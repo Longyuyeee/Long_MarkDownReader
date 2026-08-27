@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -465,6 +465,13 @@ const selectionHistoryOpen = ref(false)
 const selectionHistoryState = ref(emptyGraphSelectionHistory())
 const communityOpen = ref(false)
 const activeCommunityId = ref('')
+const activeExplorationScopes = computed(() => [
+  neighborFocusRootId.value ? 'neighbor' : '',
+  pathOpen.value ? 'path' : '',
+  activeCommunityId.value || communityOpen.value ? 'community' : '',
+  comparisonOpen.value ? 'comparison' : '',
+  selectionHistoryOpen.value ? 'history' : '',
+].filter(Boolean))
 const contextNode = ref<GraphNode | null>(null)
 const contextMenu = reactive({ show: false, x: 0, y: 0 })
 type GraphLayoutMode = 'force' | 'tree' | 'organization' | 'radial' | 'timeline'
@@ -1080,6 +1087,9 @@ const focusSelectedNeighbors = () => {
   if (!selectedNode.value) return
   closePathPanel()
   closeComparisonPanel()
+  communityOpen.value = false
+  activeCommunityId.value = ''
+  selectionHistoryOpen.value = false
   neighborFocusRootId.value = selectedNode.value.id
   neighborFocusDepth.value = 1
   searchQuery.value = ''
@@ -1104,6 +1114,8 @@ const openPathPanel = () => {
   closeComparisonPanel()
   selectionHistoryOpen.value = false
   neighborFocusRootId.value = ''
+  communityOpen.value = false
+  activeCommunityId.value = ''
   pathOpen.value = true
   pathStartId.value ||= selectedStartId
   selectedNode.value = null
@@ -1167,6 +1179,8 @@ const toggleSelectionHistoryPanel = () => {
   closePathPanel()
   closeComparisonPanel()
   communityOpen.value = false
+  activeCommunityId.value = ''
+  neighborFocusRootId.value = ''
 }
 let applyingSelectionHistory = false
 const restoreSelectionHistory = (cursor: number) => {

@@ -64,7 +64,7 @@ await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = stage === 'M3A7' ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = stage === 'M3A7' || stage === 'M3A8' ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -307,14 +307,113 @@ if (stage === 'M3A7') {
   await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'graph return after neighbor pinning')
 }
 
+let combinedFlow = null
+if (stage === 'M3A8') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')!==null`, 'M3A exit rooted selection')
+  const readScope = () => evaluate(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes||'global'`)
+  const graphShape = value => value.graphStats.match(/^\d+ \/ \d+ 节点 \d+ 连接/)?.[0] || ''
+  const scopeSequence = []
+  const chooseExit = async (selector, prefix) => {
+    const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    if (!chosen) throw new Error(`M3A exit option missing: ${prefix}`)
+  }
+
+  await evaluate(`document.querySelector('[data-testid="graph-neighbor-focus-action"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes==='neighbor'`, 'exclusive neighbor scope')
+  scopeSequence.push(await readScope())
+  const oneHop = graphShape(await snapshot())
+  await evaluate(`(()=>{const select=document.querySelector('[data-testid="graph-neighbor-focus-depth"]');if(!(select instanceof HTMLSelectElement))return false;select.value='3';select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+  await delay(150)
+  const threeHop = graphShape(await snapshot())
+
+  await evaluate(`document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes==='path'`, 'path replaces neighbor scope')
+  scopeSequence.push(await readScope())
+  await chooseExit('[data-testid="graph-path-start"]', 'NorthStar · Markdown')
+  await chooseExit('[data-testid="graph-path-end"]', 'Evidence · PDF')
+  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+  await waitFor(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length===3`, 'combined shortest-path evidence')
+  const pathSnapshot = await snapshot()
+  const path = {
+    scope: await readScope(),
+    graphShape: graphShape(pathSnapshot),
+    edgeCount: Number((await evaluate(`document.querySelector('[data-testid="graph-path-found"]')?.querySelector('strong')?.textContent?.match(/\\d+/)?.[0]||0`))),
+    evidenceEdgeCount: await evaluate(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length`),
+  }
+  await capture('combined-neighbor-path.jpg')
+
+  await evaluate(`document.querySelector('[data-testid="graph-community-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes==='community'`, 'community replaces path scope')
+  scopeSequence.push(await readScope())
+  const selectedCommunity = await evaluate(`(()=>{const cards=[...document.querySelectorAll('[data-testid="graph-community-card"]')];const card=cards.find(item=>Number(item.dataset.nodeCount||0)>1);if(!(card instanceof HTMLButtonElement))return null;const result={id:card.dataset.communityId||'',count:Number(card.dataset.nodeCount||0)};card.click();return result})()`)
+  if (!selectedCommunity) throw new Error('M3A exit non-singleton community missing')
+  await evaluate(`document.querySelector('[data-testid="graph-community-close"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'combined community focus')
+  const communitySnapshot = await snapshot()
+  const community = { scope: await readScope(), expectedNodeCount: selectedCommunity.count, nodeCount: Number(communitySnapshot.graphStats.match(/^(\d+)/)?.[1] || 0), graphShape: graphShape(communitySnapshot) }
+  await capture('combined-community.jpg')
+
+  await evaluate(`document.querySelector('[data-testid="graph-comparison-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes==='comparison'`, 'comparison replaces community scope')
+  scopeSequence.push(await readScope())
+  await chooseExit('[data-testid="graph-comparison-left"]', 'NorthStar.md · Canvas 节点')
+  await chooseExit('[data-testid="graph-comparison-right"]', 'research/Roadmap.table.json · Canvas 节点')
+  await evaluate(`document.querySelector('[data-testid="graph-comparison-run"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-comparison-common"]')?.dataset.count==='1'`, 'combined node comparison')
+  await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(180)
+  const comparison = { scope: await readScope(), commonCount: Number(await evaluate(`document.querySelector('[data-testid="graph-comparison-common"]')?.dataset.count||0`)) }
+  const narrowFits = await evaluate(`document.documentElement.scrollWidth<=innerWidth+1`)
+  await capture('combined-comparison-narrow.jpg')
+
+  await evaluate(`document.querySelector('.graph-comparison-close')?.click()`)
+  await evaluate(`document.querySelector('[data-testid="graph-selection-history-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes==='history'`, 'history replaces comparison scope')
+  scopeSequence.push(await readScope())
+  const restoredHistory = await evaluate(`(()=>{const item=[...document.querySelectorAll('[data-testid="graph-selection-history-item"]')].find(button=>button.dataset.selectedCount==='1');if(!(item instanceof HTMLButtonElement))return false;item.click();return true})()`)
+  if (!restoredHistory) throw new Error('M3A exit initial selection history missing')
+  await waitFor(`document.querySelector('canvas[data-selected-count]')?.dataset.selectedCount==='1'`, 'combined history restore')
+  const history = { scope: await readScope(), restoredSelectedCount: Number(await evaluate(`document.querySelector('canvas[data-selected-count]')?.dataset.selectedCount||0`)) }
+  await capture('combined-history-narrow.jpg')
+  await evaluate(`document.querySelector('[data-testid="graph-selection-history-close"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.activeExplorationScopes===''`, 'global scope after history')
+  scopeSequence.push('global')
+
+  await evaluate(`document.querySelector('[data-testid="graph-neighbor-pin-action"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="local-graph-rail"]')!==null`, 'combined pinned editor rail')
+  await waitFor(`document.querySelector('[data-testid="local-graph-summary"]')?.dataset.nodeCount==='6'`, 'combined pinned graph nodes')
+  const pinning = await evaluate(`(()=>{const summary=document.querySelector('[data-testid="local-graph-summary"]');return {railVisible:Boolean(document.querySelector('[data-testid="local-graph-rail"]')),nodeCount:Number(summary?.dataset.nodeCount||0),edgeCount:Number(summary?.dataset.edgeCount||0),unpinned:false}})()`)
+  await capture('combined-pinned-narrow.jpg')
+  await evaluate(`document.querySelector('[data-testid="local-graph-unpin"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="local-graph-rail"]')===null`, 'combined local graph unpin')
+  pinning.unpinned = true
+  combinedFlow = {
+    objectTypeCount: wide.objectTypeIds.length,
+    relationTypeCount: wide.relationTypeIds.length,
+    neighbor: { oneHop, threeHop },
+    path,
+    community,
+    comparison,
+    history,
+    pinning,
+    scopeSequence,
+    wideFits: wide.documentFits && pathSnapshot.documentFits && communitySnapshot.documentFits,
+    narrowFits,
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await evaluate(`location.hash='#/graph'`)
+  await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'graph return after combined pinning')
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }

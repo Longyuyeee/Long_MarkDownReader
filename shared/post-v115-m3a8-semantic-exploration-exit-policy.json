@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-8",
+  "releaseCandidate": false,
+  "scope": "complete-semantic-exploration-exit-audit",
+  "requiredStages": ["M3A-1", "M3A-2", "M3A-3", "M3A-4", "M3A-5", "M3A-6", "M3A-7"],
+  "exclusiveExplorationScopes": ["neighbor", "path", "community", "comparison", "history"],
+  "requiredCombinedFlow": ["semantic-legend", "neighbor-one-to-three", "shortest-path-with-evidence", "community-filter", "node-comparison", "selection-history-restore", "editor-local-graph-pin", "return-to-library"],
+  "safety": {
+    "sourceUserContentIncluded": false,
+    "sourceFilesUnchanged": true,
+    "runtimeErrors": 0
+  },
+  "selectedNextStage": {
+    "id": "M3B-0",
+    "name": "professional-visual-baseline-selection-audit",
+    "reason": "M3A semantics are complete; record the real visual and camera baseline before implementing community contours, semantic zoom, path motion, minimap, or cluster lenses."
+  }
+}

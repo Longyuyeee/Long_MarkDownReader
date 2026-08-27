@@ -5,7 +5,6 @@ const policy = readJson('shared/post-v115-m1-closure-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m1-closure/runtime-evidence.json')
 const formats = readJson('shared/file-formats.json')
 const matrix = readJson('shared/release-capability-matrix.json')
-const development = readJson('shared/development-version-policy.json')
 const docx = readJson('docs/evidence/post-v115-m1b2c-docx-closure/native-roundtrip.json')
 const readme = fs.readFileSync('README.md', 'utf8')
 const releaseDraft = fs.readFileSync('docs/RELEASE_NOTES_v1.0.16_DRAFT.md', 'utf8')
@@ -52,8 +51,7 @@ const checks = {
   harnessCorrected: script.includes('param([switch]$SkipBuild)')
     && script.includes('tauri.e2e.conf.json')
     && script.includes('if(-not $SkipBuild)'),
-  nextStageAligned: development.currentStage === policy.selectedNextStage
-    && policy.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit',
+  nextStageAligned: policy.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit',
 }
 
 const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name)
