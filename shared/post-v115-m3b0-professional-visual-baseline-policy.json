@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-0",
+  "releaseCandidate": false,
+  "scope": "professional-visual-and-camera-pre-change-selection-audit",
+  "requirements": [
+    "community-contours-and-semantic-hierarchy",
+    "curves-parallel-edge-separation-path-direction-and-relation-labels",
+    "far-middle-near-semantic-zoom",
+    "minimap-smooth-focus-fit-selection-cluster-lens-and-fullscreen",
+    "restrained-status-rings",
+    "theme-readability-and-reduced-motion"
+  ],
+  "preChange": {
+    "edgeVisibilityZoomThreshold": 0.3,
+    "labelVisibilityZoomThreshold": 0.4,
+    "glyphVisibilityZoomThreshold": 0.55,
+    "semanticZoomUsesDensityOrImportance": false,
+    "farCommunitySummary": false,
+    "communityContours": false,
+    "networkCurves": false,
+    "parallelEdgeSeparation": false,
+    "relationLabels": false,
+    "selectedPathDirectionFlow": false,
+    "minimap": false,
+    "fitSelection": false,
+    "clusterCollapseExpand": false,
+    "graphFullscreen": false,
+    "reducedMotionConsumedByGraph": false,
+    "continuousAnimationFrameLoop": true
+  },
+  "retainedStrengths": [
+    "object-shape-color-and-relation-line-style-semantic-legend",
+    "directed-arrowheads",
+    "stable-community-computation-and-filtering",
+    "horizontal-toolbar-wheel-and-page-level-narrow-fit"
+  ],
+  "baselineEvidence": {
+    "largeGraphTiers": [1000, 5000],
+    "crossFormatNodeCount": 17,
+    "crossFormatEdgeCount": 17,
+    "desktopShell": "tauri-webview2",
+    "theme": "dark",
+    "motionPreference": "reduced",
+    "viewports": ["1280x800", "720x680"]
+  },
+  "selectedNextStage": {
+    "id": "M3B-1",
+    "name": "semantic-zoom-community-overview",
+    "reason": "The current fixed zoom thresholds either retain every label on dense graphs or remove graph meaning at far zoom. Density-aware far community summaries and middle/near importance tiers provide the first required visual information gain and establish the camera contract needed by later path and minimap work."
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-0",
+  "actual": {
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": {
+      "defaultZoomPercent": 100,
+      "farZoomPercent": 28,
+      "nearZoomPercent": 157,
+      "farEdgesExpectedByCurrentThreshold": false,
+      "farLabelsExpectedByCurrentThreshold": false,
+      "selectedCommunity": {
+        "id": "community-15842afbebbb3cbf",
+        "count": 4
+      },
+      "pathEdgeCount": 3,
+      "relationLabelsVisible": false,
+      "minimapVisible": false,
+      "narrowFits": true,
+      "motionPreference": "reduced"
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

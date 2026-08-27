@@ -64,7 +64,7 @@ await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = stage === 'M3A7' || stage === 'M3A8' ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -406,14 +406,79 @@ if (stage === 'M3A8') {
   await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'graph return after combined pinning')
 }
 
+let visualBaseline = null
+if (stage === 'M3B0') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  const readZoom = () => evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`)
+  const wheelZoom = async (deltaY, times) => {
+    const rect = await evaluate(`(()=>{const rect=document.querySelector('[data-testid="graph-container"] canvas')?.getBoundingClientRect();return rect?{x:rect.left+rect.width/2,y:rect.top+rect.height/2}:null})()`)
+    if (!rect) throw new Error('M3B-0 graph canvas missing')
+    for (let index = 0; index < times; index += 1) {
+      await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: rect.x, y: rect.y, deltaX: 0, deltaY })
+      await delay(60)
+    }
+  }
+  await capture('visual-baseline-default.jpg')
+  const defaultZoomPercent = await readZoom()
+  await wheelZoom(120, 12)
+  const farZoomPercent = await readZoom()
+  await capture('visual-baseline-far.jpg')
+  await wheelZoom(-120, 18)
+  const nearZoomPercent = await readZoom()
+  await capture('visual-baseline-near.jpg')
+
+  await evaluate(`document.querySelector('[data-testid="graph-community-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-panel"]')!==null`, 'M3B-0 community panel')
+  const selectedCommunity = await evaluate(`(()=>{const card=[...document.querySelectorAll('[data-testid="graph-community-card"]')].find(item=>Number(item.dataset.nodeCount||0)>1);if(!(card instanceof HTMLButtonElement))return null;const result={id:card.dataset.communityId||'',count:Number(card.dataset.nodeCount||0)};card.click();return result})()`)
+  if (!selectedCommunity) throw new Error('M3B-0 community fixture missing')
+  await evaluate(`document.querySelector('[data-testid="graph-community-close"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'M3B-0 community focus')
+  await delay(120)
+  await capture('visual-baseline-community.jpg')
+  await evaluate(`document.querySelector('[data-testid="graph-community-focus-return"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')===null`, 'M3B-0 full community return')
+
+  await evaluate(`document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, 'M3B-0 path panel')
+  const chooseBaseline = async (selector, prefix) => {
+    const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    if (!chosen) throw new Error(`M3B-0 option missing: ${prefix}`)
+  }
+  await chooseBaseline('[data-testid="graph-path-start"]', 'NorthStar · Markdown')
+  await chooseBaseline('[data-testid="graph-path-end"]', 'Evidence · PDF')
+  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+  await waitFor(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length===3`, 'M3B-0 path evidence')
+  await delay(120)
+  await capture('visual-baseline-path.jpg')
+
+  await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 680, deviceScaleFactor: 1, mobile: false })
+  await delay(180)
+  const narrowFits = await evaluate(`document.documentElement.scrollWidth<=innerWidth+1`)
+  await capture('visual-baseline-narrow.jpg')
+  visualBaseline = {
+    defaultZoomPercent,
+    farZoomPercent,
+    nearZoomPercent,
+    farEdgesExpectedByCurrentThreshold: farZoomPercent > 30,
+    farLabelsExpectedByCurrentThreshold: farZoomPercent > 40,
+    selectedCommunity,
+    pathEdgeCount: await evaluate(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length`),
+    relationLabelsVisible: Boolean(await evaluate(`document.querySelector('[data-testid="graph-relation-label"]')`)),
+    minimapVisible: Boolean(await evaluate(`document.querySelector('[data-testid="graph-minimap"]')`)),
+    narrowFits,
+    motionPreference: 'reduced',
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
