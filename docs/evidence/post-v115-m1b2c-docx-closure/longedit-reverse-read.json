@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1B2C-longedit-reverse-read",
+  "status": "passed",
+  "sourceCommit": "58374b6012580bb9128ed1914eeff30a19cc6bc6",
+  "expected": {
+    "files": 9,
+    "producerSourcePairs": 9,
+    "sourceUnchangedAfterRead": true,
+    "responsive960x720": true,
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "results": [
+      {
+        "producerId": "microsoft-word-16",
+        "sourceId": "microsoft-word-16",
+        "file": "microsoft-word-16-from-microsoft-word-16.docx",
+        "sha256": "57fa623a5852210812e3294f0989dbc3f0d4ba0b7e1d558ce4906b94615ae8eb",
+        "expectedHeading": "Microsoft Word Producer Fixture",
+        "expectedStyleId": "ab",
+        "actualStyle": {
+          "value": "ab",
+          "label": "Intense Quote · ab",
+          "optionCount": 21
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "microsoft-word-16",
+        "sourceId": "wps-writer",
+        "file": "microsoft-word-16-from-wps-writer.docx",
+        "sha256": "9efb2ecda3a4b5c1e127f6515cdd314c56ee0d175731c8757877d567b968566b",
+        "expectedHeading": "WPS Writer Producer Fixture",
+        "expectedStyleId": "1",
+        "actualStyle": {
+          "value": "1",
+          "label": "Normal · 1",
+          "optionCount": 2
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "microsoft-word-16",
+        "sourceId": "libreoffice-writer",
+        "file": "microsoft-word-16-from-libreoffice-writer.docx",
+        "sha256": "391f728c9d37175e2e3d9d9a5c0e9cf67ca1542bf7c363b2e7c60e202f9258de",
+        "expectedHeading": "LibreOffice Writer Producer Fixture",
+        "expectedStyleId": "BodyText",
+        "actualStyle": {
+          "value": "BodyText",
+          "label": "Body Text · BodyText",
+          "optionCount": 8
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "wps-writer",
+        "sourceId": "microsoft-word-16",
+        "file": "wps-writer-from-microsoft-word-16.docx",
+        "sha256": "57fa623a5852210812e3294f0989dbc3f0d4ba0b7e1d558ce4906b94615ae8eb",
+        "expectedHeading": "Microsoft Word Producer Fixture",
+        "expectedStyleId": "ab",
+        "actualStyle": {
+          "value": "ab",
+          "label": "Intense Quote · ab",
+          "optionCount": 21
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "wps-writer",
+        "sourceId": "wps-writer",
+        "file": "wps-writer-from-wps-writer.docx",
+        "sha256": "9efb2ecda3a4b5c1e127f6515cdd314c56ee0d175731c8757877d567b968566b",
+        "expectedHeading": "WPS Writer Producer Fixture",
+        "expectedStyleId": "1",
+        "actualStyle": {
+          "value": "1",
+          "label": "Normal · 1",
+          "optionCount": 2
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "wps-writer",
+        "sourceId": "libreoffice-writer",
+        "file": "wps-writer-from-libreoffice-writer.docx",
+        "sha256": "391f728c9d37175e2e3d9d9a5c0e9cf67ca1542bf7c363b2e7c60e202f9258de",
+        "expectedHeading": "LibreOffice Writer Producer Fixture",
+        "expectedStyleId": "BodyText",
+        "actualStyle": {
+          "value": "BodyText",
+          "label": "Body Text · BodyText",
+          "optionCount": 8
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "libreoffice-writer",
+        "sourceId": "microsoft-word-16",
+        "file": "libreoffice-writer-from-microsoft-word-16.docx",
+        "sha256": "8010842ab275d9e269fc5a4466b889db6e1f616d150e061ac40efeb3be6c78c1",
+        "expectedHeading": "Microsoft Word Producer Fixture",
+        "expectedStyleId": "IntenseQuote",
+        "actualStyle": {
+          "value": "IntenseQuote",
+          "label": "Intense Quote · IntenseQuote",
+          "optionCount": 27
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "libreoffice-writer",
+        "sourceId": "wps-writer",
+        "file": "libreoffice-writer-from-wps-writer.docx",
+        "sha256": "eb4507a143b840a7b5f1f033b81368a3a698cc2ceafc9c3ff240ea1923778483",
+        "expectedHeading": "WPS Writer Producer Fixture",
+        "expectedStyleId": "Normal",
+        "actualStyle": {
+          "value": "Normal",
+          "label": "Normal · Normal",
+          "optionCount": 7
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      },
+      {
+        "producerId": "libreoffice-writer",
+        "sourceId": "libreoffice-writer",
+        "file": "libreoffice-writer-from-libreoffice-writer.docx",
+        "sha256": "4ba682118edf637b2ab8dfeae89a810cdc2d24d850e298c204492d1568ad2681",
+        "expectedHeading": "LibreOffice Writer Producer Fixture",
+        "expectedStyleId": "BodyText",
+        "actualStyle": {
+          "value": "BodyText",
+          "label": "Body Text · BodyText",
+          "optionCount": 10
+        },
+        "sourceUnchangedAfterRead": true,
+        "responsive960x720": true
+      }
+    ],
+    "runtimeErrors": 0
+  },
+  "evidenceFiles": [
+    "microsoft-word-16-reverse-read.jpg",
+    "wps-writer-reverse-read.jpg",
+    "libreoffice-writer-reverse-read.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

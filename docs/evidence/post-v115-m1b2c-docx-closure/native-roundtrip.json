@@ -1,0 +1,273 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1B2C-native-roundtrip",
+    "verifiedAt":  "2026-08-27T02:28:53.0608108Z",
+    "expected":  {
+                     "producers":  3,
+                     "producerSourcePairs":  9,
+                     "sourceUnchanged":  true,
+                     "independentReopen":  true
+                 },
+    "actual":  {
+                   "verifiedProducers":  3,
+                   "producerSourcePairs":  9,
+                   "stablePairs":  9
+               },
+    "status":  "passed",
+    "producers":  [
+                      {
+                          "id":  "microsoft-word-16",
+                          "producer":  "Microsoft Word",
+                          "version":  "16.0",
+                          "method":  "Hidden automation saved three LongEdit outputs as new DOCX files; the application process exited; a second worker reopened them read-only.",
+                          "status":  "verified",
+                          "files":  [
+                                        {
+                                            "sourceId":  "microsoft-word-16",
+                                            "file":  "microsoft-word-16-from-microsoft-word-16.docx",
+                                            "expectedHeading":  "Microsoft Word Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "57fa623a5852210812e3294f0989dbc3f0d4ba0b7e1d558ce4906b94615ae8eb",
+                                            "bytes":  28612,
+                                            "saveMetrics":  {
+                                                                "firstParagraphText":  "Microsoft Word Producer Fixture",
+                                                                "firstParagraphStyle":  "明显引用",
+                                                                "paragraphCount":  26,
+                                                                "tableCount":  1,
+                                                                "inlineShapeCount":  1,
+                                                                "sectionCount":  1,
+                                                                "headerCount":  3,
+                                                                "footerCount":  3,
+                                                                "repairMode":  false
+                                                            },
+                                            "reopenMetrics":  {
+                                                                  "firstParagraphText":  "Microsoft Word Producer Fixture",
+                                                                  "firstParagraphStyle":  "明显引用",
+                                                                  "paragraphCount":  26,
+                                                                  "tableCount":  1,
+                                                                  "inlineShapeCount":  1,
+                                                                  "sectionCount":  1,
+                                                                  "headerCount":  3,
+                                                                  "footerCount":  3,
+                                                                  "repairMode":  false
+                                                              },
+                                            "actualStable":  true
+                                        },
+                                        {
+                                            "sourceId":  "wps-writer",
+                                            "file":  "microsoft-word-16-from-wps-writer.docx",
+                                            "expectedHeading":  "WPS Writer Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "9efb2ecda3a4b5c1e127f6515cdd314c56ee0d175731c8757877d567b968566b",
+                                            "bytes":  83408,
+                                            "saveMetrics":  {
+                                                                "firstParagraphText":  "WPS Writer Producer Fixture",
+                                                                "firstParagraphStyle":  "正文",
+                                                                "paragraphCount":  20,
+                                                                "tableCount":  1,
+                                                                "inlineShapeCount":  1,
+                                                                "sectionCount":  1,
+                                                                "headerCount":  3,
+                                                                "footerCount":  3,
+                                                                "repairMode":  false
+                                                            },
+                                            "reopenMetrics":  {
+                                                                  "firstParagraphText":  "WPS Writer Producer Fixture",
+                                                                  "firstParagraphStyle":  "正文",
+                                                                  "paragraphCount":  20,
+                                                                  "tableCount":  1,
+                                                                  "inlineShapeCount":  1,
+                                                                  "sectionCount":  1,
+                                                                  "headerCount":  3,
+                                                                  "footerCount":  3,
+                                                                  "repairMode":  false
+                                                              },
+                                            "actualStable":  true
+                                        },
+                                        {
+                                            "sourceId":  "libreoffice-writer",
+                                            "file":  "microsoft-word-16-from-libreoffice-writer.docx",
+                                            "expectedHeading":  "LibreOffice Writer Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "391f728c9d37175e2e3d9d9a5c0e9cf67ca1542bf7c363b2e7c60e202f9258de",
+                                            "bytes":  81603,
+                                            "saveMetrics":  {
+                                                                "firstParagraphText":  "LibreOffice Writer Producer Fixture",
+                                                                "firstParagraphStyle":  "正文文本",
+                                                                "paragraphCount":  17,
+                                                                "tableCount":  1,
+                                                                "inlineShapeCount":  1,
+                                                                "sectionCount":  1,
+                                                                "headerCount":  3,
+                                                                "footerCount":  3,
+                                                                "repairMode":  false
+                                                            },
+                                            "reopenMetrics":  {
+                                                                  "firstParagraphText":  "LibreOffice Writer Producer Fixture",
+                                                                  "firstParagraphStyle":  "正文文本",
+                                                                  "paragraphCount":  17,
+                                                                  "tableCount":  1,
+                                                                  "inlineShapeCount":  1,
+                                                                  "sectionCount":  1,
+                                                                  "headerCount":  3,
+                                                                  "footerCount":  3,
+                                                                  "repairMode":  false
+                                                              },
+                                            "actualStable":  true
+                                        }
+                                    ]
+                      },
+                      {
+                          "id":  "wps-writer",
+                          "producer":  "WPS Writer",
+                          "version":  "12.1.0.28043",
+                          "method":  "Hidden automation saved three LongEdit outputs as new DOCX files; the application process exited; a second worker reopened them read-only.",
+                          "status":  "verified",
+                          "files":  [
+                                        {
+                                            "sourceId":  "microsoft-word-16",
+                                            "file":  "wps-writer-from-microsoft-word-16.docx",
+                                            "expectedHeading":  "Microsoft Word Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "57fa623a5852210812e3294f0989dbc3f0d4ba0b7e1d558ce4906b94615ae8eb",
+                                            "bytes":  28612,
+                                            "saveMetrics":  {
+                                                                "firstParagraphText":  "Microsoft Word Producer Fixture",
+                                                                "firstParagraphStyle":  "Intense Quote",
+                                                                "paragraphCount":  26,
+                                                                "tableCount":  1,
+                                                                "inlineShapeCount":  1,
+                                                                "sectionCount":  1,
+                                                                "headerCount":  3,
+                                                                "footerCount":  3,
+                                                                "repairMode":  false
+                                                            },
+                                            "reopenMetrics":  {
+                                                                  "firstParagraphText":  "Microsoft Word Producer Fixture",
+                                                                  "firstParagraphStyle":  "Intense Quote",
+                                                                  "paragraphCount":  26,
+                                                                  "tableCount":  1,
+                                                                  "inlineShapeCount":  1,
+                                                                  "sectionCount":  1,
+                                                                  "headerCount":  3,
+                                                                  "footerCount":  3,
+                                                                  "repairMode":  false
+                                                              },
+                                            "actualStable":  true
+                                        },
+                                        {
+                                            "sourceId":  "wps-writer",
+                                            "file":  "wps-writer-from-wps-writer.docx",
+                                            "expectedHeading":  "WPS Writer Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "9efb2ecda3a4b5c1e127f6515cdd314c56ee0d175731c8757877d567b968566b",
+                                            "bytes":  83408,
+                                            "saveMetrics":  {
+                                                                "firstParagraphText":  "WPS Writer Producer Fixture",
+                                                                "firstParagraphStyle":  "正文",
+                                                                "paragraphCount":  20,
+                                                                "tableCount":  1,
+                                                                "inlineShapeCount":  1,
+                                                                "sectionCount":  1,
+                                                                "headerCount":  3,
+                                                                "footerCount":  3,
+                                                                "repairMode":  false
+                                                            },
+                                            "reopenMetrics":  {
+                                                                  "firstParagraphText":  "WPS Writer Producer Fixture",
+                                                                  "firstParagraphStyle":  "正文",
+                                                                  "paragraphCount":  20,
+                                                                  "tableCount":  1,
+                                                                  "inlineShapeCount":  1,
+                                                                  "sectionCount":  1,
+                                                                  "headerCount":  3,
+                                                                  "footerCount":  3,
+                                                                  "repairMode":  false
+                                                              },
+                                            "actualStable":  true
+                                        },
+                                        {
+                                            "sourceId":  "libreoffice-writer",
+                                            "file":  "wps-writer-from-libreoffice-writer.docx",
+                                            "expectedHeading":  "LibreOffice Writer Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "391f728c9d37175e2e3d9d9a5c0e9cf67ca1542bf7c363b2e7c60e202f9258de",
+                                            "bytes":  81603,
+                                            "saveMetrics":  {
+                                                                "firstParagraphText":  "LibreOffice Writer Producer Fixture",
+                                                                "firstParagraphStyle":  "正文文本",
+                                                                "paragraphCount":  17,
+                                                                "tableCount":  1,
+                                                                "inlineShapeCount":  1,
+                                                                "sectionCount":  1,
+                                                                "headerCount":  3,
+                                                                "footerCount":  3,
+                                                                "repairMode":  false
+                                                            },
+                                            "reopenMetrics":  {
+                                                                  "firstParagraphText":  "LibreOffice Writer Producer Fixture",
+                                                                  "firstParagraphStyle":  "正文文本",
+                                                                  "paragraphCount":  17,
+                                                                  "tableCount":  1,
+                                                                  "inlineShapeCount":  1,
+                                                                  "sectionCount":  1,
+                                                                  "headerCount":  3,
+                                                                  "footerCount":  3,
+                                                                  "repairMode":  false
+                                                              },
+                                            "actualStable":  true
+                                        }
+                                    ]
+                      },
+                      {
+                          "id":  "libreoffice-writer",
+                          "producer":  "LibreOffice Writer",
+                          "version":  "26.2.4.2",
+                          "method":  "An isolated headless profile saved each LongEdit output as DOCX; a fresh profile reopened each result and rendered a non-empty PDF.",
+                          "status":  "verified",
+                          "files":  [
+                                        {
+                                            "sourceId":  "microsoft-word-16",
+                                            "file":  "libreoffice-writer-from-microsoft-word-16.docx",
+                                            "expectedHeading":  "Microsoft Word Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "8010842ab275d9e269fc5a4466b889db6e1f616d150e061ac40efeb3be6c78c1",
+                                            "bytes":  20377,
+                                            "renderedPdfBytes":  38600,
+                                            "actualStable":  true
+                                        },
+                                        {
+                                            "sourceId":  "wps-writer",
+                                            "file":  "libreoffice-writer-from-wps-writer.docx",
+                                            "expectedHeading":  "WPS Writer Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "eb4507a143b840a7b5f1f033b81368a3a698cc2ceafc9c3ff240ea1923778483",
+                                            "bytes":  80638,
+                                            "renderedPdfBytes":  78022,
+                                            "actualStable":  true
+                                        },
+                                        {
+                                            "sourceId":  "libreoffice-writer",
+                                            "file":  "libreoffice-writer-from-libreoffice-writer.docx",
+                                            "expectedHeading":  "LibreOffice Writer Producer Fixture",
+                                            "sourceUnchanged":  true,
+                                            "independentReopen":  true,
+                                            "sha256":  "4ba682118edf637b2ab8dfeae89a810cdc2d24d850e298c204492d1568ad2681",
+                                            "bytes":  82195,
+                                            "renderedPdfBytes":  58352,
+                                            "actualStable":  true
+                                        }
+                                    ]
+                      }
+                  ],
+    "sourceUserContentIncluded":  false,
+    "rawOfficeOutputsCommitted":  false
+}

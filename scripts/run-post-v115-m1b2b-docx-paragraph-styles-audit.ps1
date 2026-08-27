@@ -1,4 +1,7 @@
-param([switch]$SkipBuild)
+param(
+  [switch]$SkipBuild,
+  [string]$AuditOutput = ""
+)
 $ErrorActionPreference = "Stop"
 function Get-Sha256([string]$Path) {
   $stream = [System.IO.File]::OpenRead($Path)
@@ -9,7 +12,7 @@ function Get-Sha256([string]$Path) {
   } finally { $stream.Dispose() }
 }
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$output = Join-Path $workspace "docs\evidence\post-v115-m1b2b-docx-paragraph-styles"
+$output = if ($AuditOutput) { [System.IO.Path]::GetFullPath($AuditOutput) } else { Join-Path $workspace "docs\evidence\post-v115-m1b2b-docx-paragraph-styles" }
 $appPort = 14200
 $cdpPort = 14530
 if (Get-NetTCPConnection -LocalPort $appPort,$cdpPort -State Listen -ErrorAction SilentlyContinue) { throw "M1B2B requires free ports $appPort and $cdpPort" }

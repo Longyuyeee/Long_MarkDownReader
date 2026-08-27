@@ -5,6 +5,9 @@ import path from 'node:path'
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT
 const origin = process.env.LONGEDIT_M1B2B_APP_ORIGIN
 const output = path.resolve(process.env.LONGEDIT_M1B2B_AUDIT_OUTPUT)
+const artifactOutput = process.env.LONGEDIT_M1B2B_ARTIFACT_OUTPUT
+  ? path.resolve(process.env.LONGEDIT_M1B2B_ARTIFACT_OUTPUT)
+  : ''
 const fixtures = JSON.parse(process.env.LONGEDIT_M1B2B_FIXTURES || '[]')
 const sourceCommit = process.env.LONGEDIT_M1B2B_SOURCE_COMMIT || ''
 if (!endpoint || !origin || fixtures.length !== 3 || !/^[0-9a-f]{40}$/i.test(sourceCommit)) throw new Error('M1B2B desktop environment is incomplete')
@@ -70,6 +73,7 @@ socket.addEventListener('message', event => {
 })
 
 await fs.mkdir(output, { recursive: true })
+if (artifactOutput) await fs.mkdir(artifactOutput, { recursive: true })
 await send('Page.enable')
 await send('Runtime.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 820, deviceScaleFactor: 1, mobile: false })
@@ -122,6 +126,7 @@ for (const fixture of fixtures) {
   await waitFor(`document.querySelector('.draft-list header span')?.textContent.trim()==='0/32'`, `${fixture.id} saved reopen`)
   const after = await digest(fixture.path)
   if (after === before) throw new Error(`${fixture.id} source digest did not change after save`)
+  if (artifactOutput) await fs.copyFile(fixture.path, path.join(artifactOutput, `${fixture.id}-longedit.docx`))
   await send('Emulation.setDeviceMetricsOverride', { width: 960, height: 720, deviceScaleFactor: 1, mobile: false })
   await delay(250)
   const responsive = await evaluate(`(()=>{const e=document.querySelector('.docx-workspace');return !!e&&e.scrollWidth<=e.clientWidth+1&&document.querySelector('.edit-mode-tabs button')?.getBoundingClientRect().width>0})()`)
