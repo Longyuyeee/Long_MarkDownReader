@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-media-structured-selection",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "status": "accepted-selection",
+  "structuredText": {
+    "tenMiBJsonOutcomeMustBeRecorded": true,
+    "tenMiBUnresponsiveTimeoutMs": 30000,
+    "fiftyMiBCurrentBoundaryMustBeRecorded": true
+  },
+  "media": {
+    "webViewGenerated1080pMustLoad": true,
+    "webViewGenerated4kMustLoadOrRecordDecoderFailure": true,
+    "invalidCodecFeedbackMustBeVisible": true
+  },
+  "selectionRule": "select-one-smallest-user-complete-gap-after-real-results",
+  "selectedNextStage": "M1D-A-large-json-progressive-read-search",
+  "deferredStage": "M1D-B-video-frame-and-capture-tools",
+  "releaseCandidate": false
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-media-structured-selection",
+  "status": "passed",
+  "expected": {
+    "json10MiB": "源码首屏、搜索和树形切换可在有界时间内完成",
+    "json50MiB": "当前边界必须明确且不能卡死",
+    "media": "真实 1080p、4K 和解码失败样本均有实际结果"
+  },
+  "actual": {
+    "json10MiB": "98.758 秒后仍停留在正在读取并分析，搜索和树形均不可用",
+    "json50MiB": "699 ms 内明确阻断并提示大文件范围模式",
+    "media1080p": "1920x1080，292 ms，readyState=4",
+    "media4k": "3840x2160，141 ms，readyState=4，无页面横向溢出",
+    "invalidMkv": "162 ms 显示缺少编解码器并提供外部打开",
+    "sourceUnchanged": true,
+    "runtimeErrors": 0
+  },
+  "differences": [
+    "10 MiB JSON 虽低于 16 MiB 注册上限，但全量读取、CodeMirror 建模和 20,000 路径分析组合造成不可接受的主线程占用。",
+    "50 MiB JSON 能快速失败，但提示中承诺的大文件只读范围模式尚未接入 JSON 工作区。",
+    "当前视频基础播放与失败说明明显强于大型结构化文本路径；逐帧、截图、位置记忆和字幕轨仍未实现。"
+  ],
+  "decision": {
+    "selectedNextStage": "M1D-A-large-json-progressive-read-search",
+    "target": "10 MiB 与 50 MiB JSON 均先进入有界只读范围模式，提供首屏、分段导航和流式搜索；小 JSON 继续完整编辑",
+    "deferredStage": "M1D-B-video-frame-and-capture-tools",
+    "schemaWorkDeferredUntilLargeFileStability": true,
+    "releaseCandidate": false
+  },
+  "privacy": {
+    "fixturesGeneratedInTemporaryDirectory": true,
+    "localAbsolutePathsIncluded": false,
+    "documentBodiesIncluded": false,
+    "mediaFilesCommitted": false
+  },
+  "evidenceFiles": [
+    "runtime-evidence.json",
+    "structured-50m-boundary.jpg",
+    "media-4k-playback.jpg",
+    "media-invalid-codec.jpg"
+  ]
+}

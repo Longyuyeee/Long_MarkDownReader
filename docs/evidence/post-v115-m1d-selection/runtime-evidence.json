@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-media-structured-selection",
+  "status": "passed",
+  "actual": {
+    "structured": {
+      "json10Bytes": 10485760,
+      "json10Outcome": {
+        "status": "unresponsive-timeout",
+        "openMs": 98758,
+        "error": "10 MiB JSON remained in the loading and analysis state beyond the bounded audit window",
+        "metrics": null,
+        "searchMs": null,
+        "searchMatches": null,
+        "treeMs": null,
+        "treeMetrics": null
+      },
+      "json50Bytes": 52428800,
+      "json50BlockMs": 699,
+      "json50Error": "JSON 超过 16777216 字节读取上限 · 使用大文件只读范围模式打开，或在外部工具中拆分文件重试",
+      "sourceUnchanged": true
+    },
+    "media": {
+      "generated1080Mime": "video/webm;codecs=vp9",
+      "generated4kMime": "video/webm;codecs=vp9",
+      "video1080Bytes": 60369,
+      "video4kBytes": 186819,
+      "media1080": {
+        "loadMs": 292,
+        "width": 1920,
+        "height": 1080,
+        "duration": null,
+        "readyState": 4,
+        "pageOverflow": 0
+      },
+      "media4k": {
+        "loadMs": 141,
+        "width": 3840,
+        "height": 2160,
+        "duration": 0.696,
+        "readyState": 4,
+        "pageOverflow": 0
+      },
+      "invalidCodecMs": 162,
+      "invalidCodecText": "无法打开媒体文件当前系统缺少该视频的编解码器，请使用系统播放器打开。使用系统默认程序打开"
+    },
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}
