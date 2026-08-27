@@ -245,6 +245,8 @@
     "audit:post-v115-m3-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3-baseline-audit.ps1",
     "check:post-v115-m3a1-semantics": "node scripts/check-post-v115-m3a1-semantics.mjs",
     "audit:post-v115-m3a1-semantics": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3a1-semantics-audit.ps1",
+    "check:post-v115-m3a2-neighbor-focus": "node scripts/check-post-v115-m3a2-neighbor-focus.mjs",
+    "audit:post-v115-m3a2-neighbor-focus": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3a1-semantics-audit.ps1 -Stage M3A2",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",
     "audit:post-v115-large-library-index-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-large-library-index-baseline.ps1",

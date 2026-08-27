@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="`graph-canvas-theme-${graphCanvasTheme}`">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot }]">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -81,7 +81,11 @@
       </div>
       <button class="remediation-close" aria-label="关闭行动提示" @click="clearRemediation">×</button>
     </div>
-    <GraphSemanticLegend :graph="remediationGraph" :dark="isActiveThemeDark(store.theme)" />
+    <div v-if="neighborFocusRoot" class="neighbor-focus-banner" data-testid="graph-neighbor-focus" :data-focus-root="neighborFocusRoot.id">
+      <span><strong>邻居聚焦：{{ neighborFocusRoot.title }}</strong> · 1 跳 · {{ visibleNodes.length }} 个节点 / {{ visibleEdges.length }} 条关系</span>
+      <button type="button" data-testid="graph-neighbor-focus-return" @click="clearNeighborFocus">返回全图</button>
+    </div>
+    <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" />
     <canvas
       ref="canvasRef"
       tabindex="0"
@@ -215,6 +219,7 @@
         </div>
         <div class="details-actions">
           <button class="primary-action" @click="openNode(selectedNode)">打开{{ objectTypeLabel(selectedNode.objectType) }}</button>
+          <button data-testid="graph-neighbor-focus-action" :disabled="!selectedNeighbors.length" @click="focusSelectedNeighbors">聚焦直接邻居</button>
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
           <button :disabled="isCreatingCanvas || Boolean(selectedNode.parentId)" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
           <button :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="createProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
@@ -309,6 +314,7 @@ const { filters } = useGraphFilters()
 const searchQuery = computed({ get: () => filters.query, set: value => { filters.query = value } })
 const selectedNode = ref<GraphNode | null>(null)
 const selectedNodeIds = ref<string[]>([])
+const neighborFocusRootId = ref('')
 const contextNode = ref<GraphNode | null>(null)
 const contextMenu = reactive({ show: false, x: 0, y: 0 })
 type GraphLayoutMode = 'force' | 'tree' | 'organization' | 'radial' | 'timeline'
@@ -351,14 +357,27 @@ const remediationGraph = computed(() => {
   const connected = new Set(graphData.value.edges.flatMap(edge => [edge.source, edge.target]))
   return { nodes: filteredGraph.value.nodes.filter(node => !connected.has(node.id)), edges: [] }
 })
+const neighborFocusRoot = computed(() => graphData.value.nodes.find(node => node.id === neighborFocusRootId.value) || null)
+const neighborFocusNodeIds = computed(() => {
+  const root = neighborFocusRoot.value
+  if (!root) return null
+  const ids = new Set([root.id])
+  for (const edge of graphData.value.edges) {
+    if (edge.source === root.id) ids.add(edge.target)
+    if (edge.target === root.id) ids.add(edge.source)
+  }
+  return ids
+})
 const visibleNodes = computed(() => {
   return remediationGraph.value.nodes.filter(node =>
-    viewMode.value !== 'mindmap' || !mindmapNodeIds.value || mindmapNodeIds.value.has(node.id)
+    (!neighborFocusNodeIds.value || neighborFocusNodeIds.value.has(node.id))
+    && (viewMode.value !== 'mindmap' || !mindmapNodeIds.value || mindmapNodeIds.value.has(node.id))
   )
 })
 
 const visibleNodeIds = computed(() => new Set(visibleNodes.value.map(node => node.id)))
 const visibleEdges = computed(() => remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target)))
+const visibleGraph = computed<GraphData>(() => ({ nodes: visibleNodes.value, edges: visibleEdges.value }))
 const contextMenuOptions = computed(() => {
   const node = contextNode.value
   if (node) return [
@@ -872,6 +891,20 @@ const centerOnNode = (node: GraphNode) => {
 const selectAndCenter = (node: GraphNode) => {
   selectOnly(node)
   centerOnNode(node)
+}
+const focusSelectedNeighbors = () => {
+  if (!selectedNode.value) return
+  neighborFocusRootId.value = selectedNode.value.id
+  searchQuery.value = ''
+  requestAnimationFrame(fitGraph)
+}
+const clearNeighborFocus = () => {
+  const root = neighborFocusRoot.value
+  neighborFocusRootId.value = ''
+  requestAnimationFrame(() => {
+    fitGraph()
+    if (root) selectAndCenter(root)
+  })
 }
 const focusHealthNode = (nodeId: string) => {
   const node = graphData.value.nodes.find(candidate => candidate.id === nodeId)
@@ -1672,6 +1705,7 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
 .match-count { color: var(--theme-primary); font-weight: 650; }
 .remediation-banner { position: absolute; top: calc(var(--workspace-management-header-height) + 58px); left: var(--workspace-floating-gutter); right: var(--workspace-floating-gutter); z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: var(--workspace-shadow-sm); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
+.neighbor-focus-banner { position: absolute; z-index: 7; top: 126px; left: 16px; max-width: min(520px, calc(100% - 32px)); min-height: 34px; display: flex; align-items: center; gap: 12px; padding: 5px 7px 5px 11px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 95%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); font-size: 10px; }.neighbor-focus-banner span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.neighbor-focus-banner button { flex: none; min-height: 24px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.neighbor-focus-active :deep(.graph-semantic-legend) { top: 170px; }
 
 .tutorial-btn {
   height: var(--workspace-control-height);

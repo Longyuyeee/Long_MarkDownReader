@@ -5,6 +5,7 @@ import path from 'node:path'
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT
 const output = path.resolve(process.env.LONGEDIT_M3A1_OUTPUT)
 const library = path.resolve(process.env.LONGEDIT_M3A1_LIBRARY)
+const stage = process.env.LONGEDIT_M3_STAGE || 'M3A1'
 if (!endpoint) throw new Error('M3A-1 capture environment is incomplete')
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -74,17 +75,35 @@ await delay(300)
 const narrow = await snapshot()
 await capture('semantic-legend-narrow.jpg')
 
+let neighborFocus = null
+if (stage === 'M3A2') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  const focusClicked = await evaluate(`(()=>{const element=document.querySelector('[data-testid="graph-neighbor-focus-action"]');if(!(element instanceof HTMLButtonElement)||element.disabled)return false;element.click();return true})()`)
+  if (!focusClicked) throw new Error('M3A-2 neighbor focus action missing')
+  await waitFor(`document.querySelector('[data-testid="graph-neighbor-focus"]')!==null`, 'neighbor focus banner')
+  await delay(150)
+  const focused = await snapshot()
+  await capture('neighbor-focus.jpg')
+  const returnClicked = await evaluate(`(()=>{const element=document.querySelector('[data-testid="graph-neighbor-focus-return"]');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
+  if (!returnClicked) throw new Error('M3A-2 return-to-full-graph action missing')
+  await waitFor(`document.querySelector('[data-testid="graph-neighbor-focus"]')===null`, 'full graph return')
+  await delay(150)
+  const restored = await snapshot()
+  const graphShape = value => value.graphStats.match(/^\d+ \/ \d+ 节点 \d+ 连接/)?.[0] || ''
+  neighborFocus = { focusRootVisible: true, focused, restored, nodeCountReduced: graphShape(focused) !== graphShape(wide), fullGraphRestored: graphShape(restored) === graphShape(wide) }
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: 'M3A-1',
-  actual: { wide, narrow, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
 await fs.writeFile(path.join(output, 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
-console.log(`M3A-1 desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)
+console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

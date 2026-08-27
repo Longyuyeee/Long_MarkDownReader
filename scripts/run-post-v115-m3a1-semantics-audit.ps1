@@ -1,7 +1,8 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild,[ValidateSet('M3A1','M3A2')][string]$Stage = 'M3A1')
 $ErrorActionPreference = 'Stop'
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$output = Join-Path $workspace 'docs\evidence\post-v115-m3a1-semantics'
+$outputRelative = if ($Stage -eq 'M3A2') { 'docs\evidence\post-v115-m3a2-neighbor-focus' } else { 'docs\evidence\post-v115-m3a1-semantics' }
+$output = Join-Path $workspace $outputRelative
 $auditRoot = Join-Path $env:TEMP ("longedit-m3a1-{0}-{1}" -f $PID,[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 $library = Join-Path $auditRoot 'library'
 $webview = Join-Path $auditRoot 'webview'
@@ -52,6 +53,7 @@ try {
     $env:LONGEDIT_CDP_ENDPOINT = "http://127.0.0.1:$cdpPort"
     $env:LONGEDIT_M3A1_OUTPUT = $output
     $env:LONGEDIT_M3A1_LIBRARY = $library
+    $env:LONGEDIT_M3_STAGE = $Stage
     & node (Join-Path $workspace 'scripts\capture-post-v115-m3a1-semantics.mjs')
     if ($LASTEXITCODE -ne 0) { throw 'M3A-1 desktop capture failed' }
   } finally {
@@ -64,6 +66,7 @@ try {
   if ($listener) { Stop-Process -Id $listener.OwningProcess -Force -ErrorAction SilentlyContinue }
   Remove-Item -LiteralPath $auditRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
-& node (Join-Path $workspace 'scripts\check-post-v115-m3a1-semantics.mjs')
-if ($LASTEXITCODE -ne 0) { throw 'M3A-1 evidence contract failed' }
-Write-Output "M3A-1 real desktop semantics audit completed: $output"
+$checkRelative = if ($Stage -eq 'M3A2') { 'scripts\check-post-v115-m3a2-neighbor-focus.mjs' } else { 'scripts\check-post-v115-m3a1-semantics.mjs' }
+& node (Join-Path $workspace $checkRelative)
+if ($LASTEXITCODE -ne 0) { throw "$Stage evidence contract failed" }
+Write-Output "$Stage real desktop audit completed: $output"

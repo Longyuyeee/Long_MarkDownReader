@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-2",
+  "releaseCandidate": false,
+  "scope": "one-hop-neighbor-focus-and-explicit-full-graph-return",
+  "requirements": ["selected-node-entry", "one-hop-induced-subgraph", "visible-focus-scope", "explicit-return", "no-source-write"],
+  "selectedNextStage": { "id": "M3A-3", "name": "independently-verified-shortest-path", "reason": "Neighbor focus is bounded and reversible; the next algorithmic workflow is independently verified shortest path." }
+}
