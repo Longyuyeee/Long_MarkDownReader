@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3-0",
+  "tier": 5000,
+  "actual": {
+    "nodeCount": 5000,
+    "edgeCount": 4999,
+    "firstVisibleMs": 19378,
+    "layoutStableMs": 115802,
+    "zoomChanged": true,
+    "centeredNodeSelected": true,
+    "returnedToLibrary": true,
+    "lifecycleCycles": 0,
+    "lifecycleCompleted": true,
+    "longTaskCount": 91,
+    "longestTaskMs": 9334,
+    "jsHeapUsedBytes": 50988520,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "9d23733170a34e79d6ee5482c1b1eaa3f04401054a11a083ee5f59710d7272bd",
+    "afterSha256": "9d23733170a34e79d6ee5482c1b1eaa3f04401054a11a083ee5f59710d7272bd",
+    "semanticRegistryVisible": false
+  },
+  "expectedBeforeImplementation": {
+    "semanticRegistryVisible": false,
+    "shortestPathWorkflowVisible": false,
+    "communityWorkflowVisible": false
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

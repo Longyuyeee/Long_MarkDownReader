@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3-0",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "releaseCandidate": false,
+  "scope": "knowledge-graph-2.0-pre-change-real-desktop-baseline",
+  "graphTiers": [100, 1000, 5000],
+  "requiredInteractions": [
+    "first-visible",
+    "layout-stable",
+    "zoom",
+    "centered-node-selection",
+    "return-to-library"
+  ],
+  "lifecycle": {
+    "tier": 1000,
+    "cycles": 20,
+    "mustRemainNavigable": true,
+    "runtimeErrorBudget": 0
+  },
+  "expectedBeforeImplementation": {
+    "semanticRegistryVisible": false,
+    "objectLegendVisible": false,
+    "relationLegendVisible": false,
+    "shortestPathWorkflowVisible": false,
+    "communityWorkflowVisible": false
+  },
+  "selectedNextStage": {
+    "id": "M3A-1",
+    "name": "stable-object-relation-semantics-and-legend",
+    "reason": "Object and relation semantics are prerequisites for focus, shortest-path, community and semantic-zoom workflows."
+  }
+}

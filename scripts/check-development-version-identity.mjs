@@ -9,6 +9,7 @@ const matrix = readJson('shared/release-capability-matrix.json')
 const community = readJson('shared/v1-community-release-policy.json')
 const m1dc1Subtitle = readJson('shared/post-v115-m1dc1-subtitle-playback-policy.json')
 const m1Closure = readJson('shared/post-v115-m1-closure-policy.json')
+const m3Baseline = readJson('shared/post-v115-m3-baseline-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -36,7 +37,8 @@ const checks = {
   notReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
   binaryTransitionDeferred: policy.binaryVersionTransition === 'M4-release-freeze',
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
-    && policy.currentStage === m1Closure.selectedNextStage,
+    && m1Closure.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit'
+    && policy.currentStage === `${m3Baseline.selectedNextStage.id}-${m3Baseline.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
