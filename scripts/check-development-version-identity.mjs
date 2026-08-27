@@ -14,6 +14,7 @@ const m3a1Semantics = readJson('shared/post-v115-m3a1-semantics-policy.json')
 const m3a2NeighborFocus = readJson('shared/post-v115-m3a2-neighbor-focus-policy.json')
 const m3a3ShortestPath = readJson('shared/post-v115-m3a3-shortest-path-policy.json')
 const m3a4RelationEvidence = readJson('shared/post-v115-m3a4-relation-evidence-policy.json')
+const m3a5Community = readJson('shared/post-v115-m3a5-community-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -47,7 +48,8 @@ const checks = {
     && m3a1Semantics.selectedNextStage.id === m3a2NeighborFocus.stage
     && m3a2NeighborFocus.selectedNextStage.id === m3a3ShortestPath.stage
     && m3a3ShortestPath.selectedNextStage.id === m3a4RelationEvidence.stage
-    && policy.currentStage === `${m3a4RelationEvidence.selectedNextStage.id}-${m3a4RelationEvidence.selectedNextStage.name}`,
+    && m3a4RelationEvidence.selectedNextStage.id === m3a5Community.stage
+    && policy.currentStage === `${m3a5Community.selectedNextStage.id}-${m3a5Community.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

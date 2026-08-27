@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen }]">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'community-focus-active': activeCommunity && !communityOpen }]">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -43,6 +43,7 @@
     </WorkspaceManagementHeader>
     <div class="graph-options" data-horizontal-wheel="always">
       <GraphFilterControls :graph="graphData" :show-search="false" />
+      <button class="community-entry" :class="{ active: communityOpen || activeCommunityId }" data-testid="graph-community-entry" @click="toggleCommunityPanel">社区 {{ communityResult.communities.length }}</button>
       <span class="option-divider"></span>
       <label>布局
         <select v-model="graphLayoutMode" @change="applySelectedLayout">
@@ -73,6 +74,32 @@
         <span class="mindmap-root">中心：{{ mindmapRoot?.title || '请选择节点' }}</span>
       </template>
       <span v-if="searchQuery" class="match-count">{{ visibleNodes.length }} 个匹配</span>
+    </div>
+    <section v-if="communityOpen" class="graph-community-panel" data-testid="graph-community-panel">
+      <header><div><strong>社区发现建议</strong><span>Louvain · {{ communityResult.communities.length }} 个社区 · 模块度 {{ communityResult.modularity.toFixed(3) }}</span></div><button type="button" data-testid="graph-community-close" aria-label="关闭社区面板" @click="communityOpen = false">×</button></header>
+      <p>社区只用于当前视图探索，不写回文件或用户关系。</p>
+      <button v-if="activeCommunityId" class="community-return" type="button" data-testid="graph-community-return" @click="clearCommunityFilter">返回全部社区</button>
+      <div class="graph-community-list">
+        <button
+          v-for="community in communityResult.communities"
+          :key="community.id"
+          type="button"
+          class="graph-community-card"
+          :class="{ active: community.id === activeCommunityId }"
+          data-testid="graph-community-card"
+          :data-community-id="community.id"
+          :data-node-count="community.nodeCount"
+          @click="selectCommunity(community.id)"
+        >
+          <span><strong>{{ community.label }}</strong><small>{{ community.nodeCount }} 节点 · {{ community.internalEdgeCount }} 内部关系</small></span>
+          <span class="community-representatives">{{ community.representativeTitles.join('、') }}</span>
+          <span class="community-types">{{ community.objectTypes.slice(0, 3).map(item => `${objectTypeLabel(item.id)} ${item.count}`).join(' · ') }}</span>
+        </button>
+      </div>
+    </section>
+    <div v-if="activeCommunity && !communityOpen" class="community-focus-banner" data-testid="graph-community-focus" :data-community-id="activeCommunity.id">
+      <span><strong>{{ activeCommunity.label }}</strong> · {{ visibleNodes.length }} / {{ activeCommunity.nodeCount }} 节点 · {{ visibleEdges.length }} 条关系</span>
+      <button type="button" data-testid="graph-community-focus-return" @click="clearCommunityFilter">返回全部社区</button>
     </div>
     <div v-if="remediationCopy" class="remediation-banner" data-testid="graph-remediation-focus" :data-remediation-focus="remediationFocus">
       <div class="remediation-copy"><strong>{{ remediationCopy.title }}</strong><span>{{ remediationCopy.detail }}</span></div>
@@ -333,6 +360,7 @@ import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilte
 import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
 import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
+import { detectGraphCommunities } from '../utils/graphCommunities'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphPathResult } from '../utils/graphPath'
 import type { GraphData, GraphNode, RelationMention } from '../types/graph'
@@ -367,6 +395,8 @@ const pathOpen = ref(false)
 const pathStartId = ref('')
 const pathEndId = ref('')
 const shortestPathResult = ref<GraphPathResult | null>(null)
+const communityOpen = ref(false)
+const activeCommunityId = ref('')
 const contextNode = ref<GraphNode | null>(null)
 const contextMenu = reactive({ show: false, x: 0, y: 0 })
 type GraphLayoutMode = 'force' | 'tree' | 'organization' | 'radial' | 'timeline'
@@ -403,7 +433,16 @@ const degreeMap = computed(() => {
   return result
 })
 
-const filteredGraph = computed(() => applyGraphFilters(graphData.value, filters))
+const communityResult = computed(() => detectGraphCommunities(graphData.value))
+const activeCommunity = computed(() => communityResult.value.communities.find(community => community.id === activeCommunityId.value) || null)
+const activeCommunityNodeIds = computed(() => activeCommunity.value ? new Set(activeCommunity.value.nodeIds) : null)
+const filteredGraph = computed(() => {
+  const graph = applyGraphFilters(graphData.value, filters)
+  if (!activeCommunityNodeIds.value) return graph
+  const nodes = graph.nodes.filter(node => activeCommunityNodeIds.value?.has(node.id))
+  const nodeIds = new Set(nodes.map(node => node.id))
+  return { nodes, edges: graph.edges.filter(edge => nodeIds.has(edge.source) && nodeIds.has(edge.target)) }
+})
 const remediationGraph = computed(() => {
   if (remediationFocus.value !== 'orphans') return filteredGraph.value
   const connected = new Set(graphData.value.edges.flatMap(edge => [edge.source, edge.target]))
@@ -986,6 +1025,24 @@ const openPathPanel = () => {
   pathOpen.value = true
   pathStartId.value ||= selectedStartId
   selectedNode.value = null
+}
+const toggleCommunityPanel = () => {
+  communityOpen.value = !communityOpen.value
+  if (!communityOpen.value) return
+  closePathPanel()
+  neighborFocusRootId.value = ''
+  selectedNode.value = null
+}
+const selectCommunity = (communityId: string) => {
+  activeCommunityId.value = communityId
+  shortestPathResult.value = null
+  neighborFocusRootId.value = ''
+  selectedNode.value = null
+  requestAnimationFrame(fitGraph)
+}
+const clearCommunityFilter = () => {
+  activeCommunityId.value = ''
+  requestAnimationFrame(fitGraph)
 }
 const clearShortestPath = () => {
   shortestPathResult.value = null
@@ -1688,6 +1745,9 @@ watch(filters, () => {
     layoutSettled = false
   }
 }, { deep: true })
+watch(communityResult, result => {
+  if (activeCommunityId.value && !result.communities.some(community => community.id === activeCommunityId.value)) activeCommunityId.value = ''
+})
 
 let paused = false
 const handleVisibility = () => {
@@ -1810,6 +1870,8 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .option-divider { width: 1px; height: 16px; background: var(--workspace-border-color); }
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
 .match-count { color: var(--theme-primary); font-weight: 650; }
+.community-entry { min-height: 26px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.04); cursor: pointer; font-size: 10px; font-weight: 700; white-space: nowrap; }.community-entry.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.42); background: rgba(var(--theme-primary-rgb),.1); }
+.graph-community-panel { position: absolute; z-index: 10; top: 126px; right: 16px; width: min(380px, calc(100% - 32px)); max-height: min(520px, calc(100% - 160px)); display: grid; gap: 8px; padding: 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb,var(--theme-card) 96%,transparent); box-shadow: var(--workspace-shadow); backdrop-filter: blur(16px); }.graph-community-panel > header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }.graph-community-panel > header div { min-width: 0; display: grid; gap: 2px; }.graph-community-panel > header strong { font-size: 12px; }.graph-community-panel > header span,.graph-community-panel > p { margin: 0; color: var(--theme-text-secondary); font-size: 10px; line-height: 1.45; }.graph-community-panel > header button { width: 24px; height: 24px; flex: none; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 17px; }.community-return { min-height: 28px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-community-list { display: grid; gap: 6px; }.graph-community-card { min-width: 0; display: grid; gap: 4px; padding: 8px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); text-align: left; cursor: pointer; }.graph-community-card:hover,.graph-community-card.active { border-color: rgba(var(--theme-primary-rgb),.44); background: rgba(var(--theme-primary-rgb),.09); }.graph-community-card > span:first-child { min-width: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }.graph-community-card strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.graph-community-card small,.community-representatives,.community-types { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.community-types { color: var(--theme-primary); }.community-focus-banner { position: absolute; z-index: 7; top: 126px; left: 16px; max-width: min(620px, calc(100% - 32px)); min-height: 34px; display: flex; align-items: center; gap: 10px; padding: 5px 7px 5px 11px; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb,var(--theme-card) 95%,transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); font-size: 10px; }.community-focus-banner span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.community-focus-banner button { flex: none; min-height: 24px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.community-focus-active :deep(.graph-semantic-legend) { top: 170px; }
 .remediation-banner { position: absolute; top: calc(var(--workspace-management-header-height) + 58px); left: var(--workspace-floating-gutter); right: var(--workspace-floating-gutter); z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: var(--workspace-shadow-sm); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
 .neighbor-focus-banner { position: absolute; z-index: 7; top: 126px; left: 16px; max-width: min(560px, calc(100% - 32px)); min-height: 34px; display: flex; align-items: center; gap: 8px; padding: 5px 7px 5px 11px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 95%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); font-size: 10px; }.neighbor-focus-banner span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.neighbor-focus-banner select { flex: none; height: 24px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.neighbor-focus-banner button { flex: none; min-height: 24px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.neighbor-focus-active :deep(.graph-semantic-legend) { top: 170px; }
 .graph-path-panel { position: absolute; z-index: 9; top: 126px; left: 16px; right: 16px; max-width: 760px; max-height: min(430px, calc(100% - 170px)); display: grid; gap: 6px; padding: 8px 36px 8px 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); }.graph-path-fields { display: grid; grid-template-columns: minmax(120px,1fr) auto minmax(120px,1fr) auto; align-items: center; gap: 7px; }.graph-path-fields select { min-width: 0; height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.graph-path-fields button,.graph-path-result button,.graph-path-evidence-list button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-path-fields button:disabled { opacity: .45; cursor: not-allowed; }.graph-path-result { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 10px; }.graph-path-result span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-path-result button { margin-left: auto; flex: none; }.graph-path-result.unreachable strong { color: var(--theme-warning, #d97706); }.graph-path-evidence-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }.graph-path-evidence-edge { display: grid; gap: 6px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: color-mix(in srgb,var(--workspace-control-bg) 90%,transparent); }.graph-path-evidence-edge > header { min-width: 0; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 7px; font-size: 10px; }.graph-path-evidence-edge > header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-path-evidence-edge > header small { color: var(--theme-text-secondary); }.graph-path-mentions { display: grid; gap: 5px; }.graph-path-mentions article { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); }.graph-path-mentions article > div { min-width: 0; display: flex; gap: 7px; font-size: 10px; }.graph-path-mentions article > div span { color: var(--theme-text-secondary); }.graph-path-mentions code,.graph-path-mentions p { grid-column: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.graph-path-mentions code { color: var(--theme-primary); }.graph-path-mentions button { grid-column: 2; grid-row: 1 / 4; align-self: center; }.graph-path-structural-evidence { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); color: var(--theme-text-secondary); font-size: 10px; }.graph-path-structural-evidence button { flex: none; }.graph-path-close { position: sticky; z-index: 2; top: -2px; justify-self: end; width: 24px; height: 24px; margin-top: -36px; margin-right: -30px; border: 0; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 17px; }.graph-path-active :deep(.graph-semantic-legend) { top: 214px; }

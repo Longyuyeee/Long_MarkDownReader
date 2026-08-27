@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-5",
+  "actual": {
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": {
+      "count": 5,
+      "ids": [
+        "community-962cedbfc388598b",
+        "community-adb5419834432ae4",
+        "community-2c48aebb2e8628df",
+        "community-4d14d4bdaf42cf59",
+        "community-e5b7508fbd51ad7b"
+      ],
+      "nodeCounts": [
+        4,
+        4,
+        3,
+        3,
+        3
+      ],
+      "panelText": "社区发现建议Louvain · 5 个社区 · 模块度 0.670×社区只用于当前视图探索，不写回文件或用户关系。Brief · NorthStar4 节点 · 4 内部关系Brief、NorthStar、retention Supports the roadmapMarkdown 笔记 2 · PDF 资料 1 · PDF 批注 1Review · Grouped shapes and theme4 节点 · 3 内部关系Review、Grouped shapes and theme、Images and relationshipsPowerPoint 幻灯片 3 · PowerPoint 演示 1Discover · Deliver3 节点 · 2 内部关系Discover、Deliver、Delivery outline思维导图主题 2 · 思维导图 1Coverage chart · Management dashboard3 节点 · 3 内部关系Coverage chart、Management dashboard、Roadmap表格视图 2 · 数据表 1NorthStar.md · research/Roadmap.table.json3 节点 · 3 内部关系NorthStar.md、research/Roadmap.table.json、SystemCanvas 节点 2 · Canvas 画布 1",
+      "wideFits": true,
+      "narrowFits": true,
+      "selectedCommunityId": "community-962cedbfc388598b",
+      "expectedSelectedNodeCount": 4,
+      "selectedNodeCount": 4,
+      "restoredNodeCount": 17,
+      "rebuiltIds": [
+        "community-962cedbfc388598b",
+        "community-adb5419834432ae4",
+        "community-2c48aebb2e8628df",
+        "community-4d14d4bdaf42cf59",
+        "community-e5b7508fbd51ad7b"
+      ],
+      "stableAcrossRebuild": true
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

@@ -152,14 +152,64 @@ if (stage === 'M3A3' || stage === 'M3A4') {
   }
 }
 
+let community = null
+if (stage === 'M3A5') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await evaluate(`document.querySelector('[data-testid="graph-community-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-panel"]')!==null`, 'community panel')
+  await delay(150)
+  const readCommunityPanel = () => evaluate(`(()=>{const panel=document.querySelector('[data-testid="graph-community-panel"]');const cards=[...document.querySelectorAll('[data-testid="graph-community-card"]')];return {ids:cards.map(card=>card.dataset.communityId||''),counts:cards.map(card=>Number(card.dataset.nodeCount||0)),text:panel?.textContent?.replace(/\\s+/g,' ').trim()||'',fits:document.documentElement.scrollWidth<=innerWidth+1}})()`)
+  const first = await readCommunityPanel()
+  await capture('community-panel-wide.jpg')
+  await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(150)
+  const narrowPanel = await readCommunityPanel()
+  await capture('community-panel-narrow.jpg')
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(100)
+  const selected = await evaluate(`(()=>{const cards=[...document.querySelectorAll('[data-testid="graph-community-card"]')];const card=cards.find(item=>Number(item.dataset.nodeCount||0)>1);if(!(card instanceof HTMLButtonElement))return null;const result={id:card.dataset.communityId||'',count:Number(card.dataset.nodeCount||0)};card.click();return result})()`)
+  if (!selected) throw new Error('M3A-5 non-singleton community missing')
+  await evaluate(`document.querySelector('[data-testid="graph-community-close"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'community focus')
+  await delay(120)
+  const focused = await snapshot()
+  const selectedNodeCount = Number(focused.graphStats.match(/^(\d+) \/ \d+ 节点/)?.[1] || 0)
+  await capture('community-focus.jpg')
+  await evaluate(`document.querySelector('[data-testid="graph-community-focus-return"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')===null`, 'community return')
+  const restored = await snapshot()
+  const restoredNodeCount = Number(restored.graphStats.match(/^(\d+) \/ \d+ 节点/)?.[1] || 0)
+  await evaluate(`document.querySelector('.management-back')?.click()`)
+  await waitFor(`document.querySelector('.library-mode')!==null`, 'library between community rebuilds')
+  await evaluate(`location.hash='#/graph'`)
+  await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'community graph rebuild')
+  await evaluate(`document.querySelector('[data-testid="graph-community-entry"]')?.click()`)
+  await waitFor(`document.querySelectorAll('[data-testid="graph-community-card"]').length===${first.ids.length}`, 'rebuilt community panel')
+  const rebuilt = await readCommunityPanel()
+  community = {
+    count: first.ids.length,
+    ids: first.ids,
+    nodeCounts: first.counts,
+    panelText: first.text,
+    wideFits: first.fits,
+    narrowFits: narrowPanel.fits,
+    selectedCommunityId: selected.id,
+    expectedSelectedNodeCount: selected.count,
+    selectedNodeCount,
+    restoredNodeCount,
+    rebuiltIds: rebuilt.ids,
+    stableAcrossRebuild: JSON.stringify(first.ids) === JSON.stringify(rebuilt.ids),
+  }
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }

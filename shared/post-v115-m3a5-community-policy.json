@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-5",
+  "releaseCandidate": false,
+  "algorithm": {
+    "name": "graphology-louvain",
+    "version": "2.0.2",
+    "graphProjection": "undirected-simple-with-semantic-edge-count-weight",
+    "randomWalk": false,
+    "resolution": 1
+  },
+  "stability": {
+    "inputOrdering": "node-id-and-undirected-edge-key",
+    "communityId": "hash-of-sorted-member-node-ids",
+    "resultPersistence": "none-suggestion-only"
+  },
+  "requiredUi": ["community-count", "modularity", "stable-id", "summary", "filter", "return-to-all"],
+  "selectedNextStage": { "id": "M3A-6", "name": "dual-node-comparison", "reason": "The original M3A scope still requires dual-node comparison before visual M3B work." }
+}
