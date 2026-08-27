@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-B-video-frame-and-capture-tools",
+  "status": "passed",
+  "expected": {
+    "frameStepSeconds": 0.03333333333333333,
+    "screenshotMatchesSourcePixels": true,
+    "positionRestored": true,
+    "sourceUnchanged": true
+  },
+  "actual": {
+    "video1080": {
+      "openMs": 421,
+      "initial": {
+        "duration": 3.057,
+        "framePrevious": true,
+        "frameNext": true,
+        "captureEnabled": true,
+        "pageOverflow": 0
+      },
+      "nextMs": 120,
+      "previousMs": 109,
+      "nextDelta": 0.033332999999999835,
+      "previousDelta": 0.033333999999999975,
+      "screenshot": {
+        "width": 1920,
+        "height": 1080,
+        "bytes": 225432
+      },
+      "saveReport": {
+        "status": "saved_verified",
+        "outputDigest": true,
+        "outputBytes": 225432,
+        "width": 1920,
+        "height": 1080,
+        "mediaTime": 1.099999,
+        "sourceIdentityUnchanged": true,
+        "targetReopened": true
+      },
+      "overwriteRejected": true,
+      "rememberedTime": 1.2,
+      "restoredTime": 1.2,
+      "storagePrivacy": {
+        "count": 1,
+        "containsPath": false
+      },
+      "narrow": {
+        "pageOverflow": 0,
+        "toolbarOverflow": 0
+      }
+    },
+    "video4k": {
+      "openMs": 262,
+      "initial": {
+        "duration": 2.863,
+        "framePrevious": true,
+        "frameNext": true,
+        "captureEnabled": true,
+        "pageOverflow": 0
+      },
+      "nextMs": 336,
+      "previousMs": 337,
+      "nextDelta": 0.033332999999999835,
+      "previousDelta": 0.033333999999999975,
+      "screenshot": {
+        "width": 3840,
+        "height": 2160,
+        "bytes": 455066
+      },
+      "saveReport": {
+        "status": "saved_verified",
+        "outputDigest": true,
+        "outputBytes": 455066,
+        "width": 3840,
+        "height": 2160,
+        "mediaTime": 1.099999,
+        "sourceIdentityUnchanged": true,
+        "targetReopened": true
+      },
+      "overwriteRejected": true,
+      "rememberedTime": 1.2,
+      "restoredTime": 1.2,
+      "storagePrivacy": {
+        "count": 2,
+        "containsPath": false
+      },
+      "narrow": {
+        "pageOverflow": 0,
+        "toolbarOverflow": 0
+      }
+    },
+    "sourceUnchanged": true,
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}

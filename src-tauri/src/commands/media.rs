@@ -6,6 +6,8 @@ use crate::formats::raster_image::{
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use image::GenericImageView;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -19,6 +21,8 @@ const VIDEO_EXTENSIONS: &[&str] = &[
     "mp4", "webm", "ogv", "m4v", "mov", "mkv", "avi", "mpeg", "mpg",
 ];
 const DIRECT_VIDEO_EXTENSIONS: &[&str] = &["mp4", "webm", "ogv", "m4v"];
+const MAX_VIDEO_FRAME_PNG_BYTES: usize = 32 * 1024 * 1024;
+const MAX_VIDEO_FRAME_PIXELS: u64 = 50_000_000;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,6 +73,20 @@ pub struct ImageSavedCopyReport {
     pub orientation_normalized: bool,
     pub metadata_removed: bool,
     pub source_unchanged: bool,
+    pub target_reopened: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoFrameSavedReport {
+    pub status: String,
+    pub target_path: String,
+    pub output_digest: String,
+    pub output_bytes: u64,
+    pub width: u32,
+    pub height: u32,
+    pub media_time: f64,
+    pub source_identity_unchanged: bool,
     pub target_reopened: bool,
 }
 
@@ -168,6 +186,127 @@ pub async fn save_image_transform_copy(
         &expected_source_digest,
         &transform,
     )
+}
+
+#[tauri::command]
+pub async fn save_video_frame_png(
+    library_root: String,
+    source_path: String,
+    target_path: String,
+    expected_source_size: u64,
+    expected_source_modified: u64,
+    png_base64: String,
+    expected_width: u32,
+    expected_height: u32,
+    media_time: f64,
+) -> Result<VideoFrameSavedReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(source_path, VIDEO_EXTENSIONS)?;
+    let target_path = guard.resolve_file_for_write(target_path, &["png"])?;
+    save_video_frame_png_to_path(
+        &source_path,
+        &target_path,
+        expected_source_size,
+        expected_source_modified,
+        &png_base64,
+        expected_width,
+        expected_height,
+        media_time,
+    )
+}
+
+fn modified_seconds(metadata: &fs::Metadata) -> u64 {
+    metadata
+        .modified()
+        .ok()
+        .and_then(|value| value.duration_since(UNIX_EPOCH).ok())
+        .map(|value| value.as_secs())
+        .unwrap_or_default()
+}
+
+#[allow(clippy::too_many_arguments)]
+fn save_video_frame_png_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_source_size: u64,
+    expected_source_modified: u64,
+    png_base64: &str,
+    expected_width: u32,
+    expected_height: u32,
+    media_time: f64,
+) -> Result<VideoFrameSavedReport, String> {
+    if target_path.exists() {
+        return Err("目标文件已存在；视频截图不会覆盖现有文件".into());
+    }
+    if expected_width == 0
+        || expected_height == 0
+        || expected_width as u64 * expected_height as u64 > MAX_VIDEO_FRAME_PIXELS
+    {
+        return Err("视频截图尺寸无效或超过 5000 万像素安全上限".into());
+    }
+    if !media_time.is_finite() || media_time < 0.0 {
+        return Err("视频截图时间戳无效".into());
+    }
+    if png_base64.len() > MAX_VIDEO_FRAME_PNG_BYTES * 4 / 3 + 8 {
+        return Err("视频截图编码超过 32 MiB 安全上限".into());
+    }
+    let source_before = source_path
+        .metadata()
+        .map_err(|error| format!("读取源视频元数据失败: {error}"))?;
+    if source_before.len() != expected_source_size
+        || modified_seconds(&source_before) != expected_source_modified
+    {
+        return Err("源视频已被外部修改，请重新打开后再截图".into());
+    }
+    let png = STANDARD
+        .decode(png_base64.trim().as_bytes())
+        .map_err(|_| "视频截图不是有效的 Base64 PNG 数据".to_string())?;
+    if png.is_empty() || png.len() > MAX_VIDEO_FRAME_PNG_BYTES {
+        return Err("视频截图为空或超过 32 MiB 安全上限".into());
+    }
+    let image = image::load_from_memory_with_format(&png, image::ImageFormat::Png)
+        .map_err(|error| format!("视频截图 PNG 结构无效: {error}"))?;
+    if image.dimensions() != (expected_width, expected_height) {
+        return Err("视频截图实际尺寸与当前视频帧不一致".into());
+    }
+    let output_digest = format!("{:x}", Sha256::digest(&png));
+    write_new_bytes(target_path, &png)?;
+    let verification = (|| -> Result<(), String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("截图已创建，但无法复读: {error}"))?;
+        if saved != png || format!("{:x}", Sha256::digest(&saved)) != output_digest {
+            return Err("截图落盘字节与 Canvas 输出不一致".into());
+        }
+        let reopened = image::load_from_memory_with_format(&saved, image::ImageFormat::Png)
+            .map_err(|error| format!("截图 PNG 无法重新解码: {error}"))?;
+        if reopened.dimensions() != (expected_width, expected_height) {
+            return Err("截图复读尺寸与当前视频帧不一致".into());
+        }
+        let source_after = source_path
+            .metadata()
+            .map_err(|error| format!("截图后复核源视频失败: {error}"))?;
+        if source_after.len() != expected_source_size
+            || modified_seconds(&source_after) != expected_source_modified
+        {
+            return Err("源视频在截图另存期间发生变化".into());
+        }
+        Ok(())
+    })();
+    if let Err(error) = verification {
+        remove_created_image_if_exact(target_path, &png);
+        return Err(error);
+    }
+    Ok(VideoFrameSavedReport {
+        status: "saved_verified".into(),
+        target_path: target_path.to_string_lossy().to_string(),
+        output_digest,
+        output_bytes: png.len() as u64,
+        width: expected_width,
+        height: expected_height,
+        media_time,
+        source_identity_unchanged: true,
+        target_reopened: true,
+    })
 }
 
 fn extension_for(path: &Path) -> Result<String, String> {
@@ -292,12 +431,7 @@ fn inspect_resolved_media_file(
         .and_then(|value| value.to_str())
         .unwrap_or_default()
         .to_ascii_lowercase();
-    let modified = metadata
-        .modified()
-        .ok()
-        .and_then(|value| value.duration_since(UNIX_EPOCH).ok())
-        .map(|value| value.as_secs())
-        .unwrap_or_default();
+    let modified = modified_seconds(&metadata);
     let is_image = IMAGE_EXTENSIONS.contains(&extension.as_str());
     Ok(MediaInspection {
         path: path.to_string_lossy().to_string(),
@@ -316,8 +450,12 @@ fn inspect_resolved_media_file(
 
 #[cfg(test)]
 mod tests {
-    use super::{mime_type, playback_support, save_image_transform_copy_to_path};
+    use super::{
+        mime_type, modified_seconds, playback_support, save_image_transform_copy_to_path,
+        save_video_frame_png_to_path,
+    };
     use crate::formats::raster_image::RasterImageTransform;
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
     use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
     use sha2::{Digest, Sha256};
     use std::fs;
@@ -385,6 +523,59 @@ mod tests {
             &RasterImageTransform {
                 ..RasterImageTransform::default()
             },
+        )
+        .unwrap_err()
+        .contains("不会覆盖"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn saves_verified_video_frame_png_without_touching_source() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-video-frame-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let source_path = base.join("source.webm");
+        let target_path = base.join("frame.png");
+        let source = b"bounded-real-video-placeholder";
+        fs::write(&source_path, source).unwrap();
+        let source_metadata = source_path.metadata().unwrap();
+        let frame =
+            DynamicImage::ImageRgba8(ImageBuffer::from_pixel(4, 3, Rgba([12, 140, 220, 255])));
+        let mut png = Vec::new();
+        frame
+            .write_to(&mut Cursor::new(&mut png), ImageFormat::Png)
+            .unwrap();
+        let report = save_video_frame_png_to_path(
+            &source_path,
+            &target_path,
+            source_metadata.len(),
+            modified_seconds(&source_metadata),
+            &STANDARD.encode(&png),
+            4,
+            3,
+            1.25,
+        )
+        .unwrap();
+        assert_eq!(report.status, "saved_verified");
+        assert_eq!((report.width, report.height), (4, 3));
+        assert_eq!(report.media_time, 1.25);
+        assert_eq!(fs::read(&source_path).unwrap(), source);
+        assert_eq!(fs::read(&target_path).unwrap(), png);
+        assert!(save_video_frame_png_to_path(
+            &source_path,
+            &target_path,
+            source_metadata.len(),
+            modified_seconds(&source_metadata),
+            &STANDARD.encode(&png),
+            4,
+            3,
+            1.25,
         )
         .unwrap_err()
         .contains("不会覆盖"));

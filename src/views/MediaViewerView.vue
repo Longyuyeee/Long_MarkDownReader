@@ -25,6 +25,14 @@
 
       <div v-else-if="report?.kind === 'video'" class="media-actions" data-command-strip data-horizontal-wheel="always">
         <button :title="playing ? '暂停（空格）' : '播放（空格）'" @click="togglePlayback"><PauseIcon v-if="playing" /><PlayIcon v-else /></button>
+        <button data-testid="video-frame-previous" :title="`上一帧（按 ${frameStepRate} fps 步长）`" :disabled="frameStepPending" @click="stepFrame(-1)"><StepBackIcon /></button>
+        <button data-testid="video-frame-next" :title="`下一帧（按 ${frameStepRate} fps 步长）`" :disabled="frameStepPending" @click="stepFrame(1)"><StepForwardIcon /></button>
+        <label class="playback-rate frame-step-rate" title="逐帧时间基准">
+          <span>帧</span>
+          <select v-model.number="frameStepRate" aria-label="逐帧时间基准">
+            <option v-for="rate in frameStepRates" :key="rate" :value="rate">{{ rate }} fps</option>
+          </select>
+        </label>
         <button title="后退 10 秒（←）" @click="seekBy(-10)"><RewindIcon /></button>
         <button title="前进 10 秒（→）" @click="seekBy(10)"><FastForwardIcon /></button>
         <button title="循环播放" :class="{ active: loop }" @click="toggleLoop"><RepeatIcon /></button>
@@ -36,6 +44,12 @@
           </select>
         </label>
         <button v-if="pictureInPictureAvailable" title="画中画" @click="enterPictureInPicture"><PictureInPictureIcon /></button>
+        <button
+          data-testid="video-capture-frame"
+          :title="isExternal ? '外部视频截图请先加入资料库' : '将当前帧可靠另存为 PNG'"
+          :disabled="isExternal || capturingFrame || !mediaWidth || !mediaHeight"
+          @click="captureVideoFrame"
+        ><CameraIcon /></button>
         <button title="全屏播放（F）" @click="enterFullscreen"><MaximizeIcon /></button>
       </div>
 
@@ -71,6 +85,7 @@
           ref="imageRef"
           :src="mediaUrl"
           :alt="fileName"
+          crossorigin="anonymous"
           :style="imageStyle"
           draggable="false"
           @load="onImageLoaded"
@@ -81,13 +96,17 @@
         v-else-if="report?.kind === 'video' && mediaUrl"
         ref="videoRef"
         :src="mediaUrl"
+        crossorigin="anonymous"
         controls
         playsinline
         preload="metadata"
         @loadedmetadata="onVideoLoaded"
+        @durationchange="onVideoDurationChange"
         @play="syncVideoState"
         @pause="syncVideoState"
         @timeupdate="syncVideoState"
+        @seeked="syncVideoState"
+        @ended="onVideoEnded"
         @volumechange="syncVideoState"
         @ratechange="syncVideoState"
         @error="onMediaError"
@@ -191,15 +210,16 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'
 import {
   ArrowLeft as ArrowLeftIcon, ExternalLink as ExternalLinkIcon, FastForward as FastForwardIcon, FileWarning as FileWarningIcon,
-  Gauge as GaugeIcon, Grid3X3 as GridIcon, Image as ImageIcon, Maximize as MaximizeIcon,
+  Camera as CameraIcon, Gauge as GaugeIcon, Grid3X3 as GridIcon, Image as ImageIcon, Maximize as MaximizeIcon,
   FlipHorizontal2 as FlipHorizontalIcon, FlipVertical2 as FlipVerticalIcon,
   Pause as PauseIcon, PictureInPicture2 as PictureInPictureIcon, Play as PlayIcon,
   RefreshCw as RefreshCwIcon, Repeat2 as RepeatIcon, Rewind as RewindIcon,
   RotateCcw as RotateCcwIcon, RotateCw as RotateCwIcon, Save as SaveIcon, Scan as ScanIcon,
-  SlidersHorizontal as SlidersIcon, Video as VideoIcon, X as XIcon,
+  SkipBack as StepBackIcon, SkipForward as StepForwardIcon, SlidersHorizontal as SlidersIcon, Video as VideoIcon, X as XIcon,
   Volume2 as VolumeIcon, VolumeX as VolumeXIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon,
 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { openManagedFile } from '../services/fileNavigation'
@@ -245,9 +265,22 @@ interface ImageSavedCopyReport {
   targetReopened: boolean
 }
 
+interface VideoFrameSavedReport {
+  status: 'saved_verified'
+  targetPath: string
+  outputDigest: string
+  outputBytes: number
+  width: number
+  height: number
+  mediaTime: number
+  sourceIdentityUnchanged: boolean
+  targetReopened: boolean
+}
+
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
+const message = useMessage()
 const stageRef = ref<HTMLElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null)
@@ -268,6 +301,9 @@ const playing = ref(false)
 const muted = ref(false)
 const loop = ref(false)
 const currentTime = ref(0)
+const frameStepRate = ref(30)
+const frameStepPending = ref(false)
+const capturingFrame = ref(false)
 const editOpen = ref(false)
 const editLoading = ref(false)
 const saving = ref(false)
@@ -292,12 +328,16 @@ const contrast = ref(0)
 const saturation = ref(100)
 const isPanning = ref(false)
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2]
+const frameStepRates = [24, 25, 30, 50, 60]
 const editableImageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp']
 let loadToken = 0
 let fitFrame = 0
 let dimensionSyncing = false
 let stageResizeObserver: ResizeObserver | undefined
 let panOrigin: { pointerId: number; clientX: number; clientY: number; scrollLeft: number; scrollTop: number } | undefined
+let lastPersistedPlaybackSecond = -1
+let durationProbePending = false
+const MEDIA_POSITION_STORAGE_PREFIX = 'longedit.media-position.v1'
 
 const mediaPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
@@ -451,6 +491,44 @@ const onImageLoaded = () => {
   mediaHeight.value = imageRef.value?.naturalHeight || 0
   if (fitToWindow.value) fitImage()
 }
+
+const mediaPositionKey = (inspection: MediaInspection) => {
+  let hash = 2166136261
+  for (const character of inspection.path.toLocaleLowerCase()) {
+    hash ^= character.charCodeAt(0)
+    hash = Math.imul(hash, 16777619)
+  }
+  return `${MEDIA_POSITION_STORAGE_PREFIX}.${(hash >>> 0).toString(16)}`
+}
+const persistPlaybackPosition = (inspection = report.value, force = false) => {
+  const video = videoRef.value
+  if (!inspection || inspection.kind !== 'video' || !video || durationProbePending || !Number.isFinite(video.currentTime)) return
+  if (video.currentTime < 1) return
+  const wholeSecond = Math.floor(video.currentTime)
+  if (!force && wholeSecond === lastPersistedPlaybackSecond) return
+  lastPersistedPlaybackSecond = wholeSecond
+  localStorage.setItem(mediaPositionKey(inspection), JSON.stringify({
+    size: inspection.size,
+    modified: inspection.modified,
+    time: video.currentTime,
+  }))
+}
+const restorePlaybackPosition = () => {
+  const inspection = report.value
+  const video = videoRef.value
+  if (!inspection || inspection.kind !== 'video' || !video || !Number.isFinite(video.duration)) return
+  try {
+    const stored = JSON.parse(localStorage.getItem(mediaPositionKey(inspection)) || 'null') as { size?: number; modified?: number; time?: number } | null
+    if (!stored || stored.size !== inspection.size || stored.modified !== inspection.modified || !Number.isFinite(stored.time)) return
+    const remembered = Number(stored.time)
+    if (remembered < 1 || remembered >= video.duration - 0.5) return
+    video.currentTime = remembered
+    currentTime.value = remembered
+    playbackNotice.value = `已恢复上次播放位置 ${formatDuration(remembered)}`
+  } catch {
+    localStorage.removeItem(mediaPositionKey(inspection))
+  }
+}
 const onVideoLoaded = () => {
   mediaWidth.value = videoRef.value?.videoWidth || 0
   mediaHeight.value = videoRef.value?.videoHeight || 0
@@ -458,8 +536,24 @@ const onVideoLoaded = () => {
   applyPlaybackRate()
   if (videoRef.value) {
     videoRef.value.loop = loop.value
+    if (!Number.isFinite(videoRef.value.duration)) {
+      durationProbePending = true
+      videoRef.value.currentTime = Number.MAX_SAFE_INTEGER
+    } else {
+      restorePlaybackPosition()
+    }
     syncVideoState()
   }
+}
+const onVideoDurationChange = () => {
+  const video = videoRef.value
+  if (!video || !Number.isFinite(video.duration) || video.duration <= 0) return
+  duration.value = video.duration
+  if (durationProbePending) {
+    durationProbePending = false
+    video.currentTime = 0
+  } else if (video.currentTime > video.duration) video.currentTime = 0
+  if (video.currentTime < 1) restorePlaybackPosition()
 }
 const applyPlaybackRate = () => { if (videoRef.value) videoRef.value.playbackRate = playbackRate.value }
 const enterFullscreen = () => { void videoRef.value?.requestFullscreen() }
@@ -475,6 +569,28 @@ const seekBy = (seconds: number) => {
   if (!video || !Number.isFinite(video.duration)) return
   video.currentTime = Math.min(video.duration, Math.max(0, video.currentTime + seconds))
   syncVideoState()
+}
+const stepFrame = async (direction: -1 | 1) => {
+  const video = videoRef.value
+  if (!video || frameStepPending.value || !Number.isFinite(video.duration)) return
+  video.pause()
+  const target = Math.min(video.duration, Math.max(0, video.currentTime + direction / frameStepRate.value))
+  if (Math.abs(target - video.currentTime) < 0.0001) return
+  frameStepPending.value = true
+  try {
+    await new Promise<void>(resolve => {
+      const timeout = window.setTimeout(resolve, 1500)
+      video.addEventListener('seeked', () => {
+        window.clearTimeout(timeout)
+        resolve()
+      }, { once: true })
+      video.currentTime = target
+    })
+    syncVideoState()
+    playbackNotice.value = `已按 ${frameStepRate.value} fps 时间基准移动到 ${currentTime.value.toFixed(3)} 秒`
+  } finally {
+    frameStepPending.value = false
+  }
 }
 const toggleMute = () => {
   if (!videoRef.value) return
@@ -492,6 +608,71 @@ const syncVideoState = () => {
   muted.value = video.muted || video.volume === 0
   currentTime.value = Number.isFinite(video.currentTime) ? video.currentTime : 0
   playbackRate.value = video.playbackRate
+  persistPlaybackPosition(report.value, video.paused)
+}
+const onVideoEnded = () => {
+  syncVideoState()
+  if (report.value?.kind === 'video') localStorage.removeItem(mediaPositionKey(report.value))
+}
+const blobToBase64 = async (blob: Blob) => {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  let binary = ''
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000))
+  }
+  return btoa(binary)
+}
+const videoFrameDefaultPath = () => mediaPath.value.replace(
+  /(\.[^./\\]+)?$/,
+  `-frame-${currentTime.value.toFixed(3).replace('.', '-')}.png`,
+)
+const captureVideoFrame = async () => {
+  const video = videoRef.value
+  const inspection = report.value
+  if (!video || !inspection || inspection.kind !== 'video' || isExternal.value || capturingFrame.value) return
+  if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) {
+    playbackNotice.value = '当前帧尚未完成解码，请播放或移动到目标帧后重试。'
+    return
+  }
+  video.pause()
+  const targetPath = await save({
+    title: '另存当前视频帧',
+    defaultPath: videoFrameDefaultPath(),
+    filters: [{ name: 'PNG 图片', extensions: ['png'] }],
+  })
+  if (!targetPath) return
+  capturingFrame.value = true
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const context = canvas.getContext('2d', { alpha: false })
+    if (!context) throw new Error('当前 WebView 无法创建截图画布')
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+      value => value ? resolve(value) : reject(new Error('当前视频帧无法编码为 PNG')),
+      'image/png',
+    ))
+    const saved = await invoke<VideoFrameSavedReport>('save_video_frame_png', {
+      libraryRoot: store.libraryPath,
+      sourcePath: mediaPath.value,
+      targetPath,
+      expectedSourceSize: inspection.size,
+      expectedSourceModified: inspection.modified,
+      pngBase64: await blobToBase64(blob),
+      expectedWidth: video.videoWidth,
+      expectedHeight: video.videoHeight,
+      mediaTime: video.currentTime,
+    })
+    if (saved.status !== 'saved_verified' || !saved.sourceIdentityUnchanged || !saved.targetReopened) {
+      throw new Error('视频截图没有完成可靠保存与复读验证')
+    }
+    message.success(`当前帧已另存为 ${saved.width} × ${saved.height} PNG`)
+  } catch (error) {
+    playbackNotice.value = `截图失败：${String(error).replace(/^Error:\s*/, '')}`
+  } finally {
+    capturingFrame.value = false
+  }
 }
 const enterPictureInPicture = async () => {
   const pipDocument = document as Document & { pictureInPictureElement?: Element; exitPictureInPicture?: () => Promise<void> }
@@ -641,6 +822,7 @@ const openSavedCopy = () => {
 const load = async () => {
   if (!mediaPath.value) return
   const token = ++loadToken
+  persistPlaybackPosition(report.value, true)
   loading.value = true
   loadError.value = ''
   playbackNotice.value = ''
@@ -649,6 +831,10 @@ const load = async () => {
   duration.value = 0
   currentTime.value = 0
   playing.value = false
+  frameStepPending.value = false
+  capturingFrame.value = false
+  durationProbePending = false
+  lastPersistedPlaybackSecond = -1
   rotation.value = 0
   editOpen.value = false
   editIdentity.value = undefined
@@ -707,6 +893,8 @@ const handleKeydown = (event: KeyboardEvent) => {
     else return
   } else if (report.value?.kind === 'video') {
     if (event.key === ' ') void togglePlayback()
+    else if (event.key === ',') void stepFrame(-1)
+    else if (event.key === '.') void stepFrame(1)
     else if (event.key === 'ArrowLeft') seekBy(-10)
     else if (event.key === 'ArrowRight') seekBy(10)
     else if (event.key.toLowerCase() === 'm') toggleMute()
@@ -729,6 +917,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   loadToken += 1
+  persistPlaybackPosition(report.value, true)
   cancelAnimationFrame(fitFrame)
   stageResizeObserver?.disconnect()
   panOrigin = undefined
@@ -744,6 +933,7 @@ onBeforeUnmount(() => {
 .media-actions,.media-global-actions { display: flex; align-items: center; gap: 4px; }.media-actions { min-width: 0; overflow-x: auto; scrollbar-width: none; }.media-actions::-webkit-scrollbar { display: none; }.media-global-actions { justify-self: end; }
 button,.playback-rate { height: 30px; flex: none; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); }.media-toolbar button { width: 30px; padding: 0; cursor: pointer; }.media-toolbar button svg,.playback-rate svg { width: 15px; height: 15px; }.media-toolbar button:hover,.media-toolbar button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }.media-toolbar button:disabled { opacity: .4; cursor: default; }.media-toolbar .scale-value { width: 54px; font-size: var(--text-compact); font-variant-numeric: tabular-nums; }.toolbar-divider { width: 1px; height: 20px; margin: 0 3px; background: var(--workspace-border-color); }
 .playback-rate { gap: 5px; padding: 0 7px; }.playback-rate select { border: 0; outline: 0; color: inherit; background: transparent; font-size: var(--text-compact); }
+.frame-step-rate span { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 700; }.frame-step-rate select { max-width: 64px; }
 .media-content { min-width: 0; min-height: 0; flex: 1; display: flex; }
 .media-stage { min-width: 0; min-height: 0; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; overflow: auto; box-sizing: border-box; background: color-mix(in srgb, var(--theme-surface) 96%, #7f8a99); }.media-stage.checkerboard { background-color: var(--theme-surface); background-image: linear-gradient(45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(-45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(127,138,153,.13) 75%),linear-gradient(-45deg,transparent 75%,rgba(127,138,153,.13) 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; }.media-stage.video-stage { background: #101318; }.media-stage img { max-width: none; max-height: none; flex: none; object-fit: contain; transform-origin: center; image-rendering: auto; filter: drop-shadow(0 8px 22px rgba(0,0,0,.18)); }.media-stage video { width: min(100%, 1180px); max-height: 100%; border-radius: 6px; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
 .media-stage.image-stage { display: block; padding: 0; overscroll-behavior: contain; touch-action: none; cursor: grab; user-select: none; }.media-stage.image-stage.panning { cursor: grabbing; }.image-pan-surface { min-width: 100%; min-height: 100%; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }.image-pan-surface img { pointer-events: none; }
