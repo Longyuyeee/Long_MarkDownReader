@@ -19,6 +19,7 @@ const m3a6NodeComparison = readJson('shared/post-v115-m3a6-node-comparison-polic
 const m3a7NeighborPinningHistory = readJson('shared/post-v115-m3a7-neighbor-pinning-history-policy.json')
 const m3a8SemanticExplorationExit = readJson('shared/post-v115-m3a8-semantic-exploration-exit-policy.json')
 const m3b0ProfessionalVisualBaseline = readJson('shared/post-v115-m3b0-professional-visual-baseline-policy.json')
+const m3b1SemanticZoomCommunityOverview = readJson('shared/post-v115-m3b1-semantic-zoom-community-overview-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -57,7 +58,8 @@ const checks = {
     && m3a6NodeComparison.selectedNextStage.id === m3a7NeighborPinningHistory.stage
     && m3a7NeighborPinningHistory.selectedNextStage.id === m3a8SemanticExplorationExit.stage
     && m3a8SemanticExplorationExit.selectedNextStage.id === m3b0ProfessionalVisualBaseline.stage
-    && policy.currentStage === `${m3b0ProfessionalVisualBaseline.selectedNextStage.id}-${m3b0ProfessionalVisualBaseline.selectedNextStage.name}`,
+    && m3b0ProfessionalVisualBaseline.selectedNextStage.id === m3b1SemanticZoomCommunityOverview.stage
+    && policy.currentStage === `${m3b1SemanticZoomCommunityOverview.selectedNextStage.id}-${m3b1SemanticZoomCommunityOverview.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

@@ -6,6 +6,7 @@ const endpoint = process.env.LONGEDIT_CDP_ENDPOINT
 const output = path.resolve(process.env.LONGEDIT_M3A1_OUTPUT)
 const library = path.resolve(process.env.LONGEDIT_M3A1_LIBRARY)
 const stage = process.env.LONGEDIT_M3_STAGE || 'M3A1'
+const theme = process.env.LONGEDIT_M3_THEME || 'dark'
 if (!endpoint) throw new Error(`${stage} capture environment is incomplete`)
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -64,7 +65,7 @@ await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -471,17 +472,85 @@ if (stage === 'M3B0') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 }
 
+let semanticZoom = null
+if (stage === 'M3B1') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
+  const wheel = async deltaY => {
+    const rect = await evaluate(`(()=>{const rect=document.querySelector('[data-testid="graph-container"] canvas')?.getBoundingClientRect();return rect?{x:rect.left+rect.width/2,y:rect.top+rect.height/2}:null})()`)
+    if (!rect) throw new Error('M3B-1 graph canvas missing')
+    await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: rect.x, y: rect.y, deltaX: 0, deltaY })
+    await delay(80)
+  }
+  const reachLevel = async targetLevel => {
+    for (let attempt = 0; attempt < 24; attempt += 1) {
+      const current = await readLevel()
+      if (current === targetLevel) return
+      await wheel(targetLevel === 'near' ? -120 : 120)
+    }
+    throw new Error(`M3B-1 could not reach ${targetLevel}`)
+  }
+  const viewportSnapshot = async (width, height, file) => {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(180)
+    await reachLevel('far')
+    await waitFor(`document.querySelector('[data-testid="graph-community-overview"]')!==null`, `${width}x${height} far overview`)
+    await waitFor(`document.querySelector('[data-testid="graph-container"] canvas')?.dataset.communityOverviewInBounds==='true'`, `${width}x${height} overview bounds`)
+    const result = await evaluate(`(()=>({width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,overviewVisible:Boolean(document.querySelector('[data-testid="graph-community-overview"]')),overviewInBounds:document.querySelector('[data-testid="graph-container"] canvas')?.dataset.communityOverviewInBounds==='true',level:document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''}))()`)
+    await capture(file)
+    return result
+  }
+
+  await waitFor(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level==='near'`, 'M3B-1 near level')
+  const near = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`) }
+  await capture(`${theme}-near-1280.jpg`)
+  await reachLevel('middle')
+  const middle = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`) }
+  await capture(`${theme}-middle-1280.jpg`)
+  await reachLevel('far')
+  await waitFor(`document.querySelectorAll('[data-testid="graph-community-overview-entry"]').length===5`, 'M3B-1 five community overview entries')
+  const far = { level: await readLevel(), zoomPercent: await evaluate(`Number(document.querySelector('.graph-stats')?.textContent?.match(/(\\d+)%/)?.[1]||0)`) }
+  const overviewEntryCount = await evaluate(`document.querySelectorAll('[data-testid="graph-community-overview-entry"]').length`)
+  await capture(`${theme}-far-1280.jpg`)
+
+  const enteredCommunityNodeCount = await evaluate(`(()=>{const entry=document.querySelector('[data-testid="graph-community-overview-entry"]');if(!(entry instanceof HTMLButtonElement))return 0;const count=Number(entry.dataset.nodeCount||0);entry.click();return count})()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'M3B-1 entered community')
+  await waitFor(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level==='near'`, 'M3B-1 entered community near level')
+  await capture(`${theme}-community-entered-1280.jpg`)
+  await evaluate(`document.querySelector('[data-testid="graph-community-focus-return"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')===null`, 'M3B-1 community return')
+  await reachLevel('far')
+  await waitFor(`document.querySelector('[data-testid="graph-community-overview"]')!==null`, 'M3B-1 overview return')
+  const returnedToOverview = true
+  const viewports = [
+    await viewportSnapshot(1280, 800, `${theme}-far-returned-1280.jpg`),
+    await viewportSnapshot(1000, 700, `${theme}-far-1000.jpg`),
+    await viewportSnapshot(720, 680, `${theme}-far-720.jpg`),
+  ]
+  semanticZoom = {
+    levels: [near.level, middle.level, far.level],
+    zoomPercents: { near: near.zoomPercent, middle: middle.zoomPercent, far: far.zoomPercent },
+    communityCount: 5,
+    overviewEntryCount,
+    enteredCommunityNodeCount,
+    returnedToOverview,
+    viewports,
+    motionPreference: 'reduced',
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, stage === 'M3B1' ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

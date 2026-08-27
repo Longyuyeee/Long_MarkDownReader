@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-1",
+  "releaseCandidate": false,
+  "scope": "density-aware-semantic-zoom-and-enterable-community-overview",
+  "levels": {
+    "far": "community summaries and aggregated inter-community connections",
+    "middle": "all node identities with titles limited to deterministic key nodes and active focus",
+    "near": "full node titles and semantic glyphs"
+  },
+  "density": {
+    "referenceNodeCount": 80,
+    "pressure": "max(1,sqrt(visibleNodeCount/80))",
+    "effectiveZoom": "zoom/densityPressure",
+    "farBelow": 0.42,
+    "nearAtOrAbove": 0.85,
+    "middleKeyNodeMinimum": 8,
+    "middleKeyNodeMaximum": 28
+  },
+  "communityOverview": {
+    "identity": "existing-stable-louvain-community-id",
+    "position": "member-centroid-with-deterministic-overlap-separation",
+    "color": "dominant-object-semantic-color",
+    "connections": "aggregated-cross-community-edge-count",
+    "entry": "canvas-hit-or-keyboard-accessible-summary-button",
+    "sourcePersistence": "none"
+  },
+  "preservedBoundaries": [
+    "M3A exploration filters remain the source graph boundary",
+    "mind-map retains its existing hierarchy rendering",
+    "exports retain real visible nodes and edges rather than visual community proxies",
+    "path motion minimap cluster lens and M3C performance remain deferred"
+  ],
+  "requiredThemes": ["dark", "white", "contrast"],
+  "requiredViewports": ["1280x800", "1000x700", "720x680"],
+  "motionPreference": "reduced",
+  "selectedNextStage": {
+    "id": "M3B-2",
+    "name": "community-contours-and-semantic-hierarchy",
+    "reason": "Semantic zoom now exposes stable communities at far range; the next smallest visual increment is to preserve that thematic identity around member nodes at middle and near range before adding path motion or navigation chrome."
+  }
+}

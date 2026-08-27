@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "stage": "M3A-8",
+  "stage": "M3B-1",
   "actual": {
-    "theme": "dark",
+    "theme": "white",
     "wide": {
       "legendVisible": true,
       "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
@@ -114,52 +114,51 @@
     "nodeComparison": null,
     "selectionHistory": null,
     "neighborPinning": null,
-    "combinedFlow": {
-      "objectTypeCount": 11,
-      "relationTypeCount": 6,
-      "neighbor": {
-        "oneHop": "3 / 17 节点 3 连接",
-        "threeHop": "8 / 17 节点 9 连接"
-      },
-      "path": {
-        "scope": "path",
-        "graphShape": "4 / 17 节点 3 连接",
-        "edgeCount": 3,
-        "evidenceEdgeCount": 3
-      },
-      "community": {
-        "scope": "community",
-        "expectedNodeCount": 4,
-        "nodeCount": 4,
-        "graphShape": "4 / 17 节点 3 连接"
-      },
-      "comparison": {
-        "scope": "comparison",
-        "commonCount": 1
-      },
-      "history": {
-        "scope": "history",
-        "restoredSelectedCount": 1
-      },
-      "pinning": {
-        "railVisible": true,
-        "nodeCount": 6,
-        "edgeCount": 7,
-        "unpinned": true
-      },
-      "scopeSequence": [
-        "neighbor",
-        "path",
-        "community",
-        "comparison",
-        "history",
-        "global"
-      ],
-      "wideFits": true,
-      "narrowFits": true
-    },
+    "combinedFlow": null,
     "visualBaseline": null,
-    "semanticZoom": null,
+    "semanticZoom": {
+      "levels": [
+        "near",
+        "middle",
+        "far"
+      ],
+      "zoomPercents": {
+        "near": 100,
+        "middle": 81,
+        "far": 39
+      },
+      "communityCount": 5,
+      "overviewEntryCount": 5,
+      "enteredCommunityNodeCount": 4,
+      "returnedToOverview": true,
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "overviewVisible": true,
+          "overviewInBounds": true,
+          "level": "far"
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "overviewVisible": true,
+          "overviewInBounds": true,
+          "level": "far"
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "overviewVisible": true,
+          "overviewInBounds": true,
+          "level": "far"
+        }
+      ],
+      "motionPreference": "reduced"
+    },
     "returnedToLibrary": true,
     "runtimeErrors": 0,
     "sourceFilesUnchanged": true,

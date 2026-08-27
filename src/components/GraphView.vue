@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -213,12 +213,21 @@
       <button class="graph-comparison-close" type="button" aria-label="关闭节点比较" @click="closeComparisonPanel">×</button>
     </section>
     <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" />
+    <nav v-if="showCommunityOverview" class="graph-community-overview-nav" data-testid="graph-community-overview" :data-community-count="communityResult.communities.length" aria-label="远景社区入口">
+      <span>远景社区</span>
+      <button v-for="community in communityResult.communities" :key="community.id" type="button" data-testid="graph-community-overview-entry" :data-community-id="community.id" :data-node-count="community.nodeCount" @click="selectCommunity(community.id)">
+        {{ community.label }} · {{ community.nodeCount }}
+      </button>
+    </nav>
     <canvas
       ref="canvasRef"
       tabindex="0"
       aria-label="产品知识图谱画布"
       :data-layout-mode="graphLayoutMode"
       :data-selected-count="selectedNodeIds.length"
+      :data-semantic-zoom-level="semanticZoomLevel"
+      :data-community-summary-count="showCommunityOverview ? communityResult.communities.length : 0"
+      :data-community-overview-in-bounds="communityOverviewInBounds"
       @mousedown="startDrag"
       @mousemove="onDrag"
       @mouseup="endDrag"
@@ -316,6 +325,10 @@
       <div class="stat-divider"></div>
       <div class="stat-item">
         {{ selectedNodeIds.length }} 个已选
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item semantic-zoom-stat" data-testid="graph-semantic-zoom-status" :data-level="semanticZoomLevel">
+        {{ semanticZoomLabel }}<template v-if="showCommunityOverview"> · {{ communityResult.communities.length }} 社区</template>
       </div>
     </WorkspaceStatusBar>
     <!-- 节点悬浮提示 -->
@@ -420,6 +433,8 @@ import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
 import { compareGraphNodes } from '../utils/graphComparison'
+import { buildGraphCommunityOverview, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
+import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
@@ -557,6 +572,19 @@ const visibleEdges = computed(() => {
   return remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target) && (!pathEdges || pathEdges.has(edge)))
 })
 const visibleGraph = computed<GraphData>(() => ({ nodes: visibleNodes.value, edges: visibleEdges.value }))
+const visibleGraphSignature = computed(() => visibleNodes.value.map(node => node.id).join('\u001f'))
+const semanticZoomState = computed(() => viewMode.value === 'mindmap'
+  ? { level: 'near' as const, densityPressure: 1, effectiveZoom: zoomLevel.value }
+  : resolveGraphSemanticZoom(zoomLevel.value, visibleNodes.value.length))
+const semanticZoomLevel = computed(() => semanticZoomState.value.level)
+const semanticZoomLabel = computed(() => ({ far: '远景', middle: '中景', near: '近景' })[semanticZoomLevel.value])
+const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
+  && viewMode.value === 'network'
+  && !neighborFocusRootId.value
+  && !activeCommunityId.value
+  && !activeShortestPath.value
+  && !comparisonOpen.value)
+const semanticKeyNodeIds = computed(() => new Set(selectSemanticZoomKeyNodes(visibleGraph.value).map(node => node.id)))
 const pathCandidates = computed(() => [...remediationGraph.value.nodes].sort((a, b) => a.title.localeCompare(b.title, 'zh-CN') || a.id.localeCompare(b.id)))
 const shortestPathChain = computed(() => {
   const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node.title]))
@@ -724,7 +752,12 @@ let dragSnapshot: LayoutSnapshot | null = null
 let selectionBox: { startX: number; startY: number; x: number; y: number } | null = null
 let frameCount = 0
 let layoutSettled = false
+let communityOverviewCache: GraphCommunityOverview | null = null
+let communityOverviewCacheKey = ''
+let communityOverviewFrame = -1
 const hoveredNode = ref<GraphNode | null>(null)
+const hoveredCommunityId = ref('')
+const communityOverviewInBounds = ref(true)
 const tooltipX = ref(0)
 const tooltipY = ref(0)
 let mouseX = 0, mouseY = 0
@@ -1426,6 +1459,7 @@ const resetLayout = () => {
 }
 
 const findNodeAt = (mx: number, my: number): GraphNode | null => {
+  if (showCommunityOverview.value) return null
   // 缩放时调整检测范围 - 缩小时扩大点击区域
   const detectionRadius = 100 / Math.max(0.5, zoom)
   for (const n of visibleNodes.value) {
@@ -1439,6 +1473,42 @@ const findNodeAt = (mx: number, my: number): GraphNode | null => {
     if (dx * dx + dy * dy < r * r + detectionRadius) return n
   }
   return null
+}
+
+const currentCommunityOverview = () => {
+  const cacheKey = `${zoom.toFixed(3)}\u001e${visibleGraphSignature.value}`
+  const layoutRefresh = communityOverviewFrame !== frameCount && (layoutSettled || frameCount % 8 === 0)
+  if (!communityOverviewCache || communityOverviewCacheKey !== cacheKey || layoutRefresh) {
+    communityOverviewCache = buildGraphCommunityOverview(visibleGraph.value, communityResult.value.communities, zoom)
+    communityOverviewCacheKey = cacheKey
+    communityOverviewFrame = frameCount
+  }
+  return communityOverviewCache
+}
+const findCommunityAt = (mx: number, my: number) => {
+  if (!showCommunityOverview.value) return null
+  return currentCommunityOverview().nodes.find(node => Math.hypot(mx - node.x, my - node.y) <= node.radius) || null
+}
+
+const frameCommunityOverview = () => {
+  const canvas = canvasRef.value
+  if (!canvas || !showCommunityOverview.value) return
+  const overview = currentCommunityOverview()
+  if (!overview.nodes.length) return
+  const canvasRect = canvas.getBoundingClientRect()
+  const legendRect = containerRef.value?.querySelector('[data-testid="graph-semantic-legend"]')?.getBoundingClientRect()
+  const detailRect = containerRef.value?.querySelector('[data-testid="graph-selected-node"]')?.getBoundingClientRect()
+  const safeLeft = legendRect ? Math.min(canvas.clientWidth * 0.46, legendRect.right - canvasRect.left + 12) : 16
+  const safeRight = detailRect && canvas.clientWidth > 900 ? detailRect.left - canvasRect.left - 12 : canvas.clientWidth - 16
+  const safeTop = 154
+  const safeBottom = canvas.clientHeight - 108
+  const minX = Math.min(...overview.nodes.map(node => node.x - node.radius))
+  const maxX = Math.max(...overview.nodes.map(node => node.x + node.radius))
+  const minY = Math.min(...overview.nodes.map(node => node.y - node.radius))
+  const maxY = Math.max(...overview.nodes.map(node => node.y + node.radius))
+  viewX = safeLeft + Math.max(0, safeRight - safeLeft - (maxX - minX) * zoom) / 2 - minX * zoom
+  viewY = safeTop + Math.max(0, safeBottom - safeTop - (maxY - minY) * zoom) / 2 - minY * zoom
+  communityOverviewCacheKey = ''
 }
 
 const draw = () => {
@@ -1477,8 +1547,52 @@ const draw = () => {
   const nodeMap = new Map<string, GraphNode>()
   visibleNodes.value.forEach(n => nodeMap.set(n.id, n))
 
+  if (showCommunityOverview.value) {
+    const overview = currentCommunityOverview()
+    const overviewNodes = new Map(overview.nodes.map(node => [node.id, node]))
+    for (const edge of overview.edges) {
+      const source = overviewNodes.get(edge.source)
+      const target = overviewNodes.get(edge.target)
+      if (!source || !target) continue
+      ctx.beginPath()
+      ctx.moveTo(source.x, source.y)
+      ctx.lineTo(target.x, target.y)
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.32)' : 'rgba(15,23,42,0.28)'
+      ctx.lineWidth = Math.min(5, 1.5 + Math.log2(edge.edgeCount + 1)) / zoom
+      ctx.stroke()
+    }
+    for (const community of overview.nodes) {
+      const color = graphSemanticColor(community.semanticObjectType, isDark)
+      const hoveredCommunity = hoveredCommunityId.value === community.id
+      ctx.beginPath()
+      ctx.arc(community.x, community.y, community.radius, 0, Math.PI * 2)
+      ctx.fillStyle = `${color}${isDark ? '2e' : '24'}`
+      ctx.fill()
+      ctx.strokeStyle = hoveredCommunity ? activeTone.ui.primary : color
+      ctx.lineWidth = (hoveredCommunity ? 4 : 2.5) / zoom
+      ctx.stroke()
+      ctx.fillStyle = activeTone.ui.text
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.font = `700 ${13 / zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      const label = community.label.length > 18 ? `${community.label.slice(0, 18)}…` : community.label
+      ctx.fillText(label, community.x, community.y - 6 / zoom, community.radius * 1.65)
+      ctx.font = `600 ${11 / zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,.74)' : 'rgba(15,23,42,.68)'
+      ctx.fillText(`${community.nodeCount} 节点 · ${community.internalEdgeCount} 内部联系`, community.x, community.y + 13 / zoom, community.radius * 1.72)
+    }
+    communityOverviewInBounds.value = overview.nodes.every(community => {
+      const screenX = community.x * zoom + viewX
+      const screenY = community.y * zoom + viewY
+      const screenRadius = community.radius * zoom
+      return screenX - screenRadius >= 0 && screenX + screenRadius <= width && screenY - screenRadius >= 0 && screenY + screenRadius <= height
+    })
+  } else {
+    communityOverviewInBounds.value = true
+  }
+
   // 边 - 渐变效果（小缩放级别时跳过以优化性能）
-  if (zoom > 0.3) {
+  if (!showCommunityOverview.value) {
     for (const e of visibleEdges.value) {
       const s = nodeMap.get(e.source)
       const t = nodeMap.get(e.target)
@@ -1534,7 +1648,7 @@ const draw = () => {
   }
 
   // 节点 - 光晕效果
-  for (const n of visibleNodes.value) {
+  for (const n of showCommunityOverview.value ? [] : visibleNodes.value) {
     const r = n.size * 0.6
     const isHovered = hovered === n
     const isSelected = selectedNodeIds.value.includes(n.id)
@@ -1616,7 +1730,7 @@ const draw = () => {
     ctx.lineWidth = (isHovered || isSelected ? 3 : 1) / zoom
     ctx.stroke()
 
-    if (zoom > 0.55 && r >= 7) {
+    if (semanticZoomLevel.value !== 'far' && zoom > 0.4 && r >= 7) {
       ctx.fillStyle = isDark ? '#111827' : '#ffffff'
       ctx.font = `800 ${Math.max(7, r * 0.72)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
       ctx.textAlign = 'center'
@@ -1625,7 +1739,7 @@ const draw = () => {
     }
 
     // 标签 - 根据缩放级别动态显示
-    if (zoom > 0.4) {
+    if (semanticZoomLevel.value === 'near' || (semanticZoomLevel.value === 'middle' && (semanticKeyNodeIds.value.has(n.id) || isSelected || isHovered))) {
       ctx.fillStyle = isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
       ctx.font = `600 ${Math.max(11, 13 / zoom)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
       ctx.textAlign = 'center'
@@ -1661,6 +1775,8 @@ const draw = () => {
   const worldX = (mouseX - canvasRect.left - viewX) / zoom
   const worldY = (mouseY - canvasRect.top - viewY) / zoom
   const node = findNodeAt(worldX, worldY)
+  const community = findCommunityAt(worldX, worldY)
+  hoveredCommunityId.value = community?.id || ''
   if (node !== hoveredNode.value) {
     hoveredNode.value = node
     if (node) {
@@ -1684,6 +1800,11 @@ const startDrag = (e: MouseEvent) => {
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
   const my = (e.clientY - rect.top - viewY) / zoom
+  const community = findCommunityAt(mx, my)
+  if (community) {
+    selectCommunity(community.id)
+    return
+  }
   const node = findNodeAt(mx, my)
   if (node) {
     if (e.ctrlKey || e.metaKey) toggleSelection(node)
@@ -1901,14 +2022,20 @@ watch(filters, () => {
 watch(communityResult, result => {
   if (activeCommunityId.value && !result.communities.some(community => community.id === activeCommunityId.value)) activeCommunityId.value = ''
 })
+watch(showCommunityOverview, visible => { if (visible) requestAnimationFrame(frameCommunityOverview) })
 
 let paused = false
+let graphResizeObserver: ResizeObserver | null = null
 const handleVisibility = () => {
   if (document.hidden) { paused = true; cancelAnimationFrame(animationId) }
   else if (paused) { paused = false; layoutSettled = false; frameCount = 40; loop() }
 }
-onMounted(() => { loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('keydown', handleGraphKeydown) })
-onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('keydown', handleGraphKeydown) })
+onMounted(() => {
+  loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('keydown', handleGraphKeydown)
+  graphResizeObserver = new ResizeObserver(() => { if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview) })
+  if (containerRef.value) graphResizeObserver.observe(containerRef.value)
+})
+onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>
@@ -2139,6 +2266,32 @@ canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--them
 .graph-canvas-theme-colorful canvas { background-color: color-mix(in srgb, var(--theme-bg) 95%, #dcecff); }
 .graph-canvas-theme-focus canvas { background-color: var(--theme-bg); background-image: none; }
 
+.graph-community-overview-nav {
+  position: absolute;
+  z-index: 8;
+  right: 16px;
+  bottom: 58px;
+  left: 16px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  overflow-x: auto;
+  box-sizing: border-box;
+  border: 1px solid var(--workspace-border-color);
+  border-radius: 7px;
+  color: var(--theme-text);
+  background: color-mix(in srgb, var(--theme-card) 94%, transparent);
+  box-shadow: var(--workspace-shadow-sm);
+  backdrop-filter: blur(14px);
+  scrollbar-width: none;
+}
+.graph-community-overview-nav::-webkit-scrollbar { display: none; }
+.graph-community-overview-nav > span { position: sticky; left: 0; flex: none; padding: 0 5px; color: var(--theme-text-secondary); background: var(--theme-card); font-size: 10px; font-weight: 750; }
+.graph-community-overview-nav button { flex: none; min-height: 24px; max-width: 220px; overflow: hidden; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.3); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; font-weight: 650; }
+.graph-community-overview-nav button:hover,.graph-community-overview-nav button:focus-visible { border-color: var(--theme-primary); color: var(--theme-primary); outline: 2px solid color-mix(in srgb,var(--theme-primary) 34%,transparent); outline-offset: 1px; }
+
 .graph-stats {
   position: absolute;
   bottom: 20px;
@@ -2157,9 +2310,16 @@ canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--them
   border: 1px solid var(--workspace-border-color);
   pointer-events: none;
   animation: slideUp 0.6s var(--ease-premium);
+  max-width: calc(100% - 32px);
+  overflow-x: auto;
+  box-sizing: border-box;
+  white-space: nowrap;
+  scrollbar-width: none;
 }
+.graph-stats::-webkit-scrollbar { display: none; }
 
 .stat-item {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2170,6 +2330,8 @@ canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--them
 .stat-item svg {
   opacity: 0.6;
 }
+
+.semantic-zoom-stat { color: var(--theme-primary); opacity: 1; }
 
 .stat-divider {
   width: 1px;
