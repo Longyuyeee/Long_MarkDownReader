@@ -52,6 +52,18 @@ Long编辑 v1.0.15 支持 Windows 10/11 x64。
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 继续沿用这一安全更新链。
 
+## 1.0.16 开发中（尚未发布）
+
+`main` 正在开发下一补丁，运行时和当前公开下载仍为 v1.0.15。M1 高频格式深化与 M2 工作台 2.0 已完成真实桌面收口：
+
+- XLSX 的数据验证、条件格式和 Table 进入统一对象草稿；DOCX/PPTX 深化已有段落样式与受限对象事务，仍不宣称完整 Office 等价编辑。
+- ODS 可编辑简单文本、有限数值和文件已有命名样式，并可靠另存新副本；公式、自定义样式与 ODP 编辑继续关闭。
+- 大 JSON 渐进只读支持 512 KiB 分段导航与流式全文搜索，小 JSON 保持完整源码和树形编辑。
+- 资料库视频支持前后逐帧、原尺寸 PNG 截图、播放位置记忆，以及同目录同名 VTT/SRT 字幕选择与关闭。
+- 工作台围绕“继续工作、今天要做、需要处理”收敛，并通过真实待办写回、撤销、原文定位和千文件性能验收。
+
+本开发线仍为 `releaseCandidate=false`，没有 v1.0.16 安装包或 Release。完整已验证范围和延后边界见 [v1.0.16 开发版说明草案](docs/RELEASE_NOTES_v1.0.16_DRAFT.md) 与 [M1 总退出审计](docs/Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md)。
+
 ## v1.0.15
 
 这一补丁围绕专业桌面交互一致性和更新可靠性收口：
@@ -168,7 +180,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | 知识组织 | 引用、反向链接、知识图谱、思维导图、JSON Canvas、关系定位 |
 | 表格数据 | CSV/TSV/Table 网格与看板，XLSX/ODS 工作区和有界高级对象支持 |
 | 文档与演示 | PDF 阅读与页面工具，DOCX/PPTX 阅读、受控草稿和可靠副本 |
-| 图形与媒体 | Mermaid、Draw.io、SVG、图片基础编辑器和按需流式视频播放器 |
+| 图形与媒体 | Mermaid、Draw.io、SVG、图片基础编辑器，以及支持逐帧、截图、位置记忆和同名字幕的流式视频播放器 |
 | 外部打开 | 支持格式使用独立顶层窗口，不占用主资料库窗口或增加内部标签 |
 | 个性化 | 核心主题、场景预设、外观组合、文件颜色与图标标记 |
 
@@ -181,7 +193,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | 格式族 | 主要能力 | 明确边界 |
 | --- | --- | --- |
 | Markdown / TXT / LOG | 所见即所得或源码、搜索、撤销与显式保存 | LOG 大文件优先使用专业查看模式 |
-| JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存 | HTML 预览经过净化和 sandbox |
+| JSON / YAML / XML / TOML / 代码 | 语法高亮、结构查看、诊断、补全与保存；大 JSON 渐进只读、分段导航和流式搜索 | HTML 预览经过净化和 sandbox；大 JSON 不构建全文树形也不写回 |
 | CSV / TSV / Table | 网格、冻结列、看板、转换、导入导出 | 不承诺复杂 Excel 对象语义 |
 | XLSX | 工作表、公式、样式、图表、筛选与有界类型编辑 | 仅正式注册 `.xlsx`；宏不执行，部分高级结构只读或保存可靠副本 |
 | DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Microsoft Office |
@@ -189,8 +201,8 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
 | OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 查看支持光标锚定滚轮缩放、拖拽平移和双击 100%/适应窗口；PNG/JPEG/WebP/BMP 可旋转、翻转、精确裁剪、缩放、调整亮度/对比度/饱和度、转换并另存副本；GIF/ICO/AVIF 与外部图片只读 |
-| 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器 |
-| ODS / ODP / 旧 Office / WPS | ODS/ODP 有界预览，旧 Office 转换，WPS 原生格式交给外部程序 | ODT 尚未正式注册；`.wps/.et/.dps` 不在软件内编辑 |
+| 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口；资料库视频支持逐帧、PNG 截图、位置记忆和同名 VTT/SRT 字幕 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器；不提供嵌入字幕拆封、字幕编辑或转码 |
+| ODS / ODP / 旧 Office / WPS | ODS 支持简单值和已有命名样式的可靠副本，ODP 有界预览；旧 Office 转换，WPS 原生格式交给外部程序 | ODS 公式与自定义样式、ODP 编辑保持关闭；`.wps/.et/.dps` 不在软件内编辑 |
 
 格式事实源位于 [`shared/file-formats.json`](shared/file-formats.json)，发布边界位于 [`shared/release-capability-matrix.json`](shared/release-capability-matrix.json)。
 

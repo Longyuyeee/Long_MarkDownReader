@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1-total-exit-criteria-audit",
+  "status": "passed",
+  "baselineCommit": "784c0ecbb101d7d2f4f20e18f49c2a292a9a8cdf",
+  "expected": {
+    "tracks": ["M1A", "M1B", "M1C", "M1D"],
+    "freshDesktopRegressions": 0,
+    "sourceSafetyFailures": 0,
+    "runtimeErrors": 0,
+    "externalDocxStablePairs": 9,
+    "documentationDriftClosed": true
+  },
+  "actual": {
+    "xlsx": {
+      "objectDraftUndoRedo": true,
+      "singleExplicitSave": true,
+      "repositoryFixtureUnchanged": true,
+      "runtimeErrors": 0
+    },
+    "pptx": {
+      "sourceUnchangedBeforeSave": true,
+      "sameRouteLeaveProtection": true,
+      "savedReopenText": "LongEdit M1B1C desktop verified",
+      "responsive960": true,
+      "runtimeErrors": 0
+    },
+    "docx": {
+      "verifiedProducers": 3,
+      "producerSourcePairs": 9,
+      "stablePairs": 9,
+      "longEditReverseReads": 9,
+      "runtimeErrors": 0
+    },
+    "ods": {
+      "sourceUnchanged": true,
+      "savedNamedStyle": "Good",
+      "libreOfficeFill": "FFCCFFCC",
+      "libreOfficeFont": "FF006600",
+      "runtimeErrors": 0
+    },
+    "largeJson": {
+      "json10OpenMs": 265,
+      "json10TailSearchMs": 917,
+      "json50OpenMs": 203,
+      "json50TailSearchMs": 4171,
+      "sourceUnchanged": true,
+      "runtimeErrors": 0
+    },
+    "videoFrames": {
+      "video1080OpenMs": 327,
+      "video4kOpenMs": 275,
+      "frameStepSeconds": 0.033333,
+      "screenshots": ["1920x1080", "3840x2160"],
+      "positionRestored": true,
+      "sourceUnchanged": true,
+      "runtimeErrors": 0
+    },
+    "videoSubtitles": {
+      "discoveredTracks": 2,
+      "vttActiveCue": "VTT first cue",
+      "srtActiveCue": "SRT second cue",
+      "offStateDisablesTracks": true,
+      "malformedVttRejected": true,
+      "sourceUnchanged": true,
+      "runtimeErrors": 0
+    },
+    "testInfrastructureCorrection": {
+      "before": "PPTX audit rebuilt a normal desktop binary, so the following ODS SkipBuild audit could not find a CDP target within 60 seconds.",
+      "after": "PPTX audit accepts SkipBuild and injects tauri.e2e.conf.json whenever it builds; ODS then passed Tauri and LibreOffice verification."
+    },
+    "productionPreflightCorrection": {
+      "beforeVersion": "1.0.0",
+      "afterVersion": "1.0.15",
+      "routeAssetFamilies": "11/11",
+      "jsAssetCount": 117
+    },
+    "remainingReleaseGate": {
+      "gate": "R5E-runtime-route-smoke",
+      "historicalEvidenceVersion": "1.0.0",
+      "requiredAt": "M4-release-freeze",
+      "versionOnlyRewriteAllowed": false
+    },
+    "documentationDriftClosed": true
+  },
+  "deferred": [
+    "full-office-equivalence",
+    "ods-formula-editing",
+    "odp-editing",
+    "external-window-subtitles",
+    "embedded-subtitle-demux",
+    "subtitle-editing",
+    "video-transcoding",
+    "structured-schema-provider-and-mapping"
+  ],
+  "passed": true
+}

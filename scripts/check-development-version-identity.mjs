@@ -8,6 +8,7 @@ const tauri = readJson('src-tauri/tauri.conf.json')
 const matrix = readJson('shared/release-capability-matrix.json')
 const community = readJson('shared/v1-community-release-policy.json')
 const m1dc1Subtitle = readJson('shared/post-v115-m1dc1-subtitle-playback-policy.json')
+const m1Closure = readJson('shared/post-v115-m1-closure-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -34,7 +35,8 @@ const checks = {
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   notReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
   binaryTransitionDeferred: policy.binaryVersionTransition === 'M4-release-freeze',
-  currentStageAligned: policy.currentStage === m1dc1Subtitle.selectedNextStage,
+  currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
+    && policy.currentStage === m1Closure.selectedNextStage,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

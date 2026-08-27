@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-27 M1 总退出审计已通过：** 当前代码重新完成 XLSX 对象草稿、PPTX 统一草稿、ODS + LibreOffice、大 JSON、1080p/4K 逐帧截图和 VTT/SRT 字幕六条真实桌面复验；DOCX 继续以 Word/WPS/LibreOffice 3 个生产者、9 个来源组合、9/9 稳定复开为外部证据。复验发现 PPTX 脚本覆盖 E2E 二进制导致 ODS 60 秒无 CDP 的真实差异，已修正 `-SkipBuild` 和 E2E 配置传递后重跑通过。格式矩阵、README 和 `1.0.16` 开发说明已补齐，M1 在有界范围收口。下一步固定为 **M3 知识图谱 2.0 选择审计**；先测 100/1000/5000 节点语义、算法和性能基线，不直接堆视觉效果。详见 [`Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md`](./Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md)。
+
 > **2026-08-27 M1D-C1 外置字幕播放已通过：** 资料库视频会发现同目录同名 VTT/SRT，经过 2 MiB / 10,000 cue 有界解析后以内存 `TextTrack` 播放；真实 1280×720 WebM 在 0.6s/1.6s 分别显示指定 VTT/SRT cue，关闭、跨 TXT 重开、损坏 VTT 拒绝、960×720 布局和全部源 SHA-256 均通过，运行时错误 0。真实测试淘汰了 WebView2 中 cue 始终为 0 的 Blob `<track>` 路径，最终使用 `addTextTrack()` / `VTTCue`。下一步只做 M1 总退出条件审计。详见 [`Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md`](./Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md)。
 
 > **2026-08-27 M1D-C 字幕与 Schema 对象选择审计已通过：** 真实 1280×720 WebM 可正常解码，但同名有效 VTT/SRT 均未被发现，`textTracks=0` 且没有字幕入口；语法合法但违反同一业务类型约束的 YAML/XML/TOML 均显示有效、0 条诊断。全部临时源 SHA-256 不变，运行时错误和页面溢出均为 0。下一步只做 M1D-C1 资料库视频的 VTT/SRT sidecar 播放与轨道开关；嵌入字幕拆封、字幕编辑、转码和 Schema provider 映射继续关闭。详见 [`Post_v1.0.15_M1DC_Subtitle_and_Schema_Selection_Audit_2026-08-27.md`](./Post_v1.0.15_M1DC_Subtitle_and_Schema_Selection_Audit_2026-08-27.md)。

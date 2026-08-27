@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1-total-exit-criteria-audit",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "status": "accepted",
+  "acceptedTracks": ["M1A-xlsx", "M1B-office", "M1C-ods", "M1D-media-structured"],
+  "freshRealDesktopTracks": ["xlsx-object-drafts", "pptx-unified-drafts", "ods-libreoffice-copy", "large-json", "video-frame-tools", "video-subtitles"],
+  "externalProducerEvidence": {
+    "docxProducers": 3,
+    "docxProducerSourcePairs": 9,
+    "docxStablePairs": 9,
+    "odsIndependentProducer": "libreoffice-calc"
+  },
+  "requiredBoundaries": [
+    "office-not-full-equivalence",
+    "ods-formula-and-odp-editing-deferred",
+    "large-json-readonly",
+    "video-codec-system-dependent",
+    "external-window-subtitles-deferred",
+    "embedded-subtitle-demux-deferred",
+    "structured-schema-provider-deferred"
+  ],
+  "documentationAligned": true,
+  "selectedNextStage": "M3-knowledge-graph-2.0-selection-audit",
+  "releaseCandidate": false
+}

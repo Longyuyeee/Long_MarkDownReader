@@ -14,7 +14,7 @@
   },
   "actual": {
     "json10": {
-      "openMs": 201,
+      "openMs": 265,
       "first": {
         "loadedChars": 3080,
         "rangeLabel": "0 B–512.0 KiB / 10.0 MiB",
@@ -23,17 +23,17 @@
         "saveDisabled": true,
         "pageOverflow": 0
       },
-      "nextMs": 121,
+      "nextMs": 124,
       "nextLabel": "512.0 KiB–1.0 MiB / 10.0 MiB",
-      "previousMs": 123,
+      "previousMs": 121,
       "previousLabel": "0 B–512.0 KiB / 10.0 MiB",
-      "searchMs": 801,
+      "searchMs": 917,
       "search": {
         "progress": "100%",
         "count": 1,
         "matchedUniqueMarker": true
       },
-      "jumpMs": 145,
+      "jumpMs": 184,
       "narrow": {
         "pageOverflow": 0,
         "workspaceWidth": 749,
@@ -42,7 +42,7 @@
       }
     },
     "json50": {
-      "openMs": 177,
+      "openMs": 203,
       "first": {
         "loadedChars": 3080,
         "rangeLabel": "0 B–512.0 KiB / 50.0 MiB",
@@ -51,17 +51,17 @@
         "saveDisabled": true,
         "pageOverflow": 0
       },
-      "nextMs": 124,
+      "nextMs": 123,
       "nextLabel": "512.0 KiB–1.0 MiB / 50.0 MiB",
-      "previousMs": 121,
+      "previousMs": 120,
       "previousLabel": "0 B–512.0 KiB / 50.0 MiB",
-      "searchMs": 3300,
+      "searchMs": 4171,
       "search": {
         "progress": "100%",
         "count": 1,
         "matchedUniqueMarker": true
       },
-      "jumpMs": 125,
+      "jumpMs": 173,
       "narrow": {
         "pageOverflow": 0,
         "workspaceWidth": 749,
@@ -70,7 +70,7 @@
       }
     },
     "small": {
-      "openMs": 766,
+      "openMs": 751,
       "rangeMode": false,
       "analysisStatus": "语法有效",
       "treeDisabled": false,

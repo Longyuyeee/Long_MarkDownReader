@@ -294,7 +294,7 @@
       "routeName": "JsonEditor",
       "maxBytes": 16777216,
       "capabilities": { "read": "supported", "edit": "supported", "create": "supported", "index": "supported" },
-      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "普通 JSON 支持软件内创建、源码编辑、实时诊断、草稿恢复、树形预览、文本索引，以及受保护的标量、键、对象属性和数组项增删改。" },
+      "userCapability": { "level": "basic-edit", "label": "基础编辑", "saveMode": "overwrite", "description": "普通 JSON 支持软件内创建、源码编辑、实时诊断、草稿恢复、树形预览、文本索引，以及受保护的标量、键、对象属性和数组项增删改；超过完整分析阈值的大文件进入渐进只读模式，提供 512 KiB 分段导航和流式全文搜索，不构建全文树形也不写回。" },
       "externalPolicy": "edit",
       "adapters": { "reader": "text", "writer": "text", "creator": "text-template", "indexer": "text" },
       "creation": { "defaultExtension": ".json", "defaultContent": "{}\n", "defaultName": "未命名数据" }
@@ -385,7 +385,7 @@
       "routeName": "MediaViewer",
       "maxBytes": 2147483648,
       "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "unsupported" },
-      "userCapability": { "level": "preview-only", "label": "流式视频播放", "saveMode": "none", "description": "MP4、WebM、Ogg Video 与 M4V 走 WebView 原生播放；MOV、MKV、AVI、MPEG 与 MPG 会按系统解码器尝试播放。视频按需分段读取，不复制整文件；超过 2 GiB 或缺少解码器时使用外部播放器。" },
+      "userCapability": { "level": "preview-only", "label": "流式视频播放", "saveMode": "none", "description": "MP4、WebM、Ogg Video 与 M4V 走 WebView 原生播放；MOV、MKV、AVI、MPEG 与 MPG 会按系统解码器尝试播放。资料库视频支持前后逐帧、原尺寸 PNG 截图、隐私安全的位置记忆，以及同目录同名 VTT/SRT 字幕选择与关闭；视频按需分段读取，不复制或写回源文件，超过 2 GiB 或缺少解码器时使用外部播放器。" },
       "externalPolicy": "preview",
       "adapters": { "reader": "media", "writer": null, "creator": null, "indexer": null },
       "creation": null

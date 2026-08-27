@@ -7,7 +7,7 @@
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 > 当前权威执行入口：[2026-08-02 当前开发对齐审计与收口计划](./Development_Alignment_and_Closure_Plan_2026-08-02.md)。v1.0.1 已发布；下一代码阶段固定为 P0 内部文件路由收敛，随后按 UI-1～UI-4 完成全量 UI 治理。下方历史“最新入口”仅用于阶段追溯。
 
-> 2026-08-27 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B、M1C、M1D-A、M1D-B、M1D-C1、M2 与 [10,000 文件索引性能基线](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md) 已完成。[M1D-C1 审计](./Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md)确认资料库同名 VTT/SRT 已能有界解析、时间同步、选择与关闭，真实跨格式重开和失败样本均通过。下一阶段固定为 **M1 总退出条件审计**；只核对能力事实源、真实证据、剩余边界和是否满足进入 M3/M4 的条件，不增加新能力。下方更早入口仅用于历史追溯。
+> 2026-08-27 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1、M2 与 [10,000 文件索引性能基线](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md) 已完成。[M1 总退出审计](./Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md)重新验证 XLSX、PPTX、ODS、大 JSON、视频工具与字幕，并保留 DOCX 3 生产者 9/9 复开证据；事实源和用户文档已对齐。下一阶段固定为 **M3 知识图谱 2.0 选择审计**：先记录 100/1000/5000 节点的类型、关系、路径算法和性能真实基线，再选择 M3A 最小实现，不在基线前直接增加视觉效果。下方更早入口仅用于历史追溯。
 
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 
