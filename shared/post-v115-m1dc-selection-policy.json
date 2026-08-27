@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-C-subtitle-and-structured-schema-selection",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "status": "accepted-selection",
+  "requiredRealSamples": [
+    "webm-video",
+    "webvtt-sidecar",
+    "srt-sidecar",
+    "yaml-semantic-mismatch",
+    "xml-semantic-mismatch",
+    "toml-semantic-mismatch"
+  ],
+  "observedCurrentGaps": {
+    "subtitleSidecarSelectable": false,
+    "structuredSemanticTypeMismatchLocated": false
+  },
+  "selectedNextStage": "M1D-C1-external-subtitle-sidecar-playback",
+  "approvedScope": [
+    "library-video-sidecar-discovery",
+    "vtt-and-srt-bounded-parse",
+    "in-memory-webvtt-track",
+    "track-selection-and-off-state",
+    "source-files-never-written"
+  ],
+  "deferredScope": [
+    "embedded-subtitle-demux",
+    "subtitle-source-editing",
+    "video-transcoding",
+    "structured-schema-provider-and-mapping"
+  ],
+  "releaseCandidate": false
+}

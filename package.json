@@ -200,6 +200,8 @@
     "check:post-v115-m1da-large-json": "node scripts/check-post-v115-m1da-large-json.mjs",
     "audit:post-v115-m1db-video-tools": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1db-video-tools-audit.ps1",
     "check:post-v115-m1db-video-tools": "node scripts/check-post-v115-m1db-video-tools.mjs",
+    "audit:post-v115-m1dc-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1dc-selection-audit.ps1",
+    "check:post-v115-m1dc-selection": "node scripts/check-post-v115-m1dc-selection.mjs",
     "audit:main-version-indicator": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-main-version-indicator-audit.ps1",
     "audit:sidebar-footer-responsive": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-sidebar-footer-responsive-audit.ps1",
     "audit:small-window-ui": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-small-window-ui-audit.ps1",

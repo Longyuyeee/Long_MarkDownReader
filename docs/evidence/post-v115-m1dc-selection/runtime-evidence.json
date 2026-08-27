@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-C-subtitle-and-structured-schema-selection",
+  "status": "passed-selection-baseline",
+  "expected": {
+    "subtitleSidecarSelectable": true,
+    "semanticTypeMismatchLocated": true,
+    "sourceUnchanged": true
+  },
+  "actual": {
+    "subtitle": {
+      "decoded": true,
+      "textTrackCount": 0,
+      "trackElementCount": 0,
+      "subtitleControlVisible": false,
+      "vttRegisteredInTree": false,
+      "srtRegisteredInTree": false,
+      "pageOverflow": 0
+    },
+    "structured": {
+      "yaml": {
+        "valid": true,
+        "diagnosticCount": 0
+      },
+      "xml": {
+        "valid": true,
+        "diagnosticCount": 0
+      },
+      "toml": {
+        "valid": true,
+        "diagnosticCount": 0
+      }
+    },
+    "yamlUi": {
+      "syntaxValidVisible": true,
+      "schemaControlVisible": false,
+      "pageOverflow": 0
+    },
+    "sidecars": {
+      "vttValid": true,
+      "srtValid": true,
+      "vttCueCount": 2,
+      "srtCueCount": 2
+    },
+    "sourceUnchanged": true,
+    "runtimeErrorCount": 0
+  },
+  "difference": {
+    "subtitleSidecarSelectable": false,
+    "semanticTypeMismatchLocated": false
+  },
+  "decision": {
+    "selectedNextStage": "M1D-C1-external-subtitle-sidecar-playback",
+    "reason": "Valid VTT and SRT sidecars are currently invisible during otherwise successful video playback; bounded sidecar playback is smaller and more directly observable than introducing a multi-language schema engine.",
+    "deferred": [
+      "structured-schema-provider-and-mapping-audit",
+      "embedded-subtitle-demux",
+      "subtitle-source-editing",
+      "video-transcoding"
+    ]
+  },
+  "passed": true
+}
