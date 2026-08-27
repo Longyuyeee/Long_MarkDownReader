@@ -4,6 +4,8 @@
 阶段：E1C
 结论：`.ods/.odp` 已完成真实 ODF 样本、有界语义解析、原 Library 右侧结构化预览、全文搜索、精确定位和源文件不变证明；编辑、创建、公式计算、复杂演示还原和写回继续不支持。
 
+> 历史注记（2026-08-27）：本段是 E1C 当时的只读基线。后续 M1C-B 已将**资料库内 ODS 简单字符串/有限数值单元格**提升为可靠新副本编辑；公式、复杂单元格、外部 ODS 和 ODP 仍保持只读。当前能力以共享注册表和 `Post_v1.0.15_M1CB_ODS_Bounded_Cell_Value_Audit_2026-08-27.md` 为准。
+
 ## 1. 已交付
 
 - 共享格式注册新增 `ods` 与 `odp`，能力为 `preview-only / saveMode:none`，读取和索引 supported，编辑与创建 unsupported。

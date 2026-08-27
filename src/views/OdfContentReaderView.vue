@@ -7,10 +7,13 @@
         <component :is="isOds ? Table2 : Presentation" :size="18" aria-hidden="true" />
         <div>
           <strong>{{ fileName }}</strong>
-          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · 只读<template v-if="isExternal"> · 不会写回</template></span>
+          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · {{ editAvailable ? '基础单元格编辑 · 另存副本' : '只读' }}<template v-if="isExternal"> · 不会写回</template></span>
         </div>
       </div>
       <div class="toolbar">
+        <button v-if="editAvailable" :disabled="!canUndo" aria-label="撤销单元格修改" title="撤销单元格修改 Ctrl+Z" @click="undoDraft"><Undo2 :size="15" /></button>
+        <button v-if="editAvailable" :disabled="!canRedo" aria-label="重做单元格修改" title="重做单元格修改 Ctrl+Y" @click="redoDraft"><Redo2 :size="15" /></button>
+        <button v-if="editAvailable" :disabled="!draftDirty || saving" aria-label="另存 ODS 副本" title="另存 ODS 副本 Ctrl+S" @click="saveCopy"><Save :size="15" /></button>
         <label class="search-box">
           <Search :size="14" aria-hidden="true" />
           <input v-model="query" data-testid="e1c-odf-search" type="search" :placeholder="isOds ? '搜索单元格' : '搜索幻灯片'" />
@@ -33,6 +36,11 @@
         <ShieldAlert :size="16" />
         <div><strong>文档包含只读或隔离内容</strong><span>{{ warnings.join('；') }}</span></div>
       </div>
+      <div v-if="editAvailable" class="edit-banner" data-testid="m1cb-ods-edit-banner">
+        <PencilLine :size="15" />
+        <span><strong>可编辑简单值</strong> 双击普通文本或数值单元格开始编辑；公式、合并及复杂内容保持只读。</span>
+        <span v-if="draft" class="draft-status">{{ draft.sheetName }} · {{ draft.address }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
+      </div>
 
       <div v-if="isOds" class="ods-layout">
         <nav class="sheet-tabs" aria-label="工作表" data-horizontal-wheel="always">
@@ -53,10 +61,22 @@
                   v-for="column in sheetColumnCount"
                   :id="`${selectedSheet.id}:${columnName(column)}${row.row}`"
                   :key="column"
-                  :class="cellClasses(`${selectedSheet.id}:${columnName(column)}${row.row}`)"
+                  :class="odsCellClasses(`${selectedSheet.id}:${columnName(column)}${row.row}`, `${columnName(column)}${row.row}`)"
+                  @dblclick="beginCellEdit(`${columnName(column)}${row.row}`)"
                 >
                   <template v-if="cellAt(row, column)">
-                    <span>{{ cellAt(row, column)?.text }}</span>
+                    <input
+                      v-if="draft?.sheetName === selectedSheet.name && draft.address === `${columnName(column)}${row.row}`"
+                      ref="cellEditorRef"
+                      class="cell-editor"
+                      data-testid="m1cb-ods-cell-editor"
+                      :inputmode="draft.valueType === 'float' ? 'decimal' : 'text'"
+                      :value="draft.value"
+                      @input="updateDraft"
+                      @keydown.enter.prevent="saveCopy"
+                      @keydown.esc.prevent="resetDraft"
+                    />
+                    <span v-else>{{ cellAt(row, column)?.text }}</span>
                     <code v-if="cellAt(row, column)?.formula" :title="cellAt(row, column)?.formula">fx</code>
                   </template>
                 </td>
@@ -102,7 +122,7 @@
           <span>{{ isOds ? `${report.model.sheets.length} 个工作表` : `${report.model.slides.length} 张幻灯片` }}</span>
           <span v-if="isOds">{{ report.model.formulaCount }} 个公式（仅显示缓存值）</span>
         </div>
-        <span>ODF {{ report.model.package.manifestVersion || '1.x' }} · 源文件未修改</span>
+        <span>ODF {{ report.model.package.manifestVersion || '1.x' }} · {{ draftDirty ? '修改仅在草稿中' : '源文件未修改' }}</span>
       </footer>
     </template>
   </section>
@@ -111,24 +131,41 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core'
 import {
-  ArrowLeft, ChevronDown, ChevronUp, Image, Presentation, RefreshCw, Search, ShieldAlert, Table2,
+  ArrowLeft, ChevronDown, ChevronUp, Image, PencilLine, Presentation, Redo2, RefreshCw, Save, Search,
+  ShieldAlert, Table2, Undo2,
 } from 'lucide-vue-next'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useDialog, useMessage } from 'naive-ui'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useAppStore } from '../store/app'
+import { confirmAppAction, promptAppAction } from '../services/appDialog'
+import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 
 interface OdsCell { address: string; column: number; text: string; valueType?: string; formula?: string }
 interface OdsRow { row: number; cells: OdsCell[] }
 interface OdsSheet { id: string; name: string; rows: OdsRow[]; formulaCount: number }
 interface OdpSlide { id: string; index: number; name: string; text: string; notes: string; imageCount: number }
+interface OdsEditableCellTarget { id: string; sheetName: string; address: string; text: string; valueType: 'string' | 'float'; expectedValueDigest: string }
+interface OdsBlockedCellTarget { sheetName: string; address: string; text: string; reason: string }
+interface OdsCellEditInventory {
+  status: 'candidate' | 'blocked'
+  sourceDigest: string
+  editableCells: OdsEditableCellTarget[]
+  blockedCells: OdsBlockedCellTarget[]
+  blockers: string[]
+  writesUserFile: boolean
+}
+interface OdsSavedCopyReport { status: string; targetPath: string; targetDigest: string; sourceUnchanged: boolean; semanticReopenVerified: boolean; saveMode: string }
+interface OdsDraft extends OdsEditableCellTarget { originalValue: string; value: string }
 interface OdfContentReport {
   path: string
   size: number
   signature: string
   readOnly: boolean
   sourcePreserved: boolean
+  editInventory?: OdsCellEditInventory
   model: {
     format: 'ods' | 'odp'
     sheets: OdsSheet[]
@@ -152,6 +189,8 @@ interface OdfContentReport {
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
+const dialog = useDialog()
+const message = useMessage()
 const report = ref<OdfContentReport>()
 const loading = ref(false)
 const loadError = ref('')
@@ -160,6 +199,11 @@ const matchIndex = ref(-1)
 const selectedSheetId = ref('')
 const selectedSlideId = ref('')
 const sheetStageRef = ref<HTMLElement | null>(null)
+const cellEditorRef = ref<HTMLInputElement[] | null>(null)
+const draft = ref<OdsDraft>()
+const undoStack = ref<string[]>([])
+const redoStack = ref<string[]>([])
+const saving = ref(false)
 const documentPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
 const extension = computed(() => /\.odp$/i.test(documentPath.value) ? 'odp' : 'ods')
@@ -167,6 +211,13 @@ const isOds = computed(() => report.value?.model.format !== 'odp')
 const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || `未命名.${extension.value}`)
 const selectedSheet = computed(() => report.value?.model.sheets.find(sheet => sheet.id === selectedSheetId.value))
 const selectedSlide = computed(() => report.value?.model.slides.find(slide => slide.id === selectedSlideId.value))
+const editAvailable = computed(() => !isExternal.value && isOds.value && report.value?.editInventory?.status === 'candidate')
+const draftDirty = computed(() => !!draft.value && draft.value.value !== draft.value.originalValue)
+const canUndo = computed(() => undoStack.value.length > 0)
+const canRedo = computed(() => redoStack.value.length > 0)
+const editableTargetMap = computed(() => new Map(
+  (report.value?.editInventory?.editableCells || []).map(target => [`${target.sheetName}:${target.address}`, target]),
+))
 const sheetColumnCount = computed(() => Math.min(256, Math.max(1, ...(selectedSheet.value?.rows.flatMap(row => row.cells.map(cell => cell.column)) || [1]))))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
 const warnings = computed(() => {
@@ -199,6 +250,11 @@ const cellClasses = (id: string) => ({
   'current-hit': currentMatchId.value === id,
   'route-target': routeLocator.value === id,
 })
+const odsCellClasses = (id: string, address: string) => ({
+  ...cellClasses(id),
+  editable: !!selectedSheet.value && editableTargetMap.value.has(`${selectedSheet.value.name}:${address}`),
+  editing: draft.value?.sheetName === selectedSheet.value?.name && draft.value?.address === address,
+})
 const cellAt = (row: OdsRow, column: number) => row.cells.find(cell => cell.column === column)
 const columnName = (column: number) => {
   let value = column
@@ -213,6 +269,120 @@ const columnName = (column: number) => {
 const formatBytes = (value: number) => value < 1024 * 1024
   ? `${(value / 1024).toFixed(1)} KiB`
   : `${(value / 1024 / 1024).toFixed(1)} MiB`
+const markTabDirty = (dirty: boolean) => {
+  const tab = store.tabs.find(item => item.path === documentPath.value)
+  if (tab) tab.isDirty = dirty
+}
+const clearDraft = () => {
+  draft.value = undefined
+  undoStack.value = []
+  redoStack.value = []
+  markTabDirty(false)
+}
+const resetDraft = () => {
+  if (!draft.value) return
+  draft.value.value = draft.value.originalValue
+  undoStack.value = []
+  redoStack.value = []
+  markTabDirty(false)
+}
+const beginCellEdit = async (address: string) => {
+  if (!editAvailable.value || !selectedSheet.value) return
+  const target = editableTargetMap.value.get(`${selectedSheet.value.name}:${address}`)
+  if (!target) {
+    const blocked = report.value?.editInventory?.blockedCells.find(cell => cell.sheetName === selectedSheet.value?.name && cell.address === address)
+    if (blocked) message.info(blocked.reason === 'formula-readonly' ? '公式单元格当前保持只读' : '该单元格包含复杂结构，当前保持只读')
+    return
+  }
+  if (draft.value?.id === target.id) {
+    await nextTick()
+    cellEditorRef.value?.[0]?.focus()
+    return
+  }
+  if (draftDirty.value && draft.value?.id !== target.id) {
+    message.warning('当前单元格还有未保存修改，请先另存副本或撤销修改')
+    return
+  }
+  draft.value = { ...target, originalValue: target.text, value: target.text }
+  undoStack.value = []
+  redoStack.value = []
+  await nextTick()
+  cellEditorRef.value?.[0]?.focus()
+  cellEditorRef.value?.[0]?.select()
+}
+const updateDraft = (event: Event) => {
+  if (!draft.value) return
+  const next = (event.target as HTMLInputElement).value
+  if (next === draft.value.value) return
+  undoStack.value.push(draft.value.value)
+  draft.value.value = next
+  redoStack.value = []
+  markTabDirty(draftDirty.value)
+}
+const undoDraft = () => {
+  if (!draft.value || !undoStack.value.length) return
+  redoStack.value.push(draft.value.value)
+  draft.value.value = undoStack.value.pop()!
+  markTabDirty(draftDirty.value)
+}
+const redoDraft = () => {
+  if (!draft.value || !redoStack.value.length) return
+  undoStack.value.push(draft.value.value)
+  draft.value.value = redoStack.value.pop()!
+  markTabDirty(draftDirty.value)
+}
+const saveCopy = async () => {
+  if (!draft.value || !draftDirty.value || !report.value || saving.value) return
+  const baseName = fileName.value.replace(/\.ods$/i, '')
+  const targetFileName = (await promptAppAction(dialog, {
+    title: '另存 ODS 副本',
+    content: `只会修改 ${draft.value.sheetName} ${draft.value.address}，源文件不会被覆盖。副本保存在源文件同一文件夹。`,
+    initialValue: `${baseName}-LongEdit副本.ods`,
+    positiveText: '保存副本',
+  }))?.trim()
+  if (!targetFileName) return
+  saving.value = true
+  try {
+    const saved = await invoke<OdsSavedCopyReport>('save_ods_cell_value_copy', {
+      libraryRoot: store.libraryPath,
+      path: documentPath.value,
+      targetFileName,
+      expectedSourceSignature: report.value.signature,
+      targetId: draft.value.id,
+      expectedValueDigest: draft.value.expectedValueDigest,
+      replacementValue: draft.value.value,
+    })
+    if (!saved.sourceUnchanged || !saved.semanticReopenVerified || saved.saveMode !== 'new_copy_only') {
+      throw new Error('ODS 副本未返回完整的可靠保存凭据')
+    }
+    clearDraft()
+    message.success(`已保存并复读验证：${targetFileName}`)
+    await openManagedFile(router, saved.targetPath)
+  } catch (error) {
+    message.error(String(error).replace(/^Error:\s*/, ''))
+  } finally {
+    saving.value = false
+  }
+}
+const mayLeave = () => !draftDirty.value || confirmAppAction(dialog, {
+  title: 'ODS 还有未保存修改',
+  content: '修改目前只在内存草稿中，离开后不会写入源文件。',
+  positiveText: '放弃并离开',
+  negativeText: '继续编辑',
+})
+const onKeydown = (event: KeyboardEvent) => {
+  if (!(event.ctrlKey || event.metaKey) || !editAvailable.value) return
+  const key = event.key.toLowerCase()
+  if (key === 's') { event.preventDefault(); void saveCopy() }
+  else if (key === 'z' && event.shiftKey) { event.preventDefault(); redoDraft() }
+  else if (key === 'z') { event.preventDefault(); undoDraft() }
+  else if (key === 'y') { event.preventDefault(); redoDraft() }
+}
+const beforeUnload = (event: BeforeUnloadEvent) => {
+  if (!draftDirty.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
 const selectSlide = (id: string) => {
   selectedSlideId.value = id
   void nextTick(() => {
@@ -252,6 +422,7 @@ const load = async () => {
   if (!documentPath.value || loading.value) return
   loading.value = true
   loadError.value = ''
+  clearDraft()
   try {
     report.value = await invoke<OdfContentReport>(isExternal.value ? 'read_external_odf_content_document' : 'read_odf_content_document', {
       ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
@@ -294,7 +465,17 @@ watch([documentPath, isExternal], (_next, previous) => {
 watch(matches, value => { matchIndex.value = value.length ? 0 : -1 })
 watch(() => [route.query.locator, route.query.locatorToken], revealRouteLocator)
 watch(selectedSheetId, () => void nextTick(rememberOdfViewState))
-onBeforeUnmount(rememberOdfViewState)
+onBeforeRouteLeave(() => mayLeave())
+onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+  window.addEventListener('beforeunload', beforeUnload)
+})
+onBeforeUnmount(() => {
+  rememberOdfViewState()
+  window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('beforeunload', beforeUnload)
+})
 </script>
 
 <style scoped>
@@ -320,6 +501,10 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .risk-banner div { display: flex; flex-direction: column; gap: 2px; }
 .risk-banner strong { font-size: 12px; }
 .risk-banner span { color: var(--text-secondary); font-size: 11px; }
+.edit-banner { display: flex; min-height: 34px; align-items: center; gap: 8px; padding: 5px 14px; border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 34%, var(--border-color)); color: var(--text-secondary); background: color-mix(in srgb, var(--theme-primary) 8%, var(--bg-primary)); }
+.edit-banner > svg { flex: none; color: var(--theme-primary); }
+.edit-banner strong { color: var(--text-primary); }
+.draft-status { margin-left: auto; color: var(--theme-primary); font-size: 11px; white-space: nowrap; }
 .ods-layout { display: flex; flex: 1; min-height: 0; flex-direction: column; }
 .sheet-tabs { display: flex; min-height: 34px; overflow-x: auto; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .sheet-tabs button { min-width: 110px; padding: 0 12px; border: 0; border-right: 1px solid var(--border-color); color: var(--text-secondary); background: transparent; cursor: pointer; }
@@ -331,6 +516,11 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .sheet-stage tbody th, .corner { position: sticky; z-index: 2; left: 0; width: 48px; min-width: 48px; color: var(--text-muted); background: var(--theme-surface-2); box-shadow: 2px 0 0 color-mix(in srgb, var(--theme-primary) 24%, var(--theme-surface)); font-size: 11px; font-weight: 500; }
 .sheet-stage .corner { z-index: 4; }
 .sheet-stage td { position: relative; }
+.sheet-stage td.editable { cursor: text; }
+.sheet-stage td.editable::after { position: absolute; right: 3px; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--theme-primary); content: ''; opacity: .55; }
+.sheet-stage td.editable:hover { background: color-mix(in srgb, var(--theme-primary) 9%, var(--bg-primary)); }
+.sheet-stage td.editing { padding: 2px; outline: 2px solid var(--theme-primary); outline-offset: -2px; overflow: visible; }
+.cell-editor { width: 100%; height: 100%; min-width: 0; padding: 2px 5px; box-sizing: border-box; border: 0; outline: 0; color: var(--text-primary); caret-color: var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 8%, var(--bg-primary)); font: inherit; }
 .sheet-stage td code { position: absolute; top: 2px; right: 3px; color: var(--theme-primary); font-size: var(--text-compact); }
 .odp-layout { display: grid; flex: 1; min-height: 0; grid-template-columns: 220px minmax(0, 1fr); }
 .odp-layout aside { overflow: auto; padding: 8px; border-right: 1px solid var(--border-color); background: var(--bg-primary); }
@@ -368,5 +558,7 @@ footer > div { gap: 10px; }
   .search-box { min-width: 0; flex: 1; }
   .search-box input { width: 100%; min-width: 0; }
   footer > span { display: none; }
+  .edit-banner { align-items: flex-start; flex-wrap: wrap; }
+  .draft-status { width: 100%; margin-left: 23px; }
 }
 </style>

@@ -43,9 +43,9 @@
     {
       "id": "office-copy",
       "dependency": "none",
-      "sourcePolicy": "DOCX/PPTX 经事务预览、签名校验和用户确认后可回滚保护覆盖；PPTX 单项草稿仍可可靠另存新副本",
+      "sourcePolicy": "DOCX/PPTX 经事务预览、签名校验和用户确认后可回滚保护覆盖；PPTX 单项草稿与 ODS 有界单元格编辑可可靠另存新副本",
       "privacyBoundary": "解析、索引和副本生成均在本机完成",
-      "knownLimitations": ["DOCX/PPTX 仅开放经过真实生产者复开的基础编辑子集；高级对象保持只读"]
+      "knownLimitations": ["DOCX/PPTX/ODS 仅开放经过真实生产者复开的基础编辑子集；ODS 公式、合并、重复和复杂内容及其他高级对象保持只读"]
     },
     {
       "id": "odf-preview",
@@ -114,7 +114,7 @@
     { "id": "pdf", "profile": "pdf-copy", "readiness": "verified-with-limitations" },
     { "id": "table", "profile": "local-overwrite", "readiness": "verified" },
     { "id": "docx", "profile": "office-copy", "readiness": "verified-with-limitations" },
-    { "id": "ods", "profile": "odf-preview", "readiness": "verified-with-limitations" },
+    { "id": "ods", "profile": "office-copy", "readiness": "verified-with-limitations" },
     { "id": "odp", "profile": "odf-preview", "readiness": "verified-with-limitations" },
     { "id": "legacy-doc", "profile": "legacy-conversion", "readiness": "external-dependency" },
     { "id": "legacy-xls", "profile": "legacy-conversion", "readiness": "external-dependency" },

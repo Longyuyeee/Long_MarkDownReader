@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1C-B-ODS-bounded-cell-value",
+    "status":  "passed",
+    "capturedAt":  "2026-08-27T04:12:12.5588519Z",
+    "expected":  {
+                     "editableTarget":  "Overview!A1",
+                     "value":  "LongEdit M1C-B desktop value",
+                     "sourceUnchanged":  true,
+                     "undoRedo":  true,
+                     "explicitCopySave":  true,
+                     "libreOfficeIndependentReopen":  true,
+                     "responsive960x720":  true,
+                     "runtimeErrors":  0
+                 },
+    "actual":  {
+                   "initialValue":  "LongEdit E1C ODS fixture",
+                   "uiReopenedValue":  "LongEdit M1C-B desktop value",
+                   "libreOfficeA1":  "LongEdit M1C-B desktop value",
+                   "sourceBeforeSha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                   "sourceAfterSha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                   "targetSha256":  "c80f25cb1b08ada1546b36bb1be5c85d1ac5ffd18cbbeca42feb0517b8c1a960",
+                   "sourceUnchanged":  true,
+                   "undoRedo":  true,
+                   "explicitCopySave":  true,
+                   "responsive960x720":  true,
+                   "runtimeErrors":  0,
+                   "libreOfficePdfBytes":  21842
+               },
+    "differences":  [
+                        "Before M1C-B, ODS was read-only in LongEdit; the same real fixture now supports a bounded A1 draft and verified new-copy save.",
+                        "Formula B2, merged cells, repeated cells and complex text remain read-only by design.",
+                        "The source package digest remains identical; only the new copy carries the edited value."
+                    ],
+    "decision":  {
+                     "stageAccepted":  true,
+                     "nextStage":  "M1C-C-ODS-formula-and-style-feasibility",
+                     "odpRemainsReadOnly":  true,
+                     "releaseCandidate":  false
+                 },
+    "privacy":  {
+                    "projectAuthoredFixture":  true,
+                    "localAbsolutePathsIncluded":  false,
+                    "userDocumentBodiesIncluded":  false,
+                    "rawOfficeOutputCommitted":  false
+                },
+    "evidenceFiles":  [
+                          "ods-cell-draft.jpg",
+                          "ods-saved-copy-reopen.jpg"
+                      ]
+}

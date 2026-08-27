@@ -48,10 +48,15 @@ for (const value of ['raw_copy_file(file)', 'unchanged_parts_verified', 'structu
   requireText(editSource, value, `M1C-A isolated package contract is missing ${value}`)
 }
 requireText(generator, 'table:formula="SUM([.A2];8)"', 'M1C-A valid ODS formula seed is missing')
-for (const id of ['ods', 'odp']) {
-  const format = registry.formats?.find(item => item.id === id)
-  requireFact(format?.userCapability?.level === 'preview-only' && format?.capabilities?.edit === 'unsupported', `M1C-A must not publish ${id} editing before M1C-B`)
-}
+const currentOds = registry.formats?.find(item => item.id === 'ods')
+const currentOdp = registry.formats?.find(item => item.id === 'odp')
+requireFact(
+  currentOds?.userCapability?.level === 'basic-edit'
+    && currentOds?.userCapability?.saveMode === 'copy'
+    && currentOds?.adapters?.writer === 'odf-cell-value',
+  'M1C-A baseline must remain compatible with the later bounded ODS editor',
+)
+requireFact(currentOdp?.userCapability?.level === 'preview-only' && currentOdp?.capabilities?.edit === 'unsupported', 'M1C-A ODP read-only boundary drifted')
 requireFact(!/[A-Z]:\\Users\\|[A-Z]:\\Project\\/i.test(evidenceText), 'M1C-A evidence exposes a local absolute path')
 
 if (failures.length) {

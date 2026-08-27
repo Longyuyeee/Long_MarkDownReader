@@ -462,10 +462,10 @@
       "mimeTypes": ["application/vnd.oasis.opendocument.spreadsheet"],
       "routeName": "OdfReader",
       "maxBytes": 67108864,
-      "capabilities": { "read": "supported", "edit": "unsupported", "create": "unsupported", "index": "supported" },
-      "userCapability": { "level": "preview-only", "label": "结构化只读预览", "saveMode": "none", "description": "ODS 支持有界工作表、单元格、公式显示值预览、搜索和定位；不计算公式、不编辑也不写回源文件。" },
+      "capabilities": { "read": "supported", "edit": "supported", "create": "unsupported", "index": "supported" },
+      "userCapability": { "level": "basic-edit", "label": "基础单元格编辑", "saveMode": "copy", "description": "ODS 在资料库内支持简单文本与有限数值单元格编辑，并可靠另存同目录新副本；公式、合并、复杂内容及外部打开保持只读，不覆盖源文件。" },
       "externalPolicy": "preview",
-      "adapters": { "reader": "odf-content", "writer": null, "creator": null, "indexer": "odf-content" },
+      "adapters": { "reader": "odf-content", "writer": "odf-cell-value", "creator": null, "indexer": "odf-content" },
       "creation": null
     },
     {

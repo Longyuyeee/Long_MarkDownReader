@@ -67,18 +67,22 @@ for (const contract of [
   if (format.mimeTypes?.[0] !== contract.mime || format.routeName !== 'OdfReader') {
     failures.push(`E1C ${contract.id} identity or route drift`)
   }
+  const expectedUserLevel = contract.id === 'ods' ? 'basic-edit' : 'preview-only'
+  const expectedSaveMode = contract.id === 'ods' ? 'copy' : 'none'
+  const expectedEdit = contract.id === 'ods' ? 'supported' : 'unsupported'
+  const expectedWriter = contract.id === 'ods' ? 'odf-cell-value' : null
   if (format.maxBytes !== 64 * 1024 * 1024
-    || format.userCapability?.level !== 'preview-only'
-    || format.userCapability?.saveMode !== 'none') {
-    failures.push(`E1C ${contract.id} public read-only boundary drift`)
+    || format.userCapability?.level !== expectedUserLevel
+    || format.userCapability?.saveMode !== expectedSaveMode) {
+    failures.push(`E1C ${contract.id} current public capability drift`)
   }
   if (format.capabilities?.read !== 'supported'
     || format.capabilities?.index !== 'supported'
-    || format.capabilities?.edit !== 'unsupported'
+    || format.capabilities?.edit !== expectedEdit
     || format.capabilities?.create !== 'unsupported'
     || format.adapters?.reader !== 'odf-content'
     || format.adapters?.indexer !== 'odf-content'
-    || format.adapters?.writer !== null
+    || format.adapters?.writer !== expectedWriter
     || format.adapters?.creator !== null) {
     failures.push(`E1C ${contract.id} adapters overclaim or omit product capability`)
   }

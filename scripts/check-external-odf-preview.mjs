@@ -10,11 +10,13 @@ const requireText = (source, token, message) => {
 const registry = json('shared/file-formats.json')
 for (const id of ['ods', 'odp']) {
   const format = registry.formats.find(item => item.id === id)
-  if (!format || format.externalPolicy !== 'preview' || format.routeName !== 'OdfReader'
-    || format.capabilities.edit !== 'unsupported' || format.adapters.writer !== null
-    || format.userCapability.saveMode !== 'none') {
-    failures.push(`${id} must remain a read-only OdfReader format without a writer`)
+  if (!format || format.externalPolicy !== 'preview' || format.routeName !== 'OdfReader') {
+    failures.push(`${id} must remain an externally read-only OdfReader format`)
   }
+}
+const odp = registry.formats.find(item => item.id === 'odp')
+if (odp?.capabilities.edit !== 'unsupported' || odp?.adapters.writer !== null || odp?.userCapability.saveMode !== 'none') {
+  failures.push('odp must remain globally read-only')
 }
 
 const backend = read('src-tauri/src/commands/odf_content.rs')
@@ -24,7 +26,7 @@ for (const token of [
   'pub async fn read_external_odf_content_document',
   'access.resolve_preview(path)?',
   'ensure_odf_content_format(&document)?',
-  'read_odf_content_path(&document)',
+  'read_odf_content_path(&document, false)',
   'let source_preserved = before == after',
   '["ods", "odp"].contains(&format.id.as_str())',
 ]) requireText(backend, token, `external ODF backend is missing ${token}`)

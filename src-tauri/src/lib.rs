@@ -84,7 +84,9 @@ use commands::mindmap::{
     create_canvas_from_opml, read_external_opml_file, read_opml_file, write_external_opml_file,
     write_opml_file,
 };
-use commands::odf_content::{read_external_odf_content_document, read_odf_content_document};
+use commands::odf_content::{
+    read_external_odf_content_document, read_odf_content_document, save_ods_cell_value_copy,
+};
 use commands::odt::read_odt_document;
 use commands::pdf::{
     build_pdf_annotation_reference, inspect_pdf_form_structure, preview_pdf_form_copy,
@@ -392,6 +394,7 @@ pub fn run() {
             read_odt_document,
             read_odf_content_document,
             read_external_odf_content_document,
+            save_ods_cell_value_copy,
             preview_docx_package_patch_isolated_copy,
             preview_docx_text_patch_isolated_copy,
             preview_docx_style_patch_isolated_copy,
