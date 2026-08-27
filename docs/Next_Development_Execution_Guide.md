@@ -7,7 +7,7 @@
 > 主 PRD：[产品需求与开发路线图](./Product_Requirements_and_Development_Roadmap.md)
 > 当前权威执行入口：[2026-08-02 当前开发对齐审计与收口计划](./Development_Alignment_and_Closure_Plan_2026-08-02.md)。v1.0.1 已发布；下一代码阶段固定为 P0 内部文件路由收敛，随后按 UI-1～UI-4 完成全量 UI 治理。下方历史“最新入口”仅用于阶段追溯。
 
-> 2026-08-27 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B、M2、[10,000 文件索引性能基线](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md) 与 [M1B2C DOCX 原生往返收口](./Post_v1.0.15_M1B2C_DOCX_Native_Roundtrip_Closure_Audit_2026-08-27.md) 已完成。下一阶段固定为 **M1C ODS/ODP 基础编辑可行性审计**：先用真实 LibreOffice/WPS 文件盘点 ODF 样式、公式、文本/备注和未知对象保持风险，再选择最小安全编辑子集；不能证明安全覆盖时保持只读或可靠新副本。下方更早入口仅用于历史追溯。
+> 2026-08-27 权威执行入口：[v1.0.15 后续专业能力增强路线图](./Post_v1.0.15_Professional_Capability_Enhancement_Roadmap_2026-08-25.md)。M0、M1A、M1B、M1C-A、M2 与 [10,000 文件索引性能基线](./Post_v1.0.15_Large_Library_Index_Search_Audit_2026-08-26.md) 已完成。M1C-A 已证明 ODF 隔离副本可逐成员保持，并修正无效 ODS 公式种子和空脚本容器误报；真实 ODP 备注未保留、WPS ODS 自动化阻断。下一阶段固定为 **M1C-B ODS 有界单元格值可靠副本**：只处理简单无风险单元格，先保存新副本并由 LibreOffice Calc 独立复开；ODP、ODS 公式和样式继续只读。详见 [M1C-A 审计](./Post_v1.0.15_M1CA_ODF_Edit_Feasibility_Audit_2026-08-27.md)。下方更早入口仅用于历史追溯。
 
 > 2026-07-30 权威执行入口：[R2 Windows 安装与生命周期审计](./R2_Windows_Install_and_Lifecycle_Audit_2026-07-30.md)。**R1/R2 已完成，下一代码阶段为 R3 索引恢复、备份与隐私净化诊断**。E1B WPS ODT 保持 2/3、X3-B6 数组生产者矩阵保持 1/3，作为外部环境门禁并行等待；不得伪造关闭。下文较早的“下一入口”只保留为阶段追溯。
 

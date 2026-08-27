@@ -22,19 +22,17 @@ function Invoke-Conversion(
   $profilePath = Join-Path $workRoot $ProfileName
   New-Item -ItemType Directory -Path $profilePath, $OutputDirectory -Force | Out-Null
   $profile = ([uri]$profilePath).AbsoluteUri
-  $previousPreference = $ErrorActionPreference
-  $ErrorActionPreference = 'Continue'
-  try {
-    $output = & $script:Soffice "-env:UserInstallation=$profile" `
-      '--headless' '--nologo' '--nodefault' '--nofirststartwizard' '--norestore' `
-      '--convert-to' $Filter '--outdir' $OutputDirectory $InputPath 2>&1
-    $exitCode = $LASTEXITCODE
+  $process = Start-Process -FilePath $script:Soffice -WindowStyle Hidden -PassThru -ArgumentList @(
+    "-env:UserInstallation=$profile",
+    '--headless', '--nologo', '--nodefault', '--nofirststartwizard', '--norestore',
+    '--convert-to', $Filter, '--outdir', $OutputDirectory, $InputPath
+  )
+  if (-not $process.WaitForExit(180000)) {
+    Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+    throw "LibreOffice conversion timed out for $([System.IO.Path]::GetFileName($InputPath))"
   }
-  finally {
-    $ErrorActionPreference = $previousPreference
-  }
-  if ($exitCode -ne 0) {
-    throw "LibreOffice failed with exit code $exitCode`: $($output -join [Environment]::NewLine)"
+  if ($process.ExitCode -ne 0) {
+    throw "LibreOffice failed with exit code $($process.ExitCode)"
   }
 }
 
@@ -72,7 +70,7 @@ try {
    </table:table-row>
    <table:table-row>
     <table:table-cell office:value-type="float" office:value="42"><text:p>42</text:p></table:table-cell>
-    <table:table-cell table:formula="of:=SUM([.A2];8)" office:value-type="float" office:value="50"><text:p>50</text:p></table:table-cell>
+    <table:table-cell table:formula="SUM([.A2];8)" office:value-type="float" office:value="50"><text:p>50</text:p></table:table-cell>
    </table:table-row>
   </table:table>
   <table:table table:name="Notes">
@@ -143,7 +141,8 @@ try {
     throw 'An E1C source changed during independent reopen.'
   }
 
-  $version = (& $script:Soffice '--version' 2>&1 | Select-Object -First 1).ToString().Trim()
+  $versionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($script:Soffice)
+  $version = "LibreOffice $($versionInfo.ProductVersion)"
   $manifest = [ordered]@{
     schemaVersion = 1
     stage = 'E1C'

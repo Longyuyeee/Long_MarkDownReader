@@ -177,10 +177,7 @@ fn is_external_href(value: &str) -> bool {
 }
 
 fn is_script_element(local_name: &[u8]) -> bool {
-    matches!(
-        local_name,
-        b"scripts" | b"script" | b"event-listener" | b"event-listeners"
-    )
+    matches!(local_name, b"script" | b"event-listener")
 }
 
 fn inspect_common_xml(
@@ -899,6 +896,40 @@ mod tests {
         assert!(report.risks.script_marker_count >= 1);
         assert_eq!(report.risks.external_link_count, 1);
         assert!(report.risks.embedded_object_count >= 1);
+    }
+
+    #[test]
+    fn empty_script_containers_are_not_reported_as_macros() {
+        let source = fixture(
+            ".ods",
+            &[FixtureEntry {
+                name: "settings.xml",
+                content: br#"<office:document-settings xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"><office:scripts/><office:event-listeners/></office:document-settings>"#,
+                compression: CompressionMethod::Deflated,
+            }],
+        );
+        let report = inspect_odf_package(&source, ".ods").unwrap();
+        assert_eq!(report.risks.script_marker_count, 0);
+        assert!(!report
+            .risks
+            .risk_codes
+            .iter()
+            .any(|code| code == "script-or-macro"));
+
+        let scripted = fixture(
+            ".ods",
+            &[FixtureEntry {
+                name: "settings.xml",
+                content: br#"<office:document-settings xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"><office:scripts><office:script/></office:scripts></office:document-settings>"#,
+                compression: CompressionMethod::Deflated,
+            }],
+        );
+        assert!(inspect_odf_package(&scripted, ".ods")
+            .unwrap()
+            .risks
+            .risk_codes
+            .iter()
+            .any(|code| code == "script-or-macro"));
     }
 
     #[test]

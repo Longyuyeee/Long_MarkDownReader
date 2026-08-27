@@ -1,0 +1,69 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1C-A-odf-feasibility",
+    "capturedAt":  "2026-08-27T03:31:00.2402921Z",
+    "status":  "passed",
+    "expected":  {
+                     "formats":  2,
+                     "isolatedPackagePartPreservation":  true,
+                     "validOdsFormula":  "of:=SUM([.A2];8)",
+                     "validOdsCachedValue":  "50",
+                     "libreOfficeIndependentReopen":  true,
+                     "sourceUnchanged":  true
+                 },
+    "actual":  {
+                   "rustOdfTestsPassed":  14,
+                   "formats":  [
+                                   {
+                                       "formatId":  "ods",
+                                       "bytes":  8411,
+                                       "sha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                                       "entryCount":  9,
+                                       "sourceUnchanged":  true,
+                                       "libreOfficePdfBytes":  21586,
+                                       "formula":  "of:=SUM([.A2];8)",
+                                       "cachedValue":  "50",
+                                       "notesPreserved":  null
+                                   },
+                                   {
+                                       "formatId":  "odp",
+                                       "bytes":  15864,
+                                       "sha256":  "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+                                       "entryCount":  8,
+                                       "sourceUnchanged":  true,
+                                       "libreOfficePdfBytes":  19403,
+                                       "formula":  null,
+                                       "cachedValue":  null,
+                                       "notesPreserved":  false
+                                   }
+                               ],
+                   "libreOffice":  {
+                                       "version":  "26.2.4.2",
+                                       "isolatedProfiles":  true,
+                                       "independentPdfReopen":  true
+                                   },
+                   "wps":  {
+                               "status":  "blocked",
+                               "observation":  "KET.Application did not return from opening the valid ODS fixture within 60 seconds; the probe-started hidden process was stopped.",
+                               "countsAsProducerPass":  false
+                           }
+               },
+    "differences":  [
+                        "The former ODS seed produced of:=of:=SUM and Error 510; the seed now produces of:=SUM with cached value 50.",
+                        "LibreOffice empty office:scripts containers were formerly misclassified as macros; only actual script/event-listener elements are now blocked.",
+                        "LibreOffice did not preserve the authored ODP presenter note, so ODP notes editing remains read-only.",
+                        "WPS ODS automation timed out on this machine and is compatibility evidence only, not a producer pass."
+                    ],
+    "decision":  {
+                     "nextStage":  "M1C-B-ODS-bounded-cell-value",
+                     "ods":  "proceed-with-isolated-copy-only",
+                     "odp":  "remain-preview-only-until-text-and-notes-producer-fidelity-is-proven",
+                     "releaseCandidate":  false
+                 },
+    "privacy":  {
+                    "projectAuthoredFixtures":  true,
+                    "localAbsolutePathsIncluded":  false,
+                    "userDocumentBodiesIncluded":  false,
+                    "rawProducerOutputsCommitted":  false
+                }
+}

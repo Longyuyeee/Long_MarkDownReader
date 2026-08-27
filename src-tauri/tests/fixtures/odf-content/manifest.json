@@ -1,10 +1,10 @@
 {
     "schemaVersion":  1,
     "stage":  "E1C",
-    "generatedAt":  "2026-07-30T06:33:58.5633434Z",
+    "generatedAt":  "2026-08-27T03:25:51.9886571Z",
     "producer":  {
                      "application":  "LibreOffice Calc and Impress",
-                     "version":  "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+                     "version":  "LibreOffice 26.2.4.2",
                      "projectAuthoredSeeds":  true,
                      "isolatedProfiles":  true,
                      "independentReopen":  true
@@ -14,8 +14,8 @@
                       "formatId":  "ods",
                       "evidence":  {
                                        "file":  "longedit-e1c-spreadsheet.ods",
-                                       "bytes":  8728,
-                                       "sha256":  "b256a865f04a71218ffe407877c6ec68fa67b4db3803b9c52bd11ecb8ee14206",
+                                       "bytes":  8411,
+                                       "sha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
                                        "signature":  "504b",
                                        "expectedText":  "LongEdit E1C ODS fixture",
                                        "sourcePreserved":  true
@@ -26,7 +26,7 @@
                       "evidence":  {
                                        "file":  "longedit-e1c-presentation.odp",
                                        "bytes":  15864,
-                                       "sha256":  "bb277fbf0043019ecbddf0933fd5b497882a91c2693400ff29b2e1bcd165f148",
+                                       "sha256":  "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
                                        "signature":  "504b",
                                        "expectedText":  "LongEdit E1C ODP fixture",
                                        "sourcePreserved":  true

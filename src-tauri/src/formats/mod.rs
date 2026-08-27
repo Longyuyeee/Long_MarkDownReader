@@ -9,6 +9,8 @@ pub mod markdown;
 #[allow(dead_code)]
 pub mod odf;
 pub mod odf_content;
+#[allow(dead_code)]
+pub mod odf_edit;
 pub mod odt;
 pub mod opml;
 pub mod pdf_annotations;

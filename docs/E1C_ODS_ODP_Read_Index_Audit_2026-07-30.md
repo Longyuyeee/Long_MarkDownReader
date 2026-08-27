@@ -19,12 +19,14 @@
 
 | 格式 | 文件 | 大小 | SHA-256 |
 | --- | --- | ---: | --- |
-| ODS | `longedit-e1c-spreadsheet.ods` | 8728 | `b256a865f04a71218ffe407877c6ec68fa67b4db3803b9c52bd11ecb8ee14206` |
-| ODP | `longedit-e1c-presentation.odp` | 15864 | `bb277fbf0043019ecbddf0933fd5b497882a91c2693400ff29b2e1bcd165f148` |
+| ODS | `longedit-e1c-spreadsheet.ods` | 8411 | `bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c` |
+| ODP | `longedit-e1c-presentation.odp` | 15864 | `8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52` |
 
 样本由项目自有 FODS/FODP 种子经 LibreOffice Calc/Impress `26.2.4.2` 使用隔离配置生成，并分别由另一套全新配置重开导出 PDF。manifest 固定文件大小、摘要、ZIP 签名、生产者版本、独立重开和源文件不变事实。
 
 LibreOffice 本次从 FODP 导出 ODP 时没有保留种子中的演讲者备注文本，因此真实 ODP 基线不宣称备注生产者证据。解析器另有受控 ODF XML 测试，证明生产者实际保留备注时可生成 `odp-notes` locator；后续生产者矩阵仍需复核各应用的备注保真。
+
+2026-08-27 M1C-A 复核发现原 FODS 公式种子会被 LibreOffice 规范化为无效的 `of:=of:=SUM` 和 `错误:510`。种子已修正，当前真实 ODS 包含 `of:=SUM([.A2];8)` 与缓存值 `50`；ODS/ODP 均重新由 LibreOffice 26.2.4.2 隔离生成和独立复开，因此上表大小与摘要同步更新。只读产品边界不变。
 
 ## 3. 产品边界
 
