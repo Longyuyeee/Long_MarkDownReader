@@ -16,6 +16,7 @@ import './check-ux51-external-window-lifecycle.mjs'
 import './check-v115-interaction-polish-audit.mjs'
 import './check-v115-global-tooltip-policy.mjs'
 import './check-v115-overlay-bounds.mjs'
+import './check-post-v115-m1cc-ods-formula-style.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

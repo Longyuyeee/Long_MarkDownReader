@@ -324,6 +324,8 @@
     "audit:post-v115-m1ca-odf-feasibility": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1ca-odf-feasibility-audit.ps1",
     "check:post-v115-m1cb-ods-cell-edit": "node scripts/check-post-v115-m1cb-ods-cell-edit.mjs",
     "audit:post-v115-m1cb-ods-cell-edit": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1cb-ods-cell-edit-audit.ps1",
+    "check:post-v115-m1cc-ods-formula-style": "node scripts/check-post-v115-m1cc-ods-formula-style.mjs",
+    "audit:post-v115-m1cc-ods-formula-style": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1cc-ods-formula-style-audit.ps1",
     "audit:post-v115-m1b2c-docx-closure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1b2c-docx-closure-audit.ps1",
     "check:ux33i-docx-hyperlink-desktop": "node scripts/check-ux33i-docx-hyperlink-desktop-audit.mjs",
     "check:ux33j-installed-docx-harness": "node scripts/check-ux33j-installed-docx-harness.mjs",

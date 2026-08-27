@@ -1,0 +1,49 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1C-C-ODS-formula-and-style-feasibility",
+    "status":  "passed",
+    "capturedAt":  "2026-08-27T04:40:57.8949640Z",
+    "expected":  {
+                     "sourcePrecedent":  "Overview!A2=84.5",
+                     "storedFormula":  "of:=SUM([.A2];8)",
+                     "storedCachedValueBeforeProducerReopen":  "50",
+                     "libreOfficeRecalculatedValue":  "92.5",
+                     "styleInheritance":  "ceLongEditProbe -\u003e Good -\u003e Status -\u003e Default",
+                     "existingNamedStyleRoundtrip":  "Good",
+                     "sourceUnchanged":  true
+                 },
+    "actual":  {
+                   "formula":  "of:=SUM([.A2];8)",
+                   "cachedValueAfterLongEditPatch":  "50",
+                   "libreOfficeA2":  "84.5",
+                   "libreOfficeB2":  "92.5",
+                   "tableCellStyleCount":  19,
+                   "styleInheritance":  "ceLongEditProbe -\u003e Good -\u003e Status -\u003e Default",
+                   "roundtripStyleName":  "ceLongEditProbe(Good)",
+                   "roundtripFillColor":  "FFCCFFCC",
+                   "roundtripFontColor":  "FF006600",
+                   "sourceBeforeSha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                   "sourceAfterSha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                   "sourceUnchanged":  true
+               },
+    "differences":  [
+                        "LongEdit can safely patch the formula precedent while preserving the formula and its stored cache, but its immediate reread still sees the stale cached value 50.",
+                        "LibreOffice independently recalculates the same formula to 92.5, proving that formula editing cannot be opened without a calculation engine and cache policy.",
+                        "A producer-authored Flat ODF probe confirms that a content automatic table-cell style inheriting Good preserves the expected colors; ZIP transaction write-back remains a separate unproven boundary."
+                    ],
+    "decision":  {
+                     "stageAccepted":  true,
+                     "formulaEditingRemainsReadOnly":  true,
+                     "existingNamedStyleAssignmentCandidate":  true,
+                     "customStyleCreationCandidate":  false,
+                     "nextStage":  "M1C-D-ODS-existing-named-style-assignment",
+                     "odpRemainsReadOnly":  true,
+                     "releaseCandidate":  false
+                 },
+    "privacy":  {
+                    "projectAuthoredFixture":  true,
+                    "localAbsolutePathsIncluded":  false,
+                    "userDocumentBodiesIncluded":  false,
+                    "temporaryOfficeOutputsCommitted":  false
+                }
+}

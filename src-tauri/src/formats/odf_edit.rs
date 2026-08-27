@@ -853,6 +853,31 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "writes an isolated audit artifact for the M1C-C LibreOffice producer check"]
+    fn export_m1cc_formula_precedent_copy() {
+        let output = std::env::var_os("LONGEDIT_M1CC_OUTPUT")
+            .map(PathBuf::from)
+            .expect("LONGEDIT_M1CC_OUTPUT is required");
+        let source = fs::read(fixture("longedit-e1c-spreadsheet.ods")).unwrap();
+        let inventory = inspect_ods_cell_edit_inventory(&source).unwrap();
+        let target = inventory
+            .editable_cells
+            .iter()
+            .find(|cell| cell.sheet_name == "Overview" && cell.address == "A2")
+            .unwrap();
+        let (report, patched) = build_ods_cell_value_patch_isolated(
+            &source,
+            &target.id,
+            &target.expected_value_digest,
+            "84.5",
+        )
+        .unwrap();
+        assert_eq!(report.changed_parts, [ODF_EDITABLE_PART]);
+        assert!(report.unchanged_parts_verified && report.semantic_reparse_verified);
+        fs::write(output, patched).unwrap();
+    }
+
+    #[test]
     fn stale_or_formula_targets_cannot_be_patched() {
         let source = fs::read(fixture("longedit-e1c-spreadsheet.ods")).unwrap();
         let inventory = inspect_ods_cell_edit_inventory(&source).unwrap();
