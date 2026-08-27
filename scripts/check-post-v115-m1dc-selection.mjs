@@ -3,7 +3,6 @@ import fs from 'node:fs'
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'))
 const policy = readJson('shared/post-v115-m1dc-selection-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m1dc-selection/runtime-evidence.json')
-const media = fs.readFileSync('src/views/MediaViewerView.vue', 'utf8')
 const yaml = fs.readFileSync('src/views/YamlEditorView.vue', 'utf8')
 const xml = fs.readFileSync('src/views/XmlEditorView.vue', 'utf8')
 const toml = fs.readFileSync('src/views/TomlEditorView.vue', 'utf8')
@@ -26,9 +25,7 @@ const checks = {
     && evidence.actual.structured[id].diagnosticCount === 0)
     && evidence.actual.yamlUi.syntaxValidVisible
     && evidence.actual.yamlUi.schemaControlVisible === false,
-  currentImplementationFacts: !media.includes('<track')
-    && !media.includes('textTracks')
-    && !yaml.includes('schemaUrl')
+  deferredStructuredImplementationFacts: !yaml.includes('schemaUrl')
     && !xml.includes('schemaUrl')
     && !toml.includes('schemaUrl'),
   safetyAndLayout: evidence.actual.sourceUnchanged

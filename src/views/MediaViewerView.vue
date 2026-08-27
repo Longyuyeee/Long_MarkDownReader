@@ -43,6 +43,13 @@
             <option v-for="rate in playbackRates" :key="rate" :value="rate">{{ rate }}×</option>
           </select>
         </label>
+        <label v-if="subtitleTracks.length" class="playback-rate subtitle-picker" title="选择字幕轨道">
+          <CaptionsIcon />
+          <select v-model="selectedSubtitleId" data-testid="video-subtitle-select" aria-label="字幕轨道" @change="applySubtitleSelection">
+            <option value="off">字幕关闭</option>
+            <option v-for="track in subtitleTracks" :key="track.id" :value="track.id">{{ track.label }} · {{ track.cueCount }} 段</option>
+          </select>
+        </label>
         <button v-if="pictureInPictureAvailable" title="画中画" @click="enterPictureInPicture"><PictureInPictureIcon /></button>
         <button
           data-testid="video-capture-frame"
@@ -94,6 +101,7 @@
       </div>
       <video
         v-else-if="report?.kind === 'video' && mediaUrl"
+        :key="videoElementKey"
         ref="videoRef"
         :src="mediaUrl"
         crossorigin="anonymous"
@@ -198,6 +206,7 @@
         <span>{{ formatBytes(report.size) }}</span>
         <span v-if="mediaWidth && mediaHeight">{{ mediaWidth }} × {{ mediaHeight }}</span>
         <span v-if="isVideo && duration">{{ formatDuration(currentTime) }} / {{ formatDuration(duration) }}</span>
+        <span v-if="isVideo && subtitleTracks.length">{{ subtitleTracks.length }} 条字幕轨</span>
       </div>
       <span>{{ isVideo ? playbackStatusLabel : editableSource ? '源文件保持只读 · 编辑结果仅另存副本' : '源文件保持只读 · 图片按需解码' }}</span>
     </footer>
@@ -210,7 +219,7 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'
 import {
   ArrowLeft as ArrowLeftIcon, ExternalLink as ExternalLinkIcon, FastForward as FastForwardIcon, FileWarning as FileWarningIcon,
-  Camera as CameraIcon, Gauge as GaugeIcon, Grid3X3 as GridIcon, Image as ImageIcon, Maximize as MaximizeIcon,
+  Camera as CameraIcon, Captions as CaptionsIcon, Gauge as GaugeIcon, Grid3X3 as GridIcon, Image as ImageIcon, Maximize as MaximizeIcon,
   FlipHorizontal2 as FlipHorizontalIcon, FlipVertical2 as FlipVerticalIcon,
   Pause as PauseIcon, PictureInPicture2 as PictureInPictureIcon, Play as PlayIcon,
   RefreshCw as RefreshCwIcon, Repeat2 as RepeatIcon, Rewind as RewindIcon,
@@ -277,6 +286,16 @@ interface VideoFrameSavedReport {
   targetReopened: boolean
 }
 
+interface VideoSubtitleTrack {
+  id: string
+  label: string
+  format: 'VTT' | 'SRT'
+  cueCount: number
+  sourceBytes: number
+  webvtt: string
+  cues: Array<{ startTime: number; endTime: number; text: string }>
+}
+
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
@@ -304,6 +323,9 @@ const currentTime = ref(0)
 const frameStepRate = ref(30)
 const frameStepPending = ref(false)
 const capturingFrame = ref(false)
+const subtitleTracks = ref<VideoSubtitleTrack[]>([])
+const selectedSubtitleId = ref('off')
+const videoElementKey = ref(0)
 const editOpen = ref(false)
 const editLoading = ref(false)
 const saving = ref(false)
@@ -337,6 +359,7 @@ let stageResizeObserver: ResizeObserver | undefined
 let panOrigin: { pointerId: number; clientX: number; clientY: number; scrollLeft: number; scrollTop: number } | undefined
 let lastPersistedPlaybackSecond = -1
 let durationProbePending = false
+let runtimeSubtitleTracks: Array<{ id: string; track: TextTrack }> = []
 const MEDIA_POSITION_STORAGE_PREFIX = 'longedit.media-position.v1'
 
 const mediaPath = computed(() => String(route.query.path || store.activeTabId || ''))
@@ -401,6 +424,15 @@ const imageSurfaceStyle = computed(() => {
   }
 })
 
+const clearSubtitleTracks = () => {
+  for (const runtime of runtimeSubtitleTracks) {
+    runtime.track.mode = 'disabled'
+    for (const cue of Array.from(runtime.track.cues || [])) runtime.track.removeCue(cue)
+  }
+  runtimeSubtitleTracks = []
+  subtitleTracks.value = []
+  selectedSubtitleId.value = 'off'
+}
 const clearMediaUrl = () => {
   if (videoRef.value) {
     videoRef.value.pause()
@@ -408,6 +440,7 @@ const clearMediaUrl = () => {
     videoRef.value.load()
   }
   mediaUrl.value = ''
+  clearSubtitleTracks()
 }
 const formatBytes = (value: number) => value < 1024 * 1024
   ? `${(value / 1024).toFixed(1)} KiB`
@@ -556,6 +589,25 @@ const onVideoDurationChange = () => {
   if (video.currentTime < 1) restorePlaybackPosition()
 }
 const applyPlaybackRate = () => { if (videoRef.value) videoRef.value.playbackRate = playbackRate.value }
+const installSubtitleCues = () => {
+  const video = videoRef.value
+  if (!video) return
+  if (runtimeSubtitleTracks.length === subtitleTracks.value.length
+    && runtimeSubtitleTracks.every((runtime, index) => runtime.id === subtitleTracks.value[index]?.id)) return
+  runtimeSubtitleTracks = subtitleTracks.value.map(source => {
+    const track = video.addTextTrack('captions', source.label, 'und')
+    for (const cue of source.cues) track.addCue(new VTTCue(cue.startTime, cue.endTime, cue.text))
+    return { id: source.id, track }
+  })
+}
+const applySubtitleSelection = () => {
+  const video = videoRef.value
+  if (!video) return
+  installSubtitleCues()
+  for (const runtime of runtimeSubtitleTracks) {
+    runtime.track.mode = runtime.id === selectedSubtitleId.value ? 'showing' : 'disabled'
+  }
+}
 const enterFullscreen = () => { void videoRef.value?.requestFullscreen() }
 const togglePlayback = async () => {
   const video = videoRef.value
@@ -869,8 +921,23 @@ const load = async () => {
       isDirty: false,
       external: isExternal.value,
     })
+    if (inspected.kind === 'video' && !isExternal.value) {
+      try {
+        const discovered = await invoke<VideoSubtitleTrack[]>('discover_video_subtitles', {
+          libraryRoot: store.libraryPath,
+          path: inspected.path,
+        })
+        if (token !== loadToken) return
+        subtitleTracks.value = discovered
+        selectedSubtitleId.value = subtitleTracks.value[0]?.id || 'off'
+      } catch (error) {
+        playbackNotice.value = `字幕未加载：${String(error).replace(/^Error:\s*/, '')}`
+      }
+    }
+    videoElementKey.value += 1
     mediaUrl.value = convertFileSrc(inspected.path)
     await nextTick()
+    applySubtitleSelection()
   } catch (error) {
     if (token !== loadToken) return
     report.value = undefined
@@ -934,8 +1001,9 @@ onBeforeUnmount(() => {
 button,.playback-rate { height: 30px; flex: none; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text-secondary); background: var(--workspace-control-bg); }.media-toolbar button { width: 30px; padding: 0; cursor: pointer; }.media-toolbar button svg,.playback-rate svg { width: 15px; height: 15px; }.media-toolbar button:hover,.media-toolbar button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }.media-toolbar button:disabled { opacity: .4; cursor: default; }.media-toolbar .scale-value { width: 54px; font-size: var(--text-compact); font-variant-numeric: tabular-nums; }.toolbar-divider { width: 1px; height: 20px; margin: 0 3px; background: var(--workspace-border-color); }
 .playback-rate { gap: 5px; padding: 0 7px; }.playback-rate select { border: 0; outline: 0; color: inherit; background: transparent; font-size: var(--text-compact); }
 .frame-step-rate span { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 700; }.frame-step-rate select { max-width: 64px; }
+.subtitle-picker { max-width: 190px; color: var(--theme-primary); }.subtitle-picker select { min-width: 96px; max-width: 150px; color: var(--theme-text); text-overflow: ellipsis; }
 .media-content { min-width: 0; min-height: 0; flex: 1; display: flex; }
-.media-stage { min-width: 0; min-height: 0; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; overflow: auto; box-sizing: border-box; background: color-mix(in srgb, var(--theme-surface) 96%, #7f8a99); }.media-stage.checkerboard { background-color: var(--theme-surface); background-image: linear-gradient(45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(-45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(127,138,153,.13) 75%),linear-gradient(-45deg,transparent 75%,rgba(127,138,153,.13) 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; }.media-stage.video-stage { background: #101318; }.media-stage img { max-width: none; max-height: none; flex: none; object-fit: contain; transform-origin: center; image-rendering: auto; filter: drop-shadow(0 8px 22px rgba(0,0,0,.18)); }.media-stage video { width: min(100%, 1180px); max-height: 100%; border-radius: 6px; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+.media-stage { min-width: 0; min-height: 0; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; overflow: auto; box-sizing: border-box; background: color-mix(in srgb, var(--theme-surface) 96%, #7f8a99); }.media-stage.checkerboard { background-color: var(--theme-surface); background-image: linear-gradient(45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(-45deg,rgba(127,138,153,.13) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(127,138,153,.13) 75%),linear-gradient(-45deg,transparent 75%,rgba(127,138,153,.13) 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; }.media-stage.video-stage { background: #101318; }.media-stage img { max-width: none; max-height: none; flex: none; object-fit: contain; transform-origin: center; image-rendering: auto; filter: drop-shadow(0 8px 22px rgba(0,0,0,.18)); }.media-stage video { width: min(100%, 1180px); max-height: 100%; border-radius: 6px; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.35); }.media-stage video::cue { color: #fff; background: rgba(8,12,18,.82); font-size: 1.05rem; line-height: 1.45; text-shadow: 0 1px 3px #000; }
 .media-stage.image-stage { display: block; padding: 0; overscroll-behavior: contain; touch-action: none; cursor: grab; user-select: none; }.media-stage.image-stage.panning { cursor: grabbing; }.image-pan-surface { min-width: 100%; min-height: 100%; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }.image-pan-surface img { pointer-events: none; }
 .media-stage { position: relative; }
 .codec-notice,.playback-notice { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.15); border-radius: 6px; color: #eaf0f7; background: rgba(20,24,31,.92); box-shadow: 0 8px 24px rgba(0,0,0,.22); backdrop-filter: blur(10px); font-size: var(--text-compact); }

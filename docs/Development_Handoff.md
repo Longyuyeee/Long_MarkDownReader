@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-27 M1D-C1 外置字幕播放已通过：** 资料库视频会发现同目录同名 VTT/SRT，经过 2 MiB / 10,000 cue 有界解析后以内存 `TextTrack` 播放；真实 1280×720 WebM 在 0.6s/1.6s 分别显示指定 VTT/SRT cue，关闭、跨 TXT 重开、损坏 VTT 拒绝、960×720 布局和全部源 SHA-256 均通过，运行时错误 0。真实测试淘汰了 WebView2 中 cue 始终为 0 的 Blob `<track>` 路径，最终使用 `addTextTrack()` / `VTTCue`。下一步只做 M1 总退出条件审计。详见 [`Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md`](./Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md)。
+
 > **2026-08-27 M1D-C 字幕与 Schema 对象选择审计已通过：** 真实 1280×720 WebM 可正常解码，但同名有效 VTT/SRT 均未被发现，`textTracks=0` 且没有字幕入口；语法合法但违反同一业务类型约束的 YAML/XML/TOML 均显示有效、0 条诊断。全部临时源 SHA-256 不变，运行时错误和页面溢出均为 0。下一步只做 M1D-C1 资料库视频的 VTT/SRT sidecar 播放与轨道开关；嵌入字幕拆封、字幕编辑、转码和 Schema provider 映射继续关闭。详见 [`Post_v1.0.15_M1DC_Subtitle_and_Schema_Selection_Audit_2026-08-27.md`](./Post_v1.0.15_M1DC_Subtitle_and_Schema_Selection_Audit_2026-08-27.md)。
 
 > **2026-08-27 M1D-B 视频逐帧、截图与位置记忆已通过：** 真实 WebView2 生成并打开 1080p/4K 视频，30 fps 前后逐帧误差均在门禁内；当前帧可靠另存为 1920×1080 / 3840×2160 PNG，已有目标拒绝覆盖，源 SHA-256 不变。两段视频均从 1.2 秒准确恢复，localStorage 不含路径，1280×720/960×720 横向溢出 0、运行时错误 0。真实测试还发现并修复 Tauri 资产视频 Canvas 跨源污染。下一步进入 M1D-C 字幕与结构化格式对象选择审计，版本仍保持运行时/公开 `1.0.15`、开发目标 `1.0.16`。详见 [`Post_v1.0.15_M1DB_Video_Frame_Tools_Audit_2026-08-27.md`](./Post_v1.0.15_M1DB_Video_Frame_Tools_Audit_2026-08-27.md)。

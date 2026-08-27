@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-C1-external-subtitle-sidecar-playback",
+  "status": "passed",
+  "expected": {
+    "sameStemVttAndSrtDiscovered": true,
+    "trackSelectionAndOffState": true,
+    "timedActiveCueRendering": true,
+    "malformedSubtitleRejected": true,
+    "reopenStable": true,
+    "sourceUnchanged": true
+  },
+  "baselineDifference": {
+    "previousTextTrackCount": 0,
+    "previousSubtitleControlVisible": false,
+    "currentTextTrackCount": 2,
+    "currentSubtitleControlVisible": true
+  },
+  "actual": {
+    "vttActive": {
+      "decoded": true,
+      "selected": "vtt",
+      "options": [
+        {
+          "value": "off",
+          "text": "字幕关闭"
+        },
+        {
+          "value": "vtt",
+          "text": "WebVTT 字幕 · 2 段"
+        },
+        {
+          "value": "srt",
+          "text": "SRT 字幕 · 2 段"
+        }
+      ],
+      "textTrackCount": 2,
+      "trackElementCount": 0,
+      "modes": [
+        "showing",
+        "disabled"
+      ],
+      "cueCounts": [
+        2,
+        0
+      ],
+      "activeTexts": [
+        "VTT first cue"
+      ],
+      "statusText": "video/webm\n112.6 KiB\n1280 × 720\n0:00 / 0:03\n2 条字幕轨\nWebView 原生格式 · Range 流式读取",
+      "pageOverflow": 0
+    },
+    "srtActive": {
+      "decoded": true,
+      "selected": "srt",
+      "options": [
+        {
+          "value": "off",
+          "text": "字幕关闭"
+        },
+        {
+          "value": "vtt",
+          "text": "WebVTT 字幕 · 2 段"
+        },
+        {
+          "value": "srt",
+          "text": "SRT 字幕 · 2 段"
+        }
+      ],
+      "textTrackCount": 2,
+      "trackElementCount": 0,
+      "modes": [
+        "disabled",
+        "showing"
+      ],
+      "cueCounts": [
+        0,
+        2
+      ],
+      "activeTexts": [
+        "SRT second cue"
+      ],
+      "statusText": "video/webm\n112.6 KiB\n1280 × 720\n0:01 / 0:03\n2 条字幕轨\nWebView 原生格式 · Range 流式读取",
+      "pageOverflow": 0
+    },
+    "off": {
+      "decoded": true,
+      "selected": "off",
+      "options": [
+        {
+          "value": "off",
+          "text": "字幕关闭"
+        },
+        {
+          "value": "vtt",
+          "text": "WebVTT 字幕 · 2 段"
+        },
+        {
+          "value": "srt",
+          "text": "SRT 字幕 · 2 段"
+        }
+      ],
+      "textTrackCount": 2,
+      "trackElementCount": 0,
+      "modes": [
+        "disabled",
+        "disabled"
+      ],
+      "cueCounts": [
+        0,
+        0
+      ],
+      "activeTexts": [],
+      "statusText": "video/webm\n112.6 KiB\n1280 × 720\n0:01 / 0:03\n2 条字幕轨\nWebView 原生格式 · Range 流式读取",
+      "pageOverflow": 0
+    },
+    "narrow": {
+      "decoded": true,
+      "selected": "vtt",
+      "options": [
+        {
+          "value": "off",
+          "text": "字幕关闭"
+        },
+        {
+          "value": "vtt",
+          "text": "WebVTT 字幕 · 2 段"
+        },
+        {
+          "value": "srt",
+          "text": "SRT 字幕 · 2 段"
+        }
+      ],
+      "textTrackCount": 2,
+      "trackElementCount": 0,
+      "modes": [
+        "showing",
+        "disabled"
+      ],
+      "cueCounts": [
+        2,
+        0
+      ],
+      "activeTexts": [
+        "VTT second cue"
+      ],
+      "statusText": "video/webm\n112.6 KiB\n1280 × 720\n0:01 / 0:03\n2 条字幕轨",
+      "pageOverflow": 0
+    },
+    "reopened": {
+      "decoded": true,
+      "selected": "vtt",
+      "options": [
+        {
+          "value": "off",
+          "text": "字幕关闭"
+        },
+        {
+          "value": "vtt",
+          "text": "WebVTT 字幕 · 2 段"
+        },
+        {
+          "value": "srt",
+          "text": "SRT 字幕 · 2 段"
+        }
+      ],
+      "textTrackCount": 2,
+      "trackElementCount": 0,
+      "modes": [
+        "showing",
+        "disabled"
+      ],
+      "cueCounts": [
+        2,
+        0
+      ],
+      "activeTexts": [],
+      "statusText": "video/webm\n112.6 KiB\n1280 × 720\n0:01 / 0:03\n2 条字幕轨",
+      "pageOverflow": 0
+    },
+    "malformedRejected": {
+      "rejected": true,
+      "message": "VTT 字幕缺少 WEBVTT 文件头"
+    },
+    "sourceUnchanged": true,
+    "runtimeErrorCount": 0
+  },
+  "deferred": [
+    "external-window-sidecar-discovery",
+    "embedded-subtitle-demux",
+    "subtitle-source-editing",
+    "video-transcoding"
+  ],
+  "passed": true
+}

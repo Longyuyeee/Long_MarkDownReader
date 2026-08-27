@@ -22,6 +22,7 @@ import './check-post-v115-m1d-selection.mjs'
 import './check-post-v115-m1da-large-json.mjs'
 import './check-post-v115-m1db-video-tools.mjs'
 import './check-post-v115-m1dc-selection.mjs'
+import './check-post-v115-m1dc1-subtitle-playback.mjs'
 import './check-development-version-identity.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))

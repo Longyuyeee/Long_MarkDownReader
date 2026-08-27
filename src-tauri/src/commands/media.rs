@@ -3,6 +3,7 @@ use crate::formats::raster_image::{
     inspect_raster_image, transform_raster_image, RasterImageTransform, EDITABLE_IMAGE_EXTENSIONS,
     MAX_IMAGE_BYTES,
 };
+use crate::formats::text::read_text_snapshot;
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::write_new_bytes;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -11,7 +12,7 @@ use image::GenericImageView;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_fs::FsExt;
@@ -23,6 +24,9 @@ const VIDEO_EXTENSIONS: &[&str] = &[
 const DIRECT_VIDEO_EXTENSIONS: &[&str] = &["mp4", "webm", "ogv", "m4v"];
 const MAX_VIDEO_FRAME_PNG_BYTES: usize = 32 * 1024 * 1024;
 const MAX_VIDEO_FRAME_PIXELS: u64 = 50_000_000;
+const SUBTITLE_EXTENSIONS: &[&str] = &["vtt", "srt"];
+const MAX_SUBTITLE_BYTES: u64 = 2 * 1024 * 1024;
+const MAX_SUBTITLE_CUES: usize = 10_000;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,6 +94,26 @@ pub struct VideoFrameSavedReport {
     pub target_reopened: bool,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoSubtitleTrack {
+    pub id: String,
+    pub label: String,
+    pub format: String,
+    pub cue_count: usize,
+    pub source_bytes: u64,
+    pub webvtt: String,
+    pub cues: Vec<VideoSubtitleCue>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VideoSubtitleCue {
+    pub start_time: f64,
+    pub end_time: f64,
+    pub text: String,
+}
+
 fn mime_type(extension: &str) -> &'static str {
     match extension {
         "png" => "image/png",
@@ -143,6 +167,261 @@ pub async fn inspect_external_media_file(
 ) -> Result<MediaInspection, String> {
     let path = access.resolve_preview(path)?;
     inspect_resolved_media_file(&app, path)
+}
+
+#[tauri::command]
+pub async fn discover_video_subtitles(
+    library_root: String,
+    path: String,
+) -> Result<Vec<VideoSubtitleTrack>, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let video_path = guard.resolve_existing_file(path, VIDEO_EXTENSIONS)?;
+    discover_video_subtitles_for_path(&guard, &video_path)
+}
+
+fn discover_video_subtitles_for_path(
+    guard: &WorkspaceGuard,
+    video_path: &Path,
+) -> Result<Vec<VideoSubtitleTrack>, String> {
+    let mut tracks = Vec::new();
+    for extension in SUBTITLE_EXTENSIONS {
+        let Some(candidate) = find_matching_sidecar(video_path, extension)? else {
+            continue;
+        };
+        let sidecar = guard.resolve_existing_file(candidate, SUBTITLE_EXTENSIONS)?;
+        let metadata = sidecar
+            .metadata()
+            .map_err(|error| format!("读取字幕元数据失败: {error}"))?;
+        if metadata.len() == 0 {
+            return Err(format!(
+                "{}.{} 字幕为空",
+                video_stem(video_path)?,
+                extension
+            ));
+        }
+        if metadata.len() > MAX_SUBTITLE_BYTES {
+            return Err(format!(
+                "{}.{} 超过 2 MiB 字幕读取上限",
+                video_stem(video_path)?,
+                extension
+            ));
+        }
+        let snapshot = read_text_snapshot(&sidecar)
+            .map_err(|error| format!("读取 .{} 字幕失败: {}", extension, error.message))?;
+        let (webvtt, cues) = match *extension {
+            "vtt" => normalize_webvtt(&snapshot.content)?,
+            "srt" => convert_srt_to_webvtt(&snapshot.content)?,
+            _ => unreachable!(),
+        };
+        let cue_count = cues.len();
+        tracks.push(VideoSubtitleTrack {
+            id: extension.to_string(),
+            label: if *extension == "vtt" {
+                "WebVTT 字幕".into()
+            } else {
+                "SRT 字幕".into()
+            },
+            format: extension.to_ascii_uppercase(),
+            cue_count,
+            source_bytes: metadata.len(),
+            webvtt,
+            cues,
+        });
+    }
+    Ok(tracks)
+}
+
+fn find_matching_sidecar(video_path: &Path, extension: &str) -> Result<Option<PathBuf>, String> {
+    let stem = video_path
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .ok_or_else(|| "视频文件名无效".to_string())?;
+    let parent = video_path
+        .parent()
+        .ok_or_else(|| "视频路径缺少父目录".to_string())?;
+    let entries = fs::read_dir(parent).map_err(|error| format!("读取视频目录失败: {error}"))?;
+    for entry in entries {
+        let path = entry
+            .map_err(|error| format!("读取视频目录项失败: {error}"))?
+            .path();
+        let same_stem = path
+            .file_stem()
+            .and_then(|value| value.to_str())
+            .is_some_and(|value| value.eq_ignore_ascii_case(stem));
+        let same_extension = path
+            .extension()
+            .and_then(|value| value.to_str())
+            .is_some_and(|value| value.eq_ignore_ascii_case(extension));
+        if same_stem && same_extension && path.is_file() {
+            return Ok(Some(path));
+        }
+    }
+    Ok(None)
+}
+
+fn video_stem(path: &Path) -> Result<&str, String> {
+    path.file_stem()
+        .and_then(|value| value.to_str())
+        .ok_or_else(|| "视频文件名无效".into())
+}
+
+fn normalize_webvtt(source: &str) -> Result<(String, Vec<VideoSubtitleCue>), String> {
+    let normalized = source
+        .trim_start_matches('\u{feff}')
+        .replace("\r\n", "\n")
+        .replace('\r', "\n");
+    let first_line = normalized.lines().next().unwrap_or_default().trim();
+    if !first_line.starts_with("WEBVTT") {
+        return Err("VTT 字幕缺少 WEBVTT 文件头".into());
+    }
+    let lines: Vec<&str> = normalized.lines().collect();
+    let mut cues = Vec::new();
+    let mut index = 1usize;
+    while index < lines.len() {
+        if !lines[index].contains("-->") {
+            index += 1;
+            continue;
+        }
+        let (_, start_time, end_time) = normalized_timing_line(lines[index], false)?;
+        index += 1;
+        let text_start = index;
+        while index < lines.len() && !lines[index].trim().is_empty() {
+            index += 1;
+        }
+        if text_start == index {
+            return Err("VTT 字幕片段缺少文字".into());
+        }
+        cues.push(VideoSubtitleCue {
+            start_time,
+            end_time,
+            text: lines[text_start..index].join("\n"),
+        });
+        validate_cue_count(cues.len())?;
+    }
+    validate_cue_count(cues.len())?;
+    Ok((format!("{}\n", normalized.trim_end()), cues))
+}
+
+fn convert_srt_to_webvtt(source: &str) -> Result<(String, Vec<VideoSubtitleCue>), String> {
+    let normalized = source
+        .trim_start_matches('\u{feff}')
+        .replace("\r\n", "\n")
+        .replace('\r', "\n");
+    let mut output = String::from("WEBVTT\n\n");
+    let mut cues = Vec::new();
+    for block in normalized.split("\n\n") {
+        let lines: Vec<&str> = block.lines().map(str::trim_end).collect();
+        if lines.iter().all(|line| line.trim().is_empty()) {
+            continue;
+        }
+        let timing_index = if lines
+            .first()
+            .is_some_and(|line| line.trim().parse::<u64>().is_ok())
+        {
+            1
+        } else {
+            0
+        };
+        let timing = lines
+            .get(timing_index)
+            .ok_or_else(|| "SRT 字幕片段缺少时间轴".to_string())?;
+        let (normalized_timing, start_time, end_time) = normalized_timing_line(timing, true)?;
+        output.push_str(&normalized_timing);
+        output.push('\n');
+        let text_lines = &lines[(timing_index + 1)..];
+        if text_lines.is_empty() || text_lines.iter().all(|line| line.trim().is_empty()) {
+            return Err("SRT 字幕片段缺少文字".into());
+        }
+        let text = text_lines.join("\n");
+        output.push_str(&text);
+        output.push_str("\n\n");
+        cues.push(VideoSubtitleCue {
+            start_time,
+            end_time,
+            text,
+        });
+        validate_cue_count(cues.len())?;
+    }
+    validate_cue_count(cues.len())?;
+    Ok((output, cues))
+}
+
+fn normalized_timing_line(line: &str, allow_comma: bool) -> Result<(String, f64, f64), String> {
+    let mut parts = line.splitn(2, "-->");
+    let start = parts.next().unwrap_or_default().trim();
+    let remainder = parts
+        .next()
+        .ok_or_else(|| "字幕时间轴缺少 --> 分隔符".to_string())?
+        .trim();
+    let mut end_and_settings = remainder.splitn(2, char::is_whitespace);
+    let end = end_and_settings.next().unwrap_or_default();
+    let start_time = parse_subtitle_timestamp(start, allow_comma)?;
+    let end_time = parse_subtitle_timestamp(end, allow_comma)?;
+    if end_time <= start_time {
+        return Err("字幕片段结束时间必须晚于开始时间".into());
+    }
+    let settings = end_and_settings.next().unwrap_or_default().trim();
+    Ok((
+        format!(
+            "{} --> {}{}",
+            start.replace(',', "."),
+            end.replace(',', "."),
+            if settings.is_empty() {
+                String::new()
+            } else {
+                format!(" {settings}")
+            }
+        ),
+        start_time,
+        end_time,
+    ))
+}
+
+fn parse_subtitle_timestamp(value: &str, allow_comma: bool) -> Result<f64, String> {
+    let separator = if value.contains('.') {
+        '.'
+    } else if allow_comma && value.contains(',') {
+        ','
+    } else {
+        return Err(format!("字幕时间戳格式无效: {value}"));
+    };
+    let components: Vec<&str> = value.split(separator).collect();
+    if components.len() != 2
+        || components[1].len() != 3
+        || !components[1].bytes().all(|b| b.is_ascii_digit())
+    {
+        return Err(format!("字幕时间戳格式无效: {value}"));
+    }
+    let clock: Vec<&str> = components[0].split(':').collect();
+    if !(2..=3).contains(&clock.len())
+        || clock
+            .iter()
+            .any(|part| part.len() != 2 || !part.bytes().all(|b| b.is_ascii_digit()))
+    {
+        return Err(format!("字幕时间戳格式无效: {value}"));
+    }
+    let minute = clock[clock.len() - 2].parse::<u8>().unwrap_or(60);
+    let second = clock[clock.len() - 1].parse::<u8>().unwrap_or(60);
+    if minute > 59 || second > 59 {
+        return Err(format!("字幕时间戳超出有效范围: {value}"));
+    }
+    let hours = if clock.len() == 3 {
+        clock[0].parse::<u64>().unwrap_or_default()
+    } else {
+        0
+    };
+    let milliseconds = components[1].parse::<u64>().unwrap_or_default();
+    Ok((hours * 3600 + minute as u64 * 60 + second as u64) as f64 + milliseconds as f64 / 1000.0)
+}
+
+fn validate_cue_count(cue_count: usize) -> Result<(), String> {
+    if cue_count == 0 {
+        Err("字幕没有可播放的时间片段".into())
+    } else if cue_count > MAX_SUBTITLE_CUES {
+        Err("字幕超过 10000 个时间片段安全上限".into())
+    } else {
+        Ok(())
+    }
 }
 
 #[tauri::command]
@@ -272,8 +551,8 @@ fn save_video_frame_png_to_path(
     let output_digest = format!("{:x}", Sha256::digest(&png));
     write_new_bytes(target_path, &png)?;
     let verification = (|| -> Result<(), String> {
-        let saved = fs::read(target_path)
-            .map_err(|error| format!("截图已创建，但无法复读: {error}"))?;
+        let saved =
+            fs::read(target_path).map_err(|error| format!("截图已创建，但无法复读: {error}"))?;
         if saved != png || format!("{:x}", Sha256::digest(&saved)) != output_digest {
             return Err("截图落盘字节与 Canvas 输出不一致".into());
         }
@@ -451,10 +730,12 @@ fn inspect_resolved_media_file(
 #[cfg(test)]
 mod tests {
     use super::{
-        mime_type, modified_seconds, playback_support, save_image_transform_copy_to_path,
+        convert_srt_to_webvtt, discover_video_subtitles_for_path, mime_type, modified_seconds,
+        normalize_webvtt, playback_support, save_image_transform_copy_to_path,
         save_video_frame_png_to_path,
     };
     use crate::formats::raster_image::RasterImageTransform;
+    use crate::services::workspace_guard::WorkspaceGuard;
     use base64::{engine::general_purpose::STANDARD, Engine as _};
     use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
     use sha2::{Digest, Sha256};
@@ -526,6 +807,64 @@ mod tests {
         )
         .unwrap_err()
         .contains("不会覆盖"));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn converts_bounded_srt_and_validates_webvtt() {
+        let srt = "1\r\n00:00:00,200 --> 00:00:01,200\r\n第一段\r\n\r\n2\r\n00:00:01,300 --> 00:00:02,200\r\nSecond cue\r\n";
+        let (converted, srt_cues) = convert_srt_to_webvtt(srt).unwrap();
+        assert_eq!(srt_cues.len(), 2);
+        assert_eq!(srt_cues[0].start_time, 0.2);
+        assert_eq!(srt_cues[1].text, "Second cue");
+        assert!(converted.starts_with("WEBVTT\n\n00:00:00.200 --> 00:00:01.200"));
+        assert!(converted.contains("第一段"));
+
+        let (normalized, vtt_cues) =
+            normalize_webvtt("WEBVTT\n\n00:00.200 --> 00:01.200\nVTT cue\n").unwrap();
+        assert_eq!(vtt_cues.len(), 1);
+        assert_eq!(vtt_cues[0].text, "VTT cue");
+        assert!(normalized.ends_with('\n'));
+        assert!(normalize_webvtt("00:00.000 --> 00:01.000\nmissing header").is_err());
+        assert!(convert_srt_to_webvtt("1\ninvalid\ntext\n").is_err());
+    }
+
+    #[test]
+    fn discovers_only_same_stem_library_sidecars_without_writing_sources() {
+        let base = std::env::temp_dir().join(format!(
+            "longedit-video-subtitle-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&base).unwrap();
+        let video = base.join("lesson.webm");
+        let vtt = base.join("lesson.vtt");
+        let srt = base.join("lesson.srt");
+        let unrelated = base.join("other.vtt");
+        let video_bytes = b"real-video-placeholder";
+        let vtt_source = "WEBVTT\n\n00:00.200 --> 00:01.200\nVTT cue\n";
+        let srt_source = "1\n00:00:01,300 --> 00:00:02,200\nSRT cue\n";
+        fs::write(&video, video_bytes).unwrap();
+        fs::write(&vtt, vtt_source).unwrap();
+        fs::write(&srt, srt_source).unwrap();
+        fs::write(&unrelated, "WEBVTT\n\n00:00.000 --> 00:01.000\nOther\n").unwrap();
+
+        let guard = WorkspaceGuard::new(&base).unwrap();
+        let tracks = discover_video_subtitles_for_path(&guard, &video).unwrap();
+        assert_eq!(tracks.len(), 2);
+        assert_eq!(tracks[0].id, "vtt");
+        assert_eq!(tracks[1].id, "srt");
+        assert_eq!(tracks.iter().map(|track| track.cue_count).sum::<usize>(), 2);
+        assert_eq!(fs::read(&video).unwrap(), video_bytes);
+        assert_eq!(fs::read_to_string(&vtt).unwrap(), vtt_source);
+        assert_eq!(fs::read_to_string(&srt).unwrap(), srt_source);
+        assert_eq!(
+            fs::read_to_string(&unrelated).unwrap().lines().last(),
+            Some("Other")
+        );
         fs::remove_dir_all(base).unwrap();
     }
 

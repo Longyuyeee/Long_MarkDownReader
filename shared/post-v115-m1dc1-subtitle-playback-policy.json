@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-C1-external-subtitle-sidecar-playback",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "status": "accepted",
+  "libraryOnly": true,
+  "sameDirectoryAndStemOnly": true,
+  "supportedExtensions": ["vtt", "srt"],
+  "maximumSubtitleBytes": 2097152,
+  "maximumCueCount": 10000,
+  "defaultSelection": "first-discovered-track",
+  "sourceFilesWritten": false,
+  "requiredRealResults": [
+    "webview2-generated-webm-decoded",
+    "vtt-active-cue-rendered",
+    "srt-active-cue-rendered",
+    "off-state-disables-all-tracks",
+    "cross-format-reopen-rediscovers-tracks",
+    "malformed-vtt-rejected",
+    "narrow-layout-no-overflow",
+    "all-source-digests-unchanged"
+  ],
+  "deferredScope": [
+    "external-window-sidecar-discovery",
+    "embedded-subtitle-demux",
+    "subtitle-source-editing",
+    "video-transcoding",
+    "structured-schema-provider-and-mapping"
+  ],
+  "selectedNextStage": "M1-total-exit-criteria-audit",
+  "releaseCandidate": false
+}
