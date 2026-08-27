@@ -8,6 +8,7 @@ const failures = []
 const fail = message => failures.push(message)
 
 const pkg = json('package.json')
+const development = json('shared/development-version-policy.json')
 const registry = json('shared/file-formats.json')
 const closure = json('shared/ea5c-external-open-closure.json')
 const experience = json('shared/ux38-final-closure.json')
@@ -115,7 +116,11 @@ for (const token of [
   "import('./check-default-app-installed-lifecycle-harness.mjs')",
 ]) if (!currentAudit.includes(token)) fail(`current development audit is missing ${token}`)
 if (!pkg.scripts?.['check:ea5c-external-open-closure']) fail('EA-5C package script is missing')
-if (!alignment.includes(`当前版本：\`${pkg.version}\``) || !alignment.includes('当前阶段：**')) fail('development alignment is stale')
+if (
+  !alignment.includes(`当前开发目标：\`${development.developmentTargetVersion}\``)
+  || !alignment.includes(`运行时与当前公开版本：\`${pkg.version}\``)
+  || !alignment.includes('当前阶段：**')
+) fail('development alignment is stale')
 
 for (const [name, workflow] of [['quality gate', qualityWorkflow], ['U2 lifecycle', lifecycleWorkflow]]) {
   if (!workflow.includes('actions/setup-node@v6') || workflow.includes('actions/setup-node@v4')) fail(`${name} still uses the deprecated Node 20 action runtime`)

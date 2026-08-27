@@ -3,7 +3,8 @@ import path from 'node:path'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:14522'
 const output = path.resolve('docs/evidence/main-version-indicator')
-const expectedVersion = JSON.parse(await fs.readFile('package.json', 'utf8')).version
+const packageVersion = JSON.parse(await fs.readFile('package.json', 'utf8')).version
+const expectedVersion = JSON.parse(await fs.readFile('shared/development-version-policy.json', 'utf8')).developmentTargetVersion
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const targets = await fetch(`${endpoint}/json`).then(response => response.json())
 const target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl && !item.url.startsWith('devtools://'))
@@ -42,7 +43,15 @@ const waitFor = async (expression, description) => {
     if (await evaluate(expression)) return
     await delay(100)
   }
-  throw new Error(`Timed out waiting for ${description}`)
+  const diagnostic = await evaluate(`({
+    href: location.href,
+    hash: location.hash,
+    readyState: document.readyState,
+    title: document.title,
+    bodyText: document.body?.innerText?.slice(0, 600),
+    bodyHtml: document.body?.innerHTML?.slice(0, 600),
+  })`)
+  throw new Error(`Timed out waiting for ${description}: ${JSON.stringify({ diagnostic, runtimeErrors })}`)
 }
 const capture = async (file, clip) => {
   const shot = await send('Page.captureScreenshot', { format: 'png', fromSurface: true, ...(clip ? { clip } : {}) })
@@ -67,6 +76,7 @@ const metrics = () => evaluate(`(() => {
     sidebarWidth: sidebarRect?.width,
     text: badge?.textContent?.trim(),
     title: badge?.getAttribute('title'),
+    ariaLabel: badge?.getAttribute('aria-label'),
     labelText: document.querySelector('.lib-label')?.textContent?.trim(),
     footer: footerRect && { x: footerRect.x, y: footerRect.y, width: footerRect.width, height: footerRect.height, right: footerRect.right, bottom: footerRect.bottom },
     badge: badgeRect && { x: badgeRect.x, y: badgeRect.y, width: badgeRect.width, height: badgeRect.height, right: badgeRect.right, bottom: badgeRect.bottom },
@@ -81,7 +91,19 @@ await send('Page.enable')
 await send('Runtime.enable')
 await send('Log.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
-await waitFor(`document.querySelector('[data-testid="main-app-version"]')?.textContent?.trim() === 'v${expectedVersion}'`, 'main version indicator')
+await waitFor(`Boolean(document.querySelector('[data-testid="main-app-version"]'))`, 'main version indicator element')
+const initialBadge = await evaluate(`(() => {
+  const badge = document.querySelector('[data-testid="main-app-version"]')
+  return {
+    text: badge?.textContent?.replace(/\\s+/g, '').trim(),
+    title: badge?.getAttribute('title'),
+    hash: location.hash,
+    readyState: document.readyState,
+  }
+})()`)
+if (initialBadge.text !== `v${expectedVersion}dev`) {
+  throw new Error(`Main development version text differs: ${JSON.stringify({ expectedVersion, packageVersion, initialBadge, runtimeErrors })}`)
+}
 await delay(300)
 const normal = await metrics()
 await capture('main-version-indicator-wide.png')
@@ -112,8 +134,8 @@ const contained = state => state.badge.x >= state.footer.x
   && state.badge.right <= state.footer.right
   && state.badge.y >= state.footer.y
   && state.badge.bottom <= state.footer.bottom
-const passed = normal.text === `v${expectedVersion}`
-  && normal.title === `当前软件版本 v${expectedVersion}，点击查看更新`
+const passed = normal.text === `v${expectedVersion}dev`
+  && normal.ariaLabel === `开发线 v${expectedVersion}，运行时与当前公开版本 v${packageVersion}，点击查看更新`
   && normal.labelText === '当前资料库'
   && normal.pageOverflow <= 2
   && compact.pageOverflow <= 2
@@ -145,7 +167,7 @@ if (updateRoute.heading !== '系统与更新' || !updateRoute.updateVisible || u
 await fs.writeFile(path.join(output, 'runtime-evidence.json'), `${JSON.stringify({
   schemaVersion: 1,
   status: 'accepted',
-  expected: { version: expectedVersion, placement: 'sidebar-library-footer', normalAndCompactContainment: true },
+  expected: { version: expectedVersion, runtimeAndPublicVersion: packageVersion, placement: 'sidebar-library-footer', normalAndCompactContainment: true },
   actual: { normal, compact, narrow, updateRoute, runtimeErrorCount: runtimeErrors.length },
   passed,
 }, null, 2)}\n`)

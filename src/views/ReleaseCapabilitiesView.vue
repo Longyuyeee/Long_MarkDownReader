@@ -2,7 +2,7 @@
   <div class="release-capabilities">
     <WorkspaceManagementHeader
       title="格式能力"
-      :subtitle="`Long编辑 ${RELEASE_MATRIX_VERSION} · ${RELEASE_CAPABILITY_ROWS.length} 类格式`"
+      :subtitle="`Long编辑 ${DEVELOPMENT_TARGET_VERSION} 开发线 · 运行时 ${RELEASE_MATRIX_VERSION} · ${RELEASE_CAPABILITY_ROWS.length} 类格式`"
       @back="returnToSource"
     >
       <div class="release-state" title="社区无签名发布渠道；企业签名发布候选状态独立评估">
@@ -165,6 +165,7 @@ import {
   RELEASE_CAPABILITY_ROWS,
   RELEASE_EXTERNAL_GATES,
   RELEASE_MATRIX_VERSION,
+  DEVELOPMENT_TARGET_VERSION,
   RELEASE_PUBLIC_STATUS_LABEL,
   type ReleaseDependency,
   type ReleaseReadiness,

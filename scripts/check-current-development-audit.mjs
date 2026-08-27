@@ -18,34 +18,27 @@ import './check-v115-global-tooltip-policy.mjs'
 import './check-v115-overlay-bounds.mjs'
 import './check-post-v115-m1cc-ods-formula-style.mjs'
 import './check-post-v115-m1cd-ods-style-edit.mjs'
+import './check-development-version-identity.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
 const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
-const currentUpdater = JSON.parse(fs.readFileSync('shared/v112-managed-updater-lifecycle-policy.json', 'utf8'))
+const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json', 'utf8'))
 const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
 const counts = matrix.formats.reduce((result, item) => {
   result[item.readiness] = (result[item.readiness] ?? 0) + 1
   return result
 }, {})
-const currentUpdaterMatchesPackage = currentUpdater.status === 'hosted-managed-update-passed'
-  && currentUpdater.releases?.current?.version === pkg.version
-const expectedStage = currentUpdaterMatchesPackage
-  ? `当前阶段：**\`${pkg.version}\` 无签名社区版发布与更新链已收口**`
-  : policy.gates?.githubReleasePublished === true
-    ? `当前阶段：**\`${pkg.version}\` 无签名社区版已发布**`
-  : policy.gates?.qualityGatePassed === true
-    ? `当前阶段：**\`${pkg.version}\` 无签名社区版待发布**`
-    : `当前阶段：**\`${pkg.version}\` 无签名社区版发布候选准备中**`
 const required = [
   ['43 类格式', matrix.formats.length === 43],
   ['30 类为已验证', counts.verified === 30],
   ['7 类为有限能力', counts['verified-with-limitations'] === 7],
   ['6 类依赖外部程序', counts['external-dependency'] === 6],
   ['11 套发布能力配置', matrix.profiles.length === 11],
-  [`当前版本：\`${pkg.version}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
+  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.runtimeBaseVersion === pkg.version],
+  [`运行时与当前公开版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  [expectedStage, policy.currentStatus.startsWith(`v${pkg.version}-community-release-`)],
+  [`当前阶段：**\`${development.developmentTargetVersion}\` 开发线`, policy.currentStatus.startsWith(`v${pkg.version}-community-release-`)],
 ]
 
 for (const [token, condition] of required) {
@@ -57,7 +50,7 @@ for (const section of ['## 1. 审计结论', '## 2. 需求对齐', '## 3. 当前
   if (!audit.includes(section)) throw new Error(`[current-development-audit] audit is missing section: ${section}`)
 }
 
-console.log(`Current development audit passed: v${pkg.version}, 43 format mappings and release stage are aligned.`)
+console.log(`Current development audit passed: v${development.developmentTargetVersion} development line on v${pkg.version} runtime/public baseline.`)
 await import('./check-external-mermaid-workspace.mjs')
 await import('./check-external-opml-workspace.mjs')
 await import('./check-default-app-candidate-workflow.mjs')

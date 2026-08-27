@@ -1,5 +1,6 @@
 import matrixSource from '../../shared/release-capability-matrix.json'
 import communityReleaseSource from '../../shared/v1-community-release-policy.json'
+import developmentVersionSource from '../../shared/development-version-policy.json'
 import { FILE_FORMATS, type FileFormatDefinition } from './fileFormats'
 
 export type ReleaseReadiness = 'verified' | 'verified-with-limitations' | 'external-dependency'
@@ -46,6 +47,19 @@ interface CommunityReleasePolicy {
   }
 }
 
+interface DevelopmentVersionPolicy {
+  schemaVersion: number
+  channel: 'main-development'
+  developmentTargetVersion: string
+  runtimeBaseVersion: string
+  publicVersion: string
+  publicTag: string
+  releaseCandidate: boolean
+  currentStage: string
+  binaryVersionTransition: 'M4-release-freeze'
+  displayLabel: string
+}
+
 export interface ReleaseCapabilityRow {
   format: FileFormatDefinition
   readiness: ReleaseReadiness
@@ -57,6 +71,7 @@ export interface ReleaseCapabilityRow {
 
 const matrix = matrixSource as ReleaseCapabilityMatrix
 const communityRelease = communityReleaseSource as CommunityReleasePolicy
+const developmentVersion = developmentVersionSource as DevelopmentVersionPolicy
 const profiles = new Map(matrix.profiles.map(profile => [profile.id, profile]))
 const formats = new Map(FILE_FORMATS.map(format => [format.id, format]))
 const versionParts = (version: string) => {
@@ -80,6 +95,16 @@ if (matrix.formats.length !== FILE_FORMATS.length) throw new Error('Incomplete r
 if (communityRelease.schemaVersion !== 1 || compareVersions(communityRelease.appVersion, matrix.appVersion) > 0) {
   throw new Error('Community release policy does not match the capability matrix')
 }
+if (
+  developmentVersion.schemaVersion !== 1
+  || developmentVersion.channel !== 'main-development'
+  || developmentVersion.runtimeBaseVersion !== matrix.appVersion
+  || developmentVersion.publicVersion !== communityRelease.appVersion
+  || compareVersions(developmentVersion.developmentTargetVersion, developmentVersion.publicVersion) <= 0
+  || developmentVersion.releaseCandidate
+) {
+  throw new Error('Development version policy does not match the runtime and public release facts')
+}
 const currentCommunityReleasePublished = communityRelease.gates.githubReleasePublished
   && communityRelease.currentStatus === `v${communityRelease.appVersion}-community-release-published`
 
@@ -102,7 +127,12 @@ export const RELEASE_CAPABILITY_ROWS: readonly ReleaseCapabilityRow[] = Object.f
 export const RELEASE_STAGE = matrix.stage
 export const RELEASE_MATRIX_VERSION = matrix.appVersion
 export const RELEASE_CANDIDATE = matrix.releaseCandidate
-export const RELEASE_PUBLIC_STATUS_LABEL = currentCommunityReleasePublished
+export const DEVELOPMENT_TARGET_VERSION = developmentVersion.developmentTargetVersion
+export const DEVELOPMENT_CHANNEL_ACTIVE = developmentVersion.channel === 'main-development'
+export const DEVELOPMENT_VERSION_LABEL = developmentVersion.displayLabel
+export const RELEASE_PUBLIC_STATUS_LABEL = DEVELOPMENT_CHANNEL_ACTIVE
+  ? DEVELOPMENT_VERSION_LABEL
+  : currentCommunityReleasePublished
   && communityRelease.appVersion === matrix.appVersion
   ? `v${matrix.appVersion} 社区版已发布`
   : currentCommunityReleasePublished

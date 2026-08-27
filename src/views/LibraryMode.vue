@@ -393,7 +393,7 @@
                   @click.stop="openUpdateSettings"
                 >
                   <span v-if="hasAvailableUpdate" class="version-update-dot" aria-hidden="true"></span>
-                  v{{ currentAppVersion }}
+                  v{{ displayedAppVersion }}<span v-if="DEVELOPMENT_CHANNEL_ACTIVE" class="version-channel">dev</span>
                 </button>
               </div>
               <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
@@ -752,7 +752,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke, isTauriRuntime, listen } from '../services/tauriRuntime'
 import { initializeUpdater, updaterState } from '../services/appUpdater'
-import { RELEASE_MATRIX_VERSION } from '../config/releaseCapabilities'
+import {
+  DEVELOPMENT_CHANNEL_ACTIVE,
+  DEVELOPMENT_TARGET_VERSION,
+  RELEASE_MATRIX_VERSION,
+} from '../config/releaseCapabilities'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
@@ -787,10 +791,15 @@ const currentAppVersion = computed(() => {
     ? runtimeVersion
     : RELEASE_MATRIX_VERSION
 })
+const displayedAppVersion = computed(() => DEVELOPMENT_CHANNEL_ACTIVE
+  ? DEVELOPMENT_TARGET_VERSION
+  : currentAppVersion.value)
 const hasAvailableUpdate = computed(() => updaterState.status === 'available' && Boolean(updaterState.latestVersion))
 const versionIndicatorLabel = computed(() => hasAvailableUpdate.value
   ? `发现新版本 v${updaterState.latestVersion}，点击查看更新`
-  : `当前软件版本 v${currentAppVersion.value}，点击查看更新`)
+  : DEVELOPMENT_CHANNEL_ACTIVE
+    ? `开发线 v${DEVELOPMENT_TARGET_VERSION}，运行时与当前公开版本 v${currentAppVersion.value}，点击查看更新`
+    : `当前软件版本 v${currentAppVersion.value}，点击查看更新`)
 
 interface ExternalAppExecutable {
   role: string
@@ -4355,7 +4364,7 @@ watch(activeTabId, (newId, oldId) => {
 
 .lib-info-box { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .lib-name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.lib-label { font-size: var(--text-compact); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.3; transition: opacity 0.3s; }
+.lib-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.3; transition: opacity 0.3s; }
 .sidebar-footer:hover .lib-label { opacity: 0.5; }
 .lib-status-dot { width: 6px; height: 6px; background: #42b883; border-radius: 50%; box-shadow: 0 0 8px rgba(66, 184, 131, 0.4); }
 .app-version-badge {
@@ -4389,6 +4398,13 @@ watch(activeTabId, (newId, oldId) => {
   outline: none;
 }
 .app-version-badge.has-update { color: var(--theme-warning, #d97706); border-color: color-mix(in srgb, var(--theme-warning, #d97706) 45%, transparent); }
+.version-channel {
+  padding-left: 3px;
+  border-left: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  font-size: 0.78em;
+  font-weight: 900;
+  text-transform: uppercase;
+}
 .version-update-dot {
   width: 6px;
   height: 6px;

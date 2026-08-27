@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "status": "accepted",
   "expected": {
-    "version": "1.0.12",
+    "version": "1.0.16",
+    "runtimeAndPublicVersion": "1.0.15",
     "placement": "sidebar-library-footer",
     "normalAndCompactContainment": true
   },
@@ -14,22 +15,23 @@
       ],
       "pageOverflow": 0,
       "sidebarWidth": 260,
-      "text": "v1.0.12",
-      "title": "当前软件版本 v1.0.12，点击查看更新",
-      "label": "当前资料库",
+      "text": "v1.0.16dev",
+      "title": null,
+      "ariaLabel": "开发线 v1.0.16，运行时与当前公开版本 v1.0.15，点击查看更新",
+      "labelText": "当前资料库",
       "footer": {
         "x": 12,
-        "y": 727.609375,
+        "y": 726.4140625,
         "width": 235,
-        "height": 60.390625,
+        "height": 61.5859375,
         "right": 247,
         "bottom": 788
       },
       "badge": {
-        "x": 163.3515625,
-        "y": 737.40625,
-        "width": 47.8515625,
-        "height": 18,
+        "x": 135.1953125,
+        "y": 736.2109375,
+        "width": 76.0078125,
+        "height": 19.1953125,
         "right": 211.203125,
         "bottom": 755.40625
       },
@@ -37,6 +39,23 @@
         "x": 69.796875,
         "width": 141.40625,
         "right": 211.203125
+      },
+      "labelRect": {
+        "x": 69.796875,
+        "y": 737.0078125,
+        "width": 48.375,
+        "height": 17.59375,
+        "right": 118.171875,
+        "bottom": 754.6015625,
+        "whiteSpace": "nowrap"
+      },
+      "name": {
+        "x": 69.796875,
+        "y": 757.40625,
+        "width": 141.40625,
+        "height": 20.796875,
+        "right": 211.203125,
+        "bottom": 778.203125
       }
     },
     "compact": {
@@ -46,29 +65,97 @@
       ],
       "pageOverflow": 0,
       "sidebarWidth": 220,
-      "text": "v1.0.12",
-      "title": "当前软件版本 v1.0.12，点击查看更新",
-      "label": "当前资料库",
+      "text": "v1.0.16dev",
+      "title": null,
+      "ariaLabel": "开发线 v1.0.16，运行时与当前公开版本 v1.0.15，点击查看更新",
+      "labelText": "当前资料库",
       "footer": {
-        "x": 12,
-        "y": 710.421875,
-        "width": 195,
-        "height": 77.578125,
-        "right": 207,
-        "bottom": 788
+        "x": 8,
+        "y": 732.0078125,
+        "width": 203,
+        "height": 59.9921875,
+        "right": 211,
+        "bottom": 792
       },
       "badge": {
-        "x": 123.3515625,
-        "y": 728.8125,
-        "width": 47.8515625,
-        "height": 18,
-        "right": 171.203125,
-        "bottom": 746.8125
+        "x": 116,
+        "y": 741.0078125,
+        "width": 74.0078125,
+        "height": 19.1953125,
+        "right": 190.0078125,
+        "bottom": 760.203125
       },
       "info": {
-        "x": 69.796875,
-        "width": 101.40625,
-        "right": 171.203125
+        "x": 57,
+        "width": 145,
+        "right": 202
+      },
+      "labelRect": {
+        "x": 57,
+        "y": 741.8046875,
+        "width": 55,
+        "height": 17.59375,
+        "right": 112,
+        "bottom": 759.3984375,
+        "whiteSpace": "nowrap"
+      },
+      "name": {
+        "x": 57,
+        "y": 762.203125,
+        "width": 145,
+        "height": 20.796875,
+        "right": 202,
+        "bottom": 783
+      }
+    },
+    "narrow": {
+      "viewport": [
+        900,
+        720
+      ],
+      "pageOverflow": 0,
+      "sidebarWidth": 200,
+      "text": "v1.0.16dev",
+      "title": null,
+      "ariaLabel": "开发线 v1.0.16，运行时与当前公开版本 v1.0.15，点击查看更新",
+      "labelText": "当前资料库",
+      "footer": {
+        "x": 8,
+        "y": 652.0078125,
+        "width": 183,
+        "height": 59.9921875,
+        "right": 191,
+        "bottom": 712
+      },
+      "badge": {
+        "x": 107.9921875,
+        "y": 661.0078125,
+        "width": 74.0078125,
+        "height": 19.1953125,
+        "right": 182,
+        "bottom": 680.203125
+      },
+      "info": {
+        "x": 57,
+        "width": 125,
+        "right": 182
+      },
+      "labelRect": {
+        "x": 57,
+        "y": 661.8046875,
+        "width": 46.9921875,
+        "height": 17.59375,
+        "right": 103.9921875,
+        "bottom": 679.3984375,
+        "whiteSpace": "nowrap"
+      },
+      "name": {
+        "x": 57,
+        "y": 682.203125,
+        "width": 125,
+        "height": 20.796875,
+        "right": 182,
+        "bottom": 703
       }
     },
     "updateRoute": {

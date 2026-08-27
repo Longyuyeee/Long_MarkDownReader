@@ -1137,3 +1137,6 @@ v1.0.14 汇总 v1.0.13 发布后的三组已验收修复：窄侧栏资料库卡
 真实 Tauri 前后对照已通过：旧提交 `87c6bd5` 在不点击保存、等待 3.5 秒后改变 fixture SHA-256 并清除脏状态；当前实现同样等待后源文件逐字节不变且脏状态保留，点击保存后才写入，重载可见，720x680 无页面横向溢出，运行时错误为 0。证据与复现命令见 [`Post_v1.0.15_Explicit_Save_Alignment_Audit_2026-08-26.md`](./Post_v1.0.15_Explicit_Save_Alignment_Audit_2026-08-26.md)。
 
 接手后先建立 10,000 文件真实资料库的索引与搜索性能基线，覆盖首次/增量索引、查询、取消、重启恢复及工作台首个可操作时间。通过后再进入 M1B2A DOCX 生产者对象选择审计。当前仍为 1.0.15，`releaseCandidate=false`。
+# 2026-08-27 开发版本身份对齐
+
+当前开发目标为 `1.0.16`，运行时和当前公开版本仍为 `1.0.15`。`main` 已领先公开标签 `v1.0.15`；主界面与格式能力页必须明确显示开发线身份，package、Cargo、Tauri、公开策略和历史制品哈希只在 M4 发布冻结时原子提升。接手后先运行 `npm run check:development-version-identity` 与 `npm run audit:main-version-indicator`，通过后进入 M1D 媒体与结构化文本对象选择审计。详见 [`Post_v1.0.15_Development_Version_Identity_Alignment_Audit_2026-08-27.md`](./Post_v1.0.15_Development_Version_Identity_Alignment_Audit_2026-08-27.md)。

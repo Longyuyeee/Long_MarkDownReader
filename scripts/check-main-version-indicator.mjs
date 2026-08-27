@@ -5,12 +5,15 @@ const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const packageVersion = readJson('package.json').version
 const tauriVersion = readJson('src-tauri/tauri.conf.json').version
 const releaseVersion = readJson('shared/release-capability-matrix.json').appVersion
+const developmentVersion = readJson('shared/development-version-policy.json').developmentTargetVersion
 
 const checks = {
   versionsAligned: packageVersion === tauriVersion && tauriVersion === releaseVersion,
   runtimeVersionInitialized: source.includes('void initializeUpdater()'),
   runtimeVersionBound: source.includes('updaterState.currentVersion.trim()') && source.includes('RELEASE_MATRIX_VERSION'),
-  visibleMainIndicator: source.includes('data-testid="main-app-version"') && source.includes('v{{ currentAppVersion }}'),
+  visibleMainIndicator: source.includes('data-testid="main-app-version"')
+    && source.includes('v{{ displayedAppVersion }}')
+    && source.includes('class="version-channel"'),
   accessibleDescription: source.includes(':aria-label="versionIndicatorLabel"'),
   directUpdateRoute: source.includes("focus: 'software-update'") && source.includes('@click.stop="openUpdateSettings"'),
   updateAwareness: source.includes("updaterState.status === 'available'") && source.includes('version-update-dot'),
@@ -26,8 +29,8 @@ const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name
 const evidence = {
   expected: {
     placement: '主界面左侧底部当前资料库卡片',
-    version: packageVersion,
-    behavior: '运行时读取应用版本，初始化期间使用对齐后的发布矩阵版本',
+    version: developmentVersion,
+    behavior: '开发环境显示目标补丁版本与 dev 渠道，运行时和公开版本继续读取冻结事实源',
   },
   actual: { packageVersion, tauriVersion, releaseVersion, checks },
 }
