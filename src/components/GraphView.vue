@@ -96,6 +96,36 @@
       </div>
       <div v-if="shortestPathResult?.status === 'found'" class="graph-path-result" data-testid="graph-path-found"><strong>{{ shortestPathResult.edges.length }} 跳</strong><span>{{ shortestPathChain }}</span><button type="button" data-testid="graph-path-return" @click="clearShortestPath">返回全图</button></div>
       <div v-else-if="shortestPathResult?.status === 'unreachable'" class="graph-path-result unreachable" data-testid="graph-path-unreachable"><strong>没有可达路径</strong><span>当前筛选范围内两节点不连通，请更换节点或调整筛选。</span></div>
+      <ol v-if="pathEdgeEvidence.length" class="graph-path-evidence-list" data-testid="graph-path-evidence-list">
+        <li
+          v-for="(item, edgeIndex) in pathEdgeEvidence"
+          :key="`${edgeIndex}-${item.edge.source}-${item.edge.target}-${item.edge.relationType}`"
+          class="graph-path-evidence-edge"
+          data-testid="graph-path-evidence-edge"
+          :data-relation-type="item.edge.relationType"
+          :data-directed="String(item.edge.directed)"
+          :data-mention-count="item.mentions.length"
+        >
+          <header>
+            <strong>第 {{ edgeIndex + 1 }} 条 · {{ relationTypeLabel(item.edge.relationType) }}</strong>
+            <span>{{ item.source.title }} {{ item.edge.directed ? '→' : '↔' }} {{ item.target.title }}</span>
+            <small v-if="item.traversalReversed">路径沿关系反向发现，事实方向保持不变</small>
+            <small v-else>{{ item.edge.directed ? '有向关系' : '无向关系' }}</small>
+          </header>
+          <div v-if="item.mentions.length" class="graph-path-mentions">
+            <article v-for="(mention, mentionIndex) in item.mentions" :key="`${mention.line}-${mentionIndex}-${mention.syntax}`" data-testid="graph-path-evidence-mention">
+              <div><b>证据 {{ mentionIndex + 1 }}</b><span>第 {{ mention.line }} 行 · {{ relationTypeLabel(mention.relationType) }}</span></div>
+              <code>{{ mention.syntax }}</code>
+              <p>{{ mention.context || '该引用未提供额外上下文。' }}</p>
+              <button type="button" data-testid="graph-path-evidence-return" @click="openPathMention(item, mention)">回到来源第 {{ mention.line }} 行</button>
+            </article>
+          </div>
+          <div v-else class="graph-path-structural-evidence" data-testid="graph-path-structural-evidence">
+            <span>结构关系没有 Markdown mention；来源对象定位是可审计依据。</span>
+            <button type="button" data-testid="graph-path-structure-return" @click="openNode(item.source)">打开来源对象</button>
+          </div>
+        </li>
+      </ol>
       <button class="graph-path-close" type="button" aria-label="关闭最短路径" @click="closePathPanel">×</button>
     </section>
     <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" />
@@ -302,9 +332,11 @@ import WorkspaceStatusBar from './workspace/WorkspaceStatusBar.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
 import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
 import { findShortestGraphPath } from '../utils/graphPath'
+import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphPathResult } from '../utils/graphPath'
-import type { GraphData, GraphNode } from '../types/graph'
+import type { GraphData, GraphNode, RelationMention } from '../types/graph'
+import type { GraphPathEdgeEvidence } from '../utils/graphEvidence'
 
 const props = defineProps<{ show?: boolean }>()
 const emit = defineEmits(['selectFile'])
@@ -416,6 +448,7 @@ const shortestPathChain = computed(() => {
   const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node.title]))
   return activeShortestPath.value?.nodeIds.map(id => nodeMap.get(id) || id).join(' → ') || ''
 })
+const pathEdgeEvidence = computed(() => buildGraphPathEvidence(graphData.value, shortestPathResult.value))
 const contextMenuOptions = computed(() => {
   const node = contextNode.value
   if (node) return [
@@ -948,9 +981,11 @@ const clearNeighborFocus = () => {
 }
 const togglePathPanel = () => pathOpen.value ? closePathPanel() : openPathPanel()
 const openPathPanel = () => {
+  const selectedStartId = selectedNode.value?.id || ''
   neighborFocusRootId.value = ''
   pathOpen.value = true
-  pathStartId.value ||= selectedNode.value?.id || ''
+  pathStartId.value ||= selectedStartId
+  selectedNode.value = null
 }
 const clearShortestPath = () => {
   shortestPathResult.value = null
@@ -1012,6 +1047,14 @@ const openNode = (node: GraphNode) => {
     })
   }
   return openManagedFile(router, path)
+}
+const openPathMention = (item: GraphPathEdgeEvidence, mention: RelationMention) => {
+  if (item.source.objectType !== 'markdown') return openNode(item.source)
+  return openManagedFile(router, displayWorkspacePath(item.source.path), {
+    relationLine: String(mention.line),
+    relationSyntax: mention.syntax,
+    relationLocator: `${Date.now()}-${mention.line}`,
+  })
 }
 const openPath = (path: string) => openManagedFile(router, displayWorkspacePath(path))
 const handleHealthRepaired = () => loadGraph()
@@ -1769,7 +1812,10 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .match-count { color: var(--theme-primary); font-weight: 650; }
 .remediation-banner { position: absolute; top: calc(var(--workspace-management-header-height) + 58px); left: var(--workspace-floating-gutter); right: var(--workspace-floating-gutter); z-index: 3; min-height: 46px; display: grid; grid-template-columns: minmax(0,1fr) auto 24px; align-items: center; gap: 10px; padding: 7px 8px 7px 12px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); backdrop-filter: blur(16px); box-shadow: var(--workspace-shadow-sm); }.remediation-copy { min-width: 0; display: grid; gap: 2px; }.remediation-banner strong { font-size: 11px; }.remediation-banner span { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.remediation-actions { display: flex; align-items: center; gap: 6px; }.remediation-banner button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.2); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.06); cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.remediation-banner .remediation-close { width: 24px; min-height: 24px; padding: 0; border-color: transparent; color: var(--theme-text-secondary); background: transparent; font-size: 16px; }
 .neighbor-focus-banner { position: absolute; z-index: 7; top: 126px; left: 16px; max-width: min(560px, calc(100% - 32px)); min-height: 34px; display: flex; align-items: center; gap: 8px; padding: 5px 7px 5px 11px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 95%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); font-size: 10px; }.neighbor-focus-banner span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.neighbor-focus-banner select { flex: none; height: 24px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.neighbor-focus-banner button { flex: none; min-height: 24px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.neighbor-focus-active :deep(.graph-semantic-legend) { top: 170px; }
-.graph-path-panel { position: absolute; z-index: 9; top: 126px; left: 16px; right: 16px; max-width: 760px; display: grid; gap: 6px; padding: 8px 36px 8px 10px; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); }.graph-path-fields { display: grid; grid-template-columns: minmax(120px,1fr) auto minmax(120px,1fr) auto; align-items: center; gap: 7px; }.graph-path-fields select { min-width: 0; height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.graph-path-fields button,.graph-path-result button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-path-fields button:disabled { opacity: .45; cursor: not-allowed; }.graph-path-result { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 10px; }.graph-path-result span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-path-result button { margin-left: auto; flex: none; }.graph-path-result.unreachable strong { color: var(--theme-warning, #d97706); }.graph-path-close { position: absolute; top: 6px; right: 7px; width: 24px; height: 24px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 17px; }.graph-path-active :deep(.graph-semantic-legend) { top: 214px; }
+.graph-path-panel { position: absolute; z-index: 9; top: 126px; left: 16px; right: 16px; max-width: 760px; max-height: min(430px, calc(100% - 170px)); display: grid; gap: 6px; padding: 8px 36px 8px 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); }.graph-path-fields { display: grid; grid-template-columns: minmax(120px,1fr) auto minmax(120px,1fr) auto; align-items: center; gap: 7px; }.graph-path-fields select { min-width: 0; height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.graph-path-fields button,.graph-path-result button,.graph-path-evidence-list button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-path-fields button:disabled { opacity: .45; cursor: not-allowed; }.graph-path-result { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 10px; }.graph-path-result span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-path-result button { margin-left: auto; flex: none; }.graph-path-result.unreachable strong { color: var(--theme-warning, #d97706); }.graph-path-evidence-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }.graph-path-evidence-edge { display: grid; gap: 6px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: color-mix(in srgb,var(--workspace-control-bg) 90%,transparent); }.graph-path-evidence-edge > header { min-width: 0; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 7px; font-size: 10px; }.graph-path-evidence-edge > header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-path-evidence-edge > header small { color: var(--theme-text-secondary); }.graph-path-mentions { display: grid; gap: 5px; }.graph-path-mentions article { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); }.graph-path-mentions article > div { min-width: 0; display: flex; gap: 7px; font-size: 10px; }.graph-path-mentions article > div span { color: var(--theme-text-secondary); }.graph-path-mentions code,.graph-path-mentions p { grid-column: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.graph-path-mentions code { color: var(--theme-primary); }.graph-path-mentions button { grid-column: 2; grid-row: 1 / 4; align-self: center; }.graph-path-structural-evidence { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); color: var(--theme-text-secondary); font-size: 10px; }.graph-path-structural-evidence button { flex: none; }.graph-path-close { position: sticky; z-index: 2; top: -2px; justify-self: end; width: 24px; height: 24px; margin-top: -36px; margin-right: -30px; border: 0; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 17px; }.graph-path-active :deep(.graph-semantic-legend) { top: 214px; }
+
+.graph-path-close { position: absolute; top: 6px; right: 7px; justify-self: auto; margin: 0; }
+@media (max-width: 760px) { .graph-path-panel { max-height: min(480px, calc(100% - 150px)); }.graph-path-fields { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }.graph-path-fields > button { grid-column: 1 / -1; }.graph-path-evidence-edge > header { grid-template-columns: 1fr; gap: 2px; }.graph-path-mentions article { grid-template-columns: minmax(0,1fr); }.graph-path-mentions button { grid-column: 1; grid-row: auto; justify-self: start; }.graph-path-structural-evidence { align-items: flex-start; flex-direction: column; } }
 
 .tutorial-btn {
   flex: none;

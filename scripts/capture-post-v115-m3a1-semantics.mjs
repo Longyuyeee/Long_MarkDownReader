@@ -100,7 +100,8 @@ if (stage === 'M3A2') {
 }
 
 let shortestPath = null
-if (stage === 'M3A3') {
+let relationEvidence = null
+if (stage === 'M3A3' || stage === 'M3A4') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   await evaluate(`document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
   await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, 'shortest-path panel')
@@ -120,16 +121,35 @@ if (stage === 'M3A3') {
   await delay(200)
   const narrowFocused = await snapshot()
   await capture('shortest-path-narrow.jpg')
-  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
-  await delay(100)
-  await evaluate(`document.querySelector('[data-testid="graph-path-return"]')?.click()`)
-  await waitFor(`document.querySelector('[data-testid="graph-path-found"]')===null`, 'shortest-path return')
-  const restored = await snapshot()
-  await choose('[data-testid="graph-path-end"]', 'Review · PowerPoint 演示')
-  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
-  await waitFor(`document.querySelector('[data-testid="graph-path-unreachable"]')!==null`, 'unreachable path state')
-  const unreachableText = await evaluate(`document.querySelector('[data-testid="graph-path-unreachable"]')?.textContent?.replace(/\\s+/g,' ').trim()||''`)
-  shortestPath = { foundText, focused, narrowFocused, restored, fullGraphRestored: restored.graphStats.startsWith('17 / 17 节点 17 连接'), unreachableText }
+  if (stage === 'M3A4') {
+    const evidenceSnapshot = await evaluate(`(()=>{const edges=[...document.querySelectorAll('[data-testid="graph-path-evidence-edge"]')];const mentions=[...document.querySelectorAll('[data-testid="graph-path-evidence-mention"]')];return {edgeCount:edges.length,mentionCount:mentions.length,edges:edges.map(edge=>({relationType:edge.dataset.relationType,directed:edge.dataset.directed,mentionCount:Number(edge.dataset.mentionCount||0),text:edge.textContent?.replace(/\\s+/g,' ').trim()||''})),allEdgesTypedAndDirected:edges.every(edge=>Boolean(edge.dataset.relationType)&&['true','false'].includes(edge.dataset.directed||'')),hasStructuralBoundary:Boolean(document.querySelector('[data-testid="graph-path-structural-evidence"]')),narrowFits:document.documentElement.scrollWidth<=innerWidth+1}})()`)
+    await capture('relation-evidence-narrow.jpg')
+    await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+    await delay(150)
+    evidenceSnapshot.wideFits = await evaluate(`document.documentElement.scrollWidth<=innerWidth+1`)
+    await capture('relation-evidence-wide.jpg')
+    const returned = await evaluate(`(()=>{const button=document.querySelector('[data-testid="graph-path-evidence-return"]');if(!(button instanceof HTMLButtonElement))return false;button.click();return true})()`)
+    if (!returned) throw new Error('M3A-4 mention source return missing')
+    await waitFor(`document.querySelector('.library-mode')!==null`, 'relation source library')
+    await waitFor(`document.querySelector('.workspace-relation-evidence-target')?.dataset.relationEvidenceLine==='3'`, 'exact relation evidence line')
+    const sourceReturn = await evaluate(`(()=>{const target=document.querySelector('.workspace-relation-evidence-target');return {line:target?.dataset.relationEvidenceLine||'',targetVisible:Boolean(target),targetText:target?.textContent?.replace(/\\s+/g,' ').trim()||'',hash:location.hash}})()`)
+    await capture('relation-source-return.jpg')
+    relationEvidence = { ...evidenceSnapshot, sourceReturn }
+    shortestPath = { foundText, focused, narrowFocused }
+    await evaluate(`location.hash='#/graph'`)
+    await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'graph return after evidence')
+  } else {
+    await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+    await delay(100)
+    await evaluate(`document.querySelector('[data-testid="graph-path-return"]')?.click()`)
+    await waitFor(`document.querySelector('[data-testid="graph-path-found"]')===null`, 'shortest-path return')
+    const restored = await snapshot()
+    await choose('[data-testid="graph-path-end"]', 'Review · PowerPoint 演示')
+    await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+    await waitFor(`document.querySelector('[data-testid="graph-path-unreachable"]')!==null`, 'unreachable path state')
+    const unreachableText = await evaluate(`document.querySelector('[data-testid="graph-path-unreachable"]')?.textContent?.replace(/\\s+/g,' ').trim()||''`)
+    shortestPath = { foundText, focused, narrowFocused, restored, fullGraphRestored: restored.graphStats.startsWith('17 / 17 节点 17 连接'), unreachableText }
+  }
 }
 
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
@@ -138,8 +158,8 @@ await waitFor(`document.querySelector('.library-mode')!==null`, 'return to libra
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { wide, narrow, neighborFocus, shortestPath, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { wide, narrow, neighborFocus, shortestPath, relationEvidence, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }

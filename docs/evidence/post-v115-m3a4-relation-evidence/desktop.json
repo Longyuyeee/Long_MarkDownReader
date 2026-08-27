@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-4",
+  "actual": {
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": {
+      "foundText": "3 跳NorthStar → Brief → retention Supports the roadmap → Evidence返回全图",
+      "focused": {
+        "legendVisible": true,
+        "graphStats": "4 / 17 节点 3 连接 135% 1 个已选",
+        "objectTypeIds": [
+          "markdown",
+          "pdf",
+          "pdf_annotation"
+        ],
+        "relationTypeIds": [
+          "contains",
+          "depends-on",
+          "annotates"
+        ],
+        "directed": [
+          {
+            "id": "contains",
+            "directed": "true"
+          },
+          {
+            "id": "depends-on",
+            "directed": "true"
+          },
+          {
+            "id": "annotates",
+            "directed": "true"
+          }
+        ],
+        "documentFits": true
+      },
+      "narrowFocused": {
+        "legendVisible": true,
+        "graphStats": "4 / 17 节点 3 连接 135% 1 个已选",
+        "objectTypeIds": [
+          "markdown",
+          "pdf",
+          "pdf_annotation"
+        ],
+        "relationTypeIds": [
+          "contains",
+          "depends-on",
+          "annotates"
+        ],
+        "directed": [
+          {
+            "id": "contains",
+            "directed": "true"
+          },
+          {
+            "id": "depends-on",
+            "directed": "true"
+          },
+          {
+            "id": "annotates",
+            "directed": "true"
+          }
+        ],
+        "documentFits": true
+      }
+    },
+    "relationEvidence": {
+      "edgeCount": 3,
+      "mentionCount": 3,
+      "edges": [
+        {
+          "relationType": "depends-on",
+          "directed": "true",
+          "mentionCount": 2,
+          "text": "第 1 条 · 依赖Brief → NorthStar路径沿关系反向发现，事实方向保持不变证据 1第 3 行 · 依赖[[NorthStar]]depends-on: [[NorthStar]] [[NorthStar]]回到来源第 3 行证据 2第 3 行 · 依赖[[NorthStar]]depends-on: [[NorthStar]] [[NorthStar]]回到来源第 3 行"
+        },
+        {
+          "relationType": "annotates",
+          "directed": "true",
+          "mentionCount": 1,
+          "text": "第 2 条 · 批注Brief → retention Supports the roadmap有向关系证据 1第 6 行 · 批注longedit://pdf?path=research%2FEvidence.pdf&page=1&annotation=evidence-1[Evidence](longedit://pdf?path=research%2FEvidence.pdf&page=1&annotation=evidence-1)回到来源第 6 行"
+        },
+        {
+          "relationType": "contains",
+          "directed": "true",
+          "mentionCount": 0,
+          "text": "第 3 条 · 包含Evidence → retention Supports the roadmap路径沿关系反向发现，事实方向保持不变结构关系没有 Markdown mention；来源对象定位是可审计依据。打开来源对象"
+        }
+      ],
+      "allEdgesTypedAndDirected": true,
+      "hasStructuralBoundary": true,
+      "narrowFits": true,
+      "wideFits": true,
+      "sourceReturn": {
+        "line": "3",
+        "targetVisible": true,
+        "targetText": "relations: depends-on: [[NorthStar]] [[NorthStar]]",
+        "hash": "#/library?relationLine=3&relationSyntax=[[NorthStar]]&relationLocator=1787846179280-3&path=C:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m3a1-43312-1787846172168%5Clibrary%5Cresearch%5CBrief.md"
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

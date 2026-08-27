@@ -1181,3 +1181,9 @@ M3A-2 已完成并经需求复核补齐 1/2/3 跳切换。真实跨格式图谱�
 M3A-3 已完成独立纯函数 BFS、独立距离 oracle 和双节点桌面工作流。真实跨格式图谱中 `NorthStar → Evidence` 为 3 跳、4 节点/3 边，返回后恢复 17/17；另一跨格式目标明确显示无路径。宽窄屏、零运行时错误和源文件不变通过。
 
 当前接续点为 **M3A-4 关系证据回跳**：路径每条边必须展示全部 mention 的来源语法、方向、类型和上下文，并可回到来源对象位置；不要提前进入社区发现。详见 [`Post_v1.0.15_M3A3_Independently_Verified_Shortest_Path_Audit_2026-08-27.md`](./Post_v1.0.15_M3A3_Independently_Verified_Shortest_Path_Audit_2026-08-27.md)。
+
+## 2026-08-27 M3A-4 关系证据回跳交接
+
+M3A-4 已完成路径边全部证据展开与来源回跳。真实 3 边路径显示 3 条 mention，同一 `depends-on` 边的两次来源均保留；原始方向在反向路径遍历中不改写，无 mention 的结构边明确回到来源对象定位。点击证据实际打开 `Brief.md` 并高亮第 3 行，宽窄屏、零运行时错误和源文件不变通过。
+
+当前接续点为 **M3A-5 社区发现与稳定性**：先定义可独立验证的确定性社区算法、稳定社区 ID、摘要与筛选，再接 UI 和真实桌面证据；不要提前进入 M3B 视觉镜头。详见 [`Post_v1.0.15_M3A4_Relation_Evidence_and_Source_Return_Audit_2026-08-27.md`](./Post_v1.0.15_M3A4_Relation_Evidence_and_Source_Return_Audit_2026-08-27.md)。

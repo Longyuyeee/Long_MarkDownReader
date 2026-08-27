@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3A-4",
+  "releaseCandidate": false,
+  "scope": "all-path-edge-evidence-and-source-return",
+  "requiredEvidence": ["original-direction", "relation-type", "all-mentions", "source-syntax", "source-context", "source-line"],
+  "navigation": {
+    "markdownMention": "source-file-and-exact-line",
+    "structuralRelation": "source-object-locator",
+    "emptyMentionRule": "must-be-labelled-structural-and-must-not-fabricate-text-evidence"
+  },
+  "selectedNextStage": { "id": "M3A-5", "name": "community-discovery-stability", "reason": "The semantic discovery loop is complete; community membership and stable identifiers are the remaining M3A requirement." }
+}

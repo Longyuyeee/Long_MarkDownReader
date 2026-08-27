@@ -1441,6 +1441,7 @@ const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => act
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 let taskLocatorTarget: HTMLElement | null = null
+let relationEvidenceTarget: HTMLElement | null = null
 const revealWorkspaceTask = () => {
   const routePath = typeof route.query.path === 'string' ? route.query.path : ''
   const line = Number(route.query.taskLine)
@@ -1467,6 +1468,49 @@ const scheduleWorkspaceTaskReveal = () => {
   let attempts = 0
   const reveal = () => {
     if (revealWorkspaceTask() || attempts++ >= 20) return
+    window.setTimeout(reveal, 80)
+  }
+  nextTick(reveal)
+}
+
+const relationEvidenceNeedles = (sourceLine: string, syntax: string) => {
+  const values = [sourceLine, syntax]
+  const markdownLabel = syntax.match(/^\[([^\]]+)]\(/)?.[1]
+  const wiki = syntax.match(/^\[\[([^\]]+)]]$/)?.[1]
+  if (markdownLabel) values.push(markdownLabel)
+  if (wiki) {
+    const [target, alias] = wiki.split('|')
+    values.push(alias || target.split('/').pop() || target)
+  }
+  return [...new Set(values.map(value => value.replace(/\s+/g, ' ').trim()).filter(Boolean))]
+}
+const revealRelationEvidence = () => {
+  const routePath = typeof route.query.path === 'string' ? route.query.path : ''
+  const line = Number(route.query.relationLine)
+  const syntax = typeof route.query.relationSyntax === 'string' ? route.query.relationSyntax : ''
+  if (!vditor || !routePath || routePath !== activeTabId.value || !Number.isInteger(line) || line < 1) return false
+  const tab = tabs.value.find(item => item.path === routePath)
+  const sourceLine = tab?.content?.split(/\r?\n/)[line - 1] || ''
+  const needles = relationEvidenceNeedles(sourceLine, syntax)
+  if (!needles.length) return false
+  const editor = document.getElementById('vditor-lib')
+  const rawCandidates = [...(editor?.querySelectorAll<HTMLElement>('.vditor-wysiwyg [data-block="0"], .vditor-wysiwyg li, .vditor-ir [data-block="0"], .vditor-sv [data-block="0"]') || [])]
+  const candidates = rawCandidates.filter((element, index) => !rawCandidates.some((parent, parentIndex) => parentIndex !== index && parent.contains(element)))
+  const normalize = (value: string) => value.replace(/\s+/g, ' ').trim()
+  const target = needles.flatMap(needle => candidates.filter(element => normalize(element.textContent || '').includes(needle)))[0]
+  if (!target) return false
+  relationEvidenceTarget?.classList.remove('workspace-relation-evidence-target')
+  relationEvidenceTarget?.removeAttribute('data-relation-evidence-line')
+  relationEvidenceTarget = target
+  target.classList.add('workspace-relation-evidence-target')
+  target.dataset.relationEvidenceLine = String(line)
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  return true
+}
+const scheduleRelationEvidenceReveal = () => {
+  let attempts = 0
+  const reveal = () => {
+    if (revealRelationEvidence() || attempts++ >= 20) return
     window.setTimeout(reveal, 80)
   }
   nextTick(reveal)
@@ -1990,6 +2034,7 @@ const loadFileToEditor = async (path: string) => {
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
         scheduleWorkspaceTaskReveal();
+        scheduleRelationEvidenceReveal();
       }, 50) 
     })
   }
@@ -3259,6 +3304,7 @@ watch(() => route.query.path, (path) => {
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
 watch(() => route.query.taskLocator, () => scheduleWorkspaceTaskReveal())
+watch(() => route.query.relationLocator, () => scheduleRelationEvidenceReveal())
 const applyRouteSearch = () => {
   if (route.query.panel === 'collections') activeSidebarTab.value = 'collections'
   const collectionId = route.query.collection
@@ -4749,6 +4795,7 @@ watch(activeTabId, (newId, oldId) => {
 .external-change-summary span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .external-change-summary p { margin: 6px 0 0; color: var(--theme-text-secondary); line-height: 1.6; }
 :deep(.workspace-task-locator-target) { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: 4px; background: rgba(var(--theme-primary-rgb),.11) !important; scroll-margin-block: 120px; }
+:deep(.workspace-relation-evidence-target) { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: 4px; background: rgba(var(--theme-primary-rgb),.14) !important; scroll-margin-block: 120px; }
 .external-compare-state { min-height: 120px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--theme-text-secondary); }
 .external-compare-state.error { color: var(--status-danger); }
 .external-compare-grid { min-height: 0; max-height: 52vh; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
