@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-A-large-json-progressive-read-search",
+  "status": "passed",
+  "expected": {
+    "firstRangeVisibleWithinMs": 10000,
+    "boundedLoadedCharsBelow": 2097152,
+    "fullFileTailSearch": true,
+    "sourceBytesUnchanged": true,
+    "responsiveWidths": [
+      1280,
+      960
+    ]
+  },
+  "actual": {
+    "json10": {
+      "openMs": 201,
+      "first": {
+        "loadedChars": 3080,
+        "rangeLabel": "0 B–512.0 KiB / 10.0 MiB",
+        "readOnlyLabel": "大文件渐进只读",
+        "treeDisabled": true,
+        "saveDisabled": true,
+        "pageOverflow": 0
+      },
+      "nextMs": 121,
+      "nextLabel": "512.0 KiB–1.0 MiB / 10.0 MiB",
+      "previousMs": 123,
+      "previousLabel": "0 B–512.0 KiB / 10.0 MiB",
+      "searchMs": 801,
+      "search": {
+        "progress": "100%",
+        "count": 1,
+        "matchedUniqueMarker": true
+      },
+      "jumpMs": 145,
+      "narrow": {
+        "pageOverflow": 0,
+        "workspaceWidth": 749,
+        "searchVisible": true,
+        "toolbarHeight": 58
+      }
+    },
+    "json50": {
+      "openMs": 177,
+      "first": {
+        "loadedChars": 3080,
+        "rangeLabel": "0 B–512.0 KiB / 50.0 MiB",
+        "readOnlyLabel": "大文件渐进只读",
+        "treeDisabled": true,
+        "saveDisabled": true,
+        "pageOverflow": 0
+      },
+      "nextMs": 124,
+      "nextLabel": "512.0 KiB–1.0 MiB / 50.0 MiB",
+      "previousMs": 121,
+      "previousLabel": "0 B–512.0 KiB / 50.0 MiB",
+      "searchMs": 3300,
+      "search": {
+        "progress": "100%",
+        "count": 1,
+        "matchedUniqueMarker": true
+      },
+      "jumpMs": 125,
+      "narrow": {
+        "pageOverflow": 0,
+        "workspaceWidth": 749,
+        "searchVisible": true,
+        "toolbarHeight": 58
+      }
+    },
+    "small": {
+      "openMs": 766,
+      "rangeMode": false,
+      "analysisStatus": "语法有效",
+      "treeDisabled": false,
+      "saveDisabledWhileClean": true,
+      "pageOverflow": 0,
+      "treeRows": 9
+    },
+    "sourceUnchanged": true,
+    "runtimeErrorCount": 0
+  },
+  "passed": true
+}

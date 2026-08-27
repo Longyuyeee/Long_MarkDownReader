@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-27 M1D-A 大 JSON 渐进读取与流式搜索已通过：** 真实 10/50 MiB JSON 分别在 201/177 ms 显示 512 KiB 首段，尾部标记全文件搜索分别为 801/3,300 ms，双向分段导航为 121–124 ms；小 JSON 仍在 766 ms 完成完整分析并显示 9 个树形节点。1280×720/960×720 横向溢出 0，运行时错误 0，所有源 SHA-256 不变。大文件保存、完整树形和结构编辑保持关闭。下一步进入 M1D-B 视频逐帧、截图和播放位置记忆，版本仍保持运行时/公开 `1.0.15`、开发目标 `1.0.16`。详见 [`Post_v1.0.15_M1DA_Large_JSON_Progressive_Audit_2026-08-27.md`](./Post_v1.0.15_M1DA_Large_JSON_Progressive_Audit_2026-08-27.md)。
+
 > **2026-08-27 M1C-D ODS 已有命名样式编辑已通过，M1C 收口：** 真实 ODS `Overview!A1` 可在文件已有安全命名样式间切换，具有即时预览、撤销/重做、离开保护和可靠新副本；保存前后源 SHA-256 完全相同。真实 Tauri 960x720 重开副本仍为 `Good`，运行时错误 0；LibreOffice Calc 独立确认浅绿填充 `FFCCFFCC` 和深绿文字 `FF006600`。公式、自定义样式、混合值/样式事务、源覆盖、外部 ODS 与 ODP 继续关闭。下一步进入 M1D 媒体与结构化文本对象选择审计，版本保持 `1.0.15`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1CD_ODS_Existing_Named_Style_Audit_2026-08-27.md`](./Post_v1.0.15_M1CD_ODS_Existing_Named_Style_Audit_2026-08-27.md)。
 
 > **2026-08-27 M1C-C ODS 公式与样式可行性审计已通过：** Long编辑生产补丁把真实 ODS `Overview!A2` 改为 `84.5` 后，公式仍为 `of:=SUM([.A2];8)` 且内部缓存仍为 `50`；LibreOffice Calc 独立打开后重算为 `92.5`，因此公式编辑继续只读。真实样本含 19 个单元格样式，规范 Flat ODF 探针证明 `ce 自动样式 -> Good -> Status -> Default` 可由生产者保持，并导出浅绿 `FFCCFFCC` / 深绿 `FF006600`；但现有 ODS ZIP 事务尚未证明，公开能力不变。下一步 M1C-D 只研究已有命名样式的自动样式引用与可靠副本。版本保持 `1.0.15`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1CC_ODS_Formula_and_Style_Feasibility_Audit_2026-08-27.md`](./Post_v1.0.15_M1CC_ODS_Formula_and_Style_Feasibility_Audit_2026-08-27.md)。

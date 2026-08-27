@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "stage": "M1D-A-large-json-progressive-read-search",
+  "developmentTargetVersion": "1.0.16",
+  "runtimeBaseVersion": "1.0.15",
+  "status": "accepted",
+  "largeJsonThresholdBytes": 4194304,
+  "displayRangeBytes": 524288,
+  "searchRangeBytes": 1048576,
+  "maximumSearchResults": 100,
+  "requiredRealFilesMiB": [10, 50],
+  "smallJsonFullEditingPreserved": true,
+  "largeJsonSourceWriteEnabled": false,
+  "selectedNextStage": "M1D-B-video-frame-and-capture-tools",
+  "releaseCandidate": false
+}

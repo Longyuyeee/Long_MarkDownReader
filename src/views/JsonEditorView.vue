@@ -27,7 +27,8 @@
         <n-button
           :type="viewMode === 'tree' ? 'primary' : 'default'"
           :aria-pressed="viewMode === 'tree'"
-          :disabled="!analysis?.valid"
+          :disabled="rangeMode || !analysis?.valid"
+          :title="rangeMode ? '大文件范围模式不构建完整树形，避免再次加载全文' : '查看 JSON 树形结构'"
           @click="viewMode = 'tree'"
         >
           <template #icon><n-icon :component="TreeIcon" /></template>
@@ -88,7 +89,28 @@
       <n-button size="small" @click="load(false)">重试</n-button>
     </div>
 
-    <main v-else class="json-main" :class="{ 'inspector-hidden': !inspectorVisible }">
+    <section v-if="!loadError && rangeMode" class="range-toolbar" data-testid="json-range-toolbar" aria-label="大 JSON 分段导航">
+      <div class="range-summary">
+        <strong>大文件渐进只读</strong>
+        <span>仅加载当前 {{ formatBytes(rangeLoadedBytes) }}，不会构建全文编辑器或完整树形。</span>
+      </div>
+      <div class="range-progress">
+        <span>{{ rangePositionLabel }}</span>
+        <n-progress type="line" :percentage="rangeProgress" :show-indicator="false" :height="5" />
+      </div>
+      <div class="range-actions">
+        <n-button data-testid="json-range-previous" size="small" :disabled="loadingRange || rangeHistoryIndex <= 0" @click="loadPreviousRange">
+          <template #icon><n-icon :component="ChevronLeftIcon" /></template>
+          上一段
+        </n-button>
+        <n-button data-testid="json-range-next" size="small" :loading="loadingRange" :disabled="loadingRange || rangeEof" @click="loadNextRange">
+          下一段
+          <template #icon><n-icon :component="ChevronRightIcon" /></template>
+        </n-button>
+      </div>
+    </section>
+
+    <main v-if="!loadError" class="json-main" :class="{ 'inspector-hidden': !inspectorVisible && !rangeMode }">
       <section class="source-pane" :aria-label="viewMode === 'source' ? 'JSON 源码' : 'JSON 树形预览'">
         <div v-if="loading" class="loading-state">
           <n-spin size="small" />
@@ -234,7 +256,75 @@
         </div>
       </section>
 
-      <aside class="analysis-pane" aria-label="JSON 诊断">
+      <aside v-if="rangeMode" class="analysis-pane range-search-pane" aria-label="大 JSON 流式搜索">
+        <div class="analysis-header">
+          <div>
+            <span class="section-label">范围模式</span>
+            <strong class="valid">源文件保持只读</strong>
+          </div>
+          <n-tag size="small" :bordered="false">{{ formatBytes(fileSize) }}</n-tag>
+        </div>
+        <p class="range-search-help">
+          搜索会按 1 MiB 分块扫描整个文件，只保存最多 100 条结果，不会把全文载入内存。
+        </p>
+        <n-input
+          v-model:value="rangeSearchQuery"
+          size="small"
+          clearable
+          placeholder="输入至少 2 个字符"
+          :maxlength="128"
+          aria-label="搜索大 JSON 全文"
+          :disabled="rangeSearchPending"
+          @keyup.enter="searchRangeDocument"
+        >
+          <template #prefix><SearchIcon :size="14" /></template>
+        </n-input>
+        <n-button
+          data-testid="json-range-search"
+          type="primary"
+          size="small"
+          block
+          :loading="rangeSearchPending"
+          :disabled="rangeSearchQuery.trim().length < 2"
+          @click="searchRangeDocument"
+        >
+          搜索整个文件
+        </n-button>
+        <div v-if="rangeSearchPending || rangeSearchProgress > 0" class="range-search-progress" aria-live="polite">
+          <div>
+            <span>{{ rangeSearchPending ? '正在扫描' : '扫描完成' }}</span>
+            <strong>{{ rangeSearchProgress }}%</strong>
+          </div>
+          <n-progress type="line" :percentage="rangeSearchProgress" :show-indicator="false" :height="5" />
+        </div>
+        <div class="diagnostic-heading">
+          <strong>匹配结果</strong>
+          <span>{{ rangeSearchResults.length }}{{ rangeSearchTruncated ? '+' : '' }}</span>
+        </div>
+        <div class="range-search-results" data-testid="json-range-search-results">
+          <button
+            v-for="result in rangeSearchResults"
+            :key="`${result.segmentOffset}-${result.index}`"
+            type="button"
+            class="range-search-result"
+            @click="jumpToRangeResult(result)"
+          >
+            <strong>{{ formatBytes(result.segmentOffset) }} 附近</strong>
+            <code>{{ result.preview }}</code>
+          </button>
+          <div v-if="rangeSearchCompleted && !rangeSearchResults.length" class="empty-paths">整个文件没有匹配内容。</div>
+          <div v-else-if="!rangeSearchCompleted && !rangeSearchPending" class="empty-paths">输入关键词后扫描整个文件。</div>
+        </div>
+        <div class="structure-status range-boundary-note">
+          <ShieldCheckIcon :size="17" />
+          <div>
+            <strong>小文件能力不受影响</strong>
+            <span>小于 4 MiB 的 JSON 仍可完整编辑、分析和切换树形；大文件保存与结构编辑保持关闭。</span>
+          </div>
+        </div>
+      </aside>
+
+      <aside v-else class="analysis-pane" aria-label="JSON 诊断">
         <div class="analysis-header">
           <div>
             <span class="section-label">解析状态</span>
@@ -488,10 +578,13 @@
     </n-modal>
 
     <footer class="json-statusbar" aria-live="polite">
-      <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
+      <span>{{ rangeMode ? '大文件渐进只读' : readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span>
       <span>{{ encoding.toUpperCase() }}</span>
-      <span>{{ lineCount }} 行</span>
-      <span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span>
+      <span v-if="rangeMode">{{ rangePositionLabel }}</span>
+      <template v-else>
+        <span>{{ lineCount }} 行</span>
+        <span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span>
+      </template>
       <span v-if="format?.id === 'jsonc'">允许注释与尾随逗号</span>
     </footer>
   </div>
@@ -515,6 +608,7 @@ import {
   AlertTriangle as AlertIcon,
   ArrowLeft as ArrowLeftIcon,
   Braces as FormatIcon,
+  ChevronLeft as ChevronLeftIcon,
   ChevronDown as ChevronDownIcon,
   ChevronRight as ChevronRightIcon,
   CircleCheck as CircleCheckIcon,
@@ -553,6 +647,24 @@ interface TextDocumentSnapshot {
   modified: number
   readOnlyReason?: string
   path: string
+}
+
+interface TextDocumentRangeSnapshot {
+  content: string
+  encoding: string
+  offset: number
+  nextOffset: number
+  eof: boolean
+  size: number
+  modified: number
+  readOnlyReason: string
+  path: string
+}
+
+interface RangeSearchResult {
+  segmentOffset: number
+  index: number
+  preview: string
 }
 
 interface JsonDiagnostic {
@@ -614,6 +726,7 @@ const fileName = computed(() => jsonPath.value.split(/[\\/]/).pop() || '未命�
 const currentTab = computed(() => store.tabs.find(tab => tab.path === jsonPath.value))
 const loading = ref(true)
 const saving = ref(false)
+const loadingRange = ref(false)
 const loadError = ref('')
 const analysis = ref<JsonSourceAnalysis | null>(null)
 const analysisPending = ref(false)
@@ -660,10 +773,29 @@ const encoding = ref('utf-8')
 const fileSize = ref(0)
 const modified = ref(0)
 const readOnlyReason = ref('')
+const rangeOffset = ref(0)
+const rangeNextOffset = ref(0)
+const rangeEof = ref(true)
+const rangeHistory = ref<number[]>([])
+const rangeHistoryIndex = ref(-1)
+const rangeSearchQuery = ref('')
+const rangeSearchPending = ref(false)
+const rangeSearchProgress = ref(0)
+const rangeSearchCompleted = ref(false)
+const rangeSearchTruncated = ref(false)
+const rangeSearchResults = ref<RangeSearchResult[]>([])
 const cursorLine = ref(1)
 const cursorColumn = ref(1)
 const lineCount = ref(1)
 const readOnly = computed(() => Boolean(readOnlyReason.value))
+const rangeMode = computed(() => readOnlyReason.value === 'large-file-range')
+const rangeLoadedBytes = computed(() => Math.max(0, rangeNextOffset.value - rangeOffset.value))
+const rangeProgress = computed(() => fileSize.value
+  ? Math.min(100, Math.max(0, Math.round(rangeNextOffset.value / fileSize.value * 100)))
+  : 0)
+const rangePositionLabel = computed(() => fileSize.value
+  ? `${formatBytes(rangeOffset.value)}–${formatBytes(rangeNextOffset.value)} / ${formatBytes(fileSize.value)}`
+  : '等待范围信息')
 const transformDisabled = computed(() => (
   loading.value
   || saving.value
@@ -728,11 +860,16 @@ const arrayRemoveDisabled = computed(() => (
 let editor: EditorView | null = null
 let loadGeneration = 0
 let analysisGeneration = 0
+let rangeSearchGeneration = 0
 let analysisTimer: ReturnType<typeof setTimeout> | null = null
 let pathQueryTimer: ReturnType<typeof setTimeout> | null = null
 let applyingDocument = false
 let unlistenSave: (() => void) | null = null
 let unlistenRefresh: (() => void) | null = null
+const LARGE_JSON_RANGE_THRESHOLD_BYTES = 4 * 1024 * 1024
+const JSON_RANGE_BYTES = 512 * 1024
+const JSON_SEARCH_RANGE_BYTES = 1024 * 1024
+const MAX_RANGE_SEARCH_RESULTS = 100
 
 const rootKindLabel = computed(() => ({
   object: '对象',
@@ -938,6 +1075,17 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
 }
 
 const applySnapshot = async (loaded: TextDocumentSnapshot) => {
+  rangeSearchGeneration += 1
+  rangeSearchPending.value = false
+  rangeSearchProgress.value = 0
+  rangeSearchCompleted.value = false
+  rangeSearchTruncated.value = false
+  rangeSearchResults.value = []
+  rangeOffset.value = 0
+  rangeNextOffset.value = loaded.size
+  rangeEof.value = true
+  rangeHistory.value = []
+  rangeHistoryIndex.value = -1
   signature.value = loaded.signature
   encoding.value = loaded.encoding
   fileSize.value = loaded.size
@@ -947,6 +1095,52 @@ const applySnapshot = async (loaded: TextDocumentSnapshot) => {
   replaceDocument(loaded.content, Boolean(loaded.readOnlyReason))
   registerCurrentTab()
   await analyzeContent(loaded.content)
+}
+
+const readRange = (offset: number, selectedEncoding?: string, length = JSON_RANGE_BYTES) => invoke<TextDocumentRangeSnapshot>(
+  isExternal.value ? 'read_external_text_document_range' : 'read_text_document_range',
+  {
+    ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+    path: jsonPath.value,
+    formatId: format.value?.id,
+    offset,
+    length,
+    readOptions: selectedEncoding ? { encoding: selectedEncoding } : undefined,
+  },
+)
+
+const applyRangeSnapshot = (loaded: TextDocumentRangeSnapshot, history: 'reset' | 'append' | 'keep' = 'keep') => {
+  if (modified.value && loaded.offset > 0 && loaded.modified !== modified.value) {
+    throw new Error('文件在分段读取期间已被外部修改，请重新加载首段')
+  }
+  rangeSearchGeneration += 1
+  rangeSearchPending.value = false
+  signature.value = ''
+  encoding.value = loaded.encoding
+  fileSize.value = loaded.size
+  modified.value = loaded.modified
+  readOnlyReason.value = loaded.readOnlyReason
+  rangeOffset.value = loaded.offset
+  rangeNextOffset.value = loaded.nextOffset
+  rangeEof.value = loaded.eof
+  dirty.value = false
+  analysis.value = null
+  analysisPending.value = false
+  viewMode.value = 'source'
+  replaceDocument(loaded.content, true)
+  if (history === 'reset') {
+    rangeHistory.value = [loaded.offset]
+    rangeHistoryIndex.value = 0
+  } else if (history === 'append') {
+    const retained = rangeHistory.value.slice(0, rangeHistoryIndex.value + 1)
+    if (retained[retained.length - 1] !== loaded.offset) retained.push(loaded.offset)
+    rangeHistory.value = retained
+    rangeHistoryIndex.value = retained.length - 1
+  } else {
+    const existingIndex = rangeHistory.value.indexOf(loaded.offset)
+    if (existingIndex >= 0) rangeHistoryIndex.value = existingIndex
+  }
+  registerCurrentTab()
 }
 
 const restoreTabDraft = async (tab: TabInfo) => {
@@ -969,6 +1163,12 @@ const errorMessage = (cause: unknown) => {
 
 const load = async (discardDraft = false) => {
   const generation = ++loadGeneration
+  rangeSearchGeneration += 1
+  rangeSearchPending.value = false
+  rangeSearchProgress.value = 0
+  rangeSearchCompleted.value = false
+  rangeSearchTruncated.value = false
+  rangeSearchResults.value = []
   scalarEditVisible.value = false
   scalarEditEntry.value = null
   scalarEditSource.value = ''
@@ -998,6 +1198,13 @@ const load = async (discardDraft = false) => {
       await restoreTabDraft(draft)
       return
     }
+    const firstRange = await readRange(0)
+    if (generation !== loadGeneration) return
+    if (firstRange.size > LARGE_JSON_RANGE_THRESHOLD_BYTES) {
+      applyRangeSnapshot(firstRange, 'reset')
+      message.info('文件超过 4 MiB，已进入渐进只读模式')
+      return
+    }
     const loaded = await invoke<TextDocumentSnapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
       ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: jsonPath.value,
@@ -1011,6 +1218,107 @@ const load = async (discardDraft = false) => {
   } finally {
     if (generation === loadGeneration) loading.value = false
   }
+}
+
+const loadRangeAt = async (
+  offset: number,
+  history: 'reset' | 'append' | 'keep',
+  length = JSON_RANGE_BYTES,
+) => {
+  if (!rangeMode.value || loadingRange.value) return
+  loadingRange.value = true
+  try {
+    const loaded = await readRange(offset, encoding.value, length)
+    applyRangeSnapshot(loaded, history)
+  } catch (cause) {
+    message.error(`分段读取失败：${errorMessage(cause)}`)
+  } finally {
+    loadingRange.value = false
+  }
+}
+
+const loadNextRange = () => {
+  if (rangeEof.value) return
+  void loadRangeAt(rangeNextOffset.value, 'append')
+}
+
+const loadPreviousRange = () => {
+  if (rangeHistoryIndex.value <= 0) return
+  void loadRangeAt(rangeHistory.value[rangeHistoryIndex.value - 1], 'keep')
+}
+
+const searchRangeDocument = async () => {
+  const query = rangeSearchQuery.value.trim()
+  if (!rangeMode.value || query.length < 2 || rangeSearchPending.value) return
+  const generation = ++rangeSearchGeneration
+  rangeSearchPending.value = true
+  rangeSearchProgress.value = 0
+  rangeSearchCompleted.value = false
+  rangeSearchTruncated.value = false
+  rangeSearchResults.value = []
+  const lowerQuery = query.toLocaleLowerCase()
+  let offset = 0
+  let selectedEncoding: string | undefined
+  let carry = ''
+  let carryOffset = 0
+  let resultIndex = 0
+  try {
+    while (offset < fileSize.value) {
+      const loaded = await readRange(offset, selectedEncoding, JSON_SEARCH_RANGE_BYTES)
+      if (generation !== rangeSearchGeneration) return
+      if (modified.value && loaded.modified !== modified.value) {
+        throw new Error('文件在搜索期间已被外部修改，请重新加载后再搜索')
+      }
+      selectedEncoding = loaded.encoding
+      const combined = `${carry}${loaded.content}`
+      const searchable = combined.toLocaleLowerCase()
+      let match = searchable.indexOf(lowerQuery)
+      while (match >= 0) {
+        if (rangeSearchResults.value.length >= MAX_RANGE_SEARCH_RESULTS) {
+          rangeSearchTruncated.value = true
+          break
+        }
+        const previewStart = Math.max(0, match - 36)
+        const previewEnd = Math.min(combined.length, match + query.length + 72)
+        rangeSearchResults.value.push({
+          segmentOffset: match < carry.length ? carryOffset : loaded.offset,
+          index: resultIndex++,
+          preview: combined.slice(previewStart, previewEnd).replace(/\s+/g, ' ').trim(),
+        })
+        match = searchable.indexOf(lowerQuery, match + Math.max(1, lowerQuery.length))
+      }
+      if (rangeSearchTruncated.value || loaded.eof || loaded.nextOffset <= offset) {
+        offset = loaded.size
+      } else {
+        const carryLength = Math.min(Math.max(1, query.length - 1), loaded.content.length)
+        carry = loaded.content.slice(-carryLength)
+        carryOffset = loaded.offset
+        offset = loaded.nextOffset
+      }
+      rangeSearchProgress.value = fileSize.value
+        ? Math.min(100, Math.round(offset / fileSize.value * 100))
+        : 100
+    }
+    rangeSearchProgress.value = 100
+    rangeSearchCompleted.value = true
+  } catch (cause) {
+    if (generation === rangeSearchGeneration) message.error(`全文搜索失败：${errorMessage(cause)}`)
+  } finally {
+    if (generation === rangeSearchGeneration) rangeSearchPending.value = false
+  }
+}
+
+const jumpToRangeResult = async (result: RangeSearchResult) => {
+  await loadRangeAt(result.segmentOffset, 'reset', JSON_SEARCH_RANGE_BYTES)
+  await nextTick()
+  if (!editor) return
+  const match = editor.state.doc.toString().toLocaleLowerCase().indexOf(rangeSearchQuery.value.trim().toLocaleLowerCase())
+  if (match < 0) return
+  editor.dispatch({
+    selection: { anchor: match, head: match + rangeSearchQuery.value.trim().length },
+    effects: EditorView.scrollIntoView(match, { y: 'center' }),
+  })
+  editor.focus()
 }
 
 const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
@@ -1838,6 +2146,120 @@ onBeforeUnmount(() => {
   background: var(--theme-bg);
 }
 
+.range-toolbar {
+  flex: 0 0 58px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) minmax(220px, 340px) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--theme-primary) 7%, var(--theme-surface));
+}
+
+.range-summary,
+.range-progress {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.range-summary strong {
+  color: var(--theme-primary);
+  font-size: 12px;
+}
+
+.range-summary span,
+.range-progress span,
+.range-search-help {
+  overflow: hidden;
+  color: var(--theme-text-secondary);
+  font-size: var(--text-compact);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.range-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.range-search-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.range-search-help {
+  margin: 0;
+  overflow: visible;
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.range-search-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.range-search-progress > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--theme-text-secondary);
+  font-size: var(--text-compact);
+}
+
+.range-search-results {
+  flex: 1 1 auto;
+  min-height: 100px;
+  overflow-y: auto;
+  border-top: var(--theme-border);
+  border-bottom: var(--theme-border);
+}
+
+.range-search-result {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 4px;
+  border: 0;
+  border-bottom: var(--theme-border);
+  color: var(--theme-text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.range-search-result:hover,
+.range-search-result:focus-visible {
+  background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
+  outline: none;
+}
+
+.range-search-result strong {
+  color: var(--theme-primary);
+  font-size: 11px;
+}
+
+.range-search-result code {
+  overflow: hidden;
+  color: var(--code-editor-string);
+  font: 11px/1.5 "Fira Code", "Cascadia Code", Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.range-boundary-note {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
 .analysis-pane {
   min-width: 0;
   min-height: 0;
@@ -2155,6 +2577,20 @@ onBeforeUnmount(() => {
   .json-main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(260px, 1fr) minmax(180px, 42%);
+  }
+
+  .range-toolbar {
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .range-progress {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .range-summary span {
+    display: none;
   }
 
   .json-main.inspector-hidden {
