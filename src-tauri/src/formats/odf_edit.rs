@@ -5,7 +5,7 @@ use quick_xml::{Reader, XmlVersion};
 use regex::Regex;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Cursor, Read, Write};
 use std::ops::Range;
 use zip::write::SimpleFileOptions;
@@ -59,6 +59,20 @@ pub struct OdsEditableCellTarget {
     pub text: String,
     pub value_type: String,
     pub expected_value_digest: String,
+    pub current_style_name: String,
+    pub expected_style_digest: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OdsNamedCellStyle {
+    pub name: String,
+    pub label: String,
+    pub parent_style_name: Option<String>,
+    pub background_color: Option<String>,
+    pub text_color: Option<String>,
+    pub bold: bool,
+    pub italic: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -77,8 +91,31 @@ pub struct OdsCellEditInventory {
     pub source_digest: String,
     pub editable_cells: Vec<OdsEditableCellTarget>,
     pub blocked_cells: Vec<OdsBlockedCellTarget>,
+    pub named_cell_styles: Vec<OdsNamedCellStyle>,
     pub blockers: Vec<String>,
     pub writes_user_file: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OdsCellStylePatchReport {
+    pub status: String,
+    pub engine: String,
+    pub target_id: String,
+    pub sheet_name: String,
+    pub address: String,
+    pub style_name: String,
+    pub automatic_style_name: String,
+    pub source_digest: String,
+    pub output_digest: String,
+    pub changed_parts: Vec<String>,
+    pub unchanged_part_count: usize,
+    pub unchanged_parts_verified: bool,
+    pub structural_reparse_verified: bool,
+    pub semantic_reparse_verified: bool,
+    pub source_unchanged: bool,
+    pub writes_user_file: bool,
+    pub output_bytes: usize,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -121,6 +158,7 @@ struct CellScan {
     column_repeat: usize,
     value_type: String,
     formula: Option<String>,
+    style_name: Option<String>,
     merged: bool,
     start_tag_range: Range<usize>,
     paragraph_count: usize,
@@ -135,6 +173,18 @@ struct OdsEditableCellInternal {
     public: OdsEditableCellTarget,
     start_tag_range: Range<usize>,
     text_range: Range<usize>,
+}
+
+#[derive(Clone, Debug, Default)]
+struct NamedCellStyleDraft {
+    name: String,
+    label: String,
+    parent_style_name: Option<String>,
+    background_color: Option<String>,
+    text_color: Option<String>,
+    bold: bool,
+    italic: bool,
+    unsafe_property: bool,
 }
 
 fn package_digest(source: &[u8]) -> String {
@@ -190,6 +240,12 @@ fn xml_escape_text(value: &str) -> String {
         .replace('>', "&gt;")
 }
 
+fn xml_escape_attribute(value: &str) -> String {
+    xml_escape_text(value)
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
+}
+
 fn validate_replacement(value: &str) -> Result<(), String> {
     if value.chars().count() > MAX_ODS_REPLACEMENT_CHARS {
         return Err(format!(
@@ -209,16 +265,267 @@ fn value_digest(id: &str, value_type: &str, text: &str) -> String {
     package_digest(format!("{id}\0{value_type}\0{text}").as_bytes())
 }
 
-fn content_xml(source: &[u8]) -> Result<Vec<u8>, String> {
+fn style_digest(id: &str, text: &str, style_name: &str) -> String {
+    package_digest(format!("{id}\0{text}\0{style_name}").as_bytes())
+}
+
+fn package_part(source: &[u8], part_name: &str) -> Result<Vec<u8>, String> {
     let mut archive = ZipArchive::new(Cursor::new(source))
         .map_err(|error| format!("打开 ODS 包失败: {error}"))?;
     let mut file = archive
-        .by_name(ODF_EDITABLE_PART)
-        .map_err(|error| format!("ODS 缺少 content.xml: {error}"))?;
-    let mut xml = Vec::with_capacity(file.size() as usize);
-    file.read_to_end(&mut xml)
-        .map_err(|error| format!("读取 ODS content.xml 失败: {error}"))?;
-    Ok(xml)
+        .by_name(part_name)
+        .map_err(|error| format!("ODS 缺少 {part_name}: {error}"))?;
+    let mut bytes = Vec::with_capacity(file.size() as usize);
+    file.read_to_end(&mut bytes)
+        .map_err(|error| format!("读取 ODS {part_name} 失败: {error}"))?;
+    Ok(bytes)
+}
+
+fn content_xml(source: &[u8]) -> Result<Vec<u8>, String> {
+    package_part(source, ODF_EDITABLE_PART)
+}
+
+fn collect_style_properties(
+    event: &BytesStart<'_>,
+    draft: &mut NamedCellStyleDraft,
+    property_kind: &str,
+    decoder: quick_xml::encoding::Decoder,
+) -> Result<(), String> {
+    for attribute in event.attributes().with_checks(false) {
+        let attribute = attribute.map_err(|error| format!("ODS 样式属性损坏: {error}"))?;
+        let key = std::str::from_utf8(attribute.key.local_name().as_ref())
+            .map_err(|_| "ODS 样式属性名不是 UTF-8")?
+            .to_string();
+        let value = attribute
+            .decoded_and_normalized_value(XmlVersion::Implicit1_0, decoder)
+            .map_err(|error| format!("ODS 样式属性解码失败: {error}"))?
+            .into_owned();
+        match (property_kind, key.as_str()) {
+            ("cell", "background-color") => {
+                if value == "transparent"
+                    || Regex::new(r"^#[0-9a-fA-F]{6}$")
+                        .expect("static ODF color pattern")
+                        .is_match(&value)
+                {
+                    draft.background_color = Some(value);
+                } else {
+                    draft.unsafe_property = true;
+                }
+            }
+            ("text", "color") => {
+                if Regex::new(r"^#[0-9a-fA-F]{6}$")
+                    .expect("static ODF color pattern")
+                    .is_match(&value)
+                {
+                    draft.text_color = Some(value);
+                } else {
+                    draft.unsafe_property = true;
+                }
+            }
+            ("text", "font-weight" | "font-weight-asian" | "font-weight-complex") => {
+                if matches!(value.as_str(), "normal" | "bold") {
+                    draft.bold |= value == "bold";
+                } else {
+                    draft.unsafe_property = true;
+                }
+            }
+            ("text", "font-style" | "font-style-asian" | "font-style-complex") => {
+                if matches!(value.as_str(), "normal" | "italic") {
+                    draft.italic |= value == "italic";
+                } else {
+                    draft.unsafe_property = true;
+                }
+            }
+            (
+                "cell",
+                "wrap-option" | "shrink-to-fit" | "diagonal-bl-tr" | "diagonal-tl-br" | "border",
+            )
+            | (
+                "text",
+                "font-size"
+                | "font-size-asian"
+                | "font-size-complex"
+                | "text-underline-style"
+                | "text-underline-width"
+                | "text-underline-color",
+            ) => {}
+            _ => draft.unsafe_property = true,
+        }
+    }
+    Ok(())
+}
+
+fn parse_named_cell_style_drafts(
+    source: &[u8],
+) -> Result<BTreeMap<String, NamedCellStyleDraft>, String> {
+    let xml = package_part(source, "styles.xml")?;
+    let mut reader = Reader::from_reader(xml.as_slice());
+    reader.config_mut().trim_text(false);
+    let mut current: Option<NamedCellStyleDraft> = None;
+    let mut styles = BTreeMap::new();
+    loop {
+        match reader
+            .read_event()
+            .map_err(|error| format!("ODS styles.xml 损坏: {error}"))?
+        {
+            Event::Start(ref element)
+                if element.local_name().as_ref() == b"style" && current.is_none() =>
+            {
+                if attribute_value(element, b"family", reader.decoder())?.as_deref()
+                    == Some("table-cell")
+                {
+                    let name = attribute_value(element, b"name", reader.decoder())?
+                        .ok_or("ODS 单元格样式缺少名称")?;
+                    current = Some(NamedCellStyleDraft {
+                        label: attribute_value(element, b"display-name", reader.decoder())?
+                            .unwrap_or_else(|| name.clone()),
+                        parent_style_name: attribute_value(
+                            element,
+                            b"parent-style-name",
+                            reader.decoder(),
+                        )?,
+                        name,
+                        ..NamedCellStyleDraft::default()
+                    });
+                }
+            }
+            Event::Empty(ref element)
+                if element.local_name().as_ref() == b"style" && current.is_none() =>
+            {
+                if attribute_value(element, b"family", reader.decoder())?.as_deref()
+                    == Some("table-cell")
+                {
+                    let name = attribute_value(element, b"name", reader.decoder())?
+                        .ok_or("ODS 单元格样式缺少名称")?;
+                    let style = NamedCellStyleDraft {
+                        label: attribute_value(element, b"display-name", reader.decoder())?
+                            .unwrap_or_else(|| name.clone()),
+                        parent_style_name: attribute_value(
+                            element,
+                            b"parent-style-name",
+                            reader.decoder(),
+                        )?,
+                        name,
+                        ..NamedCellStyleDraft::default()
+                    };
+                    if styles.insert(style.name.clone(), style).is_some() {
+                        return Err("ODS styles.xml 包含重复的单元格样式名".into());
+                    }
+                }
+            }
+            Event::Start(ref element) | Event::Empty(ref element) if current.is_some() => {
+                let kind = match element.local_name().as_ref() {
+                    b"table-cell-properties" => Some("cell"),
+                    b"text-properties" => Some("text"),
+                    _ => None,
+                };
+                if let Some(kind) = kind {
+                    collect_style_properties(
+                        element,
+                        current.as_mut().unwrap(),
+                        kind,
+                        reader.decoder(),
+                    )?;
+                } else if element.local_name().as_ref() != b"style" {
+                    current.as_mut().unwrap().unsafe_property = true;
+                }
+            }
+            Event::End(ref element) if element.local_name().as_ref() == b"style" => {
+                if let Some(style) = current.take() {
+                    if styles.insert(style.name.clone(), style).is_some() {
+                        return Err("ODS styles.xml 包含重复的单元格样式名".into());
+                    }
+                }
+            }
+            Event::DocType(_) => return Err("ODS styles.xml 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    Ok(styles)
+}
+
+fn resolve_named_cell_style(
+    name: &str,
+    drafts: &BTreeMap<String, NamedCellStyleDraft>,
+    visiting: &mut BTreeSet<String>,
+) -> Result<NamedCellStyleDraft, String> {
+    if !visiting.insert(name.to_string()) {
+        return Err("ODS 单元格样式继承存在循环".into());
+    }
+    let own = drafts
+        .get(name)
+        .ok_or_else(|| format!("ODS 单元格样式缺少父级或定义: {name}"))?;
+    if own.unsafe_property {
+        return Err(format!("ODS 单元格样式包含未验证属性: {name}"));
+    }
+    let mut resolved = if let Some(parent) = own.parent_style_name.as_deref() {
+        resolve_named_cell_style(parent, drafts, visiting)?
+    } else {
+        NamedCellStyleDraft::default()
+    };
+    visiting.remove(name);
+    resolved.name = own.name.clone();
+    resolved.label = own.label.clone();
+    resolved.parent_style_name = own.parent_style_name.clone();
+    if own.background_color.is_some() {
+        resolved.background_color = own.background_color.clone();
+    }
+    if own.text_color.is_some() {
+        resolved.text_color = own.text_color.clone();
+    }
+    resolved.bold |= own.bold;
+    resolved.italic |= own.italic;
+    Ok(resolved)
+}
+
+fn inspect_named_cell_styles(source: &[u8]) -> Result<Vec<OdsNamedCellStyle>, String> {
+    let drafts = parse_named_cell_style_drafts(source)?;
+    let mut styles = Vec::new();
+    for name in drafts.keys() {
+        let Ok(style) = resolve_named_cell_style(name, &drafts, &mut BTreeSet::new()) else {
+            continue;
+        };
+        styles.push(OdsNamedCellStyle {
+            name: style.name,
+            label: style.label,
+            parent_style_name: style.parent_style_name,
+            background_color: style.background_color,
+            text_color: style.text_color,
+            bold: style.bold,
+            italic: style.italic,
+        });
+    }
+    Ok(styles)
+}
+
+fn parse_content_cell_styles(xml: &[u8]) -> Result<BTreeMap<String, Option<String>>, String> {
+    let mut reader = Reader::from_reader(xml);
+    reader.config_mut().trim_text(false);
+    let mut styles = BTreeMap::new();
+    loop {
+        match reader
+            .read_event()
+            .map_err(|error| format!("ODS content.xml 样式损坏: {error}"))?
+        {
+            Event::Start(ref element) | Event::Empty(ref element)
+                if element.local_name().as_ref() == b"style"
+                    && attribute_value(element, b"family", reader.decoder())?.as_deref()
+                        == Some("table-cell") =>
+            {
+                let name = attribute_value(element, b"name", reader.decoder())?
+                    .ok_or("ODS 自动单元格样式缺少名称")?;
+                let parent = attribute_value(element, b"parent-style-name", reader.decoder())?;
+                if styles.insert(name, parent).is_some() {
+                    return Err("ODS content.xml 包含重复自动单元格样式".into());
+                }
+            }
+            Event::DocType(_) => return Err("ODS content.xml 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    Ok(styles)
 }
 
 fn finalize_cell(
@@ -258,6 +565,8 @@ fn finalize_cell(
     }
     let id = format!("ods-cell:{}:{address}", cell.sheet_index);
     let expected_value_digest = value_digest(&id, &cell.value_type, &cell.text);
+    let direct_style_name = cell.style_name.unwrap_or_default();
+    let expected_style_digest = style_digest(&id, &cell.text, &direct_style_name);
     let public = OdsEditableCellTarget {
         id,
         sheet_name: cell.sheet_name,
@@ -265,6 +574,8 @@ fn finalize_cell(
         text: cell.text,
         value_type: cell.value_type,
         expected_value_digest,
+        current_style_name: direct_style_name,
+        expected_style_digest,
     };
     editable.push(OdsEditableCellInternal {
         public,
@@ -332,6 +643,7 @@ fn scan_ods_cells(
                         value_type: attribute_value(element, b"value-type", reader.decoder())?
                             .unwrap_or_default(),
                         formula: attribute_value(element, b"formula", reader.decoder())?,
+                        style_name: attribute_value(element, b"style-name", reader.decoder())?,
                         merged: attribute_value(
                             element,
                             b"number-columns-spanned",
@@ -520,16 +832,42 @@ pub fn inspect_ods_cell_edit_inventory(source: &[u8]) -> Result<OdsCellEditInven
             source_digest: baseline.source_package_digest,
             editable_cells: Vec::new(),
             blocked_cells: Vec::new(),
+            named_cell_styles: Vec::new(),
             blockers: baseline.blockers,
             writes_user_file: false,
         });
     }
-    let (editable, blocked_cells) = scan_ods_cells(source)?;
+    let named_cell_styles = inspect_named_cell_styles(source)?;
+    let named_style_names = named_cell_styles
+        .iter()
+        .map(|style| style.name.as_str())
+        .collect::<BTreeSet<_>>();
+    let automatic_styles = parse_content_cell_styles(&content_xml(source)?)?;
+    let (mut editable, blocked_cells) = scan_ods_cells(source)?;
+    for target in &mut editable {
+        let direct = target.public.current_style_name.clone();
+        target.public.current_style_name = if direct.is_empty() {
+            if named_style_names.contains("Default") {
+                "Default".into()
+            } else {
+                String::new()
+            }
+        } else if let Some(Some(parent)) = automatic_styles.get(&direct) {
+            if named_style_names.contains(parent.as_str()) {
+                parent.clone()
+            } else {
+                direct
+            }
+        } else {
+            direct
+        };
+    }
     Ok(OdsCellEditInventory {
         status: "candidate".into(),
         source_digest: baseline.source_package_digest,
         editable_cells: editable.into_iter().map(|target| target.public).collect(),
         blocked_cells,
+        named_cell_styles,
         blockers: Vec::new(),
         writes_user_file: false,
     })
@@ -632,6 +970,158 @@ pub fn build_ods_cell_value_patch_isolated(
         sheet_name: target.public.sheet_name,
         address: target.public.address,
         value_type: target.public.value_type,
+        source_digest: source_digest.clone(),
+        output_digest,
+        changed_parts,
+        unchanged_part_count: source_parts.len().saturating_sub(1),
+        unchanged_parts_verified: source_parts
+            .iter()
+            .filter(|(name, _)| name.as_str() != ODF_EDITABLE_PART)
+            .all(|(name, before)| output_parts.get(name) == Some(before)),
+        structural_reparse_verified: output_package.format == "ods",
+        semantic_reparse_verified,
+        source_unchanged: package_digest(source) == source_digest,
+        writes_user_file: false,
+        output_bytes: output.len(),
+    };
+    Ok((report, output))
+}
+
+pub fn build_ods_cell_style_patch_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_style_digest: &str,
+    style_name: &str,
+) -> Result<(OdsCellStylePatchReport, Vec<u8>), String> {
+    let source_digest = package_digest(source);
+    let baseline = inspect_ods_cell_edit_inventory(source)?;
+    if baseline.status != "candidate" {
+        return Err(format!(
+            "ODS 文件不满足安全编辑条件: {}",
+            baseline.blockers.join(", ")
+        ));
+    }
+    if !baseline
+        .named_cell_styles
+        .iter()
+        .any(|style| style.name == style_name)
+    {
+        return Err("ODS 样式不存在、继承无效或包含未验证属性".into());
+    }
+    let (mut internal_targets, _) = scan_ods_cells(source)?;
+    let target = internal_targets
+        .drain(..)
+        .find(|target| target.public.id == target_id)
+        .ok_or_else(|| "ODS 单元格不是可设置样式的简单值目标".to_string())?;
+    if target.public.expected_style_digest != expected_style_digest {
+        return Err("ODS 单元格样式或内容已变化，请重新读取后再编辑".into());
+    }
+
+    let mut xml = content_xml(source)?;
+    let automatic_styles = parse_content_cell_styles(&xml)?;
+    let current_direct_style = target.public.current_style_name.as_str();
+    let current_named_style = automatic_styles
+        .get(current_direct_style)
+        .and_then(|parent| parent.as_deref())
+        .unwrap_or(if current_direct_style.is_empty() {
+            "Default"
+        } else {
+            current_direct_style
+        });
+    if current_named_style == style_name {
+        return Err("ODS 单元格已经使用所选样式".into());
+    }
+
+    let automatic_style_name =
+        format!("ceLongEdit{}", &package_digest(style_name.as_bytes())[..12]);
+    let mut patches = Vec::<(Range<usize>, Vec<u8>)>::new();
+    match automatic_styles.get(&automatic_style_name) {
+        Some(Some(parent)) if parent == style_name => {}
+        Some(_) => return Err("ODS 自动样式名称与现有定义冲突".into()),
+        None => {
+            let marker = b"</office:automatic-styles>";
+            let insertion = xml
+                .windows(marker.len())
+                .position(|window| window == marker)
+                .ok_or("ODS content.xml 缺少 automatic-styles 结束标记")?;
+            let style = format!(
+                "<style:style style:name=\"{}\" style:family=\"table-cell\" style:parent-style-name=\"{}\"/>",
+                xml_escape_attribute(&automatic_style_name),
+                xml_escape_attribute(style_name)
+            );
+            patches.push((insertion..insertion, style.into_bytes()));
+        }
+    }
+
+    let tag = std::str::from_utf8(&xml[target.start_tag_range.clone()])
+        .map_err(|_| "ODS 单元格开始标签不是 UTF-8")?;
+    let style_attribute = Regex::new(r#"table:style-name="[^"]*""#)
+        .map_err(|error| format!("初始化 ODS 样式属性规则失败: {error}"))?;
+    let replacement_tag = if style_attribute.is_match(tag) {
+        style_attribute
+            .replace(
+                tag,
+                format!(
+                    "table:style-name=\"{}\"",
+                    xml_escape_attribute(&automatic_style_name)
+                ),
+            )
+            .into_owned()
+    } else {
+        tag.replacen(
+            "<table:table-cell",
+            &format!(
+                "<table:table-cell table:style-name=\"{}\"",
+                xml_escape_attribute(&automatic_style_name)
+            ),
+            1,
+        )
+    };
+    patches.push((target.start_tag_range.clone(), replacement_tag.into_bytes()));
+    patches.sort_by(|left, right| right.0.start.cmp(&left.0.start));
+    for (range, replacement) in patches {
+        xml.splice(range, replacement);
+    }
+
+    let output = rewrite_content_part(source, &xml)?;
+    let output_digest = package_digest(&output);
+    let source_parts = package_parts(source)?;
+    let output_parts = package_parts(&output)?;
+    let changed_parts = source_parts
+        .iter()
+        .filter_map(|(name, before)| {
+            output_parts
+                .get(name)
+                .filter(|after| *after != before)
+                .map(|_| name.clone())
+        })
+        .collect::<Vec<_>>();
+    if source_parts.len() != output_parts.len() || changed_parts != [ODF_EDITABLE_PART] {
+        return Err("ODS 样式补丁修改了 content.xml 之外的受保护部件".into());
+    }
+    let output_package = inspect_odf_package(&output, "ods")?;
+    parse_odf_content(&output, "ods")?;
+    let output_automatic_styles = parse_content_cell_styles(&content_xml(&output)?)?;
+    let (output_targets, _) = scan_ods_cells(&output)?;
+    let semantic_reparse_verified = output_automatic_styles
+        .get(&automatic_style_name)
+        .is_some_and(|parent| parent.as_deref() == Some(style_name))
+        && output_targets.iter().any(|candidate| {
+            candidate.public.id == target.public.id
+                && candidate.public.current_style_name == automatic_style_name
+                && candidate.public.text == target.public.text
+        });
+    if !semantic_reparse_verified {
+        return Err("ODS 单元格样式补丁语义复读不一致".into());
+    }
+    let report = OdsCellStylePatchReport {
+        status: "isolated-copy-verified".into(),
+        engine: "longedit-ods-existing-style-patch-v1".into(),
+        target_id: target.public.id,
+        sheet_name: target.public.sheet_name,
+        address: target.public.address,
+        style_name: style_name.into(),
+        automatic_style_name,
         source_digest: source_digest.clone(),
         output_digest,
         changed_parts,
@@ -850,6 +1340,125 @@ mod tests {
             assert_eq!(package_digest(&source), source_digest);
             assert_ne!(package_digest(&output), source_digest);
         }
+    }
+
+    #[test]
+    fn real_ods_existing_named_style_patches_only_content_xml() {
+        let source = fs::read(fixture("longedit-e1c-spreadsheet.ods")).unwrap();
+        let inventory = inspect_ods_cell_edit_inventory(&source).unwrap();
+        let good = inventory
+            .named_cell_styles
+            .iter()
+            .find(|style| style.name == "Good")
+            .unwrap();
+        assert_eq!(good.parent_style_name.as_deref(), Some("Status"));
+        assert_eq!(good.background_color.as_deref(), Some("#ccffcc"));
+        assert_eq!(good.text_color.as_deref(), Some("#006600"));
+        let target = inventory
+            .editable_cells
+            .iter()
+            .find(|cell| cell.sheet_name == "Overview" && cell.address == "A1")
+            .unwrap();
+        assert_eq!(target.current_style_name, "Default");
+        let (report, output) = build_ods_cell_style_patch_isolated(
+            &source,
+            &target.id,
+            &target.expected_style_digest,
+            "Good",
+        )
+        .unwrap();
+        assert_eq!(report.changed_parts, [ODF_EDITABLE_PART]);
+        assert_eq!(report.style_name, "Good");
+        assert!(report.unchanged_parts_verified && report.semantic_reparse_verified);
+        assert_eq!(
+            package_part(&source, "styles.xml").unwrap(),
+            package_part(&output, "styles.xml").unwrap()
+        );
+        assert_eq!(package_digest(&source), report.source_digest);
+    }
+
+    #[test]
+    fn ods_style_patch_rejects_stale_unknown_and_automatic_style_collision() {
+        let source = fs::read(fixture("longedit-e1c-spreadsheet.ods")).unwrap();
+        let inventory = inspect_ods_cell_edit_inventory(&source).unwrap();
+        let target = inventory
+            .editable_cells
+            .iter()
+            .find(|cell| cell.address == "A1")
+            .unwrap();
+        assert!(
+            build_ods_cell_style_patch_isolated(&source, &target.id, "stale", "Good")
+                .unwrap_err()
+                .contains("已变化")
+        );
+        assert!(build_ods_cell_style_patch_isolated(
+            &source,
+            &target.id,
+            &target.expected_style_digest,
+            "UnknownStyle",
+        )
+        .unwrap_err()
+        .contains("不存在"));
+
+        let automatic_name = format!("ceLongEdit{}", &package_digest(b"Good")[..12]);
+        let mut xml = content_xml(&source).unwrap();
+        let marker = b"</office:automatic-styles>";
+        let insertion = xml
+            .windows(marker.len())
+            .position(|window| window == marker)
+            .unwrap();
+        let collision = format!(
+            "<style:style style:name=\"{automatic_name}\" style:family=\"table-cell\" style:parent-style-name=\"Bad\"/>"
+        );
+        xml.splice(insertion..insertion, collision.into_bytes());
+        let collision_source = rewrite_content_part(&source, &xml).unwrap();
+        let collision_inventory = inspect_ods_cell_edit_inventory(&collision_source).unwrap();
+        let collision_target = collision_inventory
+            .editable_cells
+            .iter()
+            .find(|cell| cell.address == "A1")
+            .unwrap();
+        assert!(build_ods_cell_style_patch_isolated(
+            &collision_source,
+            &collision_target.id,
+            &collision_target.expected_style_digest,
+            "Good",
+        )
+        .unwrap_err()
+        .contains("冲突"));
+    }
+
+    #[test]
+    fn ods_named_style_resolution_rejects_cycles_missing_parents_and_unknown_properties() {
+        let mut drafts = BTreeMap::new();
+        drafts.insert(
+            "A".into(),
+            NamedCellStyleDraft {
+                name: "A".into(),
+                parent_style_name: Some("B".into()),
+                ..NamedCellStyleDraft::default()
+            },
+        );
+        drafts.insert(
+            "B".into(),
+            NamedCellStyleDraft {
+                name: "B".into(),
+                parent_style_name: Some("A".into()),
+                ..NamedCellStyleDraft::default()
+            },
+        );
+        assert!(resolve_named_cell_style("A", &drafts, &mut BTreeSet::new())
+            .unwrap_err()
+            .contains("循环"));
+        drafts.get_mut("B").unwrap().parent_style_name = Some("Missing".into());
+        assert!(resolve_named_cell_style("A", &drafts, &mut BTreeSet::new())
+            .unwrap_err()
+            .contains("缺少"));
+        drafts.get_mut("B").unwrap().parent_style_name = None;
+        drafts.get_mut("B").unwrap().unsafe_property = true;
+        assert!(resolve_named_cell_style("A", &drafts, &mut BTreeSet::new())
+            .unwrap_err()
+            .contains("未验证属性"));
     }
 
     #[test]

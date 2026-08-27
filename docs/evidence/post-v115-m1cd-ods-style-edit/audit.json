@@ -1,0 +1,59 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M1C-D-ODS-existing-named-style",
+    "status":  "passed",
+    "capturedAt":  "2026-08-27T05:09:08.4772390Z",
+    "expected":  {
+                     "target":  "Overview!A1",
+                     "initialStyle":  "Default",
+                     "savedStyle":  "Good",
+                     "sourceUnchanged":  true,
+                     "undoRedo":  true,
+                     "explicitCopySave":  true,
+                     "libreOfficeFill":  "FFCCFFCC",
+                     "libreOfficeFont":  "FF006600",
+                     "responsive960x720":  true,
+                     "runtimeErrors":  0
+                 },
+    "actual":  {
+                   "initialStyle":  "Default",
+                   "uiReopenedStyle":  "Good",
+                   "uiBackgroundColor":  "rgb(204, 255, 204)",
+                   "uiTextColor":  "rgb(0, 102, 0)",
+                   "libreOfficeFill":  "FFCCFFCC",
+                   "libreOfficeFont":  "FF006600",
+                   "sourceBeforeSha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                   "sourceAfterSha256":  "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+                   "targetSha256":  "678dd3efb6546394d97057f27b581e608e119909610f11a8955fc83d05ccc54a",
+                   "sourceUnchanged":  true,
+                   "undoRedo":  true,
+                   "explicitCopySave":  true,
+                   "responsive960x720":  true,
+                   "runtimeErrors":  0
+               },
+    "differences":  [
+                        "Before M1C-D, the real ODS exposed named styles only as an audit candidate and had no user style workflow.",
+                        "The current desktop flow previews Good, supports undo/redo, saves a verified copy, and reopens with the same visual style.",
+                        "LibreOffice independently exports the saved A1 style as FFCCFFCC fill and FF006600 text while the source digest remains identical.",
+                        "Formula editing, custom style creation, mixed value/style transactions, source overwrite, external ODS and ODP remain closed."
+                    ],
+    "decision":  {
+                     "stageAccepted":  true,
+                     "m1cClosed":  true,
+                     "nextStage":  "M1D-media-and-structured-text-selection-audit",
+                     "formulaEditingRemainsReadOnly":  true,
+                     "customStyleCreation":  false,
+                     "odpRemainsReadOnly":  true,
+                     "releaseCandidate":  false
+                 },
+    "privacy":  {
+                    "projectAuthoredFixture":  true,
+                    "localAbsolutePathsIncluded":  false,
+                    "userDocumentBodiesIncluded":  false,
+                    "rawOfficeOutputCommitted":  false
+                },
+    "evidenceFiles":  [
+                          "ods-style-draft.jpg",
+                          "ods-style-copy-reopen.jpg"
+                      ]
+}

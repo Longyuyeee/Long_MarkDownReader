@@ -38,8 +38,15 @@
       </div>
       <div v-if="editAvailable" class="edit-banner" data-testid="m1cb-ods-edit-banner">
         <PencilLine :size="15" />
-        <span><strong>可编辑简单值</strong> 双击普通文本或数值单元格开始编辑；公式、合并及复杂内容保持只读。</span>
-        <span v-if="draft" class="draft-status">{{ draft.sheetName }} · {{ draft.address }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
+        <span><strong>值与已有样式</strong> 单击选择样式，双击编辑值；公式、合并及复杂内容保持只读。</span>
+        <div v-if="styleDraft && namedCellStyles.length" class="style-controls" data-testid="m1cd-ods-style-controls">
+          <span>{{ styleDraft.sheetName }} {{ styleDraft.address }}</span>
+          <span class="style-swatch" :style="selectedStylePreview" aria-hidden="true"></span>
+          <select :value="styleDraft.styleName" aria-label="选择已有单元格样式" @change="updateStyleDraft">
+            <option v-for="style in namedCellStyles" :key="style.name" :value="style.name">{{ style.label }}</option>
+          </select>
+        </div>
+        <span v-if="draft || styleDraft" class="draft-status">{{ activeDraftLabel }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
       </div>
 
       <div v-if="isOds" class="ods-layout">
@@ -62,6 +69,8 @@
                   :id="`${selectedSheet.id}:${columnName(column)}${row.row}`"
                   :key="column"
                   :class="odsCellClasses(`${selectedSheet.id}:${columnName(column)}${row.row}`, `${columnName(column)}${row.row}`)"
+                  :style="odsCellStyle(`${columnName(column)}${row.row}`)"
+                  @click="beginStyleEdit(`${columnName(column)}${row.row}`)"
                   @dblclick="beginCellEdit(`${columnName(column)}${row.row}`)"
                 >
                   <template v-if="cellAt(row, column)">
@@ -72,6 +81,7 @@
                       data-testid="m1cb-ods-cell-editor"
                       :inputmode="draft.valueType === 'float' ? 'decimal' : 'text'"
                       :value="draft.value"
+                      @click.stop
                       @input="updateDraft"
                       @keydown.enter.prevent="saveCopy"
                       @keydown.esc.prevent="resetDraft"
@@ -147,18 +157,26 @@ interface OdsCell { address: string; column: number; text: string; valueType?: s
 interface OdsRow { row: number; cells: OdsCell[] }
 interface OdsSheet { id: string; name: string; rows: OdsRow[]; formulaCount: number }
 interface OdpSlide { id: string; index: number; name: string; text: string; notes: string; imageCount: number }
-interface OdsEditableCellTarget { id: string; sheetName: string; address: string; text: string; valueType: 'string' | 'float'; expectedValueDigest: string }
+interface OdsEditableCellTarget {
+  id: string; sheetName: string; address: string; text: string; valueType: 'string' | 'float'; expectedValueDigest: string
+  currentStyleName: string; expectedStyleDigest: string
+}
+interface OdsNamedCellStyle {
+  name: string; label: string; parentStyleName?: string; backgroundColor?: string; textColor?: string; bold: boolean; italic: boolean
+}
 interface OdsBlockedCellTarget { sheetName: string; address: string; text: string; reason: string }
 interface OdsCellEditInventory {
   status: 'candidate' | 'blocked'
   sourceDigest: string
   editableCells: OdsEditableCellTarget[]
   blockedCells: OdsBlockedCellTarget[]
+  namedCellStyles: OdsNamedCellStyle[]
   blockers: string[]
   writesUserFile: boolean
 }
 interface OdsSavedCopyReport { status: string; targetPath: string; targetDigest: string; sourceUnchanged: boolean; semanticReopenVerified: boolean; saveMode: string }
 interface OdsDraft extends OdsEditableCellTarget { originalValue: string; value: string }
+interface OdsStyleDraft extends OdsEditableCellTarget { originalStyleName: string; styleName: string }
 interface OdfContentReport {
   path: string
   size: number
@@ -201,6 +219,7 @@ const selectedSlideId = ref('')
 const sheetStageRef = ref<HTMLElement | null>(null)
 const cellEditorRef = ref<HTMLInputElement[] | null>(null)
 const draft = ref<OdsDraft>()
+const styleDraft = ref<OdsStyleDraft>()
 const undoStack = ref<string[]>([])
 const redoStack = ref<string[]>([])
 const saving = ref(false)
@@ -212,12 +231,24 @@ const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || `未�
 const selectedSheet = computed(() => report.value?.model.sheets.find(sheet => sheet.id === selectedSheetId.value))
 const selectedSlide = computed(() => report.value?.model.slides.find(slide => slide.id === selectedSlideId.value))
 const editAvailable = computed(() => !isExternal.value && isOds.value && report.value?.editInventory?.status === 'candidate')
-const draftDirty = computed(() => !!draft.value && draft.value.value !== draft.value.originalValue)
+const draftDirty = computed(() => (!!draft.value && draft.value.value !== draft.value.originalValue)
+  || (!!styleDraft.value && styleDraft.value.styleName !== styleDraft.value.originalStyleName))
 const canUndo = computed(() => undoStack.value.length > 0)
 const canRedo = computed(() => redoStack.value.length > 0)
 const editableTargetMap = computed(() => new Map(
   (report.value?.editInventory?.editableCells || []).map(target => [`${target.sheetName}:${target.address}`, target]),
 ))
+const namedCellStyles = computed(() => report.value?.editInventory?.namedCellStyles || [])
+const selectedStyle = computed(() => namedCellStyles.value.find(style => style.name === styleDraft.value?.styleName))
+const selectedStylePreview = computed(() => ({
+  backgroundColor: selectedStyle.value?.backgroundColor || 'var(--bg-primary)',
+  color: selectedStyle.value?.textColor || 'var(--text-primary)',
+  fontWeight: selectedStyle.value?.bold ? '700' : '400',
+  fontStyle: selectedStyle.value?.italic ? 'italic' : 'normal',
+}))
+const activeDraftLabel = computed(() => draft.value
+  ? `${draft.value.sheetName} · ${draft.value.address} · 值`
+  : styleDraft.value ? `${styleDraft.value.sheetName} · ${styleDraft.value.address} · 样式` : '')
 const sheetColumnCount = computed(() => Math.min(256, Math.max(1, ...(selectedSheet.value?.rows.flatMap(row => row.cells.map(cell => cell.column)) || [1]))))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
 const warnings = computed(() => {
@@ -254,7 +285,22 @@ const odsCellClasses = (id: string, address: string) => ({
   ...cellClasses(id),
   editable: !!selectedSheet.value && editableTargetMap.value.has(`${selectedSheet.value.name}:${address}`),
   editing: draft.value?.sheetName === selectedSheet.value?.name && draft.value?.address === address,
+  'style-selected': styleDraft.value?.sheetName === selectedSheet.value?.name && styleDraft.value?.address === address,
 })
+const odsCellStyle = (address: string) => {
+  if (!selectedSheet.value) return undefined
+  const target = editableTargetMap.value.get(`${selectedSheet.value.name}:${address}`)
+  if (!target) return undefined
+  const styleName = styleDraft.value?.id === target.id ? styleDraft.value.styleName : target.currentStyleName
+  const style = namedCellStyles.value.find(candidate => candidate.name === styleName)
+  if (!style) return undefined
+  return {
+    backgroundColor: style.backgroundColor || undefined,
+    color: style.textColor || undefined,
+    fontWeight: style.bold ? '700' : undefined,
+    fontStyle: style.italic ? 'italic' : undefined,
+  }
+}
 const cellAt = (row: OdsRow, column: number) => row.cells.find(cell => cell.column === column)
 const columnName = (column: number) => {
   let value = column
@@ -275,13 +321,14 @@ const markTabDirty = (dirty: boolean) => {
 }
 const clearDraft = () => {
   draft.value = undefined
+  styleDraft.value = undefined
   undoStack.value = []
   redoStack.value = []
   markTabDirty(false)
 }
 const resetDraft = () => {
-  if (!draft.value) return
-  draft.value.value = draft.value.originalValue
+  if (draft.value) draft.value.value = draft.value.originalValue
+  if (styleDraft.value) styleDraft.value.styleName = styleDraft.value.originalStyleName
   undoStack.value = []
   redoStack.value = []
   markTabDirty(false)
@@ -299,16 +346,36 @@ const beginCellEdit = async (address: string) => {
     cellEditorRef.value?.[0]?.focus()
     return
   }
-  if (draftDirty.value && draft.value?.id !== target.id) {
+  if (draftDirty.value && (draft.value?.id !== target.id || !!styleDraft.value)) {
     message.warning('当前单元格还有未保存修改，请先另存副本或撤销修改')
     return
   }
+  styleDraft.value = undefined
   draft.value = { ...target, originalValue: target.text, value: target.text }
   undoStack.value = []
   redoStack.value = []
   await nextTick()
   cellEditorRef.value?.[0]?.focus()
   cellEditorRef.value?.[0]?.select()
+}
+const beginStyleEdit = (address: string) => {
+  if (!editAvailable.value || !selectedSheet.value || namedCellStyles.value.length < 2) return
+  const target = editableTargetMap.value.get(`${selectedSheet.value.name}:${address}`)
+  if (!target) return
+  if (styleDraft.value?.id === target.id) return
+  if (draftDirty.value && (styleDraft.value?.id !== target.id || !!draft.value)) {
+    message.warning('当前单元格还有未保存修改，请先另存副本或撤销修改')
+    return
+  }
+  draft.value = undefined
+  styleDraft.value = {
+    ...target,
+    originalStyleName: target.currentStyleName || 'Default',
+    styleName: target.currentStyleName || 'Default',
+  }
+  undoStack.value = []
+  redoStack.value = []
+  markTabDirty(false)
 }
 const updateDraft = (event: Event) => {
   if (!draft.value) return
@@ -319,39 +386,71 @@ const updateDraft = (event: Event) => {
   redoStack.value = []
   markTabDirty(draftDirty.value)
 }
+const updateStyleDraft = (event: Event) => {
+  if (!styleDraft.value) return
+  const next = (event.target as HTMLSelectElement).value
+  if (next === styleDraft.value.styleName) return
+  undoStack.value.push(styleDraft.value.styleName)
+  styleDraft.value.styleName = next
+  redoStack.value = []
+  markTabDirty(draftDirty.value)
+}
 const undoDraft = () => {
-  if (!draft.value || !undoStack.value.length) return
-  redoStack.value.push(draft.value.value)
-  draft.value.value = undoStack.value.pop()!
+  if (!undoStack.value.length) return
+  if (draft.value) {
+    redoStack.value.push(draft.value.value)
+    draft.value.value = undoStack.value.pop()!
+  } else if (styleDraft.value) {
+    redoStack.value.push(styleDraft.value.styleName)
+    styleDraft.value.styleName = undoStack.value.pop()!
+  }
   markTabDirty(draftDirty.value)
 }
 const redoDraft = () => {
-  if (!draft.value || !redoStack.value.length) return
-  undoStack.value.push(draft.value.value)
-  draft.value.value = redoStack.value.pop()!
+  if (!redoStack.value.length) return
+  if (draft.value) {
+    undoStack.value.push(draft.value.value)
+    draft.value.value = redoStack.value.pop()!
+  } else if (styleDraft.value) {
+    undoStack.value.push(styleDraft.value.styleName)
+    styleDraft.value.styleName = redoStack.value.pop()!
+  }
   markTabDirty(draftDirty.value)
 }
 const saveCopy = async () => {
-  if (!draft.value || !draftDirty.value || !report.value || saving.value) return
+  if ((!draft.value && !styleDraft.value) || !draftDirty.value || !report.value || saving.value) return
+  const activeDraft = draft.value || styleDraft.value!
   const baseName = fileName.value.replace(/\.ods$/i, '')
   const targetFileName = (await promptAppAction(dialog, {
     title: '另存 ODS 副本',
-    content: `只会修改 ${draft.value.sheetName} ${draft.value.address}，源文件不会被覆盖。副本保存在源文件同一文件夹。`,
+    content: styleDraft.value
+      ? `只会把 ${styleDraft.value.sheetName} ${styleDraft.value.address} 切换为已有样式“${selectedStyle.value?.label || styleDraft.value.styleName}”，源文件不会被覆盖。`
+      : `只会修改 ${activeDraft.sheetName} ${activeDraft.address} 的值，源文件不会被覆盖。副本保存在源文件同一文件夹。`,
     initialValue: `${baseName}-LongEdit副本.ods`,
     positiveText: '保存副本',
   }))?.trim()
   if (!targetFileName) return
   saving.value = true
   try {
-    const saved = await invoke<OdsSavedCopyReport>('save_ods_cell_value_copy', {
-      libraryRoot: store.libraryPath,
-      path: documentPath.value,
-      targetFileName,
-      expectedSourceSignature: report.value.signature,
-      targetId: draft.value.id,
-      expectedValueDigest: draft.value.expectedValueDigest,
-      replacementValue: draft.value.value,
-    })
+    const saved = styleDraft.value
+      ? await invoke<OdsSavedCopyReport>('save_ods_cell_style_copy', {
+          libraryRoot: store.libraryPath,
+          path: documentPath.value,
+          targetFileName,
+          expectedSourceSignature: report.value.signature,
+          targetId: styleDraft.value.id,
+          expectedStyleDigest: styleDraft.value.expectedStyleDigest,
+          styleName: styleDraft.value.styleName,
+        })
+      : await invoke<OdsSavedCopyReport>('save_ods_cell_value_copy', {
+          libraryRoot: store.libraryPath,
+          path: documentPath.value,
+          targetFileName,
+          expectedSourceSignature: report.value.signature,
+          targetId: draft.value!.id,
+          expectedValueDigest: draft.value!.expectedValueDigest,
+          replacementValue: draft.value!.value,
+        })
     if (!saved.sourceUnchanged || !saved.semanticReopenVerified || saved.saveMode !== 'new_copy_only') {
       throw new Error('ODS 副本未返回完整的可靠保存凭据')
     }
@@ -504,6 +603,10 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .edit-banner { display: flex; min-height: 34px; align-items: center; gap: 8px; padding: 5px 14px; border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 34%, var(--border-color)); color: var(--text-secondary); background: color-mix(in srgb, var(--theme-primary) 8%, var(--bg-primary)); }
 .edit-banner > svg { flex: none; color: var(--theme-primary); }
 .edit-banner strong { color: var(--text-primary); }
+.style-controls { display: flex; min-width: 0; align-items: center; gap: 6px; margin-left: auto; }
+.style-controls > span:first-child { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+.style-controls select { width: 150px; min-width: 0; height: 26px; padding: 0 26px 0 8px; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); background: var(--bg-secondary); font: inherit; }
+.style-swatch { width: 18px; height: 18px; flex: none; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 4px; }
 .draft-status { margin-left: auto; color: var(--theme-primary); font-size: 11px; white-space: nowrap; }
 .ods-layout { display: flex; flex: 1; min-height: 0; flex-direction: column; }
 .sheet-tabs { display: flex; min-height: 34px; overflow-x: auto; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
@@ -520,6 +623,7 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .sheet-stage td.editable::after { position: absolute; right: 3px; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--theme-primary); content: ''; opacity: .55; }
 .sheet-stage td.editable:hover { background: color-mix(in srgb, var(--theme-primary) 9%, var(--bg-primary)); }
 .sheet-stage td.editing { padding: 2px; outline: 2px solid var(--theme-primary); outline-offset: -2px; overflow: visible; }
+.sheet-stage td.style-selected:not(.editing) { outline: 2px solid color-mix(in srgb, var(--theme-primary) 72%, #ffffff); outline-offset: -2px; }
 .cell-editor { width: 100%; height: 100%; min-width: 0; padding: 2px 5px; box-sizing: border-box; border: 0; outline: 0; color: var(--text-primary); caret-color: var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 8%, var(--bg-primary)); font: inherit; }
 .sheet-stage td code { position: absolute; top: 2px; right: 3px; color: var(--theme-primary); font-size: var(--text-compact); }
 .odp-layout { display: grid; flex: 1; min-height: 0; grid-template-columns: 220px minmax(0, 1fr); }
@@ -559,6 +663,8 @@ footer > div { gap: 10px; }
   .search-box input { width: 100%; min-width: 0; }
   footer > span { display: none; }
   .edit-banner { align-items: flex-start; flex-wrap: wrap; }
+  .style-controls { width: 100%; margin-left: 23px; }
+  .style-controls select { width: min(210px, calc(100% - 80px)); }
   .draft-status { width: 100%; margin-left: 23px; }
 }
 </style>

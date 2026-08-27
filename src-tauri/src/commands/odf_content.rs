@@ -2,7 +2,8 @@ use crate::formats::file_registry::file_format_for_path;
 use crate::formats::odf::MAX_ODF_FILE_BYTES;
 use crate::formats::odf_content::{parse_odf_content, OdfContentModel};
 use crate::formats::odf_edit::{
-    build_ods_cell_value_patch_isolated, inspect_ods_cell_edit_inventory, OdsCellEditInventory,
+    build_ods_cell_style_patch_isolated, build_ods_cell_value_patch_isolated,
+    inspect_ods_cell_edit_inventory, OdsCellEditInventory,
 };
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::write_new_bytes;
@@ -197,6 +198,92 @@ fn save_ods_cell_value_copy_to_path(
     })
 }
 
+fn save_ods_cell_style_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_source_signature: &str,
+    target_id: &str,
+    expected_style_digest: &str,
+    style_name: &str,
+) -> Result<OdsSavedCopyReport, String> {
+    if source_path == target_path {
+        return Err("ODS 可靠另存禁止覆盖源文件".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；ODS 可靠另存不会覆盖现有文件".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 ODS 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    if source_digest != expected_source_signature {
+        return Err("ODS 已被外部修改，请重新打开后再保存副本".into());
+    }
+    let (patch, output) =
+        build_ods_cell_style_patch_isolated(&source, target_id, expected_style_digest, style_name)?;
+    if !patch.unchanged_parts_verified
+        || !patch.structural_reparse_verified
+        || !patch.semantic_reparse_verified
+        || !patch.source_unchanged
+    {
+        return Err("ODS 样式隔离补丁未通过部件保持与语义复读".into());
+    }
+    if fs::read(source_path).map_err(|error| format!("保存前复核 ODS 失败: {error}"))? != source
+    {
+        return Err("ODS 在隔离验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_new_bytes(target_path, &output)?;
+    let verification = (|| -> Result<String, String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("目标已创建，但无法复读 ODS 样式副本: {error}"))?;
+        let target_digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != output || target_digest != patch.output_digest {
+            return Err("ODS 样式副本落盘字节与隔离验证输出不一致".into());
+        }
+        parse_odf_content(&saved, "ods")
+            .map_err(|error| format!("ODS 样式副本结构复读失败: {error}"))?;
+        let (replayed, replay_output) = build_ods_cell_style_patch_isolated(
+            &source,
+            target_id,
+            expected_style_digest,
+            style_name,
+        )?;
+        if replay_output != saved || !replayed.semantic_reparse_verified {
+            return Err("ODS 样式副本语义复读结果与已验证补丁不一致".into());
+        }
+        let source_after =
+            fs::read(source_path).map_err(|error| format!("另存后复核源 ODS 失败: {error}"))?;
+        if source_after != source || format!("{:x}", Sha256::digest(&source_after)) != source_digest
+        {
+            return Err("源 ODS 在样式另存期间发生变化".into());
+        }
+        Ok(target_digest)
+    })();
+    let target_digest = match verification {
+        Ok(result) => result,
+        Err(error) => {
+            remove_created_ods_if_exact(target_path, &output);
+            return Err(format!(
+                "ODS 样式可靠另存验证失败，已清理未验收副本: {error}"
+            ));
+        }
+    };
+    Ok(OdsSavedCopyReport {
+        status: "saved_verified".into(),
+        engine: patch.engine,
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature: target_digest.clone(),
+        target_digest,
+        source_signature: source_digest,
+        source_unchanged: true,
+        output_bytes: output.len(),
+        changed_parts: patch.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        save_mode: "new_copy_only".into(),
+    })
+}
+
 fn ensure_odf_content_format(path: &Path) -> Result<(), String> {
     let format = file_format_for_path(path)?;
     if !["ods", "odp"].contains(&format.id.as_str()) {
@@ -257,6 +344,36 @@ pub async fn save_ods_cell_value_copy(
     })
     .await
     .map_err(|error| format!("ODS 可靠另存任务失败: {error}"))?
+}
+
+#[tauri::command]
+pub async fn save_ods_cell_style_copy(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_source_signature: String,
+    target_id: String,
+    expected_style_digest: String,
+    style_name: String,
+) -> Result<OdsSavedCopyReport, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["ods"])?;
+    let target_name = target_file_name.trim();
+    validate_ods_copy_file_name(target_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_name), &["ods"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_ods_cell_style_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_source_signature,
+            &target_id,
+            &expected_style_digest,
+            &style_name,
+        )
+    })
+    .await
+    .map_err(|error| format!("ODS 样式可靠另存任务失败: {error}"))?
 }
 
 #[cfg(test)]
@@ -346,6 +463,55 @@ mod tests {
             &target.id,
             &target.expected_value_digest,
             "second attempt",
+        )
+        .unwrap_err()
+        .contains("不会覆盖"));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn real_ods_style_copy_save_is_verified_and_never_overwrites() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-m1cd-ods-style-save-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let source_path = root.join("source.ods");
+        let target_path = root.join("styled-copy.ods");
+        fs::copy(fixture("longedit-e1c-spreadsheet.ods"), &source_path).unwrap();
+        let source_before = fs::read(&source_path).unwrap();
+        let report = read_odf_content_path(&source_path, true).unwrap();
+        let target = report
+            .edit_inventory
+            .unwrap()
+            .editable_cells
+            .into_iter()
+            .find(|cell| cell.address == "A1")
+            .unwrap();
+        let saved = save_ods_cell_style_copy_to_path(
+            &source_path,
+            &target_path,
+            &report.signature,
+            &target.id,
+            &target.expected_style_digest,
+            "Good",
+        )
+        .unwrap();
+        assert_eq!(saved.status, "saved_verified");
+        assert_eq!(saved.save_mode, "new_copy_only");
+        assert!(saved.source_unchanged && saved.semantic_reopen_verified);
+        assert_eq!(fs::read(&source_path).unwrap(), source_before);
+        assert!(save_ods_cell_style_copy_to_path(
+            &source_path,
+            &target_path,
+            &report.signature,
+            &target.id,
+            &target.expected_style_digest,
+            "Bad",
         )
         .unwrap_err()
         .contains("不会覆盖"));

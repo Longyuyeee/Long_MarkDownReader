@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-27 M1C-D ODS 已有命名样式编辑已通过，M1C 收口：** 真实 ODS `Overview!A1` 可在文件已有安全命名样式间切换，具有即时预览、撤销/重做、离开保护和可靠新副本；保存前后源 SHA-256 完全相同。真实 Tauri 960x720 重开副本仍为 `Good`，运行时错误 0；LibreOffice Calc 独立确认浅绿填充 `FFCCFFCC` 和深绿文字 `FF006600`。公式、自定义样式、混合值/样式事务、源覆盖、外部 ODS 与 ODP 继续关闭。下一步进入 M1D 媒体与结构化文本对象选择审计，版本保持 `1.0.15`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1CD_ODS_Existing_Named_Style_Audit_2026-08-27.md`](./Post_v1.0.15_M1CD_ODS_Existing_Named_Style_Audit_2026-08-27.md)。
+
 > **2026-08-27 M1C-C ODS 公式与样式可行性审计已通过：** Long编辑生产补丁把真实 ODS `Overview!A2` 改为 `84.5` 后，公式仍为 `of:=SUM([.A2];8)` 且内部缓存仍为 `50`；LibreOffice Calc 独立打开后重算为 `92.5`，因此公式编辑继续只读。真实样本含 19 个单元格样式，规范 Flat ODF 探针证明 `ce 自动样式 -> Good -> Status -> Default` 可由生产者保持，并导出浅绿 `FFCCFFCC` / 深绿 `FF006600`；但现有 ODS ZIP 事务尚未证明，公开能力不变。下一步 M1C-D 只研究已有命名样式的自动样式引用与可靠副本。版本保持 `1.0.15`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1CC_ODS_Formula_and_Style_Feasibility_Audit_2026-08-27.md`](./Post_v1.0.15_M1CC_ODS_Formula_and_Style_Feasibility_Audit_2026-08-27.md)。
 
 > **2026-08-27 M1C-B ODS 有界单元格值可靠副本已通过：** 资料库内真实 ODS 的简单字符串/有限数值单元格现可双击编辑，具有内存草稿、撤销/重做、离开保护和显式另存；公式、合并、重复、富文本、风险包、外部 ODS 与全部 ODP 继续只读。真实 Tauri 将 `Overview!A1` 改为 `LongEdit M1C-B desktop value`，新副本由 Long编辑和 LibreOffice Calc 独立复读一致，960x720 无溢出、运行时错误 0；源 SHA-256 前后完全相同。公开能力仅更新为 ODS `basic-edit / saveMode:copy`，不宣称等价编辑。下一步 M1C-C 先审计公式命名空间、缓存值和样式继承，不直接开放写入。版本保持 `1.0.15`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M1CB_ODS_Bounded_Cell_Value_Audit_2026-08-27.md`](./Post_v1.0.15_M1CB_ODS_Bounded_Cell_Value_Audit_2026-08-27.md)。
