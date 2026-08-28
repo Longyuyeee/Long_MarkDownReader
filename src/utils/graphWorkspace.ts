@@ -1,5 +1,6 @@
 import type { GraphEdge, GraphNode } from '../types/graph'
 import { graphObjectSemantic, graphRelationSemantic } from '../config/graphSemantics'
+import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint, graphQuadraticPathData, graphQuadraticPoint, graphQuadraticTangent } from './graphEdgeRoutes'
 
 type StoredPoint = { x: number; y: number }
 type StoredLayout = { updatedAt: number; positions: Record<string, StoredPoint> }
@@ -67,6 +68,7 @@ export interface GraphSvgOptions {
   title: string
   dark: boolean
   rootId?: string
+  showRelationLabels?: boolean
   colors?: { background: string; foreground: string; card: string; primary: string; edge: string }
 }
 
@@ -74,12 +76,18 @@ export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: 
   if (!nodes.length) throw new Error('当前筛选条件下没有可导出的节点')
   const mindmap = options.mode === 'mindmap'
   const padding = 64
+  const nodeMap = new Map(nodes.map(node => [node.id, node]))
+  const nodePoints = new Map(nodes.map(node => [node.id, { x: node.x || 0, y: node.y || 0 }]))
+  const edgeRoutes = buildGraphEdgeRoutes(edges)
   const extents = nodes.map(node => {
     const root = node.id === options.rootId
     const halfWidth = mindmap ? (root ? 90 : 80) : Math.max(18, node.size * 0.6)
     const halfHeight = mindmap ? (root ? 24 : 21) : Math.max(34, node.size * 0.6 + 22)
     return { left: (node.x || 0) - halfWidth, right: (node.x || 0) + halfWidth, top: (node.y || 0) - halfHeight, bottom: (node.y || 0) + halfHeight }
-  })
+  }).concat(mindmap ? [] : edgeRoutes.flatMap(route => {
+    const geometry = graphQuadraticGeometry(route, nodePoints)
+    return geometry ? [{ left: geometry.control.x, right: geometry.control.x, top: geometry.control.y, bottom: geometry.control.y }] : []
+  }))
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
   for (const extent of extents) {
     minX = Math.min(minX, extent.left)
@@ -90,29 +98,36 @@ export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: 
   minX -= padding; maxX += padding; minY -= padding; maxY += padding
   const width = Math.max(320, Math.ceil(maxX - minX))
   const height = Math.max(240, Math.ceil(maxY - minY))
-  const nodeMap = new Map(nodes.map(node => [node.id, node]))
   const background = options.colors?.background ?? (options.dark ? '#17191d' : '#f7f9fc')
   const foreground = options.colors?.foreground ?? (options.dark ? '#f2f5f7' : '#18202b')
   const card = options.colors?.card ?? (options.dark ? '#252a30' : '#ffffff')
   const primary = options.colors?.primary ?? (options.dark ? '#42b883' : '#007aff')
   const edgeColor = options.colors?.edge ?? (options.dark ? '#56616d' : '#aab5c2')
-  const edgeMarkup = edges.flatMap(edge => {
+  const edgeMarkup = edgeRoutes.flatMap(route => {
+    const edge = route.edge
     const source = nodeMap.get(edge.source), target = nodeMap.get(edge.target)
     if (!source || !target) return []
     const sx = source.x || 0, sy = source.y || 0, tx = target.x || 0, ty = target.y || 0
-    const shape = mindmap ? `<path d="M ${sx} ${sy} C ${(sx + tx) / 2} ${sy}, ${(sx + tx) / 2} ${ty}, ${tx} ${ty}"/>` : `<line x1="${sx}" y1="${sy}" x2="${tx}" y2="${ty}"/>`
+    const geometry = mindmap ? null : graphQuadraticGeometry(route, nodePoints)
+    const shape = mindmap
+      ? `<path d="M ${sx} ${sy} C ${(sx + tx) / 2} ${sy}, ${(sx + tx) / 2} ${ty}, ${tx} ${ty}"/>`
+      : geometry ? `<path data-route-id="${escapeXml(route.routeId)}" d="${graphQuadraticPathData(geometry)}"/>` : ''
     let arrow = ''
     if (edge.directed) {
       const ratio = 0.72, inverse = 1 - ratio, middle = (sx + tx) / 2
-      const ax = mindmap ? inverse ** 3 * sx + 3 * inverse ** 2 * ratio * middle + 3 * inverse * ratio ** 2 * middle + ratio ** 3 * tx : sx + (tx - sx) * ratio
-      const ay = mindmap ? inverse ** 3 * sy + 3 * inverse ** 2 * ratio * sy + 3 * inverse * ratio ** 2 * ty + ratio ** 3 * ty : sy + (ty - sy) * ratio
-      const dx = mindmap ? 3 * inverse ** 2 * (middle - sx) + 3 * inverse * ratio * (middle - middle) + 3 * ratio ** 2 * (tx - middle) : tx - sx
-      const dy = mindmap ? 3 * inverse ** 2 * (sy - sy) + 3 * inverse * ratio * (ty - sy) + 3 * ratio ** 2 * (ty - ty) : ty - sy
+      const point = geometry ? graphQuadraticPoint(geometry, ratio) : null
+      const tangent = geometry ? graphQuadraticTangent(geometry, ratio) : null
+      const ax = point?.x ?? (mindmap ? inverse ** 3 * sx + 3 * inverse ** 2 * ratio * middle + 3 * inverse * ratio ** 2 * middle + ratio ** 3 * tx : sx + (tx - sx) * ratio)
+      const ay = point?.y ?? (mindmap ? inverse ** 3 * sy + 3 * inverse ** 2 * ratio * sy + 3 * inverse * ratio ** 2 * ty + ratio ** 3 * ty : sy + (ty - sy) * ratio)
+      const dx = tangent?.x ?? (mindmap ? 3 * inverse ** 2 * (middle - sx) + 3 * inverse * ratio * (middle - middle) + 3 * ratio ** 2 * (tx - middle) : tx - sx)
+      const dy = tangent?.y ?? (mindmap ? 3 * inverse ** 2 * (sy - sy) + 3 * inverse * ratio * (ty - sy) + 3 * ratio ** 2 * (ty - ty) : ty - sy)
       const length = Math.hypot(dx, dy) || 1, ux = dx / length, uy = dy / length, px = -uy, py = ux
       arrow = `<polygon points="${ax + ux * 6},${ay + uy * 6} ${ax - ux * 4 + px * 4},${ay - uy * 4 + py * 4} ${ax - ux * 4 - px * 4},${ay - uy * 4 - py * 4}"/>`
     }
     const semantic = graphRelationSemantic(edge.relationType)
-    return [`<g class="edge${edge.directed ? ' directed' : ' related'} ${semantic.line}" style="--edge-color:${semantic.color}">${shape}${arrow}</g>`]
+    const labelPoint = geometry && options.showRelationLabels ? graphQuadraticLabelPoint(geometry, route.curveOffset, 20) : null
+    const label = labelPoint ? `<g class="relation-label" data-relation-type="${escapeXml(edge.relationType)}"><rect x="${labelPoint.x - 34}" y="${labelPoint.y - 10}" width="68" height="20" rx="4"/><text x="${labelPoint.x}" y="${labelPoint.y}" text-anchor="middle" dominant-baseline="middle">${escapeXml(semantic.label)}</text></g>` : ''
+    return [`<g class="edge${edge.directed ? ' directed' : ' related'} ${semantic.line}" style="--edge-color:${semantic.color}">${shape}${arrow}${label}</g>`]
   }).join('')
   const nodeMarkup = nodes.map(node => {
     const x = node.x || 0, y = node.y || 0
@@ -134,7 +149,7 @@ export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: 
     return `<g class="node network-node" data-object-type="${escapeXml(semantic.id)}" style="--node-color:${semanticColor}">${shape}<text class="glyph" x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${escapeXml(semantic.glyph)}</text><text x="${x}" y="${y + radius + 18}" text-anchor="middle">${label}</text></g>`
   }).join('')
   const metadata = escapeXml(`${nodes.length} nodes, ${edges.length} edges`)
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}" role="img" aria-label="${escapeXml(options.title)}"><title>${escapeXml(options.title)}</title><desc>${metadata}</desc><rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${background}"/><style>.edge path,.edge line{fill:none;stroke:var(--edge-color,${edgeColor});stroke-width:1.4}.edge polygon{fill:var(--edge-color,${edgeColor})}.edge.dashed path,.edge.dashed line{stroke-dasharray:6 4}.edge.dotted path,.edge.dotted line{stroke-dasharray:2 4}.node text{font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.network-node circle,.network-node rect,.network-node polygon{fill:var(--node-color,${primary});stroke:rgba(255,255,255,.55);stroke-width:1.2}.network-node text.glyph{fill:${options.dark ? '#111827' : '#ffffff'};font-size:8px;font-weight:800}.mindmap-node rect{fill:${card};stroke:${edgeColor};stroke-width:1}.mindmap-node.root rect{fill:${primary};stroke:${primary}}.mindmap-node.root text{fill:#fff;font-weight:700}</style><g class="edges">${edgeMarkup}</g><g class="nodes">${nodeMarkup}</g></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}" role="img" aria-label="${escapeXml(options.title)}"><title>${escapeXml(options.title)}</title><desc>${metadata}</desc><rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${background}"/><style>.edge>path,.edge>line{fill:none;stroke:var(--edge-color,${edgeColor});stroke-width:1.4}.edge>polygon{fill:var(--edge-color,${edgeColor})}.edge.dashed>path,.edge.dashed>line{stroke-dasharray:6 4}.edge.dotted>path,.edge.dotted>line{stroke-dasharray:2 4}.relation-label rect{fill:${card};stroke:var(--edge-color,${edgeColor});stroke-width:1}.relation-label text{font:700 10px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.node text{font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.network-node circle,.network-node rect,.network-node polygon{fill:var(--node-color,${primary});stroke:rgba(255,255,255,.55);stroke-width:1.2}.network-node text.glyph{fill:${options.dark ? '#111827' : '#ffffff'};font-size:8px;font-weight:800}.mindmap-node rect{fill:${card};stroke:${edgeColor};stroke-width:1}.mindmap-node.root rect{fill:${primary};stroke:${primary}}.mindmap-node.root text{fill:#fff;font-weight:700}</style><g class="edges">${edgeMarkup}</g><g class="nodes">${nodeMarkup}</g></svg>`
 }
 
 export const graphSvgToPng = async (svg: string) => {

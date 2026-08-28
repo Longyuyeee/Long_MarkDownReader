@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-4",
+  "releaseCandidate": false,
+  "scope": "curved-parallel-relations-and-static-path-labels",
+  "preImplementationFacts": {
+    "networkEdges": "straight-line",
+    "parallelAndReciprocalEdgesOverlap": true,
+    "networkArrowheadsUseStraightEndpointAngle": true,
+    "selectedPathRelationLabels": false,
+    "pathEvidencePanelObscuresCanvasSubject": true,
+    "svgNetworkEdges": "line"
+  },
+  "requiredOutcomes": {
+    "deterministicCurvedNetworkRoutes": true,
+    "inputOrderIndependentParallelRouting": true,
+    "parallelAndReciprocalEdgesSeparated": true,
+    "arrowheadsFollowCurveTangentAndFactDirection": true,
+    "selectedPathOnlyStaticRelationLabels": true,
+    "allPathEvidenceAndSourceReturnPreserved": true,
+    "pathCameraUsesUnobscuredCanvas": true,
+    "screenAndSvgShareRouteModel": true,
+    "sourceFilesRemainUnchanged": true
+  },
+  "requiredThemes": ["dark", "white", "contrast"],
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "deferred": [
+    "selected-path-direction-animation",
+    "graph-reduced-motion-consumption",
+    "minimap-fit-selection-cluster-lens-and-fullscreen",
+    "status-rings",
+    "M3C-large-graph-performance"
+  ],
+  "selectedNextStage": {
+    "id": "M3B-5",
+    "name": "selected-path-direction-motion-and-reduced-motion-contract"
+  }
+}

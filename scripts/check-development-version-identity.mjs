@@ -22,6 +22,7 @@ const m3b0ProfessionalVisualBaseline = readJson('shared/post-v115-m3b0-professio
 const m3b1SemanticZoomCommunityOverview = readJson('shared/post-v115-m3b1-semantic-zoom-community-overview-policy.json')
 const m3b2CommunityContoursSemanticHierarchy = readJson('shared/post-v115-m3b2-community-contours-semantic-hierarchy-policy.json')
 const m3b3PathRelationshipVisualSelection = readJson('shared/post-v115-m3b3-path-relationship-visual-selection-policy.json')
+const m3b4CurvedParallelRelations = readJson('shared/post-v115-m3b4-curved-parallel-relations-static-path-labels-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -63,7 +64,8 @@ const checks = {
     && m3b0ProfessionalVisualBaseline.selectedNextStage.id === m3b1SemanticZoomCommunityOverview.stage
     && m3b1SemanticZoomCommunityOverview.selectedNextStage.id === m3b2CommunityContoursSemanticHierarchy.stage
     && m3b2CommunityContoursSemanticHierarchy.selectedNextStage.id === m3b3PathRelationshipVisualSelection.stage
-    && policy.currentStage === `${m3b3PathRelationshipVisualSelection.selectedNextStage.id}-${m3b3PathRelationshipVisualSelection.selectedNextStage.name}`,
+    && m3b3PathRelationshipVisualSelection.selectedNextStage.id === m3b4CurvedParallelRelations.stage
+    && policy.currentStage === `${m3b4CurvedParallelRelations.selectedNextStage.id}-${m3b4CurvedParallelRelations.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

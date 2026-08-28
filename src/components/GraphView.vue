@@ -126,7 +126,7 @@
       <select v-model.number="neighborFocusDepth" data-testid="graph-neighbor-focus-depth" aria-label="邻居聚焦深度"><option :value="1">1 跳</option><option :value="2">2 跳</option><option :value="3">3 跳</option></select>
       <button type="button" data-testid="graph-neighbor-focus-return" @click="clearNeighborFocus">返回全图</button>
     </div>
-    <section v-if="pathOpen" class="graph-path-panel" data-testid="graph-path-panel">
+    <section v-if="pathOpen" ref="pathPanelRef" class="graph-path-panel" data-testid="graph-path-panel">
       <div class="graph-path-fields">
         <select v-model="pathStartId" data-testid="graph-path-start" aria-label="最短路径起点"><option value="">选择起点</option><option v-for="node in pathCandidates" :key="node.id" :value="node.id">{{ node.title }} · {{ objectTypeLabel(node.objectType) }}</option></select>
         <span>→</span>
@@ -221,6 +221,7 @@
     </nav>
     <canvas
       ref="canvasRef"
+      data-testid="graph-canvas"
       tabindex="0"
       aria-label="产品知识图谱画布"
       :data-layout-mode="graphLayoutMode"
@@ -230,6 +231,11 @@
       :data-community-overview-in-bounds="communityOverviewInBounds"
       :data-community-contour-count="communityContourCount"
       :data-community-contours-cover-members="communityContoursCoverMembers"
+      :data-path-relation-label-count="activeShortestPath?.edges.length || 0"
+      :data-path-camera-safe="pathCameraSafe"
+      :data-path-camera-diagnostics="pathCameraDiagnostics"
+      :data-curved-route-count="viewMode === 'network' ? visibleEdgeRoutes.length : 0"
+      :data-parallel-route-count="viewMode === 'network' ? visibleEdgeRoutes.filter(route => route.parallelCount > 1).length : 0"
       @mousedown="startDrag"
       @mousemove="onDrag"
       @mouseup="endDrag"
@@ -436,6 +442,7 @@ import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
 import { compareGraphNodes } from '../utils/graphComparison'
 import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
+import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint, graphQuadraticPoint, graphQuadraticTangent } from '../utils/graphEdgeRoutes'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -450,6 +457,7 @@ const emit = defineEmits(['selectFile'])
 
 const containerRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const pathPanelRef = ref<HTMLElement | null>(null)
 const store = useAppStore()
 const router = useRouter()
 const route = useRoute()
@@ -574,6 +582,7 @@ const visibleEdges = computed(() => {
   return remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target) && (!pathEdges || pathEdges.has(edge)))
 })
 const visibleGraph = computed<GraphData>(() => ({ nodes: visibleNodes.value, edges: visibleEdges.value }))
+const visibleEdgeRoutes = computed(() => buildGraphEdgeRoutes(visibleEdges.value))
 const visibleGraphSignature = computed(() => visibleNodes.value.map(node => node.id).join('\u001f'))
 const semanticZoomState = computed(() => viewMode.value === 'mindmap'
   ? { level: 'near' as const, densityPressure: 1, effectiveZoom: zoomLevel.value }
@@ -765,6 +774,8 @@ let communityOverviewFrame = -1
 const hoveredNode = ref<GraphNode | null>(null)
 const hoveredCommunityId = ref('')
 const communityOverviewInBounds = ref(true)
+const pathCameraSafe = ref(true)
+const pathCameraDiagnostics = ref('')
 const tooltipX = ref(0)
 const tooltipY = ref(0)
 let mouseX = 0, mouseY = 0
@@ -1036,6 +1047,7 @@ const exportGraph = async (format: 'svg' | 'png') => {
       title: `${store.currentLibraryName} - ${viewMode.value === 'mindmap' ? '思维导图' : '知识图谱'}`,
       dark: isActiveThemeDark(store.theme),
       rootId: mindmapRoot.value?.id,
+      showRelationLabels: Boolean(activeShortestPath.value),
       colors: {
         background: tone.ui.background,
         foreground: tone.ui.text,
@@ -1095,6 +1107,27 @@ const changeGraphZoom = (factor: number, clientX?: number, clientY?: number) => 
   zoom = next
   zoomLevel.value = zoom
 }
+const availableGraphViewports = (canvas: HTMLCanvasElement) => {
+  const fallback = { x: 0, y: 0, width: canvas.clientWidth, height: canvas.clientHeight, obscured: false }
+  const panel = pathPanelRef.value
+  if (!pathOpen.value || !activeShortestPath.value || !panel) return [fallback]
+  const canvasRect = canvas.getBoundingClientRect()
+  const panelRect = panel.getBoundingClientRect()
+  const overlap = {
+    left: Math.max(0, panelRect.left - canvasRect.left),
+    top: Math.max(0, panelRect.top - canvasRect.top),
+    right: Math.min(canvas.clientWidth, panelRect.right - canvasRect.left),
+    bottom: Math.min(canvas.clientHeight, panelRect.bottom - canvasRect.top),
+  }
+  if (overlap.right <= overlap.left || overlap.bottom <= overlap.top) return [fallback]
+  const gap = 14
+  const candidates = [
+    { x: 0, y: overlap.bottom + gap, width: canvas.clientWidth, height: canvas.clientHeight - overlap.bottom - gap, obscured: false },
+    { x: overlap.right + gap, y: 0, width: canvas.clientWidth - overlap.right - gap, height: canvas.clientHeight, obscured: false },
+  ].filter(candidate => candidate.width >= 220 && candidate.height >= 160)
+  return candidates.length ? candidates : [{ ...fallback, obscured: true }]
+}
+
 const fitGraph = () => {
   const canvas = canvasRef.value
   const nodes = visibleNodes.value
@@ -1106,10 +1139,26 @@ const fitGraph = () => {
   })
   const minX = Math.min(...extents.map(item => item.left)), maxX = Math.max(...extents.map(item => item.right))
   const minY = Math.min(...extents.map(item => item.top)), maxY = Math.max(...extents.map(item => item.bottom))
-  zoom = Math.max(0.15, Math.min(1.35, Math.min((canvas.clientWidth - 100) / Math.max(1, maxX - minX), (canvas.clientHeight - 100) / Math.max(1, maxY - minY))))
-  viewX = (canvas.clientWidth - (maxX - minX) * zoom) / 2 - minX * zoom
-  viewY = (canvas.clientHeight - (maxY - minY) * zoom) / 2 - minY * zoom
+  const padding = 42
+  const graphWidth = Math.max(1, maxX - minX)
+  const graphHeight = Math.max(1, maxY - minY)
+  const viewport = availableGraphViewports(canvas).sort((left, right) => {
+    const leftScale = Math.min(Math.max(1, left.width - padding * 2) / graphWidth, Math.max(1, left.height - padding * 2) / graphHeight)
+    const rightScale = Math.min(Math.max(1, right.width - padding * 2) / graphWidth, Math.max(1, right.height - padding * 2) / graphHeight)
+    return rightScale - leftScale
+  })[0]
+  const usableWidth = Math.max(1, viewport.width - padding * 2)
+  const usableHeight = Math.max(1, viewport.height - padding * 2)
+  zoom = Math.max(0.1, Math.min(1.35, Math.min(usableWidth / graphWidth, usableHeight / graphHeight)))
+  viewX = viewport.x + padding + (usableWidth - graphWidth * zoom) / 2 - minX * zoom
+  viewY = viewport.y + padding + (usableHeight - graphHeight * zoom) / 2 - minY * zoom
   zoomLevel.value = zoom
+  const screenPoints = nodes.map(node => ({ id: node.id, x: (node.x || 0) * zoom + viewX, y: (node.y || 0) * zoom + viewY }))
+  pathCameraSafe.value = !activeShortestPath.value || (!viewport.obscured && screenPoints.every(point => {
+    const { x, y } = point
+    return x >= viewport.x && x <= viewport.x + viewport.width && y >= viewport.y && y <= viewport.y + viewport.height
+  }))
+  pathCameraDiagnostics.value = JSON.stringify({ viewport, zoom, graphWidth, graphHeight, screenPoints })
 }
 
 const centerOnNode = (node: GraphNode) => {
@@ -1636,12 +1685,16 @@ const draw = () => {
 
   // 边 - 渐变效果（小缩放级别时跳过以优化性能）
   if (!showCommunityOverview.value) {
-    for (const e of visibleEdges.value) {
+    const nodePoints = new Map(visibleNodes.value.map(node => [node.id, { x: node.x || 0, y: node.y || 0 }]))
+    for (const route of visibleEdgeRoutes.value) {
+      const e = route.edge
       const s = nodeMap.get(e.source)
       const t = nodeMap.get(e.target)
       if (!s || !t) continue
 
       const isHighlight = hovered && (s === hovered || t === hovered)
+      const isPathEdge = Boolean(activeShortestPath.value?.edges.includes(e))
+      const routeGeometry = viewMode.value === 'network' ? graphQuadraticGeometry(route, nodePoints) : null
 
       const relationSemantic = graphRelationSemantic(e.relationType)
       ctx.setLineDash(graphLineDash(relationSemantic.line, zoom))
@@ -1650,11 +1703,15 @@ const draw = () => {
       if (viewMode.value === 'mindmap') {
         const midX = ((s.x || 0) + (t.x || 0)) / 2
         ctx.bezierCurveTo(midX, s.y || 0, midX, t.y || 0, t.x || 0, t.y || 0)
-      } else {
-        ctx.lineTo(t.x || 0, t.y || 0)
+      } else if (routeGeometry) {
+        ctx.quadraticCurveTo(routeGeometry.control.x, routeGeometry.control.y, routeGeometry.target.x, routeGeometry.target.y)
       }
 
-      if (isHighlight) {
+      if (isPathEdge) {
+        ctx.strokeStyle = relationSemantic.color
+        ctx.globalAlpha = 0.92
+        ctx.lineWidth = 2.6 / zoom
+      } else if (isHighlight) {
         const gradient = ctx.createLinearGradient(s.x || 0, s.y || 0, t.x || 0, t.y || 0)
         gradient.addColorStop(0, `${activeTone.ui.primary}99`)
         gradient.addColorStop(1, `${activeTone.ui.primary}4d`)
@@ -1671,12 +1728,12 @@ const draw = () => {
 
       if (e.directed) {
         const sx = s.x || 0, sy = s.y || 0, tx = t.x || 0, ty = t.y || 0
-        const angle = Math.atan2(ty - sy, tx - sx)
-        const arrowX = sx + (tx - sx) * 0.72
-        const arrowY = sy + (ty - sy) * 0.72
+        const arrowPoint = routeGeometry ? graphQuadraticPoint(routeGeometry, 0.72) : { x: sx + (tx - sx) * 0.72, y: sy + (ty - sy) * 0.72 }
+        const tangent = routeGeometry ? graphQuadraticTangent(routeGeometry, 0.72) : { x: tx - sx, y: ty - sy }
+        const angle = Math.atan2(tangent.y, tangent.x)
         const arrowSize = 5 / zoom
         ctx.save()
-        ctx.translate(arrowX, arrowY)
+        ctx.translate(arrowPoint.x, arrowPoint.y)
         ctx.rotate(angle)
         ctx.beginPath()
         ctx.moveTo(arrowSize, 0)
@@ -1685,6 +1742,34 @@ const draw = () => {
         ctx.closePath()
         ctx.fillStyle = ctx.strokeStyle
         ctx.fill()
+        ctx.restore()
+      }
+
+      if (isPathEdge && routeGeometry && viewMode.value === 'network') {
+        const labelPoint = graphQuadraticLabelPoint(routeGeometry, route.curveOffset, 20 / zoom)
+        const tangent = graphQuadraticTangent(routeGeometry, 0.5)
+        let angle = Math.atan2(tangent.y, tangent.x)
+        if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI
+        const label = relationSemantic.label
+        ctx.save()
+        ctx.translate(labelPoint.x, labelPoint.y)
+        ctx.rotate(angle)
+        ctx.font = `700 ${10 / zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        const labelWidth = ctx.measureText(label).width + 12 / zoom
+        const labelHeight = 18 / zoom
+        ctx.fillStyle = activeTone.ui.surface
+        ctx.strokeStyle = relationSemantic.color
+        ctx.globalAlpha = 0.96
+        ctx.lineWidth = 1 / zoom
+        ctx.beginPath()
+        ctx.rect(-labelWidth / 2, -labelHeight / 2, labelWidth, labelHeight)
+        ctx.fill()
+        ctx.stroke()
+        ctx.globalAlpha = 1
+        ctx.fillStyle = activeTone.ui.text
+        ctx.fillText(label, 0, 0)
         ctx.restore()
       }
     }
@@ -2075,7 +2160,10 @@ const handleVisibility = () => {
 }
 onMounted(() => {
   loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('keydown', handleGraphKeydown)
-  graphResizeObserver = new ResizeObserver(() => { if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview) })
+  graphResizeObserver = new ResizeObserver(() => {
+    if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview)
+    else if (activeShortestPath.value) requestAnimationFrame(fitGraph)
+  })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
 onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('keydown', handleGraphKeydown) })
@@ -2202,7 +2290,8 @@ onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cance
 .graph-path-panel { position: absolute; z-index: 9; top: 126px; left: 16px; right: 16px; max-width: 760px; max-height: min(430px, calc(100% - 170px)); display: grid; gap: 6px; padding: 8px 36px 8px 10px; overflow: auto; box-sizing: border-box; border: 1px solid rgba(var(--theme-primary-rgb),.28); border-radius: 8px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 96%, transparent); box-shadow: var(--workspace-shadow-sm); backdrop-filter: blur(14px); }.graph-path-fields { display: grid; grid-template-columns: minmax(120px,1fr) auto minmax(120px,1fr) auto; align-items: center; gap: 7px; }.graph-path-fields select { min-width: 0; height: 28px; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--workspace-control-bg); font-size: 10px; }.graph-path-fields button,.graph-path-result button,.graph-path-evidence-list button { min-height: 28px; padding: 0 9px; border: 1px solid rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); cursor: pointer; font-size: 10px; font-weight: 700; }.graph-path-fields button:disabled { opacity: .45; cursor: not-allowed; }.graph-path-result { min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 10px; }.graph-path-result span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; }.graph-path-result button { margin-left: auto; flex: none; }.graph-path-result.unreachable strong { color: var(--theme-warning, #d97706); }.graph-path-evidence-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }.graph-path-evidence-edge { display: grid; gap: 6px; padding: 7px; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: color-mix(in srgb,var(--workspace-control-bg) 90%,transparent); }.graph-path-evidence-edge > header { min-width: 0; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 7px; font-size: 10px; }.graph-path-evidence-edge > header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-path-evidence-edge > header small { color: var(--theme-text-secondary); }.graph-path-mentions { display: grid; gap: 5px; }.graph-path-mentions article { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); }.graph-path-mentions article > div { min-width: 0; display: flex; gap: 7px; font-size: 10px; }.graph-path-mentions article > div span { color: var(--theme-text-secondary); }.graph-path-mentions code,.graph-path-mentions p { grid-column: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }.graph-path-mentions code { color: var(--theme-primary); }.graph-path-mentions button { grid-column: 2; grid-row: 1 / 4; align-self: center; }.graph-path-structural-evidence { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; border-top: 1px dashed var(--workspace-border-color); color: var(--theme-text-secondary); font-size: 10px; }.graph-path-structural-evidence button { flex: none; }.graph-path-close { position: sticky; z-index: 2; top: -2px; justify-self: end; width: 24px; height: 24px; margin-top: -36px; margin-right: -30px; border: 0; color: var(--theme-text-secondary); background: var(--theme-card); cursor: pointer; font-size: 17px; }.graph-path-active :deep(.graph-semantic-legend) { top: 214px; }
 
 .graph-path-close { position: absolute; top: 6px; right: 7px; justify-self: auto; margin: 0; }
-@media (max-width: 760px) { .graph-path-panel,.graph-comparison-panel { max-height: min(480px, calc(100% - 150px)); }.graph-path-fields,.graph-comparison-fields { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }.graph-path-fields > button,.graph-comparison-fields > button { grid-column: 1 / -1; }.graph-path-evidence-edge > header { grid-template-columns: 1fr; gap: 2px; }.graph-path-mentions article { grid-template-columns: minmax(0,1fr); }.graph-path-mentions button { grid-column: 1; grid-row: auto; justify-self: start; }.graph-path-structural-evidence { align-items: flex-start; flex-direction: column; }.graph-comparison-summary { grid-template-columns: minmax(0,1fr); }.graph-comparison-tags,.graph-comparison-neighbors { grid-template-columns: minmax(0,1fr); }.graph-comparison-summary > div { justify-items: start; }.graph-comparison-mentions > div,.graph-comparison-structural { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 1100px) { .graph-path-panel { max-height: min(240px, calc(100% - 230px)); } }
+@media (max-width: 760px) { .graph-comparison-panel { max-height: min(480px, calc(100% - 150px)); }.graph-path-fields,.graph-comparison-fields { grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); }.graph-path-fields > button,.graph-comparison-fields > button { grid-column: 1 / -1; }.graph-path-evidence-edge > header { grid-template-columns: 1fr; gap: 2px; }.graph-path-mentions article { grid-template-columns: minmax(0,1fr); }.graph-path-mentions button { grid-column: 1; grid-row: auto; justify-self: start; }.graph-path-structural-evidence { align-items: flex-start; flex-direction: column; }.graph-comparison-summary { grid-template-columns: minmax(0,1fr); }.graph-comparison-tags,.graph-comparison-neighbors { grid-template-columns: minmax(0,1fr); }.graph-comparison-summary > div { justify-items: start; }.graph-comparison-mentions > div,.graph-comparison-structural { align-items: flex-start; flex-direction: column; } }
 
 .tutorial-btn {
   flex: none;

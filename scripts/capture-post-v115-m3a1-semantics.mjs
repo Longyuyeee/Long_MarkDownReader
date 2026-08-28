@@ -65,7 +65,7 @@ await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -474,6 +474,7 @@ if (stage === 'M3B0') {
 
 let semanticZoom = null
 let semanticHierarchy = null
+let pathVisual = null
 if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
@@ -563,17 +564,54 @@ if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 }
 
+if (stage === 'M3B4') {
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(180)
+  const initialRoutes = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {curved:Number(canvas?.dataset.curvedRouteCount||0),parallel:Number(canvas?.dataset.parallelRouteCount||0)}})()`)
+  await capture(`${theme}-curved-parallel-global-1280.jpg`)
+  await evaluate(`document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, 'M3B-4 path panel')
+  const choosePath = async (selector, prefix) => {
+    const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    if (!chosen) throw new Error(`M3B-4 option missing: ${prefix}`)
+  }
+  await choosePath('[data-testid="graph-path-start"]', 'NorthStar · Markdown')
+  await choosePath('[data-testid="graph-path-end"]', 'Evidence · PDF')
+  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+  await waitFor(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length===3`, 'M3B-4 verified path evidence')
+  const viewports = []
+  for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(260)
+    await evaluate(`document.querySelector('button[title="适合窗口"]')?.click()`)
+    await delay(120)
+    const cameraDiagnostic = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {safe:canvas?.dataset.pathCameraSafe==='true',diagnostics:canvas?.dataset.pathCameraDiagnostics||''}})()`)
+    if (!cameraDiagnostic.safe) throw new Error(`${width}x${height} path camera unsafe: ${cameraDiagnostic.diagnostics}`)
+    const viewport = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const panel=document.querySelector('[data-testid="graph-path-panel"]');const rect=panel?.getBoundingClientRect();return {width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,cameraSafe:canvas?.dataset.pathCameraSafe==='true',pathLabelCount:Number(canvas?.dataset.pathRelationLabelCount||0),panelInBounds:Boolean(rect&&rect.left>=0&&rect.top>=0&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1),panelRect:rect?{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom}:null}})()`)
+    viewports.push(viewport)
+    await capture(`${theme}-path-${width}.jpg`)
+  }
+  pathVisual = {
+    curvedRouteCount: initialRoutes.curved,
+    parallelRouteCount: initialRoutes.parallel,
+    evidenceEdgeCount: await evaluate(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length`),
+    pathLabelCount: await evaluate(`Number(document.querySelector('[data-testid="graph-canvas"]')?.dataset.pathRelationLabelCount||0)`),
+    viewports,
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, ['M3B1', 'M3B2'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

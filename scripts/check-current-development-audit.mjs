@@ -25,6 +25,7 @@ import './check-post-v115-m1dc-selection.mjs'
 import './check-post-v115-m1dc1-subtitle-playback.mjs'
 import './check-post-v115-m1-closure.mjs'
 import './check-development-version-identity.mjs'
+import './check-post-v115-m3b4-curved-parallel-relations-static-path-labels.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

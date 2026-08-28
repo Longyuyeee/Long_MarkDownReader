@@ -1239,3 +1239,9 @@ M3B-2 已在中近景建立由稳定 Louvain 社区和成员当前坐标派生�
 远端 `main` 的功能基线为 `12fe433`，M3B-3 本次只完成事实审计与接续冻结。network 边仍为直线，同端点关系重叠，Canvas 无关系标签或路径专属表达；路径算法、3 条真实边证据、来源回跳、社区语义层级和资料库安全均保持。最新 Tauri 画面确认路径证据面板覆盖主体，图谱也尚未消费全局 `reduced` 偏好。
 
 当前接续点为 **M3B-4 曲线/平行关系与静态路径标签**。换机后先执行 `git pull --ff-only origin main`、`npm ci`、`npm run check:development-version-identity`、`npm run check:post-v115-m3b3-path-relationship-visual-selection` 和 `npm run build`；工作区必须干净。详细事实、边界和命令见 [`Post_v1.0.15_M3B3_Path_and_Relationship_Visual_Selection_and_Handoff_Audit_2026-08-28.md`](./Post_v1.0.15_M3B3_Path_and_Relationship_Visual_Selection_and_Handoff_Audit_2026-08-28.md)。
+
+## 2026-08-28 M3B-4 曲线关系与静态路径标签交接
+
+M3B-4 已完成确定性 network 二次曲线路由、2 条真实平行/互反关系分离、曲线切线箭头、仅选中路径的 3 个静态关系标签，以及证据面板之外的响应式相机取景；Canvas 与 SVG/PNG 导出共用路由几何。真实审计先后暴露零曲率中心槽、按面积选错相机区域、窄屏面板实际遮住路径和标签间距不足，均按截图实际效果修正后重跑。
+
+暗/浅/高对比三主题和 `1280×800`、`1000×700`、`720×680` 全部通过：17/17 全图、4 节点/3 边路径、3 个标签、3 条证据边、零运行时错误、资料库摘要不变并返回资料库。当前接续点为 **M3B-5 选中路径方向动效与减少动效合同**；先冻结 reduced/失焦/离开边界，不提前进入缩略导航或 M3C。详见 [`Post_v1.0.15_M3B4_Curved_Parallel_Relations_and_Static_Path_Labels_Audit_2026-08-28.md`](./Post_v1.0.15_M3B4_Curved_Parallel_Relations_and_Static_Path_Labels_Audit_2026-08-28.md)。
