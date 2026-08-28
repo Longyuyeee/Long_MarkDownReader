@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-8",
+  "releaseCandidate": false,
+  "scope": "remaining-navigation-system-selection-audit",
+  "currentFacts": {
+    "cameraPoseAndBoundedTransition": true,
+    "cameraPoseDiagnosticsInitialization": "empty-until-first-camera-action",
+    "semanticCommunityOverview": true,
+    "communityInteraction": "filtered-subgraph-enter-and-return",
+    "minimap": false,
+    "clusterCollapseExpand": false,
+    "graphFullscreen": false,
+    "largeGraphBaselineTiers": [100, 1000, 5000]
+  },
+  "decision": {
+    "selectedIncrement": "bounded-semantic-minimap-and-viewport-navigation",
+    "reason": "The real 1000/5000-node desktop evidence shows loss of orientation, while M3B-7 already exposes camera pose and bounded reduced-motion-safe camera transitions. A derived minimap adds viewport context without changing graph semantics. Cluster collapse/expand would require proxy-node aggregation contracts across selection, path, evidence, export and history; fullscreen adds space but does not restore orientation.",
+    "requiredContract": [
+      "derived-read-only-overview",
+      "current-viewport-rectangle",
+      "initialize-from-live-camera-state-without-requiring-prior-action",
+      "click-and-drag-viewport-navigation",
+      "reuse-bounded-reduced-motion-safe-camera",
+      "bounded-render-cost-without-node-labels",
+      "theme-and-high-contrast-readable",
+      "no-overlay-collision-at-1280-1000-720",
+      "source-files-remain-read-only"
+    ],
+    "deferred": [
+      "cluster-collapse-expand",
+      "graph-fullscreen",
+      "status-rings",
+      "M3C-dirty-frame-and-large-graph-performance"
+    ]
+  },
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "selectedNextStage": {
+    "id": "M3B-9",
+    "name": "bounded-semantic-minimap-and-viewport-navigation"
+  }
+}

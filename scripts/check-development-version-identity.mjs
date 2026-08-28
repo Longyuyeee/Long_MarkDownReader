@@ -26,6 +26,7 @@ const m3b4CurvedParallelRelations = readJson('shared/post-v115-m3b4-curved-paral
 const m3b5SelectedPathMotion = readJson('shared/post-v115-m3b5-selected-path-direction-motion-reduced-motion-policy.json')
 const m3b6NavigationCameraSelection = readJson('shared/post-v115-m3b6-navigation-camera-selection-policy.json')
 const m3b7FitSelectionFocus = readJson('shared/post-v115-m3b7-fit-selection-reduced-motion-focus-policy.json')
+const m3b8RemainingNavigationSelection = readJson('shared/post-v115-m3b8-remaining-navigation-selection-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -71,7 +72,8 @@ const checks = {
     && m3b4CurvedParallelRelations.selectedNextStage.id === m3b5SelectedPathMotion.stage
     && m3b5SelectedPathMotion.selectedNextStage.id === m3b6NavigationCameraSelection.stage
     && m3b6NavigationCameraSelection.selectedNextStage.id === m3b7FitSelectionFocus.stage
-    && policy.currentStage === `${m3b7FitSelectionFocus.selectedNextStage.id}-${m3b7FitSelectionFocus.selectedNextStage.name}`,
+    && m3b7FitSelectionFocus.selectedNextStage.id === m3b8RemainingNavigationSelection.stage
+    && policy.currentStage === `${m3b8RemainingNavigationSelection.selectedNextStage.id}-${m3b8RemainingNavigationSelection.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

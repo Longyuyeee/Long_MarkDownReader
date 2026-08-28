@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-8",
+  "actual": {
+    "theme": "dark",
+    "motion": "reduced",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": null,
+    "cameraNavigation": null,
+    "remainingNavigationSelection": {
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 710
+          },
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 768
+          },
+          "legendRect": {
+            "left": 16,
+            "top": 158,
+            "right": 276,
+            "bottom": 435,
+            "width": 260,
+            "height": 277
+          },
+          "statsRect": {
+            "left": 456,
+            "top": 752,
+            "right": 824,
+            "bottom": 780,
+            "width": 368,
+            "height": 28
+          },
+          "semanticZoomLevel": "near",
+          "cameraPoseAvailable": true,
+          "minimapVisible": false,
+          "clusterCollapseExpandVisible": false,
+          "fullscreenVisible": false,
+          "fullscreenApiAvailable": true,
+          "cameraPoseInitiallyAvailable": false,
+          "cameraPoseInitializedByFitAll": true
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 610
+          },
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 668
+          },
+          "legendRect": {
+            "left": 16,
+            "top": 158,
+            "right": 276,
+            "bottom": 435,
+            "width": 260,
+            "height": 277
+          },
+          "statsRect": {
+            "left": 316,
+            "top": 652,
+            "right": 684,
+            "bottom": 680,
+            "width": 368,
+            "height": 28
+          },
+          "semanticZoomLevel": "near",
+          "cameraPoseAvailable": true,
+          "minimapVisible": false,
+          "clusterCollapseExpandVisible": false,
+          "fullscreenVisible": false,
+          "fullscreenApiAvailable": true,
+          "cameraPoseInitiallyAvailable": true,
+          "cameraPoseInitializedByFitAll": false
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 590
+          },
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 648
+          },
+          "legendRect": {
+            "left": 10,
+            "top": 150,
+            "right": 270,
+            "bottom": 424,
+            "width": 260,
+            "height": 274
+          },
+          "statsRect": {
+            "left": 176,
+            "top": 632,
+            "right": 544,
+            "bottom": 660,
+            "width": 368,
+            "height": 28
+          },
+          "semanticZoomLevel": "near",
+          "cameraPoseAvailable": true,
+          "minimapVisible": false,
+          "clusterCollapseExpandVisible": false,
+          "fullscreenVisible": false,
+          "fullscreenApiAvailable": true,
+          "cameraPoseInitiallyAvailable": true,
+          "cameraPoseInitializedByFitAll": false
+        }
+      ],
+      "community": {
+        "fullGraphStats": "17 / 17 节点 17 连接 124% 0 个已选 近景",
+        "enteredCommunityCount": 4,
+        "communityStats": "4 / 17 节点 3 连接 135% 0 个已选 近景",
+        "returned": true,
+        "interactionKind": "filtered-subgraph"
+      },
+      "capabilities": {
+        "cameraPose": true,
+        "semanticCommunityOverview": true,
+        "minimap": false,
+        "clusterCollapseExpand": false,
+        "fullscreen": false
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

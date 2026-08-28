@@ -67,7 +67,7 @@ await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'
 await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion === 'reduced' ? 'reduce' : 'no-preference' }] })
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7', 'M3B8'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -480,6 +480,7 @@ let pathVisual = null
 let pathMotion = null
 let navigationBaseline = null
 let cameraNavigation = null
+let remainingNavigationSelection = null
 if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
@@ -743,14 +744,50 @@ if (stage === 'M3B7') {
   }
 }
 
+if (stage === 'M3B8') {
+  const viewports = []
+  await evaluate(`document.querySelector('.details-close')?.click()`)
+  for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(240)
+    const cameraPoseInitiallyAvailable = await evaluate(`Boolean(document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraPose)`)
+    await evaluate(`document.querySelector('[data-testid="graph-fit-all"]')?.click()`)
+    await delay(80)
+    const viewport = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const container=document.querySelector('[data-testid="graph-container"]');const legend=document.querySelector('[data-testid="graph-semantic-legend"]');const stats=document.querySelector('.graph-stats');const rect=element=>{const value=element?.getBoundingClientRect();return value?{left:Math.round(value.left),top:Math.round(value.top),right:Math.round(value.right),bottom:Math.round(value.bottom),width:Math.round(value.width),height:Math.round(value.height)}:null};return {width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,canvasRect:rect(canvas),containerRect:rect(container),legendRect:rect(legend),statsRect:rect(stats),semanticZoomLevel:container?.dataset.semanticZoomLevel||'',cameraPoseAvailable:Boolean(canvas?.dataset.cameraPose),minimapVisible:Boolean(document.querySelector('[data-testid="graph-minimap"]')),clusterCollapseExpandVisible:Boolean(document.querySelector('[data-testid="graph-cluster-collapse"],[data-testid="graph-cluster-expand"]')),fullscreenVisible:Boolean(document.querySelector('[data-testid="graph-fullscreen"]')),fullscreenApiAvailable:typeof document.documentElement.requestFullscreen==='function'}})()`)
+    viewport.cameraPoseInitiallyAvailable = cameraPoseInitiallyAvailable
+    viewport.cameraPoseInitializedByFitAll = !cameraPoseInitiallyAvailable && viewport.cameraPoseAvailable
+    viewports.push(viewport)
+    await capture(`remaining-navigation-${width}.jpg`)
+  }
+
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(180)
+  const fullGraphStats = await evaluate(`document.querySelector('.graph-stats')?.textContent?.replace(/\\s+/g,' ').trim()||''`)
+  await evaluate(`document.querySelector('[data-testid="graph-community-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-panel"]')!==null`, 'M3B-8 community panel')
+  const enteredCommunityCount = await evaluate(`(()=>{const entry=[...document.querySelectorAll('[data-testid="graph-community-card"]')].find(item=>Number(item.dataset.nodeCount||0)>1);const count=Number(entry?.dataset.nodeCount||0);entry?.click();return count})()`)
+  if (!enteredCommunityCount) throw new Error('M3B-8 non-singleton community missing')
+  await evaluate(`document.querySelector('[data-testid="graph-community-close"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'M3B-8 community filter')
+  await delay(100)
+  const communityStats = await evaluate(`document.querySelector('.graph-stats')?.textContent?.replace(/\\s+/g,' ').trim()||''`)
+  await evaluate(`document.querySelector('[data-testid="graph-community-focus-return"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')===null`, 'M3B-8 community return')
+  remainingNavigationSelection = {
+    viewports,
+    community: { fullGraphStats, enteredCommunityCount, communityStats, returned: true, interactionKind: 'filtered-subgraph' },
+    capabilities: { cameraPose: true, semanticCommunityOverview: true, minimap: false, clusterCollapseExpand: false, fullscreen: false },
+  }
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B8' ? 'M3B-8' : stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, remainingNavigationSelection, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
