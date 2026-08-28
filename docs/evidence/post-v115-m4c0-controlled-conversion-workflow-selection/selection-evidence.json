@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-0",
+  "status": "passed",
+  "sourceCommit": "7f878bdd3176179e24004d751029144270f1e009",
+  "actual": {
+    "csvDialogSourceContext": true,
+    "csvDialogTargetName": true,
+    "csvDialogSourceUnchanged": true,
+    "csvDialogNumberedCollision": true,
+    "csvDialogLossDisclosure": false,
+    "csvCurrentAutoOpen": false,
+    "csvSourceUnchanged": true,
+    "csvFirstTargetCreated": true,
+    "csvCollisionTargetCreated": true,
+    "csvTargetRowCount": 3,
+    "csvTargetColumnCount": 3,
+    "opmlSourceUnchanged": true,
+    "opmlAutoOpened": true,
+    "opmlFirstTargetCreated": true,
+    "opmlCollisionTargetCreated": true,
+    "opmlPreWriteDialogObserved": false,
+    "graphSourcesUnchanged": true,
+    "graphCanvasFirstTargetCreated": true,
+    "graphCanvasCollisionTargetCreated": true,
+    "graphCanvasNodeCount": 2,
+    "graphCanvasEdgeCount": 2,
+    "graphProjectFirstTargetCreated": true,
+    "graphProjectCollisionTargetCreated": true,
+    "graphProjectTraceable": true,
+    "graphPreWriteDialogObserved": false,
+    "responsive1280": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchangedAfterAudit": true
+  },
+  "targets": {
+    "csv": [
+      "Conversion Matrix.table.json",
+      "Conversion Matrix 1.table.json"
+    ],
+    "opml": [
+      "Conversion Outline 画布.canvas",
+      "Conversion Outline 画布 1.canvas"
+    ],
+    "graphCanvas": [
+      "Graph Center 思维导图.canvas",
+      "Graph Center 思维导图 1.canvas"
+    ],
+    "graphProject": [
+      "Graph Center 项目.md",
+      "Graph Center 项目 1.md"
+    ]
+  },
+  "initialHashes": {
+    "csv": "3b71c18e3df66bb361c37ed0894e262dccfcda633e21dbc02dcb936bf229cf4e",
+    "opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7",
+    "graphCenter": "f7466e2866b703f8fee40396abd15ac96d295baa2ec4e8b71a1f76b2433bfec3",
+    "graphPeer": "79e4b1bdab0b4178e03e1f2417b25fe2280fda817d0cd7d81fbb476a02be6bca"
+  },
+  "finalHashes": {
+    "csv": "3b71c18e3df66bb361c37ed0894e262dccfcda633e21dbc02dcb936bf229cf4e",
+    "opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7",
+    "graphCenter": "f7466e2866b703f8fee40396abd15ac96d295baa2ec4e8b71a1f76b2433bfec3",
+    "graphPeer": "79e4b1bdab0b4178e03e1f2417b25fe2280fda817d0cd7d81fbb476a02be6bca"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

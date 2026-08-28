@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-0",
+  "name": "controlled-conversion-workflow-selection-audit",
+  "predecessor": "M4B-2",
+  "originalRequirement": "Controlled cross-format conversions must disclose source, target path, overwrite strategy and conversion loss, keep the source safe, and automatically open the created target.",
+  "semanticCorrection": "The graph mind-map control is an in-place derived view switch, not a file conversion. Current graph file outputs are Canvas and a generated Markdown project note.",
+  "candidates": [
+    {
+      "id": "csv-tsv-to-table",
+      "selection": "selected",
+      "sourceSafe": true,
+      "collisionStrategy": "next-available-numbered-target",
+      "currentDisclosure": ["source-context", "candidate-target-name", "source-unchanged", "numbered-collision"],
+      "currentGaps": ["conversion-loss", "automatic-open"],
+      "reason": "It already has the narrowest source format, bounded parser, validated internal target, non-overwrite naming and the most complete confirmation surface."
+    },
+    {
+      "id": "opml-to-canvas",
+      "selection": "deferred",
+      "sourceSafe": true,
+      "collisionStrategy": "next-available-numbered-target",
+      "currentDisclosure": ["source-context", "automatic-open"],
+      "currentGaps": ["target-path", "overwrite-strategy", "conversion-loss", "pre-write-confirmation"],
+      "reason": "Projection is safe but currently writes immediately; OPML metadata and collapse/layout projection losses need a dedicated disclosure contract."
+    },
+    {
+      "id": "graph-to-canvas",
+      "selection": "deferred",
+      "sourceSafe": true,
+      "collisionStrategy": "next-available-numbered-target",
+      "currentDisclosure": ["source-context", "automatic-open"],
+      "currentGaps": ["target-path", "overwrite-strategy", "derived-snapshot-scope", "conversion-loss", "pre-write-confirmation"],
+      "reason": "The output is a point-in-time derived graph snapshot and needs scope and loss language distinct from tabular conversion."
+    },
+    {
+      "id": "graph-to-project-note",
+      "selection": "deferred",
+      "sourceSafe": true,
+      "collisionStrategy": "next-available-numbered-target",
+      "currentDisclosure": ["source-context", "automatic-open"],
+      "currentGaps": ["target-path", "overwrite-strategy", "generated-task-template", "100-node-truncation", "pre-write-confirmation"],
+      "reason": "This is a semantic template generator, not a lossless format conversion, and requires separate disclosure of generated tasks and the 100-related-object cap."
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M4C-1",
+    "name": "csv-tsv-table-disclosure-and-auto-open",
+    "scope": [
+      "Show source file, candidate target path, never-overwrite numbered collision policy and conversion-loss facts before writing.",
+      "Preserve the existing bounded CSV/TSV parser and validated internal Table target.",
+      "Automatically open the actual created Table after success and keep the source byte-identical.",
+      "Prove the first target and numbered collision target in one real desktop audit."
+    ],
+    "excluded": [
+      "OPML projection changes",
+      "Graph Canvas or project-note output changes",
+      "New conversion formats",
+      "Shared conversion framework extraction before a second workflow needs it",
+      "Version transition or release candidate"
+    ]
+  },
+  "releaseCandidate": false
+}

@@ -1,0 +1,44 @@
+import fs from 'node:fs'
+
+const read = file => fs.readFileSync(file, 'utf8')
+const readJson = file => JSON.parse(read(file))
+const policy = readJson('shared/post-v115-m4c0-controlled-conversion-workflow-selection-policy.json')
+const predecessor = readJson('shared/post-v115-m4b2-workspace-object-action-exit-audit-policy.json')
+const evidence = readJson('docs/evidence/post-v115-m4c0-controlled-conversion-workflow-selection/selection-evidence.json')
+const manifest = readJson('docs/evidence/post-v115-m4c0-controlled-conversion-workflow-selection/manifest.json')
+const development = readJson('shared/development-version-policy.json')
+const tableView = read('src/views/TableView.vue')
+const mindmapView = read('src/views/MindMapView.vue')
+const graphView = read('src/components/GraphView.vue')
+const tableBackend = read('src-tauri/src/commands/table.rs')
+const mindmapBackend = read('src-tauri/src/commands/mindmap.rs')
+const canvasBackend = read('src-tauri/src/commands/canvas.rs')
+const failures = []
+
+if (policy.stage !== 'M4C-0' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) failures.push('M4C-0 predecessor chain is invalid')
+if (policy.semanticCorrection !== 'The graph mind-map control is an in-place derived view switch, not a file conversion. Current graph file outputs are Canvas and a generated Markdown project note.') failures.push('graph mind-map semantic correction drifted')
+if (policy.candidates?.map(item => item.id).join(',') !== 'csv-tsv-to-table,opml-to-canvas,graph-to-canvas,graph-to-project-note') failures.push('conversion candidate matrix drifted')
+if (policy.candidates?.filter(item => item.selection === 'selected').map(item => item.id).join(',') !== 'csv-tsv-to-table') failures.push('selection must remain CSV/TSV to Table only')
+if (policy.selectedNextStage?.id !== 'M4C-1' || development.currentStage !== 'M4C-1-csv-tsv-table-disclosure-and-auto-open') failures.push('M4C-1 handoff is not aligned')
+for (const token of ['requestConvertToTable', 'import_table_file', '原 ${formatLabel.value} 文件保持不变', '如有同名文件，系统会使用新的序号']) if (!tableView.includes(token)) failures.push(`CSV/Table current disclosure marker missing: ${token}`)
+if (tableView.includes('转换损失') || tableView.includes('自动打开')) failures.push('M4C-0 current-state audit unexpectedly contains the selected implementation')
+for (const token of ['projectToCanvas', "'create_canvas_from_opml'", 'await openManagedFile(router, canvas)']) if (!mindmapView.includes(token)) failures.push(`OPML projection marker missing: ${token}`)
+for (const token of ['sendToCanvas', 'createProjectNote', "'create_canvas_from_graph'", "'create_project_note_from_graph'"]) if (!graphView.includes(token)) failures.push(`graph output marker missing: ${token}`)
+for (const token of ['parse_table(&source)?', 'available_output_path(&directory, &stem, ".table.json")', 'validate_internal_table(&internal)?']) if (!tableBackend.includes(token)) failures.push(`Table backend boundary missing: ${token}`)
+for (const token of ['opml_to_canvas(&document, &relative)', 'if !candidate.exists()', 'write_utf8(&target, &content)?']) if (!mindmapBackend.includes(token)) failures.push(`OPML backend boundary missing: ${token}`)
+for (const token of ['create_canvas_from_graph', 'create_project_note_from_graph', 'MAX_GRAPH_PROJECT_NODES', 'if !candidate.exists()']) if (!canvasBackend.includes(token)) failures.push(`graph output boundary missing: ${token}`)
+if (evidence.stage !== 'M4C-0' || evidence.status !== 'passed') failures.push('M4C-0 evidence is not passed')
+const actual = evidence.actual || {}
+if (!actual.csvDialogSourceContext || !actual.csvDialogTargetName || !actual.csvDialogSourceUnchanged || !actual.csvDialogNumberedCollision || actual.csvDialogLossDisclosure || actual.csvCurrentAutoOpen) failures.push('CSV current disclosure facts drifted')
+if (!actual.csvSourceUnchanged || !actual.csvFirstTargetCreated || !actual.csvCollisionTargetCreated || actual.csvTargetRowCount !== 3 || actual.csvTargetColumnCount !== 3) failures.push('CSV command evidence failed')
+if (!actual.opmlSourceUnchanged || !actual.opmlAutoOpened || !actual.opmlFirstTargetCreated || !actual.opmlCollisionTargetCreated || actual.opmlPreWriteDialogObserved) failures.push('OPML current workflow facts drifted')
+if (!actual.graphSourcesUnchanged || !actual.graphCanvasFirstTargetCreated || !actual.graphCanvasCollisionTargetCreated || !actual.graphProjectFirstTargetCreated || !actual.graphProjectCollisionTargetCreated || actual.graphPreWriteDialogObserved) failures.push('graph output current workflow facts drifted')
+if (!actual.responsive1280 || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved || !actual.sourceFilesUnchangedAfterAudit) failures.push('desktop runtime, geometry or source-safety gate failed')
+if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 4) failures.push('M4C-0 screenshots have not completed visual review')
+if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
+
+if (failures.length) {
+  console.error(`M4C-0 controlled conversion selection check failed:\n- ${failures.join('\n- ')}`)
+  process.exit(1)
+}
+console.log('M4C-0 accepted: CSV/TSV to Table is the only selected conversion disclosure and automatic-open batch.')

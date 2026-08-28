@@ -1401,3 +1401,11 @@ M4B 已收口，未新增产品运行代码。工作台对象行动固定为 Mar
 审计编排纠正了 `tauri.e2e.conf.json` 固定 14200 与脚本 14210 不一致，以及 Windows PowerShell 5.1 对无 BOM 脚本中文测试文本的代码页误读。证据还保留 `.pdf.annotations.json` 作为 JSON 最近文件可见的既有残余风险；它不属于新行动，后续发布清理应单独决策。
 
 当前唯一接续点为 **M4C-0 受控转换工作流选择审计**：先盘点 CSV/TSV→Table、OPML→Canvas、图谱输出的实际实现和来源/目标/覆盖/损失/自动打开/源安全披露，只选择一个最小完整批次；不得直接统一全部转换，不得进入 `M4-release-freeze`。详见 [`Post_v1.0.15_M4B2_Workspace_Object_Action_Exit_Audit_2026-08-29.md`](./Post_v1.0.15_M4B2_Workspace_Object_Action_Exit_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4C-0 受控转换选择审计交接
+
+M4C-0 已完成，未修改产品运行代码。实际矩阵为 CSV/TSV→Table、OPML→Canvas、图谱→Canvas、图谱→项目笔记；图谱的“设为思维导图中心”只切换派生视图，不生成文件，已从转换候选中纠偏移除。
+
+同一真实 Tauri 资料库验证四条工作流均不修改来源，并分别生成首个目标和同名编号目标。CSV 生成 3×3 Table，OPML 点击后自动打开 Canvas，图谱 Canvas 为 2 节点/2 关系，项目笔记携带可追溯元数据；运行时错误 0。CSV 当前确认已说明候选目标、源不变和编号策略，但没有转换损失且成功后仍要求二次点击打开；其他三条均缺少转换前确认和完整披露。
+
+当前唯一接续点为 **M4C-1 CSV/TSV→Table 披露与自动打开闭环**：只补来源/候选目标/不覆盖/损失的完整确认，沿用有界解析与可靠新文件写入，成功后自动打开真实目标；需真实覆盖 CSV、TSV、编号碰撞、内容复读、源摘要不变和宽窄屏。OPML、图谱输出、全局转换框架和发布冻结继续延期。详见 [`Post_v1.0.15_M4C0_Controlled_Conversion_Workflow_Selection_Audit_2026-08-29.md`](./Post_v1.0.15_M4C0_Controlled_Conversion_Workflow_Selection_Audit_2026-08-29.md)。

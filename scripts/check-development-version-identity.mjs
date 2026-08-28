@@ -45,6 +45,7 @@ const m4a6M1ObjectLocationExit = readJson('shared/post-v115-m4a6-m1-object-locat
 const m4b0WorkspaceObjectActionSelection = readJson('shared/post-v115-m4b0-workspace-object-action-selection-policy.json')
 const m4b1InternalTableTaskAction = readJson('shared/post-v115-m4b1-internal-table-boolean-task-workspace-action-policy.json')
 const m4b2WorkspaceObjectActionExit = readJson('shared/post-v115-m4b2-workspace-object-action-exit-audit-policy.json')
+const m4c0ControlledConversionSelection = readJson('shared/post-v115-m4c0-controlled-conversion-workflow-selection-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -118,7 +119,9 @@ const checks = {
     && m4b1InternalTableTaskAction.predecessor === m4b0WorkspaceObjectActionSelection.stage
     && m4b1InternalTableTaskAction.selectedNextStage.id === m4b2WorkspaceObjectActionExit.stage
     && m4b2WorkspaceObjectActionExit.predecessor === m4b1InternalTableTaskAction.stage
-    && policy.currentStage === `${m4b2WorkspaceObjectActionExit.selectedNextStage.id}-${m4b2WorkspaceObjectActionExit.selectedNextStage.name}`,
+    && m4b2WorkspaceObjectActionExit.selectedNextStage.id === m4c0ControlledConversionSelection.stage
+    && m4c0ControlledConversionSelection.predecessor === m4b2WorkspaceObjectActionExit.stage
+    && policy.currentStage === `${m4c0ControlledConversionSelection.selectedNextStage.id}-${m4c0ControlledConversionSelection.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

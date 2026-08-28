@@ -311,6 +311,8 @@
     "audit:post-v115-m4b1-internal-table-task": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4b1-internal-table-boolean-task-workspace-action-audit.ps1",
     "check:post-v115-m4b2-workspace-object-action-exit": "node scripts/check-post-v115-m4b2-workspace-object-action-exit-audit.mjs",
     "audit:post-v115-m4b2-workspace-object-action-exit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4b2-workspace-object-action-exit-audit.ps1",
+    "check:post-v115-m4c0-controlled-conversion-selection": "node scripts/check-post-v115-m4c0-controlled-conversion-workflow-selection.mjs",
+    "audit:post-v115-m4c0-controlled-conversion-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4c0-controlled-conversion-workflow-selection-audit.ps1",
     "audit:post-v115-m3c4-large-graph-performance-exit-audit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3c0-large-graph-performance-baseline-audit.ps1 -Stage M3C-4",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",

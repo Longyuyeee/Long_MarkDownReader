@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-0",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "7f878bdd3176179e24004d751029144270f1e009",
+  "evidenceFile": "selection-evidence.json",
+  "evidenceSha256": "87faeaa8a61ff2372dcbdfab952062a0dc6fb7f3ba3936864d55cb9973b04df5",
+  "screenshots": [
+    {
+      "file": "csv-current-disclosure-1280.jpg",
+      "bytes": 72714,
+      "sha256": "c0d2af8dd759c3bfbf37607fddf8533418a667bb7b46e1889dbc62eb98d7c360"
+    },
+    {
+      "file": "csv-created-target-1280.jpg",
+      "bytes": 71032,
+      "sha256": "2dd31cef44cbaa240f026c698e5a6f1f6d401ea497395a49b62c6cd783e68582"
+    },
+    {
+      "file": "opml-current-projection-1280.jpg",
+      "bytes": 122389,
+      "sha256": "dcf2fa70b1bed053784c7f784324f12405faeb082e256eadba4fa1cb6214ec4a"
+    },
+    {
+      "file": "graph-current-outputs-1280.jpg",
+      "bytes": 143038,
+      "sha256": "7b5016fd4210bf62a9243570c1e1a8c212da818754e4dbbac9aa0f1d7cc0a36c"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
