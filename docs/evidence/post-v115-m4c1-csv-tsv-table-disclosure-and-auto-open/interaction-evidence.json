@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-1",
+  "status": "passed",
+  "sourceCommit": "b5668069b5ed26b1ff21b07c70983a026663bdd4",
+  "actual": {
+    "csvDisclosureComplete": true,
+    "tsvDisclosureComplete": true,
+    "csvAutoOpenedActualTarget": true,
+    "tsvAutoOpenedNumberedTarget": true,
+    "csvSourceUnchanged": true,
+    "tsvSourceUnchanged": true,
+    "csvTargetReread": true,
+    "tsvTargetReread": true,
+    "csvTargetSerializationLossObserved": true,
+    "csvTargetName": "Conversion Matrix.table.json",
+    "tsvFirstTargetName": "Conversion Outline.table.json",
+    "tsvCollisionTargetName": "Conversion Outline 1.table.json",
+    "csvRows": 2,
+    "csvColumns": 3,
+    "tsvRows": 2,
+    "tsvColumns": 2,
+    "successDialogObservedAfterCreate": false,
+    "responsive1280": true,
+    "responsive480": true,
+    "responsive480Geometry": {
+      "innerWidth": 480,
+      "innerHeight": 700,
+      "table": {
+        "left": 205.8000030517578,
+        "right": 475.1999969482422,
+        "top": 74.80000305175781,
+        "bottom": 696.0000152587891
+      },
+      "dialog": {
+        "left": 120,
+        "right": 360,
+        "top": 57.20000076293945,
+        "bottom": 642.8000373840332
+      },
+      "tableScrollOverflowX": "auto"
+    },
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchangedAfterAudit": true
+  },
+  "initialHashes": {
+    "csv": "ecb396ebfb9f02124134e42f79e253079f911743eb16ea93bf9c0cfd6aee6c04",
+    "tsv": "74850cb927d9021851b290dee0d707bcf06f7ceae45dce7c7b4dfbb88f225489"
+  },
+  "finalHashes": {
+    "csv": "ecb396ebfb9f02124134e42f79e253079f911743eb16ea93bf9c0cfd6aee6c04",
+    "tsv": "74850cb927d9021851b290dee0d707bcf06f7ceae45dce7c7b4dfbb88f225489"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

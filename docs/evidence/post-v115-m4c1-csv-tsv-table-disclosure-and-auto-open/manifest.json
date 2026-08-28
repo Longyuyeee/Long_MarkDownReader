@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-1",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "b5668069b5ed26b1ff21b07c70983a026663bdd4",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "927614daa112fda7bc23dc83dd8112a5f889d279da6f20bc0fd1ab7b8ca2b239",
+  "screenshots": [
+    {
+      "file": "csv-disclosure-1280.jpg",
+      "bytes": 91424,
+      "sha256": "392362a54dcf6fdc09d259392ca6994ddbc572402c9bd35716726d0c575f104c"
+    },
+    {
+      "file": "csv-auto-opened-target-1280.jpg",
+      "bytes": 67464,
+      "sha256": "e020d4592ca75e8522f657d283d264b8cb38ceeefa662b1703ed7ca9744de581"
+    },
+    {
+      "file": "tsv-collision-disclosure-480.jpg",
+      "bytes": 61409,
+      "sha256": "1d528314eee8c46d15dc9f54014fe306937142809b1ad179128a5ea6b2bf55db"
+    },
+    {
+      "file": "tsv-auto-opened-numbered-target-480.jpg",
+      "bytes": 45821,
+      "sha256": "9cdfaa04b2ac8d0bc7bec450dc21e7994eeb25f34da9020ca54cef46db2488a7"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

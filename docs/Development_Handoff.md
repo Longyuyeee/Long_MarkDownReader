@@ -1409,3 +1409,11 @@ M4C-0 已完成，未修改产品运行代码。实际矩阵为 CSV/TSV→Table�
 同一真实 Tauri 资料库验证四条工作流均不修改来源，并分别生成首个目标和同名编号目标。CSV 生成 3×3 Table，OPML 点击后自动打开 Canvas，图谱 Canvas 为 2 节点/2 关系，项目笔记携带可追溯元数据；运行时错误 0。CSV 当前确认已说明候选目标、源不变和编号策略，但没有转换损失且成功后仍要求二次点击打开；其他三条均缺少转换前确认和完整披露。
 
 当前唯一接续点为 **M4C-1 CSV/TSV→Table 披露与自动打开闭环**：只补来源/候选目标/不覆盖/损失的完整确认，沿用有界解析与可靠新文件写入，成功后自动打开真实目标；需真实覆盖 CSV、TSV、编号碰撞、内容复读、源摘要不变和宽窄屏。OPML、图谱输出、全局转换框架和发布冻结继续延期。详见 [`Post_v1.0.15_M4C0_Controlled_Conversion_Workflow_Selection_Audit_2026-08-29.md`](./Post_v1.0.15_M4C0_Controlled_Conversion_Workflow_Selection_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4C-1 CSV/TSV→Table 披露与自动打开交接
+
+M4C-1 已完成。`TableView` 在创建副本前显示资料库相对来源、候选 `.table.json` 目标、绝不覆盖/同名编号策略、解析与类型推断规则、稳定 ID/初始视图，以及源编码、BOM、换行不会成为目标 JSON 物理序列化格式；确认后沿用既有有界后端，写盘成功即自动打开后端返回的实际目标，不再要求用户在成功框内二次选择。
+
+真实 Tauri 已覆盖 CSV 首个目标 `Conversion Matrix.table.json` 和 TSV 碰撞目标 `Conversion Outline 1.table.json`，目标从磁盘复读为 `2×3` 与 `2×2`，CSV/TSV 源摘要逐字节不变。1280 与 480 宽度均通过，窄屏披露可滚动且操作可达，运行时错误为 0。审计期间没有放宽资料库边界：Windows `\\?\` 路由路径被后端正确拒绝后，测试改用已验证的资料库内目标路径。
+
+当前唯一接续点为 **M4C-2 OPML→Canvas 投影披露闭环**：先对照实际 `mindmap`/Canvas 代码冻结来源、候选目标、编号策略和投影损失，补写盘前确认，同时保留既有源安全、可靠新文件写入及自动打开。必须真实覆盖首个与编号目标、Canvas 结构复读、源摘要不变、宽窄屏和 0 错误；图谱输出、全局转换框架和 `M4-release-freeze` 继续延期。详见 [`Post_v1.0.15_M4C1_CSV_TSV_Table_Disclosure_and_Auto_Open_Audit_2026-08-29.md`](./Post_v1.0.15_M4C1_CSV_TSV_Table_Disclosure_and_Auto_Open_Audit_2026-08-29.md)。

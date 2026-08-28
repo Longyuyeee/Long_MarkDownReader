@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-1",
+  "name": "csv-tsv-table-disclosure-and-auto-open",
+  "predecessor": "M4C-0",
+  "originalRequirement": "Controlled cross-format conversions must disclose source, target path, overwrite strategy and conversion loss, keep the source safe, and automatically open the created target.",
+  "sourceFormats": ["csv", "tsv"],
+  "targetFormat": "longedit-table",
+  "disclosureContract": {
+    "sourceLibraryRelativePath": true,
+    "candidateTargetLibraryRelativePath": true,
+    "neverOverwriteSourceOrExistingTarget": true,
+    "numberedCollisionTarget": true,
+    "automaticOpenActualTarget": true,
+    "lossFacts": [
+      "first-row-becomes-column-names",
+      "short-rows-are-padded-with-empty-values",
+      "type-inference-uses-first-2000-non-empty-values-per-column",
+      "cell-source-text-is-preserved-as-values",
+      "new-stable-row-and-column-ids-are-generated",
+      "one-grid-view-is-initialized",
+      "source-encoding-bom-and-line-endings-are-not-the-target-json-serialization"
+    ]
+  },
+  "preservedBackendBoundaries": {
+    "maximumSourceBytes": 33554432,
+    "maximumRows": 200000,
+    "maximumColumns": 512,
+    "maximumCellCharacters": 1000000,
+    "validatedInternalTarget": true,
+    "maximumTargetBytes": 67108864,
+    "reliableNewFileWrite": true
+  },
+  "selectedNextStage": {
+    "id": "M4C-2",
+    "name": "opml-canvas-projection-disclosure",
+    "reason": "CSV/TSV to Table now satisfies the full controlled-conversion contract. OPML to Canvas is the next bounded workflow because it already preserves the source, creates numbered targets and automatically opens them, but still lacks pre-write target, collision and projection-loss disclosure."
+  },
+  "releaseCandidate": false
+}

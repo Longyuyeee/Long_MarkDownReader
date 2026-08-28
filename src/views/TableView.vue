@@ -15,7 +15,7 @@
           <input type="number" :value="frozenColumns" min="0" :max="maxFrozenColumns" step="1" aria-label="冻结最前面的列数" @change="setFrozenColumns" />
           <span>列</span>
         </label>
-        <button v-if="!isExternal && table.format !== 'longedit-table'" @click="requestConvertToTable">创建 Table 副本</button>
+        <button v-if="!isExternal && table.format !== 'longedit-table'" data-testid="m4c1-create-table-copy" :disabled="converting" aria-live="polite" @click="requestConvertToTable">{{ converting ? '正在创建…' : '创建 Table 副本' }}</button>
         <button v-if="!isExternal && table.format === 'longedit-table'" @click="exportAs('csv')">导出 CSV</button>
         <button v-if="!isExternal && table.format === 'longedit-table'" @click="exportAs('xlsx')">导出 XLSX</button>
         <button @click="addRow">＋ 行</button>
@@ -177,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
@@ -262,6 +262,7 @@ const loading = ref(true)
 const error = ref('')
 const dirty = ref(false)
 const saving = ref(false)
+const converting = ref(false)
 const notice = ref('')
 const selectedRowId = ref('')
 const rowUndoStack = ref<RowHistoryEntry[]>([])
@@ -314,9 +315,17 @@ const chartViews = computed(() => views.value.filter((view): view is TableViewDe
 const selectedRowIndex = computed(() => selectedRowId.value && table.value ? table.value.rowIds.indexOf(selectedRowId.value) : -1)
 const maxFrozenColumns = computed(() => Math.min(12, table.value?.headers.length || 0))
 const conversionTargetName = computed(() => fileName.value.replace(/\.(csv|tsv)$/i, '') + '.table.json')
-const conversionDirectoryName = computed(() => {
-  const parts = tablePath.value.split(/[\\/]/)
-  return parts.length > 1 ? parts[parts.length - 2] : '当前资料库'
+const normalizedManagedPath = (value: string) => value.replace(/^\\\\\?\\/, '').replace(/\\/g, '/').replace(/\/+$/, '')
+const conversionSourcePath = computed(() => {
+  const source = normalizedManagedPath(tablePath.value)
+  const root = normalizedManagedPath(store.libraryPath)
+  if (root && source.toLocaleLowerCase().startsWith(`${root.toLocaleLowerCase()}/`)) return source.slice(root.length + 1)
+  return fileName.value
+})
+const conversionTargetPath = computed(() => {
+  const parts = conversionSourcePath.value.split('/')
+  parts[parts.length - 1] = conversionTargetName.value
+  return parts.join('/')
 })
 
 const typeLabel = (type: string) => ({ integer: '整数', number: '数值', boolean: '布尔', date: '日期', empty: '空', text: '文本' }[type] || '文本')
@@ -841,32 +850,38 @@ const saveTable = async () => {
   } finally { saving.value = false }
 }
 
-const revealCreatedTable = (path: string) => {
-  window.dispatchEvent(new CustomEvent('longedit:reveal-library-file', { detail: path }))
-}
-
 const convertToTable = async () => {
-  if (!table.value) return
+  if (!table.value || converting.value) return
+  converting.value = true
   try {
     const path = await invoke<string>('import_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
     window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: path }))
-    dialog.success({
-      title: 'Table 副本已创建',
-      content: `已在“${conversionDirectoryName.value}”创建 ${path.split(/[\\/]/).pop()}。原 ${formatLabel.value} 文件没有改变。`,
-      positiveText: '打开新文件',
-      negativeText: '在文件树中定位',
-      onPositiveClick: () => openManagedFile(router, path),
-      onNegativeClick: () => revealCreatedTable(path),
-    })
+    message.success(`Table 副本已创建：${path.split(/[\\/]/).pop()}，正在打开`)
+    await openManagedFile(router, path)
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+  finally { converting.value = false }
 }
 
 const requestConvertToTable = () => {
-  if (!table.value || dirty.value) { message.warning('请先保存当前修改'); return }
+  if (!table.value || dirty.value || converting.value) { message.warning('请先保存当前修改'); return }
+  const workspaceWidth = document.querySelector<HTMLElement>('.table-view')?.clientWidth || window.innerWidth
   dialog.info({
     title: '创建可视化 Table 副本？',
-    content: `将在“${conversionDirectoryName.value}”创建 ${conversionTargetName.value}，用于保存表格、看板、图表和仪表盘视图。原 ${formatLabel.value} 文件保持不变；如有同名文件，系统会使用新的序号。`,
-    positiveText: '创建副本',
+    style: { width: `${Math.max(240, Math.min(560, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    content: () => h('div', { class: 'table-conversion-disclosure', 'data-testid': 'm4c1-table-conversion-disclosure', style: { maxHeight: 'min(440px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
+      h('p', [h('strong', '来源：'), conversionSourcePath.value]),
+      h('p', [h('strong', '候选目标：'), conversionTargetPath.value]),
+      h('p', [h('strong', '覆盖策略：'), '绝不覆盖来源或已有目标；如有同名文件，将创建带新序号的目标，并自动打开实际创建的文件。']),
+      h('strong', '转换规则与损失：'),
+      h('ul', [
+        h('li', '第一行作为列名；较短的数据行以空值补齐。'),
+        h('li', '每列最多读取前 2,000 个非空值推断类型；单元格原文仍作为文本值保存。'),
+        h('li', '目标会生成新的稳定行列 ID，并仅初始化一个“表格”视图。'),
+        h('li', `源 ${formatLabel.value} 的编码、BOM 和换行格式不会作为 Table JSON 的物理序列化格式保留。`),
+      ]),
+      h('p', { class: 'table-conversion-source-safety' }, `原 ${formatLabel.value} 文件保持不变。`),
+    ]),
+    positiveText: '创建并打开',
     negativeText: '取消',
     onPositiveClick: convertToTable,
   })
@@ -979,6 +994,7 @@ onBeforeUnmount(() => {
 .board-scroll { min-width: 0; min-height: 0; flex: 1; display: flex; align-items: stretch; gap: 12px; padding: 12px; overflow: auto; scroll-padding-inline: 12px; }.board-column { width: clamp(260px, 28vw, 320px); min-width: 260px; max-height: 100%; flex: none; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 7px; background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary)); }.board-column > header { min-height: 42px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px 0 12px; border-bottom: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 94%, var(--theme-primary)); }.board-column > header strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }.board-column > header span { min-width: 22px; flex: none; padding: 2px 6px; border-radius: 10px; text-align: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); font-size: var(--text-compact); }.board-cards { min-height: 60px; flex: 1; padding: 8px; overflow-x: hidden; overflow-y: auto; }.board-card { margin-bottom: 8px; padding: 9px; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 6px; background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); cursor: grab; }.board-card:active { cursor: grabbing; }.board-card-title { min-width: 0; display: grid; grid-template-columns: 14px minmax(0,1fr); align-items: start; gap: 6px; margin-bottom: 8px; }.board-card-title svg { width: 14px; height: 14px; margin-top: 2px; color: var(--theme-text-secondary); }.board-card-title strong { min-width: 0; overflow: hidden; overflow-wrap: anywhere; font-size: 12px; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }.board-card-field { min-width: 0; display: grid; gap: 4px; margin-top: 7px; }.board-card-field > span { min-width: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.board-card-field textarea { width: 100%; min-width: 0; min-height: 34px; max-height: 84px; padding: 7px 8px; overflow: auto; resize: vertical; box-sizing: border-box; border: 1px solid transparent; border-radius: 5px; outline: 0; color: var(--theme-text); background: var(--workspace-control-bg); caret-color: var(--theme-primary); overflow-wrap: anywhere; font: var(--text-compact)/1.45 var(--font-sans); }.board-card-field textarea:hover { border-color: var(--workspace-border-color); }.board-card-field textarea:focus { border-color: var(--theme-primary); background: var(--theme-bg); box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb),.1); }.board-card footer { min-height: 22px; display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--workspace-border-color); color: var(--theme-text-secondary); font-size: var(--text-compact); }.board-card footer svg { width: 13px; height: 13px; }
 .view-empty { margin: auto; max-width: 480px; color: var(--theme-text-secondary); text-align: center; font-size: 11px; }
 .table-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--theme-text-secondary); }.table-state strong { color: var(--theme-text); }.table-state p { max-width: 560px; text-align: center; }.table-state button { padding: 7px 16px; border: 0; border-radius: 7px; color: #fff; background: var(--theme-primary); cursor: pointer; }.loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+:global(.table-conversion-disclosure) { max-width: 560px; display: grid; gap: 8px; line-height: 1.55; }.table-conversion-disclosure :global(p) { margin: 0; overflow-wrap: anywhere; }.table-conversion-disclosure :global(ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }.table-conversion-disclosure :global(.table-conversion-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); font-weight: 650; }
 @media (max-width: 900px) { .table-filter { width: 150px; }.table-title span { display: none; }.view-create-menu summary span { display: none; }.board-config-main { overflow-x: auto; scrollbar-width: none; }.board-config-main::-webkit-scrollbar { width: 0; height: 0; }.board-config-main > * { flex: none; }.board-config-main > i { display: none; } }
 @media (max-width: 620px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; }.table-filter { min-width: 0; flex: 1; }.table-tools .save-button { flex: none; }.view-tab { min-width: 104px; max-width: 160px; }.board-config-bar { padding-inline: 8px; }.board-result-count { padding-right: 7px; }.board-config-main select { width: 126px; }.board-field-menu { position: fixed; top: 148px; right: 8px; width: calc(100vw - 16px); } }
 @container (max-width: 900px) { .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }.table-title { width: 100%; min-width: 0; }.table-title div { min-width: 0; }.table-title strong { max-width: 100%; }.table-tools { width: 100%; overflow-x: auto; }.table-tools > * { flex: none; }.table-filter { min-width: 150px; flex: 1; }.board-config-main { overflow-x: auto; scrollbar-width: none; }.board-config-main::-webkit-scrollbar { width: 0; height: 0; }.board-config-main > * { flex: none; }.board-config-main > i { display: none; } }
