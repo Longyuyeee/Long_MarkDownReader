@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-0",
+  "releaseCandidate": false,
+  "scope": "large-graph-performance-current-baseline-selection-audit",
+  "graphTiers": [100, 1000, 5000],
+  "fixture": {
+    "kind": "real-markdown-directed-chain",
+    "expectedEdgesOffset": -1,
+    "sourceFilesRemainReadOnly": true
+  },
+  "requiredInteractions": [
+    "first-visible",
+    "layout-stable",
+    "cursor-anchored-zoom",
+    "canvas-pan",
+    "box-selection",
+    "bounded-node-focus",
+    "settled-frame-activity",
+    "blur-pause-and-focus-resume",
+    "return-to-library"
+  ],
+  "expectations": {
+    "100": { "firstVisibleMaximumMs": 2000, "layoutStableMaximumMs": 5000, "interactionMaximumMs": 250 },
+    "1000": { "firstVisibleMaximumMs": 5000, "layoutStableMaximumMs": 20000, "interactionMaximumMs": 1000 },
+    "5000": { "firstVisibleMaximumMs": 30000, "layoutStableMaximumMs": 120000, "interactionMaximumMs": 5000 },
+    "settledDrawsPerSecondMaximum": 2,
+    "inactiveDrawsMaximum": 2,
+    "runtimeErrors": 0
+  },
+  "lifecycle": {
+    "tier": 1000,
+    "cycles": 20,
+    "mustRemainNavigable": true,
+    "measureCollectedHeapBeforeAndAfter": true
+  },
+  "selectionDecision": {
+    "selected": "settled-dirty-frame-and-lifecycle-loop",
+    "reason": "The current graph schedules and paints continuously after layout settles. Stop idle redraws first while preserving explicit invalidation, active layout, camera motion and selected-path motion; spatial hit testing and worker layout remain separately measurable successors."
+  },
+  "deferred": [
+    "spatial-hit-test-index",
+    "layout-web-worker-or-cytoscape-layout",
+    "viewport-culling-and-label-cache",
+    "saved-large-graph-view-restoration",
+    "M3C-exit-audit"
+  ],
+  "selectedNextStage": {
+    "id": "M3C-1",
+    "name": "settled-dirty-frame-and-lifecycle-loop",
+    "reason": "Remove unconditional settled redraw and re-layout-on-focus before changing hit testing or layout architecture."
+  }
+}

@@ -31,6 +31,7 @@ const m3b9BoundedSemanticMinimap = readJson('shared/post-v115-m3b9-bounded-seman
 const m3b10RemainingProfessionalVisualSelection = readJson('shared/post-v115-m3b10-remaining-professional-visual-selection-policy.json')
 const m3b11RestrainedNodeStatusRings = readJson('shared/post-v115-m3b11-restrained-node-status-rings-policy.json')
 const m3b12ProfessionalVisualSystemExit = readJson('shared/post-v115-m3b12-professional-visual-system-exit-policy.json')
+const m3c0LargeGraphPerformanceBaseline = readJson('shared/post-v115-m3c0-large-graph-performance-baseline-selection-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -81,7 +82,8 @@ const checks = {
     && m3b9BoundedSemanticMinimap.selectedNextStage.id === m3b10RemainingProfessionalVisualSelection.stage
     && m3b10RemainingProfessionalVisualSelection.selectedNextStage.id === m3b11RestrainedNodeStatusRings.stage
     && m3b11RestrainedNodeStatusRings.selectedNextStage.id === m3b12ProfessionalVisualSystemExit.stage
-    && policy.currentStage === `${m3b12ProfessionalVisualSystemExit.selectedNextStage.id}-${m3b12ProfessionalVisualSystemExit.selectedNextStage.name}`,
+    && m3b12ProfessionalVisualSystemExit.selectedNextStage.id === m3c0LargeGraphPerformanceBaseline.stage
+    && policy.currentStage === `${m3c0LargeGraphPerformanceBaseline.selectedNextStage.id}-${m3c0LargeGraphPerformanceBaseline.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

@@ -34,6 +34,7 @@ import './check-post-v115-m3b9-bounded-semantic-minimap.mjs'
 import './check-post-v115-m3b10-remaining-professional-visual-selection.mjs'
 import './check-post-v115-m3b11-restrained-node-status-rings.mjs'
 import './check-post-v115-m3b12-professional-visual-system-exit.mjs'
+import './check-post-v115-m3c0-large-graph-performance-baseline.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-0",
+  "tier": 100,
+  "expected": {
+    "firstVisibleMaximumMs": 2000,
+    "layoutStableMaximumMs": 5000,
+    "interactionMaximumMs": 250,
+    "settledDrawsPerSecondMaximum": 2,
+    "inactiveDrawsMaximum": 2,
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "nodeCount": 100,
+    "edgeCount": 99,
+    "firstVisibleMs": 1407,
+    "layoutStableMs": 3724,
+    "interactions": {
+      "zoomChanged": true,
+      "zoomLatencyMs": 27,
+      "panChanged": true,
+      "panLatencyMs": 111,
+      "panFullGraph": true,
+      "selectionKind": "box",
+      "selectedCount": 20,
+      "selectionLatencyMs": 92,
+      "focusLatencyMs": 13,
+      "focus": {
+        "state": "reduced",
+        "reason": "node-focus",
+        "selectedCount": 1
+      }
+    },
+    "frameActivity": {
+      "settledDrawsPerSecond": 132,
+      "inactiveDraws": 1,
+      "libraryDraws": 0
+    },
+    "lifecycle": {
+      "cycles": 0,
+      "completed": true,
+      "totalMs": 0,
+      "maximumVisibleMs": 0,
+      "heapBeforeBytes": null,
+      "heapAfterBytes": null,
+      "heapDeltaBytes": null
+    },
+    "longTaskCount": 6,
+    "longestTaskMs": 537,
+    "jsHeapUsedBytes": 40042276,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "returnedToLibrary": true,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "4d976635458d97a26d41fce738d0302c9bb09f566b398678ae28422cbed35b58",
+    "afterSha256": "4d976635458d97a26d41fce738d0302c9bb09f566b398678ae28422cbed35b58"
+  },
+  "comparison": {
+    "firstVisibleWithinExpectation": true,
+    "layoutStableWithinExpectation": true,
+    "interactionsWithinExpectation": true,
+    "settledFrameActivityWithinExpectation": false,
+    "inactiveFrameActivityWithinExpectation": true
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
