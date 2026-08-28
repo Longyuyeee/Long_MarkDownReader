@@ -596,6 +596,25 @@ const remediationCopy = computed(() => ({
   overview: { title: '知识网络状态良好', detail: '继续从核心主题检查关系依据，或切换思维导图查看层级。', action: '' },
 } as Record<string, { title: string; detail: string; action: string }>)[remediationFocus.value] || null)
 
+const recordGraphPhase = (name: string, startedAt: number) => {
+  const profiler = (window as any).__m3c2Profiler
+  if (!profiler?.enabled) return
+  const duration = performance.now() - startedAt
+  const phase = profiler.phases[name] || (profiler.phases[name] = { count: 0, totalMs: 0, maximumMs: 0, over50Ms: 0, over1000Ms: 0, samples: [] })
+  phase.count += 1
+  phase.totalMs += duration
+  phase.maximumMs = Math.max(phase.maximumMs, duration)
+  if (duration >= 50) phase.over50Ms += 1
+  if (duration >= 1000) phase.over1000Ms += 1
+  if (phase.samples.length < 512) phase.samples.push(duration)
+}
+const measureGraphPhase = <T>(name: string, operation: () => T): T => {
+  const profiler = (window as any).__m3c2Profiler
+  if (!profiler?.enabled) return operation()
+  const startedAt = performance.now()
+  try { return operation() } finally { recordGraphPhase(name, startedAt) }
+}
+
 const degreeMap = computed(() => {
   const result = new Map<string, number>()
   for (const edge of graphData.value.edges) {
@@ -605,7 +624,7 @@ const degreeMap = computed(() => {
   return result
 })
 
-const communityResult = computed(() => detectGraphCommunities(graphData.value))
+const communityResult = computed(() => measureGraphPhase('community-detection', () => detectGraphCommunities(graphData.value)))
 const activeCommunity = computed(() => communityResult.value.communities.find(community => community.id === activeCommunityId.value) || null)
 const activeCommunityNodeIds = computed(() => activeCommunity.value ? new Set(activeCommunity.value.nodeIds) : null)
 const filteredGraph = computed(() => {
@@ -671,7 +690,7 @@ const visibleEdges = computed(() => {
   return remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target) && (!pathEdges || pathEdges.has(edge)))
 })
 const visibleGraph = computed<GraphData>(() => ({ nodes: visibleNodes.value, edges: visibleEdges.value }))
-const visibleEdgeRoutes = computed(() => buildGraphEdgeRoutes(visibleEdges.value))
+const visibleEdgeRoutes = computed(() => measureGraphPhase('edge-routing', () => buildGraphEdgeRoutes(visibleEdges.value)))
 const visibleGraphSignature = computed(() => visibleNodes.value.map(node => node.id).join('\u001f'))
 const semanticZoomState = computed(() => viewMode.value === 'mindmap'
   ? { level: 'near' as const, densityPressure: 1, effectiveZoom: zoomLevel.value }
@@ -685,7 +704,7 @@ const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
   && !activeShortestPath.value
   && !comparisonOpen.value)
 const graphNodeStatusNowSeconds = ref(Math.floor(Date.now() / 1000))
-const graphNodeStatusSummary = computed(() => deriveGraphNodeStatus(visibleGraph.value, graphNodeStatusNowSeconds.value))
+const graphNodeStatusSummary = computed(() => measureGraphPhase('node-status-derivation', () => deriveGraphNodeStatus(visibleGraph.value, graphNodeStatusNowSeconds.value)))
 const graphNodeStatusById = computed(() => new Map(graphNodeStatusSummary.value.nodes.map(status => [status.nodeId, status])))
 const statusRingsVisible = computed(() => viewMode.value === 'network' && semanticZoomLevel.value !== 'far' && !showCommunityOverview.value)
 const statusPrioritySuppressedIds = computed(() => new Set([
@@ -717,10 +736,10 @@ const graphNodeStatusDiagnostics = computed(() => JSON.stringify({
   governanceCount: 0,
   hoverProbe: graphNodeStatusHoverProbe.value,
 }))
-const semanticKeyNodeIds = computed(() => new Set(selectSemanticZoomKeyNodes(visibleGraph.value).map(node => node.id)))
+const semanticKeyNodeIds = computed(() => measureGraphPhase('semantic-key-selection', () => new Set(selectSemanticZoomKeyNodes(visibleGraph.value).map(node => node.id))))
 const communityContours = computed(() => semanticZoomLevel.value === 'far' || viewMode.value !== 'network'
   ? []
-  : buildGraphCommunityContours(visibleGraph.value, communityResult.value.communities, zoomLevel.value))
+  : measureGraphPhase('community-contours', () => buildGraphCommunityContours(visibleGraph.value, communityResult.value.communities, zoomLevel.value)))
 const communityContourCount = computed(() => communityContours.value.length)
 const communityContoursCoverMembers = computed(() => graphCommunityContoursCoverMembers(visibleGraph.value, communityContours.value))
 const pathCandidates = computed(() => [...remediationGraph.value.nodes].sort((a, b) => a.title.localeCompare(b.title, 'zh-CN') || a.id.localeCompare(b.id)))
@@ -953,7 +972,12 @@ const loadGraph = async () => {
     return
   }
   try {
-    graphData.value = await invoke<any>('build_link_graph', { libraryRoot: store.libraryPath })
+    const buildStartedAt = performance.now()
+    try {
+      graphData.value = await invoke<any>('build_link_graph', { libraryRoot: store.libraryPath })
+    } finally {
+      recordGraphPhase('build-link-graph', buildStartedAt)
+    }
     graphNodeStatusNowSeconds.value = Math.floor(Date.now() / 1000)
     const strongest = [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
     const requestedRoot = typeof route.query.root === 'string'
@@ -1674,7 +1698,7 @@ const saveGraphCollection = async (node: GraphNode) => {
   }
 }
 
-const simulate = () => {
+const simulate = () => measureGraphPhase('layout-simulation', () => {
   if (layoutSettled || viewMode.value === 'mindmap') return
   const nodes = visibleNodes.value
   const edges = visibleEdges.value
@@ -1766,7 +1790,7 @@ const simulate = () => {
     layoutSettled = true
     scheduleLayoutSave()
   }
-}
+})
 
 const resetView = () => {
   cancelCameraMotion()
@@ -1814,7 +1838,7 @@ const currentCommunityOverview = () => {
   const cacheKey = `${zoom.toFixed(3)}\u001e${visibleGraphSignature.value}`
   const layoutRefresh = communityOverviewFrame !== frameCount && (layoutSettled || frameCount % 8 === 0)
   if (!communityOverviewCache || communityOverviewCacheKey !== cacheKey || layoutRefresh) {
-    communityOverviewCache = buildGraphCommunityOverview(visibleGraph.value, communityResult.value.communities, zoom)
+    communityOverviewCache = measureGraphPhase('community-overview', () => buildGraphCommunityOverview(visibleGraph.value, communityResult.value.communities, zoom))
     communityOverviewCacheKey = cacheKey
     communityOverviewFrame = frameCount
   }
@@ -1978,7 +2002,7 @@ const handleMinimapKeydown = (event: KeyboardEvent) => {
   event.preventDefault()
 }
 
-const draw = () => {
+const draw = () => measureGraphPhase('canvas-draw', () => {
   const canvas = canvasRef.value
   const container = containerRef.value
   if (!canvas || !container) return
@@ -2376,7 +2400,7 @@ const draw = () => {
   canvas.dataset.layoutSettled = String(layoutSettled)
   canvas.dataset.layoutFrame = String(frameCount)
   canvas.dataset.loopContinuous = String(graphLoopNeedsContinuousFrames())
-}
+})
 
 const loop = (timestamp = performance.now()) => {
   animationId = 0

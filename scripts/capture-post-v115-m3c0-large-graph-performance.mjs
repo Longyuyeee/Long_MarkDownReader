@@ -9,7 +9,8 @@ const library = path.resolve(process.env.LONGEDIT_M3C_LIBRARY || process.env.LON
 const tier = Number(process.env.LONGEDIT_M3C_TIER || process.env.LONGEDIT_M3C0_TIER)
 const lifecycleCycles = Number(process.env.LONGEDIT_M3C_CYCLES || process.env.LONGEDIT_M3C0_CYCLES || 0)
 if (!endpoint || !Number.isInteger(tier) || tier < 1) throw new Error(`${stage} capture environment is incomplete`)
-const dirtyFrameStage = stage === 'M3C-1'
+const boundedSchedulerStage = stage !== 'M3C-0'
+const profilingStage = stage === 'M3C-2'
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -76,7 +77,9 @@ const capture = async file => {
   await fs.writeFile(path.join(output, file), Buffer.from(image.data, 'base64'))
 }
 const readPose = () => evaluate(`document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraPose||''`)
-const readDraws = () => evaluate(`Number(window.__m3cProbe?.draws||0)`)
+const readDraws = () => evaluate(profilingStage
+  ? `Number(window.__m3c2Profiler?.phases?.['canvas-draw']?.count||0)`
+  : `Number(window.__m3cProbe?.draws||0)`)
 const restoreFullGraphIfNeeded = async () => {
   const active = Boolean(await evaluate(`document.querySelector('[data-testid="graph-community-focus"]')`))
   if (!active) return false
@@ -93,7 +96,10 @@ await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'); await send('Performance.enable'); await send('HeapProfiler.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-await evaluate(`(()=>{window.__m3cLongTasks=[];window.__m3cLongTaskObserver=new PerformanceObserver(list=>window.__m3cLongTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration}))));window.__m3cLongTaskObserver.observe({type:'longtask',buffered:true});const probe=window.__m3cProbe={draws:0,current:[],frames:[]};const proto=CanvasRenderingContext2D.prototype;const clearRect=proto.clearRect,arc=proto.arc,roundRect=proto.roundRect;const isGraph=context=>context.canvas?.getAttribute?.('data-testid')==='graph-canvas';const add=(context,values)=>{if(probe.current.length>=64||!isGraph(context))return;probe.current.push(values.map(value=>Math.round(Number(value)*10)/10).join(','))};proto.clearRect=function(...args){if(isGraph(this)){if(probe.current.length){probe.frames.push({signature:probe.current.join('|'),at:performance.now()});if(probe.frames.length>40)probe.frames.shift()}probe.current=[];probe.draws+=1}return Reflect.apply(clearRect,this,args)};proto.arc=function(x,y,r,...rest){add(this,[x,y,r]);return Reflect.apply(arc,this,[x,y,r,...rest])};proto.roundRect=function(x,y,w,h,r){add(this,[x,y,w,h]);return Reflect.apply(roundRect,this,[x,y,w,h,r])}})()`)
+await evaluate(profilingStage
+  ? `(()=>{window.__m3cLongTasks=[];window.__m3cLongTaskObserver=new PerformanceObserver(list=>window.__m3cLongTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration}))));window.__m3cLongTaskObserver.observe({type:'longtask',buffered:true});window.__m3c2Profiler={enabled:true,phases:{}}})()`
+  : `(()=>{window.__m3cLongTasks=[];window.__m3cLongTaskObserver=new PerformanceObserver(list=>window.__m3cLongTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration}))));window.__m3cLongTaskObserver.observe({type:'longtask',buffered:true});const probe=window.__m3cProbe={draws:0,current:[],frames:[]};const proto=CanvasRenderingContext2D.prototype;const clearRect=proto.clearRect,arc=proto.arc,roundRect=proto.roundRect;const isGraph=context=>context.canvas?.getAttribute?.('data-testid')==='graph-canvas';const add=(context,values)=>{if(probe.current.length>=64||!isGraph(context))return;probe.current.push(values.map(value=>Math.round(Number(value)*10)/10).join(','))};proto.clearRect=function(...args){if(isGraph(this)){if(probe.current.length){probe.frames.push({signature:probe.current.join('|'),at:performance.now()});if(probe.frames.length>40)probe.frames.shift()}probe.current=[];probe.draws+=1}return Reflect.apply(clearRect,this,args)};proto.arc=function(x,y,r,...rest){add(this,[x,y,r]);return Reflect.apply(arc,this,[x,y,r,...rest])};proto.roundRect=function(x,y,w,h,r){add(this,[x,y,w,h]);return Reflect.apply(roundRect,this,[x,y,w,h,r])}})()`)
+const profilingCalibration = profilingStage ? await evaluate(`(()=>{const count=100000;let sink=0;const baselineStarted=performance.now();for(let index=0;index<count;index+=1)sink+=index&1;const baselineMs=performance.now()-baselineStarted;const phase={count:0,totalMs:0,maximumMs:0,over50Ms:0,over1000Ms:0,samples:[]};const instrumentedStarted=performance.now();for(let index=0;index<count;index+=1){const started=performance.now();sink+=index&1;const duration=performance.now()-started;phase.count+=1;phase.totalMs+=duration;phase.maximumMs=Math.max(phase.maximumMs,duration);if(duration>=50)phase.over50Ms+=1;if(duration>=1000)phase.over1000Ms+=1;if(phase.samples.length<512)phase.samples.push(duration)}const instrumentedMs=performance.now()-instrumentedStarted;let seed=${tier}>>>0;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};return {iterations:count,baselineMs,instrumentedMs,bookkeepingMicrosecondsPerCall:Math.max(0,(instrumentedMs-baselineMs)*1000/count),sink,deterministicSeed:${tier}}})()`) : null
 
 const centeredPath = path.join(library, 'node-000001.md')
 const startedAt = Date.now()
@@ -103,15 +109,26 @@ const firstVisibleMs = Date.now() - startedAt
 await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')!==null`, 'centered node selection')
 let stabilityFailure = ''
 try {
-  const stabilityExpression = dirtyFrameStage
+  const stabilityExpression = boundedSchedulerStage
     ? `(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.layoutSettled==='true'&&canvas?.dataset.loopContinuous==='false'})()`
     : `(()=>{const frames=window.__m3cProbe?.frames||[];if(frames.length<12)return false;const recent=frames.slice(-12);return recent.every(frame=>frame.signature===recent[0].signature)})()`
-  await waitFor(stabilityExpression, `${tier}-node geometry stable`, 240000)
+  const stabilityTimeoutMs = profilingStage && tier === 5000 ? Math.max(1000, 120000 - firstVisibleMs) : profilingStage ? 180000 : 240000
+  await waitFor(stabilityExpression, `${tier}-node geometry stable`, stabilityTimeoutMs)
 } catch (error) {
   stabilityFailure = String(error)
 }
 const layoutStableMs = Date.now() - startedAt
 if (stabilityFailure) {
+  const phaseProfile = profilingStage ? await evaluate(`JSON.parse(JSON.stringify(window.__m3c2Profiler?.phases||{}))`) : null
+  const drawsBeforeBudgetFailure = await readDraws()
+  const longTasks = await evaluate(`window.__m3cLongTasks||[]`)
+  if (profilingStage) await capture(`tier-${tier}.jpg`)
+  let returnedToLibrary = false
+  if (profilingStage) {
+    await click('.management-back')
+    await waitFor(`document.querySelector('.library-mode')!==null`, 'return after bounded profiling failure')
+    returnedToLibrary = true
+  }
   const afterSha256 = await hashDirectory(library)
   const evidence = {
     schemaVersion: 1,
@@ -127,11 +144,15 @@ if (stabilityFailure) {
       firstVisibleMs,
       layoutStableMs,
       interactions: null,
-      frameActivity: null,
+      frameActivity: { drawsBeforeBudgetFailure },
+      phaseProfile,
+      profilingCalibration,
       lifecycle: { cycles: lifecycleCycles, completed: false },
+      longTaskCount: longTasks.length,
+      longestTaskMs: Math.round(Math.max(0, ...longTasks.map(item => item.duration))),
       runtimeErrors: runtimeErrors.length,
       runtimeErrorMessages: runtimeErrors,
-      returnedToLibrary: false,
+      returnedToLibrary,
       sourceFilesUnchanged: beforeSha256 === afterSha256,
       beforeSha256,
       afterSha256,
@@ -156,13 +177,25 @@ const settledDrawStart = await readDraws()
 await delay(1000)
 const settledDrawsPerSecond = (await readDraws()) - settledDrawStart
 
+if (profilingStage && tier === 100) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const level = await evaluate(`document.querySelector('[data-testid="graph-container"]')?.dataset.semanticZoomLevel||''`)
+    if (level === 'middle') break
+    const deltaY = level === 'near' ? 120 : -120
+    await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');if(!(canvas instanceof HTMLCanvasElement))return;const rect=canvas.getBoundingClientRect();canvas.dispatchEvent(new WheelEvent('wheel',{deltaY:${deltaY},clientX:rect.left+rect.width/2,clientY:rect.top+rect.height/2,bubbles:true,cancelable:true}))})()`)
+    await delay(40)
+  }
+  await waitFor(`document.querySelector('[data-testid="graph-container"]')?.dataset.semanticZoomLevel==='middle'`, '100-node middle semantic profiling')
+  await delay(120)
+}
+
 const resumeLayoutBefore = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {frame:Number(canvas?.dataset.layoutFrame||-1),settled:canvas?.dataset.layoutSettled==='true'}})()`)
 const blurDrawStart = await readDraws()
 await evaluate(`window.dispatchEvent(new Event('blur'))`)
 await delay(800)
 const inactiveDraws = (await readDraws()) - blurDrawStart
 await evaluate(`window.dispatchEvent(new Event('focus'))`)
-if (dirtyFrameStage) {
+if (boundedSchedulerStage) {
   await waitFor(`document.querySelector('[data-testid="graph-canvas"]')?.dataset.layoutSettled==='true'`, `${tier}-node focus resume stability`)
   await delay(300)
 } else {
@@ -223,7 +256,7 @@ const focusStartedAt = Date.now()
 await evaluate(`(()=>{const input=document.querySelector('.graph-search input');if(!(input instanceof HTMLInputElement))return;const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;setter?.call(input,${JSON.stringify(`Node ${tier}`)});input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))})()`)
 let focusFailure = ''
 try {
-  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.selectedCount==='1'&&canvas?.dataset.cameraMotionReason==='node-focus'&&['completed','reduced'].includes(canvas.dataset.cameraMotionState||'')})()`, `${tier}-node bounded focus`, tier === 5000 ? 30000 : 180000)
+  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.selectedCount==='1'&&canvas?.dataset.cameraMotionReason==='node-focus'&&['completed','reduced'].includes(canvas.dataset.cameraMotionState||'')})()`, `${tier}-node bounded focus`, tier === 5000 && !profilingStage ? 30000 : 180000)
 } catch (error) {
   focusFailure = String(error)
 }
@@ -284,6 +317,7 @@ if (!panChanged) {
 await restoreFullGraphIfNeeded()
 const panFullGraph = await evaluate(`document.querySelector('.graph-stats')?.textContent?.includes(${JSON.stringify(`${tier} / ${tier}`)})===true`)
 await capture(`tier-${tier}.jpg`)
+const phaseProfile = profilingStage ? await evaluate(`JSON.parse(JSON.stringify(window.__m3c2Profiler?.phases||{}))`) : null
 
 await click('.management-back')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
@@ -328,6 +362,8 @@ const evidence = {
     layoutStableMs,
     interactions: { zoomChanged: true, zoomLatencyMs, panChanged, panLatencyMs, panFullGraph, selectionKind, selectedCount, selectionLatencyMs, focusLatencyMs, focus: focusState },
     frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws, focusResumeLayoutRestarts, resumeLayoutBefore, resumeLayoutAfter },
+    phaseProfile,
+    profilingCalibration,
     lifecycle,
     longTaskCount: longTasks.length,
     longestTaskMs: Math.round(Math.max(0, ...longTasks.map(item => item.duration))),
@@ -344,7 +380,7 @@ const evidence = {
     layoutStableWithinExpectation: layoutStableMs <= expectations.layoutStableMaximumMs,
     interactionsWithinExpectation: Math.max(zoomLatencyMs, panLatencyMs, selectionLatencyMs, focusLatencyMs) <= expectations.interactionMaximumMs,
     settledFrameActivityWithinExpectation: settledDrawsPerSecond <= 2,
-    inactiveFrameActivityWithinExpectation: inactiveDraws <= 2 && libraryDraws <= (dirtyFrameStage ? 0 : 2),
+    inactiveFrameActivityWithinExpectation: inactiveDraws <= 2 && libraryDraws <= (boundedSchedulerStage ? 0 : 2),
     focusResumeWithoutLayoutRestart: focusResumeLayoutRestarts === 0,
   },
   sourceUserContentIncluded: false,

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-2",
+  "name": "large-graph-main-thread-phase-profiling-selection-audit",
+  "predecessor": "M3C-1",
+  "fixture": {
+    "kind": "real-markdown-directed-chain-library",
+    "tiers": [100, 1000, 5000],
+    "sourceMode": "read-only",
+    "runtime": "real-tauri-webview2"
+  },
+  "phases": [
+    "build-link-graph",
+    "community-detection",
+    "edge-routing",
+    "node-status-derivation",
+    "semantic-key-selection",
+    "community-contours",
+    "community-overview",
+    "layout-simulation",
+    "canvas-draw"
+  ],
+  "expectations": {
+    "profilingBookkeepingMaximumMicrosecondsPerCall": 10,
+    "historicalElapsedComparisonDiagnosticOnly": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "returnedToLibrary": true,
+    "allPhasesObserved": true,
+    "dominantPhaseSelected": true
+  },
+  "m3c1Baseline": {
+    "100": { "firstVisibleMs": 680, "layoutStableMs": 2305 },
+    "1000": { "firstVisibleMs": 3236, "layoutStableMs": 17317 },
+    "5000": { "firstVisibleMs": 23562, "layoutStableMs": 186338 }
+  },
+  "selectionRules": [
+    "Prefer the phase with the highest main-thread total and maximum single-call duration.",
+    "Treat canvas-draw as inclusive of lazily evaluated semantic computeds and report an exclusive estimate by subtracting nested phases.",
+    "Do not select Worker or viewport culling from route-level elapsed time alone.",
+    "Keep backend build latency separate from PerformanceObserver main-thread long tasks.",
+    "Select exactly one minimal M3C-3 implementation and defer the rest."
+  ],
+  "measurementControl": {
+    "deterministicRandomSeedPerTier": true,
+    "profilerBookkeepingCalibratedInSameWebView": true,
+    "canvasPrototypeMonkeyPatch": false
+  },
+  "actual": {
+    "100": { "firstVisibleMs": 1285, "layoutStableMs": 3393, "layoutTotalMs": 874, "layoutMaximumMs": 19, "canvasDrawTotalMs": 555, "longestTaskMs": 205, "profilingBookkeepingMicrosecondsPerCall": 0.484 },
+    "1000": { "firstVisibleMs": 3558, "layoutStableMs": 29861, "layoutTotalMs": 26984, "layoutMaximumMs": 1248, "canvasDrawTotalMs": 515, "longestTaskMs": 1661, "profilingBookkeepingMicrosecondsPerCall": 0.516 },
+    "5000": { "completed": false, "failureStage": "layout-stable", "firstVisibleMs": 39105, "budgetObservationMs": 140049, "layoutTotalMs": 133038, "layoutMaximumMs": 29481, "canvasDrawTotalMs": 948, "semanticDerivedTotalMs": 1269, "buildLinkGraphMs": 7403, "longestTaskMs": 29730, "profilingBookkeepingMicrosecondsPerCall": 0.519 }
+  },
+  "selectionDecision": {
+    "dominantPhase": "layout-simulation",
+    "selected": "worker-backed-bounded-force-layout-kernel",
+    "reason": "At 5000 nodes, layout simulation accounts for about 99% of attributed main-thread phase cost and reaches 29481ms in one call, while raw Canvas drawing totals 948ms and semantic derivation totals about 1269ms."
+  },
+  "selectedNextStage": {
+    "id": "M3C-3",
+    "name": "worker-backed-bounded-force-layout-kernel",
+    "scope": "Move force-layout computation off the UI thread and bound per-tick repulsion work deterministically; preserve graph facts, camera, interaction, layout persistence, dirty-frame lifecycle, and reduced-motion behavior."
+  },
+  "deferred": [
+    "implementation before profiling evidence",
+    "saved view restoration",
+    "large-graph semantic detail redesign",
+    "release freeze"
+  ],
+  "releaseCandidate": false
+}
