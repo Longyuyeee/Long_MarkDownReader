@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-2",
+  "name": "m1-object-graph-location-coverage-selection-audit",
+  "predecessor": "M4A-1",
+  "candidates": [
+    {
+      "format": "DOCX",
+      "graphObjectType": "docx_block",
+      "locatorKind": "docx-block",
+      "parserLimit": 50000,
+      "selection": "deferred",
+      "reason": "Mixed paragraph, heading and table-block semantics need a bounded graph-granularity decision before block-level expansion."
+    },
+    {
+      "format": "ODS",
+      "graphObjectType": "ods_cell",
+      "locatorKind": "ods-cell",
+      "parserLimit": 200000,
+      "selection": "deferred",
+      "reason": "Cell-level expansion can exceed the professional graph scale budget; sheet-level semantics must be evaluated separately."
+    },
+    {
+      "format": "ODP",
+      "graphObjectType": "odp_slide",
+      "locatorKind": "odp-slide",
+      "parserLimit": 2000,
+      "selection": "selected",
+      "reason": "Slides are bounded, stable container objects and mirror the accepted PPTX slide graph contract."
+    },
+    {
+      "format": "Workbook",
+      "graphObjectType": "workbook_sheet",
+      "locatorKind": "workbook-sheet",
+      "parserLimit": 64,
+      "selection": "selected",
+      "reason": "Sheets are bounded, stable container objects and mirror the accepted Table view graph contract."
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M4A-3",
+    "name": "workbook-sheet-and-odp-slide-graph-location-coverage",
+    "scope": [
+      "Add Workbook document and workbook_sheet nodes with contains relations and workbook-sheet locators.",
+      "Add ODP document and odp_slide nodes with contains relations and odp-slide locators.",
+      "Register explicit graph semantics for both parent and child object types.",
+      "Verify Graph and relation-context opening through the shared managed-object navigation contract."
+    ]
+  },
+  "acceptance": {
+    "realFixtures": 4,
+    "searchLocatorKinds": 4,
+    "candidateGraphNodesBeforeImplementation": 0,
+    "selectedFormats": 2,
+    "structuralRelationType": "contains",
+    "structuralMentionCount": 0,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true
+  },
+  "deferred": [
+    "DOCX block-level graph expansion until a bounded semantic granularity is selected.",
+    "ODS cell-level graph expansion until a sheet-versus-cell scale policy is selected.",
+    "Workspace actions for every M1 object.",
+    "Unified conversion disclosure and new conversion types.",
+    "Release freeze and version transition."
+  ],
+  "releaseCandidate": false
+}

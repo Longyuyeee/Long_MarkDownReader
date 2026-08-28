@@ -37,6 +37,7 @@ const m3c2LargeGraphPhaseProfiling = readJson('shared/post-v115-m3c2-large-graph
 const m3c3WorkerBoundedLayout = readJson('shared/post-v115-m3c3-worker-backed-bounded-force-layout-kernel-policy.json')
 const m3c4LargeGraphPerformanceExit = readJson('shared/post-v115-m3c4-large-graph-performance-exit-audit-policy.json')
 const m4a1UnifiedObjectNavigation = readJson('shared/post-v115-m4a1-unified-object-navigation-policy.json')
+const m4a2ObjectGraphSelection = readJson('shared/post-v115-m4a2-m1-object-graph-coverage-selection-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -94,7 +95,9 @@ const checks = {
     && m3c3WorkerBoundedLayout.selectedNextStage.id === m3c4LargeGraphPerformanceExit.stage
     && m3c4LargeGraphPerformanceExit.selectedNextStage.id === 'M4-0'
     && m4a1UnifiedObjectNavigation.predecessor === 'M4-0'
-    && policy.currentStage === `${m4a1UnifiedObjectNavigation.selectedNextStage.id}-${m4a1UnifiedObjectNavigation.selectedNextStage.name}`,
+    && m4a1UnifiedObjectNavigation.selectedNextStage.id === m4a2ObjectGraphSelection.stage
+    && m4a2ObjectGraphSelection.predecessor === m4a1UnifiedObjectNavigation.stage
+    && policy.currentStage === `${m4a2ObjectGraphSelection.selectedNextStage.id}-${m4a2ObjectGraphSelection.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

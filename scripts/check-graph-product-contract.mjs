@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 
 const root = new URL('../', import.meta.url)
 const read = path => readFile(new URL(path, root), 'utf8')
-const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace, library, graphView, graphHealthPanel] = await Promise.all([
+const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace, library, graphView, graphHealthPanel, graphLayout, fileNavigation] = await Promise.all([
   read('src-tauri/src/commands/graph.rs'),
   read('src-tauri/src/lib.rs'),
   read('src/components/RelationSummaryBadge.vue'),
@@ -13,6 +13,8 @@ const [graphCommand, tauriLib, badge, contextPanel, contextCache, app, workspace
   read('src/views/LibraryMode.vue'),
   read('src/components/GraphView.vue'),
   read('src/components/GraphHealthPanel.vue'),
+  read('src/utils/graphForceLayoutKernel.ts'),
+  read('src/services/fileNavigation.ts'),
 ])
 
 const failures = []
@@ -51,7 +53,7 @@ requireText(workspace, "query: { root: summary.nodeId }", 'workspace summaries m
 requireText(library, "query: { root: summary.nodeId }", 'library summaries must open a centered graph')
 requireText(graphView, 'route.query.root', 'the graph workspace must consume centered navigation')
 requireText(graphView, 'displayWorkspacePath', 'the graph workspace must not expose Windows internal path prefixes')
-requireText(graphView, 'desiredLinkDistance', 'the graph layout must preserve a readable linked-node distance')
+requireText(graphLayout, 'desiredLinkDistance', 'the graph layout must preserve a readable linked-node distance')
 requireText(graphCommand, 'MAX_RELATION_CONTEXT_ITEMS', 'G8-2 relation context must remain bounded')
 requireText(graphCommand, 'GraphRelationContext', 'G8-2 must expose a typed relation context')
 requireText(graphCommand, 'GraphRelationEvidence', 'G8-2 must preserve source evidence')
@@ -84,7 +86,8 @@ requireText(graphCommand, 'focus_locator_object_id', 'C3C3 relation context must
 requireText(contextPanel, 'focusLocatorObjectId', 'C3C3 shared relation UI must request object-focused context')
 requireText(contextPanel, "node.objectType === 'pptx_slide'", 'C3C3 relation UI must navigate back to PPTX slides')
 requireText(app, ':focus-locator-object-id', 'C3C3 shared application shell must forward object focus')
-requireText(graphView, "node.objectType === 'pptx_slide'", 'C3C3 graph nodes must navigate to the shared PPTX workspace')
+requireText(graphView, 'openManagedObject', 'C3C3 graph nodes must use shared managed-object navigation')
+requireText(fileNavigation, "target.objectType === 'pptx_slide'", 'C3C3 shared navigation must route PPTX slide nodes')
 for (const route of ['LibraryMode', 'TextEditor', 'JsonEditor', 'YamlEditor', 'XmlEditor', 'TomlEditor', 'Pdf', 'Table', 'Canvas', 'MindMap']) {
   requireText(app, `'${route}'`, `G8-2 shared context route coverage is missing ${route}`)
 }

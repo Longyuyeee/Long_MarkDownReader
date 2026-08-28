@@ -403,12 +403,13 @@ M3 分为语义、视觉和性能三个子阶段。视觉升级必须建立在�
 
 ## 10. 当前下一步
 
-M0、M1、M2、M3 和 M4A-1 已完成。当前下一步固定为 **M4A-2 M1 对象图谱定位扩面选择审计**：
+M0、M1、M2、M3、M4A-1 和 M4A-2 已完成。当前下一步固定为 **M4A-3 Workbook 工作表与 ODP 幻灯片图谱定位覆盖**：
 
-- 对照 M1 已完成的 DOCX、ODS、ODP 与 Workbook 内部对象，盘点当前图谱节点、关系、mention 和打开能力；
-- 记录每种候选对象的稳定 ID、来源证据和统一定位合同可表达性，先区分“能建图”和“能真实定位”；
-- 只选择一个最小扩面批次，定义固定夹具、预期对象/关系数、返回位置和源安全门禁后再实现；
-- 工作台全对象行动、转换统一、新转换类型和发布冻结不得混入该选择审计；
+- 为 Workbook 建立文档节点与 `workbook_sheet` 子节点，使用 `contains` 结构关系和既有 `workbook-sheet` 定位器；
+- 为 ODP 建立文档节点与 `odp_slide` 子节点，使用 `contains` 结构关系和既有 `odp-slide` 定位器；
+- 在统一图谱语义事实源中登记两类父对象和两类子对象，并从图谱与关系上下文真实打开内部位置；
+- 固定夹具至少验证 Workbook 4 个工作表、ODP 2 张幻灯片、6 条结构关系、结构边 mention 为 0、返回位置正确、源摘要不变；
+- DOCX block 与 ODS cell 因最大 5 万/20 万对象的粒度风险继续延期，工作台、转换和发布冻结也不得混入；
 - 继续保持运行时/公开 `1.0.15`、开发目标 `1.0.16`、`releaseCandidate=false`。
 
 ### 2026-08-28 M3B-8 接续更新
@@ -444,3 +445,7 @@ M3C 已通过大图性能退出审计，M3 语义、视觉和性能三线全部�
 ### 2026-08-28 M4A-1 完成回执
 
 统一对象定位合同已由资料库搜索、知识图谱和关系上下文三个入口共同消费；Table 行/视图和 OPML 节点进入持久索引与 live fallback。真实 Tauri 从搜索打开 Table、OPML、DOCX、ODS、ODP、PPTX 六类内部对象并 6/6 保留返回搜索状态，运行时错误为 0，源夹具摘要不变。下一步为 **M4A-2 M1 对象图谱定位扩面选择审计**；工作台全对象行动、转换统一、版本冻结继续后置。详见 `Post_v1.0.15_M4A1_Unified_Object_Navigation_and_Table_OPML_Search_Closure_Audit_2026-08-28.md`。
+
+### 2026-08-28 M4A-2 选择回执
+
+真实 DOCX、ODS、ODP、XLSX 夹具分别解析出 13 个 block、2 个 sheet/5 个 cell、2 张 slide 和 4 个 workbook sheet；四类搜索定位器均有效，但当前图谱只包含 Markdown 控制节点，候选父/子节点为 0。选择审计据此冻结 **M4A-3 Workbook 工作表与 ODP 幻灯片图谱定位覆盖**：两者是有界稳定的容器对象，可复用既有 Table view/PPTX slide 的 `contains` 与统一打开合同。DOCX block 和 ODS cell 因最大 5 万/20 万对象的规模与语义粒度风险继续延期。详见 `Post_v1.0.15_M4A2_M1_Object_Graph_Location_Coverage_Selection_Audit_2026-08-28.md`。

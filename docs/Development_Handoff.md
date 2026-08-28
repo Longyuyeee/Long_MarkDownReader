@@ -1335,3 +1335,9 @@ M4-0 已完成真实代码事实审计并在实现前暂停。跨格式搜索当
 M4A-1 已完成。资料库搜索、知识图谱和关系上下文统一调用 `fileNavigation` 对象定位合同；知识索引 schema v2 同时为 Table 行/视图和 OPML 节点生成稳定定位段，live fallback 使用同一生成器。Table 定位可穿透已保存筛选临时显示目标行，OPML 在思维导图中选中目标节点。
 
 真实 Tauri 已从搜索依次打开 Table `roadmap-row`、OPML `workflow-node`、DOCX `docx-block-6`、ODS `ods-sheet-2:A1`、ODP `odp-slide-1`、PPTX 对象 `3`，6/6 返回保留搜索状态；运行时错误 0，6 个源夹具摘要不变。下一接续点为 **M4A-2 M1 对象图谱定位扩面选择审计**，先盘点并选择最小批次，不并入工作台全对象行动、转换统一或版本冻结。详见 [`Post_v1.0.15_M4A1_Unified_Object_Navigation_and_Table_OPML_Search_Closure_Audit_2026-08-28.md`](./Post_v1.0.15_M4A1_Unified_Object_Navigation_and_Table_OPML_Search_Closure_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4A-2 M1 对象图谱扩面选择交接
+
+M4A-2 已完成真实代码、解析上限、固定夹具和桌面图谱的选择审计。DOCX、ODS、ODP、Workbook 的精确搜索定位均存在；夹具实际解析为 13 个 block、2 个 ODS sheet/5 个 cell、2 张 ODP slide 和 4 个 workbook sheet，但图谱候选节点仍为 0。两张截图已人工复核：Workbook 搜索可定位 `Inventory` 工作表，图谱则只显示 Markdown 控制节点。运行时错误 0，四个源夹具摘要不变。
+
+当前接续点为 **M4A-3 Workbook 工作表与 ODP 幻灯片图谱定位覆盖**。只增加 `workbook`/`workbook_sheet`、`odp`/`odp_slide` 节点语义，父子结构统一使用 `contains` 且 mention 为 0，并通过共享对象打开合同核对内部位置。固定夹具预期 6 个子节点和 6 条结构边。DOCX block 与 ODS cell 因最大 5 万/20 万规模继续延期；不得混入工作台、转换或发布冻结。详见 [`Post_v1.0.15_M4A2_M1_Object_Graph_Location_Coverage_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M4A2_M1_Object_Graph_Location_Coverage_Selection_Audit_2026-08-28.md)。
