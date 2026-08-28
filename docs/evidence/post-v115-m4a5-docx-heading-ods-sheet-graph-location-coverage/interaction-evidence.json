@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-5",
+  "status": "passed",
+  "sourceCommit": "f1fc7e1f35fed12818645bfbec7dc824fa34e751",
+  "actual": {
+    "graph": {
+      "nodeCount": 5,
+      "edgeCount": 3,
+      "parentCount": 2,
+      "childCount": 3,
+      "docxHeadingCount": 1,
+      "odsSheetCount": 2,
+      "deferredFineGrainedNodeCount": 0,
+      "containsRelationCount": 3,
+      "structuralMentionCount": 0,
+      "sameSourceIdentityStable": true,
+      "objectTypes": [
+        "docx",
+        "docx_heading",
+        "ods",
+        "ods_sheet"
+      ]
+    },
+    "graphOpens": [
+      {
+        "title": "Microsoft Word Producer Fixture",
+        "objectType": "docx_heading",
+        "locator": {
+          "kind": "docx-block",
+          "objectId": "docx-block-1",
+          "page": null
+        },
+        "route": "#/library?locator=docx-block-1&locatorToken=1787925442265-1&path=[fixture]",
+        "context": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "blockId": "docx-block-1",
+          "text": "Microsoft Word Producer Fixture"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "title": "Overview",
+        "objectType": "ods_sheet",
+        "locator": {
+          "kind": "ods-sheet",
+          "objectId": "ods-sheet-1",
+          "page": null
+        },
+        "route": "#/library?locator=ods-sheet-1&locatorToken=1787925443735-4&path=[fixture]",
+        "context": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Overview",
+          "sheetId": "ods-sheet-1"
+        },
+        "returnedToGraph": true
+      }
+    ],
+    "contextOpens": [
+      {
+        "parent": "M4A5 Word",
+        "child": "Microsoft Word Producer Fixture",
+        "route": "#/library?locator=docx-block-1&locatorToken=1787925442898-3&path=[fixture]",
+        "parentContext": {
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "blockId": "docx-block-1",
+          "text": "Microsoft Word Producer Fixture"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A5 Sheet",
+        "child": "Notes",
+        "route": "#/library?locator=ods-sheet-2&locatorToken=1787925444264-6&path=[fixture]",
+        "parentContext": {
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Notes",
+          "sheetId": "ods-sheet-2"
+        },
+        "returnedToGraph": true
+      }
+    ],
+    "graphInternalOpenCount": 2,
+    "relationContextInternalOpenCount": 2,
+    "returnedGraphCount": 4,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchanged": true
+  },
+  "sourceHashesBefore": {
+    "docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c"
+  },
+  "sourceHashesAfter": {
+    "docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

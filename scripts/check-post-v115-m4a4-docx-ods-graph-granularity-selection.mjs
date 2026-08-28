@@ -14,6 +14,7 @@ const graph = read('src-tauri/src/commands/graph.rs')
 const navigation = read('src/services/fileNavigation.ts')
 const odfReader = read('src/views/OdfContentReaderView.vue')
 const semantics = readJson('shared/graph-semantics.json')
+const successor = readJson('shared/post-v115-m4a5-docx-heading-ods-sheet-graph-location-coverage-policy.json')
 const failures = []
 
 if (policy.stage !== 'M4A-4' || policy.predecessor !== 'M4A-3' || policy.selectedNextStage?.id !== 'M4A-5') failures.push('stage chain is invalid')
@@ -33,8 +34,9 @@ if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.
 const evidenceBytes = fs.readFileSync(path.join(evidenceDirectory, manifest.evidenceFile))
 if (crypto.createHash('sha256').update(evidenceBytes).digest('hex') !== manifest.evidenceSha256) failures.push('evidence digest mismatch')
 for (const screenshot of manifest.screenshots || []) { const file = path.join(evidenceDirectory, screenshot.file); if (!fs.existsSync(file) || fs.statSync(file).size !== screenshot.bytes || crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') !== screenshot.sha256) failures.push(`screenshot integrity failed: ${screenshot.file}`) }
-for (const extension of ['".docx"', '".ods"']) if (graph.includes(extension)) failures.push(`selection audit must precede graph dispatch for ${extension}`)
-for (const id of ['docx', 'docx_heading', 'ods', 'ods_sheet']) if (semantics.objectTypes.some(item => item.id === id)) failures.push(`selection audit must precede object semantics for ${id}`)
+if (successor.predecessor !== policy.stage || policy.selectedNextStage?.id !== successor.stage) failures.push('implemented successor does not preserve the selection chain')
+for (const extension of ['".docx"', '".ods"']) if (!graph.includes(extension)) failures.push(`selected successor graph dispatch is missing for ${extension}`)
+for (const id of ['docx', 'docx_heading', 'ods', 'ods_sheet']) if (!semantics.objectTypes.some(item => item.id === id)) failures.push(`selected successor object semantics missing: ${id}`)
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || manifest.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

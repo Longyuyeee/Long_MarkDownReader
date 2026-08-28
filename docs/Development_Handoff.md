@@ -1357,3 +1357,11 @@ M4A-4 已完成且没有提前修改图谱运行代码。真实 Word 夹具为 1
 全量上限是 50,000 个 DOCX block + 200,000 个 ODS cell，即单对文档 250,002 节点；这与搜索粒度混淆，也远超 5,000 节点验收档。下一批已冻结为 **M4A-5 DOCX 标题与 ODS 工作表图谱定位覆盖**：DOCX 文档最多取前 512 个非空 heading，按 level 归属最近前置上级 heading，否则归属文档；ODS 取全部已解析 sheet，上限 128。单对文档最多 642 节点、640 条 mention-free `contains`。
 
 M4A-5 固定夹具预期 2 个父节点、3 个子节点、3 条结构边，并从 Graph/关系上下文精确打开后返回。普通段落、列表、表格、图片、分页、关联内容和 ODS cell 不入图；工作台、转换与发布冻结继续后置。详见 [`Post_v1.0.15_M4A4_DOCX_ODS_Graph_Granularity_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M4A4_DOCX_ODS_Graph_Granularity_Selection_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4A-5 DOCX 标题/ODS 工作表图谱定位交接
+
+M4A-5 已完成。DOCX 文档最多生成 512 个非空 `docx_heading`，标题父级是最近的、level 数值更小的前置 heading，否则为文档；ODS 文档生成全部已解析 `ods_sheet`，显式上限 128。两类子节点分别使用 `docx-block`、`ods-sheet`，每个子节点只有一条 mention-free `contains`。普通 DOCX block 与 ODS cell 未进入图谱。
+
+Rust 图谱测试 32/32 通过，独立多级标题序列验证 H1/H2/H3 父级，同一源重复构建身份一致。真实 Tauri 固定夹具得到 5 节点/3 边，从 Graph 打开 H1/Overview，从父对象关系上下文打开 H1/Notes，4/4 返回 Graph；内部对象上下文、错误 0、源摘要不变均通过。三张截图已人工复核且无完整本机路径。
+
+当前唯一接续点为 **M4A-6 M1 对象定位覆盖退出审计**。应把 M4A-1 搜索定位与 M4A-3/M4A-5 图谱定位放到同一真实流程复核，明确搜索细粒度与图谱有界粒度的差异，再决定是否进入工作台对象行动；不得直接混入转换或发布冻结。详见 [`Post_v1.0.15_M4A5_DOCX_Heading_ODS_Sheet_Graph_Location_Coverage_Audit_2026-08-28.md`](./Post_v1.0.15_M4A5_DOCX_Heading_ODS_Sheet_Graph_Location_Coverage_Audit_2026-08-28.md)。

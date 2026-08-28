@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-5",
+  "name": "docx-heading-and-ods-sheet-graph-location-coverage",
+  "predecessor": "M4A-4",
+  "scope": [
+    "Add DOCX document and at most 512 non-empty docx_heading nodes with deterministic outline parents and docx-block locators.",
+    "Add ODS document and all parsed ods_sheet nodes up to 128 with ods-sheet locators.",
+    "Represent selected hierarchy as contains relations with no fabricated mentions and register explicit semantics.",
+    "Preserve generic internal-object focus and precise opening from Graph and relation context."
+  ],
+  "bounds": {
+    "docxHeadingsPerDocument": 512,
+    "odsSheetsPerDocument": 128,
+    "docxDeferredBlockLimit": 50000,
+    "odsDeferredCellLimit": 200000
+  },
+  "expectations": {
+    "fixtureParents": 2,
+    "fixtureChildren": 3,
+    "containsRelations": 3,
+    "structuralMentionCount": 0,
+    "explicitObjectTypes": ["docx", "docx_heading", "ods", "ods_sheet"],
+    "graphInternalOpenCount": 2,
+    "relationContextInternalOpenCount": 2,
+    "returnedGraphCount": 4,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true
+  },
+  "deferred": [
+    "DOCX paragraph, list-item, table, image, page-break and related-content graph nodes.",
+    "ODS cell graph nodes.",
+    "Workspace actions for every M1 object.",
+    "Unified conversion disclosure and new conversion types.",
+    "Release freeze and version transition."
+  ],
+  "selectedNextStage": {
+    "id": "M4A-6",
+    "name": "m1-object-location-coverage-exit-audit",
+    "reason": "The bounded M1 graph expansion batches are implemented; independently verify unified search, Graph and relation-context location coverage before moving to workspace actions or conversions."
+  },
+  "releaseCandidate": false
+}

@@ -385,6 +385,7 @@ const objectTypeLabel = (type: string) => ({
   markdown: 'Markdown 笔记', pdf: 'PDF 文档', table: '数据表', canvas: 'Canvas 画布', opml: 'OPML 思维导图',
   pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片', odp: 'OpenDocument 演示', odp_slide: 'ODP 幻灯片',
   workbook: 'Excel 工作簿', workbook_sheet: 'Workbook 工作表',
+  docx: 'Word 文档', docx_heading: 'DOCX 标题', ods: 'OpenDocument 电子表格', ods_sheet: 'ODS 工作表',
 }[type] || type)
 const contextScopeLabel = computed(() => context.value?.node?.locator ? '内部对象上下文' : '文件上下文')
 const contextCenterLabel = computed(() => context.value?.node?.locator ? '以当前对象为中心' : '以当前文件为中心')

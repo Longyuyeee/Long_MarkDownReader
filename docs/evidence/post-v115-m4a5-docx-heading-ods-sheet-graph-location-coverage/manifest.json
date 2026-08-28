@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-5",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "f1fc7e1f35fed12818645bfbec7dc824fa34e751",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "2336df996c8ecbaf006847e10906d27d5dfeed9a386ec5ddc9c1c9d01840c0e4",
+  "screenshots": [
+    {
+      "file": "docx-ods-graph-1280.jpg",
+      "bytes": 89252,
+      "sha256": "666b79c26284d30b44a1db99edf57d66f1104acaa17b2fce750e5bf5ea59d0b8"
+    },
+    {
+      "file": "docx-heading-relation-context-1280.jpg",
+      "bytes": 123709,
+      "sha256": "3be55dd4562ece33d4621778c3ad4e44d3092e3592a6c1f142511046893b8be0"
+    },
+    {
+      "file": "ods-sheet-relation-context-1280.jpg",
+      "bytes": 71999,
+      "sha256": "cae5d9f854b57ad90f0b4b0eee50ab53e6bce29f92b94b1a4b7be88d8ecc196d"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

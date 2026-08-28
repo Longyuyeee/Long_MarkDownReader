@@ -2,7 +2,7 @@
 
 日期：2026-08-25  
 基线：`main` / `4cd3aa0` / `v1.0.15`  
-状态：M0、M1、M2、M3、M4A-1、M4A-2、M4A-3、M4A-4 已通过；下一步 M4A-5 DOCX 标题与 ODS 工作表图谱定位覆盖
+状态：M0、M1、M2、M3、M4A-1～M4A-5 已通过；下一步 M4A-6 M1 对象定位覆盖退出审计
 开发线：`1.0.16`；运行时与当前公开版本：`1.0.15`；二进制版本仅在 M4 发布冻结时提升
 目标：在既有发布基础上深化薄弱格式、重构工作台、升级知识图谱，并以真实文件、真实桌面和可复核差异作为每个阶段的完成依据。
 
@@ -403,14 +403,13 @@ M3 分为语义、视觉和性能三个子阶段。视觉升级必须建立在�
 
 ## 10. 当前下一步
 
-M0、M1、M2、M3、M4A-1、M4A-2、M4A-3 和 M4A-4 已完成。当前下一步固定为 **M4A-5 DOCX 标题与 ODS 工作表图谱定位覆盖**：
+M0、M1、M2、M3、M4A-1～M4A-5 已完成。当前下一步固定为 **M4A-6 M1 对象定位覆盖退出审计**：
 
-- 为 DOCX 建立文档节点与最多 512 个非空 `docx_heading`，沿用 `docx-block` 定位器并按 heading level 保留大纲层级；
-- 为 ODS 建立文档节点与全部 `ods_sheet`，沿用解析器 128 sheet 上限和阅读器已支持的 `ods-sheet` 定位；
-- 每个子节点恰有一条 `contains` 父边，结构 mention 为 0；固定夹具预期 2 个父节点、3 个子节点和 3 条结构边；
-- 从 Graph 与关系上下文精确打开标题、工作表并返回 Graph，验证源文件不变和运行时错误 0；
-- DOCX 普通 block 与 ODS cell 继续只用于搜索/阅读，不入图；
-- 工作台全对象行动、转换统一和发布冻结不得混入；
+- 独立复核 Table、OPML、DOCX、ODS、ODP、PPTX、Workbook 的搜索定位覆盖和统一打开合同；
+- 复核图谱已选择的 Table view、OPML node、PPTX/ODP slide、Workbook/ODS sheet、DOCX heading 对象及关系上下文定位；
+- 真实桌面验证跨入口打开、返回上下文、同源身份、结构 mention、运行时错误和源安全；
+- 明确普通 DOCX block/ODS cell 是搜索对象而非图谱对象，不能把有界粒度写成覆盖缺失；
+- 退出条件通过后才选择工作台对象行动阶段；转换统一和发布冻结不得混入；
 - 继续保持运行时/公开 `1.0.15`、开发目标 `1.0.16`、`releaseCandidate=false`。
 
 ### 2026-08-28 M3B-8 接续更新
@@ -458,3 +457,7 @@ Workbook 与 ODP 已分别形成父节点及 `workbook_sheet` / `odp_slide` 子�
 ### 2026-08-28 M4A-4 选择回执
 
 真实代码与桌面审计确认：DOCX 解析器混合最多 50,000 个 block，但单独保留 heading/level；ODS 最多 200,000 个 cell、128 个 sheet，阅读器已能直接消费 `ods-sheet`。全量 block/cell 会让单对文档产生 250,002 个节点；选择 **M4A-5 DOCX 标题与 ODS 工作表图谱定位覆盖** 后，上限降为 642 个节点。DOCX 只取前 512 个非空标题并保留大纲层级，ODS 只取全部 sheet；普通 block/cell 继续用于搜索，不入图。详见 `Post_v1.0.15_M4A4_DOCX_ODS_Graph_Granularity_Selection_Audit_2026-08-28.md`。
+
+### 2026-08-28 M4A-5 完成回执
+
+DOCX 文档与最多 512 个非空标题、ODS 文档与最多 128 个工作表已进入图谱；DOCX 标题按最近的 level 数值更小的前置标题构建大纲，ODS cell 与普通 DOCX block 不入图。真实 Tauri 固定夹具得到 2 个父节点、3 个子节点和 3 条 mention-free `contains`；Graph 与关系上下文各精确打开 H1/ODS sheet 两次并 4/4 返回，同源身份稳定，运行时错误 0，源摘要不变。下一步为 **M4A-6 M1 对象定位覆盖退出审计**。详见 `Post_v1.0.15_M4A5_DOCX_Heading_ODS_Sheet_Graph_Location_Coverage_Audit_2026-08-28.md`。

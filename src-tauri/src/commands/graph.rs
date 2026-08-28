@@ -1,4 +1,5 @@
 use crate::formats::canvas::validate_canvas_json;
+use crate::formats::docx::parse_docx;
 use crate::formats::markdown::{
     extract_pdf_reference_mentions, extract_wikilink_mentions, normalize_relation_type,
     WikilinkMention,
@@ -31,6 +32,8 @@ const MAX_RELATION_DECISIONS: usize = 512;
 const MAX_RELATION_DECISION_FILE_BYTES: u64 = 512 * 1024;
 const RELATION_DECISION_DIRECTORY: &str = ".longedit";
 const RELATION_DECISION_FILE: &str = "graph-relation-decisions.json";
+const MAX_DOCX_GRAPH_HEADINGS: usize = 512;
+const MAX_ODS_GRAPH_SHEETS: usize = 128;
 
 #[derive(Serialize, Clone)]
 pub struct GraphData {
@@ -1707,6 +1710,10 @@ fn build_graph_paths(
             add_odp_document(library_root, path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".xlsx") {
             add_workbook_document(library_root, path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".docx") {
+            add_docx_document(library_root, path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".ods") {
+            add_ods_document(library_root, path, &name, nodes, edges, node_ids);
         }
     }
 }
@@ -2427,6 +2434,192 @@ fn add_workbook_document(
                 page: None,
             }),
             location_label: segment.location_label,
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            object_id,
+            "contains",
+        ));
+    }
+}
+
+fn docx_heading_parent_id(outline: &mut Vec<(u8, String)>, level: u8, document_id: &str) -> String {
+    while outline
+        .last()
+        .is_some_and(|(parent_level, _)| *parent_level >= level)
+    {
+        outline.pop();
+    }
+    outline
+        .last()
+        .map(|(_, id)| id.clone())
+        .unwrap_or_else(|| document_id.to_string())
+}
+
+fn add_docx_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(bytes) = fs::read(path) else {
+        return;
+    };
+    let Ok(model) = parse_docx(&bytes) else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let metadata = fs::metadata(path).ok();
+    let modified_at = modified_timestamp(metadata);
+    let directory = relative_directory(path, library_root);
+    let title = name
+        .rsplit_once('.')
+        .map(|(stem, _)| stem)
+        .unwrap_or(name)
+        .to_string();
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title,
+        path: path_string.clone(),
+        size: ((bytes.len() as f64 / 100_000.0) + 8.0).clamp(8.0, 24.0),
+        tags: Vec::new(),
+        directory: directory.clone(),
+        modified_at,
+        object_type: "docx".into(),
+        search_text: model.plain_text.chars().take(12_000).collect(),
+        content_signature: Some(format!("{:x}", md5::compute(&bytes))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+
+    let mut outline = Vec::<(u8, String)>::new();
+    for heading in model
+        .headings
+        .iter()
+        .filter(|heading| !heading.text.trim().is_empty())
+        .take(MAX_DOCX_GRAPH_HEADINGS)
+    {
+        let object_id = knowledge_object_id(&path_string, "docx_heading", &heading.block_id);
+        if !node_ids.insert(object_id.clone()) {
+            continue;
+        }
+        let parent_id = docx_heading_parent_id(&mut outline, heading.level, &path_string);
+        let title = heading.text.trim().chars().take(160).collect::<String>();
+        nodes.push(GraphNode {
+            id: object_id.clone(),
+            title: title.clone(),
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: directory.clone(),
+            modified_at,
+            object_type: "docx_heading".into(),
+            search_text: heading.text.chars().take(12_000).collect(),
+            content_signature: None,
+            parent_id: Some(parent_id.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "docx-block".into(),
+                object_id: heading.block_id.clone(),
+                page: None,
+            }),
+            location_label: Some(format!("标题：{title}")),
+        });
+        edges.push(GraphEdge::structural(
+            parent_id,
+            object_id.clone(),
+            "contains",
+        ));
+        outline.push((heading.level, object_id));
+    }
+}
+
+fn add_ods_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(bytes) = fs::read(path) else {
+        return;
+    };
+    let Ok(model) = parse_odf_content(&bytes, "ods") else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let metadata = fs::metadata(path).ok();
+    let modified_at = modified_timestamp(metadata);
+    let directory = relative_directory(path, library_root);
+    let title = name
+        .rsplit_once('.')
+        .map(|(stem, _)| stem)
+        .unwrap_or(name)
+        .to_string();
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title,
+        path: path_string.clone(),
+        size: ((bytes.len() as f64 / 100_000.0) + 8.0).clamp(8.0, 24.0),
+        tags: Vec::new(),
+        directory: directory.clone(),
+        modified_at,
+        object_type: "ods".into(),
+        search_text: model.plain_text.chars().take(12_000).collect(),
+        content_signature: Some(format!("{:x}", md5::compute(&bytes))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+
+    for (index, sheet) in model.sheets.iter().take(MAX_ODS_GRAPH_SHEETS).enumerate() {
+        let object_id = knowledge_object_id(&path_string, "ods_sheet", &sheet.id);
+        if !node_ids.insert(object_id.clone()) {
+            continue;
+        }
+        let title = if sheet.name.trim().is_empty() {
+            format!("工作表 {}", index + 1)
+        } else {
+            sheet.name.trim().to_string()
+        };
+        let search_text = sheet
+            .rows
+            .iter()
+            .flat_map(|row| row.cells.iter())
+            .map(|cell| cell.text.as_str())
+            .filter(|text| !text.trim().is_empty())
+            .collect::<Vec<_>>()
+            .join("\n")
+            .chars()
+            .take(12_000)
+            .collect();
+        nodes.push(GraphNode {
+            id: object_id.clone(),
+            title: title.clone(),
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: directory.clone(),
+            modified_at,
+            object_type: "ods_sheet".into(),
+            search_text,
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "ods-sheet".into(),
+                object_id: sheet.id.clone(),
+                page: None,
+            }),
+            location_label: Some(format!("工作表：{title}")),
         });
         edges.push(GraphEdge::structural(
             path_string.clone(),
@@ -4375,6 +4568,170 @@ mod tests {
         );
         assert_eq!(fs::read(&workbook_path).unwrap(), workbook_source);
         assert_eq!(fs::read(&odp_path).unwrap(), odp_source);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn docx_outline_uses_nearest_preceding_smaller_numeric_heading_level() {
+        let document = "document";
+        let mut outline = Vec::new();
+        let mut parents = Vec::new();
+        for (index, level) in [1_u8, 2, 3, 2, 4, 1, 3].into_iter().enumerate() {
+            let parent = docx_heading_parent_id(&mut outline, level, document);
+            parents.push(parent);
+            outline.push((level, format!("heading-{index}")));
+        }
+        assert_eq!(
+            parents,
+            [
+                "document",
+                "heading-0",
+                "heading-1",
+                "heading-0",
+                "heading-3",
+                "document",
+                "heading-5",
+            ]
+        );
+    }
+
+    #[test]
+    fn docx_headings_and_ods_sheets_are_bounded_stable_graph_objects() {
+        let (base, root) = fixture("m4a5-docx-ods-objects");
+        let docx_source = include_bytes!("../../../fixtures/docx/producers/microsoft-word-16.docx");
+        let ods_source =
+            include_bytes!("../../tests/fixtures/odf-content/longedit-e1c-spreadsheet.ods");
+        let docx_path = root.join("Research.docx");
+        let ods_path = root.join("Evidence.ods");
+        fs::write(&docx_path, docx_source).unwrap();
+        fs::write(&ods_path, ods_source).unwrap();
+
+        let graph =
+            tauri::async_runtime::block_on(build_link_graph(root.to_string_lossy().into_owned()))
+                .unwrap();
+        let rebuilt =
+            tauri::async_runtime::block_on(build_link_graph(root.to_string_lossy().into_owned()))
+                .unwrap();
+        let docx = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "docx")
+            .unwrap();
+        let headings = graph
+            .nodes
+            .iter()
+            .filter(|node| node.object_type == "docx_heading")
+            .collect::<Vec<_>>();
+        let ods = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "ods")
+            .unwrap();
+        let sheets = graph
+            .nodes
+            .iter()
+            .filter(|node| node.object_type == "ods_sheet")
+            .collect::<Vec<_>>();
+
+        assert_eq!(MAX_DOCX_GRAPH_HEADINGS, 512);
+        assert_eq!(MAX_ODS_GRAPH_SHEETS, 128);
+        assert_eq!(headings.len(), 1);
+        assert_eq!(sheets.len(), 2);
+        assert!(docx.search_text.contains("Microsoft Word Producer Fixture"));
+        assert!(ods.search_text.contains("LongEdit E1C ODS fixture"));
+        assert!(headings.iter().all(|heading| {
+            heading.parent_id.as_deref() == Some(docx.id.as_str())
+                && heading.locator.as_ref().is_some_and(|locator| {
+                    locator.kind == "docx-block"
+                        && locator.page.is_none()
+                        && !locator.object_id.is_empty()
+                })
+                && heading
+                    .location_label
+                    .as_deref()
+                    .is_some_and(|label| label.starts_with("标题："))
+        }));
+        assert!(sheets.iter().all(|sheet| {
+            sheet.parent_id.as_deref() == Some(ods.id.as_str())
+                && sheet.locator.as_ref().is_some_and(|locator| {
+                    locator.kind == "ods-sheet"
+                        && locator.page.is_none()
+                        && locator.object_id.starts_with("ods-sheet-")
+                })
+                && sheet
+                    .location_label
+                    .as_deref()
+                    .is_some_and(|label| label.starts_with("工作表："))
+        }));
+
+        let children = headings
+            .iter()
+            .copied()
+            .chain(sheets.iter().copied())
+            .collect::<Vec<_>>();
+        let structural_edges = graph
+            .edges
+            .iter()
+            .filter(|edge| {
+                edge.relation_type == "contains"
+                    && children.iter().any(|child| child.id == edge.target)
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(structural_edges.len(), 3);
+        assert!(structural_edges.iter().all(|edge| edge.mentions.is_empty()));
+        assert!(!graph
+            .nodes
+            .iter()
+            .any(|node| matches!(node.object_type.as_str(), "docx_block" | "ods_cell")));
+
+        for child in &children {
+            let locator = child.locator.as_ref().unwrap();
+            let focused = relation_context_for_locator(
+                &graph,
+                &child.path,
+                &child.path,
+                Some(&locator.kind),
+                Some(&locator.object_id),
+                locator.page,
+                &GraphRelationDecisionMap::new(),
+            );
+            assert_eq!(focused.node.as_ref().unwrap().id, child.id);
+            assert_eq!(focused.relations.len(), 1);
+            assert_eq!(focused.relations[0].relation_type, "contains");
+            assert_eq!(focused.relations[0].direction, "incoming");
+        }
+
+        let mut identities = children
+            .iter()
+            .map(|node| (node.id.clone(), node.parent_id.clone()))
+            .collect::<Vec<_>>();
+        let mut rebuilt_identities = rebuilt
+            .nodes
+            .iter()
+            .filter(|node| matches!(node.object_type.as_str(), "docx_heading" | "ods_sheet"))
+            .map(|node| (node.id.clone(), node.parent_id.clone()))
+            .collect::<Vec<_>>();
+        identities.sort();
+        rebuilt_identities.sort();
+        assert_eq!(identities, rebuilt_identities);
+
+        let snapshot = crate::services::knowledge_index::snapshot_from_graph(&root, graph.clone());
+        for node in std::iter::once(docx)
+            .chain(std::iter::once(ods))
+            .chain(children.iter().copied())
+        {
+            assert!(snapshot.objects.iter().any(|object| {
+                object.id == node.id
+                    && object.object_type == node.object_type
+                    && object.locator_object_id
+                        == node
+                            .locator
+                            .as_ref()
+                            .map(|locator| locator.object_id.clone())
+            }));
+        }
+        assert_eq!(fs::read(&docx_path).unwrap(), docx_source);
+        assert_eq!(fs::read(&ods_path).unwrap(), ods_source);
         fs::remove_dir_all(base).unwrap();
     }
 

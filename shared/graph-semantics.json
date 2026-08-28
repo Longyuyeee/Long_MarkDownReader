@@ -14,8 +14,12 @@
     { "id": "pptx_slide", "order": 61, "label": "PowerPoint 幻灯片", "shortLabel": "幻灯片", "glyph": "S", "shape": "diamond", "color": { "light": "#9a3412", "dark": "#fdba74" } },
     { "id": "odp", "order": 62, "label": "OpenDocument 演示", "shortLabel": "ODP", "glyph": "O", "shape": "square", "color": { "light": "#be123c", "dark": "#fb7185" } },
     { "id": "odp_slide", "order": 63, "label": "ODP 幻灯片", "shortLabel": "幻灯片", "glyph": "S", "shape": "diamond", "color": { "light": "#9f1239", "dark": "#fda4af" } },
+    { "id": "docx", "order": 64, "label": "Word 文档", "shortLabel": "DOCX", "glyph": "D", "shape": "square", "color": { "light": "#1d4ed8", "dark": "#60a5fa" } },
+    { "id": "docx_heading", "order": 65, "label": "DOCX 标题", "shortLabel": "标题", "glyph": "H", "shape": "diamond", "color": { "light": "#1e40af", "dark": "#93c5fd" } },
     { "id": "workbook", "order": 70, "label": "Excel 工作簿", "shortLabel": "工作簿", "glyph": "W", "shape": "square", "color": { "light": "#047857", "dark": "#34d399" } },
-    { "id": "workbook_sheet", "order": 71, "label": "Workbook 工作表", "shortLabel": "工作表", "glyph": "S", "shape": "diamond", "color": { "light": "#065f46", "dark": "#6ee7b7" } }
+    { "id": "workbook_sheet", "order": 71, "label": "Workbook 工作表", "shortLabel": "工作表", "glyph": "S", "shape": "diamond", "color": { "light": "#065f46", "dark": "#6ee7b7" } },
+    { "id": "ods", "order": 72, "label": "OpenDocument 电子表格", "shortLabel": "ODS", "glyph": "O", "shape": "square", "color": { "light": "#4d7c0f", "dark": "#a3e635" } },
+    { "id": "ods_sheet", "order": 73, "label": "ODS 工作表", "shortLabel": "工作表", "glyph": "S", "shape": "diamond", "color": { "light": "#3f6212", "dark": "#bef264" } }
   ],
   "relationTypes": [
     { "id": "links-to", "order": 10, "label": "普通引用", "directed": true, "line": "solid", "color": "#64748b" },
