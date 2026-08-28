@@ -11,6 +11,7 @@ const manifest = readJson('docs/evidence/post-v115-m4b2-workspace-object-action-
 const development = readJson('shared/development-version-policy.json')
 const successor = readJson('shared/post-v115-m4c0-controlled-conversion-workflow-selection-policy.json')
 const conversion = readJson('shared/post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open-policy.json')
+const opmlProjection = readJson('shared/post-v115-m4c2-opml-canvas-projection-disclosure-policy.json')
 const home = read('src/views/WorkspaceHome.vue')
 const workspace = read('src-tauri/src/commands/workspace.rs')
 const queue = read('src/components/WorkspaceHealthQueue.vue')
@@ -35,7 +36,7 @@ if (!actual.markdownCompleteChangedSource || !actual.markdownUndoRestoredOrigina
 if (actual.pdfAnnotationPreciseOpenCount !== 1 || actual.pdfAnnotationSourceWriteObserved) failures.push('PDF annotation read-only locator contract failed')
 if (!actual.responsive1280 || !actual.responsive480 || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved || !actual.sourceFilesUnchangedAfterAudit) failures.push('desktop safety, geometry or runtime gate failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 5) failures.push('M4B exit screenshots have not completed visual review')
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== conversion.stage || conversion.predecessor !== successor.stage || conversion.selectedNextStage?.id !== 'M4C-2' || development.currentStage !== 'M4C-2-opml-canvas-projection-disclosure') failures.push('M4C successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== conversion.stage || conversion.predecessor !== successor.stage || conversion.selectedNextStage?.id !== opmlProjection.stage || opmlProjection.predecessor !== conversion.stage || opmlProjection.selectedNextStage?.id !== 'M4C-3' || development.currentStage !== 'M4C-3-graph-derived-output-disclosure-selection') failures.push('M4C successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

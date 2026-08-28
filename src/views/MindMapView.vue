@@ -12,7 +12,7 @@
       <div class="header-actions">
         <button title="撤销" :disabled="!undoStack.length" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button title="重做" :disabled="!redoStack.length" @click="redo"><n-icon :component="RedoIcon" /></button>
-        <button v-if="!isExternal" title="投影到 Canvas" :disabled="saving || loading" @click="projectToCanvas"><n-icon :component="NetworkIcon" />投影到 Canvas</button>
+        <button v-if="!isExternal" data-testid="m4c2-project-to-canvas" title="投影到 Canvas" :disabled="saving || loading || projecting" aria-live="polite" @click="requestProjectToCanvas"><n-icon :component="NetworkIcon" />{{ projecting ? '正在创建…' : '投影到 Canvas' }}</button>
         <button class="primary" title="保存" :disabled="!dirty || saving" @click="save"><n-icon :component="SaveIcon" />{{ saving ? '保存中…' : '保存' }}</button>
       </div>
     </header>
@@ -177,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, h, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
@@ -204,6 +204,7 @@ const document = ref<OpmlDocument | null>(null)
 const signature = ref('')
 const loading = ref(true)
 const saving = ref(false)
+const projecting = ref(false)
 const dirty = ref(false)
 const error = ref('')
 const saveError = ref('')
@@ -231,6 +232,19 @@ let nodeDragOrigin: { clientX: number; clientY: number; positions: Map<string, {
 let nodeDragMoved = false
 let panOrigin: { clientX: number; clientY: number; x: number; y: number } | null = null
 let spacePressed = false
+
+const normalizedManagedPath = (value: string) => value.replace(/^\\\\\?\\/, '').replace(/\\/g, '/').replace(/\/+$/, '')
+const projectionSourcePath = computed(() => {
+  const source = normalizedManagedPath(path.value)
+  const root = normalizedManagedPath(store.libraryPath)
+  if (root && source.toLocaleLowerCase().startsWith(`${root.toLocaleLowerCase()}/`)) return source.slice(root.length + 1)
+  return `${fileName.value}.opml`
+})
+const projectionTargetPath = computed(() => {
+  const parts = projectionSourcePath.value.split('/')
+  parts[parts.length - 1] = `${fileName.value} 画布.canvas`
+  return parts.join('/')
+})
 
 const snapshot = () => JSON.stringify(document.value)
 const restore = (value: string) => { document.value = JSON.parse(value) as OpmlDocument; dirty.value = true; ensureSelection() }
@@ -612,10 +626,43 @@ const save = async () => {
   finally { saving.value = false }
 }
 const projectToCanvas = async () => {
+  if (isExternal.value || dirty.value || projecting.value) return
+  projecting.value = true
+  try {
+    const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: store.libraryPath, path: path.value })
+    window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: canvas }))
+    message.success(`Canvas 投影已创建：${canvas.split(/[\\/]/).pop()}，正在打开`)
+    await openManagedFile(router, canvas)
+  }
+  catch (cause) { message.error(`Canvas 投影失败：${String(cause)}`) }
+  finally { projecting.value = false }
+}
+const requestProjectToCanvas = () => {
   if (isExternal.value) return void message.info('外部 OPML 需要先加入知识库，才能投影到 Canvas')
   if (dirty.value) return void message.warning('请先点击保存，再将当前版本投影到 Canvas')
-  try { const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: store.libraryPath, path: path.value }); await openManagedFile(router, canvas) }
-  catch (cause) { message.error(`Canvas 投影失败：${String(cause)}`) }
+  if (!document.value || projecting.value) return
+  const workspaceWidth = window.document.querySelector<HTMLElement>('.mindmap-page')?.clientWidth || window.innerWidth
+  dialog.info({
+    title: '创建独立 Canvas 投影？',
+    style: { width: `${Math.max(240, Math.min(580, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    content: () => h('div', { class: 'opml-canvas-projection-disclosure', 'data-testid': 'm4c2-opml-canvas-projection-disclosure', style: { maxHeight: 'min(450px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
+      h('p', [h('strong', '来源：'), projectionSourcePath.value]),
+      h('p', [h('strong', '候选目标：'), projectionTargetPath.value]),
+      h('p', [h('strong', '覆盖策略：'), '绝不覆盖来源或已有目标；如有同名文件，将创建带新序号的目标，并自动打开实际创建的文件。']),
+      h('strong', '投影规则与损失：'),
+      h('ul', [
+        h('li', '每个 outline 会成为可编辑文本节点；标题与备注合并到节点文本，父子层级成为 contains 连线。'),
+        h('li', '目标会加入一个指向源 OPML 的文件节点，并投影全部主题，包括当前折叠的主题。'),
+        h('li', 'OPML 的 head 元数据、自定义 outline 属性和折叠状态不会成为 Canvas 字段。'),
+        h('li', '当前主题、布局和手工位置不会复刻；Canvas 会按层级与原顺序重新排布，并按深度配色。'),
+        h('li', 'Canvas 是当前已保存 OPML 的独立快照，之后修改任一文件都不会自动同步到另一份。'),
+      ]),
+      h('p', { class: 'opml-projection-source-safety' }, '原 OPML 文件保持不变。'),
+    ]),
+    positiveText: '创建并打开',
+    negativeText: '取消',
+    onPositiveClick: projectToCanvas,
+  })
 }
 const load = async () => {
   loading.value = true; error.value = ''; saveError.value = ''
@@ -706,6 +753,7 @@ onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query
 .map-panel{padding:0;overflow:hidden;outline:0;cursor:grab;touch-action:none;background-color:color-mix(in srgb,var(--theme-bg) 94%,var(--theme-primary));background-image:radial-gradient(circle,color-mix(in srgb,var(--theme-text-secondary) 24%,transparent) 1px,transparent 1px);background-size:22px 22px}.map-panel:active{cursor:grabbing}.map-canvas{position:relative;transform-origin:0 0;will-change:transform}.map-edges{position:absolute;inset:0;overflow:visible;pointer-events:none}.map-edges path{fill:none;stroke:color-mix(in srgb,var(--theme-primary) 62%,var(--theme-text-secondary));stroke-width:2.5}.map-node{position:absolute;width:210px;min-height:72px;box-sizing:border-box;padding:13px 15px;border:2px solid color-mix(in srgb,var(--theme-primary) 42%,var(--theme-border-color,#aaa));border-radius:8px;background:var(--theme-surface);box-shadow:0 8px 22px rgba(0,0,0,.1);cursor:grab;user-select:none;transition:border-color .12s,box-shadow .12s}.map-node:active{cursor:grabbing}.map-node.root{border-color:var(--theme-primary);background:color-mix(in srgb,var(--theme-surface) 84%,var(--theme-primary))}.map-node.selected{border-color:var(--theme-primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--theme-primary) 20%,transparent),0 11px 26px rgba(0,0,0,.14)}.map-node.match{outline:3px solid #f0bd29}.map-node strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.map-node p{display:-webkit-box;margin:5px 0;color:var(--theme-text-secondary);font-size:11px;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.map-node small{color:var(--theme-text-secondary);font-size:var(--text-compact)}.map-title-editor{width:100%;height:27px;padding:0 5px;box-sizing:border-box;border:1px solid var(--theme-primary);border-radius:5px;outline:0;color:var(--theme-text);background:var(--theme-card);font:700 13px var(--font-sans)}.map-collapse{position:absolute;right:-11px;top:23px;width:22px;height:22px;border:0;border-radius:50%;color:#fff;background:var(--theme-primary);cursor:pointer;font-size:var(--text-compact)}.selection-box{position:absolute;z-index:20;border:1px solid var(--theme-primary);background:color-mix(in srgb,var(--theme-primary) 14%,transparent);pointer-events:none}.canvas-help{position:absolute;left:14px;bottom:12px;display:flex;align-items:center;gap:6px;padding:7px 9px;border:var(--theme-border);border-radius:7px;color:var(--theme-text-secondary);background:color-mix(in srgb,var(--theme-surface) 90%,transparent);box-shadow:var(--workspace-shadow-sm);font-size:var(--text-compact);pointer-events:none}.map-theme-colorful .map-node:nth-of-type(5n+1){border-color:#3b82f6}.map-theme-colorful .map-node:nth-of-type(5n+2){border-color:#10b981}.map-theme-colorful .map-node:nth-of-type(5n+3){border-color:#f59e0b}.map-theme-colorful .map-node:nth-of-type(5n+4){border-color:#ec4899}.map-theme-colorful .map-node:nth-of-type(5n){border-color:#8b5cf6}.map-theme-focus{background-image:none;background-color:var(--theme-bg)}.map-theme-focus .map-node{box-shadow:none}.map-theme-professional .map-node{border-left-width:5px}
 .inspector{min-width:0;padding:16px;border-left:var(--theme-border);overflow:auto;background:var(--theme-surface)}.inspector-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.inspector code{max-width:130px;overflow:hidden;color:var(--theme-text-secondary);font-size: var(--text-compact);text-overflow:ellipsis}.inspector label{display:flex;flex-direction:column;gap:6px;margin:12px 0;color:var(--theme-text-secondary);font-size:11px}.inspector input,.inspector textarea{box-sizing:border-box;width:100%;padding:9px;border:var(--theme-border);border-radius:8px;outline:0;color:var(--theme-text);background:var(--theme-card);font:inherit;resize:vertical}.inspector label.check{flex-direction:row;align-items:center}.inspector .check input{width:auto}.inspector-actions button{flex:1}.drag-hint{margin-top:18px;padding:10px;border-radius:8px;color:var(--theme-text-secondary);background:color-mix(in srgb,var(--theme-card) 85%,var(--theme-primary));font-size: var(--text-compact);line-height:1.6}.inspector-empty,.state,.empty-search{height:100%;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--theme-text-secondary)}.inspector-empty{flex-direction:column}.state{grid-column:1/-1;flex-direction:column}.state.error strong{color:#d64545}.loader{width:28px;height:28px;border:3px solid color-mix(in srgb,var(--theme-primary) 20%,transparent);border-top-color:var(--theme-primary);border-radius:50%;animation:spin .8s linear infinite}.empty-search{min-height:300px}
 .statusbar{min-height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size: var(--text-compact)}@keyframes spin{to{transform:rotate(360deg)}}
+:global(.opml-canvas-projection-disclosure){max-width:580px;display:grid;gap:8px;line-height:1.55}.opml-canvas-projection-disclosure :global(p){margin:0;overflow-wrap:anywhere}.opml-canvas-projection-disclosure :global(ul){display:grid;gap:4px;margin:0;padding-left:20px}.opml-canvas-projection-disclosure :global(.opml-projection-source-safety){padding:7px 9px;border-radius:6px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08);font-weight:650}
 @media(max-width:850px){.mindmap-main{grid-template-columns:minmax(0,1fr)}.inspector{display:none}.header-main span,.statusbar span:last-child{display:none}.search-box{margin-left:0}.mindmap-toolbar{padding-inline:8px}}
 @container(max-width:650px){.mindmap-main{grid-template-columns:minmax(0,1fr)}.inspector{display:none}.mindmap-header{gap:8px;padding-inline:10px}.header-main{min-width:0;flex:1}.title-input{width:100%;min-width:0}.header-actions{flex:none}.header-actions button{width:36px;padding:0;justify-content:center;font-size:0}.header-main span,.statusbar span:last-child{display:none}.search-box{margin-left:0}.mindmap-toolbar{padding-inline:8px}}
 </style>

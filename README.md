@@ -200,7 +200,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | DOCX / PPTX | 阅读、受管草稿与可靠保存 | 不宣称完整等价 Microsoft Office |
 | PDF | 阅读、搜索、批注和页面管理 | 不是通用内容重排编辑器 |
 | Mermaid / Draw.io / SVG | 查看、编辑、画布操作与安全保存 | 外部资源和危险协议会被阻断 |
-| OPML / JSON Canvas | 思维导图、卡片与关系画布 | 修改需显式保存 |
+| OPML / JSON Canvas | 思维导图、卡片与关系画布；OPML 可在完整披露后生成独立 Canvas 投影 | 修改需显式保存；投影副本不与源文件自动同步 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 查看支持光标锚定滚轮缩放、拖拽平移和双击 100%/适应窗口；PNG/JPEG/WebP/BMP 可旋转、翻转、精确裁剪、缩放、调整亮度/对比度/饱和度、转换并另存副本；GIF/ICO/AVIF 与外部图片只读 |
 | 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口；资料库视频支持逐帧、PNG 截图、位置记忆和同名 VTT/SRT 字幕 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器；不提供嵌入字幕拆封、字幕编辑或转码 |
 | ODS / ODP / 旧 Office / WPS | ODS 支持简单值和已有命名样式的可靠副本，ODP 有界预览；旧 Office 转换，WPS 原生格式交给外部程序 | ODS 公式与自定义样式、ODP 编辑保持关闭；`.wps/.et/.dps` 不在软件内编辑 |

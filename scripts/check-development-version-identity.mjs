@@ -47,6 +47,7 @@ const m4b1InternalTableTaskAction = readJson('shared/post-v115-m4b1-internal-tab
 const m4b2WorkspaceObjectActionExit = readJson('shared/post-v115-m4b2-workspace-object-action-exit-audit-policy.json')
 const m4c0ControlledConversionSelection = readJson('shared/post-v115-m4c0-controlled-conversion-workflow-selection-policy.json')
 const m4c1CsvTsvTableConversion = readJson('shared/post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open-policy.json')
+const m4c2OpmlCanvasProjection = readJson('shared/post-v115-m4c2-opml-canvas-projection-disclosure-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -124,7 +125,9 @@ const checks = {
     && m4c0ControlledConversionSelection.predecessor === m4b2WorkspaceObjectActionExit.stage
     && m4c0ControlledConversionSelection.selectedNextStage.id === m4c1CsvTsvTableConversion.stage
     && m4c1CsvTsvTableConversion.predecessor === m4c0ControlledConversionSelection.stage
-    && policy.currentStage === `${m4c1CsvTsvTableConversion.selectedNextStage.id}-${m4c1CsvTsvTableConversion.selectedNextStage.name}`,
+    && m4c1CsvTsvTableConversion.selectedNextStage.id === m4c2OpmlCanvasProjection.stage
+    && m4c2OpmlCanvasProjection.predecessor === m4c1CsvTsvTableConversion.stage
+    && policy.currentStage === `${m4c2OpmlCanvasProjection.selectedNextStage.id}-${m4c2OpmlCanvasProjection.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

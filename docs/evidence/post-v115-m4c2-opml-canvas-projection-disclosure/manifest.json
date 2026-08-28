@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-2",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "1a506859c7011481577c00adb889beb02949c1c5",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "fd954ddf5044559daed385af27aee722ee7e782743bbc7b6ab5a3ba873a1968b",
+  "screenshots": [
+    {
+      "file": "opml-projection-disclosure-1280.jpg",
+      "bytes": 129017,
+      "sha256": "ec8d438849bdcae79ee8df0ccb3528a6db2d663f95b9109d1de1dc5d550feb7a"
+    },
+    {
+      "file": "opml-first-target-auto-opened-1280.jpg",
+      "bytes": 103886,
+      "sha256": "ef574887900534f3c88103a97bce590ed3299b3f0b8ab88bb0e811a5b09b8d9e"
+    },
+    {
+      "file": "opml-numbered-projection-disclosure-480.jpg",
+      "bytes": 60403,
+      "sha256": "618b52fbae8067fe96a9527ee6174589a4437b8a41322edd2642cd7145a68e92"
+    },
+    {
+      "file": "opml-numbered-target-auto-opened-480.jpg",
+      "bytes": 47889,
+      "sha256": "343126ab7b9697626bee0d1462e06bd454ea12b89769a7abe72b038b92f2501e"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

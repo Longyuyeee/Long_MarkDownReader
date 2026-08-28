@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-2",
+  "status": "passed",
+  "sourceCommit": "1a506859c7011481577c00adb889beb02949c1c5",
+  "actual": {
+    "disclosureComplete1280": true,
+    "disclosureComplete480": true,
+    "firstTargetAutoOpened": true,
+    "numberedTargetAutoOpened": true,
+    "firstTargetReread": true,
+    "numberedTargetReread": true,
+    "firstTargetName": "Conversion Outline 画布.canvas",
+    "numberedTargetName": "Conversion Outline 画布 1.canvas",
+    "targetNodeCount": 5,
+    "targetEdgeCount": 4,
+    "sourceFileNodeObserved": true,
+    "titleNoteProjectionObserved": true,
+    "collapsedTopicProjected": true,
+    "containsHierarchyObserved": true,
+    "lossFieldsAbsent": true,
+    "sourceUnchanged": true,
+    "sourceFilesUnchangedAfterAudit": true,
+    "responsive1280": true,
+    "responsive480": true,
+    "geometry1280": {
+      "innerWidth": 1280,
+      "innerHeight": 820,
+      "workspace": {
+        "left": 265.8000183105469,
+        "right": 1275.2000427246094,
+        "top": 74.80000305175781,
+        "bottom": 816.0000152587891
+      },
+      "dialog": {
+        "left": 350,
+        "right": 930,
+        "top": 153.85000610351562,
+        "bottom": 666.1499938964844
+      },
+      "disclosureOverflowY": "auto"
+    },
+    "geometry480": {
+      "innerWidth": 480,
+      "innerHeight": 700,
+      "workspace": {
+        "left": 205.8000030517578,
+        "right": 475.1999969482422,
+        "top": 74.80000305175781,
+        "bottom": 696.0000152587891
+      },
+      "dialog": {
+        "left": 120,
+        "right": 360,
+        "top": 52.20000076293945,
+        "bottom": 647.8000373840332
+      },
+      "disclosureOverflowY": "auto"
+    },
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false
+  },
+  "initialHashes": {
+    "opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7"
+  },
+  "finalHashes": {
+    "opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

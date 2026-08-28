@@ -1539,7 +1539,7 @@ onBeforeRouteLeave(() => mayLeave())
 </script>
 
 <style scoped>
-.canvas-page { width: 100%; height: 100%; min-width: 0; min-height: 0; display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.canvas-page { width: 100%; height: 100%; min-width: 0; min-height: 0; container-type: inline-size; display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
 .canvas-page.with-tabs { grid-template-rows: auto auto auto 1fr auto; }
 .canvas-header { min-height: 64px; padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--theme-border); background: color-mix(in srgb, var(--theme-surface) 92%, transparent); }
 .header-main { display: flex; align-items: center; gap: 12px; min-width: 0; }.canvas-title { font-size: 16px; font-weight: 700; }.canvas-subtitle { margin-top: 2px; color: var(--theme-text-secondary); font-size: 11px; }
@@ -1573,4 +1573,5 @@ onBeforeRouteLeave(() => mayLeave())
 .canvas-statusbar { min-height: 28px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: var(--theme-border); background: var(--theme-surface); color: var(--theme-text-secondary); font-size: 11px; }
 @keyframes pulse { 50% { opacity: .35; } } @keyframes sourcePulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--node-color) 13%, transparent); } }
 @media (max-width: 800px) { .canvas-subtitle, .canvas-statusbar span:last-child { display: none; }.canvas-toolbar { padding-inline: 8px; scrollbar-gutter: stable; }.canvas-header { min-height: 52px; padding: 7px 10px; }.canvas-title { max-width: 55vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.save-state { flex: none; padding-inline: 6px; } }
+@container (max-width: 520px) { .canvas-header { gap: 6px; }.header-main { min-width: 0; flex: 1; }.header-main > div { min-width: 0; }.canvas-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.save-state { flex: none; white-space: nowrap; } }
 </style>

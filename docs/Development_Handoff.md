@@ -1417,3 +1417,11 @@ M4C-1 已完成。`TableView` 在创建副本前显示资料库相对来源、�
 真实 Tauri 已覆盖 CSV 首个目标 `Conversion Matrix.table.json` 和 TSV 碰撞目标 `Conversion Outline 1.table.json`，目标从磁盘复读为 `2×3` 与 `2×2`，CSV/TSV 源摘要逐字节不变。1280 与 480 宽度均通过，窄屏披露可滚动且操作可达，运行时错误为 0。审计期间没有放宽资料库边界：Windows `\\?\` 路由路径被后端正确拒绝后，测试改用已验证的资料库内目标路径。
 
 当前唯一接续点为 **M4C-2 OPML→Canvas 投影披露闭环**：先对照实际 `mindmap`/Canvas 代码冻结来源、候选目标、编号策略和投影损失，补写盘前确认，同时保留既有源安全、可靠新文件写入及自动打开。必须真实覆盖首个与编号目标、Canvas 结构复读、源摘要不变、宽窄屏和 0 错误；图谱输出、全局转换框架和 `M4-release-freeze` 继续延期。详见 [`Post_v1.0.15_M4C1_CSV_TSV_Table_Disclosure_and_Auto_Open_Audit_2026-08-29.md`](./Post_v1.0.15_M4C1_CSV_TSV_Table_Disclosure_and_Auto_Open_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4C-2 OPML→Canvas 投影披露交接
+
+M4C-2 已完成。`MindMapView` 在投影前显示资料库相对来源、候选 Canvas、不覆盖/同名编号策略和全部实际投影事实；只有已保存 OPML 可以确认创建。后端仍使用 8 MiB、10,000 节点、64 层边界、Canvas schema 校验与可靠新文件写入，成功后自动打开真实目标。
+
+真实 Tauri 创建并自动打开首个 `Conversion Outline 画布.canvas` 和编号目标 `Conversion Outline 画布 1.canvas`。两份目标均从磁盘复读为 5 节点/4 条 `contains` 边，包含源 OPML 文件节点、标题+备注和全部折叠主题；`head` 元数据、自定义属性和折叠字段不在目标中，源摘要不变。1280/480、零运行时错误通过；视觉审计还修复了 Canvas 窄工作区标题与保存状态挤压。
+
+审计编排有两次明确纠偏：CDP 首次请求发生端口监听/连接竞态，已改为有界重试；手写临时 OPML 夹具生成非法 XML 后，改用仓库固定真实夹具并从头重跑，没有放宽解析门禁。当前唯一接续点为 **M4C-3 图谱派生输出披露选择审计**：分别核对图谱→Canvas 与图谱→项目笔记的来源范围、目标、编号、深度/截断、生成模板和自动打开，只选择下一最小实现；全局转换框架、清理和发布冻结继续延期。详见 [`Post_v1.0.15_M4C2_OPML_Canvas_Projection_Disclosure_Audit_2026-08-29.md`](./Post_v1.0.15_M4C2_OPML_Canvas_Projection_Disclosure_Audit_2026-08-29.md)。

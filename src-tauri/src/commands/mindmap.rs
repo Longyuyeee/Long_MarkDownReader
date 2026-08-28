@@ -264,12 +264,40 @@ mod tests {
         ))
         .unwrap_err();
         assert!(error.contains("其他程序修改"));
+        let source_before_projection = fs::read(&path).unwrap();
         let canvas = tauri::async_runtime::block_on(create_canvas_from_opml(
             root.to_string_lossy().into_owned(),
             path.to_string_lossy().into_owned(),
         ))
         .unwrap();
         assert!(Path::new(&canvas).is_file());
+        assert_eq!(
+            Path::new(&canvas).file_name().and_then(|value| value.to_str()),
+            Some("map 画布.canvas")
+        );
+        let numbered_canvas = tauri::async_runtime::block_on(create_canvas_from_opml(
+            root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+        ))
+        .unwrap();
+        assert_eq!(
+            Path::new(&numbered_canvas)
+                .file_name()
+                .and_then(|value| value.to_str()),
+            Some("map 画布 1.canvas")
+        );
+        let projected: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&canvas).unwrap()).unwrap();
+        assert_eq!(projected["nodes"].as_array().unwrap().len(), 5);
+        assert_eq!(projected["edges"].as_array().unwrap().len(), 4);
+        assert!(projected["nodes"].as_array().unwrap().iter().any(|node| {
+            node["id"] == "opml-graph" && node["text"] == "知识图谱\n\n增强关系发现"
+        }));
+        assert!(projected.get("metadata").is_none());
+        assert!(projected["nodes"].as_array().unwrap().iter().all(|node| {
+            node.get("attributes").is_none() && node.get("collapsed").is_none()
+        }));
+        assert_eq!(fs::read(&path).unwrap(), source_before_projection);
         fs::remove_dir_all(base).unwrap();
     }
 

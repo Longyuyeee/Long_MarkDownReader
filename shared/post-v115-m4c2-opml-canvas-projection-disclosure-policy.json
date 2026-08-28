@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-2",
+  "name": "opml-canvas-projection-disclosure",
+  "predecessor": "M4C-1",
+  "originalRequirement": "Controlled cross-format conversions must disclose source, target path, overwrite strategy and conversion loss, keep the source safe, and automatically open the created target.",
+  "sourceFormat": "opml",
+  "targetFormat": "canvas",
+  "disclosureContract": {
+    "sourceLibraryRelativePath": true,
+    "candidateTargetLibraryRelativePath": true,
+    "neverOverwriteSourceOrExistingTarget": true,
+    "numberedCollisionTarget": true,
+    "automaticOpenActualTarget": true,
+    "projectionFacts": [
+      "each-outline-becomes-an-editable-text-node",
+      "title-and-note-are-combined-as-node-text",
+      "parent-child-hierarchy-becomes-contains-edges",
+      "a-source-opml-file-node-is-added",
+      "all-topics-are-projected-including-collapsed-topics",
+      "head-metadata-custom-outline-attributes-and-collapse-state-are-not-canvas-fields",
+      "theme-layout-and-manual-positions-are-replaced-by-depth-and-source-order-layout",
+      "the-canvas-is-an-independent-point-in-time-snapshot"
+    ]
+  },
+  "preservedBackendBoundaries": {
+    "maximumSourceBytes": 8388608,
+    "maximumNodes": 10000,
+    "maximumDepth": 64,
+    "maximumNodeTextCharacters": 2000,
+    "maximumNoteCharacters": 20000,
+    "validatedCanvasTarget": true,
+    "maximumTargetBytes": 20971520,
+    "reliableNewFileWrite": true
+  },
+  "selectedNextStage": {
+    "id": "M4C-3",
+    "name": "graph-derived-output-disclosure-selection",
+    "reason": "CSV/TSV to Table and OPML to Canvas now satisfy their bounded conversion contracts. The two remaining graph-derived outputs have different targets and loss semantics, so the next stage must inspect and select their minimum closure instead of implementing both implicitly."
+  },
+  "releaseCandidate": false
+}
