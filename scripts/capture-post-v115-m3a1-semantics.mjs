@@ -7,6 +7,7 @@ const output = path.resolve(process.env.LONGEDIT_M3A1_OUTPUT)
 const library = path.resolve(process.env.LONGEDIT_M3A1_LIBRARY)
 const stage = process.env.LONGEDIT_M3_STAGE || 'M3A1'
 const theme = process.env.LONGEDIT_M3_THEME || 'dark'
+const motion = process.env.LONGEDIT_M3_MOTION || 'reduced'
 if (!endpoint) throw new Error(`${stage} capture environment is incomplete`)
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -63,9 +64,10 @@ const snapshot = () => evaluate(`(()=>{const legend=document.querySelector('[dat
 
 await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable')
+await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion === 'reduced' ? 'reduce' : 'no-preference' }] })
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -475,6 +477,7 @@ if (stage === 'M3B0') {
 let semanticZoom = null
 let semanticHierarchy = null
 let pathVisual = null
+let pathMotion = null
 if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
@@ -564,21 +567,21 @@ if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 }
 
-if (stage === 'M3B4') {
+if (stage === 'M3B4' || stage === 'M3B5') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   await delay(180)
   const initialRoutes = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {curved:Number(canvas?.dataset.curvedRouteCount||0),parallel:Number(canvas?.dataset.parallelRouteCount||0)}})()`)
   await capture(`${theme}-curved-parallel-global-1280.jpg`)
   await evaluate(`document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
-  await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, 'M3B-4 path panel')
+  await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, `${stage} path panel`)
   const choosePath = async (selector, prefix) => {
     const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
-    if (!chosen) throw new Error(`M3B-4 option missing: ${prefix}`)
+    if (!chosen) throw new Error(`${stage} option missing: ${prefix}`)
   }
   await choosePath('[data-testid="graph-path-start"]', 'NorthStar · Markdown')
   await choosePath('[data-testid="graph-path-end"]', 'Evidence · PDF')
   await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
-  await waitFor(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length===3`, 'M3B-4 verified path evidence')
+  await waitFor(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length===3`, `${stage} verified path evidence`)
   const viewports = []
   for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
@@ -598,6 +601,33 @@ if (stage === 'M3B4') {
     pathLabelCount: await evaluate(`Number(document.querySelector('[data-testid="graph-canvas"]')?.dataset.pathRelationLabelCount||0)`),
     viewports,
   }
+  if (stage === 'M3B5') {
+    const motionViewports = []
+    for (const [width, height] of [[1280, 800], [720, 680]]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+      await delay(420)
+      const before = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {pixels:canvas?.toDataURL('image/png')||'',phase:Number(canvas?.dataset.pathMotionPhase||0),frames:Number(canvas?.dataset.pathMotionFrames||0),state:canvas?.dataset.pathMotionState||'',reduced:canvas?.dataset.pathMotionReduced==='true',segments:Number(canvas?.dataset.pathMotionTraversalSegments||0),forward:Number(canvas?.dataset.pathMotionForwardSegments||0),reverse:Number(canvas?.dataset.pathMotionReverseSegments||0),labels:Number(canvas?.dataset.pathRelationLabelCount||0)}})()`)
+      await capture(`${theme}-${motion}-path-motion-${width}-before.jpg`)
+      await delay(320)
+      const after = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {pixels:canvas?.toDataURL('image/png')||'',phase:Number(canvas?.dataset.pathMotionPhase||0),frames:Number(canvas?.dataset.pathMotionFrames||0),state:canvas?.dataset.pathMotionState||'',reduced:canvas?.dataset.pathMotionReduced==='true',segments:Number(canvas?.dataset.pathMotionTraversalSegments||0),forward:Number(canvas?.dataset.pathMotionForwardSegments||0),reverse:Number(canvas?.dataset.pathMotionReverseSegments||0),labels:Number(canvas?.dataset.pathRelationLabelCount||0)}})()`)
+      await capture(`${theme}-${motion}-path-motion-${width}-after.jpg`)
+      motionViewports.push({ width, height, state: after.state, reduced: after.reduced, traversalSegments: after.segments, forwardSegments: after.forward, reverseSegments: after.reverse, labelCount: after.labels, phaseChanged: after.phase !== before.phase, framesAdvanced: after.frames > before.frames, pixelsChanged: after.pixels !== before.pixels })
+    }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+    await delay(180)
+    const beforePause = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');window.dispatchEvent(new Event('blur'));return Number(canvas?.dataset.pathMotionFrames||0)})()`)
+    await delay(320)
+    const pausedSnapshot = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {state:canvas?.dataset.pathMotionState||'',frames:Number(canvas?.dataset.pathMotionFrames||0)}})()`)
+    await evaluate(`window.dispatchEvent(new Event('focus'))`)
+    await delay(320)
+    const resumedSnapshot = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {state:canvas?.dataset.pathMotionState||'',frames:Number(canvas?.dataset.pathMotionFrames||0)}})()`)
+    pathMotion = {
+      preference: motion,
+      viewports: motionViewports,
+      pause: { beforeFrames: beforePause, state: pausedSnapshot.state, framesStable: pausedSnapshot.frames === beforePause },
+      resume: { state: resumedSnapshot.state, framesAdvanced: resumedSnapshot.frames > pausedSnapshot.frames, framesStable: resumedSnapshot.frames === pausedSnapshot.frames },
+    }
+  }
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 }
 
@@ -607,11 +637,11 @@ await waitFor(`document.querySelector('.library-mode')!==null`, 'return to libra
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, stage === 'M3B5' ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

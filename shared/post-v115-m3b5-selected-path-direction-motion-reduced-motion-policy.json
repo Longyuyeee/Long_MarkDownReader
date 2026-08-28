@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-5",
+  "releaseCandidate": false,
+  "scope": "selected-path-direction-motion-and-reduced-motion-contract",
+  "preImplementationFacts": {
+    "selectedPathStaticHighlight": true,
+    "selectedPathStaticRelationLabels": true,
+    "selectedPathDirectionMotion": false,
+    "graphConsumesApplicationReducedMotion": false,
+    "graphConsumesSystemReducedMotion": false,
+    "visibilityPauseExists": true,
+    "windowBlurPauseExists": false,
+    "continuousGraphLoopOutsideInactiveLifecycle": true
+  },
+  "requiredOutcomes": {
+    "motionOnlyAffectsVerifiedSelectedPath": true,
+    "motionFollowsSelectedStartToEndTraversal": true,
+    "factDirectionArrowheadsRemainIndependent": true,
+    "staticLabelsAndEvidenceNeverDependOnMotion": true,
+    "applicationAndSystemReducedMotionDisableFlow": true,
+    "windowBlurVisibilityAndUnmountStopAnimationTask": true,
+    "darkWhiteContrastRemainReadable": true,
+    "sourceFilesRemainUnchanged": true
+  },
+  "requiredThemes": ["dark", "white", "contrast"],
+  "requiredMotionPreferences": ["calm", "reduced"],
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 720, "height": 680 }
+  ],
+  "deferred": [
+    "minimap-fit-selection-cluster-lens-and-fullscreen",
+    "status-rings",
+    "M3C-dirty-frame-and-large-graph-performance"
+  ],
+  "selectedNextStage": {
+    "id": "M3B-6",
+    "name": "navigation-and-camera-system-selection-audit"
+  }
+}

@@ -234,6 +234,11 @@
       :data-path-relation-label-count="activeShortestPath?.edges.length || 0"
       :data-path-camera-safe="pathCameraSafe"
       :data-path-camera-diagnostics="pathCameraDiagnostics"
+      :data-path-motion-state="pathMotionState"
+      :data-path-motion-reduced="pathMotionReduced"
+      :data-path-motion-traversal-segments="pathMotionTraversalSegments"
+      :data-path-motion-forward-segments="pathMotionForwardSegments"
+      :data-path-motion-reverse-segments="pathMotionReverseSegments"
       :data-curved-route-count="viewMode === 'network' ? visibleEdgeRoutes.length : 0"
       :data-parallel-route-count="viewMode === 'network' ? visibleEdgeRoutes.filter(route => route.parallelCount > 1).length : 0"
       @mousedown="startDrag"
@@ -443,6 +448,7 @@ import { detectGraphCommunities } from '../utils/graphCommunities'
 import { compareGraphNodes } from '../utils/graphComparison'
 import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
 import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint, graphQuadraticPoint, graphQuadraticTangent } from '../utils/graphEdgeRoutes'
+import { advanceGraphPathMotionPhase, graphPathDashOffset, graphPathTraversalDirection } from '../utils/graphPathMotion'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -458,6 +464,8 @@ const emit = defineEmits(['selectFile'])
 const containerRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const pathPanelRef = ref<HTMLElement | null>(null)
+const graphPageActive = ref(true)
+const systemPrefersReducedMotion = ref(false)
 const store = useAppStore()
 const router = useRouter()
 const route = useRoute()
@@ -567,6 +575,22 @@ const neighborFocusNodeIds = computed(() => {
   return ids
 })
 const activeShortestPath = computed(() => shortestPathResult.value?.status === 'found' ? shortestPathResult.value : null)
+const pathMotionReduced = computed(() => store.motionSpeed === 'reduced' || systemPrefersReducedMotion.value)
+const pathMotionEnabled = computed(() => Boolean(activeShortestPath.value
+  && viewMode.value === 'network'
+  && graphPageActive.value
+  && !pathMotionReduced.value))
+const pathMotionState = computed(() => !activeShortestPath.value
+  ? 'idle'
+  : pathMotionReduced.value
+    ? 'reduced'
+    : graphPageActive.value ? 'running' : 'paused')
+const pathMotionTraversalDirections = computed(() => activeShortestPath.value?.edges.map(edge =>
+  graphPathTraversalDirection(activeShortestPath.value?.nodeIds || [], edge)
+) || [])
+const pathMotionTraversalSegments = computed(() => pathMotionTraversalDirections.value.filter(Boolean).length)
+const pathMotionForwardSegments = computed(() => pathMotionTraversalDirections.value.filter(direction => direction === 1).length)
+const pathMotionReverseSegments = computed(() => pathMotionTraversalDirections.value.filter(direction => direction === -1).length)
 const shortestPathNodeIds = computed(() => activeShortestPath.value ? new Set(activeShortestPath.value.nodeIds) : null)
 const visibleNodes = computed(() => {
   return remediationGraph.value.nodes.filter(node =>
@@ -758,6 +782,9 @@ const LAYOUT_SETTLE_THRESHOLD = 0.8
 const LAYOUT_MIN_FRAMES = 30
 
 let animationId = 0
+let pathMotionPhase = 0
+let pathMotionFrameCount = 0
+let lastLoopTimestamp = 0
 let dragging: GraphNode | null = null
 let wasDragging = false
 let offsetX = 0, offsetY = 0
@@ -1726,6 +1753,23 @@ const draw = () => {
       ctx.globalAlpha = 1
       ctx.setLineDash([])
 
+      if (isPathEdge && routeGeometry && pathMotionEnabled.value && activeShortestPath.value) {
+        const traversalDirection = graphPathTraversalDirection(activeShortestPath.value.nodeIds, e)
+        if (traversalDirection) {
+          ctx.save()
+          ctx.beginPath()
+          ctx.moveTo(routeGeometry.source.x, routeGeometry.source.y)
+          ctx.quadraticCurveTo(routeGeometry.control.x, routeGeometry.control.y, routeGeometry.target.x, routeGeometry.target.y)
+          ctx.setLineDash([7 / zoom, 17 / zoom])
+          ctx.lineDashOffset = graphPathDashOffset(pathMotionPhase, traversalDirection, zoom)
+          ctx.strokeStyle = activeTone.ui.text
+          ctx.globalAlpha = 0.82
+          ctx.lineWidth = 1.15 / zoom
+          ctx.stroke()
+          ctx.restore()
+        }
+      }
+
       if (e.directed) {
         const sx = s.x || 0, sy = s.y || 0, tx = t.x || 0, ty = t.y || 0
         const arrowPoint = routeGeometry ? graphQuadraticPoint(routeGeometry, 0.72) : { x: sx + (tx - sx) * 0.72, y: sy + (ty - sy) * 0.72 }
@@ -1912,9 +1956,20 @@ const draw = () => {
       tooltipY.value = mouseY - canvasRect.top - 60
     }
   }
+  canvas.dataset.pathMotionPhase = pathMotionPhase.toFixed(3)
+  canvas.dataset.pathMotionFrames = String(pathMotionFrameCount)
 }
 
-const loop = () => {
+const loop = (timestamp = performance.now()) => {
+  const elapsed = lastLoopTimestamp ? timestamp - lastLoopTimestamp : 0
+  lastLoopTimestamp = timestamp
+  if (pathMotionEnabled.value) {
+    pathMotionPhase = advanceGraphPathMotionPhase(pathMotionPhase, elapsed, store.motionSpeed)
+    pathMotionFrameCount += 1
+  } else if (pathMotionReduced.value || !activeShortestPath.value) {
+    pathMotionPhase = 0
+    pathMotionFrameCount = 0
+  }
   simulate()
   draw()
   animationId = requestAnimationFrame(loop)
@@ -2151,22 +2206,45 @@ watch(communityResult, result => {
   if (activeCommunityId.value && !result.communities.some(community => community.id === activeCommunityId.value)) activeCommunityId.value = ''
 })
 watch(showCommunityOverview, visible => { if (visible) requestAnimationFrame(frameCommunityOverview) })
+watch(activeShortestPath, () => { pathMotionPhase = 0; pathMotionFrameCount = 0 })
 
-let paused = false
+let windowFocused = true
+let reducedMotionQuery: MediaQueryList | null = null
 let graphResizeObserver: ResizeObserver | null = null
-const handleVisibility = () => {
-  if (document.hidden) { paused = true; cancelAnimationFrame(animationId) }
-  else if (paused) { paused = false; layoutSettled = false; frameCount = 40; loop() }
+const pauseGraphLoop = () => {
+  if (!graphPageActive.value) return
+  graphPageActive.value = false
+  lastLoopTimestamp = 0
+  cancelAnimationFrame(animationId)
+  draw()
 }
+const resumeGraphLoop = () => {
+  if (graphPageActive.value || document.hidden || !windowFocused) return
+  graphPageActive.value = true
+  lastLoopTimestamp = 0
+  layoutSettled = false
+  frameCount = 40
+  loop()
+}
+const handleVisibility = () => {
+  if (document.hidden) pauseGraphLoop()
+  else resumeGraphLoop()
+}
+const handleWindowBlur = () => { windowFocused = false; pauseGraphLoop() }
+const handleWindowFocus = () => { windowFocused = true; resumeGraphLoop() }
+const handleSystemReducedMotion = () => { systemPrefersReducedMotion.value = Boolean(reducedMotionQuery?.matches) }
 onMounted(() => {
-  loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('keydown', handleGraphKeydown)
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  handleSystemReducedMotion()
+  reducedMotionQuery.addEventListener('change', handleSystemReducedMotion)
+  loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('blur', handleWindowBlur); window.addEventListener('focus', handleWindowFocus); window.addEventListener('keydown', handleGraphKeydown)
   graphResizeObserver = new ResizeObserver(() => {
     if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview)
     else if (activeShortestPath.value) requestAnimationFrame(fitGraph)
   })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
-onUnmounted(() => { persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { graphPageActive.value = false; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>

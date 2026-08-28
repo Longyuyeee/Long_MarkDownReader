@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-5",
+  "actual": {
+    "theme": "dark",
+    "motion": "reduced",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": {
+      "curvedRouteCount": 17,
+      "parallelRouteCount": 2,
+      "evidenceEdgeCount": 3,
+      "pathLabelCount": 3,
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "cameraSafe": true,
+          "pathLabelCount": 3,
+          "panelInBounds": true,
+          "panelRect": {
+            "left": 16,
+            "top": 158,
+            "right": 776,
+            "bottom": 588
+          }
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "cameraSafe": true,
+          "pathLabelCount": 3,
+          "panelInBounds": true,
+          "panelRect": {
+            "left": 16,
+            "top": 158,
+            "right": 776,
+            "bottom": 398
+          }
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "cameraSafe": true,
+          "pathLabelCount": 3,
+          "panelInBounds": true,
+          "panelRect": {
+            "left": 16,
+            "top": 158,
+            "right": 704,
+            "bottom": 398
+          }
+        }
+      ]
+    },
+    "pathMotion": {
+      "preference": "reduced",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "state": "reduced",
+          "reduced": true,
+          "traversalSegments": 3,
+          "forwardSegments": 1,
+          "reverseSegments": 2,
+          "labelCount": 3,
+          "phaseChanged": false,
+          "framesAdvanced": false,
+          "pixelsChanged": false
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "state": "reduced",
+          "reduced": true,
+          "traversalSegments": 3,
+          "forwardSegments": 1,
+          "reverseSegments": 2,
+          "labelCount": 3,
+          "phaseChanged": false,
+          "framesAdvanced": false,
+          "pixelsChanged": false
+        }
+      ],
+      "pause": {
+        "beforeFrames": 0,
+        "state": "reduced",
+        "framesStable": true
+      },
+      "resume": {
+        "state": "reduced",
+        "framesAdvanced": false,
+        "framesStable": true
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

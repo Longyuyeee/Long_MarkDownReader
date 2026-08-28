@@ -30,7 +30,6 @@ for (const route of routes) {
 
 const graphView = await fs.readFile('src/components/GraphView.vue', 'utf8')
 for (const token of ['visibleEdgeRoutes', 'ctx.quadraticCurveTo', 'graphQuadraticTangent', 'data-path-relation-label-count', 'data-path-camera-safe', 'availableGraphViewport']) requireFact(graphView.includes(token), `M3B-4 renderer contract missing: ${token}`)
-requireFact(!graphView.includes('store.motionSpeed'), 'M3B-4 expanded into deferred motion preference consumption')
 const graphWorkspace = await fs.readFile('src/utils/graphWorkspace.ts', 'utf8')
 for (const token of ['buildGraphEdgeRoutes', 'graphQuadraticPathData', 'data-route-id', 'class="relation-label"', 'showRelationLabels']) requireFact(graphWorkspace.includes(token), `M3B-4 SVG contract missing: ${token}`)
 
