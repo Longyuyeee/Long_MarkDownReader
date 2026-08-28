@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-0",
+  "status": "passed",
+  "sourceCommit": "f92b32e2635541fecb48a643748d7c95f45ae442",
+  "actual": {
+    "workspace": {
+      "totalFiles": 2,
+      "markdownTaskCount": 1,
+      "tableTaskCount": 0,
+      "directMutationFamilies": [
+        "markdown-task"
+      ],
+      "readOnlyActionFamilies": [
+        "pdf-annotation"
+      ]
+    },
+    "table": {
+      "format": "longedit-table",
+      "rowCount": 2,
+      "booleanTaskCandidateCount": 2,
+      "booleanColumnId": "done",
+      "stableRowIds": [
+        "task-row-1",
+        "task-row-2"
+      ],
+      "rowLocatorObserved": true,
+      "sourceWriteObserved": false
+    },
+    "beforeWorkflow": {
+      "workspaceDirectCompletionAvailable": false,
+      "path": [
+        "open Table from Continue work or Library",
+        "locate the task row",
+        "edit the boolean cell",
+        "explicitly save the Table"
+      ]
+    },
+    "selectedWorkflow": {
+      "format": "Table",
+      "action": "boolean-task-row completion and restore",
+      "expectedCompletionClicks": 2,
+      "expectedUndoClicks": 1,
+      "requiresConfirmation": true,
+      "requiresExpectedSignature": true,
+      "requiresStableRowAndColumnIds": true
+    },
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchanged": true
+  },
+  "sourceHashesBefore": {
+    "table": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "markdown": "fe14c9705853eaecb2fad31aec26fdcab248fad1a8fe7cf5b800f1fd94f30ffa"
+  },
+  "sourceHashesAfter": {
+    "table": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "markdown": "fe14c9705853eaecb2fad31aec26fdcab248fad1a8fe7cf5b800f1fd94f30ffa"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

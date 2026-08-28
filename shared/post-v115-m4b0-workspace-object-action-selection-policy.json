@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-0",
+  "name": "workspace-object-action-selection-audit",
+  "predecessor": "M4A-6",
+  "originalRequirement": "M1 objects must be locatable from Workspace and return to the correct file and internal position without turning WorkspaceHome back into a format capability page.",
+  "currentWorkspaceFacts": {
+    "directMutationFamilies": ["markdown-task"],
+    "readOnlyActionFamilies": ["pdf-annotation"],
+    "m1ObjectActionFamilies": [],
+    "primaryQuestions": ["continue-work", "today-actions", "attention-needed"]
+  },
+  "candidates": [
+    {
+      "format": "Table",
+      "object": "internal-table-boolean-task-row",
+      "selection": "selected",
+      "userValue": "Complete or restore an explicitly typed task row directly from Today's tasks and open its stable row location.",
+      "semanticBoundary": "Only .table.json rows with a strict boolean column named 完成, 已完成, done, or completed and a resolvable text title column.",
+      "writeBoundary": "A narrow backend mutation must re-read the internal Table, verify workspace scope, file signature, row ID, column ID, boolean type and old value, then reliably write one boolean value.",
+      "conflictBoundary": "Reject stale signatures or changed/missing row and column identities without modifying the file; refresh Workspace after failure.",
+      "undoBoundary": "Undo uses the successful mutation receipt and its new signature to restore the prior boolean value.",
+      "navigationBoundary": "Opening the item uses the shared table-row locator and returns to the exact stable row ID."
+    },
+    {
+      "format": "OPML",
+      "object": "opml-node",
+      "selection": "deferred",
+      "reason": "OPML nodes have stable navigation and source save, but no reserved completion semantic; treating arbitrary nodes or attributes as tasks would invent meaning."
+    },
+    {
+      "format": "DOCX",
+      "object": "docx-block-or-heading",
+      "selection": "deferred",
+      "reason": "DOCX objects are editable through contextual drafts, but headings and paragraphs do not carry a safe workspace-action semantic."
+    },
+    {
+      "format": "ODS",
+      "object": "ods-cell-or-sheet",
+      "selection": "deferred",
+      "reason": "Supported edits create a new copy and require a target-path decision; direct Workspace completion would hide the required copy boundary."
+    },
+    {
+      "format": "ODP",
+      "object": "odp-slide",
+      "selection": "deferred",
+      "reason": "ODP remains read-only, so only navigation is currently safe and it adds no new daily action beyond Continue work."
+    },
+    {
+      "format": "PPTX",
+      "object": "pptx-object-or-slide",
+      "selection": "deferred",
+      "reason": "Supported edits require contextual object operations, transaction preview and explicit source-save confirmation; there is no generic task-state operation."
+    },
+    {
+      "format": "Workbook",
+      "object": "workbook-cell-or-sheet",
+      "selection": "deferred",
+      "reason": "Workbook editing is safe inside its full draft model, but there is no reserved task schema and cell safety depends on validation, formulas, merges and object context."
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M4B-1",
+    "name": "internal-table-boolean-task-workspace-action",
+    "scope": [
+      "Discover bounded internal Table task rows in the Workspace overview without delaying the first actionable content.",
+      "Show Table tasks inside the existing Today task surface without adding a new dashboard card or format statistics.",
+      "Open the exact row through the shared table-row locator.",
+      "Complete, restore and undo one row through a narrow signature-protected mutation with reliable write and failure refresh."
+    ],
+    "excluded": [
+      "CSV and TSV task inference",
+      "Arbitrary boolean columns or inferred task semantics",
+      "OPML, DOCX, ODS, ODP, PPTX or Workbook mutations",
+      "Conversion work",
+      "Version transition or release candidate"
+    ]
+  },
+  "expectedPreImplementationEvidence": {
+    "workspaceMarkdownTaskCount": 1,
+    "workspaceTableTaskCount": 0,
+    "tableBooleanTaskCandidateCount": 2,
+    "tableRowLocatorObserved": true,
+    "sourceFilesUnchanged": true,
+    "runtimeErrors": 0,
+    "wideViewport": "1280x820",
+    "narrowViewport": "480x700"
+  },
+  "releaseCandidate": false
+}

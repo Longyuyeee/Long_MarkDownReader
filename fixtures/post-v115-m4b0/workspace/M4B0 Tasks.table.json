@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "kind": "longedit.table",
+  "data": {
+    "columns": [
+      { "id": "task", "name": "任务", "type": "text" },
+      { "id": "done", "name": "完成", "type": "boolean" },
+      { "id": "owner", "name": "负责人", "type": "text" }
+    ],
+    "rows": [
+      { "id": "task-row-1", "values": { "task": "复核 Table 工作台行动", "done": "false", "owner": "Long编辑" } },
+      { "id": "task-row-2", "values": { "task": "保留已完成行用于恢复", "done": "true", "owner": "Long编辑" } }
+    ]
+  },
+  "views": [
+    {
+      "id": "grid",
+      "name": "任务表",
+      "kind": "grid",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 1,
+        "columnWidths": { "task": 260, "done": 100, "owner": 140 },
+        "groupBy": null,
+        "titleColumn": "task",
+        "cardColumns": ["done", "owner"],
+        "categoryColumn": null,
+        "valueColumn": null,
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    }
+  ],
+  "activeView": "grid"
+}

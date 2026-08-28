@@ -1373,3 +1373,11 @@ M4A-6 已通过，M4A 收口。同一真实资料库中，Table row、OPML node�
 真实图谱为 22 节点/15 边（7 父、15 子），15 条 `contains` mention 为 0，重复构建身份一致；`docx_block` / `ods_cell` 图谱节点为 0，7 个源夹具摘要不变，运行时错误为 0。审计纠偏将 Workbook 加入统一搜索退出集合，并修复了 PPTX 无 locator 父文件路由仍无条件写入当前幻灯片关系焦点的问题。
 
 当前唯一接续点为 **M4B-0 工作台对象行动选择审计**。先读取 `WorkspaceHome` 的实际代码、现有 Markdown 待办/PDF 批注行动和 M1 各对象的安全写回边界，只选择一个最小完整批次；不得直接实现全对象行动，也不得混入转换、版本提升或 release candidate。详见 [`Post_v1.0.15_M4A6_M1_Object_Location_Coverage_Exit_Audit_2026-08-28.md`](./Post_v1.0.15_M4A6_M1_Object_Location_Coverage_Exit_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4B-0 工作台对象行动选择交接
+
+M4B-0 已通过且没有提前修改工作台产品代码。当前直接写回行动只有 Markdown 待办；PDF 批注是精确查看入口。固定 `.table.json` 含 2 条显式 boolean 任务行和稳定 `task-row-1/2`，Table 阅读器能精确定位第一行，但工作台仍只显示 1 条 Markdown 待办、Table 待办为 0。1280×820、480×700 当前态和 Table 定位截图已人工复核，运行时错误 0，Table/Markdown 源摘要不变。
+
+七类 M1 候选只选择内部 Table 布尔任务行。M4B-1 限定“完成 / 已完成 / done / completed”显式 boolean 列和可解析文本标题；CSV/TSV 与任意布尔列不推断。写回必须使用窄后端命令重新核对资料库、签名、row/column ID、类型和旧值，只修改一个布尔值；完成/恢复前确认，成功后以新签名撤销，冲突时文件不变并刷新。
+
+当前唯一接续点为 **M4B-1 内部 Table 布尔任务行工作台行动闭环**。先完成后端发现/变更与 Rust 真实文件测试，再接入现有“今天要做”，最后审计取消、完成、恢复、撤销、冲突、定位、首屏时序和宽窄屏。OPML、DOCX、ODS、ODP、PPTX、Workbook 修改、转换与发布冻结均不并入。详见 [`Post_v1.0.15_M4B0_Workspace_Object_Action_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M4B0_Workspace_Object_Action_Selection_Audit_2026-08-28.md)。
