@@ -3,11 +3,13 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT
-const output = path.resolve(process.env.LONGEDIT_M3C0_OUTPUT)
-const library = path.resolve(process.env.LONGEDIT_M3C0_LIBRARY)
-const tier = Number(process.env.LONGEDIT_M3C0_TIER)
-const lifecycleCycles = Number(process.env.LONGEDIT_M3C0_CYCLES || 0)
-if (!endpoint || !Number.isInteger(tier) || tier < 1) throw new Error('M3C-0 capture environment is incomplete')
+const stage = process.env.LONGEDIT_M3C_STAGE || 'M3C-0'
+const output = path.resolve(process.env.LONGEDIT_M3C_OUTPUT || process.env.LONGEDIT_M3C0_OUTPUT)
+const library = path.resolve(process.env.LONGEDIT_M3C_LIBRARY || process.env.LONGEDIT_M3C0_LIBRARY)
+const tier = Number(process.env.LONGEDIT_M3C_TIER || process.env.LONGEDIT_M3C0_TIER)
+const lifecycleCycles = Number(process.env.LONGEDIT_M3C_CYCLES || process.env.LONGEDIT_M3C0_CYCLES || 0)
+if (!endpoint || !Number.isInteger(tier) || tier < 1) throw new Error(`${stage} capture environment is incomplete`)
+const dirtyFrameStage = stage === 'M3C-1'
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -31,7 +33,7 @@ for (let attempt = 0; attempt < 240 && !target; attempt += 1) {
   target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl && !item.url.startsWith('devtools://'))
   if (!target) await delay(100)
 }
-if (!target?.webSocketDebuggerUrl) throw new Error('M3C-0 WebView target missing')
+if (!target?.webSocketDebuggerUrl) throw new Error(`${stage} WebView target missing`)
 const socket = new WebSocket(target.webSocketDebuggerUrl)
 await new Promise((resolve, reject) => { socket.addEventListener('open', resolve, { once: true }); socket.addEventListener('error', reject, { once: true }) })
 let sequence = 0
@@ -101,7 +103,10 @@ const firstVisibleMs = Date.now() - startedAt
 await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')!==null`, 'centered node selection')
 let stabilityFailure = ''
 try {
-  await waitFor(`(()=>{const frames=window.__m3cProbe?.frames||[];if(frames.length<12)return false;const recent=frames.slice(-12);return recent.every(frame=>frame.signature===recent[0].signature)})()`, `${tier}-node geometry stable`, 180000)
+  const stabilityExpression = dirtyFrameStage
+    ? `(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.layoutSettled==='true'&&canvas?.dataset.loopContinuous==='false'})()`
+    : `(()=>{const frames=window.__m3cProbe?.frames||[];if(frames.length<12)return false;const recent=frames.slice(-12);return recent.every(frame=>frame.signature===recent[0].signature)})()`
+  await waitFor(stabilityExpression, `${tier}-node geometry stable`, 240000)
 } catch (error) {
   stabilityFailure = String(error)
 }
@@ -110,7 +115,7 @@ if (stabilityFailure) {
   const afterSha256 = await hashDirectory(library)
   const evidence = {
     schemaVersion: 1,
-    stage: 'M3C-0',
+    stage,
     tier,
     expected: { firstVisibleMaximumMs: 30000, layoutStableMaximumMs: 120000, interactionMaximumMs: 5000, settledDrawsPerSecondMaximum: 2, inactiveDrawsMaximum: 2, runtimeErrors: 0 },
     actual: {
@@ -143,7 +148,7 @@ if (stabilityFailure) {
   }
   await fs.writeFile(path.join(output, `tier-${tier}.json`), `${JSON.stringify(evidence, null, 2)}\n`)
   socket.close()
-  console.log(`M3C-0 tier ${tier}: visible ${firstVisibleMs}ms, layout stability failed after ${layoutStableMs}ms; bounded failure recorded`)
+  console.log(`${stage} tier ${tier}: visible ${firstVisibleMs}ms, layout stability failed after ${layoutStableMs}ms; bounded failure recorded`)
   process.exit(0)
 }
 
@@ -151,15 +156,23 @@ const settledDrawStart = await readDraws()
 await delay(1000)
 const settledDrawsPerSecond = (await readDraws()) - settledDrawStart
 
+const resumeLayoutBefore = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {frame:Number(canvas?.dataset.layoutFrame||-1),settled:canvas?.dataset.layoutSettled==='true'}})()`)
 const blurDrawStart = await readDraws()
 await evaluate(`window.dispatchEvent(new Event('blur'))`)
 await delay(800)
 const inactiveDraws = (await readDraws()) - blurDrawStart
 await evaluate(`window.dispatchEvent(new Event('focus'))`)
-await waitFor(`(()=>{const frames=window.__m3cProbe?.frames||[];if(frames.length<12)return false;const recent=frames.slice(-12);return recent.every(frame=>frame.signature===recent[0].signature)})()`, `${tier}-node focus resume stability`)
+if (dirtyFrameStage) {
+  await waitFor(`document.querySelector('[data-testid="graph-canvas"]')?.dataset.layoutSettled==='true'`, `${tier}-node focus resume stability`)
+  await delay(300)
+} else {
+  await waitFor(`(()=>{const frames=window.__m3cProbe?.frames||[];if(frames.length<12)return false;const recent=frames.slice(-12);return recent.every(frame=>frame.signature===recent[0].signature)})()`, `${tier}-node focus resume stability`)
+}
+const resumeLayoutAfter = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {frame:Number(canvas?.dataset.layoutFrame||-1),settled:canvas?.dataset.layoutSettled==='true',continuous:canvas?.dataset.loopContinuous==='true'}})()`)
+const focusResumeLayoutRestarts = resumeLayoutBefore.settled && resumeLayoutAfter.settled && resumeLayoutAfter.frame === resumeLayoutBefore.frame ? 0 : 1
 
 const canvasCenter = await evaluate(`(()=>{const value=document.querySelector('[data-testid="graph-canvas"]')?.getBoundingClientRect();return value?{left:value.left,top:value.top,width:value.width,height:value.height,x:value.left+value.width/2,y:value.top+value.height/2}:null})()`)
-if (!canvasCenter) throw new Error('M3C-0 graph canvas missing')
+if (!canvasCenter) throw new Error(`${stage} graph canvas missing`)
 const zoomPoseBefore = await readPose()
 const zoomStartedAt = Date.now()
 await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: canvasCenter.x, y: canvasCenter.y, deltaX: 0, deltaY: -120 })
@@ -219,7 +232,7 @@ if (focusFailure) {
   const afterSha256 = await hashDirectory(library)
   const evidence = {
     schemaVersion: 1,
-    stage: 'M3C-0',
+    stage,
     tier,
     expected: { firstVisibleMaximumMs: 30000, layoutStableMaximumMs: 120000, interactionMaximumMs: 5000, settledDrawsPerSecondMaximum: 2, inactiveDrawsMaximum: 2, runtimeErrors: 0 },
     actual: {
@@ -231,7 +244,7 @@ if (focusFailure) {
       firstVisibleMs,
       layoutStableMs,
       interactions: { zoomChanged: true, zoomLatencyMs, panChanged, panLatencyMs, selectionKind, selectedCount, selectionLatencyMs, focusLatencyMs, focus: null },
-      frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws: null },
+      frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws: null, focusResumeLayoutRestarts, resumeLayoutBefore, resumeLayoutAfter },
       lifecycle: { cycles: lifecycleCycles, completed: false },
       runtimeErrors: runtimeErrors.length,
       runtimeErrorMessages: runtimeErrors,
@@ -252,7 +265,7 @@ if (focusFailure) {
   }
   await fs.writeFile(path.join(output, `tier-${tier}.json`), `${JSON.stringify(evidence, null, 2)}\n`)
   socket.close()
-  console.log(`M3C-0 tier ${tier}: visible ${firstVisibleMs}ms, stable ${layoutStableMs}ms, focus failed after ${focusLatencyMs}ms; bounded failure recorded`)
+  console.log(`${stage} tier ${tier}: visible ${firstVisibleMs}ms, stable ${layoutStableMs}ms, focus failed after ${focusLatencyMs}ms; bounded failure recorded`)
   process.exit(0)
 }
 const focusState = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {state:canvas?.dataset.cameraMotionState||'',reason:canvas?.dataset.cameraMotionReason||'',selectedCount:Number(canvas?.dataset.selectedCount||0)}})()`)
@@ -305,7 +318,7 @@ const expectations = tier === 100
     : { firstVisibleMaximumMs: 30000, layoutStableMaximumMs: 120000, interactionMaximumMs: 5000 }
 const evidence = {
   schemaVersion: 1,
-  stage: 'M3C-0',
+  stage,
   tier,
   expected: { ...expectations, settledDrawsPerSecondMaximum: 2, inactiveDrawsMaximum: 2, runtimeErrors: 0 },
   actual: {
@@ -314,7 +327,7 @@ const evidence = {
     firstVisibleMs,
     layoutStableMs,
     interactions: { zoomChanged: true, zoomLatencyMs, panChanged, panLatencyMs, panFullGraph, selectionKind, selectedCount, selectionLatencyMs, focusLatencyMs, focus: focusState },
-    frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws },
+    frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws, focusResumeLayoutRestarts, resumeLayoutBefore, resumeLayoutAfter },
     lifecycle,
     longTaskCount: longTasks.length,
     longestTaskMs: Math.round(Math.max(0, ...longTasks.map(item => item.duration))),
@@ -331,11 +344,12 @@ const evidence = {
     layoutStableWithinExpectation: layoutStableMs <= expectations.layoutStableMaximumMs,
     interactionsWithinExpectation: Math.max(zoomLatencyMs, panLatencyMs, selectionLatencyMs, focusLatencyMs) <= expectations.interactionMaximumMs,
     settledFrameActivityWithinExpectation: settledDrawsPerSecond <= 2,
-    inactiveFrameActivityWithinExpectation: inactiveDraws <= 2 && libraryDraws <= 2,
+    inactiveFrameActivityWithinExpectation: inactiveDraws <= 2 && libraryDraws <= (dirtyFrameStage ? 0 : 2),
+    focusResumeWithoutLayoutRestart: focusResumeLayoutRestarts === 0,
   },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
 await fs.writeFile(path.join(output, `tier-${tier}.json`), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
-console.log(`M3C-0 tier ${tier}: visible ${firstVisibleMs}ms, stable ${layoutStableMs}ms, idle draws ${settledDrawsPerSecond}/s, longest task ${evidence.actual.longestTaskMs}ms`)
+console.log(`${stage} tier ${tier}: visible ${firstVisibleMs}ms, stable ${layoutStableMs}ms, idle draws ${settledDrawsPerSecond}/s, longest task ${evidence.actual.longestTaskMs}ms`)

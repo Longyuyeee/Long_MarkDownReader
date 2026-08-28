@@ -4,6 +4,8 @@ const requireFact = (condition, message) => { if (!condition) throw new Error(me
 const readJson = async file => JSON.parse(await fs.readFile(file, 'utf8'))
 const policy = await readJson('shared/post-v115-m3c0-large-graph-performance-baseline-selection-policy.json')
 const predecessor = await readJson('shared/post-v115-m3b12-professional-visual-system-exit-policy.json')
+let successor = null
+try { successor = await readJson('shared/post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop-policy.json') } catch {}
 requireFact(policy.stage === 'M3C-0' && predecessor.selectedNextStage.id === policy.stage && !policy.releaseCandidate, 'M3C-0 stage chain drifted')
 requireFact(policy.graphTiers.join(',') === '100,1000,5000', 'M3C-0 graph tiers drifted')
 requireFact(policy.selectionDecision.selected === 'settled-dirty-frame-and-lifecycle-loop' && policy.selectedNextStage.id === 'M3C-1', 'M3C-0 selection drifted')
@@ -38,5 +40,10 @@ for (const tier of policy.graphTiers) {
 requireFact(evidenceCount === 0 || evidenceCount === policy.graphTiers.length, 'M3C-0 desktop evidence is partial')
 
 const graphView = await fs.readFile('src/components/GraphView.vue', 'utf8')
-requireFact(graphView.includes('draw()\n  animationId = requestAnimationFrame(loop)') && graphView.includes('if (layoutSettled || viewMode.value === \'mindmap\') return'), 'M3C-0 selected idle-loop gap is no longer present')
-console.log(`M3C-0 large-graph baseline accepted${evidenceCount ? `: ${summaries.map(item => `${item.tier}=${item.firstVisibleMs}/${item.layoutStableMs}ms, ${item.settledDrawsPerSecond} settled draws/s, longest ${item.longestTaskMs}ms`).join('; ')}` : ''}; 5000-node interaction and long-task budget failures remain explicit, and M3C-1 selects settled dirty-frame and lifecycle-loop control.`)
+const originalGapPresent = graphView.includes('draw()\n  animationId = requestAnimationFrame(loop)') && graphView.includes('if (layoutSettled || viewMode.value === \'mindmap\') return')
+const successorClosedGap = successor?.stage === policy.selectedNextStage.id
+  && successor?.baselineStage === policy.stage
+  && graphView.includes('graphLoopNeedsContinuousFrames')
+  && graphView.includes('requestGraphFrame')
+requireFact(originalGapPresent || successorClosedGap, 'M3C-0 selected idle-loop gap is neither present nor closed by M3C-1')
+console.log(`M3C-0 large-graph baseline accepted${evidenceCount ? `: ${summaries.map(item => `${item.tier}=${item.firstVisibleMs}/${item.layoutStableMs}ms, ${item.settledDrawsPerSecond} settled draws/s, longest ${item.longestTaskMs}ms`).join('; ')}` : ''}; 5000-node interaction and long-task budget failures remain explicit, and M3C-1 ${successorClosedGap ? 'closes' : 'selects'} settled dirty-frame and lifecycle-loop control.`)

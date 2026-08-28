@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-1",
+  "name": "settled-dirty-frame-and-lifecycle-loop",
+  "baselineStage": "M3C-0",
+  "baselineEvidence": "docs/evidence/post-v115-m3c0-large-graph-performance-baseline",
+  "fixture": {
+    "kind": "real-markdown-directed-chain-library",
+    "tiers": [100, 1000, 5000],
+    "sourceMode": "read-only"
+  },
+  "expected": {
+    "settledDrawsPerSecondMaximum": 2,
+    "inactiveDrawsMaximum": 2,
+    "libraryDrawsMaximum": 0,
+    "focusResumeLayoutRestartMaximum": 0,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "returnedToLibrary": true,
+    "calmPathMotionAdvances": true,
+    "reducedPathMotionStatic": true,
+    "cameraMotionCompletes": true,
+    "lifecycleCycles": 20
+  },
+  "performanceBudgets": {
+    "100": { "firstVisibleMaximumMs": 2000, "layoutStableMaximumMs": 5000, "interactionMaximumMs": 250 },
+    "1000": { "firstVisibleMaximumMs": 5000, "layoutStableMaximumMs": 20000, "interactionMaximumMs": 1000 },
+    "5000": { "firstVisibleMaximumMs": 30000, "layoutStableMaximumMs": 120000, "interactionMaximumMs": 5000 }
+  },
+  "baselineActual": {
+    "100": { "firstVisibleMs": 1407, "layoutStableMs": 3724, "settledDrawsPerSecond": 132 },
+    "1000": { "firstVisibleMs": 2189, "layoutStableMs": 15050, "settledDrawsPerSecond": 132 },
+    "5000": { "firstVisibleMs": 24722, "layoutStableMs": 185195, "settledDrawsPerSecond": 132 }
+  },
+  "actual": {
+    "100": { "firstVisibleMs": 680, "layoutStableMs": 2305, "settledDrawsPerSecond": 0, "focusResumeLayoutRestarts": 0 },
+    "1000": { "firstVisibleMs": 3236, "layoutStableMs": 17317, "settledDrawsPerSecond": 0, "focusResumeLayoutRestarts": 0, "lifecycleCycles": 20, "heapDeltaBytes": -56844756 },
+    "5000": { "firstVisibleMs": 23562, "layoutStableMs": 186338, "settledDrawsPerSecond": 0, "focusResumeLayoutRestarts": 0, "zoomLatencyMs": 65, "longestTaskMs": 15634 }
+  },
+  "implementationBoundary": [
+    "dirty-frame scheduling after layout settlement",
+    "continuous scheduling only for active layout, camera transition, or calm selected-path motion",
+    "explicit invalidation for pointer, selection, camera, resize, theme, and graph-state changes",
+    "blur, hidden, library return, and unmount cancellation",
+    "focus resume without forced layout restart"
+  ],
+  "deferred": [
+    "spatial hit-test index",
+    "worker or layout engine replacement",
+    "viewport culling and label cache",
+    "saved view restoration",
+    "large-graph semantic detail redesign"
+  ],
+  "selectedNextStage": {
+    "id": "M3C-2",
+    "name": "large-graph-main-thread-phase-profiling-selection-audit",
+    "reason": "The settled loop is closed and interaction backlog is removed, while 5000-node layout remains 186338ms with a 15634ms longest task; profile build, layout, semantic derivation, and draw phases before selecting Worker/layout replacement or viewport culling."
+  },
+  "releaseCandidate": false
+}

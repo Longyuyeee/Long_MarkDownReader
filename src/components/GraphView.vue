@@ -880,6 +880,8 @@ const LAYOUT_SETTLE_THRESHOLD = 0.8
 const LAYOUT_MIN_FRAMES = 30
 
 let animationId = 0
+let graphLoopMounted = false
+let graphFrameDirty = true
 let pathMotionPhase = 0
 let pathMotionFrameCount = 0
 let lastLoopTimestamp = 0
@@ -917,6 +919,17 @@ const tooltipX = ref(0)
 const tooltipY = ref(0)
 let mouseX = 0, mouseY = 0
 let layoutSaveTimer = 0
+
+const graphLoopNeedsContinuousFrames = () => Boolean(
+  (viewMode.value === 'network' && !layoutSettled)
+  || cameraTransition
+  || pathMotionEnabled.value
+)
+const requestGraphFrame = (dirty = true) => {
+  if (dirty) graphFrameDirty = true
+  if (!graphLoopMounted || !graphPageActive.value || animationId || document.hidden) return
+  animationId = requestAnimationFrame(loop)
+}
 
 const currentLayoutId = () => viewMode.value === 'mindmap'
   ? `mindmap:${mindmapRoot.value?.id || 'none'}:${mindmapDepth.value}:${graphLayoutMode.value}`
@@ -962,6 +975,7 @@ const loadGraph = async () => {
     graphData.value = { nodes: [], edges: [] }
   } finally {
     isLoading.value = false
+    requestGraphFrame()
   }
 }
 
@@ -1009,6 +1023,7 @@ const restoreLayoutSnapshot = (snapshot: LayoutSnapshot) => {
   frameCount = LAYOUT_MAX_FRAMES
   minimapLayoutRevision += 1
   scheduleLayoutSave()
+  requestGraphFrame()
 }
 const pushLayoutUndo = (before: LayoutSnapshot) => {
   const after = captureLayoutSnapshot()
@@ -1068,6 +1083,7 @@ const positionGraphLayout = (mode: GraphLayoutMode) => {
     })
     frameCount = 0
     layoutSettled = false
+    requestGraphFrame()
     return
   }
   const root = (selectedNode.value && nodes.includes(selectedNode.value) ? selectedNode.value : null)
@@ -1103,6 +1119,7 @@ const positionGraphLayout = (mode: GraphLayoutMode) => {
   layoutSettled = true
   frameCount = LAYOUT_MAX_FRAMES
   minimapLayoutRevision += 1
+  requestGraphFrame()
 }
 const applySelectedLayout = () => {
   const before = captureLayoutSnapshot(activeLayoutMode)
@@ -1157,6 +1174,7 @@ const applyMindMapLayout = (root: GraphNode) => {
   zoom = Math.max(0.55, Math.min(1, 3.2 / Math.max(1, levels.length)))
   zoomLevel.value = zoom
   minimapLayoutRevision += 1
+  requestGraphFrame()
 }
 
 const switchView = (mode: 'network' | 'mindmap') => {
@@ -1248,6 +1266,7 @@ const changeGraphZoom = (factor: number, clientX?: number, clientY?: number) => 
   viewY = anchorY - worldY * next
   zoom = next
   zoomLevel.value = zoom
+  requestGraphFrame()
 }
 const availableGraphViewports = (canvas: HTMLCanvasElement) => {
   const fallback = { x: 0, y: 0, width: canvas.clientWidth, height: canvas.clientHeight, obscured: false }
@@ -1323,6 +1342,7 @@ const applyCameraPose = (pose: GraphCameraPose) => {
   zoom = pose.zoom
   zoomLevel.value = zoom
   cameraPoseDiagnostics.value = JSON.stringify({ x: viewX, y: viewY, zoom })
+  requestGraphFrame()
 }
 
 const cancelCameraMotion = (countCancellation = true) => {
@@ -1349,6 +1369,7 @@ const requestCameraPose = (target: GraphCameraPose, reason: string, targetNodeId
     duration: store.motionSpeed === 'expressive' ? 180 : store.motionSpeed === 'swift' ? 220 : 280,
   }
   cameraMotionState.value = 'running'
+  requestGraphFrame()
 }
 
 const currentNodeFocusTarget = (nodeId: string) => {
@@ -1831,6 +1852,7 @@ const frameCommunityOverview = () => {
   viewX = horizontalFrame.start + Math.max(0, horizontalFrame.size - overviewWidth) / 2 - minX * zoom
   viewY = verticalFrame.start + Math.max(0, verticalFrame.size - overviewHeight) / 2 - minY * zoom
   communityOverviewCacheKey = ''
+  requestGraphFrame()
 }
 
 const refreshCameraPoseDiagnostics = () => {
@@ -2336,9 +2358,14 @@ const draw = () => {
   const worldY = (mouseY - canvasRect.top - viewY) / zoom
   const node = findNodeAt(worldX, worldY)
   const community = findCommunityAt(worldX, worldY)
-  hoveredCommunityId.value = community?.id || ''
+  const nextHoveredCommunityId = community?.id || ''
+  if (hoveredCommunityId.value !== nextHoveredCommunityId) {
+    hoveredCommunityId.value = nextHoveredCommunityId
+    requestGraphFrame()
+  }
   if (node !== hoveredNode.value) {
     hoveredNode.value = node
+    requestGraphFrame()
     if (node) {
       tooltipX.value = mouseX - canvasRect.left + 20
       tooltipY.value = mouseY - canvasRect.top - 60
@@ -2346,11 +2373,19 @@ const draw = () => {
   }
   canvas.dataset.pathMotionPhase = pathMotionPhase.toFixed(3)
   canvas.dataset.pathMotionFrames = String(pathMotionFrameCount)
+  canvas.dataset.layoutSettled = String(layoutSettled)
+  canvas.dataset.layoutFrame = String(frameCount)
+  canvas.dataset.loopContinuous = String(graphLoopNeedsContinuousFrames())
 }
 
 const loop = (timestamp = performance.now()) => {
+  animationId = 0
+  if (!graphPageActive.value || document.hidden || !windowFocused) return
   const elapsed = lastLoopTimestamp ? timestamp - lastLoopTimestamp : 0
   lastLoopTimestamp = timestamp
+  const layoutWasActive = viewMode.value === 'network' && !layoutSettled
+  const cameraWasActive = Boolean(cameraTransition)
+  const pathWasActive = pathMotionEnabled.value
   if (pathMotionEnabled.value) {
     pathMotionPhase = advanceGraphPathMotionPhase(pathMotionPhase, elapsed, store.motionSpeed)
     pathMotionFrameCount += 1
@@ -2360,8 +2395,11 @@ const loop = (timestamp = performance.now()) => {
   }
   simulate()
   advanceCameraMotion(timestamp)
-  draw()
-  animationId = requestAnimationFrame(loop)
+  const shouldDraw = graphFrameDirty || layoutWasActive || cameraWasActive || pathWasActive
+  graphFrameDirty = false
+  if (shouldDraw) draw()
+  if (graphLoopNeedsContinuousFrames()) requestGraphFrame(false)
+  else lastLoopTimestamp = 0
 }
 
 const startDrag = (e: MouseEvent) => {
@@ -2369,6 +2407,7 @@ const startDrag = (e: MouseEvent) => {
   const canvas = canvasRef.value
   if (!canvas) return
   cancelCameraMotion()
+  requestGraphFrame()
   canvas.focus()
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
@@ -2409,6 +2448,7 @@ const startDrag = (e: MouseEvent) => {
 
 const onDrag = (e: MouseEvent) => {
   mouseX = e.clientX; mouseY = e.clientY
+  requestGraphFrame()
   if (selectionBox) {
     const canvas = canvasRef.value
     if (!canvas) return
@@ -2473,6 +2513,7 @@ const endDrag = () => {
   dragSnapshot = null
   dragStartPositions.clear()
   wasDragging = false
+  requestGraphFrame()
 }
 
 const onZoom = (e: WheelEvent) => {
@@ -2539,6 +2580,7 @@ const moveSelectedNodes = (dx: number, dy: number) => {
   frameCount = LAYOUT_MAX_FRAMES
   pushLayoutUndo(before)
   scheduleLayoutSave()
+  requestGraphFrame()
 }
 const handleGraphKeydown = (event: KeyboardEvent) => {
   const target = event.target as HTMLElement | null
@@ -2565,14 +2607,17 @@ watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
 watch(() => selectedNode.value?.id, () => { relationDraftTarget.value = '' })
 watch([comparisonLeftId, comparisonRightId], () => { comparisonHasRun.value = false })
 watch([() => selectedNodeIds.value.join('\u001f'), () => selectedNode.value?.id || ''], () => {
+  requestGraphFrame()
   if (applyingSelectionHistory) return
   selectionHistoryState.value = commitGraphSelection(selectionHistoryState.value, {
     nodeIds: selectedNodeIds.value,
     activeNodeId: selectedNode.value?.id || '',
   }, graphData.value.nodes.map(node => node.id))
 })
-watch(graphLayoutMode, value => localStorage.setItem('longedit.graph.layout-mode', value))
-watch(graphCanvasTheme, value => localStorage.setItem('longedit.graph.canvas-theme', value))
+watch(graphLayoutMode, value => { localStorage.setItem('longedit.graph.layout-mode', value); requestGraphFrame() })
+watch(graphCanvasTheme, value => { localStorage.setItem('longedit.graph.canvas-theme', value); requestGraphFrame() })
+watch(() => store.theme, () => requestGraphFrame())
+watch(viewMode, () => requestGraphFrame())
 watch(remediationFocus, focus => {
   if (focus === 'relations') showTutorial.value = true
   if (focus === 'orphans') {
@@ -2581,6 +2626,7 @@ watch(remediationFocus, focus => {
   }
   frameCount = 0
   layoutSettled = false
+  requestGraphFrame()
 }, { immediate: true })
 const structuralFilterSignature = () => JSON.stringify({
   tags: filters.tags,
@@ -2603,12 +2649,21 @@ watch(filters, () => {
     layoutSettled = false
   }
   previousStructuralFilterSignature = nextStructuralFilterSignature
+  requestGraphFrame()
 }, { deep: true })
 watch(communityResult, result => {
   if (activeCommunityId.value && !result.communities.some(community => community.id === activeCommunityId.value)) activeCommunityId.value = ''
 })
-watch(showCommunityOverview, visible => { if (visible) requestAnimationFrame(frameCommunityOverview) })
-watch(activeShortestPath, () => { pathMotionPhase = 0; pathMotionFrameCount = 0 })
+watch(showCommunityOverview, visible => {
+  if (visible) requestAnimationFrame(frameCommunityOverview)
+  requestGraphFrame()
+})
+watch(activeShortestPath, () => {
+  pathMotionPhase = 0
+  pathMotionFrameCount = 0
+  requestGraphFrame()
+})
+watch(pathMotionEnabled, () => requestGraphFrame())
 
 let windowFocused = true
 let reducedMotionQuery: MediaQueryList | null = null
@@ -2619,15 +2674,15 @@ const pauseGraphLoop = () => {
   lastLoopTimestamp = 0
   cancelCameraMotion()
   cancelAnimationFrame(animationId)
+  animationId = 0
+  graphFrameDirty = false
   draw()
 }
 const resumeGraphLoop = () => {
   if (graphPageActive.value || document.hidden || !windowFocused) return
   graphPageActive.value = true
   lastLoopTimestamp = 0
-  layoutSettled = false
-  frameCount = 40
-  loop()
+  requestGraphFrame()
 }
 const handleVisibility = () => {
   if (document.hidden) pauseGraphLoop()
@@ -2635,19 +2690,24 @@ const handleVisibility = () => {
 }
 const handleWindowBlur = () => { windowFocused = false; pauseGraphLoop() }
 const handleWindowFocus = () => { windowFocused = true; resumeGraphLoop() }
-const handleSystemReducedMotion = () => { systemPrefersReducedMotion.value = Boolean(reducedMotionQuery?.matches) }
+const handleSystemReducedMotion = () => {
+  systemPrefersReducedMotion.value = Boolean(reducedMotionQuery?.matches)
+  requestGraphFrame()
+}
 onMounted(() => {
+  graphLoopMounted = true
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   handleSystemReducedMotion()
   reducedMotionQuery.addEventListener('change', handleSystemReducedMotion)
-  loadGraph(); loop(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('blur', handleWindowBlur); window.addEventListener('focus', handleWindowFocus); window.addEventListener('keydown', handleGraphKeydown)
+  loadGraph(); requestGraphFrame(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('blur', handleWindowBlur); window.addEventListener('focus', handleWindowFocus); window.addEventListener('keydown', handleGraphKeydown)
   graphResizeObserver = new ResizeObserver(() => {
     if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview)
     else if (activeShortestPath.value) requestAnimationFrame(fitGraph)
+    requestGraphFrame()
   })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
-onUnmounted(() => { graphPageActive.value = false; cameraTransition = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>

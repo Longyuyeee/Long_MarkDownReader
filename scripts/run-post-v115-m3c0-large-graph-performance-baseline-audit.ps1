@@ -1,8 +1,14 @@
-param([switch]$SkipBuild,[ValidateSet(0,100,1000,5000)][int]$Tier = 0)
+param(
+  [switch]$SkipBuild,
+  [ValidateSet(0,100,1000,5000)][int]$Tier = 0,
+  [ValidateSet('M3C-0','M3C-1')][string]$Stage = 'M3C-0'
+)
 $ErrorActionPreference = 'Stop'
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$output = Join-Path $workspace 'docs\evidence\post-v115-m3c0-large-graph-performance-baseline'
-$auditRoot = Join-Path $env:TEMP ("longedit-m3c0-{0}-{1}" -f $PID,[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
+$stageSlug = $Stage.ToLowerInvariant().Replace('-','')
+$evidenceName = if ($Stage -eq 'M3C-1') { 'post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop' } else { 'post-v115-m3c0-large-graph-performance-baseline' }
+$output = Join-Path $workspace ("docs\evidence\{0}" -f $evidenceName)
+$auditRoot = Join-Path $env:TEMP ("longedit-{0}-{1}-{2}" -f $stageSlug,$PID,[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 $appPort = 14200
 $utf8 = [Text.UTF8Encoding]::new($false)
 $previousTarget = $env:CARGO_TARGET_DIR
@@ -62,12 +68,13 @@ try {
       try {
         Wait-ForPort $cdpPort $true
         $env:LONGEDIT_CDP_ENDPOINT = "http://127.0.0.1:$cdpPort"
-        $env:LONGEDIT_M3C0_OUTPUT = $output
-        $env:LONGEDIT_M3C0_LIBRARY = $library
-        $env:LONGEDIT_M3C0_TIER = "$tier"
-        $env:LONGEDIT_M3C0_CYCLES = if ($tier -eq 1000) { '20' } else { '0' }
+        $env:LONGEDIT_M3C_STAGE = $Stage
+        $env:LONGEDIT_M3C_OUTPUT = $output
+        $env:LONGEDIT_M3C_LIBRARY = $library
+        $env:LONGEDIT_M3C_TIER = "$tier"
+        $env:LONGEDIT_M3C_CYCLES = if ($tier -eq 1000) { '20' } else { '0' }
         & node (Join-Path $workspace 'scripts\capture-post-v115-m3c0-large-graph-performance.mjs')
-        if ($LASTEXITCODE -ne 0) { throw "M3C-0 tier $tier capture failed" }
+        if ($LASTEXITCODE -ne 0) { throw "$Stage tier $tier capture failed" }
       } finally {
         if ($app -and -not $app.HasExited) { Stop-Process -Id $app.Id -Force }
         Wait-ForPort $cdpPort $false
@@ -83,6 +90,7 @@ try {
   $env:CARGO_TARGET_DIR = $previousTarget
 }
 
-& node (Join-Path $workspace 'scripts\check-post-v115-m3c0-large-graph-performance-baseline.mjs')
-if ($LASTEXITCODE -ne 0) { throw 'M3C-0 evidence contract failed' }
-Write-Output "M3C-0 real desktop baseline completed: $output"
+$checker = if ($Stage -eq 'M3C-1') { 'scripts\check-post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop.mjs' } else { 'scripts\check-post-v115-m3c0-large-graph-performance-baseline.mjs' }
+& node (Join-Path $workspace $checker)
+if ($LASTEXITCODE -ne 0) { throw "$Stage evidence contract failed" }
+Write-Output "$Stage real desktop baseline completed: $output"

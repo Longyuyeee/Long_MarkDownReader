@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-1",
+  "tier": 5000,
+  "expected": {
+    "firstVisibleMaximumMs": 30000,
+    "layoutStableMaximumMs": 120000,
+    "interactionMaximumMs": 5000,
+    "settledDrawsPerSecondMaximum": 2,
+    "inactiveDrawsMaximum": 2,
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "nodeCount": 5000,
+    "edgeCount": 4999,
+    "firstVisibleMs": 23562,
+    "layoutStableMs": 186338,
+    "interactions": {
+      "zoomChanged": true,
+      "zoomLatencyMs": 65,
+      "panChanged": true,
+      "panLatencyMs": 124,
+      "panFullGraph": true,
+      "selectionKind": "box",
+      "selectedCount": 1,
+      "selectionLatencyMs": 220,
+      "focusLatencyMs": 237,
+      "focus": {
+        "state": "reduced",
+        "reason": "node-focus",
+        "selectedCount": 1
+      }
+    },
+    "frameActivity": {
+      "settledDrawsPerSecond": 0,
+      "inactiveDraws": 1,
+      "libraryDraws": 0,
+      "focusResumeLayoutRestarts": 0,
+      "resumeLayoutBefore": {
+        "frame": 121,
+        "settled": true
+      },
+      "resumeLayoutAfter": {
+        "frame": 121,
+        "settled": true,
+        "continuous": false
+      }
+    },
+    "lifecycle": {
+      "cycles": 0,
+      "completed": true,
+      "totalMs": 0,
+      "maximumVisibleMs": 0,
+      "heapBeforeBytes": null,
+      "heapAfterBytes": null,
+      "heapDeltaBytes": null
+    },
+    "longTaskCount": 100,
+    "longestTaskMs": 15634,
+    "jsHeapUsedBytes": 123115984,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "returnedToLibrary": true,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "9d23733170a34e79d6ee5482c1b1eaa3f04401054a11a083ee5f59710d7272bd",
+    "afterSha256": "9d23733170a34e79d6ee5482c1b1eaa3f04401054a11a083ee5f59710d7272bd"
+  },
+  "comparison": {
+    "firstVisibleWithinExpectation": true,
+    "layoutStableWithinExpectation": false,
+    "interactionsWithinExpectation": true,
+    "settledFrameActivityWithinExpectation": true,
+    "inactiveFrameActivityWithinExpectation": true,
+    "focusResumeWithoutLayoutRestart": true
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
