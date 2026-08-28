@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-12",
+  "releaseCandidate": false,
+  "scope": "professional-visual-system-exit-audit",
+  "requiredStages": ["M3B-1", "M3B-2", "M3B-3", "M3B-4", "M3B-5", "M3B-6", "M3B-7", "M3B-8", "M3B-9", "M3B-10", "M3B-11"],
+  "requiredSessions": [
+    { "theme": "dark", "motion": "calm" },
+    { "theme": "dark", "motion": "reduced" },
+    { "theme": "white", "motion": "reduced" },
+    { "theme": "contrast", "motion": "reduced" }
+  ],
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "exitCriteria": {
+    "semanticLegendWithoutDetails": true,
+    "nearMiddleFarHierarchy": true,
+    "communityContoursAndOverview": true,
+    "curvedParallelRelationsAndPathLabels": true,
+    "pathMotionIsScopedAndReducedMotionSafe": true,
+    "boundedFocusAndFitSelection": true,
+    "boundedMinimapNavigation": true,
+    "restrainedNodeStatusRings": true,
+    "responsiveOverlaySeparation": true,
+    "sourceFilesRemainReadOnly": true,
+    "runtimeErrors": 0
+  },
+  "exitDecision": {
+    "m3bComplete": true,
+    "clusterCollapseExpandDeferred": "Existing semantic community overview and filtered subgraph already provide bounded cluster entry and return; proxy-node collapse would add layout and persistence risk without demonstrated incremental value.",
+    "graphFullscreenDeferred": "Three required desktop viewports already preserve controls, canvas, details and minimap; fullscreen is not required for the professional visual acceptance goals.",
+    "governanceRingsDeferred": "No canonical per-node governance status contract exists.",
+    "m3cRemainsIndependent": true
+  },
+  "selectedNextStage": {
+    "id": "M3C-0",
+    "name": "large-graph-performance-baseline-selection-audit",
+    "reason": "M3B visual information hierarchy is complete; M3C must independently re-baseline 100, 1000 and 5000-node interaction, dirty-frame and lifecycle behavior before optimization."
+  }
+}

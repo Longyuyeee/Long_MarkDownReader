@@ -282,6 +282,8 @@
     "audit:post-v115-m3b10-remaining-professional-visual-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b10-remaining-professional-visual-selection-audit.ps1",
     "check:post-v115-m3b11-restrained-node-status-rings": "node scripts/check-post-v115-m3b11-restrained-node-status-rings.mjs",
     "audit:post-v115-m3b11-restrained-node-status-rings": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b11-restrained-node-status-rings-audit.ps1",
+    "check:post-v115-m3b12-professional-visual-system-exit": "node scripts/check-post-v115-m3b12-professional-visual-system-exit.mjs",
+    "audit:post-v115-m3b12-professional-visual-system-exit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b12-professional-visual-system-exit-audit.ps1",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",
     "audit:post-v115-large-library-index-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-large-library-index-baseline.ps1",

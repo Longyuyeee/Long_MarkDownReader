@@ -67,7 +67,7 @@ await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'
 await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion === 'reduced' ? 'reduce' : 'no-preference' }] })
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7', 'M3B8', 'M3B9', 'M3B10', 'M3B11'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7', 'M3B8', 'M3B9', 'M3B10', 'M3B11', 'M3B12'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -484,6 +484,7 @@ let remainingNavigationSelection = null
 let remainingVisualSelection = null
 let nodeStatusRings = null
 let minimapNavigation = null
+let visualSystemExit = null
 if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
@@ -927,17 +928,101 @@ if (stage === 'M3B11') {
   nodeStatusRings = { viewports, selectedPriority, unselected, hoverSetup, hoverPriority, middle, far, pathPriority, mindmap, staticMotion: true, healthPanelOpened: false }
 }
 
+if (stage === 'M3B12') {
+  const overlaps = (left, right) => Boolean(left && right && left.left < right.right && left.right > right.left && left.top < right.bottom && left.bottom > right.top)
+  const readCanvas = () => evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const container=document.querySelector('[data-testid="graph-container"]');return {level:container?.dataset.semanticZoomLevel||'',ringCount:Number(canvas?.dataset.nodeStatusRingCount||0),contourCount:Number(canvas?.dataset.communityContourCount||0),parallelRouteCount:Number(canvas?.dataset.parallelRouteCount||0),labelCount:Number(canvas?.dataset.pathRelationLabelCount||0),selectedCount:Number(canvas?.dataset.selectedCount||0)}})()`)
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(180)
+  await evaluate(`document.querySelector('.details-close')?.click()`)
+  await delay(360)
+  const legend = await evaluate(`(()=>({objectTypeCount:document.querySelectorAll('[data-testid="graph-object-legend"] [data-semantic-id]').length,relationTypeCount:document.querySelectorAll('[data-testid="graph-relation-legend"] [data-semantic-id]').length,detailsClosed:!document.querySelector('[data-testid="graph-selected-node"]')}))()`)
+  const near = await readCanvas()
+
+  const viewports = []
+  for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(260)
+    const viewport = await evaluate(`(()=>{const controls=document.querySelector('.graph-controls');if(controls)controls.scrollLeft=Math.max(0,controls.scrollWidth-controls.clientWidth);const canvas=document.querySelector('[data-testid="graph-canvas"]');const legend=document.querySelector('[data-testid="graph-semantic-legend"]');const minimap=document.querySelector('[data-testid="graph-minimap"]');const stats=document.querySelector('.graph-stats');const box=el=>{const value=el?.getBoundingClientRect();return value?{left:value.left,top:value.top,right:value.right,bottom:value.bottom,width:value.width,height:value.height}:null};const mini=box(minimap),legendBox=box(legend),statsBox=box(stats);const overlap=(a,b)=>Boolean(a&&b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top);const controlsBox=box(controls);const last=box(controls?.lastElementChild);return {width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,canvasVisible:Boolean(canvas),legendVisible:Boolean(legend),minimapVisible:Boolean(minimap),controlsReachable:Boolean(controlsBox&&last&&last.left>=controlsBox.left-1&&last.right<=controlsBox.right+1),overlayOverlap:overlap(mini,legendBox)||overlap(mini,statsBox)}})()`)
+    viewports.push(viewport)
+    await capture(`visual-system-${width}-${theme}-${motion}.jpg`)
+  }
+
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(160)
+  await evaluate(`(()=>{const input=document.querySelector('.graph-search input');if(!(input instanceof HTMLInputElement))return;const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;setter?.call(input,'Evidence');input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))})()`)
+  await waitFor(`(()=>{const state=document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionState;return state==='completed'||state==='reduced'})()`, 'M3B-12 bounded node focus')
+  const focus = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const diagnostics=JSON.parse(canvas?.dataset.cameraFocusDiagnostics||'{}');delete diagnostics.nodeId;const point=diagnostics.point,viewport=diagnostics.viewport;const inSafeViewport=Boolean(point&&viewport&&point.x>=viewport.x&&point.x<=viewport.x+viewport.width&&point.y>=viewport.y&&point.y<=viewport.y+viewport.height);return {state:canvas?.dataset.cameraMotionState||'',reason:canvas?.dataset.cameraMotionReason||'',selectedCount:Number(canvas?.dataset.selectedCount||0),inSafeViewport,diagnostics}})()`)
+  await capture(`visual-focus-${theme}-${motion}.jpg`)
+  await evaluate(`(()=>{const input=document.querySelector('.graph-search input');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;if(input instanceof HTMLInputElement){setter?.call(input,'');input.dispatchEvent(new Event('input',{bubbles:true}))}document.querySelector('.details-close')?.click();document.querySelector('[data-testid="graph-fit-all"]')?.click()})()`)
+  await delay(220)
+
+  const zoomOut = () => evaluate(`(()=>{const button=document.querySelector('.lucide-zoom-out')?.closest('button');if(!(button instanceof HTMLButtonElement))return false;button.click();return true})()`)
+  for (let attempt = 0; attempt < 10 && (await readCanvas()).level !== 'middle'; attempt += 1) { await zoomOut(); await delay(80) }
+  const middle = await readCanvas()
+  await capture(`visual-middle-${theme}-${motion}.jpg`)
+  for (let attempt = 0; attempt < 12 && (await readCanvas()).level !== 'far'; attempt += 1) { await zoomOut(); await delay(80) }
+  await waitFor(`document.querySelector('[data-testid="graph-community-overview"]')!==null`, 'M3B-12 far community overview')
+  await delay(360)
+  const farCanvas = await readCanvas()
+  const farOverlay = await evaluate(`(()=>{const mini=document.querySelector('[data-testid="graph-minimap"]')?.getBoundingClientRect();const overview=document.querySelector('[data-testid="graph-community-overview"]')?.getBoundingClientRect();const box=value=>value?{left:value.left,top:value.top,right:value.right,bottom:value.bottom}:null;return {minimap:box(mini),overview:box(overview),overviewCount:document.querySelectorAll('[data-testid="graph-community-overview-entry"]').length}})()`)
+  const far = { ...farCanvas, overviewCount: farOverlay.overviewCount, minimapOverlap: overlaps(farOverlay.minimap, farOverlay.overview) }
+  await capture(`visual-far-${theme}-${motion}.jpg`)
+  const enteredNodeCount = await evaluate(`(()=>{const entry=document.querySelector('[data-testid="graph-community-overview-entry"]');const count=Number(entry?.dataset.nodeCount||0);entry?.click();return count})()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'M3B-12 community entry')
+  await evaluate(`document.querySelector('[data-testid="graph-community-focus-return"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')===null`, 'M3B-12 community return')
+  const community = { enteredNodeCount, returned: true }
+
+  await evaluate(`document.querySelector('[data-testid="graph-fit-all"]')?.click();document.querySelector('[data-testid="graph-path-entry"]')?.click()`)
+  await waitFor(`document.querySelector('[data-testid="graph-path-panel"]')!==null`, 'M3B-12 path panel')
+  const choose = async (selector, prefix) => {
+    const chosen = await evaluate(`(()=>{const select=document.querySelector(${JSON.stringify(selector)});if(!(select instanceof HTMLSelectElement))return false;const option=[...select.options].find(item=>item.textContent?.startsWith(${JSON.stringify(prefix)}));if(!option)return false;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));return true})()`)
+    if (!chosen) throw new Error(`M3B-12 option missing: ${prefix}`)
+  }
+  await choose('[data-testid="graph-path-start"]', 'NorthStar · Markdown')
+  await choose('[data-testid="graph-path-end"]', 'Evidence · PDF')
+  await evaluate(`document.querySelector('[data-testid="graph-path-run"]')?.click()`)
+  await waitFor(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length===3`, 'M3B-12 verified path evidence')
+  const pathViewports = []
+  for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(260)
+    await evaluate(`document.querySelector('[data-testid="graph-fit-all"]')?.click()`)
+    await delay(140)
+    const item = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const panel=document.querySelector('[data-testid="graph-path-panel"]')?.getBoundingClientRect();const mini=document.querySelector('[data-testid="graph-minimap"]')?.getBoundingClientRect();const overlap=Boolean(panel&&mini&&panel.left<mini.right&&panel.right>mini.left&&panel.top<mini.bottom&&panel.bottom>mini.top);return {width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,cameraSafe:canvas?.dataset.pathCameraSafe==='true',panelInBounds:Boolean(panel&&panel.left>=0&&panel.top>=0&&panel.right<=innerWidth+1&&panel.bottom<=innerHeight+1),minimapOverlap:overlap}})()`)
+    pathViewports.push(item)
+    await capture(`visual-path-${width}-${theme}-${motion}.jpg`)
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(320)
+  const motionBefore = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {phase:Number(canvas?.dataset.pathMotionPhase||0),frames:Number(canvas?.dataset.pathMotionFrames||0)}})()`)
+  await delay(320)
+  const motionAfter = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {phase:Number(canvas?.dataset.pathMotionPhase||0),frames:Number(canvas?.dataset.pathMotionFrames||0),reduced:canvas?.dataset.pathMotionReduced==='true'}})()`)
+  const pathCanvas = await readCanvas()
+  const pathResult = { evidenceEdgeCount: await evaluate(`document.querySelectorAll('[data-testid="graph-path-evidence-edge"]').length`), labelCount: pathCanvas.labelCount, parallelRouteCount: pathCanvas.parallelRouteCount, ringCount: pathCanvas.ringCount, viewports: pathViewports, motion: { reduced: motionAfter.reduced, phaseChanged: motionAfter.phase !== motionBefore.phase, framesAdvanced: motionAfter.frames > motionBefore.frames } }
+  await evaluate(`document.querySelector('[data-testid="graph-path-return"]')?.click();document.querySelector('[aria-label="关闭最短路径"]')?.click();document.querySelector('[data-testid="graph-fit-all"]')?.click()`)
+  await delay(220)
+
+  const beforePose = await evaluate(`(()=>{const minimap=document.querySelector('[data-testid="graph-minimap-canvas"]');minimap?.focus();return document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraPose||''})()`)
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 })
+  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.cameraMotionReason==='minimap-keyboard'&&['completed','reduced'].includes(canvas.dataset.cameraMotionState||'')})()`, 'M3B-12 minimap keyboard integration')
+  const minimap = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const mini=document.querySelector('[data-testid="graph-minimap"]');return {state:canvas?.dataset.cameraMotionState||'',reason:canvas?.dataset.cameraMotionReason||'',poseChanged:(canvas?.dataset.cameraPose||'')!==${JSON.stringify(beforePose)},viewportInBounds:mini?.dataset.viewportInBounds==='true'}})()`)
+  const deferred = await evaluate(`(()=>({clusterCollapseExpandVisible:Boolean(document.querySelector('[data-testid="graph-cluster-collapse"],[data-testid="graph-cluster-expand"]')),fullscreenVisible:Boolean(document.querySelector('[data-testid="graph-fullscreen"]')),governanceRingVisible:Boolean(document.querySelector('[data-testid="graph-node-governance-ring"]'))}))()`)
+  visualSystemExit = { legend, viewports, hierarchy: { near, middle, far }, focus, community, path: pathResult, minimap, deferred }
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B11' ? 'M3B-11' : stage === 'M3B10' ? 'M3B-10' : stage === 'M3B9' ? 'M3B-9' : stage === 'M3B8' ? 'M3B-8' : stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, remainingNavigationSelection, minimapNavigation, remainingVisualSelection, nodeStatusRings, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B12' ? 'M3B-12' : stage === 'M3B11' ? 'M3B-11' : stage === 'M3B10' ? 'M3B-10' : stage === 'M3B9' ? 'M3B-9' : stage === 'M3B8' ? 'M3B-8' : stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, remainingNavigationSelection, minimapNavigation, remainingVisualSelection, nodeStatusRings, visualSystemExit, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, ['M3B5', 'M3B7', 'M3B9', 'M3B11'].includes(stage) ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, ['M3B5', 'M3B7', 'M3B9', 'M3B11', 'M3B12'].includes(stage) ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

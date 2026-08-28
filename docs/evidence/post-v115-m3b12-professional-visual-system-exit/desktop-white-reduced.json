@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-12",
+  "actual": {
+    "theme": "white",
+    "motion": "reduced",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": null,
+    "cameraNavigation": null,
+    "remainingNavigationSelection": null,
+    "minimapNavigation": null,
+    "remainingVisualSelection": null,
+    "nodeStatusRings": null,
+    "visualSystemExit": {
+      "legend": {
+        "objectTypeCount": 11,
+        "relationTypeCount": 6,
+        "detailsClosed": true
+      },
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "canvasVisible": true,
+          "legendVisible": true,
+          "minimapVisible": true,
+          "controlsReachable": true,
+          "overlayOverlap": false
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "canvasVisible": true,
+          "legendVisible": true,
+          "minimapVisible": true,
+          "controlsReachable": true,
+          "overlayOverlap": false
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "canvasVisible": true,
+          "legendVisible": true,
+          "minimapVisible": true,
+          "controlsReachable": true,
+          "overlayOverlap": false
+        }
+      ],
+      "hierarchy": {
+        "near": {
+          "level": "near",
+          "ringCount": 8,
+          "contourCount": 5,
+          "parallelRouteCount": 2,
+          "labelCount": 0,
+          "selectedCount": 0
+        },
+        "middle": {
+          "level": "middle",
+          "ringCount": 8,
+          "contourCount": 5,
+          "parallelRouteCount": 2,
+          "labelCount": 0,
+          "selectedCount": 0
+        },
+        "far": {
+          "level": "far",
+          "ringCount": 0,
+          "contourCount": 0,
+          "parallelRouteCount": 2,
+          "labelCount": 0,
+          "selectedCount": 0,
+          "overviewCount": 5,
+          "minimapOverlap": false
+        }
+      },
+      "focus": {
+        "state": "reduced",
+        "reason": "node-focus",
+        "selectedCount": 1,
+        "inSafeViewport": true,
+        "diagnostics": {
+          "point": {
+            "x": 563.201877568056,
+            "y": 306.6544261737224
+          },
+          "viewport": {
+            "x": 0,
+            "y": 0,
+            "width": 946,
+            "height": 710
+          },
+          "target": {
+            "x": -90.20187756805603,
+            "y": 48.34557382627759,
+            "zoom": 1
+          }
+        }
+      },
+      "community": {
+        "enteredNodeCount": 4,
+        "returned": true
+      },
+      "path": {
+        "evidenceEdgeCount": 3,
+        "labelCount": 3,
+        "parallelRouteCount": 0,
+        "ringCount": 0,
+        "viewports": [
+          {
+            "width": 1280,
+            "height": 800,
+            "fits": true,
+            "cameraSafe": true,
+            "panelInBounds": true,
+            "minimapOverlap": false
+          },
+          {
+            "width": 1000,
+            "height": 700,
+            "fits": true,
+            "cameraSafe": true,
+            "panelInBounds": true,
+            "minimapOverlap": false
+          },
+          {
+            "width": 720,
+            "height": 680,
+            "fits": true,
+            "cameraSafe": true,
+            "panelInBounds": true,
+            "minimapOverlap": false
+          }
+        ],
+        "motion": {
+          "reduced": true,
+          "phaseChanged": false,
+          "framesAdvanced": false
+        }
+      },
+      "minimap": {
+        "state": "reduced",
+        "reason": "minimap-keyboard",
+        "poseChanged": true,
+        "viewportInBounds": true
+      },
+      "deferred": {
+        "clusterCollapseExpandVisible": false,
+        "fullscreenVisible": false,
+        "governanceRingVisible": false
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
