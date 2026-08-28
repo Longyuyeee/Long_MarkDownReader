@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-6",
+  "actual": {
+    "theme": "dark",
+    "motion": "reduced",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": {
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "controlsScrollable": false,
+          "controlsScrollLeft": 0,
+          "controlsMaxScroll": 0,
+          "controlRect": {
+            "left": 264.1953125,
+            "right": 1228.8046875,
+            "width": 964.609375
+          },
+          "fitRect": {
+            "left": 1198.8046875,
+            "right": 1228.8046875,
+            "width": 30
+          },
+          "fitTitle": "",
+          "fitReachable": true,
+          "zoomText": "100",
+          "minimapVisible": false,
+          "fitSelectionVisible": false,
+          "fullscreenVisible": false
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "controlsScrollable": true,
+          "controlsScrollLeft": 214,
+          "controlsMaxScroll": 214,
+          "controlRect": {
+            "left": 253,
+            "right": 960,
+            "width": 707
+          },
+          "fitRect": {
+            "left": 930.3984375,
+            "right": 960.3984375,
+            "width": 30
+          },
+          "fitTitle": "",
+          "fitReachable": true,
+          "zoomText": "135",
+          "minimapVisible": false,
+          "fitSelectionVisible": false,
+          "fullscreenVisible": false
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "controlsScrollable": true,
+          "controlsScrollLeft": 183.5,
+          "controlsMaxScroll": 196,
+          "controlRect": {
+            "left": 241.796875,
+            "right": 691.203125,
+            "width": 449.40625
+          },
+          "fitRect": {
+            "left": 671.296875,
+            "right": 703.296875,
+            "width": 32
+          },
+          "fitTitle": "",
+          "fitReachable": false,
+          "zoomText": "135",
+          "minimapVisible": false,
+          "fitSelectionVisible": false,
+          "fullscreenVisible": false
+        }
+      ],
+      "nodeFocus": {
+        "canvasChangedImmediately": true,
+        "stableAfterImmediateFocus": false
+      },
+      "community": {
+        "fullGraphStats": "17 / 17 节点 17 连接 135% 1 个已选 近景",
+        "enteredCommunityCount": 4,
+        "communityStats": "4 / 17 节点 4 连接 135% 1 个已选 近景",
+        "returned": true,
+        "interactionKind": "filtered-subgraph"
+      },
+      "capabilities": {
+        "fitAll": true,
+        "fitSelection": false,
+        "smoothFocus": false,
+        "minimap": false,
+        "clusterCollapseExpand": false,
+        "fullscreen": false
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-6",
+  "releaseCandidate": false,
+  "scope": "navigation-and-camera-system-selection-audit",
+  "currentFacts": {
+    "fitAllVisibleNodes": true,
+    "pathPanelAwareFit": true,
+    "fitSelection": false,
+    "nodeFocusTransition": "immediate-view-offset-mutation",
+    "searchFocusRestartsFilteredLayout": true,
+    "boundedCameraTransition": false,
+    "minimap": false,
+    "communityInteraction": "filtered-subgraph-enter-and-return",
+    "clusterCollapseExpand": false,
+    "graphFullscreen": false,
+    "narrowToolbarUsesHorizontalScrolling": true,
+    "narrowToolbarEndCommandFullyReachableAt720": false,
+    "nodeCoordinatesRemainSourceReadOnly": true
+  },
+  "decision": {
+    "selectedIncrement": "fit-selection-and-reduced-motion-safe-focus",
+    "reason": "Existing multi-selection and panel-aware fit geometry make fit-selection the smallest useful camera increment. The same stage must make the command strip end fully reachable at 720 px and replace unbounded search/layout motion with a bounded reduced-motion-safe focus contract before introducing minimap or cluster lens state.",
+    "deferred": [
+      "minimap",
+      "cluster-collapse-expand",
+      "graph-fullscreen",
+      "status-rings",
+      "M3C-dirty-frame-and-large-graph-performance"
+    ]
+  },
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "selectedNextStage": {
+    "id": "M3B-7",
+    "name": "fit-selection-and-reduced-motion-safe-focus"
+  }
+}
