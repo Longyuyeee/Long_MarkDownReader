@@ -11,7 +11,9 @@ for (const token of ['title="适合窗口"', 'const fitGraph = () =>', 'const no
 const successorImplemented = graphView.includes('data-testid="graph-fit-selection"')
 if (successorImplemented) requireFact(graphView.includes('requestCameraPose') && graphView.includes('cameraMotionReduced'), 'M3B-7 successor camera contract is incomplete')
 else requireFact(graphView.includes('viewX = width / 2') && graphView.includes('viewY = height / 2'), 'M3B-6 immediate focus baseline drifted')
-for (const absent of ['data-testid="graph-minimap"', 'data-testid="graph-fullscreen"', 'requestFullscreen()']) requireFact(!graphView.includes(absent), `M3B-6 deferred-feature fact drifted: ${absent}`)
+const minimapImplemented = graphView.includes('data-testid="graph-minimap"')
+if (minimapImplemented) requireFact(graphView.includes('graphMinimapViewportRect') && graphView.includes("requestCameraPose(target, 'minimap-click')"), 'M3B-9 successor minimap contract is incomplete')
+for (const absent of ['data-testid="graph-fullscreen"', 'requestFullscreen()']) requireFact(!graphView.includes(absent), `M3B-6 deferred-feature fact drifted: ${absent}`)
 requireFact(graphView.includes("data-testid=\"graph-community-card\"") && graphView.includes('activeCommunityId.value = communityId') && graphView.includes('activeCommunityId.value = \'\''), 'community filter enter/return baseline drifted')
 
 let evidence = null

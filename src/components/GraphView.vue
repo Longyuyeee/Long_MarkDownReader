@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel" :data-community-contour-count="communityContourCount">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen, 'node-details-active': selectedNode && selectedNodeIds.length === 1, 'community-overview-active': showCommunityOverview }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel" :data-community-contour-count="communityContourCount">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -224,6 +224,7 @@
     </nav>
     <canvas
       ref="canvasRef"
+      class="graph-main-canvas"
       data-testid="graph-canvas"
       tabindex="0"
       aria-label="产品知识图谱画布"
@@ -261,6 +262,33 @@
       @click="onClick"
       @dblclick="onDblClick"
     ></canvas>
+    <section
+      v-if="visibleNodes.length"
+      class="graph-minimap"
+      data-testid="graph-minimap"
+      :data-source-node-count="minimapSourceNodeCount"
+      :data-rendered-point-count="minimapRenderedPointCount"
+      :data-viewport-in-bounds="String(minimapViewportInBounds)"
+      :data-camera-initialized="String(Boolean(cameraPoseDiagnostics))"
+      :data-navigation-state="minimapNavigationState"
+      :data-navigation-count="minimapNavigationCount"
+      :data-diagnostics="minimapDiagnostics"
+      aria-label="图谱缩略导航"
+    >
+      <header><span>全图方位</span><small>{{ minimapRenderedPointCount }} 点</small></header>
+      <canvas
+        ref="minimapCanvasRef"
+        class="graph-minimap-canvas"
+        data-testid="graph-minimap-canvas"
+        tabindex="0"
+        aria-label="点击或拖动以移动图谱视口"
+        @pointerdown="startMinimapNavigation"
+        @pointermove="moveMinimapNavigation"
+        @pointerup="endMinimapNavigation"
+        @pointercancel="cancelMinimapNavigation"
+        @keydown="handleMinimapKeydown"
+      ></canvas>
+    </section>
     <n-dropdown
       placement="bottom-start"
       trigger="manual"
@@ -462,6 +490,8 @@ import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint,
 import { advanceGraphPathMotionPhase, graphPathDashOffset, graphPathTraversalDirection } from '../utils/graphPathMotion'
 import { graphCameraPoseForBounds, graphCameraPoseForPoint, interpolateGraphCameraPose } from '../utils/graphCamera'
 import type { GraphCameraPose, GraphCameraViewport } from '../utils/graphCamera'
+import { graphMinimapProjection as buildGraphMinimapProjection, graphMinimapViewportRect, graphMinimapWorldPoint } from '../utils/graphMinimap'
+import type { GraphMinimapProjection } from '../utils/graphMinimap'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -476,6 +506,7 @@ const emit = defineEmits(['selectFile'])
 
 const containerRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const minimapCanvasRef = ref<HTMLCanvasElement | null>(null)
 const pathPanelRef = ref<HTMLElement | null>(null)
 const detailsPanelRef = ref<HTMLElement | null>(null)
 const graphPageActive = ref(true)
@@ -505,6 +536,12 @@ const cameraMotionCancellations = ref(0)
 const cameraPoseDiagnostics = ref('')
 const cameraFocusDiagnostics = ref('')
 const fitSelectionDiagnostics = ref('')
+const minimapDiagnostics = ref('')
+const minimapSourceNodeCount = ref(0)
+const minimapRenderedPointCount = ref(0)
+const minimapViewportInBounds = ref(true)
+const minimapNavigationState = ref<'idle' | 'click' | 'drag'>('idle')
+const minimapNavigationCount = ref(0)
 const neighborFocusRootId = ref('')
 const neighborFocusDepth = ref(1)
 const pathOpen = ref(false)
@@ -828,6 +865,10 @@ let layoutSettled = false
 let communityOverviewCache: GraphCommunityOverview | null = null
 let communityOverviewCacheKey = ''
 let communityOverviewFrame = -1
+let minimapProjectionCache: GraphMinimapProjection | null = null
+let minimapProjectionCacheKey = ''
+let minimapLayoutRevision = 0
+let minimapPointer: { id: number; startX: number; startY: number; dragged: boolean } | null = null
 const hoveredNode = ref<GraphNode | null>(null)
 const hoveredCommunityId = ref('')
 const communityOverviewInBounds = ref(true)
@@ -926,6 +967,7 @@ const restoreLayoutSnapshot = (snapshot: LayoutSnapshot) => {
   }
   layoutSettled = true
   frameCount = LAYOUT_MAX_FRAMES
+  minimapLayoutRevision += 1
   scheduleLayoutSave()
 }
 const pushLayoutUndo = (before: LayoutSnapshot) => {
@@ -1020,6 +1062,7 @@ const positionGraphLayout = (mode: GraphLayoutMode) => {
   nodes.forEach(node => { node.vx = 0; node.vy = 0 })
   layoutSettled = true
   frameCount = LAYOUT_MAX_FRAMES
+  minimapLayoutRevision += 1
 }
 const applySelectedLayout = () => {
   const before = captureLayoutSnapshot(activeLayoutMode)
@@ -1073,6 +1116,7 @@ const applyMindMapLayout = (root: GraphNode) => {
   viewY = 0
   zoom = Math.max(0.55, Math.min(1, 3.2 / Math.max(1, levels.length)))
   zoomLevel.value = zoom
+  minimapLayoutRevision += 1
 }
 
 const switchView = (mode: 'network' | 'mindmap') => {
@@ -1749,6 +1793,129 @@ const frameCommunityOverview = () => {
   communityOverviewCacheKey = ''
 }
 
+const refreshCameraPoseDiagnostics = () => {
+  const value = JSON.stringify({ x: viewX, y: viewY, zoom })
+  if (cameraPoseDiagnostics.value !== value) cameraPoseDiagnostics.value = value
+}
+
+const drawMinimap = () => {
+  const minimap = minimapCanvasRef.value
+  const main = canvasRef.value
+  if (!minimap || !main) return
+  const width = minimap.clientWidth
+  const height = minimap.clientHeight
+  if (width <= 0 || height <= 0) return
+  const dpr = window.devicePixelRatio || 1
+  if (minimap.width !== Math.round(width * dpr) || minimap.height !== Math.round(height * dpr)) {
+    minimap.width = Math.round(width * dpr)
+    minimap.height = Math.round(height * dpr)
+  }
+  const refreshBucket = layoutSettled ? minimapLayoutRevision : Math.floor(frameCount / 8)
+  const cacheKey = `${visibleGraphSignature.value}\u001e${width}x${height}\u001e${refreshBucket}`
+  if (!minimapProjectionCache || minimapProjectionCacheKey !== cacheKey) {
+    minimapProjectionCache = buildGraphMinimapProjection(visibleNodes.value, width, height, 600, 8)
+    minimapProjectionCacheKey = cacheKey
+  }
+  const projection = minimapProjectionCache
+  const context = minimap.getContext('2d')
+  if (!projection || !context) return
+  context.setTransform(dpr, 0, 0, dpr, 0, 0)
+  context.clearRect(0, 0, width, height)
+  const dark = isActiveThemeDark(store.theme)
+  for (const point of projection.points) {
+    context.beginPath()
+    context.arc(point.x, point.y, projection.sourceNodeCount > 1000 ? 1.15 : projection.sourceNodeCount > 100 ? 1.45 : 2.2, 0, Math.PI * 2)
+    context.fillStyle = graphSemanticColor(point.objectType, dark)
+    context.fill()
+  }
+  const viewport = graphMinimapViewportRect(projection, { x: viewX, y: viewY, zoom }, { width: main.clientWidth, height: main.clientHeight })
+  const tone = getActiveThemeTone(store.theme)
+  context.fillStyle = `${tone.ui.primary}18`
+  context.strokeStyle = tone.ui.primary
+  context.lineWidth = 1.5
+  context.fillRect(viewport.x, viewport.y, viewport.width, viewport.height)
+  context.strokeRect(viewport.x + 0.75, viewport.y + 0.75, Math.max(0.5, viewport.width - 1.5), Math.max(0.5, viewport.height - 1.5))
+  minimapSourceNodeCount.value = projection.sourceNodeCount
+  minimapRenderedPointCount.value = projection.points.length
+  minimapViewportInBounds.value = viewport.x >= 0 && viewport.y >= 0 && viewport.x + viewport.width <= width + 0.01 && viewport.y + viewport.height <= height + 0.01
+  minimapDiagnostics.value = JSON.stringify({ bounds: projection.bounds, scale: projection.scale, offsetX: projection.offsetX, offsetY: projection.offsetY, viewport, width, height, maximumPoints: 600 })
+}
+
+const minimapLocalPoint = (event: PointerEvent) => {
+  const minimap = minimapCanvasRef.value
+  if (!minimap) return null
+  const rect = minimap.getBoundingClientRect()
+  return { x: event.clientX - rect.left - minimap.clientLeft, y: event.clientY - rect.top - minimap.clientTop }
+}
+
+const minimapTargetForPoint = (point: { x: number; y: number }) => {
+  const main = canvasRef.value
+  if (!main || !minimapProjectionCache) return null
+  const world = graphMinimapWorldPoint(minimapProjectionCache, point)
+  return graphCameraPoseForPoint(world, { x: 0, y: 0, width: main.clientWidth, height: main.clientHeight }, zoom)
+}
+
+const startMinimapNavigation = (event: PointerEvent) => {
+  if (event.button !== 0) return
+  const point = minimapLocalPoint(event)
+  if (!point) return
+  cancelCameraMotion()
+  minimapPointer = { id: event.pointerId, startX: point.x, startY: point.y, dragged: false }
+  minimapCanvasRef.value?.setPointerCapture(event.pointerId)
+  event.preventDefault()
+}
+
+const moveMinimapNavigation = (event: PointerEvent) => {
+  if (!minimapPointer || minimapPointer.id !== event.pointerId) return
+  const point = minimapLocalPoint(event)
+  if (!point) return
+  if (!minimapPointer.dragged && Math.hypot(point.x - minimapPointer.startX, point.y - minimapPointer.startY) < 3) return
+  minimapPointer.dragged = true
+  const target = minimapTargetForPoint(point)
+  if (!target) return
+  applyCameraPose(target)
+  cameraMotionReason.value = 'minimap-drag'
+  cameraMotionState.value = cameraMotionReduced.value ? 'reduced' : 'completed'
+  minimapNavigationState.value = 'drag'
+  event.preventDefault()
+}
+
+const endMinimapNavigation = (event: PointerEvent) => {
+  if (!minimapPointer || minimapPointer.id !== event.pointerId) return
+  const point = minimapLocalPoint(event)
+  const dragged = minimapPointer.dragged
+  minimapCanvasRef.value?.releasePointerCapture(event.pointerId)
+  minimapPointer = null
+  if (!dragged && point) {
+    const target = minimapTargetForPoint(point)
+    if (target) requestCameraPose(target, 'minimap-click')
+    minimapNavigationState.value = 'click'
+  }
+  minimapNavigationCount.value += 1
+  event.preventDefault()
+}
+
+const cancelMinimapNavigation = (event: PointerEvent) => {
+  if (minimapPointer?.id === event.pointerId) minimapPointer = null
+}
+
+const handleMinimapKeydown = (event: KeyboardEvent) => {
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return
+  const main = canvasRef.value
+  if (!main) return
+  const worldStepX = main.clientWidth / zoom * 0.15
+  const worldStepY = main.clientHeight / zoom * 0.15
+  const center = { x: (main.clientWidth / 2 - viewX) / zoom, y: (main.clientHeight / 2 - viewY) / zoom }
+  if (event.key === 'ArrowLeft') center.x -= worldStepX
+  if (event.key === 'ArrowRight') center.x += worldStepX
+  if (event.key === 'ArrowUp') center.y -= worldStepY
+  if (event.key === 'ArrowDown') center.y += worldStepY
+  requestCameraPose(graphCameraPoseForPoint(center, { x: 0, y: 0, width: main.clientWidth, height: main.clientHeight }, zoom), 'minimap-keyboard')
+  minimapNavigationState.value = 'click'
+  minimapNavigationCount.value += 1
+  event.preventDefault()
+}
+
 const draw = () => {
   const canvas = canvasRef.value
   const container = containerRef.value
@@ -2088,6 +2255,8 @@ const draw = () => {
   }
 
   ctx.restore()
+  refreshCameraPoseDiagnostics()
+  drawMinimap()
 
   // 更新悬停检测
   const canvasRect = canvas.getBoundingClientRect()
@@ -2195,6 +2364,7 @@ const onDrag = (e: MouseEvent) => {
       node.y = position.y + dy
       node.vx = 0; node.vy = 0
     })
+    minimapLayoutRevision += 1
     layoutSettled = true
     frameCount = LAYOUT_MAX_FRAMES
   } else {
@@ -2619,7 +2789,7 @@ onUnmounted(() => { graphPageActive.value = false; cameraTransition = null; pers
 .control-btn:disabled { cursor: default; opacity: .32; transform: none; box-shadow: none; }
 .control-btn:disabled:hover { color: var(--theme-text); border-color: var(--workspace-border-color); background: var(--workspace-control-bg); }
 
-canvas {
+.graph-main-canvas {
   display: block;
   cursor: grab;
   flex: 1;
@@ -2629,13 +2799,36 @@ canvas {
   background-size: 22px 22px;
 }
 
-canvas:active {
+.graph-main-canvas:active {
   cursor: grabbing;
 }
-canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--theme-primary) 48%, transparent); }
-.graph-canvas-theme-professional canvas { background-color: color-mix(in srgb, var(--theme-bg) 97%, #eef2f6); background-size: 28px 28px; }
-.graph-canvas-theme-colorful canvas { background-color: color-mix(in srgb, var(--theme-bg) 95%, #dcecff); }
-.graph-canvas-theme-focus canvas { background-color: var(--theme-bg); background-image: none; }
+.graph-main-canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--theme-primary) 48%, transparent); }
+.graph-canvas-theme-professional .graph-main-canvas { background-color: color-mix(in srgb, var(--theme-bg) 97%, #eef2f6); background-size: 28px 28px; }
+.graph-canvas-theme-colorful .graph-main-canvas { background-color: color-mix(in srgb, var(--theme-bg) 95%, #dcecff); }
+.graph-canvas-theme-focus .graph-main-canvas { background-color: var(--theme-bg); background-image: none; }
+
+.graph-minimap {
+  position: absolute;
+  z-index: 7;
+  right: 16px;
+  bottom: 58px;
+  width: 184px;
+  padding: 6px;
+  box-sizing: border-box;
+  border: 1px solid rgba(var(--theme-primary-rgb), .28);
+  border-radius: 8px;
+  color: var(--theme-text);
+  background: color-mix(in srgb, var(--theme-card) 94%, transparent);
+  box-shadow: var(--workspace-shadow-sm);
+  backdrop-filter: blur(14px);
+}
+.graph-minimap header { height: 18px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px 4px; color: var(--theme-text-secondary); font-size: 9px; font-weight: 750; }
+.graph-minimap header small { font-size: 9px; font-weight: 600; }
+.graph-minimap-canvas { width: 170px; height: 104px; display: block; box-sizing: border-box; border: 1px solid var(--workspace-border-color); border-radius: 5px; outline: none; background: color-mix(in srgb, var(--theme-bg) 91%, var(--theme-card)); cursor: crosshair; touch-action: none; }
+.graph-minimap-canvas:active { cursor: grabbing; }
+.graph-minimap-canvas:focus-visible { border-color: var(--theme-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary) 32%, transparent); }
+.node-details-active .graph-minimap { right: calc(var(--workspace-inspector-width) + var(--workspace-floating-gutter) + 12px); }
+.community-overview-active .graph-minimap { bottom: 104px; }
 
 .graph-community-overview-nav {
   position: absolute;
@@ -3167,6 +3360,15 @@ canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--them
     width: auto;
     max-height: 40vh;
   }
+
+  .graph-minimap,
+  .node-details-active .graph-minimap {
+    right: 10px;
+    width: 156px;
+  }
+  .graph-minimap-canvas { width: 142px; height: 88px; }
+  .node-details-active:not(.graph-path-active):not(.graph-comparison-active) .graph-minimap { top: 150px; bottom: auto; }
+  .community-overview-active .graph-minimap { top: auto; bottom: 104px; }
 }
 
 @media (max-width: 640px) {

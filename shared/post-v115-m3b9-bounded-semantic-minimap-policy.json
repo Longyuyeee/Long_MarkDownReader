@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-9",
+  "releaseCandidate": false,
+  "scope": "bounded-semantic-minimap-and-viewport-navigation",
+  "requirements": {
+    "derivedReadOnlyOverview": true,
+    "semanticNodeColorsWithoutLabels": true,
+    "currentViewportRectangle": true,
+    "clickUsesBoundedReducedMotionSafeCamera": true,
+    "dragUsesDirectManipulationCamera": true,
+    "keyboardViewportNavigation": true,
+    "initialCameraStateRequiresNoPriorUserAction": true,
+    "maximumRenderedPoints": 600,
+    "themeAndHighContrastReadable": true,
+    "overlayCollisionFreeAtRequiredViewports": true,
+    "sourceFilesRemainReadOnly": true
+  },
+  "requiredSessions": [
+    { "theme": "dark", "motion": "calm" },
+    { "theme": "dark", "motion": "reduced" },
+    { "theme": "white", "motion": "reduced" },
+    { "theme": "contrast", "motion": "reduced" }
+  ],
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "deferred": [
+    "cluster-collapse-expand",
+    "graph-fullscreen",
+    "node-status-rings",
+    "M3C-dirty-frame-and-large-graph-performance"
+  ],
+  "selectedNextStage": {
+    "id": "M3B-10",
+    "name": "remaining-professional-visual-system-selection-audit"
+  }
+}

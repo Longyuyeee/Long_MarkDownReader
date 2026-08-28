@@ -9,7 +9,9 @@ requireFact(policy.decision.selectedIncrement === 'bounded-semantic-minimap-and-
 
 const graphView = await fs.readFile('src/components/GraphView.vue', 'utf8')
 for (const token of ['data-camera-pose', 'requestCameraPose', 'data-semantic-zoom-level', 'showCommunityOverview', 'activeCommunityId.value = communityId']) requireFact(graphView.includes(token), `M3B-8 prerequisite missing: ${token}`)
-for (const absent of ['data-testid="graph-minimap"', 'data-testid="graph-fullscreen"', 'requestFullscreen()', 'data-testid="graph-cluster-collapse"']) requireFact(!graphView.includes(absent), `M3B-8 current capability fact drifted: ${absent}`)
+const minimapImplemented = graphView.includes('data-testid="graph-minimap"')
+if (minimapImplemented) requireFact(graphView.includes('graphMinimapViewportRect') && graphView.includes('maximumPoints: 600'), 'M3B-9 successor minimap contract is incomplete')
+for (const absent of ['data-testid="graph-fullscreen"', 'requestFullscreen()', 'data-testid="graph-cluster-collapse"']) requireFact(!graphView.includes(absent), `M3B-8 current capability fact drifted: ${absent}`)
 
 const tiers = await Promise.all(policy.currentFacts.largeGraphBaselineTiers.map(tier => readJson(`docs/evidence/post-v115-m3-baseline/tier-${tier}.json`)))
 requireFact(tiers.every(item => item.stage === 'M3-0' && item.actual.nodeCount === item.tier && item.actual.runtimeErrors === 0 && item.actual.sourceFilesUnchanged && item.actual.returnedToLibrary), 'real large-graph baseline safety drifted')

@@ -67,7 +67,7 @@ await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'
 await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion === 'reduced' ? 'reduce' : 'no-preference' }] })
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7', 'M3B8'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7', 'M3B8', 'M3B9'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -481,6 +481,7 @@ let pathMotion = null
 let navigationBaseline = null
 let cameraNavigation = null
 let remainingNavigationSelection = null
+let minimapNavigation = null
 if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
@@ -780,17 +781,63 @@ if (stage === 'M3B8') {
   }
 }
 
+if (stage === 'M3B9') {
+  const viewports = []
+  const overlaps = (left, right) => Boolean(left && right && left.left < right.right && left.right > right.left && left.top < right.bottom && left.bottom > right.top)
+  for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(260)
+    const viewport = await evaluate(`(()=>{const minimap=document.querySelector('[data-testid="graph-minimap"]');const canvas=document.querySelector('[data-testid="graph-canvas"]');const details=document.querySelector('[data-testid="graph-selected-node"]');const legend=document.querySelector('[data-testid="graph-semantic-legend"]');const stats=document.querySelector('.graph-stats');const rect=element=>{const value=element?.getBoundingClientRect();return value?{left:value.left,top:value.top,right:value.right,bottom:value.bottom,width:value.width,height:value.height}:null};return {width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,minimapRect:rect(minimap),canvasRect:rect(canvas),detailsRect:rect(details),legendRect:rect(legend),statsRect:rect(stats),sourceNodeCount:Number(minimap?.dataset.sourceNodeCount||0),renderedPointCount:Number(minimap?.dataset.renderedPointCount||0),viewportInBounds:minimap?.dataset.viewportInBounds==='true',cameraInitialized:minimap?.dataset.cameraInitialized==='true',diagnostics:JSON.parse(minimap?.dataset.diagnostics||'{}')}})()`)
+    viewport.overlaps = { details: overlaps(viewport.minimapRect, viewport.detailsRect), legend: overlaps(viewport.minimapRect, viewport.legendRect), stats: overlaps(viewport.minimapRect, viewport.statsRect) }
+    viewports.push(viewport)
+    await capture(`minimap-${width}-${theme}-${motion}.jpg`)
+  }
+
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(180)
+  const clickSetup = await evaluate(`(()=>{const minimap=document.querySelector('[data-testid="graph-minimap-canvas"]');const main=document.querySelector('[data-testid="graph-canvas"]');const host=document.querySelector('[data-testid="graph-minimap"]');const rect=minimap?.getBoundingClientRect();const localX=(minimap?.clientWidth||0)*.82;const localY=(minimap?.clientHeight||0)*.28;return {x:(rect?.left||0)+(minimap?.clientLeft||0)+localX,y:(rect?.top||0)+(minimap?.clientTop||0)+localY,localX,localY,mainWidth:main?.clientWidth||0,mainHeight:main?.clientHeight||0,beforePose:JSON.parse(main?.dataset.cameraPose||'{}'),diagnostics:JSON.parse(host?.dataset.diagnostics||'{}')}})()`)
+  const clickStartedAt = Date.now()
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: clickSetup.x, y: clickSetup.y, button: 'left', clickCount: 1 })
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: clickSetup.x, y: clickSetup.y, button: 'left', clickCount: 1 })
+  await waitFor(`(()=>{const state=document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionState;return state==='completed'||state==='reduced'})()`, 'M3B-9 minimap click completion')
+  const click = await evaluate(`(()=>{const main=document.querySelector('[data-testid="graph-canvas"]');const host=document.querySelector('[data-testid="graph-minimap"]');return {elapsedMs:${Date.now()}-${clickStartedAt},pose:JSON.parse(main?.dataset.cameraPose||'{}'),motionState:main?.dataset.cameraMotionState||'',motionReason:main?.dataset.cameraMotionReason||'',motionFrames:Number(main?.dataset.cameraMotionFrames||0),navigationState:host?.dataset.navigationState||'',navigationCount:Number(host?.dataset.navigationCount||0),viewportInBounds:host?.dataset.viewportInBounds==='true'}})()`)
+  await capture(`minimap-click-${theme}-${motion}.jpg`)
+
+  const dragSetup = await evaluate(`(()=>{const element=document.querySelector('[data-testid="graph-minimap-canvas"]');const rect=element?.getBoundingClientRect();return {startX:(rect?.left||0)+(rect?.width||0)*.52,startY:(rect?.top||0)+(rect?.height||0)*.48,endX:(rect?.left||0)+(rect?.width||0)*.25,endY:(rect?.top||0)+(rect?.height||0)*.76,beforePose:JSON.parse(document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraPose||'{}')}})()`)
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: dragSetup.startX, y: dragSetup.startY, button: 'left', clickCount: 1 })
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: dragSetup.endX, y: dragSetup.endY, button: 'left' })
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: dragSetup.endX, y: dragSetup.endY, button: 'left', clickCount: 1 })
+  await delay(100)
+  const drag = await evaluate(`(()=>{const main=document.querySelector('[data-testid="graph-canvas"]');const host=document.querySelector('[data-testid="graph-minimap"]');return {pose:JSON.parse(main?.dataset.cameraPose||'{}'),motionState:main?.dataset.cameraMotionState||'',motionReason:main?.dataset.cameraMotionReason||'',navigationState:host?.dataset.navigationState||'',navigationCount:Number(host?.dataset.navigationCount||0),viewportInBounds:host?.dataset.viewportInBounds==='true'}})()`)
+  await capture(`minimap-drag-${theme}-${motion}.jpg`)
+
+  const keyboardBeforePose = await evaluate(`(()=>{const minimap=document.querySelector('[data-testid="graph-minimap-canvas"]');minimap?.focus();return JSON.parse(document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraPose||'{}')})()`)
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 })
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 })
+  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.cameraMotionReason==='minimap-keyboard'&&['completed','reduced'].includes(canvas.dataset.cameraMotionState||'')})()`, 'M3B-9 keyboard navigation completion')
+  const keyboard = await evaluate(`(()=>{const main=document.querySelector('[data-testid="graph-canvas"]');const host=document.querySelector('[data-testid="graph-minimap"]');return {beforePose:${JSON.stringify(keyboardBeforePose)},pose:JSON.parse(main?.dataset.cameraPose||'{}'),motionState:main?.dataset.cameraMotionState||'',motionReason:main?.dataset.cameraMotionReason||'',motionFrames:Number(main?.dataset.cameraMotionFrames||0),navigationCount:Number(host?.dataset.navigationCount||0),viewportInBounds:host?.dataset.viewportInBounds==='true'}})()`)
+  await capture(`minimap-keyboard-${theme}-${motion}.jpg`)
+
+  await evaluate(`(()=>{document.querySelector('.details-close')?.click();const zoomOut=document.querySelector('.lucide-zoom-out')?.closest('button');for(let index=0;index<10;index+=1)zoomOut?.click()})()`)
+  await waitFor(`document.querySelector('[data-testid="graph-community-overview"]')!==null`, 'M3B-9 far community overview')
+  await delay(360)
+  const far = await evaluate(`(()=>{const minimap=document.querySelector('[data-testid="graph-minimap"]')?.getBoundingClientRect();const nav=document.querySelector('[data-testid="graph-community-overview"]')?.getBoundingClientRect();const shape=rect=>rect?{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,width:rect.width,height:rect.height}:null;return {minimapRect:shape(minimap),communityNavRect:shape(nav),semanticZoomLevel:document.querySelector('[data-testid="graph-container"]')?.dataset.semanticZoomLevel||''}})()`)
+  far.overlap = overlaps(far.minimapRect, far.communityNavRect)
+  await capture(`minimap-far-${theme}-${motion}.jpg`)
+  minimapNavigation = { viewports, clickSetup, click, dragSetup, drag, keyboard, far }
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B8' ? 'M3B-8' : stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, remainingNavigationSelection, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B9' ? 'M3B-9' : stage === 'M3B8' ? 'M3B-8' : stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, remainingNavigationSelection, minimapNavigation, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, ['M3B5', 'M3B7'].includes(stage) ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, ['M3B5', 'M3B7', 'M3B9'].includes(stage) ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

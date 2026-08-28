@@ -1,0 +1,469 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-9",
+  "actual": {
+    "theme": "contrast",
+    "motion": "reduced",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": null,
+    "cameraNavigation": null,
+    "remainingNavigationSelection": null,
+    "minimapNavigation": {
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "minimapRect": {
+            "left": 746,
+            "top": 606,
+            "right": 930,
+            "bottom": 742,
+            "width": 184,
+            "height": 136
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 710
+          },
+          "detailsRect": {
+            "left": 942,
+            "top": 102,
+            "right": 1262,
+            "bottom": 792,
+            "width": 320,
+            "height": 690
+          },
+          "legendRect": {
+            "left": 16,
+            "top": 158,
+            "right": 276,
+            "bottom": 435.1875,
+            "width": 260,
+            "height": 277.1875
+          },
+          "statsRect": {
+            "left": 456.78125,
+            "top": 752,
+            "right": 823.21875,
+            "bottom": 780,
+            "width": 366.4375,
+            "height": 28
+          },
+          "sourceNodeCount": 17,
+          "renderedPointCount": 17,
+          "viewportInBounds": true,
+          "cameraInitialized": true,
+          "diagnostics": {
+            "bounds": {
+              "left": 357.0633855245112,
+              "right": 669.4626078472663,
+              "top": 200.81223910415954,
+              "bottom": 547.9056655808964
+            },
+            "scale": 0.24777190646612243,
+            "offsetX": -43.172151207377745,
+            "offsetY": -41.755631324568434,
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "width": 168,
+              "height": 102
+            },
+            "width": 168,
+            "height": 102,
+            "maximumPoints": 600
+          },
+          "overlaps": {
+            "details": false,
+            "legend": false,
+            "stats": false
+          }
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "minimapRect": {
+            "left": 466,
+            "top": 506,
+            "right": 650,
+            "bottom": 642,
+            "width": 184,
+            "height": 136
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 610
+          },
+          "detailsRect": {
+            "left": 662,
+            "top": 102,
+            "right": 982,
+            "bottom": 692,
+            "width": 320,
+            "height": 590
+          },
+          "legendRect": {
+            "left": 16,
+            "top": 158,
+            "right": 276,
+            "bottom": 435.1875,
+            "width": 260,
+            "height": 277.1875
+          },
+          "statsRect": {
+            "left": 316.78125,
+            "top": 652,
+            "right": 683.21875,
+            "bottom": 680,
+            "width": 366.4375,
+            "height": 28
+          },
+          "sourceNodeCount": 17,
+          "renderedPointCount": 17,
+          "viewportInBounds": true,
+          "cameraInitialized": true,
+          "diagnostics": {
+            "bounds": {
+              "left": 362.0138004079941,
+              "right": 676.476245338145,
+              "top": 202.1747190720035,
+              "bottom": 549.1893100230859
+            },
+            "scale": 0.2478281958239709,
+            "offsetX": -44.683557209209326,
+            "offsetY": -42.10459586883279,
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "width": 168,
+              "height": 102
+            },
+            "width": 168,
+            "height": 102,
+            "maximumPoints": 600
+          },
+          "overlaps": {
+            "details": false,
+            "legend": false,
+            "stats": false
+          }
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "minimapRect": {
+            "left": 554,
+            "top": 182,
+            "right": 710,
+            "bottom": 302,
+            "width": 156,
+            "height": 120
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 590
+          },
+          "detailsRect": {
+            "left": 12,
+            "top": 392,
+            "right": 708,
+            "bottom": 664,
+            "width": 696,
+            "height": 272
+          },
+          "legendRect": {
+            "left": 10,
+            "top": 150,
+            "right": 270,
+            "bottom": 424,
+            "width": 260,
+            "height": 274
+          },
+          "statsRect": {
+            "left": 176.78125,
+            "top": 632,
+            "right": 543.21875,
+            "bottom": 660,
+            "width": 366.4375,
+            "height": 28
+          },
+          "sourceNodeCount": 17,
+          "renderedPointCount": 17,
+          "viewportInBounds": true,
+          "cameraInitialized": true,
+          "diagnostics": {
+            "bounds": {
+              "left": 362.0138004079941,
+              "right": 676.476245338145,
+              "top": 202.1747190720035,
+              "bottom": 549.1893100230859
+            },
+            "scale": 0.20172062450788328,
+            "offsetX": -34.74243028656573,
+            "offsetY": -32.78281059091041,
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "width": 110.49641935911023,
+              "height": 86
+            },
+            "width": 140,
+            "height": 86,
+            "maximumPoints": 600
+          },
+          "overlaps": {
+            "details": false,
+            "legend": false,
+            "stats": false
+          }
+        }
+      ],
+      "clickSetup": {
+        "x": 891.76,
+        "y": 660.56,
+        "localX": 137.76,
+        "localY": 28.560000000000002,
+        "mainWidth": 1280,
+        "mainHeight": 710,
+        "beforePose": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "diagnostics": {
+          "bounds": {
+            "left": 362.0138004079941,
+            "right": 676.476245338145,
+            "top": 202.1747190720035,
+            "bottom": 549.1893100230859
+          },
+          "scale": 0.2478281958239709,
+          "offsetX": -44.683557209209326,
+          "offsetY": -42.10459586883279,
+          "viewport": {
+            "x": 0,
+            "y": 0,
+            "width": 168,
+            "height": 102
+          },
+          "width": 168,
+          "height": 102,
+          "maximumPoints": 600
+        }
+      },
+      "click": {
+        "elapsedMs": 8,
+        "pose": {
+          "x": -96.16953215614569,
+          "y": 69.86459322159345,
+          "zoom": 1
+        },
+        "motionState": "reduced",
+        "motionReason": "minimap-click",
+        "motionFrames": 0,
+        "navigationState": "click",
+        "navigationCount": 1,
+        "viewportInBounds": true
+      },
+      "dragSetup": {
+        "startX": 841.4,
+        "startY": 680.92,
+        "endX": 795.5,
+        "endY": 710.04,
+        "beforePose": {
+          "x": -96.16953215614569,
+          "y": 69.86459322159345,
+          "zoom": 1
+        }
+      },
+      "drag": {
+        "pose": {
+          "x": 292.2447459108956,
+          "y": -129.78976936713713,
+          "zoom": 1
+        },
+        "motionState": "reduced",
+        "motionReason": "minimap-drag",
+        "navigationState": "drag",
+        "navigationCount": 2,
+        "viewportInBounds": true
+      },
+      "keyboard": {
+        "beforePose": {
+          "x": 292.2447459108956,
+          "y": -129.78976936713713,
+          "zoom": 1
+        },
+        "pose": {
+          "x": 100.24474591089552,
+          "y": -129.78976936713713,
+          "zoom": 1
+        },
+        "motionState": "reduced",
+        "motionReason": "minimap-keyboard",
+        "motionFrames": 0,
+        "navigationCount": 3,
+        "viewportInBounds": true
+      },
+      "far": {
+        "minimapRect": {
+          "left": 1080,
+          "top": 560,
+          "right": 1264,
+          "bottom": 696,
+          "width": 184,
+          "height": 136
+        },
+        "communityNavRect": {
+          "left": 16,
+          "top": 706,
+          "right": 1264,
+          "bottom": 742,
+          "width": 1248,
+          "height": 36
+        },
+        "semanticZoomLevel": "far",
+        "overlap": false
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

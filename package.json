@@ -276,6 +276,8 @@
     "audit:post-v115-m3b7-fit-selection-reduced-motion-focus": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b7-fit-selection-focus-audit.ps1",
     "check:post-v115-m3b8-remaining-navigation-selection": "node scripts/check-post-v115-m3b8-remaining-navigation-selection.mjs",
     "audit:post-v115-m3b8-remaining-navigation-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b8-remaining-navigation-selection-audit.ps1",
+    "check:post-v115-m3b9-bounded-semantic-minimap": "node scripts/check-post-v115-m3b9-bounded-semantic-minimap.mjs",
+    "audit:post-v115-m3b9-bounded-semantic-minimap": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3b9-bounded-semantic-minimap-audit.ps1",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",
     "audit:post-v115-large-library-index-baseline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-large-library-index-baseline.ps1",
