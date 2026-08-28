@@ -84,7 +84,7 @@ requireText(graphCommand, 'object_type: "pptx_slide"', 'C3C3 must expose PPTX sl
 requireText(graphCommand, 'pptx_file_and_slides_are_stable_graph_and_index_objects', 'C3C3 graph and persistent-index identity must have Rust regression coverage')
 requireText(graphCommand, 'focus_locator_object_id', 'C3C3 relation context must support object-level focus')
 requireText(contextPanel, 'focusLocatorObjectId', 'C3C3 shared relation UI must request object-focused context')
-requireText(contextPanel, "node.objectType === 'pptx_slide'", 'C3C3 relation UI must navigate back to PPTX slides')
+requireText(contextPanel, 'node.locator?.kind && node.locator.objectId', 'C3C3 relation UI must preserve generic internal-object locator focus')
 requireText(app, ':focus-locator-object-id', 'C3C3 shared application shell must forward object focus')
 requireText(graphView, 'openManagedObject', 'C3C3 graph nodes must use shared managed-object navigation')
 requireText(fileNavigation, "target.objectType === 'pptx_slide'", 'C3C3 shared navigation must route PPTX slide nodes')

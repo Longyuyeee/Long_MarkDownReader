@@ -1766,8 +1766,19 @@ const objectTypeLabel = (type: string) => graphObjectSemantic(type).label
 const canCreateProjectNote = (node: GraphNode) => !node.parentId && ['markdown', 'pdf'].includes(node.objectType)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const openNode = (node: GraphNode) => {
+  const path = displayWorkspacePath(node.path)
+  if (node.locator?.kind && node.locator.objectId) {
+    store.setRelationObjectFocus({
+      path,
+      locatorKind: node.locator.kind,
+      locatorObjectId: node.locator.objectId,
+      locatorPage: node.locator.page ?? undefined,
+    })
+  } else {
+    store.clearRelationObjectFocus()
+  }
   return openManagedObject(router, {
-    path: displayWorkspacePath(node.path),
+    path,
     objectType: node.objectType,
     locator: node.locator,
     locationLabel: node.locationLabel,

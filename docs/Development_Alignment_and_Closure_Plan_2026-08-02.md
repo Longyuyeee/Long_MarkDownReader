@@ -131,4 +131,4 @@ M3C-4 已完成大图性能退出审计，M3 语义、视觉和性能三线正�
 
 M4-0 已完成代码事实审计并按要求暂停在实现之前。当前搜索实际为 6/7：DOCX/ODS/ODP/PPTX 有精确定位，OPML 无内部节点定位，Table 内部行未被索引；三个入口仍各自维护定位分派，图谱和工作台也未覆盖全部 M1 对象。搜索返回上下文已真实保留，CSV→Table 的披露较完整，OPML→Canvas 缺少转换前披露。恢复时从 **M4A-1 统一对象定位合同与 Table/OPML 搜索闭环** 接续；先完成统一路由映射和两种缺口格式，不同时扩展图谱、工作台、转换或版本发布。当前不改变 `releaseCandidate=false`。
 
-M4A-1 已完成统一对象定位合同与 Table/OPML 搜索闭环；M4A-2 随后用真实 DOCX、ODS、ODP、XLSX 夹具确认四类精确定位已存在、图谱候选节点仍为 0。规模与语义审计选择 Workbook sheet 和 ODP slide 作为首个最小图谱扩面批次，DOCX block 与 ODS cell 因最大 5 万/20 万对象继续延期。当前接续点为 **M4A-3 Workbook 工作表与 ODP 幻灯片图谱定位覆盖**，保持 `releaseCandidate=false`。
+M4A-1 已完成统一对象定位合同与 Table/OPML 搜索闭环；M4A-2 随后选择 Workbook sheet 和 ODP slide 作为首个最小图谱扩面批次。M4A-3 已将两类父对象和两类内部对象接入图谱：真实夹具共 2 个父节点、6 个子节点、6 条 `contains`，结构 mention 为 0；Graph 与关系上下文共 4 次精确内部打开、4/4 返回，运行时错误为 0且源摘要不变。当前接续点为 **M4A-4 DOCX/ODS 图谱粒度选择审计**，先解决最大 5 万 block 与 20 万 cell 下的有界语义和规模边界，保持 `releaseCandidate=false`。

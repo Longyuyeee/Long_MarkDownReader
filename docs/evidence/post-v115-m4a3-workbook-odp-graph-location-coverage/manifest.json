@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-3",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "5624d3789ccfe4a98160502ce57549f9b745d827",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "e01c267ac138862d39fd79b401167bf2cab89ce3f9581cc1b5edd0260683ebde",
+  "screenshots": [
+    {
+      "file": "workbook-odp-graph-1280.jpg",
+      "bytes": 94248,
+      "sha256": "0306d0e54068e488f215f1f78c654ef85c0e4b3830873d4d15391fb479e5c0e8"
+    },
+    {
+      "file": "workbook-relation-context-location-1280.jpg",
+      "bytes": 90326,
+      "sha256": "018c6c2939db25bad6260bf7c722d8607e56fabac6e9cb3ac9b0d41e2fbd91d3"
+    },
+    {
+      "file": "odp-relation-context-location-1280.jpg",
+      "bytes": 73115,
+      "sha256": "d2b840b3153d025046f90dd195ca5a4c30a1959ff616f89ac74f1fc67ae774bf"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

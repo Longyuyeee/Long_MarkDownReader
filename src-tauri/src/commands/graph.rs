@@ -3,9 +3,11 @@ use crate::formats::markdown::{
     extract_pdf_reference_mentions, extract_wikilink_mentions, normalize_relation_type,
     WikilinkMention,
 };
+use crate::formats::odf_content::parse_odf_content;
 use crate::formats::opml::{parse_opml, OpmlNode};
 use crate::formats::pptx::{parse_pptx, pptx_search_segments, pptx_slide_location_label};
 use crate::formats::table::{parse_internal_table, table_search_text};
+use crate::services::knowledge_index::build_workbook_index_segments;
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -1701,6 +1703,10 @@ fn build_graph_paths(
             add_opml_document(library_root, path, &name, nodes, edges, node_ids);
         } else if name.to_lowercase().ends_with(".pptx") {
             add_pptx_document(library_root, path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".odp") {
+            add_odp_document(library_root, path, &name, nodes, edges, node_ids);
+        } else if name.to_lowercase().ends_with(".xlsx") {
+            add_workbook_document(library_root, path, &name, nodes, edges, node_ids);
         }
     }
 }
@@ -2252,6 +2258,175 @@ fn add_pptx_document(
                 page: Some(slide_number),
             }),
             location_label: Some(location_label),
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            object_id,
+            "contains",
+        ));
+    }
+}
+
+fn add_odp_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(bytes) = fs::read(path) else {
+        return;
+    };
+    let Ok(model) = parse_odf_content(&bytes, "odp") else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let metadata = fs::metadata(path).ok();
+    let modified_at = modified_timestamp(metadata);
+    let directory = relative_directory(path, library_root);
+    let title = name
+        .rsplit_once('.')
+        .map(|(stem, _)| stem)
+        .unwrap_or(name)
+        .to_string();
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title,
+        path: path_string.clone(),
+        size: ((bytes.len() as f64 / 100_000.0) + 8.0).clamp(8.0, 24.0),
+        tags: Vec::new(),
+        directory: directory.clone(),
+        modified_at,
+        object_type: "odp".into(),
+        search_text: model.plain_text.chars().take(12_000).collect(),
+        content_signature: Some(format!("{:x}", md5::compute(&bytes))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+    for slide in &model.slides {
+        let object_id = knowledge_object_id(&path_string, "odp_slide", &slide.id);
+        if !node_ids.insert(object_id.clone()) {
+            continue;
+        }
+        let title = if slide.name.trim().is_empty() {
+            format!("幻灯片 {}", slide.index)
+        } else {
+            slide.name.clone()
+        };
+        nodes.push(GraphNode {
+            id: object_id.clone(),
+            title,
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: directory.clone(),
+            modified_at,
+            object_type: "odp_slide".into(),
+            search_text: format!("{}\n{}", slide.text, slide.notes)
+                .chars()
+                .take(12_000)
+                .collect(),
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "odp-slide".into(),
+                object_id: slide.id.clone(),
+                page: Some(slide.index as u32),
+            }),
+            location_label: Some(format!("幻灯片 {}", slide.index)),
+        });
+        edges.push(GraphEdge::structural(
+            path_string.clone(),
+            object_id,
+            "contains",
+        ));
+    }
+}
+
+fn add_workbook_document(
+    library_root: &Path,
+    path: &Path,
+    name: &str,
+    nodes: &mut Vec<GraphNode>,
+    edges: &mut Vec<GraphEdge>,
+    node_ids: &mut HashSet<String>,
+) {
+    let Ok(bytes) = fs::read(path) else {
+        return;
+    };
+    let path_string = path.to_string_lossy().into_owned();
+    let title = name
+        .rsplit_once('.')
+        .map(|(stem, _)| stem)
+        .unwrap_or(name)
+        .to_string();
+    let Ok(segments) = build_workbook_index_segments(&title, &path_string, "workbook", &bytes)
+    else {
+        return;
+    };
+    if !node_ids.insert(path_string.clone()) {
+        return;
+    }
+    let metadata = fs::metadata(path).ok();
+    let modified_at = modified_timestamp(metadata);
+    let directory = relative_directory(path, library_root);
+    let search_text = segments
+        .iter()
+        .map(|segment| segment.text.as_str())
+        .collect::<Vec<_>>()
+        .join("\n")
+        .chars()
+        .take(12_000)
+        .collect();
+    nodes.push(GraphNode {
+        id: path_string.clone(),
+        title,
+        path: path_string.clone(),
+        size: ((bytes.len() as f64 / 100_000.0) + 8.0).clamp(8.0, 24.0),
+        tags: Vec::new(),
+        directory: directory.clone(),
+        modified_at,
+        object_type: "workbook".into(),
+        search_text,
+        content_signature: Some(format!("{:x}", md5::compute(&bytes))),
+        parent_id: None,
+        locator: None,
+        location_label: None,
+    });
+    for segment in segments
+        .into_iter()
+        .filter(|segment| segment.locator_kind.as_deref() == Some("workbook-sheet"))
+    {
+        let Some(sheet) = segment.locator_object_id else {
+            continue;
+        };
+        let object_id = knowledge_object_id(&path_string, "workbook_sheet", &sheet);
+        if !node_ids.insert(object_id.clone()) {
+            continue;
+        }
+        nodes.push(GraphNode {
+            id: object_id.clone(),
+            title: sheet.clone(),
+            path: path_string.clone(),
+            size: 8.0,
+            tags: Vec::new(),
+            directory: directory.clone(),
+            modified_at,
+            object_type: "workbook_sheet".into(),
+            search_text: segment.text.chars().take(12_000).collect(),
+            content_signature: None,
+            parent_id: Some(path_string.clone()),
+            locator: Some(GraphObjectLocator {
+                kind: "workbook-sheet".into(),
+                object_id: sheet,
+                page: None,
+            }),
+            location_label: segment.location_label,
         });
         edges.push(GraphEdge::structural(
             path_string.clone(),
@@ -4070,6 +4245,136 @@ mod tests {
             3
         );
         assert_eq!(fs::read(&path).unwrap(), source);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn workbook_sheets_and_odp_slides_are_stable_graph_and_index_objects() {
+        let (base, root) = fixture("m4a3-workbook-odp-objects");
+        let workbook_source =
+            include_bytes!("../../tests/fixtures/workbook/compatibility-baseline.xlsx");
+        let odp_source =
+            include_bytes!("../../tests/fixtures/odf-content/longedit-e1c-presentation.odp");
+        let workbook_path = root.join("Planning.xlsx");
+        let odp_path = root.join("Review.odp");
+        fs::write(&workbook_path, workbook_source).unwrap();
+        fs::write(&odp_path, odp_source).unwrap();
+
+        let graph =
+            tauri::async_runtime::block_on(build_link_graph(root.to_string_lossy().into_owned()))
+                .unwrap();
+        let workbook = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "workbook")
+            .unwrap();
+        let workbook_sheets = graph
+            .nodes
+            .iter()
+            .filter(|node| node.object_type == "workbook_sheet")
+            .collect::<Vec<_>>();
+        let odp = graph
+            .nodes
+            .iter()
+            .find(|node| node.object_type == "odp")
+            .unwrap();
+        let odp_slides = graph
+            .nodes
+            .iter()
+            .filter(|node| node.object_type == "odp_slide")
+            .collect::<Vec<_>>();
+
+        assert_eq!(workbook_sheets.len(), 4);
+        assert_eq!(odp_slides.len(), 2);
+        assert!(workbook.search_text.contains("Keyboard"));
+        assert!(odp
+            .search_text
+            .to_ascii_lowercase()
+            .contains("search and precise location"));
+        assert!(workbook_sheets.iter().all(|sheet| {
+            sheet.parent_id.as_deref() == Some(workbook.id.as_str())
+                && sheet.locator.as_ref().is_some_and(|locator| {
+                    locator.kind == "workbook-sheet"
+                        && locator.page.is_none()
+                        && !locator.object_id.is_empty()
+                })
+                && sheet
+                    .location_label
+                    .as_deref()
+                    .is_some_and(|label| label.starts_with("工作表："))
+        }));
+        assert!(odp_slides.iter().all(|slide| {
+            slide.parent_id.as_deref() == Some(odp.id.as_str())
+                && slide.locator.as_ref().is_some_and(|locator| {
+                    locator.kind == "odp-slide"
+                        && locator.page.is_some()
+                        && !locator.object_id.is_empty()
+                })
+                && slide
+                    .location_label
+                    .as_deref()
+                    .is_some_and(|label| label.starts_with("幻灯片 "))
+        }));
+
+        let children = workbook_sheets
+            .iter()
+            .copied()
+            .chain(odp_slides.iter().copied())
+            .collect::<Vec<_>>();
+        let structural_edges = graph
+            .edges
+            .iter()
+            .filter(|edge| {
+                edge.relation_type == "contains"
+                    && children.iter().any(|child| child.id == edge.target)
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(structural_edges.len(), 6);
+        assert!(structural_edges.iter().all(|edge| edge.mentions.is_empty()));
+
+        for child in &children {
+            let locator = child.locator.as_ref().unwrap();
+            let focused = relation_context_for_locator(
+                &graph,
+                &child.path,
+                &child.path,
+                Some(&locator.kind),
+                Some(&locator.object_id),
+                locator.page,
+                &GraphRelationDecisionMap::new(),
+            );
+            assert_eq!(focused.node.as_ref().unwrap().id, child.id);
+            assert_eq!(focused.relations.len(), 1);
+            assert_eq!(focused.relations[0].relation_type, "contains");
+            assert_eq!(focused.relations[0].direction, "incoming");
+        }
+
+        let snapshot = crate::services::knowledge_index::snapshot_from_graph(&root, graph.clone());
+        for node in std::iter::once(workbook)
+            .chain(std::iter::once(odp))
+            .chain(children.iter().copied())
+        {
+            assert!(snapshot.objects.iter().any(|object| {
+                object.id == node.id
+                    && object.object_type == node.object_type
+                    && object.locator_object_id
+                        == node
+                            .locator
+                            .as_ref()
+                            .map(|locator| locator.object_id.clone())
+            }));
+        }
+        assert_eq!(
+            snapshot
+                .relations
+                .iter()
+                .filter(|relation| relation.relation_type == "contains"
+                    && children.iter().any(|child| child.id == relation.target))
+                .count(),
+            6
+        );
+        assert_eq!(fs::read(&workbook_path).unwrap(), workbook_source);
+        assert_eq!(fs::read(&odp_path).unwrap(), odp_source);
         fs::remove_dir_all(base).unwrap();
     }
 

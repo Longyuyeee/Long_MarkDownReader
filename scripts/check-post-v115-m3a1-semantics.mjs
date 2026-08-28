@@ -11,7 +11,7 @@ const unique = values => new Set(values).size === values.length
 const hex = value => /^#[0-9a-f]{6}$/i.test(value)
 
 requireFact(policy.stage === 'M3A-1' && policy.releaseCandidate === false, 'M3A-1 policy identity drifted')
-requireFact(JSON.stringify(ids(registry.objectTypes)) === JSON.stringify(policy.objectTypeIds), 'object semantic registry order or coverage drifted')
+requireFact(JSON.stringify(ids(registry.objectTypes).filter(id => policy.objectTypeIds.includes(id))) === JSON.stringify(policy.objectTypeIds), 'M3A-1 base object semantic order or coverage drifted')
 requireFact(JSON.stringify(ids(registry.relationTypes)) === JSON.stringify(policy.relationTypeIds), 'relation semantic registry order or coverage drifted')
 requireFact(unique(registry.objectTypes.map(item => item.order)) && unique(registry.relationTypes.map(item => item.order)), 'semantic order values must be unique')
 requireFact(registry.objectTypes.every((item, index, entries) => index === 0 || entries[index - 1].order < item.order), 'object semantic order must be ascending')

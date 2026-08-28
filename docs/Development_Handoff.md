@@ -1341,3 +1341,11 @@ M4A-1 已完成。资料库搜索、知识图谱和关系上下文统一调用 `
 M4A-2 已完成真实代码、解析上限、固定夹具和桌面图谱的选择审计。DOCX、ODS、ODP、Workbook 的精确搜索定位均存在；夹具实际解析为 13 个 block、2 个 ODS sheet/5 个 cell、2 张 ODP slide 和 4 个 workbook sheet，但图谱候选节点仍为 0。两张截图已人工复核：Workbook 搜索可定位 `Inventory` 工作表，图谱则只显示 Markdown 控制节点。运行时错误 0，四个源夹具摘要不变。
 
 当前接续点为 **M4A-3 Workbook 工作表与 ODP 幻灯片图谱定位覆盖**。只增加 `workbook`/`workbook_sheet`、`odp`/`odp_slide` 节点语义，父子结构统一使用 `contains` 且 mention 为 0，并通过共享对象打开合同核对内部位置。固定夹具预期 6 个子节点和 6 条结构边。DOCX block 与 ODS cell 因最大 5 万/20 万规模继续延期；不得混入工作台、转换或发布冻结。详见 [`Post_v1.0.15_M4A2_M1_Object_Graph_Location_Coverage_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M4A2_M1_Object_Graph_Location_Coverage_Selection_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4A-3 Workbook/ODP 图谱定位覆盖交接
+
+M4A-3 已完成。后端按真实 ODP 包内容和 Workbook 索引段生成 `odp`/`odp_slide`、`workbook`/`workbook_sheet` 节点，父子统一使用 `contains`，四类对象进入统一语义注册表。Graph 与关系上下文均通过共享对象打开合同保留通用内部对象焦点，不再仅对 PPTX slide 特判。
+
+真实 Tauri 固定夹具得到 8 个节点（2 父、6 子）、6 条结构边、结构 mention 0；从 Graph 精确打开 Inventory/Overview，从父对象关系上下文精确打开 Details/Closure，4/4 返回 Graph，运行时错误 0，Workbook/ODP 源摘要不变。三张截图已人工复核，证据路径和路由已去除本机临时目录。
+
+当前唯一接续点为 **M4A-4 DOCX/ODS 图谱粒度选择审计**。必须先结合最大 50,000 block 与 200,000 cell 上限选择有界、稳定且有专业意义的节点层级；不得直接全量入图，也不得混入工作台全对象行动、转换统一或发布冻结。详见 [`Post_v1.0.15_M4A3_Workbook_ODP_Graph_Location_Coverage_Audit_2026-08-28.md`](./Post_v1.0.15_M4A3_Workbook_ODP_Graph_Location_Coverage_Audit_2026-08-28.md)。

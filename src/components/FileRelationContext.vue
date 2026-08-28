@@ -15,7 +15,7 @@
     <aside v-if="open" id="file-relation-context" class="relation-context-panel" aria-label="文件关系上下文">
       <header>
         <div>
-          <small>{{ context?.node?.objectType === 'pptx_slide' ? '幻灯片上下文' : '文件上下文' }}</small>
+          <small>{{ contextScopeLabel }}</small>
           <strong>{{ context?.node?.title || displayName }}</strong>
           <span>{{ context?.node ? objectTypeLabel(context.node.objectType) : '当前格式尚未进入图谱索引' }}</span>
         </div>
@@ -24,7 +24,7 @@
 
       <div class="context-actions">
         <button type="button" :disabled="!context?.node" @click="openCenteredGraph">
-          <NetworkIcon />{{ context?.node?.objectType === 'pptx_slide' ? '以当前幻灯片为中心' : '以当前文件为中心' }}
+          <NetworkIcon />{{ contextCenterLabel }}
         </button>
         <button type="button" :disabled="loading" @click="loadContext(true)">
           <RefreshIcon />刷新
@@ -364,15 +364,16 @@ const openCollection = (collection: SavedSearchConfig) => router.push({
 })
 const openNode = (node: GraphContextNode) => {
   const path = displayPath(node.path)
-  if (node.objectType === 'pptx_slide') {
+  if (node.locator?.kind && node.locator.objectId) {
     store.setRelationObjectFocus({
       path,
-      locatorKind: 'pptx-slide',
-      locatorObjectId: node.locator?.objectId || '',
-      locatorPage: node.locator?.page,
+      locatorKind: node.locator.kind,
+      locatorObjectId: node.locator.objectId,
+      locatorPage: node.locator.page ?? undefined,
     })
+  } else {
+    store.clearRelationObjectFocus()
   }
-  if (node.objectType === 'pptx') store.clearRelationObjectFocus()
   return openManagedObject(router, {
     path,
     objectType: node.objectType,
@@ -382,8 +383,11 @@ const openNode = (node: GraphContextNode) => {
 }
 const objectTypeLabel = (type: string) => ({
   markdown: 'Markdown 笔记', pdf: 'PDF 文档', table: '数据表', canvas: 'Canvas 画布', opml: 'OPML 思维导图',
-  pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片',
+  pptx: 'PowerPoint 演示', pptx_slide: 'PowerPoint 幻灯片', odp: 'OpenDocument 演示', odp_slide: 'ODP 幻灯片',
+  workbook: 'Excel 工作簿', workbook_sheet: 'Workbook 工作表',
 }[type] || type)
+const contextScopeLabel = computed(() => context.value?.node?.locator ? '内部对象上下文' : '文件上下文')
+const contextCenterLabel = computed(() => context.value?.node?.locator ? '以当前对象为中心' : '以当前文件为中心')
 const relationClassLabel = (value: string) => ({ fact: '事实', structure: '结构', planning: '规划', semantic: '语义' }[value] || value)
 const relationTypeLabel = (value: string) => ({
   'links-to': '链接到', related: '相关', contains: '包含', embeds: '嵌入', annotates: '批注引用',

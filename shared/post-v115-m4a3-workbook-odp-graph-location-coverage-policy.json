@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-3",
+  "name": "workbook-sheet-and-odp-slide-graph-location-coverage",
+  "predecessor": "M4A-2",
+  "scope": [
+    "Add Workbook document and workbook_sheet nodes with stable workbook-sheet locators.",
+    "Add ODP document and odp_slide nodes with stable odp-slide locators.",
+    "Represent package hierarchy as contains relations with no fabricated mentions.",
+    "Register explicit object semantics and preserve internal-object focus when opening from Graph or relation context."
+  ],
+  "expectations": {
+    "fixtureParents": 2,
+    "fixtureChildren": 6,
+    "containsRelations": 6,
+    "structuralMentionCount": 0,
+    "explicitObjectTypes": ["odp", "odp_slide", "workbook", "workbook_sheet"],
+    "graphInternalOpenCount": 2,
+    "relationContextInternalOpenCount": 2,
+    "returnedGraphCount": 4,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true
+  },
+  "deferred": [
+    "DOCX block graph granularity selection.",
+    "ODS sheet-versus-cell graph granularity selection.",
+    "Workspace actions for every M1 object.",
+    "Unified conversion disclosure and new conversion types.",
+    "Release freeze and version transition."
+  ],
+  "selectedNextStage": {
+    "id": "M4A-4",
+    "name": "docx-ods-graph-granularity-selection-audit",
+    "reason": "Workbook and ODP close the bounded container-object batch. DOCX and ODS require an explicit bounded granularity decision before any remaining graph expansion."
+  },
+  "releaseCandidate": false
+}

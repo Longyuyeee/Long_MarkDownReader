@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-3",
+  "status": "passed",
+  "sourceCommit": "5624d3789ccfe4a98160502ce57549f9b745d827",
+  "actual": {
+    "graph": {
+      "nodeCount": 8,
+      "edgeCount": 6,
+      "parentCount": 2,
+      "childCount": 6,
+      "containsRelationCount": 6,
+      "structuralMentionCount": 0,
+      "objectTypes": [
+        "odp",
+        "odp_slide",
+        "workbook",
+        "workbook_sheet"
+      ]
+    },
+    "graphOpens": [
+      {
+        "title": "Inventory",
+        "objectType": "workbook_sheet",
+        "locator": {
+          "kind": "workbook-sheet",
+          "objectId": "Inventory",
+          "page": null
+        },
+        "route": "#/library?sheet=Inventory&locatorToken=1787924033553-1&path=[fixture]",
+        "context": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Inventory"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "title": "Overview",
+        "objectType": "odp_slide",
+        "locator": {
+          "kind": "odp-slide",
+          "objectId": "odp-slide-1",
+          "page": 1
+        },
+        "route": "#/library?locator=odp-slide-1&locatorToken=1787924035001-4&path=[fixture]",
+        "context": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "slideId": "odp-slide-1"
+        },
+        "returnedToGraph": true
+      }
+    ],
+    "contextOpens": [
+      {
+        "parent": "M4A3 Workbook",
+        "child": "Details",
+        "route": "#/library?sheet=Details&locatorToken=1787924034365-3&path=[fixture]",
+        "parentContext": {
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Details"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A3 Slides",
+        "child": "Closure",
+        "route": "#/library?locator=odp-slide-2&locatorToken=1787924035534-6&path=[fixture]",
+        "parentContext": {
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "slideId": "odp-slide-2"
+        },
+        "returnedToGraph": true
+      }
+    ],
+    "graphInternalOpenCount": 2,
+    "relationContextInternalOpenCount": 2,
+    "returnedGraphCount": 4,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchanged": true
+  },
+  "sourceHashesBefore": {
+    "workbook": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c",
+    "odp": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52"
+  },
+  "sourceHashesAfter": {
+    "workbook": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c",
+    "odp": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
