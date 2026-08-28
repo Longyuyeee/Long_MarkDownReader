@@ -177,7 +177,7 @@ pub struct TableWriteResult {
     pub size: u64,
 }
 
-fn file_signature(metadata: &fs::Metadata, bytes: &[u8]) -> String {
+pub(crate) fn file_signature(metadata: &fs::Metadata, bytes: &[u8]) -> String {
     let modified = metadata
         .modified()
         .ok()

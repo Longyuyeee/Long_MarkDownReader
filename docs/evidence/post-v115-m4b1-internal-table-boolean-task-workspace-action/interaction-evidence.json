@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-1",
+  "status": "passed",
+  "sourceCommit": "d225231d7d733cb2d179cc3c9063eaff0d3a5557",
+  "actual": {
+    "initialOpenTaskCount": 2,
+    "initialCompletedTaskCount": 1,
+    "tableTaskCount": 2,
+    "cancelSourceUnchanged": true,
+    "completeChangedSource": true,
+    "undoRestoredOriginalBytes": true,
+    "restoreAndRecompleteRestoredOriginalBytes": true,
+    "staleSignatureRejectedWithoutWrite": true,
+    "preciseTableRowOpenCount": 1,
+    "firstActionableMs": 744,
+    "responsive1280": true,
+    "responsive480": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchangedAfterAudit": true
+  },
+  "initialHashes": {
+    "table": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "markdown": "fe14c9705853eaecb2fad31aec26fdcab248fad1a8fe7cf5b800f1fd94f30ffa"
+  },
+  "completedHash": "5899033258bb8e3fd9a92a269032510794f14b26c1d4997c795adcd3a77fe977",
+  "finalHashes": {
+    "table": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "markdown": "fe14c9705853eaecb2fad31aec26fdcab248fad1a8fe7cf5b800f1fd94f30ffa"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

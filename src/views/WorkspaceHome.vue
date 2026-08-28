@@ -84,10 +84,10 @@
             <template #action><button data-testid="m2a1-task-undo" :disabled="taskMutating" @click="undoCompletedTask"><UndoIcon />撤销</button></template>
           </WorkspaceStateNotice>
           <div v-if="filteredTasks.length" class="task-list" data-testid="m2a3-task-results">
-            <div v-for="task in filteredTasks" :key="`${task.path}:${task.line}`" class="task-row" :class="{ completed: task.completed }" :data-task-priority="task.priority" :data-task-date="dateBucket(task)">
-              <button class="task-complete" :class="{ checked: task.completed }" :data-testid="task.completed ? 'm2a3-task-restore' : 'm2a1-task-complete'" :disabled="taskMutating" :title="task.completed ? `恢复待办：${taskDisplayText(task.text)}` : `完成待办：${taskDisplayText(task.text)}`" @click="changeTaskState(task, !task.completed)"><span class="task-check"><CheckIcon v-if="task.completed" /></span></button>
+            <div v-for="task in filteredTasks" :key="taskKey(task)" class="task-row" :class="{ completed: task.completed }" :data-task-source="task.sourceType" :data-task-priority="task.priority" :data-task-date="dateBucket(task)">
+              <button class="task-complete" :class="{ checked: task.completed }" :data-testid="task.sourceType === 'table' ? (task.completed ? 'm4b1-table-task-restore' : 'm4b1-table-task-complete') : (task.completed ? 'm2a3-task-restore' : 'm2a1-task-complete')" :disabled="taskMutating" :title="task.completed ? `恢复待办：${taskDisplayText(task.text)}` : `完成待办：${taskDisplayText(task.text)}`" @click="changeTaskState(task, !task.completed)"><span class="task-check"><CheckIcon v-if="task.completed" /></span></button>
               <button class="task-open" @click="openTask(task)">
-                <span><strong>{{ taskDisplayText(task.text) }}</strong><small>{{ task.relativePath }} · 第 {{ task.line }} 行<template v-if="task.dueDate"> · {{ task.dueDate }}</template></small></span>
+                <span><strong>{{ taskDisplayText(task.text) }}</strong><small><template v-if="task.sourceType === 'table'">Table · </template>{{ task.relativePath }} · {{ taskLocationLabel(task) }}<template v-if="task.dueDate"> · {{ task.dueDate }}</template></small></span>
                 <em :class="`priority-${task.priority}`">{{ priorityLabel(task.priority) }}</em>
                 <ArrowIcon />
               </button>
@@ -149,7 +149,7 @@ import {
 } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { CREATABLE_FILE_FORMATS, fileDisplayName, findFileFormat, findFileFormatById, opensInLibraryShell, routeForFile } from '../config/fileFormats'
-import { openManagedFile } from '../services/fileNavigation'
+import { openManagedFile, openManagedObject } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceGraphHealth, type WorkspaceHealthReport, type WorkspaceIndexStatus } from '../components/WorkspaceHealthQueue.vue'
 import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState.vue'
@@ -159,8 +159,8 @@ import WorkspaceSegmentedControl from '../components/workspace/WorkspaceSegmente
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
 import { confirmAppAction } from '../services/appDialog'
 
-interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string; signature: string; completed: boolean; priority: 'high' | 'medium' | 'normal' | 'low'; dueDate?: string | null }
-interface WorkspaceTaskMutationResult { path: string; line: number; text: string; completed: boolean; signature: string }
+interface WorkspaceTask { title: string; path: string; relativePath: string; line: number; text: string; signature: string; completed: boolean; priority: 'high' | 'medium' | 'normal' | 'low'; dueDate?: string | null; sourceType: 'markdown' | 'table'; rowId?: string | null; columnId?: string | null }
+interface WorkspaceTaskMutationResult { path: string; line?: number; rowId?: string; columnId?: string; text: string; completed: boolean; signature: string; sourceType: 'markdown' | 'table' }
 interface WorkspaceFile { title: string; path: string; relativePath: string; objectType: string; modifiedAt: number; size: number }
 interface WorkspaceOverview { totalFiles: number; tasks: WorkspaceTask[]; completedTasks: WorkspaceTask[]; recentFiles: WorkspaceFile[]; canvases: WorkspaceFile[]; formatCounts: { objectType: string; count: number }[] }
 interface ContinueItem { title?: string; path: string; modifiedAt?: number }
@@ -289,6 +289,10 @@ const filteredTasks = computed(() => allTasks.value.filter(task => (
   && (taskDateFilter.value === 'all' || dateBucket(task) === taskDateFilter.value)
 )))
 const priorityLabel = (priority: WorkspaceTask['priority']) => ({ high: '高', medium: '中', normal: '普通', low: '低' })[priority]
+const taskKey = (task: WorkspaceTask) => task.sourceType === 'table'
+  ? `${task.path}:${task.rowId}:${task.columnId}`
+  : `${task.path}:${task.line}`
+const taskLocationLabel = (task: WorkspaceTask) => task.sourceType === 'table' ? '任务行' : `第 ${task.line} 行`
 const taskDisplayText = (text: string) => text
   .replace(/(?:^|\s)!(?:high|medium|low)(?=\s|$)/gi, ' ')
   .replace(/(?:^|\s)#(?:高|中|低)优先级(?=\s|$)/g, ' ')
@@ -343,26 +347,45 @@ const openPath = (path: string) => {
   if (opensInLibraryShell(findFileFormat(path))) openManagedFile(router, path)
   else router.push(target)
 }
-const openTask = (task: WorkspaceTask) => openManagedFile(router, task.path, {
-  taskLine: String(task.line),
-  taskLocator: `${Date.now()}-${task.line}`,
-})
-const updateTaskState = (task: WorkspaceTask | WorkspaceTaskMutationResult, completed: boolean) => invoke<WorkspaceTaskMutationResult>('set_workspace_markdown_task_state', {
-  libraryRoot: store.libraryPath,
-  mutation: {
-    path: task.path,
-    line: task.line,
-    text: task.text,
-    completed,
-    expectedSignature: task.signature,
-  },
-})
+const openTask = (task: WorkspaceTask) => task.sourceType === 'table' && task.rowId
+  ? openManagedObject(router, { path: task.path, objectType: 'table', locator: { kind: 'table-row', objectId: task.rowId } })
+  : openManagedFile(router, task.path, {
+      taskLine: String(task.line),
+      taskLocator: `${Date.now()}-${task.line}`,
+    })
+const updateTaskState = async (task: WorkspaceTask | WorkspaceTaskMutationResult, completed: boolean): Promise<WorkspaceTaskMutationResult> => {
+  if (task.sourceType === 'table') {
+    const result = await invoke<Omit<WorkspaceTaskMutationResult, 'sourceType'>>('set_workspace_table_task_state', {
+      libraryRoot: store.libraryPath,
+      mutation: {
+        path: task.path,
+        rowId: task.rowId,
+        columnId: task.columnId,
+        text: task.text,
+        completed,
+        expectedSignature: task.signature,
+      },
+    })
+    return { ...result, sourceType: 'table' }
+  }
+  const result = await invoke<Omit<WorkspaceTaskMutationResult, 'sourceType'>>('set_workspace_markdown_task_state', {
+    libraryRoot: store.libraryPath,
+    mutation: {
+      path: task.path,
+      line: task.line,
+      text: task.text,
+      completed,
+      expectedSignature: task.signature,
+    },
+  })
+  return { ...result, sourceType: 'markdown' }
+}
 const changeTaskState = async (task: WorkspaceTask, completed: boolean) => {
   if (taskMutating.value || !await confirmAppAction(dialog, {
     title: completed ? '完成这个待办？' : '恢复这个待办？',
     content: completed
-      ? `将把“${taskDisplayText(task.text)}”写回 ${task.relativePath} 第 ${task.line} 行。完成后可在工作台撤销。`
-      : `将把“${taskDisplayText(task.text)}”恢复为未完成，并写回 ${task.relativePath} 第 ${task.line} 行。`,
+      ? `将把“${taskDisplayText(task.text)}”写回 ${task.relativePath} 的${taskLocationLabel(task)}。完成后可在工作台撤销。`
+      : `将把“${taskDisplayText(task.text)}”恢复为未完成，并写回 ${task.relativePath} 的${taskLocationLabel(task)}。`,
     positiveText: completed ? '完成待办' : '恢复待办',
   })) return
   taskMutating.value = true

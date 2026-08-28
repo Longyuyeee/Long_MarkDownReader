@@ -1,5 +1,7 @@
+use crate::commands::table::file_signature as table_file_signature;
 use crate::formats::file_registry::file_format_for_path;
 use crate::formats::markdown::extract_pdf_reference_mentions;
+use crate::formats::table::{parse_internal_table, InternalTable, MAX_INTERNAL_TABLE_BYTES};
 use crate::formats::text::{
     encode_text_for_save, read_text_snapshot, verify_current_signature, TextSavePolicy,
 };
@@ -7,12 +9,14 @@ use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::{Deserialize, Serialize};
+use serde_json::value::RawValue;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
 const MAX_MARKDOWN_TASK_BYTES: u64 = 20 * 1024 * 1024;
+const MAX_WORKSPACE_TABLE_TASK_BYTES: u64 = 8 * 1024 * 1024;
 const MAX_SCANNED_ENTRIES: usize = 100_000;
 const MAX_TASKS: usize = 24;
 const MAX_COMPLETED_TASKS: usize = 24;
@@ -36,6 +40,9 @@ pub struct WorkspaceTask {
     completed: bool,
     priority: String,
     due_date: Option<String>,
+    source_type: String,
+    row_id: Option<String>,
+    column_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -53,6 +60,28 @@ pub struct WorkspaceTaskMutation {
 pub struct WorkspaceTaskMutationResult {
     path: String,
     line: usize,
+    text: String,
+    completed: bool,
+    signature: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceTableTaskMutation {
+    path: String,
+    row_id: String,
+    column_id: String,
+    text: String,
+    completed: bool,
+    expected_signature: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceTableTaskMutationResult {
+    path: String,
+    row_id: String,
+    column_id: String,
     text: String,
     completed: bool,
     signature: String,
@@ -215,6 +244,9 @@ fn collect_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan
             completed,
             priority: task_priority(text).to_string(),
             due_date: task_due_date(text),
+            source_type: "markdown".into(),
+            row_id: None,
+            column_id: None,
         };
         if completed {
             if scan.completed_tasks.len() < MAX_COMPLETED_TASKS {
@@ -227,6 +259,259 @@ fn collect_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan
             break;
         }
     }
+}
+
+fn table_task_completion_column(table: &InternalTable) -> Option<&str> {
+    let columns = table
+        .data
+        .columns
+        .iter()
+        .filter(|column| {
+            column.column_type == "boolean"
+                && matches!(
+                    column.name.trim().to_lowercase().as_str(),
+                    "完成" | "已完成" | "done" | "completed"
+                )
+        })
+        .collect::<Vec<_>>();
+    (columns.len() == 1).then(|| columns[0].id.as_str())
+}
+
+fn table_task_title_column(table: &InternalTable) -> Option<&str> {
+    let preferred = table
+        .views
+        .iter()
+        .find(|view| view.id == table.active_view)
+        .and_then(|view| view.config.title_column.as_deref());
+    preferred
+        .and_then(|id| {
+            table
+                .data
+                .columns
+                .iter()
+                .find(|column| column.id == id && column.column_type == "text")
+        })
+        .or_else(|| {
+            table
+                .data
+                .columns
+                .iter()
+                .find(|column| column.column_type == "text")
+        })
+        .map(|column| column.id.as_str())
+}
+
+fn collect_table_tasks(root: &Path, path: &Path, title: &str, scan: &mut WorkspaceScan) {
+    if (scan.tasks.len() >= MAX_TASKS && scan.completed_tasks.len() >= MAX_COMPLETED_TASKS)
+        || path
+            .metadata()
+            .map(|metadata| metadata.len() > MAX_WORKSPACE_TABLE_TASK_BYTES)
+            .unwrap_or(true)
+    {
+        return;
+    }
+    let Ok(bytes) = fs::read(path) else {
+        return;
+    };
+    let Ok(metadata) = path.metadata() else {
+        return;
+    };
+    let Ok(content) = std::str::from_utf8(&bytes) else {
+        return;
+    };
+    let Ok(table) = parse_internal_table(content.strip_prefix('\u{feff}').unwrap_or(content))
+    else {
+        return;
+    };
+    let (Some(completion_column), Some(title_column)) = (
+        table_task_completion_column(&table),
+        table_task_title_column(&table),
+    ) else {
+        return;
+    };
+    let signature = table_file_signature(&metadata, &bytes);
+    for row in &table.data.rows {
+        let completed = match row.values.get(completion_column).map(String::as_str) {
+            Some("false") => false,
+            Some("true") => true,
+            _ => continue,
+        };
+        let Some(text) = row
+            .values
+            .get(title_column)
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty() && value.chars().count() <= 500)
+        else {
+            continue;
+        };
+        let item = WorkspaceTask {
+            title: title.to_string(),
+            path: path.to_string_lossy().into_owned(),
+            relative_path: relative_path(root, path),
+            line: 0,
+            text: text.chars().take(500).collect(),
+            signature: signature.clone(),
+            completed,
+            priority: task_priority(text).to_string(),
+            due_date: task_due_date(text),
+            source_type: "table".into(),
+            row_id: Some(row.id.clone()),
+            column_id: Some(completion_column.to_string()),
+        };
+        if completed {
+            if scan.completed_tasks.len() < MAX_COMPLETED_TASKS {
+                scan.completed_tasks.push(item);
+            }
+        } else if scan.tasks.len() < MAX_TASKS {
+            scan.tasks.push(item);
+        }
+        if scan.tasks.len() >= MAX_TASKS && scan.completed_tasks.len() >= MAX_COMPLETED_TASKS {
+            break;
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct RawWorkspaceTable<'a> {
+    #[serde(borrow)]
+    data: RawWorkspaceTableData<'a>,
+}
+
+#[derive(Deserialize)]
+struct RawWorkspaceTableData<'a> {
+    #[serde(borrow)]
+    rows: Vec<RawWorkspaceTableRow<'a>>,
+}
+
+#[derive(Deserialize)]
+struct RawWorkspaceTableRow<'a> {
+    id: String,
+    #[serde(borrow)]
+    values: HashMap<String, &'a RawValue>,
+}
+
+fn patch_table_task_value(
+    content: &str,
+    row_id: &str,
+    column_id: &str,
+    completed: bool,
+) -> Result<String, String> {
+    let raw: RawWorkspaceTable =
+        serde_json::from_str(content).map_err(|error| format!("Table JSON 无效: {}", error))?;
+    let row = raw
+        .data
+        .rows
+        .iter()
+        .find(|row| row.id == row_id)
+        .ok_or("Table 任务行已不存在，请刷新工作台后重试")?;
+    let value = row
+        .values
+        .get(column_id)
+        .ok_or("Table 完成列已不存在，请刷新工作台后重试")?
+        .get();
+    let expected = if completed { "\"false\"" } else { "\"true\"" };
+    if value != expected {
+        return Err("Table 任务状态已变化，请刷新工作台后重试".into());
+    }
+    let start = value.as_ptr() as usize - content.as_ptr() as usize;
+    let mut updated = content.to_string();
+    updated.replace_range(
+        start..start + value.len(),
+        if completed { "\"true\"" } else { "\"false\"" },
+    );
+    parse_internal_table(&updated)?;
+    Ok(updated)
+}
+
+fn mutate_workspace_table_task(
+    root: &Path,
+    mutation: WorkspaceTableTaskMutation,
+) -> Result<WorkspaceTableTaskMutationResult, String> {
+    if mutation.row_id.trim().is_empty()
+        || mutation.column_id.trim().is_empty()
+        || mutation.text.trim().is_empty()
+        || mutation.text.chars().count() > 500
+    {
+        return Err("Table 待办目标或内容无效".into());
+    }
+    if mutation.expected_signature.trim().is_empty() {
+        return Err("缺少 Table 源文件签名，请刷新工作台后重试".into());
+    }
+    let guard = WorkspaceGuard::new(root)?;
+    let path = guard.resolve_existing_file(&mutation.path, &["json"])?;
+    if !path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.to_lowercase().ends_with(".table.json"))
+    {
+        return Err("工作台只允许更新内部 .table.json 任务".into());
+    }
+    recover_interrupted_write(&path)?;
+    let metadata = path
+        .metadata()
+        .map_err(|error| format!("读取 Table 元数据失败: {}", error))?;
+    let current_bytes = fs::read(&path).map_err(|error| format!("读取 Table 失败: {}", error))?;
+    if current_bytes.len() as u64 > MAX_WORKSPACE_TABLE_TASK_BYTES {
+        return Err("工作台 Table 任务文件超过 8 MiB 上限".into());
+    }
+    if table_file_signature(&metadata, &current_bytes) != mutation.expected_signature {
+        return Err("Table 已被其他程序修改，请刷新工作台后重试".into());
+    }
+    let current = std::str::from_utf8(&current_bytes).map_err(|_| "Table 必须使用 UTF-8 编码")?;
+    let has_bom = current.starts_with('\u{feff}');
+    let source = current.strip_prefix('\u{feff}').unwrap_or(current);
+    let table = parse_internal_table(source)?;
+    if table_task_completion_column(&table) != Some(mutation.column_id.as_str()) {
+        return Err("Table 完成列已变化，请刷新工作台后重试".into());
+    }
+    let title_column =
+        table_task_title_column(&table).ok_or("Table 任务标题列已变化，请刷新工作台后重试")?;
+    let row = table
+        .data
+        .rows
+        .iter()
+        .find(|row| row.id == mutation.row_id)
+        .ok_or("Table 任务行已不存在，请刷新工作台后重试")?;
+    if row.values.get(title_column).map(|value| value.trim()) != Some(mutation.text.trim()) {
+        return Err("Table 任务内容已变化，请刷新工作台后重试".into());
+    }
+    let updated = patch_table_task_value(
+        source,
+        &mutation.row_id,
+        &mutation.column_id,
+        mutation.completed,
+    )?;
+    let mut output = Vec::with_capacity(updated.len() + usize::from(has_bom) * 3);
+    if has_bom {
+        output.extend_from_slice(b"\xEF\xBB\xBF");
+    }
+    output.extend_from_slice(updated.as_bytes());
+    if output.len() > MAX_INTERNAL_TABLE_BYTES {
+        return Err("保存结果超过 64 MB 上限".into());
+    }
+    let latest_metadata = path
+        .metadata()
+        .map_err(|error| format!("复核 Table 元数据失败: {}", error))?;
+    let latest_bytes = fs::read(&path).map_err(|error| format!("复核 Table 失败: {}", error))?;
+    if table_file_signature(&latest_metadata, &latest_bytes) != mutation.expected_signature {
+        return Err("Table 已被其他程序修改，请刷新工作台后重试".into());
+    }
+    write_bytes(&path, &output)?;
+    let saved_bytes = fs::read(&path).map_err(|error| format!("复读 Table 失败: {}", error))?;
+    if saved_bytes != output {
+        return Err("Table 待办写回后复读不一致，请重新打开文件检查".into());
+    }
+    let saved_metadata = path
+        .metadata()
+        .map_err(|error| format!("读取 Table 保存结果失败: {}", error))?;
+    Ok(WorkspaceTableTaskMutationResult {
+        path: path.to_string_lossy().into_owned(),
+        row_id: mutation.row_id,
+        column_id: mutation.column_id,
+        text: mutation.text,
+        completed: mutation.completed,
+        signature: table_file_signature(&saved_metadata, &saved_bytes),
+    })
 }
 
 fn mutate_workspace_task(
@@ -365,6 +650,7 @@ fn scan_directory(root: &Path, directory: &Path, scan: &mut WorkspaceScan) {
         let Ok(metadata) = fs::metadata(&path) else {
             continue;
         };
+        let is_internal_table = name.to_lowercase().ends_with(".table.json");
         scan.total_files += 1;
         *scan.format_counts.entry(format.id.clone()).or_default() += 1;
         let summary = WorkspaceFileSummary {
@@ -377,6 +663,8 @@ fn scan_directory(root: &Path, directory: &Path, scan: &mut WorkspaceScan) {
         };
         if format.id == "markdown" {
             collect_tasks(root, &path, &summary.title, scan);
+        } else if format.id == "table" && is_internal_table {
+            collect_table_tasks(root, &path, &summary.title, scan);
         }
         scan.files.push(summary);
     }
@@ -610,6 +898,17 @@ pub async fn set_workspace_markdown_task_state(
 }
 
 #[tauri::command]
+pub async fn set_workspace_table_task_state(
+    library_root: String,
+    mutation: WorkspaceTableTaskMutation,
+) -> Result<WorkspaceTableTaskMutationResult, String> {
+    let root = WorkspaceGuard::new(&library_root)?.root().to_path_buf();
+    tauri::async_runtime::spawn_blocking(move || mutate_workspace_table_task(&root, mutation))
+        .await
+        .map_err(|error| format!("Table 待办更新任务失败: {}", error))?
+}
+
+#[tauri::command]
 pub async fn analyze_workspace_health(
     library_root: String,
 ) -> Result<WorkspaceHealthReport, String> {
@@ -745,6 +1044,154 @@ mod tests {
         .unwrap_err();
         assert!(error.contains("其他程序修改"));
         assert_eq!(fs::read(&path).unwrap(), before);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn table_tasks_are_discovered_and_complete_then_undo_byte_for_byte() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-workspace-table-task-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("post-v115-m4b0")
+            .join("workspace")
+            .join("M4B0 Tasks.table.json");
+        let path = root.join("任务表.table.json");
+        let mut initial = b"\xEF\xBB\xBF".to_vec();
+        initial.extend(fs::read(fixture).unwrap());
+        fs::write(&path, &initial).unwrap();
+        fs::write(root.join("ignored.csv"), "任务,完成\n不应推断,true\n").unwrap();
+
+        let overview = build_workspace_overview(&root);
+        assert_eq!(overview.tasks.len(), 1);
+        assert_eq!(overview.completed_tasks.len(), 1);
+        let task = &overview.tasks[0];
+        assert_eq!(task.source_type, "table");
+        assert_eq!(task.row_id.as_deref(), Some("task-row-1"));
+        assert_eq!(task.column_id.as_deref(), Some("done"));
+        assert_eq!(task.text, "复核 Table 工作台行动");
+
+        let completed = mutate_workspace_table_task(
+            &root,
+            WorkspaceTableTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                row_id: task.row_id.clone().unwrap(),
+                column_id: task.column_id.clone().unwrap(),
+                text: task.text.clone(),
+                completed: true,
+                expected_signature: task.signature.clone(),
+            },
+        )
+        .unwrap();
+        let completed_bytes = fs::read(&path).unwrap();
+        assert!(completed_bytes.starts_with(b"\xEF\xBB\xBF"));
+        assert_ne!(completed_bytes, initial);
+        assert!(String::from_utf8_lossy(&completed_bytes).contains("\"done\": \"true\""));
+
+        let undone = mutate_workspace_table_task(
+            &root,
+            WorkspaceTableTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                row_id: completed.row_id,
+                column_id: completed.column_id,
+                text: completed.text,
+                completed: false,
+                expected_signature: completed.signature,
+            },
+        )
+        .unwrap();
+        assert!(!undone.completed);
+        assert_eq!(fs::read(&path).unwrap(), initial);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn table_task_mutation_rejects_stale_signature_without_writing() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-workspace-table-task-conflict-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("post-v115-m4b0")
+            .join("workspace")
+            .join("M4B0 Tasks.table.json");
+        let path = root.join("Tasks.table.json");
+        fs::copy(fixture, &path).unwrap();
+        let task = build_workspace_overview(&root).tasks.remove(0);
+        let mut changed = fs::read(&path).unwrap();
+        changed.push(b'\n');
+        fs::write(&path, &changed).unwrap();
+        let before = fs::read(&path).unwrap();
+
+        let error = mutate_workspace_table_task(
+            &root,
+            WorkspaceTableTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                row_id: task.row_id.unwrap(),
+                column_id: task.column_id.unwrap(),
+                text: task.text,
+                completed: true,
+                expected_signature: task.signature,
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("其他程序修改"));
+        assert_eq!(fs::read(&path).unwrap(), before);
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn table_task_mutation_rejects_files_above_workspace_scan_limit() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-workspace-table-task-size-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("fixtures")
+            .join("post-v115-m4b0")
+            .join("workspace")
+            .join("M4B0 Tasks.table.json");
+        let path = root.join("Tasks.table.json");
+        let mut bytes = fs::read(fixture).unwrap();
+        bytes.resize(MAX_WORKSPACE_TABLE_TASK_BYTES as usize + 1, b' ');
+        fs::write(&path, &bytes).unwrap();
+        let signature = table_file_signature(&path.metadata().unwrap(), &bytes);
+
+        let error = mutate_workspace_table_task(
+            &root,
+            WorkspaceTableTaskMutation {
+                path: path.to_string_lossy().into_owned(),
+                row_id: "task-row-1".into(),
+                column_id: "done".into(),
+                text: "复核 Table 工作台行动".into(),
+                completed: true,
+                expected_signature: signature,
+            },
+        )
+        .unwrap_err();
+        assert!(error.contains("8 MiB"));
+        assert_eq!(fs::read(&path).unwrap(), bytes);
         fs::remove_dir_all(root).unwrap();
     }
 

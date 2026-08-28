@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-1",
+  "name": "internal-table-boolean-task-workspace-action",
+  "predecessor": "M4B-0",
+  "scope": {
+    "included": [
+      "Discover task rows only from workspace-internal .table.json files up to 8 MiB.",
+      "Require exactly one boolean column named 完成, 已完成, done, or completed and strict true/false string values.",
+      "Resolve the task title from the active view text titleColumn or the first text column.",
+      "Merge Table tasks into the existing Today task list and filters without adding a dashboard card.",
+      "Open the stable row through the shared table-row locator.",
+      "Complete, restore and undo by replacing only the selected raw JSON boolean string after signature, row, column, type, old-value and title checks."
+    ],
+    "excluded": [
+      "CSV or TSV task inference",
+      "Ambiguous or arbitrary boolean columns",
+      "Tables larger than the bounded Workspace scan limit",
+      "OPML, DOCX, ODS, ODP, PPTX or Workbook workspace mutations",
+      "Conversion, version transition or release candidate"
+    ]
+  },
+  "safety": {
+    "workspaceGuard": true,
+    "expectedSignature": true,
+    "stableRowId": true,
+    "stableColumnId": true,
+    "strictOldValue": true,
+    "titleRecheck": true,
+    "reliableWrite": true,
+    "postWriteByteReadback": true,
+    "undoUsesNewSignature": true,
+    "undoRestoresOriginalBytes": true,
+    "preservesBomAndUntargetedBytes": true
+  },
+  "expectations": {
+    "initialOpenTaskCount": 2,
+    "initialCompletedTaskCount": 1,
+    "tableTaskCount": 2,
+    "cancelSourceUnchanged": true,
+    "completeChangesSource": true,
+    "undoRestoresOriginalBytes": true,
+    "restoreAndRecompleteRestoreOriginalBytes": true,
+    "staleSignatureRejectedWithoutWrite": true,
+    "preciseTableRowOpenCount": 1,
+    "wideViewport": "1280x820",
+    "narrowViewport": "480x700",
+    "firstActionableBudgetMs": 5000,
+    "runtimeErrors": 0,
+    "sourceFilesUnchangedAfterAudit": true
+  },
+  "selectedNextStage": {
+    "id": "M4B-2",
+    "name": "workspace-object-action-exit-audit",
+    "reason": "Independently verify the bounded Table action together with existing Markdown/PDF actions and decide whether M4B is closed before conversion work."
+  },
+  "releaseCandidate": false
+}

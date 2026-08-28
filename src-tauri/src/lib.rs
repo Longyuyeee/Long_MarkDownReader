@@ -147,6 +147,7 @@ pub use commands::workbook::{
 };
 use commands::workspace::{
     analyze_workspace_health, get_workspace_overview, set_workspace_markdown_task_state,
+    set_workspace_table_task_state,
 };
 use commands::wps_native::inspect_wps_native_file;
 use commands::xml::{
@@ -563,6 +564,7 @@ pub fn run() {
             get_library_stats,
             get_workspace_overview,
             set_workspace_markdown_task_state,
+            set_workspace_table_task_state,
             analyze_workspace_health,
             extract_wikilinks,
             find_backlinks,

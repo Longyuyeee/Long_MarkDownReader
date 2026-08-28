@@ -1381,3 +1381,13 @@ M4B-0 已通过且没有提前修改工作台产品代码。当前直接写回�
 七类 M1 候选只选择内部 Table 布尔任务行。M4B-1 限定“完成 / 已完成 / done / completed”显式 boolean 列和可解析文本标题；CSV/TSV 与任意布尔列不推断。写回必须使用窄后端命令重新核对资料库、签名、row/column ID、类型和旧值，只修改一个布尔值；完成/恢复前确认，成功后以新签名撤销，冲突时文件不变并刷新。
 
 当前唯一接续点为 **M4B-1 内部 Table 布尔任务行工作台行动闭环**。先完成后端发现/变更与 Rust 真实文件测试，再接入现有“今天要做”，最后审计取消、完成、恢复、撤销、冲突、定位、首屏时序和宽窄屏。OPML、DOCX、ODS、ODP、PPTX、Workbook 修改、转换与发布冻结均不并入。详见 [`Post_v1.0.15_M4B0_Workspace_Object_Action_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M4B0_Workspace_Object_Action_Selection_Audit_2026-08-28.md)。
+
+## 2026-08-29 M4B-1 内部 Table 布尔任务行工作台行动交接
+
+M4B-1 已完成。资料库内不超过 8 MiB 的 `.table.json` 只有在恰好存在一个名为“完成 / 已完成 / done / completed”的 boolean 列、标题可由活动视图文本标题列或首个文本列解析、单元格为严格 `true/false` 字符串时才进入既有“今天要做”。Table 行与 Markdown 待办共用状态/文件/优先级/日期筛选；打开复用共享 `table-row` 定位器。
+
+写回命令重新校验资料库边界、文件名、内容签名、稳定 row/column ID、列语义、标题、类型与旧值，并在写入前二次核对签名。实现纠正了“调用现有 Table 全量序列化即可安全撤销”的偏移：现在借助 `serde_json::value::RawValue` 取得目标原始值字节区间，只替换一个 `"false"`/`"true"`，经可靠写入和写后逐字节读回生成新签名；BOM、缩进、未知字段和非目标字节不动，撤销恢复原始完整字节。
+
+Rust Workspace 测试 8/8、前端构建和真实 Tauri 审计通过，其中命令级另有超过 8 MiB 拒绝回归。真实流程得到初始 2 条未完成、1 条已完成，其中 Table 2 条；取消不写，完成改变摘要，撤销逐字节恢复，恢复后再完成回到初始字节，外部追加换行后旧签名拒绝且不覆盖，Table 第 1 行唯一定位。1280×820/480×700 无横向溢出，最终重跑首个入口 744ms、运行时错误 0，最终 Table/Markdown SHA-256 均不变。审计脚本两次纠偏了弹窗退场竞态和同一选中行/行号重复计数，产品门槛未放宽；误触发的全 crate `cargo fmt` 只产生行尾/格式噪声，内容差异已清除且未纳入提交。
+
+当前唯一接续点为 **M4B-2 工作台对象行动退出审计**：组合复验 Markdown 待办、PDF 批注查看和 Table 布尔任务，核对其他 M1 格式延期边界，并决定 M4B 是否收口；不得新增行动类型，不得提前混入转换或发布冻结。详见 [`Post_v1.0.15_M4B1_Internal_Table_Boolean_Task_Workspace_Action_Audit_2026-08-29.md`](./Post_v1.0.15_M4B1_Internal_Table_Boolean_Task_Workspace_Action_Audit_2026-08-29.md)。

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-1",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "d225231d7d733cb2d179cc3c9063eaff0d3a5557",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "d65216d22d4e73c7b367cd72b316f59330223625292b86f2a6092802cb1bf01e",
+  "screenshots": [
+    {
+      "file": "table-tasks-workspace-1280.jpg",
+      "bytes": 82241,
+      "sha256": "f7307ef77b173c32fb9a2f65995c345d8ddf56163ef6d6282f0b2ee8c74686e6"
+    },
+    {
+      "file": "table-task-completed-1280.jpg",
+      "bytes": 82679,
+      "sha256": "3d9fd969531cdc00d910d3b128e9b6b13adb5dc76877bb3ccdf443dc72252729"
+    },
+    {
+      "file": "table-task-locator-1280.jpg",
+      "bytes": 68709,
+      "sha256": "81a945135167266e1ef7cdc686426d91f268a90215ff70c723db7458e839a657"
+    },
+    {
+      "file": "table-task-conflict-1280.jpg",
+      "bytes": 87042,
+      "sha256": "c5f2c568bbd6bad9e2216dd0918ef7368f2539fd7975ba6dae51af02c11a943f"
+    },
+    {
+      "file": "table-tasks-restored-480.jpg",
+      "bytes": 34553,
+      "sha256": "c9388ba5b3874b29467f7c0eca672dc4a08cfe884142805794e8b0e1e0a569b8"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
