@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-4",
+  "name": "docx-ods-graph-granularity-selection-audit",
+  "predecessor": "M4A-3",
+  "scaleFacts": {
+    "largeGraphAcceptedTier": 5000,
+    "docxBlockParserLimit": 50000,
+    "odsSheetParserLimit": 128,
+    "odsCellParserLimit": 200000,
+    "naiveMaximumChildren": 250000,
+    "naiveMaximumNodesWithParents": 250002,
+    "naiveMaximumContainsRelations": 250000
+  },
+  "selection": {
+    "docx": {
+      "parentObjectType": "docx",
+      "childObjectType": "docx_heading",
+      "locatorKind": "docx-block",
+      "maximumChildrenPerDocument": 512,
+      "order": "document-order",
+      "include": "non-empty parsed headings",
+      "hierarchy": "nearest preceding heading with a smaller numeric level, otherwise document",
+      "defer": ["paragraph", "list-item", "table", "image", "page-break", "related-content"]
+    },
+    "ods": {
+      "parentObjectType": "ods",
+      "childObjectType": "ods_sheet",
+      "locatorKind": "ods-sheet",
+      "maximumChildrenPerDocument": 128,
+      "order": "sheet-order",
+      "include": "all parsed sheets",
+      "defer": ["cell"]
+    },
+    "maximumSelectedChildrenPerDocumentPair": 640,
+    "maximumSelectedNodesWithParentsPerDocumentPair": 642,
+    "maximumSelectedContainsRelationsPerDocumentPair": 640,
+    "structuralRelationType": "contains",
+    "structuralMentionCount": 0
+  },
+  "selectedNextStage": {
+    "id": "M4A-5",
+    "name": "docx-heading-and-ods-sheet-graph-location-coverage",
+    "scope": [
+      "Add DOCX document and at most 512 non-empty docx_heading nodes in document order using existing docx-block locators and the parsed outline hierarchy.",
+      "Add ODS document and all parsed ods_sheet nodes up to the existing 128-sheet parser limit using ods-sheet locators.",
+      "Represent only the selected container/outline hierarchy as mention-free contains relations and register explicit semantics.",
+      "Verify precise opening from Graph and relation context, return context, runtime safety, source immutability and bounded counts."
+    ]
+  },
+  "deferred": [
+    "DOCX paragraph, list-item, table, image, page-break and related-content graph nodes.",
+    "ODS cell graph nodes.",
+    "Workspace actions for every M1 object.",
+    "Unified conversion disclosure and new conversion types.",
+    "Release freeze and version transition."
+  ],
+  "releaseCandidate": false
+}

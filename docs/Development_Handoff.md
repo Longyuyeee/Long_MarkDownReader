@@ -1349,3 +1349,11 @@ M4A-3 已完成。后端按真实 ODP 包内容和 Workbook 索引段生成 `odp
 真实 Tauri 固定夹具得到 8 个节点（2 父、6 子）、6 条结构边、结构 mention 0；从 Graph 精确打开 Inventory/Overview，从父对象关系上下文精确打开 Details/Closure，4/4 返回 Graph，运行时错误 0，Workbook/ODP 源摘要不变。三张截图已人工复核，证据路径和路由已去除本机临时目录。
 
 当前唯一接续点为 **M4A-4 DOCX/ODS 图谱粒度选择审计**。必须先结合最大 50,000 block 与 200,000 cell 上限选择有界、稳定且有专业意义的节点层级；不得直接全量入图，也不得混入工作台全对象行动、转换统一或发布冻结。详见 [`Post_v1.0.15_M4A3_Workbook_ODP_Graph_Location_Coverage_Audit_2026-08-28.md`](./Post_v1.0.15_M4A3_Workbook_ODP_Graph_Location_Coverage_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4A-4 DOCX/ODS 图谱粒度选择交接
+
+M4A-4 已完成且没有提前修改图谱运行代码。真实 Word 夹具为 13 个 block/1 个 heading，ODS 为 2 个 sheet/5 个 cell；现有 `docx-block`/`ods-cell` 搜索定位继续有效，拟选的 H1 `docx-block-1` 与 `ods-sheet-2` 也已在真实 Tauri 精确打开。运行错误 0，源摘要不变，两张截图已人工复核。
+
+全量上限是 50,000 个 DOCX block + 200,000 个 ODS cell，即单对文档 250,002 节点；这与搜索粒度混淆，也远超 5,000 节点验收档。下一批已冻结为 **M4A-5 DOCX 标题与 ODS 工作表图谱定位覆盖**：DOCX 文档最多取前 512 个非空 heading，按 level 归属最近前置上级 heading，否则归属文档；ODS 取全部已解析 sheet，上限 128。单对文档最多 642 节点、640 条 mention-free `contains`。
+
+M4A-5 固定夹具预期 2 个父节点、3 个子节点、3 条结构边，并从 Graph/关系上下文精确打开后返回。普通段落、列表、表格、图片、分页、关联内容和 ODS cell 不入图；工作台、转换与发布冻结继续后置。详见 [`Post_v1.0.15_M4A4_DOCX_ODS_Graph_Granularity_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M4A4_DOCX_ODS_Graph_Granularity_Selection_Audit_2026-08-28.md)。

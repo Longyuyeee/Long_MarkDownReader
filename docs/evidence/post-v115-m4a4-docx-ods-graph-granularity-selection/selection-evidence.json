@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-4",
+  "status": "passed",
+  "sourceCommit": "1f3efc7fd47e5335e58a1c4c9017c9fab86d4b65",
+  "actual": {
+    "parsedObjects": {
+      "docx": {
+        "blocks": 13,
+        "headings": 1,
+        "blockKinds": {
+          "heading": 1,
+          "paragraph": 6,
+          "list-item": 2,
+          "table": 1,
+          "page-break": 1,
+          "rendered-page-break": 1,
+          "image": 1
+        }
+      },
+      "ods": {
+        "sheets": 2,
+        "cells": 5,
+        "sheetNames": [
+          "Overview",
+          "Notes"
+        ]
+      }
+    },
+    "existingSearchLocators": [
+      {
+        "format": "docx",
+        "query": "before explicit page break",
+        "locatorKind": "docx-block",
+        "locatorObjectId": "docx-block-6",
+        "locationLabel": "段落 6"
+      },
+      {
+        "format": "ods",
+        "query": "read-only structured preview",
+        "locatorKind": "ods-cell",
+        "locatorObjectId": "ods-sheet-2:A1",
+        "locationLabel": "Notes · A1"
+      }
+    ],
+    "directSelectionLocators": [
+      {
+        "format": "docx",
+        "kind": "docx-block",
+        "objectId": "docx-block-1",
+        "label": "Microsoft Word Producer Fixture",
+        "route": "#/library?path=[fixture]&locator=docx-block-1&locatorToken=m4a4-docx-heading",
+        "precise": true
+      },
+      {
+        "format": "ods",
+        "kind": "ods-sheet",
+        "objectId": "ods-sheet-2",
+        "label": "Notes",
+        "route": "#/library?path=[fixture]&locator=ods-sheet-2&locatorToken=m4a4-ods-sheet",
+        "precise": true
+      }
+    ],
+    "graphBeforeImplementation": {
+      "candidateNodeCount": 0,
+      "candidateObjectTypes": []
+    },
+    "scale": {
+      "largeGraphAcceptedTier": 5000,
+      "naive": {
+        "docxBlockChildren": 50000,
+        "odsCellChildren": 200000,
+        "children": 250000,
+        "nodesWithParents": 250002,
+        "containsRelations": 250000
+      },
+      "selected": {
+        "docxHeadingCap": 512,
+        "odsSheetCap": 128,
+        "childrenPerDocumentPair": 640,
+        "nodesWithParentsPerDocumentPair": 642,
+        "containsRelationsPerDocumentPair": 640
+      },
+      "selectedNodeShareOfAcceptedTier": 0.1284,
+      "naiveToSelectedNodeRatio": 389.41121495327104
+    },
+    "selection": {
+      "docxChildType": "docx_heading",
+      "docxChildCap": 512,
+      "odsChildType": "ods_sheet",
+      "odsChildCap": 128,
+      "relationType": "contains",
+      "structuralMentionCount": 0,
+      "nextStage": "M4A-5"
+    },
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchanged": true
+  },
+  "sourceHashesBefore": {
+    "docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c"
+  },
+  "sourceHashesAfter": {
+    "docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
