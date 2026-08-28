@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-3",
+  "name": "worker-backed-bounded-force-layout-kernel",
+  "predecessor": "M3C-2",
+  "fixture": {
+    "kind": "real-markdown-directed-chain-library",
+    "tiers": [100, 1000, 5000],
+    "sourceMode": "read-only",
+    "runtime": "real-tauri-webview2",
+    "deterministicRandomSeedPerTier": true
+  },
+  "implementation": {
+    "workerModule": "src/workers/graphForceLayout.worker.ts",
+    "kernelModule": "src/utils/graphForceLayoutKernel.ts",
+    "maximumRepulsionCandidatesPerNodePerTick": 48,
+    "maximumTicks": 120,
+    "staleResultPolicy": "monotonic-job-id-ignore",
+    "mainThreadResponsibility": "dispatch-and-bounded-result-apply"
+  },
+  "expectations": {
+    "firstVisibleDiagnosticMaximumMs": { "100": 2000, "1000": 5000, "5000": 30000 },
+    "firstVisibleDiagnosticOnly": true,
+    "layoutStableMaximumMs": { "100": 5000, "1000": 20000, "5000": 120000 },
+    "mainThreadLayoutMaximumMs": 50,
+    "interactionMaximumMs": { "100": 250, "1000": 1000, "5000": 5000 },
+    "settledDrawsPerSecondMaximum": 2,
+    "inactiveDrawsMaximum": 2,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "returnedToLibrary": true,
+    "activeWorkerCancellationAndResume": true
+  },
+  "m3c2Baseline": {
+    "100": { "layoutStableMs": 3393, "mainThreadLayoutMaximumMs": 19 },
+    "1000": { "layoutStableMs": 29861, "mainThreadLayoutMaximumMs": 1248 },
+    "5000": { "layoutStableMs": null, "budgetObservationMs": 140049, "mainThreadLayoutMaximumMs": 29481 }
+  },
+  "scope": [
+    "Move force-layout computation to a dedicated module Worker.",
+    "Bound dense-cell repulsion candidates deterministically for every node and tick.",
+    "Apply Worker results in bounded main-thread batches and wake the M3C-1 dirty-frame loop only for new results.",
+    "Invalidate stale work on reload, reset, filter changes, view changes, blur and unmount.",
+    "Preserve graph facts, camera interaction, selection, layout persistence and reduced-motion behavior."
+  ],
+  "deferred": [
+    "viewport draw culling",
+    "label caching",
+    "saved view restoration",
+    "large-graph visual redesign",
+    "release freeze"
+  ],
+  "actual": {
+    "100": { "firstVisibleMs": 2511, "layoutStableMs": 4777, "mainThreadDispatchMaximumMs": 7.2, "mainThreadApplyMaximumMs": 5.2, "workerComputeMaximumMs": 13.4, "candidateChecks": 2676, "candidateMaximum": 4800, "settledDrawsPerSecond": 0, "longestTaskMs": 289 },
+    "1000": { "firstVisibleMs": 2466, "layoutStableMs": 3542, "mainThreadDispatchMaximumMs": 3.8, "mainThreadApplyMaximumMs": 6.9, "workerComputeMaximumMs": 5.9, "candidateChecks": 44912, "candidateMaximum": 48000, "settledDrawsPerSecond": 0, "longestTaskMs": 879, "lifecycleCycles": 20, "heapDeltaBytes": -57989616 },
+    "5000": { "firstVisibleMs": 7229, "layoutStableMs": 10964, "mainThreadDispatchMaximumMs": 7.6, "mainThreadApplyMaximumMs": 26.7, "workerComputeMaximumMs": 17.6, "candidateChecks": 237165, "candidateMaximum": 240000, "settledDrawsPerSecond": 0, "longestTaskMs": 915 }
+  },
+  "corrections": [
+    "Replaced stale Canvas-only stability detection with current Worker settled/frame/pending diagnostics.",
+    "Replaced object-graph structured cloning with transferable position, velocity and edge TypedArrays after a real 235.6ms main-thread dispatch.",
+    "Separated the settled Worker snapshot from the expected idle state after the later focus-loss cancellation test.",
+    "Retained the 100-node 2511ms cold development-harness first-visible result as a diagnostic miss without relaxing layout or interaction budgets."
+  ],
+  "selectedNextStage": {
+    "id": "M3C-4",
+    "name": "large-graph-performance-exit-audit",
+    "reason": "All three layout and interaction budgets now pass; the next bounded stage must verify filtered SVG/PNG export, Worker/listener cleanup and remaining non-continuous Canvas/semantic long tasks before declaring M3C complete."
+  },
+  "releaseCandidate": false
+}

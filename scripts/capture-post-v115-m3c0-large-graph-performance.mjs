@@ -10,7 +10,8 @@ const tier = Number(process.env.LONGEDIT_M3C_TIER || process.env.LONGEDIT_M3C0_T
 const lifecycleCycles = Number(process.env.LONGEDIT_M3C_CYCLES || process.env.LONGEDIT_M3C0_CYCLES || 0)
 if (!endpoint || !Number.isInteger(tier) || tier < 1) throw new Error(`${stage} capture environment is incomplete`)
 const boundedSchedulerStage = stage !== 'M3C-0'
-const profilingStage = stage === 'M3C-2'
+const profilingStage = stage === 'M3C-2' || stage === 'M3C-3'
+const workerImplementationStage = stage === 'M3C-3'
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -80,6 +81,9 @@ const readPose = () => evaluate(`document.querySelector('[data-testid="graph-can
 const readDraws = () => evaluate(profilingStage
   ? `Number(window.__m3c2Profiler?.phases?.['canvas-draw']?.count||0)`
   : `Number(window.__m3cProbe?.draws||0)`)
+const readWorkerDiagnostics = () => workerImplementationStage
+  ? evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {state:canvas?.dataset.layoutWorkerState||'',pending:canvas?.dataset.layoutWorkerPending==='true',candidateLimit:Number(canvas?.dataset.layoutWorkerCandidateLimit||0),candidateChecks:Number(canvas?.dataset.layoutWorkerCandidateChecks||0),cappedNodeCount:Number(canvas?.dataset.layoutWorkerCappedNodes||0),computeMaximumMs:Number(canvas?.dataset.layoutWorkerComputeMaximumMs||0),applyMaximumMs:Number(canvas?.dataset.layoutWorkerApplyMaximumMs||0),staleResults:Number(canvas?.dataset.layoutWorkerStaleResults||0),workerPhaseProfile:JSON.parse(JSON.stringify(window.__m3c2Profiler?.workerPhases||{}))}})()`)
+  : null
 const restoreFullGraphIfNeeded = async () => {
   const active = Boolean(await evaluate(`document.querySelector('[data-testid="graph-community-focus"]')`))
   if (!active) return false
@@ -107,10 +111,24 @@ await evaluate(`location.hash='#/graph?mode=network&root='+encodeURIComponent(${
 await waitFor(`document.querySelector('.graph-stats')?.textContent?.includes(${JSON.stringify(`${tier} / ${tier}`)})`, `${tier}-node graph visible`)
 const firstVisibleMs = Date.now() - startedAt
 await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')!==null`, 'centered node selection')
+let activeCancellationProbe = null
+if (workerImplementationStage && tier === 1000) {
+  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.layoutSettled==='false'&&canvas?.dataset.layoutWorkerState==='running'})()`, 'active worker layout before cancellation')
+  const before = await readWorkerDiagnostics()
+  await evaluate(`window.dispatchEvent(new Event('blur'))`)
+  await delay(120)
+  const inactive = await readWorkerDiagnostics()
+  await evaluate(`window.dispatchEvent(new Event('focus'))`)
+  await waitFor(`document.querySelector('[data-testid="graph-canvas"]')?.dataset.layoutWorkerState==='running'||document.querySelector('[data-testid="graph-canvas"]')?.dataset.layoutWorkerState==='settled'`, 'worker layout resume after active cancellation')
+  const resumed = await readWorkerDiagnostics()
+  activeCancellationProbe = { before, inactive, resumed }
+}
 let stabilityFailure = ''
 try {
   const stabilityExpression = boundedSchedulerStage
-    ? `(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.layoutSettled==='true'&&canvas?.dataset.loopContinuous==='false'})()`
+    ? workerImplementationStage
+      ? `(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.layoutSettled==='true'&&canvas?.dataset.layoutWorkerState==='settled'&&canvas?.dataset.layoutWorkerPending==='false'&&Number(canvas?.dataset.layoutFrame||0)>=31&&canvas?.dataset.loopContinuous==='false'})()`
+      : `(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.layoutSettled==='true'&&canvas?.dataset.loopContinuous==='false'})()`
     : `(()=>{const frames=window.__m3cProbe?.frames||[];if(frames.length<12)return false;const recent=frames.slice(-12);return recent.every(frame=>frame.signature===recent[0].signature)})()`
   const stabilityTimeoutMs = profilingStage && tier === 5000 ? Math.max(1000, 120000 - firstVisibleMs) : profilingStage ? 180000 : 240000
   await waitFor(stabilityExpression, `${tier}-node geometry stable`, stabilityTimeoutMs)
@@ -120,6 +138,7 @@ try {
 const layoutStableMs = Date.now() - startedAt
 if (stabilityFailure) {
   const phaseProfile = profilingStage ? await evaluate(`JSON.parse(JSON.stringify(window.__m3c2Profiler?.phases||{}))`) : null
+  const workerDiagnostics = await readWorkerDiagnostics()
   const drawsBeforeBudgetFailure = await readDraws()
   const longTasks = await evaluate(`window.__m3cLongTasks||[]`)
   if (profilingStage) await capture(`tier-${tier}.jpg`)
@@ -146,8 +165,10 @@ if (stabilityFailure) {
       interactions: null,
       frameActivity: { drawsBeforeBudgetFailure },
       phaseProfile,
+      workerDiagnostics,
       profilingCalibration,
       lifecycle: { cycles: lifecycleCycles, completed: false },
+      activeCancellationProbe,
       longTaskCount: longTasks.length,
       longestTaskMs: Math.round(Math.max(0, ...longTasks.map(item => item.duration))),
       runtimeErrors: runtimeErrors.length,
@@ -172,6 +193,8 @@ if (stabilityFailure) {
   console.log(`${stage} tier ${tier}: visible ${firstVisibleMs}ms, layout stability failed after ${layoutStableMs}ms; bounded failure recorded`)
   process.exit(0)
 }
+
+const stableWorkerDiagnostics = await readWorkerDiagnostics()
 
 const settledDrawStart = await readDraws()
 await delay(1000)
@@ -262,6 +285,8 @@ try {
 }
 const focusLatencyMs = Date.now() - focusStartedAt
 if (focusFailure) {
+  const phaseProfile = profilingStage ? await evaluate(`JSON.parse(JSON.stringify(window.__m3c2Profiler?.phases||{}))`) : null
+  const workerDiagnostics = await readWorkerDiagnostics()
   const afterSha256 = await hashDirectory(library)
   const evidence = {
     schemaVersion: 1,
@@ -278,7 +303,11 @@ if (focusFailure) {
       layoutStableMs,
       interactions: { zoomChanged: true, zoomLatencyMs, panChanged, panLatencyMs, selectionKind, selectedCount, selectionLatencyMs, focusLatencyMs, focus: null },
       frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws: null, focusResumeLayoutRestarts, resumeLayoutBefore, resumeLayoutAfter },
+      phaseProfile,
+      workerDiagnostics,
+      stableWorkerDiagnostics,
       lifecycle: { cycles: lifecycleCycles, completed: false },
+      activeCancellationProbe,
       runtimeErrors: runtimeErrors.length,
       runtimeErrorMessages: runtimeErrors,
       returnedToLibrary: false,
@@ -318,6 +347,7 @@ await restoreFullGraphIfNeeded()
 const panFullGraph = await evaluate(`document.querySelector('.graph-stats')?.textContent?.includes(${JSON.stringify(`${tier} / ${tier}`)})===true`)
 await capture(`tier-${tier}.jpg`)
 const phaseProfile = profilingStage ? await evaluate(`JSON.parse(JSON.stringify(window.__m3c2Profiler?.phases||{}))`) : null
+const workerDiagnostics = await readWorkerDiagnostics()
 
 await click('.management-back')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
@@ -363,8 +393,11 @@ const evidence = {
     interactions: { zoomChanged: true, zoomLatencyMs, panChanged, panLatencyMs, panFullGraph, selectionKind, selectedCount, selectionLatencyMs, focusLatencyMs, focus: focusState },
     frameActivity: { settledDrawsPerSecond, inactiveDraws, libraryDraws, focusResumeLayoutRestarts, resumeLayoutBefore, resumeLayoutAfter },
     phaseProfile,
+    workerDiagnostics,
+    stableWorkerDiagnostics,
     profilingCalibration,
     lifecycle,
+    activeCancellationProbe,
     longTaskCount: longTasks.length,
     longestTaskMs: Math.round(Math.max(0, ...longTasks.map(item => item.duration))),
     jsHeapUsedBytes: await metric('JSHeapUsedSize'),

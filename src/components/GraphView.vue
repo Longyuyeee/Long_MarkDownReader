@@ -497,6 +497,7 @@ import { graphCameraPoseForBounds, graphCameraPoseForPoint, interpolateGraphCame
 import type { GraphCameraPose, GraphCameraViewport } from '../utils/graphCamera'
 import { graphMinimapProjection as buildGraphMinimapProjection, graphMinimapViewportRect, graphMinimapWorldPoint } from '../utils/graphMinimap'
 import { deriveGraphNodeStatus } from '../utils/graphNodeStatus'
+import { GRAPH_FORCE_LAYOUT_MAX_CANDIDATES_PER_NODE, type GraphForceLayoutEdge } from '../utils/graphForceLayoutKernel'
 import type { GraphMinimapProjection } from '../utils/graphMinimap'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
@@ -596,11 +597,11 @@ const remediationCopy = computed(() => ({
   overview: { title: '知识网络状态良好', detail: '继续从核心主题检查关系依据，或切换思维导图查看层级。', action: '' },
 } as Record<string, { title: string; detail: string; action: string }>)[remediationFocus.value] || null)
 
-const recordGraphPhase = (name: string, startedAt: number) => {
+const recordGraphPhaseDuration = (name: string, duration: number, collection = 'phases') => {
   const profiler = (window as any).__m3c2Profiler
   if (!profiler?.enabled) return
-  const duration = performance.now() - startedAt
-  const phase = profiler.phases[name] || (profiler.phases[name] = { count: 0, totalMs: 0, maximumMs: 0, over50Ms: 0, over1000Ms: 0, samples: [] })
+  const phases = profiler[collection] || (profiler[collection] = {})
+  const phase = phases[name] || (phases[name] = { count: 0, totalMs: 0, maximumMs: 0, over50Ms: 0, over1000Ms: 0, samples: [] })
   phase.count += 1
   phase.totalMs += duration
   phase.maximumMs = Math.max(phase.maximumMs, duration)
@@ -608,6 +609,7 @@ const recordGraphPhase = (name: string, startedAt: number) => {
   if (duration >= 1000) phase.over1000Ms += 1
   if (phase.samples.length < 512) phase.samples.push(duration)
 }
+const recordGraphPhase = (name: string, startedAt: number) => recordGraphPhaseDuration(name, performance.now() - startedAt)
 const measureGraphPhase = <T>(name: string, operation: () => T): T => {
   const profiler = (window as any).__m3c2Profiler
   if (!profiler?.enabled) return operation()
@@ -893,8 +895,6 @@ const removeGraphRelation = async (relation: SelectedRelation) => {
 
 // 图谱布局常量
 const LAYOUT_MAX_FRAMES = 120
-const LAYOUT_OPTIMIZATION_START_FRAME = 60
-const LAYOUT_FRAME_SKIP = 3
 const LAYOUT_SETTLE_THRESHOLD = 0.8
 const LAYOUT_MIN_FRAMES = 30
 
@@ -938,9 +938,33 @@ const tooltipX = ref(0)
 const tooltipY = ref(0)
 let mouseX = 0, mouseY = 0
 let layoutSaveTimer = 0
+let layoutWorker: Worker | null = null
+let layoutWorkerJobId = 0
+let layoutWorkerPending = false
+let layoutWorkerInitialized = false
+let layoutWorkerNodes: GraphNode[] = []
+let layoutWorkerState: 'idle' | 'running' | 'settled' | 'failed' = 'idle'
+let layoutWorkerCandidateChecks = 0
+let layoutWorkerCappedNodeCount = 0
+let layoutWorkerComputeMaximumMs = 0
+let layoutWorkerApplyMaximumMs = 0
+let layoutWorkerStaleResults = 0
+
+type GraphForceLayoutWorkerResult = {
+  type: 'result'
+  jobId: number
+  frame: number
+  positions: Float64Array
+  velocities: Float64Array
+  energy: number
+  candidateChecks: number
+  cappedNodeCount: number
+  computeMs: number
+}
+type GraphForceLayoutWorkerError = { type: 'error'; jobId: number; message: string }
 
 const graphLoopNeedsContinuousFrames = () => Boolean(
-  (viewMode.value === 'network' && !layoutSettled)
+  (viewMode.value === 'network' && !layoutSettled && !layoutWorkerPending)
   || cameraTransition
   || pathMotionEnabled.value
 )
@@ -964,7 +988,135 @@ const scheduleLayoutSave = () => {
   layoutSaveTimer = window.setTimeout(() => saveGraphLayout(libraryRoot, layoutId, nodes), 350)
 }
 
+const invalidateLayoutWorker = () => {
+  const obsoleteJobId = layoutWorkerJobId
+  layoutWorkerJobId += 1
+  layoutWorkerPending = false
+  layoutWorkerInitialized = false
+  layoutWorkerNodes = []
+  if (obsoleteJobId) layoutWorker?.postMessage({ type: 'cancel', jobId: obsoleteJobId })
+  if (layoutWorkerState !== 'failed') layoutWorkerState = 'idle'
+}
+
+const handleLayoutWorkerMessage = (event: MessageEvent<GraphForceLayoutWorkerResult | GraphForceLayoutWorkerError>) => {
+  const result = event.data
+  if (result.jobId !== layoutWorkerJobId || !layoutWorkerInitialized || viewMode.value !== 'network') {
+    layoutWorkerStaleResults += 1
+    return
+  }
+  layoutWorkerPending = false
+  if (result.type === 'error') {
+    layoutWorker?.terminate()
+    layoutWorker = null
+    layoutWorkerInitialized = false
+    layoutWorkerState = 'failed'
+    layoutSettled = true
+    requestGraphFrame()
+    return
+  }
+  if (result.positions.length !== layoutWorkerNodes.length * 2 || result.velocities.length !== layoutWorkerNodes.length * 2) {
+    layoutWorker?.terminate()
+    layoutWorker = null
+    layoutWorkerInitialized = false
+    layoutWorkerState = 'failed'
+    layoutSettled = true
+    requestGraphFrame()
+    return
+  }
+
+  const applyStartedAt = performance.now()
+  for (let index = 0; index < layoutWorkerNodes.length; index += 1) {
+    const node = layoutWorkerNodes[index]
+    node.x = result.positions[index * 2]
+    node.y = result.positions[index * 2 + 1]
+    node.vx = result.velocities[index * 2]
+    node.vy = result.velocities[index * 2 + 1]
+  }
+  const applyDuration = performance.now() - applyStartedAt
+  recordGraphPhaseDuration('layout-worker-apply', applyDuration)
+  recordGraphPhaseDuration('layout-worker-compute', result.computeMs, 'workerPhases')
+  layoutWorkerApplyMaximumMs = Math.max(layoutWorkerApplyMaximumMs, applyDuration)
+  layoutWorkerComputeMaximumMs = Math.max(layoutWorkerComputeMaximumMs, result.computeMs)
+  layoutWorkerCandidateChecks = result.candidateChecks
+  layoutWorkerCappedNodeCount = result.cappedNodeCount
+  frameCount = result.frame
+  minimapLayoutRevision += 1
+
+  if ((result.energy < LAYOUT_SETTLE_THRESHOLD && frameCount > LAYOUT_MIN_FRAMES) || frameCount >= LAYOUT_MAX_FRAMES) {
+    layoutSettled = true
+    layoutWorkerState = 'settled'
+    scheduleLayoutSave()
+  } else {
+    layoutWorkerState = 'running'
+  }
+  requestGraphFrame()
+}
+
+const ensureLayoutWorker = () => {
+  if (layoutWorker) return layoutWorker
+  try {
+    layoutWorker = new Worker(new URL('../workers/graphForceLayout.worker.ts', import.meta.url), { type: 'module' })
+    layoutWorker.addEventListener('message', handleLayoutWorkerMessage)
+    layoutWorker.addEventListener('error', event => {
+      event.preventDefault()
+      layoutWorker?.terminate()
+      layoutWorker = null
+      layoutWorkerPending = false
+      layoutWorkerInitialized = false
+      layoutWorkerState = 'failed'
+      layoutSettled = true
+      requestGraphFrame()
+    })
+  } catch {
+    layoutWorkerState = 'failed'
+    layoutSettled = true
+  }
+  return layoutWorker
+}
+
+const dispatchLayoutWorkerTick = () => {
+  if (layoutWorkerPending || layoutSettled || viewMode.value !== 'network') return
+  const worker = ensureLayoutWorker()
+  if (!worker) return
+  const centerX = (containerRef.value?.clientWidth || 800) / 2 / zoom - viewX / zoom
+  const centerY = (containerRef.value?.clientHeight || 600) / 2 / zoom - viewY / zoom
+
+  if (!layoutWorkerInitialized) {
+    const nodes = visibleNodes.value
+    const nodeIndices = new Map(nodes.map((node, index) => [node.id, index]))
+    const positions = new Float64Array(nodes.length * 2)
+    const velocities = new Float64Array(nodes.length * 2)
+    nodes.forEach((node, index) => {
+      positions[index * 2] = node.x || 0
+      positions[index * 2 + 1] = node.y || 0
+      velocities[index * 2] = node.vx || 0
+      velocities[index * 2 + 1] = node.vy || 0
+    })
+    const workerEdges: GraphForceLayoutEdge[] = visibleEdges.value.flatMap(edge => {
+      const source = nodeIndices.get(edge.source)
+      const target = nodeIndices.get(edge.target)
+      return source === undefined || target === undefined ? [] : [{ source, target }]
+    })
+    const edgeIndices = new Int32Array(workerEdges.length * 2)
+    workerEdges.forEach((edge, index) => {
+      edgeIndices[index * 2] = edge.source
+      edgeIndices[index * 2 + 1] = edge.target
+    })
+    layoutWorkerJobId += 1
+    layoutWorkerNodes = nodes
+    layoutWorkerInitialized = true
+    layoutWorkerPending = true
+    layoutWorkerState = 'running'
+    worker.postMessage({ type: 'start', jobId: layoutWorkerJobId, nodeCount: nodes.length, positions, velocities, edgeIndices, centerX, centerY }, [positions.buffer, velocities.buffer, edgeIndices.buffer])
+    return
+  }
+
+  layoutWorkerPending = true
+  worker.postMessage({ type: 'tick', jobId: layoutWorkerJobId, centerX, centerY })
+}
+
 const loadGraph = async () => {
+  invalidateLayoutWorker()
   isLoading.value = true
   if (!store.libraryPath) {
     graphData.value = { nodes: [], edges: [] }
@@ -1004,6 +1156,7 @@ const loadGraph = async () => {
 }
 
 const initLayout = () => {
+  invalidateLayoutWorker()
   const nodes = graphData.value.nodes
   const cx = (containerRef.value?.clientWidth || 800) / 2
   const cy = (containerRef.value?.clientHeight || 600) / 2
@@ -1035,6 +1188,7 @@ const captureLayoutSnapshot = (mode: GraphLayoutMode = graphLayoutMode.value): L
   positions: Object.fromEntries(layoutNodes().filter(node => Number.isFinite(node.x) && Number.isFinite(node.y)).map(node => [node.id, { x: node.x!, y: node.y! }])),
 })
 const restoreLayoutSnapshot = (snapshot: LayoutSnapshot) => {
+  invalidateLayoutWorker()
   graphLayoutMode.value = snapshot.mode
   activeLayoutMode = snapshot.mode
   const nodes = layoutNodes()
@@ -1093,6 +1247,7 @@ const graphLevels = (nodes: GraphNode[], root: GraphNode) => {
   return levels
 }
 const positionGraphLayout = (mode: GraphLayoutMode) => {
+  invalidateLayoutWorker()
   const nodes = layoutNodes()
   if (!nodes.length) return
   const width = Math.max(760, canvasRef.value?.clientWidth || containerRef.value?.clientWidth || 1000)
@@ -1155,6 +1310,7 @@ const applySelectedLayout = () => {
 }
 
 const applyMindMapLayout = (root: GraphNode) => {
+  invalidateLayoutWorker()
   const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node]))
   const visited = new Set<string>([root.id])
   const levels: GraphNode[][] = [[root]]
@@ -1700,100 +1856,16 @@ const saveGraphCollection = async (node: GraphNode) => {
 
 const simulate = () => measureGraphPhase('layout-simulation', () => {
   if (layoutSettled || viewMode.value === 'mindmap') return
-  const nodes = visibleNodes.value
-  const edges = visibleEdges.value
-  if (nodes.length === 0) return
-
-  frameCount++
-  if (frameCount > LAYOUT_MAX_FRAMES) { layoutSettled = true; scheduleLayoutSave(); return }
-
-  // 降低帧率优化：超过 60 帧后每 3 帧计算一次
-  if (frameCount > LAYOUT_OPTIMIZATION_START_FRAME && frameCount % LAYOUT_FRAME_SKIP !== 0) return
-
-  const nodeMap = new Map<string, GraphNode>()
-  nodes.forEach(n => nodeMap.set(n.id, n))
-
-  // 使用空间分区优化 O(n²) 斥力计算
-  const cellSize = 100
-  const grid = new Map<string, GraphNode[]>()
-
-  for (const n of nodes) {
-    const cx = Math.floor((n.x || 0) / cellSize)
-    const cy = Math.floor((n.y || 0) / cellSize)
-    const key = `${cx},${cy}`
-    if (!grid.has(key)) grid.set(key, [])
-    grid.get(key)!.push(n)
-  }
-
-  let etotal = 0
-
-  // 斥力 — 使用空间分区只计算邻近节点，增加距离阈值优化
-  const maxRepulsionDist = 300 // 超过此距离不计算斥力
-  for (const n of nodes) {
-    const cx = Math.floor((n.x || 0) / cellSize)
-    const cy = Math.floor((n.y || 0) / cellSize)
-
-    // 检查周围 9 个格子
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        const key = `${cx + dx},${cy + dy}`
-        const neighbors = grid.get(key) || []
-        for (const m of neighbors) {
-          if (n === m) continue
-          const vx = (m.x || 0) - (n.x || 0)
-          const vy = (m.y || 0) - (n.y || 0)
-          const distSq = vx * vx + vy * vy
-          if (distSq < 1 || distSq > maxRepulsionDist * maxRepulsionDist) continue
-          const dist = Math.sqrt(distSq)
-          const force = Math.min(800 / distSq, 50)
-          const fx = (vx / dist) * force
-          const fy = (vy / dist) * force
-          n.vx = (n.vx || 0) - fx
-          n.vy = (n.vy || 0) - fy
-        }
-      }
-    }
-  }
-
-  // 引力
-  const desiredLinkDistance = 120
-  for (const e of edges) {
-    const s = nodeMap.get(e.source)
-    const t = nodeMap.get(e.target)
-    if (!s || !t) continue
-    const dx = (t.x || 0) - (s.x || 0)
-    const dy = (t.y || 0) - (s.y || 0)
-    const dist = Math.sqrt(dx * dx + dy * dy) || 1
-    const f = (dist - desiredLinkDistance) * 0.015
-    s.vx = (s.vx || 0) + (dx / dist) * f
-    s.vy = (s.vy || 0) + (dy / dist) * f
-    t.vx = (t.vx || 0) - (dx / dist) * f
-    t.vy = (t.vy || 0) - (dy / dist) * f
-  }
-
-  // 中心引力 + 阻尼 + 更新位置
-  const cx = (containerRef.value?.clientWidth || 800) / 2 / zoom - viewX / zoom
-  const cy = (containerRef.value?.clientHeight || 600) / 2 / zoom - viewY / zoom
-
-  for (const n of nodes) {
-    n.vx = (n.vx || 0) + (cx - (n.x || 0)) * 0.002
-    n.vy = (n.vy || 0) + (cy - (n.y || 0)) * 0.002
-    n.vx = (n.vx || 0) * 0.85
-    n.vy = (n.vy || 0) * 0.85
-    n.x = (n.x || 0) + (n.vx || 0)
-    n.y = (n.y || 0) + (n.vy || 0)
-    etotal += Math.abs(n.vx || 0) + Math.abs(n.vy || 0)
-  }
-
-  // 能量收敛检测
-  if (etotal < LAYOUT_SETTLE_THRESHOLD && frameCount > LAYOUT_MIN_FRAMES) {
+  if (visibleNodes.value.length === 0) {
     layoutSettled = true
-    scheduleLayoutSave()
+    return
   }
+  dispatchLayoutWorkerTick()
 })
 
 const resetView = () => {
   cancelCameraMotion()
+  invalidateLayoutWorker()
   viewX = 0
   viewY = 0
   zoom = 1
@@ -2399,6 +2471,14 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   canvas.dataset.pathMotionFrames = String(pathMotionFrameCount)
   canvas.dataset.layoutSettled = String(layoutSettled)
   canvas.dataset.layoutFrame = String(frameCount)
+  canvas.dataset.layoutWorkerState = layoutWorkerState
+  canvas.dataset.layoutWorkerPending = String(layoutWorkerPending)
+  canvas.dataset.layoutWorkerCandidateLimit = String(GRAPH_FORCE_LAYOUT_MAX_CANDIDATES_PER_NODE)
+  canvas.dataset.layoutWorkerCandidateChecks = String(layoutWorkerCandidateChecks)
+  canvas.dataset.layoutWorkerCappedNodes = String(layoutWorkerCappedNodeCount)
+  canvas.dataset.layoutWorkerComputeMaximumMs = layoutWorkerComputeMaximumMs.toFixed(3)
+  canvas.dataset.layoutWorkerApplyMaximumMs = layoutWorkerApplyMaximumMs.toFixed(3)
+  canvas.dataset.layoutWorkerStaleResults = String(layoutWorkerStaleResults)
   canvas.dataset.loopContinuous = String(graphLoopNeedsContinuousFrames())
 })
 
@@ -2492,6 +2572,7 @@ const onDrag = (e: MouseEvent) => {
     const dx = mx - dragStartWorldX
     const dy = my - dragStartWorldY
     if (!wasDragging && Math.hypot(dx, dy) < 3 / zoom) return
+    if (!wasDragging) invalidateLayoutWorker()
     wasDragging = true
     dragStartPositions.forEach((position, id) => {
       const node = graphData.value.nodes.find(candidate => candidate.id === id)
@@ -2592,6 +2673,7 @@ const onDblClick = () => {
 
 const moveSelectedNodes = (dx: number, dy: number) => {
   if (!selectedNodeIds.value.length) return
+  invalidateLayoutWorker()
   const before = captureLayoutSnapshot()
   for (const id of selectedNodeIds.value) {
     const node = graphData.value.nodes.find(candidate => candidate.id === id)
@@ -2648,6 +2730,7 @@ watch(remediationFocus, focus => {
     healthOpen.value = true
     clearSelection()
   }
+  invalidateLayoutWorker()
   frameCount = 0
   layoutSettled = false
   requestGraphFrame()
@@ -2669,6 +2752,7 @@ watch(filters, () => {
   if (selectedNode.value && !visible.has(selectedNode.value.id)) selectedNode.value = null
   const nextStructuralFilterSignature = structuralFilterSignature()
   if (viewMode.value === 'network' && nextStructuralFilterSignature !== previousStructuralFilterSignature) {
+    invalidateLayoutWorker()
     frameCount = 0
     layoutSettled = false
   }
@@ -2694,6 +2778,7 @@ let reducedMotionQuery: MediaQueryList | null = null
 let graphResizeObserver: ResizeObserver | null = null
 const pauseGraphLoop = () => {
   if (!graphPageActive.value) return
+  invalidateLayoutWorker()
   graphPageActive.value = false
   lastLoopTimestamp = 0
   cancelCameraMotion()
@@ -2731,7 +2816,7 @@ onMounted(() => {
   })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
-onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>

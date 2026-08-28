@@ -1311,3 +1311,9 @@ M3C-0 已在独立真实 Tauri/WebView2 会话中完成 100/1,000/5,000 节点 M
 固定种子真实 Tauri 剖析确认 5,000 节点布局累计 `133038ms`、最大单次 `29481ms`，Canvas 累计 `948ms`、语义派生约 `1269ms`、后端构建 `7403ms`；布局约占已归因主线程成本 99%。100/1,000 节点稳定完成，5,000 节点在产品总预算内未稳定，预算截断后仍成功返回资料库；三档错误 0、源摘要不变。
 
 测试已修正随机布局历史对照、计时包装闭合、过长等待、短聚焦和 middle 覆盖，探针记账约 `0.5µs/次`。当前接续点为 **M3C-3 Worker 承载的有界力布局内核**：移出 UI 主线程并限制密集单元斥力候选，保留 M3C-1 脏帧和陈旧任务取消；不得顺带实现裁剪/缓存或视觉重做。详见 [`Post_v1.0.15_M3C2_Large_Graph_Main_Thread_Phase_Profiling_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M3C2_Large_Graph_Main_Thread_Phase_Profiling_Selection_Audit_2026-08-28.md)。
+
+## 2026-08-28 M3C-3 Worker 承载的有界力布局内核交接
+
+模块 Worker、每节点每 tick 48 候选上限、可转移 TypedArray 和单调 job ID 已接入真实关系网络。100/1,000/5,000 节点稳定 `4777/3542/10964ms`；5,000 主线程派发/应用最大 `7.6/26.7ms`，不再出现 `29481ms` 同步布局。三档稳定绘制 0/s、交互/源安全/返回通过，1,000 节点活跃失焦取消与 20 次生命周期通过。
+
+首轮测试竞态、`235.6ms` 对象克隆和最终 idle 状态误判均已按真实证据修正；100 节点冷开发首次可见 `2511ms` 仍作为诊断差异保留。当前接续点为 **M3C-4 大图性能退出审计**：验证过滤范围 SVG/PNG 导出、Worker/监听器清理，复核剩余 Canvas/社区语义长任务，再决定 M3C 是否退出；不要自动混入裁剪/标签缓存。详见 [`Post_v1.0.15_M3C3_Worker_Backed_Bounded_Force_Layout_Kernel_Audit_2026-08-28.md`](./Post_v1.0.15_M3C3_Worker_Backed_Bounded_Force_Layout_Kernel_Audit_2026-08-28.md)。
