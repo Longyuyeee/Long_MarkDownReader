@@ -1275,3 +1275,9 @@ M3B-8 已完成且未修改图谱产品运行代码。真实 100/1000/5000 节�
 M3B-9 已完成由可见节点派生的无标签语义缩略图、实时视口框和点击/拖动/方向键导航。点击共享现有有界且 reduced 安全的相机；拖动直接跟随指针；相机诊断在首次绘制即同步。投影纯函数对 5000 节点最多绘制 600 点，不修改布局或资料库。
 
 暗色 calm、暗色/浅色/高对比 reduced 共四个真实 Tauri 会话覆盖 1280/1000/720：calm 为 `343ms/40帧`，reduced 为 `8～25ms/0帧`，详情/图例/状态栏/远景入口碰撞均为 0，运行时错误 0、源摘要不变并返回资料库。当前接续点为 **M3B-10 剩余专业视觉系统选择审计**，只从聚类折叠、全屏和节点状态外环中选择一个最小增量；M3C 继续延后。详见 [`Post_v1.0.15_M3B9_Bounded_Semantic_Minimap_and_Viewport_Navigation_Audit_2026-08-28.md`](./Post_v1.0.15_M3B9_Bounded_Semantic_Minimap_and_Viewport_Navigation_Audit_2026-08-28.md)。
+
+## 2026-08-28 M3B-10 剩余专业视觉系统选择交接
+
+M3B-10 已完成且未改图谱产品运行代码。`GraphNode.modifiedAt` 来自真实文件系统秒级时间，当前可见图度数已同步计算；治理侧栏则独立异步扫描，不能直接当作逐节点状态合同。代理聚类节点和产品全屏仍不存在。
+
+真实暗色/reduced Tauri 覆盖 1280/1000/720，七档文件时间均唯一，知识脉搏为 17 对象/17 关系/100% 覆盖，运行时错误 0、源摘要不变并返回资料库。当前接续点为 **M3B-11 克制的近期修改与关系强度节点外环**，不得引入治理扫描；聚类折叠、全屏、治理外环和 M3C 继续延后。详见 [`Post_v1.0.15_M3B10_Remaining_Professional_Visual_System_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M3B10_Remaining_Professional_Visual_System_Selection_Audit_2026-08-28.md)。

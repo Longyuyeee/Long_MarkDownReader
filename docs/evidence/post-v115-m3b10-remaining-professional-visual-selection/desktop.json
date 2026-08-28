@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-10",
+  "actual": {
+    "theme": "dark",
+    "motion": "reduced",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": null,
+    "cameraNavigation": null,
+    "remainingNavigationSelection": null,
+    "minimapNavigation": null,
+    "remainingVisualSelection": {
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "canvasVisible": true,
+          "minimapVisible": true,
+          "nodeStatusRingVisible": false,
+          "clusterCollapseExpandVisible": false,
+          "fullscreenVisible": false,
+          "fullscreenApiAvailable": true,
+          "semanticZoomLevel": "near"
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "canvasVisible": true,
+          "minimapVisible": true,
+          "nodeStatusRingVisible": false,
+          "clusterCollapseExpandVisible": false,
+          "fullscreenVisible": false,
+          "fullscreenApiAvailable": true,
+          "semanticZoomLevel": "near"
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "canvasVisible": true,
+          "minimapVisible": true,
+          "nodeStatusRingVisible": false,
+          "clusterCollapseExpandVisible": false,
+          "fullscreenVisible": false,
+          "fullscreenApiAvailable": true,
+          "semanticZoomLevel": "near"
+        }
+      ],
+      "health": {
+        "objectCount": 17,
+        "relationCount": 17,
+        "connectedCount": 17,
+        "isolatedCount": 0,
+        "coveragePercent": 100,
+        "summaries": [
+          "0断链",
+          "0歧义",
+          "0孤立笔记"
+        ],
+        "topics": [
+          {
+            "text": "Brief",
+            "relationCount": 3
+          },
+          {
+            "text": "Coverage chart",
+            "relationCount": 3
+          },
+          {
+            "text": "NorthStar",
+            "relationCount": 3
+          },
+          {
+            "text": "NorthStar.md",
+            "relationCount": 3
+          },
+          {
+            "text": "Review",
+            "relationCount": 3
+          },
+          {
+            "text": "re earch/Roadmap.table.j on",
+            "relationCount": 3
+          }
+        ],
+        "isolationQueueCount": 0,
+        "panelFits": true,
+        "narrowFits": true
+      },
+      "sourceSignals": {
+        "timestamps": [
+          {
+            "file": "NorthStar.md",
+            "modifiedAt": 1787889389
+          },
+          {
+            "file": "research/Brief.md",
+            "modifiedAt": 1787716589
+          },
+          {
+            "file": "research/Evidence.pdf",
+            "modifiedAt": 1787025389
+          },
+          {
+            "file": "research/Roadmap.table.json",
+            "modifiedAt": 1784433389
+          },
+          {
+            "file": "research/System.canvas",
+            "modifiedAt": 1780977389
+          },
+          {
+            "file": "research/Outline.opml",
+            "modifiedAt": 1774065389
+          },
+          {
+            "file": "research/Review.pptx",
+            "modifiedAt": 1756353389
+          }
+        ],
+        "uniqueModifiedAtCount": 7,
+        "relationStrengthObserved": true
+      },
+      "capabilities": {
+        "minimap": true,
+        "communityFilteredSubgraph": true,
+        "nodeStatusRings": false,
+        "clusterCollapseExpand": false,
+        "fullscreen": false
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

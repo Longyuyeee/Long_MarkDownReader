@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-10",
+  "releaseCandidate": false,
+  "scope": "remaining-professional-visual-system-selection-audit",
+  "currentFacts": {
+    "boundedSemanticMinimap": true,
+    "communityInteraction": "filtered-subgraph-enter-and-return",
+    "clusterCollapseExpand": false,
+    "graphFullscreen": false,
+    "nodeStatusRings": false,
+    "nodeModifiedAtSource": "GraphNode.modifiedAt-from-filesystem-seconds",
+    "relationStrengthSource": "synchronous-visible-graph-degree",
+    "governanceSource": "separate-asynchronous-health-and-pulse-scan-without-node-ring-contract"
+  },
+  "decision": {
+    "selectedIncrement": "restrained-recency-and-relation-strength-node-rings",
+    "reason": "Recency and relation degree already exist in the live GraphNode and visible graph without another backend scan, so restrained rings can add local information at lower semantic and lifecycle cost. Governance is not selected because the health panel owns a separate asynchronous scan and has no canonical per-node ring mapping. Cluster collapse requires proxy-node aggregation semantics across selection, paths, evidence, history and export; fullscreen adds space but not information.",
+    "requiredContract": [
+      "derive-only-from-existing-graph-node-modified-at-and-visible-degree",
+      "no-health-scan-or-governance-ring",
+      "recency-thresholds-use-real-epoch-seconds",
+      "relation-strength-normalized-within-current-visible-graph",
+      "selection-path-hover-and-object-shape-retain-priority",
+      "no-rings-in-far-community-overview",
+      "static-and-reduced-motion-safe",
+      "theme-and-high-contrast-readable",
+      "responsive-at-1280-1000-720",
+      "source-files-remain-read-only"
+    ],
+    "deferred": [
+      "governance-status-rings-until-canonical-node-contract",
+      "cluster-collapse-expand",
+      "graph-fullscreen",
+      "M3C-dirty-frame-and-large-graph-performance"
+    ]
+  },
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "selectedNextStage": {
+    "id": "M3B-11",
+    "name": "restrained-recency-and-relation-strength-node-rings"
+  }
+}

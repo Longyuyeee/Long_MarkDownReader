@@ -1,4 +1,4 @@
-param([switch]$SkipBuild,[switch]$Append,[switch]$SkipEvidenceCheck,[ValidateSet('M3A1','M3A2','M3A3','M3A4','M3A5','M3A6','M3A7','M3A8','M3B0','M3B1','M3B2','M3B4','M3B5','M3B6','M3B7','M3B8','M3B9')][string]$Stage = 'M3A1',[ValidateSet('dark','white','contrast')][string]$Theme = 'dark',[ValidateSet('calm','reduced')][string]$Motion = 'reduced')
+param([switch]$SkipBuild,[switch]$Append,[switch]$SkipEvidenceCheck,[ValidateSet('M3A1','M3A2','M3A3','M3A4','M3A5','M3A6','M3A7','M3A8','M3B0','M3B1','M3B2','M3B4','M3B5','M3B6','M3B7','M3B8','M3B9','M3B10')][string]$Stage = 'M3A1',[ValidateSet('dark','white','contrast')][string]$Theme = 'dark',[ValidateSet('calm','reduced')][string]$Motion = 'reduced')
 $ErrorActionPreference = 'Stop'
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $outputRelative = if ($Stage -eq 'M3B1') { 'docs\evidence\post-v115-m3b1-semantic-zoom-community-overview' } elseif ($Stage -eq 'M3B0') { 'docs\evidence\post-v115-m3b0-professional-visual-baseline' } elseif ($Stage -eq 'M3A8') { 'docs\evidence\post-v115-m3a8-semantic-exploration-exit' } elseif ($Stage -eq 'M3A7') { 'docs\evidence\post-v115-m3a7-neighbor-pinning-history' } elseif ($Stage -eq 'M3A6') { 'docs\evidence\post-v115-m3a6-node-comparison' } elseif ($Stage -eq 'M3A5') { 'docs\evidence\post-v115-m3a5-community' } elseif ($Stage -eq 'M3A4') { 'docs\evidence\post-v115-m3a4-relation-evidence' } elseif ($Stage -eq 'M3A3') { 'docs\evidence\post-v115-m3a3-shortest-path' } elseif ($Stage -eq 'M3A2') { 'docs\evidence\post-v115-m3a2-neighbor-focus' } else { 'docs\evidence\post-v115-m3a1-semantics' }
@@ -9,6 +9,7 @@ if ($Stage -eq 'M3B6') { $outputRelative = 'docs\evidence\post-v115-m3b6-navigat
 if ($Stage -eq 'M3B7') { $outputRelative = 'docs\evidence\post-v115-m3b7-fit-selection-reduced-motion-focus' }
 if ($Stage -eq 'M3B8') { $outputRelative = 'docs\evidence\post-v115-m3b8-remaining-navigation-selection' }
 if ($Stage -eq 'M3B9') { $outputRelative = 'docs\evidence\post-v115-m3b9-bounded-semantic-minimap' }
+if ($Stage -eq 'M3B10') { $outputRelative = 'docs\evidence\post-v115-m3b10-remaining-professional-visual-selection' }
 $output = Join-Path $workspace $outputRelative
 $auditRoot = Join-Path $env:TEMP ("longedit-m3a1-{0}-{1}" -f $PID,[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 $library = Join-Path $auditRoot 'library'
@@ -28,6 +29,16 @@ New-Item -ItemType Directory -Path $output,$library,$webview,(Join-Path $library
 [IO.File]::WriteAllText((Join-Path $library 'research\System.canvas'), '{"nodes":[{"id":"north-star","type":"file","file":"NorthStar.md","x":0,"y":0,"width":240,"height":120},{"id":"roadmap-chart","type":"file","file":"research/Roadmap.table.json","longeditViewId":"chart","x":320,"y":0,"width":240,"height":120}],"edges":[{"id":"supports-roadmap","fromNode":"north-star","toNode":"roadmap-chart","relationType":"supports"}]}', $utf8)
 [IO.File]::WriteAllText((Join-Path $library 'research\Outline.opml'), '<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>Delivery outline</title></head><body><outline text="Discover" _longeditId="discover"><outline text="Deliver" _longeditId="deliver"/></outline></body></opml>', $utf8)
 Copy-Item -LiteralPath (Join-Path $workspace 'fixtures\pptx\producers\microsoft-powerpoint-16.pptx') -Destination (Join-Path $library 'research\Review.pptx')
+if ($Stage -eq 'M3B10') {
+  $now = [DateTime]::UtcNow
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'NorthStar.md'), $now)
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'research\Brief.md'), $now.AddDays(-2))
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'research\Evidence.pdf'), $now.AddDays(-10))
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'research\Roadmap.table.json'), $now.AddDays(-40))
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'research\System.canvas'), $now.AddDays(-80))
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'research\Outline.opml'), $now.AddDays(-160))
+  [IO.File]::SetLastWriteTimeUtc((Join-Path $library 'research\Review.pptx'), $now.AddDays(-365))
+}
 
 if (-not $SkipBuild) {
   & npm run build
@@ -84,6 +95,7 @@ if ($Stage -eq 'M3B6') { $checkRelative = 'scripts\check-post-v115-m3b6-navigati
 if ($Stage -eq 'M3B7') { $checkRelative = 'scripts\check-post-v115-m3b7-fit-selection-reduced-motion-focus.mjs' }
 if ($Stage -eq 'M3B8') { $checkRelative = 'scripts\check-post-v115-m3b8-remaining-navigation-selection.mjs' }
 if ($Stage -eq 'M3B9') { $checkRelative = 'scripts\check-post-v115-m3b9-bounded-semantic-minimap.mjs' }
+if ($Stage -eq 'M3B10') { $checkRelative = 'scripts\check-post-v115-m3b10-remaining-professional-visual-selection.mjs' }
 if (-not $SkipEvidenceCheck) {
   & node (Join-Path $workspace $checkRelative)
   if ($LASTEXITCODE -ne 0) { throw "$Stage evidence contract failed" }

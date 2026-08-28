@@ -31,6 +31,7 @@ import './check-post-v115-m3b6-navigation-camera-selection.mjs'
 import './check-post-v115-m3b7-fit-selection-reduced-motion-focus.mjs'
 import './check-post-v115-m3b8-remaining-navigation-selection.mjs'
 import './check-post-v115-m3b9-bounded-semantic-minimap.mjs'
+import './check-post-v115-m3b10-remaining-professional-visual-selection.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
