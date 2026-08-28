@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-2",
+  "status": "passed",
+  "sourceCommit": "dc725720d26e06fb65d0fe515c699bb5fae3cc40",
+  "actual": {
+    "initialOpenTaskCount": 2,
+    "initialCompletedTaskCount": 1,
+    "markdownTaskCount": 1,
+    "tableTaskCount": 2,
+    "unreferencedAnnotationCount": 1,
+    "markdownCompleteChangedSource": true,
+    "markdownUndoRestoredOriginalBytes": true,
+    "tableCompleteChangedSource": true,
+    "tableUndoRestoredOriginalBytes": true,
+    "pdfAnnotationPreciseOpenCount": 1,
+    "pdfAnnotationSourceWriteObserved": false,
+    "firstActionableMs": 540,
+    "responsive1280": true,
+    "responsive480": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchangedAfterAudit": true
+  },
+  "initialHashes": {
+    "table": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "markdown": "fe14c9705853eaecb2fad31aec26fdcab248fad1a8fe7cf5b800f1fd94f30ffa",
+    "pdf": "78f31199a8d6bf09fdb730d409a0220793da167d772332c0dc15a1189bcd048a",
+    "annotations": "b48db37ab971f15281c79b53fc7a89a7dbcddf807f1977020b6f1f6494f4d357"
+  },
+  "markdownCompletedHash": "518df00f96e4f8b0721fc323211c4ac04a5ef4145ee6da94e1b29413f4fa08a5",
+  "tableCompletedHash": "5899033258bb8e3fd9a92a269032510794f14b26c1d4997c795adcd3a77fe977",
+  "finalHashes": {
+    "table": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "markdown": "fe14c9705853eaecb2fad31aec26fdcab248fad1a8fe7cf5b800f1fd94f30ffa",
+    "pdf": "78f31199a8d6bf09fdb730d409a0220793da167d772332c0dc15a1189bcd048a",
+    "annotations": "b48db37ab971f15281c79b53fc7a89a7dbcddf807f1977020b6f1f6494f4d357"
+  },
+  "inheritedM4B1SafetyEvidence": true,
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

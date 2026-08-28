@@ -1391,3 +1391,13 @@ M4B-1 已完成。资料库内不超过 8 MiB 的 `.table.json` 只有在恰好�
 Rust Workspace 测试 8/8、前端构建和真实 Tauri 审计通过，其中命令级另有超过 8 MiB 拒绝回归。真实流程得到初始 2 条未完成、1 条已完成，其中 Table 2 条；取消不写，完成改变摘要，撤销逐字节恢复，恢复后再完成回到初始字节，外部追加换行后旧签名拒绝且不覆盖，Table 第 1 行唯一定位。1280×820/480×700 无横向溢出，最终重跑首个入口 744ms、运行时错误 0，最终 Table/Markdown SHA-256 均不变。审计脚本两次纠偏了弹窗退场竞态和同一选中行/行号重复计数，产品门槛未放宽；误触发的全 crate `cargo fmt` 只产生行尾/格式噪声，内容差异已清除且未纳入提交。
 
 当前唯一接续点为 **M4B-2 工作台对象行动退出审计**：组合复验 Markdown 待办、PDF 批注查看和 Table 布尔任务，核对其他 M1 格式延期边界，并决定 M4B 是否收口；不得新增行动类型，不得提前混入转换或发布冻结。详见 [`Post_v1.0.15_M4B1_Internal_Table_Boolean_Task_Workspace_Action_Audit_2026-08-29.md`](./Post_v1.0.15_M4B1_Internal_Table_Boolean_Task_Workspace_Action_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4B-2 工作台对象行动退出审计交接
+
+M4B 已收口，未新增产品运行代码。工作台对象行动固定为 Markdown 待办签名保护写回、内部 Table 显式布尔任务签名/稳定 ID 写回，以及 PDF 未引用批注只读精确查看。OPML、DOCX、ODS、ODP、PPTX 与 Workbook 不具备通用任务语义或受其上下文保存边界约束，继续通过“继续工作”与 M4A 的共享定位进入原对象，不制造通用完成按钮。
+
+真实 Tauri 同会话初始为 2 条未完成、1 条已完成任务，Markdown 1 条、Table 2 条、未引用 PDF 批注 1 条。Markdown 与 Table 完成均改变源摘要，撤销均逐字节恢复；PDF 打开到唯一 `workspace-review` 批注且 PDF/sidecar 未写入。1280×820/480×700 无溢出，首个入口 540ms、错误 0，最终四份源摘要全部不变。五张截图已人工接受。
+
+审计编排纠正了 `tauri.e2e.conf.json` 固定 14200 与脚本 14210 不一致，以及 Windows PowerShell 5.1 对无 BOM 脚本中文测试文本的代码页误读。证据还保留 `.pdf.annotations.json` 作为 JSON 最近文件可见的既有残余风险；它不属于新行动，后续发布清理应单独决策。
+
+当前唯一接续点为 **M4C-0 受控转换工作流选择审计**：先盘点 CSV/TSV→Table、OPML→Canvas、图谱输出的实际实现和来源/目标/覆盖/损失/自动打开/源安全披露，只选择一个最小完整批次；不得直接统一全部转换，不得进入 `M4-release-freeze`。详见 [`Post_v1.0.15_M4B2_Workspace_Object_Action_Exit_Audit_2026-08-29.md`](./Post_v1.0.15_M4B2_Workspace_Object_Action_Exit_Audit_2026-08-29.md)。

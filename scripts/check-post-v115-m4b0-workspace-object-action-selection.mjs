@@ -7,6 +7,7 @@ const evidence = readJson('docs/evidence/post-v115-m4b0-workspace-object-action-
 const manifest = readJson('docs/evidence/post-v115-m4b0-workspace-object-action-selection/manifest.json')
 const development = readJson('shared/development-version-policy.json')
 const successor = readJson('shared/post-v115-m4b1-internal-table-boolean-task-workspace-action-policy.json')
+const closure = readJson('shared/post-v115-m4b2-workspace-object-action-exit-audit-policy.json')
 const workspaceHome = read('src/views/WorkspaceHome.vue')
 const workspaceBackend = read('src-tauri/src/commands/workspace.rs')
 const tableBackend = read('src-tauri/src/commands/table.rs')
@@ -27,8 +28,8 @@ if (evidence.actual?.workspace?.markdownTaskCount !== 1 || evidence.actual?.work
 if (evidence.actual?.table?.booleanTaskCandidateCount !== 2 || evidence.actual?.table?.stableRowIds?.length !== 2 || !evidence.actual?.table?.rowLocatorObserved) failures.push('real Table candidate or locator evidence is incomplete')
 if (!evidence.actual?.sourceFilesUnchanged || evidence.actual?.runtimeErrorCount !== 0 || evidence.actual?.blockingErrorSurfaceObserved) failures.push('desktop source-safety or runtime gate failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 3) failures.push('desktop screenshots have not completed visual review')
-if (successor.predecessor !== policy.stage || policy.selectedNextStage?.id !== successor.stage || successor.selectedNextStage?.id !== 'M4B-2') failures.push('implemented successor chain is invalid')
-if (development.currentStage !== 'M4B-2-workspace-object-action-exit-audit') failures.push('development handoff stage is not M4B-2')
+if (successor.predecessor !== policy.stage || policy.selectedNextStage?.id !== successor.stage || successor.selectedNextStage?.id !== closure.stage || closure.predecessor !== successor.stage) failures.push('implemented successor chain is invalid')
+if (development.currentStage !== 'M4C-0-controlled-conversion-workflow-selection-audit') failures.push('development handoff stage is not M4C-0')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

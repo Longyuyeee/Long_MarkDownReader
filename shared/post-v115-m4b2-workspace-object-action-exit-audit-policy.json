@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4B-2",
+  "name": "workspace-object-action-exit-audit",
+  "predecessor": "M4B-1",
+  "originalRequirement": "M1 objects must be locatable from Workspace and return to the correct file and internal position without turning WorkspaceHome into a format capability page or inventing unsafe generic mutations.",
+  "closureDecision": "passed-bounded-action-scope",
+  "actionFamilies": [
+    {
+      "id": "markdown-task",
+      "mode": "signature-protected-direct-mutation",
+      "location": "markdown-line",
+      "undo": "byte-exact"
+    },
+    {
+      "id": "internal-table-boolean-task",
+      "mode": "signature-and-stable-id-protected-direct-mutation",
+      "location": "table-row",
+      "undo": "byte-exact"
+    },
+    {
+      "id": "pdf-unreferenced-annotation",
+      "mode": "read-only-governance-navigation",
+      "location": "pdf-annotation",
+      "undo": "not-applicable"
+    }
+  ],
+  "deferredFamilies": [
+    { "format": "OPML", "reason": "No reserved task-state semantic; nodes remain precisely navigable." },
+    { "format": "DOCX", "reason": "Edits require contextual document drafts; headings are not generic tasks." },
+    { "format": "ODS", "reason": "Supported edits require an explicit reliable-copy target." },
+    { "format": "ODP", "reason": "The format remains read-only." },
+    { "format": "PPTX", "reason": "Edits require contextual object transactions and explicit save confirmation." },
+    { "format": "Workbook", "reason": "Cell safety depends on workbook draft, validation, formula and merge context." }
+  ],
+  "exitGates": {
+    "markdownCompleteUndoByteExact": true,
+    "tableCompleteUndoByteExact": true,
+    "tableM4B1SafetyEvidenceAccepted": true,
+    "pdfAnnotationReadOnlyPreciseOpen": true,
+    "sharedObjectLocatorsPreserved": true,
+    "noAdditionalWorkspaceMutationFamilies": true,
+    "responsiveWideAndNarrow": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchangedAfterAudit": true
+  },
+  "selectedNextStage": {
+    "id": "M4C-0",
+    "name": "controlled-conversion-workflow-selection-audit",
+    "reason": "M4A object location and M4B bounded Workspace actions are closed. Audit existing CSV-to-Table, OPML-to-Canvas and graph outputs before selecting one conversion workflow and its disclosure contract."
+  },
+  "releaseCandidate": false
+}

@@ -11,6 +11,7 @@ const app = read('src-tauri/src/lib.rs')
 const home = read('src/views/WorkspaceHome.vue')
 const navigation = read('src/services/fileNavigation.ts')
 const predecessor = readJson('shared/post-v115-m4b0-workspace-object-action-selection-policy.json')
+const successor = readJson('shared/post-v115-m4b2-workspace-object-action-exit-audit-policy.json')
 const failures = []
 
 if (policy.stage !== 'M4B-1' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage || policy.selectedNextStage?.id !== 'M4B-2') failures.push('M4B stage chain is invalid')
@@ -28,7 +29,8 @@ if (!actual.staleSignatureRejectedWithoutWrite || actual.preciseTableRowOpenCoun
 if (actual.firstActionableMs > policy.expectations.firstActionableBudgetMs || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved) failures.push('desktop performance or runtime gate failed')
 if (!actual.responsive1280 || !actual.responsive480 || !actual.sourceFilesUnchangedAfterAudit) failures.push('desktop geometry or final source safety failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 5) failures.push('screenshots have not completed visual review')
-if (development.currentStage !== 'M4B-2-workspace-object-action-exit-audit') failures.push('development handoff stage is not M4B-2')
+if (successor.predecessor !== policy.stage || policy.selectedNextStage?.id !== successor.stage || successor.selectedNextStage?.id !== 'M4C-0') failures.push('M4B exit successor chain is invalid')
+if (development.currentStage !== 'M4C-0-controlled-conversion-workflow-selection-audit') failures.push('development handoff stage is not M4C-0')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

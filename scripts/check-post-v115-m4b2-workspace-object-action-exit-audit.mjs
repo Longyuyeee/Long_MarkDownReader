@@ -1,0 +1,43 @@
+import fs from 'node:fs'
+
+const read = file => fs.readFileSync(file, 'utf8')
+const readJson = file => JSON.parse(read(file))
+const policy = readJson('shared/post-v115-m4b2-workspace-object-action-exit-audit-policy.json')
+const predecessor = readJson('shared/post-v115-m4b1-internal-table-boolean-task-workspace-action-policy.json')
+const predecessorEvidence = readJson('docs/evidence/post-v115-m4b1-internal-table-boolean-task-workspace-action/interaction-evidence.json')
+const predecessorManifest = readJson('docs/evidence/post-v115-m4b1-internal-table-boolean-task-workspace-action/manifest.json')
+const evidence = readJson('docs/evidence/post-v115-m4b2-workspace-object-action-exit-audit/exit-evidence.json')
+const manifest = readJson('docs/evidence/post-v115-m4b2-workspace-object-action-exit-audit/manifest.json')
+const development = readJson('shared/development-version-policy.json')
+const home = read('src/views/WorkspaceHome.vue')
+const workspace = read('src-tauri/src/commands/workspace.rs')
+const queue = read('src/components/WorkspaceHealthQueue.vue')
+const navigation = read('src/services/fileNavigation.ts')
+const failures = []
+
+if (policy.stage !== 'M4B-2' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) failures.push('M4B exit stage chain is invalid')
+if (policy.closureDecision !== 'passed-bounded-action-scope' || policy.actionFamilies?.map(item => item.id).join(',') !== 'markdown-task,internal-table-boolean-task,pdf-unreferenced-annotation') failures.push('bounded Workspace action families drifted')
+if (policy.deferredFamilies?.map(item => item.format).join(',') !== 'OPML,DOCX,ODS,ODP,PPTX,Workbook') failures.push('deferred Workspace format families drifted')
+for (const gate of ['markdownCompleteUndoByteExact', 'tableCompleteUndoByteExact', 'tableM4B1SafetyEvidenceAccepted', 'pdfAnnotationReadOnlyPreciseOpen', 'sharedObjectLocatorsPreserved', 'noAdditionalWorkspaceMutationFamilies', 'responsiveWideAndNarrow', 'sourceFilesUnchangedAfterAudit']) if (policy.exitGates?.[gate] !== true) failures.push(`M4B exit gate missing: ${gate}`)
+if (predecessorEvidence.status !== 'passed' || predecessorManifest.status !== 'accepted-after-visual-review' || !predecessorEvidence.actual?.staleSignatureRejectedWithoutWrite || !predecessorEvidence.actual?.restoreAndRecompleteRestoredOriginalBytes) failures.push('M4B-1 independent safety evidence is incomplete')
+for (const token of ["'set_workspace_markdown_task_state'", "'set_workspace_table_task_state'", 'openAnnotation', 'openManagedObject', "kind: 'table-row'"]) if (!home.includes(token)) failures.push(`Workspace action implementation missing: ${token}`)
+for (const token of ['mutate_workspace_task', 'mutate_workspace_table_task', 'MAX_WORKSPACE_TABLE_TASK_BYTES']) if (!workspace.includes(token)) failures.push(`Workspace backend boundary missing: ${token}`)
+if (!queue.includes("data-issue-kind=\"annotation\"") || !queue.includes("emit('openAnnotation'")) failures.push('PDF annotation governance action is missing')
+if (!navigation.includes("kind === 'pdf_annotation'") || !navigation.includes("kind === 'table-row'")) failures.push('shared object locator coverage is missing')
+const productMutationCommands = [...home.matchAll(/'set_workspace_[a-z_]+_state'/g)].map(match => match[0]).sort()
+if (JSON.stringify(productMutationCommands) !== JSON.stringify(["'set_workspace_markdown_task_state'", "'set_workspace_table_task_state'"])) failures.push('additional Workspace mutation family was introduced')
+if (evidence.stage !== 'M4B-2' || evidence.status !== 'passed') failures.push('M4B exit evidence status is invalid')
+const actual = evidence.actual || {}
+if (actual.initialOpenTaskCount !== 2 || actual.initialCompletedTaskCount !== 1 || actual.markdownTaskCount !== 1 || actual.tableTaskCount !== 2 || actual.unreferencedAnnotationCount !== 1) failures.push('combined Workspace object counts drifted')
+if (!actual.markdownCompleteChangedSource || !actual.markdownUndoRestoredOriginalBytes || !actual.tableCompleteChangedSource || !actual.tableUndoRestoredOriginalBytes) failures.push('combined mutation and undo contract failed')
+if (actual.pdfAnnotationPreciseOpenCount !== 1 || actual.pdfAnnotationSourceWriteObserved) failures.push('PDF annotation read-only locator contract failed')
+if (!actual.responsive1280 || !actual.responsive480 || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved || !actual.sourceFilesUnchangedAfterAudit) failures.push('desktop safety, geometry or runtime gate failed')
+if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 5) failures.push('M4B exit screenshots have not completed visual review')
+if (policy.selectedNextStage?.id !== 'M4C-0' || development.currentStage !== 'M4C-0-controlled-conversion-workflow-selection-audit') failures.push('M4C-0 handoff is not aligned')
+if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
+
+if (failures.length) {
+  console.error(`M4B-2 Workspace object action exit check failed:\n- ${failures.join('\n- ')}`)
+  process.exit(1)
+}
+console.log('M4B closed: Markdown and internal Table mutations plus PDF annotation navigation passed the bounded Workspace action exit audit.')
