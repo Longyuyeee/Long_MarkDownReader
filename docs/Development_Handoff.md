@@ -1329,3 +1329,9 @@ M3C-4 已通过，M3 完成语义、视觉与性能三线收口。真实 Tauri �
 M4-0 已完成真实代码事实审计并在实现前暂停。跨格式搜索当前实际为 6/7：DOCX、ODS、ODP、PPTX 已携带精确内部定位，OPML 只能定位到文件，Table 内部行文本没有进入知识索引。搜索、图谱和关系上下文仍各自解释定位器；图谱缺少 DOCX/ODS/ODP/Workbook，工作台对象行动主要仍是 Markdown 待办和 PDF 批注。DOCX 搜索返回上下文真实保留，先前未定位疑点属于等待时序问题。
 
 恢复开发的唯一接续点为 **M4A-1 统一对象定位合同与 Table/OPML 搜索闭环**：先将定位器与路由映射收敛到 `fileNavigation`，再补 Table 行/视图和 OPML 节点搜索定位，同时保护 DOCX/ODS/ODP/PPTX 与返回上下文。图谱扩面、工作台扩面、转换披露、新转换类型和版本提升均不并入。暂停点没有产品代码变更，运行时/公开版本仍为 `1.0.15`，开发目标仍为 `1.0.16`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M4_0_Cross_Format_Workflow_Entry_Audit_and_Handoff_2026-08-28.md`](./Post_v1.0.15_M4_0_Cross_Format_Workflow_Entry_Audit_and_Handoff_2026-08-28.md)。
+
+## 2026-08-28 M4A-1 统一对象定位与 Table/OPML 搜索闭环交接
+
+M4A-1 已完成。资料库搜索、知识图谱和关系上下文统一调用 `fileNavigation` 对象定位合同；知识索引 schema v2 同时为 Table 行/视图和 OPML 节点生成稳定定位段，live fallback 使用同一生成器。Table 定位可穿透已保存筛选临时显示目标行，OPML 在思维导图中选中目标节点。
+
+真实 Tauri 已从搜索依次打开 Table `roadmap-row`、OPML `workflow-node`、DOCX `docx-block-6`、ODS `ods-sheet-2:A1`、ODP `odp-slide-1`、PPTX 对象 `3`，6/6 返回保留搜索状态；运行时错误 0，6 个源夹具摘要不变。下一接续点为 **M4A-2 M1 对象图谱定位扩面选择审计**，先盘点并选择最小批次，不并入工作台全对象行动、转换统一或版本冻结。详见 [`Post_v1.0.15_M4A1_Unified_Object_Navigation_and_Table_OPML_Search_Closure_Audit_2026-08-28.md`](./Post_v1.0.15_M4A1_Unified_Object_Navigation_and_Table_OPML_Search_Closure_Audit_2026-08-28.md)。

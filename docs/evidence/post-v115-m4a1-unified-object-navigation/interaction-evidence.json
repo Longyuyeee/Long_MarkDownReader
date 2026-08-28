@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-1",
+  "sourceCommit": "494a13badc604914294b44ddb52957b38da12694",
+  "index": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "objectCount": 9,
+    "relationCount": 6
+  },
+  "actual": {
+    "unifiedConsumer": "LibraryMode knowledge search result click",
+    "preciseLocatorResults": [
+      {
+        "query": "m4a1-table-row-needle",
+        "objectType": "table",
+        "locatorKind": "table-row",
+        "locatorObjectId": "roadmap-row",
+        "locationLabel": "第 2 行",
+        "route": "#/library?row=roadmap-row&locatorToken=1787922298793-1&path=%5C%5C?%5CC:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m4a1-12208-1787922293184%5Clibrary%5CM4A1+Workflow.table.json",
+        "details": {
+          "located": true,
+          "rowId": "roadmap-row",
+          "notice": "已定位第 2 行"
+        },
+        "returnedSearchState": true
+      },
+      {
+        "query": "m4a1-opml-node-needle",
+        "objectType": "opml",
+        "locatorKind": "opml-node",
+        "locatorObjectId": "workflow-node",
+        "locationLabel": "第 2 层主题：Object navigation",
+        "route": "#/library?node=workflow-node&locatorToken=1787922299476-3&path=%5C%5C?%5CC:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m4a1-12208-1787922293184%5Clibrary%5CM4A1+Workflow.opml",
+        "details": {
+          "located": true,
+          "nodeId": "workflow-node",
+          "inspectorId": "workflow-node"
+        },
+        "returnedSearchState": true
+      },
+      {
+        "query": "before explicit page break",
+        "objectType": "docx",
+        "locatorKind": "docx-block",
+        "locatorObjectId": "docx-block-6",
+        "locationLabel": "段落 6",
+        "route": "#/library?locator=docx-block-6&locatorToken=1787922300158-5&path=%5C%5C?%5CC:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m4a1-12208-1787922293184%5Clibrary%5CM4A1+Word.docx",
+        "details": {
+          "located": true,
+          "blockId": "docx-block-6"
+        },
+        "returnedSearchState": true
+      },
+      {
+        "query": "read-only structured preview",
+        "objectType": "ods",
+        "locatorKind": "ods-cell",
+        "locatorObjectId": "ods-sheet-2:A1",
+        "locationLabel": "Notes · A1",
+        "route": "#/library?locator=ods-sheet-2:A1&locatorToken=1787922300626-6&path=%5C%5C?%5CC:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m4a1-12208-1787922293184%5Clibrary%5CM4A1+Sheet.ods",
+        "details": {
+          "located": true,
+          "cellId": "ods-sheet-2:A1"
+        },
+        "returnedSearchState": true
+      },
+      {
+        "query": "search and precise location",
+        "objectType": "odp",
+        "locatorKind": "odp-slide",
+        "locatorObjectId": "odp-slide-1",
+        "locationLabel": "幻灯片 1",
+        "route": "#/library?locator=odp-slide-1&locatorToken=1787922301094-7&path=%5C%5C?%5CC:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m4a1-12208-1787922293184%5Clibrary%5CM4A1+Slides.odp",
+        "details": {
+          "located": true,
+          "slideId": "odp-slide-1"
+        },
+        "returnedSearchState": true
+      },
+      {
+        "query": "structured slide reading",
+        "objectType": "pptx",
+        "locatorKind": "pptx-object",
+        "locatorObjectId": "3",
+        "locationLabel": "幻灯片 1 · Body C3A",
+        "route": "#/library?slide=1&locatorKind=pptx-object&locator=3&locationLabel=%E5%B9%BB%E7%81%AF%E7%89%87+1+%C2%B7+Body+C3A&matchKind=object&locatorToken=1787922301564-8&path=%5C%5C?%5CC:%5CUsers%5CAdministrator%5CAppData%5CLocal%5CTemp%5Clongedit-m4a1-12208-1787922293184%5Clibrary%5CM4A1+PowerPoint.pptx",
+        "details": {
+          "located": true,
+          "objectId": "3",
+          "activeSlide": "0"
+        },
+        "returnedSearchState": true
+      }
+    ],
+    "tableRowLocated": true,
+    "opmlNodeLocated": true,
+    "existingOfficeLocatorRegressions": 4,
+    "returnedSearchStateCount": 6,
+    "sourceFilesUnchanged": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false
+  },
+  "runtimeErrorMessages": [],
+  "sourceHashesBefore": {
+    "M4A1 PowerPoint.pptx": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+    "M4A1 Sheet.ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+    "M4A1 Slides.odp": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+    "M4A1 Word.docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "M4A1 Workflow.opml": "30dfd570bf4a770a127625dde118a7cc7effc4419efea18b30e794a33eb31469",
+    "M4A1 Workflow.table.json": "007258d82c8b7b1eeddcb8bbde589f17d3b74b36607b71641b24141f54f69354"
+  },
+  "sourceHashesAfter": {
+    "M4A1 PowerPoint.pptx": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+    "M4A1 Sheet.ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+    "M4A1 Slides.odp": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+    "M4A1 Word.docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "M4A1 Workflow.opml": "30dfd570bf4a770a127625dde118a7cc7effc4419efea18b30e794a33eb31469",
+    "M4A1 Workflow.table.json": "007258d82c8b7b1eeddcb8bbde589f17d3b74b36607b71641b24141f54f69354"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

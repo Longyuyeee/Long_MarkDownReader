@@ -371,25 +371,6 @@ pub fn serialize_opml(document: &OpmlDocument) -> Result<String, String> {
     String::from_utf8(writer.into_inner()).map_err(|error| format!("生成 OPML UTF-8 失败: {error}"))
 }
 
-pub fn opml_search_text(document: &OpmlDocument) -> String {
-    fn visit(node: &OpmlNode, output: &mut String) {
-        output.push_str(&node.text);
-        output.push('\n');
-        if !node.note.is_empty() {
-            output.push_str(&node.note);
-            output.push('\n');
-        }
-        for child in &node.children {
-            visit(child, output);
-        }
-    }
-    let mut output = format!("{}\n", document.title);
-    for root in &document.roots {
-        visit(root, &mut output);
-    }
-    output
-}
-
 pub fn opml_to_canvas(document: &OpmlDocument, source_file: &str) -> serde_json::Value {
     fn flatten<'a>(
         nodes: &'a [OpmlNode],

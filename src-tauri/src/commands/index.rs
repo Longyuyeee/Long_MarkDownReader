@@ -1,16 +1,17 @@
 use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::odt::parse_odt;
-use crate::formats::opml::{opml_search_text, parse_opml};
-use crate::formats::table::{parse_internal_table, table_search_text};
+use crate::formats::opml::parse_opml;
+use crate::formats::table::parse_internal_table;
 #[cfg(test)]
 use crate::services::knowledge_index::snapshot_from_graph;
 use crate::services::knowledge_index::{
-    build_odf_content_index_segments, build_pptx_index_segments, build_workbook_index_segments,
-    collect_index_sources, delete_index, inspect_index, read_ready_snapshot, read_snapshot,
-    ready_status_from_snapshot, recover_index_cache, refresh_snapshot_incremental_for_paths,
-    snapshot_from_graph_with_sources, write_snapshot, IndexedSearchSegment,
-    KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime, KnowledgeIndexStatus,
+    build_odf_content_index_segments, build_opml_index_segments, build_pptx_index_segments,
+    build_table_index_segments, build_workbook_index_segments, collect_index_sources, delete_index,
+    inspect_index, read_ready_snapshot, read_snapshot, ready_status_from_snapshot,
+    recover_index_cache, refresh_snapshot_incremental_for_paths, snapshot_from_graph_with_sources,
+    write_snapshot, IndexedSearchSegment, KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime,
+    KnowledgeIndexStatus,
 };
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
@@ -254,6 +255,19 @@ fn text_match_context(value: &str, query: &str) -> Option<String> {
         .find(|line| line.to_lowercase().contains(query))
         .map(snippet)
         .or_else(|| value.to_lowercase().contains(query).then(|| snippet(value)))
+}
+
+fn decode_text_file(path: &Path) -> Option<String> {
+    let bytes = path
+        .metadata()
+        .ok()
+        .filter(|metadata| metadata.len() <= MAX_TEXT_FILE_BYTES)
+        .and_then(|_| fs::read(path).ok())?;
+    let mut detector = EncodingDetector::new();
+    detector.feed(&bytes, true);
+    let encoding = detector.guess(None, true);
+    let (text, _, _) = encoding.decode(&bytes);
+    Some(text.strip_prefix('\u{feff}').unwrap_or(&text).to_string())
 }
 
 fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
@@ -631,32 +645,33 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
             if let Some(workbook_segments) = workbook_segments {
                 results.extend(search_segments(&workbook_segments, query));
             }
-        } else if matches!(
-            indexer,
-            "markdown" | "text" | "json-text" | "table" | "opml"
-        ) {
-            let content = path
-                .metadata()
-                .ok()
-                .filter(|metadata| metadata.len() <= MAX_TEXT_FILE_BYTES)
-                .and_then(|_| fs::read(&path).ok())
-                .and_then(|bytes| {
-                    let mut detector = EncodingDetector::new();
-                    detector.feed(&bytes, true);
-                    let encoding = detector.guess(None, true);
-                    let (text, _, _) = encoding.decode(&bytes);
-                    if indexer == "opml" {
-                        parse_opml(text.strip_prefix('\u{feff}').unwrap_or(&text))
-                            .ok()
-                            .map(|document| opml_search_text(&document))
-                    } else if title.to_ascii_lowercase().ends_with(".table.json") {
-                        parse_internal_table(text.strip_prefix('\u{feff}').unwrap_or(&text))
-                            .ok()
-                            .map(|table| table_search_text(&table, MAX_TEXT_FILE_BYTES as usize))
-                    } else {
-                        Some(text.into_owned())
-                    }
-                });
+        } else if indexer == "opml" {
+            if let Some(document) = decode_text_file(&path).and_then(|text| parse_opml(&text).ok())
+            {
+                let segments = build_opml_index_segments(
+                    &title,
+                    &path_string,
+                    &format.id,
+                    &document,
+                    MAX_TEXT_FILE_BYTES as usize,
+                );
+                results.extend(search_segments(&segments, query));
+            }
+        } else if indexer == "table" && title.to_ascii_lowercase().ends_with(".table.json") {
+            if let Some(table) =
+                decode_text_file(&path).and_then(|text| parse_internal_table(&text).ok())
+            {
+                let segments = build_table_index_segments(
+                    &title,
+                    &path_string,
+                    &format.id,
+                    &table,
+                    MAX_TEXT_FILE_BYTES as usize,
+                );
+                results.extend(search_segments(&segments, query));
+            }
+        } else if matches!(indexer, "markdown" | "text" | "json-text" | "table") {
+            let content = decode_text_file(&path);
             let context = content
                 .as_deref()
                 .and_then(|value| text_match_context(value, query));
@@ -1060,15 +1075,13 @@ mod tests {
             include_bytes!("../../../fixtures/pptx/producers/microsoft-powerpoint-16.pptx"),
         )
         .unwrap();
-        let runtime = KnowledgeIndexRuntime::default();
-
         let graph = tauri::async_runtime::block_on(crate::commands::graph::build_link_graph(
             root.to_string_lossy().into_owned(),
         ))
         .unwrap();
         let snapshot = snapshot_from_graph(&root, graph);
         write_snapshot(&cache, &root, &snapshot).unwrap();
-        let ready = inspect_index(&cache, &root, &runtime);
+        let ready = inspect_index(&cache, &root, &KnowledgeIndexRuntime::default());
         assert_eq!(ready.state, "ready");
         assert_eq!(
             snapshot
@@ -1092,7 +1105,10 @@ mod tests {
             include_bytes!("../../../fixtures/pptx/producers/libreoffice-impress.pptx"),
         )
         .unwrap();
-        assert_eq!(inspect_index(&cache, &root, &runtime).state, "stale");
+        assert_eq!(
+            inspect_index(&cache, &root, &KnowledgeIndexRuntime::default()).state,
+            "stale"
+        );
         assert!(read_ready_snapshot(&cache, &root, false).is_none());
         assert!(search_workspace(
             &root,
@@ -1108,11 +1124,17 @@ mod tests {
         .unwrap();
         let rebuilt = snapshot_from_graph(&root, rebuilt_graph);
         write_snapshot(&cache, &root, &rebuilt).unwrap();
-        assert_eq!(inspect_index(&cache, &root, &runtime).state, "ready");
+        assert_eq!(
+            inspect_index(&cache, &root, &KnowledgeIndexRuntime::default()).state,
+            "ready"
+        );
         assert!(read_ready_snapshot(&cache, &root, false).is_some());
 
         fs::remove_file(&presentation).unwrap();
-        assert_eq!(inspect_index(&cache, &root, &runtime).state, "stale");
+        assert_eq!(
+            inspect_index(&cache, &root, &KnowledgeIndexRuntime::default()).state,
+            "stale"
+        );
         assert!(search_workspace(
             &root,
             "libreoffice impress producer fixture",
@@ -1126,7 +1148,10 @@ mod tests {
         .unwrap();
         let empty_snapshot = snapshot_from_graph(&root, empty_graph);
         write_snapshot(&cache, &root, &empty_snapshot).unwrap();
-        assert_eq!(inspect_index(&cache, &root, &runtime).state, "ready");
+        assert_eq!(
+            inspect_index(&cache, &root, &KnowledgeIndexRuntime::default()).state,
+            "ready"
+        );
         assert!(empty_snapshot
             .objects
             .iter()
@@ -1137,7 +1162,10 @@ mod tests {
             .all(|relation| relation.relation_type != "contains"));
 
         delete_index(&cache, &root).unwrap();
-        assert_eq!(inspect_index(&cache, &root, &runtime).state, "missing");
+        assert_eq!(
+            inspect_index(&cache, &root, &KnowledgeIndexRuntime::default()).state,
+            "missing"
+        );
         fs::remove_dir_all(base).unwrap();
     }
 
@@ -1177,6 +1205,9 @@ mod tests {
         assert!(internal.iter().any(|result| {
             result.object_type == "table"
                 && result.context.contains("Unique board evidence")
+                && result.locator_kind.as_deref() == Some("table-row")
+                && result.locator_object_id.as_deref() == Some("row-1")
+                && result.location_label.as_deref() == Some("第 1 行")
                 && !result.context.contains("schemaVersion")
         }));
         fs::remove_dir_all(root).unwrap();
@@ -1256,6 +1287,9 @@ mod tests {
         assert!(results.iter().any(|result| result.object_type == "opml"
             && result.match_kind == "body"
             && result.context.contains("增强关系发现")
+            && result.locator_kind.as_deref() == Some("opml-node")
+            && result.locator_object_id.as_deref() == Some("graph")
+            && result.location_label.as_deref() == Some("第 2 层主题：知识图谱")
             && !result.context.contains("outline")));
         fs::remove_dir_all(root).unwrap();
     }

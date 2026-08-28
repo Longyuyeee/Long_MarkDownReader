@@ -67,6 +67,8 @@
             v-for="item in visibleItems"
             :key="item.node.id"
             class="outline-row"
+            data-testid="opml-outline-node"
+            :data-node-id="item.node.id"
             :class="{ selected: item.node.id === selectedId, dragging: item.node.id === draggedId, match: item.matches, collapsed: item.node.collapsed }"
             :style="{ '--depth': item.depth }"
             draggable="true"
@@ -110,6 +112,8 @@
               v-for="item in mapItems"
               :key="item.node.id"
               class="map-node"
+              data-testid="opml-map-node"
+              :data-node-id="item.node.id"
               :class="{ selected: selectedIds.includes(item.node.id), dragging: item.node.id === draggedId, match: item.matches, root: item.depth === 0 }"
               :style="{ left: `${item.x}px`, top: `${item.y}px` }"
               @pointerdown.stop="startNodePointer($event, item.node.id)"
@@ -679,7 +683,7 @@ watch(viewMode, value => localStorage.setItem('opml-view-mode', value))
 watch(layoutMode, value => localStorage.setItem('opml-layout-mode', value))
 watch(mapTheme, value => localStorage.setItem('opml-map-theme', value))
 watch([mapZoom, mapPan, layoutMode, mapTheme, viewMode, selectedIds], () => rememberMindMapViewState(), { deep: true })
-watch([path, isExternal, () => route.query.node], () => { void load() })
+watch([path, isExternal, () => route.query.node, () => route.query.locatorToken], () => { void load() })
 onMounted(() => { window.addEventListener('keydown', handleKeydown); window.addEventListener('keyup', handleKeyup); window.addEventListener('beforeunload', beforeUnload); void load() })
 onBeforeUnmount(() => {
   rememberMindMapViewState()

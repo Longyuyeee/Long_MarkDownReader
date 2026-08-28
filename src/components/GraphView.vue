@@ -475,7 +475,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, ScanSearch, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
-import { managedFileLocation, openManagedFile } from '../services/fileNavigation'
+import { managedFileLocation, openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
 import GraphFilterControls from './GraphFilterControls.vue'
@@ -1766,30 +1766,12 @@ const objectTypeLabel = (type: string) => graphObjectSemantic(type).label
 const canCreateProjectNote = (node: GraphNode) => !node.parentId && ['markdown', 'pdf'].includes(node.objectType)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const openNode = (node: GraphNode) => {
-  const locator = node.locator
-  const path = displayWorkspacePath(node.path)
-  if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
-    return openManagedFile(router, path, { page: locator?.page, annotation: locator?.objectId })
-  }
-  if (node.objectType === 'table' || node.objectType === 'table_view') {
-    return openManagedFile(router, path, { view: locator?.objectId })
-  }
-  if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
-    return openManagedFile(router, path, { node: locator?.objectId })
-  }
-  if (node.objectType === 'opml' || node.objectType === 'opml_node') {
-    return openManagedFile(router, path, { node: locator?.objectId })
-  }
-  if (node.objectType === 'pptx_slide') {
-    return openManagedFile(router, path, {
-        slide: locator?.page,
-        locatorKind: 'pptx-slide',
-        locator: locator?.objectId,
-        locationLabel: node.locationLabel || undefined,
-        locatorToken: String(Date.now()),
-    })
-  }
-  return openManagedFile(router, path)
+  return openManagedObject(router, {
+    path: displayWorkspacePath(node.path),
+    objectType: node.objectType,
+    locator: node.locator,
+    locationLabel: node.locationLabel,
+  })
 }
 const openPathMention = (item: GraphPathEdgeEvidence, mention: RelationMention) => {
   if (item.source.objectType !== 'markdown') return openNode(item.source)

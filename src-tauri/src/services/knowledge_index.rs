@@ -3,9 +3,9 @@ use crate::formats::docx::parse_docx;
 use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::odf_content::{odf_content_search_segments, parse_odf_content};
 use crate::formats::odt::parse_odt;
-use crate::formats::opml::{opml_search_text, parse_opml};
+use crate::formats::opml::{parse_opml, OpmlDocument, OpmlNode};
 use crate::formats::pptx::{parse_pptx, pptx_search_segments};
-use crate::formats::table::{parse_internal_table, table_search_text};
+use crate::formats::table::{parse_internal_table, InternalTable};
 use crate::services::pdf_index::load_pdf_index;
 use crate::services::reliable_write::write_utf8;
 use calamine::{open_workbook_from_rs, Data, Reader as CalamineReader, Xlsx};
@@ -22,8 +22,8 @@ use std::sync::{
 };
 use std::time::UNIX_EPOCH;
 
-pub const KNOWLEDGE_INDEX_SCHEMA_VERSION: u32 = 1;
-const INDEX_DIRECTORY: &str = "knowledge-index-v1";
+pub const KNOWLEDGE_INDEX_SCHEMA_VERSION: u32 = 2;
+const INDEX_DIRECTORY: &str = "knowledge-index-v2";
 const INDEX_FILE: &str = "snapshot.json";
 const QUARANTINED_INDEX_PREFIX: &str = "snapshot.corrupt";
 const MAX_INDEX_BYTES: u64 = 128 * 1024 * 1024;
@@ -463,6 +463,182 @@ fn source_title(path: &Path) -> String {
         .into_owned()
 }
 
+fn budgeted_text(value: &str, remaining_chars: &mut usize) -> String {
+    if *remaining_chars == 0 {
+        return String::new();
+    }
+    let text = value.chars().take(*remaining_chars).collect::<String>();
+    *remaining_chars = remaining_chars.saturating_sub(text.chars().count());
+    text
+}
+
+pub(crate) fn build_table_index_segments(
+    title: &str,
+    path: &str,
+    object_type: &str,
+    table: &InternalTable,
+    max_chars: usize,
+) -> Vec<IndexedSearchSegment> {
+    let mut segments = Vec::new();
+    let mut remaining_chars = max_chars;
+    let column_names = table
+        .data
+        .columns
+        .iter()
+        .map(|column| column.name.as_str())
+        .collect::<Vec<_>>()
+        .join("\t");
+    let column_names = budgeted_text(&column_names, &mut remaining_chars);
+    if !column_names.trim().is_empty() {
+        segments.push(IndexedSearchSegment {
+            title: title.into(),
+            path: path.into(),
+            object_type: object_type.into(),
+            match_kind: "body".into(),
+            text: column_names,
+            page: None,
+            annotation_id: None,
+            locator_kind: None,
+            locator_object_id: None,
+            location_label: None,
+            extraction_failed: false,
+        });
+    }
+    for view in &table.views {
+        let text = budgeted_text(
+            &format!("{}\n{}\n{}", view.name, view.kind, view.config.filter),
+            &mut remaining_chars,
+        );
+        if text.trim().is_empty() {
+            continue;
+        }
+        segments.push(IndexedSearchSegment {
+            title: title.into(),
+            path: path.into(),
+            object_type: object_type.into(),
+            match_kind: "object".into(),
+            text,
+            page: None,
+            annotation_id: None,
+            locator_kind: Some("table-view".into()),
+            locator_object_id: Some(view.id.clone()),
+            location_label: Some(format!("视图：{}", view.name)),
+            extraction_failed: false,
+        });
+    }
+    for (row_index, row) in table.data.rows.iter().enumerate() {
+        if remaining_chars == 0 {
+            break;
+        }
+        let text = table
+            .data
+            .columns
+            .iter()
+            .filter_map(|column| row.values.get(&column.id))
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+            .join("\t");
+        let text = budgeted_text(&text, &mut remaining_chars);
+        if text.trim().is_empty() {
+            continue;
+        }
+        segments.push(IndexedSearchSegment {
+            title: title.into(),
+            path: path.into(),
+            object_type: object_type.into(),
+            match_kind: "body".into(),
+            text,
+            page: None,
+            annotation_id: None,
+            locator_kind: Some("table-row".into()),
+            locator_object_id: Some(row.id.clone()),
+            location_label: Some(format!("第 {} 行", row_index + 1)),
+            extraction_failed: false,
+        });
+    }
+    segments
+}
+
+pub(crate) fn build_opml_index_segments(
+    title: &str,
+    path: &str,
+    object_type: &str,
+    document: &OpmlDocument,
+    max_chars: usize,
+) -> Vec<IndexedSearchSegment> {
+    fn visit(
+        title: &str,
+        path: &str,
+        object_type: &str,
+        node: &OpmlNode,
+        depth: usize,
+        remaining_chars: &mut usize,
+        segments: &mut Vec<IndexedSearchSegment>,
+    ) {
+        if *remaining_chars == 0 {
+            return;
+        }
+        let text = budgeted_text(&format!("{}\n{}", node.text, node.note), remaining_chars);
+        if !text.trim().is_empty() {
+            segments.push(IndexedSearchSegment {
+                title: title.into(),
+                path: path.into(),
+                object_type: object_type.into(),
+                match_kind: "body".into(),
+                text,
+                page: None,
+                annotation_id: None,
+                locator_kind: Some("opml-node".into()),
+                locator_object_id: Some(node.id.clone()),
+                location_label: Some(format!("第 {depth} 层主题：{}", node.text)),
+                extraction_failed: false,
+            });
+        }
+        for child in &node.children {
+            visit(
+                title,
+                path,
+                object_type,
+                child,
+                depth + 1,
+                remaining_chars,
+                segments,
+            );
+        }
+    }
+
+    let mut segments = Vec::new();
+    let mut remaining_chars = max_chars;
+    let document_title = budgeted_text(&document.title, &mut remaining_chars);
+    if !document_title.trim().is_empty() {
+        segments.push(IndexedSearchSegment {
+            title: title.into(),
+            path: path.into(),
+            object_type: object_type.into(),
+            match_kind: "body".into(),
+            text: document_title,
+            page: None,
+            annotation_id: None,
+            locator_kind: None,
+            locator_object_id: None,
+            location_label: None,
+            extraction_failed: false,
+        });
+    }
+    for root in &document.roots {
+        visit(
+            title,
+            path,
+            object_type,
+            root,
+            1,
+            &mut remaining_chars,
+            &mut segments,
+        );
+    }
+    segments
+}
+
 pub(crate) fn build_pptx_index_segments(
     title: &str,
     path: &str,
@@ -660,7 +836,7 @@ fn validate_workbook_index_archive(bytes: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
-fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
+fn decode_searchable_text(path: &Path) -> Option<String> {
     let bytes = path
         .metadata()
         .ok()
@@ -670,24 +846,7 @@ fn decode_searchable_text(path: &Path, indexer: &str) -> Option<String> {
     detector.feed(&bytes, true);
     let encoding = detector.guess(None, true);
     let (text, _, _) = encoding.decode(&bytes);
-    let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
-    if indexer == "opml" {
-        parse_opml(text)
-            .ok()
-            .map(|document| opml_search_text(&document))
-    } else if path
-        .file_name()
-        .unwrap_or_default()
-        .to_string_lossy()
-        .to_ascii_lowercase()
-        .ends_with(".table.json")
-    {
-        parse_internal_table(text)
-            .ok()
-            .map(|table| table_search_text(&table, MAX_INDEX_TEXT_FILE_BYTES as usize))
-    } else {
-        Some(text.to_string())
-    }
+    Some(text.strip_prefix('\u{feff}').unwrap_or(&text).to_string())
 }
 
 fn build_search_segments_for_source(
@@ -923,11 +1082,32 @@ fn build_search_segments_for_source(
         {
             segments.extend(workbook_segments);
         }
-    } else if matches!(
-        indexer,
-        "markdown" | "text" | "json-text" | "table" | "opml"
-    ) {
-        if let Some(text) = decode_searchable_text(&path, indexer) {
+    } else if indexer == "opml" {
+        if let Some(document) =
+            decode_searchable_text(&path).and_then(|text| parse_opml(&text).ok())
+        {
+            segments.extend(build_opml_index_segments(
+                &title,
+                &path_string,
+                &format.id,
+                &document,
+                MAX_INDEX_TEXT_FILE_BYTES as usize,
+            ));
+        }
+    } else if indexer == "table" && path_string.to_ascii_lowercase().ends_with(".table.json") {
+        if let Some(table) =
+            decode_searchable_text(&path).and_then(|text| parse_internal_table(&text).ok())
+        {
+            segments.extend(build_table_index_segments(
+                &title,
+                &path_string,
+                &format.id,
+                &table,
+                MAX_INDEX_TEXT_FILE_BYTES as usize,
+            ));
+        }
+    } else if matches!(indexer, "markdown" | "text" | "json-text" | "table") {
+        if let Some(text) = decode_searchable_text(&path) {
             segments.push(IndexedSearchSegment {
                 title,
                 path: path_string,
@@ -1419,6 +1599,67 @@ mod tests {
         fs::create_dir_all(&workspace).unwrap();
         fs::create_dir_all(&cache).unwrap();
         (base, workspace, cache)
+    }
+
+    #[test]
+    fn table_and_opml_cached_segments_keep_stable_internal_locators() {
+        let (base, workspace, cache) = fixture("m4a1-internal-locators");
+        fs::write(
+            workspace.join("Roadmap.table.json"),
+            r#"{
+              "schemaVersion": 1, "kind": "longedit.table",
+              "data": {
+                "columns": [{"id":"topic","name":"主题","type":"text"}],
+                "rows": [{"id":"roadmap-row","values":{"topic":"M4 unified locator evidence"}}]
+              },
+              "views": [{"id":"roadmap-grid","name":"路线图","kind":"grid","config":{"filter":"","frozenColumns":1,"columnWidths":{"topic":160}}}],
+              "activeView": "roadmap-grid"
+            }"#,
+        )
+        .unwrap();
+        fs::write(
+            workspace.join("Outline.opml"),
+            r#"<?xml version="1.0" encoding="UTF-8"?><opml version="2.0"><head><title>Workflow</title></head><body><outline text="M4 entry"><outline text="Unified workflow evidence" _longeditId="workflow-node"/></outline></body></opml>"#,
+        )
+        .unwrap();
+
+        let snapshot = snapshot_from_graph(
+            &workspace,
+            GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+            },
+        );
+        assert_eq!(snapshot.schema_version, 2);
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.text.contains("M4 unified locator evidence")
+                && segment.locator_kind.as_deref() == Some("table-row")
+                && segment.locator_object_id.as_deref() == Some("roadmap-row")
+        }));
+        assert!(snapshot
+            .search_segments
+            .iter()
+            .any(|segment| { segment.text.contains("主题") && segment.locator_kind.is_none() }));
+        assert!(snapshot.search_segments.iter().any(|segment| {
+            segment.text.contains("Unified workflow evidence")
+                && segment.locator_kind.as_deref() == Some("opml-node")
+                && segment.locator_object_id.as_deref() == Some("workflow-node")
+        }));
+        assert!(snapshot
+            .search_segments
+            .iter()
+            .any(|segment| { segment.text == "Workflow" && segment.locator_kind.is_none() }));
+        write_snapshot(&cache, &workspace, &snapshot).unwrap();
+        let reopened = read_ready_snapshot(&cache, &workspace, false).unwrap();
+        assert!(reopened.search_segments.iter().any(|segment| {
+            segment.locator_kind.as_deref() == Some("table-row")
+                && segment.locator_object_id.as_deref() == Some("roadmap-row")
+        }));
+        assert!(reopened.search_segments.iter().any(|segment| {
+            segment.locator_kind.as_deref() == Some("opml-node")
+                && segment.locator_object_id.as_deref() == Some("workflow-node")
+        }));
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

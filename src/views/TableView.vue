@@ -109,6 +109,8 @@
                 v-for="item in visibleRows"
                 :key="item.rowIndex"
                 class="table-row"
+                data-testid="table-data-row"
+                :data-row-id="table.rowIds[item.rowIndex]"
                 :class="{ selected: table.rowIds[item.rowIndex] === selectedRowId }"
                 :style="[{ transform: `translateY(${item.virtualIndex * rowHeight}px)` }, gridStyle]"
               >
@@ -291,6 +293,7 @@ let loadGeneration = 0
 
 const tablePath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
+const requestedRowId = computed(() => typeof route.query.row === 'string' ? route.query.row : '')
 const fileName = computed(() => tablePath.value.split(/[\\/]/).pop() || '数据表')
 const formatLabel = computed(() => table.value?.format === 'longedit-table' ? '开放 Table' : table.value?.format?.toUpperCase() || 'CSV')
 const tableWidth = computed(() => 52 + (columnWidths.value.length ? columnWidths.value.reduce((sum, width) => sum + width, 0) : 160))
@@ -349,7 +352,11 @@ const filteredIndices = computed(() => {
   const query = filterQuery.value.trim().toLocaleLowerCase()
   const indices = table.value.rows
     .map((_, index) => index)
-    .filter(index => !query || table.value!.rows[index].some(cell => cell.toLocaleLowerCase().includes(query)))
+    .filter(index => (
+      table.value!.rowIds[index] === requestedRowId.value
+      || !query
+      || table.value!.rows[index].some(cell => cell.toLocaleLowerCase().includes(query))
+    ))
   if (sortColumn.value >= 0) {
     const column = sortColumn.value
     const direction = sortDirection.value === 'asc' ? 1 : -1
@@ -724,20 +731,33 @@ const loadTable = async () => {
     rowRedoStack.value = []
     views.value = document.views?.length ? document.views : [{ id: 'grid', name: '表格', kind: 'grid', config: document.view }]
     const requestedView = typeof route.query.view === 'string' ? route.query.view : ''
+    const requestedRow = requestedRowId.value && document.rowIds.includes(requestedRowId.value)
+      ? requestedRowId.value
+      : ''
+    const requestedGrid = requestedRow ? views.value.find(view => view.kind === 'grid')?.id : ''
     activeViewId.value = views.value.some(view => view.id === requestedView)
       ? requestedView
-      : views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id
+      : requestedGrid || (views.value.some(view => view.id === document.activeView) ? document.activeView : views.value[0].id)
     applyView(activeView.value)
+    selectedRowId.value = requestedRow
     store.addTab({ id: tablePath.value, title: fileName.value, path: tablePath.value, isDirty: false, external: isExternal.value })
     const viewState = recallWorkspaceViewState(tablePath.value)
     loading.value = false
-    if (viewState) {
+    if (requestedRow) {
+      await nextTick()
+      const rowIndex = document.rowIds.indexOf(requestedRow)
+      const virtualIndex = filteredIndices.value.indexOf(rowIndex)
+      const top = Math.max(0, virtualIndex * rowHeight - Math.max(0, viewportHeight.value / 2 - rowHeight))
+      scrollRef.value?.scrollTo({ top })
+      scrollTop.value = top
+      notice.value = `已定位第 ${(rowIndex + 1).toLocaleString()} 行`
+    } else if (viewState) {
       if (typeof viewState.frozenColumns === 'number') frozenColumns.value = Math.min(maxFrozenColumns.value, Math.max(0, Math.trunc(viewState.frozenColumns)))
       await nextTick()
       scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
       scrollTop.value = viewState.scrollTop
     }
-    notice.value = `已解析 ${table.value.rows.length.toLocaleString()} 行`
+    if (!requestedRow) notice.value = `已解析 ${table.value.rows.length.toLocaleString()} 行`
   } catch (cause) {
     if (generation !== loadGeneration) return
     table.value = null
@@ -916,7 +936,7 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
   }
 }
 
-watch([tablePath, isExternal, () => route.query.view], loadTable)
+watch([tablePath, isExternal, () => route.query.view, () => route.query.row, () => route.query.locatorToken], loadTable)
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) {

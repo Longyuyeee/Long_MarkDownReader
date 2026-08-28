@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-1",
+  "name": "unified-object-navigation-and-table-opml-search-closure",
+  "predecessor": "M4-0",
+  "scope": [
+    "Centralize object-locator-to-route mapping for Library search, Graph and relation context.",
+    "Index Table views and rows with stable internal locators in persistent and live fallback search.",
+    "Index OPML nodes with stable internal locators in persistent and live fallback search.",
+    "Preserve existing DOCX, ODS, ODP and PPTX precise location and Library return context."
+  ],
+  "expectations": {
+    "sharedConsumers": 3,
+    "tableRowLocated": true,
+    "opmlNodeLocated": true,
+    "existingOfficeLocatorRegressions": 4,
+    "returnedSearchStateCount": 6,
+    "knowledgeIndexSchemaVersion": 2,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true
+  },
+  "actual": {
+    "sharedConsumers": 3,
+    "routeMappingsUnderContract": 11,
+    "tableRowLocated": true,
+    "opmlNodeLocated": true,
+    "existingOfficeLocatorRegressions": 4,
+    "returnedSearchStateCount": 6,
+    "knowledgeIndexSchemaVersion": 2,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true
+  },
+  "corrections": [
+    {
+      "expected": "The ODF audit could reuse a generic content-view selector.",
+      "actual": "The real component root is odf-workspace.",
+      "resolution": "Align the audit with the actual component DOM and retain route-target verification on the precise cell or slide."
+    },
+    {
+      "expected": "The PPTX query would expose one clickable result.",
+      "actual": "The same text correctly produced both a slide and an object result.",
+      "resolution": "Select the object result explicitly and verify the object locator and active slide."
+    }
+  ],
+  "deferred": [
+    "DOCX, ODS, ODP and Workbook graph coverage",
+    "workspace actions for every M1 object",
+    "unified conversion disclosure and new conversion types",
+    "release freeze and version transition"
+  ],
+  "selectedNextStage": {
+    "id": "M4A-2",
+    "name": "m1-object-graph-location-coverage-selection-audit",
+    "reason": "M4A-1 closes the shared navigation and search gaps. The next bounded step is to inventory and select the smallest graph expansion for M1 objects before implementation."
+  },
+  "releaseCandidate": false
+}

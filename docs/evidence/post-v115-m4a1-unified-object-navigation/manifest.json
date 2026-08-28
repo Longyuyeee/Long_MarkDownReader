@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-1",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "494a13badc604914294b44ddb52957b38da12694",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "7eeafbe6fce13afa592372cb382bad1689692dedf64a5d9a0875c0dbc558772a",
+  "screenshots": [
+    {
+      "file": "table-row-locator-1280.jpg",
+      "bytes": 68779,
+      "sha256": "500ed52e057e6cde803c20ce34e07c4d639c0c6cafe7a20532dce8687c76191a"
+    },
+    {
+      "file": "opml-node-locator-1280.jpg",
+      "bytes": 128469,
+      "sha256": "ffee936b95240cb363ac78adcf5d7f2592d8320f926fbb09f5a56a3ebe8b406b"
+    },
+    {
+      "file": "office-precise-locator-regression-1280.jpg",
+      "bytes": 132243,
+      "sha256": "5144d9ae26af3af62bcc0d7826008c9a0fb6001f4082abeb34566d40c1f2e14b"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

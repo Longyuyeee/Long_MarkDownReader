@@ -790,7 +790,7 @@ import {
   opensInLibraryShell,
   routeForFile,
 } from '../config/fileFormats'
-import { openManagedFile } from '../services/fileNavigation'
+import { openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { promptAppAction } from '../services/appDialog'
 import { readLocalGraphPinned, writeLocalGraphPinned } from '../utils/localGraphPin'
 import {
@@ -1929,39 +1929,30 @@ const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
   ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
 }[kind])
 
-let knowledgeLocatorSequence = 0
-const nextKnowledgeLocatorToken = () => `${Date.now()}-${++knowledgeLocatorSequence}`
-
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
-  if (result.objectType === 'pdf') {
-    openManagedFile(router, result.path, {
-        ...(result.page ? { page: String(result.page) } : {}),
-        ...(result.annotationId ? { annotation: result.annotationId } : {}),
-    })
-  } else if (result.objectType === 'workbook') {
-    void openManagedFile(router, result.path, {
-      ...(result.locatorObjectId ? { sheet: result.locatorObjectId } : {}),
-      locatorToken: nextKnowledgeLocatorToken(),
+  if (
+    result.locatorKind
+    || result.annotationId
+    || ['pdf', 'workbook', 'docx', 'odt', 'ods', 'odp', 'pptx'].includes(result.objectType)
+  ) {
+    void openManagedObject(router, {
+      path: result.path,
+      objectType: result.objectType,
+      locator: {
+        kind: result.locatorKind,
+        objectId: result.locatorObjectId,
+        page: result.page,
+      },
+      page: result.page,
+      annotationId: result.annotationId,
+      locationLabel: result.locationLabel,
+      matchKind: result.matchKind,
     }, 'replace')
-  } else if (['docx', 'odt', 'ods', 'odp'].includes(result.objectType)) {
-    void openManagedFile(router, result.path, {
-        ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
-        locatorToken: nextKnowledgeLocatorToken(),
-    }, 'replace')
-  } else if (result.objectType === 'pptx') {
-    void openManagedFile(router, result.path, {
-        ...(result.page ? { slide: String(result.page) } : {}),
-        ...(result.locatorKind ? { locatorKind: result.locatorKind } : {}),
-        ...(result.locatorObjectId ? { locator: result.locatorObjectId } : {}),
-        ...(result.locationLabel ? { locationLabel: result.locationLabel } : {}),
-        matchKind: result.matchKind,
-        locatorToken: nextKnowledgeLocatorToken(),
-    }, 'replace')
-  } else {
-    const target = routeForFile(result.path)
-    if (opensInLibraryShell(findFileFormat(result.path))) handleNodeSelect([result.path])
-    else if (target) router.push(target)
+    return
   }
+  const target = routeForFile(result.path)
+  if (opensInLibraryShell(findFileFormat(result.path))) handleNodeSelect([result.path])
+  else if (target) router.push(target)
 }
 
 const handleLoadChildren = async (option: TreeOption) => {

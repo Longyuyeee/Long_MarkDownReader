@@ -134,7 +134,7 @@
 import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
-import { openManagedFile } from '../services/fileNavigation'
+import { openManagedObject } from '../services/fileNavigation'
 import {
   ArrowRight as ArrowRightIcon,
   Check as CheckIcon,
@@ -362,21 +362,8 @@ const openCollection = (collection: SavedSearchConfig) => router.push({
         types: collection.objectTypes.length ? collection.objectTypes.join(',') : undefined,
       },
 })
-let relationNavigationSequence = 0
 const openNode = (node: GraphContextNode) => {
   const path = displayPath(node.path)
-  if (node.objectType === 'pdf' || node.objectType === 'pdf_annotation') {
-    return openManagedFile(router, path, { page: node.locator?.page, annotation: node.locator?.objectId })
-  }
-  if (node.objectType === 'table' || node.objectType === 'table_view') {
-    return openManagedFile(router, path, { view: node.locator?.objectId })
-  }
-  if (node.objectType === 'canvas' || node.objectType === 'canvas_node') {
-    return openManagedFile(router, path, { node: node.locator?.objectId })
-  }
-  if (node.objectType === 'opml' || node.objectType === 'opml_node') {
-    return openManagedFile(router, path, { node: node.locator?.objectId })
-  }
   if (node.objectType === 'pptx_slide') {
     store.setRelationObjectFocus({
       path,
@@ -384,16 +371,14 @@ const openNode = (node: GraphContextNode) => {
       locatorObjectId: node.locator?.objectId || '',
       locatorPage: node.locator?.page,
     })
-    return openManagedFile(router, path, {
-        slide: node.locator?.page,
-        locatorKind: 'pptx-slide',
-        locator: node.locator?.objectId,
-        locationLabel: node.locationLabel,
-        locatorToken: `${Date.now()}-${++relationNavigationSequence}`,
-    })
   }
   if (node.objectType === 'pptx') store.clearRelationObjectFocus()
-  return openManagedFile(router, path)
+  return openManagedObject(router, {
+    path,
+    objectType: node.objectType,
+    locator: node.locator,
+    locationLabel: node.locationLabel,
+  })
 }
 const objectTypeLabel = (type: string) => ({
   markdown: 'Markdown 笔记', pdf: 'PDF 文档', table: '数据表', canvas: 'Canvas 画布', opml: 'OPML 思维导图',
