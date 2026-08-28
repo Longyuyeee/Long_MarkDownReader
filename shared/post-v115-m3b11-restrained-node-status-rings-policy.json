@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-11",
+  "releaseCandidate": false,
+  "scope": "restrained-recency-and-relation-strength-node-rings",
+  "requirements": {
+    "existingGraphDataOnly": true,
+    "freshRecencyMaximumDays": 7,
+    "recentRecencyMaximumDays": 30,
+    "relationStrengthVisibleQuartile": 0.75,
+    "relationStrengthMinimumDegree": 2,
+    "uniformDegreeCreatesNoFalseStrengthDifference": true,
+    "selectionHoverAndPathSuppressRings": true,
+    "farCommunityOverviewHidesRings": true,
+    "mindmapHidesRings": true,
+    "staticAndReducedMotionSafe": true,
+    "governanceScanInvocations": 0,
+    "screenAnalysisOverlayOnly": true,
+    "sourceFilesRemainReadOnly": true
+  },
+  "requiredSessions": [
+    { "theme": "dark", "motion": "calm" },
+    { "theme": "dark", "motion": "reduced" },
+    { "theme": "white", "motion": "reduced" },
+    { "theme": "contrast", "motion": "reduced" }
+  ],
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "deferred": [
+    "governance-status-rings-until-canonical-node-contract",
+    "cluster-collapse-expand",
+    "graph-fullscreen",
+    "status-rings-in-svg-or-png-export",
+    "M3C-dirty-frame-and-large-graph-performance"
+  ],
+  "selectedNextStage": {
+    "id": "M3B-12",
+    "name": "professional-visual-system-exit-audit"
+  }
+}

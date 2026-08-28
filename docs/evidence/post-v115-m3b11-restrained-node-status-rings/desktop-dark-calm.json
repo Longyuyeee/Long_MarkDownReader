@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-11",
+  "actual": {
+    "theme": "dark",
+    "motion": "calm",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": null,
+    "cameraNavigation": null,
+    "remainingNavigationSelection": null,
+    "minimapNavigation": null,
+    "remainingVisualSelection": null,
+    "nodeStatusRings": {
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "level": "near",
+          "ringCount": 7,
+          "recencyCount": 3,
+          "strengthCount": 5,
+          "governanceCount": 0,
+          "diagnostics": {
+            "eligibleNodeCount": 8,
+            "renderedNodeCount": 7,
+            "freshCount": 2,
+            "recentCount": 2,
+            "relationStrengthCount": 6,
+            "maximumDegree": 3,
+            "relationStrengthThreshold": 3,
+            "prioritySuppressedCount": 1,
+            "farHidden": false,
+            "governanceCount": 0,
+            "hoverProbe": {
+              "x": 466.4885409855743,
+              "y": 511.14114049754244
+            }
+          },
+          "legendVisible": true,
+          "legendFreshCount": 2,
+          "legendRecentCount": 2,
+          "legendStrengthCount": 6,
+          "selectedCount": 0
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "level": "near",
+          "ringCount": 8,
+          "recencyCount": 4,
+          "strengthCount": 6,
+          "governanceCount": 0,
+          "diagnostics": {
+            "eligibleNodeCount": 8,
+            "renderedNodeCount": 8,
+            "freshCount": 2,
+            "recentCount": 2,
+            "relationStrengthCount": 6,
+            "maximumDegree": 3,
+            "relationStrengthThreshold": 3,
+            "prioritySuppressedCount": 0,
+            "farHidden": false,
+            "governanceCount": 0,
+            "hoverProbe": {
+              "x": 583.751488163816,
+              "y": 517.796973614158
+            }
+          },
+          "legendVisible": true,
+          "legendFreshCount": 2,
+          "legendRecentCount": 2,
+          "legendStrengthCount": 6,
+          "selectedCount": 0
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "level": "near",
+          "ringCount": 8,
+          "recencyCount": 4,
+          "strengthCount": 6,
+          "governanceCount": 0,
+          "diagnostics": {
+            "eligibleNodeCount": 8,
+            "renderedNodeCount": 8,
+            "freshCount": 2,
+            "recentCount": 2,
+            "relationStrengthCount": 6,
+            "maximumDegree": 3,
+            "relationStrengthThreshold": 3,
+            "prioritySuppressedCount": 0,
+            "farHidden": false,
+            "governanceCount": 0,
+            "hoverProbe": {
+              "x": 583.751488163816,
+              "y": 517.796973614158
+            }
+          },
+          "legendVisible": true,
+          "legendFreshCount": 2,
+          "legendRecentCount": 2,
+          "legendStrengthCount": 6,
+          "selectedCount": 0
+        }
+      ],
+      "selectedPriority": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "near",
+        "ringCount": 7,
+        "recencyCount": 3,
+        "strengthCount": 5,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 8,
+          "renderedNodeCount": 7,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 6,
+          "maximumDegree": 3,
+          "relationStrengthThreshold": 3,
+          "prioritySuppressedCount": 1,
+          "farHidden": false,
+          "governanceCount": 0,
+          "hoverProbe": {
+            "x": 456.3788148367365,
+            "y": 513.127713903218
+          }
+        },
+        "legendVisible": true,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 6,
+        "selectedCount": 1
+      },
+      "unselected": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "near",
+        "ringCount": 8,
+        "recencyCount": 4,
+        "strengthCount": 6,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 8,
+          "renderedNodeCount": 8,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 6,
+          "maximumDegree": 3,
+          "relationStrengthThreshold": 3,
+          "prioritySuppressedCount": 0,
+          "farHidden": false,
+          "governanceCount": 0,
+          "hoverProbe": {
+            "x": 583.751488163816,
+            "y": 517.796973614158
+          }
+        },
+        "legendVisible": true,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 6,
+        "selectedCount": 0
+      },
+      "hoverSetup": {
+        "x": 583.751488163816,
+        "y": 607.796973614158
+      },
+      "hoverPriority": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "near",
+        "ringCount": 7,
+        "recencyCount": 3,
+        "strengthCount": 5,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 8,
+          "renderedNodeCount": 7,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 6,
+          "maximumDegree": 3,
+          "relationStrengthThreshold": 3,
+          "prioritySuppressedCount": 1,
+          "farHidden": false,
+          "governanceCount": 0,
+          "hoverProbe": {
+            "x": 466.4885409855743,
+            "y": 511.14114049754244
+          }
+        },
+        "legendVisible": true,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 6,
+        "selectedCount": 0
+      },
+      "middle": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "middle",
+        "ringCount": 8,
+        "recencyCount": 4,
+        "strengthCount": 6,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 8,
+          "renderedNodeCount": 8,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 6,
+          "maximumDegree": 3,
+          "relationStrengthThreshold": 3,
+          "prioritySuppressedCount": 0,
+          "farHidden": false,
+          "governanceCount": 0,
+          "hoverProbe": {
+            "x": 583.751488163816,
+            "y": 517.796973614158
+          }
+        },
+        "legendVisible": true,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 6,
+        "selectedCount": 0
+      },
+      "far": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "far",
+        "ringCount": 0,
+        "recencyCount": 0,
+        "strengthCount": 0,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 8,
+          "renderedNodeCount": 0,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 6,
+          "maximumDegree": 3,
+          "relationStrengthThreshold": 3,
+          "prioritySuppressedCount": 0,
+          "farHidden": true,
+          "governanceCount": 0,
+          "hoverProbe": null
+        },
+        "legendVisible": false,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 6,
+        "selectedCount": 0
+      },
+      "pathPriority": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "near",
+        "ringCount": 0,
+        "recencyCount": 0,
+        "strengthCount": 0,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 4,
+          "renderedNodeCount": 0,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 2,
+          "maximumDegree": 2,
+          "relationStrengthThreshold": 2,
+          "prioritySuppressedCount": 4,
+          "farHidden": false,
+          "governanceCount": 0,
+          "hoverProbe": null
+        },
+        "legendVisible": true,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 2,
+        "selectedCount": 0,
+        "pathNodeCount": 4
+      },
+      "mindmap": {
+        "width": 1280,
+        "height": 800,
+        "fits": true,
+        "level": "near",
+        "ringCount": 0,
+        "recencyCount": 0,
+        "strengthCount": 0,
+        "governanceCount": 0,
+        "diagnostics": {
+          "eligibleNodeCount": 6,
+          "renderedNodeCount": 0,
+          "freshCount": 2,
+          "recentCount": 2,
+          "relationStrengthCount": 4,
+          "maximumDegree": 3,
+          "relationStrengthThreshold": 3,
+          "prioritySuppressedCount": 0,
+          "farHidden": true,
+          "governanceCount": 0,
+          "hoverProbe": null
+        },
+        "legendVisible": false,
+        "legendFreshCount": 2,
+        "legendRecentCount": 2,
+        "legendStrengthCount": 4,
+        "selectedCount": 0
+      },
+      "staticMotion": true,
+      "healthPanelOpened": false
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

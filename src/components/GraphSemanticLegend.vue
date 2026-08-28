@@ -4,6 +4,12 @@
       <span>语义图例</span><small>{{ objectItems.length }} 类对象 · {{ relationItems.length }} 类关系</small>
     </button>
     <div v-if="!collapsed" class="legend-body">
+      <div class="legend-group status-legend" data-testid="graph-node-status-legend" :data-visible="String(statusRingsVisible)" :data-fresh-count="statusSummary.freshCount" :data-recent-count="statusSummary.recentCount" :data-strength-count="statusSummary.relationStrengthCount">
+        <strong>节点状态 <small>{{ statusRingsVisible ? '当前视图' : '远景隐藏' }}</small></strong>
+        <span class="legend-item"><i class="status-mark recency-fresh"></i><span>7 天内修改</span><small>{{ statusSummary.freshCount }}</small></span>
+        <span class="legend-item"><i class="status-mark recency-recent"></i><span>30 天内修改</span><small>{{ statusSummary.recentCount }}</small></span>
+        <span class="legend-item"><i class="status-mark relation-strength"></i><span>高关系强度</span><small>{{ statusSummary.relationStrengthCount }}</small></span>
+      </div>
       <div class="legend-group" data-testid="graph-object-legend">
         <strong>对象</strong>
         <span v-for="item in objectItems" :key="item.semantic.id" class="legend-item" :data-semantic-id="item.semantic.id">
@@ -26,7 +32,8 @@
 import { computed, ref } from 'vue'
 import { graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphData } from '../types/graph'
-const props = defineProps<{ graph: GraphData; dark: boolean }>()
+import type { GraphNodeStatusSummary } from '../utils/graphNodeStatus'
+const props = defineProps<{ graph: GraphData; dark: boolean; statusSummary: GraphNodeStatusSummary; statusRingsVisible: boolean }>()
 const collapsed = ref(false)
 const counted = (values: string[]) => [...new Set(values)].map(id => ({ id, count: values.filter(value => value === id).length }))
 const objectItems = computed(() => counted(props.graph.nodes.map(node => node.objectType || 'unknown')).map(item => ({ ...item, semantic: graphObjectSemantic(item.id) })).sort((a, b) => a.semantic.order - b.semantic.order || a.id.localeCompare(b.id)))
@@ -49,5 +56,6 @@ const semanticColor = (id: string) => graphSemanticColor(id, props.dark)
 .object-mark { width: 14px; height: 14px; display: grid; place-items: center; color: #fff; background: var(--semantic-color); font-size: 8px; font-style: normal; font-weight: 900; }
 .object-mark[data-shape="circle"] { border-radius: 50%; }.object-mark[data-shape="square"] { border-radius: 3px; }.object-mark[data-shape="diamond"] { transform: rotate(45deg); border-radius: 2px; }.object-mark[data-shape="diamond"] span { transform: rotate(-45deg); }.object-mark[data-shape="hexagon"] { clip-path: polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%); }
 .relation-mark { width: 16px; height: 0; border-top: 2px solid var(--semantic-color); }.relation-mark[data-line="dashed"] { border-top-style: dashed; }.relation-mark[data-line="dotted"] { border-top-style: dotted; }
+.status-legend strong { display: flex; align-items: baseline; justify-content: space-between; }.status-legend strong small { color: var(--theme-text-secondary); font-size: 9px; font-weight: 600; }.status-mark { width: 14px; height: 14px; box-sizing: border-box; border: 2px solid transparent; border-radius: 50%; }.status-mark.recency-fresh { border-top-color: #f59e0b; border-right-color: #f59e0b; border-bottom-color: #f59e0b; }.status-mark.recency-recent { border-top-color: #d97706; border-right-color: #d97706; }.status-mark.relation-strength { border-right-color: #38bdf8; border-bottom-color: #38bdf8; border-left-color: #38bdf8; }
 @media (max-width: 720px) { .graph-semantic-legend { top: 118px; left: 10px; }.legend-body { max-height: 240px; } }
 </style>

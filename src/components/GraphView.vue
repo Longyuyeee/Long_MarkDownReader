@@ -215,7 +215,7 @@
       <p v-else class="graph-comparison-empty">比较对象类型、标签、入出关系、共同与独有邻居，并保留两节点间全部关系证据。</p>
       <button class="graph-comparison-close" type="button" aria-label="关闭节点比较" @click="closeComparisonPanel">×</button>
     </section>
-    <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" />
+    <GraphSemanticLegend :graph="visibleGraph" :dark="isActiveThemeDark(store.theme)" :status-summary="graphNodeStatusSummary" :status-rings-visible="statusRingsVisible" />
     <nav v-if="showCommunityOverview" class="graph-community-overview-nav" data-testid="graph-community-overview" :data-community-count="communityResult.communities.length" aria-label="远景社区入口">
       <span>远景社区</span>
       <button v-for="community in communityResult.communities" :key="community.id" type="button" data-testid="graph-community-overview-entry" :data-community-id="community.id" :data-node-count="community.nodeCount" @click="selectCommunity(community.id)">
@@ -235,6 +235,11 @@
       :data-community-overview-in-bounds="communityOverviewInBounds"
       :data-community-contour-count="communityContourCount"
       :data-community-contours-cover-members="communityContoursCoverMembers"
+      :data-node-status-ring-count="renderedNodeStatusRingCount"
+      :data-node-status-recency-count="renderedRecencyRingCount"
+      :data-node-status-strength-count="renderedRelationStrengthRingCount"
+      :data-node-status-governance-count="0"
+      :data-node-status-diagnostics="graphNodeStatusDiagnostics"
       :data-path-relation-label-count="activeShortestPath?.edges.length || 0"
       :data-path-camera-safe="pathCameraSafe"
       :data-path-camera-diagnostics="pathCameraDiagnostics"
@@ -491,6 +496,7 @@ import { advanceGraphPathMotionPhase, graphPathDashOffset, graphPathTraversalDir
 import { graphCameraPoseForBounds, graphCameraPoseForPoint, interpolateGraphCameraPose } from '../utils/graphCamera'
 import type { GraphCameraPose, GraphCameraViewport } from '../utils/graphCamera'
 import { graphMinimapProjection as buildGraphMinimapProjection, graphMinimapViewportRect, graphMinimapWorldPoint } from '../utils/graphMinimap'
+import { deriveGraphNodeStatus } from '../utils/graphNodeStatus'
 import type { GraphMinimapProjection } from '../utils/graphMinimap'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
@@ -678,6 +684,39 @@ const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
   && !activeCommunityId.value
   && !activeShortestPath.value
   && !comparisonOpen.value)
+const graphNodeStatusNowSeconds = ref(Math.floor(Date.now() / 1000))
+const graphNodeStatusSummary = computed(() => deriveGraphNodeStatus(visibleGraph.value, graphNodeStatusNowSeconds.value))
+const graphNodeStatusById = computed(() => new Map(graphNodeStatusSummary.value.nodes.map(status => [status.nodeId, status])))
+const statusRingsVisible = computed(() => viewMode.value === 'network' && semanticZoomLevel.value !== 'far' && !showCommunityOverview.value)
+const statusPrioritySuppressedIds = computed(() => new Set([
+  ...selectedNodeIds.value,
+  ...(activeShortestPath.value?.nodeIds || []),
+  ...(hoveredNode.value ? [hoveredNode.value.id] : []),
+]))
+const renderedNodeStatuses = computed(() => statusRingsVisible.value
+  ? graphNodeStatusSummary.value.nodes.filter(status => !statusPrioritySuppressedIds.value.has(status.nodeId) && (status.recency !== 'none' || status.showRelationStrength))
+  : [])
+const renderedNodeStatusRingCount = computed(() => renderedNodeStatuses.value.length)
+const renderedRecencyRingCount = computed(() => renderedNodeStatuses.value.filter(status => status.recency !== 'none').length)
+const renderedRelationStrengthRingCount = computed(() => renderedNodeStatuses.value.filter(status => status.showRelationStrength).length)
+const graphNodeStatusHoverProbe = computed(() => {
+  const status = renderedNodeStatuses.value[0]
+  const node = status ? visibleNodes.value.find(item => item.id === status.nodeId) : null
+  return node ? { x: node.x || 0, y: node.y || 0 } : null
+})
+const graphNodeStatusDiagnostics = computed(() => JSON.stringify({
+  eligibleNodeCount: graphNodeStatusSummary.value.ringNodeCount,
+  renderedNodeCount: renderedNodeStatusRingCount.value,
+  freshCount: graphNodeStatusSummary.value.freshCount,
+  recentCount: graphNodeStatusSummary.value.recentCount,
+  relationStrengthCount: graphNodeStatusSummary.value.relationStrengthCount,
+  maximumDegree: graphNodeStatusSummary.value.maximumDegree,
+  relationStrengthThreshold: graphNodeStatusSummary.value.relationStrengthThreshold,
+  prioritySuppressedCount: statusPrioritySuppressedIds.value.size,
+  farHidden: !statusRingsVisible.value,
+  governanceCount: 0,
+  hoverProbe: graphNodeStatusHoverProbe.value,
+}))
 const semanticKeyNodeIds = computed(() => new Set(selectSemanticZoomKeyNodes(visibleGraph.value).map(node => node.id)))
 const communityContours = computed(() => semanticZoomLevel.value === 'far' || viewMode.value !== 'network'
   ? []
@@ -902,6 +941,7 @@ const loadGraph = async () => {
   }
   try {
     graphData.value = await invoke<any>('build_link_graph', { libraryRoot: store.libraryPath })
+    graphNodeStatusNowSeconds.value = Math.floor(Date.now() / 1000)
     const strongest = [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
     const requestedRoot = typeof route.query.root === 'string'
       ? graphData.value.nodes.find(node => node.id === route.query.root)
@@ -2136,6 +2176,7 @@ const draw = () => {
   // 节点 - 光晕效果
   for (const n of showCommunityOverview.value ? [] : visibleNodes.value) {
     const r = n.size * 0.6
+    const nx = n.x || 0, ny = n.y || 0
     const isHovered = hovered === n
     const isSelected = selectedNodeIds.value.includes(n.id)
 
@@ -2169,6 +2210,38 @@ const draw = () => {
       continue
     }
 
+    const nodeStatus = graphNodeStatusById.value.get(n.id)
+    const statusPrioritySuppressed = isHovered || isSelected || Boolean(shortestPathNodeIds.value?.has(n.id))
+    if (statusRingsVisible.value && nodeStatus && !statusPrioritySuppressed) {
+      ctx.save()
+      ctx.lineCap = 'round'
+      if (nodeStatus.recency !== 'none') {
+        const ringRadius = r + 4 / zoom
+        const start = -Math.PI * 0.82
+        const sweep = nodeStatus.recency === 'fresh' ? Math.PI * 1.52 : Math.PI * 0.92
+        ctx.beginPath()
+        ctx.arc(nx, ny, ringRadius, start, start + sweep)
+        ctx.strokeStyle = store.theme === 'contrast'
+          ? '#ffd400'
+          : nodeStatus.recency === 'fresh' ? '#f59e0b' : '#d97706'
+        ctx.globalAlpha = nodeStatus.recency === 'fresh' ? 0.96 : 0.78
+        ctx.lineWidth = 2 / zoom
+        ctx.stroke()
+      }
+      if (nodeStatus.showRelationStrength) {
+        const ringRadius = r + 7 / zoom
+        const start = Math.PI * 0.12
+        const sweep = Math.PI * (0.72 + nodeStatus.relationStrength * 0.72)
+        ctx.beginPath()
+        ctx.arc(nx, ny, ringRadius, start, start + sweep)
+        ctx.strokeStyle = store.theme === 'contrast' ? '#00e5ff' : isDark ? '#38bdf8' : '#0369a1'
+        ctx.globalAlpha = 0.9
+        ctx.lineWidth = 2 / zoom
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
+
     // 外层光晕
     if (isHovered) {
       const glowGradient = ctx.createRadialGradient(n.x || 0, n.y || 0, r, n.x || 0, n.y || 0, r * 2)
@@ -2182,7 +2255,6 @@ const draw = () => {
 
     // 主体节点：形状和颜色来自统一语义注册表。
     const objectSemantic = graphObjectSemantic(n.objectType)
-    const nx = n.x || 0, ny = n.y || 0
     ctx.beginPath()
     if (objectSemantic.shape === 'square') {
       ctx.roundRect(nx - r, ny - r, r * 2, r * 2, Math.max(2, r * 0.22))

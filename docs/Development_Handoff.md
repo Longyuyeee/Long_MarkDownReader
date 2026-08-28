@@ -1281,3 +1281,9 @@ M3B-9 已完成由可见节点派生的无标签语义缩略图、实时视口�
 M3B-10 已完成且未改图谱产品运行代码。`GraphNode.modifiedAt` 来自真实文件系统秒级时间，当前可见图度数已同步计算；治理侧栏则独立异步扫描，不能直接当作逐节点状态合同。代理聚类节点和产品全屏仍不存在。
 
 真实暗色/reduced Tauri 覆盖 1280/1000/720，七档文件时间均唯一，知识脉搏为 17 对象/17 关系/100% 覆盖，运行时错误 0、源摘要不变并返回资料库。当前接续点为 **M3B-11 克制的近期修改与关系强度节点外环**，不得引入治理扫描；聚类折叠、全屏、治理外环和 M3C 继续延后。详见 [`Post_v1.0.15_M3B10_Remaining_Professional_Visual_System_Selection_Audit_2026-08-28.md`](./Post_v1.0.15_M3B10_Remaining_Professional_Visual_System_Selection_Audit_2026-08-28.md)。
+
+## 2026-08-28 M3B-11 克制节点状态外环交接
+
+M3B-11 已实现 7/30 天近期修改和当前可见图上四分位关系强度外环。状态由纯函数派生，度数均匀时不制造强弱；选择、悬停和路径节点压制外环，远景与思维导图隐藏，治理调用为 0，SVG/PNG 保持原有事实图导出。
+
+四个真实 Tauri 会话、三档窗口、真实七档文件时间和 4 节点路径通过；实际为状态节点 8、选中后 7、路径/远景/思维导图 0，零运行错误且源摘要不变。当前接续点为 **M3B-12 专业视觉系统退出审计**，判断剩余聚类折叠和全屏是否继续，或结束 M3B 进入 M3C。详见 [`Post_v1.0.15_M3B11_Restrained_Recency_and_Relation_Strength_Node_Rings_Audit_2026-08-28.md`](./Post_v1.0.15_M3B11_Restrained_Recency_and_Relation_Strength_Node_Rings_Audit_2026-08-28.md)。

@@ -29,6 +29,7 @@ const m3b7FitSelectionFocus = readJson('shared/post-v115-m3b7-fit-selection-redu
 const m3b8RemainingNavigationSelection = readJson('shared/post-v115-m3b8-remaining-navigation-selection-policy.json')
 const m3b9BoundedSemanticMinimap = readJson('shared/post-v115-m3b9-bounded-semantic-minimap-policy.json')
 const m3b10RemainingProfessionalVisualSelection = readJson('shared/post-v115-m3b10-remaining-professional-visual-selection-policy.json')
+const m3b11RestrainedNodeStatusRings = readJson('shared/post-v115-m3b11-restrained-node-status-rings-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -77,7 +78,8 @@ const checks = {
     && m3b7FitSelectionFocus.selectedNextStage.id === m3b8RemainingNavigationSelection.stage
     && m3b8RemainingNavigationSelection.selectedNextStage.id === m3b9BoundedSemanticMinimap.stage
     && m3b9BoundedSemanticMinimap.selectedNextStage.id === m3b10RemainingProfessionalVisualSelection.stage
-    && policy.currentStage === `${m3b10RemainingProfessionalVisualSelection.selectedNextStage.id}-${m3b10RemainingProfessionalVisualSelection.selectedNextStage.name}`,
+    && m3b10RemainingProfessionalVisualSelection.selectedNextStage.id === m3b11RestrainedNodeStatusRings.stage
+    && policy.currentStage === `${m3b11RestrainedNodeStatusRings.selectedNextStage.id}-${m3b11RestrainedNodeStatusRings.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
