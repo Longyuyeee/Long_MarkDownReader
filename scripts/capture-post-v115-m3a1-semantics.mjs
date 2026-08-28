@@ -39,7 +39,7 @@ const pending = new Map()
 const runtimeErrors = []
 socket.addEventListener('message', event => {
   const message = JSON.parse(event.data)
-  if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params?.exceptionDetails?.text || 'runtime exception')
+  if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params?.exceptionDetails?.exception?.description || message.params?.exceptionDetails?.text || 'runtime exception')
   if (message.method === 'Log.entryAdded' && message.params?.entry?.level === 'error') runtimeErrors.push(message.params.entry.text || 'log error')
   const request = pending.get(message.id)
   if (!request) return
@@ -67,7 +67,7 @@ await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'
 await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: motion === 'reduced' ? 'reduce' : 'no-preference' }] })
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('.library-mode')!==null`, 'library initialization')
-const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
+const initialGraphHash = ['M3A7', 'M3A8', 'M3B0', 'M3B1', 'M3B2', 'M3B4', 'M3B5', 'M3B6', 'M3B7'].includes(stage) ? `#/graph?mode=network&root=${encodeURIComponent(path.join(library, 'NorthStar.md'))}` : '#/graph'
 await evaluate(`location.hash=${JSON.stringify(initialGraphHash)}`)
 await waitFor(`document.querySelector('[data-testid="graph-object-legend"] [data-semantic-id="pptx_slide"]')!==null`, 'cross-format object legend')
 await waitFor(`document.querySelector('[data-testid="graph-relation-legend"] [data-semantic-id="supports"]')!==null`, 'cross-format relation legend')
@@ -479,6 +479,7 @@ let semanticHierarchy = null
 let pathVisual = null
 let pathMotion = null
 let navigationBaseline = null
+let cameraNavigation = null
 if (stage === 'M3B1' || stage === 'M3B2') {
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
   const readLevel = () => evaluate(`document.querySelector('[data-testid="graph-semantic-zoom-status"]')?.dataset.level||''`)
@@ -678,17 +679,81 @@ if (stage === 'M3B6') {
   }
 }
 
+if (stage === 'M3B7') {
+  const viewports = []
+  await evaluate(`document.querySelector('.details-close')?.click()`)
+  for (const [width, height] of [[1280, 800], [1000, 700], [720, 680]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+    await delay(220)
+    await evaluate(`(()=>{const controls=document.querySelector('.graph-controls');if(controls)controls.scrollLeft=Math.max(0,controls.scrollWidth-controls.clientWidth)})()`)
+    await delay(260)
+    const viewport = await evaluate(`(()=>{const controls=document.querySelector('.graph-controls');const fitAll=document.querySelector('[data-testid="graph-fit-all"]');const fitSelection=document.querySelector('[data-testid="graph-fit-selection"]');const controlRect=controls?.getBoundingClientRect();const allRect=fitAll?.getBoundingClientRect();const selectionRect=fitSelection?.getBoundingClientRect();const reachable=rect=>Boolean(controlRect&&rect&&rect.left>=controlRect.left-1&&rect.right<=controlRect.right+1);return {width:innerWidth,height:innerHeight,fits:document.documentElement.scrollWidth<=innerWidth+1,controlsScrollable:Boolean(controls&&controls.scrollWidth>controls.clientWidth),controlsScrollLeft:controls?.scrollLeft||0,controlsMaxScroll:controls?Math.max(0,controls.scrollWidth-controls.clientWidth):0,fitAllReachable:reachable(allRect),fitSelectionReachable:reachable(selectionRect),fitSelectionDisabled:Boolean(fitSelection?.disabled)}})()`)
+    viewports.push(viewport)
+    await capture(`camera-toolbar-${width}-${motion}.jpg`)
+  }
+
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
+  await delay(220)
+  const focusStartedAt = Date.now()
+  await evaluate(`(()=>{const input=document.querySelector('.graph-search input');if(!(input instanceof HTMLInputElement))return false;const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;setter?.call(input,'Evidence');input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));return true})()`)
+  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return canvas?.dataset.cameraMotionReason==='node-focus'&&['running','reduced','completed'].includes(canvas.dataset.cameraMotionState||'')})()`, 'M3B-7 node focus start')
+  const focusStart = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {state:canvas?.dataset.cameraMotionState||'',frames:Number(canvas?.dataset.cameraMotionFrames||0),reduced:canvas?.dataset.cameraMotionReduced==='true'}})()`)
+  await waitFor(`(()=>{const state=document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionState;return state==='completed'||state==='reduced'})()`, 'M3B-7 node focus completion')
+  const focusElapsedMs = Date.now() - focusStartedAt
+  await delay(80)
+  const focusCompletePixels = await evaluate(`document.querySelector('[data-testid="graph-canvas"]')?.toDataURL('image/png')||''`)
+  const focusComplete = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const canvasRect=canvas?.getBoundingClientRect();const panelRect=document.querySelector('[data-testid="graph-selected-node"]')?.getBoundingClientRect();const diagnostics=JSON.parse(canvas?.dataset.cameraFocusDiagnostics||'{}');delete diagnostics.nodeId;return {state:canvas?.dataset.cameraMotionState||'',reason:canvas?.dataset.cameraMotionReason||'',frames:Number(canvas?.dataset.cameraMotionFrames||0),pose:JSON.parse(canvas?.dataset.cameraPose||'{}'),diagnostics,selectedCount:Number(canvas?.dataset.selectedCount||0),detailsOverlap:Boolean(canvasRect&&panelRect&&panelRect.left<canvasRect.right&&panelRect.right>canvasRect.left)}})()`)
+  await delay(300)
+  const focusSettledPixels = await evaluate(`document.querySelector('[data-testid="graph-canvas"]')?.toDataURL('image/png')||''`)
+  await capture(`camera-node-focus-${motion}.jpg`)
+
+  const cancellationsBefore = await evaluate(`Number(document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionCancellations||0)`)
+  await evaluate(`(()=>{const input=document.querySelector('.graph-search input');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;if(!(input instanceof HTMLInputElement))return;setter?.call(input,'North');input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))})()`)
+  if (motion === 'calm') await waitFor(`document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionState==='running'`, 'M3B-7 cancellable focus')
+  await delay(35)
+  await evaluate(`(()=>{const input=document.querySelector('.graph-search input');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;if(!(input instanceof HTMLInputElement))return;setter?.call(input,'Brief');input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))})()`)
+  await waitFor(`(()=>{const state=document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionState;return state==='completed'||state==='reduced'})()`, 'M3B-7 replacement focus')
+  const replacementFocus = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');return {state:canvas?.dataset.cameraMotionState||'',reason:canvas?.dataset.cameraMotionReason||'',frames:Number(canvas?.dataset.cameraMotionFrames||0),cancellations:Number(canvas?.dataset.cameraMotionCancellations||0)}})()`)
+
+  await evaluate(`(()=>{const input=document.querySelector('.graph-search input');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set;if(input instanceof HTMLInputElement){setter?.call(input,'');input.dispatchEvent(new Event('input',{bubbles:true}))}document.querySelector('.details-close')?.click();document.querySelector('[data-testid="graph-fit-all"]')?.click()})()`)
+  await delay(180)
+  let selectedCount = 0
+  for (const ratio of [0.46, 0.58, 0.7, 0.82]) {
+    await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');if(!(canvas instanceof HTMLCanvasElement))return;canvas.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));const rect=canvas.getBoundingClientRect();const startX=rect.left+8,startY=rect.top+8;const endX=rect.left+rect.width*${ratio},endY=rect.top+rect.height*${ratio};canvas.dispatchEvent(new MouseEvent('mousedown',{button:0,clientX:startX,clientY:startY,shiftKey:true,bubbles:true}));canvas.dispatchEvent(new MouseEvent('mousemove',{button:0,clientX:endX,clientY:endY,shiftKey:true,bubbles:true}));canvas.dispatchEvent(new MouseEvent('mouseup',{button:0,clientX:endX,clientY:endY,shiftKey:true,bubbles:true}))})()`)
+    await delay(60)
+    selectedCount = await evaluate(`Number(document.querySelector('[data-testid="graph-canvas"]')?.dataset.selectedCount||0)`)
+    if (selectedCount >= 2 && selectedCount < 17) break
+  }
+  if (selectedCount < 2 || selectedCount >= 17) throw new Error(`M3B-7 bounded multi-selection missing: ${selectedCount}`)
+  const fitSelectionEnabled = await evaluate(`document.querySelector('[data-testid="graph-fit-selection"]')?.disabled===false`)
+  await evaluate(`document.querySelector('[data-testid="graph-fit-selection"]')?.click()`)
+  await waitFor(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const state=canvas?.dataset.cameraMotionState;return canvas?.dataset.cameraMotionReason==='fit-selection'&&(state==='completed'||state==='reduced')})()`, 'M3B-7 fit selection completion')
+  await delay(80)
+  const fitCompletePixels = await evaluate(`document.querySelector('[data-testid="graph-canvas"]')?.toDataURL('image/png')||''`)
+  const fitSelection = await evaluate(`(()=>{const canvas=document.querySelector('[data-testid="graph-canvas"]');const diagnostics=JSON.parse(canvas?.dataset.fitSelectionDiagnostics||'{}');diagnostics.nodeCount=diagnostics.nodeIds?.length||0;delete diagnostics.nodeIds;return {state:canvas?.dataset.cameraMotionState||'',frames:Number(canvas?.dataset.cameraMotionFrames||0),selectedCount:Number(canvas?.dataset.selectedCount||0),pose:JSON.parse(canvas?.dataset.cameraPose||'{}'),diagnostics}})()`)
+  await delay(300)
+  const fitSettledPixels = await evaluate(`document.querySelector('[data-testid="graph-canvas"]')?.toDataURL('image/png')||''`)
+  await capture(`camera-fit-selection-${motion}.jpg`)
+
+  cameraNavigation = {
+    viewports,
+    focus: { start: focusStart, complete: focusComplete, elapsedMs: focusElapsedMs, stableAfterCompletion: focusCompletePixels === focusSettledPixels },
+    replacementFocus: { cancellationsBefore, ...replacementFocus },
+    fitSelection: { enabled: fitSelectionEnabled, ...fitSelection, stableAfterCompletion: fitCompletePixels === fitSettledPixels },
+  }
+}
+
 const clicked = await evaluate(`(()=>{const element=document.querySelector('.management-back');if(!(element instanceof HTMLElement))return false;element.click();return true})()`)
 if (!clicked) throw new Error('M3A-1 return control missing')
 await waitFor(`document.querySelector('.library-mode')!==null`, 'return to library')
 const afterSha256 = await hashDirectory(library)
 const evidence = {
   schemaVersion: 1,
-  stage: stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
-  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
+  stage: stage === 'M3B7' ? 'M3B-7' : stage === 'M3B6' ? 'M3B-6' : stage === 'M3B5' ? 'M3B-5' : stage === 'M3B4' ? 'M3B-4' : stage === 'M3B2' ? 'M3B-2' : stage === 'M3B1' ? 'M3B-1' : stage === 'M3B0' ? 'M3B-0' : stage === 'M3A8' ? 'M3A-8' : stage === 'M3A7' ? 'M3A-7' : stage === 'M3A6' ? 'M3A-6' : stage === 'M3A5' ? 'M3A-5' : stage === 'M3A4' ? 'M3A-4' : stage === 'M3A3' ? 'M3A-3' : stage === 'M3A2' ? 'M3A-2' : 'M3A-1',
+  actual: { theme, motion, wide, narrow, neighborFocus, shortestPath, relationEvidence, community, nodeComparison, selectionHistory, neighborPinning, combinedFlow, visualBaseline, semanticZoom, semanticHierarchy, pathVisual, pathMotion, navigationBaseline, cameraNavigation, returnedToLibrary: true, runtimeErrors: runtimeErrors.length, runtimeErrorMessages: runtimeErrors, sourceFilesUnchanged: beforeSha256 === afterSha256, beforeSha256, afterSha256 },
   sourceUserContentIncluded: false,
   releaseCandidate: false,
 }
-await fs.writeFile(path.join(output, stage === 'M3B5' ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+await fs.writeFile(path.join(output, ['M3B5', 'M3B7'].includes(stage) ? `desktop-${theme}-${motion}.json` : ['M3B1', 'M3B2', 'M3B4'].includes(stage) ? `desktop-${theme}.json` : 'desktop.json'), `${JSON.stringify(evidence, null, 2)}\n`)
 socket.close()
 console.log(`${stage} desktop: ${wide.objectTypeIds.length} object types, ${wide.relationTypeIds.length} relation types, runtime errors ${runtimeErrors.length}`)

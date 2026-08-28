@@ -7,8 +7,11 @@ const predecessor = await readJson('shared/post-v115-m3b5-selected-path-directio
 requireFact(policy.stage === 'M3B-6' && predecessor.selectedNextStage.id === policy.stage && !policy.releaseCandidate, 'M3B-6 stage chain drifted')
 
 const graphView = await fs.readFile('src/components/GraphView.vue', 'utf8')
-for (const token of ['title="适合窗口"', 'const fitGraph = () =>', 'const nodes = visibleNodes.value', 'const centerOnNode = (node: GraphNode)', 'viewX = width / 2', 'viewY = height / 2', 'selectAndCenter', 'data-horizontal-wheel="always"']) requireFact(graphView.includes(token), `navigation baseline missing: ${token}`)
-for (const absent of ['data-testid="graph-minimap"', 'data-testid="graph-fit-selection"', 'data-testid="graph-fullscreen"', 'requestFullscreen()']) requireFact(!graphView.includes(absent), `M3B-6 missing-feature fact drifted: ${absent}`)
+for (const token of ['title="适合窗口"', 'const fitGraph = () =>', 'const nodes = visibleNodes.value', 'const centerOnNode = (node: GraphNode)', 'selectAndCenter', 'data-horizontal-wheel="always"']) requireFact(graphView.includes(token), `navigation baseline missing: ${token}`)
+const successorImplemented = graphView.includes('data-testid="graph-fit-selection"')
+if (successorImplemented) requireFact(graphView.includes('requestCameraPose') && graphView.includes('cameraMotionReduced'), 'M3B-7 successor camera contract is incomplete')
+else requireFact(graphView.includes('viewX = width / 2') && graphView.includes('viewY = height / 2'), 'M3B-6 immediate focus baseline drifted')
+for (const absent of ['data-testid="graph-minimap"', 'data-testid="graph-fullscreen"', 'requestFullscreen()']) requireFact(!graphView.includes(absent), `M3B-6 deferred-feature fact drifted: ${absent}`)
 requireFact(graphView.includes("data-testid=\"graph-community-card\"") && graphView.includes('activeCommunityId.value = communityId') && graphView.includes('activeCommunityId.value = \'\''), 'community filter enter/return baseline drifted')
 
 let evidence = null
@@ -26,4 +29,4 @@ if (evidence) {
   requireFact(baseline.community.enteredCommunityCount > 0 && baseline.community.enteredCommunityCount < 17 && baseline.community.fullGraphStats !== baseline.community.communityStats && baseline.community.returned && baseline.community.interactionKind === 'filtered-subgraph', 'M3B-6 community filter baseline drifted')
   requireFact(baseline.capabilities.fitAll && !baseline.capabilities.fitSelection && !baseline.capabilities.smoothFocus && !baseline.capabilities.minimap && !baseline.capabilities.clusterCollapseExpand && !baseline.capabilities.fullscreen, 'M3B-6 capability selection facts drifted')
 }
-console.log(`M3B-6 navigation selection accepted: fit-all and community filtering remain reliable, while fit-selection and bounded reduced-motion-safe focus are the next smallest camera increment${evidence ? ' with real Tauri three-viewport evidence' : ''}.`)
+console.log(`M3B-6 navigation selection accepted: fit-all and community filtering remain reliable, and the selected fit-selection/bounded-focus successor is ${successorImplemented ? 'implemented' : 'still pending'}${evidence ? ' with historical real Tauri three-viewport evidence' : ''}.`)

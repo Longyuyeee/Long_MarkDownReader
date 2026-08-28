@@ -37,7 +37,10 @@
         <button class="control-btn" @click="changeGraphZoom(0.8)" title="缩小">
           <ZoomOut :size="16" />
         </button>
-        <button class="control-btn" @click="fitGraph" title="适合窗口">
+        <button class="control-btn" data-testid="graph-fit-selection" :disabled="!selectedNodeIds.length" @click="fitSelection" title="适合选择">
+          <ScanSearch :size="16" />
+        </button>
+        <button class="control-btn" data-testid="graph-fit-all" @click="fitGraph" title="适合窗口">
           <Maximize2 :size="16" />
         </button>
       </div>
@@ -234,6 +237,14 @@
       :data-path-relation-label-count="activeShortestPath?.edges.length || 0"
       :data-path-camera-safe="pathCameraSafe"
       :data-path-camera-diagnostics="pathCameraDiagnostics"
+      :data-camera-motion-state="cameraMotionState"
+      :data-camera-motion-reason="cameraMotionReason"
+      :data-camera-motion-frames="cameraMotionFrames"
+      :data-camera-motion-cancellations="cameraMotionCancellations"
+      :data-camera-motion-reduced="String(cameraMotionReduced)"
+      :data-camera-pose="cameraPoseDiagnostics"
+      :data-camera-focus-diagnostics="cameraFocusDiagnostics"
+      :data-fit-selection-diagnostics="fitSelectionDiagnostics"
       :data-path-motion-state="pathMotionState"
       :data-path-motion-reduced="pathMotionReduced"
       :data-path-motion-traversal-segments="pathMotionTraversalSegments"
@@ -360,7 +371,7 @@
       </div>
     </transition>
     <transition name="details-slide">
-      <aside v-if="selectedNode && selectedNodeIds.length === 1" class="node-details" data-testid="graph-selected-node" :data-node-id="selectedNode.id">
+      <aside v-if="selectedNode && selectedNodeIds.length === 1" ref="detailsPanelRef" class="node-details" data-testid="graph-selected-node" :data-node-id="selectedNode.id">
         <button class="details-close" @click="clearSelection" aria-label="关闭节点详情">×</button>
         <span class="details-kicker">节点详情</span>
         <h3>{{ selectedNode.title }}</h3>
@@ -430,7 +441,7 @@ import { computed, nextTick, reactive, ref, onMounted, onUnmounted, watch } from
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, ScanSearch, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
@@ -449,6 +460,8 @@ import { compareGraphNodes } from '../utils/graphComparison'
 import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
 import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint, graphQuadraticPoint, graphQuadraticTangent } from '../utils/graphEdgeRoutes'
 import { advanceGraphPathMotionPhase, graphPathDashOffset, graphPathTraversalDirection } from '../utils/graphPathMotion'
+import { graphCameraPoseForBounds, graphCameraPoseForPoint, interpolateGraphCameraPose } from '../utils/graphCamera'
+import type { GraphCameraPose, GraphCameraViewport } from '../utils/graphCamera'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -464,6 +477,7 @@ const emit = defineEmits(['selectFile'])
 const containerRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const pathPanelRef = ref<HTMLElement | null>(null)
+const detailsPanelRef = ref<HTMLElement | null>(null)
 const graphPageActive = ref(true)
 const systemPrefersReducedMotion = ref(false)
 const store = useAppStore()
@@ -484,6 +498,13 @@ const { filters } = useGraphFilters()
 const searchQuery = computed({ get: () => filters.query, set: value => { filters.query = value } })
 const selectedNode = ref<GraphNode | null>(null)
 const selectedNodeIds = ref<string[]>([])
+const cameraMotionState = ref<'idle' | 'running' | 'completed' | 'reduced' | 'cancelled'>('idle')
+const cameraMotionReason = ref('')
+const cameraMotionFrames = ref(0)
+const cameraMotionCancellations = ref(0)
+const cameraPoseDiagnostics = ref('')
+const cameraFocusDiagnostics = ref('')
+const fitSelectionDiagnostics = ref('')
 const neighborFocusRootId = ref('')
 const neighborFocusDepth = ref(1)
 const pathOpen = ref(false)
@@ -576,6 +597,7 @@ const neighborFocusNodeIds = computed(() => {
 })
 const activeShortestPath = computed(() => shortestPathResult.value?.status === 'found' ? shortestPathResult.value : null)
 const pathMotionReduced = computed(() => store.motionSpeed === 'reduced' || systemPrefersReducedMotion.value)
+const cameraMotionReduced = pathMotionReduced
 const pathMotionEnabled = computed(() => Boolean(activeShortestPath.value
   && viewMode.value === 'network'
   && graphPageActive.value
@@ -789,6 +811,14 @@ let dragging: GraphNode | null = null
 let wasDragging = false
 let offsetX = 0, offsetY = 0
 let viewX = 0, viewY = 0, zoom = 1
+type CameraTransition = {
+  from: GraphCameraPose
+  target: GraphCameraPose
+  targetNodeId: string
+  startedAt: number
+  duration: number
+}
+let cameraTransition: CameraTransition | null = null
 let dragStartWorldX = 0, dragStartWorldY = 0
 let dragStartPositions = new Map<string, { x: number; y: number }>()
 let dragSnapshot: LayoutSnapshot | null = null
@@ -1123,6 +1153,7 @@ const toggleSelection = (node: GraphNode) => {
 const changeGraphZoom = (factor: number, clientX?: number, clientY?: number) => {
   const canvas = canvasRef.value
   if (!canvas) return
+  cancelCameraMotion()
   const rect = canvas.getBoundingClientRect()
   const anchorX = (clientX ?? rect.left + rect.width / 2) - rect.left
   const anchorY = (clientY ?? rect.top + rect.height / 2) - rect.top
@@ -1155,15 +1186,39 @@ const availableGraphViewports = (canvas: HTMLCanvasElement) => {
   return candidates.length ? candidates : [{ ...fallback, obscured: true }]
 }
 
-const fitGraph = () => {
+const availableNodeFocusViewport = (canvas: HTMLCanvasElement): GraphCameraViewport => {
+  const fallback = { x: 0, y: 0, width: canvas.clientWidth, height: canvas.clientHeight }
+  const panel = detailsPanelRef.value
+  if (!panel) return fallback
+  const canvasRect = canvas.getBoundingClientRect()
+  const panelRect = panel.getBoundingClientRect()
+  const overlap = {
+    left: Math.max(0, panelRect.left - canvasRect.left),
+    top: Math.max(0, panelRect.top - canvasRect.top),
+    right: Math.min(canvas.clientWidth, panelRect.right - canvasRect.left),
+    bottom: Math.min(canvas.clientHeight, panelRect.bottom - canvasRect.top),
+  }
+  if (overlap.right <= overlap.left || overlap.bottom <= overlap.top) return fallback
+  const gap = 14
+  const candidates = [
+    { x: 0, y: 0, width: overlap.left - gap, height: canvas.clientHeight },
+    { x: overlap.right + gap, y: 0, width: canvas.clientWidth - overlap.right - gap, height: canvas.clientHeight },
+    { x: 0, y: 0, width: canvas.clientWidth, height: overlap.top - gap },
+    { x: 0, y: overlap.bottom + gap, width: canvas.clientWidth, height: canvas.clientHeight - overlap.bottom - gap },
+  ].filter(candidate => candidate.width >= 220 && candidate.height >= 160)
+  return candidates.sort((left, right) => right.width * right.height - left.width * left.height)[0] || fallback
+}
+
+const nodeCameraExtents = (nodes: GraphNode[]) => nodes.map(node => {
+  const halfWidth = viewMode.value === 'mindmap' ? (node.id === mindmapRoot.value?.id ? 90 : 80) : Math.max(26, node.size * 0.75)
+  const halfHeight = viewMode.value === 'mindmap' ? 28 : Math.max(40, node.size * 0.75 + 24)
+  return { left: (node.x || 0) - halfWidth, right: (node.x || 0) + halfWidth, top: (node.y || 0) - halfHeight, bottom: (node.y || 0) + halfHeight }
+})
+
+const cameraTargetForNodes = (nodes: GraphNode[]) => {
   const canvas = canvasRef.value
-  const nodes = visibleNodes.value
-  if (!canvas || !nodes.length) return
-  const extents = nodes.map(node => {
-    const halfWidth = viewMode.value === 'mindmap' ? (node.id === mindmapRoot.value?.id ? 90 : 80) : Math.max(26, node.size * 0.75)
-    const halfHeight = viewMode.value === 'mindmap' ? 28 : Math.max(40, node.size * 0.75 + 24)
-    return { left: (node.x || 0) - halfWidth, right: (node.x || 0) + halfWidth, top: (node.y || 0) - halfHeight, bottom: (node.y || 0) + halfHeight }
-  })
+  if (!canvas || !nodes.length) return null
+  const extents = nodeCameraExtents(nodes)
   const minX = Math.min(...extents.map(item => item.left)), maxX = Math.max(...extents.map(item => item.right))
   const minY = Math.min(...extents.map(item => item.top)), maxY = Math.max(...extents.map(item => item.bottom))
   const padding = 42
@@ -1174,12 +1229,85 @@ const fitGraph = () => {
     const rightScale = Math.min(Math.max(1, right.width - padding * 2) / graphWidth, Math.max(1, right.height - padding * 2) / graphHeight)
     return rightScale - leftScale
   })[0]
-  const usableWidth = Math.max(1, viewport.width - padding * 2)
-  const usableHeight = Math.max(1, viewport.height - padding * 2)
-  zoom = Math.max(0.1, Math.min(1.35, Math.min(usableWidth / graphWidth, usableHeight / graphHeight)))
-  viewX = viewport.x + padding + (usableWidth - graphWidth * zoom) / 2 - minX * zoom
-  viewY = viewport.y + padding + (usableHeight - graphHeight * zoom) / 2 - minY * zoom
+  const target = graphCameraPoseForBounds({ left: minX, right: maxX, top: minY, bottom: maxY }, viewport, padding)
+  return { target, viewport, graphWidth, graphHeight }
+}
+
+const applyCameraPose = (pose: GraphCameraPose) => {
+  viewX = pose.x
+  viewY = pose.y
+  zoom = pose.zoom
   zoomLevel.value = zoom
+  cameraPoseDiagnostics.value = JSON.stringify({ x: viewX, y: viewY, zoom })
+}
+
+const cancelCameraMotion = (countCancellation = true) => {
+  if (!cameraTransition) return
+  cameraTransition = null
+  if (countCancellation) cameraMotionCancellations.value += 1
+  cameraMotionState.value = 'cancelled'
+}
+
+const requestCameraPose = (target: GraphCameraPose, reason: string, targetNodeId = '') => {
+  cancelCameraMotion()
+  cameraMotionReason.value = reason
+  cameraMotionFrames.value = 0
+  if (cameraMotionReduced.value) {
+    applyCameraPose(target)
+    cameraMotionState.value = 'reduced'
+    return
+  }
+  cameraTransition = {
+    from: { x: viewX, y: viewY, zoom },
+    target,
+    targetNodeId,
+    startedAt: performance.now(),
+    duration: store.motionSpeed === 'expressive' ? 180 : store.motionSpeed === 'swift' ? 220 : 280,
+  }
+  cameraMotionState.value = 'running'
+}
+
+const currentNodeFocusTarget = (nodeId: string) => {
+  const canvas = canvasRef.value
+  const node = graphData.value.nodes.find(candidate => candidate.id === nodeId)
+  if (!canvas || !node) return null
+  const point = { x: node.x || 0, y: node.y || 0 }
+  const viewport = availableNodeFocusViewport(canvas)
+  const target = graphCameraPoseForPoint(point, viewport, zoom)
+  cameraFocusDiagnostics.value = JSON.stringify({ nodeId, point, viewport, target })
+  return target
+}
+
+const advanceCameraMotion = (timestamp: number) => {
+  const transition = cameraTransition
+  if (!transition) return
+  const liveTarget = transition.targetNodeId ? currentNodeFocusTarget(transition.targetNodeId) || transition.target : transition.target
+  if (cameraMotionReduced.value) {
+    applyCameraPose(liveTarget)
+    cameraTransition = null
+    cameraMotionState.value = 'reduced'
+    return
+  }
+  const progress = Math.min(1, Math.max(0, (timestamp - transition.startedAt) / transition.duration))
+  applyCameraPose(interpolateGraphCameraPose(transition.from, liveTarget, progress))
+  cameraMotionFrames.value += 1
+  if (progress >= 1) {
+    applyCameraPose(liveTarget)
+    cameraTransition = null
+    cameraMotionState.value = 'completed'
+  }
+}
+
+const fitGraph = () => {
+  const nodes = visibleNodes.value
+  const resolved = cameraTargetForNodes(nodes)
+  if (!resolved) return
+  cancelCameraMotion()
+  cameraMotionReason.value = 'fit-all'
+  cameraMotionFrames.value = 0
+  cameraMotionState.value = 'idle'
+  applyCameraPose(resolved.target)
+  const { viewport, graphWidth, graphHeight } = resolved
   const screenPoints = nodes.map(node => ({ id: node.id, x: (node.x || 0) * zoom + viewX, y: (node.y || 0) * zoom + viewY }))
   pathCameraSafe.value = !activeShortestPath.value || (!viewport.obscured && screenPoints.every(point => {
     const { x, y } = point
@@ -1188,16 +1316,34 @@ const fitGraph = () => {
   pathCameraDiagnostics.value = JSON.stringify({ viewport, zoom, graphWidth, graphHeight, screenPoints })
 }
 
+const fitSelection = () => {
+  const selected = new Set(selectedNodeIds.value)
+  const nodes = visibleNodes.value.filter(node => selected.has(node.id))
+  const resolved = cameraTargetForNodes(nodes)
+  if (!resolved) return
+  const extents = nodeCameraExtents(nodes)
+  fitSelectionDiagnostics.value = JSON.stringify({
+    nodeIds: nodes.map(node => node.id),
+    bounds: {
+      left: Math.min(...extents.map(item => item.left)),
+      right: Math.max(...extents.map(item => item.right)),
+      top: Math.min(...extents.map(item => item.top)),
+      bottom: Math.max(...extents.map(item => item.bottom)),
+    },
+    viewport: resolved.viewport,
+    target: resolved.target,
+  })
+  requestCameraPose(resolved.target, 'fit-selection')
+}
+
 const centerOnNode = (node: GraphNode) => {
-  const width = containerRef.value?.clientWidth || 800
-  const height = containerRef.value?.clientHeight || 600
-  viewX = width / 2 - (node.x || 0) * zoom
-  viewY = height / 2 - (node.y || 0) * zoom
+  const target = currentNodeFocusTarget(node.id)
+  if (target) requestCameraPose(target, 'node-focus', node.id)
 }
 
 const selectAndCenter = (node: GraphNode) => {
   selectOnly(node)
-  centerOnNode(node)
+  void nextTick(() => centerOnNode(node))
 }
 const focusSelectedNeighbors = () => {
   if (!selectedNode.value) return
@@ -1518,6 +1664,7 @@ const simulate = () => {
 }
 
 const resetView = () => {
+  cancelCameraMotion()
   viewX = 0
   viewY = 0
   zoom = 1
@@ -1971,6 +2118,7 @@ const loop = (timestamp = performance.now()) => {
     pathMotionFrameCount = 0
   }
   simulate()
+  advanceCameraMotion(timestamp)
   draw()
   animationId = requestAnimationFrame(loop)
 }
@@ -1979,6 +2127,7 @@ const startDrag = (e: MouseEvent) => {
   if (e.button === 2) return
   const canvas = canvasRef.value
   if (!canvas) return
+  cancelCameraMotion()
   canvas.focus()
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
@@ -2191,16 +2340,27 @@ watch(remediationFocus, focus => {
   frameCount = 0
   layoutSettled = false
 }, { immediate: true })
+const structuralFilterSignature = () => JSON.stringify({
+  tags: filters.tags,
+  directories: filters.directories,
+  relationTypes: filters.relationTypes,
+  objectTypes: filters.objectTypes,
+  dateRange: filters.dateRange,
+  showOrphans: filters.showOrphans,
+})
+let previousStructuralFilterSignature = structuralFilterSignature()
 watch(filters, () => {
   shortestPathResult.value = null
   comparisonHasRun.value = false
   const visible = new Set(visibleNodes.value.map(node => node.id))
   selectedNodeIds.value = selectedNodeIds.value.filter(id => visible.has(id))
   if (selectedNode.value && !visible.has(selectedNode.value.id)) selectedNode.value = null
-  if (viewMode.value === 'network') {
+  const nextStructuralFilterSignature = structuralFilterSignature()
+  if (viewMode.value === 'network' && nextStructuralFilterSignature !== previousStructuralFilterSignature) {
     frameCount = 0
     layoutSettled = false
   }
+  previousStructuralFilterSignature = nextStructuralFilterSignature
 }, { deep: true })
 watch(communityResult, result => {
   if (activeCommunityId.value && !result.communities.some(community => community.id === activeCommunityId.value)) activeCommunityId.value = ''
@@ -2215,6 +2375,7 @@ const pauseGraphLoop = () => {
   if (!graphPageActive.value) return
   graphPageActive.value = false
   lastLoopTimestamp = 0
+  cancelCameraMotion()
   cancelAnimationFrame(animationId)
   draw()
 }
@@ -2244,7 +2405,7 @@ onMounted(() => {
   })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
-onUnmounted(() => { graphPageActive.value = false; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { graphPageActive.value = false; cameraTransition = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>
@@ -2975,6 +3136,11 @@ canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--them
 
   .graph-controls > * {
     flex: 0 0 auto;
+  }
+
+  .graph-controls::after {
+    content: '';
+    flex: 0 0 16px;
   }
 
   .tutorial-btn span,

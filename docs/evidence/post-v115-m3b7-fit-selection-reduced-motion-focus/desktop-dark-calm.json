@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-7",
+  "actual": {
+    "theme": "dark",
+    "motion": "calm",
+    "wide": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "narrow": {
+      "legendVisible": true,
+      "graphStats": "17 / 17 节点 17 连接 100% 1 个已选 近景",
+      "objectTypeIds": [
+        "markdown",
+        "pdf",
+        "pdf_annotation",
+        "table",
+        "table_view",
+        "canvas",
+        "canvas_node",
+        "opml",
+        "opml_node",
+        "pptx",
+        "pptx_slide"
+      ],
+      "relationTypeIds": [
+        "links-to",
+        "contains",
+        "embeds",
+        "depends-on",
+        "annotates",
+        "supports"
+      ],
+      "directed": [
+        {
+          "id": "links-to",
+          "directed": "true"
+        },
+        {
+          "id": "contains",
+          "directed": "true"
+        },
+        {
+          "id": "embeds",
+          "directed": "true"
+        },
+        {
+          "id": "depends-on",
+          "directed": "true"
+        },
+        {
+          "id": "annotates",
+          "directed": "true"
+        },
+        {
+          "id": "supports",
+          "directed": "true"
+        }
+      ],
+      "documentFits": true
+    },
+    "neighborFocus": null,
+    "shortestPath": null,
+    "relationEvidence": null,
+    "community": null,
+    "nodeComparison": null,
+    "selectionHistory": null,
+    "neighborPinning": null,
+    "combinedFlow": null,
+    "visualBaseline": null,
+    "semanticZoom": null,
+    "semanticHierarchy": null,
+    "pathVisual": null,
+    "pathMotion": null,
+    "navigationBaseline": null,
+    "cameraNavigation": {
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 800,
+          "fits": true,
+          "controlsScrollable": false,
+          "controlsScrollLeft": 0,
+          "controlsMaxScroll": 0,
+          "fitAllReachable": true,
+          "fitSelectionReachable": true,
+          "fitSelectionDisabled": true
+        },
+        {
+          "width": 1000,
+          "height": 700,
+          "fits": true,
+          "controlsScrollable": true,
+          "controlsScrollLeft": 250,
+          "controlsMaxScroll": 250,
+          "fitAllReachable": true,
+          "fitSelectionReachable": true,
+          "fitSelectionDisabled": true
+        },
+        {
+          "width": 720,
+          "height": 680,
+          "fits": true,
+          "controlsScrollable": true,
+          "controlsScrollLeft": 254,
+          "controlsMaxScroll": 256,
+          "fitAllReachable": true,
+          "fitSelectionReachable": true,
+          "fitSelectionDisabled": true
+        }
+      ],
+      "focus": {
+        "start": {
+          "state": "running",
+          "frames": 2,
+          "reduced": false
+        },
+        "complete": {
+          "state": "completed",
+          "reason": "node-focus",
+          "frames": 43,
+          "pose": {
+            "x": -153.62349443800417,
+            "y": -27.52648253572829,
+            "zoom": 1
+          },
+          "diagnostics": {
+            "point": {
+              "x": 617.6242878950354,
+              "y": 382.5264825357283
+            },
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "width": 928.0015869140625,
+              "height": 710
+            },
+            "target": {
+              "x": -153.62349443800417,
+              "y": -27.52648253572829,
+              "zoom": 1
+            }
+          },
+          "selectedCount": 1,
+          "detailsOverlap": true
+        },
+        "elapsedMs": 344,
+        "stableAfterCompletion": true
+      },
+      "replacementFocus": {
+        "cancellationsBefore": 0,
+        "state": "completed",
+        "reason": "node-focus",
+        "frames": 48,
+        "cancellations": 1
+      },
+      "fitSelection": {
+        "enabled": true,
+        "state": "completed",
+        "frames": 47,
+        "selectedCount": 3,
+        "pose": {
+          "x": 74.06679758100012,
+          "y": -5.038690092154354,
+          "zoom": 1.35
+        },
+        "diagnostics": {
+          "bounds": {
+            "left": 345.87968964863927,
+            "right": 492.5398694906197,
+            "top": 194.17595675496753,
+            "bottom": 339.2146952334093
+          },
+          "viewport": {
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 710,
+            "obscured": false
+          },
+          "target": {
+            "x": 74.06679758100012,
+            "y": -5.038690092154354,
+            "zoom": 1.35
+          },
+          "nodeCount": 3
+        },
+        "stableAfterCompletion": true
+      }
+    },
+    "returnedToLibrary": true,
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": [],
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74",
+    "afterSha256": "849bdeefc144dc31047d0e3f36a20f8c803fb464386165372ddb989afb02fa74"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

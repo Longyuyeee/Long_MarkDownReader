@@ -28,6 +28,7 @@ import './check-development-version-identity.mjs'
 import './check-post-v115-m3b4-curved-parallel-relations-static-path-labels.mjs'
 import './check-post-v115-m3b5-selected-path-direction-motion-reduced-motion.mjs'
 import './check-post-v115-m3b6-navigation-camera-selection.mjs'
+import './check-post-v115-m3b7-fit-selection-reduced-motion-focus.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

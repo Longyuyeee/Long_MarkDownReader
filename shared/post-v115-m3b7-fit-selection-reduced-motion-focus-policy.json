@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3B-7",
+  "releaseCandidate": false,
+  "scope": "fit-selection-and-reduced-motion-safe-focus",
+  "requirements": {
+    "fitSelectionUsesVisibleSelectedNodes": true,
+    "fitSelectionUsesPanelAwareViewportGeometry": true,
+    "nodeFocusUsesBoundedCancelableTransition": true,
+    "nodeFocusTracksMovingTargetUntilCompletion": true,
+    "queryFilteringDoesNotRestartForceLayout": true,
+    "applicationOrSystemReducedMotionIsImmediate": true,
+    "normalAndReducedFinalPoseEquivalent": true,
+    "narrowCommandStripEndFullyReachable": true,
+    "sourceFilesRemainReadOnly": true
+  },
+  "requiredTheme": "dark",
+  "requiredMotionPreferences": ["calm", "reduced"],
+  "requiredViewports": [
+    { "width": 1280, "height": 800 },
+    { "width": 1000, "height": 700 },
+    { "width": 720, "height": 680 }
+  ],
+  "deferred": [
+    "minimap",
+    "cluster-collapse-expand",
+    "graph-fullscreen",
+    "status-rings",
+    "M3C-dirty-frame-and-large-graph-performance"
+  ],
+  "selectedNextStage": {
+    "id": "M3B-8",
+    "name": "remaining-navigation-system-selection-audit"
+  }
+}
