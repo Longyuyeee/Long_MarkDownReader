@@ -1323,3 +1323,9 @@ M3C-0 已在独立真实 Tauri/WebView2 会话中完成 100/1,000/5,000 节点 M
 M3C-4 已通过，M3 完成语义、视觉与性能三线收口。真实 Tauri 的 100/1,000/5,000 节点分别在 `2376/4037/10631ms` 稳定，三档稳定绘制与空闲长任务均为 0，最大剩余 Canvas/语义阶段为 `421.8ms`；1,000 节点 20 次进出后 Worker `21/21`、ResizeObserver `21/21`，heap 增量 `16,035,268 bytes`，错误 0、源不变且返回资料库。
 
 真实 Windows/Tauri 保存对话框完成 5,000/4,999 完整图和 72/71 社区过滤图的 SVG/PNG 四次导出。首轮 6.9 MB SVG 在 WebView2 图像解码转 PNG 时失败，已改为从同一图谱事实直接绘制有界 Canvas；最终完整 PNG 为 `2816×2916`、`6,255,432 bytes`。当前接续点为 **M4-0 跨格式工作流与版本候选入口审计**，先冻结对象定位、受控转换、返回上下文、临时产物与发布判断范围；保持运行时/公开 `1.0.15`、开发目标 `1.0.16`、`releaseCandidate=false`。详见 [`Post_v1.0.15_M3C4_Large_Graph_Performance_Exit_Audit_2026-08-28.md`](./Post_v1.0.15_M3C4_Large_Graph_Performance_Exit_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4-0 入口审计与暂停交接
+
+M4-0 已完成真实代码事实审计并在实现前暂停。跨格式搜索当前实际为 6/7：DOCX、ODS、ODP、PPTX 已携带精确内部定位，OPML 只能定位到文件，Table 内部行文本没有进入知识索引。搜索、图谱和关系上下文仍各自解释定位器；图谱缺少 DOCX/ODS/ODP/Workbook，工作台对象行动主要仍是 Markdown 待办和 PDF 批注。DOCX 搜索返回上下文真实保留，先前未定位疑点属于等待时序问题。
+
+恢复开发的唯一接续点为 **M4A-1 统一对象定位合同与 Table/OPML 搜索闭环**：先将定位器与路由映射收敛到 `fileNavigation`，再补 Table 行/视图和 OPML 节点搜索定位，同时保护 DOCX/ODS/ODP/PPTX 与返回上下文。图谱扩面、工作台扩面、转换披露、新转换类型和版本提升均不并入。暂停点没有产品代码变更，运行时/公开版本仍为 `1.0.15`，开发目标仍为 `1.0.16`，`releaseCandidate=false`。详见 [`Post_v1.0.15_M4_0_Cross_Format_Workflow_Entry_Audit_and_Handoff_2026-08-28.md`](./Post_v1.0.15_M4_0_Cross_Format_Workflow_Entry_Audit_and_Handoff_2026-08-28.md)。
