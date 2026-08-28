@@ -41,6 +41,7 @@ const m4a2ObjectGraphSelection = readJson('shared/post-v115-m4a2-m1-object-graph
 const m4a3WorkbookOdpGraphCoverage = readJson('shared/post-v115-m4a3-workbook-odp-graph-location-coverage-policy.json')
 const m4a4DocxOdsGraphSelection = readJson('shared/post-v115-m4a4-docx-ods-graph-granularity-selection-policy.json')
 const m4a5DocxHeadingOdsSheetGraphCoverage = readJson('shared/post-v115-m4a5-docx-heading-ods-sheet-graph-location-coverage-policy.json')
+const m4a6M1ObjectLocationExit = readJson('shared/post-v115-m4a6-m1-object-location-coverage-exit-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -106,7 +107,9 @@ const checks = {
     && m4a4DocxOdsGraphSelection.predecessor === m4a3WorkbookOdpGraphCoverage.stage
     && m4a4DocxOdsGraphSelection.selectedNextStage.id === m4a5DocxHeadingOdsSheetGraphCoverage.stage
     && m4a5DocxHeadingOdsSheetGraphCoverage.predecessor === m4a4DocxOdsGraphSelection.stage
-    && policy.currentStage === `${m4a5DocxHeadingOdsSheetGraphCoverage.selectedNextStage.id}-${m4a5DocxHeadingOdsSheetGraphCoverage.selectedNextStage.name}`,
+    && m4a5DocxHeadingOdsSheetGraphCoverage.selectedNextStage.id === m4a6M1ObjectLocationExit.stage
+    && m4a6M1ObjectLocationExit.predecessor === m4a5DocxHeadingOdsSheetGraphCoverage.stage
+    && policy.currentStage === `${m4a6M1ObjectLocationExit.selectedNextStage.id}-${m4a6M1ObjectLocationExit.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

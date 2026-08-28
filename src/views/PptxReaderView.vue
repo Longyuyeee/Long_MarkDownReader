@@ -1481,7 +1481,10 @@ const applyRouteLocator = async () => {
     locatorKind,
     locator,
   })
-  if (!target) return
+  if (!target) {
+    store.clearRelationObjectFocus()
+    return
+  }
 
   await nextTick()
   if (run !== routeLocatorRun) return
@@ -2279,7 +2282,6 @@ const loadPresentation = async () => {
       ? rememberedSlideIndex
       : Math.min(activeSlideIndex.value, Math.max(0, report.value.model.slides.length - 1))
     if (typeof viewState?.panelOpen === 'boolean') showDetails.value = viewState.panelOpen
-    syncRelationFocus(activeSlideIndex.value)
     await applyRouteLocator()
     if (viewState && !route.query.locator && !route.query.slide) {
       await nextTick()

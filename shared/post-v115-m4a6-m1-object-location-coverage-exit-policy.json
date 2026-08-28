@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-6",
+  "name": "m1-object-location-coverage-exit-audit",
+  "predecessor": "M4A-5",
+  "scope": [
+    "Independently verify the seven M1 search locator families through the shared managed-object navigation contract.",
+    "Independently verify the seven selected bounded graph object families from Graph and relation context.",
+    "Preserve search return state, Graph return context, stable same-source identities, mention-free structural relations and source immutability.",
+    "Keep ordinary DOCX blocks and ODS cells as search objects rather than graph objects."
+  ],
+  "searchCoverage": [
+    { "format": "Table", "objectType": "table", "locatorKind": "table-row" },
+    { "format": "OPML", "objectType": "opml", "locatorKind": "opml-node" },
+    { "format": "DOCX", "objectType": "docx", "locatorKind": "docx-block" },
+    { "format": "ODS", "objectType": "ods", "locatorKind": "ods-cell" },
+    { "format": "ODP", "objectType": "odp", "locatorKind": "odp-slide" },
+    { "format": "PPTX", "objectType": "pptx", "locatorKind": "pptx-object" },
+    { "format": "Workbook", "objectType": "workbook", "locatorKind": "workbook-sheet" }
+  ],
+  "graphCoverage": [
+    { "parentObjectType": "table", "childObjectType": "table_view", "locatorKind": "table_view" },
+    { "parentObjectType": "opml", "childObjectType": "opml_node", "locatorKind": "opml_node" },
+    { "parentObjectType": "pptx", "childObjectType": "pptx_slide", "locatorKind": "pptx-slide" },
+    { "parentObjectType": "odp", "childObjectType": "odp_slide", "locatorKind": "odp-slide" },
+    { "parentObjectType": "workbook", "childObjectType": "workbook_sheet", "locatorKind": "workbook-sheet" },
+    { "parentObjectType": "ods", "childObjectType": "ods_sheet", "locatorKind": "ods-sheet" },
+    { "parentObjectType": "docx", "childObjectType": "docx_heading", "locatorKind": "docx-block" }
+  ],
+  "expectations": {
+    "searchLocatorFamilies": 7,
+    "searchPreciseOpenCount": 7,
+    "returnedSearchStateCount": 7,
+    "graphObjectFamilies": 7,
+    "fixtureParentCount": 7,
+    "fixtureChildCount": 15,
+    "fixtureContainsRelationCount": 15,
+    "structuralMentionCount": 0,
+    "deferredFineGrainedGraphNodeCount": 0,
+    "graphInternalOpenCount": 7,
+    "relationContextInternalOpenCount": 7,
+    "returnedGraphCount": 14,
+    "sameSourceIdentityStable": true,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true
+  },
+  "corrections": [
+    {
+      "expected": "Reuse the six search regressions from M4A-1 as the M1 exit set.",
+      "actual": "Workbook sheet search was selected and verified in M4A-2 but was not part of the earlier six-result M4A-1 regression set.",
+      "resolution": "M4A-6 uses a seven-family search matrix and includes workbook-sheet explicitly."
+    },
+    {
+      "expected": "The audit can request a second rebuild immediately after the Library shell appears.",
+      "actual": "Library startup already prepares a missing index asynchronously, so an immediate duplicate rebuild is rejected while the first build is active.",
+      "resolution": "Wait for the automatic schema-v2 index to reach ready, then read its status before exercising search."
+    },
+    {
+      "expected": "A relation-context readiness gate can depend on exact display-title equality for every producer format.",
+      "actual": "The contract is the file/internal scope and focused locator; producer-derived presentation titles are display data and are not a stable readiness signal.",
+      "resolution": "Gate context readiness on the expected scope and independently verify the visible internal target and route."
+    },
+    {
+      "expected": "Opening a PPTX parent node after a slide node resets relation context to the file.",
+      "actual": "PptxReaderView unconditionally synchronized the active slide during load, recreating internal focus even when the route carried no slide locator; the backend correctly returned the parent when invoked without focus.",
+      "resolution": "Only synchronize slide focus for an explicit route locator or user slide selection, and clear focus when the PPTX route has no internal locator."
+    },
+    {
+      "expected": "All historical M4A selection checks remain valid after their approved successors are implemented.",
+      "actual": "The M4A-2 checker still required ODP and Workbook graph dispatch and semantics to remain absent, while the M4A-3 successor is already accepted.",
+      "resolution": "Preserve the original zero-node evidence and validate the approved M4A-2 to M4A-3 implementation chain against current code."
+    }
+  ],
+  "deferred": [
+    "DOCX paragraph, list-item, table, image, page-break and related-content graph nodes.",
+    "ODS cell graph nodes.",
+    "Workspace actions until a separate bounded selection audit.",
+    "Unified conversion disclosure and new conversion types.",
+    "Release freeze and version transition."
+  ],
+  "selectedNextStage": {
+    "id": "M4B-0",
+    "name": "workspace-object-action-selection-audit",
+    "reason": "M1 search and bounded graph location coverage is independently closed; select a small, safe workspace action batch before changing dashboard behavior."
+  },
+  "releaseCandidate": false
+}

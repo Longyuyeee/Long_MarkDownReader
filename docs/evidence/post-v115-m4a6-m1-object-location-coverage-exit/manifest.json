@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-6",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "81f61357cd6933bb018ba2487edf182ae2eb29a9",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "7df8603e9c74fa53eaaf814068010146d95d4debd0ac8d7cf2842a300bc342e5",
+  "screenshots": [
+    {
+      "file": "search-location-coverage-1280.jpg",
+      "bytes": 99759,
+      "sha256": "326c57152e0dbd1f630771c1d99a13d4923babb57ce564ef5afa24860139b208"
+    },
+    {
+      "file": "bounded-graph-location-coverage-1280.jpg",
+      "bytes": 124410,
+      "sha256": "e5c94c4f9d5f1b01e6775cecb07c3cb8fe88d1adf2a87ded2d3fded85172bc21"
+    },
+    {
+      "file": "structured-relation-context-1280.jpg",
+      "bytes": 112514,
+      "sha256": "161fd24ffe4d456858fd846201a24a6cccd4d9789ebc501ec5d3761a073f7eb8"
+    },
+    {
+      "file": "office-relation-context-1280.jpg",
+      "bytes": 106424,
+      "sha256": "fccd2b1849b627beb83ae1cc1fd9f5bb320fdb8a5e3b7218386a55a7e6968bc2"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

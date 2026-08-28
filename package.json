@@ -303,6 +303,8 @@
     "audit:post-v115-m4a4-docx-ods-graph-granularity-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4a4-docx-ods-graph-granularity-selection-audit.ps1",
     "check:post-v115-m4a5-docx-heading-ods-sheet-graph-location": "node scripts/check-post-v115-m4a5-docx-heading-ods-sheet-graph-location-coverage.mjs",
     "audit:post-v115-m4a5-docx-heading-ods-sheet-graph-location": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4a5-docx-heading-ods-sheet-graph-location-coverage-audit.ps1",
+    "check:post-v115-m4a6-m1-object-location-exit": "node scripts/check-post-v115-m4a6-m1-object-location-coverage-exit.mjs",
+    "audit:post-v115-m4a6-m1-object-location-exit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4a6-m1-object-location-coverage-exit-audit.ps1",
     "audit:post-v115-m3c4-large-graph-performance-exit-audit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3c0-large-graph-performance-baseline-audit.ps1 -Stage M3C-4",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",

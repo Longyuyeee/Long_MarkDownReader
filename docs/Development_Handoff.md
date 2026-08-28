@@ -1365,3 +1365,11 @@ M4A-5 已完成。DOCX 文档最多生成 512 个非空 `docx_heading`，标题�
 Rust 图谱测试 32/32 通过，独立多级标题序列验证 H1/H2/H3 父级，同一源重复构建身份一致。真实 Tauri 固定夹具得到 5 节点/3 边，从 Graph 打开 H1/Overview，从父对象关系上下文打开 H1/Notes，4/4 返回 Graph；内部对象上下文、错误 0、源摘要不变均通过。三张截图已人工复核且无完整本机路径。
 
 当前唯一接续点为 **M4A-6 M1 对象定位覆盖退出审计**。应把 M4A-1 搜索定位与 M4A-3/M4A-5 图谱定位放到同一真实流程复核，明确搜索细粒度与图谱有界粒度的差异，再决定是否进入工作台对象行动；不得直接混入转换或发布冻结。详见 [`Post_v1.0.15_M4A5_DOCX_Heading_ODS_Sheet_Graph_Location_Coverage_Audit_2026-08-28.md`](./Post_v1.0.15_M4A5_DOCX_Heading_ODS_Sheet_Graph_Location_Coverage_Audit_2026-08-28.md)。
+
+## 2026-08-28 M4A-6 M1 对象定位覆盖退出审计交接
+
+M4A-6 已通过，M4A 收口。同一真实资料库中，Table row、OPML node、DOCX block、ODS cell、ODP slide、PPTX object、Workbook sheet 七类搜索定位 7/7 精确打开且 7/7 返回搜索状态。图谱侧的 Table view、OPML node、PPTX/ODP slide、Workbook/ODS sheet、DOCX heading 七类有界对象从 Graph 和父文件关系上下文各 7/7 打开，14/14 返回 Graph。
+
+真实图谱为 22 节点/15 边（7 父、15 子），15 条 `contains` mention 为 0，重复构建身份一致；`docx_block` / `ods_cell` 图谱节点为 0，7 个源夹具摘要不变，运行时错误为 0。审计纠偏将 Workbook 加入统一搜索退出集合，并修复了 PPTX 无 locator 父文件路由仍无条件写入当前幻灯片关系焦点的问题。
+
+当前唯一接续点为 **M4B-0 工作台对象行动选择审计**。先读取 `WorkspaceHome` 的实际代码、现有 Markdown 待办/PDF 批注行动和 M1 各对象的安全写回边界，只选择一个最小完整批次；不得直接实现全对象行动，也不得混入转换、版本提升或 release candidate。详见 [`Post_v1.0.15_M4A6_M1_Object_Location_Coverage_Exit_Audit_2026-08-28.md`](./Post_v1.0.15_M4A6_M1_Object_Location_Coverage_Exit_Audit_2026-08-28.md)。

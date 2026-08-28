@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4A-6",
+  "status": "passed",
+  "sourceCommit": "81f61357cd6933bb018ba2487edf182ae2eb29a9",
+  "actual": {
+    "index": {
+      "state": "ready",
+      "schemaVersion": 2,
+      "objectCount": 22,
+      "relationCount": 15
+    },
+    "search": {
+      "locatorFamilyCount": 7,
+      "preciseOpenCount": 7,
+      "returnedSearchStateCount": 7,
+      "results": [
+        {
+          "query": "m4a6-table-row-needle",
+          "objectType": "table",
+          "locatorKind": "table-row",
+          "locatorObjectId": "roadmap-row",
+          "locationLabel": "第 2 行",
+          "route": "#/library?row=roadmap-row&locatorToken=1787931402880-1&path=[fixture]",
+          "details": {
+            "located": true,
+            "rowId": "roadmap-row"
+          },
+          "returnedSearchState": true
+        },
+        {
+          "query": "m4a6-opml-node-needle",
+          "objectType": "opml",
+          "locatorKind": "opml-node",
+          "locatorObjectId": "workflow-node",
+          "locationLabel": "第 2 层主题：Object navigation",
+          "route": "#/library?node=workflow-node&locatorToken=1787931403347-2&path=[fixture]",
+          "details": {
+            "located": true,
+            "nodeId": "workflow-node"
+          },
+          "returnedSearchState": true
+        },
+        {
+          "query": "before explicit page break",
+          "objectType": "docx",
+          "locatorKind": "docx-block",
+          "locatorObjectId": "docx-block-6",
+          "locationLabel": "段落 6",
+          "route": "#/library?locator=docx-block-6&locatorToken=1787931403819-3&path=[fixture]",
+          "details": {
+            "located": true,
+            "blockId": "docx-block-6"
+          },
+          "returnedSearchState": true
+        },
+        {
+          "query": "read-only structured preview",
+          "objectType": "ods",
+          "locatorKind": "ods-cell",
+          "locatorObjectId": "ods-sheet-2:A1",
+          "locationLabel": "Notes · A1",
+          "route": "#/library?locator=ods-sheet-2:A1&locatorToken=1787931404280-4&path=[fixture]",
+          "details": {
+            "located": true,
+            "cellId": "ods-sheet-2:A1"
+          },
+          "returnedSearchState": true
+        },
+        {
+          "query": "search and precise location",
+          "objectType": "odp",
+          "locatorKind": "odp-slide",
+          "locatorObjectId": "odp-slide-1",
+          "locationLabel": "幻灯片 1",
+          "route": "#/library?locator=odp-slide-1&locatorToken=1787931404747-5&path=[fixture]",
+          "details": {
+            "located": true,
+            "slideId": "odp-slide-1"
+          },
+          "returnedSearchState": true
+        },
+        {
+          "query": "structured slide reading",
+          "objectType": "pptx",
+          "locatorKind": "pptx-object",
+          "locatorObjectId": "3",
+          "locationLabel": "幻灯片 1 · Body C3A",
+          "route": "#/library?slide=1&locatorKind=pptx-object&locator=3&locationLabel=%E5%B9%BB%E7%81%AF%E7%89%87+1+%C2%B7+Body+C3A&matchKind=object&locatorToken=1787931405211-6&path=[fixture]",
+          "details": {
+            "located": true,
+            "objectId": "3"
+          },
+          "returnedSearchState": true
+        },
+        {
+          "query": "Keyboard",
+          "objectType": "workbook",
+          "locatorKind": "workbook-sheet",
+          "locatorObjectId": "Inventory",
+          "locationLabel": "工作表：Inventory",
+          "route": "#/library?sheet=Inventory&locatorToken=1787931405690-7&path=[fixture]",
+          "details": {
+            "located": true,
+            "activeSheet": "Inventory"
+          },
+          "returnedSearchState": true
+        }
+      ]
+    },
+    "graph": {
+      "nodeCount": 22,
+      "edgeCount": 15,
+      "objectFamilyCount": 7,
+      "parentCount": 7,
+      "childCount": 15,
+      "containsRelationCount": 15,
+      "structuralMentionCount": 0,
+      "deferredFineGrainedNodeCount": 0,
+      "sameSourceIdentityStable": true,
+      "childCounts": {
+        "table_view": 1,
+        "opml_node": 2,
+        "docx_heading": 1,
+        "ods_sheet": 2,
+        "odp_slide": 2,
+        "pptx_slide": 3,
+        "workbook_sheet": 4
+      }
+    },
+    "graphOpens": [
+      {
+        "objectType": "table_view",
+        "title": "Review Grid",
+        "locator": {
+          "kind": "table_view",
+          "objectId": "review-grid",
+          "page": null
+        },
+        "route": "#/library?view=review-grid&locatorToken=1787931407613-8&path=[fixture]",
+        "context": {
+          "title": "Review Grid",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeView": "Review Grid"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "objectType": "opml_node",
+        "title": "Object navigation",
+        "locator": {
+          "kind": "opml_node",
+          "objectId": "workflow-node",
+          "page": null
+        },
+        "route": "#/library?node=workflow-node&locatorToken=1787931408125-9&path=[fixture]",
+        "context": {
+          "title": "Object navigation",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "nodeId": "workflow-node"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "objectType": "pptx_slide",
+        "title": "PowerPoint Producer Fixture",
+        "locator": {
+          "kind": "pptx-slide",
+          "objectId": "256",
+          "page": 1
+        },
+        "route": "#/library?slide=1&locatorKind=pptx-slide&locator=256&locationLabel=%E5%B9%BB%E7%81%AF%E7%89%87+1%EF%BC%9APowerPoint+Producer+Fixture&locatorToken=1787931408515-10&path=[fixture]",
+        "context": {
+          "title": "PowerPoint Producer Fixture",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "slideIndex": "0"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "objectType": "odp_slide",
+        "title": "Overview",
+        "locator": {
+          "kind": "odp-slide",
+          "objectId": "odp-slide-1",
+          "page": 1
+        },
+        "route": "#/library?locator=odp-slide-1&locatorToken=1787931408905-11&path=[fixture]",
+        "context": {
+          "title": "Overview",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "slideId": "odp-slide-1"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "objectType": "workbook_sheet",
+        "title": "Inventory",
+        "locator": {
+          "kind": "workbook-sheet",
+          "objectId": "Inventory",
+          "page": null
+        },
+        "route": "#/library?sheet=Inventory&locatorToken=1787931409293-12&path=[fixture]",
+        "context": {
+          "title": "Inventory",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Inventory"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "objectType": "ods_sheet",
+        "title": "Overview",
+        "locator": {
+          "kind": "ods-sheet",
+          "objectId": "ods-sheet-1",
+          "page": null
+        },
+        "route": "#/library?locator=ods-sheet-1&locatorToken=1787931409710-13&path=[fixture]",
+        "context": {
+          "title": "Overview",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Overview"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "objectType": "docx_heading",
+        "title": "Microsoft Word Producer Fixture",
+        "locator": {
+          "kind": "docx-block",
+          "objectId": "docx-block-1",
+          "page": null
+        },
+        "route": "#/library?locator=docx-block-1&locatorToken=1787931410100-14&path=[fixture]",
+        "context": {
+          "title": "Microsoft Word Producer Fixture",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "blockId": "docx-block-1"
+        },
+        "returnedToGraph": true
+      }
+    ],
+    "contextOpens": [
+      {
+        "parent": "M4A6 Workflow",
+        "child": "Review Grid",
+        "objectType": "table_view",
+        "route": "#/library?view=review-grid&locatorToken=1787931410666-16&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 Workflow",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "Review Grid",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeView": "Review Grid"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A6 Workflow",
+        "child": "Object navigation",
+        "objectType": "opml_node",
+        "route": "#/library?node=workflow-node&locatorToken=1787931411110-18&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 Workflow",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "Object navigation",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "nodeId": "workflow-node"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A6 PowerPoint",
+        "child": "PowerPoint Producer Fixture",
+        "objectType": "pptx_slide",
+        "route": "#/library?slide=1&locatorKind=pptx-slide&locator=256&locationLabel=%E5%B9%BB%E7%81%AF%E7%89%87+1%EF%BC%9APowerPoint+Producer+Fixture&locatorToken=1787931412044-20&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 PowerPoint",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "PowerPoint Producer Fixture",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "slideIndex": "0"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A6 Slides",
+        "child": "Overview",
+        "objectType": "odp_slide",
+        "route": "#/library?locator=odp-slide-1&locatorToken=1787931412476-22&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 Slides",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "Overview",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "slideId": "odp-slide-1"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A6 Workbook",
+        "child": "Inventory",
+        "objectType": "workbook_sheet",
+        "route": "#/library?sheet=Inventory&locatorToken=1787931412881-24&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 Workbook",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "Inventory",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Inventory"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A6 Sheet",
+        "child": "Overview",
+        "objectType": "ods_sheet",
+        "route": "#/library?locator=ods-sheet-1&locatorToken=1787931413676-26&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 Sheet",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "Overview",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "activeSheet": "Overview"
+        },
+        "returnedToGraph": true
+      },
+      {
+        "parent": "M4A6 Word",
+        "child": "Microsoft Word Producer Fixture",
+        "objectType": "docx_heading",
+        "route": "#/library?locator=docx-block-1&locatorToken=1787931414096-28&path=[fixture]",
+        "parentContext": {
+          "title": "M4A6 Word",
+          "scope": "文件上下文",
+          "center": "以当前文件为中心"
+        },
+        "childContext": {
+          "title": "Microsoft Word Producer Fixture",
+          "scope": "内部对象上下文",
+          "center": "以当前对象为中心"
+        },
+        "details": {
+          "located": true,
+          "blockId": "docx-block-1"
+        },
+        "returnedToGraph": true
+      }
+    ],
+    "graphInternalOpenCount": 7,
+    "relationContextInternalOpenCount": 7,
+    "returnedGraphCount": 14,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "sourceFilesUnchanged": true
+  },
+  "sourceHashesBefore": {
+    "table": "1f36ef40a4fa4b192c40acfa0315e5dd026663ca7fbea9df9bdbc90fd2e7b3d8",
+    "opml": "2947988a81c709f8830ce8e08855cce9a83d8b1d09757bc388d118eb980e7166",
+    "docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+    "odp": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+    "pptx": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+    "workbook": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c"
+  },
+  "sourceHashesAfter": {
+    "table": "1f36ef40a4fa4b192c40acfa0315e5dd026663ca7fbea9df9bdbc90fd2e7b3d8",
+    "opml": "2947988a81c709f8830ce8e08855cce9a83d8b1d09757bc388d118eb980e7166",
+    "docx": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+    "ods": "bdcb998b191da9047b29d8a2a9b67faf1564f5826c723c7a079ada2eda9a316c",
+    "odp": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+    "pptx": "858acb4e2d6841b4f0a8ea066d9a8cb3b08bc89ef69a6143216c3bcec39ae82f",
+    "workbook": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}
