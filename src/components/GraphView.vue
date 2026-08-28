@@ -20,9 +20,9 @@
         <button class="health-entry" :class="{ active: healthOpen }" @click="healthOpen = !healthOpen">
           <span class="health-dot"></span>知识治理
         </button>
-        <button class="graph-export-btn" :disabled="isExporting" @click="exportGraph('svg')">导出 SVG</button>
-        <button class="graph-export-btn" :disabled="isExporting" @click="exportGraph('png')">导出 PNG</button>
-        <button class="control-btn" @click="resetLayout" title="清除已保存位置并重新布局">
+        <button class="graph-export-btn" data-testid="graph-export-svg" :disabled="isExporting" @click="exportGraph('svg')">导出 SVG</button>
+        <button class="graph-export-btn" data-testid="graph-export-png" :disabled="isExporting" @click="exportGraph('png')">导出 PNG</button>
+        <button class="control-btn" data-testid="graph-reset-layout" @click="resetLayout" title="清除已保存位置并重新布局">
           <RotateCcw :size="16" />
         </button>
         <button class="control-btn" :disabled="!layoutUndoStack.length" @click="undoLayout" title="撤销画布调整">
@@ -112,7 +112,7 @@
         <li v-for="entry in selectionHistoryEntries" :key="entry.cursor"><button type="button" data-testid="graph-selection-history-item" :data-history-cursor="entry.cursor" :data-selected-count="entry.snapshot.nodeIds.length" :class="{ active: entry.cursor === selectionHistoryState.cursor }" @click="restoreSelectionHistory(entry.cursor)"><strong>{{ entry.label }}</strong><span>{{ entry.snapshot.nodeIds.length }} 个节点</span></button></li>
       </ol>
     </section>
-    <div v-if="activeCommunity && !communityOpen" class="community-focus-banner" data-testid="graph-community-focus" :data-community-id="activeCommunity.id">
+    <div v-if="activeCommunity && !communityOpen" class="community-focus-banner" data-testid="graph-community-focus" :data-community-id="activeCommunity.id" :data-visible-node-count="visibleNodes.length" :data-visible-edge-count="visibleEdges.length">
       <span><strong>{{ activeCommunity.label }}</strong> · {{ visibleNodes.length }} / {{ activeCommunity.nodeCount }} 节点 · {{ visibleEdges.length }} 条关系</span>
       <button type="button" data-testid="graph-community-focus-return" @click="clearCommunityFilter">返回全部社区</button>
     </div>
@@ -485,7 +485,7 @@ import WorkspaceManagementHeader from './workspace/WorkspaceManagementHeader.vue
 import WorkspaceSegmentedControl from './workspace/WorkspaceSegmentedControl.vue'
 import WorkspaceStatusBar from './workspace/WorkspaceStatusBar.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
-import { clearGraphLayout, createGraphSvg, graphSvgToPng, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
+import { clearGraphLayout, createGraphPng, createGraphSvg, restoreGraphLayout, saveGraphLayout } from '../utils/graphWorkspace'
 import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
@@ -1379,9 +1379,10 @@ const safeExportName = () => (store.currentLibraryName || '知识图谱').replac
 const exportGraph = async (format: 'svg' | 'png') => {
   if (isExporting.value) return
   isExporting.value = true
+  if (containerRef.value) containerRef.value.dataset.exportError = ''
   try {
     const tone = getActiveThemeTone(store.theme)
-    const svg = createGraphSvg(visibleNodes.value, visibleEdges.value, {
+    const exportOptions = {
       mode: viewMode.value,
       title: `${store.currentLibraryName} - ${viewMode.value === 'mindmap' ? '思维导图' : '知识图谱'}`,
       dark: isActiveThemeDark(store.theme),
@@ -1394,17 +1395,19 @@ const exportGraph = async (format: 'svg' | 'png') => {
         primary: tone.ui.primary,
         edge: tone.chartPalette[5],
       },
-    })
-    const { save } = await import('@tauri-apps/plugin-dialog')
-    const path = await save({
+    }
+    const path = await (await import('@tauri-apps/plugin-dialog')).save({
       defaultPath: `${safeExportName()}-${viewMode.value === 'mindmap' ? '思维导图' : '知识图谱'}.${format}`,
       filters: [{ name: format.toUpperCase(), extensions: [format] }],
     })
     if (!path) return
     const { writeFile } = await import('@tauri-apps/plugin-fs')
-    const bytes = format === 'svg' ? new TextEncoder().encode(svg) : await graphSvgToPng(svg)
+    const bytes = format === 'svg'
+      ? new TextEncoder().encode(createGraphSvg(visibleNodes.value, visibleEdges.value, exportOptions))
+      : await createGraphPng(visibleNodes.value, visibleEdges.value, exportOptions)
     await writeFile(path, bytes)
   } catch (error) {
+    if (containerRef.value) containerRef.value.dataset.exportError = String(error)
     message.error(`图谱导出失败：${String(error)}`)
   } finally {
     isExporting.value = false

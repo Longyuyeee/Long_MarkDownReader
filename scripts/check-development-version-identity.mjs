@@ -35,6 +35,7 @@ const m3c0LargeGraphPerformanceBaseline = readJson('shared/post-v115-m3c0-large-
 const m3c1SettledDirtyFrameLoop = readJson('shared/post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop-policy.json')
 const m3c2LargeGraphPhaseProfiling = readJson('shared/post-v115-m3c2-large-graph-main-thread-phase-profiling-selection-policy.json')
 const m3c3WorkerBoundedLayout = readJson('shared/post-v115-m3c3-worker-backed-bounded-force-layout-kernel-policy.json')
+const m3c4LargeGraphPerformanceExit = readJson('shared/post-v115-m3c4-large-graph-performance-exit-audit-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -89,7 +90,8 @@ const checks = {
     && m3c0LargeGraphPerformanceBaseline.selectedNextStage.id === m3c1SettledDirtyFrameLoop.stage
     && m3c1SettledDirtyFrameLoop.selectedNextStage.id === m3c2LargeGraphPhaseProfiling.stage
     && m3c2LargeGraphPhaseProfiling.selectedNextStage.id === m3c3WorkerBoundedLayout.stage
-    && policy.currentStage === `${m3c3WorkerBoundedLayout.selectedNextStage.id}-${m3c3WorkerBoundedLayout.selectedNextStage.name}`,
+    && m3c3WorkerBoundedLayout.selectedNextStage.id === m3c4LargeGraphPerformanceExit.stage
+    && policy.currentStage === `${m3c4LargeGraphPerformanceExit.selectedNextStage.id}-${m3c4LargeGraphPerformanceExit.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

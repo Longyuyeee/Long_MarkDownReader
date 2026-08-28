@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "stage": "M3C-4",
+  "name": "large-graph-performance-exit-audit",
+  "predecessor": "M3C-3",
+  "fixture": {
+    "kind": "real-markdown-directed-chain-library",
+    "tiers": [100, 1000, 5000],
+    "sourceMode": "read-only",
+    "runtime": "real-tauri-webview2",
+    "deterministicRandomSeedPerTier": true
+  },
+  "expectations": {
+    "layoutStableMaximumMs": { "100": 5000, "1000": 20000, "5000": 120000 },
+    "interactionMaximumMs": { "100": 250, "1000": 1000, "5000": 5000 },
+    "mainThreadLayoutMaximumMs": 50,
+    "nonContinuousPhaseMaximumMs": 1000,
+    "settledDrawsPerSecondMaximum": 2,
+    "settledIdleLongTasksMaximum": 0,
+    "lifecycleCycles": 20,
+    "lifecycleHeapDeltaMaximumBytes": 16777216,
+    "resourceLeaksMaximum": 0,
+    "exportMaximumMs": 180000,
+    "pngMaximumDimension": 8192,
+    "pngMaximumPixels": 32000000,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "returnedToLibrary": true
+  },
+  "exportContract": {
+    "tier": 5000,
+    "scopes": ["full", "filtered-community"],
+    "formats": ["svg", "png"],
+    "nativeDialogBoundary": "The real Windows/Tauri save dialog is opened and submitted by the desktop Computer Use harness, preserving its dynamic filesystem grant and the complete production SVG generation, PNG conversion and filesystem write path.",
+    "svg": "metadata and rendered node/edge counts exactly match the current visible graph and all geometry is finite",
+    "png": "valid PNG signature, non-empty finite dimensions, maximum 8192 per side and maximum 32 million pixels"
+  },
+  "resourceContract": {
+    "tier": 1000,
+    "tracked": ["module-worker", "resize-observer", "window-blur", "window-focus", "window-keydown", "document-visibilitychange"],
+    "activeCancellation": "The initial 1000-node run observes running/pending cancellation; each lifecycle cycle removes only the audit WebView's persisted graph layout before entry, proves a real initial Worker job dispatch, then leaves the graph.",
+    "exit": "Worker termination and observer disconnection balance after initial exit and after all cycles; tracked listener type counts match the first return-route baseline because the current Markdown editor legitimately owns one keydown listener."
+  },
+  "scope": [
+    "Verify full and current filtered graph SVG/PNG export through the real Tauri filesystem path.",
+    "Verify Worker, ResizeObserver and graph window/document listener cleanup under active cancellation.",
+    "Verify settled graphs have no continuous Canvas work or long tasks.",
+    "Audit remaining non-continuous Canvas and semantic phases against an explicit exit budget.",
+    "Close M3C only when performance, export, lifecycle, runtime and source-safety contracts all pass."
+  ],
+  "deferred": [
+    "viewport draw culling unless the exit audit fails",
+    "label caching unless the exit audit fails",
+    "saved view restoration",
+    "large-graph visual redesign",
+    "release freeze"
+  ],
+  "actual": {
+    "layoutStableMs": { "100": 2376, "1000": 4037, "5000": 10631 },
+    "settledDrawsPerSecond": { "100": 0, "1000": 0, "5000": 0 },
+    "settledIdleLongTasks": { "100": 0, "1000": 0, "5000": 0 },
+    "remainingPhaseMaximumMs": { "100": 29.6, "1000": 59.2, "5000": 421.8 },
+    "mainThreadLayoutMaximumMs": { "1000": 7, "5000": 26.1 },
+    "lifecycle": {
+      "cycles": 20,
+      "heapDeltaBytes": 16035268,
+      "workersCreated": 21,
+      "workersTerminated": 21,
+      "observersCreated": 21,
+      "observersDisconnected": 21
+    },
+    "exports": {
+      "full": {
+        "nodes": 5000,
+        "edges": 4999,
+        "svgBytes": 6916219,
+        "svgDurationMs": 36794,
+        "pngBytes": 6255432,
+        "pngDurationMs": 31101,
+        "pngDimensions": "2816x2916"
+      },
+      "filteredCommunity": {
+        "nodes": 72,
+        "edges": 71,
+        "svgBytes": 99887,
+        "svgDurationMs": 31861,
+        "pngBytes": 612419,
+        "pngDurationMs": 31366,
+        "pngDimensions": "2168x1902"
+      }
+    },
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "returnedToLibrary": true
+  },
+  "corrections": [
+    {
+      "expected": "Lifecycle polling would repeatedly observe the transient Worker running state.",
+      "actual": "Fast Worker jobs sometimes completed before polling.",
+      "resolution": "Count real Worker postMessage dispatches and verify active cancellation separately."
+    },
+    {
+      "expected": "The pre-entry route had no graph-related listeners.",
+      "actual": "The returned Markdown editor legitimately retained one keydown listener.",
+      "resolution": "Compare listener types at the first returned-route baseline with the final returned route."
+    },
+    {
+      "expected": "Every globally profiled phase belonged to the remaining Canvas/semantic exit budget.",
+      "actual": "Backend build-link-graph is a separate first-visible phase.",
+      "resolution": "Apply the one-second exit budget only to the enumerated Canvas and semantic phases."
+    },
+    {
+      "expected": "A complex 5000-node SVG could be decoded into an image before PNG encoding.",
+      "actual": "WebView2 rejected the 6.9 MB SVG image decode although the SVG file itself was valid.",
+      "resolution": "Render PNG directly from graph nodes, routes and semantic styles on a bounded Canvas."
+    },
+    {
+      "expected": "Choosing a community closed the community panel.",
+      "actual": "The product intentionally retained the panel while applying the 72-node/71-edge filter.",
+      "resolution": "Use the real community entry again to close the panel before export; do not change product behavior to fit the harness."
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M4-0",
+    "name": "cross-format-workflow-and-release-candidate-entry-audit",
+    "reason": "M3 semantic exploration, professional visual system and large-graph performance all passed independent exit audits. Freeze the M4 object-location, controlled-conversion, context-return and release-candidate scope before implementation or any version transition."
+  },
+  "releaseCandidate": false
+}

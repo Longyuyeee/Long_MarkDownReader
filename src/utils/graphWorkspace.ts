@@ -152,22 +152,118 @@ export const createGraphSvg = (nodes: GraphNode[], edges: GraphEdge[], options: 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${minX} ${minY} ${width} ${height}" role="img" aria-label="${escapeXml(options.title)}"><title>${escapeXml(options.title)}</title><desc>${metadata}</desc><rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${background}"/><style>.edge>path,.edge>line{fill:none;stroke:var(--edge-color,${edgeColor});stroke-width:1.4}.edge>polygon{fill:var(--edge-color,${edgeColor})}.edge.dashed>path,.edge.dashed>line{stroke-dasharray:6 4}.edge.dotted>path,.edge.dotted>line{stroke-dasharray:2 4}.relation-label rect{fill:${card};stroke:var(--edge-color,${edgeColor});stroke-width:1}.relation-label text{font:700 10px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.node text{font:600 13px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;fill:${foreground}}.network-node circle,.network-node rect,.network-node polygon{fill:var(--node-color,${primary});stroke:rgba(255,255,255,.55);stroke-width:1.2}.network-node text.glyph{fill:${options.dark ? '#111827' : '#ffffff'};font-size:8px;font-weight:800}.mindmap-node rect{fill:${card};stroke:${edgeColor};stroke-width:1}.mindmap-node.root rect{fill:${primary};stroke:${primary}}.mindmap-node.root text{fill:#fff;font-weight:700}</style><g class="edges">${edgeMarkup}</g><g class="nodes">${nodeMarkup}</g></svg>`
 }
 
-export const graphSvgToPng = async (svg: string) => {
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
-  try {
-    const image = new Image()
-    image.decoding = 'async'
-    image.src = url
-    await image.decode()
-    const scale = Math.min(2, 8192 / image.width, 8192 / image.height, Math.sqrt(32_000_000 / (image.width * image.height)))
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round(image.width * scale))
-    canvas.height = Math.max(1, Math.round(image.height * scale))
-    const context = canvas.getContext('2d')
-    if (!context) throw new Error('无法创建 PNG 画布')
-    context.drawImage(image, 0, 0, canvas.width, canvas.height)
-    const png = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'))
-    if (!png) throw new Error('PNG 编码失败')
-    return new Uint8Array(await png.arrayBuffer())
-  } finally { URL.revokeObjectURL(url) }
+const MAX_GRAPH_PNG_DIMENSION = 8192
+const MAX_GRAPH_PNG_PIXELS = 32_000_000
+
+export const boundedGraphRasterSize = (width: number, height: number) => {
+  if (!(width > 0) || !(height > 0)) throw new Error('SVG 尺寸无效')
+  const scale = Math.min(2, MAX_GRAPH_PNG_DIMENSION / width, MAX_GRAPH_PNG_DIMENSION / height, Math.sqrt(MAX_GRAPH_PNG_PIXELS / (width * height)))
+  return {
+    width: Math.max(1, Math.floor(width * scale)),
+    height: Math.max(1, Math.floor(height * scale)),
+  }
+}
+
+export const createGraphPng = async (nodes: GraphNode[], edges: GraphEdge[], options: GraphSvgOptions) => {
+  if (!nodes.length) throw new Error('当前筛选条件下没有可导出的节点')
+  const mindmap = options.mode === 'mindmap'
+  const padding = 64
+  const nodeMap = new Map(nodes.map(node => [node.id, node]))
+  const nodePoints = new Map(nodes.map(node => [node.id, { x: node.x || 0, y: node.y || 0 }]))
+  const edgeRoutes = buildGraphEdgeRoutes(edges)
+  const extents = nodes.map(node => {
+    const root = node.id === options.rootId
+    const halfWidth = mindmap ? (root ? 90 : 80) : Math.max(18, node.size * 0.6)
+    const halfHeight = mindmap ? (root ? 24 : 21) : Math.max(34, node.size * 0.6 + 22)
+    return { left: (node.x || 0) - halfWidth, right: (node.x || 0) + halfWidth, top: (node.y || 0) - halfHeight, bottom: (node.y || 0) + halfHeight }
+  }).concat(mindmap ? [] : edgeRoutes.flatMap(route => {
+    const geometry = graphQuadraticGeometry(route, nodePoints)
+    return geometry ? [{ left: geometry.control.x, right: geometry.control.x, top: geometry.control.y, bottom: geometry.control.y }] : []
+  }))
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+  for (const extent of extents) {
+    minX = Math.min(minX, extent.left); maxX = Math.max(maxX, extent.right)
+    minY = Math.min(minY, extent.top); maxY = Math.max(maxY, extent.bottom)
+  }
+  minX -= padding; maxX += padding; minY -= padding; maxY += padding
+  const logicalWidth = Math.max(320, Math.ceil(maxX - minX))
+  const logicalHeight = Math.max(240, Math.ceil(maxY - minY))
+  const raster = boundedGraphRasterSize(logicalWidth, logicalHeight)
+  const canvas = document.createElement('canvas')
+  canvas.width = raster.width; canvas.height = raster.height
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('无法创建 PNG 画布')
+  const background = options.colors?.background ?? (options.dark ? '#17191d' : '#f7f9fc')
+  const foreground = options.colors?.foreground ?? (options.dark ? '#f2f5f7' : '#18202b')
+  const card = options.colors?.card ?? (options.dark ? '#252a30' : '#ffffff')
+  const primary = options.colors?.primary ?? (options.dark ? '#42b883' : '#007aff')
+  context.fillStyle = background
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.save()
+  context.scale(raster.width / logicalWidth, raster.height / logicalHeight)
+  context.translate(-minX, -minY)
+
+  for (const route of edgeRoutes) {
+    const edge = route.edge
+    const source = nodeMap.get(edge.source), target = nodeMap.get(edge.target)
+    if (!source || !target) continue
+    const sx = source.x || 0, sy = source.y || 0, tx = target.x || 0, ty = target.y || 0
+    const geometry = mindmap ? null : graphQuadraticGeometry(route, nodePoints)
+    const semantic = graphRelationSemantic(edge.relationType)
+    context.beginPath()
+    context.moveTo(sx, sy)
+    if (mindmap) context.bezierCurveTo((sx + tx) / 2, sy, (sx + tx) / 2, ty, tx, ty)
+    else if (geometry) context.quadraticCurveTo(geometry.control.x, geometry.control.y, geometry.target.x, geometry.target.y)
+    else continue
+    context.strokeStyle = semantic.color || options.colors?.edge || (options.dark ? '#56616d' : '#aab5c2')
+    context.lineWidth = 1.4
+    context.setLineDash(semantic.line === 'dashed' ? [6, 4] : semantic.line === 'dotted' ? [2, 4] : [])
+    context.stroke()
+    context.setLineDash([])
+    if (edge.directed) {
+      const ratio = 0.72
+      const point = geometry ? graphQuadraticPoint(geometry, ratio) : { x: sx + (tx - sx) * ratio, y: sy + (ty - sy) * ratio }
+      const tangent = geometry ? graphQuadraticTangent(geometry, ratio) : { x: tx - sx, y: ty - sy }
+      const length = Math.hypot(tangent.x, tangent.y) || 1, ux = tangent.x / length, uy = tangent.y / length, px = -uy, py = ux
+      context.beginPath()
+      context.moveTo(point.x + ux * 6, point.y + uy * 6)
+      context.lineTo(point.x - ux * 4 + px * 4, point.y - uy * 4 + py * 4)
+      context.lineTo(point.x - ux * 4 - px * 4, point.y - uy * 4 - py * 4)
+      context.closePath(); context.fillStyle = context.strokeStyle; context.fill()
+    }
+    if (geometry && options.showRelationLabels) {
+      const labelPoint = graphQuadraticLabelPoint(geometry, route.curveOffset, 20)
+      context.fillStyle = card; context.fillRect(labelPoint.x - 34, labelPoint.y - 10, 68, 20)
+      context.fillStyle = foreground; context.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif'
+      context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(semantic.label, labelPoint.x, labelPoint.y)
+    }
+  }
+
+  for (const node of nodes) {
+    const x = node.x || 0, y = node.y || 0
+    const semantic = graphObjectSemantic(node.objectType)
+    const semanticColor = options.dark ? semantic.color.dark : semantic.color.light
+    const label = node.title.length > 28 ? `${node.title.slice(0, 28)}…` : node.title
+    if (mindmap) {
+      const root = node.id === options.rootId, width = root ? 180 : 160, height = root ? 48 : 42
+      context.beginPath(); context.roundRect(x - width / 2, y - height / 2, width, height, root ? 16 : 11)
+      context.fillStyle = root ? primary : card; context.fill(); context.strokeStyle = root ? primary : (options.colors?.edge || '#aab5c2'); context.stroke()
+      context.fillStyle = root ? '#ffffff' : foreground; context.font = `${root ? 700 : 600} 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif`
+      context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(label, x, y)
+      continue
+    }
+    const radius = Math.max(7, node.size * 0.6)
+    context.beginPath()
+    if (semantic.shape === 'square') context.roundRect(x - radius, y - radius, radius * 2, radius * 2, Math.max(2, radius * 0.22))
+    else if (semantic.shape === 'diamond') { context.moveTo(x, y - radius); context.lineTo(x + radius, y); context.lineTo(x, y + radius); context.lineTo(x - radius, y); context.closePath() }
+    else if (semantic.shape === 'hexagon') for (let index = 0; index < 6; index += 1) { const angle = Math.PI / 3 * index - Math.PI / 2; const px = x + Math.cos(angle) * radius, py = y + Math.sin(angle) * radius; index ? context.lineTo(px, py) : context.moveTo(px, py) }
+    else context.arc(x, y, radius, 0, Math.PI * 2)
+    context.fillStyle = semanticColor; context.fill(); context.strokeStyle = 'rgba(255,255,255,.55)'; context.lineWidth = 1.2; context.stroke()
+    context.fillStyle = options.dark ? '#111827' : '#ffffff'; context.font = '800 8px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(semantic.glyph, x, y)
+    context.fillStyle = foreground; context.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif'; context.textBaseline = 'alphabetic'; context.fillText(label, x, y + radius + 18)
+  }
+  context.restore()
+  const png = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'))
+  if (!png) throw new Error('PNG 编码失败')
+  return new Uint8Array(await png.arrayBuffer())
 }

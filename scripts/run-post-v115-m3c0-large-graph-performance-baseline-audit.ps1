@@ -1,12 +1,12 @@
 param(
   [switch]$SkipBuild,
   [ValidateSet(0,100,1000,5000)][int]$Tier = 0,
-  [ValidateSet('M3C-0','M3C-1','M3C-2','M3C-3')][string]$Stage = 'M3C-0'
+  [ValidateSet('M3C-0','M3C-1','M3C-2','M3C-3','M3C-4')][string]$Stage = 'M3C-0'
 )
 $ErrorActionPreference = 'Stop'
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $stageSlug = $Stage.ToLowerInvariant().Replace('-','')
-$evidenceName = if ($Stage -eq 'M3C-3') { 'post-v115-m3c3-worker-backed-bounded-force-layout-kernel' } elseif ($Stage -eq 'M3C-2') { 'post-v115-m3c2-large-graph-main-thread-phase-profiling-selection' } elseif ($Stage -eq 'M3C-1') { 'post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop' } else { 'post-v115-m3c0-large-graph-performance-baseline' }
+$evidenceName = if ($Stage -eq 'M3C-4') { 'post-v115-m3c4-large-graph-performance-exit-audit' } elseif ($Stage -eq 'M3C-3') { 'post-v115-m3c3-worker-backed-bounded-force-layout-kernel' } elseif ($Stage -eq 'M3C-2') { 'post-v115-m3c2-large-graph-main-thread-phase-profiling-selection' } elseif ($Stage -eq 'M3C-1') { 'post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop' } else { 'post-v115-m3c0-large-graph-performance-baseline' }
 $output = Join-Path $workspace ("docs\evidence\{0}" -f $evidenceName)
 $auditRoot = Join-Path $env:TEMP ("longedit-{0}-{1}-{2}" -f $stageSlug,$PID,[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 $appPort = 14200
@@ -72,6 +72,7 @@ try {
         $env:LONGEDIT_M3C_OUTPUT = $output
         $env:LONGEDIT_M3C_LIBRARY = $library
         $env:LONGEDIT_M3C_TIER = "$tier"
+        $env:LONGEDIT_M3C_APP_PID = "$($app.Id)"
         $env:LONGEDIT_M3C_CYCLES = if ($tier -eq 1000) { '20' } else { '0' }
         & node (Join-Path $workspace 'scripts\capture-post-v115-m3c0-large-graph-performance.mjs')
         if ($LASTEXITCODE -ne 0) { throw "$Stage tier $tier capture failed" }
@@ -90,7 +91,7 @@ try {
   $env:CARGO_TARGET_DIR = $previousTarget
 }
 
-$checker = if ($Stage -eq 'M3C-3') { 'scripts\check-post-v115-m3c3-worker-backed-bounded-force-layout-kernel.mjs' } elseif ($Stage -eq 'M3C-2') { 'scripts\check-post-v115-m3c2-large-graph-main-thread-phase-profiling-selection.mjs' } elseif ($Stage -eq 'M3C-1') { 'scripts\check-post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop.mjs' } else { 'scripts\check-post-v115-m3c0-large-graph-performance-baseline.mjs' }
+$checker = if ($Stage -eq 'M3C-4') { 'scripts\check-post-v115-m3c4-large-graph-performance-exit-audit.mjs' } elseif ($Stage -eq 'M3C-3') { 'scripts\check-post-v115-m3c3-worker-backed-bounded-force-layout-kernel.mjs' } elseif ($Stage -eq 'M3C-2') { 'scripts\check-post-v115-m3c2-large-graph-main-thread-phase-profiling-selection.mjs' } elseif ($Stage -eq 'M3C-1') { 'scripts\check-post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop.mjs' } else { 'scripts\check-post-v115-m3c0-large-graph-performance-baseline.mjs' }
 & node (Join-Path $workspace $checker)
 if ($LASTEXITCODE -ne 0) { throw "$Stage evidence contract failed" }
 Write-Output "$Stage real desktop baseline completed: $output"

@@ -10,8 +10,9 @@ const tier = Number(process.env.LONGEDIT_M3C_TIER || process.env.LONGEDIT_M3C0_T
 const lifecycleCycles = Number(process.env.LONGEDIT_M3C_CYCLES || process.env.LONGEDIT_M3C0_CYCLES || 0)
 if (!endpoint || !Number.isInteger(tier) || tier < 1) throw new Error(`${stage} capture environment is incomplete`)
 const boundedSchedulerStage = stage !== 'M3C-0'
-const profilingStage = stage === 'M3C-2' || stage === 'M3C-3'
-const workerImplementationStage = stage === 'M3C-3'
+const exitAuditStage = stage === 'M3C-4'
+const profilingStage = stage === 'M3C-2' || stage === 'M3C-3' || exitAuditStage
+const workerImplementationStage = stage === 'M3C-3' || exitAuditStage
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 const hashDirectory = async root => {
@@ -95,6 +96,26 @@ const restoreFullGraphIfNeeded = async () => {
 }
 const metric = async name => ((await send('Performance.getMetrics')).metrics || []).find(item => item.name === name)?.value ?? null
 const collectHeap = async () => { await send('HeapProfiler.collectGarbage'); return metric('JSHeapUsedSize') }
+const inspectExport = async (file, expectedFormat) => {
+  const bytes = await fs.readFile(file)
+  const sha256 = crypto.createHash('sha256').update(bytes).digest('hex')
+  if (expectedFormat === 'png') {
+    const signature = bytes.subarray(0, 8).toString('hex')
+    return { format: 'png', bytes: bytes.length, sha256, signature, width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+  }
+  const text = bytes.toString('utf8')
+  const metadata = text.match(/<desc>(\d+) nodes, (\d+) edges<\/desc>/)
+  return {
+    format: 'svg', bytes: bytes.length, sha256,
+    nodeCount: (text.match(/<g class="node(?: |")/g) || []).length,
+    edgeCount: (text.match(/<g class="edge(?: |")/g) || []).length,
+    metadataNodeCount: Number(metadata?.[1] || -1), metadataEdgeCount: Number(metadata?.[2] || -1),
+    hasFiniteGeometry: !/NaN|Infinity/.test(text),
+  }
+}
+const readResourceProbe = () => exitAuditStage
+  ? evaluate(`(()=>{const probe=window.__m3c4ResourceProbe;return probe?{workersCreated:probe.workersCreated,workersTerminated:probe.workersTerminated,workerJobsDispatched:probe.workerJobsDispatched,workerResults:probe.workerResults,terminationsWithInFlight:probe.terminationsWithInFlight,observersCreated:probe.observersCreated,observersDisconnected:probe.observersDisconnected,activeListeners:[...probe.activeListeners].sort()}:null})()`)
+  : null
 
 await fs.mkdir(output, { recursive: true })
 await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'); await send('Performance.enable'); await send('HeapProfiler.enable')
@@ -103,12 +124,15 @@ await waitFor(`document.querySelector('.library-mode')!==null`, 'library initial
 await evaluate(profilingStage
   ? `(()=>{window.__m3cLongTasks=[];window.__m3cLongTaskObserver=new PerformanceObserver(list=>window.__m3cLongTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration}))));window.__m3cLongTaskObserver.observe({type:'longtask',buffered:true});window.__m3c2Profiler={enabled:true,phases:{}}})()`
   : `(()=>{window.__m3cLongTasks=[];window.__m3cLongTaskObserver=new PerformanceObserver(list=>window.__m3cLongTasks.push(...list.getEntries().map(entry=>({startTime:entry.startTime,duration:entry.duration}))));window.__m3cLongTaskObserver.observe({type:'longtask',buffered:true});const probe=window.__m3cProbe={draws:0,current:[],frames:[]};const proto=CanvasRenderingContext2D.prototype;const clearRect=proto.clearRect,arc=proto.arc,roundRect=proto.roundRect;const isGraph=context=>context.canvas?.getAttribute?.('data-testid')==='graph-canvas';const add=(context,values)=>{if(probe.current.length>=64||!isGraph(context))return;probe.current.push(values.map(value=>Math.round(Number(value)*10)/10).join(','))};proto.clearRect=function(...args){if(isGraph(this)){if(probe.current.length){probe.frames.push({signature:probe.current.join('|'),at:performance.now()});if(probe.frames.length>40)probe.frames.shift()}probe.current=[];probe.draws+=1}return Reflect.apply(clearRect,this,args)};proto.arc=function(x,y,r,...rest){add(this,[x,y,r]);return Reflect.apply(arc,this,[x,y,r,...rest])};proto.roundRect=function(x,y,w,h,r){add(this,[x,y,w,h]);return Reflect.apply(roundRect,this,[x,y,w,h,r])}})()`)
+if (exitAuditStage) await evaluate(`(()=>{const listenerTypes=new Set(['visibilitychange','blur','focus','keydown']);const ids=new WeakMap();let nextId=0;const listenerId=listener=>{if(!ids.has(listener))ids.set(listener,++nextId);return ids.get(listener)};const probe=window.__m3c4ResourceProbe={workersCreated:0,workersTerminated:0,workerJobsDispatched:0,workerResults:0,terminationsWithInFlight:0,observersCreated:0,observersDisconnected:0,activeListeners:new Set()};for(const [target,label] of [[window,'window'],[document,'document']]){const add=target.addEventListener.bind(target);const remove=target.removeEventListener.bind(target);target.addEventListener=function(type,listener,...rest){if(listener&&listenerTypes.has(type))probe.activeListeners.add(label+':'+type+':'+listenerId(listener));return add(type,listener,...rest)};target.removeEventListener=function(type,listener,...rest){if(listener&&listenerTypes.has(type))probe.activeListeners.delete(label+':'+type+':'+listenerId(listener));return remove(type,listener,...rest)}}const NativeWorker=window.Worker;window.Worker=new Proxy(NativeWorker,{construct(Target,args){const worker=Reflect.construct(Target,args);probe.workersCreated+=1;let inFlight=0;const postMessage=worker.postMessage.bind(worker);worker.postMessage=(...messageArgs)=>{probe.workerJobsDispatched+=1;inFlight+=1;return postMessage(...messageArgs)};worker.addEventListener('message',()=>{probe.workerResults+=1;inFlight=Math.max(0,inFlight-1)});const terminate=worker.terminate.bind(worker);let terminated=false;worker.terminate=()=>{if(!terminated){terminated=true;probe.workersTerminated+=1;if(inFlight>0)probe.terminationsWithInFlight+=1}return terminate()};return worker}});const NativeResizeObserver=window.ResizeObserver;window.ResizeObserver=new Proxy(NativeResizeObserver,{construct(Target,args){const observer=Reflect.construct(Target,args);probe.observersCreated+=1;const disconnect=observer.disconnect.bind(observer);let disconnected=false;observer.disconnect=()=>{if(!disconnected){disconnected=true;probe.observersDisconnected+=1}return disconnect()};return observer}})})()`)
 const profilingCalibration = profilingStage ? await evaluate(`(()=>{const count=100000;let sink=0;const baselineStarted=performance.now();for(let index=0;index<count;index+=1)sink+=index&1;const baselineMs=performance.now()-baselineStarted;const phase={count:0,totalMs:0,maximumMs:0,over50Ms:0,over1000Ms:0,samples:[]};const instrumentedStarted=performance.now();for(let index=0;index<count;index+=1){const started=performance.now();sink+=index&1;const duration=performance.now()-started;phase.count+=1;phase.totalMs+=duration;phase.maximumMs=Math.max(phase.maximumMs,duration);if(duration>=50)phase.over50Ms+=1;if(duration>=1000)phase.over1000Ms+=1;if(phase.samples.length<512)phase.samples.push(duration)}const instrumentedMs=performance.now()-instrumentedStarted;let seed=${tier}>>>0;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};return {iterations:count,baselineMs,instrumentedMs,bookkeepingMicrosecondsPerCall:Math.max(0,(instrumentedMs-baselineMs)*1000/count),sink,deterministicSeed:${tier}}})()`) : null
+const resourceBaseline = await readResourceProbe()
 
 const centeredPath = path.join(library, 'node-000001.md')
 const startedAt = Date.now()
 await evaluate(`location.hash='#/graph?mode=network&root='+encodeURIComponent(${JSON.stringify(centeredPath)})`)
 await waitFor(`document.querySelector('.graph-stats')?.textContent?.includes(${JSON.stringify(`${tier} / ${tier}`)})`, `${tier}-node graph visible`)
+if (exitAuditStage) await evaluate(`window.dispatchEvent(new Event('focus'))`)
 const firstVisibleMs = Date.now() - startedAt
 await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')!==null`, 'centered node selection')
 let activeCancellationProbe = null
@@ -199,6 +223,42 @@ const stableWorkerDiagnostics = await readWorkerDiagnostics()
 const settledDrawStart = await readDraws()
 await delay(1000)
 const settledDrawsPerSecond = (await readDraws()) - settledDrawStart
+const settledIdleStartedAt = await evaluate(`performance.now()`)
+await delay(exitAuditStage ? 2000 : 0)
+const settledIdleLongTasks = exitAuditStage
+  ? await evaluate(`(window.__m3cLongTasks||[]).filter(item=>item.startTime>=${Number(settledIdleStartedAt)})`)
+  : []
+
+let exports = null
+if (exitAuditStage && tier === 5000) {
+  const exportOne = async (scope, format, expectedNodes, expectedEdges) => {
+    const file = path.join(output, `${scope}-${tier}.${format}`)
+    await fs.rm(file, { force: true })
+    const started = Date.now()
+    await click(`[data-testid="graph-export-${format}"]`)
+    await waitFor(`document.querySelector('[data-testid="graph-export-${format}"]')?.disabled===false`, `${scope} ${format} export`, 600000)
+    const exportError = await evaluate(`document.querySelector('[data-testid="graph-container"]')?.dataset.exportError||''`)
+    if (exportError) throw new Error(`${scope} ${format} export failed: ${exportError}`)
+    let fileWritten = false
+    for (let attempt = 0; attempt < 1200; attempt += 1) { try { if ((await fs.stat(file)).size > 0) { fileWritten = true; break } } catch {} await delay(50) }
+    if (!fileWritten) throw new Error(`${scope} ${format} export did not write ${file}`)
+    const inspected = await inspectExport(file, format)
+    return { scope, expectedNodes, expectedEdges, durationMs: Date.now() - started, ...inspected }
+  }
+  const fullSvg = await exportOne('full', 'svg', tier, tier - 1)
+  const fullPng = await exportOne('full', 'png', tier, tier - 1)
+  await click('[data-testid="graph-community-entry"]')
+  await waitFor(`document.querySelector('[data-testid="graph-community-card"]')!==null`, 'community export filter')
+  await click('[data-testid="graph-community-card"]')
+  await click('[data-testid="graph-community-entry"]')
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')!==null`, 'filtered community graph')
+  const filteredShape = await evaluate(`(()=>{const focus=document.querySelector('[data-testid="graph-community-focus"]');return {nodes:Number(focus?.dataset.visibleNodeCount||0),edges:Number(focus?.dataset.visibleEdgeCount||0)}})()`)
+  const filteredSvg = await exportOne('filtered', 'svg', filteredShape.nodes, filteredShape.edges)
+  const filteredPng = await exportOne('filtered', 'png', filteredShape.nodes, filteredShape.edges)
+  exports = { full: { nodes: tier, edges: tier - 1, svg: fullSvg, png: fullPng }, filtered: { ...filteredShape, svg: filteredSvg, png: filteredPng } }
+  await click('[data-testid="graph-community-focus-return"]')
+  await waitFor(`document.querySelector('[data-testid="graph-community-focus"]')===null`, 'full graph after export filter')
+}
 
 if (profilingStage && tier === 100) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -354,6 +414,7 @@ await waitFor(`document.querySelector('.library-mode')!==null`, 'return to libra
 const libraryDrawStart = await readDraws()
 await delay(600)
 const libraryDraws = (await readDraws()) - libraryDrawStart
+const resourceAfterInitialReturn = await readResourceProbe()
 
 let lifecycle = { cycles: lifecycleCycles, completed: lifecycleCycles === 0, totalMs: 0, maximumVisibleMs: 0, heapBeforeBytes: null, heapAfterBytes: null, heapDeltaBytes: null }
 if (lifecycleCycles > 0) {
@@ -362,9 +423,14 @@ if (lifecycleCycles > 0) {
   let maximumVisibleMs = 0
   for (let cycle = 0; cycle < lifecycleCycles; cycle += 1) {
     const cycleStartedAt = Date.now()
+    const jobsBeforeEntry = exitAuditStage ? Number((await readResourceProbe())?.workerJobsDispatched || 0) : 0
+    if (exitAuditStage) await evaluate(`localStorage.removeItem('longedit.graph.layouts.v1')`)
     await evaluate(`location.hash='#/graph'`)
     await waitFor(`document.querySelector('.graph-stats')?.textContent?.includes(${JSON.stringify(`${tier} / ${tier}`)})`, `lifecycle graph ${cycle + 1}`)
     maximumVisibleMs = Math.max(maximumVisibleMs, Date.now() - cycleStartedAt)
+    if (exitAuditStage) {
+      await waitFor(`Number(window.__m3c4ResourceProbe?.workerJobsDispatched||0)>${jobsBeforeEntry}`, `lifecycle worker dispatch ${cycle + 1}`)
+    }
     await click('.management-back')
     await waitFor(`document.querySelector('.library-mode')!==null`, `lifecycle library ${cycle + 1}`)
   }
@@ -372,6 +438,7 @@ if (lifecycleCycles > 0) {
   const heapAfterBytes = await collectHeap()
   lifecycle = { cycles: lifecycleCycles, completed: true, totalMs, maximumVisibleMs, heapBeforeBytes, heapAfterBytes, heapDeltaBytes: heapAfterBytes - heapBeforeBytes }
 }
+const resourceAfterLifecycle = await readResourceProbe()
 
 const longTasks = await evaluate(`window.__m3cLongTasks||[]`)
 const afterSha256 = await hashDirectory(library)
@@ -397,6 +464,9 @@ const evidence = {
     stableWorkerDiagnostics,
     profilingCalibration,
     lifecycle,
+    resourceLifecycle: { baseline: resourceBaseline, afterInitialReturn: resourceAfterInitialReturn, afterLifecycle: resourceAfterLifecycle },
+    exports,
+    settledIdleLongTasks,
     activeCancellationProbe,
     longTaskCount: longTasks.length,
     longestTaskMs: Math.round(Math.max(0, ...longTasks.map(item => item.duration))),

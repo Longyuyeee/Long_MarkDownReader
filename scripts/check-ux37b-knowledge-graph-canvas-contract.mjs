@@ -47,7 +47,7 @@ for (const forbidden of [
 for (const token of [
   "const { writeFile } = await import('@tauri-apps/plugin-fs')",
   "format === 'svg'",
-  'graphSvgToPng(svg)',
+  'createGraphPng(visibleNodes.value, visibleEdges.value, exportOptions)',
 ]) if (!source.includes(token)) fail(`explicit graph export contract missing: ${token}`)
 
 if (!packageJson.scripts?.['check:ux37b-knowledge-graph-canvas']) fail('package command missing')
