@@ -1507,3 +1507,9 @@ M4F-1 已完成冻结清单的 44 文件原子迁移：package/lock、Cargo/lock
 v1.0.16 社区策略现在是 `v1.0.16-community-release-quality-gate-pending`，所有质量、运行、构建、哈希、生命周期和发布门禁为 false，`candidate` 与 `release` 回执为空。当前公开版本、Tag 和不可变提交仍为 `1.0.15`、`v1.0.15`、`317b667679fff4e8e29ce2a0ca94f8e480764d13`。前端事实消费已纠正为候选策略跟随当前运行时、公开版本独立跟随公开 Tag。
 
 当前唯一接续点为 **M4F-2 v1.0.16 候选 Quality Gate 与当前运行烟测**：推送后以本次 M4F-1 提交作为唯一候选源码，运行完整 `ci:patch-release`，并重跑 R5F 路由挂载和 R5G 桌面路由、TXT/JSON I/O、性能导出。两者全部通过后才能进入 M4F-3 无签名 MSI/NSIS 与 Windows 生命周期；任何失败均保持 `releaseCandidate=false`。详见 [`Post_v1.0.15_M4F1_v1.0.16_Atomic_Version_Transition_Audit_2026-08-30.md`](./Post_v1.0.15_M4F1_v1.0.16_Atomic_Version_Transition_Audit_2026-08-30.md)。
+
+## 2026-08-30 M4F-3B 安装生命周期入口纠偏交接
+
+首轮托管运行 `33264898797` 已成功构建旧候选的 MSI/NSIS，但 R5J 在工作台等待 M2A2 已移除的知识网络脉搏而失败；实际设置页也仍把“前往工作台建议”送到已无详细治理建议的页面。现已按原始 M2A2 收敛需求把观察会话入口修正为图谱治理，并同步 R5J/G15C～E 合同。
+
+纠偏产品提交 `99cc4b79e13fc7fcc198da975b51880fc366afe4` 已重新通过完整 `ci:patch-release`、R5F 11/11、R5G 6/6 检查与 11/11 路由。R5G 还增加隔离资料库配置/扫描就绪门禁和导航诊断。当前无 `v1.0.16` Tag/Release，`releaseCandidate=false`，九道门禁仍为 4/9。唯一接续点是从该精确候选重跑托管 MSI/NSIS、升级/卸载、安装态路由与 I/O、管理备份和索引回滚；全部通过前不得进入 M4F-4。

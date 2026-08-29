@@ -51,7 +51,7 @@
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "34f8ce2badb5224cda658e350cd1ec2f70b1c6b1",
+    "artifactSourceCommit": "99cc4b79e13fc7fcc198da975b51880fc366afe4",
     "qualityGateCommand": "npm run ci:patch-release",
     "qualityGateEnvironment": "local-windows",
     "qualityGateRunId": null,

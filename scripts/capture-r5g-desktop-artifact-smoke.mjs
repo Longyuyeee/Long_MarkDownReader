@@ -60,11 +60,16 @@ const waitForFile = async (file, marker, description, attempts = 300) => {
 }
 const navigate = async (hash, selector, description) => {
   await evaluate(`location.hash = ${JSON.stringify(hash)}`)
-  await waitFor(`document.querySelector(${JSON.stringify(selector)}) !== null`, description)
-  await waitFor(`document.querySelector('.page-loader') === null`, `${description} transition`)
+  try {
+    await waitFor(`document.querySelector(${JSON.stringify(selector)}) !== null || document.querySelector('.crash-fallback') !== null`, description)
+    await waitFor(`document.querySelector('.page-loader') === null || document.querySelector('.crash-fallback') !== null`, `${description} transition`)
+  } catch (error) {
+    const diagnostics = await evaluate(`({ hash: location.hash, title: document.title, body: document.body?.innerText?.slice(0, 2000) || '', crash: document.querySelector('.crash-fallback')?.textContent?.slice(0, 1200) || '' })`)
+    throw new Error(`${description} navigation timed out: ${JSON.stringify(diagnostics)}; ${error.message}`)
+  }
   await delay(150)
-  const crash = await evaluate(`document.querySelector('.crash-fallback') !== null`)
-  if (crash) throw new Error(`${description} showed the global crash fallback`)
+  const crash = await evaluate(`document.querySelector('.crash-fallback')?.textContent?.slice(0, 1200) || ''`)
+  if (crash) throw new Error(`${description} showed the global crash fallback: ${crash}`)
 }
 const setEditorText = async text => {
   const point = await evaluate(`(() => {
@@ -104,6 +109,11 @@ await send('Runtime.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 820, deviceScaleFactor: 1, mobile: false })
 await waitFor(`document.querySelector('#app')?.children.length > 0`, 'desktop app bootstrap')
 await waitFor(`typeof window.__LONGEDIT_EXPORT_ROUTE_PERFORMANCE__ === 'function'`, 'route performance export')
+await waitFor(
+  `document.querySelector('.library-mode') !== null && document.body?.innerText?.includes('r5g-notes.txt') === true && document.body?.innerText?.includes('r5g-config.json') === true`,
+  'isolated library configuration and file scan',
+  1200,
+)
 
 const checks = [
   { id: 'current-release-executable-built', status: 'passed' },

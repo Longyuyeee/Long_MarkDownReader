@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "R5G",
   "appVersion": "1.0.16",
-  "capturedAt": "2026-08-29T16:45:30.859Z",
+  "capturedAt": "2026-08-29T18:07:45.467Z",
   "environment": "Current Tauri Debug WebView2 via Chrome DevTools Protocol",
   "releaseCandidate": false,
   "promotionEligible": false,
@@ -39,14 +39,14 @@
       "kind": "debug-runtime-smoke",
       "fileName": "tauri-app.exe",
       "size": 113576448,
-      "sha256": "36507e5e740424158e07e4499f5e599e15ad1dfc9e01ba699a27f4fd3059ae09",
+      "sha256": "b19a8d0718623f511027cd1bfd7a22e1423683aa16d7e4a6280e050875fd3f96",
       "runtimeSmokeExecuted": true
     },
     {
       "kind": "release-no-bundle",
       "fileName": "tauri-app.exe",
       "size": 108933632,
-      "sha256": "67e5ff67d34bc2ee4691597cd0cc84f32a05afd83e97c17a7f6938f3f6199662",
+      "sha256": "6d0bef46f1e632aa18a18dbc980f9521c45ba0bdb1a4661f45eafc26fa3876cd",
       "runtimeSmokeExecuted": false
     }
   ],
