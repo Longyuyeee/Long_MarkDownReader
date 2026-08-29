@@ -35,7 +35,7 @@ requireTokens(library, 'External-change UX', [
   '@click="compareExternalChange"',
   '@click="keepExternalChange"',
   '@click="reloadExternalChange"',
-  'current.textContentDigest = saved.contentDigest',
+  'updateTabFromTextSnapshot(t, saved',
 ])
 if (library.includes('stats.modified > lastKnownModified')) fail('Legacy mtime-only focus detection is still active.')
 if ((library.match(/lastKnownModified/g) || []).length) fail('Guessed wall-clock modification baselines are still present.')

@@ -34,7 +34,7 @@ requireTokens(workspace, 'Workspace automatic search preparation', [
   '搜索与关联：准备中',
   '搜索与关联：可用',
   'prepareWorkspaceSearch(store.libraryPath)',
-  "invoke<IndexStatus>('rebuild_knowledge_index'",
+  "invoke<WorkspaceIndexStatus>('rebuild_knowledge_index'",
 ])
 
 const commands = read('src-tauri/src/commands/index.rs')

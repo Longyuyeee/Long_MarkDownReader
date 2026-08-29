@@ -28,7 +28,9 @@ const embeddedPathPattern = /path:\s*['"]\/(?:text|json|yaml|xml|drawio|toml|log
 
 for (const path of managedIngressSources) {
   const source = read(path)
-  if (!source.includes('openManagedFile')) fail(`managed ingress does not use the shared navigator: ${path}`)
+  if (!source.includes('openManagedFile') && !source.includes('openManagedObject')) {
+    fail(`managed ingress does not use the shared navigator: ${path}`)
+  }
   const directRoutes = (source.match(embeddedRoutePattern) || []).filter(route => !(
     path === 'src/App.vue'
     && route === "name: 'TextEditor'"

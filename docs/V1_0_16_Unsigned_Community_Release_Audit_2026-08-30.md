@@ -23,7 +23,7 @@
 
 ## 待执行发布门禁
 
-1. 在推送后的 M4F-1 精确提交上执行完整 `ci:patch-release` Quality Gate。
+1. M4F-1 首轮 Quality Gate 已发现并纠正图谱字体、工作簿颜色语义、三个过时检查器与浏览器预览窗口边界；以 M4F-2A 推送后的精确提交重新从头执行完整 `ci:patch-release` Quality Gate。
 2. 重新执行 R5F 浏览器路由挂载以及 R5G 桌面路由、TXT/JSON I/O 和性能导出烟测。
 3. 构建无签名 NSIS 与 MSI，记录大小、SHA-256 和 `NotSigned` 状态。
 4. 在托管 Windows 中完成当前候选安装、升级、卸载和安装后工作区回归。
@@ -35,3 +35,7 @@
 - 当前用户仍只能从 v1.0.15 官方 Release 手动下载安装；自动更新在 v1.0.16 正式发布前不会发现该版本。
 - 社区安装包没有 Authenticode 商业签名，Windows 可能显示“未知发布者”或 SmartScreen。
 - 自动更新和手动安装都必须使用官方 GitHub Release，并核对 SHA-256；不得继承 v1.0.15 的哈希作为 v1.0.16 证据。
+
+## M4F-2A 纠偏记录
+
+R5F 现有历史证据原本不可重复执行。新增采集器后确认当前生产浏览器预览会因 `App.vue` 无条件调用 Tauri 窗口 API 而崩溃；该实现已改为只在真实 Tauri 运行时取窗口对象，并已完成 11/11 路由的重新验证。详细问题、修复与边界见 `Post_v1.0.15_M4F2A_Candidate_Gate_Remediation_Audit_2026-08-30.md`。这只是候选源码纠偏，不代表完整 Quality Gate 或桌面 I/O 烟测已经完成。

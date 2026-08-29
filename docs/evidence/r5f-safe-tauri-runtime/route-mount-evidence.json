@@ -1,22 +1,89 @@
 {
   "schemaVersion": 1,
   "stage": "R5F",
-  "capturedAt": "2026-07-30T16:38:36.177Z",
+  "appVersion": "1.0.16",
+  "capturedAt": "2026-08-29T16:37:55.196Z",
   "baseUrl": "http://127.0.0.1:4175/",
   "evidenceLevel": "browser-preview-route-mount-smoke",
   "sourceUserContentIncluded": false,
   "desktopFileIoProven": false,
   "routes": [
-    { "route": "/workspace", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/library", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/text", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/json", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/pdf", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/workbook", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/diagram", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/mindmap", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/graph", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/canvas", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false },
-    { "route": "/release-capabilities", "status": "passed", "appMounted": true, "routeWrapperMounted": true, "crashFallbackVisible": false }
+    {
+      "route": "/workspace",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/library",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/text",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/json",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/pdf",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/workbook",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/diagram",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/mindmap",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/graph",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/canvas",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    },
+    {
+      "route": "/release-capabilities",
+      "status": "passed",
+      "appMounted": true,
+      "routeWrapperMounted": true,
+      "crashFallbackVisible": false
+    }
   ]
 }

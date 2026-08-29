@@ -88,12 +88,13 @@ import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
+import { isTauriRuntime } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
 const router = useRouter()
 const store = useAppStore()
-const appWindow = getCurrentWindow()
-const isMainWindow = appWindow.label === 'main'
+const appWindow = isTauriRuntime() ? getCurrentWindow() : null
+const isMainWindow = appWindow ? appWindow.label === 'main' : true
 const windowRole = isMainWindow ? 'main' : 'external'
 const windowTitle = computed(() => {
   if (isMainWindow) return 'Long编辑'
@@ -299,7 +300,7 @@ const removeBeforeEach = router.beforeEach(async (to) => {
   routeErrorMessage.value = ''
   startRouteMeasurement(to.name)
   if (!isMainWindow && to.name === 'LibraryMode') {
-    if (await confirmDiscardUnsaved('关闭当前窗口？')) void appWindow.close()
+    if (await confirmDiscardUnsaved('关闭当前窗口？')) void appWindow?.close()
     return false
   }
   if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
@@ -353,15 +354,16 @@ const handleCommand = async (item: any) => {
   }
 }
 
-const minimizeWindow = () => appWindow.minimize()
+const minimizeWindow = () => appWindow?.minimize()
 const maximizeWindow = async () => {
+  if (!appWindow) return
   const isMaximized = await appWindow.isMaximized()
   if (isMaximized) appWindow.unmaximize()
   else appWindow.maximize()
 }
 const closeWindow = async () => {
   if (!isMainWindow) {
-    if (await confirmDiscardUnsaved('关闭当前窗口？')) await appWindow.close()
+    if (await confirmDiscardUnsaved('关闭当前窗口？')) await appWindow?.close()
     return
   }
   // 识别当前路由：如果是临时编辑界面，关闭时应重置回到主库
@@ -405,7 +407,7 @@ const handleHide = () => {
     store.updateConfig({ exitStrategy: 'minimize' })
   }
   showExitModal.value = false; 
-  appWindow.hide() 
+  void appWindow?.hide()
 }
 const handleExit = async () => {
   if (!await confirmDiscardUnsaved()) return

@@ -58,7 +58,7 @@ for (const token of [
 }
 
 for (const token of [
-  "import { isTauriRuntime, listen } from '../services/tauriRuntime'",
+  "import { invoke, isTauriRuntime, listen } from '../services/tauriRuntime'",
   "if (isTauriRuntime())",
   "getCurrentWindow().listen('tauri://focus'",
   'getCurrentWindow().onDragDropEvent',
@@ -97,5 +97,6 @@ requireIncludes('R5F status doc token', statusDoc, [
 ])
 
 if (!packageJson.scripts?.['check:r5f-safe-tauri-runtime']) fail('R5F package script missing.')
+if (!packageJson.scripts?.['audit:r5f-safe-tauri-runtime']) fail('R5F audit script missing.')
 
 console.log('R5F safe Tauri runtime passed: all representative preview routes mount without promoting desktop I/O evidence.')

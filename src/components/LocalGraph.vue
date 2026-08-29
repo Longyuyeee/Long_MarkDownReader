@@ -240,7 +240,7 @@ watch([() => props.libraryRoot, () => props.currentPath, depth], loadGraph, { im
 .local-node .node-mark { stroke-width: 1.5; transition: filter 0.2s ease; }
 .local-node:hover .node-mark, .local-node:focus .node-mark { filter: brightness(1.14); }
 .local-node.center .node-mark { stroke: color-mix(in srgb, var(--theme-primary) 55%, white) !important; stroke-width: 3; filter: drop-shadow(0 4px 8px rgba(var(--theme-primary-rgb), 0.3)); }
-.local-node .node-glyph { fill: #fff; font-size: 8px; font-weight: 900; pointer-events: none; }
+.local-node .node-glyph { fill: #fff; font-size: var(--text-compact); font-weight: 900; pointer-events: none; }
 .local-node text { fill: var(--theme-text); font-size: var(--text-compact); font-weight: 600; pointer-events: none; }
 .local-node.center text:not(.node-glyph) { fill: var(--theme-primary); font-weight: 750; }
 .local-graph-summary { display: flex; justify-content: center; gap: 12px; margin-top: -4px; color: var(--theme-text-secondary); font-size: var(--text-compact); }

@@ -102,6 +102,7 @@
     "check:ux38e-diagram-history": "node scripts/check-ux38e-diagram-history.mjs",
     "audit:r5c-route-performance-smoke": "node scripts/capture-r5c-route-performance-evidence.mjs",
     "audit:r5d-production-route-smoke-preflight": "node scripts/audit-r5d-production-route-smoke-preflight.mjs",
+    "audit:r5f-safe-tauri-runtime": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5f-safe-tauri-runtime-smoke.ps1",
     "audit:r5g-desktop-artifact-smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5g-desktop-artifact-smoke.ps1",
     "audit:r5h-current-installer-evidence": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/capture-r5h-current-installer-evidence.ps1",
     "audit:r5i-isolated-install-environment": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit-r5i-isolated-install-environment.ps1",

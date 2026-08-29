@@ -4999,13 +4999,13 @@ onBeforeUnmount(() => {
 .conditional-style-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
 .conditional-style-grid button { min-width: 0; height: 38px; display: flex; align-items: center; gap: 8px; padding: 4px 7px; overflow: hidden; border: 1px solid var(--workspace-border-color); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); cursor: pointer; }
 .conditional-style-grid button.active { border-color: var(--theme-primary); box-shadow: inset 0 0 0 1px var(--theme-primary); }
-.conditional-style-grid i { width: 30px; height: 26px; flex: none; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.12); border-radius: 4px; font-size: 11px; font-style: normal; }
+.conditional-style-grid i { width: 30px; height: 26px; flex: none; display: grid; place-items: center; border: 1px solid var(--workspace-border-color); border-radius: 4px; font-size: 11px; font-style: normal; }
 .conditional-style-grid span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conditional-format-editor label.conditional-stop-option { display: flex; flex-direction: row; align-items: center; gap: 7px; }
 .conditional-stop-option input { accent-color: var(--theme-primary); }
 .conditional-preview { min-height: 62px; display: grid; grid-template-columns: auto 54px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--workspace-border-color); border-radius: 5px; background: var(--theme-surface-2); }
 .conditional-preview span,.conditional-preview small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
-.conditional-preview strong { height: 34px; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.1); border-radius: 4px; }
+.conditional-preview strong { height: 34px; display: grid; place-items: center; border: 1px solid var(--workspace-border-color); border-radius: 4px; }
 .conditional-preview small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conditional-format-error { margin: 12px 0 0; color: var(--status-danger); font-size: var(--text-compact); }
 .conditional-format-actions { display: flex; align-items: center; gap: 8px; }
@@ -5133,7 +5133,7 @@ onBeforeUnmount(() => {
 .workbook-cell.has-validation-picker .cell-content { padding-right: 18px; }
 .validation-picker { position: absolute; top: 3px; right: 3px; z-index: 7; width: 20px; height: 20px; display: grid; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--theme-primary) 45%, var(--workspace-border-color)); border-radius: 4px; color: var(--theme-primary); background: color-mix(in srgb, var(--theme-surface) 88%, var(--theme-primary)); box-shadow: var(--workspace-shadow-sm); cursor: pointer; }
 .validation-picker:hover,.validation-picker[aria-expanded='true'] { color: var(--workspace-on-accent); background: var(--theme-primary); }
-.validation-menu { position: absolute; top: calc(100% + 4px); right: -2px; z-index: 50; width: max(172px, 100%); max-height: 210px; overflow: auto; padding: 5px; border: 1px solid color-mix(in srgb, var(--theme-primary) 48%, var(--workspace-border-color)); border-radius: 7px; color: var(--theme-text); background: var(--theme-surface); box-shadow: 0 12px 28px rgba(0,0,0,.22); }
+.validation-menu { position: absolute; top: calc(100% + 4px); right: -2px; z-index: 50; width: max(172px, 100%); max-height: 210px; overflow: auto; padding: 5px; border: 1px solid color-mix(in srgb, var(--theme-primary) 48%, var(--workspace-border-color)); border-radius: 7px; color: var(--theme-text); background: var(--theme-surface); box-shadow: var(--workspace-shadow); }
 .validation-menu header { min-height: 26px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 7px 4px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .validation-menu header small { color: var(--theme-primary); }
 .validation-menu > button { width: 100%; min-height: 30px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; overflow: hidden; border: 0; border-radius: 5px; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }

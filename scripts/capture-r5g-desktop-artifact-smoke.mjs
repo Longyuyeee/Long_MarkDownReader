@@ -8,6 +8,7 @@ const output = path.resolve(process.env.LONGEDIT_R5G_OUTPUT || 'docs/evidence/r5
 const debugExecutable = path.resolve(process.env.LONGEDIT_R5G_DEBUG_EXECUTABLE || '')
 const releaseExecutable = path.resolve(process.env.LONGEDIT_R5G_RELEASE_EXECUTABLE || '')
 if (!library || !debugExecutable || !releaseExecutable) throw new Error('R5G library and executable paths are required')
+const packageJson = JSON.parse(await fs.readFile(path.resolve('package.json'), 'utf8'))
 
 const textFile = path.join(library, 'r5g-notes.txt')
 const jsonFile = path.join(library, 'r5g-config.json')
@@ -190,7 +191,7 @@ await fs.writeFile(path.join(output, 'route-mount-evidence.json'), `${JSON.strin
 await fs.writeFile(path.join(output, 'audit-manifest.json'), `${JSON.stringify({
   schemaVersion: 1,
   stage: 'R5G',
-  appVersion: '1.0.0',
+  appVersion: packageJson.version,
   capturedAt,
   environment: 'Current Tauri Debug WebView2 via Chrome DevTools Protocol',
   releaseCandidate: false,
