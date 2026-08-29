@@ -864,10 +864,12 @@ const convertToTable = async () => {
 
 const requestConvertToTable = () => {
   if (!table.value || dirty.value || converting.value) { message.warning('请先保存当前修改'); return }
-  const workspaceWidth = document.querySelector<HTMLElement>('.table-view')?.clientWidth || window.innerWidth
+  // Naive UI dialogs are teleported to the window overlay, so size them against
+  // the viewport rather than the editor pane (which can be narrow beside the tree).
+  const viewportWidth = window.innerWidth
   dialog.info({
     title: '创建可视化 Table 副本？',
-    style: { width: `${Math.max(240, Math.min(560, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    style: { width: `${Math.max(240, Math.min(560, viewportWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
     content: () => h('div', { class: 'table-conversion-disclosure', 'data-testid': 'm4c1-table-conversion-disclosure', style: { maxHeight: 'min(440px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
       h('p', [h('strong', '来源：'), conversionSourcePath.value]),
       h('p', [h('strong', '候选目标：'), conversionTargetPath.value]),

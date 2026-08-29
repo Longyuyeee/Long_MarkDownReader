@@ -641,10 +641,12 @@ const requestProjectToCanvas = () => {
   if (isExternal.value) return void message.info('外部 OPML 需要先加入知识库，才能投影到 Canvas')
   if (dirty.value) return void message.warning('请先点击保存，再将当前版本投影到 Canvas')
   if (!document.value || projecting.value) return
-  const workspaceWidth = window.document.querySelector<HTMLElement>('.mindmap-page')?.clientWidth || window.innerWidth
+  // The dialog is rendered in the window overlay, not inside the mind-map pane.
+  // Using the pane width makes the disclosure unreadable beside the file tree.
+  const viewportWidth = window.innerWidth
   dialog.info({
     title: '创建独立 Canvas 投影？',
-    style: { width: `${Math.max(240, Math.min(580, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    style: { width: `${Math.max(240, Math.min(580, viewportWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
     content: () => h('div', { class: 'opml-canvas-projection-disclosure', 'data-testid': 'm4c2-opml-canvas-projection-disclosure', style: { maxHeight: 'min(450px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
       h('p', [h('strong', '来源：'), projectionSourcePath.value]),
       h('p', [h('strong', '候选目标：'), projectionTargetPath.value]),

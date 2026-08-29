@@ -9,6 +9,7 @@ const manifest = readJson('docs/evidence/post-v115-m4c3-graph-derived-output-dis
 const development = readJson('shared/development-version-policy.json')
 const successor = readJson('shared/post-v115-m4c4-graph-project-note-disclosure-policy.json')
 const graphCanvas = readJson('shared/post-v115-m4c5-graph-canvas-eligibility-and-snapshot-disclosure-policy.json')
+const exitAudit = readJson('shared/post-v115-m4c6-controlled-conversion-exit-audit-policy.json')
 const view = read('src/components/GraphView.vue')
 const canvas = read('src-tauri/src/commands/canvas.rs')
 const graph = read('src-tauri/src/commands/graph.rs')
@@ -25,7 +26,7 @@ if (actual.canvasFirstName !== 'Graph Center 思维导图.canvas' || actual.canv
 if (actual.canvasNodeCount !== 2 || actual.canvasEdgeCount !== 2 || !actual.canvasRelativeFileNodes || !actual.canvasRelationTypesPreserved) failures.push('Canvas snapshot structure evidence failed')
 if (!actual.projectTraceable || !actual.projectTemplateObserved || actual.projectRelatedCount !== 1 || !actual.sourcesUnchanged || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved) failures.push('project-note/source/runtime evidence failed')
 if (!actual.responsive1280 || !actual.responsive480 || manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 4) failures.push('responsive or visual review evidence failed')
-if (policy.selection?.id !== successor.stage || policy.selection?.name !== successor.name || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== graphCanvas.stage || graphCanvas.predecessor !== successor.stage || development.currentStage !== `${graphCanvas.selectedNextStage.id}-${graphCanvas.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
+if (policy.selection?.id !== successor.stage || policy.selection?.name !== successor.name || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== graphCanvas.stage || graphCanvas.predecessor !== successor.stage || graphCanvas.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== graphCanvas.stage || development.currentStage !== `${exitAudit.selectedNextStage.id}-${exitAudit.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

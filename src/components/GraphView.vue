@@ -1862,11 +1862,13 @@ const createProjectNote = async (node: GraphNode) => {
 
 const requestSendToCanvas = (node: GraphNode) => {
   if (!canSendToCanvas(node) || isCreatingCanvas.value) return
-  const workspaceWidth = containerRef.value?.clientWidth || window.innerWidth
+  // Dialogs are teleported to the viewport overlay. The graph pane can be much
+  // narrower when the library tree is present, but must not constrain disclosure.
+  const viewportWidth = window.innerWidth
   const depth = Math.max(1, Math.min(4, mindmapDepth.value))
   dialog.info({
     title: '创建独立 Canvas 关系快照？',
-    style: { width: `${Math.max(240, Math.min(590, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    style: { width: `${Math.max(240, Math.min(590, viewportWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
     content: () => h('div', { class: 'graph-canvas-disclosure', 'data-testid': 'm4c5-graph-canvas-disclosure', style: { maxHeight: 'min(460px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
       h('p', [h('strong', '中心来源：'), libraryRelativePath(node.path)]),
       h('p', [h('strong', '关系范围：'), `当前中心周围 ${depth} 层局部图谱。`]),
@@ -1890,11 +1892,11 @@ const requestSendToCanvas = (node: GraphNode) => {
 
 const requestCreateProjectNote = (node: GraphNode) => {
   if (!canCreateProjectNote(node) || isCreatingProject.value) return
-  const workspaceWidth = containerRef.value?.clientWidth || window.innerWidth
+  const viewportWidth = window.innerWidth
   const depth = Math.max(1, Math.min(4, mindmapDepth.value))
   dialog.info({
     title: '生成独立项目笔记？',
-    style: { width: `${Math.max(240, Math.min(580, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    style: { width: `${Math.max(240, Math.min(580, viewportWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
     content: () => h('div', { class: 'graph-project-note-disclosure', 'data-testid': 'm4c4-graph-project-note-disclosure', style: { maxHeight: 'min(450px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
       h('p', [h('strong', '中心来源：'), libraryRelativePath(node.path)]),
       h('p', [h('strong', '关系范围：'), `当前中心周围 ${depth} 层局部图谱。`]),

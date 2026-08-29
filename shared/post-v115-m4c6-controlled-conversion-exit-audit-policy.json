@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-6",
+  "name": "controlled-conversion-exit-audit",
+  "predecessor": "M4C-5",
+  "originalRequirement": "Evaluate structured text to Table, OPML to Canvas, and graph to Canvas or project note as controlled outputs; every file-producing path must disclose source, target, overwrite strategy and conversion loss, automatically open the actual target, and preserve sources.",
+  "closureDecision": "passed-bounded-conversion-scope",
+  "workflowFamilies": [
+    { "id": "csv-tsv-to-table", "source": ["csv", "tsv"], "target": "longedit-table" },
+    { "id": "opml-to-canvas", "source": ["opml"], "target": "canvas" },
+    { "id": "graph-to-project-note", "source": ["markdown", "pdf"], "target": "markdown" },
+    { "id": "graph-to-canvas", "source": ["markdown", "pdf", "csv", "tsv", "longedit-table"], "target": "json-canvas" }
+  ],
+  "exitGates": {
+    "prewriteDisclosureComplete": true,
+    "cancelCreatesNoTarget": true,
+    "collisionCreatesNumberedTarget": true,
+    "actualTargetAutomaticallyOpened": true,
+    "targetRereadMatchesBoundedProjection": true,
+    "wideAndNarrowDialogReadable": true,
+    "sourceAndExistingTargetsUnchanged": true,
+    "runtimeErrorsZero": true
+  },
+  "scopeBoundaries": {
+    "graphMindMapIsDerivedViewNotConversion": true,
+    "globalConversionFrameworkDeferred": true,
+    "newConversionTypesDeferred": true,
+    "releaseFreezeDeferred": true
+  },
+  "selectedNextStage": {
+    "id": "M4D-0",
+    "name": "temporary-artifact-and-redundant-evidence-cleanup-selection-audit",
+    "reason": "The original M4 order places cleanup of temporary scripts, candidate outputs and duplicate evidence after controlled conversions. Selection and dependency auditing must precede deletion so reproducible and release-required assets remain protected."
+  },
+  "releaseCandidate": false
+}

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-6",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "050961f4b2bc26058675ab8e49f5d1266433fe61",
+  "evidenceFile": "exit-evidence.json",
+  "evidenceSha256": "7bf6fedfa3c0c8f81bd72781d4518ced1dd7081a52ad4b21af78387cb48cd3fa",
+  "screenshots": [
+    {
+      "file": "csv-table-disclosure-1280.jpg",
+      "bytes": 95092,
+      "sha256": "ccb4fceeb36cc9342d7d8d5c1991a494d27db49541db0c59f9113b5501e1ae5f"
+    },
+    {
+      "file": "csv-table-numbered-target-1280.jpg",
+      "bytes": 78780,
+      "sha256": "e2634d104588b95b36a3dfa3012005b41efd4a241612ec7f60d787bdc901591e"
+    },
+    {
+      "file": "opml-canvas-disclosure-480.jpg",
+      "bytes": 73627,
+      "sha256": "dff9da5f9dd34d4c6dc03d8d9133fb536561ad7c1cad351a877ef9e07c93f375"
+    },
+    {
+      "file": "opml-canvas-numbered-target-480.jpg",
+      "bytes": 52462,
+      "sha256": "64cadb1e4184f2c9e17dd74578c504a8406c4aad212b1e74a6e09f8700cc210c"
+    },
+    {
+      "file": "graph-project-disclosure-1280.jpg",
+      "bytes": 137256,
+      "sha256": "4e5fb190068a3bc8bc23e56729883d49981ccbccbf6fc9a1ac24a8b5442002e2"
+    },
+    {
+      "file": "graph-project-numbered-target-1280.jpg",
+      "bytes": 115632,
+      "sha256": "71152b2e89c9830a63bb785c053a24c17ef0a20419a8fa29b2ba8ea0e5b6a9fc"
+    },
+    {
+      "file": "graph-canvas-disclosure-480.jpg",
+      "bytes": 79451,
+      "sha256": "f0c6206dc04c0530832812bc2ef7d26e63de428d54e64bb9d8f1e38f1dff7f15"
+    },
+    {
+      "file": "graph-canvas-numbered-target-480.jpg",
+      "bytes": 81487,
+      "sha256": "f92209d5f5c021af62675ffda24f0359d4583effafa6cef27df955fe8ac5bdb5"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

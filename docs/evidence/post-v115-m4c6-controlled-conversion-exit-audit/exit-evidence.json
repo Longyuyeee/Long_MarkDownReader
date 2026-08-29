@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-6",
+  "status": "passed",
+  "sourceCommit": "050961f4b2bc26058675ab8e49f5d1266433fe61",
+  "actual": {
+    "disclosures": {
+      "csvTable": true,
+      "opmlCanvas": true,
+      "graphProject": true,
+      "graphCanvas": true
+    },
+    "cancelPreventedWrites": {
+      "csvTable": true,
+      "opmlCanvas": true,
+      "graphProject": true,
+      "graphCanvas": true
+    },
+    "autoOpenedNumberedTargets": {
+      "csvTable": true,
+      "opmlCanvas": true,
+      "graphProject": true,
+      "graphCanvas": true
+    },
+    "targetReread": {
+      "csvTable": true,
+      "opmlCanvas": true,
+      "graphProject": true,
+      "graphCanvas": true
+    },
+    "responsive": {
+      "csvTable": true,
+      "opmlCanvas": true,
+      "graphProject": true,
+      "graphCanvas": true
+    },
+    "protectedFilesUnchanged": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false,
+    "workflowCount": 4
+  },
+  "protectedFileCount": 10,
+  "initialHashes": {
+    "imports/Conversion.csv": "82525b751db1b684a3a6aa550a6d11ec5e2e8866c23085589dca6e7198793f43",
+    "maps/Outline.opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7",
+    "Project Center.md": "c22feed87bdf39efd21aa47d9ec2bbf9bf983f258caaf80bd8714fbdbe60990e",
+    "Project Peer.md": "1177b1e608671f27729c9957fd3375e9f07c7742f774570d3e0389557c9d1301",
+    "Canvas Center.md": "efdb2a1afe3ef12380d7d83f727599a90c63c9482882e8e7984ec14ac5319c01",
+    "Canvas Peer.md": "434a931eb5840ceb8f22893fa8d410cda9c3b5b858cb426caaae65df037145f6",
+    "imports/Conversion.table.json": "adb9f340418039b8bb7d9b4e632818d674773fba03737927e6c3f58148a51d27",
+    "maps/Outline 画布.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+    "Project Center 项目.md": "6675a6519db33b624c97ae678e54125603f74aafd3622a0d4325c54844767884",
+    "Canvas Center 思维导图.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278"
+  },
+  "finalHashes": {
+    "imports/Conversion.csv": "82525b751db1b684a3a6aa550a6d11ec5e2e8866c23085589dca6e7198793f43",
+    "maps/Outline.opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7",
+    "Project Center.md": "c22feed87bdf39efd21aa47d9ec2bbf9bf983f258caaf80bd8714fbdbe60990e",
+    "Project Peer.md": "1177b1e608671f27729c9957fd3375e9f07c7742f774570d3e0389557c9d1301",
+    "Canvas Center.md": "efdb2a1afe3ef12380d7d83f727599a90c63c9482882e8e7984ec14ac5319c01",
+    "Canvas Peer.md": "434a931eb5840ceb8f22893fa8d410cda9c3b5b858cb426caaae65df037145f6",
+    "imports/Conversion.table.json": "adb9f340418039b8bb7d9b4e632818d674773fba03737927e6c3f58148a51d27",
+    "maps/Outline 画布.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+    "Project Center 项目.md": "6675a6519db33b624c97ae678e54125603f74aafd3622a0d4325c54844767884",
+    "Canvas Center 思维导图.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

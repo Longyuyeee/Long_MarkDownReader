@@ -1449,3 +1449,11 @@ M4C-5 已完成。根据原始 PDF/表格图谱路线，局部图谱与 Canvas �
 真实 Tauri 已覆盖 5/5 合法中心、3 类后端负例、3 类禁用入口、取消不写盘，以及首个 `Graph Center 思维导图.canvas` 和碰撞后的 `Data Board 思维导图 1.canvas` 自动打开。两份目标从磁盘复读为各 2 节点/1 边，关系类型/方向和深度布局一致；Table 父对象与内部 view 均投影为同一 `.table.json` 路径，确认 locator 不保留。10 个既有文件摘要不变，1280/480、0 错误和四张视觉证据通过。
 
 当前唯一接续点为 **M4C-6 受控转换退出审计**：组合复验四条已闭环工作流后决定 M4C 是否退出；不得提前进入 `M4-release-freeze`，不得混入全局转换框架、新转换或临时产物清理。详见 [`Post_v1.0.15_M4C5_Graph_Canvas_Eligibility_and_Snapshot_Disclosure_Audit_2026-08-29.md`](./Post_v1.0.15_M4C5_Graph_Canvas_Eligibility_and_Snapshot_Disclosure_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4C-6 受控转换退出审计交接
+
+M4C-6 已通过，M4C 在有界转换范围收口。同一真实 Tauri 会话依次完成 CSV→Table、OPML→Canvas、图谱→项目笔记、图谱→Canvas；四条路径均验证完整写前披露、取消不写盘、编号碰撞、自动打开实际目标和磁盘复读。10 个来源及预置目标最终摘要不变，运行时错误 0，8 张宽窄屏证据已人工接受。
+
+审计中先修正项目笔记 YAML 引号的测试 oracle；人工视觉复核随后拒绝了动画中提前截取的窄屏证据，并发现确认框按侧栏旁内容区宽度计算的组合偏移。Table、OPML 和两类图谱确认框现统一按窗口覆盖层宽度计算；审计等待动画完成并要求至少 420px 可读宽度后完整重跑通过。
+
+当前唯一接续点为 **M4D-0 临时产物与冗余证据清理选择审计**：对照原始 M4 顺序，先盘点本周期脚本、候选输出和重复证据的引用、可重复生成性、历史审计链与发布依赖，形成精确保留/删除候选；本选择阶段不得直接批量删除，也不得进入 `M4-release-freeze`。详见 [`Post_v1.0.15_M4C6_Controlled_Conversion_Exit_Audit_2026-08-29.md`](./Post_v1.0.15_M4C6_Controlled_Conversion_Exit_Audit_2026-08-29.md)。
