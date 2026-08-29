@@ -23,7 +23,10 @@ const [major, minor, patch] = pkg.version.split('.').map(Number)
 const previousPublicVersion = `${major}.${minor}.${patch - 1}`
 const managedUpdaterUpgradePrefix = `${previousPublicVersion}-to-${pkg.version}`
 const managedUpdaterPolicyToken = previousPublicVersion.replace(/^1\.0\./, '1')
-const managedUpdaterLifecycle = json(`shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`)
+const managedUpdaterLifecyclePath = `shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`
+const managedUpdaterLifecycle = fs.existsSync(managedUpdaterLifecyclePath) ? json(managedUpdaterLifecyclePath) : null
+const previousReleaseReceiptPath = `docs/evidence/v${previousPublicVersion}-release/release-receipt.json`
+const previousReleaseReceipt = fs.existsSync(previousReleaseReceiptPath) ? json(previousReleaseReceiptPath) : null
 
 if (!/^1\.\d+\.\d+$/.test(pkg.version) || tauri.version !== pkg.version || !cargo.includes(`version = "${pkg.version}"`)) fail('V1 version identity drift')
 if (tauri.bundle?.createUpdaterArtifacts !== false) fail('unsigned managed-SHA256 release must not require legacy Tauri updater signatures')
@@ -32,18 +35,27 @@ if (policy.userDecision?.authenticodeRequired !== false || policy.userDecision?.
 if (policy.targetRelease?.tag !== tag || policy.targetRelease?.url !== releaseUrl || policy.targetRelease?.assetMode !== 'managed-nsis-msi-with-sha256') fail('target release drift')
 if (updater.status !== 'active-from-v1.0.5' || updater.migration?.firstManagedUpdaterVersion !== '1.0.5' || policy.updater?.mode !== 'github-release-sha256-managed' || policy.updater?.enabled !== true || policy.updater?.automaticCheckIntervalHours !== 24 || policy.updater?.integrityDigestRequired !== true || policy.updater?.latestManifestAsset !== null) fail('managed updater release boundary drift')
 for (const token of ['api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest', 'Sha256::new()', 'hasher.update(&chunk)', 'hasher.finalize()', '.chunk()', 'LongEdit_{expected_version}_x64-setup.exe']) if (!backendUpdater.includes(token)) fail(`managed updater implementation missing: ${token}`)
-const previousUpdaterAccepted = managedUpdaterLifecycle.status === 'hosted-managed-update-passed'
+const previousUpdaterLifecycleAccepted = managedUpdaterLifecycle?.status === 'hosted-managed-update-passed'
   || (pkg.version === '1.0.9'
-    && managedUpdaterLifecycle.status === 'hosted-automatic-relaunch-failed'
+    && managedUpdaterLifecycle?.status === 'hosted-automatic-relaunch-failed'
     && managedUpdaterLifecycle.githubRun?.id === 31486852139
     && managedUpdaterLifecycle.githubRun?.failedCheck === 'automatic-relaunch-after-managed-update'
     && policy.patchValidation?.scope === 'updater-relaunch-retry-and-stability-recovery')
+const previousPublishedReceiptAccepted = previousReleaseReceipt?.status === 'published-and-remote-assets-verified'
+  && previousReleaseReceipt.release?.tag === `v${previousPublicVersion}`
+  && previousReleaseReceipt.release?.isDraft === false
+  && previousReleaseReceipt.release?.isPrerelease === false
+  && previousReleaseReceipt.managedUpdaterObservation?.endsWith(`-to-${previousPublicVersion}-pending`)
+const previousUpdaterAccepted = previousUpdaterLifecycleAccepted || previousPublishedReceiptAccepted
+const previousVersionBaselineAccepted = managedUpdaterLifecycle
+  ? managedUpdaterLifecycle.releases?.current?.version === previousPublicVersion
+  : previousReleaseReceipt?.release?.tag === `v${previousPublicVersion}`
 if (previousLifecycle.stage !== 'EA-5B2B'
   || previousLifecycle.artifacts?.appVersion !== policy.patchValidation?.previousInstalledLifecycleEvidenceVersion
   || previousLifecycle.checks?.lifecycle?.failed !== 0
   || previousLifecycle.checks?.installedArtifactSmoke?.failed !== 0
   || !previousUpdaterAccepted
-  || managedUpdaterLifecycle.releases?.current?.version !== previousPublicVersion
+  || !previousVersionBaselineAccepted
   || policy.patchValidation?.previousPublicVersion !== previousPublicVersion
   || policy.patchValidation?.previousInstalledLifecycleEvidenceVersion !== '1.0.5'
   || policy.patchValidation?.previousEvidenceInheritedAsCurrent !== false

@@ -12,26 +12,26 @@
     "formatCount": 43,
     "extensionCount": 91,
     "versions": {
-      "package": "1.0.13",
-      "capabilityMatrix": "1.0.13",
-      "safeDegradation": "1.0.13",
-      "communityRelease": "1.0.13",
-      "windowsLifecycle": "1.0.13",
-      "windowsReadiness": "1.0.13",
-      "r5:frontend-release-hardening-policy.json": "1.0.13",
-      "r5:desktop-startup-performance-policy.json": "1.0.13",
-      "r5:r5c-route-performance-smoke-policy.json": "1.0.13",
-      "r5:r5d-production-route-smoke-preflight-policy.json": "1.0.13",
-      "r5:r5e-runtime-route-smoke-policy.json": "1.0.13",
-      "r5:r5f-safe-tauri-runtime-policy.json": "1.0.13",
-      "r5:r5g-desktop-artifact-smoke-policy.json": "1.0.13",
-      "r5:r5h-current-installer-evidence-policy.json": "1.0.13",
-      "r5:r5i-isolated-install-lifecycle-policy.json": "1.0.13",
-      "r5:r5j-installed-artifact-smoke-policy.json": "1.0.13",
-      "r5:r5k-windows-matrix-handoff-policy.json": "1.0.13",
-      "r5:r5l-management-rollback-closure-policy.json": "1.0.13",
-      "r5:r5m-final-release-closure-policy.json": "1.0.13",
-      "r5:r5n-external-release-execution-policy.json": "1.0.13"
+      "package": "1.0.16",
+      "capabilityMatrix": "1.0.16",
+      "safeDegradation": "1.0.16",
+      "communityRelease": "1.0.16",
+      "windowsLifecycle": "1.0.16",
+      "windowsReadiness": "1.0.16",
+      "r5:frontend-release-hardening-policy.json": "1.0.16",
+      "r5:desktop-startup-performance-policy.json": "1.0.16",
+      "r5:r5c-route-performance-smoke-policy.json": "1.0.16",
+      "r5:r5d-production-route-smoke-preflight-policy.json": "1.0.16",
+      "r5:r5e-runtime-route-smoke-policy.json": "1.0.16",
+      "r5:r5f-safe-tauri-runtime-policy.json": "1.0.16",
+      "r5:r5g-desktop-artifact-smoke-policy.json": "1.0.16",
+      "r5:r5h-current-installer-evidence-policy.json": "1.0.16",
+      "r5:r5i-isolated-install-lifecycle-policy.json": "1.0.16",
+      "r5:r5j-installed-artifact-smoke-policy.json": "1.0.16",
+      "r5:r5k-windows-matrix-handoff-policy.json": "1.0.16",
+      "r5:r5l-management-rollback-closure-policy.json": "1.0.16",
+      "r5:r5m-final-release-closure-policy.json": "1.0.16",
+      "r5:r5n-external-release-execution-policy.json": "1.0.16"
     },
     "readinessCounts": {
       "external-dependency": 6,
@@ -39,9 +39,9 @@
       "verified-with-limitations": 7
     },
     "saveModeCounts": {
-      "bounded-overwrite": 2,
+      "bounded-overwrite": 3,
       "copy": 3,
-      "none": 9,
+      "none": 8,
       "overwrite": 29
     },
     "safetyLaneCounts": {
@@ -49,9 +49,10 @@
       "external-application-handoff": 6,
       "pdf-reliable-copy-isolation": 1,
       "signature-protected-overwrite": 29,
-      "strict-readonly-preview": 3,
+      "strict-readonly-preview": 2,
       "verified-image-copy": 1,
-      "verified-office-copy": 1
+      "verified-ods-reliable-copy": 1,
+      "verified-pptx-bounded-overwrite": 1
     },
     "rows": [
       {
@@ -557,13 +558,13 @@
           ".ods"
         ],
         "routeName": "OdfReader",
-        "capabilityLevel": "preview-only",
-        "saveMode": "none",
-        "writer": null,
-        "releaseProfile": "odf-preview",
+        "capabilityLevel": "basic-edit",
+        "saveMode": "copy",
+        "writer": "odf-cell-value",
+        "releaseProfile": "office-copy",
         "readiness": "verified-with-limitations",
         "dependency": "none",
-        "safetyLane": "strict-readonly-preview"
+        "safetyLane": "verified-ods-reliable-copy"
       },
       {
         "id": "odp",
@@ -633,12 +634,12 @@
         ],
         "routeName": "PptxReader",
         "capabilityLevel": "basic-edit",
-        "saveMode": "copy",
+        "saveMode": "bounded-overwrite",
         "writer": "pptx",
         "releaseProfile": "office-copy",
         "readiness": "verified-with-limitations",
         "dependency": "none",
-        "safetyLane": "verified-office-copy"
+        "safetyLane": "verified-pptx-bounded-overwrite"
       },
       {
         "id": "wps-document",

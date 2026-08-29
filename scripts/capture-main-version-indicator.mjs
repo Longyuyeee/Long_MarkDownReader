@@ -4,7 +4,9 @@ import path from 'node:path'
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:14522'
 const output = path.resolve('docs/evidence/main-version-indicator')
 const packageVersion = JSON.parse(await fs.readFile('package.json', 'utf8')).version
-const expectedVersion = JSON.parse(await fs.readFile('shared/development-version-policy.json', 'utf8')).developmentTargetVersion
+const developmentVersion = JSON.parse(await fs.readFile('shared/development-version-policy.json', 'utf8'))
+const expectedVersion = developmentVersion.developmentTargetVersion
+const publicVersion = developmentVersion.publicVersion
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const targets = await fetch(`${endpoint}/json`).then(response => response.json())
 const target = targets.find(item => item.type === 'page' && item.webSocketDebuggerUrl && !item.url.startsWith('devtools://'))
@@ -135,7 +137,7 @@ const contained = state => state.badge.x >= state.footer.x
   && state.badge.y >= state.footer.y
   && state.badge.bottom <= state.footer.bottom
 const passed = normal.text === `v${expectedVersion}dev`
-  && normal.ariaLabel === `开发线 v${expectedVersion}，运行时与当前公开版本 v${packageVersion}，点击查看更新`
+  && normal.ariaLabel === `候选准备线 v${expectedVersion}，运行时 v${packageVersion}，当前公开版本 v${publicVersion}，点击查看更新`
   && normal.labelText === '当前资料库'
   && normal.pageOverflow <= 2
   && compact.pageOverflow <= 2

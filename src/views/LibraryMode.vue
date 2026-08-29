@@ -771,6 +771,7 @@ import { initializeUpdater, updaterState } from '../services/appUpdater'
 import {
   DEVELOPMENT_CHANNEL_ACTIVE,
   DEVELOPMENT_TARGET_VERSION,
+  PUBLIC_RELEASE_VERSION,
   RELEASE_MATRIX_VERSION,
 } from '../config/releaseCapabilities'
 import { useOutline } from '../composables/useOutline'
@@ -815,7 +816,7 @@ const hasAvailableUpdate = computed(() => updaterState.status === 'available' &&
 const versionIndicatorLabel = computed(() => hasAvailableUpdate.value
   ? `发现新版本 v${updaterState.latestVersion}，点击查看更新`
   : DEVELOPMENT_CHANNEL_ACTIVE
-    ? `开发线 v${DEVELOPMENT_TARGET_VERSION}，运行时与当前公开版本 v${currentAppVersion.value}，点击查看更新`
+    ? `候选准备线 v${DEVELOPMENT_TARGET_VERSION}，运行时 v${currentAppVersion.value}，当前公开版本 v${PUBLIC_RELEASE_VERSION}，点击查看更新`
     : `当前软件版本 v${currentAppVersion.value}，点击查看更新`)
 
 interface ExternalAppExecutable {

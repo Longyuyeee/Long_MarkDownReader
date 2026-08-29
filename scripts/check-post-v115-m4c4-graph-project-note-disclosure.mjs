@@ -16,6 +16,7 @@ const cleanupImplementation = readJson('shared/post-v115-m4d1-bounded-generated-
 const cleanupExit = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
 const capabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
 const freezeEntry = readJson('shared/post-v115-m4f0-v1016-release-freeze-entry-audit-policy.json')
+const transition = readJson('shared/post-v115-m4f1-v1016-atomic-version-transition-policy.json')
 const view = read('src/components/GraphView.vue')
 const canvas = read('src-tauri/src/commands/canvas.rs')
 const graph = read('src-tauri/src/commands/graph.rs')
@@ -37,7 +38,7 @@ for (const screenshot of manifest.screenshots || []) {
   const bytes = fs.readFileSync(`docs/evidence/post-v115-m4c4-graph-project-note-disclosure/${screenshot.file}`)
   if (screenshot.bytes !== bytes.length || screenshot.sha256 !== sha256(bytes)) failures.push(`screenshot integrity failed: ${screenshot.file}`)
 }
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== successor.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || cleanupSelection.selectedNextStage?.id !== cleanupImplementation.stage || cleanupImplementation.predecessor !== cleanupSelection.stage || cleanupImplementation.selectedNextStage?.id !== cleanupExit.stage || cleanupExit.predecessor !== cleanupImplementation.stage || cleanupExit.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== cleanupExit.stage || capabilityDecision.selectedNextStage?.id !== freezeEntry.stage || freezeEntry.predecessor !== capabilityDecision.stage || development.currentStage !== `${freezeEntry.selectedNextStage.id}-${freezeEntry.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== successor.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || cleanupSelection.selectedNextStage?.id !== cleanupImplementation.stage || cleanupImplementation.predecessor !== cleanupSelection.stage || cleanupImplementation.selectedNextStage?.id !== cleanupExit.stage || cleanupExit.predecessor !== cleanupImplementation.stage || cleanupExit.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== cleanupExit.stage || capabilityDecision.selectedNextStage?.id !== freezeEntry.stage || freezeEntry.predecessor !== capabilityDecision.stage || freezeEntry.selectedNextStage?.id !== transition.stage || transition.predecessor !== freezeEntry.stage || development.currentStage !== `${transition.selectedNextStage.id}-${transition.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

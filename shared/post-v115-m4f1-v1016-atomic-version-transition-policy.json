@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4F-1",
+  "name": "v1.0.16-atomic-version-transition-and-candidate-metadata",
+  "predecessor": "M4F-0",
+  "transitionBaseCommit": "7fded3d1d270e955f2cd400be0dff5a09cb3a26f",
+  "candidateVersion": "1.0.16",
+  "publicVersion": "1.0.15",
+  "transitionDecision": "44-file-binary-identity-transition-complete-quality-gate-pending",
+  "atomicVersionFileCount": 44,
+  "historicalVersionPinCount": 5,
+  "candidateMetadata": {
+    "currentStatus": "v1.0.16-community-release-quality-gate-pending",
+    "qualityGatePassed": false,
+    "runtimeSmokePassed": false,
+    "artifactsBuilt": false,
+    "githubReleasePublished": false,
+    "candidateReceipt": null
+  },
+  "publicBoundary": {
+    "publicTag": "v1.0.15",
+    "publicTagCommit": "317b667679fff4e8e29ce2a0ca94f8e480764d13",
+    "publicVersionRemainsPriorRelease": true
+  },
+  "metadataConsumerCorrection": "candidate-community-policy-version-matches-runtime-while-development-public-version-remains-v1.0.15",
+  "previousUpdaterBaselineCorrection": "accept-explicit-pending-observation-from-verified-v1.0.15-release-receipt-while-requiring-a-full-current-candidate-lifecycle-before-promotion",
+  "selectedNextStage": {
+    "id": "M4F-2",
+    "name": "v1.0.16-candidate-quality-gate-and-runtime-smoke",
+    "reason": "Bind the pushed M4F-1 commit as the candidate source, run the complete patch-release Quality Gate, and rerun R5F route mount plus R5G desktop route and I/O smoke before any installer build."
+  },
+  "releaseCandidate": false
+}

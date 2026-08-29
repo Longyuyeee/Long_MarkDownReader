@@ -1,0 +1,335 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4F-1",
+  "status": "passed",
+  "transitionBaseCommit": "7fded3d1d270e955f2cd400be0dff5a09cb3a26f",
+  "headAtTransition": "7fded3d1d270e955f2cd400be0dff5a09cb3a26f",
+  "originMainAtTransition": "7fded3d1d270e955f2cd400be0dff5a09cb3a26f",
+  "candidateTagExists": false,
+  "versionState": {
+    "package": "1.0.16",
+    "packageLock": "1.0.16",
+    "packageLockRoot": "1.0.16",
+    "tauri": "1.0.16",
+    "cargo": "1.0.16",
+    "cargoLock": "1.0.16",
+    "matrix": "1.0.16",
+    "community": "1.0.16",
+    "runtimeBase": "1.0.16",
+    "developmentTarget": "1.0.16",
+    "publicVersion": "1.0.15"
+  },
+  "atomicTransition": {
+    "expectedFileCount": 44,
+    "changedVersionFileCount": 44,
+    "changedVersionFiles": [
+      "package-lock.json",
+      "package.json",
+      "shared/desktop-startup-performance-policy.json",
+      "shared/development-version-policy.json",
+      "shared/frontend-release-hardening-policy.json",
+      "shared/g10-cross-format-graph-acceptance-policy.json",
+      "shared/g11-installed-knowledge-pulse-policy.json",
+      "shared/g12-consented-knowledge-observation-policy.json",
+      "shared/g13-actionable-knowledge-guidance-policy.json",
+      "shared/g14-installed-knowledge-guidance-policy.json",
+      "shared/g15a-guided-remediation-routing-policy.json",
+      "shared/g15b-consented-guidance-outcome-policy.json",
+      "shared/g15c-installed-guidance-outcome-policy.json",
+      "shared/g15d-guidance-observation-entry-policy.json",
+      "shared/g15e-consented-real-library-session-policy.json",
+      "shared/g15f-local-comparison-receipt-review-policy.json",
+      "shared/g16-knowledge-isolation-action-queue-policy.json",
+      "shared/g9-knowledge-graph-pulse-policy.json",
+      "shared/p1-final-capability-closure.json",
+      "shared/r5c-route-performance-smoke-policy.json",
+      "shared/r5d-production-route-smoke-preflight-policy.json",
+      "shared/r5e-runtime-route-smoke-policy.json",
+      "shared/r5f-safe-tauri-runtime-policy.json",
+      "shared/r5g-desktop-artifact-smoke-policy.json",
+      "shared/r5h-current-installer-evidence-policy.json",
+      "shared/r5i-isolated-install-lifecycle-policy.json",
+      "shared/r5j-installed-artifact-smoke-policy.json",
+      "shared/r5k-windows-matrix-handoff-policy.json",
+      "shared/r5l-management-rollback-closure-policy.json",
+      "shared/r5m-final-release-closure-policy.json",
+      "shared/r5n-external-release-execution-policy.json",
+      "shared/release-capability-matrix.json",
+      "shared/safe-degradation-contract.json",
+      "shared/v1-community-release-policy.json",
+      "shared/windows-lifecycle-policy.json",
+      "shared/windows-release-artifact-manifest.json",
+      "shared/windows-release-notes-rollback-plan.json",
+      "shared/windows-release-rc-promotion-gate.json",
+      "shared/windows-release-readiness-policy.json",
+      "shared/windows-release-signing-evidence.json",
+      "shared/windows-release-vm-matrix-evidence.json",
+      "src-tauri/Cargo.lock",
+      "src-tauri/Cargo.toml",
+      "src-tauri/tauri.conf.json"
+    ],
+    "activeSharedVersions": [
+      {
+        "file": "shared/desktop-startup-performance-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/frontend-release-hardening-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g10-cross-format-graph-acceptance-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g11-installed-knowledge-pulse-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g12-consented-knowledge-observation-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g13-actionable-knowledge-guidance-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g14-installed-knowledge-guidance-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g15a-guided-remediation-routing-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g15b-consented-guidance-outcome-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g15c-installed-guidance-outcome-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g15d-guidance-observation-entry-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g15e-consented-real-library-session-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g15f-local-comparison-receipt-review-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g16-knowledge-isolation-action-queue-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/g9-knowledge-graph-pulse-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/p1-final-capability-closure.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5c-route-performance-smoke-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5d-production-route-smoke-preflight-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5e-runtime-route-smoke-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5f-safe-tauri-runtime-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5g-desktop-artifact-smoke-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5h-current-installer-evidence-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5i-isolated-install-lifecycle-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5j-installed-artifact-smoke-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5k-windows-matrix-handoff-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5l-management-rollback-closure-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5m-final-release-closure-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/r5n-external-release-execution-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/release-capability-matrix.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/safe-degradation-contract.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/v1-community-release-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-lifecycle-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-release-artifact-manifest.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-release-notes-rollback-plan.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-release-rc-promotion-gate.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-release-readiness-policy.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-release-signing-evidence.json",
+        "appVersion": "1.0.16"
+      },
+      {
+        "file": "shared/windows-release-vm-matrix-evidence.json",
+        "appVersion": "1.0.16"
+      }
+    ],
+    "historicalPins": [
+      {
+        "file": "shared/post-v115-m0-baseline-policy.json",
+        "appVersion": "1.0.15"
+      },
+      {
+        "file": "shared/post-v115-explicit-save-alignment-policy.json",
+        "appVersion": "1.0.15"
+      },
+      {
+        "file": "shared/post-v115-m2-closure-policy.json",
+        "appVersion": "1.0.15"
+      },
+      {
+        "file": "shared/post-v115-m2a2-workspace-governance-policy.json",
+        "appVersion": "1.0.15"
+      },
+      {
+        "file": "shared/post-v115-m2a3-workspace-navigation-policy.json",
+        "appVersion": "1.0.15"
+      }
+    ]
+  },
+  "candidateGateFacts": {
+    "currentStatus": "v1.0.16-community-release-quality-gate-pending",
+    "allGatesPending": true,
+    "candidateReceiptCleared": true,
+    "releaseReceiptCleared": true,
+    "targetTag": "v1.0.16",
+    "managedUpdaterPath": "1.0.15-to-1.0.16-pending"
+  },
+  "publicBoundary": {
+    "publicVersion": "1.0.15",
+    "publicTag": "v1.0.15",
+    "publicTagCommit": "317b667679fff4e8e29ce2a0ca94f8e480764d13",
+    "candidateDoesNotReplacePublicRelease": true
+  },
+  "metadataConsumerCorrection": {
+    "candidatePolicyMatchesRuntime": true,
+    "publicVersionRemainsIndependent": true,
+    "configAllowsCandidateRuntimeAbovePublic": true,
+    "publicVersionExportedToUserSurfaces": true,
+    "previousPublishedReceiptCanSupplyExplicitPendingBaseline": true,
+    "currentCandidateLifecycleStillRequiredBeforePromotion": true,
+    "odsReliableCopyLaneAligned": true,
+    "degradationCheckerAcceptsOdsCopy": true,
+    "p1DerivedCandidateIdentityMigrated": true
+  },
+  "documentationChecks": {
+    "releaseAuditPending": true,
+    "stageAuditBoundary": true,
+    "draftNotesBoundary": true
+  },
+  "candidateSourceCommitSelection": "bind-the-pushed-m4f1-commit-at-m4f2-entry",
+  "gatePlan": [
+    {
+      "id": "freeze-product-commit",
+      "stage": "M4F-0",
+      "status": "complete",
+      "evidence": "7e10c340fa0d528b598c9ca6be391c48b15a463f"
+    },
+    {
+      "id": "atomic-version-transition",
+      "stage": "M4F-1",
+      "status": "complete",
+      "evidence": "44 version files"
+    },
+    {
+      "id": "full-ci-patch-release-quality-gate",
+      "stage": "M4F-2",
+      "status": "pending"
+    },
+    {
+      "id": "current-candidate-runtime-route-and-io-smoke",
+      "stage": "M4F-2",
+      "status": "pending"
+    },
+    {
+      "id": "unsigned-msi-and-nsis-build",
+      "stage": "M4F-3",
+      "status": "pending"
+    },
+    {
+      "id": "managed-windows-install-lifecycle",
+      "stage": "M4F-3",
+      "status": "pending"
+    },
+    {
+      "id": "installed-workspace-regression",
+      "stage": "M4F-3",
+      "status": "pending"
+    },
+    {
+      "id": "artifact-sha256-and-release-notes-finalization",
+      "stage": "M4F-4",
+      "status": "pending"
+    },
+    {
+      "id": "tag-and-github-release-bound-to-frozen-candidate",
+      "stage": "M4F-4",
+      "status": "pending"
+    }
+  ],
+  "nextStage": {
+    "id": "M4F-2",
+    "name": "v1.0.16-candidate-quality-gate-and-runtime-smoke",
+    "reason": "Bind the pushed M4F-1 commit as the candidate source, run the complete patch-release Quality Gate, and rerun R5F route mount plus R5G desktop route and I/O smoke before any installer build."
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

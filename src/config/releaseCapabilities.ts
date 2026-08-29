@@ -56,7 +56,7 @@ interface DevelopmentVersionPolicy {
   publicTag: string
   releaseCandidate: boolean
   currentStage: string
-  binaryVersionTransition: 'M4-release-freeze'
+  binaryVersionTransition: 'M4-release-freeze' | 'v1.0.16-quality-gate-pending'
   displayLabel: string
 }
 
@@ -92,14 +92,15 @@ if (matrix.schemaVersion !== 1 || !['R1', 'R2'].includes(matrix.stage) || matrix
   throw new Error('Unsupported release capability matrix')
 }
 if (matrix.formats.length !== FILE_FORMATS.length) throw new Error('Incomplete release capability matrix')
-if (communityRelease.schemaVersion !== 1 || compareVersions(communityRelease.appVersion, matrix.appVersion) > 0) {
+if (communityRelease.schemaVersion !== 1 || communityRelease.appVersion !== matrix.appVersion) {
   throw new Error('Community release policy does not match the capability matrix')
 }
 if (
   developmentVersion.schemaVersion !== 1
   || developmentVersion.channel !== 'main-development'
   || developmentVersion.runtimeBaseVersion !== matrix.appVersion
-  || developmentVersion.publicVersion !== communityRelease.appVersion
+  || compareVersions(developmentVersion.publicVersion, developmentVersion.runtimeBaseVersion) > 0
+  || compareVersions(developmentVersion.developmentTargetVersion, developmentVersion.runtimeBaseVersion) < 0
   || compareVersions(developmentVersion.developmentTargetVersion, developmentVersion.publicVersion) <= 0
   || developmentVersion.releaseCandidate
 ) {
@@ -128,6 +129,7 @@ export const RELEASE_STAGE = matrix.stage
 export const RELEASE_MATRIX_VERSION = matrix.appVersion
 export const RELEASE_CANDIDATE = matrix.releaseCandidate
 export const DEVELOPMENT_TARGET_VERSION = developmentVersion.developmentTargetVersion
+export const PUBLIC_RELEASE_VERSION = developmentVersion.publicVersion
 export const DEVELOPMENT_CHANNEL_ACTIVE = developmentVersion.channel === 'main-development'
 export const DEVELOPMENT_VERSION_LABEL = developmentVersion.displayLabel
 export const RELEASE_PUBLIC_STATUS_LABEL = DEVELOPMENT_CHANNEL_ACTIVE

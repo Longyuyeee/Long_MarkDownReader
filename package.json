@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.0.15",
+  "version": "1.0.16",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -335,6 +335,8 @@
     "check:post-v115-m4e0-capability-version-decision": "node scripts/check-post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit.mjs",
     "audit:post-v115-m4f0-release-freeze-entry": "node scripts/audit-post-v115-m4f0-v1016-release-freeze-entry.mjs",
     "check:post-v115-m4f0-release-freeze-entry": "node scripts/check-post-v115-m4f0-v1016-release-freeze-entry-audit.mjs",
+    "audit:post-v115-m4f1-atomic-version-transition": "node scripts/audit-post-v115-m4f1-v1016-atomic-version-transition.mjs",
+    "check:post-v115-m4f1-atomic-version-transition": "node scripts/check-post-v115-m4f1-v1016-atomic-version-transition.mjs",
     "audit:post-v115-m3c4-large-graph-performance-exit-audit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3c0-large-graph-performance-baseline-audit.ps1 -Stage M3C-4",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",

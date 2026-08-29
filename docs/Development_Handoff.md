@@ -1499,3 +1499,11 @@ M4F-0 已通过。产品范围冻结为 `7e10c340fa0d528b598c9ca6be391c48b15a463
 审计还纠正了旧烟测门禁：历史 R5E 的“检查通过”只证明当时 11 条浏览器路由均被 Tauri API 阻断的记录真实，不是当前候选成功。版本迁移后必须重跑 R5F 路由挂载和 R5G 桌面路由、TXT/JSON I/O 与性能导出。九道发布门禁当前仅完成产品冻结 1 项。
 
 当前唯一接续点为 **M4F-1 v1.0.16 原子版本迁移与候选元数据**：只处理冻结的版本身份、社区 Quality Gate pending 状态和发布说明初稿；完成审计并推送后，再由 M4F-2 执行完整 Quality Gate 与当前候选运行烟测。详见 [`Post_v1.0.15_M4F0_v1.0.16_Release_Freeze_Entry_Audit_2026-08-29.md`](./Post_v1.0.15_M4F0_v1.0.16_Release_Freeze_Entry_Audit_2026-08-29.md)。
+
+## 2026-08-30 M4F-1 v1.0.16 原子版本迁移交接
+
+M4F-1 已完成冻结清单的 44 文件原子迁移：package/lock、Cargo/lock、Tauri、开发版本策略与 38 个当前共享合同均为 1.0.16；M0、显式保存、M2A2、M2A3、M2 退出五个历史基线继续固定为 1.0.15。迁移未加入产品功能，也未构建安装包、创建 Tag 或远端 Release。
+
+v1.0.16 社区策略现在是 `v1.0.16-community-release-quality-gate-pending`，所有质量、运行、构建、哈希、生命周期和发布门禁为 false，`candidate` 与 `release` 回执为空。当前公开版本、Tag 和不可变提交仍为 `1.0.15`、`v1.0.15`、`317b667679fff4e8e29ce2a0ca94f8e480764d13`。前端事实消费已纠正为候选策略跟随当前运行时、公开版本独立跟随公开 Tag。
+
+当前唯一接续点为 **M4F-2 v1.0.16 候选 Quality Gate 与当前运行烟测**：推送后以本次 M4F-1 提交作为唯一候选源码，运行完整 `ci:patch-release`，并重跑 R5F 路由挂载和 R5G 桌面路由、TXT/JSON I/O、性能导出。两者全部通过后才能进入 M4F-3 无签名 MSI/NSIS 与 Windows 生命周期；任何失败均保持 `releaseCandidate=false`。详见 [`Post_v1.0.15_M4F1_v1.0.16_Atomic_Version_Transition_Audit_2026-08-30.md`](./Post_v1.0.15_M4F1_v1.0.16_Atomic_Version_Transition_Audit_2026-08-30.md)。

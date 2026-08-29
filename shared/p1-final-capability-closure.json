@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "P1-FINAL",
-  "appVersion": "1.0.15",
+  "appVersion": "1.0.16",
   "status": "accepted-bounded-ready-for-patch-release",
   "releaseCandidate": false,
   "originalDemand": {
@@ -55,7 +55,7 @@
     {
       "id": "office-and-spreadsheet",
       "status": "accepted-bounded",
-      "scope": ["docx-basic-reliable-copy", "pptx-basic-reliable-copy", "xlsx-bounded-workbook-editing", "csv-tsv-table-editing", "ods-odp-preview"],
+      "scope": ["docx-basic-reliable-copy", "pptx-basic-reliable-copy", "xlsx-bounded-workbook-editing", "csv-tsv-table-editing", "ods-bounded-reliable-copy", "odp-preview"],
       "boundary": "no-full-word-powerpoint-excel-equivalence-and-no-internal-wps-native-writeback"
     },
     {
@@ -89,5 +89,5 @@
     "githubReleaseAndRemoteHashVerificationRequired": true,
     "managedUpdaterObservationRequired": true
   },
-  "nextStage": "V1.0.15-UNSIGNED-PATCH-RELEASE"
+  "nextStage": "V1.0.16-UNSIGNED-PATCH-RELEASE"
 }

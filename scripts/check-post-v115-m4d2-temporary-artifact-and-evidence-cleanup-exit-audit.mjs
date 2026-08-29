@@ -5,6 +5,7 @@ const predecessor = readJson('shared/post-v115-m4d1-bounded-generated-graph-expo
 const policy = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
 const successor = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
 const freezeEntry = readJson('shared/post-v115-m4f0-v1016-release-freeze-entry-audit-policy.json')
+const transition = readJson('shared/post-v115-m4f1-v1016-atomic-version-transition-policy.json')
 const development = readJson('shared/development-version-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit/exit-evidence.json')
 const failures = []
@@ -18,7 +19,7 @@ if (evidence.retainedMetrics?.length !== 4 || evidence.retainedMetrics.some(item
 if (Object.values(evidence.runnerContract || {}).some(value => !value)) failures.push('future runner cleanup contract drifted')
 if (evidence.inventoryClosure?.addedFileCount !== 931 || evidence.inventoryClosure?.selectedCandidateCount !== 4 || evidence.inventoryClosure?.protectedDuplicateCount !== 8 || evidence.inventoryClosure?.scriptsSelectedForRemoval !== 0 || evidence.inventoryClosure?.duplicateEvidenceSelectedForRemoval !== 0) failures.push('inventory closure facts drifted')
 for (const file of evidence.actualDeletions || []) if (fs.existsSync(file)) failures.push(`deleted payload returned: ${file}`)
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== freezeEntry.stage || freezeEntry.predecessor !== successor.stage || development.currentStage !== `${freezeEntry.selectedNextStage.id}-${freezeEntry.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== freezeEntry.stage || freezeEntry.predecessor !== successor.stage || freezeEntry.selectedNextStage?.id !== transition.stage || transition.predecessor !== freezeEntry.stage || development.currentStage !== `${transition.selectedNextStage.id}-${transition.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) { console.error(`M4D-2 cleanup exit check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

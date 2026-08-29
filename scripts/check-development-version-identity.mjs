@@ -57,6 +57,7 @@ const m4d1BoundedCleanup = readJson('shared/post-v115-m4d1-bounded-generated-gra
 const m4d2CleanupExit = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
 const m4e0CapabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
 const m4f0ReleaseFreezeEntry = readJson('shared/post-v115-m4f0-v1016-release-freeze-entry-audit-policy.json')
+const m4f1AtomicVersionTransition = readJson('shared/post-v115-m4f1-v1016-atomic-version-transition-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -76,13 +77,16 @@ const checks = {
   runtimeFactsFrozen: pkg.version === policy.runtimeBaseVersion
     && tauri.version === policy.runtimeBaseVersion
     && matrix.appVersion === policy.runtimeBaseVersion,
-  publicFactsFrozen: community.appVersion === policy.publicVersion
-    && community.gates?.githubReleasePublished === true
-    && policy.publicTag === `v${policy.publicVersion}`,
+  candidateMetadataFacts: community.appVersion === policy.runtimeBaseVersion
+    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-quality-gate-pending`
+    && community.gates?.githubReleasePublished === false,
+  publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
+    && policy.publicVersion === '1.0.15',
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   notReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
-  binaryTransitionDeferred: policy.binaryVersionTransition === 'M4-release-freeze',
+  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-quality-gate-pending'
+    && policy.runtimeBaseVersion === policy.developmentTargetVersion,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
     && m1Closure.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit'
     && m3Baseline.selectedNextStage.id === m3a1Semantics.stage
@@ -154,27 +158,33 @@ const checks = {
     && m4e0CapabilityDecision.predecessor === m4d2CleanupExit.stage
     && m4e0CapabilityDecision.selectedNextStage.id === m4f0ReleaseFreezeEntry.stage
     && m4f0ReleaseFreezeEntry.predecessor === m4e0CapabilityDecision.stage
-    && policy.currentStage === `${m4f0ReleaseFreezeEntry.selectedNextStage.id}-${m4f0ReleaseFreezeEntry.selectedNextStage.name}`,
+    && m4f0ReleaseFreezeEntry.selectedNextStage.id === m4f1AtomicVersionTransition.stage
+    && m4f1AtomicVersionTransition.predecessor === m4f0ReleaseFreezeEntry.stage
+    && policy.currentStage === `${m4f1AtomicVersionTransition.selectedNextStage.id}-${m4f1AtomicVersionTransition.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
   mainUiIdentifiesDevelopment: library.includes('v{{ displayedAppVersion }}')
     && library.includes('class="version-channel"')
-    && library.includes('运行时与当前公开版本'),
+    && library.includes('候选准备线')
+    && library.includes('当前公开版本')
+    && library.includes('PUBLIC_RELEASE_VERSION'),
   capabilityUiIdentifiesDevelopment: capabilities.includes('DEVELOPMENT_TARGET_VERSION')
-    && capabilities.includes('开发线 · 运行时'),
+    && capabilities.includes('候选准备')
+    && capabilities.includes('PUBLIC_RELEASE_VERSION'),
   auditDocumentsIdentity: audit.includes(`当前开发目标：\`${policy.developmentTargetVersion}\``)
-    && audit.includes(`运行时与当前公开版本：\`${policy.runtimeBaseVersion}\``),
+    && audit.includes(`候选运行时版本：\`${policy.runtimeBaseVersion}\``)
+    && audit.includes(`当前公开版本：\`${policy.publicVersion}\``),
 }
 
 const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name)
 const evidence = {
   expected: {
     developmentTargetVersion: expectedTarget,
-    runtimeBaseVersion: policy.publicVersion,
+    runtimeBaseVersion: policy.developmentTargetVersion,
     publicTag: policy.publicTag,
     headAheadOfPublicTag: true,
-    binaryVersionTransition: 'M4-release-freeze',
+    binaryVersionTransition: 'v1.0.16-quality-gate-pending',
   },
   actual: { headCommit, tagCommit, commitsAhead, tagIsAncestor, checks },
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "D2",
-  "appVersion": "1.0.15",
+  "appVersion": "1.0.16",
   "formatRegistrySchemaVersion": 2,
   "lanes": [
     {
@@ -45,7 +45,7 @@
     },
     {
       "id": "strict-readonly-preview",
-      "formats": ["ods", "odp", "video"],
+      "formats": ["odp", "video"],
       "saveModes": ["none"],
       "profiles": ["odf-preview", "media-preview"],
       "sourcePolicy": "never-write-source",
@@ -53,7 +53,7 @@
       "evidence": [
         {
           "path": "src-tauri/src/commands/odf_content.rs",
-          "markers": ["read_only: true", "source_preserved", "before == after"]
+          "markers": ["read_only: edit_inventory", "source_preserved", "before == after"]
         },
         {
           "path": "shared/file-formats.json",
@@ -62,6 +62,24 @@
         {
           "path": "src-tauri/src/commands/media.rs",
           "markers": ["WorkspaceGuard::new(library_root)", "asset_protocol_scope", "read_only: true"]
+        }
+      ]
+    },
+    {
+      "id": "verified-ods-reliable-copy",
+      "formats": ["ods"],
+      "saveModes": ["copy"],
+      "profiles": ["office-copy"],
+      "sourcePolicy": "never-overwrite-source-new-copy-only",
+      "failurePolicy": "reject-stale-source-existing-target-unsupported-cell-or-unverified-copy",
+      "evidence": [
+        {
+          "path": "src-tauri/src/commands/odf_content.rs",
+          "markers": ["save_ods_cell_value_copy", "save_ods_cell_style_copy", "write_new_bytes", "source_unchanged: true", "semantic_reopen_verified: true"]
+        },
+        {
+          "path": "shared/file-formats.json",
+          "markers": ["\"id\": \"ods\"", "\"saveMode\": \"copy\"", "\"writer\": \"odf-cell-value\""]
         }
       ]
     },
