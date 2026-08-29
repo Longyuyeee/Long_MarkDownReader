@@ -9,6 +9,7 @@ const projectNote = readJson('shared/post-v115-m4c4-graph-project-note-disclosur
 const graphCanvas = readJson('shared/post-v115-m4c5-graph-canvas-eligibility-and-snapshot-disclosure-policy.json')
 const exitAudit = readJson('shared/post-v115-m4c6-controlled-conversion-exit-audit-policy.json')
 const cleanupSelection = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json')
+const cleanupImplementation = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4c2-opml-canvas-projection-disclosure/interaction-evidence.json')
 const manifest = readJson('docs/evidence/post-v115-m4c2-opml-canvas-projection-disclosure/manifest.json')
 const development = readJson('shared/development-version-policy.json')
@@ -27,7 +28,7 @@ if (!actual.firstTargetReread || !actual.numberedTargetReread || actual.firstTar
 if (actual.targetNodeCount !== 5 || actual.targetEdgeCount !== 4 || !actual.sourceFileNodeObserved || !actual.titleNoteProjectionObserved || !actual.containsHierarchyObserved || !actual.lossFieldsAbsent) failures.push('Canvas projection structure evidence failed')
 if (!actual.sourceUnchanged || !actual.sourceFilesUnchangedAfterAudit || !actual.responsive1280 || !actual.responsive480 || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved) failures.push('source safety, responsive or runtime gate failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 4) failures.push('M4C-2 screenshots have not completed visual review')
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selection.id !== projectNote.stage || projectNote.predecessor !== successor.stage || projectNote.selectedNextStage?.id !== graphCanvas.stage || graphCanvas.predecessor !== projectNote.stage || graphCanvas.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== graphCanvas.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || development.currentStage !== `${cleanupSelection.selectedNextStage.id}-${cleanupSelection.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selection.id !== projectNote.stage || projectNote.predecessor !== successor.stage || projectNote.selectedNextStage?.id !== graphCanvas.stage || graphCanvas.predecessor !== projectNote.stage || graphCanvas.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== graphCanvas.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || cleanupSelection.selectedNextStage?.id !== cleanupImplementation.stage || cleanupImplementation.predecessor !== cleanupSelection.stage || development.currentStage !== `${cleanupImplementation.selectedNextStage.id}-${cleanupImplementation.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4D-1",
+  "status": "passed",
+  "selectionStage": "M4D-0",
+  "removed": [
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/full-5000.svg",
+      "bytes": 6916219,
+      "sha256": "f4532c1731703c47df8c296ffe201497c9984a1bc1a682b9730b18d0aad77dab",
+      "retainedMetric": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json#actual.exports.full.svg"
+    },
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/full-5000.png",
+      "bytes": 6255432,
+      "sha256": "835da016b13474597b5862c26dc3d3e8204b7f10117d290289aa1483306ea6c3",
+      "retainedMetric": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json#actual.exports.full.png"
+    },
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/filtered-5000.svg",
+      "bytes": 99887,
+      "sha256": "e521352b77008f30fb0e93d05c6f9546afc607d611e7d8927bdf58a8ea9e02f6",
+      "retainedMetric": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json#actual.exports.filtered.svg"
+    },
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/filtered-5000.png",
+      "bytes": 612419,
+      "sha256": "5f90dc43a2e3036f78393e5dded9fcec55387798ff23c52549e8b692ac89d4e6",
+      "retainedMetric": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json#actual.exports.filtered.png"
+    }
+  ],
+  "removedFileCount": 4,
+  "removedBytes": 13883957,
+  "retainedMetricsFile": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json",
+  "cleanupBoundary": "exact-M4D-0-selection-only",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

@@ -11,6 +11,7 @@ const manifest = readJson('docs/evidence/post-v115-m4c5-graph-canvas-eligibility
 const development = readJson('shared/development-version-policy.json')
 const exitAudit = readJson('shared/post-v115-m4c6-controlled-conversion-exit-audit-policy.json')
 const cleanupSelection = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json')
+const cleanupImplementation = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const view = read('src/components/GraphView.vue')
 const canvas = read('src-tauri/src/commands/canvas.rs')
 const graph = read('src-tauri/src/commands/graph.rs')
@@ -31,7 +32,7 @@ if (!actual.sourcesUnchanged || !actual.responsive1280 || !actual.responsive480 
 const evidenceBytes = fs.readFileSync('docs/evidence/post-v115-m4c5-graph-canvas-eligibility-and-snapshot-disclosure/interaction-evidence.json')
 if (manifest.evidenceSha256 !== sha256(evidenceBytes) || manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 4) failures.push('M4C-5 evidence integrity or visual review failed')
 for (const screenshot of manifest.screenshots || []) { const bytes = fs.readFileSync(`docs/evidence/post-v115-m4c5-graph-canvas-eligibility-and-snapshot-disclosure/${screenshot.file}`); if (screenshot.bytes !== bytes.length || screenshot.sha256 !== sha256(bytes)) failures.push(`screenshot integrity failed: ${screenshot.file}`) }
-if (policy.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== policy.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || development.currentStage !== `${cleanupSelection.selectedNextStage.id}-${cleanupSelection.selectedNextStage.name}`) failures.push('M4C-6 successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== policy.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || cleanupSelection.selectedNextStage?.id !== cleanupImplementation.stage || cleanupImplementation.predecessor !== cleanupSelection.stage || development.currentStage !== `${cleanupImplementation.selectedNextStage.id}-${cleanupImplementation.selectedNextStage.name}`) failures.push('M4C-6 successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) { console.error(`M4C-5 graph Canvas eligibility and snapshot disclosure check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4D-1",
+  "name": "bounded-generated-graph-export-artifact-cleanup",
+  "predecessor": "M4D-0",
+  "implementationBaselineCommit": "9319ecb25918c03877c73001f8f89d141c1d367d",
+  "originalRequirement": "Clean temporary scripts, candidate outputs and duplicate evidence produced during this development cycle, retaining files required for reproducible audits or release; summarize facts and risks only after cleanup.",
+  "deletionContract": {
+    "selectionSource": "shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json",
+    "exactFileCount": 4,
+    "exactBytes": 13883957,
+    "metricsMustMatchBeforeDeletion": true,
+    "cleanupRunsOnlyAfterM3C4CheckerPasses": true,
+    "cleanupRunsOnlyWhen5000TierWasGenerated": true,
+    "allOtherTrackedFilesProtected": true
+  },
+  "retainedReplacementEvidence": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json",
+  "recovery": {
+    "gitCommit": "9319ecb25918c03877c73001f8f89d141c1d367d",
+    "reproducibleBy": "npm run audit:post-v115-m3c4-large-graph-performance-exit-audit"
+  },
+  "selectedNextStage": {
+    "id": "M4D-2",
+    "name": "temporary-artifact-and-evidence-cleanup-exit-audit",
+    "reason": "Verify the bounded deletion, retained audit value, future runner cleanup and repository cleanup boundary before summarizing M4 facts and risks."
+  },
+  "releaseCandidate": false
+}

@@ -94,4 +94,8 @@ try {
 $checker = if ($Stage -eq 'M3C-4') { 'scripts\check-post-v115-m3c4-large-graph-performance-exit-audit.mjs' } elseif ($Stage -eq 'M3C-3') { 'scripts\check-post-v115-m3c3-worker-backed-bounded-force-layout-kernel.mjs' } elseif ($Stage -eq 'M3C-2') { 'scripts\check-post-v115-m3c2-large-graph-main-thread-phase-profiling-selection.mjs' } elseif ($Stage -eq 'M3C-1') { 'scripts\check-post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop.mjs' } else { 'scripts\check-post-v115-m3c0-large-graph-performance-baseline.mjs' }
 & node (Join-Path $workspace $checker)
 if ($LASTEXITCODE -ne 0) { throw "$Stage evidence contract failed" }
+if ($Stage -eq 'M3C-4' -and ($Tier -eq 0 -or $Tier -eq 5000)) {
+  & node (Join-Path $workspace 'scripts\cleanup-post-v115-m4d1-generated-graph-export-artifacts.mjs')
+  if ($LASTEXITCODE -ne 0) { throw 'M3C-4 generated export artifact cleanup failed' }
+}
 Write-Output "$Stage real desktop baseline completed: $output"

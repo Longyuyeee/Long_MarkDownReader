@@ -327,6 +327,8 @@
     "audit:post-v115-m4c6-controlled-conversion-exit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4c6-controlled-conversion-exit-audit.ps1",
     "audit:post-v115-m4d0-cleanup-selection": "node scripts/audit-post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection.mjs",
     "check:post-v115-m4d0-cleanup-selection": "node scripts/check-post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection.mjs",
+    "cleanup:post-v115-m4d1-generated-graph-exports": "node scripts/cleanup-post-v115-m4d1-generated-graph-export-artifacts.mjs",
+    "check:post-v115-m4d1-bounded-cleanup": "node scripts/check-post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup.mjs",
     "audit:post-v115-m3c4-large-graph-performance-exit-audit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3c0-large-graph-performance-baseline-audit.ps1 -Stage M3C-4",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",

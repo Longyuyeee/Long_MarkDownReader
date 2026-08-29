@@ -5,6 +5,7 @@ const read = file => fs.readFileSync(file, 'utf8')
 const readJson = file => JSON.parse(read(file))
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 const policy = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json')
+const successor = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const predecessor = readJson('shared/post-v115-m4c6-controlled-conversion-exit-audit-policy.json')
 const development = readJson('shared/development-version-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection/inventory.json')
@@ -25,7 +26,7 @@ for (const candidate of evidence.candidates || []) {
 }
 if (evidence.duplicateGroups?.some(group => group.selectedForRemoval || !policy.protectedDuplicateClasses.includes(group.classification))) failures.push('protected duplicate semantics drifted')
 if (evidence.ignoredLocalState?.some(item => item.trackedAtBaseline || !item.ignoredByPolicy || item.cleanupScope !== 'local-only-excluded-from-tracked-M4D-selection')) failures.push('ignored local state boundary drifted')
-if (policy.selectedNextStage?.id !== 'M4D-1' || development.currentStage !== `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`) failures.push('M4D-1 handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || development.currentStage !== `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`) failures.push('M4D successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) { console.error(`M4D-0 cleanup selection check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

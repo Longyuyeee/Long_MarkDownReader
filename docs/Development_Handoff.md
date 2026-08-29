@@ -1465,3 +1465,11 @@ M4D-0 已完成且未删除文件。冻结 `v1.0.15..20ab256` 得到 931 个新�
 唯一安全候选为 M3C-4 的 `full-5000.svg/png` 与 `filtered-5000.svg/png`，合计 13,883,957 bytes。四份负载的 SHA-256、字节数、节点/边、几何、PNG 尺寸和耗时均已保留在 `tier-5000.json`；M3C-4 checker 不读取负载，审计 harness 可重建，发布链没有路径依赖。
 
 当前唯一接续点为 **M4D-1 有界生成图谱导出产物清理**：只删除这四个精确路径，并让 M3C-4 runner 在检查通过后自动清除未来重建的负载；不得扩大到其他证据、脚本、夹具或发布文件。完成后复验 M3C-4/M4D-0/M4C-6/版本链，再决定 M4D 退出审计。详见 [`Post_v1.0.15_M4D0_Temporary_Artifact_and_Redundant_Evidence_Cleanup_Selection_Audit_2026-08-29.md`](./Post_v1.0.15_M4D0_Temporary_Artifact_and_Redundant_Evidence_Cleanup_Selection_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4D-1 有界生成图谱导出产物清理交接
+
+M4D-1 已按 M4D-0 冻结清单精确移除 `full-5000.svg/png` 与 `filtered-5000.svg/png`，共 4 个文件、13,883,957 bytes。实际删除前逐项核对文件大小、SHA-256 与 `tier-5000.json`；该 JSON 继续保留节点/边、几何、尺寸和耗时等完整验收指标。其他脚本、截图、JSON、manifest、夹具、重复语义证据与发布文件均未删除。
+
+M3C-4 runner 现在先运行原性能 checker，只有通过后才调用专用清理器；清理器再次按当次结构化指标核对四个精确路径后删除。因此失败审计仍保留诊断负载，成功审计不会重新积累大文件。已删除内容可从提交 `9319ecb25918c03877c73001f8f89d141c1d367d` 恢复或由原审计重建。
+
+当前唯一接续点为 **M4D-2 临时产物与证据清理退出审计**：验证删除后仓库、M4D-0 冻结分类、M3C-4 替代证据和 runner 自动清理边界，确认无越界删除或同条件遗漏后，再进入 M4 能力事实、风险与版本决策汇总。详见 [`Post_v1.0.15_M4D1_Bounded_Generated_Graph_Export_Artifact_Cleanup_Audit_2026-08-29.md`](./Post_v1.0.15_M4D1_Bounded_Generated_Graph_Export_Artifact_Cleanup_Audit_2026-08-29.md)。
