@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-4",
+  "name": "graph-project-note-disclosure",
+  "predecessor": "M4C-3",
+  "originalRequirement": "Controlled cross-format conversions must disclose source, target path, overwrite strategy and conversion loss, keep the source safe, and automatically open the created target.",
+  "sourceFormats": ["markdown", "pdf"],
+  "targetFormat": "markdown",
+  "disclosureContract": {
+    "centerLibraryRelativePath": true,
+    "boundedDepth": [1, 4],
+    "candidateTargetBesideCenter": true,
+    "neverOverwriteSourceOrExistingTarget": true,
+    "numberedCollisionTarget": true,
+    "automaticOpenActualTarget": true,
+    "generationFacts": [
+      "traceable-generated-center-and-depth-metadata",
+      "fixed-goal-related-material-and-next-step-task-template",
+      "center-body-is-not-copied",
+      "related-objects-are-sorted-by-title-and-path",
+      "at-most-100-related-objects-are-written",
+      "omitted-related-object-count-is-written-into-the-note",
+      "the-note-is-an-independently-editable-point-in-time-derivative-without-automatic-sync"
+    ]
+  },
+  "preservedBackendBoundaries": {
+    "topLevelMarkdownOrPdfCenterOnly": true,
+    "depthClampedToOneThroughFour": true,
+    "maximumRelatedObjects": 100,
+    "safeWikiLinkPathFiltering": true,
+    "reliableNewUtf8FileWrite": true
+  },
+  "selectedNextStage": {
+    "id": "M4C-5",
+    "name": "graph-canvas-eligibility-and-snapshot-disclosure",
+    "reason": "The project-note path now closes its bounded disclosure contract. The remaining graph-to-Canvas output must reconcile its frontend/backend center eligibility and disclose its independent relationship snapshot semantics before M4 conversion exit or release freeze."
+  },
+  "releaseCandidate": false
+}

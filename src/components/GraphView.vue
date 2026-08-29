@@ -420,7 +420,7 @@
           <button data-testid="graph-neighbor-pin-action" :disabled="Boolean(selectedNode.parentId)" @click="pinSelectedNeighborsToEditor">固定局部关系到编辑器右栏</button>
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
           <button :disabled="isCreatingCanvas || Boolean(selectedNode.parentId)" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
-          <button :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="createProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
+          <button data-testid="m4c4-create-project-note" :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="requestCreateProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
           <button :disabled="isSavingCollection || !canCreateProjectNote(selectedNode)" @click="saveGraphCollection(selectedNode)">{{ isSavingCollection ? '正在保存…' : '保存视图' }}</button>
         </div>
         <div v-if="selectedNode.objectType === 'markdown'" class="relation-editor">
@@ -470,10 +470,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, h, nextTick, reactive, ref, onMounted, onUnmounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, ScanSearch, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
@@ -522,6 +522,7 @@ const store = useAppStore()
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
+const dialog = useDialog()
 
 const graphData = ref<GraphData>({ nodes: [], edges: [] })
 const isLoading = ref(true)
@@ -1765,6 +1766,19 @@ const focusFirstMatch = () => {
 const objectTypeLabel = (type: string) => graphObjectSemantic(type).label
 const canCreateProjectNote = (node: GraphNode) => !node.parentId && ['markdown', 'pdf'].includes(node.objectType)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
+const normalizedManagedPath = (value: string) => displayWorkspacePath(value).replace(/\\/g, '/').replace(/\/+$/, '')
+const libraryRelativePath = (value: string) => {
+  const source = normalizedManagedPath(value)
+  const root = normalizedManagedPath(store.libraryPath)
+  if (root && source.toLocaleLowerCase().startsWith(`${root.toLocaleLowerCase()}/`)) return source.slice(root.length + 1)
+  return source
+}
+const graphProjectTargetPath = (node: GraphNode) => {
+  const source = libraryRelativePath(node.path)
+  const directory = source.split('/').slice(0, -1).join('/')
+  const safeTitle = `${node.title} 项目`.replace(/[\\/:*?"<>|]/g, '') || '知识图谱 项目'
+  return `${directory ? `${directory}/` : ''}${safeTitle}.md`
+}
 const openNode = (node: GraphNode) => {
   const path = displayWorkspacePath(node.path)
   if (node.locator?.kind && node.locator.objectId) {
@@ -1829,12 +1843,41 @@ const createProjectNote = async (node: GraphNode) => {
       centerPath: node.path,
       depth: mindmapDepth.value
     })
-    openManagedFile(router, path)
+    window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: path }))
+    message.success(`项目笔记已创建：${path.split(/[\\/]/).pop()}，正在打开`)
+    await openManagedFile(router, path)
   } catch (error) {
     message.error(`生成项目笔记失败：${String(error)}`)
   } finally {
     isCreatingProject.value = false
   }
+}
+
+const requestCreateProjectNote = (node: GraphNode) => {
+  if (!canCreateProjectNote(node) || isCreatingProject.value) return
+  const workspaceWidth = containerRef.value?.clientWidth || window.innerWidth
+  const depth = Math.max(1, Math.min(4, mindmapDepth.value))
+  dialog.info({
+    title: '生成独立项目笔记？',
+    style: { width: `${Math.max(240, Math.min(580, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    content: () => h('div', { class: 'graph-project-note-disclosure', 'data-testid': 'm4c4-graph-project-note-disclosure', style: { maxHeight: 'min(450px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
+      h('p', [h('strong', '中心来源：'), libraryRelativePath(node.path)]),
+      h('p', [h('strong', '关系范围：'), `当前中心周围 ${depth} 层局部图谱。`]),
+      h('p', [h('strong', '候选目标：'), graphProjectTargetPath(node)]),
+      h('p', [h('strong', '覆盖策略：'), '绝不覆盖中心来源或已有目标；如有同名文件，将创建带新序号的 Markdown，并自动打开实际创建的文件。']),
+      h('strong', '生成规则与边界：'),
+      h('ul', [
+        h('li', '写入可追溯的中心路径、实际深度和 Long编辑生成标记。'),
+        h('li', '生成固定的“目标”“关联资料”“下一步”结构及待办模板，不复制中心正文。'),
+        h('li', '关联对象按标题、路径排序；最多写入 100 个，超出数量会在笔记中明确记录。'),
+        h('li', '项目笔记是当前关系图的时间点派生结果；生成后可自由编辑，但不会与图谱或中心来源自动同步。'),
+      ]),
+      h('p', { class: 'graph-project-source-safety' }, '中心来源和其他关联文件保持不变。'),
+    ]),
+    positiveText: '生成并打开',
+    negativeText: '取消',
+    onPositiveClick: () => createProjectNote(node),
+  })
 }
 
 const saveGraphCollection = async (node: GraphNode) => {
@@ -3616,4 +3659,9 @@ onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cam
   .tutorial-card { padding: 24px 18px; }
   .empty-icon { display: none; }
 }
+
+:global(.graph-project-note-disclosure) { max-width: 580px; display: grid; gap: 8px; line-height: 1.55; }
+:global(.graph-project-note-disclosure p) { margin: 0; overflow-wrap: anywhere; }
+:global(.graph-project-note-disclosure ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }
+:global(.graph-project-note-disclosure .graph-project-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); font-weight: 650; }
 </style>

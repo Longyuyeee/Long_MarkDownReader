@@ -49,6 +49,7 @@ const m4c0ControlledConversionSelection = readJson('shared/post-v115-m4c0-contro
 const m4c1CsvTsvTableConversion = readJson('shared/post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open-policy.json')
 const m4c2OpmlCanvasProjection = readJson('shared/post-v115-m4c2-opml-canvas-projection-disclosure-policy.json')
 const m4c3GraphOutputSelection = readJson('shared/post-v115-m4c3-graph-derived-output-disclosure-selection-policy.json')
+const m4c4GraphProjectNote = readJson('shared/post-v115-m4c4-graph-project-note-disclosure-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -130,7 +131,9 @@ const checks = {
     && m4c2OpmlCanvasProjection.predecessor === m4c1CsvTsvTableConversion.stage
     && m4c2OpmlCanvasProjection.selectedNextStage.id === m4c3GraphOutputSelection.stage
     && m4c3GraphOutputSelection.predecessor === m4c2OpmlCanvasProjection.stage
-    && policy.currentStage === `${m4c3GraphOutputSelection.selection.id}-${m4c3GraphOutputSelection.selection.name}`,
+    && m4c3GraphOutputSelection.selection.id === m4c4GraphProjectNote.stage
+    && m4c4GraphProjectNote.predecessor === m4c3GraphOutputSelection.stage
+    && policy.currentStage === `${m4c4GraphProjectNote.selectedNextStage.id}-${m4c4GraphProjectNote.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

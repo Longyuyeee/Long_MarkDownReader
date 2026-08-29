@@ -6,6 +6,7 @@ const policy = readJson('shared/post-v115-m4c1-csv-tsv-table-disclosure-and-auto
 const predecessor = readJson('shared/post-v115-m4c0-controlled-conversion-workflow-selection-policy.json')
 const successor = readJson('shared/post-v115-m4c2-opml-canvas-projection-disclosure-policy.json')
 const graphOutputSelection = readJson('shared/post-v115-m4c3-graph-derived-output-disclosure-selection-policy.json')
+const projectNote = readJson('shared/post-v115-m4c4-graph-project-note-disclosure-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open/interaction-evidence.json')
 const manifest = readJson('docs/evidence/post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open/manifest.json')
 const development = readJson('shared/development-version-policy.json')
@@ -28,7 +29,7 @@ if (actual.csvTargetName !== 'Conversion Matrix.table.json' || actual.tsvFirstTa
 if (actual.csvRows !== 2 || actual.csvColumns !== 3 || actual.tsvRows !== 2 || actual.tsvColumns !== 2) failures.push('target content reread drifted')
 if (actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved || actual.successDialogObservedAfterCreate) failures.push('runtime, error surface or legacy success dialog gate failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 4) failures.push('M4C-1 screenshots have not completed visual review')
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== graphOutputSelection.stage || graphOutputSelection.predecessor !== successor.stage || development.currentStage !== `${graphOutputSelection.selection.id}-${graphOutputSelection.selection.name}`) failures.push('M4C successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== graphOutputSelection.stage || graphOutputSelection.predecessor !== successor.stage || graphOutputSelection.selection.id !== projectNote.stage || projectNote.predecessor !== graphOutputSelection.stage || development.currentStage !== `${projectNote.selectedNextStage.id}-${projectNote.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

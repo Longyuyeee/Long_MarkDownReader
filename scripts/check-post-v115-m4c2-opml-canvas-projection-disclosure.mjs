@@ -5,6 +5,7 @@ const readJson = file => JSON.parse(read(file))
 const policy = readJson('shared/post-v115-m4c2-opml-canvas-projection-disclosure-policy.json')
 const predecessor = readJson('shared/post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open-policy.json')
 const successor = readJson('shared/post-v115-m4c3-graph-derived-output-disclosure-selection-policy.json')
+const projectNote = readJson('shared/post-v115-m4c4-graph-project-note-disclosure-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4c2-opml-canvas-projection-disclosure/interaction-evidence.json')
 const manifest = readJson('docs/evidence/post-v115-m4c2-opml-canvas-projection-disclosure/manifest.json')
 const development = readJson('shared/development-version-policy.json')
@@ -23,7 +24,7 @@ if (!actual.firstTargetReread || !actual.numberedTargetReread || actual.firstTar
 if (actual.targetNodeCount !== 5 || actual.targetEdgeCount !== 4 || !actual.sourceFileNodeObserved || !actual.titleNoteProjectionObserved || !actual.containsHierarchyObserved || !actual.lossFieldsAbsent) failures.push('Canvas projection structure evidence failed')
 if (!actual.sourceUnchanged || !actual.sourceFilesUnchangedAfterAudit || !actual.responsive1280 || !actual.responsive480 || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved) failures.push('source safety, responsive or runtime gate failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 4) failures.push('M4C-2 screenshots have not completed visual review')
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || development.currentStage !== `${successor.selection.id}-${successor.selection.name}`) failures.push('M4C-3 handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selection.id !== projectNote.stage || projectNote.predecessor !== successor.stage || development.currentStage !== `${projectNote.selectedNextStage.id}-${projectNote.selectedNextStage.name}`) failures.push('M4C-3 handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {
