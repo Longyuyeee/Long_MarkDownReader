@@ -58,6 +58,7 @@ const m4d2CleanupExit = readJson('shared/post-v115-m4d2-temporary-artifact-and-e
 const m4e0CapabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
 const m4f0ReleaseFreezeEntry = readJson('shared/post-v115-m4f0-v1016-release-freeze-entry-audit-policy.json')
 const m4f1AtomicVersionTransition = readJson('shared/post-v115-m4f1-v1016-atomic-version-transition-policy.json')
+const m4f2CandidateQualityGate = readJson('shared/post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -78,14 +79,16 @@ const checks = {
     && tauri.version === policy.runtimeBaseVersion
     && matrix.appVersion === policy.runtimeBaseVersion,
   candidateMetadataFacts: community.appVersion === policy.runtimeBaseVersion
-    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-quality-gate-pending`
+    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-quality-gate-and-runtime-smoke-passed-installer-pending`
+    && community.gates?.qualityGatePassed === true
+    && community.gates?.localRuntimeSmokePassed === true
     && community.gates?.githubReleasePublished === false,
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
     && policy.publicVersion === '1.0.15',
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   notReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
-  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-quality-gate-pending'
+  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-quality-gate-and-runtime-smoke-passed'
     && policy.runtimeBaseVersion === policy.developmentTargetVersion,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
     && m1Closure.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit'
@@ -160,7 +163,9 @@ const checks = {
     && m4f0ReleaseFreezeEntry.predecessor === m4e0CapabilityDecision.stage
     && m4f0ReleaseFreezeEntry.selectedNextStage.id === m4f1AtomicVersionTransition.stage
     && m4f1AtomicVersionTransition.predecessor === m4f0ReleaseFreezeEntry.stage
-    && policy.currentStage === `${m4f1AtomicVersionTransition.selectedNextStage.id}-${m4f1AtomicVersionTransition.selectedNextStage.name}`,
+    && m4f1AtomicVersionTransition.selectedNextStage.id === m4f2CandidateQualityGate.stage
+    && m4f2CandidateQualityGate.predecessor === m4f1AtomicVersionTransition.stage
+    && policy.currentStage === `${m4f2CandidateQualityGate.selectedNextStage.id}-${m4f2CandidateQualityGate.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
@@ -184,7 +189,7 @@ const evidence = {
     runtimeBaseVersion: policy.developmentTargetVersion,
     publicTag: policy.publicTag,
     headAheadOfPublicTag: true,
-    binaryVersionTransition: 'v1.0.16-quality-gate-pending',
+    binaryVersionTransition: 'v1.0.16-quality-gate-and-runtime-smoke-passed',
   },
   actual: { headCommit, tagCommit, commitsAhead, tagIsAncestor, checks },
 }

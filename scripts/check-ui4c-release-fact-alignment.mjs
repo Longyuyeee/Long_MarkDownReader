@@ -34,11 +34,18 @@ if (community.channel !== 'community-unsigned') failures.push('community release
 const published = community.gates?.githubReleasePublished === true
 const publishedCurrent = published && community.appVersion === pkg.version
 const publishedPrior = published && compareVersions(community.appVersion, pkg.version) < 0
-const ready = !published && community.gates?.qualityGatePassed === true
-const pending = !published && !ready
+const qualityVerified = !published && community.gates?.qualityGatePassed === true
+const ready = qualityVerified
+  && community.gates?.msiBuilt === true
+  && community.gates?.nsisBuilt === true
+  && community.gates?.artifactHashesVerified === true
+  && community.gates?.installedLifecyclePassed === true
+const installerPending = qualityVerified && !ready
+const pending = !published && !qualityVerified
 if (published && (community.currentStatus !== `v${community.appVersion}-community-release-published` || community.release?.tag !== `v${community.appVersion}`)) failures.push('published community receipt drift')
 if (publishedPrior && !config.includes('发布准备中 · 当前公开')) failures.push('pre-release public status is missing')
 if (ready && (community.currentStatus !== `${tag}-community-release-ready-to-publish` || community.releaseCandidate !== true)) failures.push('ready community state drift')
+if (installerPending && (community.currentStatus !== `${tag}-community-release-quality-gate-and-runtime-smoke-passed-installer-pending` || community.releaseCandidate !== false)) failures.push('installer-pending community state drift')
 if (pending && (community.currentStatus !== `${tag}-community-release-quality-gate-pending` || community.releaseCandidate !== false)) failures.push('pending community state drift')
 
 for (const token of ['communityReleaseSource', 'RELEASE_PUBLIC_STATUS_LABEL', '社区版已发布', '社区版']) {
@@ -55,4 +62,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log(`UI-4C release facts passed: ${tag} is ${publishedCurrent ? 'published' : publishedPrior ? `being prepared above v${community.appVersion}` : ready ? 'ready' : 'being prepared'} and enterprise RC remains separate.`)
+console.log(`UI-4C release facts passed: ${tag} is ${publishedCurrent ? 'published' : publishedPrior ? `being prepared above v${community.appVersion}` : ready ? 'ready' : installerPending ? 'quality verified with installers pending' : 'being prepared'} and enterprise RC remains separate.`)

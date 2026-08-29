@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4F-2",
+  "name": "v1.0.16-candidate-quality-gate-and-runtime-smoke",
+  "predecessor": "M4F-1",
+  "candidateSourceCommit": "34f8ce2badb5224cda658e350cd1ec2f70b1c6b1",
+  "candidateVersion": "1.0.16",
+  "publicVersion": "1.0.15",
+  "qualityGate": {
+    "command": "npm run ci:patch-release",
+    "status": "passed",
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "productionVulnerabilities": 0
+  },
+  "runtimeSmoke": {
+    "r5fBrowserPreviewRoutesPassed": 11,
+    "r5fBrowserPreviewRoutesFailed": 0,
+    "r5gDesktopChecksPassed": 6,
+    "r5gDesktopRoutesPassed": 11,
+    "txtSaveReopenPassed": true,
+    "jsonSaveReopenPassed": true,
+    "desktopPerformanceExportPassed": true,
+    "sourceUserContentIncluded": false
+  },
+  "releaseBoundary": {
+    "releaseCandidate": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "signedArtifactRuntimeProven": false,
+    "githubReleasePublished": false
+  },
+  "selectedNextStage": {
+    "id": "M4F-3",
+    "name": "v1.0.16-unsigned-installer-build-and-hash-audit",
+    "reason": "Build MSI and NSIS from the immutable candidate source, record size, SHA-256 and NotSigned status, without tagging or publishing."
+  }
+}

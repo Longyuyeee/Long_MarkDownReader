@@ -1,6 +1,6 @@
 # v1.0.16 无签名社区版发布审计
 
-状态：**质量门禁待执行**
+状态：**质量门禁与当前运行烟测已通过，安装包待构建**
 
 渠道：`community-unsigned`
 
@@ -16,26 +16,26 @@
 
 ## 已满足的发布前置
 
-- 产品功能范围冻结到 `7e10c340fa0d528b598c9ca6be391c48b15a463f`。
+- 产品功能范围以 `7e10c340fa0d528b598c9ca6be391c48b15a463f` 为冻结入口；经过门禁纠偏后，精确产品候选固定为 `34f8ce2badb5224cda658e350cd1ec2f70b1c6b1`。
 - package、Cargo、Tauri 和 38 个当前共享合同已在同一步迁移到 `1.0.16`；五个历史基线继续固定为 `1.0.15`。
-- v1.0.16 社区策略已清除 v1.0.15 的候选、产物和远端 Release 回执，全部门禁重新设为待执行。
+- 精确候选已从头通过完整 `npm run ci:patch-release`：前端构建、Rust locked check 和生产依赖审计均通过，生产依赖漏洞为 0。
+- 当前 R5F 浏览器预览路由挂载为 11/11；R5G 真实 Tauri Debug WebView2 为 6/6 检查、11/11 路由，TXT/JSON 保存重开和性能导出通过。
+- v1.0.16 社区策略已绑定精确候选，但安装包、安装生命周期和远端 Release 回执仍为空。
 - 当前公开稳定版仍为 `v1.0.15`，不存在 `v1.0.16` Tag 或可下载安装包。
 
 ## 待执行发布门禁
 
-1. M4F-1 首轮 Quality Gate 已发现并纠正图谱字体、工作簿颜色语义、三个过时检查器与浏览器预览窗口边界；以 M4F-2A 推送后的精确提交重新从头执行完整 `ci:patch-release` Quality Gate。
-2. 重新执行 R5F 浏览器路由挂载以及 R5G 桌面路由、TXT/JSON I/O 和性能导出烟测。
-3. 构建无签名 NSIS 与 MSI，记录大小、SHA-256 和 `NotSigned` 状态。
-4. 在托管 Windows 中完成当前候选安装、升级、卸载和安装后工作区回归。
-5. 最终确认发布说明，创建绑定候选提交的 Tag 与 GitHub Release，并从远端下载附件复核。
+1. 从精确候选提交构建无签名 NSIS 与 MSI，记录大小、SHA-256 和 `NotSigned` 状态。
+2. 在托管 Windows 中完成当前候选安装、升级、卸载和安装后工作区回归。
+3. 最终确认发布说明，创建绑定候选提交的 Tag 与 GitHub Release，并从远端下载附件复核。
 
 ## 当前边界
 
-- 版本身份迁移不等于 Quality Gate 通过，也不等于候选、安装包或公开 Release 已存在。
+- 质量门禁和运行烟测通过不等于安装包、安装态生命周期或公开 Release 已存在。
 - 当前用户仍只能从 v1.0.15 官方 Release 手动下载安装；自动更新在 v1.0.16 正式发布前不会发现该版本。
 - 社区安装包没有 Authenticode 商业签名，Windows 可能显示“未知发布者”或 SmartScreen。
 - 自动更新和手动安装都必须使用官方 GitHub Release，并核对 SHA-256；不得继承 v1.0.15 的哈希作为 v1.0.16 证据。
 
 ## M4F-2A 纠偏记录
 
-R5F 现有历史证据原本不可重复执行。新增采集器后确认当前生产浏览器预览会因 `App.vue` 无条件调用 Tauri 窗口 API 而崩溃；该实现已改为只在真实 Tauri 运行时取窗口对象，并已完成 11/11 路由的重新验证。详细问题、修复与边界见 `Post_v1.0.15_M4F2A_Candidate_Gate_Remediation_Audit_2026-08-30.md`。这只是候选源码纠偏，不代表完整 Quality Gate 或桌面 I/O 烟测已经完成。
+R5F 现有历史证据原本不可重复执行。新增采集器后确认当前生产浏览器预览会因 `App.vue` 无条件调用 Tauri 窗口 API 而崩溃；该实现已改为只在真实 Tauri 运行时取窗口对象，并完成 11/11 路由重新验证。详细问题与修复见 `Post_v1.0.15_M4F2A_Candidate_Gate_Remediation_Audit_2026-08-30.md`；完整质量门禁、R5F/R5G 结果与下一接续点见 `Post_v1.0.15_M4F2_v1.0.16_Candidate_Quality_Gate_and_Runtime_Smoke_Audit_2026-08-30.md`。

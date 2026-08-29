@@ -64,7 +64,12 @@ if (!fs.existsSync(auditPath) || !fs.existsSync(notesPath)) fail('current releas
 for (const token of [tag, '未知发布者', 'SHA-256', '自动更新']) if (!readme.includes(token)) fail(`README release disclosure missing: ${token}`)
 
 const published = policy.gates?.githubReleasePublished === true
-const ready = !published && policy.gates?.qualityGatePassed === true
+const qualityVerified = !published && policy.gates?.qualityGatePassed === true
+const ready = qualityVerified
+  && policy.gates?.msiBuilt === true
+  && policy.gates?.nsisBuilt === true
+  && policy.gates?.artifactHashesVerified === true
+  && policy.gates?.installedLifecyclePassed === true
 if (published) {
   if (!policy.releaseCandidate || policy.currentStatus !== `${tag}-community-release-published` || policy.release?.tag !== tag || policy.release?.url !== releaseUrl || !/^[0-9a-f]{40}$/.test(policy.release?.taggedCommit ?? '')) fail('published release receipt drift')
 } else if (ready) {
@@ -76,6 +81,18 @@ if (published) {
     || policy.gates?.installedLifecyclePassed !== true
     || policy.patchValidation?.fullInstalledLifecycleRerun !== true
     || !Number.isInteger(policy.candidate?.hostedInstalledLifecycleRunId)) fail('ready-to-publish state drift')
+} else if (qualityVerified) {
+  if (policy.releaseCandidate !== false
+    || policy.currentStatus !== `${tag}-community-release-quality-gate-and-runtime-smoke-passed-installer-pending`
+    || policy.gates?.frontendBuildPassed !== true
+    || policy.gates?.rustLockedCheckPassed !== true
+    || policy.gates?.productionDependencyAuditPassed !== true
+    || policy.gates?.localRuntimeSmokePassed !== true
+    || policy.gates?.msiBuilt !== false
+    || policy.gates?.nsisBuilt !== false
+    || policy.gates?.artifactHashesVerified !== false
+    || policy.gates?.installedLifecyclePassed !== false
+    || !/^[0-9a-f]{40}$/.test(policy.candidate?.artifactSourceCommit ?? '')) fail('quality-verified installer-pending state drift')
 } else if (policy.releaseCandidate !== false || policy.currentStatus !== `${tag}-community-release-quality-gate-pending` || policy.gates?.msiBuilt !== false || policy.gates?.nsisBuilt !== false) {
   fail('pre-quality release state drift')
 }
@@ -166,4 +183,4 @@ if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
-console.log(`V1 community release contract passed: ${tag} is ${published ? 'published' : ready ? 'ready to publish' : 'awaiting quality gate and package evidence'} with managed SHA-256 updates.`)
+console.log(`V1 community release contract passed: ${tag} is ${published ? 'published' : ready ? 'ready to publish' : qualityVerified ? 'quality verified with installer evidence pending' : 'awaiting quality gate and package evidence'} with managed SHA-256 updates.`)

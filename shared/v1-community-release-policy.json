@@ -5,7 +5,7 @@
   "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-30",
-  "currentStatus": "v1.0.16-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.16-community-release-quality-gate-and-runtime-smoke-passed-installer-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,15 +24,15 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
     "msiBuilt": false,
     "nsisBuilt": false,
     "artifactHashesVerified": false,
-    "localRuntimeSmokePassed": false,
+    "localRuntimeSmokePassed": true,
     "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
@@ -50,7 +50,18 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "34f8ce2badb5224cda658e350cd1ec2f70b1c6b1",
+    "qualityGateCommand": "npm run ci:patch-release",
+    "qualityGateEnvironment": "local-windows",
+    "qualityGateRunId": null,
+    "hostedInstalledLifecycleRunId": null,
+    "runtimeSmokeEvidence": [
+      "docs/evidence/r5f-safe-tauri-runtime/manifest.json",
+      "docs/evidence/r5g-desktop-artifact-smoke/audit-manifest.json"
+    ],
+    "artifacts": []
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -59,5 +70,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "pass-v1.0.16-quality-gate-and-current-candidate-runtime-smoke"
+  "nextAction": "build-v1.0.16-unsigned-msi-nsis-and-verify-hashes"
 }
