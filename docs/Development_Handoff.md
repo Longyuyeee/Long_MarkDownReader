@@ -1441,3 +1441,11 @@ M4C-4 已完成。顶层 Markdown/PDF 图谱对象生成项目笔记前，现在
 真实 Tauri 使用两个各含 102 个关联对象的中心，分别创建并打开 `First/Graph First 项目.md` 和碰撞后的 `Collision/Graph Collision 项目 1.md`。两份目标均写入 100 个排序对象、记录省略 2 个并从磁盘复读；取消不写盘，207 份既有 Markdown 摘要不变，1280/480、0 运行时错误和四张视觉证据通过。
 
 审计纠正了 PowerShell 5.1 无 BOM 脚本对中文碰撞文件名的误解码，并在人工复核后等待异步确认框完全关闭再重取窄屏目标证据；产品门禁未放宽。当前唯一接续点为 **M4C-5 图谱→Canvas 资格纠偏与快照披露**：必须先统一前端、命令和局部图谱中心类型，再披露相对中心、深度、根目录候选目标、编号、相对文件节点、关系方向/类型、重新布局和独立快照。详见 [`Post_v1.0.15_M4C4_Graph_Project_Note_Disclosure_Audit_2026-08-29.md`](./Post_v1.0.15_M4C4_Graph_Project_Note_Disclosure_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4C-5 图谱→Canvas 资格纠偏与快照披露交接
+
+M4C-5 已完成。根据原始 PDF/表格图谱路线，局部图谱与 Canvas 命令现在共用统一中心解析：允许 Markdown、PDF、CSV、TSV、开放 Table；普通 JSON 和其他格式拒绝。前端只向顶层 Markdown/PDF/Table 开放，OPML、Canvas/Office 及所有内部子对象禁用。
+
+真实 Tauri 已覆盖 5/5 合法中心、3 类后端负例、3 类禁用入口、取消不写盘，以及首个 `Graph Center 思维导图.canvas` 和碰撞后的 `Data Board 思维导图 1.canvas` 自动打开。两份目标从磁盘复读为各 2 节点/1 边，关系类型/方向和深度布局一致；Table 父对象与内部 view 均投影为同一 `.table.json` 路径，确认 locator 不保留。10 个既有文件摘要不变，1280/480、0 错误和四张视觉证据通过。
+
+当前唯一接续点为 **M4C-6 受控转换退出审计**：组合复验四条已闭环工作流后决定 M4C 是否退出；不得提前进入 `M4-release-freeze`，不得混入全局转换框架、新转换或临时产物清理。详见 [`Post_v1.0.15_M4C5_Graph_Canvas_Eligibility_and_Snapshot_Disclosure_Audit_2026-08-29.md`](./Post_v1.0.15_M4C5_Graph_Canvas_Eligibility_and_Snapshot_Disclosure_Audit_2026-08-29.md)。

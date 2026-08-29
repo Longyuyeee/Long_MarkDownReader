@@ -478,6 +478,26 @@ pub(crate) fn filter_graph_by_depth(
     }
 }
 
+pub(crate) fn resolve_local_graph_center(
+    guard: &WorkspaceGuard,
+    center_path: &str,
+) -> Result<PathBuf, String> {
+    let center =
+        guard.resolve_existing_file(center_path, &["md", "pdf", "csv", "tsv", "json"])?;
+    if center
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.eq_ignore_ascii_case("json"))
+        && !center
+            .file_name()
+            .and_then(|value| value.to_str())
+            .is_some_and(|value| value.to_ascii_lowercase().ends_with(".table.json"))
+    {
+        return Err("仅支持开放 Table JSON 作为表格中心对象".into());
+    }
+    Ok(center)
+}
+
 #[tauri::command]
 pub async fn build_local_graph(
     library_root: String,
@@ -485,7 +505,7 @@ pub async fn build_local_graph(
     depth: usize,
 ) -> Result<GraphData, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
-    let center = guard.resolve_existing_file(center_path, &["md", "pdf"])?;
+    let center = resolve_local_graph_center(&guard, &center_path)?;
     let graph = build_link_graph(guard.root().to_string_lossy().into_owned()).await?;
     Ok(filter_graph_by_depth(
         graph,
@@ -3874,6 +3894,54 @@ mod tests {
         let missing = filter_graph_by_depth(graph, "missing", 2);
         assert!(missing.nodes.is_empty());
         assert!(missing.edges.is_empty());
+    }
+
+    #[test]
+    fn local_graph_center_supports_graph_canvas_file_types_only() {
+        let (base, root) = fixture("local-graph-centers");
+        for name in [
+            "Center.md",
+            "Center.pdf",
+            "Center.csv",
+            "Center.tsv",
+            "Center.table.json",
+        ] {
+            fs::write(
+                root.join(name),
+                if name.ends_with(".table.json") {
+                    "{}"
+                } else {
+                    "fixture"
+                },
+            )
+            .unwrap();
+        }
+        fs::write(root.join("Other.json"), "{}").unwrap();
+        fs::write(root.join("Outline.opml"), "<opml version=\"2.0\"/>").unwrap();
+        let guard = WorkspaceGuard::new(&root).unwrap();
+
+        for name in [
+            "Center.md",
+            "Center.pdf",
+            "Center.csv",
+            "Center.tsv",
+            "Center.table.json",
+        ] {
+            assert!(
+                resolve_local_graph_center(&guard, &root.join(name).to_string_lossy()).is_ok(),
+                "{name}"
+            );
+        }
+        assert_eq!(
+            resolve_local_graph_center(&guard, &root.join("Other.json").to_string_lossy())
+                .unwrap_err(),
+            "仅支持开放 Table JSON 作为表格中心对象"
+        );
+        assert!(
+            resolve_local_graph_center(&guard, &root.join("Outline.opml").to_string_lossy())
+                .is_err()
+        );
+        fs::remove_dir_all(base).unwrap();
     }
 
     #[test]

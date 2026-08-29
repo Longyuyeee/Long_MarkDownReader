@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-5",
+  "status": "accepted-after-visual-review",
+  "sourceCommit": "7364c73fb4281b8e6c89b6b912fbbcdcc1dd3f4f",
+  "evidenceFile": "interaction-evidence.json",
+  "evidenceSha256": "582d5daee443223653b076cd68d2f7e4535ca3947db8d2643e7dc19a7085ac6c",
+  "screenshots": [
+    {
+      "file": "graph-canvas-disclosure-1280.jpg",
+      "bytes": 139534,
+      "sha256": "73105419d33b8879a69cf854f751d9c08ad8fb3b9d423217bb3dfff59a9c27c9"
+    },
+    {
+      "file": "graph-canvas-first-target-1280.jpg",
+      "bytes": 111635,
+      "sha256": "cf79ad7a46556d0acc128d539ae4f87de94d09567ecd9ff8069af365d2360b40"
+    },
+    {
+      "file": "graph-canvas-disclosure-480.jpg",
+      "bytes": 68647,
+      "sha256": "1c44342b43fdafa11fff82ea5298498bc8fb6c85d6c6bf678fee105ee52f028b"
+    },
+    {
+      "file": "graph-canvas-numbered-target-480.jpg",
+      "bytes": 85105,
+      "sha256": "ed991f58d0fa184ebfd2eef2fcfa1e64036fee8caf1f748d84302d0123904dfa"
+    }
+  ],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

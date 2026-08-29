@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-5",
+  "status": "passed",
+  "sourceCommit": "7364c73fb4281b8e6c89b6b912fbbcdcc1dd3f4f",
+  "actual": {
+    "positiveCenterTypes": [
+      "Graph Center.md",
+      "Paper.pdf",
+      "Data.csv",
+      "Data.tsv",
+      "Data Board.table.json"
+    ],
+    "genericJsonRejected": true,
+    "opmlRejected": true,
+    "canvasRejected": true,
+    "opmlActionDisabled": true,
+    "canvasActionDisabled": true,
+    "internalActionDisabled": true,
+    "markdownActionEnabled": true,
+    "tableActionEnabled": true,
+    "disclosureComplete1280": true,
+    "disclosureComplete480": true,
+    "cancelPreventedWrite": true,
+    "firstTargetAutoOpened": true,
+    "numberedTargetAutoOpened": true,
+    "firstTargetName": "Graph Center 思维导图.canvas",
+    "numberedTargetName": "Data Board 思维导图 1.canvas",
+    "firstNodeCount": 2,
+    "firstEdgeCount": 1,
+    "numberedNodeCount": 2,
+    "numberedEdgeCount": 1,
+    "firstFiles": [
+      "Graph Center.md",
+      "Graph Peer.md"
+    ],
+    "tableFiles": [
+      "Data Board.table.json",
+      "Data Board.table.json"
+    ],
+    "tableInternalLocatorLossObserved": true,
+    "canvasNodesAreBoundedFiles": true,
+    "relationProjectionObserved": true,
+    "depthLayoutAndColorsObserved": true,
+    "sourcesUnchanged": true,
+    "responsive1280": true,
+    "responsive480": true,
+    "runtimeErrorCount": 0,
+    "blockingErrorSurfaceObserved": false
+  },
+  "sourceFileCount": 10,
+  "initialHashes": {
+    "Data Board 思维导图.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+    "Data Board.table.json": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "Data.csv": "d7bfe0ea50821ba6bf2ad343bd22af2533351d7efbd389ac4594203ee7082268",
+    "Data.tsv": "4af3ea13e2bed6c56c77b640736f441b44fbeb782e966bcfbfca7d88e87225b3",
+    "Existing.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+    "Graph Center.md": "f7466e2866b703f8fee40396abd15ac96d295baa2ec4e8b71a1f76b2433bfec3",
+    "Graph Peer.md": "11b90a75902eaf12c581606a4dc50f9047d9f866f422d012af671cd7e1cb483a",
+    "Other.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "Outline.opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7",
+    "Paper.pdf": "336e26b9b36af394d989cfb3c594ea9894f47ccac04a586f3be32b9497eed638"
+  },
+  "finalHashes": {
+    "Data Board 思维导图.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+    "Data Board.table.json": "92d83226331280976c82deaabb15e61efdbeb62dda9fca438dbcecac1301de08",
+    "Data.csv": "d7bfe0ea50821ba6bf2ad343bd22af2533351d7efbd389ac4594203ee7082268",
+    "Data.tsv": "4af3ea13e2bed6c56c77b640736f441b44fbeb782e966bcfbfca7d88e87225b3",
+    "Existing.canvas": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+    "Graph Center.md": "f7466e2866b703f8fee40396abd15ac96d295baa2ec4e8b71a1f76b2433bfec3",
+    "Graph Peer.md": "11b90a75902eaf12c581606a4dc50f9047d9f866f422d012af671cd7e1cb483a",
+    "Other.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "Outline.opml": "0df075d721f42b6f59a0cbd697decac8215f8635a478f42c7bcb910b5619b1a7",
+    "Paper.pdf": "336e26b9b36af394d989cfb3c594ea9894f47ccac04a586f3be32b9497eed638"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

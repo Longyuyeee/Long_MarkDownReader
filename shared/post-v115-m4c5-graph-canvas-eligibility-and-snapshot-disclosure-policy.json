@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4C-5",
+  "name": "graph-canvas-eligibility-and-snapshot-disclosure",
+  "predecessor": "M4C-4",
+  "originalRequirement": "PDF and data-table graph nodes may be used as local mind-map centers and sent with their neighbors to JSON Canvas; controlled outputs must disclose source, target, overwrite strategy and conversion loss while preserving sources.",
+  "sourceFormats": ["markdown", "pdf", "csv", "tsv", "longedit-table"],
+  "targetFormat": "json-canvas",
+  "eligibilityContract": {
+    "frontendTopLevelObjectTypes": ["markdown", "pdf", "table"],
+    "backendFileTypes": ["md", "pdf", "csv", "tsv", "table.json"],
+    "genericJsonRejected": true,
+    "internalGraphObjectsRejected": true,
+    "sharedBackendResolver": true
+  },
+  "disclosureContract": {
+    "centerLibraryRelativePath": true,
+    "boundedDepth": [1, 4],
+    "candidateTargetInLibraryRoot": true,
+    "neverOverwriteSourceOrExistingTarget": true,
+    "numberedCollisionTarget": true,
+    "automaticOpenActualTarget": true,
+    "snapshotFacts": [
+      "included-objects-become-library-relative-file-nodes",
+      "center-and-related-objects-use-distinct-colors",
+      "relation-type-and-directed-arrow-semantics-are-retained",
+      "titles-tags-search-text-modified-time-and-internal-locators-are-not-canvas-fields",
+      "multiple-internal-objects-may-point-to-the-same-source-file",
+      "theme-filter-manual-position-and-viewport-are-not-retained",
+      "positions-are-regenerated-by-breadth-first-depth",
+      "the-canvas-is-an-independent-point-in-time-snapshot-without-automatic-bidirectional-sync"
+    ]
+  },
+  "selectedNextStage": {
+    "id": "M4C-6",
+    "name": "controlled-conversion-exit-audit",
+    "reason": "All selected conversion and graph-derived output paths now have bounded pre-write disclosure. A combined exit audit must verify their contracts together before M4 release freeze."
+  },
+  "releaseCandidate": false
+}

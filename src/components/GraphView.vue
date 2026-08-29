@@ -419,7 +419,7 @@
           <button data-testid="graph-neighbor-focus-action" :disabled="!selectedNeighbors.length" @click="focusSelectedNeighbors">聚焦直接邻居</button>
           <button data-testid="graph-neighbor-pin-action" :disabled="Boolean(selectedNode.parentId)" @click="pinSelectedNeighborsToEditor">固定局部关系到编辑器右栏</button>
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
-          <button :disabled="isCreatingCanvas || Boolean(selectedNode.parentId)" @click="sendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
+          <button data-testid="m4c5-send-to-canvas" :disabled="isCreatingCanvas || !canSendToCanvas(selectedNode)" @click="requestSendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
           <button data-testid="m4c4-create-project-note" :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="requestCreateProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
           <button :disabled="isSavingCollection || !canCreateProjectNote(selectedNode)" @click="saveGraphCollection(selectedNode)">{{ isSavingCollection ? '正在保存…' : '保存视图' }}</button>
         </div>
@@ -1764,6 +1764,7 @@ const focusFirstMatch = () => {
 }
 
 const objectTypeLabel = (type: string) => graphObjectSemantic(type).label
+const canSendToCanvas = (node: GraphNode) => !node.parentId && ['markdown', 'pdf', 'table'].includes(node.objectType)
 const canCreateProjectNote = (node: GraphNode) => !node.parentId && ['markdown', 'pdf'].includes(node.objectType)
 const displayWorkspacePath = (path: string) => path.replace(/^\\\\\?\\/, '')
 const normalizedManagedPath = (value: string) => displayWorkspacePath(value).replace(/\\/g, '/').replace(/\/+$/, '')
@@ -1778,6 +1779,10 @@ const graphProjectTargetPath = (node: GraphNode) => {
   const directory = source.split('/').slice(0, -1).join('/')
   const safeTitle = `${node.title} 项目`.replace(/[\\/:*?"<>|]/g, '') || '知识图谱 项目'
   return `${directory ? `${directory}/` : ''}${safeTitle}.md`
+}
+const graphCanvasTargetPath = (node: GraphNode) => {
+  const safeTitle = `${node.title} 思维导图`.replace(/[\\/:*?"<>|]/g, '') || '知识图谱 思维导图'
+  return `${safeTitle}.canvas`
 }
 const openNode = (node: GraphNode) => {
   const path = displayWorkspacePath(node.path)
@@ -1826,7 +1831,9 @@ const sendToCanvas = async (node: GraphNode) => {
       centerPath: node.path,
       depth: mindmapDepth.value
     })
-    openManagedFile(router, path)
+    window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: path }))
+    message.success(`Canvas 快照已创建：${path.split(/[\\/]/).pop()}，正在打开`)
+    await openManagedFile(router, path)
   } catch (error) {
     message.error(`生成画布失败：${String(error)}`)
   } finally {
@@ -1851,6 +1858,34 @@ const createProjectNote = async (node: GraphNode) => {
   } finally {
     isCreatingProject.value = false
   }
+}
+
+const requestSendToCanvas = (node: GraphNode) => {
+  if (!canSendToCanvas(node) || isCreatingCanvas.value) return
+  const workspaceWidth = containerRef.value?.clientWidth || window.innerWidth
+  const depth = Math.max(1, Math.min(4, mindmapDepth.value))
+  dialog.info({
+    title: '创建独立 Canvas 关系快照？',
+    style: { width: `${Math.max(240, Math.min(590, workspaceWidth - 24))}px`, maxWidth: 'calc(100vw - 24px)' },
+    content: () => h('div', { class: 'graph-canvas-disclosure', 'data-testid': 'm4c5-graph-canvas-disclosure', style: { maxHeight: 'min(460px, calc(100vh - 190px))', overflowY: 'auto', paddingRight: '4px' } }, [
+      h('p', [h('strong', '中心来源：'), libraryRelativePath(node.path)]),
+      h('p', [h('strong', '关系范围：'), `当前中心周围 ${depth} 层局部图谱。`]),
+      h('p', [h('strong', '候选目标：'), graphCanvasTargetPath(node)]),
+      h('p', [h('strong', '覆盖策略：'), '目标创建在资料库根目录；绝不覆盖来源或已有目标，如有同名文件将创建带新序号的 Canvas，并自动打开实际文件。']),
+      h('strong', '投影规则与损失：'),
+      h('ul', [
+        h('li', '纳入的每个图谱对象成为资料库相对路径的文件节点；中心与其他对象使用不同颜色。'),
+        h('li', '纳入的关系保留关系类型和有向/无向箭头语义。'),
+        h('li', '对象标题、标签、搜索文本、修改时间和内部 locator 不成为 Canvas 字段；多个内部对象可能指向同一源文件。'),
+        h('li', '当前图谱主题、筛选、手工位置和视口不会复刻；节点按关系深度重新排布。'),
+        h('li', 'Canvas 是当前关系图的独立时间点快照，之后修改 Canvas、图谱或来源文件都不会自动双向同步。'),
+      ]),
+      h('p', { class: 'graph-canvas-source-safety' }, '中心来源和其他关联文件保持不变。'),
+    ]),
+    positiveText: '创建并打开',
+    negativeText: '取消',
+    onPositiveClick: () => sendToCanvas(node),
+  })
 }
 
 const requestCreateProjectNote = (node: GraphNode) => {
@@ -3664,4 +3699,8 @@ onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cam
 :global(.graph-project-note-disclosure p) { margin: 0; overflow-wrap: anywhere; }
 :global(.graph-project-note-disclosure ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }
 :global(.graph-project-note-disclosure .graph-project-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); font-weight: 650; }
+:global(.graph-canvas-disclosure) { max-width: 590px; display: grid; gap: 8px; line-height: 1.55; }
+:global(.graph-canvas-disclosure p) { margin: 0; overflow-wrap: anywhere; }
+:global(.graph-canvas-disclosure ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }
+:global(.graph-canvas-disclosure .graph-canvas-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); font-weight: 650; }
 </style>

@@ -14,6 +14,7 @@ const conversion = readJson('shared/post-v115-m4c1-csv-tsv-table-disclosure-and-
 const opmlProjection = readJson('shared/post-v115-m4c2-opml-canvas-projection-disclosure-policy.json')
 const graphOutputSelection = readJson('shared/post-v115-m4c3-graph-derived-output-disclosure-selection-policy.json')
 const projectNote = readJson('shared/post-v115-m4c4-graph-project-note-disclosure-policy.json')
+const graphCanvas = readJson('shared/post-v115-m4c5-graph-canvas-eligibility-and-snapshot-disclosure-policy.json')
 const home = read('src/views/WorkspaceHome.vue')
 const workspace = read('src-tauri/src/commands/workspace.rs')
 const queue = read('src/components/WorkspaceHealthQueue.vue')
@@ -38,7 +39,7 @@ if (!actual.markdownCompleteChangedSource || !actual.markdownUndoRestoredOrigina
 if (actual.pdfAnnotationPreciseOpenCount !== 1 || actual.pdfAnnotationSourceWriteObserved) failures.push('PDF annotation read-only locator contract failed')
 if (!actual.responsive1280 || !actual.responsive480 || actual.runtimeErrorCount !== 0 || actual.blockingErrorSurfaceObserved || !actual.sourceFilesUnchangedAfterAudit) failures.push('desktop safety, geometry or runtime gate failed')
 if (manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 5) failures.push('M4B exit screenshots have not completed visual review')
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== conversion.stage || conversion.predecessor !== successor.stage || conversion.selectedNextStage?.id !== opmlProjection.stage || opmlProjection.predecessor !== conversion.stage || opmlProjection.selectedNextStage?.id !== graphOutputSelection.stage || graphOutputSelection.predecessor !== opmlProjection.stage || graphOutputSelection.selection.id !== projectNote.stage || projectNote.predecessor !== graphOutputSelection.stage || development.currentStage !== `${projectNote.selectedNextStage.id}-${projectNote.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== conversion.stage || conversion.predecessor !== successor.stage || conversion.selectedNextStage?.id !== opmlProjection.stage || opmlProjection.predecessor !== conversion.stage || opmlProjection.selectedNextStage?.id !== graphOutputSelection.stage || graphOutputSelection.predecessor !== opmlProjection.stage || graphOutputSelection.selection.id !== projectNote.stage || projectNote.predecessor !== graphOutputSelection.stage || projectNote.selectedNextStage?.id !== graphCanvas.stage || graphCanvas.predecessor !== projectNote.stage || development.currentStage !== `${graphCanvas.selectedNextStage.id}-${graphCanvas.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

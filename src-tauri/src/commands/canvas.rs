@@ -1,3 +1,4 @@
+use crate::commands::graph::resolve_local_graph_center;
 use crate::formats::canvas::{markdown_outline_to_canvas, validate_canvas_json};
 use crate::formats::file_registry::file_format_for_path;
 use crate::formats::text::{
@@ -240,18 +241,7 @@ pub async fn create_canvas_from_graph(
     depth: usize,
 ) -> Result<String, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
-    let center = guard.resolve_existing_file(center_path, &["md", "pdf", "csv", "tsv", "json"])?;
-    if center
-        .extension()
-        .and_then(|value| value.to_str())
-        .is_some_and(|value| value.eq_ignore_ascii_case("json"))
-        && !center
-            .file_name()
-            .and_then(|value| value.to_str())
-            .is_some_and(|value| value.to_ascii_lowercase().ends_with(".table.json"))
-    {
-        return Err("仅支持开放 Table JSON 作为表格中心对象".into());
-    }
+    let center = resolve_local_graph_center(&guard, &center_path)?;
     let canonical_root = guard.root().to_string_lossy().into_owned();
     let canonical_center = center.to_string_lossy().into_owned();
     let graph = build_local_graph(canonical_root.clone(), canonical_center.clone(), depth).await?;
