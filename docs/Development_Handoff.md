@@ -1473,3 +1473,11 @@ M4D-1 已按 M4D-0 冻结清单精确移除 `full-5000.svg/png` 与 `filtered-50
 M3C-4 runner 现在先运行原性能 checker，只有通过后才调用专用清理器；清理器再次按当次结构化指标核对四个精确路径后删除。因此失败审计仍保留诊断负载，成功审计不会重新积累大文件。已删除内容可从提交 `9319ecb25918c03877c73001f8f89d141c1d367d` 恢复或由原审计重建。
 
 当前唯一接续点为 **M4D-2 临时产物与证据清理退出审计**：验证删除后仓库、M4D-0 冻结分类、M3C-4 替代证据和 runner 自动清理边界，确认无越界删除或同条件遗漏后，再进入 M4 能力事实、风险与版本决策汇总。详见 [`Post_v1.0.15_M4D1_Bounded_Generated_Graph_Export_Artifact_Cleanup_Audit_2026-08-29.md`](./Post_v1.0.15_M4D1_Bounded_Generated_Graph_Export_Artifact_Cleanup_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4D-2 临时产物与证据清理退出审计交接
+
+M4D-2 已通过，M4D 在有界清理范围收口。`9319ecb..fb34c52` 的 Git 树对照只有 M4D-0 冻结的四个 M3C-4 原生导出负载被删除，意外删除为 0；公开 `v1.0.15` 到 M4C-6 冻结提交的其余 927 个新增路径全部保留。四个负载的结构化替代指标保持一致，当前 post-v1.0.15 证据中没有遗留 SVG/PNG 原生导出负载，也没有满足相同删除条件的遗漏候选。
+
+未来 M3C-4 完整/5000 档审计继续在 checker 通过后按当次指标全量预检并清理四个负载；较小单档和失败审计不会删除。历史证据、8 组语义重复内容、可重跑脚本和发布依赖继续受保护。
+
+当前唯一接续点为 **M4E-0 能力事实、残余风险与版本决策审计**：汇总 M0～M4D 的用户价值、测试覆盖、延期边界和用户可见变化，对齐 README、格式能力页、发布矩阵与 Release Notes，再决定是否进入版本提升和完整发布门禁。当前不得直接提升二进制版本、构建安装包、创建 Tag 或 Release。详见 [`Post_v1.0.15_M4D2_Temporary_Artifact_and_Evidence_Cleanup_Exit_Audit_2026-08-29.md`](./Post_v1.0.15_M4D2_Temporary_Artifact_and_Evidence_Cleanup_Exit_Audit_2026-08-29.md)。
