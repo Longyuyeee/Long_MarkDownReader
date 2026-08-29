@@ -317,6 +317,8 @@
     "audit:post-v115-m4c1-csv-tsv-table-conversion": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4c1-csv-tsv-table-disclosure-and-auto-open-audit.ps1",
     "check:post-v115-m4c2-opml-canvas-projection": "node scripts/check-post-v115-m4c2-opml-canvas-projection-disclosure.mjs",
     "audit:post-v115-m4c2-opml-canvas-projection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4c2-opml-canvas-projection-disclosure-audit.ps1",
+    "check:post-v115-m4c3-graph-output-selection": "node scripts/check-post-v115-m4c3-graph-derived-output-disclosure-selection.mjs",
+    "audit:post-v115-m4c3-graph-output-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4c3-graph-derived-output-disclosure-selection-audit.ps1",
     "audit:post-v115-m3c4-large-graph-performance-exit-audit": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m3c0-large-graph-performance-baseline-audit.ps1 -Stage M3C-4",
     "check:post-v115-explicit-save-alignment": "node scripts/check-post-v115-explicit-save-alignment.mjs",
     "check:post-v115-large-library-index": "node scripts/check-post-v115-large-library-index.mjs",
