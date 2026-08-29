@@ -55,6 +55,7 @@ const m4c6ControlledConversionExit = readJson('shared/post-v115-m4c6-controlled-
 const m4d0CleanupSelection = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json')
 const m4d1BoundedCleanup = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const m4d2CleanupExit = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
+const m4e0CapabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -148,7 +149,9 @@ const checks = {
     && m4d1BoundedCleanup.predecessor === m4d0CleanupSelection.stage
     && m4d1BoundedCleanup.selectedNextStage.id === m4d2CleanupExit.stage
     && m4d2CleanupExit.predecessor === m4d1BoundedCleanup.stage
-    && policy.currentStage === `${m4d2CleanupExit.selectedNextStage.id}-${m4d2CleanupExit.selectedNextStage.name}`,
+    && m4d2CleanupExit.selectedNextStage.id === m4e0CapabilityDecision.stage
+    && m4e0CapabilityDecision.predecessor === m4d2CleanupExit.stage
+    && policy.currentStage === `${m4e0CapabilityDecision.selectedNextStage.id}-${m4e0CapabilityDecision.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

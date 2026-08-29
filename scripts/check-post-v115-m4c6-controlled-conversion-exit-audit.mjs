@@ -14,6 +14,7 @@ const development = readJson('shared/development-version-policy.json')
 const successor = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json')
 const cleanupImplementation = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const cleanupExit = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
+const capabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
 const evidencePath = 'docs/evidence/post-v115-m4c6-controlled-conversion-exit-audit/exit-evidence.json'
 const evidence = readJson(evidencePath)
 const manifest = readJson('docs/evidence/post-v115-m4c6-controlled-conversion-exit-audit/manifest.json')
@@ -38,7 +39,7 @@ if (JSON.stringify(evidence.initialHashes) !== JSON.stringify(evidence.finalHash
 const evidenceBytes = fs.readFileSync(evidencePath)
 if (manifest.evidenceSha256 !== sha256(evidenceBytes) || manifest.status !== 'accepted-after-visual-review' || manifest.screenshots?.length !== 8) failures.push('M4C-6 evidence integrity or visual review failed')
 for (const screenshot of manifest.screenshots || []) { const bytes = fs.readFileSync(`docs/evidence/post-v115-m4c6-controlled-conversion-exit-audit/${screenshot.file}`); if (screenshot.bytes !== bytes.length || screenshot.sha256 !== sha256(bytes)) failures.push(`screenshot integrity failed: ${screenshot.file}`) }
-if (policy.selectedNextStage?.id !== successor.stage || policy.selectedNextStage?.name !== successor.name || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== cleanupImplementation.stage || cleanupImplementation.predecessor !== successor.stage || cleanupImplementation.selectedNextStage?.id !== cleanupExit.stage || cleanupExit.predecessor !== cleanupImplementation.stage || development.currentStage !== `${cleanupExit.selectedNextStage.id}-${cleanupExit.selectedNextStage.name}`) failures.push('M4D successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || policy.selectedNextStage?.name !== successor.name || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== cleanupImplementation.stage || cleanupImplementation.predecessor !== successor.stage || cleanupImplementation.selectedNextStage?.id !== cleanupExit.stage || cleanupExit.predecessor !== cleanupImplementation.stage || cleanupExit.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== cleanupExit.stage || development.currentStage !== `${capabilityDecision.selectedNextStage.id}-${capabilityDecision.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) { console.error(`M4C-6 controlled conversion exit check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

@@ -1481,3 +1481,11 @@ M4D-2 已通过，M4D 在有界清理范围收口。`9319ecb..fb34c52` 的 Git �
 未来 M3C-4 完整/5000 档审计继续在 checker 通过后按当次指标全量预检并清理四个负载；较小单档和失败审计不会删除。历史证据、8 组语义重复内容、可重跑脚本和发布依赖继续受保护。
 
 当前唯一接续点为 **M4E-0 能力事实、残余风险与版本决策审计**：汇总 M0～M4D 的用户价值、测试覆盖、延期边界和用户可见变化，对齐 README、格式能力页、发布矩阵与 Release Notes，再决定是否进入版本提升和完整发布门禁。当前不得直接提升二进制版本、构建安装包、创建 Tag 或 Release。详见 [`Post_v1.0.15_M4D2_Temporary_Artifact_and_Evidence_Cleanup_Exit_Audit_2026-08-29.md`](./Post_v1.0.15_M4D2_Temporary_Artifact_and_Evidence_Cleanup_Exit_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4E-0 能力事实、残余风险与版本决策交接
+
+M4E-0 已通过。结构化审计重新核对 M0～M4D 的 9 个里程碑闭环和大 JSON、媒体、行动工作台、统一定位、图谱、受控转换 6 组实际代码能力；43 类格式、11 套能力配置、README、格式能力页、发布矩阵与 `v1.0.16` 开发版说明现已一致。版本结论为 **可以进入 `v1.0.16` 发布冻结，但当前不是发布候选或已发布版本**。
+
+仍保留 6 类非阻断但必须公开的边界：Office/ODF 不宣称完整等价；ODS 公式/自定义样式和 ODP 编辑未开放；部分媒体依赖系统编解码器且外部窗口高级能力延期；YAML/XML/TOML 高级模式延期；图谱聚类折叠、全屏、治理环和性能型保存视图未纳入；ODT 与 XLSX 数组公式外部生产者证据不足。发布冻结仍有 9 道门禁，包括冻结提交、原子版本提升、完整补丁发布检查、当前版本运行时烟测、MSI/NSIS、Windows 安装生命周期、安装态工作区回归、产物哈希/最终说明及绑定冻结提交的 Tag/Release。
+
+当前唯一接续点为 **M4F-0 v1.0.16 发布冻结入口审计**。先锁定产品提交并逐项执行上述门禁；只有所有门禁通过后才能把能力矩阵改为候选并创建远端发布，任何失败都必须保持 `releaseCandidate=false`。详见 [`Post_v1.0.15_M4E0_Capability_Facts_Residual_Risks_and_Version_Decision_Audit_2026-08-29.md`](./Post_v1.0.15_M4E0_Capability_Facts_Residual_Risks_and_Version_Decision_Audit_2026-08-29.md)。

@@ -42,7 +42,7 @@
 
       <div class="matrix-head" aria-hidden="true">
         <span>格式</span>
-        <span>公开能力</span>
+        <span>能力层级</span>
         <span>保存边界</span>
         <span>依赖</span>
       </div>

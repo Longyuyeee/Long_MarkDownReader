@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4E-0",
+  "name": "capability-facts-residual-risks-and-version-decision-audit",
+  "predecessor": "M4D-2",
+  "originalRequirement": "Summarize capability facts, real tests, residual risks and user-visible changes after cleanup, then decide whether the development line may enter version elevation.",
+  "decision": "eligible-to-enter-v1.0.16-release-freeze-not-yet-a-release-candidate",
+  "candidateVersion": "1.0.16",
+  "decisionBasis": {
+    "m1FormatDepthClosed": true,
+    "m2WorkspaceClosed": true,
+    "m3SemanticVisualPerformanceClosed": true,
+    "m4ObjectLocationActionsConversionsCleanupClosed": true,
+    "userVisibleFactsAligned": true,
+    "residualRisksBoundedOrFailClosed": true,
+    "fullReleaseGatesStillRequired": true
+  },
+  "versionRule": "Roadmap candidate rows are minimum independent value thresholds, not milestone counters. The cumulative main development line has continuously declared 1.0.16 as its next patch target, so M2 and M3 value do not force empty intermediate 1.0.17/1.0.18 releases.",
+  "scopeBoundaries": {
+    "binaryVersionsRemain1015": true,
+    "capabilityMatrixRuntimeVersionRemains1015": true,
+    "releaseCandidateRemainsFalse": true,
+    "installersNotBuilt": true,
+    "tagNotCreated": true,
+    "githubReleaseNotCreated": true
+  },
+  "selectedNextStage": {
+    "id": "M4F-0",
+    "name": "v1.0.16-release-freeze-entry-audit",
+    "reason": "Freeze an exact product commit and define the atomic version transition plus complete quality, route-smoke, installer, lifecycle, artifact and remote-release gates before changing any release fact."
+  },
+  "releaseCandidate": false
+}

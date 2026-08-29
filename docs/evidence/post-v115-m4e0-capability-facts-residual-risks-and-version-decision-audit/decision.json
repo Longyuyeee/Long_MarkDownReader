@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4E-0",
+  "status": "passed",
+  "sourceCommit": "24526980d74115e80a93f00f177f05ab4eab28bf",
+  "candidateVersion": "1.0.16",
+  "publicVersion": "1.0.15",
+  "runtimeVersion": "1.0.15",
+  "milestoneChecks": {
+    "m1": true,
+    "m2": true,
+    "m3a": true,
+    "m3b": true,
+    "m3c": true,
+    "m4a": true,
+    "m4b": true,
+    "m4c": true,
+    "m4d": true
+  },
+  "sourceChecks": {
+    "largeJson": true,
+    "video": true,
+    "workspaceActions": true,
+    "managedNavigation": true,
+    "graphSystem": true,
+    "conversions": true
+  },
+  "documentationChecks": {
+    "readmeDevelopmentScope": true,
+    "readmeStableBoundary": true,
+    "readmeLimitations": true,
+    "draftScope": true,
+    "draftLimitations": true,
+    "capabilityPageIdentity": true
+  },
+  "capabilityMatrix": {
+    "appVersion": "1.0.15",
+    "releaseCandidate": false,
+    "formatCount": 43,
+    "profileCount": 11,
+    "readinessCounts": {
+      "verified": 30,
+      "verified-with-limitations": 7,
+      "external-dependency": 6
+    },
+    "externalGates": [
+      {
+        "id": "e1b-wps-odt",
+        "status": "partial",
+        "evidence": "2/3",
+        "releaseImpact": "可信 WPS ODF 证据到位前，ODT 保持未注册"
+      },
+      {
+        "id": "x3-b6-array-producers",
+        "status": "partial",
+        "evidence": "1/3",
+        "releaseImpact": "XLSX 数组计算与写回继续阻断"
+      }
+    ]
+  },
+  "residualRisks": [
+    {
+      "id": "office-equivalence",
+      "disposition": "non-blocking-fail-closed",
+      "boundary": "Full Office/OpenDocument equivalence is not claimed; unsupported objects remain read-only, blocked, or reliable-copy only."
+    },
+    {
+      "id": "ods-odp",
+      "disposition": "non-blocking-fail-closed",
+      "boundary": "ODS formula/custom-style editing and ODP editing remain closed."
+    },
+    {
+      "id": "media-runtime",
+      "disposition": "non-blocking-disclosed",
+      "boundary": "Playback depends on system codecs; external-window subtitles, embedded subtitle demux, subtitle editing and transcoding remain deferred."
+    },
+    {
+      "id": "structured-schema",
+      "disposition": "non-blocking-disclosed",
+      "boundary": "YAML/XML/TOML schema providers and mappings remain deferred; no business diagnostics are invented."
+    },
+    {
+      "id": "graph-deferred",
+      "disposition": "non-blocking-selected-out",
+      "boundary": "Proxy cluster collapse, fullscreen, governance rings and performance-specific saved-view restoration are not part of the accepted graph scope."
+    },
+    {
+      "id": "external-evidence",
+      "disposition": "non-blocking-fail-closed",
+      "boundary": "ODT remains unregistered and XLSX array formula writeback remains blocked while external evidence gates are partial."
+    }
+  ],
+  "releaseFreezeGates": [
+    "freeze-product-commit",
+    "atomic-runtime-package-tauri-cargo-matrix-version-transition",
+    "full-ci-patch-release-quality-gate",
+    "current-version-r5e-runtime-route-smoke",
+    "unsigned-msi-and-nsis-build",
+    "managed-windows-install-lifecycle",
+    "installed-workspace-regression",
+    "artifact-sha256-and-release-notes-finalization",
+    "tag-and-github-release-bound-to-frozen-commit"
+  ],
+  "versionDecision": "eligible-to-enter-v1.0.16-release-freeze-not-yet-a-release-candidate",
+  "versionRationale": "The cumulative development line delivers complete M1 format depth, M2 Workspace actions, M3 graph semantics/visual/performance, and M4 cross-format workflows. Suggested roadmap version rows are value thresholds, not milestone counters; the continuously declared next patch remains 1.0.16.",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

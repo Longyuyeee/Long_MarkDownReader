@@ -24,11 +24,9 @@ for (const token of [
   'container-type: inline-size',
   '@container (max-width: 900px)',
   "title: '创建可视化 Table 副本？'",
-  "title: 'Table 副本已创建'",
-  "positiveText: '打开新文件'",
-  "negativeText: '在文件树中定位'",
+  'Table 副本已创建：${path.split(/[\\\\/]/).pop()}，正在打开',
+  'await openManagedFile(router, path)',
   "new CustomEvent('longedit:library-file-created'",
-  "new CustomEvent('longedit:reveal-library-file'",
 ]) if (!table.includes(token)) fail(`TableView contract token missing: ${token}`)
 
 for (const token of [
@@ -41,7 +39,7 @@ for (const token of [
 
 if (!viewState.includes('frozenColumns?: number')) fail('session view-state freeze count is not retained')
 if (table.includes('freezeFirstColumn') || table.includes('toggleFreeze')) fail('boolean first-column freeze implementation returned')
-if (/message\.success\([^\n]+\)[\s\S]{0,120}openManagedFile\(router, path, \{\}, 'replace'\)/.test(table)) fail('conversion returned to an unexplained automatic route change')
+if (table.includes("openManagedFile(router, path, {}, 'replace')")) fail('conversion must open the created target through the managed-file default route')
 if (!packageJson.scripts?.['check:ux38c-table-grid-experience']) fail('package checker command missing')
 if (!packageJson.scripts?.['audit:ux38c-table-grid']) fail('desktop audit command missing')
 if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-ux38c-table-grid-experience')) fail('checker is outside the development audit chain')
@@ -63,4 +61,4 @@ for (const screenshot of manifest.screenshots) {
   if (fs.statSync(file).size !== screenshot.bytes || screenshot.bytes < 70_000 || sha256(file) !== screenshot.sha256) fail(`screenshot integrity drift: ${screenshot.file}`)
 }
 
-console.log('UX-38C table grid contract passed: product behavior and accepted Tauri evidence cover variable frozen columns, opaque layers, safe row selection, explicit conversion, tree location, and narrow layout.')
+console.log('UX-38C table grid contract passed: current product behavior and accepted historical Tauri evidence cover variable frozen columns, opaque layers, safe row selection, disclosed conversion, automatic target opening, and narrow layout.')

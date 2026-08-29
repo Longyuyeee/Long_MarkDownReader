@@ -54,7 +54,7 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 
 ## 1.0.16 开发中（尚未发布）
 
-`main` 正在开发下一补丁，运行时和当前公开下载仍为 v1.0.15。M1 高频格式深化与 M2 工作台 2.0 已完成真实桌面收口：
+`main` 正在开发下一补丁，运行时和当前公开下载仍为 v1.0.15。M1～M4D 已完成分阶段真实审计：
 
 - XLSX 的数据验证、条件格式和 Table 进入统一对象草稿；DOCX/PPTX 深化已有段落样式与受限对象事务，仍不宣称完整 Office 等价编辑。
 - ODS 可编辑简单文本、有限数值和文件已有命名样式，并可靠另存新副本；公式、自定义样式与 ODP 编辑继续关闭。
@@ -62,8 +62,9 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - 资料库视频支持前后逐帧、原尺寸 PNG 截图、播放位置记忆，以及同目录同名 VTT/SRT 字幕选择与关闭。
 - 工作台围绕“继续工作、今天要做、需要处理”收敛；Markdown 待办与内部 Table 显式布尔任务行已通过真实确认写回、恢复、撤销、冲突拒绝、原对象定位和响应式验收。
 - 知识图谱 2.0 已完成稳定语义探索、专业视觉与 Worker 承载的大图性能收口；跨格式搜索、图谱和关系上下文现共享对象定位合同，Table 行/视图与 OPML 节点可被搜索并打开到内部位置。
+- M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
 
-本开发线仍为 `releaseCandidate=false`，没有 v1.0.16 安装包或 Release。完整已验证范围和延后边界见 [v1.0.16 开发版说明草案](docs/RELEASE_NOTES_v1.0.16_DRAFT.md) 与 [M1 总退出审计](docs/Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md)。
+M4E-0 已确认累计用户价值足以进入 v1.0.16 发布冻结，但本开发线仍为 `releaseCandidate=false`，没有 v1.0.16 安装包或 Release。完整已验证范围和延后边界见 [v1.0.16 开发版说明草案](docs/RELEASE_NOTES_v1.0.16_DRAFT.md) 与 [M4E-0 版本决策审计](docs/Post_v1.0.15_M4E0_Capability_Facts_Residual_Risks_and_Version_Decision_Audit_2026-08-29.md)。
 
 ## v1.0.15
 
@@ -130,6 +131,8 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 发布已通过源码 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及公开附件重新下载哈希复核。完整变更见 [v1.0.11 发布说明](docs/RELEASE_NOTES_v1.0.11.md)。
 
 ## 真实界面
+
+> 以下“真实界面”“核心能力”和“格式能力”描述当前 `main` 开发线；公开下载仍以 v1.0.15 Release 为准，开发线新增能力尚未进入安装包。
 
 ### 专业编辑工作区
 
@@ -269,7 +272,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前候选审计见 [v1.0.15 发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前版本入口判断见 [M4E-0 版本决策审计](docs/Post_v1.0.15_M4E0_Capability_Facts_Residual_Risks_and_Version_Decision_Audit_2026-08-29.md)；当前公开稳定版审计仍为 [v1.0.15 发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 ## 许可证
 
