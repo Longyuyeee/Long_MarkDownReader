@@ -199,8 +199,8 @@
                 </li>
                 <li :class="{ active: observationSessionPhase === 2, complete: observationSessionPhase > 2 }">
                   <b>2</b>
-                  <div><strong>执行一项知识治理建议</strong><span>返回工作台查看建议，再在图谱或管理界面完成一项关系改善。</span></div>
-                  <n-button size="small" secondary :disabled="observationSessionPhase < 2" data-testid="knowledge-session-open-guidance" @click="openObservationRemediation">前往工作台建议</n-button>
+                  <div><strong>执行一项知识治理建议</strong><span>前往图谱治理查看建议，并在关系上下文中完成一项改善。</span></div>
+                  <n-button size="small" secondary :disabled="observationSessionPhase < 2" data-testid="knowledge-session-open-guidance" @click="openObservationRemediation">前往图谱建议</n-button>
                 </li>
                 <li :class="{ complete: observationSessionPhase >= 3 }">
                   <b>3</b>
@@ -603,7 +603,7 @@ const resetObservationSession = () => setObservationSessionPhase(1)
 const markExistingBaselineReady = () => setObservationSessionPhase(2)
 const openObservationRemediation = () => {
   advanceObservationSession(2)
-  router.push({ name: 'WorkspaceHome' })
+  router.push({ name: 'Graph', query: { focus: 'overview' } })
 }
 const markObservationRemediationComplete = () => advanceObservationSession(3)
 

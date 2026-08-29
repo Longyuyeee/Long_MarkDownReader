@@ -357,8 +357,8 @@ await activateTarget(mainTarget)
 await waitFor(`document.querySelector('.app-container')?.dataset.windowRole === 'main'`, 'installed main window shell', 1200)
 await navigate('#/workspace', '.workspace-home', 'installed workspace initialization')
 await waitFor(
-  `document.querySelector('[data-testid="knowledge-network-pulse"]') !== null`,
-  'installed workspace initialization before route testing',
+  `document.querySelector('[data-testid="m2a2-workspace-primary"]')?.getAttribute('data-primary-state') === 'ready'`,
+  'installed workspace primary actions before route testing',
   1200,
 )
 await delay(750)
@@ -562,7 +562,8 @@ await fs.writeFile(path.join(output, 'installed-docx-hyperlink-evidence.json'), 
   results: installedDocxResults,
 }, null, 2)}\n`)
 
-await navigate('#/workspace', '.workspace-home', 'installed workspace knowledge network pulse')
+await navigate('#/graph?focus=overview', '.graph-container', 'installed graph governance knowledge network pulse')
+await waitFor(`document.querySelector('.health-panel') !== null`, 'installed graph governance panel')
 await waitFor(`Number(document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow')) > 0`, 'installed knowledge network coverage')
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'installed knowledge network top topics')
 await waitFor(`document.querySelector('[data-testid="knowledge-network-guidance"]') !== null`, 'installed actionable knowledge guidance')
@@ -599,25 +600,6 @@ if (knowledgePulse.objectCount < 5 || knowledgePulse.relationCount < 3 || knowle
 await capture('installed-knowledge-network-pulse.jpg')
 checks.push({ id: 'installed-knowledge-network-pulse', status: 'passed' })
 
-await waitFor(`document.querySelector('[data-testid="knowledge-observation-entry"]') !== null`, 'workspace knowledge observation entry')
-await evaluate(`document.querySelector('[data-testid="knowledge-observation-entry"]')?.click()`)
-await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-export"].is-route-focused') !== null`, 'workspace baseline entry focused Settings destination', 1200)
-await waitForStableVisibleSurface('[data-testid="knowledge-observation-export"]', 'workspace baseline entry target in settled viewport')
-const workspaceObservationNavigation = await evaluate(`(() => ({
-  route: location.hash,
-  targetVisible: document.querySelector('[data-testid="knowledge-observation-export"]') !== null,
-  targetFocused: document.querySelector('[data-testid="knowledge-observation-export"]')?.classList.contains('is-route-focused') === true,
-  openedInCurrentWindow: window.opener === null,
-}))()`)
-if (!workspaceObservationNavigation.route.includes('/settings?focus=knowledge-observation') ||
-    !workspaceObservationNavigation.targetVisible || !workspaceObservationNavigation.targetFocused ||
-    !workspaceObservationNavigation.openedInCurrentWindow) {
-  throw new Error(`Installed workspace observation entry failed: ${JSON.stringify(workspaceObservationNavigation)}`)
-}
-await capture('installed-workspace-observation-entry.jpg')
-
-await navigate('#/workspace', '.workspace-home', 'workspace before actionable guidance navigation')
-await waitFor(`document.querySelector('[data-testid="knowledge-network-guidance"]') !== null`, 'restored actionable knowledge guidance')
 await evaluate(`document.querySelector('[data-testid="knowledge-network-guidance"]')?.click()`)
 await waitFor(`document.querySelector('.graph-container') !== null`, 'actionable guidance graph route mount')
 await waitFor(`document.querySelector('.page-loader') === null`, 'actionable guidance graph route transition')
@@ -655,7 +637,6 @@ await fs.writeFile(path.join(output, 'installed-knowledge-observation-entry-evid
   sourceUserContentIncluded: false,
   exportTriggered: false,
   visualSurfaceSettled: true,
-  workspaceObservationNavigation,
   graphOutcomeNavigation,
 }, null, 2)}\n`)
 checks.push({ id: 'installed-knowledge-observation-entry-navigation', status: 'passed' })
@@ -669,9 +650,10 @@ await capture('installed-knowledge-session-start.jpg')
 await evaluate(`document.querySelector('[data-testid="knowledge-session-existing-baseline"]')?.click()`)
 await waitFor(`document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') === '2'`, 'existing baseline session handoff')
 await evaluate(`document.querySelector('[data-testid="knowledge-session-open-guidance"]')?.click()`)
-await waitFor(`document.querySelector('.workspace-home') !== null && document.querySelector('.page-loader') === null`, 'observation session Workspace handoff', 1200)
-await waitFor(`document.querySelector('[data-testid="knowledge-observation-entry"]') !== null`, 'observation session return entry')
-await evaluate(`document.querySelector('[data-testid="knowledge-observation-entry"]')?.click()`)
+await waitFor(`document.querySelector('.graph-container') !== null && document.querySelector('.page-loader') === null`, 'observation session graph governance handoff', 1200)
+await waitFor(`document.querySelector('.health-panel') !== null`, 'observation session graph governance panel')
+await waitFor(`document.querySelector('[data-testid="knowledge-outcome-entry"]') !== null`, 'observation session graph return entry')
+await evaluate(`document.querySelector('[data-testid="knowledge-outcome-entry"]')?.click()`)
 await waitFor(`location.hash.includes('/settings?focus=knowledge-observation') && document.querySelector('[data-testid="knowledge-observation-session"]')?.getAttribute('data-phase') === '2'`, 'observation session resumed in Settings', 1200)
 await waitForStableVisibleSurface('[data-testid="knowledge-session-remediation-complete"]', 'installed remediation confirmation action')
 await evaluate(`document.querySelector('[data-testid="knowledge-session-remediation-complete"]')?.click()`)
@@ -969,7 +951,6 @@ await fs.writeFile(path.join(output, 'installed-artifact-smoke.json'), `${JSON.s
     'installed-knowledge-guidance-graph.jpg',
     'installed-knowledge-topic-centered.jpg',
     'installed-knowledge-network-evidence.json',
-    'installed-workspace-observation-entry.jpg',
     'installed-graph-outcome-entry.jpg',
     'installed-knowledge-observation-entry-evidence.json',
     'installed-knowledge-session-start.jpg',

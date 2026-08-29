@@ -2802,8 +2802,8 @@ watch(() => store.theme, () => requestGraphFrame())
 watch(viewMode, () => requestGraphFrame())
 watch(remediationFocus, focus => {
   if (focus === 'relations') showTutorial.value = true
+  if (['orphans', 'diversity', 'overview'].includes(focus)) healthOpen.value = true
   if (focus === 'orphans') {
-    healthOpen.value = true
     clearSelection()
   }
   invalidateLayoutWorker()
