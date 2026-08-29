@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4D-0",
+  "name": "temporary-artifact-and-redundant-evidence-cleanup-selection-audit",
+  "predecessor": "M4C-6",
+  "auditBaselineCommit": "20ab25629b9eb6f0da1b96a6bb354cede1a0d6cd",
+  "originalRequirement": "Clean temporary scripts, candidate outputs and duplicate evidence produced during this development cycle, retaining files required for reproducible audits or release; summarize facts and risks only after cleanup.",
+  "classificationContract": {
+    "reproducibleAuditHarnessesRetained": true,
+    "historicalAuditEvidenceRetained": true,
+    "semanticDuplicateEvidenceRetained": true,
+    "releaseDependenciesRetained": true,
+    "ignoredLocalBuildStateExcluded": true,
+    "deletionRequiresExactPathAndReplacementEvidence": true
+  },
+  "selection": {
+    "id": "m3c4-generated-export-artifacts",
+    "decision": "selected",
+    "files": [
+      "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/full-5000.svg",
+      "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/full-5000.png",
+      "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/filtered-5000.svg",
+      "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/filtered-5000.png"
+    ],
+    "bytes": 13883957,
+    "reason": "These four native-save export payloads are reproducible intermediate outputs. Their exact hashes, sizes, geometry and semantic counts are retained in tier-5000.json, and the M3C-4 checker consumes that retained record rather than the payload files."
+  },
+  "protectedDuplicateClasses": [
+    "reduced-motion-before-after-equivalence",
+    "baseline-current-equivalence",
+    "intentional-duplicate-detection-fixture",
+    "independent-stage-evidence"
+  ],
+  "selectedNextStage": {
+    "id": "M4D-1",
+    "name": "bounded-generated-graph-export-artifact-cleanup",
+    "reason": "Remove only the four selected M3C-4 payloads and make the audit runner clean future regenerated payloads after their metrics are recorded and checked."
+  },
+  "releaseCandidate": false
+}

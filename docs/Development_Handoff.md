@@ -1457,3 +1457,11 @@ M4C-6 已通过，M4C 在有界转换范围收口。同一真实 Tauri 会话依
 审计中先修正项目笔记 YAML 引号的测试 oracle；人工视觉复核随后拒绝了动画中提前截取的窄屏证据，并发现确认框按侧栏旁内容区宽度计算的组合偏移。Table、OPML 和两类图谱确认框现统一按窗口覆盖层宽度计算；审计等待动画完成并要求至少 420px 可读宽度后完整重跑通过。
 
 当前唯一接续点为 **M4D-0 临时产物与冗余证据清理选择审计**：对照原始 M4 顺序，先盘点本周期脚本、候选输出和重复证据的引用、可重复生成性、历史审计链与发布依赖，形成精确保留/删除候选；本选择阶段不得直接批量删除，也不得进入 `M4-release-freeze`。详见 [`Post_v1.0.15_M4C6_Controlled_Conversion_Exit_Audit_2026-08-29.md`](./Post_v1.0.15_M4C6_Controlled_Conversion_Exit_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4D-0 临时产物与冗余证据清理选择审计交接
+
+M4D-0 已完成且未删除文件。冻结 `v1.0.15..20ab256` 得到 931 个新增 Git blob 路径、58,155,445 bytes：179 个脚本属于 capture/check/run/invoke/verify 可重跑链，573 个证据文件承载阶段事实。8 组完全相同内容分别证明减少动效不运动、基线/当前等价、重复检测夹具或独立阶段结果，Git 已按 blob 去重，因此全部保护。
+
+唯一安全候选为 M3C-4 的 `full-5000.svg/png` 与 `filtered-5000.svg/png`，合计 13,883,957 bytes。四份负载的 SHA-256、字节数、节点/边、几何、PNG 尺寸和耗时均已保留在 `tier-5000.json`；M3C-4 checker 不读取负载，审计 harness 可重建，发布链没有路径依赖。
+
+当前唯一接续点为 **M4D-1 有界生成图谱导出产物清理**：只删除这四个精确路径，并让 M3C-4 runner 在检查通过后自动清除未来重建的负载；不得扩大到其他证据、脚本、夹具或发布文件。完成后复验 M3C-4/M4D-0/M4C-6/版本链，再决定 M4D 退出审计。详见 [`Post_v1.0.15_M4D0_Temporary_Artifact_and_Redundant_Evidence_Cleanup_Selection_Audit_2026-08-29.md`](./Post_v1.0.15_M4D0_Temporary_Artifact_and_Redundant_Evidence_Cleanup_Selection_Audit_2026-08-29.md)。

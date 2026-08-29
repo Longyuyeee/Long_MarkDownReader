@@ -11,6 +11,7 @@ const manifest = readJson('docs/evidence/post-v115-m4c4-graph-project-note-discl
 const development = readJson('shared/development-version-policy.json')
 const successor = readJson('shared/post-v115-m4c5-graph-canvas-eligibility-and-snapshot-disclosure-policy.json')
 const exitAudit = readJson('shared/post-v115-m4c6-controlled-conversion-exit-audit-policy.json')
+const cleanupSelection = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection-policy.json')
 const view = read('src/components/GraphView.vue')
 const canvas = read('src-tauri/src/commands/canvas.rs')
 const graph = read('src-tauri/src/commands/graph.rs')
@@ -32,7 +33,7 @@ for (const screenshot of manifest.screenshots || []) {
   const bytes = fs.readFileSync(`docs/evidence/post-v115-m4c4-graph-project-note-disclosure/${screenshot.file}`)
   if (screenshot.bytes !== bytes.length || screenshot.sha256 !== sha256(bytes)) failures.push(`screenshot integrity failed: ${screenshot.file}`)
 }
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== successor.stage || development.currentStage !== `${exitAudit.selectedNextStage.id}-${exitAudit.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== exitAudit.stage || exitAudit.predecessor !== successor.stage || exitAudit.selectedNextStage?.id !== cleanupSelection.stage || cleanupSelection.predecessor !== exitAudit.stage || development.currentStage !== `${cleanupSelection.selectedNextStage.id}-${cleanupSelection.selectedNextStage.name}`) failures.push('M4C successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) {

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4D-0",
+  "status": "passed",
+  "sourceCommit": "20ab25629b9eb6f0da1b96a6bb354cede1a0d6cd",
+  "publicTag": "v1.0.15",
+  "inventory": {
+    "addedFileCount": 931,
+    "addedBytes": 58155445,
+    "addedScriptCount": 179,
+    "addedScriptFamilies": {
+      "capture": 45,
+      "check": 74,
+      "invoke": 1,
+      "run": 58,
+      "verify": 1
+    },
+    "addedEvidenceCount": 573,
+    "addedDocumentCount": 79,
+    "addedPolicyCount": 69,
+    "exactDuplicateGroupCount": 8,
+    "exactDuplicatePathCount": 16,
+    "selectedCandidateCount": 4,
+    "selectedCandidateBytes": 13883957
+  },
+  "candidates": [
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/full-5000.svg",
+      "bytes": 6916219,
+      "sha256": "f4532c1731703c47df8c296ffe201497c9984a1bc1a682b9730b18d0aad77dab",
+      "retainedMetricPath": "tier-5000.json#actual.exports.full.svg",
+      "retainedMetricsMatch": true,
+      "generatedByExistingHarness": true,
+      "directlyConsumedByChecker": false,
+      "releaseDependencyObserved": false,
+      "selectedForM4D1": true
+    },
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/full-5000.png",
+      "bytes": 6255432,
+      "sha256": "835da016b13474597b5862c26dc3d3e8204b7f10117d290289aa1483306ea6c3",
+      "retainedMetricPath": "tier-5000.json#actual.exports.full.png",
+      "retainedMetricsMatch": true,
+      "generatedByExistingHarness": true,
+      "directlyConsumedByChecker": false,
+      "releaseDependencyObserved": false,
+      "selectedForM4D1": true
+    },
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/filtered-5000.svg",
+      "bytes": 99887,
+      "sha256": "e521352b77008f30fb0e93d05c6f9546afc607d611e7d8927bdf58a8ea9e02f6",
+      "retainedMetricPath": "tier-5000.json#actual.exports.filtered.svg",
+      "retainedMetricsMatch": true,
+      "generatedByExistingHarness": true,
+      "directlyConsumedByChecker": false,
+      "releaseDependencyObserved": false,
+      "selectedForM4D1": true
+    },
+    {
+      "file": "docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/filtered-5000.png",
+      "bytes": 612419,
+      "sha256": "5f90dc43a2e3036f78393e5dded9fcec55387798ff23c52549e8b692ac89d4e6",
+      "retainedMetricPath": "tier-5000.json#actual.exports.filtered.png",
+      "retainedMetricsMatch": true,
+      "generatedByExistingHarness": true,
+      "directlyConsumedByChecker": false,
+      "releaseDependencyObserved": false,
+      "selectedForM4D1": true
+    }
+  ],
+  "duplicateGroups": [
+    {
+      "objectId": "968577581094c101d34518e345a050c008665054",
+      "bytesPerFile": 42684,
+      "files": [
+        "docs/evidence/post-v115-large-library-index/current-restart-ready-query-1280.jpg",
+        "docs/evidence/post-v115-large-library-index/restart-ready-query-1280.jpg"
+      ],
+      "classification": "baseline-current-equivalence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "627ffa1838d32f3010382a47a97717d6dc35a345",
+      "bytesPerFile": 54739,
+      "files": [
+        "docs/evidence/post-v115-m3a4-relation-evidence/relation-source-return.jpg",
+        "docs/evidence/post-v115-m3a6-node-comparison/node-comparison-source-return.jpg"
+      ],
+      "classification": "independent-stage-evidence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "822cb92f47063d3adb772026934f19624333fb88",
+      "bytesPerFile": 84274,
+      "files": [
+        "docs/evidence/post-v115-m3b11-restrained-node-status-rings/node-status-mindmap-dark-calm.jpg",
+        "docs/evidence/post-v115-m3b11-restrained-node-status-rings/node-status-mindmap-dark-reduced.jpg"
+      ],
+      "classification": "independent-stage-evidence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "b90cedd29f3c2c23b2255586a387f280f27d680f",
+      "bytesPerFile": 60732,
+      "files": [
+        "docs/evidence/post-v115-m3b5-selected-path-direction-motion-reduced-motion/contrast-reduced-path-motion-720-after.jpg",
+        "docs/evidence/post-v115-m3b5-selected-path-direction-motion-reduced-motion/contrast-reduced-path-motion-720-before.jpg"
+      ],
+      "classification": "reduced-motion-before-after-equivalence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "79f85df4265ba5d9d712c7a7e0e1ef8decf800e2",
+      "bytesPerFile": 106023,
+      "files": [
+        "docs/evidence/post-v115-m3b5-selected-path-direction-motion-reduced-motion/dark-reduced-path-motion-1280-after.jpg",
+        "docs/evidence/post-v115-m3b5-selected-path-direction-motion-reduced-motion/dark-reduced-path-motion-1280-before.jpg"
+      ],
+      "classification": "reduced-motion-before-after-equivalence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "b06585427dfe4776004940ed7e850a8d745c54d9",
+      "bytesPerFile": 54017,
+      "files": [
+        "docs/evidence/post-v115-m3b5-selected-path-direction-motion-reduced-motion/dark-reduced-path-motion-720-after.jpg",
+        "docs/evidence/post-v115-m3b5-selected-path-direction-motion-reduced-motion/dark-reduced-path-motion-720-before.jpg"
+      ],
+      "classification": "reduced-motion-before-after-equivalence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "d4ccede41e83f8f416679553ba082601b1d6f03b",
+      "bytesPerFile": 68709,
+      "files": [
+        "docs/evidence/post-v115-m4b0-workspace-object-action-selection/table-boolean-task-row-1280.jpg",
+        "docs/evidence/post-v115-m4b1-internal-table-boolean-task-workspace-action/table-task-locator-1280.jpg"
+      ],
+      "classification": "independent-stage-evidence",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    },
+    {
+      "objectId": "b231f25fc6921bb66d09404e7efe0991ad21ee0d",
+      "bytesPerFile": 37,
+      "files": [
+        "fixtures/post-v115-m0/workspace/duplicates/copy-a.txt",
+        "fixtures/post-v115-m0/workspace/duplicates/copy-b.txt"
+      ],
+      "classification": "intentional-duplicate-detection-fixture",
+      "selectedForRemoval": false,
+      "reason": "The paths carry distinct behavioral, baseline, fixture or stage meaning; Git already stores their identical content as one blob."
+    }
+  ],
+  "ignoredLocalState": [
+    {
+      "root": "node_modules",
+      "trackedAtBaseline": false,
+      "ignoredByPolicy": true,
+      "cleanupScope": "local-only-excluded-from-tracked-M4D-selection"
+    },
+    {
+      "root": "dist",
+      "trackedAtBaseline": false,
+      "ignoredByPolicy": true,
+      "cleanupScope": "local-only-excluded-from-tracked-M4D-selection"
+    },
+    {
+      "root": "src-tauri/target",
+      "trackedAtBaseline": false,
+      "ignoredByPolicy": true,
+      "cleanupScope": "local-only-excluded-from-tracked-M4D-selection"
+    },
+    {
+      "root": "src-tauri/gen",
+      "trackedAtBaseline": false,
+      "ignoredByPolicy": true,
+      "cleanupScope": "local-only-excluded-from-tracked-M4D-selection"
+    },
+    {
+      "root": ".release-secrets",
+      "trackedAtBaseline": false,
+      "ignoredByPolicy": true,
+      "cleanupScope": "local-only-excluded-from-tracked-M4D-selection"
+    }
+  ],
+  "decisions": {
+    "scriptsSelectedForRemoval": 0,
+    "duplicateEvidenceSelectedForRemoval": 0,
+    "generatedExportPayloadsSelectedForRemoval": 4,
+    "selectedNextStage": {
+      "id": "M4D-1",
+      "name": "bounded-generated-graph-export-artifact-cleanup",
+      "reason": "Remove only the four selected M3C-4 payloads and make the audit runner clean future regenerated payloads after their metrics are recorded and checked."
+    }
+  },
+  "releaseCandidate": false
+}
