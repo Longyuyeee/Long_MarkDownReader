@@ -46,7 +46,7 @@
 
 决定为：**允许进入 v1.0.16 发布冻结，但尚不是发布候选**。
 
-进入冻结后仍必须完成九项门禁：冻结产品提交；package/Tauri/Cargo/矩阵的原子版本迁移；完整 `ci:patch-release`；当前版本 R5E 运行路由冒烟；无签名 MSI/NSIS；托管 Windows 安装生命周期；安装后工作区回归；制品 SHA-256 与最终说明；Tag/GitHub Release 与冻结提交绑定。
+进入冻结后仍必须完成九项门禁：冻结产品提交；package/Tauri/Cargo/矩阵的原子版本迁移；完整 `ci:patch-release`；当前候选 R5F 路由挂载与 R5G 桌面路由/I/O 烟测；无签名 MSI/NSIS；托管 Windows 安装生命周期；安装后工作区回归；制品 SHA-256 与最终说明；Tag/GitHub Release 与冻结提交绑定。历史 R5E 只证明当时的 Tauri API 阻断记录真实，不能作为当前候选通过证据。
 
 任一门禁失败都必须回到事实与代码修复，不能通过修改版本说明掩盖。当前保持 package、Cargo、Tauri、能力矩阵、运行时和公开版本 `1.0.15`，开发目标 `1.0.16`，`releaseCandidate=false`。
 

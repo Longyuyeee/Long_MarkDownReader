@@ -8,6 +8,7 @@ const policy = readJson('shared/post-v115-m4d0-temporary-artifact-and-redundant-
 const successor = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const cleanupExit = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
 const capabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
+const freezeEntry = readJson('shared/post-v115-m4f0-v1016-release-freeze-entry-audit-policy.json')
 const predecessor = readJson('shared/post-v115-m4c6-controlled-conversion-exit-audit-policy.json')
 const development = readJson('shared/development-version-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4d0-temporary-artifact-and-redundant-evidence-cleanup-selection/inventory.json')
@@ -28,7 +29,7 @@ for (const candidate of evidence.candidates || []) {
 }
 if (evidence.duplicateGroups?.some(group => group.selectedForRemoval || !policy.protectedDuplicateClasses.includes(group.classification))) failures.push('protected duplicate semantics drifted')
 if (evidence.ignoredLocalState?.some(item => item.trackedAtBaseline || !item.ignoredByPolicy || item.cleanupScope !== 'local-only-excluded-from-tracked-M4D-selection')) failures.push('ignored local state boundary drifted')
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== cleanupExit.stage || cleanupExit.predecessor !== successor.stage || cleanupExit.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== cleanupExit.stage || development.currentStage !== `${capabilityDecision.selectedNextStage.id}-${capabilityDecision.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== cleanupExit.stage || cleanupExit.predecessor !== successor.stage || cleanupExit.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== cleanupExit.stage || capabilityDecision.selectedNextStage?.id !== freezeEntry.stage || freezeEntry.predecessor !== capabilityDecision.stage || development.currentStage !== `${freezeEntry.selectedNextStage.id}-${freezeEntry.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) { console.error(`M4D-0 cleanup selection check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

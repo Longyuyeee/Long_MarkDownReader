@@ -6,6 +6,7 @@ const predecessor = readJson('shared/post-v115-m4d0-temporary-artifact-and-redun
 const policy = readJson('shared/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup-policy.json')
 const successor = readJson('shared/post-v115-m4d2-temporary-artifact-and-evidence-cleanup-exit-audit-policy.json')
 const capabilityDecision = readJson('shared/post-v115-m4e0-capability-facts-residual-risks-and-version-decision-audit-policy.json')
+const freezeEntry = readJson('shared/post-v115-m4f0-v1016-release-freeze-entry-audit-policy.json')
 const development = readJson('shared/development-version-policy.json')
 const evidence = readJson('docs/evidence/post-v115-m4d1-bounded-generated-graph-export-artifact-cleanup/cleanup.json')
 const tier = readJson('docs/evidence/post-v115-m3c4-large-graph-performance-exit-audit/tier-5000.json')
@@ -26,7 +27,7 @@ const checkerIndex = runner.indexOf('& node (Join-Path $workspace $checker)')
 const cleanupIndex = runner.indexOf('cleanup-post-v115-m4d1-generated-graph-export-artifacts.mjs')
 if (checkerIndex < 0 || cleanupIndex < 0 || cleanupIndex <= checkerIndex || !runner.includes("if ($Stage -eq 'M3C-4' -and ($Tier -eq 0 -or $Tier -eq 5000))")) failures.push('M3C-4 runner cleanup is not gated after its checker and 5000-tier generation')
 for (const token of ['retained?.bytes !== bytes.length', 'retained?.sha256 !== digest', 'for (const item of verified)', 'fs.unlinkSync(item.absolute)']) if (!cleanup.includes(token)) failures.push(`cleanup safety contract missing: ${token}`)
-if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== successor.stage || development.currentStage !== `${capabilityDecision.selectedNextStage.id}-${capabilityDecision.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
+if (policy.selectedNextStage?.id !== successor.stage || successor.predecessor !== policy.stage || successor.selectedNextStage?.id !== capabilityDecision.stage || capabilityDecision.predecessor !== successor.stage || capabilityDecision.selectedNextStage?.id !== freezeEntry.stage || freezeEntry.predecessor !== capabilityDecision.stage || development.currentStage !== `${freezeEntry.selectedNextStage.id}-${freezeEntry.selectedNextStage.name}`) failures.push('M4 successor handoff is not aligned')
 if (policy.releaseCandidate !== false || evidence.releaseCandidate !== false || development.releaseCandidate !== false) failures.push('release boundary changed')
 
 if (failures.length) { console.error(`M4D-1 bounded cleanup check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

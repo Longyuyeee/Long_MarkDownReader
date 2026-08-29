@@ -53,7 +53,7 @@ const documentationChecks = {
   readmeDevelopmentScope: readme.includes('M1～M4D 已完成分阶段真实审计') && readme.includes('M4 跨格式工作流与有界清理已完成'),
   readmeStableBoundary: readme.includes('以下“真实界面”“核心能力”和“格式能力”描述当前 `main` 开发线') && readme.includes('公开下载仍以 v1.0.15 Release 为准'),
   readmeLimitations: ['不宣称完整 Office 等价编辑', '大 JSON 渐进只读', '不提供嵌入字幕拆封、字幕编辑或转码'].every(token => readme.includes(token)),
-  draftScope: ['共享统一对象定位合同', '内部 Table 布尔任务', 'CSV/TSV→Table', 'OPML→Canvas', '图谱→项目笔记', '可重建大图导出负载'].every(token => draft.includes(token)) && draft.includes('允许进入 **M4F-0 v1.0.16 发布冻结入口审计**'),
+  draftScope: ['共享统一对象定位合同', '内部 Table 布尔任务', 'CSV/TSV→Table', 'OPML→Canvas', '图谱→项目笔记', '可重建大图导出负载', 'M4E-0 已汇总', 'M4F-0 已把'].every(token => draft.includes(token)),
   draftLimitations: ['不宣称完整 Excel、Word、PowerPoint 或 OpenDocument 等价编辑', '当前 `releaseCandidate=false`'].every(token => draft.includes(token)),
   capabilityPageIdentity: capabilityView.includes('DEVELOPMENT_TARGET_VERSION') && capabilityView.includes('RELEASE_MATRIX_VERSION') && capabilityView.includes('<span>能力层级</span>'),
 }
@@ -70,7 +70,7 @@ const releaseFreezeGates = [
   'freeze-product-commit',
   'atomic-runtime-package-tauri-cargo-matrix-version-transition',
   'full-ci-patch-release-quality-gate',
-  'current-version-r5e-runtime-route-smoke',
+  'current-candidate-runtime-route-and-io-smoke',
   'unsigned-msi-and-nsis-build',
   'managed-windows-install-lifecycle',
   'installed-workspace-regression',

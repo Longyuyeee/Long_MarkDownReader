@@ -1489,3 +1489,13 @@ M4E-0 已通过。结构化审计重新核对 M0～M4D 的 9 个里程碑闭环�
 仍保留 6 类非阻断但必须公开的边界：Office/ODF 不宣称完整等价；ODS 公式/自定义样式和 ODP 编辑未开放；部分媒体依赖系统编解码器且外部窗口高级能力延期；YAML/XML/TOML 高级模式延期；图谱聚类折叠、全屏、治理环和性能型保存视图未纳入；ODT 与 XLSX 数组公式外部生产者证据不足。发布冻结仍有 9 道门禁，包括冻结提交、原子版本提升、完整补丁发布检查、当前版本运行时烟测、MSI/NSIS、Windows 安装生命周期、安装态工作区回归、产物哈希/最终说明及绑定冻结提交的 Tag/Release。
 
 当前唯一接续点为 **M4F-0 v1.0.16 发布冻结入口审计**。先锁定产品提交并逐项执行上述门禁；只有所有门禁通过后才能把能力矩阵改为候选并创建远端发布，任何失败都必须保持 `releaseCandidate=false`。详见 [`Post_v1.0.15_M4E0_Capability_Facts_Residual_Risks_and_Version_Decision_Audit_2026-08-29.md`](./Post_v1.0.15_M4E0_Capability_Facts_Residual_Risks_and_Version_Decision_Audit_2026-08-29.md)。
+
+## 2026-08-29 M4F-0 v1.0.16 发布冻结入口交接
+
+M4F-0 已通过。产品范围冻结为 `7e10c340fa0d528b598c9ca6be391c48b15a463f`；选择时它与 `origin/main` 一致、工作区干净且没有 `v1.0.16` Tag。后续若修改任何产品行为，原冻结即失效，必须修复、重审并选择新的冻结提交。
+
+实际扫描得到 44 个原子版本迁移文件：package/lock、Cargo/lock、Tauri、开发版本策略 6 个主事实源，以及 38 个仍与当前运行时绑定的共享合同。M0 基线、显式保存对齐、M2A2、M2A3、M2 退出五个 post-v1.0.15 历史策略保持 1.0.15。社区发布策略需重置为 v1.0.16 Quality Gate pending，当前公开版本仍为 v1.0.15，不能提前写发布产物或远端回执。
+
+审计还纠正了旧烟测门禁：历史 R5E 的“检查通过”只证明当时 11 条浏览器路由均被 Tauri API 阻断的记录真实，不是当前候选成功。版本迁移后必须重跑 R5F 路由挂载和 R5G 桌面路由、TXT/JSON I/O 与性能导出。九道发布门禁当前仅完成产品冻结 1 项。
+
+当前唯一接续点为 **M4F-1 v1.0.16 原子版本迁移与候选元数据**：只处理冻结的版本身份、社区 Quality Gate pending 状态和发布说明初稿；完成审计并推送后，再由 M4F-2 执行完整 Quality Gate 与当前候选运行烟测。详见 [`Post_v1.0.15_M4F0_v1.0.16_Release_Freeze_Entry_Audit_2026-08-29.md`](./Post_v1.0.15_M4F0_v1.0.16_Release_Freeze_Entry_Audit_2026-08-29.md)。

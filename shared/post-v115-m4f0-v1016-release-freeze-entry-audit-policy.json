@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4F-0",
+  "name": "v1.0.16-release-freeze-entry-audit",
+  "predecessor": "M4E-0",
+  "candidateVersion": "1.0.16",
+  "publicVersion": "1.0.15",
+  "frozenProductCommit": "7e10c340fa0d528b598c9ca6be391c48b15a463f",
+  "freezeDecision": "product-scope-frozen-version-transition-authorized-not-yet-executed",
+  "atomicVersionScope": {
+    "primaryFiles": [
+      "package.json",
+      "package-lock.json",
+      "src-tauri/Cargo.toml",
+      "src-tauri/Cargo.lock",
+      "src-tauri/tauri.conf.json",
+      "shared/development-version-policy.json"
+    ],
+    "activeSharedAppVersion": "all shared JSON files with appVersion 1.0.15 except the five frozen post-v1.0.15 historical baseline policies",
+    "activeSharedFileCount": 38,
+    "totalFileCount": 44
+  },
+  "historicalVersionPins": [
+    "shared/post-v115-m0-baseline-policy.json",
+    "shared/post-v115-explicit-save-alignment-policy.json",
+    "shared/post-v115-m2-closure-policy.json",
+    "shared/post-v115-m2a2-workspace-governance-policy.json",
+    "shared/post-v115-m2a3-workspace-navigation-policy.json"
+  ],
+  "runtimeSmokeDecision": "rerun-current-candidate-r5f-route-mount-and-r5g-desktop-route-io-smoke; historical-r5e-blocker-evidence-is-not-a-current-pass",
+  "selectedNextStage": {
+    "id": "M4F-1",
+    "name": "v1.0.16-atomic-version-transition-and-candidate-metadata",
+    "reason": "Apply the complete 44-file version transition in one commit, reset community release facts to quality-gate pending, keep v1.0.15 public, and then push for the candidate Quality Gate."
+  },
+  "releaseCandidate": false
+}
