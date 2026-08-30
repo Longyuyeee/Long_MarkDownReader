@@ -1747,7 +1747,9 @@ const restoreSelectionHistory = (cursor: number) => {
 }
 const focusHealthNode = (nodeId: string) => {
   const node = graphData.value.nodes.find(candidate => candidate.id === nodeId)
-  if (node) selectAndCenter(node)
+  if (!node) return
+  selectAndCenter(node)
+  router.replace({ name: 'Graph', query: { ...route.query, root: node.id } })
 }
 const focusHealthGuidance = (focus: string) => {
   if (focus === 'library') {
