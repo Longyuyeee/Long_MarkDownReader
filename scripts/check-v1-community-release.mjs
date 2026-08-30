@@ -70,8 +70,18 @@ const ready = qualityVerified
   && policy.gates?.nsisBuilt === true
   && policy.gates?.artifactHashesVerified === true
   && policy.gates?.installedLifecyclePassed === true
+const lifecycleVerified = ready
+  && policy.releaseCandidate === false
+  && policy.currentStatus === `${tag}-community-release-hosted-lifecycle-passed-final-release-audit-pending`
 if (published) {
   if (!policy.releaseCandidate || policy.currentStatus !== `${tag}-community-release-published` || policy.release?.tag !== tag || policy.release?.url !== releaseUrl || !/^[0-9a-f]{40}$/.test(policy.release?.taggedCommit ?? '')) fail('published release receipt drift')
+} else if (lifecycleVerified) {
+  if (policy.gates?.githubReleasePublished !== false
+    || policy.patchValidation?.fullInstalledLifecycleRerun !== true
+    || policy.patchValidation?.managedUpdaterUpgradePath !== `${managedUpdaterUpgradePrefix}-passed`
+    || !Number.isInteger(policy.candidate?.hostedInstalledLifecycleRunId)
+    || policy.candidate?.artifacts?.length !== 2
+    || policy.candidate.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')) fail('hosted-lifecycle-passed intermediate state drift')
 } else if (ready) {
   if (!policy.releaseCandidate
     || policy.currentStatus !== `${tag}-community-release-ready-to-publish`
@@ -97,7 +107,7 @@ if (published) {
   fail('pre-quality release state drift')
 }
 
-if (ready || published) {
+if ((ready && !lifecycleVerified) || published) {
   const manifestPath = `docs/evidence/v${pkg.version}-release/artifact-manifest.json`
   if (!fs.existsSync(manifestPath)) fail('current artifact manifest is missing')
   else {
@@ -183,4 +193,4 @@ if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
-console.log(`V1 community release contract passed: ${tag} is ${published ? 'published' : ready ? 'ready to publish' : qualityVerified ? 'quality verified with installer evidence pending' : 'awaiting quality gate and package evidence'} with managed SHA-256 updates.`)
+console.log(`V1 community release contract passed: ${tag} is ${published ? 'published' : lifecycleVerified ? 'hosted lifecycle verified with final release audit pending' : ready ? 'ready to publish' : qualityVerified ? 'quality verified with installer evidence pending' : 'awaiting quality gate and package evidence'} with managed SHA-256 updates.`)

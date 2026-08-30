@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4F-3",
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 33322246630,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630",
+  "workflowCommit": "d78985d5ad10268b7555bd7a07a3ca778b9ae2b1",
+  "productSourceCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+  "previousPublicCommit": "317b667679fff4e8e29ce2a0ca94f8e480764d13",
+  "appVersion": "1.0.16",
+  "previousVersion": "1.0.15",
+  "artifact": {
+    "id": 9735798998,
+    "name": "v116-candidate-lifecycle-33322246630",
+    "zipSizeBytes": 206211967,
+    "zipSha256": "987e90b41e608c9d70629eecb1f7dce9893b0dfb5c30025036512fdb6da02c24",
+    "expiresAt": "2026-09-13T17:08:20Z"
+  },
+  "installers": [
+    {
+      "target": "msi",
+      "fileName": "Long编辑_1.0.16_x64_zh-CN.msi",
+      "sizeBytes": 73887744,
+      "sha256": "e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "nsis",
+      "fileName": "Long编辑_1.0.16_x64-setup.exe",
+      "sizeBytes": 65788796,
+      "sha256": "e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "previousInstaller": {
+    "target": "nsis",
+    "fileName": "Long编辑_1.0.15_x64-setup.exe",
+    "sizeBytes": 65444141,
+    "sha256": "30bab7b311877a3fa3e94ff75dd4058cb1f9ab9c557d65331dde5642adcd0c32"
+  },
+  "checks": {
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "managementRollbackFailed": 0
+  },
+  "importedEvidence": {
+    "fileCount": 29,
+    "totalBytes": 1552423,
+    "canonicalTreeSha256": "da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "enterpriseReleaseCandidate": false,
+  "selectedNextStage": "M4F-4-v1.0.16-final-artifact-manifest-and-release-readiness-audit"
+}

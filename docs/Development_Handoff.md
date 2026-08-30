@@ -1513,3 +1513,9 @@ v1.0.16 社区策略现在是 `v1.0.16-community-release-quality-gate-pending`�
 首轮托管运行 `33264898797` 已成功构建旧候选的 MSI/NSIS，但 R5J 在工作台等待 M2A2 已移除的知识网络脉搏而失败；实际设置页也仍把“前往工作台建议”送到已无详细治理建议的页面。现已按原始 M2A2 收敛需求把观察会话入口修正为图谱治理，并同步 R5J/G15C～E 合同。
 
 第二轮托管运行 `33267563652` 成功构建双安装包，却发现治理面板首次以 `open=true` 挂载时不执行扫描的真实产品缺陷。第三轮 `33319332897` 已越过该点并通过治理覆盖、建议、设置观察会话和 UX-33J，最终发现主题虽然居中，URL 却未写入原 G11/G16 要求的 `Graph?root=` 对象身份。最终纠偏产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58` 已同步视觉选择与深链身份，并重新通过完整 `ci:patch-release`、R5F 11/11、R5G 6/6 检查与 11/11 路由。当前无 `v1.0.16` Tag/Release，`releaseCandidate=false`，九道门禁仍为 4/9。唯一接续点是从该精确候选重跑托管 MSI/NSIS、升级/卸载、安装态路由与 I/O、管理备份和索引回滚；全部通过前不得进入 M4F-4。
+
+## 2026-08-31 M4F-3C 托管安装生命周期关闭与换机交接
+
+第四次托管运行 [`33322246630`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 已从产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58` 完整通过：双 `NotSigned` 安装包、R5I 22/22、R5J 18/18 与路由 11/11、R5L 7/7。MSI 为 73,887,744 bytes / `e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215`，NSIS 为 65,788,796 bytes / `e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff`，均已下载文件本体独立复核。
+
+换机所需的 29 个结构化 JSON 与必要截图已导入 `docs/evidence/post-v115-m4f3-v1016-hosted-installer-lifecycle/`，规范树摘要为 `da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25`；远端 artifact ID `9735798998`、ZIP 摘要 `987e90b41e608c9d70629eecb1f7dce9893b0dfb5c30025036512fdb6da02c24`，当前到期时间 2026-09-13T17:08:20Z。九道门禁现为 7/9，仍无 `v1.0.16` Tag/Release，`releaseCandidate=false`。唯一接续点为 **M4F-4 最终 artifact manifest、SHA256SUMS、发布说明与发布就绪审计**；完成前不得创建远端发布。详见 [`Post_v1.0.15_M4F3C_v1.0.16_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md`](./Post_v1.0.15_M4F3C_v1.0.16_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md)。

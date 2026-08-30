@@ -79,7 +79,7 @@ const checks = {
     && tauri.version === policy.runtimeBaseVersion
     && matrix.appVersion === policy.runtimeBaseVersion,
   candidateMetadataFacts: community.appVersion === policy.runtimeBaseVersion
-    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-quality-gate-and-runtime-smoke-passed-installer-pending`
+    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-hosted-lifecycle-passed-final-release-audit-pending`
     && community.gates?.qualityGatePassed === true
     && community.gates?.localRuntimeSmokePassed === true
     && community.gates?.githubReleasePublished === false,
@@ -88,7 +88,7 @@ const checks = {
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   notReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
-  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-quality-gate-and-runtime-smoke-passed'
+  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-hosted-installer-lifecycle-passed'
     && policy.runtimeBaseVersion === policy.developmentTargetVersion,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
     && m1Closure.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit'
@@ -165,7 +165,7 @@ const checks = {
     && m4f1AtomicVersionTransition.predecessor === m4f0ReleaseFreezeEntry.stage
     && m4f1AtomicVersionTransition.selectedNextStage.id === m4f2CandidateQualityGate.stage
     && m4f2CandidateQualityGate.predecessor === m4f1AtomicVersionTransition.stage
-    && policy.currentStage === `${m4f2CandidateQualityGate.selectedNextStage.id}-${m4f2CandidateQualityGate.selectedNextStage.name}`,
+    && policy.currentStage === 'M4F-4-v1.0.16-final-artifact-manifest-and-release-readiness-audit',
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
@@ -189,7 +189,7 @@ const evidence = {
     runtimeBaseVersion: policy.developmentTargetVersion,
     publicTag: policy.publicTag,
     headAheadOfPublicTag: true,
-    binaryVersionTransition: 'v1.0.16-quality-gate-and-runtime-smoke-passed',
+    binaryVersionTransition: 'v1.0.16-hosted-installer-lifecycle-passed',
   },
   actual: { headCommit, tagCommit, commitsAhead, tagIsAncestor, checks },
 }

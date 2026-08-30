@@ -10,7 +10,7 @@
   "workflow": ".github/workflows/v116-candidate-lifecycle.yml",
   "requiredArtifacts": ["msi", "nsis"],
   "requiredLifecycle": ["1.0.15-to-1.0.16-upgrade", "installed-route-and-io-smoke", "uninstall-and-retention", "management-backup-and-index-rollback"],
-  "status": "hosted-three-attempts-failed-remediated-rerun-pending",
+  "status": "hosted-installer-lifecycle-passed-m4f4-pending",
   "releaseCandidate": false,
   "attemptHistory": [
     {
@@ -45,13 +45,35 @@
       "failedCheck": "installed-knowledge-topic-centered-navigation",
       "cause": "graph-health-topic-centered-without-root-query-deep-link",
       "acceptedForRelease": false
+    },
+    {
+      "runId": 33322246630,
+      "productSourceCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+      "status": "hosted-installers-and-full-lifecycle-passed",
+      "msiBuilt": true,
+      "nsisBuilt": true,
+      "artifactHashesIndependentlyVerified": true,
+      "lifecycleChecksPassed": 22,
+      "installedArtifactChecksPassed": 18,
+      "installedRoutesPassed": 11,
+      "managementRollbackChecksPassed": 7,
+      "failedChecks": 0,
+      "acceptedForM4F4": true,
+      "acceptedForRelease": false
     }
   ],
+  "hostedSuccessEvidence": {
+    "importManifest": "docs/evidence/post-v115-m4f3-v1016-hosted-installer-lifecycle/import-manifest.json",
+    "githubRunId": 33322246630,
+    "artifactId": 9735798998,
+    "artifactZipSha256": "987e90b41e608c9d70629eecb1f7dce9893b0dfb5c30025036512fdb6da02c24",
+    "sourceUserContentIncluded": false
+  },
   "localBuildObservation": {
     "msiBuilt": true,
     "nsisBuilt": false,
     "nsisBlocker": "official-nsis-makensis-loader-exit-0xc0000135",
     "promotionalEvidence": false
   },
-  "nextAction": "dispatch-remediated-exact-candidate-hosted-lifecycle-and-import-immutable-evidence"
+  "nextAction": "execute-m4f4-final-artifact-manifest-release-notes-and-release-readiness-audit"
 }
