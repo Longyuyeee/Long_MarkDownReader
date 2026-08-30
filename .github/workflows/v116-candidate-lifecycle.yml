@@ -6,7 +6,7 @@ name: v1.0.16 Candidate Installer Lifecycle
       candidate_commit:
         description: Exact 40-character frozen v1.0.16 candidate commit
         required: true
-        default: "99cc4b79e13fc7fcc198da975b51880fc366afe4"
+        default: "3d7807d7c1bc899b86b57a0cae4cd264746fdfb6"
 
 permissions:
   contents: read
