@@ -203,7 +203,7 @@ const runRepairs = async (repairs: RepairRequest[]) => {
 const applyRepair = (issue: LinkIssue, candidate: Candidate) => runRepairs([requestFor(issue, candidate)])
 const applyRecommendedRepairs = () => runRepairs(recommendedRepairs.value.map(issue => requestFor(issue, issue.recommendedCandidate!)))
 
-watch(() => props.open, value => { if (value) loadReport() })
+watch(() => props.open, value => { if (value) loadReport() }, { immediate: true })
 watch(() => props.libraryRoot, () => { report.value = null; pulse.value = null; if (props.open) loadReport() })
 </script>
 

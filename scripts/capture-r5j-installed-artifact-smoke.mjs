@@ -564,7 +564,19 @@ await fs.writeFile(path.join(output, 'installed-docx-hyperlink-evidence.json'), 
 
 await navigate('#/graph?focus=overview', '.graph-container', 'installed graph governance knowledge network pulse')
 await waitFor(`document.querySelector('.health-panel') !== null`, 'installed graph governance panel')
-await waitFor(`Number(document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow')) > 0`, 'installed knowledge network coverage')
+try {
+  await waitFor(`Number(document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow')) > 0`, 'installed knowledge network coverage')
+} catch (error) {
+  const diagnostics = await evaluate(`(() => ({
+    hash: location.hash,
+    libraryReady: document.querySelector('[data-testid="m2a2-workspace-primary"]')?.getAttribute('data-workspace-state') || '',
+    panelText: document.querySelector('.health-panel')?.textContent?.slice(0, 2000) || '',
+    pulsePresent: document.querySelector('[data-testid="knowledge-network-pulse"]') !== null,
+    coverage: document.querySelector('[data-testid="knowledge-network-coverage"]')?.getAttribute('aria-valuenow') || '',
+    body: document.body?.innerText?.slice(0, 2000) || '',
+  }))()`)
+  throw new Error(`Installed knowledge network coverage failed: ${JSON.stringify(diagnostics)}; ${error.message}`)
+}
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'installed knowledge network top topics')
 await waitFor(`document.querySelector('[data-testid="knowledge-network-guidance"]') !== null`, 'installed actionable knowledge guidance')
 const knowledgePulse = await evaluate(`(() => {
@@ -690,7 +702,8 @@ await fs.writeFile(path.join(output, 'installed-knowledge-session-evidence.json'
 }, null, 2)}\n`)
 checks.push({ id: 'installed-consented-real-library-session-guidance', status: 'passed' })
 
-await navigate('#/workspace', '.workspace-home', 'workspace before centered knowledge topic navigation')
+await navigate('#/graph?focus=overview', '.graph-container', 'graph governance before centered knowledge topic navigation')
+await waitFor(`document.querySelector('.health-panel') !== null`, 'restored graph governance panel')
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'restored installed knowledge network top topics')
 
 const selectedTopic = knowledgePulse.topics[0]
