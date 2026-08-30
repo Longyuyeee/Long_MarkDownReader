@@ -3,14 +3,14 @@
   "stage": "M4F-3A",
   "name": "v1.0.16-hosted-installer-and-lifecycle-handoff",
   "predecessor": "M4F-2",
-  "candidateSourceCommit": "3d7807d7c1bc899b86b57a0cae4cd264746fdfb6",
+  "candidateSourceCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
   "candidateVersion": "1.0.16",
   "previousPublicTag": "v1.0.15",
   "previousPublicCommit": "317b667679fff4e8e29ce2a0ca94f8e480764d13",
   "workflow": ".github/workflows/v116-candidate-lifecycle.yml",
   "requiredArtifacts": ["msi", "nsis"],
   "requiredLifecycle": ["1.0.15-to-1.0.16-upgrade", "installed-route-and-io-smoke", "uninstall-and-retention", "management-backup-and-index-rollback"],
-  "status": "hosted-two-attempts-failed-remediated-rerun-pending",
+  "status": "hosted-three-attempts-failed-remediated-rerun-pending",
   "releaseCandidate": false,
   "attemptHistory": [
     {
@@ -33,6 +33,17 @@
       "artifactHashesIndependentlyVerified": true,
       "failedCheck": "installed-knowledge-network-coverage",
       "cause": "graph-health-panel-initial-open-prop-did-not-trigger-load-report",
+      "acceptedForRelease": false
+    },
+    {
+      "runId": 33319332897,
+      "productSourceCommit": "3d7807d7c1bc899b86b57a0cae4cd264746fdfb6",
+      "status": "installers-built-lifecycle-failed-at-centered-graph-route-identity",
+      "msiBuilt": true,
+      "nsisBuilt": true,
+      "artifactHashesIndependentlyVerified": true,
+      "failedCheck": "installed-knowledge-topic-centered-navigation",
+      "cause": "graph-health-topic-centered-without-root-query-deep-link",
       "acceptedForRelease": false
     }
   ],
