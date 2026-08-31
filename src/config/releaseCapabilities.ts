@@ -56,7 +56,7 @@ interface DevelopmentVersionPolicy {
   publicTag: string
   releaseCandidate: boolean
   currentStage: string
-  binaryVersionTransition: 'M4-release-freeze' | 'v1.0.16-quality-gate-pending' | 'v1.0.16-quality-gate-and-runtime-smoke-passed' | 'v1.0.16-hosted-installer-lifecycle-passed' | 'v1.0.16-release-ready' | 'v1.0.16-public-release-published' | 'v1.0.17-quality-gate-pending' | 'v1.0.17-candidate-packaged' | 'v1.0.17-hosted-installer-lifecycle-passed' | 'v1.0.17-release-ready' | 'v1.0.17-public-release-published'
+  binaryVersionTransition: 'M4-release-freeze' | 'v1.0.16-quality-gate-pending' | 'v1.0.16-quality-gate-and-runtime-smoke-passed' | 'v1.0.16-hosted-installer-lifecycle-passed' | 'v1.0.16-release-ready' | 'v1.0.16-public-release-published' | 'v1.0.17-quality-gate-pending' | 'v1.0.17-candidate-packaged' | 'v1.0.17-hosted-installer-lifecycle-passed' | 'v1.0.17-release-ready' | 'v1.0.17-public-release-published' | 'v1.0.17-release-and-managed-updater-closed' | 'v1.0.18-quality-gate-pending' | 'v1.0.18-candidate-packaged' | 'v1.0.18-hosted-installer-lifecycle-passed' | 'v1.0.18-release-ready' | 'v1.0.18-public-release-published'
   displayLabel: string
 }
 

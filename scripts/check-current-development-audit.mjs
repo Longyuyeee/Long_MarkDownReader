@@ -25,6 +25,7 @@ import './check-post-v117-m6-0-v1018-scope-selection.mjs'
 import './check-post-v117-m6-1-graph-fullscreen.mjs'
 import './check-post-v117-m6-2-v1018-next-slice-selection.mjs'
 import './check-post-v117-m6-3-v1018-release-readiness.mjs'
+import './check-post-v117-m6-4-v1018-candidate-packaging.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
@@ -76,7 +77,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.17' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M6-4 v1.0.18 原子版本迁移与候选打包**', policy.currentStatus === 'v1.0.17-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.16-to-1.0.17-passed'],
+  ['当前阶段：**M6-4 v1.0.18 原子版本迁移与候选打包**', policy.currentStatus === 'v1.0.18-community-release-quality-gate-pending' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.17-to-1.0.18-pending'],
 ]
 
 for (const [token, condition] of required) {

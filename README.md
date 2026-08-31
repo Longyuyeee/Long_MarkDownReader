@@ -76,6 +76,8 @@ M6-2 已完成：本补丁停止扩大范围，下一步进入 **M6-3 v1.0.18 �
 
 M6-3 已完成：Rust 全仓 **548/0/5**，完整 `ci:patch-release` 在补齐真实托管运行回执并对齐证据字段后从头复跑通过，生产构建 6,275 模块、43 格式/91 扩展名、Rust locked check 与生产依赖 0 漏洞均达标。下一步为 **M6-4 v1.0.18 原子版本迁移与候选打包**；详见 [M6-3 质量与发布就绪审计](docs/Post_v1.0.17_M6_3_v1.0.18_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md)。
 
+M6-4 已完成原子版本迁移：44 项当前运行身份统一为 `1.0.18`，公开版本仍为 `v1.0.17`，所有 v1.0.18 候选安装、生命周期与发布门均重新归零。当前状态是“候选源码已准备、安装包待构建”，不是正式发布；候选说明见 [v1.0.18 Release Notes](docs/RELEASE_NOTES_v1.0.18.md)。
+
 ### v1.0.16 发布链回顾
 
 M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。

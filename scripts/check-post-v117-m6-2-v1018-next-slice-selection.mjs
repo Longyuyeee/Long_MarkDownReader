@@ -34,7 +34,7 @@ if (graph.includes('data-testid="graph-cluster-collapse"') || graph.includes('da
 for (const source of [yaml, xml, toml]) if (['schemaProvider', 'schemaUri', '$schema'].some(token => source.includes(token))) fail('M6-2 structured schema boundary drift')
 if (!odfEdit.includes('notes_depth')) fail('M6-2 ODP notes boundary drift')
 const expectedDevelopmentStage = successor.status === 'accepted' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : 'M6-3-v1.0.18-quality-debt-and-release-readiness'
-if (development.currentStage !== expectedDevelopmentStage || development.runtimeBaseVersion !== '1.0.17'
+if (development.currentStage !== expectedDevelopmentStage || !['1.0.17', '1.0.18'].includes(development.runtimeBaseVersion)
   || development.publicVersion !== '1.0.17' || development.developmentTargetVersion !== '1.0.18' || development.releaseCandidate) fail('M6-3 handoff drift')
 for (const [document, tokens] of [[audit, ['M6-3', 'ci:patch-release', '为什么停止扩大范围', '预期与当前实际']], [roadmap, ['M6-2 选择回执', 'M6-3', '停止扩大']], [alignment, successor.status === 'accepted' ? ['M6-2 已完成', '唯一接续点为 M6-3'] : ['当前阶段：**M6-3 v1.0.18 质量债与发布就绪审计**', '唯一接续点为 M6-3']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-2 document missing ${token}`)

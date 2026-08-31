@@ -112,7 +112,7 @@ const checks = {
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
   binaryTransitionComplete: (candidateRuntime
-    ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready'].includes(policy.binaryVersionTransition)
+    ? [`v${policy.runtimeBaseVersion}-quality-gate-pending`, `v${policy.runtimeBaseVersion}-candidate-packaged`, `v${policy.runtimeBaseVersion}-hosted-lifecycle-passed`, `v${policy.runtimeBaseVersion}-release-ready`].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === expectedTarget
     : [`v${policy.runtimeBaseVersion}-public-release-published`, `v${policy.runtimeBaseVersion}-release-and-managed-updater-closed`].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === policy.publicVersion)
