@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-1",
+  "name": "odp-slide-text-producer-fidelity-and-object-selection",
+  "status": "accepted",
+  "predecessor": "M5-0",
+  "runtimeBaseVersion": "1.0.16",
+  "publicVersion": "1.0.16",
+  "developmentTargetVersion": "1.0.17",
+  "requiredProducers": [
+    "libreoffice-impress",
+    "microsoft-powerpoint"
+  ],
+  "selectedObjectClass": "direct-draw-frame-text-box-text-paragraph-on-simple-slide",
+  "selectionRules": {
+    "slideMustContainOnlyDirectTextFrames": true,
+    "presenterNotesReadOnly": true,
+    "slidesWithCustomShapesBlocked": true,
+    "listsFieldsMediaAnimationsMastersReadOnly": true,
+    "sourceDigestMustRemainUnchangedDuringReopen": true,
+    "reliableCopyOnly": true,
+    "sourceOverwrite": false
+  },
+  "realMatrix": {
+    "fixturesPerProducer": 1,
+    "slidesPerFixture": 2,
+    "simpleBodyMarkersPerFixture": 4,
+    "libreOfficeVersion": "26.2.4.2",
+    "powerPointVersion": "16.0",
+    "libreOfficeMarkersRecoveredByPowerPoint": 4,
+    "powerPointMarkersRecoveredByPowerPoint": 4,
+    "libreOfficePdfBytes": 17253,
+    "powerPointPdfBytes": 15580,
+    "sourceUnchanged": true,
+    "notesPreservedByBoth": false
+  },
+  "selectedNextStage": {
+    "id": "M5-2",
+    "name": "odp-simple-slide-body-reliable-copy-foundation"
+  },
+  "nextStageRequirements": {
+    "boundedInventoryBeforeMutation": true,
+    "rejectComplexObjectSlides": true,
+    "directFrameParagraphsOnly": true,
+    "presenterNotesRemainReadOnly": true,
+    "reliableNewCopyOnly": true,
+    "sourceDigestMustRemainUnchanged": true,
+    "libreOfficeAndPowerPointReopenRequired": true,
+    "expectedVsActualRequired": true,
+    "noUiPromotionBeforeBackendExit": true,
+    "binaryVersionChange": false
+  },
+  "productCodeChanged": false,
+  "binaryVersionChanged": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m5-2-odp-simple-slide-body-reliable-copy-foundation"
+}

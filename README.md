@@ -274,7 +274,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，M5-0 已按 [v1.0.17 范围选择审计](docs/Post_v1.0.16_M5_0_v1.0.17_Scope_Selection_Audit_2026-08-31.md) 只选择 ODP 正文方向；下一阶段为 M5-1 ODP 幻灯片正文生产者保真与对象选择审计。当前公开稳定版仍为 [v1.0.16](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)，ODP 仍保持只读。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。M5-1 已按 [ODP 生产者保真与对象选择审计](docs/Post_v1.0.16_M5_1_ODP_Slide_Text_Producer_Fidelity_and_Object_Selection_Audit_2026-08-31.md) 只选择无复杂对象页上的直接文本框段落；下一阶段为 M5-2 ODP 简单幻灯片正文可靠副本基础。当前公开稳定版仍为 [v1.0.16](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)，ODP 仍保持只读。
 
 ## 许可证
 

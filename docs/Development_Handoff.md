@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 M5-1 ODP 生产者保真与对象选择已通过：** LibreOffice Impress 26.2.4.2 与 PowerPoint 16.0 各生成两页 ODP；两者简单正文均被 PowerPoint 4/4 找回，均被 LibreOffice 成功渲染且源摘要不变。LibreOffice 路径实际丢失备注；带自定义形状的 LibreOffice 页在 PowerPoint 中整页显示 0 个形状，因此不能只跳过形状本身。唯一接续点为 **M5-2 ODP 简单幻灯片正文可靠副本基础**：仅处理无复杂对象页上的直接文本框段落，复杂对象页整页拒绝，只另存新副本，不开放 UI、不覆盖源文件、不提升版本。详见 [`Post_v1.0.16_M5_1_ODP_Slide_Text_Producer_Fidelity_and_Object_Selection_Audit_2026-08-31.md`](./Post_v1.0.16_M5_1_ODP_Slide_Text_Producer_Fidelity_and_Object_Selection_Audit_2026-08-31.md)。
+
 > **2026-08-31 M5-0 v1.0.17 范围选择已通过：** 真实代码比较 ODP 正文、结构化 Schema 和图谱聚类/全屏后，只选择相邻的 ODP 正文方向。重跑 ODF/LibreOffice 基线得到 Rust 20 通过、0 失败、1 个显式 artifact 测试忽略，LibreOffice 26.2.4.2 独立 ODP 导出 19,403 bytes、源摘要不变；实际备注仍未保留，因此 ODP 继续 `preview-only`。唯一接续点为 **M5-1 ODP 幻灯片正文生产者保真与对象选择审计**；只盘点 LibreOffice/PowerPoint 项目自有输出，不写产品功能、不开放备注、不提升版本。详见 [`Post_v1.0.16_M5_0_v1.0.17_Scope_Selection_Audit_2026-08-31.md`](./Post_v1.0.16_M5_0_v1.0.17_Scope_Selection_Audit_2026-08-31.md)。
 
 > **2026-08-31 M4F-6 官方应用内更新观察已通过：** GitHub 托管一次性 Windows 从官方 v1.0.15 发现 v1.0.16，经显式确认、官方 NSIS 大小/SHA-256 校验、同目录静默覆盖和自动重启后显示最新版；资料库与配置在覆盖、卸载后均保留。修复 Tag refspec 后的运行 [`33350758818`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33350758818) 为 12/12，三张截图已人工验收，9 个原始证据文件逐项哈希导入。v1.0.16 发布与更新链已收口，唯一接续点为 **M5-0 v1.0.17 范围选择审计**；先选择一个可真实验收的最小切片，不提升当前 1.0.16 二进制。详见 [`Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。

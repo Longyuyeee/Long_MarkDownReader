@@ -39,7 +39,7 @@ if (evidence.stage !== policy.stage || evidence.status !== 'accepted' || evidenc
   || evidence.actual?.realTest?.rustPassed !== 20 || evidence.actual?.realTest?.rustFailed !== 0
   || evidence.actual?.realTest?.libreOfficeVersion !== '26.2.4.2' || evidence.actual?.realTest?.notesPreserved !== false
   || evidence.differences?.length !== 3 || evidence.sourceUserContentIncluded || evidence.releaseCandidate) fail('M5-0 real evidence drift')
-if (development.currentStage !== 'M5-1-odp-slide-text-producer-fidelity-and-object-selection'
+if (!['M5-1-odp-slide-text-producer-fidelity-and-object-selection', 'M5-2-odp-simple-slide-body-reliable-copy-foundation'].includes(development.currentStage)
   || development.runtimeBaseVersion !== '1.0.16' || development.publicVersion !== '1.0.16' || development.developmentTargetVersion !== '1.0.17') fail('M5-1 development handoff drift')
 for (const [document, tokens] of [[audit, ['真实测试：预期与实际', 'M5-1', '备注继续只读', '20 通过']], [roadmap, ['M5-0', 'M5-1', 'LibreOffice 26.2.4.2']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M5-0 document missing ${token}`)

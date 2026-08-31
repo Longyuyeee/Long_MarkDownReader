@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-1",
+  "status": "accepted",
+  "capturedAt": "2026-08-31T03:18:44.5835253Z",
+  "expected": {
+    "requiredProducers": [
+      "libreoffice-impress",
+      "microsoft-powerpoint"
+    ],
+    "slideCountPerFixture": 2,
+    "simpleBodyMarkersPerFixture": 4,
+    "notesPreservedByBoth": true,
+    "sourceUnchanged": true
+  },
+  "actual": {
+    "producers": {
+      "libreOffice": "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+      "powerPoint": "16.0",
+      "wps": {
+        "status": "available-not-required",
+        "build": "12.1.0.28043",
+        "reason": "M5-1 freezes the required matrix to LibreOffice and PowerPoint; WPS ODP generation is a later optional producer expansion."
+      }
+    },
+    "outputs": [
+      {
+        "producer": "libreoffice-impress",
+        "inventory": {
+          "bytes": 12049,
+          "sha256": "178ca2f218f1be007e93887c4518c49932ee8d8b25c71c8eed0a02b96a313b47",
+          "zipEntries": 8,
+          "slideCount": 2,
+          "simpleParagraphCount": 4,
+          "simpleParagraphs": [
+            "M5_LO_TITLE",
+            "M5_LO_BODY_A",
+            "M5_LO_BODY_B",
+            "M5_LO_CLOSURE"
+          ],
+          "complexShapeParagraphCount": 0,
+          "complexShapeParagraphs": [],
+          "notesParagraphCount": 0,
+          "notes": [],
+          "expectedMarkerCount": 5,
+          "missingMarkers": [
+            "M5_LO_NOTE"
+          ]
+        },
+        "powerPointReopen": {
+          "version": "16.0",
+          "slideCount": 2,
+          "bodyMarkersRecovered": [
+            "M5_LO_TITLE",
+            "M5_LO_BODY_A",
+            "M5_LO_BODY_B",
+            "M5_LO_CLOSURE"
+          ],
+          "bodyMarkersMissing": [],
+          "noteRecovered": false,
+          "shapes": [
+            {
+              "slide": 1,
+              "name": "M5 LO Title",
+              "type": 17,
+              "hasTextFrame": -1,
+              "text": "M5_LO_TITLE"
+            },
+            {
+              "slide": 1,
+              "name": "M5 LO Body",
+              "type": 17,
+              "hasTextFrame": -1,
+              "text": "M5_LO_BODY_A\rM5_LO_BODY_B"
+            },
+            {
+              "slide": 2,
+              "name": "M5 LO Closure Title",
+              "type": 17,
+              "hasTextFrame": -1,
+              "text": "M5_LO_CLOSURE"
+            }
+          ]
+        },
+        "libreOfficeReopen": {
+          "pdfBytes": 17253,
+          "sourceUnchanged": true
+        }
+      },
+      {
+        "producer": "microsoft-powerpoint",
+        "inventory": {
+          "bytes": 46981,
+          "sha256": "fa20bc2aedfdd81d46111792857a2a2853fa5179828a8cc22ecd85c10e494a94",
+          "zipEntries": 7,
+          "slideCount": 2,
+          "simpleParagraphCount": 4,
+          "simpleParagraphs": [
+            "M5_PPT_TITLE",
+            "M5_PPT_BODY_A",
+            "M5_PPT_BODY_B",
+            "M5_PPT_CLOSURE"
+          ],
+          "complexShapeParagraphCount": 1,
+          "complexShapeParagraphs": [
+            "M5_PPT_SHAPE"
+          ],
+          "notesParagraphCount": 2,
+          "notes": [
+            "M5_PPT_NOTE",
+            ""
+          ],
+          "expectedMarkerCount": 6,
+          "missingMarkers": []
+        },
+        "powerPointReopen": {
+          "version": "16.0",
+          "slideCount": 2,
+          "bodyMarkersRecovered": [
+            "M5_PPT_TITLE",
+            "M5_PPT_BODY_A",
+            "M5_PPT_BODY_B",
+            "M5_PPT_CLOSURE"
+          ],
+          "bodyMarkersMissing": [],
+          "noteRecovered": true,
+          "shapes": [
+            {
+              "slide": 1,
+              "name": "M5 PPT Title",
+              "type": 17,
+              "hasTextFrame": -1,
+              "text": "M5_PPT_TITLE"
+            },
+            {
+              "slide": 1,
+              "name": "M5 PPT Body",
+              "type": 17,
+              "hasTextFrame": -1,
+              "text": "M5_PPT_BODY_A\rM5_PPT_BODY_B"
+            },
+            {
+              "slide": 1,
+              "name": "M5 PPT Complex Shape",
+              "type": 5,
+              "hasTextFrame": -1,
+              "text": "M5_PPT_SHAPE"
+            },
+            {
+              "slide": 2,
+              "name": "M5 PPT Closure",
+              "type": 17,
+              "hasTextFrame": -1,
+              "text": "M5_PPT_CLOSURE"
+            }
+          ]
+        },
+        "libreOfficeReopen": {
+          "pdfBytes": 15580,
+          "sourceUnchanged": true
+        }
+      }
+    ],
+    "requiredMatrixPassed": true,
+    "simpleBodyTextStable": true,
+    "notesPreservedByBoth": false
+  },
+  "differences": [
+    {
+      "expected": "Removing the hand-authored presentation style is sufficient to make the LibreOffice fixture cross-producer readable.",
+      "actual": "The styled and unstyled runs both retained 4/4 markers in XML and LibreOffice rendering, while PowerPoint recovered only the closure marker; the style hypothesis was disproved.",
+      "correction": "Isolate other slide-level object classes before selecting the minimum common baseline."
+    },
+    {
+      "expected": "Both producers preserve simple body text and presenter notes.",
+      "actual": "Both producers preserved simple body text, but LibreOffice dropped M5_LO_NOTE during FODP to ODP generation.",
+      "correction": "Select only direct draw:frame/draw:text-box/text:p body text; keep all presenter notes read-only."
+    },
+    {
+      "expected": "A slide containing a LibreOffice custom shape remains safely readable in PowerPoint.",
+      "actual": "The diagnostic fixture with a LibreOffice custom shape caused PowerPoint to expose zero shapes from that slide, while the closure-only slide remained readable. The corrected LibreOffice baseline contains no custom shape; the PowerPoint producer fixture still inventories one complex shape separately.",
+      "correction": "Treat any slide containing draw:custom-shape or another complex object as blocked for M5-2; only direct-frame text on otherwise simple slides can advance."
+    }
+  ],
+  "decision": {
+    "selectedNextStage": "M5-2-odp-simple-slide-body-reliable-copy-foundation",
+    "editableCandidate": "direct-draw-frame-text-box-text-paragraph-on-simple-slide",
+    "presenterNotesReadOnly": true,
+    "slidesWithCustomShapesBlocked": true,
+    "listsFieldsMediaAnimationsMastersReadOnly": true,
+    "productCodeChanged": false,
+    "binaryVersionChanged": false,
+    "releaseCandidate": false
+  },
+  "attemptHistory": [
+    {
+      "attempt": 1,
+      "status": "failed-before-output",
+      "expected": "PowerPoint accepts integer 0 for DisplayAlerts",
+      "actual": "the COM property was a strict PpAlertLevel enum",
+      "correction": "use ppAlertsNone value 1"
+    },
+    {
+      "attempt": 2,
+      "status": "rejected",
+      "expected": "custom presentation style text is cross-producer visible",
+      "actual": "PowerPoint recovered 1/4 LibreOffice body markers although XML and LibreOffice render contained 4/4",
+      "correction": "remove the hand-authored custom presentation style from the minimum common fixture"
+    },
+    {
+      "attempt": 3,
+      "status": "rejected",
+      "expected": "removing the custom presentation style restores 4/4 cross-producer visibility",
+      "actual": "PowerPoint still recovered only 1/4 LibreOffice body markers; shape inventory showed the entire custom-shape-bearing slide had zero imported shapes",
+      "correction": "remove the custom shape from the simple-slide baseline and block complex-object slides"
+    },
+    {
+      "attempt": 4,
+      "status": "accepted",
+      "expected": "direct frame body text on slides without complex objects is 4/4 cross-producer stable",
+      "actual": "4/4 LibreOffice and 4/4 PowerPoint body markers were recovered; LibreOffice notes remain excluded and complex-object slides are blocked",
+      "correction": "freeze the simple-slide direct-frame paragraph object class"
+    }
+  ],
+  "privacy": {
+    "projectAuthoredContent": true,
+    "rawProducerOutputsCommitted": false,
+    "localAbsolutePathsIncluded": false,
+    "userContentIncluded": false
+  }
+}
