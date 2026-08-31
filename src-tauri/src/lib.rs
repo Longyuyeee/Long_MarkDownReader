@@ -85,8 +85,8 @@ use commands::mindmap::{
     write_opml_file,
 };
 use commands::odf_content::{
-    read_external_odf_content_document, read_odf_content_document, save_ods_cell_style_copy,
-    save_ods_cell_value_copy,
+    read_external_odf_content_document, read_odf_content_document, save_odp_slide_text_copy,
+    save_ods_cell_style_copy, save_ods_cell_value_copy,
 };
 use commands::odt::read_odt_document;
 use commands::pdf::{
@@ -398,6 +398,7 @@ pub fn run() {
             read_external_odf_content_document,
             save_ods_cell_value_copy,
             save_ods_cell_style_copy,
+            save_odp_slide_text_copy,
             preview_docx_package_patch_isolated_copy,
             preview_docx_text_patch_isolated_copy,
             preview_docx_style_patch_isolated_copy,

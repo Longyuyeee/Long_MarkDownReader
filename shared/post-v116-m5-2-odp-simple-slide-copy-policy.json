@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-2",
+  "name": "odp-simple-slide-body-reliable-copy-foundation",
+  "status": "accepted",
+  "predecessor": "M5-1",
+  "runtimeBaseVersion": "1.0.16",
+  "publicVersion": "1.0.16",
+  "developmentTargetVersion": "1.0.17",
+  "implementation": {
+    "boundedInventory": true,
+    "wholeSlideComplexObjectRejection": true,
+    "digestLockedTarget": true,
+    "contentXmlOnlyPatch": true,
+    "protectedPartsBytePreserved": true,
+    "reliableNewCopyOnly": true,
+    "sourceOverwrite": false,
+    "filesystemReplayVerified": true,
+    "semanticReopenVerified": true,
+    "tauriCommandRegistered": true,
+    "uiExposed": false
+  },
+  "realMatrix": {
+    "libreOfficeVersion": "26.2.4.2",
+    "powerPointVersion": "16.0",
+    "simpleProducerSources": 2,
+    "editableTargetsPerSimpleSource": 2,
+    "complexProducerSlidesBlocked": 1,
+    "libreOfficeCopyBytes": 12061,
+    "powerPointCopyBytes": 43935,
+    "libreOfficePdfBytes": 15665,
+    "powerPointPdfBytes": 13736,
+    "replacementMarkersRecovered": 2,
+    "stableMarkersRecovered": 2,
+    "originalMarkersRemoved": 2,
+    "powerPointNotePreserved": true,
+    "sourceUnchanged": true
+  },
+  "selectedNextStage": {
+    "id": "M5-3",
+    "name": "odp-simple-slide-body-copy-workspace-and-real-desktop-audit"
+  },
+  "nextStageRequirements": {
+    "libraryWorkspaceOnly": true,
+    "externalOdpReadOnly": true,
+    "inventoryDrivenSelection": true,
+    "blockedSlideExplanationRequired": true,
+    "draftAndLeaveProtectionRequired": true,
+    "reliableNewCopyOnly": true,
+    "sourceOverwrite": false,
+    "realTauriDesktopRequired": true,
+    "libreOfficeAndPowerPointReopenRequired": true,
+    "responsiveEvidenceRequired": true,
+    "expectedVsActualRequired": true,
+    "binaryVersionChange": false
+  },
+  "versionClosureBlockers": {
+    "odpWorkspaceMissing": true,
+    "realDesktopEvidenceMissing": true,
+    "unexpectedFullRustTestFailures": 3,
+    "fullRustTestPassed": 545,
+    "fullRustTestIgnored": 5,
+    "mustResolveBeforeV1017Packaging": true
+  },
+  "binaryVersionChanged": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit"
+}

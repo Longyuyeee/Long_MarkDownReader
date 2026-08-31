@@ -13,6 +13,7 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 const ODF_EDITABLE_PART: &str = "content.xml";
 const MAX_ODS_REPLACEMENT_CHARS: usize = 32_767;
+const MAX_ODP_REPLACEMENT_CHARS: usize = 16_384;
 const ODS_PATCH_DEFLATE_LEVEL: i64 = 4;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -139,6 +140,57 @@ pub struct OdsCellValuePatchReport {
     pub output_bytes: usize,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OdpEditableTextTarget {
+    pub id: String,
+    pub slide_index: usize,
+    pub slide_name: String,
+    pub paragraph_index: usize,
+    pub text: String,
+    pub expected_text_digest: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OdpBlockedSlide {
+    pub slide_index: usize,
+    pub slide_name: String,
+    pub reasons: Vec<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OdpSlideTextEditInventory {
+    pub status: String,
+    pub source_digest: String,
+    pub editable_targets: Vec<OdpEditableTextTarget>,
+    pub blocked_slides: Vec<OdpBlockedSlide>,
+    pub blockers: Vec<String>,
+    pub writes_user_file: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OdpSlideTextPatchReport {
+    pub status: String,
+    pub engine: String,
+    pub target_id: String,
+    pub slide_index: usize,
+    pub slide_name: String,
+    pub paragraph_index: usize,
+    pub source_digest: String,
+    pub output_digest: String,
+    pub changed_parts: Vec<String>,
+    pub unchanged_part_count: usize,
+    pub unchanged_parts_verified: bool,
+    pub structural_reparse_verified: bool,
+    pub semantic_reparse_verified: bool,
+    pub source_unchanged: bool,
+    pub writes_user_file: bool,
+    pub output_bytes: usize,
+}
+
 #[derive(Default)]
 struct SheetScan {
     index: usize,
@@ -173,6 +225,29 @@ struct OdsEditableCellInternal {
     public: OdsEditableCellTarget,
     start_tag_range: Range<usize>,
     text_range: Range<usize>,
+}
+
+struct OdpEditableTextInternal {
+    public: OdpEditableTextTarget,
+    text_range: Range<usize>,
+}
+
+#[derive(Default)]
+struct OdpParagraphScan {
+    text: String,
+    text_range: Option<Range<usize>>,
+    complex: bool,
+}
+
+struct OdpSlideScan {
+    index: usize,
+    name: String,
+    stack: Vec<String>,
+    notes_depth: usize,
+    paragraph_count: usize,
+    paragraph: Option<OdpParagraphScan>,
+    candidates: Vec<OdpEditableTextInternal>,
+    reasons: BTreeSet<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -737,6 +812,280 @@ fn scan_ods_cells(
     Ok((editable, blocked))
 }
 
+fn validate_odp_replacement(value: &str) -> Result<(), String> {
+    if value.is_empty() {
+        return Err("ODP 正文替换值不能为空".into());
+    }
+    if value.chars().count() > MAX_ODP_REPLACEMENT_CHARS {
+        return Err(format!("ODP 正文超过 {MAX_ODP_REPLACEMENT_CHARS} 字符上限"));
+    }
+    if value
+        .chars()
+        .any(|character| character.is_control() && !matches!(character, '\t' | '\n' | '\r'))
+    {
+        return Err("ODP 正文包含不支持的控制字符".into());
+    }
+    Ok(())
+}
+
+fn odp_text_digest(id: &str, text: &str) -> String {
+    package_digest(format!("{id}\0{text}").as_bytes())
+}
+
+fn odp_reason(element: &str) -> String {
+    match element {
+        "custom-shape" | "g" | "connector" | "line" | "rect" | "ellipse" | "polygon" | "path" => {
+            format!("complex-object:{element}")
+        }
+        "image" | "object" | "object-ole" | "plugin" | "applet" => {
+            format!("embedded-content:{element}")
+        }
+        "list" | "list-item" | "span" | "a" | "page-number" | "date" | "time" | "variable-set"
+        | "variable-get" | "user-field-get" | "sequence" => {
+            format!("rich-or-field-text:{element}")
+        }
+        "animations" | "par" | "seq" | "animate" | "transition-filter" => {
+            format!("animation:{element}")
+        }
+        _ => format!("non-direct-structure:{element}"),
+    }
+}
+
+fn finalize_odp_paragraph(slide: &mut OdpSlideScan) {
+    let Some(paragraph) = slide.paragraph.take() else {
+        return;
+    };
+    slide.paragraph_count += 1;
+    if paragraph.complex || paragraph.text_range.is_none() {
+        if !paragraph.text.trim().is_empty() || paragraph.complex {
+            slide.reasons.insert("rich-or-fragmented-paragraph".into());
+        }
+        return;
+    }
+    if paragraph.text.is_empty() {
+        return;
+    }
+    let id = format!("odp-text:{}:{}", slide.index, slide.paragraph_count);
+    slide.candidates.push(OdpEditableTextInternal {
+        public: OdpEditableTextTarget {
+            expected_text_digest: odp_text_digest(&id, &paragraph.text),
+            id,
+            slide_index: slide.index,
+            slide_name: slide.name.clone(),
+            paragraph_index: slide.paragraph_count,
+            text: paragraph.text,
+        },
+        text_range: paragraph.text_range.expect("eligible ODP text range"),
+    });
+}
+
+fn scan_odp_slide_text(
+    source: &[u8],
+) -> Result<(Vec<OdpEditableTextInternal>, Vec<OdpBlockedSlide>), String> {
+    let xml = content_xml(source)?;
+    let mut reader = Reader::from_reader(xml.as_slice());
+    reader.config_mut().trim_text(false);
+    let mut slide: Option<OdpSlideScan> = None;
+    let mut editable = Vec::new();
+    let mut blocked = Vec::new();
+    let mut slide_count = 0usize;
+
+    loop {
+        let event = reader
+            .read_event()
+            .map_err(|error| format!("ODP content.xml 损坏: {error}"))?;
+        let position =
+            usize::try_from(reader.buffer_position()).map_err(|_| "ODP XML 位置超过平台上限")?;
+        match event {
+            Event::Start(ref element)
+                if element.local_name().as_ref() == b"page" && slide.is_none() =>
+            {
+                slide_count += 1;
+                slide = Some(OdpSlideScan {
+                    index: slide_count,
+                    name: attribute_value(element, b"name", reader.decoder())?
+                        .unwrap_or_else(|| format!("Slide {slide_count}")),
+                    stack: vec!["page".into()],
+                    notes_depth: 0,
+                    paragraph_count: 0,
+                    paragraph: None,
+                    candidates: Vec::new(),
+                    reasons: BTreeSet::new(),
+                });
+            }
+            Event::Start(ref element) if slide.is_some() => {
+                let local = std::str::from_utf8(element.local_name().as_ref())
+                    .map_err(|_| "ODP 元素名不是 UTF-8")?
+                    .to_string();
+                let current = slide.as_mut().unwrap();
+                if current.notes_depth > 0 {
+                    if local == "notes" {
+                        current.notes_depth += 1;
+                    }
+                    current.stack.push(local);
+                    continue;
+                }
+                if local == "notes" && current.stack.len() == 1 {
+                    current.notes_depth = 1;
+                    current.stack.push(local);
+                    continue;
+                }
+                let direct_frame = local == "frame" && current.stack.as_slice() == ["page"];
+                let direct_text_box = local == "text-box"
+                    && current.stack.len() == 2
+                    && current.stack[0] == "page"
+                    && current.stack[1] == "frame";
+                let direct_paragraph = local == "p"
+                    && current.stack.len() == 3
+                    && current.stack[0] == "page"
+                    && current.stack[1] == "frame"
+                    && current.stack[2] == "text-box";
+                if direct_paragraph {
+                    current.paragraph = Some(OdpParagraphScan::default());
+                } else if local == "span"
+                    && current.paragraph.is_some()
+                    && current.stack.len() == 4
+                    && current.stack[3] == "p"
+                {
+                } else if current.paragraph.is_some() {
+                    current.paragraph.as_mut().unwrap().complex = true;
+                    current.reasons.insert(odp_reason(&local));
+                } else if !direct_frame && !direct_text_box {
+                    current.reasons.insert(odp_reason(&local));
+                }
+                current.stack.push(local);
+            }
+            Event::Empty(ref element) if slide.is_some() => {
+                let local = std::str::from_utf8(element.local_name().as_ref())
+                    .map_err(|_| "ODP 元素名不是 UTF-8")?
+                    .to_string();
+                let current = slide.as_mut().unwrap();
+                if current.notes_depth > 0 || (local == "notes" && current.stack.len() == 1) {
+                    continue;
+                }
+                let empty_direct_frame = local == "frame" && current.stack.as_slice() == ["page"];
+                let empty_direct_paragraph = local == "p"
+                    && current.stack.len() == 3
+                    && current.stack[0] == "page"
+                    && current.stack[1] == "frame"
+                    && current.stack[2] == "text-box";
+                let empty_span = local == "span" && current.paragraph.is_some();
+                let empty_accessibility_metadata = matches!(local.as_str(), "title" | "desc")
+                    && (current.stack.as_slice() == ["page"]
+                        || (current.stack.len() == 2
+                            && current.stack[0] == "page"
+                            && current.stack[1] == "frame"));
+                if current.paragraph.is_some() {
+                    if !empty_span {
+                        current.paragraph.as_mut().unwrap().complex = true;
+                        current.reasons.insert(odp_reason(&local));
+                    }
+                } else if !empty_direct_frame
+                    && !empty_direct_paragraph
+                    && !empty_accessibility_metadata
+                {
+                    current.reasons.insert(odp_reason(&local));
+                }
+            }
+            Event::Text(ref text)
+                if slide
+                    .as_ref()
+                    .is_some_and(|value| value.paragraph.is_some()) =>
+            {
+                let raw_text: &[u8] = text.as_ref();
+                let start = position
+                    .checked_sub(raw_text.len())
+                    .ok_or("ODP 文本位置无效")?;
+                let paragraph = slide.as_mut().unwrap().paragraph.as_mut().unwrap();
+                match paragraph.text_range.as_mut() {
+                    Some(range) if range.end == start => range.end = position,
+                    Some(_) => paragraph.complex = true,
+                    None => paragraph.text_range = Some(start..position),
+                }
+                paragraph.text.push_str(
+                    &text
+                        .xml10_content()
+                        .map_err(|error| format!("ODP 正文文本损坏: {error}"))?,
+                );
+            }
+            Event::GeneralRef(ref reference)
+                if slide
+                    .as_ref()
+                    .is_some_and(|value| value.paragraph.is_some()) =>
+            {
+                let value: &[u8] = reference;
+                let start = position
+                    .checked_sub(value.len() + 2)
+                    .ok_or("ODP 实体引用位置无效")?;
+                let decoded = match value {
+                    b"amp" => "&",
+                    b"lt" => "<",
+                    b"gt" => ">",
+                    b"quot" => "\"",
+                    b"apos" => "'",
+                    _ => {
+                        let current = slide.as_mut().unwrap();
+                        current.paragraph.as_mut().unwrap().complex = true;
+                        current
+                            .reasons
+                            .insert("unsupported-entity-reference".into());
+                        continue;
+                    }
+                };
+                let paragraph = slide.as_mut().unwrap().paragraph.as_mut().unwrap();
+                match paragraph.text_range.as_mut() {
+                    Some(range) if range.end == start => range.end = position,
+                    Some(_) => paragraph.complex = true,
+                    None => paragraph.text_range = Some(start..position),
+                }
+                paragraph.text.push_str(decoded);
+            }
+            Event::End(ref element) if slide.is_some() => {
+                let local = std::str::from_utf8(element.local_name().as_ref())
+                    .map_err(|_| "ODP 元素名不是 UTF-8")?
+                    .to_string();
+                let current = slide.as_mut().unwrap();
+                if current.notes_depth > 0 {
+                    if local == "notes" {
+                        current.notes_depth = current.notes_depth.saturating_sub(1);
+                    }
+                    current.stack.pop();
+                    continue;
+                }
+                if local == "p" && current.paragraph.is_some() {
+                    finalize_odp_paragraph(current);
+                }
+                if local == "page" && current.stack.len() == 1 {
+                    let completed = slide.take().unwrap();
+                    if completed.reasons.is_empty() && !completed.candidates.is_empty() {
+                        editable.extend(completed.candidates);
+                    } else {
+                        let reasons = if completed.reasons.is_empty() {
+                            vec!["no-direct-text-target".into()]
+                        } else {
+                            completed.reasons.into_iter().collect()
+                        };
+                        blocked.push(OdpBlockedSlide {
+                            slide_index: completed.index,
+                            slide_name: completed.name,
+                            reasons,
+                        });
+                    }
+                } else {
+                    current.stack.pop();
+                }
+            }
+            Event::DocType(_) => return Err("ODP content.xml 不允许 DOCTYPE".into()),
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    if slide.is_some() {
+        return Err("ODP content.xml 幻灯片结构未闭合".into());
+    }
+    Ok((editable, blocked))
+}
+
 fn package_parts(source: &[u8]) -> Result<BTreeMap<String, OdfPackagePartSnapshot>, String> {
     let mut archive = ZipArchive::new(Cursor::new(source))
         .map_err(|error| format!("打开 ODF 隔离包失败: {error}"))?;
@@ -1139,6 +1488,119 @@ pub fn build_ods_cell_style_patch_isolated(
     Ok((report, output))
 }
 
+pub fn inspect_odp_slide_text_edit_inventory(
+    source: &[u8],
+) -> Result<OdpSlideTextEditInventory, String> {
+    let (baseline, _) = inspect_odf_edit_baseline(source, "odp")?;
+    if !baseline.editing_enabled {
+        return Ok(OdpSlideTextEditInventory {
+            status: "blocked".into(),
+            source_digest: baseline.source_package_digest,
+            editable_targets: Vec::new(),
+            blocked_slides: Vec::new(),
+            blockers: baseline.blockers,
+            writes_user_file: false,
+        });
+    }
+    let (targets, blocked_slides) = scan_odp_slide_text(source)?;
+    Ok(OdpSlideTextEditInventory {
+        status: if targets.is_empty() {
+            "blocked"
+        } else {
+            "candidate"
+        }
+        .into(),
+        source_digest: baseline.source_package_digest,
+        editable_targets: targets.into_iter().map(|target| target.public).collect(),
+        blocked_slides,
+        blockers: Vec::new(),
+        writes_user_file: false,
+    })
+}
+
+pub fn build_odp_slide_text_patch_isolated(
+    source: &[u8],
+    target_id: &str,
+    expected_text_digest: &str,
+    replacement_text: &str,
+) -> Result<(OdpSlideTextPatchReport, Vec<u8>), String> {
+    validate_odp_replacement(replacement_text)?;
+    let source_digest = package_digest(source);
+    let inventory = inspect_odp_slide_text_edit_inventory(source)?;
+    if inventory.status != "candidate" {
+        return Err("ODP 文件没有满足安全条件的简单幻灯片正文目标".into());
+    }
+    let (mut internal_targets, _) = scan_odp_slide_text(source)?;
+    let target = internal_targets
+        .drain(..)
+        .find(|target| target.public.id == target_id)
+        .ok_or_else(|| "ODP 目标不属于可编辑的简单幻灯片正文".to_string())?;
+    if target.public.expected_text_digest != expected_text_digest {
+        return Err("ODP 正文已变化，请重新读取后再编辑".into());
+    }
+    if target.public.text == replacement_text {
+        return Err("ODP 正文新值与当前值相同".into());
+    }
+
+    let mut xml = content_xml(source)?;
+    xml.splice(
+        target.text_range.clone(),
+        xml_escape_text(replacement_text).into_bytes(),
+    );
+    let output = rewrite_content_part(source, &xml)?;
+    let output_digest = package_digest(&output);
+    let source_parts = package_parts(source)?;
+    let output_parts = package_parts(&output)?;
+    let changed_parts = source_parts
+        .iter()
+        .filter_map(|(name, before)| {
+            output_parts
+                .get(name)
+                .filter(|after| *after != before)
+                .map(|_| name.clone())
+        })
+        .collect::<Vec<_>>();
+    if source_parts.len() != output_parts.len() || changed_parts != [ODF_EDITABLE_PART] {
+        return Err("ODP 正文补丁修改了 content.xml 之外的受保护部件".into());
+    }
+    let output_package = inspect_odf_package(&output, "odp")?;
+    let output_model = parse_odf_content(&output, "odp")?;
+    let output_inventory = inspect_odp_slide_text_edit_inventory(&output)?;
+    let semantic_reparse_verified =
+        output_inventory.editable_targets.iter().any(|candidate| {
+            candidate.id == target.public.id && candidate.text == replacement_text
+        }) && output_model
+            .slides
+            .iter()
+            .find(|slide| slide.index == target.public.slide_index)
+            .is_some_and(|slide| slide.text.contains(replacement_text));
+    if !semantic_reparse_verified {
+        return Err("ODP 正文补丁语义复读不一致".into());
+    }
+    let report = OdpSlideTextPatchReport {
+        status: "isolated-copy-verified".into(),
+        engine: "longedit-odp-simple-slide-text-patch-v1".into(),
+        target_id: target.public.id,
+        slide_index: target.public.slide_index,
+        slide_name: target.public.slide_name,
+        paragraph_index: target.public.paragraph_index,
+        source_digest: source_digest.clone(),
+        output_digest,
+        changed_parts,
+        unchanged_part_count: source_parts.len().saturating_sub(1),
+        unchanged_parts_verified: source_parts
+            .iter()
+            .filter(|(name, _)| name.as_str() != ODF_EDITABLE_PART)
+            .all(|(name, before)| output_parts.get(name) == Some(before)),
+        structural_reparse_verified: output_package.format == "odp",
+        semantic_reparse_verified,
+        source_unchanged: package_digest(source) == source_digest,
+        writes_user_file: false,
+        output_bytes: output.len(),
+    };
+    Ok((report, output))
+}
+
 pub fn inspect_odf_edit_baseline(
     source: &[u8],
     extension: &str,
@@ -1256,6 +1718,45 @@ mod tests {
             .join(name)
     }
 
+    fn odp_fixture(content: &str) -> Vec<u8> {
+        let output = Cursor::new(Vec::new());
+        let mut writer = ZipWriter::new(output);
+        writer
+            .start_file(
+                "mimetype",
+                SimpleFileOptions::default().compression_method(CompressionMethod::Stored),
+            )
+            .unwrap();
+        writer
+            .write_all(b"application/vnd.oasis.opendocument.presentation")
+            .unwrap();
+        writer
+            .start_file(
+                "content.xml",
+                SimpleFileOptions::default().compression_method(CompressionMethod::Deflated),
+            )
+            .unwrap();
+        writer.write_all(content.as_bytes()).unwrap();
+        writer
+            .start_file(
+                "META-INF/manifest.xml",
+                SimpleFileOptions::default().compression_method(CompressionMethod::Deflated),
+            )
+            .unwrap();
+        writer
+            .write_all(
+                br#"<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.presentation"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>"#,
+            )
+            .unwrap();
+        writer.finish().unwrap().into_inner()
+    }
+
+    fn simple_odp_xml(extra: &str) -> String {
+        format!(
+            r#"<?xml version="1.0" encoding="UTF-8"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" office:version="1.3"><office:body><office:presentation><draw:page draw:name="Simple"><draw:frame draw:name="Title"><draw:text-box><text:p>M5_2_ORIGINAL</text:p></draw:text-box></draw:frame>{extra}<presentation:notes><draw:frame><draw:text-box><text:p>READ_ONLY_NOTE</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:body></office:document-content>"#
+        )
+    }
+
     #[test]
     fn real_ods_and_odp_are_isolated_without_part_drift() {
         for (name, extension, next_stage) in [
@@ -1288,6 +1789,102 @@ mod tests {
                 package_parts(&isolated).unwrap()
             );
             assert_eq!(package_digest(&source), source_digest);
+        }
+    }
+
+    #[test]
+    fn odp_simple_slide_inventory_and_patch_are_bounded_to_content_xml() {
+        let source = odp_fixture(&simple_odp_xml(""));
+        let source_digest = package_digest(&source);
+        let inventory = inspect_odp_slide_text_edit_inventory(&source).unwrap();
+        assert_eq!(inventory.status, "candidate");
+        assert_eq!(inventory.editable_targets.len(), 1);
+        assert!(inventory.blocked_slides.is_empty());
+        assert!(!inventory.writes_user_file);
+        let target = &inventory.editable_targets[0];
+        let (report, output) = build_odp_slide_text_patch_isolated(
+            &source,
+            &target.id,
+            &target.expected_text_digest,
+            "M5_2_REPLACED & <verified>",
+        )
+        .unwrap();
+        assert_eq!(report.status, "isolated-copy-verified");
+        assert_eq!(report.changed_parts, [ODF_EDITABLE_PART]);
+        assert!(report.unchanged_parts_verified);
+        assert!(report.structural_reparse_verified);
+        assert!(report.semantic_reparse_verified);
+        assert!(report.source_unchanged);
+        assert_eq!(package_digest(&source), source_digest);
+        assert_ne!(package_digest(&output), source_digest);
+        assert_eq!(
+            package_part(&source, "META-INF/manifest.xml").unwrap(),
+            package_part(&output, "META-INF/manifest.xml").unwrap()
+        );
+    }
+
+    #[test]
+    fn odp_complex_object_blocks_the_whole_slide_and_stale_targets_fail() {
+        let complex = odp_fixture(&simple_odp_xml(
+            "<draw:custom-shape draw:name=\"Unsafe\"><text:p>SHAPE</text:p></draw:custom-shape>",
+        ));
+        let inventory = inspect_odp_slide_text_edit_inventory(&complex).unwrap();
+        assert_eq!(inventory.status, "blocked");
+        assert!(inventory.editable_targets.is_empty());
+        assert_eq!(inventory.blocked_slides.len(), 1);
+        assert!(inventory.blocked_slides[0]
+            .reasons
+            .iter()
+            .any(|reason| reason == "complex-object:custom-shape"));
+
+        let simple = odp_fixture(&simple_odp_xml(""));
+        let target = inspect_odp_slide_text_edit_inventory(&simple)
+            .unwrap()
+            .editable_targets
+            .remove(0);
+        assert!(build_odp_slide_text_patch_isolated(
+            &simple,
+            &target.id,
+            "stale-digest",
+            "changed"
+        )
+        .unwrap_err()
+        .contains("已变化"));
+    }
+
+    #[test]
+    #[ignore = "uses real LibreOffice and PowerPoint producer ODPs supplied by the M5-2 audit"]
+    fn export_m5_2_real_producer_odp_copies() {
+        for (source_key, output_key, replacement) in [
+            (
+                "LONGEDIT_M5_2_LIBREOFFICE_SOURCE",
+                "LONGEDIT_M5_2_LIBREOFFICE_OUTPUT",
+                "M5_2_LO_REPLACED",
+            ),
+            (
+                "LONGEDIT_M5_2_POWERPOINT_SOURCE",
+                "LONGEDIT_M5_2_POWERPOINT_OUTPUT",
+                "M5_2_PPT_REPLACED",
+            ),
+        ] {
+            let source_path = PathBuf::from(std::env::var(source_key).expect(source_key));
+            let output_path = PathBuf::from(std::env::var(output_key).expect(output_key));
+            let source = fs::read(&source_path).unwrap();
+            let inventory = inspect_odp_slide_text_edit_inventory(&source).unwrap();
+            assert_eq!(inventory.status, "candidate", "{source_key}");
+            assert!(inventory.blocked_slides.is_empty(), "{source_key}");
+            let target = inventory.editable_targets.first().expect(source_key);
+            let (report, output) = build_odp_slide_text_patch_isolated(
+                &source,
+                &target.id,
+                &target.expected_text_digest,
+                replacement,
+            )
+            .unwrap();
+            assert!(report.unchanged_parts_verified);
+            assert!(report.semantic_reparse_verified);
+            assert!(report.source_unchanged);
+            fs::write(output_path, output).unwrap();
         }
     }
 

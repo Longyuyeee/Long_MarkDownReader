@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-2",
+  "status": "accepted",
+  "capturedAt": "2026-08-31T03:56:47.8572774Z",
+  "expected": {
+    "simpleProducerCopies": 2,
+    "replacementRecoveredByPowerPoint": true,
+    "originalMarkerRemoved": true,
+    "complexSlideBlocked": true,
+    "presenterNotePreserved": true,
+    "sourceUnchanged": true,
+    "libreOfficeRender": true
+  },
+  "actual": {
+    "producers": {
+      "libreOffice": "LibreOffice 26.2.4.2 0229ac93fcf0d7cbc6376066c6f35021cef002dc",
+      "powerPoint": "16.0"
+    },
+    "rust": {
+      "boundedTestsPassed": true,
+      "producerEvidence": [
+        {
+          "blockedSlideCount": 0,
+          "editableTargetCount": 2,
+          "overwriteRejected": true,
+          "replacement": "M5_2_LO_REPLACED",
+          "saved": {
+            "changedParts": [
+              "content.xml"
+            ],
+            "engine": "longedit-odp-simple-slide-text-patch-v1",
+            "outputBytes": 12061,
+            "saveMode": "new_copy_only",
+            "semanticReopenVerified": true,
+            "sourceSignature": "980e21709318a1639c69a96c4eb626252383843b0194f4f7c5ff552f85fa7033",
+            "sourceUnchanged": true,
+            "status": "saved_verified",
+            "structuralReopenVerified": true,
+            "targetDigest": "d0553418da9e5039ca83efca9b6801dee596764501726591eb6d1e51370cd995",
+            "targetSignature": "d0553418da9e5039ca83efca9b6801dee596764501726591eb6d1e51370cd995",
+            "unchangedPartsVerified": true
+          },
+          "sourceKey": "LONGEDIT_M5_2_LIBREOFFICE_SOURCE",
+          "targetId": "odp-text:1:1"
+        },
+        {
+          "blockedSlideCount": 0,
+          "editableTargetCount": 2,
+          "overwriteRejected": true,
+          "replacement": "M5_2_PPT_REPLACED",
+          "saved": {
+            "changedParts": [
+              "content.xml"
+            ],
+            "engine": "longedit-odp-simple-slide-text-patch-v1",
+            "outputBytes": 43935,
+            "saveMode": "new_copy_only",
+            "semanticReopenVerified": true,
+            "sourceSignature": "2982ffd11ecd13f287efbdd0c43f9a007324808df5f355438a069492d7e86632",
+            "sourceUnchanged": true,
+            "status": "saved_verified",
+            "structuralReopenVerified": true,
+            "targetDigest": "1806d287a1ec8e4e72bcdabee91f29823489da441d480c58bfe475c6d92220a9",
+            "targetSignature": "1806d287a1ec8e4e72bcdabee91f29823489da441d480c58bfe475c6d92220a9",
+            "unchangedPartsVerified": true
+          },
+          "sourceKey": "LONGEDIT_M5_2_POWERPOINT_SOURCE",
+          "targetId": "odp-text:1:1"
+        },
+        {
+          "blockReasons": [
+            "complex-object:custom-shape",
+            "non-direct-structure:desc",
+            "non-direct-structure:enhanced-geometry",
+            "non-direct-structure:equation",
+            "non-direct-structure:handle",
+            "non-direct-structure:p",
+            "non-direct-structure:title",
+            "rich-or-field-text:span"
+          ],
+          "blockedSlideCount": 1,
+          "editableTargetCount": 0,
+          "sourceKey": "LONGEDIT_M5_2_COMPLEX_SOURCE"
+        }
+      ]
+    },
+    "copies": [
+      {
+        "producer": "libreoffice-impress",
+        "sourceBytes": 12118,
+        "sourceSha256": "980e21709318a1639c69a96c4eb626252383843b0194f4f7c5ff552f85fa7033",
+        "outputBytes": 12061,
+        "outputSha256": "d0553418da9e5039ca83efca9b6801dee596764501726591eb6d1e51370cd995",
+        "powerPointReopen": {
+          "slideCount": 1,
+          "expectedRecovered": [
+            "M5_2_LO_REPLACED",
+            "M5_2_LO_STABLE"
+          ],
+          "expectedMissing": [],
+          "rejectedStillPresent": [],
+          "noteRecovered": null
+        },
+        "libreOfficeReopen": {
+          "pdfBytes": 15665,
+          "sourceUnchanged": true
+        }
+      },
+      {
+        "producer": "microsoft-powerpoint",
+        "sourceBytes": 44304,
+        "sourceSha256": "2982ffd11ecd13f287efbdd0c43f9a007324808df5f355438a069492d7e86632",
+        "outputBytes": 43935,
+        "outputSha256": "1806d287a1ec8e4e72bcdabee91f29823489da441d480c58bfe475c6d92220a9",
+        "powerPointReopen": {
+          "slideCount": 1,
+          "expectedRecovered": [
+            "M5_2_PPT_REPLACED",
+            "M5_2_PPT_STABLE"
+          ],
+          "expectedMissing": [],
+          "rejectedStillPresent": [],
+          "noteRecovered": true
+        },
+        "libreOfficeReopen": {
+          "pdfBytes": 13736,
+          "sourceUnchanged": true
+        }
+      }
+    ],
+    "complexProducerSlideBlocked": true,
+    "sourceUnchanged": true,
+    "requiredMatrixPassed": true
+  },
+  "differences": [
+    {
+      "expected": "Escaped ampersand and angle brackets remain valid simple text after patching.",
+      "actual": "The first unit run rejected the escaped output because XML predefined entities were classified as rich text.",
+      "correction": "Patch the whole direct paragraph content range and decode only the five predefined XML entities; nested elements remain blocked."
+    },
+    {
+      "expected": "Skipping only a complex shape is sufficient.",
+      "actual": "The real PowerPoint complex producer slide inventories zero editable targets and one blocked slide.",
+      "correction": "Enforce whole-slide rejection whenever a custom shape or another complex object is present."
+    },
+    {
+      "expected": "A verified in-memory patch is enough for reliable copy.",
+      "actual": "Both real producer paths also require no-overwrite filesystem creation, byte replay, semantic reopen, independent PowerPoint reopen and LibreOffice rendering.",
+      "correction": "Keep M5-2 backend-only and require every verification layer before later UI promotion."
+    }
+  ],
+  "decision": {
+    "selectedNextStage": "M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit",
+    "productCodeChanged": true,
+    "uiChanged": false,
+    "binaryVersionChanged": false,
+    "releaseCandidate": false,
+    "odpRegistryPromoted": false
+  },
+  "privacy": {
+    "projectAuthoredContent": true,
+    "rawProducerOutputsCommitted": false,
+    "localAbsolutePathsIncluded": false,
+    "userContentIncluded": false
+  }
+}

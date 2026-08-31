@@ -65,6 +65,7 @@ const m4f5PublishedRelease = readJson('shared/post-v115-m4f5-v1016-published-rel
 const m4f6ManagedUpdater = readJson('shared/v116-managed-updater-lifecycle-policy.json')
 const m5ScopeSelection = readJson('shared/post-v116-m5-0-v1017-scope-selection-policy.json')
 const m5OdpProducerSelection = readJson('shared/post-v116-m5-1-odp-producer-selection-policy.json')
+const m5OdpReliableCopy = readJson('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -187,7 +188,9 @@ const checks = {
     && m5ScopeSelection.status === 'scope-selected'
     && m5OdpProducerSelection.predecessor === m5ScopeSelection.stage
     && m5OdpProducerSelection.status === 'accepted'
-    && policy.currentStage === `${m5OdpProducerSelection.selectedNextStage.id}-${m5OdpProducerSelection.selectedNextStage.name}`,
+    && m5OdpReliableCopy.predecessor === m5OdpProducerSelection.stage
+    && m5OdpReliableCopy.status === 'accepted'
+    && policy.currentStage === `${m5OdpReliableCopy.selectedNextStage.id}-${m5OdpReliableCopy.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
