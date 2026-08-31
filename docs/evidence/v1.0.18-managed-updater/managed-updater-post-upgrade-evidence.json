@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.18-U1-POST-UPGRADE",
+  "capturedAt": "2026-08-31T13:32:29.308Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows updated through the installed v1.0.17 client",
+  "release": {
+    "available": false,
+    "currentVersion": "1.0.18",
+    "latestVersion": "1.0.18",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18",
+    "releaseNotes": "Long编辑 v1.0.18 是 v1.0.17 之后的有界补丁版本，新增知识图谱独立全屏生命周期，并完成发布证据一致性修正。\n\n本版本已通过完整发布门、GitHub 托管 Windows 的 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。安装包为未签名社区版，Windows 可能显示未知发布者或 SmartScreen 提示；请仅从本 Release 下载并使用 SHA256SUMS.txt 校验。",
+    "publishedAt": "2026-08-31T13:03:47Z",
+    "installerName": "LongEdit_1.0.18_x64-setup.exe",
+    "installerSize": 65784946,
+    "installerSha256": "477d1423909d660d5c60d238805b54248ac9f667b9f956036589ea55bf9e719d"
+  },
+  "manualCheckVisible": true,
+  "settingsNavigation": {
+    "beforeHash": "#/library",
+    "entryVisible": true,
+    "entryText": "当前资料库 v1.0.18devManaged Updater Synthetic Vault",
+    "afterHash": "#/settings?category=system",
+    "systemCategorySelected": true
+  },
+  "upToDateSurface": {
+    "text": "软件更新当前版本 v1.0.18 · 每 24 小时自动检查，也可随时手动检查当前已是最新版本 v1.0.18。 检查更新",
+    "visible": true,
+    "viewport": {
+      "top": 418.4375,
+      "bottom": 515.625,
+      "width": 690,
+      "height": 97.1875
+    }
+  },
+  "screenshot": "managed-updater-current.jpg",
+  "sourceUserContentIncluded": false
+}

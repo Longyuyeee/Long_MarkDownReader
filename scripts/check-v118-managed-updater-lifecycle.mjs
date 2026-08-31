@@ -53,10 +53,9 @@ if (!completed) {
       else if (!matchesIdentity(evidencePath, file.bytes, file.sha256)) fail(`v1.0.18 updater evidence hash drift: ${file.path}`)
     }
     const discovery = json(`${root}/managed-updater-discovery-evidence.json`)
-    if (!discovery.release?.releaseNotes?.includes('状态：已正式发布。') || discovery.confirmation?.installerStartedBeforeConfirmation !== false) fail('official published copy or confirmation boundary drift')
+    if (!discovery.release?.releaseNotes?.includes('Long编辑 v1.0.18 是 v1.0.17 之后的有界补丁版本') || !discovery.release?.releaseNotes?.includes('已通过完整发布门') || discovery.confirmation?.installerStartedBeforeConfirmation !== false) fail('official published copy or confirmation boundary drift')
   }
 }
 
 if (failures.length) { console.error(failures.map(message => `- ${message}`).join('\n')); process.exit(1) }
 console.log(`V1.0.18 managed updater lifecycle contract passed: ${completed ? 'hosted 1.0.17 -> 1.0.18 evidence accepted' : 'safe hosted execution harness is ready'}.`)
-

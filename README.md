@@ -50,7 +50,7 @@ Long编辑 v1.0.18 支持 Windows 10/11 x64。
 1453fa9a911d934fdacda88f63d3bac783100b9ef210fb02362ebe9aa0f16c3e  LongEdit_1.0.17_x64_zh-CN.msi
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.16 → v1.0.17 的发布后官方更新观察已由 [真实运行 33368732235](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235) 以 12/12 通过；v1.0.17 → v1.0.18 的观察正在 M6-8 执行。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.17 → v1.0.18 的发布后官方更新观察已由 [真实运行 33397305847](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847) 以 12/12、失败 0 通过，并验证覆盖安装、自动重启和资料保留。
 
 ## v1.0.17
 
@@ -78,7 +78,7 @@ M6-3 已完成：Rust 全仓 **548/0/5**，完整 `ci:patch-release` 在补齐�
 
 M6-4 已完成：44 项当前运行身份统一为 `1.0.18`，精确候选源码为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`；完整发布门通过，真实 MSI/NSIS 已核验版本、大小、SHA-256 与 `NotSigned`，当前 Tauri WebView2 以 6/6 检查覆盖 11/11 路由及 TXT/JSON 保存重开。公开版本仍为 `v1.0.17`，尚未创建 v1.0.18 Tag/Release；唯一接续点为 **M6-5 v1.0.18 托管安装生命周期**。详见 [M6-4 候选打包审计](docs/Post_v1.0.17_M6_4_v1.0.18_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 与 [v1.0.18 Release Notes](docs/RELEASE_NOTES_v1.0.18.md)。
 
-M6-5 [v1.0.18 托管安装生命周期](docs/Post_v1.0.17_M6_5_v1.0.18_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 已通过：GitHub 一次性 Windows 从精确候选重建 MSI/NSIS，并以公开 `v1.0.17` 完成 22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚，失败 0；14 张截图已人工复核。M6-6 冻结最终制品，M6-7 已完成 [v1.0.18 正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 和三项附件回下载复核。当前唯一接续点是 M6-8 v1.0.17 → v1.0.18 官方应用内更新观察。
+M6-5 [v1.0.18 托管安装生命周期](docs/Post_v1.0.17_M6_5_v1.0.18_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 已通过：GitHub 一次性 Windows 从精确候选重建 MSI/NSIS，并以公开 `v1.0.17` 完成 22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚，失败 0；14 张截图已人工复核。M6-6 冻结最终制品，M6-7 完成 [v1.0.18 正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 和三项附件回下载复核；M6-8 的 [真实运行 33397305847](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847) 再以 12/12 验证官方应用内升级。v1.0.18 发布与更新链现已全部收口，下一目标为 v1.0.19 范围选择。
 
 ### v1.0.16 发布链回顾
 

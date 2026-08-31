@@ -16,7 +16,8 @@ v1.0.18 聚焦 v1.0.17 之后已完成真实验收的最小增量：知识图谱
 - Rust 全仓测试：548 通过、0 失败、5 个明确依赖外部桌面应用或审计产物的测试忽略。
 - 完整 `ci:patch-release`：6,275 前端模块、43 格式/91 扩展名合同、Rust locked check 和生产依赖 0 漏洞通过。
 - GitHub 托管 Windows 从精确候选重建 MSI/NSIS，并从公开 v1.0.17 完成 22/22 生命周期、18/18 安装态检查、11/11 路由与 7/7 管理回滚；失败 0，14 张截图已人工复核。
+- 发布后 [托管运行 33397305847](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847) 从官方 v1.0.17 完成应用内发现、显式确认、SHA-256 校验、同目录覆盖、自动重启和资料保留，12/12、失败 0；三张截图已人工复核。
 
 ## 发布与后续
 
-`v1.0.18` Tag 精确绑定候选源码 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`；GitHub Release `379760984` 为 latest、非草稿、非预发布。NSIS、MSI 与 `SHA256SUMS.txt` 已从公开地址重新下载并匹配冻结清单。尚未完成的是 v1.0.17 → v1.0.18 应用内更新观察。未签名社区安装包保持 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen 提示。
+`v1.0.18` Tag 精确绑定候选源码 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`；GitHub Release `379760984` 为 latest、非草稿、非预发布。NSIS、MSI 与 `SHA256SUMS.txt` 已从公开地址重新下载并匹配冻结清单，v1.0.17 → v1.0.18 应用内更新观察也已通过，整个发布链收口。未签名社区安装包保持 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen 提示。

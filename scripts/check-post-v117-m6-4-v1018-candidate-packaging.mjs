@@ -12,6 +12,8 @@ const finalReadiness = fs.existsSync('shared/post-v117-m6-6-v1018-final-artifact
   ? json('shared/post-v117-m6-6-v1018-final-artifact-manifest-release-readiness-policy.json') : null
 const publishedRelease = fs.existsSync('shared/post-v117-m6-7-v1018-published-release-policy.json')
   ? json('shared/post-v117-m6-7-v1018-published-release-policy.json') : null
+const managedUpdater = fs.existsSync('shared/v118-managed-updater-lifecycle-policy.json')
+  ? json('shared/v118-managed-updater-lifecycle-policy.json') : null
 const pkg = json('package.json')
 const lock = json('package-lock.json')
 const tauri = json('src-tauri/tauri.conf.json')
@@ -33,11 +35,12 @@ if (pkg.version !== '1.0.18' || lock.version !== '1.0.18' || lock.packages?.['']
 const hostedPassed = hostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
+const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
 if (development.runtimeBaseVersion !== '1.0.18' || development.publicVersion !== (releasePublished ? '1.0.18' : '1.0.17')
   || development.publicTag !== (releasePublished ? 'v1.0.18' : 'v1.0.17')
   || development.developmentTargetVersion !== (releasePublished ? '1.0.19' : '1.0.18') || development.releaseCandidate) fail('development candidate/public split drift')
 if (community.appVersion !== '1.0.18'
-  || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== (releasePublished ? '1.0.17-to-1.0.18-pending' : hostedPassed ? '1.0.17-to-1.0.18-passed' : '1.0.17-to-1.0.18-pending')
+  || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== (managedUpdaterComplete ? '1.0.17-to-1.0.18-passed' : '1.0.17-to-1.0.18-pending')
   || community.targetRelease?.tag !== 'v1.0.18' || (releasePublished ? community.release?.databaseId !== publishedRelease.releaseDatabaseId : community.release !== null)) fail('community candidate identity drift')
 if (!['状态：候选准备中，尚未公开发布', '状态：候选已打包，托管安装生命周期待验证，尚未公开发布', '状态：托管安装生命周期已通过，最终发布就绪审计中，尚未公开发布。', '状态：发布就绪，尚未公开发布。', '状态：已正式发布；三项公开附件已完成远端回下载复核。'].some(token => notes.includes(token))
   || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.18 release notes boundary drift')
@@ -58,7 +61,7 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
     || policy.runtimeSmoke?.checksPassed !== 6 || policy.runtimeSmoke?.routesPassed !== 11
     || policy.selectedNextStage?.id !== 'M6-5' || policy.nextAction !== 'execute-m6-5-v1.0.18-hosted-installer-lifecycle') fail('M6-4 accepted package receipt drift')
   const expectedStage = releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : releaseReady ? 'M6-7-v1.0.18-tag-release-and-remote-asset-verification' : hostedPassed ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
-  const expectedTransition = releasePublished ? 'v1.0.18-public-release-published' : releaseReady ? 'v1.0.18-release-ready' : hostedPassed ? 'v1.0.18-hosted-installer-lifecycle-passed' : 'v1.0.18-candidate-packaged'
+  const expectedTransition = managedUpdaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : releaseReady ? 'v1.0.18-release-ready' : hostedPassed ? 'v1.0.18-hosted-installer-lifecycle-passed' : 'v1.0.18-candidate-packaged'
   const expectedCommunityStatus = releasePublished ? 'v1.0.18-community-release-published' : releaseReady ? 'v1.0.18-community-release-ready-to-publish' : hostedPassed ? 'v1.0.18-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.18-community-release-candidate-packaged-installed-lifecycle-pending'
   if (development.currentStage !== expectedStage
     || development.binaryVersionTransition !== expectedTransition

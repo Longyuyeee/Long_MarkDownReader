@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.18-U1-DISCOVERY",
+  "capturedAt": "2026-08-31T13:32:16.117Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.17",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.17",
+    "latestVersion": "1.0.18",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18",
+    "releaseNotes": "Long编辑 v1.0.18 是 v1.0.17 之后的有界补丁版本，新增知识图谱独立全屏生命周期，并完成发布证据一致性修正。\n\n本版本已通过完整发布门、GitHub 托管 Windows 的 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。安装包为未签名社区版，Windows 可能显示未知发布者或 SmartScreen 提示；请仅从本 Release 下载并使用 SHA256SUMS.txt 校验。",
+    "publishedAt": "2026-08-31T13:03:47Z",
+    "installerName": "LongEdit_1.0.18_x64-setup.exe",
+    "installerSize": 65784946,
+    "installerSha256": "477d1423909d660d5c60d238805b54248ac9f667b9f956036589ea55bf9e719d"
+  },
+  "confirmation": {
+    "title": "发现新版本已通过官方发布源检查",
+    "text": "发现新版本已通过官方发布源检查v1.0.17v1.0.18安装包将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后安装。62.7 MBWindow  x64覆盖安装本次更新本版本已通过完整发布门、GitHub 托管 Window  的 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。安装包为未签名社区版，Window  可能显示未知发布者或 SmartScreen 提示；请仅从本 Relea e 下载并使用 SHA256SUMS.txt 校验。安装完成后 Long编辑会自动重新打开。未签名社区版仍可能触发 Window “未知发布者”提示。发布详情稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-08-31T13:32:16.133Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

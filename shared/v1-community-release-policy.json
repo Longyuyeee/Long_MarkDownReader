@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.17-to-1.0.18-pending",
+    "managedUpdaterUpgradePath": "1.0.17-to-1.0.18-passed",
     "scope": "post-v1.0.17-bounded-graph-fullscreen-and-release-readiness-receipt-fixes"
   },
   "targetRelease": {
@@ -93,10 +93,8 @@
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.17-to-v1.0.18-managed-update-observation-pending",
     "download-only-from-official-github-release",
-    "verify-published-sha256-before-install",
-    "v1.0.17-to-v1.0.18-managed-update-observation-pending"
+    "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation"
+  "nextAction": "v1.0.18-release-and-managed-updater-closure-complete"
 }

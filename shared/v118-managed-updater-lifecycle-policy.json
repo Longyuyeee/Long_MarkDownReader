@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.18-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v118-managed-updater-lifecycle.yml",
   "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
@@ -56,26 +56,42 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
   "expectedVsActualAtEntry": {
     "expected": "official v1.0.17 discovers, confirms, verifies, installs, relaunches and reports official v1.0.18 while retaining user data",
     "actual": "official release assets and installed executable identity are frozen; hosted application-managed update has not run yet",
     "correction": "run the disposable hosted workflow and accept only measured lifecycle evidence"
   },
-  "attemptHistory": [],
-  "githubRun": null,
+  "attemptHistory": [
+    {
+      "runId": 33397305847,
+      "headCommit": "3ec909f2c1e4b35423fbd2d7284f17390201281f",
+      "status": "passed",
+      "expected": "official v1.0.17 discovers, confirms, verifies, installs, relaunches and reports official v1.0.18 with stable visual evidence while retaining user data",
+      "actual": "all 12 lifecycle checks passed; official v1.0.18 copy and all three stable screenshots were visually accepted",
+      "correction": "replace the inherited v1.0.17 fixed release-copy sentence check with the actual v1.0.18 official release-copy identity; GitHub stable/latest metadata remains independently verified",
+      "installerExecuted": true,
+      "accepted": true
+    }
+  ],
+  "githubRun": {
+    "id": 33397305847,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847",
+    "headCommit": "3ec909f2c1e4b35423fbd2d7284f17390201281f",
+    "conclusion": "success",
+    "artifactId": 9759899783
+  },
   "evidenceRoot": "docs/evidence/v1.0.18-managed-updater",
-  "nextAction": "push-harness-pass-current-audit-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "v1.0.18-release-and-managed-updater-closure-complete"
 }
-

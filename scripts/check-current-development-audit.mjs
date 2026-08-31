@@ -81,7 +81,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.18' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M6-8 v1.0.17 → v1.0.18 官方应用内更新观察**', policy.currentStatus === 'v1.0.18-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.17-to-1.0.18-pending'],
+  ['当前阶段：**M6-8 v1.0.17 → v1.0.18 官方应用内更新观察已完成**', policy.currentStatus === 'v1.0.18-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.17-to-1.0.18-passed'],
 ]
 
 for (const [token, condition] of required) {

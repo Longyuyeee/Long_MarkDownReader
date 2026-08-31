@@ -1,6 +1,6 @@
 # Long Markdown Reader 开发交接
 
-> **2026-08-31 v1.0.18 已正式发布并远端复核：** Tag `v1.0.18` 精确绑定产品候选 `5988c03c…`；GitHub Release [`379760984`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 为 latest、非 Draft、非 Prerelease，NSIS、MSI 与 `SHA256SUMS.txt` 已从公开地址回下载并逐项匹配。公开与运行时版本均为 1.0.18，下一目标 1.0.19。唯一接续点为 **M6-8 v1.0.17 → v1.0.18 官方应用内更新观察**。详见 [`Post_v1.0.17_M6_7_v1.0.18_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md`](./Post_v1.0.17_M6_7_v1.0.18_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
+> **2026-08-31 v1.0.18 发布与更新链全部收口：** Tag `v1.0.18` 精确绑定产品候选 `5988c03c…`；GitHub Release [`379760984`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 的三项附件已公开回下载复核。随后 [托管运行 33397305847](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847) 从官方 v1.0.17 完成应用内更新，12/12、失败 0，三张截图人工复核。公开与运行时版本均为 1.0.18，下一目标 1.0.19；v1.0.18 阶段剩余工作为 0。详见 [`Post_v1.0.17_M6_8_v1.0.18_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.17_M6_8_v1.0.18_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.18 M6-6 发布就绪：** 只晋级托管运行 `33378338422` 已通过的 MSI/NSIS，最终公开名、大小、SHA-256、`SHA256SUMS.txt` 和 artifact manifest 已冻结。社区无签名候选具备发布资格，企业签名候选仍为 false；当前尚无 `v1.0.18` Tag/Release。唯一接续点为 **M6-7 Tag、GitHub Release 与远端附件复核**。详见 [`Post_v1.0.17_M6_6_v1.0.18_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.17_M6_6_v1.0.18_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。
 

@@ -10,6 +10,8 @@ const finalReadiness = fs.existsSync('shared/post-v117-m6-6-v1018-final-artifact
   ? json('shared/post-v117-m6-6-v1018-final-artifact-manifest-release-readiness-policy.json') : null
 const publishedRelease = fs.existsSync('shared/post-v117-m6-7-v1018-published-release-policy.json')
   ? json('shared/post-v117-m6-7-v1018-published-release-policy.json') : null
+const managedUpdater = fs.existsSync('shared/v118-managed-updater-lifecycle-policy.json')
+  ? json('shared/v118-managed-updater-lifecycle-policy.json') : null
 const workflow = fs.readFileSync(policy.workflow, 'utf8')
 const failures = []
 const requiredTokens = [
@@ -32,6 +34,7 @@ if (policy.releaseCandidate || policy.sourceUserContentIncluded || policy.localC
 const hostedPassed = policy.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
+const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
 const expectedDevelopmentStage = releasePublished
   ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation'
   : releaseReady
@@ -39,7 +42,9 @@ const expectedDevelopmentStage = releasePublished
   : hostedPassed
   ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit'
   : `${policy.stage}-${policy.name}`
-const expectedVersionTransition = releasePublished
+const expectedVersionTransition = managedUpdaterComplete
+  ? 'v1.0.18-release-and-managed-updater-closed'
+  : releasePublished
   ? 'v1.0.18-public-release-published'
   : releaseReady
   ? 'v1.0.18-release-ready'

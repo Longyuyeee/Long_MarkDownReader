@@ -22,7 +22,7 @@ for (const name of names) {
 const lifecycle = JSON.parse(fs.readFileSync(path.join(destinationRoot, 'managed-updater-lifecycle-result.json'), 'utf8'))
 const discovery = JSON.parse(fs.readFileSync(path.join(destinationRoot, 'managed-updater-discovery-evidence.json'), 'utf8'))
 if (lifecycle.status !== 'passed' || lifecycle.checksPassed !== 12 || lifecycle.checksFailed !== 0 || lifecycle.sourceUserContentIncluded) throw new Error('Managed updater lifecycle did not pass 12/12 or contains user content')
-if (!discovery.release?.releaseNotes?.includes('状态：已正式发布。') || discovery.confirmation?.installerStartedBeforeConfirmation !== false) throw new Error('Official published release messaging or confirmation boundary is missing')
+if (!discovery.release?.releaseNotes?.includes('Long编辑 v1.0.18 是 v1.0.17 之后的有界补丁版本') || !discovery.release?.releaseNotes?.includes('已通过完整发布门') || discovery.confirmation?.installerStartedBeforeConfirmation !== false) throw new Error('Official published release messaging or confirmation boundary is missing')
 
 const files = names.map(name => {
   const bytes = fs.readFileSync(path.join(destinationRoot, name))
@@ -50,4 +50,3 @@ const manifest = {
 }
 fs.writeFileSync(path.join(destinationRoot, 'import-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
 console.log(JSON.stringify(manifest, null, 2))
-
