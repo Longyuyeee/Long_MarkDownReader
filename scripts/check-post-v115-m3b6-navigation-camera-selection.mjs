@@ -13,7 +13,9 @@ if (successorImplemented) requireFact(graphView.includes('requestCameraPose') &&
 else requireFact(graphView.includes('viewX = width / 2') && graphView.includes('viewY = height / 2'), 'M3B-6 immediate focus baseline drifted')
 const minimapImplemented = graphView.includes('data-testid="graph-minimap"')
 if (minimapImplemented) requireFact(graphView.includes('graphMinimapViewportRect') && graphView.includes("requestCameraPose(target, 'minimap-click')"), 'M3B-9 successor minimap contract is incomplete')
-for (const absent of ['data-testid="graph-fullscreen"', 'requestFullscreen()']) requireFact(!graphView.includes(absent), `M3B-6 deferred-feature fact drifted: ${absent}`)
+const fullscreenImplemented = graphView.includes('data-testid="graph-fullscreen"')
+if (fullscreenImplemented) requireFact(graphView.includes('container.requestFullscreen()') && graphView.includes("document.addEventListener('fullscreenchange'"), 'M6-1 successor fullscreen contract is incomplete')
+else for (const absent of ['data-testid="graph-fullscreen"', 'requestFullscreen()']) requireFact(!graphView.includes(absent), `M3B-6 deferred-feature fact drifted: ${absent}`)
 requireFact(graphView.includes("data-testid=\"graph-community-card\"") && graphView.includes('activeCommunityId.value = communityId') && graphView.includes('activeCommunityId.value = \'\''), 'community filter enter/return baseline drifted')
 
 let evidence = null

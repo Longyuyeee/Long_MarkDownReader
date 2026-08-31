@@ -1,0 +1,356 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-1",
+  "capturedAt": "2026-08-31T08:03:32.141Z",
+  "session": {
+    "theme": "dark",
+    "motion": "reduced"
+  },
+  "expected": {
+    "explicitSupportedEntry": true,
+    "fullscreenFillsEachViewport": true,
+    "fullscreenChangeOwnsState": true,
+    "escapeExits": true,
+    "graphStatePreserved": true,
+    "routeUnmountExits": true,
+    "sourceFilesUnchanged": true,
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "cycles": [
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "before": {
+          "viewport": {
+            "width": 1280,
+            "height": 800
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": false,
+          "fullscreenActive": "false",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 768
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 710
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-209.43535044198916,\"y\":-242.1429804519915,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "图谱全屏",
+          "buttonPressed": "false",
+          "buttonDisabled": false
+        },
+        "inside": {
+          "viewport": {
+            "width": 1280,
+            "height": 800
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": true,
+          "fullscreenActive": "true",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 0,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 800
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 58,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 742
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-209.43535044198916,\"y\":-242.1429804519915,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "退出图谱全屏",
+          "buttonPressed": "true",
+          "buttonDisabled": false
+        },
+        "after": {
+          "viewport": {
+            "width": 1280,
+            "height": 800
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": false,
+          "fullscreenActive": "false",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 768
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1280,
+            "bottom": 800,
+            "width": 1280,
+            "height": 710
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-209.43535044198916,\"y\":-242.1429804519915,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "图谱全屏",
+          "buttonPressed": "false",
+          "buttonDisabled": false
+        }
+      },
+      {
+        "viewport": {
+          "width": 1000,
+          "height": 700
+        },
+        "before": {
+          "viewport": {
+            "width": 1000,
+            "height": 700
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": false,
+          "fullscreenActive": "false",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 668
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 610
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-339.96288253335126,\"y\":-319.24216040810916,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "图谱全屏",
+          "buttonPressed": "false",
+          "buttonDisabled": false
+        },
+        "inside": {
+          "viewport": {
+            "width": 1000,
+            "height": 700
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": true,
+          "fullscreenActive": "true",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 0,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 700
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 58,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 642
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-339.96288253335126,\"y\":-319.24216040810916,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "退出图谱全屏",
+          "buttonPressed": "true",
+          "buttonDisabled": false
+        },
+        "after": {
+          "viewport": {
+            "width": 1000,
+            "height": 700
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": false,
+          "fullscreenActive": "false",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 668
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 1000,
+            "bottom": 700,
+            "width": 1000,
+            "height": 610
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-339.96288253335126,\"y\":-319.24216040810916,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "图谱全屏",
+          "buttonPressed": "false",
+          "buttonDisabled": false
+        }
+      },
+      {
+        "viewport": {
+          "width": 720,
+          "height": 680
+        },
+        "before": {
+          "viewport": {
+            "width": 720,
+            "height": 680
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": false,
+          "fullscreenActive": "false",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 648
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 590
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-479.96288253335126,\"y\":-329.24216040810916,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "图谱全屏",
+          "buttonPressed": "false",
+          "buttonDisabled": false
+        },
+        "inside": {
+          "viewport": {
+            "width": 720,
+            "height": 680
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": true,
+          "fullscreenActive": "true",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 0,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 680
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 58,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 622
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-479.96288253335126,\"y\":-329.24216040810916,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "退出图谱全屏",
+          "buttonPressed": "true",
+          "buttonDisabled": false
+        },
+        "after": {
+          "viewport": {
+            "width": 720,
+            "height": 680
+          },
+          "documentFits": true,
+          "fullscreenElementIsGraph": false,
+          "fullscreenActive": "false",
+          "fullscreenSupported": "true",
+          "containerRect": {
+            "left": 0,
+            "top": 32,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 648
+          },
+          "canvasRect": {
+            "left": 0,
+            "top": 90,
+            "right": 720,
+            "bottom": 680,
+            "width": 720,
+            "height": 590
+          },
+          "selectedCount": 1,
+          "cameraPose": "{\"x\":-479.96288253335126,\"y\":-329.24216040810916,\"zoom\":1.35}",
+          "minimapVisible": true,
+          "historyVisible": true,
+          "historyCount": 1,
+          "buttonLabel": "图谱全屏",
+          "buttonPressed": "false",
+          "buttonDisabled": false
+        }
+      }
+    ],
+    "routeCleanup": {
+      "returnedToLibrary": true,
+      "fullscreenElementCleared": true
+    },
+    "sourceFilesUnchanged": true,
+    "beforeSha256": "7506e42d897c4f89cf737acd233d550b6c3ef08b9de33f147eadd3b0da44bd7f",
+    "afterSha256": "7506e42d897c4f89cf737acd233d550b6c3ef08b9de33f147eadd3b0da44bd7f",
+    "runtimeErrors": 0,
+    "runtimeErrorMessages": []
+  }
+}

@@ -211,7 +211,7 @@ const checks = {
     && m5ReleaseReadiness.predecessor === m5OdpWorkspace.stage
     && m5ReleaseReadiness.status === 'accepted'
     && (m5ManagedUpdater.status === 'hosted-managed-update-passed'
-      ? ['M6-0-v1.0.18-scope-selection-audit', 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit'].includes(policy.currentStage)
+      ? ['M6-0-v1.0.18-scope-selection-audit', 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit', 'M6-2-v1.0.18-next-slice-selection-audit'].includes(policy.currentStage)
       : m5PublishedRelease.status === 'published-and-remote-assets-verified'
       ? policy.currentStage === `${m5PublishedRelease.selectedNextStage.id}-${m5PublishedRelease.selectedNextStage.name}`
       : m5FinalReadiness.status === 'accepted-ready-to-publish'

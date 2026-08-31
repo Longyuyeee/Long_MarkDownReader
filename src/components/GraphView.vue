@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen, 'node-details-active': selectedNode && selectedNodeIds.length === 1, 'community-overview-active': showCommunityOverview }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel" :data-community-contour-count="communityContourCount">
+  <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen, 'node-details-active': selectedNode && selectedNodeIds.length === 1, 'community-overview-active': showCommunityOverview, 'graph-fullscreen-active': graphFullscreenActive }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel" :data-community-contour-count="communityContourCount" :data-fullscreen-active="String(graphFullscreenActive)" :data-fullscreen-supported="String(graphFullscreenSupported)">
     <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
@@ -42,6 +42,10 @@
         </button>
         <button class="control-btn" data-testid="graph-fit-all" @click="fitGraph" title="适合窗口">
           <Maximize2 :size="16" />
+        </button>
+        <button class="control-btn" data-testid="graph-fullscreen" :disabled="!graphFullscreenSupported" :aria-pressed="graphFullscreenActive" :aria-label="graphFullscreenActive ? '退出图谱全屏' : '图谱全屏'" @click="toggleGraphFullscreen" :title="graphFullscreenActive ? '退出图谱全屏' : '图谱全屏'">
+          <Minimize2 v-if="graphFullscreenActive" :size="16" />
+          <Expand v-else :size="16" />
         </button>
       </div>
     </WorkspaceManagementHeader>
@@ -474,7 +478,7 @@ import { computed, h, nextTick, reactive, ref, onMounted, onUnmounted, watch } f
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { Circle, CircleHelp, Link2, Maximize2, Network, Redo2, RotateCcw, ScanSearch, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Circle, CircleHelp, Expand, Link2, Maximize2, Minimize2, Network, Redo2, RotateCcw, ScanSearch, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
@@ -518,6 +522,8 @@ const pathPanelRef = ref<HTMLElement | null>(null)
 const detailsPanelRef = ref<HTMLElement | null>(null)
 const graphPageActive = ref(true)
 const systemPrefersReducedMotion = ref(false)
+const graphFullscreenActive = ref(false)
+const graphFullscreenSupported = ref(false)
 const store = useAppStore()
 const router = useRouter()
 const route = useRoute()
@@ -2778,7 +2784,11 @@ const handleGraphKeydown = (event: KeyboardEvent) => {
     selectedNode.value = visibleNodes.value[visibleNodes.value.length - 1] || null
     return
   }
-  if (event.key === 'Escape') { clearSelection(); return }
+  if (event.key === 'Escape') {
+    if (graphFullscreenActive.value) return
+    clearSelection()
+    return
+  }
   const distance = event.shiftKey ? 24 : 8
   if (event.key === 'ArrowLeft') { event.preventDefault(); moveSelectedNodes(-distance, 0) }
   if (event.key === 'ArrowRight') { event.preventDefault(); moveSelectedNodes(distance, 0) }
@@ -2881,12 +2891,31 @@ const handleSystemReducedMotion = () => {
   systemPrefersReducedMotion.value = Boolean(reducedMotionQuery?.matches)
   requestGraphFrame()
 }
+const syncGraphFullscreen = () => {
+  graphFullscreenActive.value = document.fullscreenElement === containerRef.value
+  void nextTick(() => requestGraphFrame())
+}
+const handleGraphFullscreenError = () => {
+  graphFullscreenActive.value = false
+  message.error('无法进入图谱全屏，请检查系统或窗口权限。')
+}
+const toggleGraphFullscreen = async () => {
+  const container = containerRef.value
+  if (!container || !graphFullscreenSupported.value) return
+  try {
+    if (document.fullscreenElement === container) await document.exitFullscreen()
+    else await container.requestFullscreen()
+  } catch {
+    handleGraphFullscreenError()
+  }
+}
 onMounted(() => {
   graphLoopMounted = true
+  graphFullscreenSupported.value = typeof containerRef.value?.requestFullscreen === 'function' && typeof document.exitFullscreen === 'function'
   reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   handleSystemReducedMotion()
   reducedMotionQuery.addEventListener('change', handleSystemReducedMotion)
-  loadGraph(); requestGraphFrame(); document.addEventListener('visibilitychange', handleVisibility); window.addEventListener('blur', handleWindowBlur); window.addEventListener('focus', handleWindowFocus); window.addEventListener('keydown', handleGraphKeydown)
+  loadGraph(); requestGraphFrame(); document.addEventListener('visibilitychange', handleVisibility); document.addEventListener('fullscreenchange', syncGraphFullscreen); document.addEventListener('fullscreenerror', handleGraphFullscreenError); window.addEventListener('blur', handleWindowBlur); window.addEventListener('focus', handleWindowFocus); window.addEventListener('keydown', handleGraphKeydown)
   graphResizeObserver = new ResizeObserver(() => {
     if (showCommunityOverview.value) requestAnimationFrame(frameCommunityOverview)
     else if (activeShortestPath.value) requestAnimationFrame(fitGraph)
@@ -2894,7 +2923,7 @@ onMounted(() => {
   })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
-onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>
@@ -2909,6 +2938,12 @@ onUnmounted(() => { graphLoopMounted = false; graphPageActive.value = false; cam
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.graph-container:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  background: var(--theme-bg);
 }
 
 .graph-header {

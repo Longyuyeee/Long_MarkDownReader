@@ -17,7 +17,9 @@ const [graphView, graphHealth, graphTypes, graphBackend] = await Promise.all([
 for (const token of ['const degreeMap = computed', 'nodeDegree', 'data-testid="graph-minimap"', 'showCommunityOverview']) requireFact(graphView.includes(token), `M3B-10 graph prerequisite missing: ${token}`)
 requireFact(graphTypes.includes('modifiedAt: number') && graphBackend.includes('modified_at: modified_timestamp'), 'M3B-10 real recency source drifted')
 for (const token of ["invoke<HealthReport>('analyze_graph_health'", "invoke<KnowledgeGraphPulse>('get_knowledge_graph_pulse'"]) requireFact(graphHealth.includes(token), `M3B-10 governance source fact missing: ${token}`)
-for (const absent of ['data-testid="graph-node-status-ring"', 'data-testid="graph-fullscreen"', 'data-testid="graph-cluster-collapse"']) requireFact(!graphView.includes(absent), `M3B-10 current capability fact drifted: ${absent}`)
+for (const absent of ['data-testid="graph-node-status-ring"', 'data-testid="graph-cluster-collapse"']) requireFact(!graphView.includes(absent), `M3B-10 current capability fact drifted: ${absent}`)
+const fullscreenImplemented = graphView.includes('data-testid="graph-fullscreen"')
+if (fullscreenImplemented) requireFact(graphView.includes('container.requestFullscreen()') && graphView.includes("document.addEventListener('fullscreenchange'"), 'M6-1 successor fullscreen contract is incomplete')
 
 let desktop = null
 try { desktop = await readJson('docs/evidence/post-v115-m3b10-remaining-professional-visual-selection/desktop.json') } catch {}

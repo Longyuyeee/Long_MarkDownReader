@@ -70,6 +70,8 @@ M5-9 已完成：最终托管运行 [33368732235](https://github.com/Longyuyeee/
 
 M6-0 已完成：真实代码和既有真实 Tauri 三视口证据只选择 **M6-1 图谱有界全屏生命周期与真实桌面审计**。F11 专注模式保持原语义；社区代理折叠、治理环、结构化 Schema 和 ODP 备注编辑继续延后。完整选择依据见 [M6-0 范围选择审计](docs/Post_v1.0.17_M6_0_v1.0.18_Scope_Selection_Audit_2026-08-31.md)。
 
+M6-1 已完成：图谱现在支持独立全屏进入/退出；暗色/reduced 与浅色/calm 的 1280、1000、720 三档真实 Tauri 共 6/6 循环通过，Escape、路由卸载、选择/相机/缩略图保持、0 运行时错误和源摘要不变均已验证。完整事实见 [M6-1 图谱全屏生命周期审计](docs/Post_v1.0.17_M6_1_Knowledge_Graph_Bounded_Fullscreen_Lifecycle_Audit_2026-08-31.md)。下一接续点为 **M6-2 v1.0.18 下一切片选择审计**，当前尚未进入版本打包。
+
 ### v1.0.16 发布链回顾
 
 M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-1",
+  "name": "knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit",
+  "status": "accepted",
+  "predecessor": "M6-0",
+  "implementationBaseCommit": "9ff76262aa367e7efef8afc939e859e4220bfc6c",
+  "runtimeBaseVersion": "1.0.17",
+  "publicVersion": "1.0.17",
+  "developmentTargetVersion": "1.0.18",
+  "implementation": {
+    "surface": "src/components/GraphView.vue",
+    "surfaceSha256": "adfa4a224d25995414ab7c18c4cccf65b88bf53c90304d6cab89a0ae56929c86",
+    "api": "standard-webview-fullscreen-api",
+    "stateSource": "document-fullscreenchange",
+    "entry": "explicit-graph-toolbar-button",
+    "exit": ["toolbar-button", "escape", "browser-exit", "route-unmount"],
+    "preserved": ["selection", "camera-pose", "selection-history-panel", "minimap", "graph-data"],
+    "unchanged": ["nodes", "edges", "communities", "paths", "evidence", "exports", "source-files", "f11-zen-mode"]
+  },
+  "realDesktopAudit": {
+    "sessions": 2,
+    "fullscreenCycles": 6,
+    "themes": ["dark", "white"],
+    "motions": ["reduced", "calm"],
+    "viewports": ["1280x800", "1000x700", "720x680"],
+    "successfulEntries": 6,
+    "successfulEscapeExits": 6,
+    "successfulRouteUnmountExits": 2,
+    "runtimeErrors": 0,
+    "sourceFilesUnchanged": true,
+    "screenshotsVisuallyReviewed": 6
+  },
+  "differencesAndCorrections": [
+    {
+      "expected": "a coordinate-level CDP click will carry WebView fullscreen user activation",
+      "actual": "the first real run timed out because the synthetic coordinate event did not grant the Fullscreen API activation",
+      "correction": "the harness now invokes the same real button through CDP Runtime.evaluate with userGesture=true; product behavior was not bypassed"
+    },
+    {
+      "expected": "the dynamic native title remains the button accessible name",
+      "actual": "the application tooltip layer intentionally removes native title attributes, leaving the audit's accessible-name field empty",
+      "correction": "the product now supplies a dynamic aria-label for enter and exit states"
+    },
+    {
+      "expected": "route-unmount exitFullscreen completes without an error",
+      "actual": "WebView deactivated the Document before the unmount promise resolved, producing a rejected Document-not-active runtime error",
+      "correction": "unmount cleanup now handles the bounded rejection while the browser clears fullscreen; final fullscreenElement=null remains mandatory"
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M6-2",
+    "name": "v1.0.18-next-slice-selection-audit"
+  },
+  "releaseCandidate": false,
+  "binaryVersionChange": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m6-2-v1.0.18-next-slice-selection-audit"
+}
