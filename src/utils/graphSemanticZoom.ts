@@ -50,6 +50,18 @@ export const resolveGraphSemanticZoom = (zoom: number, nodeCount: number): Graph
   return { level, densityPressure, effectiveZoom }
 }
 
+/**
+ * A community overview is useful only when it reduces visual complexity.
+ * Louvain legitimately returns one community per disconnected node; rendering
+ * those as large labelled summaries makes an orphan-heavy graph less readable.
+ */
+export const shouldUseGraphCommunityOverview = (communities: GraphCommunitySummary[], nodeCount: number) => {
+  if (!communities.length || nodeCount <= 0) return false
+  const singletonCount = communities.filter(community => community.nodeCount === 1 && community.internalEdgeCount === 0).length
+  const usefulMaximum = Math.max(24, Math.ceil(Math.sqrt(nodeCount) * 4))
+  return communities.length <= usefulMaximum && singletonCount / communities.length < 0.85
+}
+
 const compareText = (left: string, right: string) => left.localeCompare(right, 'zh-CN')
 
 export const selectSemanticZoomKeyNodes = (graph: GraphData): GraphNode[] => {

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-1",
+  "name": "knowledge-graph-usability-stabilization",
+  "status": "implemented-static-audit-passed",
+  "predecessor": "M7-8",
+  "runtimeBaseVersion": "1.0.19",
+  "publicVersion": "1.0.19",
+  "developmentTargetVersion": "1.0.20",
+  "trigger": "user-supplied-real-library-screenshot-and-interaction-report",
+  "alignmentDecision": "corrective continuation of the original M3B professional visual and M3C interaction-performance requirements; not a new roadmap branch",
+  "observedFailures": [
+    "filter-popup-and-expanded-legend-overlap-in-the-top-left",
+    "canvas-backing-store-reset-can-repeat-on-fractional-device-pixel-ratios",
+    "single-click-release-opens-a-document-and-conflicts-with-dragging",
+    "community-pointer-down-enters-immediately-and-prevents-panning",
+    "540-disconnected-nodes-render-as-540-large-labelled-community-bubbles",
+    "default-expanded-legend-and-letter-glyphs-add-unnecessary-visual-noise",
+    "interaction-model-is-not-explained-in-place"
+  ],
+  "acceptedCorrections": [
+    "size-the-backing-store-from-the-canvas-viewport-and-rounded-physical-pixels-only",
+    "use-pointer-capture-and-a-six-pixel-pan-threshold",
+    "single-click-selects-double-click-opens",
+    "community-click-is-committed-on-release-and-drag-pans",
+    "suppress-community-overview-when-it-does-not-reduce-complexity",
+    "keep-the-legend-collapsed-by-default-with-an-inline-operation-guide",
+    "raise-the-filter-options-layer-above-the-legend-without-covering-dialog-panels",
+    "hide-letter-glyphs-in-the-semantic-legend"
+  ],
+  "verification": {
+    "frontendBuild": "passed",
+    "ux37bRegressionContract": "passed",
+    "m3b1SemanticZoomRegressionContract": "passed",
+    "focusedM8StaticAndPureFunctionAudit": "passed",
+    "realTauriVisualAndInteractionAudit": "pending"
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "selectedNextStage": {
+    "id": "M8-2",
+    "name": "knowledge-graph-real-tauri-visual-interaction-audit"
+  },
+  "nextAction": "run-real-tauri-large-orphan-and-connected-graph-visual-interaction-audit-before-closing-the-fix"
+}

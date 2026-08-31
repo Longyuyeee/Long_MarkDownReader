@@ -262,13 +262,12 @@
       :data-path-motion-reverse-segments="pathMotionReverseSegments"
       :data-curved-route-count="viewMode === 'network' ? visibleEdgeRoutes.length : 0"
       :data-parallel-route-count="viewMode === 'network' ? visibleEdgeRoutes.filter(route => route.parallelCount > 1).length : 0"
-      @mousedown="startDrag"
-      @mousemove="onDrag"
-      @mouseup="endDrag"
-      @mouseleave="endDrag"
+      @pointerdown="startDrag"
+      @pointermove="onDrag"
+      @pointerup="endDrag"
+      @pointercancel="cancelDrag"
       @wheel.prevent="onZoom"
       @contextmenu.prevent="openGraphContextMenu"
-      @click="onClick"
       @dblclick="onDblClick"
     ></canvas>
     <section
@@ -494,7 +493,7 @@ import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
 import { compareGraphNodes } from '../utils/graphComparison'
-import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes } from '../utils/graphSemanticZoom'
+import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes, shouldUseGraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint, graphQuadraticPoint, graphQuadraticTangent } from '../utils/graphEdgeRoutes'
 import { advanceGraphPathMotionPhase, graphPathDashOffset, graphPathTraversalDirection } from '../utils/graphPathMotion'
 import { graphCameraPoseForBounds, graphCameraPoseForPoint, interpolateGraphCameraPose } from '../utils/graphCamera'
@@ -706,8 +705,10 @@ const semanticZoomState = computed(() => viewMode.value === 'mindmap'
   : resolveGraphSemanticZoom(zoomLevel.value, visibleNodes.value.length))
 const semanticZoomLevel = computed(() => semanticZoomState.value.level)
 const semanticZoomLabel = computed(() => ({ far: '远景', middle: '中景', near: '近景' })[semanticZoomLevel.value])
+const communityOverviewUseful = computed(() => shouldUseGraphCommunityOverview(communityResult.value.communities, visibleNodes.value.length))
 const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
   && viewMode.value === 'network'
+  && communityOverviewUseful.value
   && !neighborFocusRootId.value
   && !activeCommunityId.value
   && !activeShortestPath.value
@@ -913,6 +914,10 @@ let pathMotionFrameCount = 0
 let lastLoopTimestamp = 0
 let dragging: GraphNode | null = null
 let wasDragging = false
+let activePointerId: number | null = null
+let dragStartClientX = 0
+let dragStartClientY = 0
+let pendingCommunityId = ''
 let offsetX = 0, offsetY = 0
 let viewX = 0, viewY = 0, zoom = 1
 type CameraTransition = {
@@ -2164,15 +2169,16 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   if (!canvas || !container) return
 
   const dpr = window.devicePixelRatio || 1
-  const width = container.clientWidth
-  const height = container.clientHeight
+  const width = Math.max(1, Math.round(canvas.clientWidth))
+  const height = Math.max(1, Math.round(canvas.clientHeight))
+  const pixelWidth = Math.max(1, Math.round(width * dpr))
+  const pixelHeight = Math.max(1, Math.round(height * dpr))
 
-  // 仅在尺寸变化时调整 canvas
-  if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
-    canvas.width = width * dpr
-    canvas.height = height * dpr
-    canvas.style.width = width + 'px'
-    canvas.style.height = height + 'px'
+  // CSS flex controls the viewport. Resize only the rounded backing store;
+  // resetting it on every frame causes visible flicker on fractional DPRs.
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth
+    canvas.height = pixelHeight
   }
 
   const ctx = canvas.getContext('2d')
@@ -2590,22 +2596,30 @@ const loop = (timestamp = performance.now()) => {
   else lastLoopTimestamp = 0
 }
 
-const startDrag = (e: MouseEvent) => {
-  if (e.button === 2) return
+const startDrag = (e: PointerEvent) => {
+  if (e.button !== 0 && e.button !== 1) return
   const canvas = canvasRef.value
   if (!canvas) return
   cancelCameraMotion()
   requestGraphFrame()
   canvas.focus()
+  activePointerId = e.pointerId
+  dragStartClientX = e.clientX
+  dragStartClientY = e.clientY
+  pendingCommunityId = ''
+  canvas.setPointerCapture(e.pointerId)
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
   const my = (e.clientY - rect.top - viewY) / zoom
-  const community = findCommunityAt(mx, my)
+  const community = e.button === 0 ? findCommunityAt(mx, my) : null
   if (community) {
-    selectCommunity(community.id)
+    pendingCommunityId = community.id
+    dragging = { id: '', title: '', path: '', size: 0, x: e.clientX, y: e.clientY } as GraphNode
+    offsetX = viewX; offsetY = viewY
+    wasDragging = false
     return
   }
-  const node = findNodeAt(mx, my)
+  const node = e.button === 0 ? findNodeAt(mx, my) : null
   if (node) {
     if (e.ctrlKey || e.metaKey) toggleSelection(node)
     else if (!selectedNodeIds.value.includes(node.id)) selectOnly(node)
@@ -2634,9 +2648,10 @@ const startDrag = (e: MouseEvent) => {
   wasDragging = false
 }
 
-const onDrag = (e: MouseEvent) => {
+const onDrag = (e: PointerEvent) => {
   mouseX = e.clientX; mouseY = e.clientY
   requestGraphFrame()
+  if (activePointerId !== null && e.pointerId !== activePointerId) return
   if (selectionBox) {
     const canvas = canvasRef.value
     if (!canvas) return
@@ -2669,13 +2684,26 @@ const onDrag = (e: MouseEvent) => {
     layoutSettled = true
     frameCount = LAYOUT_MAX_FRAMES
   } else {
+    if (!wasDragging && Math.hypot(e.clientX - dragStartClientX, e.clientY - dragStartClientY) < 6) return
     wasDragging = true
     viewX = e.clientX - (dragging.x || 0) + offsetX
     viewY = e.clientY - (dragging.y || 0) + offsetY
   }
 }
 
-const endDrag = () => {
+const resetDragState = () => {
+  dragging = null
+  dragSnapshot = null
+  dragStartPositions.clear()
+  wasDragging = false
+  activePointerId = null
+  pendingCommunityId = ''
+}
+
+const endDrag = (event: PointerEvent) => {
+  if (activePointerId !== null && event.pointerId !== activePointerId) return
+  const canvas = canvasRef.value
+  if (canvas?.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId)
   if (selectionBox) {
     const left = Math.min(selectionBox.startX, selectionBox.x)
     const right = Math.max(selectionBox.startX, selectionBox.x)
@@ -2694,14 +2722,18 @@ const endDrag = () => {
     pushLayoutUndo(dragSnapshot)
     scheduleLayoutSave()
   }
-  if (dragging && dragging.id && !wasDragging) {
-    selectedNode.value = dragging
-    emit('selectFile', dragging.path)
-  }
-  dragging = null
-  dragSnapshot = null
-  dragStartPositions.clear()
-  wasDragging = false
+  if (pendingCommunityId && !wasDragging) selectCommunity(pendingCommunityId)
+  // Single click only selects. Opening is reserved for double click so click,
+  // node drag and canvas pan no longer compete with navigation.
+  resetDragState()
+  requestGraphFrame()
+}
+
+const cancelDrag = (event: PointerEvent) => {
+  if (activePointerId !== null && event.pointerId !== activePointerId) return
+  if (dragSnapshot && wasDragging) restoreLayoutSnapshot(dragSnapshot)
+  selectionBox = null
+  resetDragState()
   requestGraphFrame()
 }
 
@@ -2745,14 +2777,12 @@ const handleContextMenuAction = async (key: string) => {
   else if (key === 'save-collection' && node) await saveGraphCollection(node)
 }
 
-const onClick = () => {
-  // 点击逻辑由 endDrag 处理 — 此处不再发射
-}
-
-const onDblClick = () => {
-  if (hoveredNode.value) {
-    openNode(hoveredNode.value)
-  }
+const onDblClick = (event: MouseEvent) => {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const rect = canvas.getBoundingClientRect()
+  const node = findNodeAt((event.clientX - rect.left - viewX) / zoom, (event.clientY - rect.top - viewY) / zoom)
+  if (node) openNode(node)
 }
 
 const moveSelectedNodes = (dx: number, dy: number) => {
@@ -3017,7 +3047,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   position: absolute;
   top: calc(var(--workspace-management-header-height) + 12px);
   left: var(--workspace-floating-gutter);
-  z-index: 4;
+  z-index: 9;
   min-height: 34px;
   display: flex;
   align-items: center;
@@ -3041,6 +3071,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   background: transparent;
   font-size: 11px;
 }
+.graph-container:has(.graph-filter-control[open]) :deep(.graph-semantic-legend) { visibility: hidden; }
 .option-divider { width: 1px; height: 16px; background: var(--workspace-border-color); }
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
 .match-count { color: var(--theme-primary); font-weight: 650; }
@@ -3149,6 +3180,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   flex: 1;
   min-height: 0;
   outline: none;
+  touch-action: none;
   background-image: radial-gradient(circle, color-mix(in srgb, var(--theme-text-secondary) 20%, transparent) 1px, transparent 1px);
   background-size: 22px 22px;
 }

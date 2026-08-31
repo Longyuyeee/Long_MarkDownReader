@@ -53,6 +53,7 @@
     "check:ux37a-opml-canvas": "node scripts/check-ux37a-opml-canvas-contract.mjs",
     "audit:ux37a-opml-canvas": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux37a-opml-canvas-audit.ps1",
     "check:ux37b-knowledge-graph-canvas": "node scripts/check-ux37b-knowledge-graph-canvas-contract.mjs",
+    "check:m8-1-graph-usability": "node scripts/check-post-v119-m8-1-graph-usability-stabilization.mjs",
     "audit:ux37b-knowledge-graph-canvas": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux37b-knowledge-graph-canvas-audit.ps1",
     "check:ux38-format-experience-matrix": "node scripts/check-ux38-format-experience-matrix.mjs",
     "audit:ux38a-lightweight-formats": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux38a-lightweight-formats-audit.ps1",

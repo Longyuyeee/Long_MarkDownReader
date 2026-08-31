@@ -211,7 +211,7 @@ const checks = {
     && m5ReleaseReadiness.predecessor === m5OdpWorkspace.stage
     && m5ReleaseReadiness.status === 'accepted'
     && (m5ManagedUpdater.status === 'hosted-managed-update-passed'
-      ? /^M[67]-[0-9]+-/.test(policy.currentStage)
+      ? /^M[678]-[0-9]+-/.test(policy.currentStage)
       : m5PublishedRelease.status === 'published-and-remote-assets-verified'
       ? policy.currentStage === `${m5PublishedRelease.selectedNextStage.id}-${m5PublishedRelease.selectedNextStage.name}`
       : m5FinalReadiness.status === 'accepted-ready-to-publish'
