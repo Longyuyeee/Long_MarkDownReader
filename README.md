@@ -78,6 +78,8 @@ M6-3 已完成：Rust 全仓 **548/0/5**，完整 `ci:patch-release` 在补齐�
 
 M6-4 已完成：44 项当前运行身份统一为 `1.0.18`，精确候选源码为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`；完整发布门通过，真实 MSI/NSIS 已核验版本、大小、SHA-256 与 `NotSigned`，当前 Tauri WebView2 以 6/6 检查覆盖 11/11 路由及 TXT/JSON 保存重开。公开版本仍为 `v1.0.17`，尚未创建 v1.0.18 Tag/Release；唯一接续点为 **M6-5 v1.0.18 托管安装生命周期**。详见 [M6-4 候选打包审计](docs/Post_v1.0.17_M6_4_v1.0.18_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 与 [v1.0.18 Release Notes](docs/RELEASE_NOTES_v1.0.18.md)。
 
+M6-5 已冻结 [v1.0.18 托管安装生命周期](docs/Post_v1.0.17_M6_5_v1.0.18_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 入口：GitHub 一次性 Windows 将从精确候选重建 MSI/NSIS，并以公开 `v1.0.17` 验证 22 项生命周期、18 项安装态检查、11 条路由和 7 项管理回滚。当前等待真实托管结果，生命周期全绿前不会创建 `v1.0.18` Tag 或 Release。
+
 ### v1.0.16 发布链回顾
 
 M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。

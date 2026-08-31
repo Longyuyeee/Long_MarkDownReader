@@ -18,4 +18,4 @@ v1.0.18 聚焦 v1.0.17 之后已完成真实验收的最小增量：知识图谱
 
 ## 尚未完成
 
-候选源码 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a` 已完成真实 MSI/NSIS 构建、逐文件 SHA-256/版本/`NotSigned` 核验和当前 WebView2 6/6、11 路由烟测。托管安装/升级/卸载生命周期、最终发布产物清单、GitHub Tag/Release、远端回下载和 v1.0.17 → v1.0.18 应用内更新观察仍未完成。未签名社区安装包将保持 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen 提示。
+候选源码 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a` 已完成真实 MSI/NSIS 构建、逐文件 SHA-256/版本/`NotSigned` 核验和当前 WebView2 6/6、11 路由烟测。M6-5 GitHub 托管 Windows 测试入口已冻结，正在等待安装/升级/卸载和安装态回归的真实结果；最终发布产物清单、GitHub Tag/Release、远端回下载和 v1.0.17 → v1.0.18 应用内更新观察仍未完成。未签名社区安装包将保持 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen 提示。
