@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.17-U1",
+  "status": "hosted-execution-pending",
+  "environment": "github-hosted-disposable-windows",
+  "workflow": ".github/workflows/v117-managed-updater-lifecycle.yml",
+  "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
+  "releases": {
+    "previous": {
+      "version": "1.0.16",
+      "tag": "v1.0.16",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16",
+      "installer": {
+        "fileName": "LongEdit_1.0.16_x64-setup.exe",
+        "sizeBytes": 65788796,
+        "sha256": "e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff",
+        "authenticodeStatus": "NotSigned"
+      }
+    },
+    "current": {
+      "version": "1.0.17",
+      "tag": "v1.0.17",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.17",
+      "taggedCommit": "2b6235d420ceffd291dab72c4af17caffe464333",
+      "releaseTargetCommitishObserved": "main",
+      "installer": {
+        "fileName": "LongEdit_1.0.17_x64-setup.exe",
+        "sizeBytes": 65778243,
+        "sha256": "154ace58e2e20b6ebe9947c2690f03b0d9737f69fecb9ffca90c0cdf3b2ba282",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "61e4b9c46a21481206b175a9b1060ae71664f5e880e72165042ba8fce5ea4d96",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 108643328,
+        "sha256": "61e4b9c46a21481206b175a9b1060ae71664f5e880e72165042ba8fce5ea4d96",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
+    }
+  },
+  "requirements": {
+    "officialLatestRelease": true,
+    "explicitUserConfirmation": true,
+    "sha256BeforeInstall": true,
+    "silentOverwrite": true,
+    "sameInstallRoot": true,
+    "installedExecutableIdentityRecorded": true,
+    "automaticRelaunchAfterInstall": true,
+    "firstLaunchAfterUpdate": true,
+    "postUpgradeReportsCurrent": true,
+    "libraryDataRetained": true,
+    "configDataRetained": true,
+    "uninstallRetainsUserData": true,
+    "sourceUserContentIncluded": false
+  },
+  "gates": {
+    "harnessImplemented": true,
+    "qualityGatePassed": false,
+    "hostedWorkflowPassed": false,
+    "releaseDiscoveryPassed": false,
+    "confirmationBoundaryPassed": false,
+    "downloadHashPassed": false,
+    "overwriteInstallPassed": false,
+    "automaticRelaunchPassed": false,
+    "firstLaunchPassed": false,
+    "postUpgradeCurrentPassed": false,
+    "userDataRetentionPassed": false,
+    "evidenceImported": false
+  },
+  "expectedVsActualAtEntry": {
+    "expected": "official v1.0.16 discovers, confirms, verifies, installs, relaunches and reports official v1.0.17 while retaining user data",
+    "actual": "official release assets and installed executable identity are frozen; hosted application-managed update has not run yet",
+    "correction": "run the disposable hosted workflow and accept only measured lifecycle evidence"
+  },
+  "attemptHistory": [],
+  "githubRun": null,
+  "evidenceRoot": "docs/evidence/v1.0.17-managed-updater",
+  "nextAction": "push-harness-pass-current-audit-and-run-hosted-managed-updater-lifecycle"
+}
