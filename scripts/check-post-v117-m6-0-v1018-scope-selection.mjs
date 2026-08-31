@@ -69,7 +69,7 @@ if (combinedGraph.actual?.runtimeErrors !== 0 || !combinedGraph.actual?.sourceFi
 if (evidence.stage !== 'M6-0' || evidence.status !== 'accepted' || evidence.actual?.selectedCandidate !== selected[0].id || evidence.differences?.length !== 4
   || evidence.selectedNextStage !== 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit' || evidence.releaseCandidate || evidence.sourceUserContentIncluded) fail('M6-0 selection evidence drift')
 const developmentStageAccepted = successor.status === 'accepted'
-  ? /^M6-[0-9]+-/.test(development.currentStage)
+  ? /^M[67]-[0-9]+-/.test(development.currentStage)
   : development.currentStage === evidence.selectedNextStage
 if (!developmentStageAccepted || !['1.0.17', '1.0.18'].includes(development.runtimeBaseVersion) || !['1.0.17', '1.0.18'].includes(development.publicVersion)
   || !['1.0.18', '1.0.19'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-1 development handoff drift')

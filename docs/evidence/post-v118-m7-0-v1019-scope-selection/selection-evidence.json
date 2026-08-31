@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-0",
+  "status": "accepted",
+  "capturedAt": "2026-08-31T13:55:00Z",
+  "sourceCommit": "c90c1dcd731326b1bc1eba29517c9f7126119196",
+  "actual": {
+    "selectedCandidate": "local-json-schema-sidecar-provider-mapping",
+    "jsonFoundation": {
+      "sourceByteLimit": 16777216,
+      "nodeLimit": 200000,
+      "pathEntryLimit": 20000,
+      "pathLineColumnAvailable": true,
+      "signatureProtectedExplicitSave": true,
+      "schemaIntegrationTokens": 0
+    },
+    "safeLocalSidecarPrecedent": {
+      "command": "discover_video_subtitles",
+      "sameStemLibraryBoundary": true,
+      "sourceWrites": 0
+    },
+    "sourceIdentities": [
+      { "path": "src/views/JsonEditorView.vue", "bytes": 84804, "sha256": "c1cba17705a1aa6612013599ac0a02d1eeae6431c71dbda6d333997ac7f28019" },
+      { "path": "src-tauri/src/formats/json.rs", "bytes": 63440, "sha256": "891c3374da633cf82c811b3509e2eff8e438d698e8247a331d0a1dcc7da2bb9f" },
+      { "path": "src-tauri/src/commands/json.rs", "bytes": 13436, "sha256": "c933911c6450ac5babae89478d2c8972dc4752a1763a006eeb8b79e27566dc50" },
+      { "path": "src-tauri/src/commands/media.rs", "bytes": 34737, "sha256": "6b1c13f18713514528a7290fb4f7b03437ce319948f06ad2c84daafb329a271f" }
+    ]
+  },
+  "differences": [
+    {
+      "expected": "the original structured-text roadmap might allow one shared Schema mode for JSON, YAML, XML and TOML",
+      "actual": "JSON Schema, YAML/TOML projection and XML XSD have different standards, trust and resolution boundaries",
+      "correction": "select only the standardized local JSON/JSONC foundation and keep YAML, TOML and XML out of M7-1"
+    },
+    {
+      "expected": "existing syntax diagnostics may already cover business constraints",
+      "actual": "valid but business-invalid samples produce zero diagnostics and production schema integration tokens are zero",
+      "correction": "separate syntax truth from optional schema truth and require explicit diagnostic provenance"
+    },
+    {
+      "expected": "a remote schema URI could provide the quickest provider experience",
+      "actual": "remote resolution introduces trust, cache, offline, privacy and reference-expansion risks",
+      "correction": "M7-1 forbids network access and automatic remote resolution; only a deterministic local sibling sidecar may be evaluated"
+    }
+  ],
+  "selectedNextStage": "M7-1-local-json-schema-sidecar-provider-mapping-feasibility-audit",
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false
+}
+

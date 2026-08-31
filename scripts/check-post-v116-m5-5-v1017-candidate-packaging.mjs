@@ -22,7 +22,7 @@ const evidence = fs.existsSync('docs/evidence/post-v116-m5-5-v1017-candidate-pac
 const runtimeSmoke = fs.existsSync('docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/audit-manifest.json') ? json('docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/audit-manifest.json') : null
 const failures = []
 const fail = message => failures.push(message)
-const laterCandidateActive = pkg.version === '1.0.18' && community.appVersion === '1.0.18' && /^M6-[0-9]+-/.test(development.currentStage)
+const laterCandidateActive = pkg.version === '1.0.18' && community.appVersion === '1.0.18' && /^M[67]-[0-9]+-/.test(development.currentStage)
 const laterPublicActive = development.publicVersion === '1.0.18' && development.publicTag === 'v1.0.18'
 
 if (policy.stage !== 'M5-5' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) fail('M5-5 predecessor chain drifted')
@@ -58,7 +58,7 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
     || (!laterCandidateActive && community.currentStatus !== expectedCommunityStatus)
-    || !(releaseClosed ? /^M6-[0-9]+-/.test(development.currentStage) : expectedStages.includes(development.currentStage))
+    || !(releaseClosed ? /^M[67]-[0-9]+-/.test(development.currentStage) : expectedStages.includes(development.currentStage))
     || !expectedTransitions.includes(development.binaryVersionTransition)) fail('M5-5 accepted package state drifted')
   if (policy.artifacts?.[0]?.sizeBytes !== 74186752 || policy.artifacts?.[0]?.sha256 !== '96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e'
     || policy.artifacts?.[1]?.sizeBytes !== 65922301 || policy.artifacts?.[1]?.sha256 !== '09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886') fail('M5-5 artifact receipt drifted')

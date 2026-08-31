@@ -25,12 +25,12 @@ for (const expected of [...predecessor.artifacts, predecessor.checksumFile]) {
 }
 if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' || !manifest.boundaries?.releaseAssetsPublished || !manifest.boundaries?.managedUpdaterReleaseAssetsPresent) fail('published artifact manifest drifted')
 const updaterComplete = updater.status === 'hosted-managed-update-passed'
-const laterCandidateActive = community.appVersion === '1.0.18' && /^M6-[0-9]+-/.test(development.currentStage)
+const laterCandidateActive = community.appVersion === '1.0.18' && /^M[67]-[0-9]+-/.test(development.currentStage)
 if (!laterCandidateActive && (community.currentStatus !== 'v1.0.17-community-release-published' || !community.releaseCandidate || !community.gates?.githubReleasePublished || community.release?.databaseId !== policy.releaseDatabaseId || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== (updaterComplete ? 'v1.0.17-release-and-managed-updater-closure-complete' : 'execute-m5-9-v1.0.16-to-v1.0.17-managed-updater-observation'))) fail('community published state drifted')
 const laterPublicActive = development.publicVersion === '1.0.18' && development.publicTag === 'v1.0.18'
 if ((!laterPublicActive && (development.publicVersion !== '1.0.17' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit))
   || !['1.0.17', '1.0.18'].includes(development.runtimeBaseVersion) || development.developmentTargetVersion !== (laterPublicActive ? '1.0.19' : '1.0.18')
-  || !(updaterComplete ? /^M6-[0-9]+-/.test(development.currentStage) : development.currentStage === 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation')
+  || !(updaterComplete ? /^M[67]-[0-9]+-/.test(development.currentStage) : development.currentStage === 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation')
   || !(updaterComplete ? ['v1.0.17-release-and-managed-updater-closed', 'v1.0.18-quality-gate-pending', 'v1.0.18-candidate-packaged', 'v1.0.18-hosted-installer-lifecycle-passed', 'v1.0.18-release-ready', 'v1.0.18-public-release-published', 'v1.0.18-release-and-managed-updater-closed'].includes(development.binaryVersionTransition) : development.binaryVersionTransition === 'v1.0.17-public-release-published')) fail('development/public handoff drifted')
 if (failures.length) { console.error(`M5-8 published release check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }
 console.log('M5-8 accepted: v1.0.17 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.')

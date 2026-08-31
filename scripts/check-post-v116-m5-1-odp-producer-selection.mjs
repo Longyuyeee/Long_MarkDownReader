@@ -51,7 +51,7 @@ for (const [document, tokens] of [[audit, ['真实测试：预期、实际与修
   for (const token of tokens) if (!document.includes(token)) fail(`M5-1 document missing ${token}`)
 }
 const publicProgression = (development.publicVersion === '1.0.16' && development.developmentTargetVersion === '1.0.17') || (development.publicVersion === '1.0.17' && development.developmentTargetVersion === '1.0.18') || (development.publicVersion === '1.0.18' && development.developmentTargetVersion === '1.0.19')
-if (!([`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, 'M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit', 'M5-4-v1.0.17-quality-debt-and-release-readiness', 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging', 'M5-6-v1.0.17-hosted-installer-lifecycle', 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit', 'M5-8-v1.0.17-tag-release-and-remote-asset-verification', 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation'].includes(development.currentStage) || /^M6-[0-9]+-/.test(development.currentStage))
+if (!([`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, 'M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit', 'M5-4-v1.0.17-quality-debt-and-release-readiness', 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging', 'M5-6-v1.0.17-hosted-installer-lifecycle', 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit', 'M5-8-v1.0.17-tag-release-and-remote-asset-verification', 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation'].includes(development.currentStage) || /^M[67]-[0-9]+-/.test(development.currentStage))
   || !['1.0.16', '1.0.17', '1.0.18'].includes(development.runtimeBaseVersion) || !publicProgression) fail('M5-2 development handoff drift')
 
 if (failures.length) {

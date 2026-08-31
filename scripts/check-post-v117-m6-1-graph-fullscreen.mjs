@@ -62,7 +62,7 @@ for (const [file, theme, motion] of [['desktop-dark-reduced.json', 'dark', 'redu
       || !inside.minimapVisible || !inside.historyVisible || !after.minimapVisible || !after.historyVisible) fail(`M6-1 cycle drift: ${file}/${viewport.width}x${viewport.height}`)
   }
 }
-const developmentStageAccepted = successor.status === 'scope-selected' ? /^M6-(?:[3-9]|[1-9][0-9]+)-/.test(development.currentStage) : development.currentStage === 'M6-2-v1.0.18-next-slice-selection-audit'
+const developmentStageAccepted = successor.status === 'scope-selected' ? (/^M6-(?:[3-9]|[1-9][0-9]+)-/.test(development.currentStage) || /^M7-[0-9]+-/.test(development.currentStage)) : development.currentStage === 'M6-2-v1.0.18-next-slice-selection-audit'
 if (!developmentStageAccepted || !['1.0.17', '1.0.18'].includes(development.runtimeBaseVersion)
   || !['1.0.17', '1.0.18'].includes(development.publicVersion) || !['1.0.18', '1.0.19'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-2 handoff drift')
 for (const [document, tokens] of [[audit, ['6/6', 'Document not active', 'aria-label', 'M6-2']], [roadmap, ['M6-1 退出回执', '暗色/reduced', '浅色/calm', 'M6-2']]]) {

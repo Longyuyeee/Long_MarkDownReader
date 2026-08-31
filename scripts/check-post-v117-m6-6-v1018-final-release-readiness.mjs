@@ -47,7 +47,8 @@ if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '1dbb47325812f
 if (community.currentStatus !== (releasePublished ? 'v1.0.18-community-release-published' : 'v1.0.18-community-release-ready-to-publish')
   || !community.releaseCandidate || (releasePublished ? community.release?.databaseId !== published.releaseDatabaseId : community.release !== null)
   || community.nextAction !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closure-complete' : releasePublished ? 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'execute-m6-7-v1.0.18-tag-release-and-remote-asset-verification')) fail('community ready state drifted')
-if (development.currentStage !== (releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'M6-7-v1.0.18-tag-release-and-remote-asset-verification')
+const expectedDevelopmentStage = updaterComplete && /^M7-[0-9]+-/.test(development.currentStage) ? development.currentStage : releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
+if (development.currentStage !== expectedDevelopmentStage
   || development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : 'v1.0.18-release-ready')
   || development.publicVersion !== (releasePublished ? '1.0.18' : '1.0.17')) fail('development ready handoff drifted')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()

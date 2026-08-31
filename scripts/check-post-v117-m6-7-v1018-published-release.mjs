@@ -32,7 +32,7 @@ if (community.currentStatus !== 'v1.0.18-community-release-published' || !commun
   || community.nextAction !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closure-complete' : 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation')) fail('community published state drifted')
 if (development.publicVersion !== '1.0.18' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit
   || development.runtimeBaseVersion !== '1.0.18' || development.developmentTargetVersion !== '1.0.19'
-  || development.currentStage !== 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation'
+  || !(updaterComplete && /^M7-[0-9]+-/.test(development.currentStage) || development.currentStage === 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation')
   || development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : 'v1.0.18-public-release-published')) fail('development/public handoff drifted')
 
 if (failures.length) {

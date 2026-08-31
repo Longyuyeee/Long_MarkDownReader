@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-0",
+  "name": "v1.0.19-scope-selection-audit",
+  "status": "scope-selected",
+  "predecessor": "V1.0.18-U1",
+  "selectionSourceCommit": "c90c1dcd731326b1bc1eba29517c9f7126119196",
+  "runtimeBaseVersion": "1.0.18",
+  "publicVersion": "1.0.18",
+  "developmentTargetVersion": "1.0.19",
+  "selectionPrinciples": [
+    "align-with-original-structured-schema-requirement",
+    "one-standard-one-bounded-provider",
+    "local-explicit-and-offline-first",
+    "no-source-write-scope-expansion",
+    "no-schema-means-no-business-diagnostics",
+    "expected-versus-actual-differences-must-be-recorded"
+  ],
+  "candidates": [
+    {
+      "id": "local-json-schema-sidecar-provider-mapping",
+      "current": "JSON and JSONC already expose bounded parsing, path entries, line-column locations, diagnostics, safe editing and source signature protection; production code has no schema provider, schema URI or mapping token",
+      "gap": "a trusted local sidecar naming rule, bounded schema loading, JSON Schema draft support, instance-path-to-source mapping, diagnostic provenance and failure fallback are absent",
+      "reuse": "high",
+      "risk": "medium",
+      "userValue": "high",
+      "selected": true
+    },
+    {
+      "id": "yaml-toml-json-schema-projection",
+      "current": "YAML and TOML have bounded parsers and path outlines",
+      "gap": "scalar conversion, tag and numeric fidelity, multi-document behavior and mapping semantics require an independent contract",
+      "reuse": "medium",
+      "risk": "medium-high",
+      "userValue": "high",
+      "selected": false
+    },
+    {
+      "id": "xml-xsd-provider",
+      "current": "XML has bounded parsing, namespaces, paths and DOCTYPE blocking",
+      "gap": "XSD import/include resolution, namespace identity, external resource blocking and validator dependency are absent",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "high",
+      "selected": false
+    },
+    {
+      "id": "graph-cluster-collapse-expand",
+      "current": "community interaction remains a filtered subgraph rather than proxy collapse",
+      "gap": "proxy identity, aggregated edges, history, evidence, minimap, export and camera restoration contracts are absent",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "medium-high",
+      "selected": false
+    },
+    {
+      "id": "odp-presenter-note-editing",
+      "current": "notes remain parsed, indexed and read-only",
+      "gap": "LibreOffice and PowerPoint producer preservation remains asymmetric",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "medium",
+      "selected": false
+    },
+    {
+      "id": "graph-governance-rings",
+      "current": "recency and relation-strength rings are accepted",
+      "gap": "stable per-node governance facts, provenance and explanation are absent",
+      "reuse": "medium",
+      "risk": "medium-high",
+      "userValue": "medium",
+      "selected": false
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M7-1",
+    "name": "local-json-schema-sidecar-provider-mapping-feasibility-audit"
+  },
+  "nextStageRequirements": {
+    "jsonAndJsoncOnly": true,
+    "localSiblingSidecarOnly": true,
+    "networkAccessForbidden": true,
+    "automaticRemoteResolutionForbidden": true,
+    "explicitDeterministicMapping": true,
+    "boundedSchemaBytesAndReferences": true,
+    "schemaDiagnosticsHaveProvenance": true,
+    "instancePathMapsToSourceLineColumn": true,
+    "noSchemaProducesNoBusinessDiagnostics": true,
+    "damagedUnsupportedOrUnsafeSchemaDegradesSafely": true,
+    "documentAndSchemaSourcesRemainReadOnlyDuringValidation": true,
+    "realTauriAuditRequiredBeforeProductAcceptance": true,
+    "yamlTomlXmlRemainOutOfScope": true,
+    "binaryVersionChange": false
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m7-1-local-json-schema-sidecar-provider-mapping-feasibility-audit"
+}
+

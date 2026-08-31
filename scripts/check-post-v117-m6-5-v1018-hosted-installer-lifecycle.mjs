@@ -35,7 +35,9 @@ const hostedPassed = policy.status === 'hosted-installer-lifecycle-passed-releas
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
 const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
-const expectedDevelopmentStage = releasePublished
+const expectedDevelopmentStage = managedUpdaterComplete && /^M7-[0-9]+-/.test(development.currentStage)
+  ? development.currentStage
+  : releasePublished
   ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation'
   : releaseReady
   ? 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'

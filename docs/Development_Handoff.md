@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.19 M7-0 范围选择已完成：** v1.0.18 阶段剩余工作为 0；真实代码与最初需求重新对齐后，唯一选择 **M7-1 本地 JSON Schema sidecar provider/mapping 可行性审计**。只允许 JSON/JSONC、本地同目录确定性 sidecar、无网络、无远程自动解析、无源写入；先验证预算、诊断来源、实例路径到行列和失败降级，不提升 1.0.18 运行时。详见 [`Post_v1.0.18_M7_0_v1.0.19_Scope_Selection_Audit_2026-08-31.md`](./Post_v1.0.18_M7_0_v1.0.19_Scope_Selection_Audit_2026-08-31.md)。
+
 > **2026-08-31 v1.0.18 发布与更新链全部收口：** Tag `v1.0.18` 精确绑定产品候选 `5988c03c…`；GitHub Release [`379760984`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 的三项附件已公开回下载复核。随后 [托管运行 33397305847](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847) 从官方 v1.0.17 完成应用内更新，12/12、失败 0，三张截图人工复核。公开与运行时版本均为 1.0.18，下一目标 1.0.19；v1.0.18 阶段剩余工作为 0。详见 [`Post_v1.0.17_M6_8_v1.0.18_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.17_M6_8_v1.0.18_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.18 M6-6 发布就绪：** 只晋级托管运行 `33378338422` 已通过的 MSI/NSIS，最终公开名、大小、SHA-256、`SHA256SUMS.txt` 和 artifact manifest 已冻结。社区无签名候选具备发布资格，企业签名候选仍为 false；当前尚无 `v1.0.18` Tag/Release。唯一接续点为 **M6-7 Tag、GitHub Release 与远端附件复核**。详见 [`Post_v1.0.17_M6_6_v1.0.18_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.17_M6_6_v1.0.18_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。
