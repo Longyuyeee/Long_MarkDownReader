@@ -33,8 +33,8 @@ for (const token of ['workflow_dispatch:', 'runs-on: windows-latest', 'LONGEDIT_
 if (workflow.includes('npm run tauri -- build') || workflow.includes('src-tauri/target')) fail('updater workflow must use published assets')
 if (!probe.includes('await delay(1000)') || !probe.includes('visual surface is stable')) fail('updater screenshot stabilization contract is missing')
 for (const token of ['v1.0.16', 'v1.0.17', '预期与实际差异', '用户确认', 'SHA-256', '自动重启', '资料', '托管']) if (!audit.includes(token)) fail(`updater audit missing: ${token}`)
-const readmeTokens = development.publicVersion === '1.0.18'
-  ? ['Stable-v1.0.18', 'LongEdit_1.0.18_x64-setup.exe', 'LongEdit_1.0.18_x64_zh-CN.msi']
+const readmeTokens = ['1.0.18', '1.0.19'].includes(development.publicVersion)
+  ? [`Stable-v${development.publicVersion}`, `LongEdit_${development.publicVersion}_x64-setup.exe`, `LongEdit_${development.publicVersion}_x64_zh-CN.msi`]
   : ['Stable-v1.0.17', 'LongEdit_1.0.17_x64-setup.exe', currentAsset.sha256, 'LongEdit_1.0.17_x64_zh-CN.msi']
 for (const token of readmeTokens) if (!readme.includes(token)) fail(`README public download fact missing: ${token}`)
 

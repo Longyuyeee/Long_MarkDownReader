@@ -14,6 +14,7 @@ const byteVariants = file => {
 }
 const matchesIdentity = (file, sizeBytes, sha256) => byteVariants(file).some(bytes => bytes.length === sizeBytes && crypto.createHash('sha256').update(bytes).digest('hex') === sha256)
 const policy = json('shared/v118-managed-updater-lifecycle-policy.json')
+const development = json('shared/development-version-policy.json')
 const previousReceipt = json('docs/evidence/v1.0.17-release/release-receipt.json')
 const currentReceipt = json('docs/evidence/v1.0.18-release/release-receipt.json')
 const currentInstalled = json('docs/evidence/post-v117-m6-5-v1018-hosted-installer-lifecycle/installed-artifact-smoke.json')
@@ -32,7 +33,8 @@ for (const token of ['workflow_dispatch:', 'runs-on: windows-latest', 'LONGEDIT_
 if (workflow.includes('npm run tauri -- build') || workflow.includes('src-tauri/target')) fail('updater workflow must use published assets')
 if (!probe.includes('await delay(1000)') || !probe.includes('visual surface is stable')) fail('updater screenshot stabilization contract is missing')
 for (const token of ['v1.0.17', 'v1.0.18', '预期与实际差异', '用户确认', 'SHA-256', '自动重启', '资料', '托管']) if (!audit.includes(token)) fail(`updater audit missing: ${token}`)
-for (const token of ['Stable-v1.0.18', 'LongEdit_1.0.18_x64-setup.exe', 'LongEdit_1.0.18_x64_zh-CN.msi']) if (!readme.includes(token)) fail(`README public download fact missing: ${token}`)
+const readmeVersion = development.publicVersion === '1.0.19' ? '1.0.19' : '1.0.18'
+for (const token of [`Stable-v${readmeVersion}`, `LongEdit_${readmeVersion}_x64-setup.exe`, `LongEdit_${readmeVersion}_x64_zh-CN.msi`]) if (!readme.includes(token)) fail(`README public download fact missing: ${token}`)
 
 const completed = policy.status === 'hosted-managed-update-passed'
 if (!completed) {

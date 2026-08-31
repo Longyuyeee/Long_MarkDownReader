@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-7",
+  "name": "v1.0.19-tag-release-and-remote-asset-verification",
+  "status": "published-and-remote-assets-verified",
+  "predecessor": "M7-6",
+  "candidateSourceCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+  "releaseAuditCommit": "1b0dee352103c0dca4a375688e3d339c23595894",
+  "tag": "v1.0.19",
+  "tagObject": "ad023d0cbf407acb0eea9a89bc0197b15f84bb0d",
+  "releaseDatabaseId": 379909457,
+  "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.19",
+  "publishedAt": "2026-08-31T16:45:32Z",
+  "expected": {
+    "taggedCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+    "assetCount": 3,
+    "isDraft": false,
+    "isPrerelease": false,
+    "isLatest": true,
+    "remoteDownloadRequired": true
+  },
+  "observedDifferences": [
+    {
+      "expected": "gh release view exposes an isLatest JSON field",
+      "actual": "the installed gh version does not expose isLatest",
+      "correction": "verify latest status through the official releases/latest API endpoint and match release database ID"
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M7-8",
+    "name": "v1.0.18-to-v1.0.19-managed-updater-observation"
+  },
+  "releasePublished": true,
+  "remoteAssetsVerified": true,
+  "enterpriseReleaseCandidate": false,
+  "sourceUserContentIncluded": false
+}

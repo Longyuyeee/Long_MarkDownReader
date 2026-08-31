@@ -82,11 +82,11 @@ const required = [
   ['7 类为有限能力', counts['verified-with-limitations'] === 7],
   ['6 类依赖外部程序', counts['external-dependency'] === 6],
   ['11 套发布能力配置', matrix.profiles.length === 11],
-  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === '1.0.19'],
+  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === '1.0.20'],
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
-  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.18' && development.publicTag === `v${development.publicVersion}`],
+  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.19' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M7-7 v1.0.19 Tag、Release 与远端附件复核**', policy.currentStatus === 'v1.0.19-community-release-ready-to-publish' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.18-to-1.0.19-passed'],
+  ['当前阶段：**M7-8 v1.0.18 → v1.0.19 官方应用内更新观察**', policy.currentStatus === 'v1.0.19-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.18-to-1.0.19-passed'],
 ]
 
 for (const [token, condition] of required) {

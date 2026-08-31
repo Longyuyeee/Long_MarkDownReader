@@ -55,8 +55,9 @@ if (evidenceRoot) {
   if (names.length !== 29 || tree !== imported?.repositoryCanonicalEvidence?.canonicalTreeSha256 || tree !== policy.hostedSuccessEvidence?.repositoryCanonicalTreeSha256) fail('M7-5 canonical evidence tree drift')
 }
 
-if (!/^M7-[6-9]-v1\.0\.19-/.test(development.currentStage) || !['v1.0.19-hosted-installer-lifecycle-passed', 'v1.0.19-release-ready'].includes(development.binaryVersionTransition)) fail('M7-5 development handoff drift')
-if (!community.gates?.qualityGatePassed || !community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.localRuntimeSmokePassed || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished || community.candidate?.artifactSourceCommit !== policy.candidateSourceCommit) fail('M7-5 community handoff drift')
+if (!/^M7-[6-9]-/.test(development.currentStage) || !['v1.0.19-hosted-installer-lifecycle-passed', 'v1.0.19-release-ready', 'v1.0.19-public-release-published', 'v1.0.19-release-and-managed-updater-closed'].includes(development.binaryVersionTransition)) fail('M7-5 development handoff drift')
+if (!community.gates?.qualityGatePassed || !community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.localRuntimeSmokePassed || !community.gates?.installedLifecyclePassed || community.candidate?.artifactSourceCommit !== policy.candidateSourceCommit) fail('M7-5 community handoff drift')
+if (community.gates?.githubReleasePublished && community.release?.taggedCommit !== policy.candidateSourceCommit) fail('M7-5 published successor drift')
 if (policy.nextAction !== 'execute-m7-6-v1.0.19-final-artifact-manifest-and-release-readiness-audit') fail('M7-5 next action drift')
 
 if (failures.length) { console.error(`M7-5 hosted lifecycle failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

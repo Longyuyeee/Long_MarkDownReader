@@ -50,7 +50,7 @@ const expectedDevelopmentStage = m7Active ? development.currentStage : published
   ? `${candidatePackaging.selectedNextStage.id}-${candidatePackaging.selectedNextStage.name}`
   : successor.status === 'accepted' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : 'M6-3-v1.0.18-quality-debt-and-release-readiness'
 if (development.currentStage !== expectedDevelopmentStage || (m7Active && !['v1.0.18-release-and-managed-updater-closed', 'v1.0.19-quality-gate-pending', 'v1.0.19-candidate-packaged', 'v1.0.19-hosted-installer-lifecycle-passed', 'v1.0.19-release-ready', 'v1.0.19-public-release-published', 'v1.0.19-release-and-managed-updater-closed'].includes(development.binaryVersionTransition)) || !['1.0.17', '1.0.18', '1.0.19'].includes(development.runtimeBaseVersion)
-  || !['1.0.17', '1.0.18'].includes(development.publicVersion) || !['1.0.18', '1.0.19'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-3 handoff drift')
+  || !['1.0.17', '1.0.18', '1.0.19'].includes(development.publicVersion) || !['1.0.18', '1.0.19', '1.0.20'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-3 handoff drift')
 for (const [document, tokens] of [[audit, ['M6-3', 'ci:patch-release', '为什么停止扩大范围', '预期与当前实际']], [roadmap, ['M6-2 选择回执', 'M6-3', '停止扩大']], [alignment, successor.status === 'accepted' ? ['M6-2 已完成', '唯一接续点为 M6-3'] : ['当前阶段：**M6-3 v1.0.18 质量债与发布就绪审计**', '唯一接续点为 M6-3']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-2 document missing ${token}`)
 }

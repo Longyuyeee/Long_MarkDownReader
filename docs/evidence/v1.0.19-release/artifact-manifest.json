@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "M7-6",
-  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
   "sourceCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
   "sourceVersion": "1.0.19",
   "hostedRunId": 33409497055,
@@ -42,6 +42,10 @@
     "managementRollbackChecksPassed": 7,
     "failedChecks": 0
   },
-  "releasePublished": false,
+  "boundaries": {
+    "releaseAssetsPublished": true,
+    "managedUpdaterReleaseAssetsPresent": true
+  },
+  "releasePublished": true,
   "sourceUserContentIncluded": false
 }

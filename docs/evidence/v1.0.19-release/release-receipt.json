@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-7",
+  "status": "published-and-remote-assets-verified",
+  "release": {
+    "databaseId": 379909457,
+    "tag": "v1.0.19",
+    "taggedCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+    "tagObject": "ad023d0cbf407acb0eea9a89bc0197b15f84bb0d",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.19",
+    "publishedAt": "2026-08-31T16:45:32Z",
+    "isDraft": false,
+    "isPrerelease": false,
+    "isLatest": true
+  },
+  "assets": [
+    {
+      "id": 538260562,
+      "name": "LongEdit_1.0.19_x64-setup.exe",
+      "sizeBytes": 66777917,
+      "sha256": "996e12218a24e1689947ec0c358720cc84cc136ffb2ac581fe31682fb8516582",
+      "authenticodeStatus": "NotSigned",
+      "remoteDownloadVerified": true
+    },
+    {
+      "id": 538260567,
+      "name": "LongEdit_1.0.19_x64_zh-CN.msi",
+      "sizeBytes": 75386880,
+      "sha256": "04aca041970120b0685cb1d30ee95e5102b6fdd60b59394f3ecac45a00b863f0",
+      "authenticodeStatus": "NotSigned",
+      "remoteDownloadVerified": true
+    },
+    {
+      "id": 538260564,
+      "name": "SHA256SUMS.txt",
+      "sizeBytes": 192,
+      "sha256": "d101e50c341cdfda6caea65c833948cf597d447b1e83673e165873b6d671cefb",
+      "remoteDownloadVerified": true
+    }
+  ],
+  "sourceUserContentIncluded": false
+}
