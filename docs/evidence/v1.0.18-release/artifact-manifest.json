@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "M6-6",
-  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
   "appVersion": "1.0.18",
   "capturedAt": "2026-08-31T00:00:00Z",
   "sourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
@@ -73,9 +73,9 @@
     "enterprisePromotionEligible": false,
     "authenticodeRequired": false,
     "managedUpdaterReleaseAssetsPrepared": true,
-    "managedUpdaterReleaseAssetsPresent": false,
+    "managedUpdaterReleaseAssetsPresent": true,
     "legacyTauriUpdaterArtifactsPresent": false,
-    "releaseAssetsPublished": false,
+    "releaseAssetsPublished": true,
     "artifactFilesCommitted": false,
     "sourceUserContentIncluded": false
   }

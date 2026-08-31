@@ -107,7 +107,7 @@ const checks = {
         && community.gates?.githubReleasePublished === true
         && community.release?.taggedCommit === policy.publicTagCommit),
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && ['1.0.16', '1.0.17'].includes(policy.publicVersion),
+    && ['1.0.16', '1.0.17', '1.0.18'].includes(policy.publicVersion),
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,

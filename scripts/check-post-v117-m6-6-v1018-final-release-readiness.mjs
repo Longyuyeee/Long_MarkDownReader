@@ -9,6 +9,8 @@ const imported = json('docs/evidence/post-v117-m6-5-v1018-hosted-installer-lifec
 const manifest = json('docs/evidence/v1.0.18-release/artifact-manifest.json')
 const community = json('shared/v1-community-release-policy.json')
 const development = json('shared/development-version-policy.json')
+const published = fs.existsSync('shared/post-v117-m6-7-v1018-published-release-policy.json')
+  ? json('shared/post-v117-m6-7-v1018-published-release-policy.json') : null
 const checksum = fs.readFileSync('docs/evidence/v1.0.18-release/SHA256SUMS.txt')
 const failures = []
 const fail = message => failures.push(message)
@@ -21,7 +23,9 @@ if (policy.stage !== 'M6-6' || policy.predecessor !== predecessor.stage || prede
 if (policy.status !== 'accepted-ready-to-publish' || policy.candidateSourceCommit !== predecessor.candidateSourceCommit
   || policy.hostedRunId !== imported.githubRunId || policy.hostedArtifactId !== imported.artifact?.id) fail('M6-6 immutable identity drifted')
 if (!policy.releaseReady || policy.releasePublished || policy.enterpriseReleaseCandidate || policy.sourceUserContentIncluded) fail('release readiness boundary drifted')
-if (manifest.stage !== policy.stage || manifest.status !== 'ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed'
+const releasePublished = published?.status === 'published-and-remote-assets-verified'
+const expectedManifestStatus = releasePublished ? 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' : 'ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed'
+if (manifest.stage !== policy.stage || manifest.status !== expectedManifestStatus
   || manifest.sourceCommit !== policy.candidateSourceCommit || manifest.sourceVersion !== policy.candidateVersion) fail('artifact manifest identity drifted')
 if (policy.artifacts?.length !== 2 || manifest.artifacts?.length !== 2 || community.candidate?.artifacts?.length !== 2) fail('final installer count drifted')
 for (const expected of policy.artifacts) {
@@ -37,12 +41,14 @@ if (manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22 || manifest.
   || manifest.hostedInstalledLifecycle?.installedRoutesPassed !== 11 || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7
   || manifest.hostedInstalledLifecycle?.failedChecks !== 0) fail('hosted lifecycle facts drifted')
 if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '1dbb47325812f166608921528bb88f08275decf980450a7d36e1dfc8d12b3013') fail('canonical evidence receipt drifted')
-if (community.currentStatus !== 'v1.0.18-community-release-ready-to-publish' || !community.releaseCandidate || community.release !== null
-  || community.nextAction !== 'execute-m6-7-v1.0.18-tag-release-and-remote-asset-verification') fail('community ready state drifted')
-if (development.currentStage !== 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
-  || development.binaryVersionTransition !== 'v1.0.18-release-ready' || development.publicVersion !== '1.0.17') fail('development ready handoff drifted')
+if (community.currentStatus !== (releasePublished ? 'v1.0.18-community-release-published' : 'v1.0.18-community-release-ready-to-publish')
+  || !community.releaseCandidate || (releasePublished ? community.release?.databaseId !== published.releaseDatabaseId : community.release !== null)
+  || community.nextAction !== (releasePublished ? 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'execute-m6-7-v1.0.18-tag-release-and-remote-asset-verification')) fail('community ready state drifted')
+if (development.currentStage !== (releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'M6-7-v1.0.18-tag-release-and-remote-asset-verification')
+  || development.binaryVersionTransition !== (releasePublished ? 'v1.0.18-public-release-published' : 'v1.0.18-release-ready')
+  || development.publicVersion !== (releasePublished ? '1.0.18' : '1.0.17')) fail('development ready handoff drifted')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
-if (candidateTags) fail('v1.0.18 tag must not exist before M6-7 publication')
+if (releasePublished ? execFileSync('git', ['rev-list', '-n', '1', 'v1.0.18'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit : Boolean(candidateTags)) fail('v1.0.18 tag/publication boundary drifted')
 
 if (failures.length) {
   console.error(`M6-6 release readiness failed:\n- ${failures.join('\n- ')}`)

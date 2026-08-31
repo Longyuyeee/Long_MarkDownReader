@@ -8,6 +8,8 @@ const predecessor = json('shared/post-v117-m6-4-v1018-candidate-packaging-policy
 const development = json('shared/development-version-policy.json')
 const finalReadiness = fs.existsSync('shared/post-v117-m6-6-v1018-final-artifact-manifest-release-readiness-policy.json')
   ? json('shared/post-v117-m6-6-v1018-final-artifact-manifest-release-readiness-policy.json') : null
+const publishedRelease = fs.existsSync('shared/post-v117-m6-7-v1018-published-release-policy.json')
+  ? json('shared/post-v117-m6-7-v1018-published-release-policy.json') : null
 const workflow = fs.readFileSync(policy.workflow, 'utf8')
 const failures = []
 const requiredTokens = [
@@ -29,12 +31,17 @@ if (policy.requiredArtifacts?.join(',') !== 'msi,nsis' || policy.requiredLifecyc
 if (policy.releaseCandidate || policy.sourceUserContentIncluded || policy.localCandidateObservation?.promotionalEvidence) failures.push('pre-hosted release boundary drift')
 const hostedPassed = policy.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
-const expectedDevelopmentStage = releaseReady
+const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
+const expectedDevelopmentStage = releasePublished
+  ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation'
+  : releaseReady
   ? 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
   : hostedPassed
   ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit'
   : `${policy.stage}-${policy.name}`
-const expectedVersionTransition = releaseReady
+const expectedVersionTransition = releasePublished
+  ? 'v1.0.18-public-release-published'
+  : releaseReady
   ? 'v1.0.18-release-ready'
   : hostedPassed
   ? 'v1.0.18-hosted-installer-lifecycle-passed'

@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.18 已正式发布并远端复核：** Tag `v1.0.18` 精确绑定产品候选 `5988c03c…`；GitHub Release [`379760984`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 为 latest、非 Draft、非 Prerelease，NSIS、MSI 与 `SHA256SUMS.txt` 已从公开地址回下载并逐项匹配。公开与运行时版本均为 1.0.18，下一目标 1.0.19。唯一接续点为 **M6-8 v1.0.17 → v1.0.18 官方应用内更新观察**。详见 [`Post_v1.0.17_M6_7_v1.0.18_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md`](./Post_v1.0.17_M6_7_v1.0.18_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
+
 > **2026-08-31 v1.0.18 M6-6 发布就绪：** 只晋级托管运行 `33378338422` 已通过的 MSI/NSIS，最终公开名、大小、SHA-256、`SHA256SUMS.txt` 和 artifact manifest 已冻结。社区无签名候选具备发布资格，企业签名候选仍为 false；当前尚无 `v1.0.18` Tag/Release。唯一接续点为 **M6-7 Tag、GitHub Release 与远端附件复核**。详见 [`Post_v1.0.17_M6_6_v1.0.18_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.17_M6_6_v1.0.18_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.18 M6-5 托管生命周期已关闭：** GitHub Actions 运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 从精确候选 `5988c03c…` 重建 MSI/NSIS，22/22 生命周期、18/18 安装态检查、11/11 路由、7/7 管理回滚全部通过，失败 0。29 个脱敏证据文件与 14 张已人工复核截图已导入，仓库规范树摘要 `1dbb4732…3013`。唯一接续点为 **M6-6 v1.0.18 最终产物清单与发布就绪审计**；完成前仍不得创建 Tag/Release。详见 [`Post_v1.0.17_M6_5B_v1.0.18_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md`](./Post_v1.0.17_M6_5B_v1.0.18_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md)。

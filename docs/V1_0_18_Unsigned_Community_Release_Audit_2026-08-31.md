@@ -1,9 +1,11 @@
 # v1.0.18 未签名社区发布审计
 
-状态：发布就绪，尚未公开发布。
+状态：已正式发布并完成远端附件复核；发布后应用内更新观察待执行。
 
-当前运行时身份将原子迁移到 `1.0.18`，当前公开版本和不可变 Tag 仍为 `v1.0.17`。社区包继续采用未签名 `NotSigned` 模式，用户必须从官方 GitHub Release 下载并核对 SHA-256；自动更新仍要求官方 GitHub 来源和完整 SHA-256 校验。
+当前运行时与公开版本均为 `1.0.18`，不可变 Tag `v1.0.18` 绑定产品候选 `5988c03c…`。社区包继续采用未签名 `NotSigned` 模式，用户必须从官方 GitHub Release 下载并核对 SHA-256；自动更新仍要求官方 GitHub 来源和完整 SHA-256 校验。
 
 本阶段不继承 v1.0.17 的安装包、安装生命周期或发布回执。精确候选源码 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a` 的新 MSI/NSIS、当前 WebView2 烟测和 v1.0.17 → v1.0.18 托管安装生命周期已经通过；只有最终产物清单、发布就绪门禁和远端回下载继续全部通过后，才允许公开发布。
 
-渠道事实为 `community-unsigned`，当前社区 `releaseCandidate=true` 只表示全部发布前门禁已通过；企业签名候选仍为 `releaseCandidate=false`。公开前不提供非官方的手动下载安装入口。
+渠道事实为 `community-unsigned`，社区 `releaseCandidate=true` 表示正式发布回执成立；企业签名候选仍为 `releaseCandidate=false`。Release `379760984` 的三项附件已远端复核，下一步只执行 M6-8 更新观察。
+
+手动下载安装只允许使用官方 GitHub Release，并须先核对 `SHA256SUMS.txt`。

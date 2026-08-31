@@ -23,6 +23,7 @@ const runtimeSmoke = fs.existsSync('docs/evidence/post-v116-m5-5-v1017-candidate
 const failures = []
 const fail = message => failures.push(message)
 const laterCandidateActive = pkg.version === '1.0.18' && community.appVersion === '1.0.18' && /^M6-[0-9]+-/.test(development.currentStage)
+const laterPublicActive = development.publicVersion === '1.0.18' && development.publicTag === 'v1.0.18'
 
 if (policy.stage !== 'M5-5' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) fail('M5-5 predecessor chain drifted')
 if (policy.candidateVersion !== '1.0.17' || policy.publicVersion !== '1.0.16' || policy.atomicVersionFileCount !== 44
@@ -32,9 +33,9 @@ if (!laterCandidateActive && (pkg.version !== '1.0.17' || lock.version !== '1.0.
   || !/name = "tauri-app"\r?\nversion = "1\.0\.17"/.test(cargoLock))) fail('atomic runtime identity drifted')
 const releasePublished = published.status === 'published-and-remote-assets-verified'
 if (!['1.0.17', '1.0.18'].includes(development.runtimeBaseVersion)
-  || development.publicVersion !== (releasePublished ? '1.0.17' : '1.0.16')
-  || development.publicTag !== (releasePublished ? 'v1.0.17' : 'v1.0.16')
-  || development.developmentTargetVersion !== (releasePublished ? '1.0.18' : '1.0.17')) fail('development public/candidate split drifted')
+  || development.publicVersion !== (laterPublicActive ? '1.0.18' : releasePublished ? '1.0.17' : '1.0.16')
+  || development.publicTag !== (laterPublicActive ? 'v1.0.18' : releasePublished ? 'v1.0.17' : 'v1.0.16')
+  || development.developmentTargetVersion !== (laterPublicActive ? '1.0.19' : releasePublished ? '1.0.18' : '1.0.17')) fail('development public/candidate split drifted')
 if (!laterCandidateActive && (community.appVersion !== '1.0.17' || community.patchValidation?.previousPublicVersion !== '1.0.16'
   || community.targetRelease?.tag !== 'v1.0.17' || Boolean(community.gates?.githubReleasePublished) !== releasePublished)) fail('community candidate identity drifted')
 if (!(releasePublished ? notes.includes('状态：已正式发布') : ['状态：候选准备中，尚未公开发布', '状态：发布就绪，尚未公开发布'].some(token => notes.includes(token)))
@@ -53,7 +54,7 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
   const releaseClosed = updater.status === 'hosted-managed-update-passed'
   const expectedCommunityStatus = releasePublished ? 'v1.0.17-community-release-published' : releaseReady ? 'v1.0.17-community-release-ready-to-publish' : successorPassed ? 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'
   const expectedStages = releaseClosed ? null : [releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : releaseReady ? 'M5-8-v1.0.17-tag-release-and-remote-asset-verification' : successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`]
-  const expectedTransitions = releaseClosed ? ['v1.0.17-release-and-managed-updater-closed', 'v1.0.18-quality-gate-pending', 'v1.0.18-candidate-packaged', 'v1.0.18-hosted-installer-lifecycle-passed', 'v1.0.18-release-ready'] : [releasePublished ? 'v1.0.17-public-release-published' : releaseReady ? 'v1.0.17-release-ready' : successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged']
+  const expectedTransitions = releaseClosed ? ['v1.0.17-release-and-managed-updater-closed', 'v1.0.18-quality-gate-pending', 'v1.0.18-candidate-packaged', 'v1.0.18-hosted-installer-lifecycle-passed', 'v1.0.18-release-ready', 'v1.0.18-public-release-published'] : [releasePublished ? 'v1.0.17-public-release-published' : releaseReady ? 'v1.0.17-release-ready' : successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged']
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
     || (!laterCandidateActive && community.currentStatus !== expectedCommunityStatus)
