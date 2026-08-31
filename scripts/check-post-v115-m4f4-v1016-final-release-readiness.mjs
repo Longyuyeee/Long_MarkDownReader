@@ -11,6 +11,7 @@ const manifest = json('docs/evidence/v1.0.16-release/artifact-manifest.json')
 const community = json('shared/v1-community-release-policy.json')
 const development = json('shared/development-version-policy.json')
 const m4f5 = fs.existsSync('shared/post-v115-m4f5-v1016-published-release-policy.json') ? json('shared/post-v115-m4f5-v1016-published-release-policy.json') : null
+const m4f6 = fs.existsSync('shared/v116-managed-updater-lifecycle-policy.json') ? json('shared/v116-managed-updater-lifecycle-policy.json') : null
 const checksumBytes = fs.readFileSync('docs/evidence/v1.0.16-release/SHA256SUMS.txt')
 const releaseNotes = fs.readFileSync('docs/RELEASE_NOTES_v1.0.16.md', 'utf8')
 const readme = fs.readFileSync('README.md', 'utf8')
@@ -36,8 +37,11 @@ if (manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2' || mani
 if (manifest.hostedInstalledLifecycle?.runId !== policy.hostedRunId || manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22 || manifest.hostedInstalledLifecycle?.installedWorkspaceChecksPassed !== 18 || manifest.hostedInstalledLifecycle?.installedRoutesPassed !== 11 || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7 || manifest.hostedInstalledLifecycle?.failedChecks !== 0) fail('hosted lifecycle facts drifted')
 if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '8488388c57a5646454a8d6ab7723ddcdbe135ce5259ede436d89b990ed045ad0') fail('cross-platform evidence receipt drifted')
 if (published) {
-  if (community.currentStatus !== 'v1.0.16-community-release-published' || community.releaseCandidate !== true || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation') fail('community published state drifted after M4F-4')
-  if (development.currentStage !== 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation' || development.binaryVersionTransition !== 'v1.0.16-public-release-published' || development.publicVersion !== '1.0.16' || development.publicTag !== 'v1.0.16') fail('published development/public handoff drifted')
+  const updaterComplete = m4f6?.status === 'hosted-managed-update-passed' && m4f6?.githubRun?.conclusion === 'success'
+  const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
+  const expectedStage = updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
+  if (community.currentStatus !== 'v1.0.16-community-release-published' || community.releaseCandidate !== true || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction) fail('community published state drifted after M4F-4')
+  if (development.currentStage !== expectedStage || development.binaryVersionTransition !== 'v1.0.16-public-release-published' || development.publicVersion !== '1.0.16' || development.publicTag !== 'v1.0.16') fail('published development/public handoff drifted')
   if (m4f5?.predecessor !== policy.stage || !m4f5.releasePublished || !m4f5.remoteAssetsVerified) fail('M4F-5 completion receipt is missing')
   if (execFileSync('git', ['rev-list', '-n', '1', 'v1.0.16'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit) fail('v1.0.16 tag does not bind the candidate source')
 } else {

@@ -7,6 +7,7 @@ const evidence = json('docs/evidence/post-v115-m4f2-v1016-candidate-quality-gate
 const predecessor = json('shared/post-v115-m4f1-v1016-atomic-version-transition-policy.json')
 const development = json('shared/development-version-policy.json')
 const community = json('shared/v1-community-release-policy.json')
+const m4f6 = json('shared/v116-managed-updater-lifecycle-policy.json')
 const packageManifest = json('package.json')
 const r5fManifest = json('docs/evidence/r5f-safe-tauri-runtime/manifest.json')
 const r5fRoutes = json('docs/evidence/r5f-safe-tauri-runtime/route-mount-evidence.json')
@@ -42,9 +43,11 @@ if (lifecycleAdvanced) {
   const releasePublished = community.currentStatus === 'v1.0.16-community-release-published'
   if (!community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished !== releasePublished || community.candidate?.artifacts?.length !== 2) failures.push('M4F-3 completion facts drifted')
   const releaseReady = community.currentStatus === 'v1.0.16-community-release-ready-to-publish'
+  const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
+  const publishedStage = updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
   if (community.releaseCandidate !== (releaseReady || releasePublished)) failures.push('community release-ready promotion drifted')
   if (releasePublished
-    ? development.currentStage !== 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation' || development.binaryVersionTransition !== 'v1.0.16-public-release-published'
+    ? development.currentStage !== publishedStage || development.binaryVersionTransition !== 'v1.0.16-public-release-published'
     : releaseReady
     ? development.currentStage !== 'M4F-5-v1.0.16-tag-release-and-remote-asset-verification' || development.binaryVersionTransition !== 'v1.0.16-release-ready'
     : development.currentStage !== 'M4F-4-v1.0.16-final-artifact-manifest-and-release-readiness-audit' || development.binaryVersionTransition !== 'v1.0.16-hosted-installer-lifecycle-passed') failures.push('M4F-4/M4F-5 handoff drifted')

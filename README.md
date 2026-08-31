@@ -50,7 +50,7 @@ e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff  LongEdit_1.0.1
 e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215  LongEdit_1.0.16_x64_zh-CN.msi
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.16 继续沿用这一安全更新链；v1.0.15 → v1.0.16 的发布后官方更新观察仍是独立接续点。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 → v1.0.16 的发布后官方更新观察已在一次性 Windows 上以 12/12 检查通过。
 
 ## v1.0.16
 
@@ -65,6 +65,8 @@ v1.0.16 已正式发布。`main` 当前运行时与公开下载均为 v1.0.16，
 - M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
 
 M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
+
+M4F-6 已完成：[真实运行 33350758818](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33350758818) 从官方 v1.0.15 应用内发现并确认 v1.0.16，校验 NSIS 后同目录覆盖、自动重启、报告最新版并保留资料与配置，12/12 检查通过。完整事实见 [M4F-6 官方应用内更新审计](docs/Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
 
 ## v1.0.15
 
@@ -272,7 +274,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前唯一接续点见 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)：下一阶段为 M4F-6 v1.0.15 → v1.0.16 官方应用内更新观察；当前公开稳定版审计为 [v1.0.16 发布审计](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前唯一接续点见 [M4F-6 官方应用内更新审计](docs/Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)：下一阶段为 M5-0 v1.0.17 范围选择审计；当前公开稳定版审计为 [v1.0.16 发布审计](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)。
 
 ## 许可证
 

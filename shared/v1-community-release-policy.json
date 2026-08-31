@@ -92,9 +92,8 @@
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.15-to-v1.0.16-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation"
+  "nextAction": "v1.0.16-release-and-managed-updater-closure-complete"
 }

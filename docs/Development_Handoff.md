@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 M4F-6 官方应用内更新观察已通过：** GitHub 托管一次性 Windows 从官方 v1.0.15 发现 v1.0.16，经显式确认、官方 NSIS 大小/SHA-256 校验、同目录静默覆盖和自动重启后显示最新版；资料库与配置在覆盖、卸载后均保留。修复 Tag refspec 后的运行 [`33350758818`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33350758818) 为 12/12，三张截图已人工验收，9 个原始证据文件逐项哈希导入。v1.0.16 发布与更新链已收口，唯一接续点为 **M5-0 v1.0.17 范围选择审计**；先选择一个可真实验收的最小切片，不提升当前 1.0.16 二进制。详见 [`Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
+
 > **2026-08-27 M1 总退出审计已通过：** 当前代码重新完成 XLSX 对象草稿、PPTX 统一草稿、ODS + LibreOffice、大 JSON、1080p/4K 逐帧截图和 VTT/SRT 字幕六条真实桌面复验；DOCX 继续以 Word/WPS/LibreOffice 3 个生产者、9 个来源组合、9/9 稳定复开为外部证据。复验发现 PPTX 脚本覆盖 E2E 二进制导致 ODS 60 秒无 CDP 的真实差异，已修正 `-SkipBuild` 和 E2E 配置传递后重跑通过。格式矩阵、README 和 `1.0.16` 开发说明已补齐，M1 在有界范围收口。下一步固定为 **M3 知识图谱 2.0 选择审计**；先测 100/1000/5000 节点语义、算法和性能基线，不直接堆视觉效果。详见 [`Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md`](./Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md)。
 
 > **2026-08-27 M1D-C1 外置字幕播放已通过：** 资料库视频会发现同目录同名 VTT/SRT，经过 2 MiB / 10,000 cue 有界解析后以内存 `TextTrack` 播放；真实 1280×720 WebM 在 0.6s/1.6s 分别显示指定 VTT/SRT cue，关闭、跨 TXT 重开、损坏 VTT 拒绝、960×720 布局和全部源 SHA-256 均通过，运行时错误 0。真实测试淘汰了 WebView2 中 cue 始终为 0 的 Blob `<track>` 路径，最终使用 `addTextTrack()` / `VTTCue`。下一步只做 M1 总退出条件审计。详见 [`Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md`](./Post_v1.0.15_M1DC1_Subtitle_Sidecar_Playback_Audit_2026-08-27.md)。
@@ -1535,3 +1537,7 @@ M4F-4 已用 Actions artifact `9735798998` 的真实文件本体重新核对两�
 ## 2026-08-31 M4F-6 官方应用内更新观察入口
 
 M4F-6 已冻结官方 v1.0.15/v1.0.16 NSIS 名称、大小和 SHA-256，并复用经过多版本验证的参数化更新 runner/probe；只允许在 GitHub 托管一次性 Windows 上执行。入口审计纠正了旧工作流把 Release API `target_commitish` 当作 Tag 提交的假设：v1.0.16 实际返回 `main`，新工作流改为 fetch 后解引用 annotated Tag 并要求 `757d543…`。当前状态为真实托管执行待运行，不能把 M4F-3 的直接安装升级写成官方应用内更新已收口。详见 [`Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
+
+## 2026-08-31 M4F-6 官方应用内更新观察关闭
+
+首轮运行 `33350679455` 在安装器执行前因 PowerShell 环境变量与 refspec 冒号边界失败；`${env:CURRENT_TAG}` 修复后，运行 `33350758818` 完成官方 v1.0.15 → v1.0.16 应用内更新，12/12 检查通过。三张 UI 截图已人工验收，artifact `9743531758` 的 9 个文件已按原始大小和 SHA-256 导入。M4F-6 目标与需求全部对齐；当前运行时/公开版本保持 v1.0.16，开发目标保持 v1.0.17，唯一接续点为 **M5-0 v1.0.17 范围选择审计**。
