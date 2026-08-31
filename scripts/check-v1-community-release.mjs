@@ -22,7 +22,7 @@ const notesPath = `docs/RELEASE_NOTES_v${pkg.version}.md`
 const [major, minor, patch] = pkg.version.split('.').map(Number)
 const previousPublicVersion = `${major}.${minor}.${patch - 1}`
 const managedUpdaterUpgradePrefix = `${previousPublicVersion}-to-${pkg.version}`
-const managedUpdaterPolicyToken = previousPublicVersion.replace(/^1\.0\./, '1')
+const managedUpdaterPolicyToken = `${major}${patch - 1}`
 const managedUpdaterLifecyclePath = `shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`
 const managedUpdaterLifecycle = fs.existsSync(managedUpdaterLifecyclePath) ? json(managedUpdaterLifecyclePath) : null
 const previousReleaseReceiptPath = `docs/evidence/v${previousPublicVersion}-release/release-receipt.json`
@@ -65,6 +65,11 @@ for (const token of [tag, '未知发布者', 'SHA-256', '自动更新']) if (!re
 
 const published = policy.gates?.githubReleasePublished === true
 const qualityVerified = !published && policy.gates?.qualityGatePassed === true
+const packageVerified = qualityVerified
+  && policy.gates?.msiBuilt === true
+  && policy.gates?.nsisBuilt === true
+  && policy.gates?.artifactHashesVerified === true
+  && policy.gates?.installedLifecyclePassed === false
 const ready = qualityVerified
   && policy.gates?.msiBuilt === true
   && policy.gates?.nsisBuilt === true
@@ -91,6 +96,13 @@ if (published) {
     || policy.gates?.installedLifecyclePassed !== true
     || policy.patchValidation?.fullInstalledLifecycleRerun !== true
     || !Number.isInteger(policy.candidate?.hostedInstalledLifecycleRunId)) fail('ready-to-publish state drift')
+} else if (packageVerified) {
+  if (policy.releaseCandidate !== false
+    || policy.currentStatus !== `${tag}-community-release-candidate-packaged-installed-lifecycle-pending`
+    || policy.gates?.localRuntimeSmokePassed !== true
+    || policy.gates?.githubReleasePublished !== false
+    || policy.candidate?.artifacts?.length !== 2
+    || policy.candidate.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')) fail('candidate-packaged lifecycle-pending state drift')
 } else if (qualityVerified) {
   if (policy.releaseCandidate !== false
     || policy.currentStatus !== `${tag}-community-release-quality-gate-and-runtime-smoke-passed-installer-pending`
@@ -192,4 +204,4 @@ if (failures.length) {
   console.error(failures.map(message => `- ${message}`).join('\n'))
   process.exit(1)
 }
-console.log(`V1 community release contract passed: ${tag} is ${published ? 'published' : lifecycleVerified ? 'hosted lifecycle verified with final release audit pending' : ready ? 'ready to publish' : qualityVerified ? 'quality verified with installer evidence pending' : 'awaiting quality gate and package evidence'} with managed SHA-256 updates.`)
+console.log(`V1 community release contract passed: ${tag} is ${published ? 'published' : lifecycleVerified ? 'hosted lifecycle verified with final release audit pending' : ready ? 'ready to publish' : packageVerified ? 'packaged with installed lifecycle pending' : qualityVerified ? 'quality verified with installer evidence pending' : 'awaiting quality gate and package evidence'} with managed SHA-256 updates.`)

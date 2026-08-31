@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.16",
-  "releaseCandidate": true,
+  "appVersion": "1.0.17",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-08-30",
-  "currentStatus": "v1.0.16-community-release-published",
+  "generatedAt": "2026-08-31",
+  "currentStatus": "v1.0.17-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,76 +24,40 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.15",
+    "previousPublicVersion": "1.0.16",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.15-to-1.0.16-passed",
-    "scope": "post-v1.0.15-professional-capability-cross-format-workflow-and-release-freeze"
+    "managedUpdaterUpgradePath": "1.0.16-to-1.0.17-pending",
+    "scope": "post-v1.0.16-bounded-odp-body-copy-and-release-readiness-fixes"
   },
   "targetRelease": {
-    "tag": "v1.0.16",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16",
+    "tag": "v1.0.17",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.17",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "qualityGateEnvironment": "local-windows",
-    "qualityGateRunId": null,
-    "hostedInstalledLifecycleRunId": 33322246630,
-    "runtimeSmokeEvidence": [
-      "docs/evidence/r5f-safe-tauri-runtime/manifest.json",
-      "docs/evidence/r5g-desktop-artifact-smoke/audit-manifest.json"
-    ],
-    "artifacts": [
-      {
-        "target": "msi",
-        "sourceFileName": "Long编辑_1.0.16_x64_zh-CN.msi",
-        "fileName": "LongEdit_1.0.16_x64_zh-CN.msi",
-        "sizeBytes": 73887744,
-        "sha256": "e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215",
-        "authenticodeStatus": "NotSigned"
-      },
-      {
-        "target": "nsis",
-        "sourceFileName": "Long编辑_1.0.16_x64-setup.exe",
-        "fileName": "LongEdit_1.0.16_x64-setup.exe",
-        "sizeBytes": 65788796,
-        "sha256": "e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff",
-        "authenticodeStatus": "NotSigned"
-      }
-    ]
-  },
-  "release": {
-    "databaseId": 379466292,
-    "tag": "v1.0.16",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16",
-    "taggedCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
-    "publishedAt": "2026-08-31T02:09:02Z",
-    "isDraft": false,
-    "isPrerelease": false,
-    "receipt": "docs/evidence/v1.0.16-release/release-receipt.json"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
+    "v1.0.16-to-v1.0.17-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "v1.0.16-release-and-managed-updater-closure-complete"
+  "nextAction": "pass-v1.0.17-quality-gate-and-build-real-candidate-installers"
 }

@@ -78,6 +78,7 @@ const expectedTarget = `${publicMajor}.${publicMinor}.${publicPatch + 1}`
 const tagCommit = git('rev-list', '-n', '1', policy.publicTag)
 const headCommit = git('rev-parse', 'HEAD')
 const commitsAhead = Number(git('rev-list', '--count', `${policy.publicTag}..HEAD`))
+const candidateRuntime = policy.runtimeBaseVersion !== policy.publicVersion
 let tagIsAncestor = true
 try { execFileSync('git', ['merge-base', '--is-ancestor', policy.publicTag, 'HEAD']) } catch { tagIsAncestor = false }
 
@@ -88,20 +89,28 @@ const checks = {
     && tauri.version === policy.runtimeBaseVersion
     && matrix.appVersion === policy.runtimeBaseVersion,
   candidateMetadataFacts: community.appVersion === policy.runtimeBaseVersion
-    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-published`
-    && community.releaseCandidate === true
-    && community.gates?.qualityGatePassed === true
-    && community.gates?.localRuntimeSmokePassed === true
-    && community.gates?.githubReleasePublished === true
-    && community.release?.taggedCommit === policy.publicTagCommit,
+    && (candidateRuntime
+      ? community.currentStatus.startsWith(`v${policy.runtimeBaseVersion}-community-release-`)
+        && community.releaseCandidate === false
+        && community.gates?.githubReleasePublished === false
+        && community.patchValidation?.previousPublicVersion === policy.publicVersion
+        && community.release === null
+      : community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-published`
+        && community.releaseCandidate === true
+        && community.gates?.qualityGatePassed === true
+        && community.gates?.localRuntimeSmokePassed === true
+        && community.gates?.githubReleasePublished === true
+        && community.release?.taggedCommit === policy.publicTagCommit),
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && policy.publicVersion === policy.runtimeBaseVersion
     && policy.publicVersion === '1.0.16',
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
-  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-public-release-published'
-    && policy.runtimeBaseVersion === policy.publicVersion
+  binaryTransitionComplete: (candidateRuntime
+    ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged'].includes(policy.binaryVersionTransition)
+      && policy.runtimeBaseVersion === expectedTarget
+    : policy.binaryVersionTransition === 'v1.0.16-public-release-published'
+      && policy.runtimeBaseVersion === policy.publicVersion)
     && policy.developmentTargetVersion === expectedTarget,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
     && m1Closure.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit'
@@ -220,7 +229,7 @@ const evidence = {
     runtimeBaseVersion: policy.runtimeBaseVersion,
     publicTag: policy.publicTag,
     headAheadOfPublicTag: true,
-    binaryVersionTransition: 'v1.0.16-public-release-published',
+    binaryVersionTransition: policy.binaryVersionTransition,
   },
   actual: { headCommit, tagCommit, commitsAhead, tagIsAncestor, checks },
 }

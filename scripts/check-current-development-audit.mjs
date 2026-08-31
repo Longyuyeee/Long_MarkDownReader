@@ -16,6 +16,7 @@ import './check-post-v116-m5-1-odp-producer-selection.mjs'
 import './check-post-v116-m5-2-odp-simple-slide-copy.mjs'
 import './check-post-v116-m5-3-odp-workspace.mjs'
 import './check-post-v116-m5-4-v1017-release-readiness.mjs'
+import './check-post-v116-m5-5-v1017-candidate-packaging.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
@@ -65,9 +66,9 @@ const required = [
   ['11 套发布能力配置', matrix.profiles.length === 11],
   [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === '1.0.17'],
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
-  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === pkg.version && development.publicTag === `v${development.publicVersion}`],
+  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.16' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M5-5 v1.0.17 原子版本迁移与候选安装包构建**', policy.currentStatus === `v${pkg.version}-community-release-published`],
+  ['当前阶段：**M5-5 v1.0.17 原子版本迁移与候选安装包构建**', ['v1.0.17-community-release-quality-gate-pending', 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'].includes(policy.currentStatus)],
 ]
 
 for (const [token, condition] of required) {

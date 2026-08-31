@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-5",
+  "name": "v1.0.17-atomic-version-transition-and-candidate-packaging",
+  "status": "atomic-transition-complete-package-pending",
+  "predecessor": "M5-4",
+  "transitionBaseCommit": "5fe3e79e9d9581a917c94be99c087fc3492d0228",
+  "candidateSourceCommit": null,
+  "candidateVersion": "1.0.17",
+  "publicVersion": "1.0.16",
+  "atomicVersionFileCount": 44,
+  "qualityGatePassed": false,
+  "candidatePackageBuilt": false,
+  "artifacts": [],
+  "installedLifecyclePassed": false,
+  "githubReleasePublished": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "push-atomic-transition-run-full-quality-gate-and-build-real-msi-nsis"
+}

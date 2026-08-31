@@ -35,6 +35,11 @@ const published = community.gates?.githubReleasePublished === true
 const publishedCurrent = published && community.appVersion === pkg.version
 const publishedPrior = published && compareVersions(community.appVersion, pkg.version) < 0
 const qualityVerified = !published && community.gates?.qualityGatePassed === true
+const packageVerified = qualityVerified
+  && community.gates?.msiBuilt === true
+  && community.gates?.nsisBuilt === true
+  && community.gates?.artifactHashesVerified === true
+  && community.gates?.installedLifecyclePassed === false
 const ready = qualityVerified
   && community.gates?.msiBuilt === true
   && community.gates?.nsisBuilt === true
@@ -43,13 +48,14 @@ const ready = qualityVerified
 const lifecycleVerified = ready
   && community.releaseCandidate === false
   && community.currentStatus === `${tag}-community-release-hosted-lifecycle-passed-final-release-audit-pending`
-const installerPending = qualityVerified && !ready
+const installerPending = qualityVerified && !ready && !packageVerified
 const pending = !published && !qualityVerified
 if (published && (community.currentStatus !== `v${community.appVersion}-community-release-published` || community.release?.tag !== `v${community.appVersion}`)) failures.push('published community receipt drift')
 if (publishedPrior && !config.includes('发布准备中 · 当前公开')) failures.push('pre-release public status is missing')
 if (lifecycleVerified && community.gates?.githubReleasePublished !== false) failures.push('hosted lifecycle intermediate state drift')
 if (ready && !lifecycleVerified && (community.currentStatus !== `${tag}-community-release-ready-to-publish` || community.releaseCandidate !== true)) failures.push('ready community state drift')
 if (installerPending && (community.currentStatus !== `${tag}-community-release-quality-gate-and-runtime-smoke-passed-installer-pending` || community.releaseCandidate !== false)) failures.push('installer-pending community state drift')
+if (packageVerified && (community.currentStatus !== `${tag}-community-release-candidate-packaged-installed-lifecycle-pending` || community.releaseCandidate !== false)) failures.push('candidate-packaged community state drift')
 if (pending && (community.currentStatus !== `${tag}-community-release-quality-gate-pending` || community.releaseCandidate !== false)) failures.push('pending community state drift')
 
 for (const token of ['communityReleaseSource', 'RELEASE_PUBLIC_STATUS_LABEL', '社区版已发布', '社区版']) {

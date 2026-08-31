@@ -27,13 +27,14 @@ const fail = message => failures.push(message)
 if (policy.stage !== 'M4F-4' || policy.predecessor !== predecessor.stage || predecessor.nextAction !== 'execute-m4f4-final-artifact-manifest-release-notes-and-release-readiness-audit') fail('M4F-4 predecessor chain drifted')
 if (policy.candidateSourceCommit !== predecessor.candidateSourceCommit || policy.hostedRunId !== 33322246630 || policy.hostedArtifactId !== 9735798998) fail('M4F-4 immutable identity drifted')
 if (!policy.releaseReady || policy.releasePublished || policy.enterpriseReleaseCandidate || policy.sourceUserContentIncluded) fail('M4F-4 promotion/privacy boundary drifted')
-const published = community.gates?.githubReleasePublished === true
+const laterCandidateActive = community.appVersion !== '1.0.16'
+const published = laterCandidateActive || community.gates?.githubReleasePublished === true
 const expectedManifestStatus = published ? 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' : 'ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed'
 if (manifest.stage !== policy.stage || manifest.status !== expectedManifestStatus || manifest.sourceCommit !== policy.candidateSourceCommit || manifest.sourceVersion !== policy.candidateVersion) fail('final artifact manifest identity drifted')
-if (manifest.artifacts?.length !== 2 || policy.artifacts?.length !== 2 || community.candidate?.artifacts?.length !== 2) fail('final installer count drifted')
+if (manifest.artifacts?.length !== 2 || policy.artifacts?.length !== 2 || (!laterCandidateActive && community.candidate?.artifacts?.length !== 2)) fail('final installer count drifted')
 for (const expected of policy.artifacts) {
   const actual = manifest.artifacts.find(item => item.target === expected.target)
-  const candidate = community.candidate.artifacts.find(item => item.target === expected.target)
+  const candidate = laterCandidateActive ? actual : community.candidate?.artifacts?.find(item => item.target === expected.target)
   for (const item of [actual, candidate]) if (!item || item.sourceFileName !== expected.sourceFileName || item.fileName !== expected.fileName || item.sizeBytes !== expected.sizeBytes || item.sha256 !== expected.sha256 || item.authenticodeStatus !== 'NotSigned') fail(`${expected.target} release mapping drifted`)
 }
 if (checksumBytes.length !== policy.checksumFile.sizeBytes || sha256(checksumBytes) !== policy.checksumFile.sha256 || manifest.checksumFile.sha256 !== policy.checksumFile.sha256) fail('SHA256SUMS receipt drifted')
@@ -55,8 +56,8 @@ if (published) {
     : m5?.status === 'scope-selected'
     ? `${m5.selectedNextStage.id}-${m5.selectedNextStage.name}`
     : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
-  if (community.currentStatus !== 'v1.0.16-community-release-published' || community.releaseCandidate !== true || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction) fail('community published state drifted after M4F-4')
-  if (development.currentStage !== expectedStage || development.binaryVersionTransition !== 'v1.0.16-public-release-published' || development.publicVersion !== '1.0.16' || development.publicTag !== 'v1.0.16') fail('published development/public handoff drifted')
+  if (!laterCandidateActive && (community.currentStatus !== 'v1.0.16-community-release-published' || community.releaseCandidate !== true || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction)) fail('community published state drifted after M4F-4')
+  if (development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged'].includes(development.binaryVersionTransition) || development.publicVersion !== '1.0.16' || development.publicTag !== 'v1.0.16') fail('published development/public handoff drifted')
   if (m4f5?.predecessor !== policy.stage || !m4f5.releasePublished || !m4f5.remoteAssetsVerified) fail('M4F-5 completion receipt is missing')
   if (execFileSync('git', ['rev-list', '-n', '1', 'v1.0.16'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit) fail('v1.0.16 tag does not bind the candidate source')
 } else {
