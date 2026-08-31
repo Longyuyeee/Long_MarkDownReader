@@ -1531,3 +1531,7 @@ M4F-4 已用 Actions artifact `9735798998` 的真实文件本体重新核对两�
 `v1.0.16` 已正式发布：Tag 解引用到真实安装包产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58`，发布前审计提交为 `a6d6cbc088c43adc940858c8775f55d33af1ee2d`。Release `379466292` 为非 Draft、非 Prerelease 且由 latest API 返回；NSIS、MSI 与 `SHA256SUMS.txt` 从公开地址回下载后，名称、大小、SHA-256 和 `NotSigned` 均与冻结 manifest 一致。
 
 首次常规 Tag 推送因环境 Token 缺少 `workflow` scope 被拒绝，单次长上传还产生并自动回滚了只含校验文件的临时 Draft；最终改用已有完整权限钥匙串、先 Draft 后逐附件上传与显式发布，未留下半成品公开 Release。九道发布门禁现为 9/9，公开/运行时版本均为 v1.0.16，企业矩阵仍为 false；下一补丁目标登记为 v1.0.17，但尚未提升运行时。唯一接续点为 **M4F-6 v1.0.15 → v1.0.16 官方应用内更新观察**。详见 [`Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md`](./Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
+
+## 2026-08-31 M4F-6 官方应用内更新观察入口
+
+M4F-6 已冻结官方 v1.0.15/v1.0.16 NSIS 名称、大小和 SHA-256，并复用经过多版本验证的参数化更新 runner/probe；只允许在 GitHub 托管一次性 Windows 上执行。入口审计纠正了旧工作流把 Release API `target_commitish` 当作 Tag 提交的假设：v1.0.16 实际返回 `main`，新工作流改为 fetch 后解引用 annotated Tag 并要求 `757d543…`。当前状态为真实托管执行待运行，不能把 M4F-3 的直接安装升级写成官方应用内更新已收口。详见 [`Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。

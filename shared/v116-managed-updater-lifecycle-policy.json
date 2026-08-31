@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.16-U1",
+  "status": "hosted-execution-pending",
+  "environment": "github-hosted-disposable-windows",
+  "workflow": ".github/workflows/v116-managed-updater-lifecycle.yml",
+  "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
+  "releases": {
+    "previous": {
+      "version": "1.0.15",
+      "tag": "v1.0.15",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15",
+      "installer": {
+        "fileName": "LongEdit_1.0.15_x64-setup.exe",
+        "sizeBytes": 65564296,
+        "sha256": "03fda623363e196f87dc09c6204a752a1b112df03e57945ecf06ba97c9e44965",
+        "authenticodeStatus": "NotSigned"
+      }
+    },
+    "current": {
+      "version": "1.0.16",
+      "tag": "v1.0.16",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16",
+      "taggedCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+      "releaseTargetCommitishObserved": "main",
+      "installer": {
+        "fileName": "LongEdit_1.0.16_x64-setup.exe",
+        "sizeBytes": 65788796,
+        "sha256": "e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "adfcc62a4efa29bd2586a878ca6badd03bef8c2d4c162fda6aaab2cbbc55ea94",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 108686336,
+        "sha256": "adfcc62a4efa29bd2586a878ca6badd03bef8c2d4c162fda6aaab2cbbc55ea94",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
+    }
+  },
+  "requirements": {
+    "officialLatestRelease": true,
+    "explicitUserConfirmation": true,
+    "sha256BeforeInstall": true,
+    "silentOverwrite": true,
+    "sameInstallRoot": true,
+    "installedExecutableIdentityRecorded": true,
+    "automaticRelaunchAfterInstall": true,
+    "firstLaunchAfterUpdate": true,
+    "postUpgradeReportsCurrent": true,
+    "libraryDataRetained": true,
+    "configDataRetained": true,
+    "uninstallRetainsUserData": true,
+    "sourceUserContentIncluded": false
+  },
+  "gates": {
+    "harnessImplemented": true,
+    "qualityGatePassed": false,
+    "hostedWorkflowPassed": false,
+    "releaseDiscoveryPassed": false,
+    "confirmationBoundaryPassed": false,
+    "downloadHashPassed": false,
+    "overwriteInstallPassed": false,
+    "automaticRelaunchPassed": false,
+    "firstLaunchPassed": false,
+    "postUpgradeCurrentPassed": false,
+    "userDataRetentionPassed": false,
+    "evidenceImported": false
+  },
+  "expectedVsActualAtEntry": {
+    "expected": "GitHub release target_commitish identifies the commit behind v1.0.16",
+    "actual": "release target_commitish is main while the annotated v1.0.16 tag dereferences to 757d54309ddb35f445344d909fa4c7ba2567bc58",
+    "correction": "fetch and dereference the tag, retain releaseTargetCommitish only as an observed API field"
+  },
+  "githubRun": null,
+  "evidenceRoot": "docs/evidence/v1.0.16-managed-updater",
+  "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"
+}

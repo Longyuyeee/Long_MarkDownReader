@@ -136,6 +136,8 @@ M4F-4 已完成最终 artifact manifest 与发布就绪审计。真实下载的 
 
 M4F-5 已完成正式发布。`v1.0.16` Tag 解引用到安装包产品提交 `757d543…`，Release `379466292` 为非 Draft、非 Prerelease 且是 latest；三个附件从公开地址回下载后的大小、SHA-256 与签名状态全部符合冻结 manifest。首次 Tag 推送的 `workflow` scope 与单次长上传 Draft 回滚差异均已按事实纠正。社区发布门禁 9/9，企业 RC 仍关闭；下一步只执行 M4F-6 v1.0.15 → v1.0.16 官方应用内更新观察。
 
+M4F-6 入口已建立：官方 v1.0.15/v1.0.16 NSIS 事实、一次性 Windows 工作流、参数化 runner/probe 和 pending 合同已经冻结。Release API 的 `target_commitish=main` 与 annotated Tag 实际提交不同，新工作流改为 fetch 并解引用 Tag；当前必须先推送入口再触发真实托管执行，成功证据导入前不得宣称官方应用内更新链收口。
+
 M4A 已完成退出审计：Table、OPML、DOCX、ODS、ODP、PPTX、Workbook 的 7 类搜索对象 7/7 精确打开并保留返回状态；7 类有界图谱对象从 Graph 与关系上下文各 7/7 打开，14/14 返回 Graph。真实图谱为 7 父、15 子、15 条 mention-free `contains`，同源身份稳定、错误 0、7 个源文件不变，普通 DOCX block 与 ODS cell 继续用于搜索而不入图。审计同时修复 PPTX 无 locator 父文件路由残留幻灯片关系焦点的问题。当前接续点为 **M4B-0 工作台对象行动选择审计**，保持 `releaseCandidate=false`。
 
 M4B-0 已完成工作台对象行动选择审计。当前工作台直接写回只有 Markdown 待办，PDF 批注仅查看；真实内部 Table 的 2 条显式 boolean 任务行可按稳定 row ID 定位，但尚未进入待办。七类候选只选择 `.table.json` 布尔任务行，因其具备明确任务语义、稳定 row/column ID、签名与可靠写入；其他格式按无任务语义、只读、可靠副本或上下文事务边界延期。当前进入 **M4B-1 内部 Table 布尔任务行工作台行动闭环**，不混入转换或发布冻结。
