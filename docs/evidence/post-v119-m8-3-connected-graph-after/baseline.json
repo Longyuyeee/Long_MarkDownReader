@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-3-connected-graph",
+  "sourceCommit": "bae8f4e262b6a4b76cae2b2049704bf282f579b8",
+  "nodeCount": 180,
+  "edgeExpectation": "at-least-360",
+  "initialLevel": "middle",
+  "finalLevel": "near",
+  "toolbarClientWidth": 1123,
+  "toolbarScrollWidth": 1123,
+  "toolbarOverflowPixels": 0,
+  "wheelRoundTripMaximumMs": 95.53490000000056,
+  "wheelRoundTripAverageMs": 89.5732000000002,
+  "tools": {
+    "buttonCount": 13,
+    "width": 248,
+    "height": 253.1999969482422,
+    "maximumButtonHeight": 32,
+    "singleLineLabels": true
+  },
+  "level": "near",
+  "pose": "{\"x\":-2660.4604570269803,\"y\":-1414.2105039548933,\"zoom\":3}",
+  "layoutFrame": 120,
+  "layoutWorkerComputeMaximumMs": 2.1,
+  "layoutWorkerApplyMaximumMs": 1,
+  "phases": {
+    "community-contours": {
+      "count": 11,
+      "totalMs": 7.400000002235174,
+      "maximumMs": 0.8999999985098839,
+      "over50Ms": 0,
+      "over1000Ms": 0,
+      "samples": [
+        0.8999999985098839,
+        0.8000000007450581,
+        0.6999999992549419,
+        0.5,
+        0.6000000014901161,
+        0.6999999992549419,
+        0.6000000014901161,
+        0.7000000029802322,
+        0.6999999992549419,
+        0.6000000014901161,
+        0.5999999977648258
+      ]
+    },
+    "layout-simulation": {
+      "count": 12,
+      "totalMs": 0,
+      "maximumMs": 0,
+      "over50Ms": 0,
+      "over1000Ms": 0,
+      "samples": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "canvas-draw": {
+      "count": 12,
+      "totalMs": 46.599999997764826,
+      "maximumMs": 5.100000001490116,
+      "over50Ms": 0,
+      "over1000Ms": 0,
+      "samples": [
+        5.100000001490116,
+        4.199999999254942,
+        4.099999997764826,
+        4.200000002980232,
+        4.100000001490116,
+        3.600000001490116,
+        3.599999997764826,
+        3.699999999254942,
+        4.599999997764826,
+        4.199999999254942,
+        2.600000001490116,
+        2.599999997764826
+      ]
+    }
+  },
+  "workerPhases": {},
+  "selectedCount": 0,
+  "runtimeErrors": [],
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

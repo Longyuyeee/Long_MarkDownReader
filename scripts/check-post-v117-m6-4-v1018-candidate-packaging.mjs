@@ -25,7 +25,7 @@ const evidence = fs.existsSync('docs/evidence/post-v117-m6-4-v1018-candidate-pac
 const runtimeSmoke = fs.existsSync('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json') ? json('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json') : null
 const failures = []
 const fail = message => failures.push(message)
-const laterCandidateActive = pkg.version === '1.0.19' && community.appVersion === '1.0.19' && /^M7-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
+const laterCandidateActive = ['1.0.19', '1.0.20'].includes(pkg.version) && community.appVersion === pkg.version && /^M[78]-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
 
 if (policy.stage !== 'M6-4' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) fail('M6-4 predecessor chain drift')
 if (policy.candidateVersion !== '1.0.18' || policy.publicVersion !== '1.0.17' || policy.atomicVersionFileCount !== 44
@@ -38,7 +38,7 @@ const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
 const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
 const laterPublicActive = development.publicVersion === '1.0.19' && development.publicTag === 'v1.0.19'
-if (!['1.0.18', '1.0.19'].includes(development.runtimeBaseVersion) || development.publicVersion !== (laterPublicActive ? '1.0.19' : releasePublished ? '1.0.18' : '1.0.17')
+if (!['1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion) || development.publicVersion !== (laterPublicActive ? '1.0.19' : releasePublished ? '1.0.18' : '1.0.17')
   || development.publicTag !== (laterPublicActive ? 'v1.0.19' : releasePublished ? 'v1.0.18' : 'v1.0.17')
   || development.developmentTargetVersion !== (laterPublicActive ? '1.0.20' : releasePublished ? '1.0.19' : '1.0.18') || development.releaseCandidate) fail('development candidate/public split drift')
 if (!laterCandidateActive && (community.appVersion !== '1.0.18'

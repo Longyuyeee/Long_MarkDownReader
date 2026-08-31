@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-09-01 M8-3 知识图谱性能与视觉收口已通过：** 真实 180 节点/540 连接 Tauri 对照中 Canvas draw 峰值从 7.1 ms 降至 5.1 ms，默认选择归零，状态环最多 24 个；视口裁剪、近景尺寸、标签碰撞、节点材质和原生“图谱工具”弹层已完成。当前唯一接续点为 **M8-4 v1.0.20 质量门、版本迁移与发布**。详见 [`Post_v1.0.19_M8_3_Knowledge_Graph_Performance_and_Visual_Closure_Audit_2026-09-01.md`](./Post_v1.0.19_M8_3_Knowledge_Graph_Performance_and_Visual_Closure_Audit_2026-09-01.md)。
+
 > **2026-09-01 v1.0.19 M7-8 发布与更新链已全部收口：** 托管运行 `33418123151` 使用公开 v1.0.18/v1.0.19 NSIS，以 12/12、失败 0 验证用户确认、SHA-256、覆盖安装、自动重启、最新版状态及资料/配置保留；三张截图已人工复核，9 个脱敏证据文件已导入。当前公开与运行时均为 v1.0.19，下一补丁目标为 v1.0.20；后续应另行执行范围选择审计。详见 [`Post_v1.0.18_M7_8_v1.0.19_Official_Managed_Updater_Observation_Audit_2026-09-01.md`](./Post_v1.0.18_M7_8_v1.0.19_Official_Managed_Updater_Observation_Audit_2026-09-01.md)。
 
 > **2026-09-01 v1.0.19 M7-7 正式发布与远端附件复核已通过：** annotated Tag `v1.0.19` 精确解析到固定候选 `9655b021…`；GitHub Release `379909457` 为最新、非草稿、非预发布，公开 NSIS、MSI 与 `SHA256SUMS.txt` 已独立回下载并与冻结清单逐项一致。详见 [`Post_v1.0.18_M7_7_v1.0.19_Published_Release_and_Remote_Asset_Audit_2026-09-01.md`](./Post_v1.0.18_M7_7_v1.0.19_Published_Release_and_Remote_Asset_Audit_2026-09-01.md)。

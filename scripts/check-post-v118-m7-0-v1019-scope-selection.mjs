@@ -43,8 +43,9 @@ if (development.currentStage === 'M7-1-local-json-schema-sidecar-provider-mappin
   for (const identity of evidence.actual?.sourceIdentities ?? []) if (!fs.existsSync(identity.path) || !matchesIdentity(identity.path, identity)) fail(`M7-0 source identity drift: ${identity.path}`)
 }
 const candidateTransition = /^M7-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
+const successorTransition = /^M8-[0-9]+-/.test(development.currentStage)
 const publishedSuccessor = development.publicVersion === '1.0.19' && development.developmentTargetVersion === '1.0.20'
-if (development.runtimeBaseVersion !== (candidateTransition ? '1.0.19' : '1.0.18') || (!publishedSuccessor && (development.publicVersion !== '1.0.18' || development.developmentTargetVersion !== '1.0.19')) || !/^M7-(?:[1-9]|[1-9]\d)-/.test(development.currentStage) || (candidateTransition ? !development.binaryVersionTransition.startsWith('v1.0.19-') : development.binaryVersionTransition !== 'v1.0.18-release-and-managed-updater-closed') || development.releaseCandidate) fail('M7 successor development handoff drift')
+if (development.runtimeBaseVersion !== (successorTransition ? '1.0.20' : candidateTransition ? '1.0.19' : '1.0.18') || (!publishedSuccessor && (development.publicVersion !== '1.0.18' || development.developmentTargetVersion !== '1.0.19')) || !/^M[78]-(?:[1-9]|[1-9]\d)-/.test(development.currentStage) || (successorTransition ? !development.binaryVersionTransition.startsWith('v1.0.20-') : candidateTransition ? !development.binaryVersionTransition.startsWith('v1.0.19-') : development.binaryVersionTransition !== 'v1.0.18-release-and-managed-updater-closed') || development.releaseCandidate) fail('M7 successor development handoff drift')
 for (const [document, tokens] of [[audit, ['最初需求', '本地 JSON Schema sidecar', '未配置 Schema 时不制造错误', 'M7-1']], [roadmap, ['M7-0', 'M7-1', 'JSON/JSONC', '联网']], [alignment, ['M7-0 已完成', 'M7-1 禁止联网与远程自动解析']]]) for (const token of tokens) if (!document.includes(token)) fail(`M7-0 document missing: ${token}`)
 
 if (failures.length) { console.error(`M7-0 scope selection failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

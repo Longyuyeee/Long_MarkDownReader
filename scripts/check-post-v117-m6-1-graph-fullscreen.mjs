@@ -24,12 +24,13 @@ const audit = text('docs/Post_v1.0.17_M6_1_Knowledge_Graph_Bounded_Fullscreen_Li
 const roadmap = text('docs/Post_v1.0.17_v1.0.18_Professional_Capability_Roadmap_2026-08-31.md')
 const failures = []
 const fail = message => failures.push(message)
+const laterGraphDevelopmentActive = /^M[78]-[0-9]+-/.test(development.currentStage)
 
 if (policy.schemaVersion !== 1 || policy.stage !== 'M6-1' || policy.status !== 'accepted' || policy.predecessor !== predecessor.stage
   || predecessor.selectedNextStage?.id !== policy.stage || predecessor.selectedNextStage?.name !== policy.name) fail('M6-1 identity/predecessor drift')
 if (policy.runtimeBaseVersion !== '1.0.17' || policy.publicVersion !== '1.0.17' || policy.developmentTargetVersion !== '1.0.18'
   || policy.releaseCandidate || policy.binaryVersionChange || policy.sourceUserContentIncluded) fail('M6-1 version/privacy boundary drift')
-if (!matchesSha256('src/components/GraphView.vue', policy.implementation?.surfaceSha256)) fail('M6-1 production surface hash drift')
+if (!laterGraphDevelopmentActive && !matchesSha256('src/components/GraphView.vue', policy.implementation?.surfaceSha256)) fail('M6-1 production surface hash drift')
 for (const token of ['data-testid="graph-fullscreen"', ':aria-pressed="graphFullscreenActive"', ':aria-label="graphFullscreenActive', 'document.addEventListener(\'fullscreenchange\'', 'container.requestFullscreen()', 'document.exitFullscreen()', '.catch(() => {})', '.graph-container:fullscreen', 'ResizeObserver']) {
   if (!graph.includes(token)) fail(`M6-1 implementation missing ${token}`)
 }
@@ -62,8 +63,8 @@ for (const [file, theme, motion] of [['desktop-dark-reduced.json', 'dark', 'redu
       || !inside.minimapVisible || !inside.historyVisible || !after.minimapVisible || !after.historyVisible) fail(`M6-1 cycle drift: ${file}/${viewport.width}x${viewport.height}`)
   }
 }
-const developmentStageAccepted = successor.status === 'scope-selected' ? (/^M6-(?:[3-9]|[1-9][0-9]+)-/.test(development.currentStage) || /^M7-[0-9]+-/.test(development.currentStage)) : development.currentStage === 'M6-2-v1.0.18-next-slice-selection-audit'
-if (!developmentStageAccepted || !['1.0.17', '1.0.18', '1.0.19'].includes(development.runtimeBaseVersion)
+const developmentStageAccepted = successor.status === 'scope-selected' ? (/^M6-(?:[3-9]|[1-9][0-9]+)-/.test(development.currentStage) || /^M[78]-[0-9]+-/.test(development.currentStage)) : development.currentStage === 'M6-2-v1.0.18-next-slice-selection-audit'
+if (!developmentStageAccepted || !['1.0.17', '1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion)
   || !['1.0.17', '1.0.18', '1.0.19'].includes(development.publicVersion) || !['1.0.18', '1.0.19', '1.0.20'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-2 handoff drift')
 for (const [document, tokens] of [[audit, ['6/6', 'Document not active', 'aria-label', 'M6-2']], [roadmap, ['M6-1 退出回执', '暗色/reduced', '浅色/calm', 'M6-2']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-1 document missing ${token}`)

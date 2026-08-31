@@ -3869,7 +3869,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   color: var(--theme-text, #e8edf2);
   background: var(--workspace-control-bg, rgba(255, 255, 255, .04));
   cursor: pointer;
-  font-size: 10px;
+  font-size: var(--text-compact, 11px);
   font-weight: 700;
   white-space: nowrap;
 }

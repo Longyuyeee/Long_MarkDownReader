@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.0.20",
-  "runtimeBaseVersion": "1.0.19",
+  "runtimeBaseVersion": "1.0.20",
   "publicVersion": "1.0.19",
   "publicTag": "v1.0.19",
   "publicTagCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-3-knowledge-graph-toolbar-and-connected-graph-visual-refinement",
-  "binaryVersionTransition": "v1.0.19-release-and-managed-updater-closed",
-  "displayLabel": "v1.0.19 已发布 · v1.0.20 图谱可用性修复审计中"
+  "currentStage": "M8-4-v1.0.20-atomic-version-transition-and-candidate-packaging",
+  "binaryVersionTransition": "v1.0.20-quality-gate-pending",
+  "displayLabel": "v1.0.20 候选质量门与打包中 · 当前公开 v1.0.19 · M8-4"
 }

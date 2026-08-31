@@ -42,7 +42,7 @@ requireTokens(graph, 'Knowledge graph interaction', [
   "{ label: '设为思维导图中心', key: 'mindmap-root' }",
   "{ label: '重新计算布局', key: 'reset-layout' }",
   'const node = findNodeAt(worldX, worldY)',
-  'if (e.button === 2) return',
+  'if (e.button !== 0 && e.button !== 1) return',
 ])
 
 console.log('Canvas pointer interaction passed: knowledge graph, OPML mind map, and JSON Canvas use cursor-anchored wheel zoom with node and background context actions.')
