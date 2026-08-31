@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5J",
+  "appVersion": "1.0.19",
+  "capturedAt": "2026-08-31T16:24:09.443Z",
+  "environment": "Disposable Windows installed current NSIS artifact",
+  "status": "passed",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "signedArtifactRuntimeProven": false,
+  "sourceUserContentIncluded": false,
+  "installerSha256": "996e12218a24e1689947ec0c358720cc84cc136ffb2ac581fe31682fb8516582",
+  "installedExecutable": {
+    "fileName": "tauri-app.exe",
+    "sizeBytes": 112867328,
+    "sha256": "85282a401a8ff41dc7720cc4686dbb7d340ef6f12cfd55411481f08b2fcf17aa"
+  },
+  "checks": [
+    {
+      "id": "installed-current-webview-bootstrap",
+      "status": "passed"
+    },
+    {
+      "id": "installed-external-cold-launch-unicode-space-path",
+      "status": "passed"
+    },
+    {
+      "id": "installed-single-instance-external-handoff",
+      "status": "passed"
+    },
+    {
+      "id": "installed-txt-read-edit-save-reopen",
+      "status": "passed",
+      "visual": {
+        "foreground": "rgb(31, 41, 55)",
+        "background": "rgb(247, 248, 250)",
+        "contrastRatio": 13.813901563004986,
+        "cumulativeOpacity": 1,
+        "fontSize": "13px",
+        "markerRect": {
+          "x": 320.8125,
+          "y": 178,
+          "width": 106.640625,
+          "height": 15
+        },
+        "editorRect": {
+          "x": 266,
+          "y": 161,
+          "width": 1009,
+          "height": 627
+        },
+        "markerInsideEditor": true,
+        "markerHitTestVisible": true,
+        "hitStack": [
+          {
+            "tag": "DIV",
+            "className": "cm-line cm-activeLine",
+            "text": "R5J_TEXT_SAVED",
+            "background": "rgba(37, 99, 235, 0.07)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-content cm-lineWrapping",
+            "text": "R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-scroller",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-editor ͼ1 ͼ2 ͼ4 ͼo",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgb(243, 246, 250)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "editor-host",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "className": "editor-stage",
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "text-workspace",
+            "text": "r5j-notesr5j-notes.txt 纯文本  · 已同步 保存读取UTF-8GBKGB18030保存UTF-8GBKGB18030BOM无 BOMUT",
+            "background": "rgb(247, 248, 250)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "library-embedded-editor",
+            "text": "r5j-notesr5j-notes.txt 纯文本  · 已同步 保存读取UTF-8GBKGB18030保存UTF-8GBKGB18030BOM无 BOMUT",
+            "background": "rgb(247, 248, 250)",
+            "pointerEvents": "auto"
+          }
+        ],
+        "editorInstances": [
+          {
+            "text": "9123›R5J_TEXT_SAVEDinstalled-right-side-workspace=true",
+            "rect": {
+              "x": 266,
+              "y": 161,
+              "width": 1009,
+              "height": 627
+            },
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": "1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed-json-read-edit-save-reopen",
+      "status": "passed",
+      "visual": {
+        "foreground": "rgb(31, 41, 55)",
+        "background": "rgb(247, 248, 250)",
+        "contrastRatio": 13.813901563004986,
+        "cumulativeOpacity": 1,
+        "fontSize": "13px",
+        "markerRect": {
+          "x": 401.65625,
+          "y": 161.4375,
+          "width": 106.65625,
+          "height": 15
+        },
+        "editorRect": {
+          "x": 266,
+          "y": 123,
+          "width": 679,
+          "height": 667
+        },
+        "markerInsideEditor": true,
+        "markerHitTestVisible": true,
+        "hitStack": [
+          {
+            "tag": "SPAN",
+            "className": "ͼq",
+            "text": "\"R5J_JSON_SAVED\"",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-line",
+            "text": "  \"marker\": \"R5J_JSON_SAVED\",",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-content cm-lineWrapping",
+            "text": "{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-scroller",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "cm-editor ͼ1 ͼ2 ͼ4 ͼo",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgb(243, 246, 250)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "className": "editor-host",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "SECTION",
+            "className": "source-pane",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "className": "json-main",
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}解析状态语法有效JSON根节点对象节点3属性2",
+            "background": "rgba(0, 0, 0, 0)",
+            "pointerEvents": "auto"
+          }
+        ],
+        "editorInstances": [
+          {
+            "text": "91234›⌄{  \"marker\": \"R5J_JSON_SAVED\",  \"installed\": true}",
+            "rect": {
+              "x": 266,
+              "y": 123,
+              "width": 679,
+              "height": 667
+            },
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": "1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed-docx-hyperlink-microsoft-word",
+      "status": "passed"
+    },
+    {
+      "id": "installed-docx-hyperlink-wps-writer",
+      "status": "passed"
+    },
+    {
+      "id": "installed-docx-hyperlink-libreoffice-writer",
+      "status": "passed"
+    },
+    {
+      "id": "installed-knowledge-network-pulse",
+      "status": "passed"
+    },
+    {
+      "id": "installed-actionable-knowledge-guidance",
+      "status": "passed"
+    },
+    {
+      "id": "installed-knowledge-observation-entry-navigation",
+      "status": "passed"
+    },
+    {
+      "id": "installed-consented-real-library-session-guidance",
+      "status": "passed"
+    },
+    {
+      "id": "installed-knowledge-topic-centered-navigation",
+      "status": "passed"
+    },
+    {
+      "id": "installed-local-comparison-receipt-review",
+      "status": "passed"
+    },
+    {
+      "id": "installed-consented-knowledge-guidance-outcome",
+      "status": "passed"
+    },
+    {
+      "id": "installed-user-triggered-default-app-candidates",
+      "status": "passed"
+    },
+    {
+      "id": "installed-representative-right-side-routes",
+      "status": "passed"
+    },
+    {
+      "id": "installed-route-performance-export",
+      "status": "passed"
+    }
+  ],
+  "evidenceFiles": [
+    "installed-txt-save-reopen.jpg",
+    "installed-json-save-reopen.jpg",
+    "installed-default-app-candidates.jpg",
+    "installed-default-app-lifecycle-evidence.json",
+    "installed-microsoft-word-docx-hyperlink.jpg",
+    "installed-wps-writer-docx-hyperlink-readonly.jpg",
+    "installed-libreoffice-writer-docx-hyperlink.jpg",
+    "installed-docx-hyperlink-evidence.json",
+    "installed-knowledge-network-pulse.jpg",
+    "installed-knowledge-guidance-graph.jpg",
+    "installed-knowledge-topic-centered.jpg",
+    "installed-knowledge-network-evidence.json",
+    "installed-graph-outcome-entry.jpg",
+    "installed-knowledge-observation-entry-evidence.json",
+    "installed-knowledge-session-start.jpg",
+    "installed-knowledge-session-ready.jpg",
+    "installed-knowledge-session-evidence.json",
+    "installed-knowledge-observation-settings.jpg",
+    "installed-knowledge-observation-baseline.json",
+    "installed-knowledge-guidance-comparison.json",
+    "installed-knowledge-guidance-outcome-evidence.json",
+    "installed-knowledge-receipt-review-entry.jpg",
+    "installed-knowledge-receipt-review-evidence.json",
+    "installed-route-mount-evidence.json",
+    "installed-route-performance-evidence.json"
+  ]
+}

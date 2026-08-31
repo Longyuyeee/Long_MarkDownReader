@@ -1,6 +1,8 @@
 # Long Markdown Reader 开发交接
 
-> **2026-08-31 v1.0.19 M7-4 原子迁移已完成、候选打包待执行：** package/lock、Cargo/lock、Tauri、37 个活动共享合同、开发与社区策略共 44 项当前运行身份已切到 1.0.19；公开 v1.0.18 Tag/Release 事实冻结，候选门全部重置为 false。下一步先从本提交完整复跑质量门，再构建、核验 MSI/NSIS 和真实 WebView2 烟测；不得直接创建 Tag/Release。详见 [`Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md`](./Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md)。
+> **2026-09-01 v1.0.19 M7-5 托管安装生命周期已通过：** 固定候选 `9655b021…` 的完整补丁门、本机真实 Tauri 6/6 + 11/11 和 GitHub Run `33409497055` 均通过；托管 MSI/NSIS 为 `NotSigned`，22/22 生命周期、18/18 安装态、11/11 路由和 7/7 管理回滚失败 0，14 张截图已抽检。公开版本仍为 v1.0.18，唯一接续点为 **M7-6 v1.0.19 最终制品清单与发布就绪审计**。详见 [`Post_v1.0.18_M7_5_v1.0.19_Hosted_Installer_Lifecycle_Closure_Audit_2026-09-01.md`](./Post_v1.0.18_M7_5_v1.0.19_Hosted_Installer_Lifecycle_Closure_Audit_2026-09-01.md)。
+
+> **2026-08-31 v1.0.19 M7-4 原子迁移与候选打包已完成：** 44 项当前运行身份已切到 1.0.19；完整门禁、托管双包和真实 WebView2 烟测通过。本机 NSIS加载器故障已被隔离为工具链问题，最终候选采用从固定提交重建并通过完整生命周期的托管双包。详见 [`Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md`](./Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.19 M7-3 质量与发布就绪已通过：** 全仓 Rust 559 通过、0 失败、5 忽略；完整 `ci:patch-release` 首次通过，6,275 前端模块、43 格式/91 扩展名、Rust 编译与生产依赖 0 漏洞保持成立。补充严格 Clippy 的 43 条均为历史债，新增 Schema 模块/命令 0 命中。唯一接续点为 **M7-4 v1.0.19 原子版本迁移与候选打包**；本阶段仍为 1.0.18，未生成安装包。详见 [`Post_v1.0.18_M7_3_v1.0.19_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.18_M7_3_v1.0.19_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md)。
 

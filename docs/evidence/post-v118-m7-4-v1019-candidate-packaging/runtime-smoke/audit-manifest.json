@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5G",
+  "appVersion": "1.0.19",
+  "capturedAt": "2026-08-31T15:39:07.121Z",
+  "environment": "Current Tauri Debug WebView2 via Chrome DevTools Protocol",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "signedArtifactRuntimeProven": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "current-release-executable-built",
+      "status": "passed"
+    },
+    {
+      "id": "current-debug-webview-bootstrap",
+      "status": "passed"
+    },
+    {
+      "id": "txt-read-edit-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "json-read-edit-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "representative-right-side-routes",
+      "status": "passed"
+    },
+    {
+      "id": "desktop-route-performance-export",
+      "status": "passed"
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "debug-runtime-smoke",
+      "fileName": "tauri-app.exe",
+      "size": 118907904,
+      "sha256": "03891ab523ceb8404ebb32e33c7ced05b19038bbf605eb449ec124364020351b",
+      "runtimeSmokeExecuted": true
+    },
+    {
+      "kind": "release-no-bundle",
+      "fileName": "tauri-app.exe",
+      "size": 113103360,
+      "sha256": "f65ee78cf49b9f17e777d986498918cf5411ea7ef2c87caea460de1159f2762d",
+      "runtimeSmokeExecuted": false
+    }
+  ],
+  "evidenceFiles": [
+    "txt-save-reopen.jpg",
+    "json-save-reopen.jpg",
+    "route-performance-evidence.json",
+    "route-mount-evidence.json"
+  ]
+}

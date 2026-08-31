@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-5",
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 33409497055,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33409497055",
+  "workflowCommit": "1d48ea5fd3ccb182959a6b63256709ef5b34c8a8",
+  "productSourceCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+  "previousPublicCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+  "appVersion": "1.0.19",
+  "previousVersion": "1.0.18",
+  "artifact": {
+    "id": 9766240379,
+    "name": "v119-candidate-lifecycle-33409497055",
+    "zipSizeBytes": 209048354,
+    "zipSha256": "f8ea4237197bda30befdf0dd5f85e997bc82773ac38baf28917d69139179ead1",
+    "expiresAt": "2026-09-14T16:24:57Z"
+  },
+  "installers": [
+    {
+      "target": "msi",
+      "fileName": "Long编辑_1.0.19_x64_zh-CN.msi",
+      "sizeBytes": 75386880,
+      "sha256": "04aca041970120b0685cb1d30ee95e5102b6fdd60b59394f3ecac45a00b863f0",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "nsis",
+      "fileName": "Long编辑_1.0.19_x64-setup.exe",
+      "sizeBytes": 66777917,
+      "sha256": "996e12218a24e1689947ec0c358720cc84cc136ffb2ac581fe31682fb8516582",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "previousInstaller": {
+    "target": "nsis",
+    "fileName": "Long编辑_1.0.18_x64-setup.exe",
+    "sizeBytes": 65792484,
+    "sha256": "f8423eb4bd3618c8072d4d5642f0f1e1b1b14341119bdd33bbb3fd3a9bd8fee6",
+    "authenticodeStatus": "NotSigned"
+  },
+  "checks": {
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "managementRollbackFailed": 0
+  },
+  "visualReview": {
+    "screenshotCount": 14,
+    "reviewed": true,
+    "result": "accepted-no-clipping-crash-fallback-or-stale-version-copy"
+  },
+  "expectedActualDifference": {
+    "expected": "hosted artifacts preserve frozen source/version/signature/lifecycle semantics; byte identity with the local M7-4 MSI observation is not required",
+    "actual": "the hosted MSI hash differs from the local M7-4 MSI hash and the local NSIS toolchain was unavailable, while frozen source, version, NotSigned status and every hosted lifecycle gate match",
+    "correction": "record the local MSI observation and local NSIS toolchain failure separately, and promote only the hosted lifecycle artifacts in M7-6"
+  },
+  "importedEvidence": {
+    "fileCount": 29,
+    "totalBytes": 1555773,
+    "canonicalTreeSha256": "2f9c7ebfbd48433a06cdbd56f633c8384760611e861c887a91da868a556da9c7",
+    "scope": "raw-downloaded-artifact-bytes"
+  },
+  "repositoryCanonicalEvidence": {
+    "algorithm": "json-stable-indent-2-lf-and-binary-byte-preserve-v1",
+    "fileCount": 29,
+    "totalBytes": 1552864,
+    "canonicalTreeSha256": "3b3acdd400ca523ed5c7bc40015e912f22a1fb6f50f5b2b3584b1b021eaa90b6"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "selectedNextStage": "M7-6-v1.0.19-final-artifact-manifest-and-release-readiness-audit"
+}

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-5",
+  "name": "v1.0.19-hosted-installer-lifecycle",
+  "status": "hosted-installer-lifecycle-passed-release-readiness-pending",
+  "predecessor": "M7-4",
+  "candidateSourceCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+  "candidateVersion": "1.0.19",
+  "previousPublicTag": "v1.0.18",
+  "previousPublicCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+  "workflow": ".github/workflows/v119-candidate-lifecycle.yml",
+  "requiredArtifacts": ["msi", "nsis"],
+  "requiredLifecycle": [
+    "1.0.18-to-1.0.19-upgrade",
+    "installed-route-and-io-smoke",
+    "uninstall-and-retention",
+    "management-backup-and-index-rollback"
+  ],
+  "localCandidateObservation": {
+    "msiSha256": "4d807cd37204c99fa6e99e5a58ab1086d509699a043e911cf76bf1eaad6318b3",
+    "nsisSha256": null,
+    "nsisToolchainFailure": "local-nsis-loader-0xc0000135; hosted-rebuild-passed",
+    "promotionalEvidence": false
+  },
+  "attemptHistory": [
+    {
+      "runId": 33409497055,
+      "workflowCommit": "1d48ea5fd3ccb182959a6b63256709ef5b34c8a8",
+      "productSourceCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+      "status": "hosted-installers-and-full-lifecycle-passed",
+      "lifecycleChecksPassed": 22,
+      "installedArtifactChecksPassed": 18,
+      "installedRoutesPassed": 11,
+      "managementRollbackChecksPassed": 7,
+      "failedChecks": 0,
+      "acceptedForM7_6": true,
+      "acceptedForRelease": false
+    }
+  ],
+  "hostedSuccessEvidence": {
+    "evidenceRoot": "docs/evidence/post-v118-m7-5-v1019-hosted-installer-lifecycle",
+    "importManifest": "docs/evidence/post-v118-m7-5-v1019-hosted-installer-lifecycle/import-manifest.json",
+    "artifactId": 9766240379,
+    "artifactZipSha256": "f8ea4237197bda30befdf0dd5f85e997bc82773ac38baf28917d69139179ead1",
+    "repositoryCanonicalTreeSha256": "3b3acdd400ca523ed5c7bc40015e912f22a1fb6f50f5b2b3584b1b021eaa90b6",
+    "screenshotsVisuallyReviewed": 14
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m7-6-v1.0.19-final-artifact-manifest-and-release-readiness-audit"
+}

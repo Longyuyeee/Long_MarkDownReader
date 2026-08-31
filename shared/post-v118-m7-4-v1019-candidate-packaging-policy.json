@@ -2,17 +2,53 @@
   "schemaVersion": 1,
   "stage": "M7-4",
   "name": "v1.0.19-atomic-version-transition-and-candidate-packaging",
-  "status": "atomic-transition-complete-package-pending",
+  "status": "accepted",
   "predecessor": "M7-3",
   "transitionBaseCommit": "a21041bbf452f7d714387566e6755aea0e325b0d",
-  "candidateSourceCommit": null,
+  "candidateSourceCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
   "candidateVersion": "1.0.19",
   "publicVersion": "1.0.18",
   "atomicVersionFileCount": 44,
-  "qualityGatePassed": false,
-  "candidatePackageBuilt": false,
-  "artifacts": [],
-  "runtimeSmoke": null,
+  "qualityGatePassed": true,
+  "candidatePackageBuilt": true,
+  "artifacts": [
+    {
+      "target": "msi",
+      "sourceFileName": "Long编辑_1.0.19_x64_zh-CN.msi",
+      "releaseFileName": "LongEdit_1.0.19_x64_zh-CN.msi",
+      "sizeBytes": 75386880,
+      "sha256": "04aca041970120b0685cb1d30ee95e5102b6fdd60b59394f3ecac45a00b863f0",
+      "productVersion": "1.0.19",
+      "authenticodeStatus": "NotSigned",
+      "buildOrigin": "github-hosted-windows"
+    },
+    {
+      "target": "nsis",
+      "sourceFileName": "Long编辑_1.0.19_x64-setup.exe",
+      "releaseFileName": "LongEdit_1.0.19_x64-setup.exe",
+      "sizeBytes": 66777917,
+      "sha256": "996e12218a24e1689947ec0c358720cc84cc136ffb2ac581fe31682fb8516582",
+      "productVersion": "1.0.19",
+      "authenticodeStatus": "NotSigned",
+      "buildOrigin": "github-hosted-windows"
+    }
+  ],
+  "localCandidateObservation": {
+    "msiSizeBytes": 75640832,
+    "msiSha256": "4d807cd37204c99fa6e99e5a58ab1086d509699a043e911cf76bf1eaad6318b3",
+    "msiAuthenticodeStatus": "NotSigned",
+    "nsisBuilt": false,
+    "nsisToolchainFailure": "local-nsis-loader-0xc0000135; hosted-rebuild-passed",
+    "promotionalEvidence": false
+  },
+  "runtimeSmoke": {
+    "status": "passed-real-tauri-debug-webview2",
+    "checksPassed": 6,
+    "routesPassed": 11,
+    "txtSaveReopenPassed": true,
+    "jsonSaveReopenPassed": true,
+    "sourceUserContentIncluded": false
+  },
   "installedLifecyclePassed": false,
   "githubReleasePublished": false,
   "releaseCandidate": false,
@@ -21,5 +57,5 @@
     "id": "M7-5",
     "name": "v1.0.19-hosted-installer-lifecycle"
   },
-  "nextAction": "push-atomic-transition-run-full-quality-gate-and-build-real-msi-nsis"
+  "nextAction": "execute-m7-5-v1.0.19-hosted-installer-lifecycle"
 }
