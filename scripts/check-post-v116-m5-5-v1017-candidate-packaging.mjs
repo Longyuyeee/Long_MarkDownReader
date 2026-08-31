@@ -10,6 +10,7 @@ const community = json('shared/v1-community-release-policy.json')
 const successor = json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const finalReadiness = json('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json')
 const published = json('shared/post-v116-m5-8-v1017-published-release-policy.json')
+const updater = json('shared/v117-managed-updater-lifecycle-policy.json')
 const pkg = json('package.json')
 const lock = json('package-lock.json')
 const tauri = json('src-tauri/tauri.conf.json')
@@ -48,9 +49,10 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
 } else if (policy.status === 'accepted') {
   const successorPassed = successor.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
   const releaseReady = finalReadiness.status === 'accepted-ready-to-publish'
+  const releaseClosed = updater.status === 'hosted-managed-update-passed'
   const expectedCommunityStatus = releasePublished ? 'v1.0.17-community-release-published' : releaseReady ? 'v1.0.17-community-release-ready-to-publish' : successorPassed ? 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'
-  const expectedStage = releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : releaseReady ? 'M5-8-v1.0.17-tag-release-and-remote-asset-verification' : successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`
-  const expectedTransition = releasePublished ? 'v1.0.17-public-release-published' : releaseReady ? 'v1.0.17-release-ready' : successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged'
+  const expectedStage = releaseClosed ? 'M6-0-v1.0.18-scope-selection-audit' : releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : releaseReady ? 'M5-8-v1.0.17-tag-release-and-remote-asset-verification' : successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`
+  const expectedTransition = releaseClosed ? 'v1.0.17-release-and-managed-updater-closed' : releasePublished ? 'v1.0.17-public-release-published' : releaseReady ? 'v1.0.17-release-ready' : successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged'
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
     || community.currentStatus !== expectedCommunityStatus

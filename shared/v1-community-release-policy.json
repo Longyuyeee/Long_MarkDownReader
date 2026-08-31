@@ -42,7 +42,7 @@
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.16-to-1.0.17-pending",
+    "managedUpdaterUpgradePath": "1.0.16-to-1.0.17-passed",
     "scope": "post-v1.0.16-bounded-odp-body-copy-and-release-readiness-fixes"
   },
   "targetRelease": {
@@ -92,9 +92,8 @@
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.16-to-v1.0.17-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-m5-9-v1.0.16-to-v1.0.17-managed-updater-observation"
+  "nextAction": "v1.0.17-release-and-managed-updater-closure-complete"
 }

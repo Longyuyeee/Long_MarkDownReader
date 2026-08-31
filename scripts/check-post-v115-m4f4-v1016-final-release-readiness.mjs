@@ -49,7 +49,9 @@ if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '8488388c57a56
 if (published) {
   const updaterComplete = m4f6?.status === 'hosted-managed-update-passed' && m4f6?.githubRun?.conclusion === 'success'
   const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-  const expectedStage = m5Published?.status === 'published-and-remote-assets-verified'
+  const expectedStage = development.binaryVersionTransition === 'v1.0.17-release-and-managed-updater-closed'
+    ? 'M6-0-v1.0.18-scope-selection-audit'
+    : m5Published?.status === 'published-and-remote-assets-verified'
     ? `${m5Published.selectedNextStage.id}-${m5Published.selectedNextStage.name}`
     : m5FinalReadiness?.status === 'accepted-ready-to-publish'
     ? `${m5FinalReadiness.selectedNextStage.id}-${m5FinalReadiness.selectedNextStage.name}`
@@ -70,7 +72,7 @@ if (published) {
     : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
   if (!laterCandidateActive && (community.currentStatus !== 'v1.0.16-community-release-published' || community.releaseCandidate !== true || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction)) fail('community published state drifted after M4F-4')
   const expectedPublicVersion = m5Published?.status === 'published-and-remote-assets-verified' ? '1.0.17' : '1.0.16'
-  if (development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready', 'v1.0.17-public-release-published'].includes(development.binaryVersionTransition) || development.publicVersion !== expectedPublicVersion || development.publicTag !== `v${expectedPublicVersion}`) fail('published development/public handoff drifted')
+  if (development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready', 'v1.0.17-public-release-published', 'v1.0.17-release-and-managed-updater-closed'].includes(development.binaryVersionTransition) || development.publicVersion !== expectedPublicVersion || development.publicTag !== `v${expectedPublicVersion}`) fail('published development/public handoff drifted')
   if (m4f5?.predecessor !== policy.stage || !m4f5.releasePublished || !m4f5.remoteAssetsVerified) fail('M4F-5 completion receipt is missing')
   if (execFileSync('git', ['rev-list', '-n', '1', 'v1.0.16'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit) fail('v1.0.16 tag does not bind the candidate source')
 } else {

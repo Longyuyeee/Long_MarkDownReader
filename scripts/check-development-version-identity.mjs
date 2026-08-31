@@ -72,6 +72,7 @@ const m5CandidatePackaging = readJson('shared/post-v116-m5-5-v1017-candidate-pac
 const m5HostedLifecycle = readJson('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const m5FinalReadiness = readJson('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json')
 const m5PublishedRelease = readJson('shared/post-v116-m5-8-v1017-published-release-policy.json')
+const m5ManagedUpdater = readJson('shared/v117-managed-updater-lifecycle-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -113,7 +114,7 @@ const checks = {
   binaryTransitionComplete: (candidateRuntime
     ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready'].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === expectedTarget
-    : policy.binaryVersionTransition === `v${policy.runtimeBaseVersion}-public-release-published`
+    : [`v${policy.runtimeBaseVersion}-public-release-published`, `v${policy.runtimeBaseVersion}-release-and-managed-updater-closed`].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === policy.publicVersion)
     && policy.developmentTargetVersion === expectedTarget,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
@@ -209,7 +210,9 @@ const checks = {
     && m5OdpWorkspace.status === 'accepted'
     && m5ReleaseReadiness.predecessor === m5OdpWorkspace.stage
     && m5ReleaseReadiness.status === 'accepted'
-    && (m5PublishedRelease.status === 'published-and-remote-assets-verified'
+    && (m5ManagedUpdater.status === 'hosted-managed-update-passed'
+      ? policy.currentStage === 'M6-0-v1.0.18-scope-selection-audit'
+      : m5PublishedRelease.status === 'published-and-remote-assets-verified'
       ? policy.currentStage === `${m5PublishedRelease.selectedNextStage.id}-${m5PublishedRelease.selectedNextStage.name}`
       : m5FinalReadiness.status === 'accepted-ready-to-publish'
       ? policy.currentStage === `${m5FinalReadiness.selectedNextStage.id}-${m5FinalReadiness.selectedNextStage.name}`

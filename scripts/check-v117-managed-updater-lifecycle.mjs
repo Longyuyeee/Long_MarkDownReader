@@ -1,9 +1,11 @@
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const json = file => JSON.parse(read(file))
 const failures = []
 const fail = message => failures.push(message)
+const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 const policy = json('shared/v117-managed-updater-lifecycle-policy.json')
 const previousReceipt = json('docs/evidence/v1.0.16-release/release-receipt.json')
 const currentReceipt = json('docs/evidence/v1.0.17-release/release-receipt.json')
@@ -28,7 +30,25 @@ for (const token of ['Stable-v1.0.17', 'LongEdit_1.0.17_x64-setup.exe', currentA
 const completed = policy.status === 'hosted-managed-update-passed'
 if (!completed) {
   if (policy.gates?.harnessImplemented !== true || Object.entries(policy.gates ?? {}).some(([key, value]) => key !== 'harnessImplemented' && value !== false) || policy.githubRun !== null || policy.nextAction !== 'push-harness-pass-current-audit-and-run-hosted-managed-updater-lifecycle') fail('pending updater state drift')
-} else if (Object.values(policy.gates ?? {}).some(value => value !== true) || !Number.isInteger(policy.githubRun?.id) || policy.githubRun?.conclusion !== 'success' || !/^[0-9a-f]{40}$/.test(policy.githubRun?.headCommit ?? '') || policy.nextAction !== 'v1.0.17-release-and-managed-updater-closure-complete') fail('completed updater state drift')
+} else {
+  if (Object.values(policy.gates ?? {}).some(value => value !== true) || !Number.isInteger(policy.githubRun?.id) || policy.githubRun?.conclusion !== 'success' || !/^[0-9a-f]{40}$/.test(policy.githubRun?.headCommit ?? '') || policy.nextAction !== 'v1.0.17-release-and-managed-updater-closure-complete') fail('completed updater state drift')
+  const attempts = policy.attemptHistory ?? []
+  if (attempts.length !== 3 || attempts[0]?.status !== 'rejected-stale-release-copy' || attempts[0]?.accepted !== false || attempts[1]?.status !== 'rejected-transition-ghosting-in-available-screenshot' || attempts[1]?.accepted !== false || attempts[2]?.runId !== policy.githubRun.id || attempts[2]?.accepted !== true) fail('real attempt history drift')
+  const root = policy.evidenceRoot
+  const manifestPath = `${root}/import-manifest.json`
+  if (!fs.existsSync(manifestPath)) fail('v1.0.17 updater evidence is missing')
+  else {
+    const manifest = json(manifestPath)
+    if (manifest.stage !== 'V1.0.17-U1I' || manifest.status !== 'accepted' || manifest.githubRunId !== policy.githubRun.id || manifest.artifactId !== policy.githubRun.artifactId || manifest.headCommit !== policy.githubRun.headCommit || manifest.previousVersion !== '1.0.16' || manifest.currentVersion !== '1.0.17' || manifest.officialInstallerSha256 !== policy.releases.current.installer.sha256 || manifest.installedExecutableSha256 !== policy.releases.current.installedPackageExecutable.sha256 || manifest.lifecycleChecks?.passed !== 12 || manifest.lifecycleChecks?.failed !== 0 || manifest.releaseMessaging !== 'official-published-copy-observed-after-correction' || manifest.sourceUserContentIncluded !== false || manifest.files?.length !== 9 || manifest.files.filter(file => file.path.endsWith('.jpg')).some(file => file.visuallyReviewed !== true)) fail('v1.0.17 updater import drift')
+    for (const file of manifest.files ?? []) {
+      const evidencePath = `${root}/${file.path}`
+      if (!fs.existsSync(evidencePath)) fail(`v1.0.17 updater evidence missing: ${file.path}`)
+      else if (fs.statSync(evidencePath).size !== file.bytes || sha256(evidencePath) !== file.sha256) fail(`v1.0.17 updater evidence hash drift: ${file.path}`)
+    }
+    const discovery = json(`${root}/managed-updater-discovery-evidence.json`)
+    if (!discovery.release?.releaseNotes?.includes('状态：已正式发布。') || discovery.confirmation?.installerStartedBeforeConfirmation !== false) fail('official published copy or confirmation boundary drift')
+  }
+}
 
 if (failures.length) { console.error(failures.map(message => `- ${message}`).join('\n')); process.exit(1) }
 console.log(`V1.0.17 managed updater lifecycle contract passed: ${completed ? 'hosted 1.0.16 -> 1.0.17 evidence accepted' : 'safe hosted execution harness is ready'}.`)

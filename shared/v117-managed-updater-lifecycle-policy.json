@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.17-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v117-managed-updater-lifecycle.yml",
   "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
@@ -56,25 +56,62 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
   "expectedVsActualAtEntry": {
     "expected": "official v1.0.16 discovers, confirms, verifies, installs, relaunches and reports official v1.0.17 while retaining user data",
     "actual": "official release assets and installed executable identity are frozen; hosted application-managed update has not run yet",
     "correction": "run the disposable hosted workflow and accept only measured lifecycle evidence"
   },
-  "attemptHistory": [],
-  "githubRun": null,
+  "attemptHistory": [
+    {
+      "runId": 33367780969,
+      "headCommit": "b4e9404fc09b7673cb881b39c60d43a87ac076ae",
+      "status": "rejected-stale-release-copy",
+      "expected": "official updater presents the published v1.0.17 release state",
+      "actual": "12/12 lifecycle checks passed but GitHub Release body still said ready to publish and not public",
+      "correction": "replace the GitHub Release body with the repository official release notes and rerun",
+      "installerExecuted": true,
+      "accepted": false
+    },
+    {
+      "runId": 33368020849,
+      "headCommit": "b4e9404fc09b7673cb881b39c60d43a87ac076ae",
+      "status": "rejected-transition-ghosting-in-available-screenshot",
+      "expected": "all three UI evidence screenshots are visually stable and reviewable",
+      "actual": "12/12 and corrected published copy passed, but the available screenshot captured Vue/WebView2 transition ghosting",
+      "correction": "wait one second after the modal becomes visible before capturing visual evidence",
+      "installerExecuted": true,
+      "accepted": false
+    },
+    {
+      "runId": 33368732235,
+      "headCommit": "6af0d846d1c15e878836941f744985e7ed16b762",
+      "status": "passed",
+      "expected": "official v1.0.16 discovers, confirms, verifies, installs, relaunches and reports official v1.0.17 with stable visual evidence while retaining user data",
+      "actual": "all 12 lifecycle checks passed; official published copy and all three stable screenshots were visually accepted",
+      "correction": "none after release-copy and screenshot-stabilization repairs; retain upload-artifact Node 24 warning as non-blocking maintenance",
+      "installerExecuted": true,
+      "accepted": true
+    }
+  ],
+  "githubRun": {
+    "id": 33368732235,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235",
+    "headCommit": "6af0d846d1c15e878836941f744985e7ed16b762",
+    "conclusion": "success",
+    "artifactId": 9749254816
+  },
   "evidenceRoot": "docs/evidence/v1.0.17-managed-updater",
-  "nextAction": "push-harness-pass-current-audit-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "v1.0.17-release-and-managed-updater-closure-complete"
 }

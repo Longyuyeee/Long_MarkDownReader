@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.17-U1-DISCOVERY",
+  "capturedAt": "2026-08-31T07:32:18.642Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.16",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.16",
+    "latestVersion": "1.0.17",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.17",
+    "releaseNotes": "# Long编辑 v1.0.17 发布说明\n\n状态：已正式发布。\n\nv1.0.17 聚焦 v1.0.16 之后已经完成真实验收的最小增量：资料库内 ODP 简单幻灯片正文的有界编辑副本，以及版本收口阶段发现的可靠性修正。\n\n## 主要变化\n\n- ODP 简单正文页支持资料库内草稿、撤销/重做和可靠新副本；复杂对象页整页阻断，源文件不覆盖，外部 ODP 仍保持只读。\n- Workbook 产品复读不再遗漏有值区之外的合并范围和空白样式单元格。\n- 知识索引新增真实文件后的陈旧检测不再依赖文件监视器事件到达时序。\n- PPTX 能力登记与已经验收的有界覆盖语义重新对齐。\n\n## 已完成验证\n\n- ODP 副本由 LibreOffice Impress 与 PowerPoint 真实样本生成并在两套桌面应用中复开。\n- Rust 全仓测试：548 通过、0 失败、5 个明确依赖外部桌面应用或审计产物的测试忽略。\n- 完整 `ci:patch-release`：前端、43 格式/91 扩展名合同、Rust locked check 和生产依赖审计通过，生产依赖漏洞为 0。\n- 候选 MSI/NSIS 已真实构建并核验 1.0.17 产品版本、大小、SHA-256 与 `NotSigned`；当前 Tauri WebView2 烟测为 6/6 检查、11/11 路由，TXT/JSON 保存复开通过。\n- GitHub 托管 Windows 已从精确候选重建 MSI/NSIS，并通过 `v1.0.16 → v1.0.17` 升级、22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚；失败 0。\n- 最终公开资产已冻结：NSIS SHA-256 `154ace58e2e20b6ebe9947c2690f03b0d9737f69fecb9ffca90c0cdf3b2ba282`，MSI SHA-256 `1453fa9a911d934fdacda88f63d3bac783100b9ef210fb02362ebe9aa0f16c3e`，并生成 `SHA256SUMS.txt`。\n\n## 发布边界\n\nv1.0.17 Tag 已绑定精确产品提交 `2b6235d420ceffd291dab72c4af17caffe464333`，GitHub Release `379561360` 的 NSIS、MSI 与 `SHA256SUMS.txt` 已从公开地址重新下载并逐项复核。发布后的唯一剩余观察是 v1.0.16→v1.0.17 官方应用内更新链；它不改变本次手动下载安装资产已正式发布的事实。\n\n社区安装包继续采用无 Authenticode 签名模式，Windows 可能显示“未知发布者”或 SmartScreen 提示。只应从官方 GitHub Release 下载，并在安装前核对 SHA-256；自动更新也必须先校验官方 NSIS 文件。\n",
+    "publishedAt": "2026-08-31T07:00:05Z",
+    "installerName": "LongEdit_1.0.17_x64-setup.exe",
+    "installerSize": 65778243,
+    "installerSha256": "154ace58e2e20b6ebe9947c2690f03b0d9737f69fecb9ffca90c0cdf3b2ba282"
+  },
+  "confirmation": {
+    "title": "发现新版本已通过官方发布源检查",
+    "text": "发现新版本已通过官方发布源检查v1.0.16v1.0.17安装包将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后安装。62.7 MBWindow  x64覆盖安装本次更新状态：已正式发布。v1.0.17 聚焦 v1.0.16 之后已经完成真实验收的最小增量：资料库内 ODP 简单幻灯片正文的有界编辑副本，以及版本收口阶段发现的可靠性修正。主要变化ODP 简单正文页支持资料库内草稿、撤销/重做和可靠新副本；复杂对象页整页阻断，源文件不覆盖，外部 ODP 仍保持只读。安装完成后 Long编辑会自动重新打开。未签名社区版仍可能触发 Window “未知发布者”提示。发布详情稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-08-31T07:32:18.661Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

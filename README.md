@@ -50,7 +50,7 @@ Long编辑 v1.0.17 支持 Windows 10/11 x64。
 1453fa9a911d934fdacda88f63d3bac783100b9ef210fb02362ebe9aa0f16c3e  LongEdit_1.0.17_x64_zh-CN.msi
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 → v1.0.16 的发布后官方更新观察已以 12/12 通过；v1.0.16 → v1.0.17 正在 M5-9 一次性 Windows 托管观察中。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.16 → v1.0.17 的发布后官方更新观察已由 [真实运行 33368732235](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235) 以 12/12 通过。
 
 ## v1.0.17
 
@@ -65,6 +65,8 @@ v1.0.17 已正式发布。`main` 当前运行时与公开下载均为 v1.0.17，
 - M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
 
 M5-8 已完成：`v1.0.17` Tag 绑定精确产品提交 `2b6235d420ceffd291dab72c4af17caffe464333`，GitHub Release `379561360` 的 NSIS、MSI 和 `SHA256SUMS.txt` 已从公开地址重新下载并匹配冻结清单。此前托管运行 [33361759629](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33361759629) 已通过 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。完整事实见 [v1.0.17 发布说明](docs/RELEASE_NOTES_v1.0.17.md) 与 [M5-8 正式发布审计](docs/Post_v1.0.16_M5_8_v1.0.17_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
+
+M5-9 已完成：最终托管运行 [33368732235](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235) 从官方 v1.0.16 应用内发现并确认 v1.0.17，校验 NSIS、同目录覆盖、自动重启、最新版状态以及覆盖/卸载后资料保留共 12/12 通过。前两轮暴露并修正 Release 候选文案残留与动画截图重影，最终三张 UI 证据人工复核清晰。完整事实见 [M5-9 官方应用内更新审计](docs/Post_v1.0.16_M5_9_v1.0.17_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。下一接续点为 **M6-0 v1.0.18 范围选择审计**。
 
 ### v1.0.16 发布链回顾
 
