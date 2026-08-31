@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.19 M7-2 产品验收已通过：** 本地 JSON/JSONC Schema 已接入只读 Tauri 命令和既有编辑器，语法/Schema 状态分离、sidecar 来源、脱敏诊断、源码定位与变化刷新均通过；外部文件、大文件模式、Schema 递归与远程引用保持关闭。13 个命令测试、9 个内核测试、前端构建以及 1280×800 / 720×680 真实桌面矩阵通过，运行时错误 0，源摘要不变。唯一接续点为 **M7-3 v1.0.19 质量债与发布就绪审计**；完整门禁通过前仍保持 1.0.18、不打包。详见 [`Post_v1.0.18_M7_2_Local_JSON_Schema_Product_and_Desktop_Audit_2026-08-31.md`](./Post_v1.0.18_M7_2_Local_JSON_Schema_Product_and_Desktop_Audit_2026-08-31.md)。
+
 > **2026-08-31 v1.0.19 M7-1 可行性已通过：** 本地 JSON/JSONC Schema 内核已冻结同 stem `.schema.json`、Draft 2020-12、1 MiB / 5 万节点 / 64 引用 / 200 诊断预算；关闭依赖网络/文件解析并再次拒绝所有非内部引用。9 个内核测试、28 个 JSON 回归、Rust 检查和真实只读临时文件通过。当前仍无命令/UI，不是产品验收；唯一接续点为 **M7-2 有界产品实现与真实桌面审计**，完成前不提升版本、不打包、不发布。详见 [`Post_v1.0.18_M7_1_Local_JSON_Schema_Feasibility_Audit_2026-08-31.md`](./Post_v1.0.18_M7_1_Local_JSON_Schema_Feasibility_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.19 M7-0 范围选择已完成：** v1.0.18 阶段剩余工作为 0；真实代码与最初需求重新对齐后，唯一选择 **M7-1 本地 JSON Schema sidecar provider/mapping 可行性审计**。只允许 JSON/JSONC、本地同目录确定性 sidecar、无网络、无远程自动解析、无源写入；先验证预算、诊断来源、实例路径到行列和失败降级，不提升 1.0.18 运行时。详见 [`Post_v1.0.18_M7_0_v1.0.19_Scope_Selection_Audit_2026-08-31.md`](./Post_v1.0.18_M7_0_v1.0.19_Scope_Selection_Audit_2026-08-31.md)。

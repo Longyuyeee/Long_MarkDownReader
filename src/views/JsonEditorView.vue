@@ -353,6 +353,63 @@
           </div>
         </div>
 
+        <section class="schema-panel" data-testid="json-schema-panel" aria-label="本地 JSON Schema 验证">
+          <div class="diagnostic-heading">
+            <strong>本地 Schema</strong>
+            <span>{{ schemaStatusLabel }}</span>
+          </div>
+          <p class="schema-source">
+            <template v-if="schemaValidation?.schemaPath">来源：<code>{{ schemaFileName }}</code></template>
+            <template v-else-if="isExternal">外部文件不自动读取相邻 Schema</template>
+            <template v-else-if="isSchemaDocument">Schema 文件不递归发现 sidecar</template>
+            <template v-else>可选同级文件：<code>{{ expectedSchemaFileName }}</code></template>
+          </p>
+          <div v-if="schemaPending" class="schema-state">
+            <n-spin size="small" />
+            <span>正在只读验证</span>
+          </div>
+          <div v-else-if="schemaValidation?.status === 'no-schema'" class="schema-state neutral">
+            <ShieldCheckIcon :size="17" />
+            <span>未配置 Schema，不产生业务约束诊断。</span>
+          </div>
+          <div v-else-if="schemaValidation?.status === 'valid'" class="schema-state valid">
+            <ShieldCheckIcon :size="17" />
+            <span>Draft 2020-12 验证通过，文档和 Schema 均未写入。</span>
+          </div>
+          <div v-else-if="schemaValidation?.status === 'schema-error'" class="schema-state error" role="alert">
+            <ShieldAlertIcon :size="17" />
+            <span>{{ schemaValidation.error || '本地 Schema 无法安全使用' }}</span>
+          </div>
+          <div v-else-if="schemaValidation?.status === 'syntax-blocked'" class="schema-state neutral">
+            <ShieldAlertIcon :size="17" />
+            <span>先修复 JSON 语法，再执行 Schema 验证。</span>
+          </div>
+          <div v-else-if="schemaValidation?.status === 'external-unavailable'" class="schema-state neutral">
+            <ShieldCheckIcon :size="17" />
+            <span>仅资料库内文件启用确定性本地 Schema，避免读取未授权的外部相邻文件。</span>
+          </div>
+          <div v-else-if="schemaValidation?.status === 'large-file-unavailable'" class="schema-state neutral">
+            <ShieldCheckIcon :size="17" />
+            <span>大文件范围模式不加载全文，因此不执行 Schema 验证。</span>
+          </div>
+          <button
+            v-for="(diagnostic, index) in schemaValidation?.diagnostics || []"
+            :key="`${diagnostic.code}-${diagnostic.start}-${index}`"
+            class="diagnostic-item error schema-diagnostic"
+            type="button"
+            @click="revealSchemaDiagnostic(diagnostic)"
+          >
+            <AlertCircleIcon :size="16" />
+            <span>
+              <strong>{{ schemaDiagnosticTitle(diagnostic.keyword) }}</strong>
+              <small>第 {{ diagnostic.line }} 行，第 {{ diagnostic.column }} 列 · 本地 sidecar</small>
+              <em>{{ diagnostic.message }}</em>
+              <code>{{ diagnostic.sourcePath }}</code>
+            </span>
+          </button>
+          <small v-if="schemaValidation?.diagnosticsTruncated" class="schema-truncated">诊断已达到 200 条上限，请先修复前面的错误。</small>
+        </section>
+
         <section class="path-browser" aria-label="字段路径与快速定位">
           <div class="diagnostic-heading">
             <strong>字段路径与快速定位</strong>
@@ -694,6 +751,31 @@ interface JsonSourceAnalysis {
   diagnostics: JsonDiagnostic[]
 }
 
+interface JsonSchemaDiagnostic {
+  severity: 'error'
+  code: string
+  message: string
+  keyword: string
+  instancePointer: string
+  sourcePath: string
+  schemaPath: string
+  start: number
+  end: number
+  line: number
+  column: number
+  provenance: 'local-sibling-sidecar'
+}
+
+interface JsonSchemaValidation {
+  status: 'no-schema' | 'valid' | 'invalid' | 'schema-error' | 'syntax-blocked' | 'external-unavailable' | 'large-file-unavailable'
+  schemaApplied: boolean
+  schemaPath?: string
+  draft?: string
+  error?: string
+  diagnostics: JsonSchemaDiagnostic[]
+  diagnosticsTruncated: boolean
+}
+
 interface JsonPathEntry {
   path: string
   label: string
@@ -730,6 +812,8 @@ const loadingRange = ref(false)
 const loadError = ref('')
 const analysis = ref<JsonSourceAnalysis | null>(null)
 const analysisPending = ref(false)
+const schemaValidation = ref<JsonSchemaValidation | null>(null)
+const schemaPending = ref(false)
 const transformPending = ref(false)
 const pathQuery = ref('')
 const deferredPathQuery = ref('')
@@ -860,9 +944,11 @@ const arrayRemoveDisabled = computed(() => (
 let editor: EditorView | null = null
 let loadGeneration = 0
 let analysisGeneration = 0
+let schemaGeneration = 0
 let rangeSearchGeneration = 0
 let analysisTimer: ReturnType<typeof setTimeout> | null = null
 let pathQueryTimer: ReturnType<typeof setTimeout> | null = null
+let schemaPollTimer: ReturnType<typeof setInterval> | null = null
 let applyingDocument = false
 let unlistenSave: (() => void) | null = null
 let unlistenRefresh: (() => void) | null = null
@@ -879,6 +965,19 @@ const rootKindLabel = computed(() => ({
   boolean: '布尔值',
   null: 'Null',
 }[analysis.value?.rootKind || ''] || '未解析'))
+
+const expectedSchemaFileName = computed(() => fileName.value.replace(/\.(jsonc?|JSONC?)$/, '.schema.json'))
+const isSchemaDocument = computed(() => /\.schema\.json$/i.test(fileName.value))
+const schemaFileName = computed(() => schemaValidation.value?.schemaPath?.split(/[\\/]/).pop() || expectedSchemaFileName.value)
+const schemaStatusLabel = computed(() => ({
+  'no-schema': '未配置',
+  valid: '通过',
+  invalid: `${schemaValidation.value?.diagnostics.length || 0} 个错误`,
+  'schema-error': 'Schema 不可用',
+  'syntax-blocked': '等待语法修复',
+  'external-unavailable': '外部文件关闭',
+  'large-file-unavailable': '大文件模式关闭',
+} as Record<string, string>)[schemaValidation.value?.status || ''] || '等待验证')
 
 const structureStatusText = computed(() => {
   if (!analysis.value?.valid) return '语法有效后才能判断结构编辑兼容性'
@@ -996,6 +1095,47 @@ const resetTreeForAnalysis = (result: JsonSourceAnalysis) => {
   if (treeViewport.value) treeViewport.value.scrollTop = 0
 }
 
+const validateSchemaContent = async (content: string, syntaxValid = analysis.value?.valid === true) => {
+  const generation = ++schemaGeneration
+  if (isExternal.value) {
+    schemaValidation.value = { status: 'external-unavailable', schemaApplied: false, diagnostics: [], diagnosticsTruncated: false }
+    schemaPending.value = false
+    return
+  }
+  if (rangeMode.value) {
+    schemaValidation.value = { status: 'large-file-unavailable', schemaApplied: false, diagnostics: [], diagnosticsTruncated: false }
+    schemaPending.value = false
+    return
+  }
+  if (!syntaxValid) {
+    schemaValidation.value = { status: 'syntax-blocked', schemaApplied: false, diagnostics: [], diagnosticsTruncated: false }
+    schemaPending.value = false
+    return
+  }
+  schemaPending.value = true
+  try {
+    const result = await invoke<JsonSchemaValidation>('validate_local_json_schema', {
+      libraryRoot: store.libraryPath,
+      path: jsonPath.value,
+      content,
+      jsonc: format.value?.id === 'jsonc',
+    })
+    if (generation === schemaGeneration && sourceContent.value === content) schemaValidation.value = result
+  } catch (cause) {
+    if (generation === schemaGeneration) {
+      schemaValidation.value = {
+        status: 'schema-error',
+        schemaApplied: false,
+        error: errorMessage(cause),
+        diagnostics: [],
+        diagnosticsTruncated: false,
+      }
+    }
+  } finally {
+    if (generation === schemaGeneration) schemaPending.value = false
+  }
+}
+
 const analyzeContent = async (content: string) => {
   const generation = ++analysisGeneration
   analysisPending.value = true
@@ -1009,6 +1149,7 @@ const analyzeContent = async (content: string) => {
       analysis.value = result
       resetTreeForAnalysis(result)
       if (!result.valid) viewMode.value = 'source'
+      await validateSchemaContent(content, result.valid)
     }
     return result
   } finally {
@@ -1125,6 +1266,9 @@ const applyRangeSnapshot = (loaded: TextDocumentRangeSnapshot, history: 'reset' 
   rangeEof.value = loaded.eof
   dirty.value = false
   analysis.value = null
+  schemaGeneration += 1
+  schemaValidation.value = { status: 'large-file-unavailable', schemaApplied: false, diagnostics: [], diagnosticsTruncated: false }
+  schemaPending.value = false
   analysisPending.value = false
   viewMode.value = 'source'
   replaceDocument(loaded.content, true)
@@ -1184,7 +1328,10 @@ const load = async (discardDraft = false) => {
   propertyRemovePendingStart.value = null
   arrayRemovePendingStart.value = null
   analysisGeneration += 1
+  schemaGeneration += 1
   analysisPending.value = false
+  schemaPending.value = false
+  schemaValidation.value = null
   clearAnalysisTimer()
   loading.value = true
   loadError.value = ''
@@ -1338,6 +1485,7 @@ const revealSourceRange = (range: Pick<JsonDiagnostic, 'start' | 'end'>) => {
 }
 
 const revealDiagnostic = (diagnostic: JsonDiagnostic) => revealSourceRange(diagnostic)
+const revealSchemaDiagnostic = (diagnostic: JsonSchemaDiagnostic) => revealSourceRange(diagnostic)
 const openSourceSearch = () => {
   if (editor) openSearchPanel(editor)
 }
@@ -1729,6 +1877,16 @@ const diagnosticTitle = (code: string) => ({
   'empty-document': '空文档',
 }[code] || code)
 
+const schemaDiagnosticTitle = (keyword: string) => ({
+  type: '类型不符合 Schema',
+  required: '缺少必填属性',
+  enum: '值不在允许范围',
+  pattern: '文本格式不符合约束',
+  minimum: '数值低于下限',
+  maximum: '数值超过上限',
+  additionalProperties: '存在未允许的属性',
+}[keyword] || `Schema 约束：${keyword}`)
+
 const formatBytes = (value: number) => {
   if (value < 1024) return `${value} B`
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KiB`
@@ -1831,10 +1989,16 @@ onMounted(async () => {
   window.addEventListener('resize', measureTreeViewport)
   unlistenSave = await listen('command-save', () => { void save() })
   unlistenRefresh = await listen('command-refresh', () => { void reloadFromDisk() })
+  schemaPollTimer = setInterval(() => {
+    if (!loading.value && !schemaPending.value && !rangeMode.value && !isExternal.value && analysis.value?.valid && sourceContent.value) {
+      void validateSchemaContent(sourceContent.value, true)
+    }
+  }, 2500)
 })
 onBeforeUnmount(() => {
   clearAnalysisTimer()
   if (pathQueryTimer) clearTimeout(pathQueryTimer)
+  if (schemaPollTimer) clearInterval(schemaPollTimer)
   syncCurrentTab(dirty.value)
   editor?.destroy()
   editor = null
@@ -2359,6 +2523,45 @@ onBeforeUnmount(() => {
 .structure-status span {
   line-height: 1.5;
 }
+
+.schema-panel {
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--theme-primary) 4%, var(--theme-bg));
+}
+
+.schema-source {
+  margin: 7px 0 10px;
+  overflow-wrap: anywhere;
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.schema-source code,
+.schema-truncated {
+  color: var(--code-editor-property);
+}
+
+.schema-state {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--status-info) 7%, transparent);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.schema-state.valid { color: var(--theme-success, #27804f); }
+.schema-state.error { color: var(--theme-error, #c33f3f); }
+.schema-state.neutral { color: var(--theme-text-secondary); }
+.schema-diagnostic { margin-top: 7px; }
+.schema-truncated { display: block; margin-top: 8px; font-size: 11px; }
 
 .path-browser {
   margin-bottom: 18px;

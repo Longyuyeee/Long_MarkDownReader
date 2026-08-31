@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-2",
+  "name": "bounded-local-json-schema-product-implementation-and-real-desktop-audit",
+  "status": "product-accepted",
+  "predecessor": "M7-1",
+  "runtimeBaseVersion": "1.0.18",
+  "publicVersion": "1.0.18",
+  "developmentTargetVersion": "1.0.19",
+  "productContract": {
+    "formats": ["json", "jsonc"],
+    "sidecarPattern": "<document-stem>.schema.json",
+    "schemaDocumentsRecurse": false,
+    "libraryWorkspaceOnly": true,
+    "externalDocumentsReadAdjacentSchema": false,
+    "largeFileRangeModeSchemaValidation": false,
+    "syntaxAndSchemaDiagnosticsSeparated": true,
+    "documentValuesMasked": true,
+    "explicitSaveUnchanged": true,
+    "sourceWrites": 0
+  },
+  "acceptance": {
+    "tauriCommandRegistered": true,
+    "workspaceAuthorizationReused": true,
+    "jsonCommandTestsPassed": 13,
+    "schemaKernelTestsPassed": 9,
+    "frontendBuildModules": 6275,
+    "realTauriDesktopAuditPassed": true,
+    "wideViewport": "1280x800",
+    "narrowViewport": "720x680",
+    "optionalSidecarZeroDiagnostics": true,
+    "sidecarHotRefresh": true,
+    "diagnosticSourceReveal": true,
+    "damagedSchemaFailsClosed": true,
+    "sourceAndSchemaBytesUnchangedAfterRestore": true,
+    "runtimeErrors": 0
+  },
+  "selectedNextStage": {
+    "id": "M7-3",
+    "name": "v1019-quality-debt-and-release-readiness-audit"
+  },
+  "nextStageRequirements": {
+    "fullRustSuite": true,
+    "completePatchReleaseGate": true,
+    "productionDependencyAudit": true,
+    "binaryVersionChange": false,
+    "candidatePackaging": false
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m7-3-v1019-quality-debt-and-release-readiness-audit"
+}

@@ -70,7 +70,7 @@ use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
     remove_json_array_item_source, remove_json_object_property_source,
     rename_json_object_key_source, replace_json_scalar_source, transform_json_source,
-    write_external_json_source_document, write_json_source_document,
+    validate_local_json_schema, write_external_json_source_document, write_json_source_document,
 };
 use commands::legacy_binary_office::{
     convert_legacy_binary_office_to_modern_copy, preflight_legacy_binary_office,
@@ -337,6 +337,7 @@ pub fn run() {
             preflight_legacy_doc,
             convert_legacy_doc_to_docx_copy,
             analyze_json_source,
+            validate_local_json_schema,
             append_json_array_item_source,
             append_json_object_property_source,
             remove_json_array_item_source,

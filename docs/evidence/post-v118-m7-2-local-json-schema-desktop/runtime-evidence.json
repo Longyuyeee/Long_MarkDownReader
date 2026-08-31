@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-2-bounded-local-json-schema-product-implementation-and-real-desktop-audit",
+  "status": "passed",
+  "expected": {
+    "optionalSidecarZeroDiagnostics": true,
+    "sidecarHotRefresh": true,
+    "diagnosticSourceReveal": true,
+    "maskedDocumentValues": true,
+    "damagedSchemaFailsClosed": true,
+    "sourceAndSchemaBytesUnchangedAfterRestore": true,
+    "responsiveViewports": [
+      1280,
+      720
+    ],
+    "runtimeErrors": 0
+  },
+  "actual": {
+    "noSchema": {
+      "label": "未配置",
+      "source": "可选同级文件：service-settings.schema.json",
+      "diagnostics": [],
+      "message": "未配置 Schema，不产生业务约束诊断。",
+      "overflow": 0
+    },
+    "invalid": {
+      "label": "2 个错误",
+      "source": "来源：service-settings.schema.json",
+      "diagnostics": [
+        "类型不符合 Schema第 4 行，第 14 列 · 本地 sidecar[文档值已隐藏] is not of type \"boolean\"$.enabled",
+        "类型不符合 Schema第 3 行，第 11 列 · 本地 sidecar[文档值已隐藏] is not of type \"integer\"$.port"
+      ],
+      "overflow": 0
+    },
+    "revealStatus": "源码编辑UTF-86 行行 3，列 24允许注释与尾随逗号",
+    "validNarrow": {
+      "label": "通过",
+      "source": "来源：service-settings.schema.json",
+      "diagnostics": [],
+      "message": "Draft 2020-12 验证通过，文档和 Schema 均未写入。",
+      "overflow": 0
+    },
+    "damaged": {
+      "label": "Schema 不可用",
+      "source": "来源：service-settings.schema.json",
+      "diagnostics": [],
+      "message": "本地 JSON Schema 不是有效的严格 JSON：EOF while parsing an object at line 1 column 1",
+      "overflow": 0
+    },
+    "documentUnchanged": true,
+    "restoredSchemaUnchanged": true,
+    "runtimeErrorCount": 0,
+    "viewportMatrix": [
+      "1280x800",
+      "720x680"
+    ]
+  },
+  "screenshots": [
+    "m7-2-schema-invalid-wide.jpg",
+    "m7-2-schema-valid-narrow.jpg"
+  ],
+  "sourceUserContentIncluded": false,
+  "passed": true
+}

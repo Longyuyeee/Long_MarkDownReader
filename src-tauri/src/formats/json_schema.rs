@@ -36,6 +36,7 @@ pub struct JsonSchemaValidation {
     pub schema_applied: bool,
     pub schema_path: Option<String>,
     pub draft: Option<String>,
+    pub error: Option<String>,
     pub diagnostics: Vec<JsonSchemaDiagnostic>,
     pub diagnostics_truncated: bool,
 }
@@ -137,6 +138,7 @@ pub fn validate_json_schema_source(
         schema_applied: true,
         schema_path: Some(schema_path.into()),
         draft: Some(DRAFT_2020_12.into()),
+        error: None,
         diagnostics,
         diagnostics_truncated,
     })
@@ -148,6 +150,7 @@ fn no_schema() -> JsonSchemaValidation {
         schema_applied: false,
         schema_path: None,
         draft: None,
+        error: None,
         diagnostics: Vec::new(),
         diagnostics_truncated: false,
     }

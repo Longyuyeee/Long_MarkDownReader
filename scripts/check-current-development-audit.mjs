@@ -32,6 +32,7 @@ import './check-post-v117-m6-6-v1018-final-release-readiness.mjs'
 import './check-post-v117-m6-7-v1018-published-release.mjs'
 import './check-post-v118-m7-0-v1019-scope-selection.mjs'
 import './check-post-v118-m7-1-local-json-schema-feasibility.mjs'
+import './check-post-v118-m7-2-local-json-schema-product.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
@@ -83,7 +84,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.18' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M7-2 有界本地 JSON Schema 产品实现与真实桌面审计**', policy.currentStatus === 'v1.0.18-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.17-to-1.0.18-passed'],
+  ['当前阶段：**M7-3 v1.0.19 质量债与发布就绪审计**', policy.currentStatus === 'v1.0.18-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.17-to-1.0.18-passed'],
 ]
 
 for (const [token, condition] of required) {

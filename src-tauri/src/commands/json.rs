@@ -11,8 +11,12 @@ use crate::formats::json::{
     replace_json_scalar_source as replace_scalar_source, transform_json_source as transform_source,
     JsonSourceAnalysis,
 };
+use crate::formats::json_schema::{
+    local_schema_sidecar_path, validate_with_local_schema, JsonSchemaValidation,
+};
 use crate::formats::text::{TextDocumentError, TextDocumentSnapshot};
 use crate::services::external_file_access::ExternalFileAccess;
+use crate::services::workspace_guard::WorkspaceGuard;
 use tauri::State;
 
 fn validate_save(
@@ -50,6 +54,33 @@ fn validate_save(
 #[tauri::command]
 pub fn analyze_json_source(content: String, jsonc: bool) -> JsonSourceAnalysis {
     analyze_source(&content, jsonc)
+}
+
+#[tauri::command]
+pub fn validate_local_json_schema(
+    library_root: String,
+    path: String,
+    content: String,
+    jsonc: bool,
+) -> Result<JsonSchemaValidation, TextDocumentError> {
+    let expected_extension = if jsonc { "jsonc" } else { "json" };
+    let document_path = WorkspaceGuard::new(library_root)
+        .map_err(|error| TextDocumentError::simple("workspace-root-invalid", error))?
+        .resolve_existing_file(path, &[expected_extension])
+        .map_err(|error| TextDocumentError::simple("schema-document-path-rejected", error))?;
+    match validate_with_local_schema(&document_path, &content, jsonc) {
+        Ok(result) => Ok(result),
+        Err(message) => Ok(JsonSchemaValidation {
+            status: "schema-error".into(),
+            schema_applied: true,
+            schema_path: local_schema_sidecar_path(&document_path)
+                .map(|path| path.to_string_lossy().into_owned()),
+            draft: None,
+            error: Some(message),
+            diagnostics: Vec::new(),
+            diagnostics_truncated: false,
+        }),
+    }
 }
 
 #[tauri::command]
@@ -390,5 +421,63 @@ mod tests {
         let error = remove_json_array_item_source(content, false, target.start + 1, target.end)
             .unwrap_err();
         assert_eq!(error.code, "json-array-remove-rejected");
+    }
+
+    #[test]
+    fn local_schema_command_uses_workspace_guard_and_returns_business_diagnostics() {
+        let workspace = TestWorkspace::new("schema-command");
+        let path = workspace.root.join("settings.jsonc");
+        fs::write(&path, "{\n  // draft\n  \"port\": \"wrong\",\n}\n").unwrap();
+        fs::write(
+            workspace.root.join("settings.schema.json"),
+            r#"{"type":"object","properties":{"port":{"type":"integer"}}}"#,
+        )
+        .unwrap();
+
+        let result = validate_local_json_schema(
+            workspace.root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            fs::read_to_string(&path).unwrap(),
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(result.status, "invalid");
+        assert_eq!(result.diagnostics.len(), 1);
+        assert_eq!(result.diagnostics[0].source_path, "$.port");
+        assert_eq!(result.diagnostics[0].line, 3);
+    }
+
+    #[test]
+    fn local_schema_command_rejects_outside_documents_and_reports_unsafe_sidecars() {
+        let workspace = TestWorkspace::new("schema-guard");
+        let outside = TestWorkspace::new("schema-outside");
+        let outside_path = outside.root.join("outside.json");
+        fs::write(&outside_path, "{}").unwrap();
+        let error = validate_local_json_schema(
+            workspace.root.to_string_lossy().into_owned(),
+            outside_path.to_string_lossy().into_owned(),
+            "{}".into(),
+            false,
+        )
+        .unwrap_err();
+        assert_eq!(error.code, "schema-document-path-rejected");
+
+        let path = workspace.root.join("unsafe.json");
+        fs::write(&path, "{}").unwrap();
+        fs::write(
+            workspace.root.join("unsafe.schema.json"),
+            r#"{"$ref":"https://example.invalid/schema.json"}"#,
+        )
+        .unwrap();
+        let result = validate_local_json_schema(
+            workspace.root.to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            "{}".into(),
+            false,
+        )
+        .unwrap();
+        assert_eq!(result.status, "schema-error");
+        assert!(result.error.unwrap().contains("仅允许 # 开头"));
     }
 }
