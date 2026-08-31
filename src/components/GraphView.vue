@@ -15,38 +15,30 @@
           <CircleHelp :size="16" />
           <span>如何建立链接</span>
         </button>
-        <button class="graph-export-btn" :class="{ active: pathOpen }" data-testid="graph-path-entry" @click="togglePathPanel">最短路径</button>
-        <button class="graph-export-btn" :class="{ active: comparisonOpen }" data-testid="graph-comparison-entry" @click="toggleComparisonPanel">节点比较</button>
-        <button class="health-entry" :class="{ active: healthOpen }" @click="healthOpen = !healthOpen">
-          <span class="health-dot"></span>知识治理
-        </button>
-        <button class="graph-export-btn" data-testid="graph-export-svg" :disabled="isExporting" @click="exportGraph('svg')">导出 SVG</button>
-        <button class="graph-export-btn" data-testid="graph-export-png" :disabled="isExporting" @click="exportGraph('png')">导出 PNG</button>
-        <button class="control-btn" data-testid="graph-reset-layout" @click="resetLayout" title="清除已保存位置并重新布局">
-          <RotateCcw :size="16" />
-        </button>
-        <button class="control-btn" :disabled="!layoutUndoStack.length" @click="undoLayout" title="撤销画布调整">
-          <Undo2 :size="16" />
-        </button>
-        <button class="control-btn" :disabled="!layoutRedoStack.length" @click="redoLayout" title="重做画布调整">
-          <Redo2 :size="16" />
-        </button>
-        <button class="control-btn" @click="changeGraphZoom(1.2)" title="放大">
-          <ZoomIn :size="16" />
-        </button>
-        <button class="control-btn" @click="changeGraphZoom(0.8)" title="缩小">
-          <ZoomOut :size="16" />
-        </button>
-        <button class="control-btn" data-testid="graph-fit-selection" :disabled="!selectedNodeIds.length" @click="fitSelection" title="适合选择">
-          <ScanSearch :size="16" />
-        </button>
-        <button class="control-btn" data-testid="graph-fit-all" @click="fitGraph" title="适合窗口">
-          <Maximize2 :size="16" />
-        </button>
-        <button class="control-btn" data-testid="graph-fullscreen" :disabled="!graphFullscreenSupported" :aria-pressed="graphFullscreenActive" :aria-label="graphFullscreenActive ? '退出图谱全屏' : '图谱全屏'" @click="toggleGraphFullscreen" :title="graphFullscreenActive ? '退出图谱全屏' : '图谱全屏'">
-          <Minimize2 v-if="graphFullscreenActive" :size="16" />
-          <Expand v-else :size="16" />
-        </button>
+        <button class="graph-tools-entry" type="button" data-testid="graph-tools-entry" title="探索、导出、布局与视图工具" :aria-expanded="graphToolsOpen" @click="graphToolsOpen = !graphToolsOpen"><SlidersHorizontal :size="16" /><span>图谱工具</span></button>
+          <div v-if="graphToolsOpen" class="graph-tools-menu" data-testid="graph-tools-menu" @click="graphToolsOpen = false">
+            <div class="graph-tools-explore">
+              <button :class="{ active: pathOpen }" data-testid="graph-path-entry" @click="togglePathPanel">最短路径</button>
+              <button :class="{ active: comparisonOpen }" data-testid="graph-comparison-entry" @click="toggleComparisonPanel">节点比较</button>
+              <button class="graph-tools-health" :class="{ active: healthOpen }" @click="healthOpen = !healthOpen"><span class="health-dot"></span>知识治理</button>
+            </div>
+            <div class="graph-tools-export">
+              <button class="graph-export-btn" data-testid="graph-export-svg" :disabled="isExporting" @click="exportGraph('svg')"><Download :size="14" />SVG</button>
+              <button class="graph-export-btn" data-testid="graph-export-png" :disabled="isExporting" @click="exportGraph('png')"><Download :size="14" />PNG</button>
+            </div>
+            <div class="graph-tools-grid">
+              <button class="control-btn" data-testid="graph-reset-layout" @click="resetLayout" title="重新布局"><RotateCcw :size="16" /><span>重排</span></button>
+              <button class="control-btn" :disabled="!layoutUndoStack.length" @click="undoLayout" title="撤销画布调整"><Undo2 :size="16" /><span>撤销</span></button>
+              <button class="control-btn" :disabled="!layoutRedoStack.length" @click="redoLayout" title="重做画布调整"><Redo2 :size="16" /><span>重做</span></button>
+              <button class="control-btn" @click="changeGraphZoom(1.2)" title="放大"><ZoomIn :size="16" /><span>放大</span></button>
+              <button class="control-btn" @click="changeGraphZoom(0.8)" title="缩小"><ZoomOut :size="16" /><span>缩小</span></button>
+              <button class="control-btn" data-testid="graph-fit-selection" :disabled="!selectedNodeIds.length" @click="fitSelection" title="适合选择"><ScanSearch :size="16" /><span>看选择</span></button>
+              <button class="control-btn" data-testid="graph-fit-all" @click="fitGraph" title="适合窗口"><Maximize2 :size="16" /><span>看全图</span></button>
+              <button class="control-btn" data-testid="graph-fullscreen" :disabled="!graphFullscreenSupported" :aria-pressed="graphFullscreenActive" :aria-label="graphFullscreenActive ? '退出图谱全屏' : '图谱全屏'" @click="toggleGraphFullscreen" :title="graphFullscreenActive ? '退出图谱全屏' : '图谱全屏'">
+                <Minimize2 v-if="graphFullscreenActive" :size="16" /><Expand v-else :size="16" /><span>{{ graphFullscreenActive ? '退出全屏' : '全屏' }}</span>
+              </button>
+            </div>
+          </div>
       </div>
     </WorkspaceManagementHeader>
     <div class="graph-options" data-horizontal-wheel="always">
@@ -477,7 +469,7 @@ import { computed, h, nextTick, reactive, ref, onMounted, onUnmounted, watch } f
 import { invoke } from '@tauri-apps/api/core'
 import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
-import { Circle, CircleHelp, Expand, Link2, Maximize2, Minimize2, Network, Redo2, RotateCcw, ScanSearch, Search, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Circle, CircleHelp, Download, Expand, Link2, Maximize2, Minimize2, Network, Redo2, RotateCcw, ScanSearch, Search, SlidersHorizontal, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { managedFileLocation, openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { useAppStore } from '../store/app'
 import { getActiveThemeTone, isActiveThemeDark } from '../config/themePresets'
@@ -583,6 +575,7 @@ type GraphCanvasTheme = 'professional' | 'colorful' | 'focus'
 type LayoutSnapshot = { mode: GraphLayoutMode; positions: Record<string, { x: number; y: number }> }
 const graphLayoutMode = ref<GraphLayoutMode>((localStorage.getItem('longedit.graph.layout-mode') as GraphLayoutMode) || 'force')
 const graphCanvasTheme = ref<GraphCanvasTheme>((localStorage.getItem('longedit.graph.canvas-theme') as GraphCanvasTheme) || 'colorful')
+const graphToolsOpen = ref(false)
 const zoomLevel = ref(1)
 const layoutUndoStack = ref<LayoutSnapshot[]>([])
 const layoutRedoStack = ref<LayoutSnapshot[]>([])
@@ -722,9 +715,18 @@ const statusPrioritySuppressedIds = computed(() => new Set([
   ...(activeShortestPath.value?.nodeIds || []),
   ...(hoveredNode.value ? [hoveredNode.value.id] : []),
 ]))
-const renderedNodeStatuses = computed(() => statusRingsVisible.value
-  ? graphNodeStatusSummary.value.nodes.filter(status => !statusPrioritySuppressedIds.value.has(status.nodeId) && (status.recency !== 'none' || status.showRelationStrength))
-  : [])
+const renderedNodeStatuses = computed(() => {
+  if (!statusRingsVisible.value) return []
+  const limit = visibleNodes.value.length > 120 ? 24 : visibleNodes.value.length > 60 ? 36 : Number.POSITIVE_INFINITY
+  return graphNodeStatusSummary.value.nodes
+    .filter(status => !statusPrioritySuppressedIds.value.has(status.nodeId) && (status.recency !== 'none' || status.showRelationStrength))
+    .sort((left, right) => Number(right.showRelationStrength) - Number(left.showRelationStrength)
+      || right.degree - left.degree
+      || (left.ageDays ?? Number.POSITIVE_INFINITY) - (right.ageDays ?? Number.POSITIVE_INFINITY)
+      || left.nodeId.localeCompare(right.nodeId))
+    .slice(0, limit)
+})
+const renderedNodeStatusIds = computed(() => new Set(renderedNodeStatuses.value.map(status => status.nodeId)))
 const renderedNodeStatusRingCount = computed(() => renderedNodeStatuses.value.length)
 const renderedRecencyRingCount = computed(() => renderedNodeStatuses.value.filter(status => status.recency !== 'none').length)
 const renderedRelationStrengthRingCount = computed(() => renderedNodeStatuses.value.filter(status => status.showRelationStrength).length)
@@ -1148,8 +1150,7 @@ const loadGraph = async () => {
       ? graphData.value.nodes.find(node => node.id === route.query.root)
       : undefined
     const initialNode = requestedRoot || selectedNode.value || strongest
-    const compactViewport = window.matchMedia('(max-width: 900px)').matches
-    if (initialNode && (requestedRoot || selectedNode.value || !compactViewport)) {
+    if (initialNode && (requestedRoot || selectedNode.value || route.query.mode === 'mindmap')) {
       selectOnly(initialNode)
     }
 
@@ -1989,7 +1990,7 @@ const findNodeAt = (mx: number, my: number): GraphNode | null => {
       if (Math.abs(dx) <= width / 2 && Math.abs(dy) <= 24) return n
       continue
     }
-    const r = n.size * 0.6
+    const r = n.size * 0.6 / Math.sqrt(Math.max(1, zoom))
     if (dx * dx + dy * dy < r * r + detectionRadius) return n
   }
   return null
@@ -2199,6 +2200,17 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   // 构建节点 Map 加速查找
   const nodeMap = new Map<string, GraphNode>()
   visibleNodes.value.forEach(n => nodeMap.set(n.id, n))
+  const viewportPadding = 96 / zoom
+  const worldLeft = -viewX / zoom - viewportPadding
+  const worldTop = -viewY / zoom - viewportPadding
+  const worldRight = (width - viewX) / zoom + viewportPadding
+  const worldBottom = (height - viewY) / zoom + viewportPadding
+  const renderNodes = visibleNodes.value.filter(node => {
+    const radius = Math.max(18 / zoom, node.size * 0.6 / Math.sqrt(Math.max(1, zoom)))
+    const x = node.x || 0, y = node.y || 0
+    return x + radius >= worldLeft && x - radius <= worldRight && y + radius >= worldTop && y - radius <= worldBottom
+  })
+  const selectedIds = new Set(selectedNodeIds.value)
 
   // Community contours sit behind relationships and nodes. They are derived
   // from member coordinates only and never feed forces or persisted layout.
@@ -2280,6 +2292,9 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
       const s = nodeMap.get(e.source)
       const t = nodeMap.get(e.target)
       if (!s || !t) continue
+      const sx = s.x || 0, sy = s.y || 0, tx = t.x || 0, ty = t.y || 0
+      if ((sx < worldLeft && tx < worldLeft) || (sx > worldRight && tx > worldRight)
+        || (sy < worldTop && ty < worldTop) || (sy > worldBottom && ty > worldBottom)) continue
 
       const isHighlight = hovered && (s === hovered || t === hovered)
       const isPathEdge = Boolean(activeShortestPath.value?.edges.includes(e))
@@ -2333,7 +2348,6 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
       }
 
       if (e.directed) {
-        const sx = s.x || 0, sy = s.y || 0, tx = t.x || 0, ty = t.y || 0
         const arrowPoint = routeGeometry ? graphQuadraticPoint(routeGeometry, 0.72) : { x: sx + (tx - sx) * 0.72, y: sy + (ty - sy) * 0.72 }
         const tangent = routeGeometry ? graphQuadraticTangent(routeGeometry, 0.72) : { x: tx - sx, y: ty - sy }
         const angle = Math.atan2(tangent.y, tangent.x)
@@ -2382,11 +2396,15 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   }
 
   // 节点 - 光晕效果
-  for (const n of showCommunityOverview.value ? [] : visibleNodes.value) {
-    const r = n.size * 0.6
+  const labelBoxes: Array<{ left: number; right: number; top: number; bottom: number }> = []
+  for (const n of showCommunityOverview.value ? [] : renderNodes) {
+    // Keep overview nodes expressive while preventing near zoom from turning
+    // them into screen-sized bubbles. The square-root scale preserves spatial
+    // emphasis without scaling diameter linearly with the camera.
+    const r = n.size * 0.6 / Math.sqrt(Math.max(1, zoom))
     const nx = n.x || 0, ny = n.y || 0
     const isHovered = hovered === n
-    const isSelected = selectedNodeIds.value.includes(n.id)
+    const isSelected = selectedIds.has(n.id)
 
     if (viewMode.value === 'mindmap') {
       const isRoot = n.id === mindmapRoot.value?.id
@@ -2420,7 +2438,7 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
 
     const nodeStatus = graphNodeStatusById.value.get(n.id)
     const statusPrioritySuppressed = isHovered || isSelected || Boolean(shortestPathNodeIds.value?.has(n.id))
-    if (statusRingsVisible.value && nodeStatus && !statusPrioritySuppressed) {
+    if (renderedNodeStatusIds.value.has(n.id) && nodeStatus && !statusPrioritySuppressed) {
       ctx.save()
       ctx.lineCap = 'round'
       if (nodeStatus.recency !== 'none') {
@@ -2479,46 +2497,53 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
       ctx.arc(nx, ny, r, 0, Math.PI * 2)
     }
 
-    const nodeGradient = ctx.createRadialGradient(
-      (n.x || 0) - r * 0.3, (n.y || 0) - r * 0.3, 0,
-      n.x || 0, n.y || 0, r
-    )
-
     const semanticColor = graphSemanticColor(n.objectType, isDark)
-    nodeGradient.addColorStop(0, semanticColor)
-    nodeGradient.addColorStop(1, semanticColor)
-
-    ctx.fillStyle = nodeGradient
+    ctx.save()
+    if (isSelected || isHovered) {
+      ctx.shadowColor = `${activeTone.ui.primary}${isSelected ? '88' : '55'}`
+      ctx.shadowBlur = (isSelected ? 18 : 12) / zoom
+    }
+    ctx.fillStyle = semanticColor
     ctx.fill()
+    // A restrained directional sheen gives depth without the plastic white
+    // hotspot that became distracting across dense graphs.
+    const sheen = ctx.createLinearGradient(nx - r, ny - r, nx + r, ny + r)
+    sheen.addColorStop(0, isDark ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.24)')
+    sheen.addColorStop(0.48, 'rgba(255,255,255,0)')
+    sheen.addColorStop(1, isDark ? 'rgba(0,0,0,.14)' : 'rgba(0,0,0,.08)')
+    ctx.fillStyle = sheen
+    ctx.fill()
+    ctx.restore()
 
     // 边缘描边
     ctx.strokeStyle = isSelected ? activeTone.ui.primary : (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)')
     ctx.lineWidth = (isHovered || isSelected ? 3 : 1) / zoom
     ctx.stroke()
 
-    if (semanticZoomLevel.value !== 'far' && zoom > 0.4 && r >= 7) {
-      ctx.fillStyle = isDark ? '#111827' : '#ffffff'
-      ctx.font = `800 ${Math.max(7, r * 0.72)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(objectSemantic.glyph, nx, ny + 0.5)
-    }
-
     // 标签 - 根据缩放级别动态显示
     if (semanticZoomLevel.value === 'near' || (semanticZoomLevel.value === 'middle' && (semanticKeyNodeIds.value.has(n.id) || isSelected || isHovered))) {
-      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
-      ctx.font = `600 ${Math.max(11, 13 / zoom)}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
-
       const maxLen = zoom > 1 ? 10 : Math.floor(10 / (1.5 - zoom * 0.5))
       const display = n.title.length > maxLen ? n.title.slice(0, maxLen) + '…' : n.title
-
-      // 文字阴影
-      ctx.shadowColor = isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)'
-      ctx.shadowBlur = 3 / zoom
-      ctx.fillText(display, n.x || 0, (n.y || 0) + r + 8 / zoom)
-      ctx.shadowBlur = 0
+      const fontSize = (isSelected || isHovered ? 13 : 12) / zoom
+      ctx.font = `${isSelected || isHovered ? 700 : 600} ${fontSize}px Inter, "Microsoft YaHei", sans-serif`
+      const textWidth = ctx.measureText(display).width
+      const labelX = nx
+      const labelY = ny + r + 8 / zoom
+      const paddingX = 6 / zoom, paddingY = 3 / zoom
+      const box = { left: labelX - textWidth / 2 - paddingX, right: labelX + textWidth / 2 + paddingX, top: labelY - paddingY, bottom: labelY + fontSize + paddingY }
+      const collides = labelBoxes.some(item => box.left < item.right && box.right > item.left && box.top < item.bottom && box.bottom > item.top)
+      const labelLimit = visibleNodes.value.length > 120 ? (zoom >= 2 ? 28 : 36) : 64
+      if ((!collides && labelBoxes.length < labelLimit) || isSelected || isHovered) {
+        ctx.beginPath()
+        ctx.roundRect(box.left, box.top, box.right - box.left, box.bottom - box.top, 5 / zoom)
+        ctx.fillStyle = isDark ? 'rgba(16,22,31,.82)' : 'rgba(255,255,255,.88)'
+        ctx.fill()
+        ctx.fillStyle = isDark ? 'rgba(245,248,252,.94)' : 'rgba(18,24,33,.9)'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+        ctx.fillText(display, labelX, labelY)
+        labelBoxes.push(box)
+      }
     }
   }
 
@@ -3134,6 +3159,30 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 .health-dot { width: 7px; height: 7px; border-radius: 50%; background: #d59a35; box-shadow: 0 0 0 3px rgba(213, 154, 53, 0.13); }
 .health-entry.active .health-dot { background: var(--theme-primary); box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.14); }
 
+.graph-tools-entry {
+  height: var(--workspace-control-height);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--workspace-border-color);
+  border-radius: var(--theme-radius-sm);
+  color: var(--theme-text);
+  background: var(--workspace-control-bg);
+  cursor: pointer;
+  font-size: var(--text-compact);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.graph-tools-entry:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb), .45); background: rgba(var(--theme-primary-rgb), .08); }
+:global(.graph-tools-menu) { width: 248px; display: grid; gap: 9px; padding: 4px; }
+:global(.graph-tools-export) { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+:global(.graph-tools-export .graph-export-btn) { height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(var(--theme-primary-rgb), .22); border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .06); cursor: pointer; font-size: 11px; font-weight: 750; }
+:global(.graph-tools-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding-top: 8px; border-top: 1px solid var(--workspace-border-color); }
+:global(.graph-tools-grid .control-btn) { width: auto; height: 32px; display: flex; align-items: center; justify-content: flex-start; gap: 7px; padding: 0 9px; border: 1px solid var(--workspace-border-color); border-radius: 6px; color: var(--theme-text); background: var(--workspace-control-bg); cursor: pointer; font-size: 11px; font-weight: 650; opacity: 1; }
+:global(.graph-tools-grid .control-btn:hover) { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb), .4); background: rgba(var(--theme-primary-rgb), .08); transform: none; box-shadow: none; }
+:global(.graph-tools-grid .control-btn:disabled) { cursor: default; opacity: .38; }
+
 .graph-export-btn {
   height: var(--workspace-control-height);
   padding: 0 10px;
@@ -3701,7 +3750,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   50% { transform: scale(1.18); opacity: 1; }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1500px) {
   .view-switch button,
   .tutorial-btn,
   .health-entry,
@@ -3722,8 +3771,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
     flex: 0 0 16px;
   }
 
-  .tutorial-btn span,
-  .graph-export-btn { display: none; }
+  .tutorial-btn span { display: none; }
   .tutorial-btn { width: var(--workspace-control-height); padding: 0; justify-content: center; }
 
   .graph-search {
@@ -3774,4 +3822,109 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 :global(.graph-canvas-disclosure p) { margin: 0; overflow-wrap: anywhere; }
 :global(.graph-canvas-disclosure ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }
 :global(.graph-canvas-disclosure .graph-canvas-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); font-weight: 650; }
+</style>
+
+<!-- Naive UI teleports popover content to document.body, so these uniquely
+     prefixed rules must be global rather than scoped to GraphView's root. -->
+<style>
+.graph-tools-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(var(--workspace-management-header-height, 56px) + 8px);
+  right: var(--workspace-floating-gutter, 16px);
+  width: 248px;
+  display: grid;
+  gap: 9px;
+  padding: 4px;
+  box-sizing: border-box;
+  border: 1px solid var(--workspace-border-color, rgba(128, 128, 128, .2));
+  border-radius: 8px;
+  color: var(--theme-text, #e8edf2);
+  background: color-mix(in srgb, var(--theme-card, #20262e) 97%, transparent);
+  box-shadow: var(--workspace-shadow, 0 14px 40px rgba(0, 0, 0, .34));
+  backdrop-filter: blur(18px);
+}
+.graph-tools-export {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.graph-tools-explore {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--workspace-border-color, rgba(128, 128, 128, .2));
+}
+.graph-tools-explore button {
+  min-width: 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px;
+  border: 1px solid var(--workspace-border-color, rgba(128, 128, 128, .2));
+  border-radius: 6px;
+  color: var(--theme-text, #e8edf2);
+  background: var(--workspace-control-bg, rgba(255, 255, 255, .04));
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.graph-tools-explore button:hover,
+.graph-tools-explore button.active {
+  color: var(--theme-primary, #42b883);
+  border-color: rgba(var(--theme-primary-rgb, 66, 184, 131), .4);
+  background: rgba(var(--theme-primary-rgb, 66, 184, 131), .08);
+}
+.graph-tools-export .graph-export-btn {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(var(--theme-primary-rgb, 66, 184, 131), .24);
+  border-radius: 6px;
+  color: var(--theme-primary, #42b883);
+  background: rgba(var(--theme-primary-rgb, 66, 184, 131), .07);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.graph-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--workspace-border-color, rgba(128, 128, 128, .2));
+}
+.graph-tools-grid .control-btn {
+  width: auto;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid var(--workspace-border-color, rgba(128, 128, 128, .2));
+  border-radius: 6px;
+  color: var(--theme-text, #e8edf2);
+  background: var(--workspace-control-bg, rgba(255, 255, 255, .04));
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+  opacity: 1;
+  white-space: nowrap;
+}
+.graph-tools-grid .control-btn:hover {
+  color: var(--theme-primary, #42b883);
+  border-color: rgba(var(--theme-primary-rgb, 66, 184, 131), .4);
+  background: rgba(var(--theme-primary-rgb, 66, 184, 131), .08);
+  transform: none;
+  box-shadow: none;
+}
+.graph-tools-grid .control-btn:disabled { cursor: default; opacity: .38; }
 </style>
