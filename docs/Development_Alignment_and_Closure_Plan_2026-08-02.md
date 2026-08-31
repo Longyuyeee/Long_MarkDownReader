@@ -132,6 +132,8 @@ M3C-4 已完成大图性能退出审计，M3 语义、视觉和性能三线正�
 
 M4-0 已完成代码事实审计并按要求暂停在实现之前。当前搜索实际为 6/7：DOCX/ODS/ODP/PPTX 有精确定位，OPML 无内部节点定位，Table 内部行未被索引；三个入口仍各自维护定位分派，图谱和工作台也未覆盖全部 M1 对象。搜索返回上下文已真实保留，CSV→Table 的披露较完整，OPML→Canvas 缺少转换前披露。恢复时从 **M4A-1 统一对象定位合同与 Table/OPML 搜索闭环** 接续；先完成统一路由映射和两种缺口格式，不同时扩展图谱、工作台、转换或版本发布。当前不改变 `releaseCandidate=false`。
 
+M4F-4 已完成最终 artifact manifest 与发布就绪审计。真实下载的 NSIS/MSI 与托管回执大小、SHA-256、`NotSigned` 一致，公开 `LongEdit` 名称映射和 192-byte `SHA256SUMS.txt` 已冻结；M4F-3 换行摘要与旧版本 artifact/烟测预期均按真实差异修正。社区候选可发布，企业 RC 仍关闭，当前公开版本仍为 v1.0.15。下一步只执行 M4F-5 Tag、GitHub Release 和三个远端附件回下载复核。
+
 M4A 已完成退出审计：Table、OPML、DOCX、ODS、ODP、PPTX、Workbook 的 7 类搜索对象 7/7 精确打开并保留返回状态；7 类有界图谱对象从 Graph 与关系上下文各 7/7 打开，14/14 返回 Graph。真实图谱为 7 父、15 子、15 条 mention-free `contains`，同源身份稳定、错误 0、7 个源文件不变，普通 DOCX block 与 ODS cell 继续用于搜索而不入图。审计同时修复 PPTX 无 locator 父文件路由残留幻灯片关系焦点的问题。当前接续点为 **M4B-0 工作台对象行动选择审计**，保持 `releaseCandidate=false`。
 
 M4B-0 已完成工作台对象行动选择审计。当前工作台直接写回只有 Markdown 待办，PDF 批注仅查看；真实内部 Table 的 2 条显式 boolean 任务行可按稳定 row ID 定位，但尚未进入待办。七类候选只选择 `.table.json` 布尔任务行，因其具备明确任务语义、稳定 row/column ID、签名与可靠写入；其他格式按无任务语义、只读、可靠副本或上下文事务边界延期。当前进入 **M4B-1 内部 Table 布尔任务行工作台行动闭环**，不混入转换或发布冻结。

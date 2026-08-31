@@ -64,7 +64,7 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - 知识图谱 2.0 已完成稳定语义探索、专业视觉与 Worker 承载的大图性能收口；跨格式搜索、图谱和关系上下文现共享对象定位合同，Table 行/视图与 OPML 节点可被搜索并打开到内部位置。
 - M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
 
-M4F-1 已完成 44 个版本文件的 v1.0.16 原子迁移并把社区元数据重置为 Quality Gate pending；本开发线仍为 `releaseCandidate=false`，没有 v1.0.16 安装包或 Release。完整已验证范围、延后边界和发布门禁见 [v1.0.16 候选发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-1 原子版本迁移审计](docs/Post_v1.0.15_M4F1_v1.0.16_Atomic_Version_Transition_Audit_2026-08-30.md)。
+M4F-4 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 也已冻结。社区候选现已具备发布条件，但 `v1.0.16` Tag、GitHub Release 和公开下载尚未发布；Actions artifact 不能作为用户下载入口。完整事实见 [v1.0.16 候选发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-4 最终发布就绪审计](docs/Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。
 
 ## v1.0.15
 
@@ -272,7 +272,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前接续点见 [M4F-1 原子版本迁移审计](docs/Post_v1.0.15_M4F1_v1.0.16_Atomic_Version_Transition_Audit_2026-08-30.md)；当前公开稳定版审计仍为 [v1.0.15 发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前唯一接续点见 [M4F-4 最终发布就绪审计](docs/Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)：下一阶段为 M4F-5 Tag、GitHub Release 与三个远端附件回下载复核；当前公开稳定版审计仍为 [v1.0.15 发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
 
 ## 许可证
 

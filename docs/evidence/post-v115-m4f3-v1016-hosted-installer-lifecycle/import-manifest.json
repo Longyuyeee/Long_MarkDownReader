@@ -50,7 +50,14 @@
   "importedEvidence": {
     "fileCount": 29,
     "totalBytes": 1552423,
-    "canonicalTreeSha256": "da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25"
+    "canonicalTreeSha256": "da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25",
+    "scope": "raw-downloaded-artifact-bytes"
+  },
+  "repositoryCanonicalEvidence": {
+    "algorithm": "json-stable-indent-2-lf-and-binary-byte-preserve-v1",
+    "fileCount": 29,
+    "totalBytes": 1549514,
+    "canonicalTreeSha256": "8488388c57a5646454a8d6ab7723ddcdbe135ce5259ede436d89b990ed045ad0"
   },
   "sourceUserContentIncluded": false,
   "releaseCandidate": false,

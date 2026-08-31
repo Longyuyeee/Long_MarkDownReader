@@ -1519,3 +1519,9 @@ v1.0.16 社区策略现在是 `v1.0.16-community-release-quality-gate-pending`�
 第四次托管运行 [`33322246630`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 已从产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58` 完整通过：双 `NotSigned` 安装包、R5I 22/22、R5J 18/18 与路由 11/11、R5L 7/7。MSI 为 73,887,744 bytes / `e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215`，NSIS 为 65,788,796 bytes / `e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff`，均已下载文件本体独立复核。
 
 换机所需的 29 个结构化 JSON 与必要截图已导入 `docs/evidence/post-v115-m4f3-v1016-hosted-installer-lifecycle/`，规范树摘要为 `da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25`；远端 artifact ID `9735798998`、ZIP 摘要 `987e90b41e608c9d70629eecb1f7dce9893b0dfb5c30025036512fdb6da02c24`，当前到期时间 2026-09-13T17:08:20Z。九道门禁现为 7/9，仍无 `v1.0.16` Tag/Release，`releaseCandidate=false`。唯一接续点为 **M4F-4 最终 artifact manifest、SHA256SUMS、发布说明与发布就绪审计**；完成前不得创建远端发布。详见 [`Post_v1.0.15_M4F3C_v1.0.16_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md`](./Post_v1.0.15_M4F3C_v1.0.16_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md)。
+
+## 2026-08-31 M4F-4 最终产物与发布就绪交接
+
+M4F-4 已用 Actions artifact `9735798998` 的真实文件本体重新核对两份安装包：NSIS 为 65,788,796 bytes / `e1a688…`，MSI 为 73,887,744 bytes / `e3fa4f…`，均为 `NotSigned`。托管 `Long编辑` 文件名与公开 `LongEdit` 文件名建立显式映射，重命名不改变字节；最终 `SHA256SUMS.txt` 为 192 bytes / `d25aa5…`。
+
+本阶段真实复现并修复了 M4F-3 JSON 换行导致的换机摘要失败，同时纠正旧发布检查器要求 3 个 artifact 和历史单实例阻断烟测的错误预期。下载证据和仓库证据以跨平台规范算法共同得到 `848838…`。九道门禁现为 8/9，社区候选 `releaseCandidate=true`，企业矩阵仍为 false；当前公开版本仍是 v1.0.15。唯一接续点为 **M4F-5 v1.0.16 Tag、GitHub Release 与远端三个附件回下载复核**，不得在远端复核前宣布发布完成。详见 [`Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。

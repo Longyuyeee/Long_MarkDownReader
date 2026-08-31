@@ -36,7 +36,7 @@
 
 ## 换机证据交接
 
-仓库内 `docs/evidence/post-v115-m4f3-v1016-hosted-installer-lifecycle/` 保存 29 个结构化回执和必要截图，共 1,552,423 bytes；不包含用户源内容，也不提交 200 MB 安装包。`import-manifest.json` 保存远端 run/artifact 身份、安装包哈希、计数和规范证据树 SHA-256 `da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25`，检查器会在换机后重新计算。
+仓库内 `docs/evidence/post-v115-m4f3-v1016-hosted-installer-lifecycle/` 保存 29 个结构化回执和必要截图；不包含用户源内容，也不提交 200 MB 安装包。`import-manifest.json` 保留下载 artifact 原始 1,552,423 bytes / SHA-256 树 `da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25`，并由 M4F-4 增加跨平台规范树：JSON 固定缩进和 LF、图片原字节，共 1,549,514 bytes / `8488388c57a5646454a8d6ab7723ddcdbe135ce5259ede436d89b990ed045ad0`。这样既保留远端原始来源回执，也不会因 checkout 换行转换导致换机门禁误报。
 
 如需在 artifact 到期前重新下载：
 

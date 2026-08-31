@@ -39,6 +39,7 @@ import './check-post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop.mjs'
 import './check-post-v115-m3c2-large-graph-main-thread-phase-profiling-selection.mjs'
 import './check-post-v115-m3c3-worker-backed-bounded-force-layout-kernel.mjs'
 import './check-post-v115-m3c4-large-graph-performance-exit-audit.mjs'
+import './check-post-v115-m4f4-v1016-final-release-readiness.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))

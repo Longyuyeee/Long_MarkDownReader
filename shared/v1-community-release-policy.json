@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.16",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-30",
-  "currentStatus": "v1.0.16-community-release-hosted-lifecycle-passed-final-release-audit-pending",
+  "currentStatus": "v1.0.16-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -63,14 +63,16 @@
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "Long编辑_1.0.16_x64_zh-CN.msi",
+        "sourceFileName": "Long编辑_1.0.16_x64_zh-CN.msi",
+        "fileName": "LongEdit_1.0.16_x64_zh-CN.msi",
         "sizeBytes": 73887744,
         "sha256": "e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215",
         "authenticodeStatus": "NotSigned"
       },
       {
         "target": "nsis",
-        "fileName": "Long编辑_1.0.16_x64-setup.exe",
+        "sourceFileName": "Long编辑_1.0.16_x64-setup.exe",
+        "fileName": "LongEdit_1.0.16_x64-setup.exe",
         "sizeBytes": 65788796,
         "sha256": "e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff",
         "authenticodeStatus": "NotSigned"
@@ -85,5 +87,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "complete-m4f4-final-artifact-manifest-release-notes-and-release-readiness-audit"
+  "nextAction": "execute-m4f5-v1.0.16-tag-release-and-remote-asset-verification"
 }

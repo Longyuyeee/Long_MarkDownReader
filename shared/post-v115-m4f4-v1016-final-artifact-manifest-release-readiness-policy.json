@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "stage": "M4F-4",
+  "name": "v1.0.16-final-artifact-manifest-and-release-readiness-audit",
+  "predecessor": "M4F-3A",
+  "candidateSourceCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+  "candidateVersion": "1.0.16",
+  "publicVersion": "1.0.15",
+  "hostedRunId": 33322246630,
+  "hostedArtifactId": 9735798998,
+  "expectations": {
+    "realInstallerCount": 2,
+    "authenticodeStatus": "NotSigned",
+    "publicAssetPrefix": "LongEdit",
+    "checksumAsset": "SHA256SUMS.txt",
+    "runtimeSmokeStatus": "passed-real-tauri-debug-webview2",
+    "repositoryEvidenceCrossPlatformReproducible": true,
+    "tagAbsent": true,
+    "githubReleaseAbsent": true
+  },
+  "observedBeforeCorrection": {
+    "realInstallerHashesMatchedHostedReceipt": true,
+    "m4f3RepositoryEvidenceCheck": "failed-after-checkout-line-ending-conversion",
+    "hostedSourceAssetPrefix": "Long编辑",
+    "releasePreparationAssetPrefix": "LongEdit",
+    "communityCheckerExpectedArtifactCount": 3,
+    "candidateArtifactCount": 2,
+    "communityCheckerRuntimeSmokeStatus": "blocked-existing-single-instance",
+    "actualRuntimeSmokeStatus": "passed-real-tauri-debug-webview2"
+  },
+  "corrections": [
+    "Preserve the raw downloaded evidence receipt while checking repository evidence through a cross-platform canonical JSON encoding.",
+    "Record both hosted source file names and public release asset names without changing installer bytes.",
+    "Require two installer artifacts plus a separate checksum file instead of inheriting the v1.0.15 release executable shape.",
+    "Bind the final manifest to the actual passed R5G Tauri smoke rather than the historical single-instance-blocked status."
+  ],
+  "artifacts": [
+    {
+      "target": "nsis",
+      "sourceFileName": "Long编辑_1.0.16_x64-setup.exe",
+      "fileName": "LongEdit_1.0.16_x64-setup.exe",
+      "sizeBytes": 65788796,
+      "sha256": "e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "msi",
+      "sourceFileName": "Long编辑_1.0.16_x64_zh-CN.msi",
+      "fileName": "LongEdit_1.0.16_x64_zh-CN.msi",
+      "sizeBytes": 73887744,
+      "sha256": "e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "d25aa57073da234d6a6fc5e9af928be6c3d3642197a0f091ba1fa5aaeed966bc"
+  },
+  "selectedNextStage": {
+    "id": "M4F-5",
+    "name": "v1.0.16-tag-release-and-remote-asset-verification"
+  },
+  "releaseReady": true,
+  "releasePublished": false,
+  "enterpriseReleaseCandidate": false,
+  "sourceUserContentIncluded": false
+}

@@ -1,6 +1,6 @@
 # Long编辑 v1.0.16 开发版说明（草案）
 
-> 这是 `main` 上的开发记录，不是公开 Release，不对应可下载的 v1.0.16 安装包。M4F-1 已把候选二进制身份迁移到 1.0.16，但当前公开版本仍为 v1.0.15；只有完整发布门禁通过后才会创建 Tag 和 Release。
+> 这是 `main` 上的历史开发记录，不是公开 Release，不对应可下载的 v1.0.16 安装包。M4F-4 已完成最终产物与发布就绪审计，当前公开版本仍为 v1.0.15；正式候选说明以 [`RELEASE_NOTES_v1.0.16.md`](./RELEASE_NOTES_v1.0.16.md) 为准，M4F-5 完成 Tag、Release 与远端附件回下载复核后才能宣布发布。
 
 ## 已完成并通过真实验收
 
@@ -24,7 +24,7 @@
 - 大 JSON 渐进模式只读，不构建全文树形。
 - 视频播放取决于 WebView/系统解码器；外部窗口字幕、嵌入字幕拆封、字幕编辑和转码尚未提供。
 - YAML/XML/TOML 的 Schema provider/mapping 尚未提供；未配置 Schema 时不制造业务错误。
-- 当前 `releaseCandidate=false`，本草案不会替代正式 Release Notes。
+- 社区候选现为 `releaseCandidate=true`，仅表示可以进入 M4F-5 发布；企业候选仍为 false。本草案不会替代正式 Release Notes。
 
 ## 下一阶段
 
@@ -49,3 +49,5 @@ M4E-0 已汇总实际代码、M1～M4D 退出证据和用户可见声明。累�
 M4F-0 已把 `7e10c340fa0d528b598c9ca6be391c48b15a463f` 冻结为产品范围基线，并盘点出 44 个必须原子迁移的版本文件。审计同时纠正旧门禁：历史 R5E 是阻断证据，不是当前候选成功烟测；v1.0.16 必须重跑 R5F 路由挂载和 R5G 桌面路由/I/O。当前进入 **M4F-1 原子版本迁移与候选元数据**；Quality Gate、当前候选运行烟测、安装包、Windows 生命周期、制品哈希、Tag 与远端 Release 均未执行，因此 `releaseCandidate=false` 不变。
 
 M4F-1 已将冻结清单中的 44 个版本文件原子迁移到 1.0.16，五个历史 post-v1.0.15 基线继续保持 1.0.15。社区候选元数据已清除旧版候选、产物和发布回执并回到 Quality Gate pending；前端发布事实消费也已允许候选运行时版本高于当前公开版本。当前进入 **M4F-2 候选 Quality Gate 与运行烟测**，九道发布门禁完成 2/9，`releaseCandidate=false` 不变。
+
+M4F-2 与 M4F-3 已完成精确候选 `757d54309ddb35f445344d909fa4c7ba2567bc58` 的完整 Quality Gate、真实 Tauri 运行烟测、无签名 MSI/NSIS 构建以及托管 Windows 安装生命周期。M4F-4 又从 Actions artifact `9735798998` 复核真实文件本体，冻结双安装包 manifest 与 `SHA256SUMS.txt`，并确认本地和远端均尚无 `v1.0.16` Tag/Release。九道门禁现为 8/9；唯一接续点是 **M4F-5 Tag、GitHub Release 与三个远端附件回下载复核**。

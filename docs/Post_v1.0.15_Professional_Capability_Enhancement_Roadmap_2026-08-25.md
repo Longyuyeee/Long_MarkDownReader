@@ -442,6 +442,12 @@ M3C 已通过大图性能退出审计，M3 语义、视觉和性能三线全部�
 
 项目暂停在实现之前。恢复后的唯一接续点为 **M4A-1 统一对象定位合同与 Table/OPML 搜索闭环**，先把格式定位到路由的映射收敛为单一合同，再补 Table 行/视图和 OPML 节点；图谱/工作台扩面、转换统一和版本冻结继续后置。详见 `Post_v1.0.15_M4_0_Cross_Format_Workflow_Entry_Audit_and_Handoff_2026-08-28.md`。
 
+### 2026-08-31 M4F-4 最终发布就绪回执
+
+精确产品候选 `757d543…` 的两份托管安装包已从 Actions artifact 下载并再次核对文件本体，大小、SHA-256 和 `NotSigned` 全部一致；最终 artifact manifest、公开文件名映射和 `SHA256SUMS.txt` 已冻结。证据树换行差异改用保留原始下载回执并增加跨平台规范摘要的方式解决，旧检查器的 3-artifact 与历史烟测假设也已按 v1.0.16 实际结果纠正。
+
+M4F-4 通过后九道发布门禁为 8/9。当前唯一接续点为 **M4F-5 v1.0.16 Tag、GitHub Release 与远端附件回下载复核**；当前公开版本仍为 v1.0.15，远端发布完成前不得宣传 v1.0.16 已发布。
+
 ### 2026-08-28 M4A-1 完成回执
 
 统一对象定位合同已由资料库搜索、知识图谱和关系上下文三个入口共同消费；Table 行/视图和 OPML 节点进入持久索引与 live fallback。真实 Tauri 从搜索打开 Table、OPML、DOCX、ODS、ODP、PPTX 六类内部对象并 6/6 保留返回搜索状态，运行时错误为 0，源夹具摘要不变。下一步为 **M4A-2 M1 对象图谱定位扩面选择审计**；工作台全对象行动、转换统一、版本冻结继续后置。详见 `Post_v1.0.15_M4A1_Unified_Object_Navigation_and_Table_OPML_Search_Closure_Audit_2026-08-28.md`。

@@ -56,7 +56,7 @@ interface DevelopmentVersionPolicy {
   publicTag: string
   releaseCandidate: boolean
   currentStage: string
-  binaryVersionTransition: 'M4-release-freeze' | 'v1.0.16-quality-gate-pending' | 'v1.0.16-quality-gate-and-runtime-smoke-passed' | 'v1.0.16-hosted-installer-lifecycle-passed'
+  binaryVersionTransition: 'M4-release-freeze' | 'v1.0.16-quality-gate-pending' | 'v1.0.16-quality-gate-and-runtime-smoke-passed' | 'v1.0.16-hosted-installer-lifecycle-passed' | 'v1.0.16-release-ready'
   displayLabel: string
 }
 

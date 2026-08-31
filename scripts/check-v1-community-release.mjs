@@ -112,18 +112,22 @@ if ((ready && !lifecycleVerified) || published) {
   if (!fs.existsSync(manifestPath)) fail('current artifact manifest is missing')
   else {
     const manifest = json(manifestPath)
-    if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 3 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
+    if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 2 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
     if (manifest.qualityGate?.status !== 'passed'
-      || manifest.qualityGate?.runId !== policy.candidate?.qualityGateRunId
+      || manifest.qualityGate?.command !== policy.candidate?.qualityGateCommand
       || manifest.hostedInstalledLifecycle?.status !== 'passed'
       || manifest.hostedInstalledLifecycle?.runId !== policy.candidate?.hostedInstalledLifecycleRunId
       || manifest.hostedInstalledLifecycle?.sourceCommit !== manifest.sourceCommit
       || manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22
       || manifest.hostedInstalledLifecycle?.installedWorkspaceChecksPassed !== 18
+      || manifest.hostedInstalledLifecycle?.installedRoutesPassed !== 11
+      || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7
       || manifest.hostedInstalledLifecycle?.failedChecks !== 0
       || manifest.hostedInstalledLifecycle?.sourceUserContentIncluded !== false
-      || manifest.runtimeSmoke?.status !== 'blocked-existing-single-instance'
+      || manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2'
+      || manifest.runtimeSmoke?.checksPassed !== 6
+      || manifest.runtimeSmoke?.routesPassed !== 11
       || manifest.boundaries?.communityUnsigned !== true
       || manifest.boundaries?.enterprisePromotionEligible !== false) fail('current release evidence boundary drift')
     for (const artifact of manifest.artifacts ?? []) {
@@ -131,28 +135,23 @@ if ((ready && !lifecycleVerified) || published) {
       if (!candidate || candidate.fileName !== artifact.fileName || candidate.sizeBytes !== artifact.sizeBytes || candidate.sha256 !== artifact.sha256 || candidate.authenticodeStatus !== artifact.authenticodeStatus) fail(`candidate artifact drift: ${artifact.target}`)
     }
 
-    const hostedRoot = `docs/evidence/v${pkg.version}-release/hosted-lifecycle`
-    const hostedManifestPath = `${hostedRoot}/import-manifest.json`
+    const hostedRoot = manifest.hostedInstalledLifecycle?.evidenceRoot
+    const hostedManifestPath = manifest.hostedInstalledLifecycle?.evidenceManifest
     if (!fs.existsSync(hostedManifestPath)) fail('hosted lifecycle import manifest is missing')
     else {
       const hosted = json(hostedManifestPath)
-      if (hosted.status !== 'accepted-for-unsigned-community-release'
+      if (hosted.status !== 'hosted-installer-lifecycle-passed'
         || hosted.githubRunId !== policy.candidate?.hostedInstalledLifecycleRunId
         || hosted.productSourceCommit !== manifest.sourceCommit
         || hosted.appVersion !== pkg.version
-        || hosted.authenticodeStatus !== 'NotSigned'
-        || hosted.lifecycleChecks?.passed !== 22
-        || hosted.lifecycleChecks?.failed !== 0
-        || hosted.installedArtifactChecks?.passed !== 18
-        || hosted.installedArtifactChecks?.failed !== 0
-        || hosted.communityReleaseCandidateEvidence !== true
+        || hosted.checks?.lifecyclePassed !== 22
+        || hosted.checks?.lifecycleFailed !== 0
+        || hosted.checks?.installedArtifactPassed !== 18
+        || hosted.checks?.installedArtifactFailed !== 0
+        || hosted.checks?.installedRoutesPassed !== 11
+        || hosted.checks?.managementRollbackPassed !== 7
         || hosted.enterpriseReleaseCandidate !== false
         || hosted.sourceUserContentIncluded !== false) fail('hosted lifecycle import boundary drift')
-      for (const file of hosted.files ?? []) {
-        const evidencePath = `${hostedRoot}/${file.path}`
-        if (!fs.existsSync(evidencePath)) fail(`hosted lifecycle evidence is missing: ${file.path}`)
-        else if (fs.statSync(evidencePath).size !== file.bytes || sha256(evidencePath) !== file.sha256) fail(`hosted lifecycle evidence hash drift: ${file.path}`)
-      }
     }
 
     if (published) {

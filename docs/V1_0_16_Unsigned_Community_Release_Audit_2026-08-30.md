@@ -1,6 +1,6 @@
 # v1.0.16 无签名社区版发布审计
 
-状态：**质量门禁与当前运行烟测已通过，安装包待构建**
+状态：**最终发布就绪审计已通过，Tag、GitHub Release 与远端附件复核待执行**
 
 渠道：`community-unsigned`
 
@@ -26,8 +26,8 @@
 
 ## 待执行发布门禁
 
-1. M4F-4 形成最终 artifact manifest 与 `SHA256SUMS.txt`，复核 `NotSigned`、候选身份和最终发布说明。
-2. 审计通过后创建绑定产品提交的 Tag 与 GitHub Release，并从远端下载附件复核。
+1. M4F-4 已形成最终 artifact manifest 与 `SHA256SUMS.txt`，并以真实下载文件复核 `NotSigned`、候选身份、公开文件名映射和最终发布说明。
+2. M4F-5 创建绑定候选事实的 Tag 与 GitHub Release，并从远端下载三个附件复核。
 
 ## 当前边界
 

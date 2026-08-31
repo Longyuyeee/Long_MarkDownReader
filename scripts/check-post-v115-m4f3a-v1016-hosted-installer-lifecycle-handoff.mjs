@@ -42,11 +42,24 @@ if (routes.routes?.length !== 11 || routes.routes.some(route => route.status !==
 if (management.status !== 'passed' || management.checks?.length !== 7 || management.checks.some(check => check.status !== 'passed') || management.sourceUserContentIncluded) failures.push('R5L management rollback evidence drifted')
 if (buildReceipt.candidateSourceCommit !== policy.candidateSourceCommit || buildReceipt.artifacts?.length !== 2 || buildReceipt.artifacts.some(artifact => artifact.authenticodeStatus !== 'NotSigned')) failures.push('hosted installer receipt drifted')
 const importedFiles = fs.readdirSync(evidenceRoot).filter(name => name !== 'import-manifest.json').sort()
-const canonicalTree = importedFiles.map(name => {
+const canonicalEvidenceBytes = name => {
   const bytes = fs.readFileSync(`${evidenceRoot}/${name}`)
+  if (!name.endsWith('.json')) return bytes
+  return Buffer.from(`${JSON.stringify(JSON.parse(bytes.toString('utf8')), null, 2)}\n`)
+}
+const canonicalTree = importedFiles.map(name => {
+  const bytes = canonicalEvidenceBytes(name)
   return `${name}:${bytes.length}:${crypto.createHash('sha256').update(bytes).digest('hex')}`
 }).join('\n')
-if (importedFiles.length !== imported.importedEvidence?.fileCount || importedFiles.reduce((sum, name) => sum + fs.statSync(`${evidenceRoot}/${name}`).size, 0) !== imported.importedEvidence?.totalBytes || crypto.createHash('sha256').update(canonicalTree).digest('hex') !== imported.importedEvidence?.canonicalTreeSha256) failures.push('imported evidence tree drifted')
+const repositoryCanonical = imported.repositoryCanonicalEvidence
+if (imported.importedEvidence?.scope !== 'raw-downloaded-artifact-bytes'
+  || imported.importedEvidence?.fileCount !== 29
+  || imported.importedEvidence?.totalBytes !== 1552423
+  || imported.importedEvidence?.canonicalTreeSha256 !== 'da466efc170b487b95c5a6fbfbd4f9558d23058ff9080a19a7156c8b20181d25') failures.push('raw downloaded evidence receipt drifted')
+if (repositoryCanonical?.algorithm !== 'json-stable-indent-2-lf-and-binary-byte-preserve-v1'
+  || importedFiles.length !== repositoryCanonical?.fileCount
+  || importedFiles.reduce((sum, name) => sum + canonicalEvidenceBytes(name).length, 0) !== repositoryCanonical?.totalBytes
+  || crypto.createHash('sha256').update(canonicalTree).digest('hex') !== repositoryCanonical?.canonicalTreeSha256) failures.push('repository canonical evidence tree drifted')
 if (policy.previousPublicTag !== 'v1.0.15' || execFileSync('git', ['rev-list', '-n', '1', policy.previousPublicTag], { encoding: 'utf8' }).trim() !== policy.previousPublicCommit) failures.push('previous public source drifted')
 if (policy.requiredArtifacts?.join(',') !== 'msi,nsis' || policy.requiredLifecycle?.length !== 4) failures.push('required hosted scope drifted')
 for (const token of tokens) if (!workflow.includes(token)) failures.push(`workflow token missing: ${token}`)
