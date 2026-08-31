@@ -24,7 +24,8 @@ tauri-plugin-opener = "2"
 tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
-jsonc-parser = "=0.33.0"
+jsonc-parser = { version = "=0.33.0", features = ["serde"] }
+jsonschema = { version = "=0.52.1", default-features = false }
 window-vibrancy = "0.5"
 encoding_rs = "0.8"
 chardetng = "0.1"

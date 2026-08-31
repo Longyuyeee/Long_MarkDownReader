@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-1",
+  "status": "accepted",
+  "capturedAt": "2026-08-31T15:10:00Z",
+  "sourceCommit": "af3504046367f3224e82b3a76f2f3f95f22c1773",
+  "actual": {
+    "dependency": {
+      "crate": "jsonschema",
+      "version": "0.52.1",
+      "defaultFeatures": false,
+      "resolveHttpEnabled": false,
+      "resolveFileEnabled": false
+    },
+    "limits": {
+      "schemaBytes": 1048576,
+      "schemaNodes": 50000,
+      "schemaReferences": 64,
+      "diagnostics": 200
+    },
+    "tests": {
+      "kernel": { "passed": 9, "failed": 0 },
+      "existingJsonRegression": { "passed": 28, "failed": 0 },
+      "cargoCheck": "passed",
+      "supplementalStrictClippy": {
+        "status": "existing-baseline-debt",
+        "existingFindings": 43,
+        "newModuleFindings": 0,
+        "releaseGate": false
+      }
+    },
+    "behaviors": {
+      "noSidecarStatus": "no-schema",
+      "validStatus": "valid",
+      "invalidStatus": "invalid",
+      "externalReferencesRejected": ["https", "file", "relative"],
+      "internalFragmentReferenceAccepted": true,
+      "jsoncAccepted": true,
+      "sourceLineColumnMapped": true,
+      "numericObjectKeyMappedWithoutArrayAmbiguity": true,
+      "documentValueMasked": true,
+      "realDocumentAndSchemaHashesUnchanged": true
+    }
+  },
+  "differences": [
+    {
+      "expected": "the feasibility stage might immediately expose a product-visible Schema panel",
+      "actual": "the backend kernel is proven but no Tauri command or UI consumes it",
+      "correction": "keep product acceptance false and require command, UI, refresh and real desktop evidence in M7-2"
+    },
+    {
+      "expected": "disabling jsonschema default features alone would be the complete offline boundary",
+      "actual": "a future dependency feature change could weaken that single boundary",
+      "correction": "also reject every non-fragment $ref and $dynamicRef before validator construction"
+    },
+    {
+      "expected": "Schema errors could use their raw validator messages",
+      "actual": "raw messages may contain document values",
+      "correction": "use masked messages and assert that secret sample values never enter diagnostics"
+    }
+  ],
+  "selectedNextStage": "M7-2-bounded-local-json-schema-product-implementation-and-real-desktop-audit",
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false
+}

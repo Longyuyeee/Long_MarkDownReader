@@ -5,6 +5,8 @@ pub mod docx_patch;
 pub mod drawio;
 pub mod file_registry;
 pub mod json;
+#[allow(dead_code)]
+pub mod json_schema;
 pub mod markdown;
 #[allow(dead_code)]
 pub mod odf;

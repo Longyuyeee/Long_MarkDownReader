@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-1",
+  "name": "local-json-schema-sidecar-provider-mapping-feasibility-audit",
+  "status": "feasibility-accepted",
+  "predecessor": "M7-0",
+  "runtimeBaseVersion": "1.0.18",
+  "publicVersion": "1.0.18",
+  "developmentTargetVersion": "1.0.19",
+  "contract": {
+    "formats": ["json", "jsonc"],
+    "sidecarPattern": "<document-stem>.schema.json",
+    "draft": "2020-12",
+    "schemaSourceByteLimit": 1048576,
+    "schemaNodeLimit": 50000,
+    "schemaReferenceLimit": 64,
+    "diagnosticLimit": 200,
+    "externalReferencesAllowed": false,
+    "internalFragmentReferencesAllowed": true,
+    "networkResolverFeaturesEnabled": false,
+    "crossDirectorySymlinksAllowed": false,
+    "sourceWrites": 0
+  },
+  "acceptance": {
+    "targetedKernelTestsPassed": 9,
+    "jsonRegressionTestsPassed": 28,
+    "rustCheckPassed": true,
+    "supplementalStrictClippy": "43-pre-existing-lints-new-module-zero",
+    "realSiblingFilesReadOnlyPassed": true,
+    "jsoncCommentsAndTrailingCommasPassed": true,
+    "instancePathLineColumnMappingPassed": true,
+    "diagnosticValuesMasked": true,
+    "unsafeSchemaFailsClosed": true,
+    "noSchemaProducesNoBusinessDiagnostics": true,
+    "productUiIntegrated": false,
+    "realTauriProductAcceptance": false
+  },
+  "selectedNextStage": {
+    "id": "M7-2",
+    "name": "bounded-local-json-schema-product-implementation-and-real-desktop-audit"
+  },
+  "nextStageRequirements": {
+    "registerReadOnlyTauriCommand": true,
+    "reuseLibraryPathAuthorization": true,
+    "separateSyntaxAndSchemaTruthInUi": true,
+    "showSchemaSourceAndStatus": true,
+    "refreshOnDocumentOrSidecarChange": true,
+    "preserveExplicitSaveAndConflictProtection": true,
+    "realTauriWideAndNarrowAudit": true,
+    "sourceAndSchemaRemainUnchanged": true,
+    "networkAndExternalReferencesRemainForbidden": true,
+    "binaryVersionChange": false
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m7-2-bounded-local-json-schema-product-implementation-and-real-desktop-audit"
+}
