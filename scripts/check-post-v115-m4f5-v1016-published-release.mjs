@@ -9,6 +9,7 @@ const receipt = json('docs/evidence/v1.0.16-release/release-receipt.json')
 const community = json('shared/v1-community-release-policy.json')
 const development = json('shared/development-version-policy.json')
 const m4f6 = json('shared/v116-managed-updater-lifecycle-policy.json')
+const m5 = json('shared/post-v116-m5-0-v1017-scope-selection-policy.json')
 const audit = fs.readFileSync('docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md', 'utf8')
 const failures = []
 const fail = message => failures.push(message)
@@ -31,7 +32,9 @@ for (const asset of receipt.assets ?? []) {
 if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' || manifest.releaseReceipt !== 'release-receipt.json' || !manifest.boundaries?.releaseAssetsPublished) fail('published artifact manifest drifted')
 const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
 const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-const expectedStage = updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
+const expectedStage = m5.status === 'scope-selected'
+  ? `${m5.selectedNextStage.id}-${m5.selectedNextStage.name}`
+  : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
 if (community.currentStatus !== 'v1.0.16-community-release-published' || !community.releaseCandidate || !community.gates?.githubReleasePublished || community.release?.databaseId !== policy.releaseDatabaseId || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction) fail('community published state drifted')
 if (development.publicVersion !== '1.0.16' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit || development.developmentTargetVersion !== '1.0.17' || development.currentStage !== expectedStage || development.binaryVersionTransition !== 'v1.0.16-public-release-published') fail('development/public handoff drifted')
 if (updaterComplete && receipt.postReleaseManagedUpdaterObservation !== '1.0.15-to-1.0.16-passed') fail('post-release managed updater receipt drifted')

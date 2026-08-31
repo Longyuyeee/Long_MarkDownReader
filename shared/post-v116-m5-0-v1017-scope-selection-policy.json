@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-0",
+  "name": "v1.0.17-scope-selection-audit",
+  "status": "scope-selected",
+  "predecessor": "V1.0.16-U1",
+  "selectionSourceCommit": "ef97bbc52f5f6dd41de09ed966c0f5b10afb5eef",
+  "runtimeBaseVersion": "1.0.16",
+  "publicVersion": "1.0.16",
+  "developmentTargetVersion": "1.0.17",
+  "selectionPrinciples": [
+    "adjacent-to-verified-user-workflow",
+    "bounded-source-safe-copy-before-overwrite",
+    "real-producer-evidence-before-ui-promotion",
+    "one-format-one-object-family-one-stage",
+    "expected-versus-actual-differences-must-be-recorded"
+  ],
+  "candidates": [
+    {
+      "id": "odp-bounded-slide-text",
+      "current": "ODP has bounded package validation, slide/text/notes parsing, search, precise slide locators and a real LibreOffice fixture, but no inventory, patch command, writer adapter or edit UI",
+      "gap": "simple slide body text has no producer-fidelity inventory or reliable-copy transaction; presenter notes are known not to survive the current LibreOffice roundtrip",
+      "reuse": "high",
+      "risk": "medium",
+      "userValue": "high",
+      "selected": true
+    },
+    {
+      "id": "structured-schema-mode",
+      "current": "YAML, XML and TOML have syntax analysis and editing but zero schema integration tokens in their production views",
+      "gap": "provider trust, schema mapping, resolution, diagnostics and offline/privacy boundaries are all absent",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "high",
+      "selected": false
+    },
+    {
+      "id": "graph-cluster-collapse-or-fullscreen",
+      "current": "the graph already has stable communities, semantic navigation and bounded performance, but GraphView has no fullscreen or cluster-collapse implementation",
+      "gap": "proxy-node identity, selection/history restoration, camera persistence, reduced-motion and responsive exit contracts are absent",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "medium",
+      "selected": false
+    }
+  ],
+  "realBaseline": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m1ca-odf-feasibility-audit.ps1 -EvidenceOutput <temporary-path>",
+    "capturedAt": "2026-08-31T02:44:29.7284589Z",
+    "rustTestsPassed": 20,
+    "rustTestsFailed": 0,
+    "rustTestsIgnored": 1,
+    "libreOfficeVersion": "26.2.4.2",
+    "odpFixtureBytes": 15864,
+    "odpFixtureSha256": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+    "libreOfficePdfBytes": 19403,
+    "sourceUnchanged": true,
+    "slideTextParsed": true,
+    "notesPreserved": false
+  },
+  "selectedNextStage": {
+    "id": "M5-1",
+    "name": "odp-slide-text-producer-fidelity-and-object-selection"
+  },
+  "nextStageRequirements": {
+    "productCodeChanges": false,
+    "binaryVersionChange": false,
+    "projectAuthoredProducerFixturesOnly": true,
+    "inspectLibreOfficeAndPowerPointOutputs": true,
+    "recordUnavailableProducerAsBlocker": true,
+    "simpleSlideBodyTextOnly": true,
+    "presenterNotesRemainReadOnly": true,
+    "animationsMediaMastersAndComplexShapesRemainReadOnly": true,
+    "sourceDigestMustRemainUnchanged": true,
+    "independentProducerReopenRequired": true,
+    "expectedVsActualRequired": true
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m5-1-odp-slide-text-producer-fidelity-and-object-selection"
+}

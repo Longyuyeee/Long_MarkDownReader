@@ -63,6 +63,7 @@ const m4f3HostedLifecycle = readJson('shared/post-v115-m4f3a-v1016-hosted-instal
 const m4f4ReleaseReadiness = readJson('shared/post-v115-m4f4-v1016-final-artifact-manifest-release-readiness-policy.json')
 const m4f5PublishedRelease = readJson('shared/post-v115-m4f5-v1016-published-release-policy.json')
 const m4f6ManagedUpdater = readJson('shared/v116-managed-updater-lifecycle-policy.json')
+const m5ScopeSelection = readJson('shared/post-v116-m5-0-v1017-scope-selection-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -181,7 +182,9 @@ const checks = {
     && m4f6ManagedUpdater.stage === 'V1.0.16-U1'
     && m4f6ManagedUpdater.status === 'hosted-managed-update-passed'
     && m4f6ManagedUpdater.nextAction === 'v1.0.16-release-and-managed-updater-closure-complete'
-    && policy.currentStage === 'M5-0-v1.0.17-scope-selection-audit',
+    && m5ScopeSelection.predecessor === m4f6ManagedUpdater.stage
+    && m5ScopeSelection.status === 'scope-selected'
+    && policy.currentStage === `${m5ScopeSelection.selectedNextStage.id}-${m5ScopeSelection.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-0",
+  "status": "accepted",
+  "capturedAt": "2026-08-31T02:44:29.7284589Z",
+  "sourceCommit": "ef97bbc52f5f6dd41de09ed966c0f5b10afb5eef",
+  "expected": {
+    "selectOneSmallAdjacentSlice": true,
+    "reuseVerifiedSafetyFoundation": true,
+    "runRealProducerBaseline": true,
+    "doNotPromoteProductCapability": true
+  },
+  "actual": {
+    "selectedCandidate": "odp-bounded-slide-text",
+    "currentOdpCapability": "preview-only",
+    "currentOdpWriterAdapter": null,
+    "currentOdpEditUi": false,
+    "odpFixture": {
+      "file": "src-tauri/tests/fixtures/odf-content/longedit-e1c-presentation.odp",
+      "bytes": 15864,
+      "sha256": "8ef886d0370d18a497ceb7811ed845a1f4d73064ae4a20cf37e0e1eb22554f52",
+      "slides": 2,
+      "zipEntries": 8
+    },
+    "realTest": {
+      "rustPassed": 20,
+      "rustFailed": 0,
+      "rustIgnored": 1,
+      "libreOfficeVersion": "26.2.4.2",
+      "libreOfficeIndependentPdfBytes": 19403,
+      "sourceUnchanged": true,
+      "slideTextParsed": true,
+      "notesPreserved": false
+    },
+    "alternativeFacts": {
+      "structuredViewSchemaTokens": { "yaml": 0, "xml": 0, "toml": 0 },
+      "graphFullscreenTokens": 0,
+      "graphClusterCollapseTokens": 0
+    }
+  },
+  "differences": [
+    {
+      "expected": "ODP text and presenter notes can advance together because both are already parsed",
+      "actual": "slide body text is parsed and locatable, but the real LibreOffice roundtrip still drops the authored presenter note",
+      "correction": "M5-1 inventories simple body text separately and keeps presenter notes read-only"
+    },
+    {
+      "expected": "the existing ODF isolation candidate is close enough to expose editing",
+      "actual": "there is no ODP target inventory, stale-target digest, patch transaction, writer adapter, save receipt or edit UI",
+      "correction": "M5-1 is producer fidelity and object selection only; implementation cannot begin before its exit audit"
+    },
+    {
+      "expected": "Schema mode or graph fullscreen may be equally small postponed additions",
+      "actual": "both lack several foundational production contracts, while ODP can reuse verified package, parser, locator and reliable-copy patterns",
+      "correction": "defer both and select only ODP body-text fidelity"
+    }
+  ],
+  "selectedNextStage": "M5-1-odp-slide-text-producer-fidelity-and-object-selection",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

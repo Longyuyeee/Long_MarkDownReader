@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 M5-0 v1.0.17 范围选择已通过：** 真实代码比较 ODP 正文、结构化 Schema 和图谱聚类/全屏后，只选择相邻的 ODP 正文方向。重跑 ODF/LibreOffice 基线得到 Rust 20 通过、0 失败、1 个显式 artifact 测试忽略，LibreOffice 26.2.4.2 独立 ODP 导出 19,403 bytes、源摘要不变；实际备注仍未保留，因此 ODP 继续 `preview-only`。唯一接续点为 **M5-1 ODP 幻灯片正文生产者保真与对象选择审计**；只盘点 LibreOffice/PowerPoint 项目自有输出，不写产品功能、不开放备注、不提升版本。详见 [`Post_v1.0.16_M5_0_v1.0.17_Scope_Selection_Audit_2026-08-31.md`](./Post_v1.0.16_M5_0_v1.0.17_Scope_Selection_Audit_2026-08-31.md)。
+
 > **2026-08-31 M4F-6 官方应用内更新观察已通过：** GitHub 托管一次性 Windows 从官方 v1.0.15 发现 v1.0.16，经显式确认、官方 NSIS 大小/SHA-256 校验、同目录静默覆盖和自动重启后显示最新版；资料库与配置在覆盖、卸载后均保留。修复 Tag refspec 后的运行 [`33350758818`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33350758818) 为 12/12，三张截图已人工验收，9 个原始证据文件逐项哈希导入。v1.0.16 发布与更新链已收口，唯一接续点为 **M5-0 v1.0.17 范围选择审计**；先选择一个可真实验收的最小切片，不提升当前 1.0.16 二进制。详见 [`Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md`](./Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
 
 > **2026-08-27 M1 总退出审计已通过：** 当前代码重新完成 XLSX 对象草稿、PPTX 统一草稿、ODS + LibreOffice、大 JSON、1080p/4K 逐帧截图和 VTT/SRT 字幕六条真实桌面复验；DOCX 继续以 Word/WPS/LibreOffice 3 个生产者、9 个来源组合、9/9 稳定复开为外部证据。复验发现 PPTX 脚本覆盖 E2E 二进制导致 ODS 60 秒无 CDP 的真实差异，已修正 `-SkipBuild` 和 E2E 配置传递后重跑通过。格式矩阵、README 和 `1.0.16` 开发说明已补齐，M1 在有界范围收口。下一步固定为 **M3 知识图谱 2.0 选择审计**；先测 100/1000/5000 节点语义、算法和性能基线，不直接堆视觉效果。详见 [`Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md`](./Post_v1.0.15_M1_Total_Exit_Criteria_Audit_2026-08-27.md)。

@@ -11,6 +11,7 @@ import './check-v112-managed-updater-lifecycle.mjs'
 import './check-v113-managed-updater-lifecycle.mjs'
 import './check-v114-managed-updater-lifecycle.mjs'
 import './check-v116-managed-updater-lifecycle.mjs'
+import './check-post-v116-m5-0-v1017-scope-selection.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
@@ -62,7 +63,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === pkg.version && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**`v1.0.16` 正式发布后更新观察**', policy.currentStatus === `v${pkg.version}-community-release-published`],
+  ['当前阶段：**M5-1 ODP 幻灯片正文生产者保真与对象选择审计**', policy.currentStatus === `v${pkg.version}-community-release-published`],
 ]
 
 for (const [token, condition] of required) {
