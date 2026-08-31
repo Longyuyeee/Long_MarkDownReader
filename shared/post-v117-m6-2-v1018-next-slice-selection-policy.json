@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-2",
+  "name": "v1.0.18-next-slice-selection-audit",
+  "status": "scope-selected",
+  "predecessor": "M6-1",
+  "selectionSourceCommit": "83d0a74db4019d95396f723cca2dafb611014fed",
+  "runtimeBaseVersion": "1.0.17",
+  "publicVersion": "1.0.17",
+  "developmentTargetVersion": "1.0.18",
+  "candidates": [
+    {
+      "id": "v1018-quality-debt-and-release-readiness",
+      "current": "M6-1 provides a complete user-visible graph fullscreen lifecycle with two real Tauri sessions, six viewport cycles, Escape and route cleanup, zero runtime errors and unchanged source files",
+      "gap": "the complete current Rust suite and patch-release quality gate have not yet been rerun against the M6-1 product commit",
+      "risk": "low",
+      "userValue": "cohesive-patch",
+      "selected": true
+    },
+    {
+      "id": "graph-cluster-collapse-expand",
+      "current": "communities remain filtered subgraphs without proxy nodes",
+      "gap": "proxy identity, aggregated edges, selection/history, path/evidence, minimap, export and restoration contracts remain absent",
+      "risk": "high",
+      "userValue": "medium-high",
+      "selected": false
+    },
+    {
+      "id": "structured-schema-mode",
+      "current": "YAML/XML/TOML have bounded analysis and editing but no schema validator dependency or provider mapping",
+      "gap": "provider trust, mapping, resolution, caching, offline/privacy, diagnostics provenance and failure fallback remain absent",
+      "risk": "high",
+      "userValue": "high",
+      "selected": false
+    },
+    {
+      "id": "graph-governance-rings",
+      "current": "health analysis is independently loaded by GraphHealthPanel while GraphView status rings use only recency and relation strength",
+      "gap": "a shared per-node health fact, scan ownership, provenance, priority and explanation contract remain absent",
+      "risk": "medium-high",
+      "userValue": "medium",
+      "selected": false
+    },
+    {
+      "id": "odp-presenter-note-editing",
+      "current": "notes remain parsed and read-only outside the accepted simple body-copy transaction",
+      "gap": "LibreOffice and PowerPoint note preservation remains asymmetric",
+      "risk": "high",
+      "userValue": "medium",
+      "selected": false
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M6-3",
+    "name": "v1.0.18-quality-debt-and-release-readiness"
+  },
+  "nextStageRequirements": {
+    "productCodeChanges": false,
+    "binaryVersionChange": false,
+    "completeRustSuiteRequired": true,
+    "completePatchReleaseGateRequired": true,
+    "m6FullscreenEvidenceMustRemainAccepted": true,
+    "allUnexpectedFailuresMustBeReproducedAndFixed": true,
+    "expectedVsActualRequired": true,
+    "versionTransitionOnlyAfterFullPass": true,
+    "releaseCandidateOnlyAfterPackagingAndLifecycle": true
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m6-3-v1.0.18-quality-debt-and-release-readiness"
+}

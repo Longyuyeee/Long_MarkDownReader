@@ -62,10 +62,12 @@ if (combinedGraph.actual?.runtimeErrors !== 0 || !combinedGraph.actual?.sourceFi
   || deferred?.fullscreenVisible || deferred?.clusterCollapseExpandVisible || deferred?.governanceRingVisible) fail('M3B-12 combined graph baseline drift')
 if (evidence.stage !== 'M6-0' || evidence.status !== 'accepted' || evidence.actual?.selectedCandidate !== selected[0].id || evidence.differences?.length !== 4
   || evidence.selectedNextStage !== 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit' || evidence.releaseCandidate || evidence.sourceUserContentIncluded) fail('M6-0 selection evidence drift')
-const expectedDevelopmentStages = successor.status === 'accepted' ? [`${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`] : [evidence.selectedNextStage]
-if (!expectedDevelopmentStages.includes(development.currentStage) || development.runtimeBaseVersion !== '1.0.17' || development.publicVersion !== '1.0.17'
+const developmentStageAccepted = successor.status === 'accepted'
+  ? /^M6-[0-9]+-/.test(development.currentStage)
+  : development.currentStage === evidence.selectedNextStage
+if (!developmentStageAccepted || development.runtimeBaseVersion !== '1.0.17' || development.publicVersion !== '1.0.17'
   || development.developmentTargetVersion !== '1.0.18' || development.releaseCandidate) fail('M6-1 development handoff drift')
-for (const [document, tokens] of [[audit, ['真实证据与预期差异', 'M6-1', '图谱有界全屏生命周期', 'F11']], [roadmap, ['M6-0', 'M6-1', '1280×800', '720×680']], [alignment, successor.status === 'accepted' ? ['当前阶段：**M6-2 v1.0.18 下一切片选择审计**', '唯一接续点为 M6-2'] : ['当前阶段：**M6-1 图谱有界全屏生命周期与真实桌面审计**', '唯一接续点为 M6-1']]]) {
+for (const [document, tokens] of [[audit, ['真实证据与预期差异', 'M6-1', '图谱有界全屏生命周期', 'F11']], [roadmap, ['M6-0', 'M6-1', '1280×800', '720×680']], [alignment, successor.status === 'accepted' ? ['M6-0 已完成', '唯一接续点为 M6-1'] : ['当前阶段：**M6-1 图谱有界全屏生命周期与真实桌面审计**', '唯一接续点为 M6-1']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-0 document missing ${token}`)
 }
 

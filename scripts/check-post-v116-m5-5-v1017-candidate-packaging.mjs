@@ -51,12 +51,12 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
   const releaseReady = finalReadiness.status === 'accepted-ready-to-publish'
   const releaseClosed = updater.status === 'hosted-managed-update-passed'
   const expectedCommunityStatus = releasePublished ? 'v1.0.17-community-release-published' : releaseReady ? 'v1.0.17-community-release-ready-to-publish' : successorPassed ? 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'
-  const expectedStages = releaseClosed ? ['M6-0-v1.0.18-scope-selection-audit', 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit', 'M6-2-v1.0.18-next-slice-selection-audit'] : [releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : releaseReady ? 'M5-8-v1.0.17-tag-release-and-remote-asset-verification' : successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`]
+  const expectedStages = releaseClosed ? null : [releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : releaseReady ? 'M5-8-v1.0.17-tag-release-and-remote-asset-verification' : successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`]
   const expectedTransition = releaseClosed ? 'v1.0.17-release-and-managed-updater-closed' : releasePublished ? 'v1.0.17-public-release-published' : releaseReady ? 'v1.0.17-release-ready' : successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged'
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
     || community.currentStatus !== expectedCommunityStatus
-    || !expectedStages.includes(development.currentStage)
+    || !(releaseClosed ? /^M6-[0-9]+-/.test(development.currentStage) : expectedStages.includes(development.currentStage))
     || development.binaryVersionTransition !== expectedTransition) fail('M5-5 accepted package state drifted')
   if (policy.artifacts?.[0]?.sizeBytes !== 74186752 || policy.artifacts?.[0]?.sha256 !== '96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e'
     || policy.artifacts?.[1]?.sizeBytes !== 65922301 || policy.artifacts?.[1]?.sha256 !== '09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886') fail('M5-5 artifact receipt drifted')

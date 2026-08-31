@@ -7,6 +7,7 @@ const text = file => fs.readFileSync(file, 'utf8')
 const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 const policy = json('shared/post-v117-m6-1-graph-fullscreen-policy.json')
 const predecessor = json('shared/post-v117-m6-0-v1018-scope-selection-policy.json')
+const successor = json('shared/post-v117-m6-2-v1018-next-slice-selection-policy.json')
 const development = json('shared/development-version-policy.json')
 const manifest = json('docs/evidence/post-v117-m6-1-graph-fullscreen/manifest.json')
 const graph = text('src/components/GraphView.vue')
@@ -53,7 +54,8 @@ for (const [file, theme, motion] of [['desktop-dark-reduced.json', 'dark', 'redu
       || !inside.minimapVisible || !inside.historyVisible || !after.minimapVisible || !after.historyVisible) fail(`M6-1 cycle drift: ${file}/${viewport.width}x${viewport.height}`)
   }
 }
-if (development.currentStage !== 'M6-2-v1.0.18-next-slice-selection-audit' || development.runtimeBaseVersion !== '1.0.17'
+const expectedDevelopmentStage = successor.status === 'scope-selected' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : 'M6-2-v1.0.18-next-slice-selection-audit'
+if (development.currentStage !== expectedDevelopmentStage || development.runtimeBaseVersion !== '1.0.17'
   || development.publicVersion !== '1.0.17' || development.developmentTargetVersion !== '1.0.18' || development.releaseCandidate) fail('M6-2 handoff drift')
 for (const [document, tokens] of [[audit, ['6/6', 'Document not active', 'aria-label', 'M6-2']], [roadmap, ['M6-1 退出回执', '暗色/reduced', '浅色/calm', 'M6-2']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-1 document missing ${token}`)

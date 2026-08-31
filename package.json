@@ -432,6 +432,7 @@
     "check:post-v117-m6-0-v1018-scope-selection": "node scripts/check-post-v117-m6-0-v1018-scope-selection.mjs",
     "check:post-v117-m6-1-graph-fullscreen": "node scripts/check-post-v117-m6-1-graph-fullscreen.mjs",
     "audit:post-v117-m6-1-graph-fullscreen": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v117-m6-1-graph-fullscreen-audit.ps1",
+    "check:post-v117-m6-2-v1018-next-slice-selection": "node scripts/check-post-v117-m6-2-v1018-next-slice-selection.mjs",
     "check:post-v116-m5-1-odp-producer-selection": "node scripts/check-post-v116-m5-1-odp-producer-selection.mjs",
     "audit:post-v116-m5-1-odp-producer-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v116-m5-1-odp-producer-selection-audit.ps1",
     "check:post-v116-m5-2-odp-simple-slide-copy": "node scripts/check-post-v116-m5-2-odp-simple-slide-copy.mjs",
