@@ -52,17 +52,21 @@ e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215  LongEdit_1.0.1
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 → v1.0.16 的发布后官方更新观察已在一次性 Windows 上以 12/12 检查通过。
 
-## v1.0.16
+## v1.0.17
 
-v1.0.16 已正式发布。`main` 当前运行时与公开下载均为 v1.0.16，下一补丁开发目标登记为 v1.0.17；M1～M4D 已完成分阶段真实审计：
+v1.0.17 已正式发布。`main` 当前运行时与公开下载均为 v1.0.17，下一补丁开发目标登记为 v1.0.18；M1～M5 已完成分阶段真实审计：
 
 - XLSX 的数据验证、条件格式和 Table 进入统一对象草稿；DOCX/PPTX 深化已有段落样式与受限对象事务，仍不宣称完整 Office 等价编辑。
-- ODS 可编辑简单文本、有限数值和文件已有命名样式，并可靠另存新副本；公式、自定义样式与 ODP 编辑继续关闭。
+- ODS 可编辑简单文本、有限数值和文件已有命名样式，并可靠另存新副本；ODP 简单正文页支持资料库内有界编辑副本，复杂对象页整页阻断，公式、自定义样式和外部 ODP 编辑继续关闭。
 - 大 JSON 渐进只读支持 512 KiB 分段导航与流式全文搜索，小 JSON 保持完整源码和树形编辑。
 - 资料库视频支持前后逐帧、原尺寸 PNG 截图、播放位置记忆，以及同目录同名 VTT/SRT 字幕选择与关闭。
 - 工作台围绕“继续工作、今天要做、需要处理”收敛；Markdown 待办与内部 Table 显式布尔任务行已通过真实确认写回、恢复、撤销、冲突拒绝、原对象定位和响应式验收。
 - 知识图谱 2.0 已完成稳定语义探索、专业视觉与 Worker 承载的大图性能收口；跨格式搜索、图谱和关系上下文现共享对象定位合同，Table 行/视图与 OPML 节点可被搜索并打开到内部位置。
 - M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
+
+M5-8 已完成：`v1.0.17` Tag 绑定精确产品提交 `2b6235d420ceffd291dab72c4af17caffe464333`，GitHub Release `379561360` 的 NSIS、MSI 和 `SHA256SUMS.txt` 已从公开地址重新下载并匹配冻结清单。此前托管运行 [33361759629](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33361759629) 已通过 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。完整事实见 [v1.0.17 发布说明](docs/RELEASE_NOTES_v1.0.17.md) 与 [M5-8 正式发布审计](docs/Post_v1.0.16_M5_8_v1.0.17_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
+
+### v1.0.16 发布链回顾
 
 M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
 
@@ -274,7 +278,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。M5-3 已按 [ODP 简单页正文副本工作区审计](docs/Post_v1.0.16_M5_3_ODP_Simple_Slide_Body_Copy_Workspace_Audit_2026-08-31.md) 完成资料库内正文草稿、整页阻断解释、可靠新副本及真实 LibreOffice/PowerPoint 桌面复开；ODP 现登记为有界 `basic-edit / copy`，外部打开仍只读。M5-4 已按 [v1.0.17 质量债务与发布就绪审计](docs/Post_v1.0.16_M5_4_v1.0.17_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md) 将全仓 Rust 修正至 548 通过、0 失败、5 忽略并通过完整发布门。M5-5 已按 [v1.0.17 原子迁移与候选打包审计](docs/Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 从精确提交构建真实 MSI/NSIS、记录 SHA-256 与 `NotSigned`，并通过当前 WebView2 6/6 检查和 11/11 路由；候选说明见 [v1.0.17 Release Notes](docs/RELEASE_NOTES_v1.0.17.md)。M5-6 已按 [托管安装生命周期审计](docs/Post_v1.0.16_M5_6_v1.0.17_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 从精确候选真实构建双安装包，并通过 `v1.0.16 → v1.0.17` 升级、22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。M5-7 已按 [最终产物与发布就绪审计](docs/Post_v1.0.16_M5_7_v1.0.17_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md) 冻结托管双包、公开文件名和 `SHA256SUMS.txt`。公开稳定版仍为 [v1.0.16](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)；下一步 M5-8 创建精确 Tag/Release 并回下载复核。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。M5-3 已按 [ODP 简单页正文副本工作区审计](docs/Post_v1.0.16_M5_3_ODP_Simple_Slide_Body_Copy_Workspace_Audit_2026-08-31.md) 完成资料库内正文草稿、整页阻断解释、可靠新副本及真实 LibreOffice/PowerPoint 桌面复开；ODP 现登记为有界 `basic-edit / copy`，外部打开仍只读。M5-4 已按 [v1.0.17 质量债务与发布就绪审计](docs/Post_v1.0.16_M5_4_v1.0.17_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md) 将全仓 Rust 修正至 548 通过、0 失败、5 忽略并通过完整发布门。M5-5 已按 [v1.0.17 原子迁移与候选打包审计](docs/Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 从精确提交构建真实 MSI/NSIS、记录 SHA-256 与 `NotSigned`，并通过当前 WebView2 6/6 检查和 11/11 路由。M5-6 已按 [托管安装生命周期审计](docs/Post_v1.0.16_M5_6_v1.0.17_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 通过 `v1.0.16 → v1.0.17` 升级、22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。M5-7 冻结最终清单，M5-8 已按 [正式发布与远端复核审计](docs/Post_v1.0.16_M5_8_v1.0.17_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md) 完成 [v1.0.17 正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.17) 和三项附件回下载校验；下一步 M5-9 观察官方应用内更新链。
 
 ## 许可证
 

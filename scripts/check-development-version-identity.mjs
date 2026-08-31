@@ -71,6 +71,7 @@ const m5ReleaseReadiness = readJson('shared/post-v116-m5-4-v1017-release-readine
 const m5CandidatePackaging = readJson('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const m5HostedLifecycle = readJson('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const m5FinalReadiness = readJson('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json')
+const m5PublishedRelease = readJson('shared/post-v116-m5-8-v1017-published-release-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -105,14 +106,14 @@ const checks = {
         && community.gates?.githubReleasePublished === true
         && community.release?.taggedCommit === policy.publicTagCommit),
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && policy.publicVersion === '1.0.16',
+    && ['1.0.16', '1.0.17'].includes(policy.publicVersion),
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
   binaryTransitionComplete: (candidateRuntime
     ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready'].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === expectedTarget
-    : policy.binaryVersionTransition === 'v1.0.16-public-release-published'
+    : policy.binaryVersionTransition === `v${policy.runtimeBaseVersion}-public-release-published`
       && policy.runtimeBaseVersion === policy.publicVersion)
     && policy.developmentTargetVersion === expectedTarget,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
@@ -208,7 +209,9 @@ const checks = {
     && m5OdpWorkspace.status === 'accepted'
     && m5ReleaseReadiness.predecessor === m5OdpWorkspace.stage
     && m5ReleaseReadiness.status === 'accepted'
-    && (m5FinalReadiness.status === 'accepted-ready-to-publish'
+    && (m5PublishedRelease.status === 'published-and-remote-assets-verified'
+      ? policy.currentStage === `${m5PublishedRelease.selectedNextStage.id}-${m5PublishedRelease.selectedNextStage.name}`
+      : m5FinalReadiness.status === 'accepted-ready-to-publish'
       ? policy.currentStage === `${m5FinalReadiness.selectedNextStage.id}-${m5FinalReadiness.selectedNextStage.name}`
       : m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
       ? policy.currentStage === 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'

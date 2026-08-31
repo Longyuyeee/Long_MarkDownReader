@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.0.17",
+  "developmentTargetVersion": "1.0.18",
   "runtimeBaseVersion": "1.0.17",
-  "publicVersion": "1.0.16",
-  "publicTag": "v1.0.16",
-  "publicTagCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+  "publicVersion": "1.0.17",
+  "publicTag": "v1.0.17",
+  "publicTagCommit": "2b6235d420ceffd291dab72c4af17caffe464333",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M5-8-v1.0.17-tag-release-and-remote-asset-verification",
-  "binaryVersionTransition": "v1.0.17-release-ready",
-  "displayLabel": "v1.0.17 已通过最终发布审计 · 当前公开 v1.0.16 · M5-8 远端发布复核"
+  "currentStage": "M5-9-v1.0.16-to-v1.0.17-managed-updater-observation",
+  "binaryVersionTransition": "v1.0.17-public-release-published",
+  "displayLabel": "v1.0.17 已正式发布 · 下一目标 v1.0.18 · M5-9 更新观察"
 }
