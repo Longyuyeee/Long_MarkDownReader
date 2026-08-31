@@ -3,7 +3,14 @@ import fs from 'node:fs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const json = file => JSON.parse(read(file))
-const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+const byteVariants = file => {
+  const raw = fs.readFileSync(file)
+  if (!file.endsWith('.json')) return [raw]
+  const lf = Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'))
+  const crlf = Buffer.from(lf.toString('utf8').replace(/\n/g, '\r\n'))
+  return [raw, lf, crlf]
+}
+const matchesIdentity = (file, sizeBytes, sha256) => byteVariants(file).some(bytes => bytes.length === sizeBytes && crypto.createHash('sha256').update(bytes).digest('hex') === sha256)
 const failures = []
 const fail = message => failures.push(message)
 const requireTokens = (source, tokens, area) => tokens.forEach(token => {
@@ -90,7 +97,7 @@ if (!completed) {
     for (const file of manifest.files ?? []) {
       const evidencePath = `${root}/${file.path}`
       if (!fs.existsSync(evidencePath)) fail(`v1.0.16 updater evidence missing: ${file.path}`)
-      else if (fs.statSync(evidencePath).size !== file.bytes || sha256(evidencePath) !== file.sha256) fail(`v1.0.16 updater evidence hash drift: ${file.path}`)
+      else if (!matchesIdentity(evidencePath, file.bytes, file.sha256)) fail(`v1.0.16 updater evidence hash drift: ${file.path}`)
     }
   }
 }

@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.18 M6-5A 换机证据身份纠偏：** 换机审计确认产品代码和 Git 证据未漂移，失败来自 `core.autocrlf=true` 与历史检查器原始字节哈希。源码/JSON 现只把 LF/CRLF 视为等价表示并同时核对大小与摘要，二进制截图仍按原始字节核验；M6-1 策略改记 Git blob 规范摘要。纠偏不改变产品、版本或发布状态。唯一接续点仍是下载并独立审计成功运行 `33378338422` 的 M6-5 artifact，完成前不得进入 M6-6 或发布。详见 [`Post_v1.0.17_M6_5A_Cross_Machine_Evidence_Identity_Correction_Audit_2026-08-31.md`](./Post_v1.0.17_M6_5A_Cross_Machine_Evidence_Identity_Correction_Audit_2026-08-31.md)。
+
 > **2026-08-31 v1.0.18 M6-5 换机暂停交接：** 远端 `main` 与本地共同 HEAD 为 `6d208bcf7d0ba430b7df478718fe636fe91c6e34`，工作区干净；产品候选固定为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`。GitHub Actions 运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 未取消，暂停时已通过身份/依赖步骤并正在构建候选 MSI/NSIS，最终结论未知。换机后先查看该运行，禁止重复触发或提前发布。完整命令、完成事实、严格接续顺序与禁止边界见 [`Development_Handoff_v1.0.18_M6-5_2026-08-31.md`](./Development_Handoff_v1.0.18_M6-5_2026-08-31.md)。
 
 > **2026-08-31 M5-5 v1.0.17 原子版本迁移与候选打包已通过：** 精确提交 `2b6235d420ceffd291dab72c4af17caffe464333` 通过完整发布门；真实 MSI 为 74,186,752 bytes / `961184…d6e`，NSIS 为 65,922,301 bytes / `099238…886`，产品版本均为 1.0.17 且 `NotSigned`。当前 Tauri WebView2 烟测 6/6、11/11 路由，TXT/JSON 真实保存复开通过且截图人工核对。公开版本仍为 v1.0.16，`releaseCandidate=false`。唯一接续点为 **M5-6 v1.0.17 托管安装生命周期**；安装、升级、卸载和安装态回归通过前不得创建 Tag 或 GitHub Release。详见 [`Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md`](./Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md)。

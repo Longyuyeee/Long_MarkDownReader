@@ -22,6 +22,8 @@ const m5HostedLifecycle = fs.existsSync('shared/post-v116-m5-6-v1017-hosted-inst
 const m5FinalReadiness = fs.existsSync('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json') ? json('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json') : null
 const m5Published = fs.existsSync('shared/post-v116-m5-8-v1017-published-release-policy.json') ? json('shared/post-v116-m5-8-v1017-published-release-policy.json') : null
 const checksumBytes = fs.readFileSync('docs/evidence/v1.0.16-release/SHA256SUMS.txt')
+const checksumLf = Buffer.from(checksumBytes.toString('utf8').replace(/\r\n/g, '\n'))
+const checksumCrlf = Buffer.from(checksumLf.toString('utf8').replace(/\n/g, '\r\n'))
 const releaseNotes = fs.readFileSync('docs/RELEASE_NOTES_v1.0.16.md', 'utf8')
 const readme = fs.readFileSync('README.md', 'utf8')
 const audit = fs.readFileSync('docs/Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md', 'utf8')
@@ -41,7 +43,7 @@ for (const expected of policy.artifacts) {
   const candidate = laterCandidateActive ? actual : community.candidate?.artifacts?.find(item => item.target === expected.target)
   for (const item of [actual, candidate]) if (!item || item.sourceFileName !== expected.sourceFileName || item.fileName !== expected.fileName || item.sizeBytes !== expected.sizeBytes || item.sha256 !== expected.sha256 || item.authenticodeStatus !== 'NotSigned') fail(`${expected.target} release mapping drifted`)
 }
-if (checksumBytes.length !== policy.checksumFile.sizeBytes || sha256(checksumBytes) !== policy.checksumFile.sha256 || manifest.checksumFile.sha256 !== policy.checksumFile.sha256) fail('SHA256SUMS receipt drifted')
+if (![checksumBytes, checksumLf, checksumCrlf].some(bytes => bytes.length === policy.checksumFile.sizeBytes && sha256(bytes) === policy.checksumFile.sha256) || manifest.checksumFile.sha256 !== policy.checksumFile.sha256) fail('SHA256SUMS receipt drifted')
 for (const artifact of policy.artifacts) if (!checksumBytes.toString('utf8').includes(`${artifact.sha256}  ${artifact.fileName}`)) fail(`SHA256SUMS missing ${artifact.fileName}`)
 if (manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2' || manifest.runtimeSmoke?.checksPassed !== 6 || manifest.runtimeSmoke?.routesPassed !== 11 || !manifest.runtimeSmoke?.txtSaveReopenPassed || !manifest.runtimeSmoke?.jsonSaveReopenPassed) fail('real runtime smoke facts drifted')
 if (manifest.hostedInstalledLifecycle?.runId !== policy.hostedRunId || manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22 || manifest.hostedInstalledLifecycle?.installedWorkspaceChecksPassed !== 18 || manifest.hostedInstalledLifecycle?.installedRoutesPassed !== 11 || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7 || manifest.hostedInstalledLifecycle?.failedChecks !== 0) fail('hosted lifecycle facts drifted')

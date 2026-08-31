@@ -4,7 +4,15 @@ import path from 'node:path'
 
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'))
 const text = file => fs.readFileSync(file, 'utf8')
-const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+const byteVariants = file => {
+  const raw = fs.readFileSync(file)
+  if (!/\.(?:json|vue)$/i.test(file)) return [raw]
+  const lf = Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'))
+  const crlf = Buffer.from(lf.toString('utf8').replace(/\n/g, '\r\n'))
+  return [raw, lf, crlf]
+}
+const matchesSha256 = (file, sha256) => byteVariants(file).some(bytes => crypto.createHash('sha256').update(bytes).digest('hex') === sha256)
+const matchesIdentity = (file, sizeBytes, sha256) => byteVariants(file).some(bytes => bytes.length === sizeBytes && crypto.createHash('sha256').update(bytes).digest('hex') === sha256)
 const policy = json('shared/post-v117-m6-1-graph-fullscreen-policy.json')
 const predecessor = json('shared/post-v117-m6-0-v1018-scope-selection-policy.json')
 const successor = json('shared/post-v117-m6-2-v1018-next-slice-selection-policy.json')
@@ -21,7 +29,7 @@ if (policy.schemaVersion !== 1 || policy.stage !== 'M6-1' || policy.status !== '
   || predecessor.selectedNextStage?.id !== policy.stage || predecessor.selectedNextStage?.name !== policy.name) fail('M6-1 identity/predecessor drift')
 if (policy.runtimeBaseVersion !== '1.0.17' || policy.publicVersion !== '1.0.17' || policy.developmentTargetVersion !== '1.0.18'
   || policy.releaseCandidate || policy.binaryVersionChange || policy.sourceUserContentIncluded) fail('M6-1 version/privacy boundary drift')
-if (policy.implementation?.surfaceSha256 !== sha256('src/components/GraphView.vue')) fail('M6-1 production surface hash drift')
+if (!matchesSha256('src/components/GraphView.vue', policy.implementation?.surfaceSha256)) fail('M6-1 production surface hash drift')
 for (const token of ['data-testid="graph-fullscreen"', ':aria-pressed="graphFullscreenActive"', ':aria-label="graphFullscreenActive', 'document.addEventListener(\'fullscreenchange\'', 'container.requestFullscreen()', 'document.exitFullscreen()', '.catch(() => {})', '.graph-container:fullscreen', 'ResizeObserver']) {
   if (!graph.includes(token)) fail(`M6-1 implementation missing ${token}`)
 }
@@ -35,7 +43,7 @@ if (policy.realDesktopAudit?.sessions !== 2 || policy.realDesktopAudit?.fullscre
 if (manifest.stage !== 'M6-1' || manifest.status !== 'accepted' || manifest.files?.length !== 8 || !manifest.screenshotsVisuallyReviewed || manifest.sourceUserContentIncluded) fail('M6-1 manifest drift')
 for (const item of manifest.files ?? []) {
   const file = path.join('docs/evidence/post-v117-m6-1-graph-fullscreen', item.file)
-  if (!fs.existsSync(file) || fs.statSync(file).size !== item.sizeBytes || sha256(file) !== item.sha256) fail(`M6-1 evidence identity drift: ${item.file}`)
+  if (!fs.existsSync(file) || !matchesIdentity(file, item.sizeBytes, item.sha256)) fail(`M6-1 evidence identity drift: ${item.file}`)
 }
 for (const [file, theme, motion] of [['desktop-dark-reduced.json', 'dark', 'reduced'], ['desktop-white-calm.json', 'white', 'calm']]) {
   const evidence = json(path.join('docs/evidence/post-v117-m6-1-graph-fullscreen', file))

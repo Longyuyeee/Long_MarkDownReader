@@ -3,6 +3,9 @@ import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'))
+const canonicalEvidenceBytes = file => file.endsWith('.json')
+  ? Buffer.from(`${JSON.stringify(json(file), null, 2)}\n`)
+  : fs.readFileSync(file)
 const policy = json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const predecessor = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const workflow = fs.readFileSync(policy.workflow, 'utf8')
@@ -47,10 +50,10 @@ if (management.status !== 'passed' || management.checks?.length !== 7 || managem
 
 const evidenceNames = fs.readdirSync(evidenceRoot).filter(name => name !== 'import-manifest.json').sort()
 const rows = evidenceNames.map(name => {
-  const bytes = fs.readFileSync(`${evidenceRoot}/${name}`)
+  const bytes = canonicalEvidenceBytes(`${evidenceRoot}/${name}`)
   return `${name}:${bytes.length}:${crypto.createHash('sha256').update(bytes).digest('hex')}`
 })
-if (evidenceNames.length !== imported.repositoryCanonicalEvidence?.fileCount || evidenceNames.reduce((sum, name) => sum + fs.statSync(`${evidenceRoot}/${name}`).size, 0) !== imported.repositoryCanonicalEvidence?.totalBytes || crypto.createHash('sha256').update(rows.join('\n')).digest('hex') !== imported.repositoryCanonicalEvidence?.canonicalTreeSha256) failures.push('repository canonical evidence tree drifted')
+if (evidenceNames.length !== imported.repositoryCanonicalEvidence?.fileCount || evidenceNames.reduce((sum, name) => sum + canonicalEvidenceBytes(`${evidenceRoot}/${name}`).length, 0) !== imported.repositoryCanonicalEvidence?.totalBytes || crypto.createHash('sha256').update(rows.join('\n')).digest('hex') !== imported.repositoryCanonicalEvidence?.canonicalTreeSha256) failures.push('repository canonical evidence tree drifted')
 
 if (failures.length) {
   console.error(`M5-6 hosted installer lifecycle check failed:\n- ${failures.join('\n- ')}`)

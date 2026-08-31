@@ -15,6 +15,9 @@ const checksum = fs.readFileSync('docs/evidence/v1.0.17-release/SHA256SUMS.txt')
 const failures = []
 const fail = message => failures.push(message)
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
+const checksumLf = Buffer.from(checksum.toString('utf8').replace(/\r\n/g, '\n'))
+const checksumCrlf = Buffer.from(checksumLf.toString('utf8').replace(/\n/g, '\r\n'))
+const checksumIdentityMatches = [checksum, checksumLf, checksumCrlf].some(bytes => bytes.length === policy.checksumFile.sizeBytes && sha256(bytes) === policy.checksumFile.sha256)
 
 if (policy.stage !== 'M5-7' || policy.predecessor !== predecessor.stage || predecessor.nextAction !== 'execute-m5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit') fail('M5-7 predecessor chain drifted')
 if (policy.candidateSourceCommit !== predecessor.candidateSourceCommit || policy.hostedRunId !== imported.githubRunId || policy.hostedArtifactId !== imported.artifact?.id) fail('M5-7 immutable identity drifted')
@@ -33,7 +36,7 @@ for (const expected of policy.artifacts) {
   }
   if (!checksum.toString('utf8').includes(`${expected.sha256}  ${expected.fileName}`)) fail(`checksum missing ${expected.fileName}`)
 }
-if (checksum.length !== policy.checksumFile.sizeBytes || sha256(checksum) !== policy.checksumFile.sha256 || manifest.checksumFile?.sha256 !== policy.checksumFile.sha256) fail('checksum receipt drifted')
+if (!checksumIdentityMatches || manifest.checksumFile?.sha256 !== policy.checksumFile.sha256) fail('checksum receipt drifted')
 if (manifest.runtimeSmoke?.checksPassed !== 6 || manifest.runtimeSmoke?.routesPassed !== 11 || !manifest.runtimeSmoke?.txtSaveReopenPassed || !manifest.runtimeSmoke?.jsonSaveReopenPassed) fail('runtime smoke facts drifted')
 if (manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22 || manifest.hostedInstalledLifecycle?.installedWorkspaceChecksPassed !== 18 || manifest.hostedInstalledLifecycle?.installedRoutesPassed !== 11 || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7 || manifest.hostedInstalledLifecycle?.failedChecks !== 0) fail('hosted lifecycle facts drifted')
 if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== 'defb7ae3c255f211b1d4d68ce405e6b2dea0b1b67bc42503d180f70595c336f1') fail('canonical evidence receipt drifted')

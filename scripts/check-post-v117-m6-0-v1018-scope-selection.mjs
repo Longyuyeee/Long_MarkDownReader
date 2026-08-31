@@ -3,7 +3,13 @@ import fs from 'node:fs'
 
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'))
 const text = file => fs.readFileSync(file, 'utf8')
-const sha256 = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+const newlineVariants = file => {
+  const raw = fs.readFileSync(file)
+  const lf = Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'))
+  const crlf = Buffer.from(lf.toString('utf8').replace(/\n/g, '\r\n'))
+  return [raw, lf, crlf]
+}
+const matchesSha256 = (file, expected) => newlineVariants(file).some(bytes => crypto.createHash('sha256').update(bytes).digest('hex') === expected)
 const policy = json('shared/post-v117-m6-0-v1018-scope-selection-policy.json')
 const successor = json('shared/post-v117-m6-1-graph-fullscreen-policy.json')
 const evidence = json('docs/evidence/post-v117-m6-0-v1018-scope-selection/selection-evidence.json')
@@ -51,9 +57,9 @@ if (!odp.includes('selectedSlide.notes') || !odfEdit.includes('notes_depth')) fa
 
 const hashes = evidence.actual?.sourceHashes ?? {}
 for (const [key, file] of [['yamlViewSha256', 'src/views/YamlEditorView.vue'], ['xmlViewSha256', 'src/views/XmlEditorView.vue'], ['tomlViewSha256', 'src/views/TomlEditorView.vue'], ['odpViewSha256', 'src/views/OdfContentReaderView.vue']]) {
-  if (hashes[key] !== sha256(file)) fail(`M6-0 source hash drift: ${file}`)
+  if (!matchesSha256(file, hashes[key])) fail(`M6-0 source hash drift: ${file}`)
 }
-if (successor.status !== 'accepted' && hashes.graphViewSha256 !== sha256('src/components/GraphView.vue')) fail('M6-0 graph source hash drift')
+if (successor.status !== 'accepted' && !matchesSha256('src/components/GraphView.vue', hashes.graphViewSha256)) fail('M6-0 graph source hash drift')
 const real = historicGraph.actual?.remainingNavigationSelection
 if (real?.viewports?.length !== 3 || !real.viewports.every(item => item.fits && item.fullscreenApiAvailable && !item.fullscreenVisible && !item.clusterCollapseExpandVisible)
   || real.community?.interactionKind !== 'filtered-subgraph' || historicGraph.actual?.runtimeErrors !== 0 || !historicGraph.actual?.sourceFilesUnchanged || !historicGraph.actual?.returnedToLibrary) fail('M3B-8 real desktop baseline drift')
