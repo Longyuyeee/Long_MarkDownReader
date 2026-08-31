@@ -7,6 +7,7 @@ const policy = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json
 const predecessor = json('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
 const development = json('shared/development-version-policy.json')
 const community = json('shared/v1-community-release-policy.json')
+const successor = json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const pkg = json('package.json')
 const lock = json('package-lock.json')
 const tauri = json('src-tauri/tauri.conf.json')
@@ -38,11 +39,12 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
     || development.currentStage !== 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging'
     || development.binaryVersionTransition !== 'v1.0.17-quality-gate-pending') fail('M5-5 pending state drifted')
 } else if (policy.status === 'accepted') {
+  const successorPassed = successor.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
-    || community.currentStatus !== 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'
-    || development.currentStage !== `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`
-    || development.binaryVersionTransition !== 'v1.0.17-candidate-packaged') fail('M5-5 accepted package state drifted')
+    || community.currentStatus !== (successorPassed ? 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending')
+    || development.currentStage !== (successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`)
+    || development.binaryVersionTransition !== (successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged')) fail('M5-5 accepted package state drifted')
   if (policy.artifacts?.[0]?.sizeBytes !== 74186752 || policy.artifacts?.[0]?.sha256 !== '96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e'
     || policy.artifacts?.[1]?.sizeBytes !== 65922301 || policy.artifacts?.[1]?.sha256 !== '09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886') fail('M5-5 artifact receipt drifted')
   if (evidence?.status !== 'passed' || evidence?.candidateSourceCommit !== policy.candidateSourceCommit || evidence?.differencesAndCorrections?.length !== 4

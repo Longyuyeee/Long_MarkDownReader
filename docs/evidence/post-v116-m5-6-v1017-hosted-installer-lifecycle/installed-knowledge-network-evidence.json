@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "stage": "G14",
+  "capturedAt": "2026-08-31T06:32:01.619Z",
+  "evidenceLevel": "installed-current-tauri-webview2-synthetic-library",
+  "sourceUserContentIncluded": false,
+  "knowledgePulse": {
+    "objectCount": 11,
+    "relationCount": 9,
+    "connectedObjectCount": 11,
+    "isolatedObjectCount": 0,
+    "coveragePercent": 100,
+    "relationTypes": [
+      "contains",
+      "depends-on",
+      "embeds",
+      "supports"
+    ],
+    "guidance": {
+      "code": "network-health-on-track",
+      "title": "知识网络状态良好",
+      "detail": "关系覆盖 100%，继续从核心主题维护网络。"
+    },
+    "topics": [
+      {
+        "nodeId": "longedit-object:canvas_node:997425f4cb2e51d13dbff162cb71e1db:north-star",
+        "title": "r5j-north-star.md",
+        "relationCount": 3
+      },
+      {
+        "nodeId": "longedit-object:canvas_node:997425f4cb2e51d13dbff162cb71e1db:plan",
+        "title": "r5j-plan.md",
+        "relationCount": 3
+      },
+      {
+        "nodeId": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+        "title": "r5j-network",
+        "relationCount": 2
+      },
+      {
+        "nodeId": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+        "title": "r5j-north-star",
+        "relationCount": 2
+      },
+      {
+        "nodeId": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+        "title": "r5j-plan",
+        "relationCount": 2
+      },
+      {
+        "nodeId": "longedit-object:docx_heading:952984a21cfafe47a939d761be45661f:docx-block-1",
+        "title": "LibreOffice Writer UX33H Hyperlink Fixture",
+        "relationCount": 1
+      }
+    ]
+  },
+  "guidanceNavigation": {
+    "route": "#/graph?focus=overview",
+    "graphVisible": true,
+    "openedInCurrentWindow": true
+  },
+  "centeredNavigation": {
+    "nodeId": "longedit-object:canvas_node:997425f4cb2e51d13dbff162cb71e1db:north-star",
+    "title": "r5j-north-star.md",
+    "route": "#/graph?focus=overview&root=longedit-object:canvas_node:997425f4cb2e51d13dbff162cb71e1db:north-star"
+  }
+}

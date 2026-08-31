@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "stage": "G15F",
+  "evidenceLevel": "installed-current-tauri-webview2-synthetic-local-receipt-review",
+  "sourceUserContentIncluded": false,
+  "receiptPathPersisted": false,
+  "automaticUploadTriggered": false,
+  "unknownFieldRejected": true,
+  "receiptReviewSurface": {
+    "entryVisible": true,
+    "entryLabel": "查看已保存结果",
+    "openedInCurrentWindow": true,
+    "pathRendered": false,
+    "pathPersisted": false
+  },
+  "reviewedComparison": {
+    "schemaVersion": 1,
+    "stage": "G15B",
+    "appVersion": "1.0.17",
+    "generatedAt": 1788157917,
+    "evidenceLevel": "local-consented-aggregate-comparison-only",
+    "consentBoundary": "User selects a local aggregate baseline, previews the comparison, and explicitly chooses a new local JSON destination. LongEdit performs no automatic upload.",
+    "sourceUserContentIncluded": false,
+    "objectIdentifiersIncluded": false,
+    "fileNamesIncluded": false,
+    "absolutePathsIncluded": false,
+    "baselineGeneratedAt": 1788157917,
+    "elapsedSeconds": 0,
+    "baseline": {
+      "objectCount": 11,
+      "relationCount": 9,
+      "connectedObjectCount": 11,
+      "isolatedObjectCount": 0,
+      "coveragePercent": 100,
+      "relationTypeCount": 4,
+      "guidanceCodes": [
+        "network-health-on-track"
+      ]
+    },
+    "current": {
+      "objectCount": 12,
+      "relationCount": 10,
+      "connectedObjectCount": 12,
+      "isolatedObjectCount": 0,
+      "coveragePercent": 100,
+      "relationTypeCount": 4,
+      "guidanceCodes": [
+        "network-health-on-track"
+      ]
+    },
+    "changes": {
+      "objectCount": 1,
+      "relationCount": 1,
+      "connectedObjectCount": 1,
+      "isolatedObjectCount": 0,
+      "coveragePercent": 0,
+      "relationTypeCount": 0
+    },
+    "outcome": "improved",
+    "achievements": [
+      "relations-added"
+    ]
+  }
+}

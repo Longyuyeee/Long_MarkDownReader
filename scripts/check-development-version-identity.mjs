@@ -69,6 +69,7 @@ const m5OdpReliableCopy = readJson('shared/post-v116-m5-2-odp-simple-slide-copy-
 const m5OdpWorkspace = readJson('shared/post-v116-m5-3-odp-workspace-policy.json')
 const m5ReleaseReadiness = readJson('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
 const m5CandidatePackaging = readJson('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
+const m5HostedLifecycle = readJson('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -108,7 +109,7 @@ const checks = {
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
   binaryTransitionComplete: (candidateRuntime
-    ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged'].includes(policy.binaryVersionTransition)
+    ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed'].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === expectedTarget
     : policy.binaryVersionTransition === 'v1.0.16-public-release-published'
       && policy.runtimeBaseVersion === policy.publicVersion)
@@ -206,8 +207,10 @@ const checks = {
     && m5OdpWorkspace.status === 'accepted'
     && m5ReleaseReadiness.predecessor === m5OdpWorkspace.stage
     && m5ReleaseReadiness.status === 'accepted'
-    && (m5CandidatePackaging.status === 'accepted'
-      ? policy.currentStage === `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
+    && (m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+      ? policy.currentStage === 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'
+      : m5CandidatePackaging.status === 'accepted'
+        ? policy.currentStage === `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
       : policy.currentStage === `${m5ReleaseReadiness.selectedNextStage.id}-${m5ReleaseReadiness.selectedNextStage.name}`),
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')

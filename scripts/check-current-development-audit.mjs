@@ -17,6 +17,7 @@ import './check-post-v116-m5-2-odp-simple-slide-copy.mjs'
 import './check-post-v116-m5-3-odp-workspace.mjs'
 import './check-post-v116-m5-4-v1017-release-readiness.mjs'
 import './check-post-v116-m5-5-v1017-candidate-packaging.mjs'
+import './check-post-v116-m5-6-v1017-hosted-installer-lifecycle.mjs'
 import './check-code-file-creation.mjs'
 import './check-cf1-code-file-creation-audit.mjs'
 import './check-ux51-external-window-lifecycle.mjs'
@@ -68,7 +69,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.16' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M5-6 v1.0.17 托管安装生命周期**', policy.currentStatus === 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'],
+  ['当前阶段：**M5-7 v1.0.17 最终产物与发布就绪审计**', policy.currentStatus === 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending'],
 ]
 
 for (const [token, condition] of required) {

@@ -5,7 +5,7 @@
   "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-31",
-  "currentStatus": "v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending",
+  "currentStatus": "v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -31,7 +31,7 @@
     "nsisBuilt": true,
     "artifactHashesVerified": true,
     "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": false,
+    "installedLifecyclePassed": true,
     "qualityGatePassed": true,
     "githubReleasePublished": false
   },
@@ -39,7 +39,7 @@
     "previousPublicVersion": "1.0.16",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.0.16-to-1.0.17-pending",
@@ -86,5 +86,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-v1.0.17-hosted-installer-lifecycle"
+  "nextAction": "execute-m5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit"
 }

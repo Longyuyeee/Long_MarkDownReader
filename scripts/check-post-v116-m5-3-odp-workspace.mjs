@@ -57,7 +57,7 @@ for (const file of evidence.evidenceFiles ?? []) {
   if (bytes.length < 40_000 || crypto.createHash('sha256').update(bytes).digest('hex').length !== 64) fail(`M5-3 screenshot invalid: ${file}`)
 }
 for (const token of ['真实测试：预期、实际、差异与修正', '12,108', '43,938', '15,900', '14,109', 'M5-4', '544 通过、4 失败、5 忽略', '单独复跑通过']) if (!audit.includes(token)) fail(`M5-3 audit missing ${token}`)
-if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging', 'M5-6-v1.0.17-hosted-installer-lifecycle'].includes(development.currentStage)) fail('development handoff has not progressed from M5-4')
+if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging', 'M5-6-v1.0.17-hosted-installer-lifecycle', 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'].includes(development.currentStage)) fail('development handoff has not progressed from M5-4')
 
 if (failures.length) {
   console.error(`M5-3 ODP workspace failed:\n- ${failures.join('\n- ')}`)

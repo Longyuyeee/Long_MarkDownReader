@@ -65,7 +65,7 @@ if (!evidence.actual?.rust?.boundedTestsPassed || rustEvidence.length !== 3
   || rustEvidence.slice(0, 2).some(item => !item.overwriteRejected || item.saved?.changedParts?.join(',') !== 'content.xml')) fail('M5-2 Rust producer evidence drift')
 for (const token of ['LONGEDIT_M5_2_LIBREOFFICE_SOURCE', 'LONGEDIT_M5_2_POWERPOINT_SOURCE', 'LONGEDIT_M5_2_COMPLEX_SOURCE', 'Test-PowerPointReopen', 'Test-LibreOfficeRender']) if (!runner.includes(token)) fail(`M5-2 runner missing ${token}`)
 for (const [document, tokens] of [[audit, ['真实测试：预期、实际与修正', '12,061', '43,935', '545 通过、3 失败、5 忽略', 'M5-3']], [roadmap, ['M5-2', 'M5-3', '整页阻断', '可靠副本', '3 个非预期失败']]]) for (const token of tokens) if (!document.includes(token)) fail(`M5-2 document missing ${token}`)
-if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`, 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging', 'M5-6-v1.0.17-hosted-installer-lifecycle'].includes(development.currentStage)
+if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`, 'M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging', 'M5-6-v1.0.17-hosted-installer-lifecycle', 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'].includes(development.currentStage)
   || !['1.0.16', '1.0.17'].includes(development.runtimeBaseVersion) || development.publicVersion !== '1.0.16' || development.developmentTargetVersion !== '1.0.17') fail('M5-3 development identity drift')
 
 if (failures.length) {

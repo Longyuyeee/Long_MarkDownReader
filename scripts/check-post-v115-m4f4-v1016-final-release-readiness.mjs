@@ -18,6 +18,7 @@ const m5Copy = fs.existsSync('shared/post-v116-m5-2-odp-simple-slide-copy-policy
 const m5Workspace = fs.existsSync('shared/post-v116-m5-3-odp-workspace-policy.json') ? json('shared/post-v116-m5-3-odp-workspace-policy.json') : null
 const m5ReleaseReadiness = fs.existsSync('shared/post-v116-m5-4-v1017-release-readiness-policy.json') ? json('shared/post-v116-m5-4-v1017-release-readiness-policy.json') : null
 const m5CandidatePackaging = fs.existsSync('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json') ? json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json') : null
+const m5HostedLifecycle = fs.existsSync('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json') ? json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json') : null
 const checksumBytes = fs.readFileSync('docs/evidence/v1.0.16-release/SHA256SUMS.txt')
 const releaseNotes = fs.readFileSync('docs/RELEASE_NOTES_v1.0.16.md', 'utf8')
 const readme = fs.readFileSync('README.md', 'utf8')
@@ -46,7 +47,9 @@ if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '8488388c57a56
 if (published) {
   const updaterComplete = m4f6?.status === 'hosted-managed-update-passed' && m4f6?.githubRun?.conclusion === 'success'
   const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-  const expectedStage = m5CandidatePackaging?.status === 'accepted'
+  const expectedStage = m5HostedLifecycle?.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+    ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'
+    : m5CandidatePackaging?.status === 'accepted'
     ? `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
     : m5ReleaseReadiness?.status === 'accepted'
     ? `${m5ReleaseReadiness.selectedNextStage.id}-${m5ReleaseReadiness.selectedNextStage.name}`
@@ -60,7 +63,7 @@ if (published) {
     ? `${m5.selectedNextStage.id}-${m5.selectedNextStage.name}`
     : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
   if (!laterCandidateActive && (community.currentStatus !== 'v1.0.16-community-release-published' || community.releaseCandidate !== true || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction)) fail('community published state drifted after M4F-4')
-  if (development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged'].includes(development.binaryVersionTransition) || development.publicVersion !== '1.0.16' || development.publicTag !== 'v1.0.16') fail('published development/public handoff drifted')
+  if (development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed'].includes(development.binaryVersionTransition) || development.publicVersion !== '1.0.16' || development.publicTag !== 'v1.0.16') fail('published development/public handoff drifted')
   if (m4f5?.predecessor !== policy.stage || !m4f5.releasePublished || !m4f5.remoteAssetsVerified) fail('M4F-5 completion receipt is missing')
   if (execFileSync('git', ['rev-list', '-n', '1', 'v1.0.16'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit) fail('v1.0.16 tag does not bind the candidate source')
 } else {

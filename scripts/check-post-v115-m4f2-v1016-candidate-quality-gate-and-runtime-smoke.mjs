@@ -14,6 +14,7 @@ const m5Copy = json('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json')
 const m5Workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const m5ReleaseReadiness = json('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
 const m5CandidatePackaging = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
+const m5HostedLifecycle = json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
 const packageManifest = json('package.json')
 const r5fManifest = json('docs/evidence/r5f-safe-tauri-runtime/manifest.json')
 const r5fRoutes = json('docs/evidence/r5f-safe-tauri-runtime/route-mount-evidence.json')
@@ -51,7 +52,9 @@ if (lifecycleAdvanced) {
   if (!laterCandidateActive && (!community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished !== releasePublished || community.candidate?.artifacts?.length !== 2)) failures.push('M4F-3 completion facts drifted')
   const releaseReady = community.currentStatus === 'v1.0.16-community-release-ready-to-publish'
   const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
-  const publishedStage = m5CandidatePackaging.status === 'accepted'
+  const publishedStage = m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+    ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'
+    : m5CandidatePackaging.status === 'accepted'
     ? `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
     : m5ReleaseReadiness.status === 'accepted'
     ? `${m5ReleaseReadiness.selectedNextStage.id}-${m5ReleaseReadiness.selectedNextStage.name}`
@@ -66,7 +69,7 @@ if (lifecycleAdvanced) {
     : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
   if (!laterCandidateActive && community.releaseCandidate !== (releaseReady || releasePublished)) failures.push('community release-ready promotion drifted')
   if (releasePublished
-    ? development.currentStage !== publishedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged'].includes(development.binaryVersionTransition)
+    ? development.currentStage !== publishedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed'].includes(development.binaryVersionTransition)
     : releaseReady
     ? development.currentStage !== 'M4F-5-v1.0.16-tag-release-and-remote-asset-verification' || development.binaryVersionTransition !== 'v1.0.16-release-ready'
     : development.currentStage !== 'M4F-4-v1.0.16-final-artifact-manifest-and-release-readiness-audit' || development.binaryVersionTransition !== 'v1.0.16-hosted-installer-lifecycle-passed') failures.push('M4F-4/M4F-5 handoff drifted')

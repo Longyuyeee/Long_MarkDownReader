@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-6",
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 33361759629,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33361759629",
+  "workflowCommit": "98631fd9545f3aeaa653e47bc8b4776c4836f44c",
+  "productSourceCommit": "2b6235d420ceffd291dab72c4af17caffe464333",
+  "previousPublicCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+  "appVersion": "1.0.17",
+  "previousVersion": "1.0.16",
+  "artifact": {
+    "id": 9747835764,
+    "name": "v117-candidate-lifecycle-33361759629",
+    "zipSizeBytes": 206517643,
+    "zipSha256": "f321741bee7a3527750659cf83197e851efa6db717757eacd5dbb0430ca6f51a",
+    "expiresAt": "2026-09-14T06:32:47Z"
+  },
+  "installers": [
+    {
+      "target": "msi",
+      "fileName": "Long编辑_1.0.17_x64_zh-CN.msi",
+      "sizeBytes": 73863168,
+      "sha256": "1453fa9a911d934fdacda88f63d3bac783100b9ef210fb02362ebe9aa0f16c3e",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "nsis",
+      "fileName": "Long编辑_1.0.17_x64-setup.exe",
+      "sizeBytes": 65778243,
+      "sha256": "154ace58e2e20b6ebe9947c2690f03b0d9737f69fecb9ffca90c0cdf3b2ba282",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "previousInstaller": {
+    "target": "nsis",
+    "fileName": "Long编辑_1.0.16_x64-setup.exe",
+    "sizeBytes": 65795604,
+    "sha256": "993f54681a83e484b066fec776f64fccce48d271c912e2591ae2d5fa52d94926",
+    "authenticodeStatus": "NotSigned"
+  },
+  "checks": {
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "managementRollbackFailed": 0
+  },
+  "expectedActualDifference": {
+    "expected": "hosted artifacts preserve frozen source/version/signature/lifecycle semantics; byte identity with local M5-5 build is not required",
+    "actual": "hosted MSI/NSIS hashes differ from local M5-5 hashes while source, version, NotSigned status and all lifecycle checks match",
+    "correction": "record local and hosted receipts independently and promote only the hosted lifecycle artifacts in M5-7"
+  },
+  "importedEvidence": {
+    "fileCount": 29,
+    "totalBytes": 1546366,
+    "canonicalTreeSha256": "27a5e6eb6ddaa7f3820d25e8ee70890adc4d8b4dcafd2aa60e2cc53e3387818c",
+    "scope": "raw-downloaded-artifact-bytes"
+  },
+  "repositoryCanonicalEvidence": {
+    "algorithm": "json-stable-indent-2-lf-and-binary-byte-preserve-v1",
+    "fileCount": 29,
+    "totalBytes": 1543457,
+    "canonicalTreeSha256": "defb7ae3c255f211b1d4d68ce405e6b2dea0b1b67bc42503d180f70595c336f1"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "selectedNextStage": "M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit"
+}
