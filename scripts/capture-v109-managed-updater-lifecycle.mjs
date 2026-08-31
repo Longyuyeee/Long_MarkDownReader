@@ -138,6 +138,11 @@ if (mode === 'discover-install') {
     'visible managed updater confirmation modal',
     1200,
   )
+  // WebView2 can expose the modal before Vue's 300 ms entrance transition and
+  // the underlying library animations have finished compositing. Capture only
+  // after the visual surface is stable so evidence does not contain ghosted
+  // transition frames.
+  await delay(1000)
   const surface = await evaluate(`(() => {
     const modal = document.querySelector('.update-modal')
     const button = [...(modal?.querySelectorAll('button') || [])].find(item => item.textContent?.includes('下载并安装'))
