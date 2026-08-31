@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-6",
+  "name": "v1.0.17-hosted-installer-lifecycle",
+  "status": "workflow-ready-hosted-run-pending",
+  "predecessor": "M5-5",
+  "candidateSourceCommit": "2b6235d420ceffd291dab72c4af17caffe464333",
+  "candidateVersion": "1.0.17",
+  "previousPublicTag": "v1.0.16",
+  "previousPublicCommit": "757d54309ddb35f445344d909fa4c7ba2567bc58",
+  "workflow": ".github/workflows/v117-candidate-lifecycle.yml",
+  "requiredArtifacts": ["msi", "nsis"],
+  "requiredLifecycle": [
+    "1.0.16-to-1.0.17-upgrade",
+    "installed-route-and-io-smoke",
+    "uninstall-and-retention",
+    "management-backup-and-index-rollback"
+  ],
+  "localCandidateObservation": {
+    "msiSha256": "96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e",
+    "nsisSha256": "09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886",
+    "promotionalEvidence": false
+  },
+  "attemptHistory": [],
+  "hostedSuccessEvidence": null,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "push-workflow-and-run-exact-candidate-on-github-hosted-windows"
+}
