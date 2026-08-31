@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-2",
+  "name": "knowledge-graph-real-tauri-visual-interaction-audit",
+  "status": "accepted",
+  "predecessor": "M8-1",
+  "productSourceCommit": "e8e8a7959e19c03013209970ecc75a4d85b93185",
+  "runtimeBaseVersion": "1.0.19",
+  "publicVersion": "1.0.19",
+  "developmentTargetVersion": "1.0.20",
+  "acceptedFacts": {
+    "syntheticIsolatedMarkdownNodes": 540,
+    "semanticZoomLevel": "far",
+    "renderedCommunitySummaries": 0,
+    "canvasBackingStoreMatchesViewport": true,
+    "canvasBackingMutationsDuringSixWheelEvents": 0,
+    "middleButtonPanChangedCamera": true,
+    "singleClickStayedInGraphAndSelectedOneNode": true,
+    "legendCollapsedWithOperationHelp": true,
+    "legendHiddenWhileFilterOpen": true,
+    "runtimeErrorCount": 0,
+    "sourceFilesUnchanged": true
+  },
+  "visualReview": {
+    "status": "accepted",
+    "finding": "the pathological wall of 540 labelled community circles is replaced by an uncluttered far-view node cloud; the remaining high-density toolbar and connected-graph typography require a separate refinement stage"
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "selectedNextStage": {
+    "id": "M8-3",
+    "name": "knowledge-graph-toolbar-and-connected-graph-visual-refinement"
+  },
+  "nextAction": "refine-toolbar-information-architecture-and-connected-graph-typography-without-reopening-settled-interaction-or-performance-contracts"
+}
