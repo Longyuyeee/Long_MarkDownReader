@@ -162,7 +162,7 @@ if ((ready && !lifecycleVerified) || published) {
         || hosted.checks?.installedArtifactFailed !== 0
         || hosted.checks?.installedRoutesPassed !== 11
         || hosted.checks?.managementRollbackPassed !== 7
-        || hosted.enterpriseReleaseCandidate !== false
+        || hosted.releaseCandidate !== false
         || hosted.sourceUserContentIncluded !== false) fail('hosted lifecycle import boundary drift')
     }
 

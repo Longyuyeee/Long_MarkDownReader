@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-3",
+  "status": "passed",
+  "qualityGateBaselineCommit": "18b1fab71cc685316da125806157cf0fb0fb752e",
+  "expected": {
+    "completeRustFailures": 0,
+    "patchReleaseCi": "passed",
+    "productionVulnerabilities": 0,
+    "binaryVersionChanged": false
+  },
+  "actual": {
+    "completeRustPassed": 548,
+    "completeRustFailures": 0,
+    "completeRustIgnored": 5,
+    "frontendModulesBuilt": 6275,
+    "formatCount": 43,
+    "extensionCount": 91,
+    "cargoCheck": "passed",
+    "patchReleaseCi": "passed-after-correction",
+    "productionVulnerabilities": 0
+  },
+  "differencesAndCorrections": [
+    {
+      "expected": "published v1.0.17 community release evidence resolves the accepted hosted lifecycle run",
+      "actual": "the first full patch-release attempt failed because the current release policy omitted hostedInstalledLifecycleRunId although the artifact manifest and imported evidence both recorded run 33361759629",
+      "rootCause": "the published candidate policy did not retain the hosted lifecycle run receipt used by the stricter release checker",
+      "correction": "record hostedInstalledLifecycleRunId 33361759629 in the release policy and retain exact equality checks across policy, artifact manifest and imported evidence",
+      "rerun": "focused community release contract and complete ci:patch-release passed"
+    },
+    {
+      "expected": "hosted lifecycle evidence proves the candidate is not an enterprise release candidate",
+      "actual": "the checker queried absent enterpriseReleaseCandidate while the accepted M5-6 evidence schema records releaseCandidate=false",
+      "rootCause": "checker field name drifted from the imported evidence schema",
+      "correction": "validate the real releaseCandidate=false field without weakening run, source, version, lifecycle count or privacy checks",
+      "rerun": "focused community release contract and complete ci:patch-release passed"
+    }
+  ],
+  "decision": {
+    "packagingEligible": true,
+    "selectedNextStage": "M6-4-v1.0.18-atomic-version-transition-and-candidate-packaging",
+    "binaryVersionChanged": false,
+    "candidatePackageBuilt": false,
+    "releaseCandidate": false
+  },
+  "privacy": {
+    "sourceUserContentIncluded": false,
+    "localAbsolutePathsIncluded": false
+  }
+}

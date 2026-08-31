@@ -55,6 +55,7 @@
     "qualityGateCommand": "npm run ci:patch-release",
     "qualityGateEnvironment": "local-windows",
     "qualityGateRunId": null,
+    "hostedInstalledLifecycleRunId": 33361759629,
     "runtimeSmokeEvidence": [
       "docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/audit-manifest.json",
       "docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/route-mount-evidence.json"
