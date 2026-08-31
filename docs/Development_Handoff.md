@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.18 M6-5 换机暂停交接：** 远端 `main` 与本地共同 HEAD 为 `6d208bcf7d0ba430b7df478718fe636fe91c6e34`，工作区干净；产品候选固定为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`。GitHub Actions 运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 未取消，暂停时已通过身份/依赖步骤并正在构建候选 MSI/NSIS，最终结论未知。换机后先查看该运行，禁止重复触发或提前发布。完整命令、完成事实、严格接续顺序与禁止边界见 [`Development_Handoff_v1.0.18_M6-5_2026-08-31.md`](./Development_Handoff_v1.0.18_M6-5_2026-08-31.md)。
+
 > **2026-08-31 M5-5 v1.0.17 原子版本迁移与候选打包已通过：** 精确提交 `2b6235d420ceffd291dab72c4af17caffe464333` 通过完整发布门；真实 MSI 为 74,186,752 bytes / `961184…d6e`，NSIS 为 65,922,301 bytes / `099238…886`，产品版本均为 1.0.17 且 `NotSigned`。当前 Tauri WebView2 烟测 6/6、11/11 路由，TXT/JSON 真实保存复开通过且截图人工核对。公开版本仍为 v1.0.16，`releaseCandidate=false`。唯一接续点为 **M5-6 v1.0.17 托管安装生命周期**；安装、升级、卸载和安装态回归通过前不得创建 Tag 或 GitHub Release。详见 [`Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md`](./Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md)。
 
 > **2026-08-31 M5-5 v1.0.17 原子版本迁移已完成、候选打包进行中：** package/lock、Cargo/lock、Tauri 与 38 个当前共享合同已同批迁移到 1.0.17；v1.0.17 社区质量、构建、安装和发布事实全部归零，v1.0.16 的公开 Tag、Release 与回执保持不变。下一步只从本次精确提交重新执行完整发布门并构建真实 MSI/NSIS，记录大小、SHA-256 与 `NotSigned`；安装生命周期通过前不得创建 v1.0.17 Tag 或 GitHub Release。详见 [`RELEASE_NOTES_v1.0.17.md`](./RELEASE_NOTES_v1.0.17.md) 与 [`V1_0_17_Unsigned_Community_Release_Audit_2026-08-31.md`](./V1_0_17_Unsigned_Community_Release_Audit_2026-08-31.md)。

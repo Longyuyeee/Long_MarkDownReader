@@ -4,6 +4,8 @@
 
 阶段状态：**测试入口已冻结，真实 GitHub 托管 Windows 运行待执行。**
 
+暂停交接状态：运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 已于 2026-08-31 17:34（Asia/Hong_Kong）触发；17:42 暂停本机监控时，身份核验与候选依赖安装通过，候选 MSI/NSIS 正在构建，最终结论未知。运行未取消；换机后必须先读取该运行，不得重复触发。
+
 ## 目标与不可变身份
 
 - 候选源码：`5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`，版本 `1.0.18`。
