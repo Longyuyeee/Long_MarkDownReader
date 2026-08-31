@@ -386,6 +386,8 @@
     "check:post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke": "node scripts/check-post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke.mjs",
     "check:post-v115-m4f3a-v1016-hosted-installer-lifecycle-handoff": "node scripts/check-post-v115-m4f3a-v1016-hosted-installer-lifecycle-handoff.mjs",
     "check:post-v115-m4f4-v1016-final-release-readiness": "node scripts/check-post-v115-m4f4-v1016-final-release-readiness.mjs",
+    "check:post-v115-m4f5-v1016-published-release": "node scripts/check-post-v115-m4f5-v1016-published-release.mjs",
+    "audit:post-v115-m4f5-v1016-remote-release": "pwsh -NoProfile -File scripts/audit-post-v115-m4f5-v1016-remote-release.ps1",
     "audit:post-v115-m4f4-v1016-final-release-readiness": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v115-m4f4-v1016-final-release-readiness-audit.ps1",
     "check:r5h-current-installer-evidence": "node scripts/check-r5h-current-installer-evidence.mjs",
     "check:r5i-isolated-install-lifecycle": "node scripts/check-r5i-isolated-install-lifecycle.mjs",

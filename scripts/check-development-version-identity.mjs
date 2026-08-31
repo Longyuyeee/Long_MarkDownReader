@@ -61,6 +61,7 @@ const m4f1AtomicVersionTransition = readJson('shared/post-v115-m4f1-v1016-atomic
 const m4f2CandidateQualityGate = readJson('shared/post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke-policy.json')
 const m4f3HostedLifecycle = readJson('shared/post-v115-m4f3a-v1016-hosted-installer-lifecycle-handoff-policy.json')
 const m4f4ReleaseReadiness = readJson('shared/post-v115-m4f4-v1016-final-artifact-manifest-release-readiness-policy.json')
+const m4f5PublishedRelease = readJson('shared/post-v115-m4f5-v1016-published-release-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -81,18 +82,21 @@ const checks = {
     && tauri.version === policy.runtimeBaseVersion
     && matrix.appVersion === policy.runtimeBaseVersion,
   candidateMetadataFacts: community.appVersion === policy.runtimeBaseVersion
-    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-ready-to-publish`
+    && community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-published`
     && community.releaseCandidate === true
     && community.gates?.qualityGatePassed === true
     && community.gates?.localRuntimeSmokePassed === true
-    && community.gates?.githubReleasePublished === false,
+    && community.gates?.githubReleasePublished === true
+    && community.release?.taggedCommit === policy.publicTagCommit,
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && policy.publicVersion === '1.0.15',
+    && policy.publicVersion === policy.runtimeBaseVersion
+    && policy.publicVersion === '1.0.16',
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
-  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-release-ready'
-    && policy.runtimeBaseVersion === policy.developmentTargetVersion,
+  binaryTransitionComplete: policy.binaryVersionTransition === 'v1.0.16-public-release-published'
+    && policy.runtimeBaseVersion === policy.publicVersion
+    && policy.developmentTargetVersion === expectedTarget,
   currentStageAligned: m1dc1Subtitle.selectedNextStage === m1Closure.stage
     && m1Closure.selectedNextStage === 'M3-knowledge-graph-2.0-selection-audit'
     && m3Baseline.selectedNextStage.id === m3a1Semantics.stage
@@ -170,8 +174,10 @@ const checks = {
     && m4f2CandidateQualityGate.predecessor === m4f1AtomicVersionTransition.stage
     && m4f3HostedLifecycle.predecessor === m4f2CandidateQualityGate.stage
     && m4f4ReleaseReadiness.predecessor === m4f3HostedLifecycle.stage
-    && m4f4ReleaseReadiness.selectedNextStage.id === 'M4F-5'
-    && policy.currentStage === `${m4f4ReleaseReadiness.selectedNextStage.id}-${m4f4ReleaseReadiness.selectedNextStage.name}`,
+    && m4f4ReleaseReadiness.selectedNextStage.id === m4f5PublishedRelease.stage
+    && m4f5PublishedRelease.predecessor === m4f4ReleaseReadiness.stage
+    && m4f5PublishedRelease.selectedNextStage.id === 'M4F-6'
+    && policy.currentStage === `${m4f5PublishedRelease.selectedNextStage.id}-${m4f5PublishedRelease.selectedNextStage.name}`,
   configConsumesPolicy: config.includes("development-version-policy.json")
     && config.includes('DEVELOPMENT_TARGET_VERSION')
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
@@ -184,7 +190,7 @@ const checks = {
     && capabilities.includes('候选准备')
     && capabilities.includes('PUBLIC_RELEASE_VERSION'),
   auditDocumentsIdentity: audit.includes(`当前开发目标：\`${policy.developmentTargetVersion}\``)
-    && audit.includes(`候选运行时版本：\`${policy.runtimeBaseVersion}\``)
+    && audit.includes(`当前运行时版本：\`${policy.runtimeBaseVersion}\``)
     && audit.includes(`当前公开版本：\`${policy.publicVersion}\``),
 }
 
@@ -192,10 +198,10 @@ const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name
 const evidence = {
   expected: {
     developmentTargetVersion: expectedTarget,
-    runtimeBaseVersion: policy.developmentTargetVersion,
+    runtimeBaseVersion: policy.runtimeBaseVersion,
     publicTag: policy.publicTag,
     headAheadOfPublicTag: true,
-    binaryVersionTransition: 'v1.0.16-release-ready',
+    binaryVersionTransition: 'v1.0.16-public-release-published',
   },
   actual: { headCommit, tagCommit, commitsAhead, tagIsAncestor, checks },
 }

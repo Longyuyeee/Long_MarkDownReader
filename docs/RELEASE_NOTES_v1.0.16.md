@@ -1,6 +1,8 @@
 # Long编辑 v1.0.16
 
-v1.0.16 聚焦专业格式工作流、行动工作台、知识图谱 2.0 与跨格式可靠输出。本文是候选发布说明；Quality Gate、安装包、Windows 生命周期和最终 artifact manifest 已通过，但远端发布完成前，不代表已有可下载的 v1.0.16。
+v1.0.16 聚焦专业格式工作流、行动工作台、知识图谱 2.0 与跨格式可靠输出。Quality Gate、安装包、Windows 生命周期、最终 artifact manifest、GitHub Release 和三个远端附件回下载复核均已通过。
+
+本版本安装包由产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58` 构建；发布前最终产物与就绪审计提交为 `a6d6cbc088c43adc940858c8775f55d33af1ee2d`。`v1.0.16` Tag 绑定前者，后者仅记录安装包本体复核、公开名称、校验和与发布边界，不改变二进制内容。
 
 ## 主要变化
 
@@ -13,7 +15,7 @@ v1.0.16 聚焦专业格式工作流、行动工作台、知识图谱 2.0 与跨�
 ## 发布验证
 
 - M0～M4E 的真实文件、真实 Tauri 桌面、来源摘要、独立复开和结构化性能证据已经收口。
-- v1.0.16 的完整补丁 Quality Gate、当前候选运行烟测、无签名 MSI/NSIS、托管 Windows 生命周期、最终 artifact manifest 和 `SHA256SUMS.txt` 已经通过；`v1.0.16` Tag、GitHub Release 与远端附件回下载复核尚未创建或执行。
+- v1.0.16 的完整补丁 Quality Gate、当前候选运行烟测、无签名 MSI/NSIS、托管 Windows 生命周期、最终 artifact manifest 和 `SHA256SUMS.txt` 已经通过；`v1.0.16` Tag、GitHub Release 与三个远端附件回下载复核也已完成。
 - 最终附件必须记录真实大小、SHA-256 与 `NotSigned`，不得复用 v1.0.15 的候选或发布回执。
 
 ## 安装与更新

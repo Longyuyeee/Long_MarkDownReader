@@ -169,7 +169,7 @@ if ((ready && !lifecycleVerified) || published) {
           || receipt.authenticodeStatus !== 'NotSigned'
           || receipt.sourceUserContentIncluded !== false
           || receipt.managedUpdaterObservation !== policy.patchValidation?.managedUpdaterUpgradePath
-          || manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-passed-local-smoke-blocked-existing-single-instance'
+          || manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed'
           || manifest.releaseReceipt !== 'release-receipt.json'
           || manifest.boundaries?.managedUpdaterReleaseAssetsPresent !== true
           || manifest.boundaries?.legacyTauriUpdaterArtifactsPresent !== false) fail('published remote receipt boundary drift')

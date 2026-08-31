@@ -63,6 +63,9 @@ if (repositoryCanonical?.algorithm !== 'json-stable-indent-2-lf-and-binary-byte-
 if (policy.previousPublicTag !== 'v1.0.15' || execFileSync('git', ['rev-list', '-n', '1', policy.previousPublicTag], { encoding: 'utf8' }).trim() !== policy.previousPublicCommit) failures.push('previous public source drifted')
 if (policy.requiredArtifacts?.join(',') !== 'msi,nsis' || policy.requiredLifecycle?.length !== 4) failures.push('required hosted scope drifted')
 for (const token of tokens) if (!workflow.includes(token)) failures.push(`workflow token missing: ${token}`)
-if (execFileSync('git', ['tag', '--list', 'v1.0.16'], { encoding: 'utf8' }).trim()) failures.push('v1.0.16 tag exists before release closure')
+const releasePublished = fs.existsSync('docs/evidence/v1.0.16-release/release-receipt.json')
+if (releasePublished
+  ? execFileSync('git', ['rev-list', '-n', '1', 'v1.0.16'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit
+  : Boolean(execFileSync('git', ['tag', '--list', 'v1.0.16'], { encoding: 'utf8' }).trim())) failures.push('v1.0.16 tag state does not match release closure')
 if (failures.length) { console.error(`M4F-3A handoff check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }
-console.log('M4F-3 closure accepted: run 33322246630 built both unsigned installers and passed R5I 22/22, R5J 18/18 + 11/11 routes, and R5L 7/7; M4F-4 remains pending.')
+console.log('M4F-3 closure accepted: run 33322246630 built both unsigned installers and passed R5I 22/22, R5J 18/18 + 11/11 routes, and R5L 7/7; later release stages remain consistent.')

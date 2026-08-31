@@ -1525,3 +1525,9 @@ v1.0.16 社区策略现在是 `v1.0.16-community-release-quality-gate-pending`�
 M4F-4 已用 Actions artifact `9735798998` 的真实文件本体重新核对两份安装包：NSIS 为 65,788,796 bytes / `e1a688…`，MSI 为 73,887,744 bytes / `e3fa4f…`，均为 `NotSigned`。托管 `Long编辑` 文件名与公开 `LongEdit` 文件名建立显式映射，重命名不改变字节；最终 `SHA256SUMS.txt` 为 192 bytes / `d25aa5…`。
 
 本阶段真实复现并修复了 M4F-3 JSON 换行导致的换机摘要失败，同时纠正旧发布检查器要求 3 个 artifact 和历史单实例阻断烟测的错误预期。下载证据和仓库证据以跨平台规范算法共同得到 `848838…`。九道门禁现为 8/9，社区候选 `releaseCandidate=true`，企业矩阵仍为 false；当前公开版本仍是 v1.0.15。唯一接续点为 **M4F-5 v1.0.16 Tag、GitHub Release 与远端三个附件回下载复核**，不得在远端复核前宣布发布完成。详见 [`Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。
+
+## 2026-08-31 M4F-5 v1.0.16 正式发布交接
+
+`v1.0.16` 已正式发布：Tag 解引用到真实安装包产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58`，发布前审计提交为 `a6d6cbc088c43adc940858c8775f55d33af1ee2d`。Release `379466292` 为非 Draft、非 Prerelease 且由 latest API 返回；NSIS、MSI 与 `SHA256SUMS.txt` 从公开地址回下载后，名称、大小、SHA-256 和 `NotSigned` 均与冻结 manifest 一致。
+
+首次常规 Tag 推送因环境 Token 缺少 `workflow` scope 被拒绝，单次长上传还产生并自动回滚了只含校验文件的临时 Draft；最终改用已有完整权限钥匙串、先 Draft 后逐附件上传与显式发布，未留下半成品公开 Release。九道发布门禁现为 9/9，公开/运行时版本均为 v1.0.16，企业矩阵仍为 false；下一补丁目标登记为 v1.0.17，但尚未提升运行时。唯一接续点为 **M4F-6 v1.0.15 → v1.0.16 官方应用内更新观察**。详见 [`Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md`](./Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。

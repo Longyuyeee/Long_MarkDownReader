@@ -32,17 +32,20 @@ else {
   }
 }
 if (packageManifest.version !== '1.0.16' || policy.candidateVersion !== '1.0.16' || evidence.candidateVersion !== '1.0.16') failures.push('candidate binary identity drifted')
-if (policy.publicVersion !== '1.0.15' || evidence.publicVersion !== '1.0.15' || development.publicVersion !== '1.0.15' || development.publicTag !== 'v1.0.15') failures.push('public release boundary drifted')
+if (policy.publicVersion !== '1.0.15' || evidence.publicVersion !== '1.0.15' || !['1.0.15', '1.0.16'].includes(development.publicVersion) || development.publicTag !== `v${development.publicVersion}`) failures.push('public release boundary drifted')
 if (policy.qualityGate?.status !== 'passed' || policy.qualityGate?.command !== 'npm run ci:patch-release' || !policy.qualityGate?.frontendBuildPassed || !policy.qualityGate?.rustLockedCheckPassed || !policy.qualityGate?.productionDependencyAuditPassed || policy.qualityGate?.productionVulnerabilities !== 0) failures.push('quality gate policy drifted')
 if (evidence.qualityGate?.status !== 'passed' || evidence.qualityGate?.moduleCount !== 6275 || evidence.qualityGate?.formatCount !== 43 || evidence.qualityGate?.extensionCount !== 91 || !evidence.qualityGate?.rustLockedCheckPassed || evidence.qualityGate?.productionVulnerabilities !== 0) failures.push('quality gate evidence drifted')
-if (!['v1.0.16-community-release-quality-gate-and-runtime-smoke-passed-installer-pending', 'v1.0.16-community-release-hosted-lifecycle-passed-final-release-audit-pending', 'v1.0.16-community-release-ready-to-publish'].includes(community.currentStatus) || community.candidate?.artifactSourceCommit !== candidate || community.candidate?.qualityGateCommand !== policy.qualityGate.command) failures.push('community candidate intermediate state drifted')
+if (!['v1.0.16-community-release-quality-gate-and-runtime-smoke-passed-installer-pending', 'v1.0.16-community-release-hosted-lifecycle-passed-final-release-audit-pending', 'v1.0.16-community-release-ready-to-publish', 'v1.0.16-community-release-published'].includes(community.currentStatus) || community.candidate?.artifactSourceCommit !== candidate || community.candidate?.qualityGateCommand !== policy.qualityGate.command) failures.push('community candidate intermediate state drifted')
 if (!community.gates?.frontendBuildPassed || !community.gates?.rustLockedCheckPassed || !community.gates?.productionDependencyAuditPassed || !community.gates?.qualityGatePassed || !community.gates?.localRuntimeSmokePassed) failures.push('completed community gates drifted')
-const lifecycleAdvanced = ['v1.0.16-community-release-hosted-lifecycle-passed-final-release-audit-pending', 'v1.0.16-community-release-ready-to-publish'].includes(community.currentStatus)
+const lifecycleAdvanced = ['v1.0.16-community-release-hosted-lifecycle-passed-final-release-audit-pending', 'v1.0.16-community-release-ready-to-publish', 'v1.0.16-community-release-published'].includes(community.currentStatus)
 if (lifecycleAdvanced) {
-  if (!community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished || community.candidate?.artifacts?.length !== 2) failures.push('M4F-3 completion facts drifted')
+  const releasePublished = community.currentStatus === 'v1.0.16-community-release-published'
+  if (!community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished !== releasePublished || community.candidate?.artifacts?.length !== 2) failures.push('M4F-3 completion facts drifted')
   const releaseReady = community.currentStatus === 'v1.0.16-community-release-ready-to-publish'
-  if (community.releaseCandidate !== releaseReady) failures.push('community release-ready promotion drifted')
-  if (releaseReady
+  if (community.releaseCandidate !== (releaseReady || releasePublished)) failures.push('community release-ready promotion drifted')
+  if (releasePublished
+    ? development.currentStage !== 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation' || development.binaryVersionTransition !== 'v1.0.16-public-release-published'
+    : releaseReady
     ? development.currentStage !== 'M4F-5-v1.0.16-tag-release-and-remote-asset-verification' || development.binaryVersionTransition !== 'v1.0.16-release-ready'
     : development.currentStage !== 'M4F-4-v1.0.16-final-artifact-manifest-and-release-readiness-audit' || development.binaryVersionTransition !== 'v1.0.16-hosted-installer-lifecycle-passed') failures.push('M4F-4/M4F-5 handoff drifted')
 } else {
@@ -62,6 +65,6 @@ if (releaseArtifact?.size !== evidence.r5g?.releaseNoBundleArtifact?.sizeBytes |
 for (const image of ['docs/evidence/r5g-desktop-artifact-smoke/txt-save-reopen.jpg', 'docs/evidence/r5g-desktop-artifact-smoke/json-save-reopen.jpg']) {
   if (!fs.existsSync(image) || fs.statSync(image).size < 10000) failures.push(`${image} is missing or too small`)
 }
-if (git('tag', '--list', 'v1.0.16')) failures.push('v1.0.16 tag exists before release closure')
+if (community.gates?.githubReleasePublished ? git('rev-list', '-n', '1', 'v1.0.16') !== candidate : Boolean(git('tag', '--list', 'v1.0.16'))) failures.push('v1.0.16 tag state does not match release closure')
 if (failures.length) { console.error(`M4F-2 candidate quality/runtime check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }
-console.log(`M4F-2 accepted: candidate ${candidate} passed the full quality gate, R5F 11/11 and R5G 6/6 + 11/11; installers, tag and release remain pending.`)
+console.log(`M4F-2 accepted: candidate ${candidate} passed the full quality gate, R5F 11/11 and R5G 6/6 + 11/11; later release stages remain consistent.`)

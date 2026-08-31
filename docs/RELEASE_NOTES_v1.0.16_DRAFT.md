@@ -1,6 +1,6 @@
 # Long编辑 v1.0.16 开发版说明（草案）
 
-> 这是 `main` 上的历史开发记录，不是公开 Release，不对应可下载的 v1.0.16 安装包。M4F-4 已完成最终产物与发布就绪审计，当前公开版本仍为 v1.0.15；正式候选说明以 [`RELEASE_NOTES_v1.0.16.md`](./RELEASE_NOTES_v1.0.16.md) 为准，M4F-5 完成 Tag、Release 与远端附件回下载复核后才能宣布发布。
+> 这是 `main` 上的历史开发记录。v1.0.16 已正式发布，本草案不再作为当前状态入口；正式说明以 [`RELEASE_NOTES_v1.0.16.md`](./RELEASE_NOTES_v1.0.16.md) 为准。
 
 ## 已完成并通过真实验收
 
@@ -51,3 +51,5 @@ M4F-0 已把 `7e10c340fa0d528b598c9ca6be391c48b15a463f` 冻结为产品范围基
 M4F-1 已将冻结清单中的 44 个版本文件原子迁移到 1.0.16，五个历史 post-v1.0.15 基线继续保持 1.0.15。社区候选元数据已清除旧版候选、产物和发布回执并回到 Quality Gate pending；前端发布事实消费也已允许候选运行时版本高于当前公开版本。当前进入 **M4F-2 候选 Quality Gate 与运行烟测**，九道发布门禁完成 2/9，`releaseCandidate=false` 不变。
 
 M4F-2 与 M4F-3 已完成精确候选 `757d54309ddb35f445344d909fa4c7ba2567bc58` 的完整 Quality Gate、真实 Tauri 运行烟测、无签名 MSI/NSIS 构建以及托管 Windows 安装生命周期。M4F-4 又从 Actions artifact `9735798998` 复核真实文件本体，冻结双安装包 manifest 与 `SHA256SUMS.txt`，并确认本地和远端均尚无 `v1.0.16` Tag/Release。九道门禁现为 8/9；唯一接续点是 **M4F-5 Tag、GitHub Release 与三个远端附件回下载复核**。
+
+M4F-5 已创建并发布 `v1.0.16` Tag/Release，三个附件从公开下载路径回下载后的名称、大小、SHA-256 与签名状态均与冻结 manifest 一致。九道发布门禁完成 9/9；当前唯一接续点为 **M4F-6 v1.0.15 → v1.0.16 官方应用内更新观察**。

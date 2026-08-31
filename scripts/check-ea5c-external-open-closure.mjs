@@ -118,7 +118,7 @@ for (const token of [
 if (!pkg.scripts?.['check:ea5c-external-open-closure']) fail('EA-5C package script is missing')
 if (
   !alignment.includes(`当前开发目标：\`${development.developmentTargetVersion}\``)
-  || !alignment.includes(`候选运行时版本：\`${pkg.version}\``)
+  || !(alignment.includes(`候选运行时版本：\`${pkg.version}\``) || alignment.includes(`当前运行时版本：\`${pkg.version}\``))
   || !alignment.includes(`当前公开版本：\`${development.publicVersion}\``)
   || !alignment.includes('当前阶段：**')
 ) fail('development alignment is stale')

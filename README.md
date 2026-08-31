@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15"><img src="https://img.shields.io/badge/Stable-v1.0.15-cca43b" alt="v1.0.15 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16"><img src="https://img.shields.io/badge/Stable-v1.0.16-cca43b" alt="v1.0.16 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,30 +31,30 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.15 已发布并完成三个公开附件的回下载 SHA-256 复核，集中统一应用提示层、右键菜单、应用内对话框、长格式菜单和更新进度反馈。完整范围见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md)。
+> v1.0.16 已发布并完成三个公开附件的回下载 SHA-256 复核，集中交付专业格式深化、行动工作台、知识图谱 2.0 与跨格式可靠输出。完整范围见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md)。
 
 ## 下载
 
-Long编辑 v1.0.15 支持 Windows 10/11 x64。
+Long编辑 v1.0.16 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.15_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.15/LongEdit_1.0.15_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.15_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.15/LongEdit_1.0.15_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.15](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.15) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.16_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.16/LongEdit_1.0.16_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.16_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.16/LongEdit_1.0.16_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.16](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.16) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-03fda623363e196f87dc09c6204a752a1b112df03e57945ecf06ba97c9e44965  LongEdit_1.0.15_x64-setup.exe
-44653300bc0c26afb9472cf356224c0d12a921787b8ab5c1596162785c0667ec  LongEdit_1.0.15_x64_zh-CN.msi
+e1a688509279d191b4f39011336612cc6d47149bb5ab61d33c0a48ea091502ff  LongEdit_1.0.16_x64-setup.exe
+e3fa4fe3e49406e1f2785496fad4fc002527f9945fd9239e22e0dca9869da215  LongEdit_1.0.16_x64_zh-CN.msi
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.15 继续沿用这一安全更新链。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。v1.0.16 继续沿用这一安全更新链；v1.0.15 → v1.0.16 的发布后官方更新观察仍是独立接续点。
 
-## 1.0.16 开发中（尚未发布）
+## v1.0.16
 
-`main` 已把候选运行时原子迁移到 v1.0.16，当前公开下载仍为 v1.0.15。M1～M4D 已完成分阶段真实审计：
+v1.0.16 已正式发布。`main` 当前运行时与公开下载均为 v1.0.16，下一补丁开发目标登记为 v1.0.17；M1～M4D 已完成分阶段真实审计：
 
 - XLSX 的数据验证、条件格式和 Table 进入统一对象草稿；DOCX/PPTX 深化已有段落样式与受限对象事务，仍不宣称完整 Office 等价编辑。
 - ODS 可编辑简单文本、有限数值和文件已有命名样式，并可靠另存新副本；公式、自定义样式与 ODP 编辑继续关闭。
@@ -64,7 +64,7 @@ v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手
 - 知识图谱 2.0 已完成稳定语义探索、专业视觉与 Worker 承载的大图性能收口；跨格式搜索、图谱和关系上下文现共享对象定位合同，Table 行/视图与 OPML 节点可被搜索并打开到内部位置。
 - M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
 
-M4F-4 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 也已冻结。社区候选现已具备发布条件，但 `v1.0.16` Tag、GitHub Release 和公开下载尚未发布；Actions artifact 不能作为用户下载入口。完整事实见 [v1.0.16 候选发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-4 最终发布就绪审计](docs/Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)。
+M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
 
 ## v1.0.15
 
@@ -272,7 +272,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前唯一接续点见 [M4F-4 最终发布就绪审计](docs/Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md)：下一阶段为 M4F-5 Tag、GitHub Release 与三个远端附件回下载复核；当前公开稳定版审计仍为 [v1.0.15 发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，当前唯一接续点见 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)：下一阶段为 M4F-6 v1.0.15 → v1.0.16 官方应用内更新观察；当前公开稳定版审计为 [v1.0.16 发布审计](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)。
 
 ## 许可证
 

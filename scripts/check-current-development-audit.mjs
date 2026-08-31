@@ -40,6 +40,7 @@ import './check-post-v115-m3c2-large-graph-main-thread-phase-profiling-selection
 import './check-post-v115-m3c3-worker-backed-bounded-force-layout-kernel.mjs'
 import './check-post-v115-m3c4-large-graph-performance-exit-audit.mjs'
 import './check-post-v115-m4f4-v1016-final-release-readiness.mjs'
+import './check-post-v115-m4f5-v1016-published-release.mjs'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
@@ -56,11 +57,11 @@ const required = [
   ['7 类为有限能力', counts['verified-with-limitations'] === 7],
   ['6 类依赖外部程序', counts['external-dependency'] === 6],
   ['11 套发布能力配置', matrix.profiles.length === 11],
-  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.runtimeBaseVersion === pkg.version],
-  [`候选运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
-  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion !== pkg.version && development.publicTag === `v${development.publicVersion}`],
+  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === '1.0.17'],
+  [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
+  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === pkg.version && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  [`当前阶段：**\`${development.developmentTargetVersion}\` 候选准备线`, policy.currentStatus.startsWith(`v${pkg.version}-community-release-`)],
+  ['当前阶段：**`v1.0.16` 正式发布后更新观察**', policy.currentStatus === `v${pkg.version}-community-release-published`],
 ]
 
 for (const [token, condition] of required) {
@@ -72,7 +73,7 @@ for (const section of ['## 1. 审计结论', '## 2. 需求对齐', '## 3. 当前
   if (!audit.includes(section)) throw new Error(`[current-development-audit] audit is missing section: ${section}`)
 }
 
-console.log(`Current development audit passed: v${development.developmentTargetVersion} candidate runtime on v${development.publicVersion} public baseline.`)
+console.log(`Current development audit passed: v${development.publicVersion} is public, runtime remains v${development.runtimeBaseVersion}, and v${development.developmentTargetVersion} is the next patch target.`)
 await import('./check-external-mermaid-workspace.mjs')
 await import('./check-external-opml-workspace.mjs')
 await import('./check-default-app-candidate-workflow.mjs')

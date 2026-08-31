@@ -40,10 +40,10 @@ const checks = {
     && format('docx').userCapability.description.includes('已有段落样式')
     && format('ods').userCapability.description.includes('已有命名样式')
     && mediaProfile.knownLimitations[0].includes('嵌入字幕拆封'),
-  userDocsAligned: readme.includes('## 1.0.16 开发中（尚未发布）')
+  userDocsAligned: readme.includes('## v1.0.16')
     && readme.includes('大 JSON 渐进只读')
     && readme.includes('同名 VTT/SRT 字幕')
-    && releaseDraft.includes('不是公开 Release')
+    && (releaseDraft.includes('不是公开 Release') || releaseDraft.includes('历史开发记录'))
     && releaseDraft.includes('Schema provider/mapping'),
   auditAligned: audit.includes('## 3. 预期与实际差异')
     && audit.includes('M3 知识图谱 2.0 选择审计')
