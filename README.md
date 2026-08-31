@@ -76,7 +76,7 @@ M6-2 已完成：本补丁停止扩大范围，下一步进入 **M6-3 v1.0.18 �
 
 M6-3 已完成：Rust 全仓 **548/0/5**，完整 `ci:patch-release` 在补齐真实托管运行回执并对齐证据字段后从头复跑通过，生产构建 6,275 模块、43 格式/91 扩展名、Rust locked check 与生产依赖 0 漏洞均达标。下一步为 **M6-4 v1.0.18 原子版本迁移与候选打包**；详见 [M6-3 质量与发布就绪审计](docs/Post_v1.0.17_M6_3_v1.0.18_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md)。
 
-M6-4 已完成原子版本迁移：44 项当前运行身份统一为 `1.0.18`，公开版本仍为 `v1.0.17`，所有 v1.0.18 候选安装、生命周期与发布门均重新归零。当前状态是“候选源码已准备、安装包待构建”，不是正式发布；候选说明见 [v1.0.18 Release Notes](docs/RELEASE_NOTES_v1.0.18.md)。
+M6-4 已完成：44 项当前运行身份统一为 `1.0.18`，精确候选源码为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`；完整发布门通过，真实 MSI/NSIS 已核验版本、大小、SHA-256 与 `NotSigned`，当前 Tauri WebView2 以 6/6 检查覆盖 11/11 路由及 TXT/JSON 保存重开。公开版本仍为 `v1.0.17`，尚未创建 v1.0.18 Tag/Release；唯一接续点为 **M6-5 v1.0.18 托管安装生命周期**。详见 [M6-4 候选打包审计](docs/Post_v1.0.17_M6_4_v1.0.18_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 与 [v1.0.18 Release Notes](docs/RELEASE_NOTES_v1.0.18.md)。
 
 ### v1.0.16 发布链回顾
 

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-4-v1.0.18-atomic-version-transition-and-candidate-packaging",
+  "status": "passed",
+  "candidateSourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+  "expected": {
+    "runtimeVersion": "1.0.18",
+    "publicVersion": "1.0.17",
+    "qualityGate": "passed",
+    "msiProductVersion": "1.0.18",
+    "nsisProductVersion": "1.0.18",
+    "authenticodeStatus": "NotSigned",
+    "runtimeSmokeChecks": 6,
+    "runtimeSmokeRoutes": 11,
+    "installedLifecyclePassed": false,
+    "githubReleasePublished": false
+  },
+  "actual": {
+    "runtimeVersion": "1.0.18",
+    "publicVersion": "1.0.17",
+    "qualityGate": "passed",
+    "frontendModulesBuilt": 6275,
+    "formatCount": 43,
+    "extensionCount": 91,
+    "productionVulnerabilities": 0,
+    "artifacts": [
+      {
+        "target": "msi",
+        "sourceFileName": "Long编辑_1.0.18_x64_zh-CN.msi",
+        "sizeBytes": 74186752,
+        "sha256": "f1f5c147c9ff8b04c5f8b8a486fdb6cdd32abedd771e19d092c54c2f5185be01",
+        "productVersion": "1.0.18",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "target": "nsis",
+        "sourceFileName": "Long编辑_1.0.18_x64-setup.exe",
+        "sizeBytes": 65934312,
+        "sha256": "96db31068a1b00732ab289474ab000ee465d4565a9150d8cb8a055a8ac96869f",
+        "productVersion": "1.0.18",
+        "authenticodeStatus": "NotSigned"
+      }
+    ],
+    "runtimeSmoke": {
+      "checksPassed": 6,
+      "checksFailed": 0,
+      "routesPassed": 11,
+      "routesFailed": 0,
+      "txtSaveReopenPassed": true,
+      "jsonSaveReopenPassed": true,
+      "screenshotsVisuallyReviewed": true
+    },
+    "installedLifecyclePassed": false,
+    "githubReleasePublished": false
+  },
+  "differencesAndCorrections": [
+    {
+      "difference": "缺失 v1.0.18 Tag 的检查使用 git rev-list 并在正常的未发布状态抛错",
+      "correction": "改用 git tag --list 安全表达 Tag 必须不存在"
+    },
+    {
+      "difference": "历史 M5 审计假设当前社区候选仍为 v1.0.17，并只枚举到 v1.0.18 质量门待跑状态",
+      "correction": "后续候选生效时改读冻结的 v1.0.17 策略、manifest 和发布回执，并接受合法的 v1.0.18 候选已打包状态"
+    },
+    {
+      "difference": "P1 当前合同的 nextStage 遗留旧补丁版本",
+      "correction": "与当前候选身份同批更新为 V1.0.18-UNSIGNED-PATCH-RELEASE"
+    },
+    {
+      "difference": "既有 R5G runner 只允许覆盖历史证据目录",
+      "correction": "增加唯一的 M6-4 仓库证据目录白名单，保留历史证据并运行当前 v1.0.18 WebView2 烟测"
+    }
+  ],
+  "decision": {
+    "stageAccepted": true,
+    "selectedNextStage": "M6-5-v1.0.18-hosted-installer-lifecycle",
+    "releaseCandidate": false
+  },
+  "privacy": {
+    "sourceUserContentIncluded": false,
+    "localAbsolutePathsIncluded": false
+  }
+}

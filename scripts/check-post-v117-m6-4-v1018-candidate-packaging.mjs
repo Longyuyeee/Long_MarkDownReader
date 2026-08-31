@@ -14,6 +14,8 @@ const matrix = json('shared/release-capability-matrix.json')
 const cargo = read('src-tauri/Cargo.toml')
 const cargoLock = read('src-tauri/Cargo.lock')
 const notes = read('docs/RELEASE_NOTES_v1.0.18.md')
+const evidence = fs.existsSync('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/audit.json') ? json('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/audit.json') : null
+const runtimeSmoke = fs.existsSync('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json') ? json('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json') : null
 const failures = []
 const fail = message => failures.push(message)
 
@@ -24,20 +26,46 @@ if (pkg.version !== '1.0.18' || lock.version !== '1.0.18' || lock.packages?.['']
   || tauri.version !== '1.0.18' || matrix.appVersion !== '1.0.18' || !cargo.includes('version = "1.0.18"')
   || !/name = "tauri-app"\r?\nversion = "1\.0\.18"/.test(cargoLock)) fail('atomic runtime identity drift')
 if (development.runtimeBaseVersion !== '1.0.18' || development.publicVersion !== '1.0.17' || development.publicTag !== 'v1.0.17'
-  || development.developmentTargetVersion !== '1.0.18' || development.currentStage !== `${policy.stage}-${policy.name}`
-  || development.binaryVersionTransition !== 'v1.0.18-quality-gate-pending' || development.releaseCandidate) fail('development candidate/public split drift')
-if (community.appVersion !== '1.0.18' || community.currentStatus !== 'v1.0.18-community-release-quality-gate-pending'
+  || development.developmentTargetVersion !== '1.0.18' || development.releaseCandidate) fail('development candidate/public split drift')
+if (community.appVersion !== '1.0.18'
   || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== '1.0.17-to-1.0.18-pending'
-  || community.targetRelease?.tag !== 'v1.0.18' || community.candidate !== null || community.release !== null
-  || Object.values(community.gates ?? {}).some(Boolean)) fail('community candidate reset drift')
-if (!notes.includes('状态：候选准备中，尚未公开发布') || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.18 release notes boundary drift')
+  || community.targetRelease?.tag !== 'v1.0.18' || community.release !== null) fail('community candidate identity drift')
+if (!['状态：候选准备中，尚未公开发布', '状态：候选已打包，托管安装生命周期待验证，尚未公开发布'].some(token => notes.includes(token))
+  || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.18 release notes boundary drift')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
 if (candidateTags) fail('v1.0.18 tag must not exist before publication')
-if (policy.status !== 'atomic-transition-complete-package-pending' || policy.candidateSourceCommit !== null || policy.qualityGatePassed
-  || policy.candidatePackageBuilt || policy.artifacts?.length || policy.nextAction !== 'push-atomic-transition-run-full-quality-gate-and-build-real-msi-nsis') fail('M6-4 pending state drift')
+if (policy.status === 'atomic-transition-complete-package-pending') {
+  if (policy.candidateSourceCommit !== null || policy.qualityGatePassed || policy.candidatePackageBuilt || policy.artifacts?.length
+    || community.currentStatus !== 'v1.0.18-community-release-quality-gate-pending' || community.candidate !== null
+    || Object.values(community.gates ?? {}).some(Boolean)
+    || development.currentStage !== `${policy.stage}-${policy.name}`
+    || development.binaryVersionTransition !== 'v1.0.18-quality-gate-pending'
+    || policy.nextAction !== 'push-atomic-transition-run-full-quality-gate-and-build-real-msi-nsis') fail('M6-4 pending state drift')
+} else if (policy.status === 'accepted') {
+  if (policy.candidateSourceCommit !== '5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a' || !policy.qualityGatePassed || !policy.candidatePackageBuilt
+    || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.productVersion !== '1.0.18' || item.authenticodeStatus !== 'NotSigned')
+    || policy.artifacts?.[0]?.sizeBytes !== 74186752 || policy.artifacts?.[0]?.sha256 !== 'f1f5c147c9ff8b04c5f8b8a486fdb6cdd32abedd771e19d092c54c2f5185be01'
+    || policy.artifacts?.[1]?.sizeBytes !== 65934312 || policy.artifacts?.[1]?.sha256 !== '96db31068a1b00732ab289474ab000ee465d4565a9150d8cb8a055a8ac96869f'
+    || policy.runtimeSmoke?.checksPassed !== 6 || policy.runtimeSmoke?.routesPassed !== 11
+    || policy.selectedNextStage?.id !== 'M6-5' || policy.nextAction !== 'execute-m6-5-v1.0.18-hosted-installer-lifecycle') fail('M6-4 accepted package receipt drift')
+  if (development.currentStage !== `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
+    || development.binaryVersionTransition !== 'v1.0.18-candidate-packaged'
+    || community.currentStatus !== 'v1.0.18-community-release-candidate-packaged-installed-lifecycle-pending'
+    || community.releaseCandidate || !community.gates?.qualityGatePassed || !community.gates?.msiBuilt || !community.gates?.nsisBuilt
+    || !community.gates?.artifactHashesVerified || !community.gates?.localRuntimeSmokePassed || community.gates?.installedLifecyclePassed
+    || community.gates?.githubReleasePublished || community.candidate?.artifactSourceCommit !== policy.candidateSourceCommit
+    || community.candidate?.artifacts?.length !== 2) fail('M6-4 accepted development/community state drift')
+  if (evidence?.status !== 'passed' || evidence?.candidateSourceCommit !== policy.candidateSourceCommit || evidence?.differencesAndCorrections?.length !== 4
+    || runtimeSmoke?.appVersion !== '1.0.18' || runtimeSmoke?.checks?.filter(item => item.status === 'passed').length !== 6
+    || evidence?.actual?.runtimeSmoke?.routesPassed !== 11 || !evidence?.actual?.runtimeSmoke?.screenshotsVisuallyReviewed) fail('M6-4 real evidence drift')
+  try {
+    execFileSync('git', ['cat-file', '-e', `${policy.candidateSourceCommit}^{commit}`])
+    execFileSync('git', ['merge-base', '--is-ancestor', policy.candidateSourceCommit, 'HEAD'])
+  } catch { fail('M6-4 candidate source commit is unavailable or not an ancestor') }
+} else fail('M6-4 status is unsupported')
 
 if (failures.length) {
   console.error(`M6-4 candidate packaging failed:\n- ${failures.join('\n- ')}`)
   process.exit(1)
 }
-console.log('M6-4 atomic transition accepted: 44 current identity files target v1.0.18 while public v1.0.17 facts remain frozen; package evidence is still pending.')
+console.log(`M6-4 ${policy.status}: v1.0.18 candidate identity, real local package receipts, and WebView2 evidence are valid while public v1.0.17 remains frozen.`)

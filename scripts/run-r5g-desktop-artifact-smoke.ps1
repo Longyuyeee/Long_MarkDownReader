@@ -8,7 +8,8 @@ $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $output = [System.IO.Path]::GetFullPath((Join-Path $workspace $OutputDirectory))
 $expectedOutput = [System.IO.Path]::GetFullPath((Join-Path $workspace "docs\evidence\r5g-desktop-artifact-smoke"))
 $m5CandidateOutput = [System.IO.Path]::GetFullPath((Join-Path $workspace "docs\evidence\post-v116-m5-5-v1017-candidate-packaging\runtime-smoke"))
-if ($output -ne $expectedOutput -and $output -ne $m5CandidateOutput) { throw "R5G audit output must remain in an approved repository evidence directory" }
+$m6CandidateOutput = [System.IO.Path]::GetFullPath((Join-Path $workspace "docs\evidence\post-v117-m6-4-v1018-candidate-packaging\runtime-smoke"))
+if ($output -ne $expectedOutput -and $output -ne $m5CandidateOutput -and $output -ne $m6CandidateOutput) { throw "R5G audit output must remain in an approved repository evidence directory" }
 
 $busyPorts = Get-NetTCPConnection -LocalPort 9000, 9341 -State Listen -ErrorAction SilentlyContinue
 if ($busyPorts) { throw "R5G desktop audit requires free local ports 9000 and 9341" }

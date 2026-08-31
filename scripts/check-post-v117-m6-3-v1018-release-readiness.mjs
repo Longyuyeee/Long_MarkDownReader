@@ -25,7 +25,7 @@ if (policy.qualityDebt?.completeRustPassed !== 548 || policy.qualityDebt?.comple
 if (!policy.releaseGate?.fullPatchReleaseCiPassed || policy.releaseGate?.frontendModulesBuilt !== 6275
   || policy.releaseGate?.formatCount !== 43 || policy.releaseGate?.extensionCount !== 91 || !policy.releaseGate?.cargoCheckPassed
   || policy.releaseGate?.productionVulnerabilities !== 0 || !policy.releaseGate?.packagingEligible) fail('M6-3 release gate drift')
-const receiptRunAccepted = successor.status === 'atomic-transition-complete-package-pending'
+const receiptRunAccepted = ['atomic-transition-complete-package-pending', 'accepted'].includes(successor.status)
   ? evidence.differencesAndCorrections?.some(item => item.correction?.includes('33361759629'))
   : release.candidate?.hostedInstalledLifecycleRunId === 33361759629
 if (!receiptRunAccepted || !releaseChecker.includes('hosted.releaseCandidate !== false')) fail('M6-3 release receipt correction drift')
@@ -36,10 +36,11 @@ if (evidence.status !== 'passed' || evidence.actual?.completeRustPassed !== 548 
   || evidence.privacy?.sourceUserContentIncluded || evidence.privacy?.localAbsolutePathsIncluded) fail('M6-3 evidence drift')
 if (policy.selectedNextStage?.id !== 'M6-4' || policy.selectedNextStage?.name !== 'v1.0.18-atomic-version-transition-and-candidate-packaging'
   || policy.nextAction !== 'execute-m6-4-v1.0.18-atomic-version-transition-and-candidate-packaging') fail('M6-4 handoff drift')
-const runtimeAccepted = successor.status === 'atomic-transition-complete-package-pending' ? development.runtimeBaseVersion === '1.0.18' : development.runtimeBaseVersion === '1.0.17'
-if (development.currentStage !== `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}` || !runtimeAccepted
+const runtimeAccepted = ['atomic-transition-complete-package-pending', 'accepted'].includes(successor.status) ? development.runtimeBaseVersion === '1.0.18' : development.runtimeBaseVersion === '1.0.17'
+const expectedDevelopmentStage = successor.status === 'accepted' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
+if (development.currentStage !== expectedDevelopmentStage || !runtimeAccepted
   || development.publicVersion !== '1.0.17' || development.developmentTargetVersion !== '1.0.18' || development.releaseCandidate) fail('M6-4 development handoff drift')
-for (const [document, tokens] of [[audit, ['548 通过、0 失败、5 忽略', '6,275 modules transformed', '33361759629', 'found 0 vulnerabilities', 'M6-4']], [roadmap, ['M6-3 质量与发布就绪回执', '548', 'M6-4']], [alignment, ['当前阶段：**M6-4 v1.0.18 原子版本迁移与候选打包**', '唯一接续点为 M6-4']]]) {
+for (const [document, tokens] of [[audit, ['548 通过、0 失败、5 忽略', '6,275 modules transformed', '33361759629', 'found 0 vulnerabilities', 'M6-4']], [roadmap, ['M6-3 质量与发布就绪回执', '548', 'M6-4']], [alignment, ['M6-3 已完成', '唯一接续点为 M6-4']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-3 document missing ${token}`)
 }
 
