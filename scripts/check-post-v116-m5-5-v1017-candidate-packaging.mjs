@@ -8,6 +8,7 @@ const predecessor = json('shared/post-v116-m5-4-v1017-release-readiness-policy.j
 const development = json('shared/development-version-policy.json')
 const community = json('shared/v1-community-release-policy.json')
 const successor = json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
+const finalReadiness = json('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json')
 const pkg = json('package.json')
 const lock = json('package-lock.json')
 const tauri = json('src-tauri/tauri.conf.json')
@@ -30,7 +31,7 @@ if (development.runtimeBaseVersion !== '1.0.17' || development.publicVersion !==
   || development.publicTag !== 'v1.0.16' || development.developmentTargetVersion !== '1.0.17') fail('development public/candidate split drifted')
 if (community.appVersion !== '1.0.17' || community.patchValidation?.previousPublicVersion !== '1.0.16'
   || community.targetRelease?.tag !== 'v1.0.17' || community.gates?.githubReleasePublished) fail('community candidate identity drifted')
-if (!notes.includes('状态：候选准备中，尚未公开发布') || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.17 release notes boundary drifted')
+if (!['状态：候选准备中，尚未公开发布', '状态：发布就绪，尚未公开发布'].some(token => notes.includes(token)) || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.17 release notes boundary drifted')
 if (execFileSync('git', ['tag', '--list', 'v1.0.17'], { encoding: 'utf8' }).trim()) fail('v1.0.17 tag exists before installed lifecycle and publication')
 
 if (policy.status === 'atomic-transition-complete-package-pending') {
@@ -40,11 +41,12 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
     || development.binaryVersionTransition !== 'v1.0.17-quality-gate-pending') fail('M5-5 pending state drifted')
 } else if (policy.status === 'accepted') {
   const successorPassed = successor.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+  const releaseReady = finalReadiness.status === 'accepted-ready-to-publish'
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
-    || community.currentStatus !== (successorPassed ? 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending')
-    || development.currentStage !== (successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`)
-    || development.binaryVersionTransition !== (successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged')) fail('M5-5 accepted package state drifted')
+    || community.currentStatus !== (releaseReady ? 'v1.0.17-community-release-ready-to-publish' : successorPassed ? 'v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending')
+    || development.currentStage !== (releaseReady ? 'M5-8-v1.0.17-tag-release-and-remote-asset-verification' : successorPassed ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`)
+    || development.binaryVersionTransition !== (releaseReady ? 'v1.0.17-release-ready' : successorPassed ? 'v1.0.17-hosted-lifecycle-passed' : 'v1.0.17-candidate-packaged')) fail('M5-5 accepted package state drifted')
   if (policy.artifacts?.[0]?.sizeBytes !== 74186752 || policy.artifacts?.[0]?.sha256 !== '96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e'
     || policy.artifacts?.[1]?.sizeBytes !== 65922301 || policy.artifacts?.[1]?.sha256 !== '09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886') fail('M5-5 artifact receipt drifted')
   if (evidence?.status !== 'passed' || evidence?.candidateSourceCommit !== policy.candidateSourceCommit || evidence?.differencesAndCorrections?.length !== 4

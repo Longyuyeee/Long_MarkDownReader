@@ -1,6 +1,6 @@
 # Long编辑 v1.0.17 发布说明
 
-状态：候选准备中，尚未公开发布。
+状态：发布就绪，尚未公开发布。
 
 v1.0.17 聚焦 v1.0.16 之后已经完成真实验收的最小增量：资料库内 ODP 简单幻灯片正文的有界编辑副本，以及版本收口阶段发现的可靠性修正。
 
@@ -17,10 +17,11 @@ v1.0.17 聚焦 v1.0.16 之后已经完成真实验收的最小增量：资料库
 - Rust 全仓测试：548 通过、0 失败、5 个明确依赖外部桌面应用或审计产物的测试忽略。
 - 完整 `ci:patch-release`：前端、43 格式/91 扩展名合同、Rust locked check 和生产依赖审计通过，生产依赖漏洞为 0。
 - 候选 MSI/NSIS 已真实构建并核验 1.0.17 产品版本、大小、SHA-256 与 `NotSigned`；当前 Tauri WebView2 烟测为 6/6 检查、11/11 路由，TXT/JSON 保存复开通过。
-- GitHub 托管 Windows 已从精确候选重建 MSI/NSIS，并通过 `v1.0.16 → v1.0.17` 升级、22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚；失败 0。
+- GitHub 托管 Windows 已从精确候选重建 MSI/NSIS，并通过 `v1.0.16 → v1.0.17` 升级、22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚；失败 0。
+- 最终公开资产已冻结：NSIS SHA-256 `154ace58e2e20b6ebe9947c2690f03b0d9737f69fecb9ffca90c0cdf3b2ba282`，MSI SHA-256 `1453fa9a911d934fdacda88f63d3bac783100b9ef210fb02362ebe9aa0f16c3e`，并生成 `SHA256SUMS.txt`。
 
 ## 发布边界
 
-本说明随候选源码准备，不代表 v1.0.17 已公开发布。M5-6 托管安装生命周期已经全部通过，M5-7 仍须把已验证的托管 MSI/NSIS 固化为最终 artifact manifest、`SHA256SUMS.txt` 和发布就绪回执；该审计完成前不能创建 Tag 与 GitHub Release。
+本说明随候选源码准备，不代表 v1.0.17 已公开发布。M5-7 已把通过生命周期的托管 MSI/NSIS 固化为最终 artifact manifest 和 `SHA256SUMS.txt`；M5-8 仍须创建绑定精确产品提交的 Tag 与 GitHub Release，并从公开地址回下载三项资产逐一复核后，才能宣称正式发布。
 
 社区安装包继续采用无 Authenticode 签名模式，Windows 可能显示“未知发布者”或 SmartScreen 提示。只应从官方 GitHub Release 下载，并在安装前核对 SHA-256；自动更新也必须先校验官方 NSIS 文件。

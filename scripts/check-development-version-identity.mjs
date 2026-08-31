@@ -70,6 +70,7 @@ const m5OdpWorkspace = readJson('shared/post-v116-m5-3-odp-workspace-policy.json
 const m5ReleaseReadiness = readJson('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
 const m5CandidatePackaging = readJson('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const m5HostedLifecycle = readJson('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
+const m5FinalReadiness = readJson('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json')
 const config = fs.readFileSync('src/config/releaseCapabilities.ts', 'utf8')
 const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'utf8')
@@ -93,7 +94,7 @@ const checks = {
   candidateMetadataFacts: community.appVersion === policy.runtimeBaseVersion
     && (candidateRuntime
       ? community.currentStatus.startsWith(`v${policy.runtimeBaseVersion}-community-release-`)
-        && community.releaseCandidate === false
+        && community.releaseCandidate === (community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-ready-to-publish`)
         && community.gates?.githubReleasePublished === false
         && community.patchValidation?.previousPublicVersion === policy.publicVersion
         && community.release === null
@@ -109,7 +110,7 @@ const checks = {
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,
   binaryTransitionComplete: (candidateRuntime
-    ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed'].includes(policy.binaryVersionTransition)
+    ? ['v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready'].includes(policy.binaryVersionTransition)
       && policy.runtimeBaseVersion === expectedTarget
     : policy.binaryVersionTransition === 'v1.0.16-public-release-published'
       && policy.runtimeBaseVersion === policy.publicVersion)
@@ -207,7 +208,9 @@ const checks = {
     && m5OdpWorkspace.status === 'accepted'
     && m5ReleaseReadiness.predecessor === m5OdpWorkspace.stage
     && m5ReleaseReadiness.status === 'accepted'
-    && (m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+    && (m5FinalReadiness.status === 'accepted-ready-to-publish'
+      ? policy.currentStage === `${m5FinalReadiness.selectedNextStage.id}-${m5FinalReadiness.selectedNextStage.name}`
+      : m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
       ? policy.currentStage === 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'
       : m5CandidatePackaging.status === 'accepted'
         ? policy.currentStage === `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`

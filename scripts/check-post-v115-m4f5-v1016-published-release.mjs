@@ -16,6 +16,7 @@ const m5Workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const m5ReleaseReadiness = json('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
 const m5CandidatePackaging = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const m5HostedLifecycle = json('shared/post-v116-m5-6-v1017-hosted-installer-lifecycle-policy.json')
+const m5FinalReadiness = json('shared/post-v116-m5-7-v1017-final-artifact-manifest-release-readiness-policy.json')
 const audit = fs.readFileSync('docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md', 'utf8')
 const laterCandidateActive = community.appVersion !== '1.0.16'
 const failures = []
@@ -39,7 +40,9 @@ for (const asset of receipt.assets ?? []) {
 if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' || manifest.releaseReceipt !== 'release-receipt.json' || !manifest.boundaries?.releaseAssetsPublished) fail('published artifact manifest drifted')
 const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
 const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-const expectedStage = m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+const expectedStage = m5FinalReadiness.status === 'accepted-ready-to-publish'
+  ? `${m5FinalReadiness.selectedNextStage.id}-${m5FinalReadiness.selectedNextStage.name}`
+  : m5HostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
   ? 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'
   : m5CandidatePackaging.status === 'accepted'
   ? `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
@@ -55,7 +58,7 @@ const expectedStage = m5HostedLifecycle.status === 'hosted-installer-lifecycle-p
   ? `${m5.selectedNextStage.id}-${m5.selectedNextStage.name}`
   : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
 if (!laterCandidateActive && (community.currentStatus !== 'v1.0.16-community-release-published' || !community.releaseCandidate || !community.gates?.githubReleasePublished || community.release?.databaseId !== policy.releaseDatabaseId || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== expectedNextAction)) fail('community published state drifted')
-if (development.publicVersion !== '1.0.16' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit || development.developmentTargetVersion !== '1.0.17' || development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed'].includes(development.binaryVersionTransition)) fail('development/public handoff drifted')
+if (development.publicVersion !== '1.0.16' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit || development.developmentTargetVersion !== '1.0.17' || development.currentStage !== expectedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready'].includes(development.binaryVersionTransition)) fail('development/public handoff drifted')
 if (updaterComplete && receipt.postReleaseManagedUpdaterObservation !== '1.0.15-to-1.0.16-passed') fail('post-release managed updater receipt drifted')
 for (const token of ['预期与实际差异', '379466292', 'M4F-6', 'v1.0.15 → v1.0.16']) if (!audit.includes(token)) fail(`M4F-5 audit token missing: ${token}`)
 

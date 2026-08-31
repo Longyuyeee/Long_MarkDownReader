@@ -43,3 +43,9 @@ M5-3 登记的四个 Rust 问题已经按真实代码根因清零。Workbook 修
 GitHub Actions `33361759629` 从精确候选和公开 `v1.0.16` Tag 分别重建安装器，双包及升级基线均为 `NotSigned`，并一次通过 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。托管包与本地包摘要不同，但源码、版本、签名和语义全部一致；两套回执独立保留，后续只晋级托管产物。
 
 唯一接续点为 **M5-7 v1.0.17 最终 artifact manifest、SHA256SUMS、发布说明与发布就绪审计**。当前仍为 `releaseCandidate=false`，审计全绿前不得创建 Tag 或 GitHub Release。
+
+## M5-7 最终产物与发布就绪回执
+
+最终清单只采用运行 `33361759629` 已通过生命周期的托管 MSI/NSIS，并冻结公开文件名、大小、SHA-256、`NotSigned` 与 `SHA256SUMS.txt`。本地 M5-5 摘要没有混入发布资产。阶段提升为无签名社区 `releaseCandidate=true`，但仍未创建 Tag 或 Release。
+
+唯一接续点为 **M5-8 v1.0.17 Tag、GitHub Release 与远端资产回下载复核**。Tag 必须绑定 `2b6235d420ceffd291dab72c4af17caffe464333`，三项资产必须从公开地址重新下载并匹配最终清单。

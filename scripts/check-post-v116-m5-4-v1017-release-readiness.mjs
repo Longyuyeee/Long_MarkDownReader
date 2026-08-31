@@ -43,7 +43,7 @@ for (const token of ['真实测试：预期、实际、差异与修正', '548 �
 const expectedDevelopmentStage = successor.status === 'accepted'
   ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`
   : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
-if (![expectedDevelopmentStage, 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit'].includes(development.currentStage)) fail('development handoff is not aligned with M5-5 progression')
+if (![expectedDevelopmentStage, 'M5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit', 'M5-8-v1.0.17-tag-release-and-remote-asset-verification'].includes(development.currentStage)) fail('development handoff is not aligned with M5-5 progression')
 
 if (failures.length) {
   console.error(`M5-4 release readiness failed:\n- ${failures.join('\n- ')}`)

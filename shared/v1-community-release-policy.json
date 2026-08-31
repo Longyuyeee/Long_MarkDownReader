@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.17",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-31",
-  "currentStatus": "v1.0.17-community-release-hosted-lifecycle-passed-final-release-audit-pending",
+  "currentStatus": "v1.0.17-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -64,16 +64,16 @@
         "target": "msi",
         "sourceFileName": "Long编辑_1.0.17_x64_zh-CN.msi",
         "fileName": "LongEdit_1.0.17_x64_zh-CN.msi",
-        "sizeBytes": 74186752,
-        "sha256": "96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e",
+        "sizeBytes": 73863168,
+        "sha256": "1453fa9a911d934fdacda88f63d3bac783100b9ef210fb02362ebe9aa0f16c3e",
         "authenticodeStatus": "NotSigned"
       },
       {
         "target": "nsis",
         "sourceFileName": "Long编辑_1.0.17_x64-setup.exe",
         "fileName": "LongEdit_1.0.17_x64-setup.exe",
-        "sizeBytes": 65922301,
-        "sha256": "09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886",
+        "sizeBytes": 65778243,
+        "sha256": "154ace58e2e20b6ebe9947c2690f03b0d9737f69fecb9ffca90c0cdf3b2ba282",
         "authenticodeStatus": "NotSigned"
       }
     ]
@@ -86,5 +86,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-m5-7-v1.0.17-final-artifact-manifest-and-release-readiness-audit"
+  "nextAction": "execute-m5-8-v1.0.17-tag-release-and-remote-asset-verification"
 }
