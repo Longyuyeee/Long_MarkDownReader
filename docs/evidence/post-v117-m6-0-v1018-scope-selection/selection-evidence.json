@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-0",
+  "status": "accepted",
+  "capturedAt": "2026-08-31T07:51:59.654Z",
+  "sourceCommit": "1d952ef26a26141731939ecaf46445423da95c6e",
+  "expected": {
+    "selectOneSmallAdjacentSlice": true,
+    "reuseVerifiedGraphFoundation": true,
+    "preserveSourceReadOnlyBoundary": true,
+    "doNotPromoteProductCapability": true
+  },
+  "actual": {
+    "selectedCandidate": "graph-bounded-fullscreen-lifecycle",
+    "sourceHashes": {
+      "graphViewSha256": "eb7da3814230a6295aac12c4d8a26e393c202d5356bc1c37593edc6006e86248",
+      "yamlViewSha256": "b498408f331da7f84da72175ce0b3089149c2055c91c65bb91c43a42e40c1d16",
+      "xmlViewSha256": "3cd812037594ca1744edf067b6d7e9fe33ef8a12b1ca941d890d95ccd31d3ae5",
+      "tomlViewSha256": "e691581313ca0ce0e3129599f4dffda75a49608da38bc2527a79365bb12d5df4",
+      "odpViewSha256": "6c2477815ce5cc0521df66c1da9eb9479959704216e8df3f42c73d68c5c6a83f"
+    },
+    "currentCodeFacts": {
+      "graphFullscreenTokens": 0,
+      "graphClusterCollapseTokens": 0,
+      "graphResizeObserver": true,
+      "graphMinimap": true,
+      "graphCamera": true,
+      "appZenMode": true,
+      "appZenUsesNativeFullscreen": false,
+      "structuredSchemaProviderTokens": 0,
+      "odpNotesDisplayedReadOnly": true,
+      "odpNotesExcludedFromBodyEditing": true
+    },
+    "realDesktopBaseline": {
+      "source": "docs/evidence/post-v115-m3b8-remaining-navigation-selection/desktop.json",
+      "theme": "dark",
+      "motion": "reduced",
+      "viewports": [
+        { "width": 1280, "height": 800, "fits": true, "canvasWidth": 1280, "canvasHeight": 710, "fullscreenApiAvailable": true },
+        { "width": 1000, "height": 700, "fits": true, "canvasWidth": 1000, "canvasHeight": 610, "fullscreenApiAvailable": true },
+        { "width": 720, "height": 680, "fits": true, "canvasWidth": 720, "canvasHeight": 590, "fullscreenApiAvailable": true }
+      ],
+      "communityRoundtrip": "17-node-full-graph-to-4-node-filtered-subgraph-to-17-node-full-graph",
+      "communityInteractionKind": "filtered-subgraph",
+      "runtimeErrors": 0,
+      "sourceFilesUnchanged": true,
+      "returnedToLibrary": true
+    },
+    "latestCombinedGraphBaseline": {
+      "source": "docs/evidence/post-v115-m3b12-professional-visual-system-exit/desktop-dark-reduced.json",
+      "runtimeErrors": 0,
+      "sourceFilesUnchanged": true,
+      "returnedToLibrary": true,
+      "fullscreenVisible": false,
+      "clusterCollapseExpandVisible": false,
+      "governanceRingVisible": false
+    }
+  },
+  "differences": [
+    {
+      "expected": "the existing F11 command may already provide true graph fullscreen",
+      "actual": "F11 only toggles the Pinia zen flag and hides application chrome; it never invokes the Fullscreen API and GraphView has no fullscreen state",
+      "correction": "M6-1 adds a graph-scoped explicit toolbar action and keeps F11 zen semantics separate"
+    },
+    {
+      "expected": "community filtering may be a small base for collapse and expand",
+      "actual": "the real interaction is a 17 to 4 to 17 filtered-subgraph roundtrip with no proxy identity or aggregated-edge semantics",
+      "correction": "defer cluster proxies; M6-1 must not change nodes, edges, paths, evidence, history or export"
+    },
+    {
+      "expected": "Schema mode may be comparable in size because three structured editors already exist",
+      "actual": "all three editors lack provider trust, mapping, resolution, cache, offline/privacy and diagnostics-provenance contracts",
+      "correction": "defer Schema mode until a provider and association selection audit can be isolated"
+    },
+    {
+      "expected": "ODP presenter notes can follow the completed simple body-copy path",
+      "actual": "notes remain producer-asymmetric and are deliberately excluded from the accepted body edit transaction",
+      "correction": "keep notes read-only and do not broaden the v1.0.18 first slice"
+    }
+  ],
+  "selectedNextStage": "M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false
+}

@@ -54,8 +54,9 @@ if (lifecycleAdvanced) {
   if (!laterCandidateActive && (!community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished !== releasePublished || community.candidate?.artifacts?.length !== 2)) failures.push('M4F-3 completion facts drifted')
   const releaseReady = community.currentStatus === 'v1.0.16-community-release-ready-to-publish'
   const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
-  const publishedStage = development.binaryVersionTransition === 'v1.0.17-release-and-managed-updater-closed'
-    ? 'M6-0-v1.0.18-scope-selection-audit'
+  const postClosureStage = development.binaryVersionTransition === 'v1.0.17-release-and-managed-updater-closed'
+  const publishedStage = postClosureStage
+    ? development.currentStage
     : m5Published.status === 'published-and-remote-assets-verified'
     ? `${m5Published.selectedNextStage.id}-${m5Published.selectedNextStage.name}`
     : m5FinalReadiness.status === 'accepted-ready-to-publish'
@@ -77,7 +78,7 @@ if (lifecycleAdvanced) {
     : updaterComplete ? 'M5-0-v1.0.17-scope-selection-audit' : 'M4F-6-v1.0.15-to-v1.0.16-managed-updater-observation'
   if (!laterCandidateActive && community.releaseCandidate !== (releaseReady || releasePublished)) failures.push('community release-ready promotion drifted')
   if (releasePublished
-    ? development.currentStage !== publishedStage || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready', 'v1.0.17-public-release-published', 'v1.0.17-release-and-managed-updater-closed'].includes(development.binaryVersionTransition)
+    ? development.currentStage !== publishedStage || (postClosureStage && !['M6-0-v1.0.18-scope-selection-audit', 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit'].includes(development.currentStage)) || !['v1.0.16-public-release-published', 'v1.0.17-quality-gate-pending', 'v1.0.17-candidate-packaged', 'v1.0.17-hosted-lifecycle-passed', 'v1.0.17-release-ready', 'v1.0.17-public-release-published', 'v1.0.17-release-and-managed-updater-closed'].includes(development.binaryVersionTransition)
     : releaseReady
     ? development.currentStage !== 'M4F-5-v1.0.16-tag-release-and-remote-asset-verification' || development.binaryVersionTransition !== 'v1.0.16-release-ready'
     : development.currentStage !== 'M4F-4-v1.0.16-final-artifact-manifest-and-release-readiness-audit' || development.binaryVersionTransition !== 'v1.0.16-hosted-installer-lifecycle-passed') failures.push('M4F-4/M4F-5 handoff drifted')

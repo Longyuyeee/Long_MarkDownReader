@@ -37,7 +37,7 @@ if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== 'defb7ae3c255f
 if (community.currentStatus !== (releasePublished ? 'v1.0.17-community-release-published' : 'v1.0.17-community-release-ready-to-publish')
   || !community.releaseCandidate || (releasePublished ? community.release?.databaseId !== published.releaseDatabaseId : community.release !== null)
   || community.nextAction !== (releaseClosed ? 'v1.0.17-release-and-managed-updater-closure-complete' : releasePublished ? 'execute-m5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : 'execute-m5-8-v1.0.17-tag-release-and-remote-asset-verification')) fail('community ready state drifted')
-if (development.currentStage !== (releaseClosed ? 'M6-0-v1.0.18-scope-selection-audit' : releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : 'M5-8-v1.0.17-tag-release-and-remote-asset-verification')
+if (!(releaseClosed ? ['M6-0-v1.0.18-scope-selection-audit', 'M6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit'].includes(development.currentStage) : development.currentStage === (releasePublished ? 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation' : 'M5-8-v1.0.17-tag-release-and-remote-asset-verification'))
   || development.binaryVersionTransition !== (releaseClosed ? 'v1.0.17-release-and-managed-updater-closed' : releasePublished ? 'v1.0.17-public-release-published' : 'v1.0.17-release-ready')
   || development.publicVersion !== (releasePublished ? '1.0.17' : '1.0.16')) fail('development ready handoff drifted')
 const tagCommit = execFileSync('git', ['rev-list', '-n', '1', 'v1.0.17'], { encoding: 'utf8' }).trim()

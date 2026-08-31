@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-0",
+  "name": "v1.0.18-scope-selection-audit",
+  "status": "scope-selected",
+  "predecessor": "M5-9",
+  "selectionSourceCommit": "1d952ef26a26141731939ecaf46445423da95c6e",
+  "runtimeBaseVersion": "1.0.17",
+  "publicVersion": "1.0.17",
+  "developmentTargetVersion": "1.0.18",
+  "selectionPrinciples": [
+    "adjacent-to-verified-user-workflow",
+    "one-bounded-capability-one-stage",
+    "reuse-existing-lifecycle-and-responsive-contracts",
+    "do-not-expand-source-write-scope",
+    "expected-versus-actual-differences-must-be-recorded"
+  ],
+  "candidates": [
+    {
+      "id": "graph-bounded-fullscreen-lifecycle",
+      "current": "GraphView has stable semantic exploration, camera, minimap, ResizeObserver and real 1280/1000/720 desktop evidence; the WebView Fullscreen API was observed available, but no graph fullscreen command or lifecycle exists",
+      "gap": "entry, fullscreenchange synchronization, Escape/browser exit, route-unmount cleanup, resize refit and responsive overlay preservation are absent; the existing F11 zen mode only hides application chrome and is not graph fullscreen",
+      "reuse": "high",
+      "risk": "low-medium",
+      "userValue": "medium-high",
+      "selected": true
+    },
+    {
+      "id": "graph-cluster-collapse-expand",
+      "current": "Louvain communities currently enter and return from a filtered subgraph; they do not create proxy cluster nodes",
+      "gap": "proxy identity, aggregated edges, selection/history, path/evidence, minimap, export and camera restoration contracts are absent",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "medium-high",
+      "selected": false
+    },
+    {
+      "id": "structured-schema-mode",
+      "current": "YAML, XML and TOML already provide bounded source analysis, outline, diagnostics and safe editing, but production views contain no schema provider or association contract",
+      "gap": "provider trust, local/remote resolution, per-workspace mapping, cache, offline/privacy, diagnostics provenance and failure fallback are absent",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "high",
+      "selected": false
+    },
+    {
+      "id": "odp-presenter-note-editing",
+      "current": "ODP notes are parsed, indexed and displayed read-only while body editing explicitly excludes notes",
+      "gap": "the real producer baseline is asymmetric because LibreOffice did not preserve authored notes while PowerPoint did",
+      "reuse": "medium",
+      "risk": "high",
+      "userValue": "medium",
+      "selected": false
+    },
+    {
+      "id": "graph-governance-rings",
+      "current": "GraphView exposes recency and relation-strength rings while the governance ring count remains explicitly zero",
+      "gap": "there is no stable per-node governance fact, provenance or user explanation contract",
+      "reuse": "medium",
+      "risk": "medium-high",
+      "userValue": "medium",
+      "selected": false
+    }
+  ],
+  "selectedNextStage": {
+    "id": "M6-1",
+    "name": "knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit"
+  },
+  "nextStageRequirements": {
+    "graphOnly": true,
+    "sourceFilesRemainReadOnly": true,
+    "explicitToolbarEntry": true,
+    "browserFullscreenApiOnly": true,
+    "fullscreenChangeIsSourceOfTruth": true,
+    "escapeAndBrowserExitSupported": true,
+    "routeUnmountCleanupRequired": true,
+    "selectionPanelsCameraAndMinimapPreserved": true,
+    "resizeObserverAndCanvasRefitRequired": true,
+    "realTauriThreeViewportAuditRequired": true,
+    "darkLightAndReducedMotionEvidenceRequired": true,
+    "expectedVsActualRequired": true,
+    "noClusterProxyOrGraphSemanticChange": true,
+    "binaryVersionChange": false
+  },
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m6-1-knowledge-graph-bounded-fullscreen-lifecycle-and-real-desktop-audit"
+}

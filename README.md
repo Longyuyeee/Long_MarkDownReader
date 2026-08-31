@@ -66,7 +66,9 @@ v1.0.17 已正式发布。`main` 当前运行时与公开下载均为 v1.0.17，
 
 M5-8 已完成：`v1.0.17` Tag 绑定精确产品提交 `2b6235d420ceffd291dab72c4af17caffe464333`，GitHub Release `379561360` 的 NSIS、MSI 和 `SHA256SUMS.txt` 已从公开地址重新下载并匹配冻结清单。此前托管运行 [33361759629](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33361759629) 已通过 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。完整事实见 [v1.0.17 发布说明](docs/RELEASE_NOTES_v1.0.17.md) 与 [M5-8 正式发布审计](docs/Post_v1.0.16_M5_8_v1.0.17_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
 
-M5-9 已完成：最终托管运行 [33368732235](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235) 从官方 v1.0.16 应用内发现并确认 v1.0.17，校验 NSIS、同目录覆盖、自动重启、最新版状态以及覆盖/卸载后资料保留共 12/12 通过。前两轮暴露并修正 Release 候选文案残留与动画截图重影，最终三张 UI 证据人工复核清晰。完整事实见 [M5-9 官方应用内更新审计](docs/Post_v1.0.16_M5_9_v1.0.17_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。下一接续点为 **M6-0 v1.0.18 范围选择审计**。
+M5-9 已完成：最终托管运行 [33368732235](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235) 从官方 v1.0.16 应用内发现并确认 v1.0.17，校验 NSIS、同目录覆盖、自动重启、最新版状态以及覆盖/卸载后资料保留共 12/12 通过。前两轮暴露并修正 Release 候选文案残留与动画截图重影，最终三张 UI 证据人工复核清晰。完整事实见 [M5-9 官方应用内更新审计](docs/Post_v1.0.16_M5_9_v1.0.17_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
+
+M6-0 已完成：真实代码和既有真实 Tauri 三视口证据只选择 **M6-1 图谱有界全屏生命周期与真实桌面审计**。F11 专注模式保持原语义；社区代理折叠、治理环、结构化 Schema 和 ODP 备注编辑继续延后。完整选择依据见 [M6-0 范围选择审计](docs/Post_v1.0.17_M6_0_v1.0.18_Scope_Selection_Audit_2026-08-31.md)。
 
 ### v1.0.16 发布链回顾
 
