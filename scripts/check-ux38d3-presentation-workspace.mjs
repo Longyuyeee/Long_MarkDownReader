@@ -17,7 +17,10 @@ const registry = JSON.parse(read('shared/file-formats.json'))
 const pptxFormat = registry.formats.find(format => format.id === 'pptx')
 const odpFormat = registry.formats.find(format => format.id === 'odp')
 if (pptxFormat?.userCapability?.saveMode !== 'bounded-overwrite' || pptxFormat.userCapability.label !== '受限演示文稿编辑') fail('PPTX bounded source-save boundary drift')
-if (odpFormat?.userCapability?.saveMode !== 'none' || odpFormat.capabilities?.edit !== 'unsupported') fail('ODP read-only boundary drift')
+const m5Workspace = JSON.parse(read('shared/post-v116-m5-3-odp-workspace-policy.json'))
+if (m5Workspace.status === 'accepted'
+  ? (odpFormat?.userCapability?.saveMode !== 'copy' || odpFormat.capabilities?.edit !== 'supported' || odpFormat.externalPolicy !== 'preview')
+  : (odpFormat?.userCapability?.saveMode !== 'none' || odpFormat.capabilities?.edit !== 'unsupported')) fail('ODP capability progression drift')
 
 const root = 'docs/evidence/ux38d3-presentation-workspace'
 const manifestPath = path.join(root, 'manifest.json')
@@ -43,4 +46,4 @@ if (matrix.formats.find(format => format.id === 'odp')?.profile !== 'ux38d3-odp'
 const packageJson = JSON.parse(read('package.json'))
 if (!packageJson.scripts?.['audit:ux38d3-presentation-workspace'] || !packageJson.scripts?.['check:ux38d3-presentation-workspace']) fail('package audit/check command missing')
 if (!packageJson.scripts?.['check:current-development-audit']?.includes('check-ux38d3-presentation-workspace')) fail('checker is outside the development audit chain')
-console.log('UX-38D3 presentation workspace contract passed: historical copy-only evidence remains immutable while PPTX has progressed to bounded explicit save; ODP remains read-only with restored context.')
+console.log('UX-38D3 presentation workspace contract passed: historical evidence remains immutable while PPTX and later library-only ODP capability progression stay aligned.')

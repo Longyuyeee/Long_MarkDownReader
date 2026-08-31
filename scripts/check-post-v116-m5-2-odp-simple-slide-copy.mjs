@@ -3,6 +3,7 @@ import fs from 'node:fs'
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'))
 const text = file => fs.readFileSync(file, 'utf8')
 const policy = json('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json')
+const successor = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const predecessor = json('shared/post-v116-m5-1-odp-producer-selection-policy.json')
 const evidence = json('docs/evidence/post-v116-m5-2-odp-simple-slide-copy/audit.json')
 const development = json('shared/development-version-policy.json')
@@ -36,11 +37,15 @@ if (!policy.versionClosureBlockers?.odpWorkspaceMissing || !policy.versionClosur
   || policy.versionClosureBlockers?.fullRustTestIgnored !== 5 || !policy.versionClosureBlockers?.mustResolveBeforeV1017Packaging) fail('M5-2 version closure blockers drift')
 
 const odp = registry.formats.find(format => format.id === 'odp')
-if (odp?.capabilities?.edit !== 'unsupported' || odp?.adapters?.writer !== null || odp?.userCapability?.level !== 'preview-only' || odp?.userCapability?.saveMode !== 'none') fail('ODP registry was promoted before M5-3 desktop exit')
+if (successor.status === 'accepted'
+  ? (odp?.capabilities?.edit !== 'supported' || odp?.adapters?.writer !== 'odf-slide-text' || odp?.userCapability?.level !== 'basic-edit' || odp?.userCapability?.saveMode !== 'copy')
+  : (odp?.capabilities?.edit !== 'unsupported' || odp?.adapters?.writer !== null || odp?.userCapability?.level !== 'preview-only' || odp?.userCapability?.saveMode !== 'none')) fail('ODP registry does not match M5-3 progression')
 for (const token of ['OdpSlideTextEditInventory', 'blocked_slides', 'complex-object:custom-shape', 'build_odp_slide_text_patch_isolated', 'changed_parts != [ODF_EDITABLE_PART]', 'longedit-odp-simple-slide-text-patch-v1']) if (!edit.includes(token)) fail(`M5-2 edit backend missing ${token}`)
 for (const token of ['odp_edit_inventory', 'save_odp_slide_text_copy_to_path', 'ODP 可靠另存禁止覆盖源文件', 'write_new_bytes', 'save_m5_2_real_producer_odp_copies']) if (!commands.includes(token)) fail(`M5-2 command backend missing ${token}`)
 if (!lib.includes('save_odp_slide_text_copy')) fail('M5-2 Tauri command registration missing')
-if (view.includes("invoke<OdpSavedCopyReport>('save_odp_slide_text_copy'") || view.includes('odpEditInventory')) fail('ODP UI was exposed before M5-3')
+if (successor.status === 'accepted'
+  ? (!view.includes("invoke<OdpSavedCopyReport>('save_odp_slide_text_copy'") || !view.includes('odpEditInventory'))
+  : (view.includes("invoke<OdpSavedCopyReport>('save_odp_slide_text_copy'") || view.includes('odpEditInventory'))) fail('ODP UI does not match M5-3 progression')
 
 if (evidence.stage !== policy.stage || evidence.status !== 'accepted' || !evidence.actual?.requiredMatrixPassed
   || !evidence.actual?.sourceUnchanged || !evidence.actual?.complexProducerSlideBlocked
@@ -60,7 +65,7 @@ if (!evidence.actual?.rust?.boundedTestsPassed || rustEvidence.length !== 3
   || rustEvidence.slice(0, 2).some(item => !item.overwriteRejected || item.saved?.changedParts?.join(',') !== 'content.xml')) fail('M5-2 Rust producer evidence drift')
 for (const token of ['LONGEDIT_M5_2_LIBREOFFICE_SOURCE', 'LONGEDIT_M5_2_POWERPOINT_SOURCE', 'LONGEDIT_M5_2_COMPLEX_SOURCE', 'Test-PowerPointReopen', 'Test-LibreOfficeRender']) if (!runner.includes(token)) fail(`M5-2 runner missing ${token}`)
 for (const [document, tokens] of [[audit, ['真实测试：预期、实际与修正', '12,061', '43,935', '545 通过、3 失败、5 忽略', 'M5-3']], [roadmap, ['M5-2', 'M5-3', '整页阻断', '可靠副本', '3 个非预期失败']]]) for (const token of tokens) if (!document.includes(token)) fail(`M5-2 document missing ${token}`)
-if (development.currentStage !== `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
+if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`].includes(development.currentStage)
   || development.runtimeBaseVersion !== '1.0.16' || development.publicVersion !== '1.0.16' || development.developmentTargetVersion !== '1.0.17') fail('M5-3 development identity drift')
 
 if (failures.length) {

@@ -28,7 +28,10 @@ if (selected?.length !== 1 || selected[0].id !== 'odp-bounded-slide-text'
 if (Object.entries(policy.nextStageRequirements ?? {}).some(([key, value]) => key === 'productCodeChanges' || key === 'binaryVersionChange' ? value !== false : value !== true)) fail('M5-1 boundary drift')
 
 const odp = registry.formats.find(format => format.id === 'odp')
-if (odp?.capabilities?.edit !== 'unsupported' || odp?.adapters?.writer !== null || odp?.userCapability?.level !== 'preview-only' || odp?.userCapability?.saveMode !== 'none') fail('ODP was promoted before M5-1 evidence')
+const workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
+if (workspace.status === 'accepted'
+  ? (odp?.capabilities?.edit !== 'supported' || odp?.adapters?.writer !== 'odf-slide-text' || odp?.userCapability?.level !== 'basic-edit' || odp?.userCapability?.saveMode !== 'copy')
+  : (odp?.capabilities?.edit !== 'unsupported' || odp?.adapters?.writer !== null || odp?.userCapability?.level !== 'preview-only' || odp?.userCapability?.saveMode !== 'none')) fail('ODP registry does not match later-stage progression')
 for (const token of ['MAX_ODP_SLIDES', 'pub struct OdpSlide', 'locator_kind: "odp-slide"', 'locator_kind: "odp-notes"']) if (!odfContent.includes(token)) fail(`ODP parser missing ${token}`)
 for (const token of ['bounded-slide-text-candidate', 'real_ods_and_odp_are_isolated_without_part_drift']) if (!odfEdit.includes(token)) fail(`ODP isolation baseline missing ${token}`)
 for (const token of ['class="odp-layout"', 'selectedSlide.notes', "const editAvailable = computed(() => !isExternal.value && isOds.value"]) if (!odfView.includes(token)) fail(`ODP read-only UI boundary missing ${token}`)
@@ -39,7 +42,7 @@ if (evidence.stage !== policy.stage || evidence.status !== 'accepted' || evidenc
   || evidence.actual?.realTest?.rustPassed !== 20 || evidence.actual?.realTest?.rustFailed !== 0
   || evidence.actual?.realTest?.libreOfficeVersion !== '26.2.4.2' || evidence.actual?.realTest?.notesPreserved !== false
   || evidence.differences?.length !== 3 || evidence.sourceUserContentIncluded || evidence.releaseCandidate) fail('M5-0 real evidence drift')
-if (!['M5-1-odp-slide-text-producer-fidelity-and-object-selection', 'M5-2-odp-simple-slide-body-reliable-copy-foundation', 'M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit'].includes(development.currentStage)
+if (!['M5-1-odp-slide-text-producer-fidelity-and-object-selection', 'M5-2-odp-simple-slide-body-reliable-copy-foundation', 'M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit', 'M5-4-v1.0.17-quality-debt-and-release-readiness'].includes(development.currentStage)
   || development.runtimeBaseVersion !== '1.0.16' || development.publicVersion !== '1.0.16' || development.developmentTargetVersion !== '1.0.17') fail('M5-1 development handoff drift')
 for (const [document, tokens] of [[audit, ['真实测试：预期与实际', 'M5-1', '备注继续只读', '20 通过']], [roadmap, ['M5-0', 'M5-1', 'LibreOffice 26.2.4.2']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M5-0 document missing ${token}`)

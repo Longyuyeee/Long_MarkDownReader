@@ -56,7 +56,9 @@ requireFact(
     && currentOds?.adapters?.writer === 'odf-cell-value',
   'M1C-A baseline must remain compatible with the later bounded ODS editor',
 )
-requireFact(currentOdp?.userCapability?.level === 'preview-only' && currentOdp?.capabilities?.edit === 'unsupported', 'M1C-A ODP read-only boundary drifted')
+requireFact(currentOdp?.userCapability?.level === 'basic-edit' && currentOdp?.userCapability?.saveMode === 'copy'
+  && currentOdp?.capabilities?.edit === 'supported' && currentOdp?.adapters?.writer === 'odf-slide-text'
+  && currentOdp?.externalPolicy === 'preview', 'M1C-A baseline must remain compatible with the later bounded ODP copy editor')
 requireFact(!/[A-Z]:\\Users\\|[A-Z]:\\Project\\/i.test(evidenceText), 'M1C-A evidence exposes a local absolute path')
 
 if (failures.length) {

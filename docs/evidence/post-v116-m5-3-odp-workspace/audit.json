@@ -1,0 +1,97 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit",
+    "status":  "passed",
+    "capturedAt":  "2026-08-31T04:31:39.2747303Z",
+    "expected":  {
+                     "realProducers":  2,
+                     "editableTargetsPerSimpleSource":  2,
+                     "libraryWorkspaceOnly":  true,
+                     "undoRedo":  true,
+                     "reloadLeaveGuard":  true,
+                     "newCopyOnly":  true,
+                     "sourceUnchanged":  true,
+                     "complexWholeSlideBlocked":  true,
+                     "responsive720x720":  true,
+                     "uiAutomaticReopen":  true,
+                     "powerPointSemanticReopen":  true,
+                     "libreOfficeRenderReopen":  true,
+                     "runtimeErrors":  0
+                 },
+    "actual":  {
+                   "realProducers":  2,
+                   "editableTargetsPerSimpleSource":  2,
+                   "libraryWorkspaceOnly":  true,
+                   "undoRedo":  true,
+                   "reloadLeaveGuard":  true,
+                   "newCopyOnly":  true,
+                   "sourceUnchanged":  true,
+                   "complexWholeSlideBlocked":  true,
+                   "responsive720x720":  true,
+                   "uiAutomaticReopen":  true,
+                   "powerPointSemanticReopen":  true,
+                   "libreOfficeRenderReopen":  true,
+                   "runtimeErrors":  0,
+                   "copies":  [
+                                  {
+                                      "producer":  "LibreOffice",
+                                      "targetBytes":  12108,
+                                      "sourceUnchanged":  true,
+                                      "uiReopened":  true
+                                  },
+                                  {
+                                      "producer":  "PowerPoint",
+                                      "targetBytes":  43938,
+                                      "sourceUnchanged":  true,
+                                      "uiReopened":  true
+                                  }
+                              ],
+                   "powerPoint":  [
+                                      {
+                                          "producer":  "LibreOffice",
+                                          "replacementRecovered":  true,
+                                          "originalRemoved":  true,
+                                          "notePreserved":  true
+                                      },
+                                      {
+                                          "producer":  "PowerPoint",
+                                          "replacementRecovered":  true,
+                                          "originalRemoved":  true,
+                                          "notePreserved":  true
+                                      }
+                                  ],
+                   "libreOffice":  [
+                                       {
+                                           "producer":  "LibreOffice",
+                                           "pdfBytes":  15900
+                                       },
+                                       {
+                                           "producer":  "PowerPoint",
+                                           "pdfBytes":  14109
+                                       }
+                                   ]
+               },
+    "differences":  [
+                        "Expected to reuse the ODS save workspace directly; actual ODP needs its own inventory, whole-slide blocker explanation, and save receipt checks.",
+                        "Expected toolbar reload to call load directly; actual load clears the in-memory draft, so reload now uses the same confirmation guard as route leave.",
+                        "Real PowerPoint and LibreOffice sources pass desktop edit, automatic copy reopen, PowerPoint semantic reopen, and LibreOffice PDF rendering; the complex-shape slide remains wholly blocked."
+                    ],
+    "decision":  {
+                     "stageAccepted":  true,
+                     "selectedNextStage":  "M5-4-v1.0.17-quality-debt-and-release-readiness",
+                     "registryPromotionAllowed":  true,
+                     "binaryVersionChanged":  false,
+                     "releaseCandidate":  false
+                 },
+    "privacy":  {
+                    "projectAuthoredFixtures":  true,
+                    "localAbsolutePathsIncluded":  false,
+                    "rawOfficeFilesCommitted":  false,
+                    "sourceUserContentIncluded":  false
+                },
+    "evidenceFiles":  [
+                          "odp-wide-draft.jpg",
+                          "odp-narrow-draft.jpg",
+                          "odp-complex-blocked.jpg"
+                      ]
+}

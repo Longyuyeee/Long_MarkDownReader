@@ -33,7 +33,8 @@ for (const file of evidence.evidenceFiles || []) {
 const ods = registry.formats?.find(item => item.id === 'ods')
 const odp = registry.formats?.find(item => item.id === 'odp')
 requireFact(ods?.capabilities?.edit === 'supported' && ods?.userCapability?.level === 'basic-edit' && ods?.userCapability?.saveMode === 'copy' && ods?.adapters?.writer === 'odf-cell-value' && ods?.externalPolicy === 'preview', 'M1C-B ODS public capability is inaccurate')
-requireFact(odp?.capabilities?.edit === 'unsupported' && odp?.userCapability?.level === 'preview-only' && odp?.adapters?.writer === null, 'M1C-B must not widen ODP')
+requireFact(odp?.capabilities?.edit === 'supported' && odp?.userCapability?.level === 'basic-edit' && odp?.userCapability?.saveMode === 'copy'
+  && odp?.adapters?.writer === 'odf-slide-text' && odp?.externalPolicy === 'preview', 'M1C-B must remain compatible with the later bounded ODP copy editor')
 for (const token of ['build_ods_cell_value_patch_isolated', 'expected_source_signature', 'write_new_bytes(target_path, &output)', 'source_unchanged: true', 'save_mode: "new_copy_only"']) requireText(backend, token, `M1C-B save command is missing ${token}`)
 for (const token of ['formula-readonly', 'merged-cell', 'repeated-cell', 'unchanged_parts_verified', 'semantic_reparse_verified']) requireText(engine, token, `M1C-B isolated patch gate is missing ${token}`)
 for (const token of ['m1cb-ods-edit-banner', 'm1cb-ods-cell-editor', 'undoDraft', 'redoDraft', 'saveCopy', 'onBeforeRouteLeave', '另存 ODS 副本']) requireText(view, token, `M1C-B workspace is missing ${token}`)

@@ -15,6 +15,7 @@ const m4f6 = fs.existsSync('shared/v116-managed-updater-lifecycle-policy.json') 
 const m5 = fs.existsSync('shared/post-v116-m5-0-v1017-scope-selection-policy.json') ? json('shared/post-v116-m5-0-v1017-scope-selection-policy.json') : null
 const m5Producer = fs.existsSync('shared/post-v116-m5-1-odp-producer-selection-policy.json') ? json('shared/post-v116-m5-1-odp-producer-selection-policy.json') : null
 const m5Copy = fs.existsSync('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json') ? json('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json') : null
+const m5Workspace = fs.existsSync('shared/post-v116-m5-3-odp-workspace-policy.json') ? json('shared/post-v116-m5-3-odp-workspace-policy.json') : null
 const checksumBytes = fs.readFileSync('docs/evidence/v1.0.16-release/SHA256SUMS.txt')
 const releaseNotes = fs.readFileSync('docs/RELEASE_NOTES_v1.0.16.md', 'utf8')
 const readme = fs.readFileSync('README.md', 'utf8')
@@ -42,7 +43,9 @@ if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '8488388c57a56
 if (published) {
   const updaterComplete = m4f6?.status === 'hosted-managed-update-passed' && m4f6?.githubRun?.conclusion === 'success'
   const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-  const expectedStage = m5Copy?.status === 'accepted'
+  const expectedStage = m5Workspace?.status === 'accepted'
+    ? `${m5Workspace.selectedNextStage.id}-${m5Workspace.selectedNextStage.name}`
+    : m5Copy?.status === 'accepted'
     ? `${m5Copy.selectedNextStage.id}-${m5Copy.selectedNextStage.name}`
     : m5Producer?.status === 'accepted'
     ? `${m5Producer.selectedNextStage.id}-${m5Producer.selectedNextStage.name}`

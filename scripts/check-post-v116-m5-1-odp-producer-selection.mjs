@@ -7,6 +7,7 @@ const predecessor = json('shared/post-v116-m5-0-v1017-scope-selection-policy.jso
 const evidence = json('docs/evidence/post-v116-m5-1-odp-producer-selection/producer-selection.json')
 const development = json('shared/development-version-policy.json')
 const registry = json('shared/file-formats.json')
+const workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const runner = text('scripts/run-post-v116-m5-1-odp-producer-selection-audit.ps1')
 const audit = text('docs/Post_v1.0.16_M5_1_ODP_Slide_Text_Producer_Fidelity_and_Object_Selection_Audit_2026-08-31.md')
 const roadmap = text('docs/Post_v1.0.16_v1.0.17_Professional_Capability_Roadmap_2026-08-31.md')
@@ -27,7 +28,9 @@ if (!policy.selectionRules?.slideMustContainOnlyDirectTextFrames || !policy.sele
 if (Object.entries(policy.nextStageRequirements ?? {}).some(([key, value]) => key === 'binaryVersionChange' ? value !== false : value !== true)) fail('M5-2 entry boundary drift')
 
 const odp = registry.formats.find(format => format.id === 'odp')
-if (odp?.capabilities?.edit !== 'unsupported' || odp?.adapters?.writer !== null || odp?.userCapability?.level !== 'preview-only' || odp?.userCapability?.saveMode !== 'none') fail('ODP was promoted before M5-2 backend exit')
+if (workspace.status === 'accepted'
+  ? (odp?.capabilities?.edit !== 'supported' || odp?.adapters?.writer !== 'odf-slide-text' || odp?.userCapability?.level !== 'basic-edit' || odp?.userCapability?.saveMode !== 'copy')
+  : (odp?.capabilities?.edit !== 'unsupported' || odp?.adapters?.writer !== null || odp?.userCapability?.level !== 'preview-only' || odp?.userCapability?.saveMode !== 'none')) fail('ODP registry does not match later-stage progression')
 if (evidence.stage !== policy.stage || evidence.status !== 'accepted' || !evidence.actual?.requiredMatrixPassed
   || !evidence.actual?.simpleBodyTextStable || evidence.actual?.notesPreservedByBoth !== false
   || evidence.actual?.outputs?.length !== 2 || evidence.differences?.length !== 3 || evidence.attemptHistory?.length !== 4
@@ -47,7 +50,7 @@ for (const token of ['PowerPoint.Application', 'libreoffice-impress', 'M5_LO_BOD
 for (const [document, tokens] of [[audit, ['真实测试：预期、实际与修正', '4/4', '整页阻断', 'M5-2']], [roadmap, ['M5-1', 'M5-2', '4/4', '复杂对象']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M5-1 document missing ${token}`)
 }
-if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, 'M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit'].includes(development.currentStage)
+if (![`${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`, 'M5-3-odp-simple-slide-body-copy-workspace-and-real-desktop-audit', 'M5-4-v1.0.17-quality-debt-and-release-readiness'].includes(development.currentStage)
   || development.runtimeBaseVersion !== '1.0.16' || development.publicVersion !== '1.0.16' || development.developmentTargetVersion !== '1.0.17') fail('M5-2 development handoff drift')
 
 if (failures.length) {

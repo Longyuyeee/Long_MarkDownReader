@@ -274,7 +274,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。M5-2 已按 [ODP 简单页正文可靠副本基础审计](docs/Post_v1.0.16_M5_2_ODP_Simple_Slide_Body_Reliable_Copy_Foundation_Audit_2026-08-31.md) 完成真实 LibreOffice/PowerPoint 后端新副本；下一阶段为 M5-3 库内工作区与真实桌面审计。当前公开稳定版仍为 [v1.0.16](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)，在 M5-3 通过前 ODP 仍保持只读声明且不打包 1.0.17。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。M5-3 已按 [ODP 简单页正文副本工作区审计](docs/Post_v1.0.16_M5_3_ODP_Simple_Slide_Body_Copy_Workspace_Audit_2026-08-31.md) 完成资料库内正文草稿、整页阻断解释、可靠新副本及真实 LibreOffice/PowerPoint 桌面复开；ODP 现登记为有界 `basic-edit / copy`，外部打开仍只读。当前公开稳定版仍为 [v1.0.16](docs/V1_0_16_Unsigned_Community_Release_Audit_2026-08-30.md)；下一阶段 M5-4 必须清零全仓 Rust 最新 4 个失败（3 个稳定、1 个间歇）并通过发布门，才可打包 1.0.17。
 
 ## 许可证
 

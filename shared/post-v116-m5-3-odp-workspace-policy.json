@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-3",
+  "name": "odp-simple-slide-body-copy-workspace-and-real-desktop-audit",
+  "status": "accepted",
+  "predecessor": "M5-2",
+  "runtimeBaseVersion": "1.0.16",
+  "publicVersion": "1.0.16",
+  "developmentTargetVersion": "1.0.17",
+  "workspace": {
+    "libraryOnly": true,
+    "inventoryDrivenSelection": true,
+    "wholeSlideBlockerExplanation": true,
+    "draftUndoRedo": true,
+    "routeLeaveProtection": true,
+    "reloadProtection": true,
+    "reliableNewCopyOnly": true,
+    "automaticCopyReopen": true,
+    "externalOdpReadOnly": true,
+    "sourceOverwrite": false
+  },
+  "realDesktop": {
+    "libreOfficeProducer": true,
+    "powerPointProducer": true,
+    "editableTargetsPerSimpleSource": 2,
+    "complexPowerPointSlideBlocked": true,
+    "wideEvidence": true,
+    "responsive720x720": true,
+    "runtimeErrors": 0,
+    "sourceUnchanged": true,
+    "powerPointSemanticReopen": true,
+    "libreOfficePdfReopen": true,
+    "libreOfficeCopyBytes": 12108,
+    "powerPointCopyBytes": 43938,
+    "libreOfficePdfBytes": 15900,
+    "powerPointPdfBytes": 14109
+  },
+  "registry": {
+    "level": "basic-edit",
+    "saveMode": "copy",
+    "writer": "odf-slide-text",
+    "externalPolicy": "preview"
+  },
+  "selectedNextStage": {
+    "id": "M5-4",
+    "name": "v1.0.17-quality-debt-and-release-readiness"
+  },
+  "versionClosureBlockers": {
+    "unexpectedFullRustTestFailures": 4,
+    "fullRustTestPassed": 544,
+    "fullRustTestIgnored": 5,
+    "persistentIsolatedFailures": 3,
+    "intermittentIsolatedPasses": 1,
+    "intermittentTest": "services::knowledge_index::tests::snapshot_round_trip_detects_staleness_and_deletion",
+    "versionIdentityStill1016": true,
+    "candidatePackageMissing": true,
+    "releaseNotesNotClosed": true,
+    "mustResolveBeforeV1017Packaging": true
+  },
+  "binaryVersionChanged": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m5-4-v1.0.17-quality-debt-and-release-readiness"
+}

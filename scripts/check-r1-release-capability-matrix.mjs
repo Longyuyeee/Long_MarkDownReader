@@ -68,7 +68,7 @@ for (const [id, profile] of [
   ['docx', 'office-copy'],
   ['pptx', 'office-copy'],
   ['ods', 'office-copy'],
-  ['odp', 'odf-preview'],
+  ['odp', 'office-copy'],
   ['workbook', 'workbook-bounded'],
   ['raster-image', 'media-preview'],
 ]) {

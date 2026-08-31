@@ -45,20 +45,12 @@
     },
     {
       "id": "strict-readonly-preview",
-      "formats": ["odp", "video"],
+      "formats": ["video"],
       "saveModes": ["none"],
-      "profiles": ["odf-preview", "media-preview"],
+      "profiles": ["media-preview"],
       "sourcePolicy": "never-write-source",
       "failurePolicy": "stop-preview-on-source-change",
       "evidence": [
-        {
-          "path": "src-tauri/src/commands/odf_content.rs",
-          "markers": ["read_only: edit_inventory", "source_preserved", "before == after"]
-        },
-        {
-          "path": "shared/file-formats.json",
-          "markers": ["\"id\": \"ods\"", "\"id\": \"odp\""]
-        },
         {
           "path": "src-tauri/src/commands/media.rs",
           "markers": ["WorkspaceGuard::new(library_root)", "asset_protocol_scope", "read_only: true"]
@@ -66,20 +58,20 @@
       ]
     },
     {
-      "id": "verified-ods-reliable-copy",
-      "formats": ["ods"],
+      "id": "verified-odf-reliable-copy",
+      "formats": ["ods", "odp"],
       "saveModes": ["copy"],
       "profiles": ["office-copy"],
       "sourcePolicy": "never-overwrite-source-new-copy-only",
-      "failurePolicy": "reject-stale-source-existing-target-unsupported-cell-or-unverified-copy",
+      "failurePolicy": "reject-stale-source-existing-target-unsupported-cell-or-slide-or-unverified-copy",
       "evidence": [
         {
           "path": "src-tauri/src/commands/odf_content.rs",
-          "markers": ["save_ods_cell_value_copy", "save_ods_cell_style_copy", "write_new_bytes", "source_unchanged: true", "semantic_reopen_verified: true"]
+          "markers": ["save_ods_cell_value_copy", "save_ods_cell_style_copy", "save_odp_slide_text_copy", "write_new_bytes", "source_unchanged: true", "semantic_reopen_verified: true"]
         },
         {
           "path": "shared/file-formats.json",
-          "markers": ["\"id\": \"ods\"", "\"saveMode\": \"copy\"", "\"writer\": \"odf-cell-value\""]
+          "markers": ["\"id\": \"ods\"", "\"id\": \"odp\"", "\"saveMode\": \"copy\"", "\"writer\": \"odf-cell-value\"", "\"writer\": \"odf-slide-text\""]
         }
       ]
     },

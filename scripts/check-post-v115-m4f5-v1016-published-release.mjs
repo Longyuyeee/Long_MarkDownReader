@@ -12,6 +12,7 @@ const m4f6 = json('shared/v116-managed-updater-lifecycle-policy.json')
 const m5 = json('shared/post-v116-m5-0-v1017-scope-selection-policy.json')
 const m5Producer = json('shared/post-v116-m5-1-odp-producer-selection-policy.json')
 const m5Copy = json('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json')
+const m5Workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const audit = fs.readFileSync('docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md', 'utf8')
 const failures = []
 const fail = message => failures.push(message)
@@ -34,7 +35,9 @@ for (const asset of receipt.assets ?? []) {
 if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' || manifest.releaseReceipt !== 'release-receipt.json' || !manifest.boundaries?.releaseAssetsPublished) fail('published artifact manifest drifted')
 const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
 const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-const expectedStage = m5Copy.status === 'accepted'
+const expectedStage = m5Workspace.status === 'accepted'
+  ? `${m5Workspace.selectedNextStage.id}-${m5Workspace.selectedNextStage.name}`
+  : m5Copy.status === 'accepted'
   ? `${m5Copy.selectedNextStage.id}-${m5Copy.selectedNextStage.name}`
   : m5Producer.status === 'accepted'
   ? `${m5Producer.selectedNextStage.id}-${m5Producer.selectedNextStage.name}`

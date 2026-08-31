@@ -15,8 +15,8 @@ for (const id of ['ods', 'odp']) {
   }
 }
 const odp = registry.formats.find(item => item.id === 'odp')
-if (odp?.capabilities.edit !== 'unsupported' || odp?.adapters.writer !== null || odp?.userCapability.saveMode !== 'none') {
-  failures.push('odp must remain globally read-only')
+if (odp?.capabilities.edit !== 'supported' || odp?.adapters.writer !== 'odf-slide-text' || odp?.userCapability.saveMode !== 'copy') {
+  failures.push('odp library bounded-copy capability drifted')
 }
 
 const backend = read('src-tauri/src/commands/odf_content.rs')
@@ -34,6 +34,7 @@ for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
   "isExternal.value ? 'read_external_odf_content_document' : 'read_odf_content_document'",
   '...(isExternal.value ? {} : { libraryRoot: store.libraryPath })',
+  'odpEditAvailable = computed(() => !isExternal.value',
   'external: isExternal.value',
   '外部文件 · ',
   ' · 不会写回',
@@ -51,4 +52,4 @@ if (failures.length) {
   console.error(failures.map(failure => `- ${failure}`).join('\n'))
   process.exit(1)
 }
-console.log('EA-3C external ODF preview passed: ODS/ODP use authorized read-only parsing, preserve source bytes, and add no file associations.')
+console.log('EA-3C external ODF preview passed: external ODS/ODP remain read-only while library-only bounded editors preserve source and add no file associations.')

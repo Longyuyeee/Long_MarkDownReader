@@ -7,13 +7,13 @@
         <component :is="isOds ? Table2 : Presentation" :size="18" aria-hidden="true" />
         <div>
           <strong>{{ fileName }}</strong>
-          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · {{ editAvailable ? '基础单元格编辑 · 另存副本' : '只读' }}<template v-if="isExternal"> · 不会写回</template></span>
+          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · {{ workspaceCapabilityLabel }}<template v-if="isExternal"> · 不会写回</template></span>
         </div>
       </div>
       <div class="toolbar">
-        <button v-if="editAvailable" :disabled="!canUndo" aria-label="撤销单元格修改" title="撤销单元格修改 Ctrl+Z" @click="undoDraft"><Undo2 :size="15" /></button>
-        <button v-if="editAvailable" :disabled="!canRedo" aria-label="重做单元格修改" title="重做单元格修改 Ctrl+Y" @click="redoDraft"><Redo2 :size="15" /></button>
-        <button v-if="editAvailable" :disabled="!draftDirty || saving" aria-label="另存 ODS 副本" title="另存 ODS 副本 Ctrl+S" @click="saveCopy"><Save :size="15" /></button>
+        <button v-if="workspaceEditable" :disabled="!canUndo" :aria-label="undoLabel" :title="`${undoLabel} Ctrl+Z`" @click="undoDraft"><Undo2 :size="15" /></button>
+        <button v-if="workspaceEditable" :disabled="!canRedo" :aria-label="redoLabel" :title="`${redoLabel} Ctrl+Y`" @click="redoDraft"><Redo2 :size="15" /></button>
+        <button v-if="workspaceEditable" :disabled="!draftDirty || saving" :aria-label="saveLabel" :title="`${saveLabel} Ctrl+S`" @click="saveCopy"><Save :size="15" /></button>
         <label class="search-box">
           <Search :size="14" aria-hidden="true" />
           <input v-model="query" data-testid="e1c-odf-search" type="search" :placeholder="isOds ? '搜索单元格' : '搜索幻灯片'" />
@@ -21,7 +21,7 @@
         </label>
         <button :disabled="!matches.length" title="上一个匹配" @click="moveMatch(-1)"><ChevronUp :size="15" /></button>
         <button :disabled="!matches.length" title="下一个匹配" @click="moveMatch(1)"><ChevronDown :size="15" /></button>
-        <button :disabled="loading" title="重新读取" @click="load"><RefreshCw :size="15" :class="{ spinning: loading }" /></button>
+        <button :disabled="loading" aria-label="重新读取 ODF" title="重新读取" @click="reloadDocument"><RefreshCw :size="15" :class="{ spinning: loading }" /></button>
       </div>
     </header>
 
@@ -47,6 +47,11 @@
           </select>
         </div>
         <span v-if="draft || styleDraft" class="draft-status">{{ activeDraftLabel }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
+      </div>
+      <div v-if="odpEditAvailable" class="edit-banner" data-testid="m5-3-odp-edit-banner">
+        <PencilLine :size="15" />
+        <span><strong>简单正文可靠副本</strong> 仅可选择未含复杂对象的正文段落；源文件、备注、版式、媒体和动画不会写回。</span>
+        <span v-if="odpDraft" class="draft-status">第 {{ odpDraft.slideIndex }} 张 · 正文 {{ odpDraft.paragraphIndex }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
       </div>
 
       <div v-if="isOds" class="ods-layout">
@@ -123,6 +128,43 @@
             <section v-if="selectedSlide.notes"><strong>演讲者备注</strong><p>{{ selectedSlide.notes }}</p></section>
             <div v-if="!selectedSlide.text && !selectedSlide.notes" class="empty">此幻灯片没有可提取文本。</div>
           </article>
+          <section v-if="!isExternal && selectedSlide" class="odp-edit-panel" data-testid="m5-3-odp-edit-panel">
+            <template v-if="selectedBlockedSlide">
+              <div class="odp-blocked" data-testid="m5-3-odp-blocked-slide">
+                <ShieldAlert :size="16" />
+                <div><strong>此页整体保持只读</strong><p>{{ blockedSlideExplanation }}</p></div>
+              </div>
+            </template>
+            <template v-else-if="selectedOdpTargets.length">
+              <header><strong>可另存的简单正文</strong><span>{{ selectedOdpTargets.length }} 段</span></header>
+              <div class="odp-target-list" role="list" aria-label="可编辑正文段落">
+                <button
+                  v-for="target in selectedOdpTargets"
+                  :key="target.id"
+                  type="button"
+                  :class="{ active: odpDraft?.id === target.id }"
+                  :data-target-id="target.id"
+                  @click="beginOdpTextEdit(target)"
+                >
+                  <span>正文 {{ target.paragraphIndex }}</span><strong>{{ target.text }}</strong>
+                </button>
+              </div>
+              <label v-if="odpDraft" class="odp-text-editor">
+                <span>副本中的新正文</span>
+                <textarea
+                  data-testid="m5-3-odp-text-editor"
+                  maxlength="16384"
+                  :value="odpDraft.value"
+                  @input="updateOdpDraft"
+                  @keydown.esc.prevent="resetDraft"
+                ></textarea>
+              </label>
+              <p class="odp-copy-boundary">保存时只创建同目录新 ODP；已有文件和源文件都不会覆盖。</p>
+            </template>
+            <div v-else class="odp-blocked">
+              <ShieldAlert :size="16" /><div><strong>没有可安全编辑的正文</strong><p>{{ odpInventoryExplanation }}</p></div>
+            </div>
+          </section>
         </main>
       </div>
 
@@ -177,6 +219,19 @@ interface OdsCellEditInventory {
 interface OdsSavedCopyReport { status: string; targetPath: string; targetDigest: string; sourceUnchanged: boolean; semanticReopenVerified: boolean; saveMode: string }
 interface OdsDraft extends OdsEditableCellTarget { originalValue: string; value: string }
 interface OdsStyleDraft extends OdsEditableCellTarget { originalStyleName: string; styleName: string }
+interface OdpEditableTextTarget {
+  id: string; slideIndex: number; slideName: string; paragraphIndex: number; text: string; expectedTextDigest: string
+}
+interface OdpBlockedSlide { slideIndex: number; slideName: string; reasons: string[] }
+interface OdpSlideTextEditInventory {
+  status: 'candidate' | 'blocked'; sourceDigest: string; editableTargets: OdpEditableTextTarget[]
+  blockedSlides: OdpBlockedSlide[]; blockers: string[]; writesUserFile: boolean
+}
+interface OdpDraft extends OdpEditableTextTarget { originalValue: string; value: string }
+interface OdpSavedCopyReport {
+  status: string; targetPath: string; targetDigest: string; sourceUnchanged: boolean; unchangedPartsVerified: boolean
+  structuralReopenVerified: boolean; semanticReopenVerified: boolean; changedParts: string[]; saveMode: string
+}
 interface OdfContentReport {
   path: string
   size: number
@@ -184,6 +239,7 @@ interface OdfContentReport {
   readOnly: boolean
   sourcePreserved: boolean
   editInventory?: OdsCellEditInventory
+  odpEditInventory?: OdpSlideTextEditInventory
   model: {
     format: 'ods' | 'odp'
     sheets: OdsSheet[]
@@ -220,6 +276,7 @@ const sheetStageRef = ref<HTMLElement | null>(null)
 const cellEditorRef = ref<HTMLInputElement[] | null>(null)
 const draft = ref<OdsDraft>()
 const styleDraft = ref<OdsStyleDraft>()
+const odpDraft = ref<OdpDraft>()
 const undoStack = ref<string[]>([])
 const redoStack = ref<string[]>([])
 const saving = ref(false)
@@ -231,14 +288,32 @@ const fileName = computed(() => documentPath.value.split(/[\\/]/).pop() || `未�
 const selectedSheet = computed(() => report.value?.model.sheets.find(sheet => sheet.id === selectedSheetId.value))
 const selectedSlide = computed(() => report.value?.model.slides.find(slide => slide.id === selectedSlideId.value))
 const editAvailable = computed(() => !isExternal.value && isOds.value && report.value?.editInventory?.status === 'candidate')
+const odpEditAvailable = computed(() => !isExternal.value && !isOds.value && report.value?.odpEditInventory?.status === 'candidate')
+const workspaceEditable = computed(() => editAvailable.value || odpEditAvailable.value)
 const draftDirty = computed(() => (!!draft.value && draft.value.value !== draft.value.originalValue)
-  || (!!styleDraft.value && styleDraft.value.styleName !== styleDraft.value.originalStyleName))
+  || (!!styleDraft.value && styleDraft.value.styleName !== styleDraft.value.originalStyleName)
+  || (!!odpDraft.value && odpDraft.value.value !== odpDraft.value.originalValue))
 const canUndo = computed(() => undoStack.value.length > 0)
 const canRedo = computed(() => redoStack.value.length > 0)
 const editableTargetMap = computed(() => new Map(
   (report.value?.editInventory?.editableCells || []).map(target => [`${target.sheetName}:${target.address}`, target]),
 ))
 const namedCellStyles = computed(() => report.value?.editInventory?.namedCellStyles || [])
+const selectedOdpTargets = computed(() => (report.value?.odpEditInventory?.editableTargets || [])
+  .filter(target => target.slideIndex === selectedSlide.value?.index))
+const selectedBlockedSlide = computed(() => report.value?.odpEditInventory?.blockedSlides
+  .find(slide => slide.slideIndex === selectedSlide.value?.index))
+const blockedSlideExplanation = computed(() => {
+  const reasons = selectedBlockedSlide.value?.reasons || []
+  if (reasons.some(reason => reason === 'complex-object:custom-shape')) {
+    return '检测到自定义形状及其未验证内部结构；为避免部分修改破坏页面语义，本页全部正文保持只读。'
+  }
+  return [...new Set(reasons.map(reason => odpBlockerLabel(reason)))].join('；')
+})
+const odpInventoryExplanation = computed(() => {
+  const blockers = report.value?.odpEditInventory?.blockers || []
+  return blockers.length ? blockers.join('；') : '当前页没有满足直接文本框、单段简单正文边界的目标。'
+})
 const selectedStyle = computed(() => namedCellStyles.value.find(style => style.name === styleDraft.value?.styleName))
 const selectedStylePreview = computed(() => ({
   backgroundColor: selectedStyle.value?.backgroundColor || 'var(--bg-primary)',
@@ -249,6 +324,12 @@ const selectedStylePreview = computed(() => ({
 const activeDraftLabel = computed(() => draft.value
   ? `${draft.value.sheetName} · ${draft.value.address} · 值`
   : styleDraft.value ? `${styleDraft.value.sheetName} · ${styleDraft.value.address} · 样式` : '')
+const workspaceCapabilityLabel = computed(() => isOds.value
+  ? (editAvailable.value ? '基础单元格编辑 · 另存副本' : '只读')
+  : (odpEditAvailable.value ? '简单正文编辑 · 可靠另存副本' : '只读'))
+const undoLabel = computed(() => isOds.value ? '撤销单元格修改' : '撤销正文修改')
+const redoLabel = computed(() => isOds.value ? '重做单元格修改' : '重做正文修改')
+const saveLabel = computed(() => isOds.value ? '另存 ODS 副本' : '可靠另存 ODP 副本')
 const sheetColumnCount = computed(() => Math.min(256, Math.max(1, ...(selectedSheet.value?.rows.flatMap(row => row.cells.map(cell => cell.column)) || [1]))))
 const routeLocator = computed(() => typeof route.query.locator === 'string' ? route.query.locator : '')
 const warnings = computed(() => {
@@ -315,6 +396,15 @@ const columnName = (column: number) => {
 const formatBytes = (value: number) => value < 1024 * 1024
   ? `${(value / 1024).toFixed(1)} KiB`
   : `${(value / 1024 / 1024).toFixed(1)} MiB`
+function odpBlockerLabel(reason: string) {
+  if (reason.startsWith('complex-object:')) return `检测到复杂对象（${reason.slice('complex-object:'.length)}）`
+  if (reason === 'list-structure') return '包含列表结构'
+  if (reason === 'field-structure') return '包含动态字段'
+  if (reason === 'rich-text-structure') return '包含多段或富文本结构'
+  if (reason === 'animation-structure') return '包含动画结构'
+  if (reason.startsWith('non-direct-structure:')) return '包含非直接正文结构'
+  return `包含未验证结构（${reason}）`
+}
 const markTabDirty = (dirty: boolean) => {
   const tab = store.tabs.find(item => item.path === documentPath.value)
   if (tab) tab.isDirty = dirty
@@ -322,6 +412,7 @@ const markTabDirty = (dirty: boolean) => {
 const clearDraft = () => {
   draft.value = undefined
   styleDraft.value = undefined
+  odpDraft.value = undefined
   undoStack.value = []
   redoStack.value = []
   markTabDirty(false)
@@ -329,6 +420,7 @@ const clearDraft = () => {
 const resetDraft = () => {
   if (draft.value) draft.value.value = draft.value.originalValue
   if (styleDraft.value) styleDraft.value.styleName = styleDraft.value.originalStyleName
+  if (odpDraft.value) odpDraft.value.value = odpDraft.value.originalValue
   undoStack.value = []
   redoStack.value = []
   markTabDirty(false)
@@ -395,6 +487,29 @@ const updateStyleDraft = (event: Event) => {
   redoStack.value = []
   markTabDirty(draftDirty.value)
 }
+const beginOdpTextEdit = (target: OdpEditableTextTarget) => {
+  if (!odpEditAvailable.value) return
+  if (odpDraft.value?.id === target.id) return
+  if (draftDirty.value) {
+    message.warning('当前正文还有未保存修改，请先另存副本或撤销修改')
+    return
+  }
+  draft.value = undefined
+  styleDraft.value = undefined
+  odpDraft.value = { ...target, originalValue: target.text, value: target.text }
+  undoStack.value = []
+  redoStack.value = []
+  markTabDirty(false)
+}
+const updateOdpDraft = (event: Event) => {
+  if (!odpDraft.value) return
+  const next = (event.target as HTMLTextAreaElement).value
+  if (next === odpDraft.value.value) return
+  undoStack.value.push(odpDraft.value.value)
+  odpDraft.value.value = next
+  redoStack.value = []
+  markTabDirty(draftDirty.value)
+}
 const undoDraft = () => {
   if (!undoStack.value.length) return
   if (draft.value) {
@@ -403,6 +518,9 @@ const undoDraft = () => {
   } else if (styleDraft.value) {
     redoStack.value.push(styleDraft.value.styleName)
     styleDraft.value.styleName = undoStack.value.pop()!
+  } else if (odpDraft.value) {
+    redoStack.value.push(odpDraft.value.value)
+    odpDraft.value.value = undoStack.value.pop()!
   }
   markTabDirty(draftDirty.value)
 }
@@ -414,25 +532,41 @@ const redoDraft = () => {
   } else if (styleDraft.value) {
     undoStack.value.push(styleDraft.value.styleName)
     styleDraft.value.styleName = redoStack.value.pop()!
+  } else if (odpDraft.value) {
+    undoStack.value.push(odpDraft.value.value)
+    odpDraft.value.value = redoStack.value.pop()!
   }
   markTabDirty(draftDirty.value)
 }
 const saveCopy = async () => {
-  if ((!draft.value && !styleDraft.value) || !draftDirty.value || !report.value || saving.value) return
-  const activeDraft = draft.value || styleDraft.value!
-  const baseName = fileName.value.replace(/\.ods$/i, '')
+  if ((!draft.value && !styleDraft.value && !odpDraft.value) || !draftDirty.value || !report.value || saving.value) return
+  const activeDraft = draft.value || styleDraft.value
+  const baseName = fileName.value.replace(/\.(ods|odp)$/i, '')
+  const odpMode = Boolean(odpDraft.value)
   const targetFileName = (await promptAppAction(dialog, {
-    title: '另存 ODS 副本',
-    content: styleDraft.value
+    title: odpMode ? '可靠另存 ODP 副本' : '另存 ODS 副本',
+    content: odpDraft.value
+      ? `只会修改第 ${odpDraft.value.slideIndex} 张幻灯片的正文 ${odpDraft.value.paragraphIndex}；备注、版式和其他正文保持不变，源文件不会被覆盖。`
+      : styleDraft.value
       ? `只会把 ${styleDraft.value.sheetName} ${styleDraft.value.address} 切换为已有样式“${selectedStyle.value?.label || styleDraft.value.styleName}”，源文件不会被覆盖。`
-      : `只会修改 ${activeDraft.sheetName} ${activeDraft.address} 的值，源文件不会被覆盖。副本保存在源文件同一文件夹。`,
-    initialValue: `${baseName}-LongEdit副本.ods`,
+      : `只会修改 ${activeDraft!.sheetName} ${activeDraft!.address} 的值，源文件不会被覆盖。副本保存在源文件同一文件夹。`,
+    initialValue: `${baseName}-LongEdit副本.${odpMode ? 'odp' : 'ods'}`,
     positiveText: '保存副本',
   }))?.trim()
   if (!targetFileName) return
   saving.value = true
   try {
-    const saved = styleDraft.value
+    const saved = odpDraft.value
+      ? await invoke<OdpSavedCopyReport>('save_odp_slide_text_copy', {
+          libraryRoot: store.libraryPath,
+          path: documentPath.value,
+          targetFileName,
+          expectedSourceSignature: report.value.signature,
+          targetId: odpDraft.value.id,
+          expectedTextDigest: odpDraft.value.expectedTextDigest,
+          replacementText: odpDraft.value.value,
+        })
+      : styleDraft.value
       ? await invoke<OdsSavedCopyReport>('save_ods_cell_style_copy', {
           libraryRoot: store.libraryPath,
           path: documentPath.value,
@@ -452,7 +586,14 @@ const saveCopy = async () => {
           replacementValue: draft.value!.value,
         })
     if (!saved.sourceUnchanged || !saved.semanticReopenVerified || saved.saveMode !== 'new_copy_only') {
-      throw new Error('ODS 副本未返回完整的可靠保存凭据')
+      throw new Error(`${odpMode ? 'ODP' : 'ODS'} 副本未返回完整的可靠保存凭据`)
+    }
+    if (odpMode) {
+      const odpSaved = saved as OdpSavedCopyReport
+      if (odpSaved.status !== 'saved_verified' || !odpSaved.unchangedPartsVerified
+        || !odpSaved.structuralReopenVerified || odpSaved.changedParts.join(',') !== 'content.xml') {
+        throw new Error('ODP 副本未通过结构复开和受保护部件检查')
+      }
     }
     clearDraft()
     message.success(`已保存并复读验证：${targetFileName}`)
@@ -464,13 +605,13 @@ const saveCopy = async () => {
   }
 }
 const mayLeave = () => !draftDirty.value || confirmAppAction(dialog, {
-  title: 'ODS 还有未保存修改',
+  title: `${isOds.value ? 'ODS' : 'ODP'} 还有未保存修改`,
   content: '修改目前只在内存草稿中，离开后不会写入源文件。',
   positiveText: '放弃并离开',
   negativeText: '继续编辑',
 })
 const onKeydown = (event: KeyboardEvent) => {
-  if (!(event.ctrlKey || event.metaKey) || !editAvailable.value) return
+  if (!(event.ctrlKey || event.metaKey) || !workspaceEditable.value) return
   const key = event.key.toLowerCase()
   if (key === 's') { event.preventDefault(); void saveCopy() }
   else if (key === 'z' && event.shiftKey) { event.preventDefault(); redoDraft() }
@@ -483,11 +624,20 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
   event.returnValue = ''
 }
 const selectSlide = (id: string) => {
+  const targetSlide = report.value?.model.slides.find(slide => slide.id === id)
+  if (draftDirty.value && odpDraft.value && targetSlide?.index !== odpDraft.value.slideIndex) {
+    message.warning('当前正文还有未保存修改，请先另存副本或撤销修改')
+    return
+  }
   selectedSlideId.value = id
   void nextTick(() => {
     rememberOdfViewState()
     document.getElementById(id)?.scrollIntoView({ block: 'center' })
   })
+}
+const reloadDocument = async () => {
+  if (!await mayLeave()) return
+  await load()
 }
 const reveal = async (id: string, parent: string) => {
   if (isOds.value) selectedSheetId.value = parent
@@ -641,6 +791,21 @@ header { display: flex; min-height: 52px; align-items: center; justify-content: 
 .slide section { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
 .slide section p { white-space: pre-wrap; }
 .media-note { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 11px; }
+.odp-edit-panel { width: min(960px, calc(100% - 24px)); margin: 14px auto 0; padding: 12px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); }
+.odp-edit-panel > header { display: flex; min-height: 24px; padding: 0; border: 0; justify-content: space-between; background: transparent; }
+.odp-edit-panel > header span, .odp-copy-boundary { color: var(--text-muted); font-size: 11px; }
+.odp-target-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 7px; margin: 8px 0; }
+.odp-target-list button { display: flex; min-width: 0; flex-direction: column; gap: 3px; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; text-align: left; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
+.odp-target-list button.active { border-color: var(--theme-primary); box-shadow: inset 0 0 0 1px var(--theme-primary); }
+.odp-target-list button span { color: var(--theme-primary); font-size: 11px; }
+.odp-target-list button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.odp-text-editor { display: grid; gap: 5px; margin-top: 10px; color: var(--text-muted); font-size: 11px; }
+.odp-text-editor textarea { width: 100%; min-height: 78px; resize: vertical; padding: 8px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; outline: 0; color: var(--text-primary); background: var(--bg-secondary); font: inherit; line-height: 1.5; }
+.odp-text-editor textarea:focus { border-color: var(--theme-primary); }
+.odp-copy-boundary { margin: 8px 0 0; }
+.odp-blocked { display: flex; align-items: flex-start; gap: 8px; color: var(--text-secondary); }
+.odp-blocked svg { flex: none; color: #d49a28; }
+.odp-blocked p { margin: 3px 0 0; color: var(--text-muted); font-size: 11px; }
 .search-hit { background: color-mix(in srgb, #f0bd3e 20%, var(--bg-primary)) !important; }
 .current-hit, .route-target { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .empty { display: grid; min-height: 180px; place-items: center; color: var(--text-muted); }
@@ -654,6 +819,7 @@ footer > div { gap: 10px; }
   .odp-layout aside button { min-width: 180px; }
   .slide-stage { padding: 12px; }
   .slide { width: 100%; }
+  .odp-edit-panel { width: 100%; }
   .search-box input { width: 100px; }
 }
 @container (max-width: 700px) {
