@@ -2,19 +2,50 @@
   "schemaVersion": 1,
   "stage": "M5-5",
   "name": "v1.0.17-atomic-version-transition-and-candidate-packaging",
-  "status": "atomic-transition-complete-package-pending",
+  "status": "accepted",
   "predecessor": "M5-4",
   "transitionBaseCommit": "5fe3e79e9d9581a917c94be99c087fc3492d0228",
-  "candidateSourceCommit": null,
+  "candidateSourceCommit": "2b6235d420ceffd291dab72c4af17caffe464333",
   "candidateVersion": "1.0.17",
   "publicVersion": "1.0.16",
   "atomicVersionFileCount": 44,
-  "qualityGatePassed": false,
-  "candidatePackageBuilt": false,
-  "artifacts": [],
+  "qualityGatePassed": true,
+  "candidatePackageBuilt": true,
+  "artifacts": [
+    {
+      "target": "msi",
+      "sourceFileName": "Long编辑_1.0.17_x64_zh-CN.msi",
+      "releaseFileName": "LongEdit_1.0.17_x64_zh-CN.msi",
+      "sizeBytes": 74186752,
+      "sha256": "96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e",
+      "productVersion": "1.0.17",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "nsis",
+      "sourceFileName": "Long编辑_1.0.17_x64-setup.exe",
+      "releaseFileName": "LongEdit_1.0.17_x64-setup.exe",
+      "sizeBytes": 65922301,
+      "sha256": "09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886",
+      "productVersion": "1.0.17",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "runtimeSmoke": {
+    "status": "passed-real-tauri-debug-webview2",
+    "checksPassed": 6,
+    "routesPassed": 11,
+    "txtSaveReopenPassed": true,
+    "jsonSaveReopenPassed": true,
+    "sourceUserContentIncluded": false
+  },
   "installedLifecyclePassed": false,
   "githubReleasePublished": false,
   "releaseCandidate": false,
   "sourceUserContentIncluded": false,
-  "nextAction": "push-atomic-transition-run-full-quality-gate-and-build-real-msi-nsis"
+  "selectedNextStage": {
+    "id": "M5-6",
+    "name": "v1.0.17-hosted-installer-lifecycle"
+  },
+  "nextAction": "execute-m5-6-v1.0.17-hosted-installer-lifecycle"
 }

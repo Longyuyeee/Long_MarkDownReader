@@ -5,7 +5,7 @@
   "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-31",
-  "currentStatus": "v1.0.17-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,15 +24,15 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
-    "localRuntimeSmokePassed": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
+    "localRuntimeSmokePassed": true,
     "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
@@ -50,7 +50,34 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.17",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "2b6235d420ceffd291dab72c4af17caffe464333",
+    "qualityGateCommand": "npm run ci:patch-release",
+    "qualityGateEnvironment": "local-windows",
+    "qualityGateRunId": null,
+    "runtimeSmokeEvidence": [
+      "docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/audit-manifest.json",
+      "docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/route-mount-evidence.json"
+    ],
+    "artifacts": [
+      {
+        "target": "msi",
+        "sourceFileName": "Long编辑_1.0.17_x64_zh-CN.msi",
+        "fileName": "LongEdit_1.0.17_x64_zh-CN.msi",
+        "sizeBytes": 74186752,
+        "sha256": "96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e",
+        "authenticodeStatus": "NotSigned"
+      },
+      {
+        "target": "nsis",
+        "sourceFileName": "Long编辑_1.0.17_x64-setup.exe",
+        "fileName": "LongEdit_1.0.17_x64-setup.exe",
+        "sizeBytes": 65922301,
+        "sha256": "09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886",
+        "authenticodeStatus": "NotSigned"
+      }
+    ]
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -59,5 +86,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "pass-v1.0.17-quality-gate-and-build-real-candidate-installers"
+  "nextAction": "execute-v1.0.17-hosted-installer-lifecycle"
 }

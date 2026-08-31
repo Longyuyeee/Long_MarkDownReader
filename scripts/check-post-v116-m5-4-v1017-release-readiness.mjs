@@ -6,6 +6,7 @@ const policy = json('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
 const predecessor = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const evidence = json('docs/evidence/post-v116-m5-4-v1017-release-readiness/audit.json')
 const development = json('shared/development-version-policy.json')
+const successor = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const workbook = read('src-tauri/src/commands/workbook.rs')
 const registry = read('src-tauri/src/formats/file_registry.rs')
 const knowledge = read('src-tauri/src/services/knowledge_index.rs')
@@ -39,7 +40,10 @@ if (evidence.status !== 'passed' || evidence.actual?.fullRustPassed !== 548 || e
   || evidence.privacy?.sourceUserContentIncluded || evidence.privacy?.localAbsolutePathsIncluded) fail('M5-4 evidence drift')
 
 for (const token of ['真实测试：预期、实际、差异与修正', '548 通过、0 失败、5 忽略', '6,275', '生产依赖漏洞为 0', 'M5-5']) if (!audit.includes(token)) fail(`M5-4 audit missing ${token}`)
-if (development.currentStage !== `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`) fail('development handoff is not M5-5')
+const expectedDevelopmentStage = successor.status === 'accepted'
+  ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}`
+  : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
+if (development.currentStage !== expectedDevelopmentStage) fail('development handoff is not aligned with M5-5 progression')
 
 if (failures.length) {
   console.error(`M5-4 release readiness failed:\n- ${failures.join('\n- ')}`)

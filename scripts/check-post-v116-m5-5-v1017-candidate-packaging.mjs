@@ -14,6 +14,8 @@ const matrix = json('shared/release-capability-matrix.json')
 const cargo = read('src-tauri/Cargo.toml')
 const cargoLock = read('src-tauri/Cargo.lock')
 const notes = read('docs/RELEASE_NOTES_v1.0.17.md')
+const evidence = fs.existsSync('docs/evidence/post-v116-m5-5-v1017-candidate-packaging/audit.json') ? json('docs/evidence/post-v116-m5-5-v1017-candidate-packaging/audit.json') : null
+const runtimeSmoke = fs.existsSync('docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/audit-manifest.json') ? json('docs/evidence/post-v116-m5-5-v1017-candidate-packaging/runtime-smoke/audit-manifest.json') : null
 const failures = []
 const fail = message => failures.push(message)
 
@@ -39,7 +41,17 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
   if (!/^[0-9a-f]{40}$/.test(policy.candidateSourceCommit ?? '') || !policy.qualityGatePassed || !policy.candidatePackageBuilt
     || policy.artifacts?.length !== 2 || policy.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')
     || community.currentStatus !== 'v1.0.17-community-release-candidate-packaged-installed-lifecycle-pending'
+    || development.currentStage !== `${policy.selectedNextStage?.id}-${policy.selectedNextStage?.name}`
     || development.binaryVersionTransition !== 'v1.0.17-candidate-packaged') fail('M5-5 accepted package state drifted')
+  if (policy.artifacts?.[0]?.sizeBytes !== 74186752 || policy.artifacts?.[0]?.sha256 !== '96118462661e7b0eb2370aed49352b9db980fa42b7f8c27444382e1c788b4d6e'
+    || policy.artifacts?.[1]?.sizeBytes !== 65922301 || policy.artifacts?.[1]?.sha256 !== '09923846c2ef19b31eb44bfa2bacfdadc6e03de2e50c05a2c03b4e432acc5886') fail('M5-5 artifact receipt drifted')
+  if (evidence?.status !== 'passed' || evidence?.candidateSourceCommit !== policy.candidateSourceCommit || evidence?.differencesAndCorrections?.length !== 4
+    || runtimeSmoke?.appVersion !== '1.0.17' || runtimeSmoke?.checks?.filter(item => item.status === 'passed').length !== 6
+    || evidence?.actual?.runtimeSmoke?.routesPassed !== 11 || !evidence?.actual?.runtimeSmoke?.screenshotsVisuallyReviewed) fail('M5-5 real evidence drifted')
+  try {
+    execFileSync('git', ['cat-file', '-e', `${policy.candidateSourceCommit}^{commit}`])
+    execFileSync('git', ['merge-base', '--is-ancestor', policy.candidateSourceCommit, 'HEAD'])
+  } catch { fail('M5-5 candidate source commit is unavailable or not an ancestor') }
 } else fail('M5-5 status is unsupported')
 
 if (failures.length) {

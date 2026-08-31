@@ -13,6 +13,7 @@ const m5Producer = json('shared/post-v116-m5-1-odp-producer-selection-policy.jso
 const m5Copy = json('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json')
 const m5Workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const m5ReleaseReadiness = json('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
+const m5CandidatePackaging = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const packageManifest = json('package.json')
 const r5fManifest = json('docs/evidence/r5f-safe-tauri-runtime/manifest.json')
 const r5fRoutes = json('docs/evidence/r5f-safe-tauri-runtime/route-mount-evidence.json')
@@ -50,7 +51,9 @@ if (lifecycleAdvanced) {
   if (!laterCandidateActive && (!community.gates?.msiBuilt || !community.gates?.nsisBuilt || !community.gates?.artifactHashesVerified || !community.gates?.installedLifecyclePassed || community.gates?.githubReleasePublished !== releasePublished || community.candidate?.artifacts?.length !== 2)) failures.push('M4F-3 completion facts drifted')
   const releaseReady = community.currentStatus === 'v1.0.16-community-release-ready-to-publish'
   const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
-  const publishedStage = m5ReleaseReadiness.status === 'accepted'
+  const publishedStage = m5CandidatePackaging.status === 'accepted'
+    ? `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
+    : m5ReleaseReadiness.status === 'accepted'
     ? `${m5ReleaseReadiness.selectedNextStage.id}-${m5ReleaseReadiness.selectedNextStage.name}`
     : m5Workspace.status === 'accepted'
     ? `${m5Workspace.selectedNextStage.id}-${m5Workspace.selectedNextStage.name}`

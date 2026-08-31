@@ -16,6 +16,7 @@ v1.0.17 聚焦 v1.0.16 之后已经完成真实验收的最小增量：资料库
 - ODP 副本由 LibreOffice Impress 与 PowerPoint 真实样本生成并在两套桌面应用中复开。
 - Rust 全仓测试：548 通过、0 失败、5 个明确依赖外部桌面应用或审计产物的测试忽略。
 - 完整 `ci:patch-release`：前端、43 格式/91 扩展名合同、Rust locked check 和生产依赖审计通过，生产依赖漏洞为 0。
+- 候选 MSI/NSIS 已真实构建并核验 1.0.17 产品版本、大小、SHA-256 与 `NotSigned`；当前 Tauri WebView2 烟测为 6/6 检查、11/11 路由，TXT/JSON 保存复开通过。
 
 ## 发布边界
 

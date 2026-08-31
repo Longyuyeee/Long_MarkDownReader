@@ -14,6 +14,7 @@ const m5Producer = json('shared/post-v116-m5-1-odp-producer-selection-policy.jso
 const m5Copy = json('shared/post-v116-m5-2-odp-simple-slide-copy-policy.json')
 const m5Workspace = json('shared/post-v116-m5-3-odp-workspace-policy.json')
 const m5ReleaseReadiness = json('shared/post-v116-m5-4-v1017-release-readiness-policy.json')
+const m5CandidatePackaging = json('shared/post-v116-m5-5-v1017-candidate-packaging-policy.json')
 const audit = fs.readFileSync('docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md', 'utf8')
 const laterCandidateActive = community.appVersion !== '1.0.16'
 const failures = []
@@ -37,7 +38,9 @@ for (const asset of receipt.assets ?? []) {
 if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' || manifest.releaseReceipt !== 'release-receipt.json' || !manifest.boundaries?.releaseAssetsPublished) fail('published artifact manifest drifted')
 const updaterComplete = m4f6.status === 'hosted-managed-update-passed' && m4f6.githubRun?.conclusion === 'success'
 const expectedNextAction = updaterComplete ? 'v1.0.16-release-and-managed-updater-closure-complete' : 'execute-m4f6-v1.0.15-to-v1.0.16-managed-updater-observation'
-const expectedStage = m5ReleaseReadiness.status === 'accepted'
+const expectedStage = m5CandidatePackaging.status === 'accepted'
+  ? `${m5CandidatePackaging.selectedNextStage.id}-${m5CandidatePackaging.selectedNextStage.name}`
+  : m5ReleaseReadiness.status === 'accepted'
   ? `${m5ReleaseReadiness.selectedNextStage.id}-${m5ReleaseReadiness.selectedNextStage.name}`
   : m5Workspace.status === 'accepted'
   ? `${m5Workspace.selectedNextStage.id}-${m5Workspace.selectedNextStage.name}`

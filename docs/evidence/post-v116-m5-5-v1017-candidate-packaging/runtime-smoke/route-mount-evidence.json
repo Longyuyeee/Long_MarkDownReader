@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5G",
+  "capturedAt": "2026-08-31T05:34:50.150Z",
+  "evidenceLevel": "real-tauri-debug-webview2",
+  "sourceUserContentIncluded": false,
+  "routes": [
+    {
+      "route": "/workspace",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/library",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/text",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/json",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/pdf",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/workbook",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/diagram",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/mindmap",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/graph",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/canvas",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    },
+    {
+      "route": "/release-capabilities",
+      "status": "passed",
+      "crashFallbackVisible": false,
+      "routeWrapperMounted": true
+    }
+  ]
+}
