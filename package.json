@@ -464,6 +464,8 @@
     "import:post-v118-m7-5-v1019-hosted-evidence": "node scripts/import-post-v118-m7-5-v1019-hosted-evidence.mjs",
     "check:post-v118-m7-6-v1019-final-release-readiness": "node scripts/check-post-v118-m7-6-v1019-final-release-readiness.mjs",
     "check:post-v118-m7-7-v1019-published-release": "node scripts/check-post-v118-m7-7-v1019-published-release.mjs",
+    "check:v119-managed-updater-lifecycle": "node scripts/check-v119-managed-updater-lifecycle.mjs",
+    "import:v119-managed-updater-evidence": "node scripts/import-v119-managed-updater-evidence.mjs",
     "verify:post-v118-m7-6-v1019-real-release-assets": "node scripts/verify-post-v118-m7-6-v1019-real-release-assets.mjs",
     "check:command-strip-layout": "node scripts/check-command-strip-layout.mjs",
     "check:v1-installed-hotfix": "node scripts/check-v1-installed-hotfix.mjs",

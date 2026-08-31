@@ -1,0 +1,116 @@
+name: V1.0.19 Managed Updater Lifecycle
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  managed-updater-lifecycle:
+    name: Exercise official v1.0.18 to v1.0.19 managed update and automatic relaunch
+    runs-on: windows-latest
+    timeout-minutes: 35
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      LONGEDIT_MANAGED_UPDATER_DISPOSABLE: "1"
+
+    steps:
+      - name: Check out lifecycle contracts
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Load managed updater policy
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $policy = Get-Content -LiteralPath "shared\v119-managed-updater-lifecycle-policy.json" -Raw | ConvertFrom-Json
+          "PREVIOUS_VERSION=$($policy.releases.previous.version)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "PREVIOUS_TAG=$($policy.releases.previous.tag)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "PREVIOUS_INSTALLER_NAME=$($policy.releases.previous.installer.fileName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "PREVIOUS_INSTALLER_SHA256=$($policy.releases.previous.installer.sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_VERSION=$($policy.releases.current.version)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_TAG=$($policy.releases.current.tag)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_TAGGED_COMMIT=$($policy.releases.current.taggedCommit)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_RELEASE_URL=$($policy.releases.current.url)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_INSTALLER_NAME=$($policy.releases.current.installer.fileName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_INSTALLER_SIZE=$($policy.releases.current.installer.sizeBytes)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_INSTALLER_SHA256=$($policy.releases.current.installer.sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CURRENT_EXECUTABLE_REFERENCE_SHA256=$($policy.releases.current.standaloneReleaseExecutableReferenceSha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Download official community releases
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Path "previous-release", "current-release", "managed-updater-output" -Force | Out-Null
+          gh release download $env:PREVIOUS_TAG --repo Longyuyeee/Long_MarkDownReader --pattern $env:PREVIOUS_INSTALLER_NAME --dir "previous-release"
+          gh release download $env:CURRENT_TAG --repo Longyuyeee/Long_MarkDownReader --pattern $env:CURRENT_INSTALLER_NAME --dir "current-release"
+
+      - name: Verify official release metadata, tag and assets
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $previous = gh api "repos/Longyuyeee/Long_MarkDownReader/releases/tags/$env:PREVIOUS_TAG" | ConvertFrom-Json
+          $current = gh api "repos/Longyuyeee/Long_MarkDownReader/releases/tags/$env:CURRENT_TAG" | ConvertFrom-Json
+          $latest = gh api "repos/Longyuyeee/Long_MarkDownReader/releases/latest" | ConvertFrom-Json
+          if ($previous.draft -or $previous.prerelease -or $current.draft -or $current.prerelease) { throw "Managed updater lifecycle requires stable published releases." }
+          git fetch --force origin "refs/tags/${env:CURRENT_TAG}:refs/tags/${env:CURRENT_TAG}"
+          $taggedCommit = (git rev-list -n 1 $env:CURRENT_TAG).Trim()
+          if ($latest.tag_name -ne $env:CURRENT_TAG -or $taggedCommit -ne $env:CURRENT_TAGGED_COMMIT) { throw "Current release is not the expected latest tagged commit." }
+          $previousAsset = @($previous.assets | Where-Object { $_.name -eq $env:PREVIOUS_INSTALLER_NAME })
+          $currentAsset = @($current.assets | Where-Object { $_.name -eq $env:CURRENT_INSTALLER_NAME })
+          if ($previousAsset.Count -ne 1 -or $currentAsset.Count -ne 1) { throw "Official release installer assets are missing or ambiguous." }
+          if ($previousAsset[0].digest -ne "sha256:$env:PREVIOUS_INSTALLER_SHA256" -or $currentAsset[0].digest -ne "sha256:$env:CURRENT_INSTALLER_SHA256") { throw "GitHub release asset digest drift." }
+          $previousPath = Join-Path $env:GITHUB_WORKSPACE "previous-release\$env:PREVIOUS_INSTALLER_NAME"
+          $currentPath = Join-Path $env:GITHUB_WORKSPACE "current-release\$env:CURRENT_INSTALLER_NAME"
+          if ((Get-FileHash -LiteralPath $previousPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:PREVIOUS_INSTALLER_SHA256) { throw "Downloaded previous installer hash drift." }
+          if ((Get-FileHash -LiteralPath $currentPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:CURRENT_INSTALLER_SHA256) { throw "Downloaded current installer hash drift." }
+          if ((Get-Item -LiteralPath $currentPath).Length -ne [long]$env:CURRENT_INSTALLER_SIZE) { throw "Downloaded current installer size drift." }
+          $receipt = [ordered]@{
+            schemaVersion = 1
+            stage = "V1.0.19-U1-ASSETS"
+            capturedAt = (Get-Date).ToUniversalTime().ToString("o")
+            repository = "Longyuyeee/Long_MarkDownReader"
+            latestTag = $latest.tag_name
+            previous = [ordered]@{ tag = $previous.tag_name; assetId = $previousAsset[0].id; fileName = $previousAsset[0].name; sizeBytes = $previousAsset[0].size; sha256 = $env:PREVIOUS_INSTALLER_SHA256 }
+            current = [ordered]@{ tag = $current.tag_name; taggedCommit = $taggedCommit; releaseTargetCommitish = $current.target_commitish; assetId = $currentAsset[0].id; fileName = $currentAsset[0].name; sizeBytes = $currentAsset[0].size; sha256 = $env:CURRENT_INSTALLER_SHA256 }
+            sourceUserContentIncluded = $false
+          }
+          [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE "managed-updater-output\official-release-assets.json"), ($receipt | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
+
+      - name: Execute disposable managed updater lifecycle
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts\run-v109-managed-updater-lifecycle.ps1" `
+            -PreviousInstallerPath (Join-Path $env:GITHUB_WORKSPACE "previous-release\$env:PREVIOUS_INSTALLER_NAME") `
+            -PreviousVersion $env:PREVIOUS_VERSION `
+            -CurrentVersion $env:CURRENT_VERSION `
+            -ExpectedPreviousInstallerSha256 $env:PREVIOUS_INSTALLER_SHA256 `
+            -ExpectedCurrentInstallerSha256 $env:CURRENT_INSTALLER_SHA256 `
+            -ExpectedCurrentInstallerSize ([long]$env:CURRENT_INSTALLER_SIZE) `
+            -ReleaseExecutableReferenceSha256 $env:CURRENT_EXECUTABLE_REFERENCE_SHA256 `
+            -ExpectedTaggedCommit $env:CURRENT_TAGGED_COMMIT `
+            -ExpectedReleaseUrl $env:CURRENT_RELEASE_URL `
+            -NodeExecutable (Get-Command node.exe).Source `
+            -ProbeScript (Join-Path $env:GITHUB_WORKSPACE "scripts\capture-v109-managed-updater-lifecycle.mjs") `
+            -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE "managed-updater-output") `
+            -ConfirmDisposableMachine `
+            -AllowInstallerMutation
+
+      - name: Upload managed updater evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v119-managed-updater-lifecycle-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: managed-updater-output
+
+
+
