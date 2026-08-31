@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-4",
+  "name": "v1.0.17-quality-debt-and-release-readiness",
+  "status": "accepted",
+  "predecessor": "M5-3",
+  "runtimeBaseVersion": "1.0.16",
+  "publicVersion": "1.0.16",
+  "developmentTargetVersion": "1.0.17",
+  "qualityDebt": {
+    "previousFullRustPassed": 544,
+    "previousFullRustFailed": 4,
+    "previousFullRustIgnored": 5,
+    "currentFullRustPassed": 548,
+    "currentFullRustFailed": 0,
+    "currentFullRustIgnored": 5,
+    "workbookLayoutReadbackFixed": true,
+    "knowledgeIndexWatcherRaceFixed": true,
+    "pptxRegistryAssertionAligned": true
+  },
+  "releaseGate": {
+    "fullPatchReleaseCiPassed": true,
+    "frontendModulesBuilt": 6275,
+    "formatCount": 43,
+    "extensionCount": 91,
+    "cargoCheckPassed": true,
+    "productionVulnerabilities": 0,
+    "packagingEligible": true
+  },
+  "selectedNextStage": {
+    "id": "M5-5",
+    "name": "v1.0.17-atomic-version-transition-and-candidate-packaging"
+  },
+  "binaryVersionChanged": false,
+  "candidatePackageBuilt": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m5-5-v1.0.17-atomic-version-transition-and-candidate-packaging"
+}

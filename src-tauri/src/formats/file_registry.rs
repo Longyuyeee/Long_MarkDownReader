@@ -516,7 +516,7 @@ mod tests {
     }
 
     #[test]
-    fn pptx_is_basic_copy_edit_and_globally_indexed() {
+    fn pptx_is_basic_bounded_overwrite_edit_and_globally_indexed() {
         let format = file_format_for_path("roadmap.pptx").unwrap();
         assert_eq!(format.id, "pptx");
         assert_eq!(format.route_name, "PptxReader");
@@ -525,7 +525,7 @@ mod tests {
         assert_eq!(format.capabilities.create, CapabilityLevel::Unsupported);
         assert!(format.capabilities.index.is_supported());
         assert_eq!(format.user_capability.level, UserCapabilityLevel::BasicEdit);
-        assert_eq!(format.user_capability.save_mode, SaveMode::Copy);
+        assert_eq!(format.user_capability.save_mode, SaveMode::BoundedOverwrite);
         assert_eq!(format.adapters.reader.as_deref(), Some("pptx"));
         assert_eq!(format.adapters.writer.as_deref(), Some("pptx"));
         assert_eq!(format.adapters.indexer.as_deref(), Some("pptx"));

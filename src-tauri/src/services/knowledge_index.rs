@@ -1447,9 +1447,17 @@ pub fn inspect_index(
     if path.exists() {
         if let Some(snapshot) = runtime.cached_snapshot(workspace) {
             let changed_paths = runtime.changed_paths(workspace);
-            if changed_paths.is_empty() {
-                return ready_status_from_snapshot(cache_root, workspace, &snapshot);
-            }
+            let stale_source_count = if changed_paths.is_empty() {
+                let current_sources = collect_index_sources(workspace);
+                let current_source_digest = source_digest(&current_sources);
+                if current_source_digest == snapshot.source_digest {
+                    return ready_status_from_snapshot(cache_root, workspace, &snapshot);
+                }
+                runtime.invalidate_snapshot(workspace);
+                current_sources.len()
+            } else {
+                changed_paths.len()
+            };
             return KnowledgeIndexStatus {
                 state: "stale".into(),
                 schema_version: snapshot.schema_version,
@@ -1464,7 +1472,7 @@ pub fn inspect_index(
                     .unwrap_or(0),
                 error: None,
                 recovery_available: true,
-                stale_source_count: Some(changed_paths.len()),
+                stale_source_count: Some(stale_source_count),
             };
         }
     }

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "stage": "M5-4-v1.0.17-quality-debt-and-release-readiness",
+  "status": "passed",
+  "expected": {
+    "fullRustFailures": 0,
+    "workbookBlankStyleReadback": "#FFF2CC",
+    "workbookMergeReadback": "D6:E6",
+    "pptxSaveMode": "bounded-overwrite",
+    "knowledgeIndexAfterNewFile": "stale",
+    "patchReleaseCi": "passed"
+  },
+  "actual": {
+    "fullRustPassed": 548,
+    "fullRustFailures": 0,
+    "fullRustIgnored": 5,
+    "workbookBlankStyleReadback": "#FFF2CC",
+    "workbookMergeReadback": "D6:E6",
+    "pptxSaveMode": "bounded-overwrite",
+    "knowledgeIndexAfterNewFile": "stale",
+    "frontendModulesBuilt": 6275,
+    "formatCount": 43,
+    "extensionCount": 91,
+    "productionVulnerabilities": 0,
+    "patchReleaseCi": "passed"
+  },
+  "differencesAndCorrections": [
+    {
+      "difference": "Workbook 写入成功后，空白样式单元格和有值范围外合并区在产品复读中缺失",
+      "cause": "布局读取错误地使用 Calamine 有值行数截断 OOXML 样式与结构",
+      "correction": "产品布局复读覆盖 XLSX 完整规范行域，同时保持列数和文件大小边界"
+    },
+    {
+      "difference": "PPTX 注册表测试期望 copy，实际能力为 bounded-overwrite",
+      "cause": "历史测试断言未随已验收的可靠受控覆盖能力更新",
+      "correction": "断言名称和值与共享格式事实源对齐"
+    },
+    {
+      "difference": "知识索引全套并发测试偶发把新增文件后的状态报告为 ready",
+      "cause": "缓存快速路径在文件监视器事件到达前直接信任空变更集合",
+      "correction": "缓存命中仍比较真实来源摘要，消除事件时序依赖"
+    },
+    {
+      "difference": "第一次完整复测在编译阶段发现三个内部布局缓存测试仍传入旧的行数参数",
+      "cause": "初版修正删除了 read_worksheet_layout 参数，但内部测试夹具仍依赖该兼容签名",
+      "correction": "保留并显式标记未使用的 _total_rows 兼容参数；产品布局边界仍固定为 XLSX 规范行域"
+    }
+  ],
+  "decision": {
+    "stageAccepted": true,
+    "packagingEligible": true,
+    "binaryVersionChanged": false,
+    "candidatePackageBuilt": false,
+    "releaseCandidate": false,
+    "selectedNextStage": "M5-5-v1.0.17-atomic-version-transition-and-candidate-packaging"
+  },
+  "privacy": {
+    "sourceUserContentIncluded": false,
+    "localAbsolutePathsIncluded": false
+  }
+}

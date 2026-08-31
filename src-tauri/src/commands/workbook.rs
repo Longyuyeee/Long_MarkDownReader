@@ -54,6 +54,7 @@ use std::time::UNIX_EPOCH;
 use tauri::State;
 
 const MAX_WORKBOOK_BYTES: u64 = 128 * 1024 * 1024;
+const MAX_WORKBOOK_LAYOUT_ROWS: usize = 1_048_576;
 const MAX_PAGE_ROWS: usize = 5_000;
 const MAX_PREVIEW_COLUMNS: usize = 256;
 
@@ -706,7 +707,7 @@ fn read_worksheet_layout(
     sheet: &str,
     signature: &str,
     source: &[u8],
-    total_rows: usize,
+    _total_rows: usize,
 ) -> Result<(Arc<WorkbookSheetLayout>, bool), String> {
     if let Some(layout) = worksheet_value_cache()
         .lock()
@@ -724,7 +725,7 @@ fn read_worksheet_layout(
         source,
         sheet,
         0,
-        total_rows,
+        MAX_WORKBOOK_LAYOUT_ROWS,
         MAX_PREVIEW_COLUMNS,
     )?);
     let mut cache = worksheet_value_cache()
