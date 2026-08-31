@@ -73,6 +73,18 @@
     "actual": "release target_commitish is main while the annotated v1.0.16 tag dereferences to 757d54309ddb35f445344d909fa4c7ba2567bc58",
     "correction": "fetch and dereference the tag, retain releaseTargetCommitish only as an observed API field"
   },
+  "attemptHistory": [
+    {
+      "runId": 33350679455,
+      "headCommit": "04bc13f67f358bfeb9bae3ba4e23330ece5057d1",
+      "status": "failed-before-updater-at-tag-fetch-refspec",
+      "expected": "fetch refs/tags/v1.0.16 into the local tag namespace",
+      "actual": "PowerShell parsed the colon after $env:CURRENT_TAG as part of environment-variable syntax and Git received refs/tags//tags/v1.0.16",
+      "correction": "use ${env:CURRENT_TAG} to delimit the environment-variable name on both sides of the refspec colon",
+      "installerExecuted": false,
+      "accepted": false
+    }
+  ],
   "githubRun": null,
   "evidenceRoot": "docs/evidence/v1.0.16-managed-updater",
   "nextAction": "push-harness-pass-quality-gate-and-run-hosted-managed-updater-lifecycle"

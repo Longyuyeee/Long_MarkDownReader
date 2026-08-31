@@ -43,7 +43,7 @@ if (Object.entries(policy.requirements ?? {}).some(([key, value]) => key === 'so
 requireTokens(workflow, [
   'workflow_dispatch:', 'runs-on: windows-latest', 'LONGEDIT_MANAGED_UPDATER_DISPOSABLE: "1"',
   'shared\\v116-managed-updater-lifecycle-policy.json', 'gh release download $env:PREVIOUS_TAG',
-  'gh release download $env:CURRENT_TAG', 'releases/latest', 'git rev-list -n 1 $env:CURRENT_TAG',
+  'gh release download $env:CURRENT_TAG', 'releases/latest', 'refs/tags/${env:CURRENT_TAG}:refs/tags/${env:CURRENT_TAG}', 'git rev-list -n 1 $env:CURRENT_TAG',
   'releaseTargetCommitish = $current.target_commitish', 'run-v109-managed-updater-lifecycle.ps1',
   'capture-v109-managed-updater-lifecycle.mjs', 'v116-managed-updater-lifecycle-${{ github.run_id }}',
 ], 'v1.0.16 updater workflow')
@@ -62,6 +62,8 @@ for (const token of ['v1.0.15', 'v1.0.16', '用户确认', 'SHA-256', '自动重
 }
 
 const completed = policy.status === 'hosted-managed-update-passed'
+const firstAttempt = policy.attemptHistory?.[0]
+if (firstAttempt?.runId !== 33350679455 || firstAttempt?.status !== 'failed-before-updater-at-tag-fetch-refspec' || firstAttempt?.installerExecuted !== false || firstAttempt?.accepted !== false) fail('first hosted attempt history drift')
 if (!completed) {
   if (policy.gates?.harnessImplemented !== true
     || Object.entries(policy.gates ?? {}).some(([key, value]) => key !== 'harnessImplemented' && value !== false)

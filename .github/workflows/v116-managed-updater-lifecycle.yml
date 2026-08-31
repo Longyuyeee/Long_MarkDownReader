@@ -59,7 +59,7 @@ jobs:
           $current = gh api "repos/Longyuyeee/Long_MarkDownReader/releases/tags/$env:CURRENT_TAG" | ConvertFrom-Json
           $latest = gh api "repos/Longyuyeee/Long_MarkDownReader/releases/latest" | ConvertFrom-Json
           if ($previous.draft -or $previous.prerelease -or $current.draft -or $current.prerelease) { throw "Managed updater lifecycle requires stable published releases." }
-          git fetch --force origin "refs/tags/$env:CURRENT_TAG:refs/tags/$env:CURRENT_TAG"
+          git fetch --force origin "refs/tags/${env:CURRENT_TAG}:refs/tags/${env:CURRENT_TAG}"
           $taggedCommit = (git rev-list -n 1 $env:CURRENT_TAG).Trim()
           if ($latest.tag_name -ne $env:CURRENT_TAG -or $taggedCommit -ne $env:CURRENT_TAGGED_COMMIT) { throw "Current release is not the expected latest tagged commit." }
           $previousAsset = @($previous.assets | Where-Object { $_.name -eq $env:PREVIOUS_INSTALLER_NAME })

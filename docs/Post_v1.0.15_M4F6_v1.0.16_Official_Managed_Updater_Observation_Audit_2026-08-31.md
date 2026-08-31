@@ -21,6 +21,8 @@
 
 入口审计发现旧工作流把 Release API 的 `target_commitish` 当作 Tag 对应提交。v1.0.16 的实际 API 字段为 `main`，但 annotated Tag `v1.0.16^{}` 正确指向产品提交 `757d54309ddb35f445344d909fa4c7ba2567bc58`。新工作流因此显式 fetch 并解引用 Tag，`target_commitish=main` 只作为实际观察记录，不再错误要求二者相等。
 
+首轮真实运行 [`33350679455`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33350679455) 在更新器启动前失败。预期 Git 收到 `refs/tags/v1.0.16:refs/tags/v1.0.16`；实际 PowerShell 把 `$env:CURRENT_TAG:` 的冒号继续作为环境变量语法解析，Git 收到 `refs/tags//tags/v1.0.16`。现使用 `${env:CURRENT_TAG}` 明确变量边界；本轮没有执行安装器、没有形成更新通过证据。
+
 其他预期与实际差异必须等真实运行后补录；任何失败都保留为证据并修正后重跑，不把部分通过写成发布后更新链收口。
 
 ## 当前接续点
