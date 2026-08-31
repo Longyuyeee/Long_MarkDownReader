@@ -1,6 +1,8 @@
 # Long Markdown Reader 开发交接
 
-> **2026-09-01 v1.0.19 M7-5 托管安装生命周期已通过：** 固定候选 `9655b021…` 的完整补丁门、本机真实 Tauri 6/6 + 11/11 和 GitHub Run `33409497055` 均通过；托管 MSI/NSIS 为 `NotSigned`，22/22 生命周期、18/18 安装态、11/11 路由和 7/7 管理回滚失败 0，14 张截图已抽检。公开版本仍为 v1.0.18，唯一接续点为 **M7-6 v1.0.19 最终制品清单与发布就绪审计**。详见 [`Post_v1.0.18_M7_5_v1.0.19_Hosted_Installer_Lifecycle_Closure_Audit_2026-09-01.md`](./Post_v1.0.18_M7_5_v1.0.19_Hosted_Installer_Lifecycle_Closure_Audit_2026-09-01.md)。
+> **2026-09-01 v1.0.19 M7-6 最终制品与发布就绪已通过：** 固定候选 `9655b021…` 的托管 MSI/NSIS、ASCII 发布名和 `SHA256SUMS.txt` 已冻结；发布物只采用通过完整托管生命周期的双包。本机 MSI观察和本机 NSIS 工具故障不进入 Release。公开版本仍为 v1.0.18，唯一接续点为 **M7-7 v1.0.19 Tag、GitHub Release 与远端附件复核**。详见 [`Post_v1.0.18_M7_6_v1.0.19_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-09-01.md`](./Post_v1.0.18_M7_6_v1.0.19_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-09-01.md)。
+
+> **2026-09-01 v1.0.19 M7-5 托管安装生命周期已通过：** 固定候选 `9655b021…` 的完整补丁门、本机真实 Tauri 6/6 + 11/11 和 GitHub Run `33409497055` 均通过；托管 MSI/NSIS 为 `NotSigned`，22/22 生命周期、18/18 安装态、11/11 路由和 7/7 管理回滚失败 0，14 张截图已抽检。详见 [`Post_v1.0.18_M7_5_v1.0.19_Hosted_Installer_Lifecycle_Closure_Audit_2026-09-01.md`](./Post_v1.0.18_M7_5_v1.0.19_Hosted_Installer_Lifecycle_Closure_Audit_2026-09-01.md)。
 
 > **2026-08-31 v1.0.19 M7-4 原子迁移与候选打包已完成：** 44 项当前运行身份已切到 1.0.19；完整门禁、托管双包和真实 WebView2 烟测通过。本机 NSIS加载器故障已被隔离为工具链问题，最终候选采用从固定提交重建并通过完整生命周期的托管双包。详见 [`Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md`](./Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md)。
 

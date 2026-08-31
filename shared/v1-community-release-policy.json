@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.19",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-31",
-  "currentStatus": "v1.0.19-community-release-hosted-lifecycle-passed-final-release-audit-pending",
+  "currentStatus": "v1.0.19-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -87,5 +87,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-m7-6-v1.0.19-final-artifact-manifest-and-release-readiness-audit"
+  "nextAction": "execute-m7-7-v1.0.19-tag-release-and-remote-asset-verification"
 }
