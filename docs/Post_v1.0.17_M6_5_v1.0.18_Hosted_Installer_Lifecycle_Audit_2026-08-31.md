@@ -2,9 +2,11 @@
 
 审计日期：2026-08-31
 
-阶段状态：**测试入口已冻结，真实 GitHub 托管 Windows 运行待执行。**
+阶段状态：**已通过并关闭；M6-6 最终产物清单与发布就绪审计进行中。**
 
-暂停交接状态：运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 已于 2026-08-31 17:34（Asia/Hong_Kong）触发；17:42 暂停本机监控时，身份核验与候选依赖安装通过，候选 MSI/NSIS 正在构建，最终结论未知。运行未取消；换机后必须先读取该运行，不得重复触发。
+最终回执：运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 成功。精确候选 `5988c03c…` 在 GitHub 托管 Windows 重建的 MSI/NSIS 均为 1.0.18、`NotSigned`，并完成 22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚，失败 0。29 个脱敏证据文件和 14 张已人工复核截图已导入；完整关闭事实见 [M6-5B 关闭审计](./Post_v1.0.17_M6_5B_v1.0.18_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md)。
+
+历史暂停状态：运行于 2026-08-31 17:34（Asia/Hong_Kong）触发，17:42 暂停本机监控时仍在构建；该描述已由上方成功回执取代。
 
 ## 目标与不可变身份
 
@@ -19,4 +21,4 @@
 
 ## 发布边界与接续点
 
-当前仍为 `releaseCandidate=false`，不得创建 `v1.0.18` Tag 或 GitHub Release。唯一接续动作是推送本测试入口、触发精确候选提交的 GitHub Actions、下载并独立校验 artifact，再把原始结构化证据导入仓库。生命周期全绿后才能进入最终安装包清单、`SHA256SUMS.txt`、发布说明和发布就绪审计。
+当前仍为 `releaseCandidate=false`，不得创建 `v1.0.18` Tag 或 GitHub Release。唯一接续动作是 M6-6：只晋级本次托管通过的安装包，生成最终安装包清单、`SHA256SUMS.txt` 并完成发布就绪审计。

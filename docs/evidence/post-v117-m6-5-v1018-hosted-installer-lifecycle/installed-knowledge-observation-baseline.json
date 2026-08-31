@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "stage": "G12",
+  "appVersion": "1.0.18",
+  "generatedAt": 1788171628,
+  "evidenceLevel": "local-consented-aggregate-only",
+  "consentBoundary": "User previews aggregate metrics and explicitly chooses a local JSON destination. LongEdit performs no automatic upload.",
+  "sourceUserContentIncluded": false,
+  "objectIdentifiersIncluded": false,
+  "fileNamesIncluded": false,
+  "absolutePathsIncluded": false,
+  "objectCount": 11,
+  "relationCount": 9,
+  "connectedObjectCount": 11,
+  "isolatedObjectCount": 0,
+  "coveragePercent": 100,
+  "objectTypes": [
+    {
+      "category": "canvas",
+      "count": 1
+    },
+    {
+      "category": "canvas_node",
+      "count": 2
+    },
+    {
+      "category": "docx",
+      "count": 3
+    },
+    {
+      "category": "docx_heading",
+      "count": 3
+    },
+    {
+      "category": "markdown",
+      "count": 2
+    }
+  ],
+  "relationTypes": [
+    {
+      "relationType": "contains",
+      "count": 5
+    },
+    {
+      "relationType": "depends-on",
+      "count": 1
+    },
+    {
+      "relationType": "embeds",
+      "count": 2
+    },
+    {
+      "relationType": "supports",
+      "count": 1
+    }
+  ],
+  "degreeDistribution": {
+    "zero": 0,
+    "one": 6,
+    "twoToFour": 5,
+    "fiveOrMore": 0
+  },
+  "guidance": [
+    {
+      "code": "network-health-on-track",
+      "priority": "healthy",
+      "currentValue": 100,
+      "targetValue": 70
+    }
+  ]
+}

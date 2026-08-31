@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "M6-5",
   "name": "v1.0.18-hosted-installer-lifecycle",
-  "status": "workflow-ready-hosted-run-pending",
+  "status": "hosted-installer-lifecycle-passed-release-readiness-pending",
   "predecessor": "M6-4",
   "candidateSourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
   "candidateVersion": "1.0.18",
@@ -21,9 +21,30 @@
     "nsisSha256": "96db31068a1b00732ab289474ab000ee465d4565a9150d8cb8a055a8ac96869f",
     "promotionalEvidence": false
   },
-  "attemptHistory": [],
-  "hostedSuccessEvidence": null,
+  "attemptHistory": [
+    {
+      "runId": 33378338422,
+      "workflowCommit": "6d208bcf7d0ba430b7df478718fe636fe91c6e34",
+      "productSourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+      "status": "hosted-installers-and-full-lifecycle-passed",
+      "lifecycleChecksPassed": 22,
+      "installedArtifactChecksPassed": 18,
+      "installedRoutesPassed": 11,
+      "managementRollbackChecksPassed": 7,
+      "failedChecks": 0,
+      "acceptedForM6_6": true,
+      "acceptedForRelease": false
+    }
+  ],
+  "hostedSuccessEvidence": {
+    "evidenceRoot": "docs/evidence/post-v117-m6-5-v1018-hosted-installer-lifecycle",
+    "importManifest": "docs/evidence/post-v117-m6-5-v1018-hosted-installer-lifecycle/import-manifest.json",
+    "artifactId": 9754106849,
+    "artifactZipSha256": "357fc9987296ffabd438f9e9a2968130009e826757a316c1858292d116010b71",
+    "repositoryCanonicalTreeSha256": "1dbb47325812f166608921528bb88f08275decf980450a7d36e1dfc8d12b3013",
+    "screenshotsVisuallyReviewed": 14
+  },
   "releaseCandidate": false,
   "sourceUserContentIncluded": false,
-  "nextAction": "push-workflow-and-run-exact-candidate-on-github-hosted-windows"
+  "nextAction": "execute-m6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit"
 }

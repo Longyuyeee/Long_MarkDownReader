@@ -5,7 +5,7 @@
   "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-08-31",
-  "currentStatus": "v1.0.18-community-release-candidate-packaged-installed-lifecycle-pending",
+  "currentStatus": "v1.0.18-community-release-hosted-lifecycle-passed-final-release-audit-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -31,7 +31,7 @@
     "nsisBuilt": true,
     "artifactHashesVerified": true,
     "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": false,
+    "installedLifecyclePassed": true,
     "qualityGatePassed": true,
     "githubReleasePublished": false
   },
@@ -39,10 +39,10 @@
     "previousPublicVersion": "1.0.17",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.17-to-1.0.18-pending",
+    "managedUpdaterUpgradePath": "1.0.17-to-1.0.18-passed",
     "scope": "post-v1.0.17-bounded-graph-fullscreen-and-release-readiness-receipt-fixes"
   },
   "targetRelease": {
@@ -64,19 +64,20 @@
         "target": "msi",
         "sourceFileName": "Long编辑_1.0.18_x64_zh-CN.msi",
         "fileName": "LongEdit_1.0.18_x64_zh-CN.msi",
-        "sizeBytes": 74186752,
-        "sha256": "f1f5c147c9ff8b04c5f8b8a486fdb6cdd32abedd771e19d092c54c2f5185be01",
+        "sizeBytes": 73863168,
+        "sha256": "379dc0ca3fc7cf362af6d29818b95ad98f38d03ae5ce78bdb53ceace20cb2955",
         "authenticodeStatus": "NotSigned"
       },
       {
         "target": "nsis",
         "sourceFileName": "Long编辑_1.0.18_x64-setup.exe",
         "fileName": "LongEdit_1.0.18_x64-setup.exe",
-        "sizeBytes": 65934312,
-        "sha256": "96db31068a1b00732ab289474ab000ee465d4565a9150d8cb8a055a8ac96869f",
+        "sizeBytes": 65784946,
+        "sha256": "477d1423909d660d5c60d238805b54248ac9f667b9f956036589ea55bf9e719d",
         "authenticodeStatus": "NotSigned"
       }
-    ]
+    ],
+    "hostedInstalledLifecycleRunId": 33378338422
   },
   "release": null,
   "releaseWarnings": [
@@ -86,5 +87,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-v1.0.18-hosted-installer-lifecycle"
+  "nextAction": "execute-m6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit"
 }

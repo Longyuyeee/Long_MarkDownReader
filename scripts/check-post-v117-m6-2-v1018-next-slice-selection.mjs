@@ -7,6 +7,7 @@ const predecessor = json('shared/post-v117-m6-1-graph-fullscreen-policy.json')
 const development = json('shared/development-version-policy.json')
 const successor = json('shared/post-v117-m6-3-v1018-release-readiness-policy.json')
 const candidatePackaging = json('shared/post-v117-m6-4-v1018-candidate-packaging-policy.json')
+const hostedLifecycle = json('shared/post-v117-m6-5-v1018-hosted-installer-lifecycle-policy.json')
 const graph = text('src/components/GraphView.vue')
 const yaml = text('src/views/YamlEditorView.vue')
 const xml = text('src/views/XmlEditorView.vue')
@@ -34,7 +35,9 @@ for (const token of ['data-testid="graph-fullscreen"', 'container.requestFullscr
 if (graph.includes('data-testid="graph-cluster-collapse"') || graph.includes('data-testid="graph-node-governance-ring"')) fail('M6-2 deferred graph boundary drift')
 for (const source of [yaml, xml, toml]) if (['schemaProvider', 'schemaUri', '$schema'].some(token => source.includes(token))) fail('M6-2 structured schema boundary drift')
 if (!odfEdit.includes('notes_depth')) fail('M6-2 ODP notes boundary drift')
-const expectedDevelopmentStage = candidatePackaging.status === 'accepted'
+const expectedDevelopmentStage = hostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+  ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit'
+  : candidatePackaging.status === 'accepted'
   ? `${candidatePackaging.selectedNextStage.id}-${candidatePackaging.selectedNextStage.name}`
   : successor.status === 'accepted' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : 'M6-3-v1.0.18-quality-debt-and-release-readiness'
 if (development.currentStage !== expectedDevelopmentStage || !['1.0.17', '1.0.18'].includes(development.runtimeBaseVersion)

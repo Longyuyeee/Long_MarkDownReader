@@ -437,6 +437,7 @@
     "apply:post-v117-m6-4-v1018-atomic-version-transition": "node scripts/apply-post-v117-m6-4-v1018-atomic-version-transition.mjs",
     "check:post-v117-m6-4-v1018-candidate-packaging": "node scripts/check-post-v117-m6-4-v1018-candidate-packaging.mjs",
     "check:post-v117-m6-5-v1018-hosted-installer-lifecycle": "node scripts/check-post-v117-m6-5-v1018-hosted-installer-lifecycle.mjs",
+    "import:post-v117-m6-5-v1018-hosted-evidence": "node scripts/import-post-v117-m6-5-v1018-hosted-evidence.mjs",
     "check:post-v116-m5-1-odp-producer-selection": "node scripts/check-post-v116-m5-1-odp-producer-selection.mjs",
     "audit:post-v116-m5-1-odp-producer-selection": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v116-m5-1-odp-producer-selection-audit.ps1",
     "check:post-v116-m5-2-odp-simple-slide-copy": "node scripts/check-post-v116-m5-2-odp-simple-slide-copy.mjs",

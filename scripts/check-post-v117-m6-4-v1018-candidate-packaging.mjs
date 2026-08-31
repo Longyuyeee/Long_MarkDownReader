@@ -7,6 +7,7 @@ const policy = json('shared/post-v117-m6-4-v1018-candidate-packaging-policy.json
 const predecessor = json('shared/post-v117-m6-3-v1018-release-readiness-policy.json')
 const development = json('shared/development-version-policy.json')
 const community = json('shared/v1-community-release-policy.json')
+const hostedLifecycle = json('shared/post-v117-m6-5-v1018-hosted-installer-lifecycle-policy.json')
 const pkg = json('package.json')
 const lock = json('package-lock.json')
 const tauri = json('src-tauri/tauri.conf.json')
@@ -27,10 +28,11 @@ if (pkg.version !== '1.0.18' || lock.version !== '1.0.18' || lock.packages?.['']
   || !/name = "tauri-app"\r?\nversion = "1\.0\.18"/.test(cargoLock)) fail('atomic runtime identity drift')
 if (development.runtimeBaseVersion !== '1.0.18' || development.publicVersion !== '1.0.17' || development.publicTag !== 'v1.0.17'
   || development.developmentTargetVersion !== '1.0.18' || development.releaseCandidate) fail('development candidate/public split drift')
+const hostedPassed = hostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
 if (community.appVersion !== '1.0.18'
-  || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== '1.0.17-to-1.0.18-pending'
+  || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== (hostedPassed ? '1.0.17-to-1.0.18-passed' : '1.0.17-to-1.0.18-pending')
   || community.targetRelease?.tag !== 'v1.0.18' || community.release !== null) fail('community candidate identity drift')
-if (!['状态：候选准备中，尚未公开发布', '状态：候选已打包，托管安装生命周期待验证，尚未公开发布'].some(token => notes.includes(token))
+if (!['状态：候选准备中，尚未公开发布', '状态：候选已打包，托管安装生命周期待验证，尚未公开发布', '状态：托管安装生命周期已通过，最终发布就绪审计中，尚未公开发布。'].some(token => notes.includes(token))
   || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.18 release notes boundary drift')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
 if (candidateTags) fail('v1.0.18 tag must not exist before publication')
@@ -48,11 +50,14 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
     || policy.artifacts?.[1]?.sizeBytes !== 65934312 || policy.artifacts?.[1]?.sha256 !== '96db31068a1b00732ab289474ab000ee465d4565a9150d8cb8a055a8ac96869f'
     || policy.runtimeSmoke?.checksPassed !== 6 || policy.runtimeSmoke?.routesPassed !== 11
     || policy.selectedNextStage?.id !== 'M6-5' || policy.nextAction !== 'execute-m6-5-v1.0.18-hosted-installer-lifecycle') fail('M6-4 accepted package receipt drift')
-  if (development.currentStage !== `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
-    || development.binaryVersionTransition !== 'v1.0.18-candidate-packaged'
-    || community.currentStatus !== 'v1.0.18-community-release-candidate-packaged-installed-lifecycle-pending'
+  const expectedStage = hostedPassed ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
+  const expectedTransition = hostedPassed ? 'v1.0.18-hosted-installer-lifecycle-passed' : 'v1.0.18-candidate-packaged'
+  const expectedCommunityStatus = hostedPassed ? 'v1.0.18-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.18-community-release-candidate-packaged-installed-lifecycle-pending'
+  if (development.currentStage !== expectedStage
+    || development.binaryVersionTransition !== expectedTransition
+    || community.currentStatus !== expectedCommunityStatus
     || community.releaseCandidate || !community.gates?.qualityGatePassed || !community.gates?.msiBuilt || !community.gates?.nsisBuilt
-    || !community.gates?.artifactHashesVerified || !community.gates?.localRuntimeSmokePassed || community.gates?.installedLifecyclePassed
+    || !community.gates?.artifactHashesVerified || !community.gates?.localRuntimeSmokePassed || community.gates?.installedLifecyclePassed !== hostedPassed
     || community.gates?.githubReleasePublished || community.candidate?.artifactSourceCommit !== policy.candidateSourceCommit
     || community.candidate?.artifacts?.length !== 2) fail('M6-4 accepted development/community state drift')
   if (evidence?.status !== 'passed' || evidence?.candidateSourceCommit !== policy.candidateSourceCommit || evidence?.differencesAndCorrections?.length !== 4

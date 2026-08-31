@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.18 M6-5 托管生命周期已关闭：** GitHub Actions 运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 从精确候选 `5988c03c…` 重建 MSI/NSIS，22/22 生命周期、18/18 安装态检查、11/11 路由、7/7 管理回滚全部通过，失败 0。29 个脱敏证据文件与 14 张已人工复核截图已导入，仓库规范树摘要 `1dbb4732…3013`。唯一接续点为 **M6-6 v1.0.18 最终产物清单与发布就绪审计**；完成前仍不得创建 Tag/Release。详见 [`Post_v1.0.17_M6_5B_v1.0.18_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md`](./Post_v1.0.17_M6_5B_v1.0.18_Hosted_Installer_Lifecycle_Closure_Audit_2026-08-31.md)。
+
 > **2026-08-31 v1.0.18 M6-5A 换机证据身份纠偏：** 换机审计确认产品代码和 Git 证据未漂移，失败来自 `core.autocrlf=true` 与历史检查器原始字节哈希。源码/JSON 现只把 LF/CRLF 视为等价表示并同时核对大小与摘要，二进制截图仍按原始字节核验；M6-1 策略改记 Git blob 规范摘要。纠偏不改变产品、版本或发布状态。唯一接续点仍是下载并独立审计成功运行 `33378338422` 的 M6-5 artifact，完成前不得进入 M6-6 或发布。详见 [`Post_v1.0.17_M6_5A_Cross_Machine_Evidence_Identity_Correction_Audit_2026-08-31.md`](./Post_v1.0.17_M6_5A_Cross_Machine_Evidence_Identity_Correction_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.18 M6-5 换机暂停交接：** 远端 `main` 与本地共同 HEAD 为 `6d208bcf7d0ba430b7df478718fe636fe91c6e34`，工作区干净；产品候选固定为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`。GitHub Actions 运行 [`33378338422`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422) 未取消，暂停时已通过身份/依赖步骤并正在构建候选 MSI/NSIS，最终结论未知。换机后先查看该运行，禁止重复触发或提前发布。完整命令、完成事实、严格接续顺序与禁止边界见 [`Development_Handoff_v1.0.18_M6-5_2026-08-31.md`](./Development_Handoff_v1.0.18_M6-5_2026-08-31.md)。
