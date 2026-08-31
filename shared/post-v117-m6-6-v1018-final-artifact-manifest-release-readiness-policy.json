@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-6",
+  "name": "v1.0.18-final-artifact-manifest-and-release-readiness-audit",
+  "status": "accepted-ready-to-publish",
+  "predecessor": "M6-5",
+  "candidateSourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+  "candidateVersion": "1.0.18",
+  "publicVersion": "1.0.17",
+  "hostedRunId": 33378338422,
+  "hostedArtifactId": 9754106849,
+  "artifacts": [
+    {
+      "target": "nsis",
+      "sourceFileName": "Long编辑_1.0.18_x64-setup.exe",
+      "fileName": "LongEdit_1.0.18_x64-setup.exe",
+      "sizeBytes": 65784946,
+      "sha256": "477d1423909d660d5c60d238805b54248ac9f667b9f956036589ea55bf9e719d",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "msi",
+      "sourceFileName": "Long编辑_1.0.18_x64_zh-CN.msi",
+      "fileName": "LongEdit_1.0.18_x64_zh-CN.msi",
+      "sizeBytes": 73863168,
+      "sha256": "379dc0ca3fc7cf362af6d29818b95ad98f38d03ae5ce78bdb53ceace20cb2955",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "fa9ff4cbabaa6a480b76942a6be19ae21ca9feb313211a3e618d308947e74c79"
+  },
+  "selectedNextStage": {
+    "id": "M6-7",
+    "name": "v1.0.18-tag-release-and-remote-asset-verification"
+  },
+  "releaseReady": true,
+  "releasePublished": false,
+  "enterpriseReleaseCandidate": false,
+  "sourceUserContentIncluded": false
+}

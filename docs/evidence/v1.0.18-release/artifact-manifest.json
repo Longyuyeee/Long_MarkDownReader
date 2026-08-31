@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "stage": "M6-6",
+  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "appVersion": "1.0.18",
+  "capturedAt": "2026-08-31T00:00:00Z",
+  "sourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+  "sourceVersion": "1.0.18",
+  "build": {
+    "workflow": ".github/workflows/v118-candidate-lifecycle.yml",
+    "runId": 33378338422,
+    "status": "passed",
+    "msiBundlePassed": true,
+    "nsisBundlePassed": true
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "evidence": "docs/evidence/post-v117-m6-3-v1018-release-readiness/audit.json"
+  },
+  "artifacts": [
+    {
+      "target": "nsis",
+      "sourceFileName": "Long编辑_1.0.18_x64-setup.exe",
+      "fileName": "LongEdit_1.0.18_x64-setup.exe",
+      "sizeBytes": 65784946,
+      "sha256": "477d1423909d660d5c60d238805b54248ac9f667b9f956036589ea55bf9e719d",
+      "authenticodeStatus": "NotSigned",
+      "productVersion": "1.0.18"
+    },
+    {
+      "target": "msi",
+      "sourceFileName": "Long编辑_1.0.18_x64_zh-CN.msi",
+      "fileName": "LongEdit_1.0.18_x64_zh-CN.msi",
+      "sizeBytes": 73863168,
+      "sha256": "379dc0ca3fc7cf362af6d29818b95ad98f38d03ae5ce78bdb53ceace20cb2955",
+      "authenticodeStatus": "NotSigned",
+      "productVersion": "1.0.18"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "fa9ff4cbabaa6a480b76942a6be19ae21ca9feb313211a3e618d308947e74c79"
+  },
+  "runtimeSmoke": {
+    "status": "passed-real-tauri-debug-webview2",
+    "checksPassed": 6,
+    "routesPassed": 11,
+    "txtSaveReopenPassed": true,
+    "jsonSaveReopenPassed": true,
+    "sourceUserContentIncluded": false,
+    "evidence": "docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json"
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 33378338422,
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33378338422",
+    "sourceCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false,
+    "evidenceRoot": "docs/evidence/post-v117-m6-5-v1018-hosted-installer-lifecycle",
+    "evidenceManifest": "docs/evidence/post-v117-m6-5-v1018-hosted-installer-lifecycle/import-manifest.json"
+  },
+  "releaseReceipt": "release-receipt.json",
+  "boundaries": {
+    "releaseCandidate": true,
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "authenticodeRequired": false,
+    "managedUpdaterReleaseAssetsPrepared": true,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false,
+    "releaseAssetsPublished": false,
+    "artifactFilesCommitted": false,
+    "sourceUserContentIncluded": false
+  }
+}

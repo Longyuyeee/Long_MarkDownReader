@@ -8,6 +8,8 @@ const evidence = json('docs/evidence/post-v117-m6-3-v1018-release-readiness/audi
 const development = json('shared/development-version-policy.json')
 const successor = json('shared/post-v117-m6-4-v1018-candidate-packaging-policy.json')
 const hostedLifecycle = json('shared/post-v117-m6-5-v1018-hosted-installer-lifecycle-policy.json')
+const finalReadiness = fs.existsSync('shared/post-v117-m6-6-v1018-final-artifact-manifest-release-readiness-policy.json')
+  ? json('shared/post-v117-m6-6-v1018-final-artifact-manifest-release-readiness-policy.json') : null
 const release = json('shared/v1-community-release-policy.json')
 const releaseChecker = read('scripts/check-v1-community-release.mjs')
 const audit = read('docs/Post_v1.0.17_M6_3_v1.0.18_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md')
@@ -38,7 +40,9 @@ if (evidence.status !== 'passed' || evidence.actual?.completeRustPassed !== 548 
 if (policy.selectedNextStage?.id !== 'M6-4' || policy.selectedNextStage?.name !== 'v1.0.18-atomic-version-transition-and-candidate-packaging'
   || policy.nextAction !== 'execute-m6-4-v1.0.18-atomic-version-transition-and-candidate-packaging') fail('M6-4 handoff drift')
 const runtimeAccepted = ['atomic-transition-complete-package-pending', 'accepted'].includes(successor.status) ? development.runtimeBaseVersion === '1.0.18' : development.runtimeBaseVersion === '1.0.17'
-const expectedDevelopmentStage = hostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
+const expectedDevelopmentStage = finalReadiness?.status === 'accepted-ready-to-publish'
+  ? 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
+  : hostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
   ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit'
   : successor.status === 'accepted' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
 if (development.currentStage !== expectedDevelopmentStage || !runtimeAccepted
