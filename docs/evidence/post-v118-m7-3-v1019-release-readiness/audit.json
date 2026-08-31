@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-3",
+  "status": "passed",
+  "capturedAt": "2026-08-31T16:30:00Z",
+  "sourceCommit": "233aa07c8d9fdb3b4b59407f4aa7c70d69683a5b",
+  "actual": {
+    "completeRustPassed": 559,
+    "completeRustFailures": 0,
+    "completeRustIgnored": 5,
+    "patchReleaseCi": "passed-first-attempt",
+    "frontendModulesBuilt": 6275,
+    "formatCount": 43,
+    "extensionCount": 91,
+    "cargoCheck": "passed",
+    "productionVulnerabilities": 0,
+    "supplementalStrictClippy": {
+      "status": "existing-baseline-debt",
+      "existingFindings": 43,
+      "newSchemaSourceFindings": 0,
+      "releaseGate": false
+    }
+  },
+  "differencesAndCorrections": [],
+  "decision": {
+    "packagingEligible": true,
+    "binaryVersionChanged": false,
+    "candidatePackageBuilt": false,
+    "releaseCandidate": false,
+    "nextStage": "M7-4-v1.0.19-atomic-version-transition-and-candidate-packaging"
+  },
+  "privacy": {
+    "sourceUserContentIncluded": false,
+    "localAbsolutePathsIncluded": false
+  }
+}

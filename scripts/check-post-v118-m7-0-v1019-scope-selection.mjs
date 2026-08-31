@@ -42,7 +42,7 @@ if (evidence.stage !== 'M7-0' || evidence.status !== 'accepted' || evidence.actu
 if (development.currentStage === 'M7-1-local-json-schema-sidecar-provider-mapping-feasibility-audit') {
   for (const identity of evidence.actual?.sourceIdentities ?? []) if (!fs.existsSync(identity.path) || !matchesIdentity(identity.path, identity)) fail(`M7-0 source identity drift: ${identity.path}`)
 }
-if (development.runtimeBaseVersion !== '1.0.18' || development.publicVersion !== '1.0.18' || development.developmentTargetVersion !== '1.0.19' || !['M7-1-local-json-schema-sidecar-provider-mapping-feasibility-audit', 'M7-2-bounded-local-json-schema-product-implementation-and-real-desktop-audit', 'M7-3-v1019-quality-debt-and-release-readiness-audit'].includes(development.currentStage) || development.binaryVersionTransition !== 'v1.0.18-release-and-managed-updater-closed' || development.releaseCandidate) fail('M7-1/M7-2/M7-3 development handoff drift')
+if (development.runtimeBaseVersion !== '1.0.18' || development.publicVersion !== '1.0.18' || development.developmentTargetVersion !== '1.0.19' || !/^M7-(?:[1-9]|[1-9]\d)-/.test(development.currentStage) || development.binaryVersionTransition !== 'v1.0.18-release-and-managed-updater-closed' || development.releaseCandidate) fail('M7 successor development handoff drift')
 for (const [document, tokens] of [[audit, ['最初需求', '本地 JSON Schema sidecar', '未配置 Schema 时不制造错误', 'M7-1']], [roadmap, ['M7-0', 'M7-1', 'JSON/JSONC', '联网']], [alignment, ['M7-0 已完成', 'M7-1 禁止联网与远程自动解析']]]) for (const token of tokens) if (!document.includes(token)) fail(`M7-0 document missing: ${token}`)
 
 if (failures.length) { console.error(`M7-0 scope selection failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-3",
+  "name": "v1.0.19-quality-debt-and-release-readiness-audit",
+  "status": "accepted",
+  "predecessor": "M7-2",
+  "qualityGateBaselineCommit": "233aa07c8d9fdb3b4b59407f4aa7c70d69683a5b",
+  "runtimeBaseVersion": "1.0.18",
+  "publicVersion": "1.0.18",
+  "developmentTargetVersion": "1.0.19",
+  "qualityDebt": {
+    "completeRustPassed": 559,
+    "completeRustFailed": 0,
+    "completeRustIgnored": 5,
+    "supplementalStrictClippyExistingFindings": 43,
+    "newSchemaSourceFindings": 0,
+    "strictClippyIsReleaseGate": false
+  },
+  "releaseGate": {
+    "fullPatchReleaseCiPassed": true,
+    "frontendModulesBuilt": 6275,
+    "formatCount": 43,
+    "extensionCount": 91,
+    "cargoCheckPassed": true,
+    "productionVulnerabilities": 0,
+    "packagingEligible": true
+  },
+  "selectedNextStage": {
+    "id": "M7-4",
+    "name": "v1.0.19-atomic-version-transition-and-candidate-packaging"
+  },
+  "binaryVersionChanged": false,
+  "candidatePackageBuilt": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m7-4-v1.0.19-atomic-version-transition-and-candidate-packaging"
+}

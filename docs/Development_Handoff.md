@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-08-31 v1.0.19 M7-3 质量与发布就绪已通过：** 全仓 Rust 559 通过、0 失败、5 忽略；完整 `ci:patch-release` 首次通过，6,275 前端模块、43 格式/91 扩展名、Rust 编译与生产依赖 0 漏洞保持成立。补充严格 Clippy 的 43 条均为历史债，新增 Schema 模块/命令 0 命中。唯一接续点为 **M7-4 v1.0.19 原子版本迁移与候选打包**；本阶段仍为 1.0.18，未生成安装包。详见 [`Post_v1.0.18_M7_3_v1.0.19_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md`](./Post_v1.0.18_M7_3_v1.0.19_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md)。
+
 > **2026-08-31 v1.0.19 M7-2 产品验收已通过：** 本地 JSON/JSONC Schema 已接入只读 Tauri 命令和既有编辑器，语法/Schema 状态分离、sidecar 来源、脱敏诊断、源码定位与变化刷新均通过；外部文件、大文件模式、Schema 递归与远程引用保持关闭。13 个命令测试、9 个内核测试、前端构建以及 1280×800 / 720×680 真实桌面矩阵通过，运行时错误 0，源摘要不变。唯一接续点为 **M7-3 v1.0.19 质量债与发布就绪审计**；完整门禁通过前仍保持 1.0.18、不打包。详见 [`Post_v1.0.18_M7_2_Local_JSON_Schema_Product_and_Desktop_Audit_2026-08-31.md`](./Post_v1.0.18_M7_2_Local_JSON_Schema_Product_and_Desktop_Audit_2026-08-31.md)。
 
 > **2026-08-31 v1.0.19 M7-1 可行性已通过：** 本地 JSON/JSONC Schema 内核已冻结同 stem `.schema.json`、Draft 2020-12、1 MiB / 5 万节点 / 64 引用 / 200 诊断预算；关闭依赖网络/文件解析并再次拒绝所有非内部引用。9 个内核测试、28 个 JSON 回归、Rust 检查和真实只读临时文件通过。当前仍无命令/UI，不是产品验收；唯一接续点为 **M7-2 有界产品实现与真实桌面审计**，完成前不提升版本、不打包、不发布。详见 [`Post_v1.0.18_M7_1_Local_JSON_Schema_Feasibility_Audit_2026-08-31.md`](./Post_v1.0.18_M7_1_Local_JSON_Schema_Feasibility_Audit_2026-08-31.md)。
