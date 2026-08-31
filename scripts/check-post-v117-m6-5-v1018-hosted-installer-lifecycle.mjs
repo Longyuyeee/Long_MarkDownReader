@@ -35,7 +35,8 @@ const hostedPassed = policy.status === 'hosted-installer-lifecycle-passed-releas
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
 const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
-const expectedDevelopmentStage = managedUpdaterComplete && /^M7-[0-9]+-/.test(development.currentStage)
+const laterM7Active = managedUpdaterComplete && /^M7-[0-9]+-/.test(development.currentStage)
+const expectedDevelopmentStage = laterM7Active
   ? development.currentStage
   : releasePublished
   ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation'
@@ -44,7 +45,9 @@ const expectedDevelopmentStage = managedUpdaterComplete && /^M7-[0-9]+-/.test(de
   : hostedPassed
   ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit'
   : `${policy.stage}-${policy.name}`
-const expectedVersionTransition = managedUpdaterComplete
+const expectedVersionTransition = laterM7Active
+  ? development.binaryVersionTransition
+  : managedUpdaterComplete
   ? 'v1.0.18-release-and-managed-updater-closed'
   : releasePublished
   ? 'v1.0.18-public-release-published'

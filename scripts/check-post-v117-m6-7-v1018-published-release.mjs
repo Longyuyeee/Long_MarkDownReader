@@ -27,13 +27,14 @@ for (const expected of [...predecessor.artifacts, predecessor.checksumFile]) {
 if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed'
   || !manifest.boundaries?.releaseAssetsPublished || !manifest.boundaries?.managedUpdaterReleaseAssetsPresent) fail('published artifact manifest drifted')
 const updaterComplete = updater.status === 'hosted-managed-update-passed'
-if (community.currentStatus !== 'v1.0.18-community-release-published' || !community.releaseCandidate || !community.gates?.githubReleasePublished
+const laterCandidateActive = community.appVersion === '1.0.19' && /^M7-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
+if (!laterCandidateActive && (community.currentStatus !== 'v1.0.18-community-release-published' || !community.releaseCandidate || !community.gates?.githubReleasePublished
   || community.release?.databaseId !== policy.releaseDatabaseId || community.release?.taggedCommit !== policy.candidateSourceCommit
-  || community.nextAction !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closure-complete' : 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation')) fail('community published state drifted')
+  || community.nextAction !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closure-complete' : 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation'))) fail('community published state drifted')
 if (development.publicVersion !== '1.0.18' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit
-  || development.runtimeBaseVersion !== '1.0.18' || development.developmentTargetVersion !== '1.0.19'
+  || !['1.0.18', '1.0.19'].includes(development.runtimeBaseVersion) || development.developmentTargetVersion !== '1.0.19'
   || !(updaterComplete && /^M7-[0-9]+-/.test(development.currentStage) || development.currentStage === 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation')
-  || development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : 'v1.0.18-public-release-published')) fail('development/public handoff drifted')
+  || (!laterCandidateActive && development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : 'v1.0.18-public-release-published'))) fail('development/public handoff drifted')
 
 if (failures.length) {
   console.error(`M6-7 published release check failed:\n- ${failures.join('\n- ')}`)

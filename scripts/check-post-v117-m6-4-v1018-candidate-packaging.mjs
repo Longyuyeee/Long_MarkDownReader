@@ -25,23 +25,24 @@ const evidence = fs.existsSync('docs/evidence/post-v117-m6-4-v1018-candidate-pac
 const runtimeSmoke = fs.existsSync('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json') ? json('docs/evidence/post-v117-m6-4-v1018-candidate-packaging/runtime-smoke/audit-manifest.json') : null
 const failures = []
 const fail = message => failures.push(message)
+const laterCandidateActive = pkg.version === '1.0.19' && community.appVersion === '1.0.19' && /^M7-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
 
 if (policy.stage !== 'M6-4' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) fail('M6-4 predecessor chain drift')
 if (policy.candidateVersion !== '1.0.18' || policy.publicVersion !== '1.0.17' || policy.atomicVersionFileCount !== 44
   || policy.releaseCandidate || policy.installedLifecyclePassed || policy.githubReleasePublished || policy.sourceUserContentIncluded) fail('M6-4 version/release/privacy boundary drift')
-if (pkg.version !== '1.0.18' || lock.version !== '1.0.18' || lock.packages?.['']?.version !== '1.0.18'
+if (!laterCandidateActive && (pkg.version !== '1.0.18' || lock.version !== '1.0.18' || lock.packages?.['']?.version !== '1.0.18'
   || tauri.version !== '1.0.18' || matrix.appVersion !== '1.0.18' || !cargo.includes('version = "1.0.18"')
-  || !/name = "tauri-app"\r?\nversion = "1\.0\.18"/.test(cargoLock)) fail('atomic runtime identity drift')
+  || !/name = "tauri-app"\r?\nversion = "1\.0\.18"/.test(cargoLock))) fail('atomic runtime identity drift')
 const hostedPassed = hostedLifecycle.status === 'hosted-installer-lifecycle-passed-release-readiness-pending'
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
 const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
-if (development.runtimeBaseVersion !== '1.0.18' || development.publicVersion !== (releasePublished ? '1.0.18' : '1.0.17')
+if (!['1.0.18', '1.0.19'].includes(development.runtimeBaseVersion) || development.publicVersion !== (releasePublished ? '1.0.18' : '1.0.17')
   || development.publicTag !== (releasePublished ? 'v1.0.18' : 'v1.0.17')
   || development.developmentTargetVersion !== (releasePublished ? '1.0.19' : '1.0.18') || development.releaseCandidate) fail('development candidate/public split drift')
-if (community.appVersion !== '1.0.18'
+if (!laterCandidateActive && (community.appVersion !== '1.0.18'
   || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== (managedUpdaterComplete ? '1.0.17-to-1.0.18-passed' : '1.0.17-to-1.0.18-pending')
-  || community.targetRelease?.tag !== 'v1.0.18' || (releasePublished ? community.release?.databaseId !== publishedRelease.releaseDatabaseId : community.release !== null)) fail('community candidate identity drift')
+  || community.targetRelease?.tag !== 'v1.0.18' || (releasePublished ? community.release?.databaseId !== publishedRelease.releaseDatabaseId : community.release !== null))) fail('community candidate identity drift')
 if (!['状态：候选准备中，尚未公开发布', '状态：候选已打包，托管安装生命周期待验证，尚未公开发布', '状态：托管安装生命周期已通过，最终发布就绪审计中，尚未公开发布。', '状态：发布就绪，尚未公开发布。', '状态：已正式发布；三项公开附件已完成远端回下载复核。'].some(token => notes.includes(token))
   || !notes.includes('NotSigned') || !notes.includes('安装生命周期')) fail('v1.0.18 release notes boundary drift')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
@@ -63,13 +64,13 @@ if (policy.status === 'atomic-transition-complete-package-pending') {
   const expectedStage = managedUpdaterComplete && /^M7-[0-9]+-/.test(development.currentStage) ? development.currentStage : releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : releaseReady ? 'M6-7-v1.0.18-tag-release-and-remote-asset-verification' : hostedPassed ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit' : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
   const expectedTransition = managedUpdaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : releaseReady ? 'v1.0.18-release-ready' : hostedPassed ? 'v1.0.18-hosted-installer-lifecycle-passed' : 'v1.0.18-candidate-packaged'
   const expectedCommunityStatus = releasePublished ? 'v1.0.18-community-release-published' : releaseReady ? 'v1.0.18-community-release-ready-to-publish' : hostedPassed ? 'v1.0.18-community-release-hosted-lifecycle-passed-final-release-audit-pending' : 'v1.0.18-community-release-candidate-packaged-installed-lifecycle-pending'
-  if (development.currentStage !== expectedStage
+  if (!laterCandidateActive && (development.currentStage !== expectedStage
     || development.binaryVersionTransition !== expectedTransition
     || community.currentStatus !== expectedCommunityStatus
     || community.releaseCandidate !== releaseReady || !community.gates?.qualityGatePassed || !community.gates?.msiBuilt || !community.gates?.nsisBuilt
     || !community.gates?.artifactHashesVerified || !community.gates?.localRuntimeSmokePassed || community.gates?.installedLifecyclePassed !== hostedPassed
     || community.gates?.githubReleasePublished !== releasePublished || community.candidate?.artifactSourceCommit !== policy.candidateSourceCommit
-    || community.candidate?.artifacts?.length !== 2) fail('M6-4 accepted development/community state drift')
+    || community.candidate?.artifacts?.length !== 2)) fail('M6-4 accepted development/community state drift')
   if (evidence?.status !== 'passed' || evidence?.candidateSourceCommit !== policy.candidateSourceCommit || evidence?.differencesAndCorrections?.length !== 4
     || runtimeSmoke?.appVersion !== '1.0.18' || runtimeSmoke?.checks?.filter(item => item.status === 'passed').length !== 6
     || evidence?.actual?.runtimeSmoke?.routesPassed !== 11 || !evidence?.actual?.runtimeSmoke?.screenshotsVisuallyReviewed) fail('M6-4 real evidence drift')

@@ -32,7 +32,7 @@ if (evidence.actual?.noSchema?.diagnostics?.length !== 0 || evidence.actual?.inv
 if (evidence.actual?.invalid?.diagnostics?.some(item => !item.includes('[文档值已隐藏]')) || evidence.actual?.invalid?.overflow > 0 || evidence.actual?.validNarrow?.overflow > 0) fail('M7-2 masking/responsive evidence drift')
 for (const screenshot of evidence.screenshots || []) if (!fs.existsSync(`docs/evidence/post-v118-m7-2-local-json-schema-desktop/${screenshot}`)) fail(`M7-2 screenshot missing: ${screenshot}`)
 
-if (policy.selectedNextStage?.id !== 'M7-3' || !/^M7-(?:[3-9]|[1-9]\d)-/.test(development.currentStage) || development.runtimeBaseVersion !== '1.0.18' || development.releaseCandidate) fail('M7-3 successor handoff drift')
+if (policy.selectedNextStage?.id !== 'M7-3' || !/^M7-(?:[3-9]|[1-9]\d)-/.test(development.currentStage) || !['1.0.18', '1.0.19'].includes(development.runtimeBaseVersion) || development.releaseCandidate) fail('M7-3 successor handoff drift')
 for (const [document, tokens] of [[audit, ['产品验收通过', '13 通过', '9 通过', '1280×800', '720×680', 'M7-3']], [roadmap, ['M7-2 产品验收通过', 'M7-3']], [handoff, ['M7-2 产品验收已通过', 'M7-3']]]) for (const token of tokens) if (!document.includes(token)) fail(`M7-2 document missing: ${token}`)
 
 if (failures.length) { console.error(`M7-2 local JSON Schema product audit failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

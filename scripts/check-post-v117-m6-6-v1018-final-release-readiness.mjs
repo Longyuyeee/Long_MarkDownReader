@@ -27,12 +27,15 @@ if (policy.status !== 'accepted-ready-to-publish' || policy.candidateSourceCommi
 if (!policy.releaseReady || policy.releasePublished || policy.enterpriseReleaseCandidate || policy.sourceUserContentIncluded) fail('release readiness boundary drifted')
 const releasePublished = published?.status === 'published-and-remote-assets-verified'
 const updaterComplete = updater?.status === 'hosted-managed-update-passed'
+const laterCandidateActive = community.appVersion === '1.0.19' && /^M7-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
 const expectedManifestStatus = releasePublished ? 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' : 'ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed'
 if (manifest.stage !== policy.stage || manifest.status !== expectedManifestStatus
   || manifest.sourceCommit !== policy.candidateSourceCommit || manifest.sourceVersion !== policy.candidateVersion) fail('artifact manifest identity drifted')
-if (policy.artifacts?.length !== 2 || manifest.artifacts?.length !== 2 || community.candidate?.artifacts?.length !== 2) fail('final installer count drifted')
+if (policy.artifacts?.length !== 2 || manifest.artifacts?.length !== 2 || (!laterCandidateActive && community.candidate?.artifacts?.length !== 2)) fail('final installer count drifted')
 for (const expected of policy.artifacts) {
-  for (const actual of [manifest.artifacts.find(item => item.target === expected.target), community.candidate?.artifacts?.find(item => item.target === expected.target)]) {
+  const receipts = [manifest.artifacts.find(item => item.target === expected.target)]
+  if (!laterCandidateActive) receipts.push(community.candidate?.artifacts?.find(item => item.target === expected.target))
+  for (const actual of receipts) {
     if (!actual || actual.sourceFileName !== expected.sourceFileName || actual.fileName !== expected.fileName || actual.sizeBytes !== expected.sizeBytes
       || actual.sha256 !== expected.sha256 || actual.authenticodeStatus !== 'NotSigned') fail(`${expected.target} release mapping drifted`)
   }
@@ -44,12 +47,12 @@ if (manifest.hostedInstalledLifecycle?.lifecycleChecksPassed !== 22 || manifest.
   || manifest.hostedInstalledLifecycle?.installedRoutesPassed !== 11 || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7
   || manifest.hostedInstalledLifecycle?.failedChecks !== 0) fail('hosted lifecycle facts drifted')
 if (imported.repositoryCanonicalEvidence?.canonicalTreeSha256 !== '1dbb47325812f166608921528bb88f08275decf980450a7d36e1dfc8d12b3013') fail('canonical evidence receipt drifted')
-if (community.currentStatus !== (releasePublished ? 'v1.0.18-community-release-published' : 'v1.0.18-community-release-ready-to-publish')
+if (!laterCandidateActive && (community.currentStatus !== (releasePublished ? 'v1.0.18-community-release-published' : 'v1.0.18-community-release-ready-to-publish')
   || !community.releaseCandidate || (releasePublished ? community.release?.databaseId !== published.releaseDatabaseId : community.release !== null)
-  || community.nextAction !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closure-complete' : releasePublished ? 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'execute-m6-7-v1.0.18-tag-release-and-remote-asset-verification')) fail('community ready state drifted')
+  || community.nextAction !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closure-complete' : releasePublished ? 'execute-m6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'execute-m6-7-v1.0.18-tag-release-and-remote-asset-verification'))) fail('community ready state drifted')
 const expectedDevelopmentStage = updaterComplete && /^M7-[0-9]+-/.test(development.currentStage) ? development.currentStage : releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
 if (development.currentStage !== expectedDevelopmentStage
-  || development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : 'v1.0.18-release-ready')
+  || (!laterCandidateActive && development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : 'v1.0.18-release-ready'))
   || development.publicVersion !== (releasePublished ? '1.0.18' : '1.0.17')) fail('development ready handoff drifted')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
 if (releasePublished ? execFileSync('git', ['rev-list', '-n', '1', 'v1.0.18'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit : Boolean(candidateTags)) fail('v1.0.18 tag/publication boundary drifted')

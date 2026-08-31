@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.0.19",
-  "runtimeBaseVersion": "1.0.18",
+  "runtimeBaseVersion": "1.0.19",
   "publicVersion": "1.0.18",
   "publicTag": "v1.0.18",
   "publicTagCommit": "5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M7-4-v1019-atomic-version-transition-and-candidate-packaging",
-  "binaryVersionTransition": "v1.0.18-release-and-managed-updater-closed",
-  "displayLabel": "v1.0.18 已收口 · v1.0.19 M7-4 原子提版与候选打包"
+  "currentStage": "M7-4-v1.0.19-atomic-version-transition-and-candidate-packaging",
+  "binaryVersionTransition": "v1.0.19-quality-gate-pending",
+  "displayLabel": "v1.0.19 候选质量门与打包中 · 当前公开 v1.0.18 · M7-4"
 }

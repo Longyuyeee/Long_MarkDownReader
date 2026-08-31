@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "stage": "M7-4",
+  "name": "v1.0.19-atomic-version-transition-and-candidate-packaging",
+  "status": "atomic-transition-complete-package-pending",
+  "predecessor": "M7-3",
+  "transitionBaseCommit": "a21041bbf452f7d714387566e6755aea0e325b0d",
+  "candidateSourceCommit": null,
+  "candidateVersion": "1.0.19",
+  "publicVersion": "1.0.18",
+  "atomicVersionFileCount": 44,
+  "qualityGatePassed": false,
+  "candidatePackageBuilt": false,
+  "artifacts": [],
+  "runtimeSmoke": null,
+  "installedLifecyclePassed": false,
+  "githubReleasePublished": false,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "selectedNextStage": {
+    "id": "M7-5",
+    "name": "v1.0.19-hosted-installer-lifecycle"
+  },
+  "nextAction": "push-atomic-transition-run-full-quality-gate-and-build-real-msi-nsis"
+}
