@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.19-U1-POST-UPGRADE",
+  "capturedAt": "2026-08-31T17:12:37.475Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows updated through the installed v1.0.18 client",
+  "release": {
+    "available": false,
+    "currentVersion": "1.0.19",
+    "latestVersion": "1.0.19",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.19",
+    "releaseNotes": "# Long编辑 v1.0.19 发布说明\n\n状态：已正式发布；三个公开附件已完成独立回下载与 SHA-256 复核\n\nv1.0.19 聚焦 v1.0.18 之后完成真实验收的最小增量：为资料库内 JSON/JSONC 增加离线、有界、只读的本地 JSON Schema sidecar 验证。\n\n## 新增\n\n- 对 `document.json` / `document.jsonc` 确定性发现同目录 `document.schema.json`。\n- 支持 Draft 2020-12、JSONC 注释/尾随逗号、内部 fragment 引用和最多 200 条脱敏诊断。\n- 在既有 JSON 编辑器中分开显示语法与 Schema 状态、来源、JSONPath、行列，并可点击定位源码。\n- sidecar 变化可自动刷新；未配置 Schema 时不制造业务错误。\n\n## 安全与边界\n\n- Schema 最大 1 MiB、5 万节点、64 个引用；网络、远程 URI、文件引用与跨目录软链接全部拒绝。\n- 外部文件、大文件范围模式和 `.schema.json` 自身递归发现均关闭。\n- 验证过程不写文档或 Schema；显式保存和磁盘冲突保护保持不变。\n- 当前社区发布仍为 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen 提示。\n\n## 验证与发布状态\n\n功能阶段已通过 13 个命令测试、9 个内核测试和真实 Tauri 1280×800 / 720×680 状态矩阵；全仓 Rust 为 559 通过、0 失败、5 忽略，完整补丁发布门和生产依赖 0 漏洞已通过。\n\n固定候选 `9655b021…` 已通过本地 WebView2 6/6 + 11/11，以及 GitHub 托管 MSI/NSIS 重建、22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。两个发布安装器均为 `NotSigned`；annotated Tag `v1.0.19` 精确解析到该候选，GitHub Release 的 NSIS、MSI 与 `SHA256SUMS.txt` 已从公开地址重新下载并逐项匹配冻结清单。剩余收口项仅为 v1.0.18 → v1.0.19 官方应用内更新观察。\n",
+    "publishedAt": "2026-08-31T16:45:32Z",
+    "installerName": "LongEdit_1.0.19_x64-setup.exe",
+    "installerSize": 66777917,
+    "installerSha256": "996e12218a24e1689947ec0c358720cc84cc136ffb2ac581fe31682fb8516582"
+  },
+  "manualCheckVisible": true,
+  "settingsNavigation": {
+    "beforeHash": "#/library",
+    "entryVisible": true,
+    "entryText": "当前资料库 v1.0.19devManaged Updater Synthetic Vault",
+    "afterHash": "#/settings?category=system",
+    "systemCategorySelected": true
+  },
+  "upToDateSurface": {
+    "text": "软件更新当前版本 v1.0.19 · 每 24 小时自动检查，也可随时手动检查当前已是最新版本 v1.0.19。 检查更新",
+    "visible": true,
+    "viewport": {
+      "top": 418.4375,
+      "bottom": 515.625,
+      "width": 690,
+      "height": 97.1875
+    }
+  },
+  "screenshot": "managed-updater-current.jpg",
+  "sourceUserContentIncluded": false
+}

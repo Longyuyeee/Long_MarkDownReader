@@ -53,7 +53,7 @@ if (!laterCandidateActive && (community.currentStatus !== (releasePublished ? 'v
 const expectedDevelopmentStage = updaterComplete && /^M7-[0-9]+-/.test(development.currentStage) ? development.currentStage : releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
 if (development.currentStage !== expectedDevelopmentStage
   || (!laterCandidateActive && development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : 'v1.0.18-release-ready'))
-  || development.publicVersion !== (laterCandidateActive && development.binaryVersionTransition === 'v1.0.19-public-release-published' ? '1.0.19' : releasePublished ? '1.0.18' : '1.0.17')) fail('development ready handoff drifted')
+  || development.publicVersion !== (laterCandidateActive && ['v1.0.19-public-release-published', 'v1.0.19-release-and-managed-updater-closed'].includes(development.binaryVersionTransition) ? '1.0.19' : releasePublished ? '1.0.18' : '1.0.17')) fail('development ready handoff drifted')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
 if (releasePublished ? execFileSync('git', ['rev-list', '-n', '1', 'v1.0.18'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit : Boolean(candidateTags)) fail('v1.0.18 tag/publication boundary drifted')
 
