@@ -5,7 +5,7 @@
 当前状态：**已正式发布，远端附件复核通过；官方应用内更新观察待 M8-9 执行。**
 
 - 发布通道：`community-unsigned`。
-- 当前边界：社区版双包均为 `NotSigned`；企业 Authenticode 候选继续独立，不由本社区版本冒充。
+- 当前边界：社区版双包均为 `NotSigned`；企业 Authenticode 候选继续独立并保持 `releaseCandidate=false`，不由本社区版本冒充。
 - 当前公开稳定版：[v1.0.20](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.20)，Tag 精确解析到 `a08ab6a5471f9f8b163403edadb554ea6446c3f4`。
 - 用户获取方式：从官方 GitHub Release **手动下载安装**；无签名包可能显示未知发布者或 SmartScreen 提示，请核对 `SHA256SUMS.txt`。
 
