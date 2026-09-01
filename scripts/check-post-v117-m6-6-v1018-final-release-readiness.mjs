@@ -27,7 +27,7 @@ if (policy.status !== 'accepted-ready-to-publish' || policy.candidateSourceCommi
 if (!policy.releaseReady || policy.releasePublished || policy.enterpriseReleaseCandidate || policy.sourceUserContentIncluded) fail('release readiness boundary drifted')
 const releasePublished = published?.status === 'published-and-remote-assets-verified'
 const updaterComplete = updater?.status === 'hosted-managed-update-passed'
-const laterCandidateActive = ['1.0.19', '1.0.20'].includes(community.appVersion) && /^M[78]-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
+const laterCandidateActive = ['1.0.19', '1.0.20', '1.0.21'].includes(community.appVersion) && /^M[78]-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
 const expectedManifestStatus = releasePublished ? 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' : 'ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed'
 if (manifest.stage !== policy.stage || manifest.status !== expectedManifestStatus
   || manifest.sourceCommit !== policy.candidateSourceCommit || manifest.sourceVersion !== policy.candidateVersion) fail('artifact manifest identity drifted')
@@ -53,7 +53,7 @@ if (!laterCandidateActive && (community.currentStatus !== (releasePublished ? 'v
 const expectedDevelopmentStage = updaterComplete && /^M[78]-[0-9]+-/.test(development.currentStage) ? development.currentStage : releasePublished ? 'M6-8-v1.0.17-to-v1.0.18-managed-updater-observation' : 'M6-7-v1.0.18-tag-release-and-remote-asset-verification'
 if (development.currentStage !== expectedDevelopmentStage
   || (!laterCandidateActive && development.binaryVersionTransition !== (updaterComplete ? 'v1.0.18-release-and-managed-updater-closed' : releasePublished ? 'v1.0.18-public-release-published' : 'v1.0.18-release-ready'))
-  || !(laterCandidateActive ? ['1.0.18', '1.0.19', '1.0.20'].includes(development.publicVersion) : development.publicVersion === (releasePublished ? '1.0.18' : '1.0.17'))) fail('development ready handoff drifted')
+  || !(laterCandidateActive ? ['1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(development.publicVersion) : development.publicVersion === (releasePublished ? '1.0.18' : '1.0.17'))) fail('development ready handoff drifted')
 const candidateTags = execFileSync('git', ['tag', '--list', 'v1.0.18'], { encoding: 'utf8' }).trim()
 if (releasePublished ? execFileSync('git', ['rev-list', '-n', '1', 'v1.0.18'], { encoding: 'utf8' }).trim() !== policy.candidateSourceCommit : Boolean(candidateTags)) fail('v1.0.18 tag/publication boundary drifted')
 

@@ -17,7 +17,7 @@ const cargo = read('src-tauri/Cargo.toml')
 const cargoLock = read('src-tauri/Cargo.lock')
 const notes = read('docs/RELEASE_NOTES_v1.0.19.md')
 const audit = read('docs/Post_v1.0.18_M7_4_v1.0.19_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md')
-const successorActive = pkg.version === '1.0.20' && community.appVersion === '1.0.20' && /^M8-[0-9]+-/.test(development.currentStage)
+const successorActive = ['1.0.20', '1.0.21'].includes(pkg.version) && community.appVersion === pkg.version && /^M8-[0-9]+-/.test(development.currentStage)
 
 if (policy.stage !== 'M7-4' || policy.predecessor !== predecessor.stage || predecessor.selectedNextStage?.id !== policy.stage) fail('M7-4 predecessor chain drift')
 if (policy.candidateVersion !== '1.0.19' || policy.publicVersion !== '1.0.18' || policy.atomicVersionFileCount !== 44 || policy.releaseCandidate || policy.installedLifecyclePassed || policy.githubReleasePublished || policy.sourceUserContentIncluded) fail('M7-4 version/release/privacy boundary drift')

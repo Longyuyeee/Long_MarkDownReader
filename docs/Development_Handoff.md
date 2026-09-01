@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-09-01 v1.0.21 候选收口：** 用户确认本机公开 v1.0.20 不包含知识图谱交互精修，因此当前运行身份已原子迁移到 v1.0.21；公开 v1.0.20 事实保持冻结。候选范围仅包括缩放下限、稳定帧、详情卡片、应用下拉和主题差异。下一步必须从固定提交执行完整门禁与 v1.0.20→v1.0.21 安装生命周期，通过后再晋级 README、Tag 和 GitHub Release。详见 [`RELEASE_NOTES_v1.0.21.md`](./RELEASE_NOTES_v1.0.21.md)。
+
 > **2026-09-01 M8-4 跨电脑暂停接续点：** v1.0.20 产品候选已冻结在 `654ae5aa4c08e60c9fd5b91811cc938f91e0c3c2`；最终真实 Tauri 180 节点/540 连接复跑的 Canvas draw 峰值为 4.5 ms、运行时错误 0，三张截图已人工复核。完整本地门禁已通过至 Rust 检查，唯独 npm 官方审计端点两次 TLS 建连失败，尚未取得依赖安全结果。当前公开版仍为 v1.0.19，v1.0.20 的托管双包、安装生命周期、哈希冻结、Tag、README 晋级和 Release 均未执行。换机后严格从固定候选运行 `v120-candidate-lifecycle.yml`。详见 [`Post_v1.0.19_M8_4_v1.0.20_Cross_Machine_Handoff_Audit_2026-09-01.md`](./Post_v1.0.19_M8_4_v1.0.20_Cross_Machine_Handoff_Audit_2026-09-01.md)。
 
 > **2026-09-01 M8-3 知识图谱性能与视觉收口已通过：** 真实 180 节点/540 连接 Tauri 对照中 Canvas draw 峰值从 7.1 ms 降至最终候选复跑的 4.5 ms，默认选择归零，状态环最多 24 个；视口裁剪、近景尺寸、标签碰撞、节点材质和原生“图谱工具”弹层已完成。当前唯一接续点为 **M8-4 v1.0.20 质量门、版本迁移与发布**。详见 [`Post_v1.0.19_M8_3_Knowledge_Graph_Performance_and_Visual_Closure_Audit_2026-09-01.md`](./Post_v1.0.19_M8_3_Knowledge_Graph_Performance_and_Visual_Closure_Audit_2026-09-01.md)。

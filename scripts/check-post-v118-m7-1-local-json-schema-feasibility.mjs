@@ -28,7 +28,7 @@ for (const token of ['MAX_SCHEMA_SOURCE_BYTES', 'MAX_SCHEMA_NODES', 'MAX_SCHEMA_
 for (const forbidden of ['reqwest::', 'http://example', 'Command::new']) if (source.includes(forbidden)) fail(`M7-1 kernel contains forbidden token: ${forbidden}`)
 
 if (evidence.stage !== 'M7-1' || evidence.status !== 'accepted' || evidence.actual?.tests?.kernel?.passed !== 9 || evidence.actual?.tests?.kernel?.failed !== 0 || evidence.actual?.tests?.existingJsonRegression?.passed !== 28 || evidence.actual?.tests?.existingJsonRegression?.failed !== 0 || evidence.actual?.tests?.supplementalStrictClippy?.existingFindings !== 43 || evidence.actual?.tests?.supplementalStrictClippy?.newModuleFindings !== 0 || evidence.differences?.length !== 3 || evidence.releaseCandidate || evidence.sourceUserContentIncluded) fail('M7-1 evidence drift')
-if (policy.selectedNextStage?.id !== 'M7-2' || !/^M[78]-(?:[2-9]|[1-9]\d)-/.test(development.currentStage) || !['1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion) || development.releaseCandidate) fail('M7-2 successor handoff drift')
+if (policy.selectedNextStage?.id !== 'M7-2' || !/^M[78]-(?:[2-9]|[1-9]\d)-/.test(development.currentStage) || !['1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(development.runtimeBaseVersion) || development.releaseCandidate) fail('M7-2 successor handoff drift')
 for (const [document, tokens] of [[audit, ['可行性通过', '不是产品验收', '9 通过', '28 通过', '43 条历史 lint', 'M7-2']], [roadmap, ['M7-1 可行性通过', 'M7-2', '真实 Tauri']], [handoff, ['M7-1 可行性已通过', 'M7-2', '不提升版本']]]) for (const token of tokens) if (!document.includes(token)) fail(`M7-1 document missing: ${token}`)
 
 if (failures.length) { console.error(`M7-1 local JSON Schema feasibility failed:\n- ${failures.join('\n- ')}`); process.exit(1) }

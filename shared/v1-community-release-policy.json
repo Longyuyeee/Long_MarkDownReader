@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.20",
-  "releaseCandidate": true,
+  "appVersion": "1.0.21",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-09-01",
-  "currentStatus": "v1.0.20-community-release-published",
+  "currentStatus": "v1.0.21-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,78 +24,40 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.19",
+    "previousPublicVersion": "1.0.20",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.19-to-1.0.20-pending",
-    "scope": "post-v1.0.19-knowledge-graph-usability-performance-and-visual-closure"
+    "managedUpdaterUpgradePath": "1.0.20-to-1.0.21-pending",
+    "scope": "post-v1.0.20-knowledge-graph-zoom-detail-controls-and-theme-polish"
   },
   "targetRelease": {
-    "tag": "v1.0.20",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.20",
+    "tag": "v1.0.21",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.21",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "qualityGateEnvironment": "local-and-hosted-windows",
-    "qualityGateRunId": 33461982887,
-    "runtimeSmokeEvidence": [
-      "docs/evidence/post-v119-m8-5-graph-visual-performance/manifest.json",
-      "docs/evidence/post-v119-m8-6-v1020-hosted-installer-lifecycle/import-manifest.json"
-    ],
-    "artifacts": [
-      {
-        "target": "msi",
-        "sourceFileName": "Long编辑_1.0.20_x64_zh-CN.msi",
-        "fileName": "LongEdit_1.0.20_x64_zh-CN.msi",
-        "sizeBytes": 75386880,
-        "sha256": "4b062ce72d40fce26611ca8c6b76932de9533a512e4bba5b6c3d1a5968d755a7",
-        "authenticodeStatus": "NotSigned"
-      },
-      {
-        "target": "nsis",
-        "sourceFileName": "Long编辑_1.0.20_x64-setup.exe",
-        "fileName": "LongEdit_1.0.20_x64-setup.exe",
-        "sizeBytes": 66804712,
-        "sha256": "c89b2cae801ad3f8f343bea37012871b86f9868e2576c7b2ac7b0662666a81ca",
-        "authenticodeStatus": "NotSigned"
-      }
-    ],
-    "hostedInstalledLifecycleRunId": 33461982887
-  },
-  "release": {
-    "databaseId": 380189898,
-    "tag": "v1.0.20",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.20",
-    "taggedCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
-    "tagObject": "fadc0a41f80a577d0586e788a15e25602314479b",
-    "publishedAt": "2026-09-01T03:16:46Z",
-    "isDraft": false,
-    "isPrerelease": false,
-    "isLatest": true
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.19-to-v1.0.20-managed-update-observation-pending",
+    "v1.0.20-to-v1.0.21-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "execute-m8-9-v1.0.19-to-v1.0.20-managed-updater-observation"
+  "nextAction": "pass-v1.0.21-quality-gate-and-build-real-candidate-installers"
 }
