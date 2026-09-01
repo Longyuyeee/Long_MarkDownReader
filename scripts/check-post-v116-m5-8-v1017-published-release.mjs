@@ -27,7 +27,7 @@ if (manifest.status !== 'published-remote-assets-verified-hosted-lifecycle-and-r
 const updaterComplete = updater.status === 'hosted-managed-update-passed'
 const laterCandidateActive = ['1.0.18', '1.0.19', '1.0.20'].includes(community.appVersion) && /^M[678]-[0-9]+-/.test(development.currentStage)
 if (!laterCandidateActive && (community.currentStatus !== 'v1.0.17-community-release-published' || !community.releaseCandidate || !community.gates?.githubReleasePublished || community.release?.databaseId !== policy.releaseDatabaseId || community.release?.taggedCommit !== policy.candidateSourceCommit || community.nextAction !== (updaterComplete ? 'v1.0.17-release-and-managed-updater-closure-complete' : 'execute-m5-9-v1.0.16-to-v1.0.17-managed-updater-observation'))) fail('community published state drifted')
-const laterPublicActive = ['1.0.18', '1.0.19'].includes(development.publicVersion) && development.publicTag === `v${development.publicVersion}`
+const laterPublicActive = ['1.0.18', '1.0.19', '1.0.20'].includes(development.publicVersion) && development.publicTag === `v${development.publicVersion}`
 if ((!laterPublicActive && (development.publicVersion !== '1.0.17' || development.publicTag !== policy.tag || development.publicTagCommit !== policy.candidateSourceCommit))
   || !['1.0.17', '1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion) || development.developmentTargetVersion !== (laterPublicActive ? `1.0.${Number(development.publicVersion.split('.')[2]) + 1}` : '1.0.18')
   || !(updaterComplete ? /^M[678]-[0-9]+-/.test(development.currentStage) : development.currentStage === 'M5-9-v1.0.16-to-v1.0.17-managed-updater-observation')

@@ -37,10 +37,11 @@ const hostedPassed = hostedLifecycle.status === 'hosted-installer-lifecycle-pass
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
 const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
-const laterPublicActive = development.publicVersion === '1.0.19' && development.publicTag === 'v1.0.19'
-if (!['1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion) || development.publicVersion !== (laterPublicActive ? '1.0.19' : releasePublished ? '1.0.18' : '1.0.17')
-  || development.publicTag !== (laterPublicActive ? 'v1.0.19' : releasePublished ? 'v1.0.18' : 'v1.0.17')
-  || development.developmentTargetVersion !== (laterPublicActive ? '1.0.20' : releasePublished ? '1.0.19' : '1.0.18') || development.releaseCandidate) fail('development candidate/public split drift')
+const laterPublicActive = ['1.0.19', '1.0.20'].includes(development.publicVersion) && development.publicTag === `v${development.publicVersion}`
+const laterDevelopmentTarget = laterPublicActive ? `1.0.${Number(development.publicVersion.split('.')[2]) + 1}` : null
+if (!['1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion) || development.publicVersion !== (laterPublicActive ? development.publicVersion : releasePublished ? '1.0.18' : '1.0.17')
+  || development.publicTag !== (laterPublicActive ? `v${development.publicVersion}` : releasePublished ? 'v1.0.18' : 'v1.0.17')
+  || development.developmentTargetVersion !== (laterPublicActive ? laterDevelopmentTarget : releasePublished ? '1.0.19' : '1.0.18') || development.releaseCandidate) fail('development candidate/public split drift')
 if (!laterCandidateActive && (community.appVersion !== '1.0.18'
   || community.patchValidation?.previousPublicVersion !== '1.0.17' || community.patchValidation?.managedUpdaterUpgradePath !== (managedUpdaterComplete ? '1.0.17-to-1.0.18-passed' : '1.0.17-to-1.0.18-pending')
   || community.targetRelease?.tag !== 'v1.0.18' || (releasePublished ? community.release?.databaseId !== publishedRelease.releaseDatabaseId : community.release !== null))) fail('community candidate identity drift')

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-6",
+  "name": "v1.0.20-hosted-installer-lifecycle",
+  "status": "hosted-installer-lifecycle-passed",
+  "predecessor": "M8-5",
+  "candidateSourceCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+  "candidateVersion": "1.0.20",
+  "previousPublicTag": "v1.0.19",
+  "previousPublicCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+  "workflow": ".github/workflows/v120-candidate-lifecycle.yml",
+  "githubRunId": 33461982887,
+  "evidenceManifest": "docs/evidence/post-v119-m8-6-v1020-hosted-installer-lifecycle/import-manifest.json",
+  "checks": {
+    "lifecyclePassed": 22,
+    "installedArtifactPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "failed": 0
+  },
+  "sourceUserContentIncluded": false,
+  "nextAction": "execute-m8-7-v1.0.20-final-artifact-manifest-and-release-readiness-audit"
+}

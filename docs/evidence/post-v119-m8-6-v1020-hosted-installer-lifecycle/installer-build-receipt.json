@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M8-6",
+    "status":  "hosted-installers-built",
+    "candidateSourceCommit":  "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+    "previousSourceCommit":  "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+    "appVersion":  "1.0.20",
+    "previousVersion":  "1.0.19",
+    "runner":  "windows-latest",
+    "releaseCandidate":  false,
+    "sourceUserContentIncluded":  false,
+    "artifacts":  [
+                      {
+                          "target":  "msi",
+                          "fileName":  "Long编辑_1.0.20_x64_zh-CN.msi",
+                          "sizeBytes":  75386880,
+                          "sha256":  "4b062ce72d40fce26611ca8c6b76932de9533a512e4bba5b6c3d1a5968d755a7",
+                          "authenticodeStatus":  "NotSigned"
+                      },
+                      {
+                          "target":  "nsis",
+                          "fileName":  "Long编辑_1.0.20_x64-setup.exe",
+                          "sizeBytes":  66804712,
+                          "sha256":  "c89b2cae801ad3f8f343bea37012871b86f9868e2576c7b2ac7b0662666a81ca",
+                          "authenticodeStatus":  "NotSigned"
+                      }
+                  ]
+}

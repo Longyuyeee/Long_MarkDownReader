@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5L",
+  "capturedAt": "2026-09-01T03:11:31.647Z",
+  "environment": "disposable-windows-installed-current-artifact",
+  "status": "passed",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "installed-release-formal-config-load",
+      "status": "passed"
+    },
+    {
+      "id": "management-backup-export",
+      "status": "passed"
+    },
+    {
+      "id": "management-backup-privacy-preflight",
+      "status": "passed"
+    },
+    {
+      "id": "knowledge-index-delete-rebuild",
+      "status": "passed"
+    },
+    {
+      "id": "post-rollback-management-backup-restore",
+      "status": "passed"
+    },
+    {
+      "id": "post-restore-knowledge-index-rebuild",
+      "status": "passed"
+    },
+    {
+      "id": "post-restore-representative-file-reopen",
+      "status": "passed"
+    }
+  ],
+  "backup": {
+    "bytes": 14026,
+    "sha256": "f4f9efc0086c1c5e799dff54e01a06e24fea0e22846337abf4145849476aeb3c",
+    "entryCount": 5,
+    "redactedLibraryCount": 1,
+    "excluded": [
+      "document-body",
+      "api-key",
+      "system-credential",
+      "absolute-user-path",
+      "recoverable-cache-body",
+      "external-library-content"
+    ]
+  },
+  "preflight": {
+    "valid": true,
+    "schemaVersion": 1,
+    "stage": "R3B",
+    "entryCount": 5,
+    "redactedLibraryCount": 1,
+    "savedSearchCount": 1,
+    "requiresLibraryMapping": true,
+    "mappingCount": 1,
+    "excluded": [
+      "document-body",
+      "api-key",
+      "system-credential",
+      "absolute-user-path",
+      "recoverable-cache-body",
+      "external-library-content"
+    ],
+    "blockedReasons": []
+  },
+  "indexBeforeRollback": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "sourceCount": 10,
+    "objectCount": 15,
+    "relationCount": 10,
+    "cacheBytes": 20251
+  },
+  "completedAt": "2026-09-01T03:12:14.606Z",
+  "restore": {
+    "libraryCount": 1,
+    "savedSearchCount": 1,
+    "warningCount": 2
+  },
+  "indexAfterRestore": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "sourceCount": 10,
+    "objectCount": 15,
+    "relationCount": 10,
+    "cacheBytes": 20251
+  }
+}

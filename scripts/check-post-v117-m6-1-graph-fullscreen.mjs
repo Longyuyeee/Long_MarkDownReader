@@ -65,7 +65,7 @@ for (const [file, theme, motion] of [['desktop-dark-reduced.json', 'dark', 'redu
 }
 const developmentStageAccepted = successor.status === 'scope-selected' ? (/^M6-(?:[3-9]|[1-9][0-9]+)-/.test(development.currentStage) || /^M[78]-[0-9]+-/.test(development.currentStage)) : development.currentStage === 'M6-2-v1.0.18-next-slice-selection-audit'
 if (!developmentStageAccepted || !['1.0.17', '1.0.18', '1.0.19', '1.0.20'].includes(development.runtimeBaseVersion)
-  || !['1.0.17', '1.0.18', '1.0.19'].includes(development.publicVersion) || !['1.0.18', '1.0.19', '1.0.20'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-2 handoff drift')
+  || !['1.0.17', '1.0.18', '1.0.19', '1.0.20'].includes(development.publicVersion) || !['1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-2 handoff drift')
 for (const [document, tokens] of [[audit, ['6/6', 'Document not active', 'aria-label', 'M6-2']], [roadmap, ['M6-1 退出回执', '暗色/reduced', '浅色/calm', 'M6-2']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-1 document missing ${token}`)
 }

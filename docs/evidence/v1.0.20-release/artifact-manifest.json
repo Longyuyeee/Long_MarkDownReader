@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-7",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
+  "appVersion": "1.0.20",
+  "sourceVersion": "1.0.20",
+  "sourceCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+  "hostedRunId": 33461982887,
+  "hostedArtifactId": 9784635425,
+  "artifacts": [
+    {
+      "target": "nsis",
+      "sourceFileName": "Long编辑_1.0.20_x64-setup.exe",
+      "fileName": "LongEdit_1.0.20_x64-setup.exe",
+      "sizeBytes": 66804712,
+      "sha256": "c89b2cae801ad3f8f343bea37012871b86f9868e2576c7b2ac7b0662666a81ca",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "msi",
+      "sourceFileName": "Long编辑_1.0.20_x64_zh-CN.msi",
+      "fileName": "LongEdit_1.0.20_x64_zh-CN.msi",
+      "sizeBytes": 75386880,
+      "sha256": "4b062ce72d40fce26611ca8c6b76932de9533a512e4bba5b6c3d1a5968d755a7",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "79765d82c0bdb28bc95cc7cf9deb9aba761d4d7c68f77c15142cfabcb4fd5133"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release"
+  },
+  "runtimeSmoke": {
+    "status": "passed-real-tauri-debug-webview2",
+    "checksPassed": 6,
+    "routesPassed": 11,
+    "graphDesktopEvidence": "docs/evidence/post-v119-m8-5-graph-visual-performance/manifest.json"
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 33461982887,
+    "sourceCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+    "evidenceRoot": "docs/evidence/post-v119-m8-6-v1020-hosted-installer-lifecycle",
+    "evidenceManifest": "docs/evidence/post-v119-m8-6-v1020-hosted-installer-lifecycle/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": true,
+    "managedUpdaterReleaseAssetsPresent": true,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "releaseReceipt": "release-receipt.json",
+  "releasePublished": true,
+  "sourceUserContentIncluded": false
+}

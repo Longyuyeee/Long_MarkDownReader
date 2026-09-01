@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-6",
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 33461982887,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33461982887",
+  "workflowCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+  "productSourceCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+  "previousPublicCommit": "9655b02142b64bd8e7f1ad4056a4b9c6f0367990",
+  "appVersion": "1.0.20",
+  "previousVersion": "1.0.19",
+  "artifact": {
+    "id": 9784635425,
+    "name": "v120-candidate-lifecycle-33461982887",
+    "zipSizeBytes": 209994658,
+    "zipSha256": "dc7f1c78e1df2bb7478c2e09e3c026fa48518f19d13cce1dc6689b91bb1f4f44",
+    "expiresAt": "2026-09-15T03:12:18Z"
+  },
+  "installers": [
+    {
+      "target": "msi",
+      "fileName": "Long编辑_1.0.20_x64_zh-CN.msi",
+      "sizeBytes": 75386880,
+      "sha256": "4b062ce72d40fce26611ca8c6b76932de9533a512e4bba5b6c3d1a5968d755a7",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "nsis",
+      "fileName": "Long编辑_1.0.20_x64-setup.exe",
+      "sizeBytes": 66804712,
+      "sha256": "c89b2cae801ad3f8f343bea37012871b86f9868e2576c7b2ac7b0662666a81ca",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "checks": {
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "managementRollbackFailed": 0
+  },
+  "visualReview": {
+    "screenshotCount": 14,
+    "reviewed": true,
+    "result": "accepted-no-crash-blank-fallback-blocking-overlay-or-stale-version-copy"
+  },
+  "expectedActualDifference": {
+    "expected": "a clean Windows runner reproduces the complete quality gate and then builds and exercises the frozen candidate",
+    "actual": "run 33461279465 exposed missing Git tag history and run 33461583883 exposed three CRLF evidence identities that existed only in the local worktree; run 33461982887 passed after both causes were corrected",
+    "correction": "fetch the frozen candidate with full history and commit the three historical evidence files as binary byte identities without weakening either audit"
+  },
+  "repositoryEvidence": {
+    "fileCount": 29,
+    "totalBytes": 1502535,
+    "treeSha256": "09c1a327378397a8599b8c3bfdb8344bae62c5bac1544de127aee11b8e8d822f"
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "selectedNextStage": "M8-7-v1.0.20-final-artifact-manifest-and-release-readiness-audit"
+}
