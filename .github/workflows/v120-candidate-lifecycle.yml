@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.candidate_commit }}
+          fetch-depth: 0
           path: current-product
 
       - name: Check out previous public release
@@ -101,11 +102,11 @@ jobs:
           foreach ($artifact in @($msi[0], $nsis[0], $previousNsis[0])) {
             if ((Get-AuthenticodeSignature -LiteralPath $artifact.FullName).Status -ne 'NotSigned') { throw "Unexpected signature status: $($artifact.Name)" }
           }
-          $output = Join-Path $env:GITHUB_WORKSPACE 'm8-5-output'
+          $output = Join-Path $env:GITHUB_WORKSPACE 'm8-6-output'
           New-Item -ItemType Directory -Path $output -Force | Out-Null
           $receipt = [ordered]@{
             schemaVersion = 1
-            stage = 'M8-5'
+            stage = 'M8-6'
             status = 'hosted-installers-built'
             candidateSourceCommit = $env:PRODUCT_SOURCE_COMMIT
             previousSourceCommit = $env:PREVIOUS_SOURCE_COMMIT
@@ -123,7 +124,7 @@ jobs:
           "CURRENT_INSTALLER_DIRECTORY=$($nsis[0].Directory.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PREVIOUS_INSTALLER_DIRECTORY=$($previousNsis[0].Directory.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CURRENT_INSTALLER_SHA256=$($receipt.artifacts[1].sha256)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "M8_5_OUTPUT=$output" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "M8_6_OUTPUT=$output" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Execute disposable install and installed-workspace lifecycle
         shell: powershell
@@ -141,11 +142,11 @@ jobs:
             -ManagementRollbackSmokeScript (Join-Path $root 'scripts\capture-r5l-management-rollback-smoke.mjs') `
             -EvidenceExporter (Join-Path $root 'scripts\export-r5k-windows-evidence-bundle.ps1') `
             -ExpectedSourceCommit $env:PRODUCT_SOURCE_COMMIT `
-            -OutputDirectory $env:M8_5_OUTPUT `
+            -OutputDirectory $env:M8_6_OUTPUT `
             -ConfirmDisposableMachine `
             -AllowInstallerMutation
 
-      - name: Upload M8-5 evidence and unsigned installers
+      - name: Upload M8-6 evidence and unsigned installers
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -153,7 +154,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: |
-            m8-5-output
+            m8-6-output
             current-product/src-tauri/target/release/bundle/msi/*_1.0.20_x64_zh-CN.msi
             current-product/src-tauri/target/release/bundle/nsis/*_1.0.20_x64-setup.exe
             previous-product/src-tauri/target/release/bundle/nsis/*_1.0.19_x64-setup.exe
