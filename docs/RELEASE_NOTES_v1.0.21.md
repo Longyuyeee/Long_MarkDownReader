@@ -1,6 +1,6 @@
 # Long编辑 v1.0.21
 
-状态：候选验证中，尚未公开发布。
+状态：已于 2026-09-01 正式发布，三个公开附件已回下载复核。
 
 v1.0.21 是知识图谱交互精修补丁，不扩大源文件写回范围。
 
@@ -16,7 +16,9 @@ v1.0.21 是知识图谱交互精修补丁，不扩大源文件写回范围。
 
 Windows/Tauri/WebView2、1440×900、DPR 1.25、真实资料库 45 个源文件、83 节点/81 连接。连续缩小 48 次后稳定在 58%，社区总览为 false；等待 550ms 后布局帧号仍为 120，连续动画为 false；详情卡片为 380×468px，约占视口 13.72%；运行时错误为 0，测试前后 45/45 文件 SHA-256 一致。
 
-正式发布前还必须完成完整 `ci:patch-release`、真实 MSI/NSIS 构建、从公开 v1.0.20 到 v1.0.21 的隔离安装生命周期、制品 SHA-256 和远端回下载复核。
+固定候选 `284b0244e25f21c870bb01c37c7533b0e28ac221` 已通过完整 `ci:patch-release`。GitHub 托管 Windows [运行 33488674071](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33488674071) 从公开 v1.0.20 完成 v1.0.21 隔离覆盖安装：生命周期 22/22、安装态 18/18、路由 11/11、管理回滚 7/7，失败 0。NSIS、MSI 与 `SHA256SUMS.txt` 已从公开 Release 回下载并逐项匹配冻结大小与 SHA-256。
+
+公开 Release：[Long编辑 v1.0.21](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.21)。
 
 ## 安全与兼容性
 

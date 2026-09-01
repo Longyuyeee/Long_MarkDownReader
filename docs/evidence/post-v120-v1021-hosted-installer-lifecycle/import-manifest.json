@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-10",
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 33488674071,
+  "githubRunUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33488674071",
+  "workflowCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
+  "productSourceCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
+  "previousPublicCommit": "a08ab6a5471f9f8b163403edadb554ea6446c3f4",
+  "appVersion": "1.0.21",
+  "previousVersion": "1.0.20",
+  "artifact": {
+    "id": 9794307935,
+    "name": "v121-candidate-lifecycle-33488674071",
+    "zipSizeBytes": 210056918,
+    "zipSha256": "2ed9a7441bd6fe8437a70f9eee0781d890489fc82128e5469cc9f7be2626a71e",
+    "expiresAt": "2026-09-15T09:29:00Z"
+  },
+  "installers": [
+    {
+      "target": "msi",
+      "fileName": "Long编辑_1.0.21_x64_zh-CN.msi",
+      "sizeBytes": 75386880,
+      "sha256": "cce3488045be3ef45eee124853fd34fa24d06feb8a792d0c6d8d5541a8aa6a21",
+      "authenticodeStatus": "NotSigned"
+    },
+    {
+      "target": "nsis",
+      "fileName": "Long编辑_1.0.21_x64-setup.exe",
+      "sizeBytes": 66815338,
+      "sha256": "25507ea07506bb6b6a75da6ed82bc1ae7daf87da022ca4736f0aa30383691b13",
+      "authenticodeStatus": "NotSigned"
+    }
+  ],
+  "checks": {
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "managementRollbackFailed": 0
+  },
+  "visualReview": {
+    "screenshotCount": 14,
+    "reviewed": true,
+    "result": "accepted-installed-v1.0.21-no-crash-blank-fallback-blocking-overlay-or-stale-version-copy"
+  },
+  "expectedActualDifference": {
+    "expected": "the frozen v1.0.21 candidate passes the complete quality gate, rebuilds MSI and NSIS, and upgrades a disposable installed v1.0.20 environment without regressions",
+    "actual": "run 33488674071 passed the quality gate, produced both NotSigned installers, completed 22 lifecycle, 18 installed-artifact, 11 route, and 7 management rollback checks with zero failures",
+    "correction": "no product correction was required after the frozen candidate; only the hosted evidence and immutable release facts were promoted"
+  },
+  "repositoryEvidence": {
+    "fileCount": 30,
+    "totalBytes": 1709588
+  },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "selectedNextStage": "M8-11-v1.0.21-tag-release-and-remote-asset-verification"
+}
