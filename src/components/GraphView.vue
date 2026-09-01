@@ -385,7 +385,7 @@
     </WorkspaceStatusBar>
     <!-- 节点悬浮提示 -->
     <transition name="tooltip-fade">
-      <div v-if="hoveredNode" class="node-tooltip" :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }">
+      <div v-if="hoveredNode && hoveredNode.id !== selectedNode?.id" class="node-tooltip" :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }">
         <div class="tooltip-header">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -717,7 +717,9 @@ const statusPrioritySuppressedIds = computed(() => new Set([
 ]))
 const renderedNodeStatuses = computed(() => {
   if (!statusRingsVisible.value) return []
-  const limit = visibleNodes.value.length > 120 ? 24 : visibleNodes.value.length > 60 ? 36 : Number.POSITIVE_INFINITY
+  const limit = visibleNodes.value.length > 120
+    ? (semanticZoomLevel.value === 'middle' ? 12 : 20)
+    : visibleNodes.value.length > 60 ? 30 : Number.POSITIVE_INFINITY
   return graphNodeStatusSummary.value.nodes
     .filter(status => !statusPrioritySuppressedIds.value.has(status.nodeId) && (status.recency !== 'none' || status.showRelationStrength))
     .sort((left, right) => Number(right.showRelationStrength) - Number(left.showRelationStrength)
@@ -963,6 +965,11 @@ let layoutWorkerCappedNodeCount = 0
 let layoutWorkerComputeMaximumMs = 0
 let layoutWorkerApplyMaximumMs = 0
 let layoutWorkerStaleResults = 0
+let autoFitAfterLayout = false
+let autoFitCompletionCount = 0
+let autoFitTimer = 0
+let selectionEffectStartedAt = 0
+let selectionEffectNodeId = ''
 
 type GraphForceLayoutWorkerResult = {
   type: 'result'
@@ -981,6 +988,7 @@ const graphLoopNeedsContinuousFrames = () => Boolean(
   (viewMode.value === 'network' && !layoutSettled && !layoutWorkerPending)
   || cameraTransition
   || pathMotionEnabled.value
+  || (selectionEffectStartedAt > 0 && performance.now() - selectionEffectStartedAt < 420)
 )
 const requestGraphFrame = (dirty = true) => {
   if (dirty) graphFrameDirty = true
@@ -1060,6 +1068,17 @@ const handleLayoutWorkerMessage = (event: MessageEvent<GraphForceLayoutWorkerRes
     layoutSettled = true
     layoutWorkerState = 'settled'
     scheduleLayoutSave()
+    if (autoFitAfterLayout) {
+      autoFitAfterLayout = false
+      requestAnimationFrame(() => {
+        fitGraph()
+        window.clearTimeout(autoFitTimer)
+        autoFitTimer = window.setTimeout(() => {
+          fitGraph()
+          autoFitCompletionCount += 1
+        }, 160)
+      })
+    }
   } else {
     layoutWorkerState = 'running'
   }
@@ -1170,6 +1189,7 @@ const loadGraph = async () => {
 
 const initLayout = () => {
   invalidateLayoutWorker()
+  autoFitAfterLayout = true
   const nodes = graphData.value.nodes
   const cx = (containerRef.value?.clientWidth || 800) / 2
   const cy = (containerRef.value?.clientHeight || 600) / 2
@@ -1183,6 +1203,17 @@ const initLayout = () => {
   })
   frameCount = restored === nodes.length && nodes.length > 0 ? LAYOUT_MAX_FRAMES : 0
   layoutSettled = restored === nodes.length && nodes.length > 0
+  if (layoutSettled) {
+    autoFitAfterLayout = false
+    requestAnimationFrame(() => {
+      fitGraph()
+      window.clearTimeout(autoFitTimer)
+      autoFitTimer = window.setTimeout(() => {
+        fitGraph()
+        autoFitCompletionCount += 1
+      }, 160)
+    })
+  }
   if (!restored && graphLayoutMode.value !== 'force') positionGraphLayout(graphLayoutMode.value)
 }
 
@@ -2211,6 +2242,7 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
     return x + radius >= worldLeft && x - radius <= worldRight && y + radius >= worldTop && y - radius <= worldBottom
   })
   const selectedIds = new Set(selectedNodeIds.value)
+  const denseNetwork = viewMode.value === 'network' && visibleNodes.value.length > 120
 
   // Community contours sit behind relationships and nodes. They are derived
   // from member coordinates only and never feed forces or persisted layout.
@@ -2222,10 +2254,10 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
       ctx.moveTo(contour.points[0].x, contour.points[0].y)
       for (let index = 1; index < contour.points.length; index += 1) ctx.lineTo(contour.points[index].x, contour.points[index].y)
       ctx.closePath()
-      ctx.fillStyle = `${color}${semanticZoomLevel.value === 'middle' ? (isDark ? '1f' : '17') : (isDark ? '12' : '0d')}`
+      ctx.fillStyle = `${color}${semanticZoomLevel.value === 'middle' ? (isDark ? '16' : '11') : (isDark ? '0e' : '0a')}`
       ctx.fill()
-      ctx.strokeStyle = `${color}${semanticZoomLevel.value === 'middle' ? '9c' : '66'}`
-      ctx.lineWidth = (semanticZoomLevel.value === 'middle' ? 2 : 1.25) / zoom
+      ctx.strokeStyle = `${color}${semanticZoomLevel.value === 'middle' ? '70' : '52'}`
+      ctx.lineWidth = (semanticZoomLevel.value === 'middle' ? 1.4 : 1.1) / zoom
       ctx.setLineDash(semanticZoomLevel.value === 'middle' ? [] : [5 / zoom, 4 / zoom])
       ctx.stroke()
       ctx.setLineDash([])
@@ -2323,7 +2355,9 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
         ctx.lineWidth = 2.5 / zoom
       } else {
         ctx.strokeStyle = relationSemantic.color
-        ctx.globalAlpha = isDark ? 0.42 : 0.5
+        ctx.globalAlpha = denseNetwork
+          ? (semanticZoomLevel.value === 'near' ? (isDark ? 0.32 : 0.38) : (isDark ? 0.22 : 0.28))
+          : (isDark ? 0.42 : 0.5)
         ctx.lineWidth = 1 / zoom
       }
       ctx.stroke()
@@ -2347,7 +2381,7 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
         }
       }
 
-      if (e.directed) {
+      if (e.directed && (!denseNetwork || semanticZoomLevel.value === 'near' || isHighlight || isPathEdge)) {
         const arrowPoint = routeGeometry ? graphQuadraticPoint(routeGeometry, 0.72) : { x: sx + (tx - sx) * 0.72, y: sy + (ty - sy) * 0.72 }
         const tangent = routeGeometry ? graphQuadraticTangent(routeGeometry, 0.72) : { x: tx - sx, y: ty - sy }
         const angle = Math.atan2(tangent.y, tangent.x)
@@ -2520,6 +2554,27 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
     ctx.lineWidth = (isHovered || isSelected ? 3 : 1) / zoom
     ctx.stroke()
 
+    if (isSelected) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(nx, ny, r + 4 / zoom, 0, Math.PI * 2)
+      ctx.strokeStyle = activeTone.ui.primary
+      ctx.globalAlpha = 0.9
+      ctx.lineWidth = 1.5 / zoom
+      ctx.stroke()
+      const effectAge = selectionEffectNodeId === n.id ? performance.now() - selectionEffectStartedAt : Number.POSITIVE_INFINITY
+      if (!cameraMotionReduced.value && effectAge >= 0 && effectAge < 420) {
+        const progress = effectAge / 420
+        ctx.beginPath()
+        ctx.arc(nx, ny, r + (6 + progress * 13) / zoom, 0, Math.PI * 2)
+        ctx.strokeStyle = activeTone.ui.primary
+        ctx.globalAlpha = (1 - progress) * 0.55
+        ctx.lineWidth = 2 / zoom
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
+
     // 标签 - 根据缩放级别动态显示
     if (semanticZoomLevel.value === 'near' || (semanticZoomLevel.value === 'middle' && (semanticKeyNodeIds.value.has(n.id) || isSelected || isHovered))) {
       const maxLen = zoom > 1 ? 10 : Math.floor(10 / (1.5 - zoom * 0.5))
@@ -2594,6 +2649,9 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   canvas.dataset.layoutWorkerComputeMaximumMs = layoutWorkerComputeMaximumMs.toFixed(3)
   canvas.dataset.layoutWorkerApplyMaximumMs = layoutWorkerApplyMaximumMs.toFixed(3)
   canvas.dataset.layoutWorkerStaleResults = String(layoutWorkerStaleResults)
+  canvas.dataset.autoFitCompletionCount = String(autoFitCompletionCount)
+  canvas.dataset.denseEdgeArrowPolicy = denseNetwork && semanticZoomLevel.value !== 'near' ? 'priority-only' : 'all-directed'
+  canvas.dataset.selectionEffect = selectionEffectStartedAt > 0 && performance.now() - selectionEffectStartedAt < 420 ? 'active' : 'settled'
   canvas.dataset.loopContinuous = String(graphLoopNeedsContinuousFrames())
 })
 
@@ -2605,6 +2663,7 @@ const loop = (timestamp = performance.now()) => {
   const layoutWasActive = viewMode.value === 'network' && !layoutSettled
   const cameraWasActive = Boolean(cameraTransition)
   const pathWasActive = pathMotionEnabled.value
+  const selectionEffectWasActive = selectionEffectStartedAt > 0
   if (pathMotionEnabled.value) {
     pathMotionPhase = advanceGraphPathMotionPhase(pathMotionPhase, elapsed, store.motionSpeed)
     pathMotionFrameCount += 1
@@ -2614,7 +2673,11 @@ const loop = (timestamp = performance.now()) => {
   }
   simulate()
   advanceCameraMotion(timestamp)
-  const shouldDraw = graphFrameDirty || layoutWasActive || cameraWasActive || pathWasActive
+  if (selectionEffectWasActive && performance.now() - selectionEffectStartedAt >= 420) {
+    selectionEffectStartedAt = 0
+    selectionEffectNodeId = ''
+  }
+  const shouldDraw = graphFrameDirty || layoutWasActive || cameraWasActive || pathWasActive || selectionEffectWasActive
   graphFrameDirty = false
   if (shouldDraw) draw()
   if (graphLoopNeedsContinuousFrames()) requestGraphFrame(false)
@@ -2853,7 +2916,13 @@ const handleGraphKeydown = (event: KeyboardEvent) => {
 
 watch(() => props.show, (v) => { if (v !== false) loadGraph() })
 watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
-watch(() => selectedNode.value?.id, () => { relationDraftTarget.value = '' })
+watch(() => selectedNode.value?.id, nodeId => {
+  relationDraftTarget.value = ''
+  if (!nodeId || cameraMotionReduced.value) return
+  selectionEffectNodeId = nodeId
+  selectionEffectStartedAt = performance.now()
+  requestGraphFrame()
+})
 watch([comparisonLeftId, comparisonRightId], () => { comparisonHasRun.value = false })
 watch([() => selectedNodeIds.value.join('\u001f'), () => selectedNode.value?.id || ''], () => {
   requestGraphFrame()
@@ -2978,7 +3047,7 @@ onMounted(() => {
   })
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
 })
-onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
+onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); window.clearTimeout(autoFitTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
 <style scoped>

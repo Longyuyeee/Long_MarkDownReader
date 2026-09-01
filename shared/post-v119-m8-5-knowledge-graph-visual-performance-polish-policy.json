@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "appVersion": "1.0.20",
+  "stage": "M8-5",
+  "status": "implemented-real-desktop-audit-pending",
+  "predecessor": "M8-4",
+  "scope": "knowledge-graph-settled-auto-fit-dense-visual-hierarchy-and-bounded-selection-effect",
+  "expected": {
+    "settledLayoutAutoFits": true,
+    "denseMiddleArrowPolicy": "priority-only",
+    "denseMiddleStatusRingMaximum": 12,
+    "denseNearStatusRingMaximum": 20,
+    "selectedTooltipDuplicated": false,
+    "selectionEffectMaximumMs": 420,
+    "reducedMotionDisablesSelectionEffect": true,
+    "continuousIdleRendering": false
+  },
+  "releaseCandidate": false
+}
