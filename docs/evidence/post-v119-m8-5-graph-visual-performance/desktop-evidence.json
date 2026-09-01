@@ -1,0 +1,49 @@
+{
+    "schemaVersion":  1,
+    "stage":  "M8-5",
+    "sourceCommit":  "4bb8c28c7b519a8838960161db440f8720997d91",
+    "nodeCount":  180,
+    "edgeCount":  540,
+    "viewport":  {
+                     "width":  1440,
+                     "height":  900,
+                     "deviceScaleFactor":  1.25
+                 },
+    "canvas":  {
+                   "left":  0,
+                   "top":  90,
+                   "width":  1440,
+                   "height":  810
+               },
+    "semanticLevel":  "middle",
+    "cameraPose":  {
+                       "x":  -374.9794528176443,
+                       "y":  -163.38665960238774,
+                       "zoom":  1.0825704856744236
+                   },
+    "autoFitCompletionCount":  1,
+    "fitPointCount":  180,
+    "fitPointsInBounds":  true,
+    "denseEdgeArrowPolicy":  "priority-only",
+    "statusRingCount":  12,
+    "selectedCount":  0,
+    "loopContinuous":  "false",
+    "activeSelection":  {
+                            "selectedCount":  1,
+                            "selectionEffect":  "active",
+                            "detailsVisible":  true,
+                            "tooltipVisible":  false
+                        },
+    "settledSelection":  {
+                             "selectionEffect":  "settled",
+                             "loopContinuous":  "false",
+                             "tooltipVisible":  false
+                         },
+    "canvasDrawMaximumMs":  5.099999964237213,
+    "runtimeErrors":  [
+
+                      ],
+    "sourceUserContentIncluded":  false,
+    "releaseCandidate":  false,
+    "sourceFilesUnchanged":  true
+}

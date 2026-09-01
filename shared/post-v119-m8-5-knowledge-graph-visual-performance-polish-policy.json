@@ -2,8 +2,10 @@
   "schemaVersion": 1,
   "appVersion": "1.0.20",
   "stage": "M8-5",
-  "status": "implemented-real-desktop-audit-pending",
+  "status": "accepted-real-desktop-audit-passed",
   "predecessor": "M8-4",
+  "productSourceCommit": "4bb8c28c7b519a8838960161db440f8720997d91",
+  "evidence": "docs/evidence/post-v119-m8-5-graph-visual-performance",
   "scope": "knowledge-graph-settled-auto-fit-dense-visual-hierarchy-and-bounded-selection-effect",
   "expected": {
     "settledLayoutAutoFits": true,

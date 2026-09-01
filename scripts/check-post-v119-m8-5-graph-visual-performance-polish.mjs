@@ -6,7 +6,7 @@ const graphView = fs.readFileSync('src/components/GraphView.vue', 'utf8')
 const policy = JSON.parse(fs.readFileSync('shared/post-v119-m8-5-knowledge-graph-visual-performance-polish-policy.json', 'utf8'))
 
 requireFact(policy.appVersion === '1.0.20' && policy.stage === 'M8-5' && policy.predecessor === 'M8-4', 'policy identity drifted')
-requireFact(policy.status === 'implemented-real-desktop-audit-pending' && policy.releaseCandidate === false, 'release boundary drifted')
+requireFact(policy.status === 'accepted-real-desktop-audit-passed' && policy.productSourceCommit === '4bb8c28c7b519a8838960161db440f8720997d91' && policy.releaseCandidate === false, 'release boundary drifted')
 
 for (const token of [
   'hoveredNode && hoveredNode.id !== selectedNode?.id',
