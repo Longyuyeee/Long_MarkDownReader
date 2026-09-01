@@ -57,6 +57,7 @@
     "check:m8-2-graph-usability-evidence": "node scripts/check-post-v119-m8-2-graph-usability-evidence.mjs",
     "audit:m8-2-graph-usability": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v119-m8-2-graph-usability-audit.ps1",
     "check:m8-5-graph-visual-performance": "node scripts/check-post-v119-m8-5-graph-visual-performance-polish.mjs",
+    "check:post-v120-graph-interaction-polish": "node scripts/check-post-v120-graph-zoom-detail-controls.mjs",
     "audit:m8-5-graph-visual-performance": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-post-v119-m8-5-graph-visual-performance-audit.ps1",
     "check:m8-5-graph-visual-performance-evidence": "node scripts/check-post-v119-m8-5-graph-visual-performance-evidence.mjs",
     "audit:ux37b-knowledge-graph-canvas": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-ux37b-knowledge-graph-canvas-audit.ps1",

@@ -46,31 +46,16 @@
       <button class="community-entry" :class="{ active: communityOpen || activeCommunityId }" data-testid="graph-community-entry" @click="toggleCommunityPanel">社区 {{ communityResult.communities.length }}</button>
       <button class="community-entry" :class="{ active: selectionHistoryOpen }" data-testid="graph-selection-history-entry" @click="toggleSelectionHistoryPanel">选择历史 {{ selectionHistoryState.entries.length }}</button>
       <span class="option-divider"></span>
-      <label>布局
-        <select v-model="graphLayoutMode" @change="applySelectedLayout">
-          <option value="force">自动网络</option>
-          <option value="tree">树状</option>
-          <option value="organization">组织</option>
-          <option value="radial">放射</option>
-          <option value="timeline">时间线</option>
-        </select>
+      <label class="graph-option-field"><span>布局</span>
+        <n-select class="graph-option-select graph-layout-select" size="small" :value="graphLayoutMode" :options="graphLayoutOptions" aria-label="图谱布局" @update:value="updateGraphLayoutMode" />
       </label>
-      <label>主题
-        <select v-model="graphCanvasTheme">
-          <option value="professional">专业</option>
-          <option value="colorful">多彩</option>
-          <option value="focus">专注</option>
-        </select>
+      <label class="graph-option-field"><span>主题</span>
+        <n-select class="graph-option-select graph-theme-select" size="small" :value="graphCanvasTheme" :options="graphCanvasThemeOptions" aria-label="图谱主题" @update:value="updateGraphCanvasTheme" />
       </label>
       <template v-if="viewMode === 'mindmap'">
         <span class="option-divider"></span>
-        <label>展开深度
-          <select v-model.number="mindmapDepth" @change="refreshMindMap">
-            <option :value="1">1 层</option>
-            <option :value="2">2 层</option>
-            <option :value="3">3 层</option>
-            <option :value="4">4 层</option>
-          </select>
+        <label class="graph-option-field"><span>展开深度</span>
+          <n-select class="graph-option-select graph-depth-select" size="small" :value="mindmapDepth" :options="mindmapDepthOptions" aria-label="思维导图展开深度" @update:value="updateMindmapDepth" />
         </label>
         <span class="mindmap-root">中心：{{ mindmapRoot?.title || '请选择节点' }}</span>
       </template>
@@ -485,7 +470,7 @@ import { findShortestGraphPath } from '../utils/graphPath'
 import { buildGraphPathEvidence } from '../utils/graphEvidence'
 import { detectGraphCommunities } from '../utils/graphCommunities'
 import { compareGraphNodes } from '../utils/graphComparison'
-import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes, shouldUseGraphCommunityOverview } from '../utils/graphSemanticZoom'
+import { buildGraphCommunityContours, buildGraphCommunityOverview, graphCommunityContoursCoverMembers, graphReadableZoomFloor, resolveGraphSemanticZoom, selectSemanticZoomKeyNodes, shouldUseGraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { buildGraphEdgeRoutes, graphQuadraticGeometry, graphQuadraticLabelPoint, graphQuadraticPoint, graphQuadraticTangent } from '../utils/graphEdgeRoutes'
 import { advanceGraphPathMotionPhase, graphPathDashOffset, graphPathTraversalDirection } from '../utils/graphPathMotion'
 import { graphCameraPoseForBounds, graphCameraPoseForPoint, interpolateGraphCameraPose } from '../utils/graphCamera'
@@ -575,6 +560,19 @@ type GraphCanvasTheme = 'professional' | 'colorful' | 'focus'
 type LayoutSnapshot = { mode: GraphLayoutMode; positions: Record<string, { x: number; y: number }> }
 const graphLayoutMode = ref<GraphLayoutMode>((localStorage.getItem('longedit.graph.layout-mode') as GraphLayoutMode) || 'force')
 const graphCanvasTheme = ref<GraphCanvasTheme>((localStorage.getItem('longedit.graph.canvas-theme') as GraphCanvasTheme) || 'colorful')
+const graphLayoutOptions = [
+  { label: '自动网络', value: 'force' },
+  { label: '树状层级', value: 'tree' },
+  { label: '组织结构', value: 'organization' },
+  { label: '放射聚焦', value: 'radial' },
+  { label: '时间线', value: 'timeline' },
+]
+const graphCanvasThemeOptions = [
+  { label: '专业 · 克制网格', value: 'professional' },
+  { label: '多彩 · 语义光域', value: 'colorful' },
+  { label: '专注 · 纯净画布', value: 'focus' },
+]
+const mindmapDepthOptions = [1, 2, 3, 4].map(value => ({ label: `${value} 层`, value }))
 const graphToolsOpen = ref(false)
 const zoomLevel = ref(1)
 const layoutUndoStack = ref<LayoutSnapshot[]>([])
@@ -699,9 +697,13 @@ const semanticZoomState = computed(() => viewMode.value === 'mindmap'
 const semanticZoomLevel = computed(() => semanticZoomState.value.level)
 const semanticZoomLabel = computed(() => ({ far: '远景', middle: '中景', near: '近景' })[semanticZoomLevel.value])
 const communityOverviewUseful = computed(() => shouldUseGraphCommunityOverview(communityResult.value.communities, visibleNodes.value.length))
+const communityOverviewAvailable = computed(() => communityOverviewUseful.value && visibleNodes.value.length >= 240)
+const minimumZoomLevel = computed(() => viewMode.value === 'mindmap'
+  ? 0.38
+  : graphReadableZoomFloor(visibleNodes.value.length, communityOverviewAvailable.value))
 const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
   && viewMode.value === 'network'
-  && communityOverviewUseful.value
+  && communityOverviewAvailable.value
   && !neighborFocusRootId.value
   && !activeCommunityId.value
   && !activeShortestPath.value
@@ -735,7 +737,7 @@ const renderedRelationStrengthRingCount = computed(() => renderedNodeStatuses.va
 const graphNodeStatusHoverProbe = computed(() => {
   const status = renderedNodeStatuses.value[0]
   const node = status ? visibleNodes.value.find(item => item.id === status.nodeId) : null
-  return node ? { x: node.x || 0, y: node.y || 0 } : null
+  return node ? { id: node.id, x: node.x || 0, y: node.y || 0 } : null
 })
 const graphNodeStatusDiagnostics = computed(() => JSON.stringify({
   eligibleNodeCount: graphNodeStatusSummary.value.ringNodeCount,
@@ -940,7 +942,6 @@ let frameCount = 0
 let layoutSettled = false
 let communityOverviewCache: GraphCommunityOverview | null = null
 let communityOverviewCacheKey = ''
-let communityOverviewFrame = -1
 let minimapProjectionCache: GraphMinimapProjection | null = null
 let minimapProjectionCacheKey = ''
 let minimapLayoutRevision = 0
@@ -1352,6 +1353,15 @@ const applySelectedLayout = () => {
   scheduleLayoutSave()
   requestAnimationFrame(fitGraph)
 }
+const updateGraphLayoutMode = (value: GraphLayoutMode) => {
+  graphLayoutMode.value = value
+  applySelectedLayout()
+}
+const updateGraphCanvasTheme = (value: GraphCanvasTheme) => { graphCanvasTheme.value = value }
+const updateMindmapDepth = (value: number) => {
+  mindmapDepth.value = value
+  refreshMindMap()
+}
 
 const applyMindMapLayout = (root: GraphNode) => {
   invalidateLayoutWorker()
@@ -1486,7 +1496,7 @@ const changeGraphZoom = (factor: number, clientX?: number, clientY?: number) => 
   const rect = canvas.getBoundingClientRect()
   const anchorX = (clientX ?? rect.left + rect.width / 2) - rect.left
   const anchorY = (clientY ?? rect.top + rect.height / 2) - rect.top
-  const next = Math.max(0.1, Math.min(3, zoom * factor))
+  const next = Math.max(minimumZoomLevel.value, Math.min(3, zoom * factor))
   const worldX = (anchorX - viewX) / zoom
   const worldY = (anchorY - viewY) / zoom
   viewX = anchorX - worldX * next
@@ -1564,9 +1574,20 @@ const cameraTargetForNodes = (nodes: GraphNode[]) => {
 }
 
 const applyCameraPose = (pose: GraphCameraPose) => {
-  viewX = pose.x
-  viewY = pose.y
-  zoom = pose.zoom
+  const canvas = canvasRef.value
+  const nextZoom = Math.max(minimumZoomLevel.value, Math.min(3, pose.zoom))
+  if (canvas && nextZoom !== pose.zoom) {
+    const anchorX = canvas.clientWidth / 2
+    const anchorY = canvas.clientHeight / 2
+    const worldX = (anchorX - pose.x) / Math.max(0.001, pose.zoom)
+    const worldY = (anchorY - pose.y) / Math.max(0.001, pose.zoom)
+    viewX = anchorX - worldX * nextZoom
+    viewY = anchorY - worldY * nextZoom
+  } else {
+    viewX = pose.x
+    viewY = pose.y
+  }
+  zoom = nextZoom
   zoomLevel.value = zoom
   cameraPoseDiagnostics.value = JSON.stringify({ x: viewX, y: viewY, zoom })
   requestGraphFrame()
@@ -2028,12 +2049,10 @@ const findNodeAt = (mx: number, my: number): GraphNode | null => {
 }
 
 const currentCommunityOverview = () => {
-  const cacheKey = `${zoom.toFixed(3)}\u001e${visibleGraphSignature.value}`
-  const layoutRefresh = communityOverviewFrame !== frameCount && (layoutSettled || frameCount % 8 === 0)
-  if (!communityOverviewCache || communityOverviewCacheKey !== cacheKey || layoutRefresh) {
+  const cacheKey = `${zoom.toFixed(3)}\u001e${visibleGraphSignature.value}\u001e${minimapLayoutRevision}`
+  if (!communityOverviewCache || communityOverviewCacheKey !== cacheKey) {
     communityOverviewCache = measureGraphPhase('community-overview', () => buildGraphCommunityOverview(visibleGraph.value, communityResult.value.communities, zoom))
     communityOverviewCacheKey = cacheKey
-    communityOverviewFrame = frameCount
   }
   return communityOverviewCache
 }
@@ -2066,10 +2085,13 @@ const frameCommunityOverview = () => {
   const verticalFrame = overviewHeight <= safeBottom - safeTop
     ? { start: safeTop, size: safeBottom - safeTop }
     : { start: 12, size: canvas.clientHeight - 120 }
-  viewX = horizontalFrame.start + Math.max(0, horizontalFrame.size - overviewWidth) / 2 - minX * zoom
-  viewY = verticalFrame.start + Math.max(0, verticalFrame.size - overviewHeight) / 2 - minY * zoom
-  communityOverviewCacheKey = ''
-  requestGraphFrame()
+  const nextViewX = horizontalFrame.start + Math.max(0, horizontalFrame.size - overviewWidth) / 2 - minX * zoom
+  const nextViewY = verticalFrame.start + Math.max(0, verticalFrame.size - overviewHeight) / 2 - minY * zoom
+  if (Math.abs(nextViewX - viewX) > 0.5 || Math.abs(nextViewY - viewY) > 0.5) {
+    viewX = nextViewX
+    viewY = nextViewY
+    requestGraphFrame()
+  }
 }
 
 const refreshCameraPoseDiagnostics = () => {
@@ -2299,12 +2321,12 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
       ctx.fillStyle = activeTone.ui.text
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.font = `700 ${13 / zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-      const label = community.label.length > 18 ? `${community.label.slice(0, 18)}…` : community.label
-      ctx.fillText(label, community.x, community.y - 6 / zoom, community.radius * 1.65)
-      ctx.font = `600 ${11 / zoom}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      ctx.font = `700 ${12 / zoom}px Inter, "Microsoft YaHei", sans-serif`
+      const label = community.label.length > 11 ? `${community.label.slice(0, 11)}…` : community.label
+      ctx.fillText(label, community.x, community.y - 6 / zoom)
+      ctx.font = `600 ${10 / zoom}px Inter, "Microsoft YaHei", sans-serif`
       ctx.fillStyle = isDark ? 'rgba(255,255,255,.74)' : 'rgba(15,23,42,.68)'
-      ctx.fillText(`${community.nodeCount} 节点 · ${community.internalEdgeCount} 内部联系`, community.x, community.y + 13 / zoom, community.radius * 1.72)
+      ctx.fillText(`${community.nodeCount} 节点 · ${community.internalEdgeCount} 内部联系`, community.x, community.y + 13 / zoom)
     }
     communityOverviewInBounds.value = overview.nodes.every(community => {
       const screenX = community.x * zoom + viewX
@@ -3157,14 +3179,22 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 }
 
 .graph-options label { display: flex; align-items: center; gap: 6px; }
-.graph-options input { accent-color: var(--theme-primary); }
-.graph-options select {
-  border: 0;
-  outline: 0;
-  color: var(--theme-text);
-  background: transparent;
-  font-size: 11px;
+.graph-option-field > span { flex: none; font-weight: 650; }
+.graph-option-select { width: 136px; }
+.graph-theme-select { width: 164px; }
+.graph-depth-select { width: 90px; }
+.graph-options :deep(.n-base-selection) {
+  --n-height: 28px !important;
+  --n-border: 1px solid rgba(var(--theme-primary-rgb), .18) !important;
+  --n-border-hover: 1px solid rgba(var(--theme-primary-rgb), .48) !important;
+  --n-border-focus: 1px solid var(--theme-primary) !important;
+  --n-border-radius: 7px !important;
+  --n-color: color-mix(in srgb, var(--workspace-control-bg) 92%, transparent) !important;
+  --n-color-active: color-mix(in srgb, var(--theme-card) 96%, transparent) !important;
+  --n-box-shadow-active: 0 0 0 2px rgba(var(--theme-primary-rgb), .12) !important;
+  font-weight: 650;
 }
+.graph-options input { accent-color: var(--theme-primary); }
 .graph-container:has(.graph-filter-control[open]) :deep(.graph-semantic-legend) { visibility: hidden; }
 .option-divider { width: 1px; height: 16px; background: var(--workspace-border-color); }
 .mindmap-root { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text); }
@@ -3307,9 +3337,26 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   cursor: grabbing;
 }
 .graph-main-canvas:focus-visible { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--theme-primary) 48%, transparent); }
-.graph-canvas-theme-professional .graph-main-canvas { background-color: color-mix(in srgb, var(--theme-bg) 97%, #eef2f6); background-size: 28px 28px; }
-.graph-canvas-theme-colorful .graph-main-canvas { background-color: color-mix(in srgb, var(--theme-bg) 95%, #dcecff); }
-.graph-canvas-theme-focus .graph-main-canvas { background-color: var(--theme-bg); background-image: none; }
+.graph-canvas-theme-professional .graph-main-canvas {
+  background-color: color-mix(in srgb, var(--theme-bg) 98%, #eef2f6);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--theme-text-secondary) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--theme-text-secondary) 7%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.graph-canvas-theme-colorful .graph-main-canvas {
+  background-color: color-mix(in srgb, var(--theme-bg) 94%, #dcecff);
+  background-image:
+    radial-gradient(circle at 18% 18%, rgba(45, 212, 191, .09), transparent 32%),
+    radial-gradient(circle at 82% 72%, rgba(96, 165, 250, .10), transparent 36%),
+    radial-gradient(circle, color-mix(in srgb, var(--theme-text-secondary) 18%, transparent) 1px, transparent 1px);
+  background-size: auto, auto, 22px 22px;
+}
+.graph-canvas-theme-focus .graph-main-canvas {
+  background-color: color-mix(in srgb, var(--theme-bg) 99%, #05070a);
+  background-image: radial-gradient(circle at 50% 42%, rgba(var(--theme-primary-rgb), .045), transparent 44%);
+  background-size: auto;
+}
 
 .graph-minimap {
   position: absolute;
@@ -3427,20 +3474,22 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 
 .node-details {
   position: absolute;
-  top: calc(var(--workspace-management-header-height) + 12px);
+  top: auto;
   right: var(--workspace-floating-gutter);
+  bottom: 16px;
   z-index: 5;
   width: var(--workspace-inspector-width);
-  max-height: calc(100vh - var(--workspace-management-header-height) - 52px);
+  max-width: min(380px, calc(100% - 32px));
+  max-height: min(520px, calc(100% - var(--workspace-management-header-height) - 88px));
   overflow: auto;
-  padding: 20px;
+  padding: 16px;
   box-sizing: border-box;
-  border: 1px solid rgba(var(--theme-primary-rgb), 0.14);
-  border-radius: 6px;
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.24);
+  border-radius: 12px;
   color: var(--theme-text);
   background: color-mix(in srgb, var(--theme-card) 95%, transparent);
   backdrop-filter: blur(22px);
-  box-shadow: var(--workspace-shadow);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .24), var(--workspace-shadow-sm);
 }
 
 .details-close {
@@ -3859,9 +3908,10 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
     top: auto;
     right: 12px;
     bottom: 16px;
-    left: 12px;
-    width: auto;
-    max-height: 40vh;
+    left: auto;
+    width: var(--workspace-inspector-width);
+    max-width: min(380px, calc(100% - 24px));
+    max-height: min(480px, 52vh);
   }
 
   .graph-minimap,
@@ -3881,6 +3931,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }
   .tutorial-card { padding: 24px 18px; }
   .empty-icon { display: none; }
+  .node-details { right: 10px; bottom: 10px; width: calc(100% - 20px); max-height: 46vh; }
 }
 
 :global(.graph-project-note-disclosure) { max-width: 580px; display: grid; gap: 8px; line-height: 1.55; }

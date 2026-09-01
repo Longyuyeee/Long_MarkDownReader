@@ -51,6 +51,17 @@ export const resolveGraphSemanticZoom = (zoom: number, nodeCount: number): Graph
 }
 
 /**
+ * Keep ordinary graphs above the point where labels and hit targets stop being
+ * useful. Very large graphs may still use the explicit community overview,
+ * whose geometry is designed for a much smaller camera scale.
+ */
+export const graphReadableZoomFloor = (nodeCount: number, communityOverviewAvailable: boolean) => {
+  if (communityOverviewAvailable) return 0.16
+  const densityPressure = Math.max(1, Math.sqrt(Math.max(1, nodeCount) / 80))
+  return Math.min(0.68, Math.max(0.58, densityPressure * 0.43))
+}
+
+/**
  * A community overview is useful only when it reduces visual complexity.
  * Louvain legitimately returns one community per disconnected node; rendering
  * those as large labelled summaries makes an orphan-heavy graph less readable.
