@@ -6,6 +6,7 @@
 
 - 发布通道：`community-unsigned`。
 - 社区发布状态：`releaseCandidate=true`；完整门禁、真实 MSI/NSIS、v1.0.20→v1.0.21 隔离安装生命周期、SHA-256 与远端复核均已通过。
+- 企业签名候选仍为 `releaseCandidate=false`，与已批准的 `community-unsigned` 社区渠道分离；社区用户继续从官方 Release 手动下载安装并核对 SHA-256。
 - 固定候选：`284b0244e25f21c870bb01c37c7533b0e28ac221`；托管运行 `33488674071` 为 22/22、18/18、11/11、7/7，失败 0。
 - 正式 Release：`380371788`，Tag `v1.0.21` 精确解析到固定候选；三个附件已从公开地址回下载复核。
 - 企业 Authenticode 候选继续独立保持关闭，社区版不得冒充已签名软件。

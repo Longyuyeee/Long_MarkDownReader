@@ -51,7 +51,7 @@ const expectedDevelopmentStage = laterStageActive ? development.currentStage : p
   ? 'M6-6-v1.0.18-final-artifact-manifest-and-release-readiness-audit'
   : successor.status === 'accepted' ? `${successor.selectedNextStage.id}-${successor.selectedNextStage.name}` : `${policy.selectedNextStage.id}-${policy.selectedNextStage.name}`
 if (development.currentStage !== expectedDevelopmentStage || (laterStageActive && !development.binaryVersionTransition.startsWith(`v${development.runtimeBaseVersion}-`)) || !runtimeAccepted
-  || !['1.0.17', '1.0.18', '1.0.19', '1.0.20'].includes(development.publicVersion) || !['1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-4 development handoff drift')
+  || !['1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(development.publicVersion) || !['1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-4 development handoff drift')
 for (const [document, tokens] of [[audit, ['548 通过、0 失败、5 忽略', '6,275 modules transformed', '33361759629', 'found 0 vulnerabilities', 'M6-4']], [roadmap, ['M6-3 质量与发布就绪回执', '548', 'M6-4']], [alignment, ['M6-3 已完成', '唯一接续点为 M6-4']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-3 document missing ${token}`)
 }

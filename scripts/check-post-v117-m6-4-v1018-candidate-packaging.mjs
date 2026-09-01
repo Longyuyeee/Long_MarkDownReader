@@ -37,7 +37,7 @@ const hostedPassed = hostedLifecycle.status === 'hosted-installer-lifecycle-pass
 const releaseReady = finalReadiness?.status === 'accepted-ready-to-publish'
 const releasePublished = publishedRelease?.status === 'published-and-remote-assets-verified'
 const managedUpdaterComplete = managedUpdater?.status === 'hosted-managed-update-passed'
-const laterPublicActive = ['1.0.19', '1.0.20'].includes(development.publicVersion) && development.publicTag === `v${development.publicVersion}`
+const laterPublicActive = ['1.0.19', '1.0.20', '1.0.21'].includes(development.publicVersion) && development.publicTag === `v${development.publicVersion}`
 const laterDevelopmentTarget = laterPublicActive ? `1.0.${Number(development.publicVersion.split('.')[2]) + 1}` : null
 if (!['1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(development.runtimeBaseVersion) || development.publicVersion !== (laterPublicActive ? development.publicVersion : releasePublished ? '1.0.18' : '1.0.17')
   || development.publicTag !== (laterPublicActive ? `v${development.publicVersion}` : releasePublished ? 'v1.0.18' : 'v1.0.17')

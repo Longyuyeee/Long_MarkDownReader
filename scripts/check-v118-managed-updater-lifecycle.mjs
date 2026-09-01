@@ -33,7 +33,7 @@ for (const token of ['workflow_dispatch:', 'runs-on: windows-latest', 'LONGEDIT_
 if (workflow.includes('npm run tauri -- build') || workflow.includes('src-tauri/target')) fail('updater workflow must use published assets')
 if (!probe.includes('await delay(1000)') || !probe.includes('visual surface is stable')) fail('updater screenshot stabilization contract is missing')
 for (const token of ['v1.0.17', 'v1.0.18', '预期与实际差异', '用户确认', 'SHA-256', '自动重启', '资料', '托管']) if (!audit.includes(token)) fail(`updater audit missing: ${token}`)
-const readmeVersion = ['1.0.19', '1.0.20'].includes(development.publicVersion) ? development.publicVersion : '1.0.18'
+const readmeVersion = ['1.0.19', '1.0.20', '1.0.21'].includes(development.publicVersion) ? development.publicVersion : '1.0.18'
 for (const token of [`Stable-v${readmeVersion}`, `LongEdit_${readmeVersion}_x64-setup.exe`, `LongEdit_${readmeVersion}_x64_zh-CN.msi`]) if (!readme.includes(token)) fail(`README public download fact missing: ${token}`)
 
 const completed = policy.status === 'hosted-managed-update-passed'
