@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import './check-community-updater-contract.mjs'
 import './check-command-strip-layout.mjs'
 import './check-v106-managed-updater-lifecycle.mjs'
@@ -25,7 +26,7 @@ import './check-v118-managed-updater-lifecycle.mjs'
 import './check-v119-managed-updater-lifecycle.mjs'
 import './check-post-v119-m8-5-graph-visual-performance-polish.mjs'
 import './check-post-v119-m8-5-graph-visual-performance-evidence.mjs'
-import './check-post-v120-graph-zoom-detail-controls.mjs'
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v120-graph-zoom-detail-controls.mjs'], { stdio: 'inherit' })
 import './check-post-v117-m6-0-v1018-scope-selection.mjs'
 import './check-post-v117-m6-1-graph-fullscreen.mjs'
 import './check-post-v117-m6-2-v1018-next-slice-selection.mjs'
@@ -54,14 +55,14 @@ import './check-post-v115-m1dc-selection.mjs'
 import './check-post-v115-m1dc1-subtitle-playback.mjs'
 import './check-post-v115-m1-closure.mjs'
 import './check-development-version-identity.mjs'
-import './check-post-v115-m3b4-curved-parallel-relations-static-path-labels.mjs'
-import './check-post-v115-m3b5-selected-path-direction-motion-reduced-motion.mjs'
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v115-m3b4-curved-parallel-relations-static-path-labels.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v115-m3b5-selected-path-direction-motion-reduced-motion.mjs'], { stdio: 'inherit' })
 import './check-post-v115-m3b6-navigation-camera-selection.mjs'
-import './check-post-v115-m3b7-fit-selection-reduced-motion-focus.mjs'
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v115-m3b7-fit-selection-reduced-motion-focus.mjs'], { stdio: 'inherit' })
 import './check-post-v115-m3b8-remaining-navigation-selection.mjs'
-import './check-post-v115-m3b9-bounded-semantic-minimap.mjs'
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v115-m3b9-bounded-semantic-minimap.mjs'], { stdio: 'inherit' })
 import './check-post-v115-m3b10-remaining-professional-visual-selection.mjs'
-import './check-post-v115-m3b11-restrained-node-status-rings.mjs'
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v115-m3b11-restrained-node-status-rings.mjs'], { stdio: 'inherit' })
 import './check-post-v115-m3b12-professional-visual-system-exit.mjs'
 import './check-post-v115-m3c0-large-graph-performance-baseline.mjs'
 import './check-post-v115-m3c1-settled-dirty-frame-and-lifecycle-loop.mjs'

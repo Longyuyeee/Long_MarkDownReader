@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-09-03 M8-12A Quality Gate 历史标签检出纠偏：** `v1.0.21` 发布后的通用 Quality Gate 红灯已定位为 CI 浅克隆配置错误，而非产品回归；补丁发布门需要解析 `v1.0.17` 等历史 Tag，但原工作流仅获取当前提交深度 1 且不取标签。现已为 `actions/checkout@v6` 显式启用完整历史与标签，并补齐 Node 22 直接加载 TypeScript 图谱工具的类型剥离声明。四条专项检查、当前开发总审计和完整 `ci:patch-release` 均通过，前端为 6,276 modules、Rust check 通过、生产依赖 0 漏洞；产品运行代码、版本、公开安装包和 Release 保持不变。远端绿色运行后，唯一接续点为 **M8-12B 官方 v1.0.20 -> v1.0.21 应用内更新观察**。详见 [`Post_v1.0.21_M8_12A_Quality_Gate_Tag_Checkout_Correction_Audit_2026-09-03.md`](./Post_v1.0.21_M8_12A_Quality_Gate_Tag_Checkout_Correction_Audit_2026-09-03.md)。
+
 > **2026-09-01 v1.0.21 正式发布收口：** 知识图谱缩放下限、稳定帧、详情卡片、应用下拉和主题差异精修已进入正式安装包。固定候选 `284b0244…` 通过完整门禁；托管运行 `33488674071` 完成 v1.0.20→v1.0.21 的 22/22、18/18、11/11、7/7 真实安装生命周期，失败 0。Tag、Release `380371788` 和三个公开附件回下载复核均已完成。唯一接续点为 **M8-12 官方 v1.0.20 → v1.0.21 应用内更新观察**，不得重建或改写 v1.0.21。详见 [`RELEASE_NOTES_v1.0.21.md`](./RELEASE_NOTES_v1.0.21.md)。
 
 > **2026-09-01 M8-4 跨电脑暂停接续点：** v1.0.20 产品候选已冻结在 `654ae5aa4c08e60c9fd5b91811cc938f91e0c3c2`；最终真实 Tauri 180 节点/540 连接复跑的 Canvas draw 峰值为 4.5 ms、运行时错误 0，三张截图已人工复核。完整本地门禁已通过至 Rust 检查，唯独 npm 官方审计端点两次 TLS 建连失败，尚未取得依赖安全结果。当前公开版仍为 v1.0.19，v1.0.20 的托管双包、安装生命周期、哈希冻结、Tag、README 晋级和 Release 均未执行。换机后严格从固定候选运行 `v120-candidate-lifecycle.yml`。详见 [`Post_v1.0.19_M8_4_v1.0.20_Cross_Machine_Handoff_Audit_2026-09-01.md`](./Post_v1.0.19_M8_4_v1.0.20_Cross_Machine_Handoff_Audit_2026-09-01.md)。
