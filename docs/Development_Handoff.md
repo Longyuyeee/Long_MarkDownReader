@@ -1,5 +1,7 @@
 # Long Markdown Reader 开发交接
 
+> **2026-09-03 M8-12B 官方更新观察合同已冻结：** 已依据公开 v1.0.20/v1.0.21 Release、候选安装态 EXE 身份和既有 v1.0.19 成功运行器，新增只下载公开 NSIS 的一次性托管工作流、待执行政策、证据导入器和机器检查器。该流程不重建 v1.0.21、不接触本机安装或用户资料；预期为 12/12 用户确认、SHA-256、覆盖安装、自动重启、最新版状态及资料/配置保留。当前仍为托管执行待完成，运行成功并导入证据前不得关闭 M8 或进入 v1.0.22。详见 [`Post_v1.0.21_M8_12B_Official_Managed_Updater_Observation_Audit_2026-09-03.md`](./Post_v1.0.21_M8_12B_Official_Managed_Updater_Observation_Audit_2026-09-03.md)。
+
 > **2026-09-03 M8-12A Quality Gate 历史标签检出纠偏已关闭：** `v1.0.21` 发布后的通用 Quality Gate 红灯已定位为 CI 浅克隆配置错误，而非产品回归；补丁发布门需要解析 `v1.0.17` 等历史 Tag，但原工作流仅获取当前提交深度 1 且不取标签。现已为 `actions/checkout@v6` 显式启用完整历史与标签，并补齐 Node 22 直接加载 TypeScript 图谱工具的类型剥离声明。四条专项检查、当前开发总审计和完整 `ci:patch-release` 均通过，前端为 6,276 modules、Rust check 通过、生产依赖 0 漏洞；修复提交 `49fcc52e…` 的远端 Quality Gate [`33760803962`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33760803962) 以 7 分 02 秒成功。产品运行代码、版本、公开安装包和 Release 保持不变。唯一接续点为 **M8-12B 官方 v1.0.20 -> v1.0.21 应用内更新观察**。详见 [`Post_v1.0.21_M8_12A_Quality_Gate_Tag_Checkout_Correction_Audit_2026-09-03.md`](./Post_v1.0.21_M8_12A_Quality_Gate_Tag_Checkout_Correction_Audit_2026-09-03.md)。
 
 > **2026-09-01 v1.0.21 正式发布收口：** 知识图谱缩放下限、稳定帧、详情卡片、应用下拉和主题差异精修已进入正式安装包。固定候选 `284b0244…` 通过完整门禁；托管运行 `33488674071` 完成 v1.0.20→v1.0.21 的 22/22、18/18、11/11、7/7 真实安装生命周期，失败 0。Tag、Release `380371788` 和三个公开附件回下载复核均已完成。唯一接续点为 **M8-12 官方 v1.0.20 → v1.0.21 应用内更新观察**，不得重建或改写 v1.0.21。详见 [`RELEASE_NOTES_v1.0.21.md`](./RELEASE_NOTES_v1.0.21.md)。
