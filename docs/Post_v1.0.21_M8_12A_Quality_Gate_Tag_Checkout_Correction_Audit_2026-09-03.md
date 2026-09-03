@@ -55,7 +55,15 @@ with:
 - Rust `cargo check --locked`：通过。
 - `npm audit --omit=dev --registry=https://registry.npmjs.org`：0 vulnerabilities。
 
-远端绿色运行属于推送后验收，必须以本次修复提交触发的新 Quality Gate 为准。
+## 远端验收结果
+
+- 修复提交：`49fcc52e65d3accccde190a2873f0b2fa0aa6fea`。
+- GitHub Quality Gate：[`33760803962`](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33760803962)。
+- 运行结论：成功。
+- 总耗时：7 分 02 秒。
+- 完整历史检出、Node 环境、锁定依赖安装、完整补丁发布门及清理步骤全部通过。
+
+M8-12A 至此关闭，历史标签不可见和 Node 22 TypeScript 检查器入口不完整两项问题均已纠正。
 
 ## 边界与接续点
 
