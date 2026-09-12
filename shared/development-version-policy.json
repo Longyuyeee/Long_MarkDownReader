@@ -8,12 +8,12 @@
   "publicTagCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-12-v1.0.20-to-v1.0.21-managed-updater-observation",
+  "currentStage": "M8-13-v1.0.22-search-scope-freeze-and-release-readiness",
   "binaryVersionTransition": "v1.0.21-public-release-published",
-  "displayLabel": "v1.0.21 已发布 · v1.0.22 搜索恢复切片开发中",
+  "displayLabel": "v1.0.21 已发布 · v1.0.22 搜索补丁范围冻结与发布准备",
   "activeSlice": {
-    "id": "v1.0.22-compact-search-results",
-    "status": "bounded-layout-accepted-scope-freeze-next",
-    "document": "docs/Post_v1.0.21_Compact_Search_Result_Layout_Audit_2026-09-12.md"
+    "id": "v1.0.22-search-scope-freeze",
+    "status": "scope-frozen-pre-version-quality-review",
+    "document": "docs/Post_v1.0.21_v1.0.22_Scope_Freeze_and_Readiness_2026-09-12.md"
   }
 }

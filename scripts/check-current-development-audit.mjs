@@ -96,7 +96,8 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.21' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M8-12 v1.0.20 → v1.0.21 官方应用内更新观察**', policy.currentStatus === 'v1.0.21-community-release-published' && ['1.0.20-to-1.0.21-pending', '1.0.20-to-1.0.21-passed'].includes(policy.patchValidation?.managedUpdaterUpgradePath)],
+  ['当前阶段：**v1.0.22 搜索补丁范围冻结与发布准备**', development.currentStage === 'M8-13-v1.0.22-search-scope-freeze-and-release-readiness' && development.activeSlice?.id === 'v1.0.22-search-scope-freeze' && fs.existsSync(development.activeSlice.document)],
+  ['M8 更新观察已收口', policy.currentStatus === 'v1.0.21-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.20-to-1.0.21-passed'],
 ]
 
 for (const [token, condition] of required) {
