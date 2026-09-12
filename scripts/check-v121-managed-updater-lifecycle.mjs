@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import { assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const json = file => JSON.parse(read(file))
@@ -38,6 +39,8 @@ if (!probe.includes('await delay(1000)') || !probe.includes('visual surface is s
 for (const token of ['v1.0.20', 'v1.0.21', '预期与实际差异', '用户确认', 'SHA-256', '自动重启', '资料', '托管']) if (!audit.includes(token)) fail(`updater audit missing: ${token}`)
 
 const completed = policy.status === 'hosted-managed-update-passed'
+try { assertV121UpdaterStatus(policy, json('shared/v1-community-release-policy.json'), currentReceipt) }
+catch (error) { fail(error.message) }
 if (!completed) {
   if (policy.gates?.harnessImplemented !== true || Object.entries(policy.gates ?? {}).some(([key, value]) => key !== 'harnessImplemented' && value !== false) || policy.githubRun !== null || policy.nextAction !== 'push-harness-pass-current-audit-and-run-hosted-managed-updater-lifecycle') fail('pending updater state drift')
 } else {

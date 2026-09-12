@@ -25,6 +25,7 @@ import './check-v117-managed-updater-lifecycle.mjs'
 import './check-v118-managed-updater-lifecycle.mjs'
 import './check-v119-managed-updater-lifecycle.mjs'
 import './check-v121-managed-updater-lifecycle.mjs'
+execFileSync(process.execPath, ['--test', 'scripts/test-v121-updater-status.mjs'], { stdio: 'inherit' })
 import './check-post-v119-m8-5-graph-visual-performance-polish.mjs'
 import './check-post-v119-m8-5-graph-visual-performance-evidence.mjs'
 execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v120-graph-zoom-detail-controls.mjs'], { stdio: 'inherit' })
@@ -92,7 +93,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.21' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**M8-12 v1.0.20 → v1.0.21 官方应用内更新观察**', policy.currentStatus === 'v1.0.21-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.20-to-1.0.21-passed'],
+  ['当前阶段：**M8-12 v1.0.20 → v1.0.21 官方应用内更新观察**', policy.currentStatus === 'v1.0.21-community-release-published' && ['1.0.20-to-1.0.21-pending', '1.0.20-to-1.0.21-passed'].includes(policy.patchValidation?.managedUpdaterUpgradePath)],
 ]
 
 for (const [token, condition] of required) {
