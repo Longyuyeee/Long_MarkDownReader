@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.21-U1I",
+  "status": "accepted",
+  "importedAt": "2026-09-12T05:12:30Z",
+  "githubRunId": 34674860989,
+  "artifactId": 10291902042,
+  "artifactDigest": "sha256:a0514dcf66c3f306ed6e9794cee7d911bead4f20eaaa6f8a60b1e6d4bd4249df",
+  "headCommit": "80b6e1f86d7bdf8c0e22cbf4ee91fc835741f47e",
+  "previousVersion": "1.0.20",
+  "currentVersion": "1.0.21",
+  "officialInstallerSha256": "25507ea07506bb6b6a75da6ed82bc1ae7daf87da022ca4736f0aa30383691b13",
+  "installedExecutableSha256": "621f933df95fe6b050c59b98e7471a97d0f2f8487bfc56968bbb54ba29b75539",
+  "lifecycleChecks": {
+    "passed": 12,
+    "failed": 0
+  },
+  "releaseMessaging": "official-published-copy-observed",
+  "sourceUserContentIncluded": false,
+  "visualReview": {
+    "reviewer": "Codex (direct screenshot inspection)",
+    "reviewedAt": "2026-09-12T05:11:56Z",
+    "screenshots": [
+      {
+        "path": "managed-updater-available.jpg",
+        "sha256": "b726b4db8502b9c57290402cce18f4f815177e91be1066ff7f1347bfa527cf42",
+        "accepted": true
+      },
+      {
+        "path": "managed-updater-installing.jpg",
+        "sha256": "0ea6d323f45452762b128ce1ae1e72c66fa3c46284f1fa9331b7dd71204a35be",
+        "accepted": true
+      },
+      {
+        "path": "managed-updater-current.jpg",
+        "sha256": "1cc6817647b6d37852f7ea84fa25932abcc13ec2169d7bb9f7f1e00bd634e36c",
+        "accepted": true
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "managed-updater-available.jpg",
+      "bytes": 57200,
+      "sha256": "b726b4db8502b9c57290402cce18f4f815177e91be1066ff7f1347bfa527cf42",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "managed-updater-current.jpg",
+      "bytes": 50255,
+      "sha256": "1cc6817647b6d37852f7ea84fa25932abcc13ec2169d7bb9f7f1e00bd634e36c",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "managed-updater-discovery-evidence.json",
+      "bytes": 3773,
+      "sha256": "5cb3817c0883363a0fb9ebab693f551de73e42910926bfca8d331bd251ccdfea"
+    },
+    {
+      "path": "managed-updater-installed-binary.json",
+      "bytes": 598,
+      "sha256": "3a80921f188b87329971d64350aa901f3a707e4c1530091b8df5a7e912083468"
+    },
+    {
+      "path": "managed-updater-installing.jpg",
+      "bytes": 61264,
+      "sha256": "0ea6d323f45452762b128ce1ae1e72c66fa3c46284f1fa9331b7dd71204a35be",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "managed-updater-lifecycle-result.json",
+      "bytes": 3460,
+      "sha256": "67f05e7985de5ce8faca8c43dcc3f4f074f1b4cbf92293d228f3368426fc5781"
+    },
+    {
+      "path": "managed-updater-post-upgrade-evidence.json",
+      "bytes": 3380,
+      "sha256": "b31e870d640220b421a16077ea12f5ca8caf0c53718a59f61a35ceaf85323422"
+    },
+    {
+      "path": "managed-updater-post-upgrade-navigation.json",
+      "bytes": 373,
+      "sha256": "8eb91b5cc12bea584ee837b4c91510f084faebe3afd1922e303e91b08ac2ded3"
+    },
+    {
+      "path": "official-release-assets.json",
+      "bytes": 772,
+      "sha256": "aa5f2a6e7a387245ec78994d74144dc29ef881ef76a3672fe5609753b28c9a9f"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.21-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v121-managed-updater-lifecycle.yml",
   "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
@@ -56,25 +56,34 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
   "expectedVsActualAtEntry": {
     "expected": "official v1.0.20 discovers, confirms, verifies, installs, relaunches and reports official v1.0.21 while retaining user data",
     "actual": "pending hosted execution against immutable public Release assets",
     "correction": "do not treat candidate overwrite-install lifecycle as the separate post-publication in-app updater observation"
   },
-  "attemptHistory": [],
-  "githubRun": null,
+  "attemptHistory": [
+    { "runId": 34674860989, "accepted": true, "checksPassed": 12, "checksFailed": 0, "date": "2026-09-12" }
+  ],
+  "githubRun": {
+    "id": 34674860989,
+    "conclusion": "success",
+    "headCommit": "80b6e1f86d7bdf8c0e22cbf4ee91fc835741f47e",
+    "artifactId": 10291902042,
+    "artifactDigest": "sha256:a0514dcf66c3f306ed6e9794cee7d911bead4f20eaaa6f8a60b1e6d4bd4249df",
+    "qualityGateRunId": 34674531897
+  },
   "evidenceRoot": "docs/evidence/v1.0.21-managed-updater",
-  "nextAction": "push-harness-pass-current-audit-and-run-hosted-managed-updater-lifecycle"
+  "nextAction": "v1.0.21-release-and-managed-updater-closure-complete"
 }

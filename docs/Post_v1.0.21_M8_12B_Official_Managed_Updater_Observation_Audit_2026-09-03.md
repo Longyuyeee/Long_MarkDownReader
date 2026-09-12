@@ -2,7 +2,9 @@
 
 日期：2026-09-03
 
-阶段结论：**托管执行待完成；合同、公开资产事实及远端 Quality Gate 已通过。**
+阶段结论（2026-09-12 更新）：**正式托管观察 12/12、失败 0，三张截图直接复核，九个证据文件及导入清单已入库；M8-12 收口。**
+
+完成运行：[34674860989](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/34674860989)，前置完整 Quality Gate：[34674531897](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/34674531897)。下文“当前实际”和“下一步”是 2026-09-03 进入阶段时的历史记录；当前接续以 [2026-09-12 收口记录](./Post_v1.0.21_M8_12E_Managed_Update_Closure_2026-09-12.md) 为准。
 
 ## 目标与边界
 

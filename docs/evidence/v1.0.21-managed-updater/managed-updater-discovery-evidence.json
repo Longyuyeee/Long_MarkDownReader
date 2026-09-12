@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.21-U1-DISCOVERY",
+  "capturedAt": "2026-09-12T05:10:54.676Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.20",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.20",
+    "latestVersion": "1.0.21",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.21",
+    "releaseNotes": "# Long编辑 v1.0.21\n\n状态：已于 2026-09-01 正式发布，三个公开附件已回下载复核。\n\nv1.0.21 是知识图谱交互精修补丁，不扩大源文件写回范围。\n\n## 主要变化\n\n- 普通图谱根据节点密度设置可读缩放下限；83 节点真实场景最低为 58%，连续缩小不再误入社区泡泡总览。\n- 社区总览只用于至少 240 个可见节点且聚合有效的大图，并移除稳定布局后的逐帧缓存重建，解决图标闪烁和乱动。\n- 社区标题不再通过 Canvas 最大宽度压扁字形，改为一致字体与有界截断。\n- 单节点详情收为右下角卡片，桌面宽度上限 380px、高度上限 520px，不再占满底部。\n- 布局、主题和思维导图深度使用统一应用浮层选择器；专业、多彩、专注三种画布具有明确不同的视觉层次。\n\n## 真实验证基线\n\nWindows/Tauri/WebView2、1440×900、DPR 1.25、真实资料库 45 个源文件、83 节点/81 连接。连续缩小 48 次后稳定在 58%，社区总览为 false；等待 550ms 后布局帧号仍为 120，连续动画为 false；详情卡片为 380×468px，约占视口 13.72%；运行时错误为 0，测试前后 45/45 文件 SHA-256 一致。\n\n固定候选 `284b0244e25f21c870bb01c37c7533b0e28ac221` 已通过完整 `ci:patch-release`。GitHub 托管 Windows [运行 33488674071](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33488674071) 从公开 v1.0.20 完成 v1.0.21 隔离覆盖安装：生命周期 22/22、安装态 18/18、路由 11/11、管理回滚 7/7，失败 0。NSIS、MSI 与 `SHA256SUMS.txt` 已从公开 Release 回下载并逐项匹配冻结大小与 SHA-256。\n\n公开 Release：[Long编辑 v1.0.21](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.21)。\n\n## 安全与兼容性\n\n支持 Windows 10/11 x64。社区安装包为 `NotSigned`，Windows 可能显示未知发布者或 SmartScreen 提示；只应从官方 GitHub Release 下载并核对 `SHA256SUMS.txt`。\n",
+    "publishedAt": "2026-09-01T09:34:23Z",
+    "installerName": "LongEdit_1.0.21_x64-setup.exe",
+    "installerSize": 66815338,
+    "installerSha256": "25507ea07506bb6b6a75da6ed82bc1ae7daf87da022ca4736f0aa30383691b13"
+  },
+  "confirmation": {
+    "title": "发现新版本已通过官方发布源检查",
+    "text": "发现新版本已通过官方发布源检查v1.0.20v1.0.21安装包将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后安装。63.7 MBWindow  x64覆盖安装本次更新状态：已于 2026-09-01 正式发布，三个公开附件已回下载复核。v1.0.21 是知识图谱交互精修补丁，不扩大源文件写回范围。主要变化普通图谱根据节点密度设置可读缩放下限；83 节点真实场景最低为 58%，连续缩小不再误入社区泡泡总览。安装完成后 Long编辑会自动重新打开。未签名社区版仍可能触发 Window “未知发布者”提示。发布详情稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-09-12T05:10:54.698Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}
