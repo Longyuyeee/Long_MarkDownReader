@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import crypto from 'node:crypto'
+import { assertCommunityReleaseObservation } from './lib/community-release-observation.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const json = path => JSON.parse(read(path))
@@ -27,6 +28,9 @@ const managedUpdaterLifecyclePath = `shared/v${managedUpdaterPolicyToken}-manage
 const managedUpdaterLifecycle = fs.existsSync(managedUpdaterLifecyclePath) ? json(managedUpdaterLifecyclePath) : null
 const previousReleaseReceiptPath = `docs/evidence/v${previousPublicVersion}-release/release-receipt.json`
 const previousReleaseReceipt = fs.existsSync(previousReleaseReceiptPath) ? json(previousReleaseReceiptPath) : null
+const currentObservationPath = `shared/v${major}${patch}-managed-updater-lifecycle-policy.json`
+try { assertCommunityReleaseObservation(policy, fs.existsSync(currentObservationPath) ? json(currentObservationPath) : null) }
+catch (error) { fail(error.message) }
 
 if (!/^1\.\d+\.\d+$/.test(pkg.version) || tauri.version !== pkg.version || !cargo.includes(`version = "${pkg.version}"`)) fail('V1 version identity drift')
 if (tauri.bundle?.createUpdaterArtifacts !== false) fail('unsigned managed-SHA256 release must not require legacy Tauri updater signatures')
@@ -83,7 +87,7 @@ if (published) {
 } else if (lifecycleVerified) {
   if (policy.gates?.githubReleasePublished !== false
     || policy.patchValidation?.fullInstalledLifecycleRerun !== true
-    || policy.patchValidation?.managedUpdaterUpgradePath !== `${managedUpdaterUpgradePrefix}-passed`
+    || policy.patchValidation?.managedUpdaterUpgradePath !== `${managedUpdaterUpgradePrefix}-pending`
     || !Number.isInteger(policy.candidate?.hostedInstalledLifecycleRunId)
     || policy.candidate?.artifacts?.length !== 2
     || policy.candidate.artifacts.some(item => !['msi', 'nsis'].includes(item.target) || item.authenticodeStatus !== 'NotSigned')) fail('hosted-lifecycle-passed intermediate state drift')

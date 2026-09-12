@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
-import { assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
+import { assertV121DevelopmentBoundary, assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
 
 const read = file => fs.readFileSync(file, 'utf8')
 const json = file => JSON.parse(read(file))
@@ -27,7 +27,8 @@ const previousAsset = previousReceipt.assets.find(item => item.name.endsWith('-s
 const currentAsset = currentReceipt.assets.find(item => item.name.endsWith('-setup.exe'))
 
 if (policy.schemaVersion !== 1 || policy.stage !== 'V1.0.21-U1' || !['hosted-execution-pending', 'hosted-managed-update-passed'].includes(policy.status)) fail('v1.0.21 updater policy identity drift')
-if (development.publicVersion !== '1.0.21' || development.runtimeBaseVersion !== '1.0.21' || development.developmentTargetVersion !== '1.0.22') fail('development version boundary drift')
+try { assertV121DevelopmentBoundary(development, json('shared/v1-community-release-policy.json')) }
+catch (error) { fail(error.message) }
 if (policy.releases?.previous?.version !== '1.0.20' || policy.releases?.previous?.tag !== previousReceipt.release?.tag || policy.releases?.previous?.installer?.fileName !== previousAsset?.name || policy.releases?.previous?.installer?.sizeBytes !== previousAsset?.sizeBytes || policy.releases?.previous?.installer?.sha256 !== previousAsset?.sha256) fail('previous official release drift')
 if (policy.releases?.current?.version !== '1.0.21' || policy.releases?.current?.tag !== currentReceipt.release?.tag || policy.releases?.current?.url !== currentReceipt.release?.url || policy.releases?.current?.taggedCommit !== currentReceipt.release?.taggedCommit || policy.releases?.current?.installer?.fileName !== currentAsset?.name || policy.releases?.current?.installer?.sizeBytes !== currentAsset?.sizeBytes || policy.releases?.current?.installer?.sha256 !== currentAsset?.sha256) fail('current official release drift')
 if (policy.releases?.current?.installedPackageExecutable?.sha256 !== '621f933df95fe6b050c59b98e7471a97d0f2f8487bfc56968bbb54ba29b75539' || policy.releases?.current?.installedPackageExecutable?.sizeBytes !== 112869888 || candidateLifecycle.githubRunId !== 33488674071) fail('installed executable trust anchor drift')
