@@ -1,10 +1,19 @@
 {
   "schemaVersion": 1,
   "stage": "M8-15",
-  "status": "hosted-success-user-review-rejected",
-  "githubRunId": 34676269824,
-  "releaseBlocker": "TXT save/reopen screenshot contains save failure and unsaved state; manual reproduction and product correction required",
-  "candidateCommit": "ada0cd607ae64b03c7f8786cef68f7326a5a8663",
+  "status": "corrected-candidate-hosted-execution-pending",
+  "githubRunId": null,
+  "releaseBlocker": "Corrected candidate requires fresh installed lifecycle, visible save feedback review and separate search acceptance",
+  "candidateCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+  "rejectedCandidates": [
+    {
+      "candidateCommit": "ada0cd607ae64b03c7f8786cef68f7326a5a8663",
+      "githubRunId": 34676269824,
+      "status": "hosted-success-user-review-rejected",
+      "reason": "TXT screenshot shows save failure and unsaved state despite workflow success",
+      "review": "docs/V1_0_22_User_Scenario_Review_2026-09-12.md"
+    }
+  ],
   "appVersion": "1.0.22",
   "previousVersion": "1.0.21",
   "previousTagCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
