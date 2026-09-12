@@ -131,11 +131,14 @@ pub async fn get_all_tags(library_root: String) -> Result<Vec<TagEntry>, String>
 
 #[tauri::command]
 pub async fn search_by_tag(library_root: String, tag: String) -> Result<Vec<FileEntry>, String> {
+    search_tags_in_library(Path::new(&library_root), &tag)
+}
+
+fn search_tags_in_library(root: &Path, tag: &str) -> Result<Vec<FileEntry>, String> {
     let mut results = Vec::new();
-    let root = Path::new(&library_root);
-    if root.exists() {
-        search_tag_recursive(root, &tag, &mut results);
-    }
+    // An unavailable library is a failed search, not a successful empty result.
+    fs::read_dir(root).map_err(|_| "资料库不存在或无法读取，请检查路径后重试".to_string())?;
+    search_tag_recursive(root, tag, &mut results);
     Ok(results)
 }
 
@@ -200,6 +203,44 @@ fn search_tag_recursive(dir: &Path, tag: &str, results: &mut Vec<FileEntry>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tag_search_rejects_missing_or_non_directory_root() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-tag-search-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        assert!(search_tags_in_library(&root, "验收").is_err());
+        fs::write(&root, "synthetic").unwrap();
+        assert!(search_tags_in_library(&root, "验收").is_err());
+        fs::remove_file(&root).unwrap();
+    }
+
+    #[test]
+    fn tag_search_distinguishes_readable_empty_library_and_match() {
+        let root = std::env::temp_dir().join(format!(
+            "longedit-tag-search-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir(&root).unwrap();
+        assert!(search_tags_in_library(&root, "验收").unwrap().is_empty());
+        let note = root.join("synthetic.md");
+        fs::write(&note, "合成资料 #验收").unwrap();
+        assert_eq!(search_tags_in_library(&root, "验收").unwrap().len(), 1);
+        assert!(search_tags_in_library(&root, "没有匹配")
+            .unwrap()
+            .is_empty());
+        fs::remove_file(note).unwrap();
+        fs::remove_dir(root).unwrap();
+    }
 
     #[test]
     fn searchable_extensions_are_case_insensitive_and_bounded() {

@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-12",
+  "baselineCommit": "53402d4784eefae65ef7739b37680345a30e0c97",
+  "candidateChanges": ["src-tauri/src/commands/search.rs", "scripts/test-search-recovery.mjs"],
+  "environment": "local Windows Tauri debug build; synthetic library; isolated WebView profile; native computer-use observation",
+  "status": "bounded-recovery-accepted",
+  "observations": [
+    "ordinary search found synthetic content",
+    "temporary synthetic library relocation caused real IPC failure and visible retry alert",
+    "restoring library and clicking retry restored ordinary result without changing query",
+    "rebuilt tag command reported unavailable directory as error",
+    "restoring library and clicking retry returned Markdown tag match"
+  ],
+  "fixtureSha256BeforeAndAfter": "bccf7772feb1a640f99eadfe6221df6ab787f70d8ce9d2b9d94d77dd1708c8db",
+  "sourceUserContentIncluded": false,
+  "vueTestsPassed": 14,
+  "rustSearchTestsPassed": 4,
+  "screenshots": [
+    { "path": "tag-search-failure.jpg", "sha256": "357032b55f828086801dd153455d0421df13ff5949773e0f03de7add4354728c", "directlyReviewed": true },
+    { "path": "tag-search-recovered.jpg", "sha256": "272b40f42c576198cd069d5b824406dd850fd7ec74762ffda3d9beb79058ced0", "directlyReviewed": true }
+  ],
+  "limitations": ["not a full large-library performance matrix", "nested-directory or individual-file read failures retain prior best-effort semantics", "library switch and unmount race checks use real Vue runtime with controlled backend responses, not native timing stress"]
+}
