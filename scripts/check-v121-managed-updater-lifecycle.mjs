@@ -52,6 +52,13 @@ if (!completed) {
   if (!fs.existsSync(manifestPath)) fail('v1.0.21 updater evidence is missing')
   else {
     const manifest = json(manifestPath)
+    const review = manifest.visualReview
+    if (!review || typeof review.reviewer !== 'string' || !review.reviewer.trim()
+      || !Number.isFinite(Date.parse(review.reviewedAt)) || Date.parse(review.reviewedAt) > Date.parse(manifest.importedAt)
+      || !Array.isArray(review.screenshots) || review.screenshots.length !== 3
+      || (manifest.files ?? []).filter(file => file.path.endsWith('.jpg')).length !== 3
+      || (manifest.files ?? []).filter(file => file.path.endsWith('.jpg')).some(file =>
+        review.screenshots.filter(item => item.path === file.path && item.sha256 === file.sha256 && item.accepted === true).length !== 1)) fail('explicit screenshot review record missing or mismatched')
     if (manifest.stage !== 'V1.0.21-U1I' || manifest.status !== 'accepted' || manifest.githubRunId !== policy.githubRun.id || manifest.artifactId !== policy.githubRun.artifactId || manifest.headCommit !== policy.githubRun.headCommit || manifest.previousVersion !== '1.0.20' || manifest.currentVersion !== '1.0.21' || manifest.officialInstallerSha256 !== policy.releases.current.installer.sha256 || manifest.installedExecutableSha256 !== policy.releases.current.installedPackageExecutable.sha256 || manifest.lifecycleChecks?.passed !== 12 || manifest.lifecycleChecks?.failed !== 0 || manifest.releaseMessaging !== 'official-published-copy-observed' || manifest.sourceUserContentIncluded !== false || manifest.files?.length !== 9 || manifest.files.filter(file => file.path.endsWith('.jpg')).some(file => file.visuallyReviewed !== true)) fail('v1.0.21 updater import drift')
     for (const file of manifest.files ?? []) {
       const evidencePath = `${root}/${file.path}`

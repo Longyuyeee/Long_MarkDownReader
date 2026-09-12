@@ -26,6 +26,7 @@ import './check-v118-managed-updater-lifecycle.mjs'
 import './check-v119-managed-updater-lifecycle.mjs'
 import './check-v121-managed-updater-lifecycle.mjs'
 execFileSync(process.execPath, ['--test', 'scripts/test-v121-updater-status.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-v121-updater-import.mjs'], { stdio: 'inherit' })
 import './check-post-v119-m8-5-graph-visual-performance-polish.mjs'
 import './check-post-v119-m8-5-graph-visual-performance-evidence.mjs'
 execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-post-v120-graph-zoom-detail-controls.mjs'], { stdio: 'inherit' })
