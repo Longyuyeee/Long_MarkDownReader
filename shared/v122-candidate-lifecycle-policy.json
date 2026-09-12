@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-15",
+  "status": "hosted-execution-pending",
+  "candidateCommit": "ada0cd607ae64b03c7f8786cef68f7326a5a8663",
+  "appVersion": "1.0.22",
+  "previousVersion": "1.0.21",
+  "previousTagCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
+  "previousInstallerSource": "official-github-release",
+  "previousReleaseReceipt": "docs/evidence/v1.0.21-release/release-receipt.json",
+  "workflow": ".github/workflows/v122-candidate-lifecycle.yml",
+  "expectedChecks": { "lifecycle": 22, "installedWorkspace": 18, "routes": 11, "managementRollback": 7 },
+  "searchInstalledAcceptance": "pending-separate-validation",
+  "officialManagedUpdateObservation": "pending-after-publication",
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false
+}

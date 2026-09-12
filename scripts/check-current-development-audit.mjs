@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-version-transition.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-v122-candidate-lifecycle.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
 import './check-community-updater-contract.mjs'
