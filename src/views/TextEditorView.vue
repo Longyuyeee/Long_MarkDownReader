@@ -153,6 +153,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { runTextSave, waitForTextSave } from '../utils/pendingTextSaves'
 import { basicSetup } from 'codemirror'
 import { autocompletion } from '@codemirror/autocomplete'
 import { undo, redo } from '@codemirror/commands'
@@ -522,9 +523,12 @@ const readRange = (offset: number, encoding?: string) => invoke<TextDocumentRang
 
 const load = async (encoding?: string, discardDraft = false) => {
   const generation = ++loadGeneration
+  const requestedPath = textPath.value
   loading.value = true
   loadError.value = ''
   try {
+    await waitForTextSave(requestedPath)
+    if (generation !== loadGeneration || textPath.value !== requestedPath) return
     if (
       !textPath.value
       || format.value?.routeName !== 'TextEditor'
@@ -581,26 +585,42 @@ const loadNextRange = async () => {
 const save = async () => {
   if (!editor || readOnly.value || !dirty.value || saving.value || !format.value) return
   saving.value = true
+  const savedEditor = editor
+  const savedPath = textPath.value
+  const savedGeneration = loadGeneration
+  const savedTab = store.tabs.find(item => item.path === savedPath)
+  const isCurrent = () => editor === savedEditor && textPath.value === savedPath && loadGeneration === savedGeneration
   const content = editor.state.doc.toString()
+  const command = isExternal.value ? 'write_external_text_document' : 'write_text_document'
+  const args = {
+    ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
+    path: savedPath, formatId: format.value.id, content, expectedSignature: signature.value,
+    savePolicy: { expectedSignature: signature.value, encoding: saveEncoding.value, bom: saveBom.value, lineEnding: saveLineEnding.value, hasFinalNewline: saveFinalNewline.value },
+  }
+  return runTextSave(savedPath, async () => {
   try {
-    const snapshot = await invoke<TextDocumentSnapshot>(
-      isExternal.value ? 'write_external_text_document' : 'write_text_document',
-      {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: textPath.value,
-      formatId: format.value.id,
-      content,
-      expectedSignature: signature.value,
-      savePolicy: {
-        expectedSignature: signature.value,
-        encoding: saveEncoding.value,
-        bom: saveBom.value,
-        lineEnding: saveLineEnding.value,
-        hasFinalNewline: saveFinalNewline.value,
-      },
-      },
-    )
-    if (editor.state.doc.toString() === content) {
+    const snapshot = await invoke<TextDocumentSnapshot>(command, args)
+    if (!isCurrent()) {
+      // Only reconcile the original tab, never the newly selected document.
+      if (savedTab && store.tabs.includes(savedTab)) {
+        const unchanged = savedTab.content === content
+          && savedTab.textSaveEncoding === args.savePolicy.encoding
+          && savedTab.textSaveBom === args.savePolicy.bom
+          && savedTab.textSaveLineEnding === args.savePolicy.lineEnding
+          && savedTab.textSaveFinalNewline === args.savePolicy.hasFinalNewline
+        savedTab.textSignature = snapshot.signature
+        savedTab.textSize = snapshot.size
+        savedTab.textModified = snapshot.modified
+        if (unchanged) {
+          savedTab.content = snapshot.content
+          savedTab.isDirty = false
+        }
+      }
+      return
+    }
+    if (savedEditor.state.doc.toString() === content
+      && saveEncoding.value === args.savePolicy.encoding && saveBom.value === args.savePolicy.bom
+      && saveLineEnding.value === args.savePolicy.lineEnding && saveFinalNewline.value === args.savePolicy.hasFinalNewline) {
       applySnapshot(snapshot)
     } else {
       signature.value = snapshot.signature
@@ -612,20 +632,21 @@ const save = async () => {
     message.success('文本已安全保存')
   } catch (cause) {
     const error = cause as TextDocumentError
-    if (error?.code === 'external-modified') {
+    if (isCurrent() && error?.code === 'external-modified') {
       dialog.warning({
         title: '文件已在外部修改',
         content: errorMessage(cause),
         positiveText: '重新加载',
         negativeText: '保留编辑内容',
-        onPositiveClick: () => { void load(sourceEncoding.value, true) },
+        onPositiveClick: () => { if (isCurrent()) void load(sourceEncoding.value, true) },
       })
     } else {
-      message.error(`保存失败：${errorMessage(cause)}`)
+      message.error(`${savedPath.split(/[\\/]/).pop()} 保存失败：${errorMessage(cause)}`)
     }
   } finally {
     saving.value = false
   }
+  })
 }
 
 const reloadCurrentEncoding = async () => {
@@ -707,6 +728,7 @@ onMounted(async () => {
   window.addEventListener('keydown', handleKeydown)
 })
 onBeforeUnmount(() => {
+  ++loadGeneration
   editor?.destroy()
   editor = null
   window.removeEventListener('keydown', handleKeydown)

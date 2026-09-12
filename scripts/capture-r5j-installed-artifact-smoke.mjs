@@ -376,6 +376,15 @@ await waitFor(`document.querySelector(${JSON.stringify(embeddedEditorSelector)})
 await assertNoGlobalFallback('reopened installed TXT editor')
 const textVisual = await assertEditorTextVisible('R5J_TEXT_SAVED', 'reopened installed TXT editor')
 await capture('installed-txt-save-reopen.jpg')
+// Keep the immediate navigation scenario. Disk contents alone do not prove a
+// successful user experience; preserve the screenshot before rejecting it.
+const textSaveFeedback = await evaluate(`({
+  failed: document.body.innerText.includes('保存失败'),
+  identity: document.querySelector('.text-workspace .document-title')?.textContent || ''
+})`)
+if (textSaveFeedback.failed || !textSaveFeedback.identity.includes('已同步') || textSaveFeedback.identity.includes('未保存')) {
+  throw new Error('Installed TXT save/reopen has failure feedback or unsaved state; screenshot retained')
+}
 checks.push({ id: 'installed-txt-read-edit-save-reopen', status: 'passed', visual: textVisual })
 
 const jsonRoute = `#/library?path=${encodeURIComponent(jsonFile)}`
