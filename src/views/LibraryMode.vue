@@ -112,8 +112,7 @@
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
-                  <div v-if="knowledgeSearchRunning" class="knowledge-search-state">正在搜索工作区已索引内容…</div>
-                  <div v-else-if="!visibleKnowledgeSearchResults.length" class="knowledge-search-state">没有找到匹配内容</div>
+                  <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
                   <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.locatorObjectId || result.annotationId || index}`" class="knowledge-search-result">
                     <button class="knowledge-result-open" @click="openKnowledgeSearchResult(result)">
                       <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
@@ -741,6 +740,7 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import SearchFeedback from '../components/SearchFeedback.vue'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -1304,6 +1304,7 @@ const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const knowledgeSearchRunning = ref(false)
+const knowledgeSearchFailed = ref(false)
 let knowledgeSearchGeneration = 0
 let relationSummaryGeneration = 0
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
@@ -1325,6 +1326,8 @@ const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.len
   : knowledgeSearchResults.value)
 const closeGraphCollection = () => {
   ++knowledgeSearchGeneration
+  knowledgeSearchFailed.value = false
+  knowledgeSearchRunning.value = false
   activeCollectionId.value = ''
   knowledgeSearchResults.value = []
   void refreshRelationSummaries()
@@ -1338,6 +1341,8 @@ const activateGraphCollection = async (search: SavedSearchConfig) => {
   searchQuery.value = ''
   searchObjectTypes.value = []
   knowledgeSearchRunning.value = true
+  knowledgeSearchFailed.value = false
+  knowledgeSearchResults.value = []
   activeSidebarTab.value = 'files'
   try {
     const graph = await invoke<GraphData>('build_local_graph', {
@@ -3280,6 +3285,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  ++knowledgeSearchGeneration
   editorLoadGeneration += 1
   destroyImageFix()
   window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)
@@ -3525,6 +3531,13 @@ const handleKnowledgeIndexAction = (key: string) => {
 }
 
 watch(() => store.libraryPath, (newPath) => {
+  ++knowledgeSearchGeneration
+  if (searchTimer) clearTimeout(searchTimer)
+  activeCollectionId.value = ''
+  knowledgeSearchResults.value = []
+  knowledgeSearchRunning.value = false
+  knowledgeSearchFailed.value = false
+  searchQuery.value = ''
   relationSummaries.value = {}
   if (newPath) {
     searchQuery.value = ''
@@ -3542,8 +3555,10 @@ watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { dee
 
 // 搜索防抖
 let searchTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchQuery, (q) => {
+const retryKnowledgeSearch = () => scheduleKnowledgeSearch(searchQuery.value)
+const scheduleKnowledgeSearch = (q: string) => {
   if (searchTimer) clearTimeout(searchTimer)
+  knowledgeSearchFailed.value = false
   if (!q.trim()) {
     if (activeCollectionId.value) return
     ++knowledgeSearchGeneration
@@ -3555,31 +3570,42 @@ watch(searchQuery, (q) => {
   }
   activeCollectionId.value = ''
   const generation = ++knowledgeSearchGeneration
+  const libraryRoot = store.libraryPath
+  knowledgeSearchResults.value = []
+  if (!libraryRoot) {
+    knowledgeSearchRunning.value = false
+    return
+  }
   knowledgeSearchRunning.value = true
   searchTimer = setTimeout(async () => {
-    if (!store.libraryPath) return
+    const isCurrent = () => generation === knowledgeSearchGeneration && libraryRoot === store.libraryPath
+    if (!isCurrent()) return
     try {
       if (q.startsWith('#')) {
-        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot: store.libraryPath, tag: q.slice(1) })
-        if (generation !== knowledgeSearchGeneration) return
+        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot, tag: q.slice(1) })
+        if (!isCurrent()) return
         knowledgeSearchResults.value = results.map(result => ({
           title: result.name, path: result.path, objectType: 'markdown', matchKind: 'tag',
           context: `标签 #${q.slice(1)}`, score: 80, extractionFailed: false,
         }))
       } else {
-        const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot: store.libraryPath, query: q })
-        if (generation !== knowledgeSearchGeneration) return
+        const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot, query: q })
+        if (!isCurrent()) return
         knowledgeSearchResults.value = results
         void refreshKnowledgeIndexStatus()
       }
       await refreshRelationSummaries()
     } catch (e) {
-      if (generation === knowledgeSearchGeneration) knowledgeSearchResults.value = []
+      if (isCurrent()) {
+        knowledgeSearchResults.value = []
+        knowledgeSearchFailed.value = true
+      }
     } finally {
-      if (generation === knowledgeSearchGeneration) knowledgeSearchRunning.value = false
+      if (isCurrent()) knowledgeSearchRunning.value = false
     }
   }, 300)
-})
+}
+watch(searchQuery, scheduleKnowledgeSearch)
 watch(activeTabId, (newId, oldId) => { 
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
@@ -3909,7 +3935,6 @@ watch(activeTabId, (newId, oldId) => {
 
 .tags-manage { display: flex; flex-direction: column; gap: 8px; padding: 0 10px 14px; }
 .knowledge-search-results { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px 14px; overflow-y: auto; }
-.knowledge-search-state { padding: 24px 10px; color: var(--theme-text-secondary); font-size: 11px; text-align: center; line-height: 1.6; }
 .knowledge-search-result { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; width: 100%; padding: 4px 6px 4px 0; border: 1px solid rgba(0,0,0,.07); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.035); }
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 5px 4px 5px 10px; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }

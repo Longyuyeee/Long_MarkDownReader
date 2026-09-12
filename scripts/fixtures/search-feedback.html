@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>搜索反馈组件验收（合成状态）</title>
+<div id="app"></div>
+<script type="module">
+import { createApp, ref } from 'vue/dist/vue.esm-bundler.js'
+import SearchFeedback from '/src/components/SearchFeedback.vue'
+createApp({ components: { SearchFeedback }, setup() {
+  const state = ref('failed'); const dark = ref(false)
+  return { state, dark }
+}, template: `<main :class="{ dark }"><h1>搜索反馈组件验收</h1><p>合成状态预览，不调用后端、不读取资料。</p><nav><button @click="state='failed'">失败</button><button @click="state='running'">等待</button><button @click="state='empty'">空结果</button><button @click="dark=!dark">切换明暗</button></nav><section><SearchFeedback :running="state==='running'" :failed="state==='failed'" :empty="state==='empty'" @retry="state='running'" /></section></main>` }).mount('#app')
+</script>
+<style>body{margin:0;font-family:system-ui,"Microsoft YaHei",sans-serif}main{min-height:100vh;box-sizing:border-box;padding:24px;background:#fafafa;color:#20252d;--theme-text:#20252d;--theme-text-secondary:#636973}main.dark{background:#20252d;color:#edf0f4;--theme-text:#edf0f4;--theme-text-secondary:#b8c0cb}h1{font-size:20px}nav{display:flex;gap:8px;flex-wrap:wrap}nav button{padding:8px}section{width:240px;max-width:100%;margin-top:24px;border:1px solid #888;border-radius:8px}</style>
+</html>

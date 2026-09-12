@@ -10,5 +10,10 @@
   "releaseCandidate": false,
   "currentStage": "M8-12-v1.0.20-to-v1.0.21-managed-updater-observation",
   "binaryVersionTransition": "v1.0.21-public-release-published",
-  "displayLabel": "v1.0.21 已发布 · M8-12 已收口 · 下一目标 v1.0.22 范围待选"
+  "displayLabel": "v1.0.21 已发布 · v1.0.22 搜索恢复切片开发中",
+  "activeSlice": {
+    "id": "v1.0.22-search-recovery",
+    "status": "implemented-desktop-integration-pending",
+    "document": "docs/Post_v1.0.21_Search_Recovery_Slice_2026-09-12.md"
+  }
 }
