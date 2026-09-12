@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.0.22",
-  "runtimeBaseVersion": "1.0.21",
+  "runtimeBaseVersion": "1.0.22",
   "publicVersion": "1.0.21",
   "publicTag": "v1.0.21",
   "publicTagCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-13-v1.0.22-search-scope-freeze-and-release-readiness",
-  "binaryVersionTransition": "v1.0.21-public-release-published",
-  "displayLabel": "v1.0.21 已发布 · v1.0.22 搜索补丁范围冻结与发布准备",
+  "currentStage": "M8-14-v1.0.22-search-candidate",
+  "binaryVersionTransition": "v1.0.22-quality-gate-pending",
+  "displayLabel": "v1.0.22 搜索修复候选 · 当前公开 v1.0.21",
   "activeSlice": {
     "id": "v1.0.22-search-scope-freeze",
-    "status": "scope-frozen-pre-version-quality-review",
-    "document": "docs/Post_v1.0.21_v1.0.22_Scope_Freeze_and_Readiness_2026-09-12.md"
+    "status": "runtime-transitioned-candidate-validation-pending",
+    "document": "docs/V1_0_22_Unsigned_Community_Release_Audit_2026-09-12.md"
   }
 }

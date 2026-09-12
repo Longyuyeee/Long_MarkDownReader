@@ -27,7 +27,7 @@ if (policy.status !== 'accepted-ready-to-publish' || policy.candidateSourceCommi
 if (!policy.releaseReady || policy.releasePublished || policy.enterpriseReleaseCandidate || policy.sourceUserContentIncluded) fail('release readiness boundary drifted')
 const releasePublished = published?.status === 'published-and-remote-assets-verified'
 const updaterComplete = updater?.status === 'hosted-managed-update-passed'
-const laterCandidateActive = ['1.0.19', '1.0.20', '1.0.21'].includes(community.appVersion) && /^M[78]-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
+const laterCandidateActive = ['1.0.19', '1.0.20', '1.0.21', '1.0.22'].includes(community.appVersion) && /^M[78]-(?:[4-9]|[1-9]\d)-/.test(development.currentStage)
 const expectedManifestStatus = releasePublished ? 'published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed' : 'ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed'
 if (manifest.stage !== policy.stage || manifest.status !== expectedManifestStatus
   || manifest.sourceCommit !== policy.candidateSourceCommit || manifest.sourceVersion !== policy.candidateVersion) fail('artifact manifest identity drifted')

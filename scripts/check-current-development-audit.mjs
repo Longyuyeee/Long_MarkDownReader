@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath, ['--test', 'scripts/test-v122-version-transition.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
 import './check-community-updater-contract.mjs'
@@ -97,8 +98,8 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.21' && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**v1.0.22 搜索补丁范围冻结与发布准备**', development.currentStage === 'M8-13-v1.0.22-search-scope-freeze-and-release-readiness' && development.activeSlice?.id === 'v1.0.22-search-scope-freeze' && fs.existsSync(development.activeSlice.document)],
-  ['M8 更新观察已收口', policy.currentStatus === 'v1.0.21-community-release-published' && policy.patchValidation?.managedUpdaterUpgradePath === '1.0.20-to-1.0.21-passed'],
+  ['当前阶段：**v1.0.22 搜索补丁候选安装验收准备**', development.currentStage === 'M8-14-v1.0.22-search-candidate' && development.activeSlice?.id === 'v1.0.22-search-scope-freeze' && fs.existsSync(development.activeSlice.document)],
+  ['M8 更新观察已收口', JSON.parse(fs.readFileSync('shared/v121-managed-updater-lifecycle-policy.json', 'utf8')).status === 'hosted-managed-update-passed'],
 ]
 
 for (const [token, condition] of required) {
