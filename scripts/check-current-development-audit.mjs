@@ -7,6 +7,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-v122-installer-receipt.m
 execFileSync(process.execPath, ['--test', 'scripts/test-search-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
 import './check-community-updater-contract.mjs'
+execFileSync(process.execPath, ['--test', 'scripts/test-installed-text-save-feedback.mjs'], { stdio: 'inherit' })
 import './check-command-strip-layout.mjs'
 import './check-v106-managed-updater-lifecycle.mjs'
 import './check-v107-managed-updater-lifecycle.mjs'
