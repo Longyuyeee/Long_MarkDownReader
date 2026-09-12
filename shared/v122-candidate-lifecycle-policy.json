@@ -1,7 +1,9 @@
 {
   "schemaVersion": 1,
   "stage": "M8-15",
-  "status": "hosted-execution-pending",
+  "status": "hosted-success-user-review-rejected",
+  "githubRunId": 34676269824,
+  "releaseBlocker": "TXT save/reopen screenshot contains save failure and unsaved state; manual reproduction and product correction required",
   "candidateCommit": "ada0cd607ae64b03c7f8786cef68f7326a5a8663",
   "appVersion": "1.0.22",
   "previousVersion": "1.0.21",
