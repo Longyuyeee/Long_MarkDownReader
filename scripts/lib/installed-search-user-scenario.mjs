@@ -56,10 +56,9 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     await send('Emulation.setDeviceMetricsOverride', { width: 1000, height: 700, deviceScaleFactor: 1, mobile: false })
     await navigate('#/library', '.library-mode', 'search user scenario library')
     await click('#tab-files')
-    await click('button[title="刷新列表"]')
+    await click('button[aria-label="刷新列表"]')
     // Rebuild via visible menu and real input, not an IPC call or component method.
-    await waitFor(`!document.querySelector('button[title="搜索与关联选项"]')?.disabled`, 'index controls ready')
-    await click('button[title="搜索与关联选项"]')
+    await click('button[aria-label="搜索与关联选项"]')
     await waitFor(`[...document.querySelectorAll('.n-dropdown-option')].some(e=>e.innerText.includes('重新准备搜索与关联'))`, 'rebuild menu')
     const menu = await evaluate(`(() => {const e=[...document.querySelectorAll('.n-dropdown-option')].find(e=>e.innerText.includes('重新准备搜索与关联')); const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`)
     for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, ...menu, button:'left',clickCount:1 })
@@ -83,7 +82,7 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     }
     await query('客户会议纪要')
     await waitFor(`document.querySelectorAll('.knowledge-result-open').length >= 2`, 'similar titles')
-    const exact = `.knowledge-result-open[title=${JSON.stringify(fixtures[0][0])}]`
+    const exact = `.knowledge-result-open[aria-label=${JSON.stringify(`打开 ${fixtures[0][0]}`)}]`
     await tabTo(exact)
     await capture('search-keyboard-focused-title.jpg')
     await key('Enter', 'Enter', 13)
