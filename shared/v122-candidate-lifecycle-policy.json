@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "stage": "M8-15",
-  "status": "corrected-candidate-hosted-success-review-pending",
+  "status": "corrected-candidate-installed-search-passed-final-release-audit-pending",
   "githubRunId": 34679919233,
-  "releaseBlocker": "Corrected candidate hosted lifecycle succeeded and TXT screenshot reviewed; remaining visual review and separate installed search acceptance required",
+  "releaseBlocker": "Installed lifecycle and independent search acceptance passed; final release evidence consolidation and transient feedback review remain before publication",
   "reviewDocument": "docs/Development_User_Task_Plan_2026-09-22.md",
   "candidateCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
   "rejectedCandidates": [
@@ -22,7 +22,14 @@
   "previousReleaseReceipt": "docs/evidence/v1.0.21-release/release-receipt.json",
   "workflow": ".github/workflows/v122-candidate-lifecycle.yml",
   "expectedChecks": { "lifecycle": 22, "installedWorkspace": 18, "routes": 11, "managementRollback": 7 },
-  "searchInstalledAcceptance": "pending-separate-validation",
+  "searchInstalledAcceptance": "passed-installed-webview-input-events",
+  "searchEvidence": {
+    "githubRunId": 35743671363,
+    "orchestrationCommit": "6fec3fff09440d694d7791fd1f90f352b2268062",
+    "report": "docs/evidence/v122-installed-search/installed-search-user-scenario.json",
+    "sha256": "19ed9e6357093be98b8fdfe88352a1d5c02d4957c616b5a8518617814545012d",
+    "screenshotsReviewed": 8
+  },
   "officialManagedUpdateObservation": "pending-after-publication",
   "releaseCandidate": false,
   "sourceUserContentIncluded": false

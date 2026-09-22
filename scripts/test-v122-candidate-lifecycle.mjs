@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { parse } from 'yaml'
@@ -31,11 +32,27 @@ test('upgrade baseline is the hash-checked official previous installer, never a 
   assert.ok(receiptStep.run.includes("'previous-official'"))
   assert.ok(receiptStep.run.includes('previousInstallerSha256'))
 })
-test('quality gate precedes build and independent search/update acceptance remain pending', () => {
+test('quality gate precedes build; installed search has exact independent evidence and publication stays closed', () => {
   assert.ok(job.steps.findIndex(s => s.run === 'npm run ci:patch-release') < job.steps.findIndex(s => (s.run ?? '').includes('tauri -- build')))
   assert.equal(policy.releaseCandidate, false)
   assert.equal(policy.sourceUserContentIncluded, false)
-  assert.equal(policy.searchInstalledAcceptance, 'pending-separate-validation')
+  assert.equal(policy.searchInstalledAcceptance, 'passed-installed-webview-input-events')
+  const bytes = fs.readFileSync(policy.searchEvidence.report)
+  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), policy.searchEvidence.sha256)
+  const report = JSON.parse(bytes)
+  assert.equal(report.status, 'passed')
+  assert.equal(report.sourceCommit, policy.candidateCommit)
+  assert.equal(report.evidenceLevel, 'installed-webview-input-events')
+  const installer = JSON.parse(fs.readFileSync('docs/evidence/v122-corrected-candidate/installer-build-receipt.json'))
+  assert.equal(report.installerSha256, installer.artifacts.find(a => a.target === 'nsis').sha256)
+  assert.deepEqual(report.checks.map(c => [c.id, c.status]), [
+    ['keyword-offline-keyboard-retry-query-preserved', 'passed'],
+    ['tag-offline-keyboard-retry-query-preserved', 'passed'],
+    ['keyboard-near-duplicate-target-open', 'passed'],
+    ['source-files-unchanged', 'passed'],
+  ])
+  assert.ok(report.inputTrace.filter(e => e.type === 'click' && e.trusted && e.target === '重新搜索').length >= 2)
+  assert.ok(report.inputTrace.some(e => e.type === 'click' && e.trusted && e.target === '打开 客户会议纪要-九月交付确认.md'))
   assert.equal(policy.officialManagedUpdateObservation, 'pending-after-publication')
   assert.ok(source.includes('-ConfirmDisposableMachine'))
   assert.ok(source.includes('-ExpectedSourceCommit $env:PRODUCT_SOURCE_COMMIT'))

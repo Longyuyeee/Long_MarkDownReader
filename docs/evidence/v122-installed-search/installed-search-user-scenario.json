@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+  "installerSha256": "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294",
+  "evidenceLevel": "installed-webview-input-events",
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "keyword-offline-keyboard-retry-query-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "tag-offline-keyboard-retry-query-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "keyboard-near-duplicate-target-open",
+      "status": "passed"
+    },
+    {
+      "id": "source-files-unchanged",
+      "status": "passed"
+    }
+  ],
+  "status": "passed",
+  "openedDocument": {
+    "openedPath": "\\\\?\\C:\\LongEditR5ILibrary\\客户会议纪要-九月交付确认.md",
+    "expectedPath": "C:\\LongEditR5ILibrary\\客户会议纪要-九月交付确认.md",
+    "location": "http://tauri.localhost/#/library?path=%5C%5C?%5CC:%5CLongEditR5ILibrary%5C%E5%AE%A2%E6%88%B7%E4%BC%9A%E8%AE%AE%E7%BA%AA%E8%A6%81-%E4%B9%9D%E6%9C%88%E4%BA%A4%E4%BB%98%E7%A1%AE%E8%AE%A4.md",
+    "activeTab": "客户会议纪要-九月交付确认"
+  },
+  "inputTrace": [
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keypress",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keypress",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认-内部草稿.md"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认-内部草稿.md"
+    },
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "keypress",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "keyup",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    }
+  ]
+}
