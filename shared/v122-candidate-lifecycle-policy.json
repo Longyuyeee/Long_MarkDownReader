@@ -3,7 +3,8 @@
   "stage": "M8-15",
   "status": "corrected-candidate-installed-search-passed-final-release-audit-pending",
   "githubRunId": 34679919233,
-  "releaseBlocker": "Installed lifecycle and independent search acceptance passed; final release evidence consolidation and transient feedback review remain before publication",
+  "releaseBlocker": null,
+  "finalFeedbackRunId": 35744511959,
   "reviewDocument": "docs/Development_User_Task_Plan_2026-09-22.md",
   "candidateCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
   "rejectedCandidates": [

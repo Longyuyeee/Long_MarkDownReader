@@ -1,6 +1,15 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (development.publicVersion === '1.0.22'
+    && development.publicTag === 'v1.0.22'
+    && development.runtimeBaseVersion === '1.0.22'
+    && development.developmentTargetVersion === '1.0.23'
+    && community.appVersion === '1.0.22'
+    && community.gates?.githubReleasePublished === true
+    && community.release?.tag === 'v1.0.22'
+    && /^[0-9a-f]{40}$/.test(community.release?.taggedCommit ?? '')
+    && development.publicTagCommit === community.release.taggedCommit) return
   // Only the explicitly planned successor is accepted. Historical installer and
   // screenshot hashes remain checked by check-v121-managed-updater-lifecycle.
   if (development.publicVersion !== '1.0.21'

@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import crypto from 'node:crypto'
 import { assertCommunityReleaseObservation } from './lib/community-release-observation.mjs'
+import { assertInstalledReleaseRuntime } from './lib/installed-release-runtime.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const json = path => JSON.parse(read(path))
@@ -130,6 +131,9 @@ if ((ready && !lifecycleVerified) || published) {
     const manifest = json(manifestPath)
     if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 2 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
+    if (pkg.version === '1.0.22') {
+      try { assertInstalledReleaseRuntime(manifest) } catch (error) { fail(`installed release runtime: ${error.message}`) }
+    } else if (manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2' || manifest.runtimeSmoke?.checksPassed !== 6 || manifest.runtimeSmoke?.routesPassed !== 11) fail('legacy debug runtime evidence drift')
     if (manifest.qualityGate?.status !== 'passed'
       || manifest.qualityGate?.command !== policy.candidate?.qualityGateCommand
       || manifest.hostedInstalledLifecycle?.status !== 'passed'
@@ -141,9 +145,6 @@ if ((ready && !lifecycleVerified) || published) {
       || manifest.hostedInstalledLifecycle?.managementRollbackChecksPassed !== 7
       || manifest.hostedInstalledLifecycle?.failedChecks !== 0
       || manifest.hostedInstalledLifecycle?.sourceUserContentIncluded !== false
-      || manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2'
-      || manifest.runtimeSmoke?.checksPassed !== 6
-      || manifest.runtimeSmoke?.routesPassed !== 11
       || manifest.boundaries?.communityUnsigned !== true
       || manifest.boundaries?.enterprisePromotionEligible !== false) fail('current release evidence boundary drift')
     for (const artifact of manifest.artifacts ?? []) {

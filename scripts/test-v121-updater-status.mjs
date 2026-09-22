@@ -23,6 +23,13 @@ test('unknown status fails closed', () => {
 
 const successor = () => ({ appVersion: '1.0.22', targetRelease: { tag: 'v1.0.22' }, patchValidation: { previousPublicVersion: '1.0.21', managedUpdaterUpgradePath: '1.0.21-to-1.0.22-pending' } })
 const closed = { status: 'hosted-managed-update-passed' }
+test('published successor boundary requires its own real release identity', () => {
+  const development = { publicVersion: '1.0.22', publicTag: 'v1.0.22', publicTagCommit: 'a'.repeat(40), runtimeBaseVersion: '1.0.22', developmentTargetVersion: '1.0.23' }
+  const community = { ...successor(), gates: { githubReleasePublished: true }, release: { tag: 'v1.0.22', taggedCommit: 'a'.repeat(40) } }
+  assert.doesNotThrow(() => assertV121DevelopmentBoundary(development, community))
+  assert.throws(() => assertV121DevelopmentBoundary(development, { ...community, gates: { githubReleasePublished: false } }))
+  assert.throws(() => assertV121DevelopmentBoundary({ ...development, publicTagCommit: 'b'.repeat(40) }, community))
+})
 const receipt = { managedUpdaterObservation: '1.0.20-to-1.0.21-passed' }
 test('successor keeps the historical receipt and a separate pending update path', () => {
   const community = successor()

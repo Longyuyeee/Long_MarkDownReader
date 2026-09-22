@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 execFileSync(process.execPath, ['--test', 'scripts/test-text-save-lifecycle.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-version-transition.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-candidate-lifecycle.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-installed-release-runtime.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-installer-receipt.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
@@ -88,6 +89,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
 const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
 const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json', 'utf8'))
+const v122Published = policy.appVersion === '1.0.22' && policy.gates?.githubReleasePublished === true
 const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
 const counts = matrix.formats.reduce((result, item) => {
   result[item.readiness] = (result[item.readiness] ?? 0) + 1
@@ -99,11 +101,11 @@ const required = [
   ['7 类为有限能力', counts['verified-with-limitations'] === 7],
   ['6 类依赖外部程序', counts['external-dependency'] === 6],
   ['11 套发布能力配置', matrix.profiles.length === 11],
-  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === '1.0.22'],
+  [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (v122Published ? '1.0.23' : '1.0.22')],
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
-  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === '1.0.21' && development.publicTag === `v${development.publicVersion}`],
+  [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (v122Published ? '1.0.22' : '1.0.21') && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  ['当前阶段：**v1.0.22 搜索补丁候选安装验收准备**', development.currentStage === 'M8-14-v1.0.22-search-candidate' && development.activeSlice?.id === 'v1.0.22-search-scope-freeze' && fs.existsSync(development.activeSlice.document)],
+  [v122Published ? '当前阶段：**v1.0.22 已发布，官方更新观察待完成**' : '当前阶段：**v1.0.22 搜索补丁候选安装验收准备**', development.currentStage === (v122Published ? 'M8-16-v1.0.22-release-and-update-observation' : 'M8-14-v1.0.22-search-candidate') && development.activeSlice?.id === 'v1.0.22-search-scope-freeze' && fs.existsSync(development.activeSlice.document)],
   ['M8 更新观察已收口', JSON.parse(fs.readFileSync('shared/v121-managed-updater-lifecycle-policy.json', 'utf8')).status === 'hosted-managed-update-passed'],
 ]
 
