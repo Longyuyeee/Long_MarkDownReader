@@ -100,7 +100,7 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     await tabTo(exact)
     await capture('search-keyboard-focused-title.jpg')
     await key('Enter', 'Enter', 13)
-    await waitFor(`document.querySelector('.library-embedded-editor')?.innerText.includes('我要先核对预算')`, 'correct confirmation document opened')
+    await waitFor(`(() => { const e=document.querySelector('#vditor-lib'); return e && e.getBoundingClientRect().height > 0 && e.innerText.includes('我要先核对预算'); })()`, 'correct confirmation document opened')
     const openedPath = await evaluate(`new URLSearchParams(location.hash.split('?')[1]||'').get('path')`)
     if (path.resolve(openedPath || '').toLowerCase() !== path.join(library, fixtures[0][0]).toLowerCase()) throw new Error('Keyboard opened wrong near-duplicate file')
     await capture('search-keyboard-opened-document.jpg')

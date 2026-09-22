@@ -37,6 +37,13 @@ test('installed search reuses verified artifact and cannot publish', () => {
 test('search scenario refuses arbitrary user library before performing any IO', async () => {
   await assert.rejects(runInstalledSearchScenario({ library: 'C:\\UserLibrary' }), /disposable R5I library/)
 })
+test('Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor', () => {
+  const view = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
+  const scenario = fs.readFileSync('scripts/lib/installed-search-user-scenario.mjs', 'utf8')
+  assert.ok(view.includes('id="vditor-lib"'))
+  assert.ok(scenario.includes("document.querySelector('#vditor-lib')"))
+  assert.ok(!scenario.includes("document.querySelector('.library-embedded-editor')"))
+})
 test('workflow PowerShell parses without installing', { skip: process.platform !== 'win32' }, () => {
   for (const step of workflow.jobs['installed-search'].steps.filter(s => s.shell === 'powershell')) {
     const result = spawnSync('powershell.exe', ['-NoProfile', '-Command', '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseInput([Console]::In.ReadToEnd(),[ref]$tokens,[ref]$errors)>$null; if($errors.Count){$errors | Out-String | Write-Error; exit 1}'], { input: step.run, encoding: 'utf8' })
