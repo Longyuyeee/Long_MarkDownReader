@@ -9,7 +9,7 @@
   "previousReleaseReceipt": "docs/evidence/v1.0.22-release/release-receipt.json",
   "workflow": ".github/workflows/v123-candidate-lifecycle.yml",
   "expectedChecks": { "lifecycle": 22, "installedWorkspace": 18, "routes": 11, "managementRollback": 7, "versionIdentity": 4 },
-  "githubRunId": null,
+  "githubRunId": 35754325807,
   "releaseCandidate": false,
   "sourceUserContentIncluded": false,
   "officialManagedUpdateObservation": "pending-after-publication"
