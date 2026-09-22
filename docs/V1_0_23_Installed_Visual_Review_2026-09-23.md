@@ -17,3 +17,11 @@
 `v123-installed-visual-review.yml` 在一次性 Windows runner 下载同一 artifact，独立核对全部字节后安装；不重新构建、不操作用户安装目录。保留成功或失败的原图，收到结果后再判断。如仍空白则继续诊断产品，不降低验收门槛。正式公开版继续为 v1.0.22。
 
 下一版本方向见 [用户痛点计划](./After_v1_0_23_User_Pain_Priorities_2026-09-23.md)，优先退出/未保存保护一致性，当前不混入新功能。
+
+## 补充核对
+
+首轮 17 张原始 JPG 现已全部实际查看。DOCX 两个生产者草稿与 WPS 高级对象只读提示正常；知识操作步骤能显示并滚动。图谱操作说明存在局部遮挡，已明确记入后续计划；本次小库证据不代表 540 节点性能验收。跨页短暂保存提示仍出现在部分连拍中，不从静态图推断永久残留。
+
+原始报告逐项核对结果为 22/22、18/18、11/11、7/7、4/4，所有条目 status 为 passed；本机独立 Authenticode 检查确认 MSI/NSIS 均为 NotSigned。总审计 `node scripts/check-current-development-audit.mjs` 通过。
+
+同包复验已启动：[35758597675](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/35758597675)，编排提交 `2ab61463`。继续查询此运行，禁止重复触发；先审阅新设置原图，再决定能否收口。
