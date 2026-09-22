@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.0.23",
-  "runtimeBaseVersion": "1.0.22",
+  "runtimeBaseVersion": "1.0.23",
   "publicVersion": "1.0.22",
   "publicTag": "v1.0.22",
   "publicTagCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-17-v1.0.23-version-identity",
-  "binaryVersionTransition": "v1.0.22-public-release-published",
-  "displayLabel": "运行时/公开 v1.0.22 · 下一目标 v1.0.23",
+  "currentStage": "M8-18-v1.0.23-version-candidate",
+  "binaryVersionTransition": "v1.0.23-quality-gate-pending",
+  "displayLabel": "v1.0.23 版本身份修复候选 · 当前公开 v1.0.22",
   "activeSlice": {
     "id": "v1.0.23-version-identity",
-    "status": "implemented-page-and-installed-validation-pending",
-    "document": "docs/V1_0_23_Version_Identity_Slice_2026-09-22.md"
+    "status": "runtime-transitioned-candidate-validation-pending",
+    "document": "docs/V1_0_23_Unsigned_Community_Release_Audit_2026-09-23.md"
   }
 }

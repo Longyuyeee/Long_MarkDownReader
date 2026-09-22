@@ -3,6 +3,15 @@
 export function assertV121DevelopmentBoundary(development, community) {
   if (development.publicVersion === '1.0.22'
     && development.publicTag === 'v1.0.22'
+    && development.publicTagCommit === 'cc58aa68d1974ac2445ed4b884c7677f5a320e93'
+    && development.runtimeBaseVersion === '1.0.23'
+    && development.developmentTargetVersion === '1.0.23'
+    && community.appVersion === '1.0.23'
+    && community.gates?.githubReleasePublished === false
+    && community.patchValidation?.previousPublicVersion === '1.0.22'
+    && community.targetRelease?.tag === 'v1.0.23') return
+  if (development.publicVersion === '1.0.22'
+    && development.publicTag === 'v1.0.22'
     && development.runtimeBaseVersion === '1.0.22'
     && development.developmentTargetVersion === '1.0.23'
     && community.appVersion === '1.0.22'
@@ -28,6 +37,16 @@ export function assertV121UpdaterStatus(policy, community, receipt) {
   const expected = `1.0.20-to-1.0.21-${suffix}`
   if (receipt.managedUpdaterObservation !== expected) {
     throw new Error(`v1.0.21 updater status conflict: release receipt must be ${expected}`)
+  }
+  if (community.appVersion === '1.0.23') {
+    if (suffix !== 'passed'
+      || community.patchValidation?.previousPublicVersion !== '1.0.22'
+      || community.targetRelease?.tag !== 'v1.0.23'
+      || community.patchValidation?.managedUpdaterUpgradePath !== '1.0.22-to-1.0.23-pending'
+      || community.gates?.githubReleasePublished !== false) {
+      throw new Error('v1.0.21 updater status conflict: v1.0.23 candidate must retain a separate pending update path')
+    }
+    return
   }
   if (community.appVersion === '1.0.22') {
     if (suffix !== 'passed'

@@ -22,6 +22,15 @@ test('unknown status fails closed', () => {
 })
 
 const successor = () => ({ appVersion: '1.0.22', targetRelease: { tag: 'v1.0.22' }, patchValidation: { previousPublicVersion: '1.0.21', managedUpdaterUpgradePath: '1.0.21-to-1.0.22-pending' } })
+
+test('v1.0.23 candidate does not inherit historical updater acceptance', () => {
+  const development = { publicVersion: '1.0.22', publicTag: 'v1.0.22', publicTagCommit: 'cc58aa68d1974ac2445ed4b884c7677f5a320e93', runtimeBaseVersion: '1.0.23', developmentTargetVersion: '1.0.23' }
+  const community = { appVersion: '1.0.23', targetRelease: { tag: 'v1.0.23' }, gates: { githubReleasePublished: false }, patchValidation: { previousPublicVersion: '1.0.22', managedUpdaterUpgradePath: '1.0.22-to-1.0.23-pending' } }
+  assert.doesNotThrow(() => assertV121DevelopmentBoundary(development, community))
+  assert.doesNotThrow(() => assertV121UpdaterStatus({ status: 'hosted-managed-update-passed' }, community, { managedUpdaterObservation: '1.0.20-to-1.0.21-passed' }))
+  assert.throws(() => assertV121DevelopmentBoundary({ ...development, publicTagCommit: '0'.repeat(40) }, community))
+  assert.throws(() => assertV121UpdaterStatus({ status: 'hosted-managed-update-passed' }, { ...community, patchValidation: { ...community.patchValidation, managedUpdaterUpgradePath: '1.0.22-to-1.0.23-passed' } }, { managedUpdaterObservation: '1.0.20-to-1.0.21-passed' }))
+})
 const closed = { status: 'hosted-managed-update-passed' }
 test('published successor boundary requires its own real release identity', () => {
   const development = { publicVersion: '1.0.22', publicTag: 'v1.0.22', publicTagCommit: 'a'.repeat(40), runtimeBaseVersion: '1.0.22', developmentTargetVersion: '1.0.23' }
