@@ -1,0 +1,66 @@
+{
+  "observedAt": "2026-09-23",
+  "productCommit": "ca8a6a0db324fbab213a30131b6e7f21f099e0cd",
+  "harnessCommit": "a744b66c69e1555ffc4e0c65f85d3eb52b9d33e6",
+  "appVersion": "1.0.22",
+  "simulatedLatestVersion": "1.0.23",
+  "nativeBinarySha256": "0d1f49b32bc8aa981ac8ab2543c4b1d69b7e15ef5d80ccca7633052f32e054b7",
+  "method": "native UI actions with external API fault injection",
+  "sourceUserContentIncluded": false,
+  "installerExecuted": false,
+  "realNetworkFailure": false,
+  "realBrowserFailure": false,
+  "screenshotsReviewed": 5,
+  "files": [
+    {
+      "name": "available.json",
+      "sizeBytes": 7844,
+      "sha256": "d21555e12fe32059f3a01c137f45cc40a19d8c65f8c8943f1cb21ef559995a6d"
+    },
+    {
+      "name": "available.png",
+      "sizeBytes": 64154,
+      "sha256": "cfe5f89a04d2c925688413e83948bebe4a5808111d2ee23ba841da9d2cf92bb2"
+    },
+    {
+      "name": "offline.json",
+      "sizeBytes": 5588,
+      "sha256": "3694703bb356b2d47dce98b6ef6c96ebba4d531a6bc9d9bf4ca17dc7acb24bce"
+    },
+    {
+      "name": "offline.png",
+      "sizeBytes": 58578,
+      "sha256": "f8678d44a0c6e8ff83107680f6c42e58d711a7122e2807277de414908e425bd4"
+    },
+    {
+      "name": "opener-failure.json",
+      "sizeBytes": 8738,
+      "sha256": "f3157c533d7787e2efc969d6e04c4c0fa1ce108eb47db125c04405f6a6a8192f"
+    },
+    {
+      "name": "opener-failure.png",
+      "sizeBytes": 69832,
+      "sha256": "4a98941e71f4ad4b42030e5556f402e4c7a9802847ee474a62d66af16e1f4a44"
+    },
+    {
+      "name": "opener-retry.json",
+      "sizeBytes": 8250,
+      "sha256": "db0dd5502227b60eee27120230aabaeae33b456fd804d9bceca6216e0bef4c40"
+    },
+    {
+      "name": "opener-retry.png",
+      "sizeBytes": 64244,
+      "sha256": "72ea9b00696a42b9405d84d9040e44e5302db6e05909dcc5c25c06f86959ad39"
+    },
+    {
+      "name": "recovered-current.json",
+      "sizeBytes": 5486,
+      "sha256": "3bd6fb10b8427878d25f7a9d020cefe98f89473049a04a81ce5b94925694d6ac"
+    },
+    {
+      "name": "recovered-current.png",
+      "sizeBytes": 58214,
+      "sha256": "380439d94d076f7fe7c7f7f21b56e29435d3687dcbdd72fd991a4dcc75f8eef9"
+    }
+  ]
+}
