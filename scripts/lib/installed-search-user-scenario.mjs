@@ -17,7 +17,10 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
   const checks = []
   const input = '.search-area input'
   const key = async (key, code, windowsVirtualKeyCode, modifiers = 0) => {
-    for (const type of ['rawKeyDown', 'keyUp']) await send('Input.dispatchKeyEvent', { type, key, code, windowsVirtualKeyCode, modifiers })
+    // Enter has a character/default-action phase in Chromium. rawKeyDown alone
+    // can move focus correctly for Tab yet omit native button activation.
+    await send('Input.dispatchKeyEvent', { type: key === 'Enter' ? 'keyDown' : 'rawKeyDown', key, code, windowsVirtualKeyCode, modifiers, ...(key === 'Enter' ? { text: '\r', unmodifiedText: '\r' } : {}) })
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key, code, windowsVirtualKeyCode, modifiers })
   }
   const click = async selector => {
     const pointExpression = `(() => {
@@ -55,6 +58,15 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     for (const [name, content] of fixtures) await fs.writeFile(path.join(library, name), content, { flag: 'wx' })
     await send('Emulation.setDeviceMetricsOverride', { width: 1000, height: 700, deviceScaleFactor: 1, mobile: false })
     await navigate('#/library', '.library-mode', 'search user scenario library')
+    // Observe trusted events only; never synthesize clicks or alter application state.
+    await evaluate(`(() => {
+      window.__installedSearchInputTrace = [];
+      for(const type of ['keydown','keypress','keyup','click']) document.addEventListener(type, event => {
+        const e=event.target;
+        if(!e?.matches?.('.search-feedback-error button, .knowledge-result-open'))return;
+        window.__installedSearchInputTrace.push({type:event.type,key:event.key||'',trusted:event.isTrusted,prevented:event.defaultPrevented,target:e.getAttribute('aria-label')||e.textContent});
+      });
+    })()`)
     await click('#tab-files')
     await click('button[aria-label="刷新列表"]')
     // Rebuild via visible menu and real input, not an IPC call or component method.
@@ -74,7 +86,9 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
       await capture(`search-${label}-offline.jpg`)
       await fs.rename(offline, library); moved = false
       await tabTo('.search-feedback-error button')
+      const beforeClicks = await evaluate(`window.__installedSearchInputTrace.filter(e=>e.type==='click').length`)
       await key('Enter', 'Enter', 13)
+      await waitFor(`window.__installedSearchInputTrace.filter(e=>e.type==='click' && e.trusted).length > ${beforeClicks}`, `${label} trusted keyboard activation`)
       await waitFor(`!document.querySelector('.search-feedback-error') && document.querySelectorAll('.knowledge-result-open').length >= 2`, `${label} retry recovery`)
       if (!await evaluate(`document.querySelector(${JSON.stringify(input)}).value === ${JSON.stringify(value)}`)) throw new Error('Retry changed user query')
       await capture(`search-${label}-retry.jpg`)
@@ -100,6 +114,7 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     throw error
   } finally {
     if (moved) await fs.rename(offline,library)
+    receipt.inputTrace = await evaluate('window.__installedSearchInputTrace || []').catch(() => [])
     await fs.writeFile(path.join(output,'installed-search-user-scenario.json'),JSON.stringify(receipt,null,2)+'\n')
   }
 }
