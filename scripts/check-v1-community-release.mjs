@@ -131,7 +131,7 @@ if ((ready && !lifecycleVerified) || published) {
     const manifest = json(manifestPath)
     if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 2 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
-    if (pkg.version === '1.0.22') {
+    if (['1.0.22', '1.0.23'].includes(pkg.version)) {
       try { assertInstalledReleaseRuntime(manifest) } catch (error) { fail(`installed release runtime: ${error.message}`) }
     } else if (manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2' || manifest.runtimeSmoke?.checksPassed !== 6 || manifest.runtimeSmoke?.routesPassed !== 11) fail('legacy debug runtime evidence drift')
     if (manifest.qualityGate?.status !== 'passed'
