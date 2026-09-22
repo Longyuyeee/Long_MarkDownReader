@@ -1,6 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import fs from 'node:fs'
 import { assertV121DevelopmentBoundary, assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
+
+test('published v1.0.23 requires its exact tag and keeps the new updater pending', () => {
+  const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json'))
+  const community = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json'))
+  assertV121DevelopmentBoundary(development, community)
+  assert.equal(development.publicVersion, '1.0.23')
+  assert.throws(() => assertV121DevelopmentBoundary({ ...development, publicTagCommit: '0'.repeat(40) }, community))
+  assert.throws(() => assertV121DevelopmentBoundary({ ...development, developmentTargetVersion: '1.0.25' }, community))
+  const policy = { status: 'hosted-managed-update-passed' }
+  const receipt = { managedUpdaterObservation: '1.0.20-to-1.0.21-passed' }
+  assertV121UpdaterStatus(policy, community, receipt)
+  assert.throws(() => assertV121UpdaterStatus(policy, { ...community, release: { ...community.release, taggedCommit: '0'.repeat(40) } }, receipt))
+  assert.throws(() => assertV121UpdaterStatus(policy, { ...community, patchValidation: { ...community.patchValidation, managedUpdaterUpgradePath: '1.0.22-to-1.0.23-passed' } }, receipt))
+})
 
 for (const status of ['hosted-execution-pending', 'hosted-managed-update-passed']) {
   for (const communitySuffix of ['pending', 'passed']) {

@@ -1,5 +1,7 @@
 # v1.0.23 版本身份修复：候选收口审计
 
+**发布结果：** v1.0.23 已发布，Tag `403a5122d169dfb238cd0a424d83e356f644fb08`，Release `393964632`；正式三个附件回下载大小与摘要完全一致。回执 `docs/evidence/v1.0.23-release/release-receipt.json`。社区未签名边界不变，官方 1.0.22→1.0.23 更新观察保持 pending。下方为冻结、验收及发布前过程记录。
+
 最新：构建/安装与同包视觉复验已完成，设置原图显示正常。社区候选 ready-to-publish，清单 `docs/evidence/v1.0.23-release/artifact-manifest.json` 严格引用复验原始报告；本机 debug 不冒充安装证据，官方更新仍待发布后观察。见 [安装原图复审](./V1_0_23_Installed_Visual_Review_2026-09-23.md)。下方待验证段落为过程记录。
 
 频道 `community-unsigned`，`releaseCandidate=false`；公开下载仍为 v1.0.22。

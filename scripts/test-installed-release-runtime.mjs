@@ -4,6 +4,13 @@ import fs from 'node:fs'
 import crypto from 'node:crypto'
 import { assertInstalledReleaseRuntime } from './lib/installed-release-runtime.mjs'
 const fixture = () => JSON.parse(fs.readFileSync('docs/evidence/v1.0.22-release/artifact-manifest.json'))
+
+test('v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture', () => {
+  const manifest = JSON.parse(fs.readFileSync('docs/evidence/v1.0.23-release/artifact-manifest.json'))
+  assertInstalledReleaseRuntime(manifest)
+  manifest.runtimeSmoke.reports.version.path = 'docs/evidence/v123-candidate-lifecycle/installed-version-identity.json'
+  assert.throws(() => assertInstalledReleaseRuntime(manifest))
+})
 test('release uses real immutable installed reports, not invented debug counts', () => {
   assert.doesNotThrow(() => assertInstalledReleaseRuntime(fixture()))
 })

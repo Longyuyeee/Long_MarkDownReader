@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "M8-19",
-  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
   "appVersion": "1.0.23",
   "sourceVersion": "1.0.23",
   "sourceCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
@@ -26,7 +26,8 @@
     "evidenceRoot": "docs/evidence/v123-installed-visual-review", "evidenceManifest": "docs/evidence/v1.0.23-release/import-manifest.json",
     "lifecycleChecksPassed": 22, "installedWorkspaceChecksPassed": 18, "installedRoutesPassed": 11, "managementRollbackChecksPassed": 7, "failedChecks": 0, "sourceUserContentIncluded": false
   },
-  "boundaries": { "communityUnsigned": true, "enterprisePromotionEligible": false, "releaseAssetsPublished": false, "managedUpdaterReleaseAssetsPresent": false, "legacyTauriUpdaterArtifactsPresent": false },
+  "boundaries": { "communityUnsigned": true, "enterprisePromotionEligible": false, "releaseAssetsPublished": true, "managedUpdaterReleaseAssetsPresent": true, "legacyTauriUpdaterArtifactsPresent": false },
   "sourceUserContentIncluded": false,
-  "releasePublished": false
+  "releasePublished": true,
+  "releaseReceipt": "release-receipt.json"
 }

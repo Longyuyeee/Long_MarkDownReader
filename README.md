@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22"><img src="https://img.shields.io/badge/Stable-v1.0.22-cca43b" alt="v1.0.22 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.23"><img src="https://img.shields.io/badge/Stable-v1.0.23-cca43b" alt="v1.0.23 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -31,25 +31,25 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.22 已正式发布，三个公开附件已完成回下载 SHA-256 复核。本补丁改善搜索失败重试、紧凑结果辨认，并修复纯文本保存后切页的问题。完整范围、验证和已知显示限制见 [v1.0.22 发布说明](docs/RELEASE_NOTES_v1.0.22.md)。
+> v1.0.23 已正式发布，三个公开附件已完成回下载 SHA-256 复核。本补丁统一实际运行版本显示，移除正式界面的错误 DEV 标记，并隔离发布页打开失败与更新状态。见 [v1.0.23 发布说明](docs/RELEASE_NOTES_v1.0.23.md)。
 
 ## 下载
 
-当前公开稳定版为 v1.0.22；安装态搜索、保存和生命周期验收已完成。官方 1.0.21 → 1.0.22 应用内更新也已[独立观察通过](docs/V1_0_22_Managed_Update_Closure_2026-09-22.md)，涵盖自动重启与资料保留。`main` 已迁移到 v1.0.23 候选，修复版本身份与更新提示；页面观察已完成，安装验收和正式发布尚未完成，见 [候选说明](docs/RELEASE_NOTES_v1.0.23.md)。下方下载链接仍是已发布的 v1.0.22，不是新候选。
+当前公开稳定版为 v1.0.23；安装生命周期、保存及三处版本显示已验收，原始证据见 [安装原图复审](docs/V1_0_23_Installed_Visual_Review_2026-09-23.md)。官方 1.0.22 → 1.0.23 应用内更新仍待独立观察，不以安装验收代替。下一目标 v1.0.24 优先考虑关闭行为与未保存保护一致性，另有图谱说明局部遮挡待修，见 [后续计划](docs/After_v1_0_23_User_Pain_Priorities_2026-09-23.md)。
 
-Long编辑 v1.0.22 支持 Windows 10/11 x64。
+Long编辑 v1.0.23 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.22_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.22/LongEdit_1.0.22_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.22_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.22/LongEdit_1.0.22_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.22](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.23_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.23/LongEdit_1.0.23_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.23_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.23/LongEdit_1.0.23_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.23](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.23) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294  LongEdit_1.0.22_x64-setup.exe
-860f57969502da3920fb6a25798337f3e52eab5ded93c42f298c456bfede4266  LongEdit_1.0.22_x64_zh-CN.msi
+b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a  LongEdit_1.0.23_x64-setup.exe
+18cbe4d115a5611ae81ecafc21fe8b4ebc6999362c8479fd5f5b8d516db98fce  LongEdit_1.0.23_x64_zh-CN.msi
 ```
 
 v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。历史覆盖安装中，v1.0.19 → v1.0.20 由 [运行 33461982887](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33461982887) 通过；v1.0.20 → v1.0.21 由 [运行 33488674071](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33488674071) 完成 22/22 生命周期、18/18 安装态、11/11 路由和 7/7 管理回滚，失败 0。当前 v1.0.21 → v1.0.22 的官方应用内更新观察也已完成，见上方收口记录；这些历史证据不代表 v1.0.23 已安装或发布。

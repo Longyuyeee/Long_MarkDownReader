@@ -1,6 +1,15 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (development.publicVersion === '1.0.23'
+    && development.publicTag === 'v1.0.23'
+    && development.publicTagCommit === '403a5122d169dfb238cd0a424d83e356f644fb08'
+    && development.runtimeBaseVersion === '1.0.23'
+    && development.developmentTargetVersion === '1.0.24'
+    && community.appVersion === '1.0.23'
+    && community.gates?.githubReleasePublished === true
+    && community.release?.tag === 'v1.0.23'
+    && community.release?.taggedCommit === development.publicTagCommit) return
   if (development.publicVersion === '1.0.22'
     && development.publicTag === 'v1.0.22'
     && development.publicTagCommit === 'cc58aa68d1974ac2445ed4b884c7677f5a320e93'
@@ -43,7 +52,7 @@ export function assertV121UpdaterStatus(policy, community, receipt) {
       || community.patchValidation?.previousPublicVersion !== '1.0.22'
       || community.targetRelease?.tag !== 'v1.0.23'
       || community.patchValidation?.managedUpdaterUpgradePath !== '1.0.22-to-1.0.23-pending'
-      || community.gates?.githubReleasePublished !== false) {
+      || (community.gates?.githubReleasePublished !== false && !(community.gates?.githubReleasePublished === true && community.release?.tag === 'v1.0.23' && community.release?.taggedCommit === '403a5122d169dfb238cd0a424d83e356f644fb08'))) {
       throw new Error('v1.0.21 updater status conflict: v1.0.23 candidate must retain a separate pending update path')
     }
     return
