@@ -11,7 +11,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
   assert.equal(runtime.routesPassed, 11)
   assert.ok(['1.0.22', '1.0.23'].includes(manifest.appVersion))
   const versionCandidate = manifest.appVersion === '1.0.23'
-  const evidenceRoot = versionCandidate ? 'docs/evidence/v123-candidate-lifecycle/' : 'docs/evidence/v122-installed-search/'
+  const evidenceRoot = versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
   const reports = Object.fromEntries(Object.entries(runtime.reports).map(([name, item]) => {
     assert.equal(item.path, evidenceRoot + path.posix.basename(item.path))
     const bytes = read(item.path)

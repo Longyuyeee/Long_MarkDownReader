@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.0.23",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-09-23",
-  "currentStatus": "v1.0.23-community-release-quality-gate-pending",
+  "currentStatus": "v1.0.23-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,22 +24,22 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
     "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "installedLifecyclePassed": true,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
     "previousPublicVersion": "1.0.22",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.0.22-to-1.0.23-pending",
@@ -50,7 +50,15 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.23",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+    "qualityGateCommand": "npm run ci:patch-release",
+    "hostedInstalledLifecycleRunId": 35758597675,
+    "artifacts": [
+      { "target": "msi", "fileName": "LongEdit_1.0.23_x64_zh-CN.msi", "sizeBytes": 75386880, "sha256": "18cbe4d115a5611ae81ecafc21fe8b4ebc6999362c8479fd5f5b8d516db98fce", "authenticodeStatus": "NotSigned" },
+      { "target": "nsis", "fileName": "LongEdit_1.0.23_x64-setup.exe", "sizeBytes": 66803615, "sha256": "b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a", "authenticodeStatus": "NotSigned" }
+    ]
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -59,5 +67,5 @@
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "pass-v1.0.23-quality-gate-and-build-real-candidate-installers"
+  "nextAction": "publish-verified-v1.0.23-and-observe-official-managed-update"
 }

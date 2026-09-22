@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-19",
+  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "appVersion": "1.0.23",
+  "sourceVersion": "1.0.23",
+  "sourceCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+  "hostedRunId": 35754325807,
+  "hostedArtifactId": 10707843931,
+  "checksumFile": { "fileName": "SHA256SUMS.txt", "sizeBytes": 192, "sha256": "770547283d05e5c0d9dad9fa2870d83d59410674ce75036ec5d78b7dadf7cfa4" },
+  "artifacts": [
+    { "target": "msi", "fileName": "LongEdit_1.0.23_x64_zh-CN.msi", "sizeBytes": 75386880, "sha256": "18cbe4d115a5611ae81ecafc21fe8b4ebc6999362c8479fd5f5b8d516db98fce", "authenticodeStatus": "NotSigned", "sourceFileName": "Long编辑_1.0.23_x64_zh-CN.msi" },
+    { "target": "nsis", "fileName": "LongEdit_1.0.23_x64-setup.exe", "sizeBytes": 66803615, "sha256": "b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a", "authenticodeStatus": "NotSigned", "sourceFileName": "Long编辑_1.0.23_x64-setup.exe" }
+  ],
+  "qualityGate": { "status": "passed", "command": "npm run ci:patch-release", "runId": 35754325807 },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2", "checksPassed": 18, "routesPassed": 11,
+    "reports": {
+      "workspace": { "path": "docs/evidence/v123-installed-visual-review/installed-artifact-smoke.json", "sha256": "9987da6a8094f200499be6473de822aaedacabc3961f42cf872a81d1c70ec56f" },
+      "routes": { "path": "docs/evidence/v123-installed-visual-review/installed-route-mount-evidence.json", "sha256": "75bf628942a8bb33d9cfe514a778630781feb2dbcd05cc3fdef995d96eb1df64" },
+      "version": { "path": "docs/evidence/v123-installed-visual-review/installed-version-identity.json", "sha256": "360233aa62f473cf0b5ef07a2b9410400097d0fa5eea6d05afbc465ec26baa19" }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed", "runId": 35758597675, "sourceCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+    "evidenceRoot": "docs/evidence/v123-installed-visual-review", "evidenceManifest": "docs/evidence/v1.0.23-release/import-manifest.json",
+    "lifecycleChecksPassed": 22, "installedWorkspaceChecksPassed": 18, "installedRoutesPassed": 11, "managementRollbackChecksPassed": 7, "failedChecks": 0, "sourceUserContentIncluded": false
+  },
+  "boundaries": { "communityUnsigned": true, "enterprisePromotionEligible": false, "releaseAssetsPublished": false, "managedUpdaterReleaseAssetsPresent": false, "legacyTauriUpdaterArtifactsPresent": false },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false
+}

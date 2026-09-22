@@ -47,7 +47,7 @@ function versionCandidateFixture() {
 function validateSynthetic(f, corruptBytes = false) {
   const bytes = new Map()
   f.m.runtimeSmoke.reports = Object.fromEntries(Object.entries(f.records).map(([name, record])=> {
-    const file = `docs/evidence/v123-candidate-lifecycle/${name}.json`
+    const file = `docs/evidence/v123-installed-visual-review/${name}.json`
     const buffer = Buffer.from(JSON.stringify(record))
     bytes.set(file, buffer)
     return [name, { path:file, sha256:crypto.createHash('sha256').update(buffer).digest('hex') }]

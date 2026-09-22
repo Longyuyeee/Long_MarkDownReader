@@ -1,0 +1,35 @@
+{
+  "sourceCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+  "installerSha256": "b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a",
+  "appVersion": "1.0.23",
+  "evidenceLevel": "installed-webview-input-events",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "observations": {
+    "nativeVersion": "1.0.23",
+    "badge": " v1.0.23",
+    "badgeLabel": "当前软件版本 v1.0.23，已核对远端版本 v1.0.22，点击查看更新",
+    "settingsRoute": "#/settings?category=system&focus=software-update",
+    "settings": "软件更新\n当前版本 v1.0.23 · 每 24 小时自动检查，也可随时手动检查\n当前已是最新版本 v1.0.23。\n检查更新",
+    "checkedSettings": "软件更新\n当前版本 v1.0.23 · 每 24 小时自动检查，也可随时手动检查\n当前已是最新版本 v1.0.23。\n检查更新",
+    "capabilities": "返回资料库\n格式能力\nLong编辑 v1.0.23 · 已核对远端版本 v1.0.22 · 43 类格式\n社区版 · 未签名\n外部打开与默认应用\n\n29 类格式可直接编辑，8 类文件可只读预览，预览格式永不写回。展开格式即可启用或关闭 Long编辑；设为系统默认时，Windows 会显示一次必要的确认。\n\n在此页逐项管理\n全部\n43\n已验证\n30\n有限能力\n7\n外部依赖\n6\n可外部打开\n37\n格式\n能力层级\n保存边界\n依赖\nMarkdown\n.md\n完整编辑\n原文件保存\n无\n纯文本\n.txt\n完整编辑\n原文件保存\n无\n环境变量\n.env · .env.local · .env.development · .env.production · .env.test\n受保护编辑\n原文件保存\n无\nINI / CONF 配置\n.ini · .conf · .cfg\n完整编辑\n原文件保存\n无\nJava Properties\n.properties\n完整编辑\n原文件保存\n无\nEditorConfig\n.editorconfig\n完整编辑\n原文件保存\n无\nGit 忽略规则\n.gitignore\n完整编辑\n原文件保存\n无\nJavaScript\n.js · .jsx · .mjs · .cjs\n专业源码编辑\n原文件保存\n无\nTypeScript\n.ts · .tsx · .mts · .cts\n专业源码编辑\n原文件保存\n无\nPython\n.py\n专业源码编辑\n原文件保存\n无\nRust\n.rs\n专业源码编辑\n原文件保存\n无\nGo\n.go\n专业源码编辑\n原文件保存\n无\nJava / Kotlin\n.java · .kt · .kts\n专业源码编辑\n原文件保存\n无\nC / C++ / C#\n.c · .h · .cc · .cpp · .cxx · .hpp · .cs\n专业源码编辑\n原文件保存\n无\nShell / PowerShell\n.sh · .bash · .zsh · .ps1\n专业源码编辑\n原文件保存\n无\nSQL\n.sql\n专业源码编辑\n原文件保存\n无\nHTML / CSS / Vue\n.html · .htm · .css · .scss · .less · .vue\n专业源码编辑\n原文件保存\n无\nJSON\n.json\n基础编辑\n原文件保存\n无\n日志\n.log\n专业查看与编辑\n原文件保存\n无\nJSONC\n.jsonc\n基础编辑\n原文件保存\n无\nYAML\n.yaml · .yml\n完整编辑\n原文件保存\n无\nXML\n.xml\n完整编辑\n原文件保存\n无\nSVG\n.svg\n安全源码编辑\n原文件保存\n无\n图片\n.png · .jpg · .jpeg · .gif · .webp · .bmp · .ico · .avif\n图片基础编辑\n仅新副本\n无\n视频\n.mp4 · .webm · .ogv · .m4v · .mov · .mkv · .avi · .mpeg · .mpg\n流式视频播放\n不保存\n无\nTOML\n.toml\n完整编辑\n原文件保存\n无\nJSON Canvas\n.canvas\n完整编辑\n原文件保存\n无\nPDF\n.pdf\n受限 PDF 编辑\n仅新副本\n无\n开放数据表\n.table.json · .csv · .tsv\n完整编辑\n原文件保存\n无\nWord 文档\n.docx\n受限页面编辑\n有限写回\n无\nOpenDocument 电子表格\n.ods\n基础单元格编辑\n仅新副本\n无\nOpenDocument 演示文稿\n.odp\n简单正文可靠副本\n仅新副本\n无\n旧版 Word 文档\n.doc\n预检并转换副本\n不保存\n兼容 Office\n旧版 Excel 工作簿\n.xls\n预检并转换副本\n不保存\n兼容 Office\n旧版 PowerPoint 演示\n.ppt\n预检并转换副本\n不保存\n兼容 Office\nPowerPoint 演示\n.pptx\n受限演示文稿编辑\n有限写回\n无\nWPS 文字\n.wps\n外部打开\n不保存\n兼容应用\nWPS 表格\n.et\n外部打开\n不保存\n兼容应用\nWPS 演示\n.dps\n外部打开\n不保存\n兼容应用\nExcel 工作簿\n.xlsx\n基础编辑\n有限写回\n无\nDraw.io 图表\n.drawio · .dio\n结构化基础编辑\n原文件保存\n无\nMermaid 图表\n.mmd · .mermaid\n完整编辑\n原文件保存\n无\nOPML 思维导图\n.opml\n完整编辑\n原文件保存\n无\n外部证据门禁\n2\n待外部环境\ne1b-wps-odt\n2/3\n\n可信 WPS ODF 证据到位前，ODT 保持未注册\n\n待外部环境\nx3-b6-array-producers\n1/3\n\nXLSX 数组计算与写回继续阻断"
+  },
+  "checks": [
+    {
+      "id": "native-version-and-sidebar",
+      "status": "passed"
+    },
+    {
+      "id": "badge-opens-settings",
+      "status": "passed"
+    },
+    {
+      "id": "real-update-preserves-installed-version",
+      "status": "passed"
+    },
+    {
+      "id": "production-capability-no-dev",
+      "status": "passed"
+    }
+  ]
+}

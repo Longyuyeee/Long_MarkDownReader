@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-19",
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 35758597675,
+  "buildRunId": 35754325807,
+  "productSourceCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+  "appVersion": "1.0.23",
+  "previousVersion": "1.0.22",
+  "checks": { "lifecyclePassed": 22, "lifecycleFailed": 0, "installedArtifactPassed": 18, "installedArtifactFailed": 0, "installedRoutesPassed": 11, "managementRollbackPassed": 7, "managementRollbackFailed": 0, "versionIdentityPassed": 4 },
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "visualReview": {
+    "document": "docs/V1_0_23_Installed_Visual_Review_2026-09-23.md",
+    "originalRunScreenshotsReviewed": 17,
+    "followupVersionScreenshotsReviewed": 3,
+    "initialSettingsScreenshotAccepted": false,
+    "followupSettingsScreenshotAccepted": true,
+    "settingsSha256": "28de5fa333defa7f8fb0ba37e093082c5764e55b3c24f9e1e9d46ce07027a1c5",
+    "knownGraphOverlapDeferred": true
+  }
+}

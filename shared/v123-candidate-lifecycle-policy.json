@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "M8-19",
-  "status": "frozen-candidate-execution-pending",
+  "status": "hosted-installer-lifecycle-and-version-visual-passed",
   "candidateCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
   "appVersion": "1.0.23",
   "previousVersion": "1.0.22",
@@ -10,6 +10,8 @@
   "workflow": ".github/workflows/v123-candidate-lifecycle.yml",
   "expectedChecks": { "lifecycle": 22, "installedWorkspace": 18, "routes": 11, "managementRollback": 7, "versionIdentity": 4 },
   "githubRunId": 35754325807,
+  "visualReviewRunId": 35758597675,
+  "releaseManifest": "docs/evidence/v1.0.23-release/artifact-manifest.json",
   "releaseCandidate": false,
   "sourceUserContentIncluded": false,
   "officialManagedUpdateObservation": "pending-after-publication"

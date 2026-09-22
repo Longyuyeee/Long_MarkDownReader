@@ -1,5 +1,7 @@
 # v1.0.23 安装包原图复审
 
+**最终复验：** 同包运行 `35758597675` 成功，22/18/11/7/4 项逐项核对通过。新三张版本原图已实际查看；设置页完整显示当前 v1.0.23 与最新状态，无 DEV。无需重建或修改产品，首轮空白与捕获入场时机吻合；原图保留不改写。复验原始证据在 `evidence/v123-installed-visual-review/`，发布清单在 `evidence/v1.0.23-release/`。安装及该版本视觉门已收口，公开发布和官方更新是后续独立步骤。以下为过程记录。
+
 产品候选 `403a5122d169dfb238cd0a424d83e356f644fb08` 保持不变。托管运行 [35754325807](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/35754325807) 成功，artifact `10707843931` 已下载。原始 JSON/JPG 原样归档于 `evidence/v123-candidate-lifecycle/`，不覆盖失败观察。
 
 独立回执校验通过：MSI SHA-256 `18cbe4d115a5611ae81ecafc21fe8b4ebc6999362c8479fd5f5b8d516db98fce`；NSIS `b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a`。报告声明安装生命周期 22 项、工作面 18 项、管理回滚 7 项、版本身份 4 项通过。报告通过不替代人工视觉审阅。
