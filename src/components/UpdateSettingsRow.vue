@@ -2,7 +2,7 @@
   <div class="setting-row update-settings-row" data-testid="app-update-settings">
     <div class="info">
       <div class="label">软件更新</div>
-      <div class="desc">当前版本 v{{ state.currentVersion }} · 每 24 小时自动检查，也可随时手动检查</div>
+      <div class="desc">当前版本 v{{ appVersionIdentity.version }} · 每 24 小时自动检查，也可随时手动检查</div>
       <div v-if="statusText" class="update-status" :class="{ error: state.status === 'error' }">{{ statusText }}</div>
       <div v-if="state.status === 'installing'" class="settings-progress" aria-live="polite">
         <div><span>{{ progressLabel }}</span><strong>{{ state.progressPercent }}%</strong></div>
@@ -37,6 +37,8 @@ import {
   openLatestRelease,
   updaterState as state,
 } from '../services/appUpdater'
+
+import { appVersionIdentity } from '../services/appVersionIdentity'
 
 const message = useMessage()
 const formatBytes = (bytes: number) => bytes > 0 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : '0 MB'

@@ -4,10 +4,12 @@ execFileSync(process.execPath, ['--test', 'scripts/test-text-save-lifecycle.mjs'
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-version-transition.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-candidate-lifecycle.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-release-runtime.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-version-identity.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-installer-receipt.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
 import './check-community-updater-contract.mjs'
+import './check-v122-managed-updater-lifecycle.mjs'
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-installed-search-workflow.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-text-save-feedback.mjs'], { stdio: 'inherit' })
 import './check-command-strip-layout.mjs'
@@ -105,7 +107,7 @@ const required = [
   [`当前运行时版本：\`${development.runtimeBaseVersion}\``, matrix.appVersion === pkg.version && policy.appVersion === pkg.version],
   [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (v122Published ? '1.0.22' : '1.0.21') && development.publicTag === `v${development.publicVersion}`],
   ['P0、UI-1、UI-2、UI-3 与 UI-4 均已完成', true],
-  [v122Published ? '当前阶段：**v1.0.22 已发布，官方更新观察待完成**' : '当前阶段：**v1.0.22 搜索补丁候选安装验收准备**', development.currentStage === (v122Published ? 'M8-16-v1.0.22-release-and-update-observation' : 'M8-14-v1.0.22-search-candidate') && development.activeSlice?.id === 'v1.0.22-search-scope-freeze' && fs.existsSync(development.activeSlice.document)],
+  [v122Published ? '当前阶段：**v1.0.23 版本身份修复（页面与安装态待验证）**' : '当前阶段：**v1.0.22 搜索补丁候选安装验收准备**', development.currentStage === (v122Published ? 'M8-17-v1.0.23-version-identity' : 'M8-14-v1.0.22-search-candidate') && development.activeSlice?.id === (v122Published ? 'v1.0.23-version-identity' : 'v1.0.22-search-scope-freeze') && fs.existsSync(development.activeSlice.document)],
   ['M8 更新观察已收口', JSON.parse(fs.readFileSync('shared/v121-managed-updater-lifecycle-policy.json', 'utf8')).status === 'hosted-managed-update-passed'],
 ]
 

@@ -106,8 +106,6 @@ if (
 ) {
   throw new Error('Development version policy does not match the runtime and public release facts')
 }
-const currentCommunityReleasePublished = communityRelease.gates.githubReleasePublished
-  && communityRelease.currentStatus === `v${communityRelease.appVersion}-community-release-published`
 
 export const RELEASE_CAPABILITY_ROWS: readonly ReleaseCapabilityRow[] = Object.freeze(
   matrix.formats.map(mapping => {
@@ -130,20 +128,8 @@ export const RELEASE_MATRIX_VERSION = matrix.appVersion
 export const RELEASE_CANDIDATE = matrix.releaseCandidate
 export const DEVELOPMENT_TARGET_VERSION = developmentVersion.developmentTargetVersion
 export const PUBLIC_RELEASE_VERSION = developmentVersion.publicVersion
-export const DEVELOPMENT_CHANNEL_ACTIVE = developmentVersion.channel === 'main-development'
-export const DEVELOPMENT_VERSION_LABEL = developmentVersion.displayLabel
-export const RELEASE_PUBLIC_STATUS_LABEL = DEVELOPMENT_CHANNEL_ACTIVE
-  ? DEVELOPMENT_VERSION_LABEL
-  : currentCommunityReleasePublished
-  && communityRelease.appVersion === matrix.appVersion
-  ? `v${matrix.appVersion} 社区版已发布`
-  : currentCommunityReleasePublished
-    ? `v${matrix.appVersion} 发布准备中 · 当前公开 v${communityRelease.appVersion}`
-  : communityRelease.releaseCandidate
-    ? `v${matrix.appVersion} 社区版`
-    : communityRelease.currentStatus === `v${matrix.appVersion}-community-release-quality-gate-pending`
-      ? `v${matrix.appVersion} 社区版`
-      : RELEASE_CANDIDATE
-        ? '企业发布候选'
-        : `${RELEASE_STAGE} 能力审计`
+export const DEVELOPMENT_CHANNEL_ACTIVE = import.meta.env.DEV
+export const DEVELOPMENT_VERSION_LABEL = `开发目标 v${developmentVersion.developmentTargetVersion}`
+// Publication is remote state: a packaged build cannot know the current latest release offline.
+export const RELEASE_PUBLIC_STATUS_LABEL = DEVELOPMENT_CHANNEL_ACTIVE ? '开发构建 · 社区版' : '社区版 · 未签名'
 export const RELEASE_EXTERNAL_GATES = Object.freeze(matrix.externalGates)

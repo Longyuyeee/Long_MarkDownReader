@@ -232,12 +232,12 @@ const checks = {
     && config.includes('DEVELOPMENT_VERSION_LABEL'),
   mainUiIdentifiesDevelopment: library.includes('v{{ displayedAppVersion }}')
     && library.includes('class="version-channel"')
-    && library.includes('候选准备线')
-    && library.includes('当前公开版本')
-    && library.includes('PUBLIC_RELEASE_VERSION'),
-  capabilityUiIdentifiesDevelopment: capabilities.includes('DEVELOPMENT_TARGET_VERSION')
-    && capabilities.includes('候选准备')
-    && capabilities.includes('PUBLIC_RELEASE_VERSION'),
+    && library.includes('appVersionIdentity.value.version')
+    && library.includes('appVersionIdentity.value.indicatorLabel')
+    && !library.includes('PUBLIC_RELEASE_VERSION'),
+  capabilityUiIdentifiesDevelopment: capabilities.includes('appVersionIdentity.value.version')
+    && capabilities.includes('appVersionIdentity.value.developmentLabel')
+    && capabilities.includes('appVersionIdentity.value.remoteLabel'),
   auditDocumentsIdentity: audit.includes(`当前开发目标：\`${policy.developmentTargetVersion}\``)
     && audit.includes(`当前运行时版本：\`${policy.runtimeBaseVersion}\``)
     && audit.includes(`当前公开版本：\`${policy.publicVersion}\``),

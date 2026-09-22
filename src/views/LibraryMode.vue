@@ -768,11 +768,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke, isTauriRuntime, listen } from '../services/tauriRuntime'
 import { initializeUpdater, updaterState } from '../services/appUpdater'
+import { appVersionIdentity } from '../services/appVersionIdentity'
 import {
   DEVELOPMENT_CHANNEL_ACTIVE,
-  DEVELOPMENT_TARGET_VERSION,
-  PUBLIC_RELEASE_VERSION,
-  RELEASE_MATRIX_VERSION,
 } from '../config/releaseCapabilities'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
@@ -803,21 +801,9 @@ import {
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 
-const currentAppVersion = computed(() => {
-  const runtimeVersion = updaterState.currentVersion.trim()
-  return updaterState.status !== 'idle' && runtimeVersion !== '1.0.0'
-    ? runtimeVersion
-    : RELEASE_MATRIX_VERSION
-})
-const displayedAppVersion = computed(() => DEVELOPMENT_CHANNEL_ACTIVE
-  ? DEVELOPMENT_TARGET_VERSION
-  : currentAppVersion.value)
-const hasAvailableUpdate = computed(() => updaterState.status === 'available' && Boolean(updaterState.latestVersion))
-const versionIndicatorLabel = computed(() => hasAvailableUpdate.value
-  ? `发现新版本 v${updaterState.latestVersion}，点击查看更新`
-  : DEVELOPMENT_CHANNEL_ACTIVE
-    ? `候选准备线 v${DEVELOPMENT_TARGET_VERSION}，运行时 v${currentAppVersion.value}，当前公开版本 v${PUBLIC_RELEASE_VERSION}，点击查看更新`
-    : `当前软件版本 v${currentAppVersion.value}，点击查看更新`)
+const displayedAppVersion = computed(() => appVersionIdentity.value.version)
+const hasAvailableUpdate = computed(() => appVersionIdentity.value.hasUpdate)
+const versionIndicatorLabel = computed(() => appVersionIdentity.value.indicatorLabel)
 
 interface ExternalAppExecutable {
   role: string

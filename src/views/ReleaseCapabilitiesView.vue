@@ -2,7 +2,7 @@
   <div class="release-capabilities">
     <WorkspaceManagementHeader
       title="格式能力"
-      :subtitle="`Long编辑 ${DEVELOPMENT_TARGET_VERSION} 候选准备 · 运行时 ${RELEASE_MATRIX_VERSION} · 当前公开 ${PUBLIC_RELEASE_VERSION} · ${RELEASE_CAPABILITY_ROWS.length} 类格式`"
+      :subtitle="versionSubtitle"
       @back="returnToSource"
     >
       <div class="release-state" title="社区无签名发布渠道；企业签名发布候选状态独立评估">
@@ -164,14 +164,21 @@ import WorkspaceManagementHeader from '../components/workspace/WorkspaceManageme
 import {
   RELEASE_CAPABILITY_ROWS,
   RELEASE_EXTERNAL_GATES,
-  RELEASE_MATRIX_VERSION,
-  DEVELOPMENT_TARGET_VERSION,
-  PUBLIC_RELEASE_VERSION,
   RELEASE_PUBLIC_STATUS_LABEL,
   type ReleaseDependency,
   type ReleaseReadiness,
 } from '../config/releaseCapabilities'
 import type { ExternalFilePolicy, SaveMode } from '../config/fileFormats'
+import { appVersionIdentity } from '../services/appVersionIdentity'
+import { initializeUpdater } from '../services/appUpdater'
+
+const versionSubtitle = computed(() => [
+  `Long编辑 v${appVersionIdentity.value.version}`,
+  appVersionIdentity.value.developmentLabel,
+  appVersionIdentity.value.remoteLabel,
+  `${RELEASE_CAPABILITY_ROWS.length} 类格式`,
+].filter(Boolean).join(' · '))
+onMounted(() => { void initializeUpdater() })
 
 type FilterValue = 'all' | 'external-ready' | ReleaseReadiness
 interface DefaultAppCandidateStatus {

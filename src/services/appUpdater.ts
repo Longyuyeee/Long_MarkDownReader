@@ -2,6 +2,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { reactive } from 'vue'
+import appPackage from '../../package.json'
 import { isTauriRuntime, listen } from './tauriRuntime'
 
 export const LATEST_RELEASE_URL = 'https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest'
@@ -42,7 +43,7 @@ interface CommunityUpdateProgress {
 
 export const updaterState = reactive({
   status: 'idle' as UpdateStatus,
-  currentVersion: '1.0.0',
+  currentVersion: appPackage.version,
   latestVersion: '',
   releaseUrl: LATEST_RELEASE_URL,
   releaseNotes: '',
@@ -90,8 +91,8 @@ export const initializeUpdater = async () => {
         updaterState.status = 'unsupported'
         return
       }
-      await initializeProgressListener()
       updaterState.currentVersion = await getVersion()
+      await initializeProgressListener()
       updaterState.status = 'ready'
     } catch (error) {
       updaterState.error = errorMessage(error)
