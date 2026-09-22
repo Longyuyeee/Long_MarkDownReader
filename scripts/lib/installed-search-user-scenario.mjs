@@ -20,12 +20,17 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     for (const type of ['rawKeyDown', 'keyUp']) await send('Input.dispatchKeyEvent', { type, key, code, windowsVirtualKeyCode, modifiers })
   }
   const click = async selector => {
-    const point = await evaluate(`(() => {
+    const pointExpression = `(() => {
       const e=document.querySelector(${JSON.stringify(selector)}); if(!e)return null;
+      if(e.disabled || getComputedStyle(e).visibility==='hidden' || getComputedStyle(e).display==='none')return null;
       const r=e.getBoundingClientRect(); const x=r.x+r.width/2,y=r.y+r.height/2;
       if(!r.width||!r.height||!e.contains(document.elementFromPoint(x,y)))return null;
       return {x,y};
-    })()`)
+    })()`
+    // Navigation and sidebar transitions may mount the control before it is hit-testable.
+    // Wait for actual actionability, never bypass an overlay or call the handler directly.
+    await waitFor(pointExpression, `visible unobscured input target: ${selector}`, 80)
+    const point = await evaluate(pointExpression)
     if (!point) throw new Error(`Visible input target missing: ${selector}`)
     for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, ...point, button: 'left', clickCount: 1 })
   }
