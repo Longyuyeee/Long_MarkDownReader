@@ -1,0 +1,17 @@
+{
+  "productName": "LongEdit Version Audit",
+  "identifier": "com.longyuye.mdreader.version-audit",
+  "app": {
+    "windows": [{
+      "label": "main",
+      "title": "LongEdit Version Audit - isolated",
+      "width": 1100,
+      "height": 800,
+      "decorations": false,
+      "transparent": true,
+      "visible": false,
+      "dragDropEnabled": true
+    }]
+  },
+  "bundle": { "active": false }
+}

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-23",
+  "sourceCommit": "ca8a6a0db324fbab213a30131b6e7f21f099e0cd",
+  "appVersion": "1.0.22",
+  "developmentTarget": "1.0.23",
+  "tool": "computer-use @oai/sky",
+  "input": "native accessibility clicks and screenshot-derived coordinates",
+  "fixture": "synthetic-one-note-library",
+  "sourceUserContentIncluded": false,
+  "productionFrontendBinarySha256": "c23cb2ab0158d5b2b6b44fac7d6119e4d25e249aeb389a62c378cad79b2988a9",
+  "developmentFrontendBinarySha256": "0d1f49b32bc8aa981ac8ab2543c4b1d69b7e15ef5d80ccca7633052f32e054b7",
+  "binaryProfile": "debug; production frontend embedded first, Vite development frontend second; isolated app identifier; not a release installer",
+  "screenshotsReviewed": 5,
+  "remoteUpdateObservation": "actual GitHub check: current 1.0.22, latest 1.0.22",
+  "pending": [
+    "offline and update failure UI",
+    "available update UI",
+    "browser failure UI",
+    "frozen 1.0.23 installer lifecycle"
+  ],
+  "files": [
+    {
+      "name": "development-capabilities.json",
+      "sizeBytes": 30232,
+      "sha256": "ff5dcc770c787ad316c134f1677702fba4918c9d5a9fceb04d4b1d936e21f378"
+    },
+    {
+      "name": "development-library.json",
+      "sizeBytes": 6300,
+      "sha256": "480c10456013dfa137b21702095b5d51ff0c40d261bbe31fe32ff8458d28d3b4"
+    },
+    {
+      "name": "development-library.png",
+      "sizeBytes": 44620,
+      "sha256": "501e6f3da9799cc95d0970d101352ff4092df1606648f1e971d0519e20d2f264"
+    },
+    {
+      "name": "development-settings.json",
+      "sizeBytes": 5490,
+      "sha256": "24295b9d367f914da4cfb2f4e83ded5be4e4700cd8e6885da7f050321214ee0a"
+    },
+    {
+      "name": "production-capabilities.json",
+      "sizeBytes": 30106,
+      "sha256": "fc76c755e1348212d3b72aafdb2c0401733f8c51d4b3805c2f506682509bf3be"
+    },
+    {
+      "name": "production-capabilities.png",
+      "sizeBytes": 78639,
+      "sha256": "594da46a34f0885ce3fb758d2eed542e1b1863666b603a392428f9a6e1de367e"
+    },
+    {
+      "name": "production-library.json",
+      "sizeBytes": 6229,
+      "sha256": "552b5db6ab46f46bcb805a622af8a86ceceaa7ea0af55cae67afbd1d14c53d2f"
+    },
+    {
+      "name": "production-library.png",
+      "sizeBytes": 42811,
+      "sha256": "aa9b2a19c74df68c0640f66f61cb5ad0733ac62049bece150c9be9f31880b010"
+    },
+    {
+      "name": "production-settings-after-release.json",
+      "sizeBytes": 5505,
+      "sha256": "2fc9f01cae57272a258cee7536d2155e757610d01eaeb16496947267b8a4bb44"
+    },
+    {
+      "name": "production-settings-after-release.png",
+      "sizeBytes": 57948,
+      "sha256": "7091242acac5a90cbfa3439a63124b202738c32e0aa3d1717217392bf947b2d0"
+    },
+    {
+      "name": "production-settings-before-release.json",
+      "sizeBytes": 5491,
+      "sha256": "7762dcf4821528e246979a26e43b96810ca3112c8674020415c852ec2290ba82"
+    },
+    {
+      "name": "production-settings-before-release.png",
+      "sizeBytes": 57953,
+      "sha256": "55bace6498d2cefbc3bcb088c10922f26f760a608b1625518881bebcf732aea0"
+    }
+  ]
+}
