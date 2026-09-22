@@ -1,5 +1,7 @@
 # v1.0.23 版本身份修复：候选收口审计
 
+最新：构建/安装运行已成功，但原始设置截图正文空白；不计视觉通过，复用不变安装包补查。见 [安装原图复审](./V1_0_23_Installed_Visual_Review_2026-09-23.md)。
+
 频道 `community-unsigned`，`releaseCandidate=false`；公开下载仍为 v1.0.22。
 
 ## 冻结范围

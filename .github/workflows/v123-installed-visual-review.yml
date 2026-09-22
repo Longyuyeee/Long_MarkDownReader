@@ -1,0 +1,50 @@
+name: v1.0.23 Installed Visual Review
+"on":
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  visual-review:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      LONGEDIT_R5I_DISPOSABLE: "1"
+      LONGEDIT_INSTALLED_VERSION_SCENARIO: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Download and verify unchanged candidate
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh run download 35754325807 --name v123-candidate-lifecycle-35754325807 --dir candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate download failed' }
+          node scripts/verify-v123-installer-receipt.mjs candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate byte verification failed' }
+      - name: Observe installed version surfaces without rebuilding
+        shell: powershell
+        run: |
+          & ./scripts/run-r5i-isolated-install-lifecycle.ps1 `
+            -InstallerDirectory "$pwd/candidate/current-product/src-tauri/target/release/bundle/nsis" `
+            -PreviousInstallerDirectory "$pwd/candidate/previous-official" `
+            -CurrentVersion '1.0.23' -PreviousVersion '1.0.22' `
+            -ExpectedCurrentSha256 'b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a' `
+            -ExpectedSourceCommit '403a5122d169dfb238cd0a424d83e356f644fb08' `
+            -NodeExecutable (Get-Command node.exe).Source `
+            -InstalledSmokeScript "$pwd/scripts/capture-r5j-installed-artifact-smoke.mjs" `
+            -ManagementRollbackSmokeScript "$pwd/scripts/capture-r5l-management-rollback-smoke.mjs" `
+            -EvidenceExporter "$pwd/scripts/export-r5k-windows-evidence-bundle.ps1" `
+            -OutputDirectory "$pwd/visual-review-output" `
+            -ConfirmDisposableMachine -AllowInstallerMutation
+      - name: Preserve original observations including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v123-installed-visual-review-${{ github.run_id }}
+          path: visual-review-output
+          if-no-files-found: error
+          retention-days: 30
