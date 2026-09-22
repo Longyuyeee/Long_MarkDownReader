@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+  "installerSha256": "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294",
+  "evidenceLevel": "installed-webview-input-events",
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "keyword-offline-keyboard-retry-query-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "tag-offline-keyboard-retry-query-preserved",
+      "status": "passed"
+    }
+  ],
+  "status": "failed",
+  "error": "Error: Keyboard opened wrong near-duplicate file",
+  "inputTrace": [
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keypress",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keypress",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "prevented": false,
+      "target": "重新搜索"
+    },
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认-内部草稿.md"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认-内部草稿.md"
+    },
+    {
+      "type": "keyup",
+      "key": "Tab",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "keydown",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "keypress",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    },
+    {
+      "type": "keyup",
+      "key": "Enter",
+      "trusted": true,
+      "prevented": false,
+      "target": "打开 客户会议纪要-九月交付确认.md"
+    }
+  ]
+}
