@@ -1,0 +1,61 @@
+name: v1.0.22 Installed Search User Scenarios
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  installed-search:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      LONGEDIT_R5I_DISPOSABLE: "1"
+      LONGEDIT_INSTALLED_SEARCH_SCENARIO: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Download existing corrected candidate without rebuilding
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = gh api repos/Longyuyeee/Long_MarkDownReader/actions/runs/34679919233 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $run.conclusion -ne 'success' -or $run.head_sha -ne '4839c252a55b3849ff3b18f290ee6a92e4413672') { throw 'Source run identity or conclusion mismatch.' }
+          gh run download 34679919233 --repo Longyuyeee/Long_MarkDownReader --name v122-candidate-lifecycle-34679919233 --dir candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate download failed; do not rebuild as a substitute.' }
+          node scripts/verify-v122-installer-receipt.mjs candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate byte verification failed.' }
+      - name: Run installed dark compact user scenarios on disposable machine
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $policy = Get-Content shared/v122-candidate-lifecycle-policy.json -Raw | ConvertFrom-Json
+          $receipt = Get-Content candidate/m8-15-output/installer-build-receipt.json -Raw | ConvertFrom-Json
+          if ($policy.candidateCommit -ne 'cc58aa68d1974ac2445ed4b884c7677f5a320e93') { throw 'This workflow is bound to the corrected candidate.' }
+          $nsis = @($receipt.artifacts | Where-Object target -eq 'nsis')
+          if ($nsis.Count -ne 1) { throw 'Expected one verified NSIS.' }
+          & ./scripts/run-r5i-isolated-install-lifecycle.ps1 `
+            -InstallerDirectory "$pwd/candidate/current-product/src-tauri/target/release/bundle/nsis" `
+            -PreviousInstallerDirectory "$pwd/candidate/previous-official" `
+            -CurrentVersion '1.0.22' -PreviousVersion '1.0.21' `
+            -ExpectedCurrentSha256 $nsis[0].sha256 `
+            -ExpectedSourceCommit $policy.candidateCommit `
+            -NodeExecutable (Get-Command node.exe).Source `
+            -InstalledSmokeScript "$pwd/scripts/capture-r5j-installed-artifact-smoke.mjs" `
+            -ManagementRollbackSmokeScript "$pwd/scripts/capture-r5l-management-rollback-smoke.mjs" `
+            -EvidenceExporter "$pwd/scripts/export-r5k-windows-evidence-bundle.ps1" `
+            -OutputDirectory "$pwd/search-output" -TestTheme dark `
+            -ConfirmDisposableMachine -AllowInstallerMutation
+      - name: Preserve success and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v122-installed-search-${{ github.run_id }}
+          path: search-output
+          if-no-files-found: warn
+          retention-days: 30

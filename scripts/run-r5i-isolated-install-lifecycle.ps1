@@ -19,6 +19,8 @@ param(
     [ValidatePattern("^[a-fA-F0-9]{40}$")]
     [string]$ExpectedSourceCommit,
     [string]$OutputDirectory = "C:\LongEditR5IOutput",
+    [ValidateSet('white', 'dark')]
+    [string]$TestTheme = 'white',
     [switch]$ConfirmDisposableMachine,
     [switch]$AllowInstallerMutation,
     [switch]$RequireSignedArtifact
@@ -269,7 +271,7 @@ $formalConfig = [ordered]@{
         gitBranch = "main"
     })
     activeLibraryPath = $libraryRoot
-    theme = "white"
+    theme = $TestTheme
     codeTheme = "github"
     editorMode = "wysiwyg"
     editorBgColor = ""
