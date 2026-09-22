@@ -4,6 +4,7 @@
       <div class="label">软件更新</div>
       <div class="desc">当前版本 v{{ appVersionIdentity.version }} · 每 24 小时自动检查，也可随时手动检查</div>
       <div v-if="statusText" class="update-status" :class="{ error: state.status === 'error' }">{{ statusText }}</div>
+      <div v-if="state.releasePageError" class="update-status error" role="alert">无法打开发布详情：{{ state.releasePageError }}。更新状态未改变，可重试打开。</div>
       <div v-if="state.status === 'installing'" class="settings-progress" aria-live="polite">
         <div><span>{{ progressLabel }}</span><strong>{{ state.progressPercent }}%</strong></div>
         <n-progress type="line" :percentage="state.progressPercent" :show-indicator="false" processing />

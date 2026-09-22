@@ -41,6 +41,7 @@
     </section>
     <p class="restart-note"><ShieldCheckIcon :size="14" aria-hidden="true" />安装完成后 Long编辑会自动重新打开。</p>
     <p class="unsigned-note">未签名社区版仍可能触发 Windows“未知发布者”提示。</p>
+    <p v-if="state.releasePageError" role="alert">无法打开发布详情：{{ state.releasePageError }}。更新状态未改变，可重试打开。</p>
     <template #footer>
       <div class="modal-actions">
         <n-button class="release-link" quaternary :disabled="state.status === 'installing'" @click="openRelease">发布详情</n-button>

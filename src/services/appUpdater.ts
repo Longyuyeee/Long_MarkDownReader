@@ -56,6 +56,7 @@ export const updaterState = reactive({
   totalBytes: 0,
   progressPercent: 0,
   error: '',
+  releasePageError: '',
 })
 
 let initialization: Promise<void> | null = null
@@ -160,6 +161,7 @@ export const installAvailableUpdate = async () => {
 
 export const openLatestRelease = async () => {
   if (updaterState.status === 'installing') return false
+  updaterState.releasePageError = ''
   // Opening a website is not an update check. Preserve the last observed
   // status (including failures), and do not overwrite a concurrent check.
   try {
@@ -168,8 +170,7 @@ export const openLatestRelease = async () => {
     else window.open(url, '_blank', 'noopener,noreferrer')
     return true
   } catch (error) {
-    updaterState.error = errorMessage(error)
-    updaterState.status = 'error'
+    updaterState.releasePageError = errorMessage(error)
     return false
   }
 }

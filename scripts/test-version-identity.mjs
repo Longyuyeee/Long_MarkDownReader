@@ -63,8 +63,40 @@ test('release-page opening is blocked during installation and reports opener fai
   assert.equal(calls, 0)
   updater.updaterState.status = 'ready'
   assert.equal(await updater.openLatestRelease(), false)
+  assert.equal(updater.updaterState.status, 'ready')
+  assert.equal(updater.updaterState.error, '')
+  assert.match(updater.updaterState.releasePageError, /Browser unavailable/)
+})
+
+test('late browser failure cannot dismiss an available update or interrupt installation state', async () => {
+  for (const status of ['available', 'installing', 'checking', 'up-to-date', 'error']) {
+    let rejectOpen
+    const updater = loadUpdater(() => new Promise((resolve, reject) => { rejectOpen = reject }))
+    updater.updaterState.status = 'available'
+    const opening = updater.openLatestRelease()
+    Object.assign(updater.updaterState, { status, latestVersion: '1.0.23', error: 'Preserved check result', progressPercent: 42 })
+    const before = { ...updater.updaterState }
+    rejectOpen(new Error('Browser unavailable'))
+    assert.equal(await opening, false)
+    assert.deepEqual({ ...updater.updaterState, releasePageError: '' }, before)
+    assert.match(updater.updaterState.releasePageError, /Browser unavailable/)
+  }
+})
+
+test('retrying browser opening clears only browser error and both user surfaces expose it', async () => {
+  let fail = true
+  const updater = loadUpdater(async () => { if (fail) throw new Error('Browser unavailable') })
+  Object.assign(updater.updaterState, { status: 'error', error: 'Offline' })
+  await updater.openLatestRelease()
+  assert.ok(updater.updaterState.releasePageError)
+  fail = false
+  assert.equal(await updater.openLatestRelease(), true)
+  assert.equal(updater.updaterState.releasePageError, '')
+  assert.equal(updater.updaterState.error, 'Offline')
   assert.equal(updater.updaterState.status, 'error')
-  assert.match(updater.updaterState.error, /Browser unavailable/)
+  for (const file of ['src/components/AppUpdater.vue', 'src/components/UpdateSettingsRow.vue']) {
+    assert.match(fs.readFileSync(file, 'utf8'), /v-if="state.releasePageError"[^>]*role="alert"/)
+  }
 })
 
 test('installed version never becomes the future development target', () => {
