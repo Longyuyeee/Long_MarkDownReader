@@ -10,6 +10,63 @@ const ctx = vm.createContext({ exports: {} })
 vm.runInContext(ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText, ctx)
 const resolve = changes => ctx.exports.resolveVersionIdentity({ runtimeVersion: '1.0.22', buildVersion: '1.0.22', developmentBuild: false, developmentTarget: '1.0.23', updateStatus: 'ready', latestVersion: '', ...changes })
 
+function loadUpdater(openUrl = async () => {}, invoke = async () => {}) {
+  const storage = new Map()
+  const environment = vm.createContext({ exports: {}, localStorage: {
+    getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value),
+  }, require: name => {
+    if (name === 'vue') return { reactive }
+    if (name === '../../package.json') return { default: { version: '1.0.22' } }
+    if (name === '@tauri-apps/api/app') return { getVersion: async () => '1.0.22' }
+    if (name === '@tauri-apps/api/core') return { invoke }
+    if (name === '@tauri-apps/plugin-opener') return { openUrl }
+    if (name === './tauriRuntime') return { isTauriRuntime: () => true, listen: async () => () => {} }
+    throw new Error(`Unexpected dependency: ${name}`)
+  } })
+  vm.runInContext(ts.transpileModule(fs.readFileSync('src/services/appUpdater.ts', 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText, environment)
+  return environment.exports
+}
+
+test('opening release notes preserves current, failed and available update observations', async () => {
+  for (const status of ['up-to-date', 'error', 'available', 'ready', 'unsupported']) {
+    const opened = []
+    const updater = loadUpdater(async url => opened.push(url))
+    Object.assign(updater.updaterState, { status, latestVersion: '1.0.22', error: status === 'error' ? 'Offline' : '' })
+    const before = { ...updater.updaterState }
+    assert.equal(await updater.openLatestRelease(), true)
+    assert.deepEqual({ ...updater.updaterState }, before)
+    assert.deepEqual(opened, [updater.LATEST_RELEASE_URL])
+  }
+})
+
+test('slow release-page opening cannot overwrite a completed concurrent update check', async () => {
+  let finishOpen
+  const updater = loadUpdater(() => new Promise(resolve => { finishOpen = resolve }), async () => ({
+    available: false, currentVersion: '1.0.22', latestVersion: '1.0.22',
+    releaseUrl: 'https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest',
+    releaseNotes: '', publishedAt: null, installerName: '', installerSize: 0, installerSha256: '',
+  }))
+  await updater.initializeUpdater()
+  const opening = updater.openLatestRelease()
+  await updater.checkForUpdates(true)
+  assert.equal(updater.updaterState.status, 'up-to-date')
+  finishOpen()
+  assert.equal(await opening, true)
+  assert.equal(updater.updaterState.status, 'up-to-date')
+})
+
+test('release-page opening is blocked during installation and reports opener failure', async () => {
+  let calls = 0
+  const updater = loadUpdater(async () => { calls++; throw new Error('Browser unavailable') })
+  updater.updaterState.status = 'installing'
+  assert.equal(await updater.openLatestRelease(), false)
+  assert.equal(calls, 0)
+  updater.updaterState.status = 'ready'
+  assert.equal(await updater.openLatestRelease(), false)
+  assert.equal(updater.updaterState.status, 'error')
+  assert.match(updater.updaterState.error, /Browser unavailable/)
+})
+
 test('installed version never becomes the future development target', () => {
   const identity = resolve({})
   assert.equal(identity.version, '1.0.22')

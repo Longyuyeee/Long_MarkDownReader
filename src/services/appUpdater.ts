@@ -160,13 +160,12 @@ export const installAvailableUpdate = async () => {
 
 export const openLatestRelease = async () => {
   if (updaterState.status === 'installing') return false
-  updaterState.status = 'opening'
-  updaterState.error = ''
+  // Opening a website is not an update check. Preserve the last observed
+  // status (including failures), and do not overwrite a concurrent check.
   try {
     const url = updaterState.releaseUrl || LATEST_RELEASE_URL
     if (isTauriRuntime()) await openUrl(url)
     else window.open(url, '_blank', 'noopener,noreferrer')
-    updaterState.status = updaterState.latestVersion ? 'available' : 'ready'
     return true
   } catch (error) {
     updaterState.error = errorMessage(error)
