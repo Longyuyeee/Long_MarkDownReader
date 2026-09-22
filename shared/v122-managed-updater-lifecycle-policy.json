@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.22-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v122-managed-updater-lifecycle.yml",
   "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
@@ -57,25 +57,40 @@
   },
   "gates": {
     "harnessImplemented": true,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "qualityGatePassed": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true
   },
   "expectedVsActualAtEntry": {
     "expected": "official v1.0.21 discovers, confirms, verifies, installs, relaunches and reports official v1.0.22 while retaining user data",
     "actual": "pending hosted execution",
     "correction": "candidate installation evidence does not prove official in-app update"
   },
-  "attemptHistory": [],
-  "githubRun": null,
+  "attemptHistory": [
+    {
+      "runId": 35745952274,
+      "accepted": true,
+      "checksPassed": 12,
+      "checksFailed": 0,
+      "date": "2026-09-22"
+    }
+  ],
+  "githubRun": {
+    "id": 35745952274,
+    "conclusion": "success",
+    "headCommit": "a152ff08709deff87ce5fb551800747ab95ee34e",
+    "artifactId": 10701449509,
+    "artifactDigest": "sha256:5a19b245bc8bedb3ec4982ef3bbfd765c818be0cc15067a59005a079f539b9cb",
+    "qualityGateRunId": 34679919233
+  },
   "evidenceRoot": "docs/evidence/v1.0.22-managed-updater",
-  "nextAction": "execute-once-and-review-original-reports-and-screenshots"
+  "nextAction": "v1.0.22-release-and-managed-updater-closure-complete"
 }

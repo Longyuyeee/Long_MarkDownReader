@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.22-U1-DISCOVERY",
+  "capturedAt": "2026-09-22T15:15:44.976Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.21",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.21",
+    "latestVersion": "1.0.22",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22",
+    "releaseNotes": "# v1.0.22 搜索可靠性补丁\n\n状态：2026-09-22 已正式发布，MSI、NSIS 与 SHA256SUMS 三个公开附件已回下载核验。官方 1.0.21→1.0.22 应用内更新观察尚未完成。\n\n本版补强日常“找到资料、辨认结果、安全保存”的体验，不新增搜索引擎或图谱特效。\n\n- 搜索失败不再显示成“没有找到”，支持保持原查询重试；切换资料库、清空查询后，旧请求不会覆盖当前结果。\n- 标签搜索遇到资料库根目录不可读时明确报错。\n- 紧凑搜索结果将标题、命中信息和关系入口分行，长标题保留完整名称提示。\n- 修复纯文本保存后迅速切换文件时出现保存报错、旧标签状态不一致的问题；保存回执归属原文件，后续编辑的草稿不会被旧回执覆盖。\n\n固定产品 `cc58aa68` 已完成托管双包、安装生命周期与 TXT 保存截图核对；独立安装态搜索运行 `35743671363` 的 4 项用户任务通过，8 张搜索原图已直接审阅，涵盖暗色紧凑侧栏、离线反馈、键盘重试和准确打开。最终图谱提示观察 `35744511959` 通过，未在该环境复现持续加载或消息遮挡；不等于全部大库性能验收。\n\n已知显示限制：本包实际版本为 1.0.22，但侧栏可能仍显示 DEV，能力页的“当前公开版本”保留构建时 1.0.21 文案。这是静态发布状态文案，不代表实际安装版本回退；公开版本以本 Release、安装包版本和 SHA-256 为准。下个补丁优先解耦运行版本与开发路线文案，不把该问题隐藏为已修复。\n\n社区安装包采用 NotSigned（未签名），Windows 可能提示未知发布者；只从官方 Release 手动下载安装并核对 SHA-256。自动更新观察必须在正式发布后单独执行，不能用候选安装验收代替。\n\n边界：子目录/单文件读取保持 best-effort；不新增索引格式，不宣称全树诊断或新的性能指标。见当前开发交接文档。\n",
+    "publishedAt": "2026-09-22T15:09:05Z",
+    "installerName": "LongEdit_1.0.22_x64-setup.exe",
+    "installerSize": 66806406,
+    "installerSha256": "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294"
+  },
+  "confirmation": {
+    "title": "发现新版本已通过官方发布源检查",
+    "text": "发现新版本已通过官方发布源检查v1.0.21v1.0.22安装包将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后安装。63.7 MBWindow  x64覆盖安装本次更新v1.0.22 搜索可靠性补丁状态：2026-09-22 已正式发布，MSI、NSIS 与 SHA256SUMS 三个公开附件已回下载核验。官方 1.0.21→1.0.22 应用内更新观察尚未完成。本版补强日常“找到资料、辨认结果、安全保存”的体验，不新增搜索引擎或图谱特效。搜索失败不再显示成“没有找到”，支持保持原查询重试；切换资料库、清空查询后，旧请求不会覆盖当前结果。安装完成后 Long编辑会自动重新打开。未签名社区版仍可能触发 Window “未知发布者”提示。发布详情稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-09-22T15:15:44.999Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

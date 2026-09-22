@@ -1,0 +1,103 @@
+{
+    "schemaVersion":  1,
+    "stage":  "V1.0.22-U1",
+    "capturedAt":  "2026-09-22T15:16:00.4448537Z",
+    "environment":  "GitHub-hosted disposable Windows official community release update",
+    "status":  "passed",
+    "previousVersion":  "1.0.21",
+    "currentVersion":  "1.0.22",
+    "previousInstallerSha256":  "25507ea07506bb6b6a75da6ed82bc1ae7daf87da022ca4736f0aa30383691b13",
+    "currentInstallerSha256":  "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294",
+    "currentInstallerSizeBytes":  66806406,
+    "installedExecutableSha256":  "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+    "installedExecutableAuthenticodeStatus":  "NotSigned",
+    "standaloneReleaseExecutableReferenceSha256":  "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+    "matchesStandaloneReleaseExecutableReference":  true,
+    "releaseUrl":  "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22",
+    "taggedCommit":  "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+    "checks":  [
+                   {
+                       "id":  "official-v1.0.21-fresh-install",
+                       "status":  "passed",
+                       "version":  "1.0.21",
+                       "installerSha256":  "25507ea07506bb6b6a75da6ed82bc1ae7daf87da022ca4736f0aa30383691b13"
+                   },
+                   {
+                       "id":  "official-release-discovery",
+                       "status":  "passed",
+                       "from":  "1.0.21",
+                       "to":  "1.0.22",
+                       "releaseUrl":  "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22"
+                   },
+                   {
+                       "id":  "explicit-user-confirmation",
+                       "status":  "passed",
+                       "installerStartedBeforeConfirmation":  false
+                   },
+                   {
+                       "id":  "silent-overwrite-install",
+                       "status":  "passed",
+                       "installRootPreserved":  true
+                   },
+                   {
+                       "id":  "downloaded-installer-sha256",
+                       "status":  "passed",
+                       "fileName":  "LongEdit_1.0.22_x64-setup.exe",
+                       "sizeBytes":  66806406,
+                       "sha256":  "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294"
+                   },
+                   {
+                       "id":  "installed-version-and-binary-recorded",
+                       "status":  "passed",
+                       "version":  "1.0.22",
+                       "sha256":  "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+                       "authenticodeStatus":  "NotSigned",
+                       "matchesStandaloneReleaseExecutableReference":  true,
+                       "trustAnchor":  "verified-official-nsis-installer"
+                   },
+                   {
+                       "id":  "overwrite-retains-user-data",
+                       "status":  "passed",
+                       "libraryMarker":  true,
+                       "configMarker":  true
+                   },
+                   {
+                       "id":  "automatic-relaunch-after-managed-update",
+                       "status":  "passed",
+                       "version":  "1.0.22",
+                       "processId":  2760,
+                       "executablePath":  "C:\\LongEditManagedUpdater\\tauri-app.exe"
+                   },
+                   {
+                       "id":  "first-launch-after-managed-update",
+                       "status":  "passed",
+                       "version":  "1.0.22"
+                   },
+                   {
+                       "id":  "post-upgrade-reports-current",
+                       "status":  "passed",
+                       "updateAvailable":  false
+                   },
+                   {
+                       "id":  "post-update-uninstall",
+                       "status":  "passed"
+                   },
+                   {
+                       "id":  "uninstall-retains-user-data",
+                       "status":  "passed",
+                       "libraryMarker":  true,
+                       "configMarker":  true
+                   }
+               ],
+    "checksPassed":  12,
+    "checksFailed":  0,
+    "downloadedFromOfficialRelease":  true,
+    "explicitUserConfirmation":  true,
+    "automaticRelaunchAfterInstall":  true,
+    "userDataRetainedAfterOverwrite":  true,
+    "userDataRetainedAfterUninstall":  true,
+    "sourceUserContentIncluded":  false,
+    "authenticodeStatus":  "NotSigned",
+    "communityReleaseEvidence":  true,
+    "enterprisePromotionEligible":  false
+}
