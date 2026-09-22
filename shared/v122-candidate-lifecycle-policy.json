@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
   "stage": "M8-15",
-  "status": "corrected-candidate-hosted-execution-pending",
+  "status": "corrected-candidate-hosted-success-review-pending",
   "githubRunId": 34679919233,
-  "releaseBlocker": "Corrected candidate requires fresh installed lifecycle, visible save feedback review and separate search acceptance",
+  "releaseBlocker": "Corrected candidate hosted lifecycle succeeded and TXT screenshot reviewed; remaining visual review and separate installed search acceptance required",
+  "reviewDocument": "docs/Development_User_Task_Plan_2026-09-22.md",
   "candidateCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
   "rejectedCandidates": [
     {
