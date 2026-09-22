@@ -914,6 +914,10 @@ if (!performanceEvidence?.routes?.length || !performanceEvidence?.measures?.leng
 checks.push({ id: 'installed-route-performance-export', status: 'passed' })
 
 const executableStats = await fs.stat(installedExecutable)
+if (process.env.LONGEDIT_FINAL_RELEASE_REVIEW === '1') {
+  const { reviewInstalledFeedback } = await import('./lib/installed-final-review.mjs')
+  await reviewInstalledFeedback({ evaluate, navigate, capture, output, sourceCommit, installerSha256 })
+}
 if (process.env.LONGEDIT_INSTALLED_SEARCH_SCENARIO === '1') {
   const { runInstalledSearchScenario } = await import('./lib/installed-search-user-scenario.mjs')
   await runInstalledSearchScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256 })

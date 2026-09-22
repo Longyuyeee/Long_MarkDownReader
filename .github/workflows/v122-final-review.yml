@@ -1,0 +1,49 @@
+name: v1.0.22 Final Installed Feedback Review
+"on":
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  final-review:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      LONGEDIT_R5I_DISPOSABLE: "1"
+      LONGEDIT_FINAL_RELEASE_REVIEW: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Download and verify frozen candidate
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh run download 34679919233 --name v122-candidate-lifecycle-34679919233 --dir candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate download failed' }
+          node scripts/verify-v122-installer-receipt.mjs candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate byte verification failed' }
+      - name: Observe installed feedback without rebuilding
+        shell: powershell
+        run: |
+          & ./scripts/run-r5i-isolated-install-lifecycle.ps1 `
+            -InstallerDirectory "$pwd/candidate/current-product/src-tauri/target/release/bundle/nsis" `
+            -PreviousInstallerDirectory "$pwd/candidate/previous-official" `
+            -CurrentVersion '1.0.22' -PreviousVersion '1.0.21' `
+            -ExpectedCurrentSha256 '0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294' `
+            -ExpectedSourceCommit 'cc58aa68d1974ac2445ed4b884c7677f5a320e93' `
+            -NodeExecutable (Get-Command node.exe).Source `
+            -InstalledSmokeScript "$pwd/scripts/capture-r5j-installed-artifact-smoke.mjs" `
+            -ManagementRollbackSmokeScript "$pwd/scripts/capture-r5l-management-rollback-smoke.mjs" `
+            -EvidenceExporter "$pwd/scripts/export-r5k-windows-evidence-bundle.ps1" `
+            -OutputDirectory "$pwd/final-review-output" -TestTheme dark `
+            -ConfirmDisposableMachine -AllowInstallerMutation
+      - name: Preserve original observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v122-final-review-${{ github.run_id }}
+          path: final-review-output
+          retention-days: 30
