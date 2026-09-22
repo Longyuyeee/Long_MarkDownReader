@@ -102,6 +102,7 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     await key('Enter', 'Enter', 13)
     await waitFor(`(() => { const e=document.querySelector('#vditor-lib'); return e && e.getBoundingClientRect().height > 0 && e.innerText.includes('我要先核对预算'); })()`, 'correct confirmation document opened')
     const openedPath = await evaluate(`new URLSearchParams(location.hash.split('?')[1]||'').get('path')`)
+    receipt.openedDocument = { openedPath, expectedPath: path.join(library, fixtures[0][0]), location: await evaluate('location.href'), activeTab: await evaluate(`document.querySelector('.workspace-tab[aria-selected="true"]')?.getAttribute('aria-label')`) }
     if (path.resolve(openedPath || '').toLowerCase() !== path.join(library, fixtures[0][0]).toLowerCase()) throw new Error('Keyboard opened wrong near-duplicate file')
     await capture('search-keyboard-opened-document.jpg')
     checks.push({ id:'keyboard-near-duplicate-target-open', status:'passed' })
