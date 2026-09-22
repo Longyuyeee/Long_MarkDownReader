@@ -5,7 +5,16 @@ import { test } from 'node:test'
 import vm from 'node:vm'
 import ts from 'typescript'
 import { parse } from 'yaml'
-import { runInstalledSearchScenario } from './lib/installed-search-user-scenario.mjs'
+import { runInstalledSearchScenario, filePathFromRouteHash } from './lib/installed-search-user-scenario.mjs'
+
+test('route query preserves the question mark in Windows extended-length paths', () => {
+  const expected = '\\\\?\\C:\\LongEditR5ILibrary\\客户会议纪要-九月交付确认.md'
+  const hash = '#/library?path=' + encodeURIComponent(expected).replace('%3F', '?')
+  assert.equal(filePathFromRouteHash(hash), expected)
+  assert.equal(filePathFromRouteHash('#/library'), null)
+  assert.equal(filePathFromRouteHash('#/library?panel=files'), null)
+  assert.equal(filePathFromRouteHash('#/library?panel=files&path=C%3A%5Cnote.md'), 'C:\\note.md')
+})
 
 const source = fs.readFileSync('.github/workflows/v122-installed-search.yml', 'utf8')
 const workflow = parse(source)

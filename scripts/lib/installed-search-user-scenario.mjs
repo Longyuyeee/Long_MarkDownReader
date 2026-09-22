@@ -2,6 +2,11 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
+export function filePathFromRouteHash(hash) {
+  const queryStart = hash.indexOf('?')
+  return queryStart < 0 ? null : new URLSearchParams(hash.slice(queryStart + 1)).get('path')
+}
+
 export async function runInstalledSearchScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256 }) {
   // This destructive environment simulation is only valid in the existing disposable runner.
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') {
@@ -101,9 +106,9 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     await capture('search-keyboard-focused-title.jpg')
     await key('Enter', 'Enter', 13)
     await waitFor(`(() => { const e=document.querySelector('#vditor-lib'); return e && e.getBoundingClientRect().height > 0 && e.innerText.includes('我要先核对预算'); })()`, 'correct confirmation document opened')
-    const openedPath = await evaluate(`new URLSearchParams(location.hash.split('?')[1]||'').get('path')`)
+    const openedPath = filePathFromRouteHash(await evaluate('location.hash'))
     receipt.openedDocument = { openedPath, expectedPath: path.join(library, fixtures[0][0]), location: await evaluate('location.href'), activeTab: await evaluate(`document.querySelector('.workspace-tab[aria-selected="true"]')?.getAttribute('aria-label')`) }
-    if (path.resolve(openedPath || '').toLowerCase() !== path.join(library, fixtures[0][0]).toLowerCase()) throw new Error('Keyboard opened wrong near-duplicate file')
+    if (!openedPath || path.toNamespacedPath(await fs.realpath(openedPath)).toLowerCase() !== path.toNamespacedPath(await fs.realpath(path.join(library, fixtures[0][0]))).toLowerCase()) throw new Error('Keyboard opened wrong near-duplicate file')
     await capture('search-keyboard-opened-document.jpg')
     checks.push({ id:'keyboard-near-duplicate-target-open', status:'passed' })
     for (const [name, content] of fixtures) if(hash(await fs.readFile(path.join(library,name)))!==hash(content))throw new Error('Read-only scenario changed fixture source')
