@@ -1,5 +1,7 @@
 # v1.0.22 安装态搜索专项执行
 
+**当前唯一接续运行：** [35743007169](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/35743007169)，编排 `dad0b88c`，产品仍为 `cc58aa68`。已单次触发、登记时未完成；先检查该运行及 `v122-installed-search-35743007169`，不要照较早记录重复启动。发布保持关闭，等待正文/路径/源文件及生命周期完整结果和截图审阅。
+
 第四次运行 `35742556003`：原报告明确关键词和标签的离线→键盘 Enter 重试→查询保留均 passed，事件记录包含可信 keypress/click。失败停在正文确认。直接查看 `search-failure.jpg` 已实际打开正确确认版并显示“我要先核对预算”；源码说明 Markdown 使用 `#vditor-lib`，而 `.library-embedded-editor` 仅适用于其他格式。修正专项读取实际 Markdown 工作面，仍须可见正文、准确路由和源文件不变同时成立；不是删除正文检查。新增定位契约测试后 5 项通过。原报告仍为 failed，不改写；截图及输入轨迹完整保存在 `docs/evidence/v122-search-attempt-35742556003/`。
 
 第三次运行 `35742092552`：刷新/索引控件定位已解决，关键词基线命中与离线失败页面均实际截图确认，恢复后 Enter 重试超时。三张原图及报告存于 `docs/evidence/v122-search-attempt-35742092552/`。不能据此宣称整个搜索恢复通过。检查输入协议后补全 Enter 的字符/default-action 阶段（`keyDown` + `text: '\r'`，随后 `keyUp`），Tab 和组合键不改；同时只读记录目标按钮的可信键盘/click 事件，要求原生默认动作确实触发，再判断恢复结果。此时键盘输入不完整仍为待重跑验证的解释；不直接调用 click、搜索函数或改组件状态，产品仍不变。
