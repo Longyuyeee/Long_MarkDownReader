@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { assertInstalledReleaseRuntime } from './lib/installed-release-runtime.mjs'
 
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'))
 const policy = readJson('shared/development-version-policy.json')
@@ -7,6 +8,11 @@ const pkg = readJson('package.json')
 const tauri = readJson('src-tauri/tauri.conf.json')
 const matrix = readJson('shared/release-capability-matrix.json')
 const community = readJson('shared/v1-community-release-policy.json')
+let installedRuntimeVerified = false
+if (community.appVersion === '1.0.22' && community.gates?.githubReleasePublished === true) {
+  assertInstalledReleaseRuntime(readJson('docs/evidence/v1.0.22-release/artifact-manifest.json'))
+  installedRuntimeVerified = true
+}
 const m1dc1Subtitle = readJson('shared/post-v115-m1dc1-subtitle-playback-policy.json')
 const m1Closure = readJson('shared/post-v115-m1-closure-policy.json')
 const m3Baseline = readJson('shared/post-v115-m3-baseline-policy.json')
@@ -103,11 +109,11 @@ const checks = {
       : community.currentStatus === `v${policy.runtimeBaseVersion}-community-release-published`
         && community.releaseCandidate === true
         && community.gates?.qualityGatePassed === true
-        && community.gates?.localRuntimeSmokePassed === true
+        && (community.gates?.localRuntimeSmokePassed === true || installedRuntimeVerified)
         && community.gates?.githubReleasePublished === true
         && community.release?.taggedCommit === policy.publicTagCommit),
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && ['1.0.16', '1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21'].includes(policy.publicVersion),
+    && ['1.0.16', '1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22'].includes(policy.publicVersion),
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,

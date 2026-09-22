@@ -1,14 +1,22 @@
 {
   "schemaVersion": 1,
   "stage": "M8-16",
-  "status": "release-ready-hosted-lifecycle-and-installed-runtime-passed",
-  "finalFeedbackReview": { "runId": 35744511959, "report": "docs/evidence/v122-final-feedback/installed-final-feedback-review.json", "status": "passed" },
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
+  "finalFeedbackReview": {
+    "runId": 35744511959,
+    "report": "docs/evidence/v122-final-feedback/installed-final-feedback-review.json",
+    "status": "passed"
+  },
   "appVersion": "1.0.22",
   "sourceVersion": "1.0.22",
   "sourceCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
   "hostedRunId": 34679919233,
   "hostedArtifactId": 10293294351,
-  "checksumFile": { "fileName": "SHA256SUMS.txt", "sizeBytes": 192, "sha256": "55bf0641ed465f4b2c03ec2c6d856511f002fee4e3d22aa4984be121a88318ae" },
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "55bf0641ed465f4b2c03ec2c6d856511f002fee4e3d22aa4984be121a88318ae"
+  },
   "artifacts": [
     {
       "target": "msi",
@@ -67,9 +75,11 @@
   "boundaries": {
     "communityUnsigned": true,
     "enterprisePromotionEligible": false,
-    "releaseAssetsPublished": false,
-    "managedUpdaterReleaseAssetsPresent": false,
+    "releaseAssetsPublished": true,
+    "managedUpdaterReleaseAssetsPresent": true,
     "legacyTauriUpdaterArtifactsPresent": false
   },
-  "sourceUserContentIncluded": false
+  "sourceUserContentIncluded": false,
+  "releaseReceipt": "release-receipt.json",
+  "releasePublished": true
 }

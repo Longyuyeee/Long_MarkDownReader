@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.0.22",
+  "developmentTargetVersion": "1.0.23",
   "runtimeBaseVersion": "1.0.22",
-  "publicVersion": "1.0.21",
-  "publicTag": "v1.0.21",
-  "publicTagCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
+  "publicVersion": "1.0.22",
+  "publicTag": "v1.0.22",
+  "publicTagCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-14-v1.0.22-search-candidate",
-  "binaryVersionTransition": "v1.0.22-quality-gate-pending",
-  "displayLabel": "v1.0.22 搜索修复候选 · 当前公开 v1.0.21",
+  "currentStage": "M8-16-v1.0.22-release-and-update-observation",
+  "binaryVersionTransition": "v1.0.22-public-release-published",
+  "displayLabel": "运行时/公开 v1.0.22 · 下一目标 v1.0.23",
   "activeSlice": {
     "id": "v1.0.22-search-scope-freeze",
-    "status": "runtime-transitioned-candidate-validation-pending",
+    "status": "published-official-update-observation-pending",
     "document": "docs/V1_0_22_Unsigned_Community_Release_Audit_2026-09-12.md"
   }
 }
