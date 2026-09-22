@@ -923,6 +923,10 @@ if (process.env.LONGEDIT_INSTALLED_SEARCH_SCENARIO === '1') {
   await runInstalledSearchScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256 })
 }
 const capturedAt = new Date().toISOString()
+if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
+  const { runInstalledVersionScenario } = await import('./lib/installed-version-identity.mjs')
+  await runInstalledVersionScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion })
+}
 await fs.writeFile(path.join(output, 'installed-knowledge-network-evidence.json'), `${JSON.stringify({
   schemaVersion: 1,
   stage: 'G14',

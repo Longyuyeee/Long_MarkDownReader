@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-19",
+  "status": "frozen-candidate-execution-pending",
+  "candidateCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+  "appVersion": "1.0.23",
+  "previousVersion": "1.0.22",
+  "previousTagCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+  "previousReleaseReceipt": "docs/evidence/v1.0.22-release/release-receipt.json",
+  "workflow": ".github/workflows/v123-candidate-lifecycle.yml",
+  "expectedChecks": { "lifecycle": 22, "installedWorkspace": 18, "routes": 11, "managementRollback": 7, "versionIdentity": 4 },
+  "githubRunId": null,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "officialManagedUpdateObservation": "pending-after-publication"
+}
