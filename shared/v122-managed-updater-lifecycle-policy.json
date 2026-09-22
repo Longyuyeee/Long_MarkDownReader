@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.22-U1",
+  "status": "hosted-execution-pending",
+  "environment": "github-hosted-disposable-windows",
+  "workflow": ".github/workflows/v122-managed-updater-lifecycle.yml",
+  "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
+  "releases": {
+    "previous": {
+      "version": "1.0.21",
+      "tag": "v1.0.21",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.21",
+      "taggedCommit": "284b0244e25f21c870bb01c37c7533b0e28ac221",
+      "releaseTargetCommitishObserved": "main",
+      "installer": {
+        "fileName": "LongEdit_1.0.21_x64-setup.exe",
+        "sizeBytes": 66815338,
+        "sha256": "25507ea07506bb6b6a75da6ed82bc1ae7daf87da022ca4736f0aa30383691b13",
+        "authenticodeStatus": "NotSigned"
+      }
+    },
+    "current": {
+      "version": "1.0.22",
+      "tag": "v1.0.22",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22",
+      "taggedCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+      "installer": {
+        "fileName": "LongEdit_1.0.22_x64-setup.exe",
+        "sizeBytes": 66806406,
+        "sha256": "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 112886784,
+        "sha256": "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
+    }
+  },
+  "requirements": {
+    "officialLatestRelease": true,
+    "explicitUserConfirmation": true,
+    "sha256BeforeInstall": true,
+    "silentOverwrite": true,
+    "sameInstallRoot": true,
+    "installedExecutableIdentityRecorded": true,
+    "automaticRelaunchAfterInstall": true,
+    "firstLaunchAfterUpdate": true,
+    "postUpgradeReportsCurrent": true,
+    "libraryDataRetained": true,
+    "configDataRetained": true,
+    "uninstallRetainsUserData": true,
+    "sourceUserContentIncluded": false
+  },
+  "gates": {
+    "harnessImplemented": true,
+    "qualityGatePassed": false,
+    "hostedWorkflowPassed": false,
+    "releaseDiscoveryPassed": false,
+    "confirmationBoundaryPassed": false,
+    "downloadHashPassed": false,
+    "overwriteInstallPassed": false,
+    "automaticRelaunchPassed": false,
+    "firstLaunchPassed": false,
+    "postUpgradeCurrentPassed": false,
+    "userDataRetentionPassed": false,
+    "evidenceImported": false
+  },
+  "expectedVsActualAtEntry": {
+    "expected": "official v1.0.21 discovers, confirms, verifies, installs, relaunches and reports official v1.0.22 while retaining user data",
+    "actual": "pending hosted execution",
+    "correction": "candidate installation evidence does not prove official in-app update"
+  },
+  "attemptHistory": [],
+  "githubRun": null,
+  "evidenceRoot": "docs/evidence/v1.0.22-managed-updater",
+  "nextAction": "execute-once-and-review-original-reports-and-screenshots"
+}
