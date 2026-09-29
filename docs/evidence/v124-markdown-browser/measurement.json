@@ -1,0 +1,12 @@
+{
+  "evidenceLevel": "local-browser-synthetic-document",
+  "installedCandidate": false,
+  "sourceUserContentIncluded": false,
+  "fixture": {"characters": 119130, "headings": 225, "codeBlocks": 71, "domNodes": 9172},
+  "frameSampleCount": 90,
+  "baseline": {"activeAnimations": 296, "frameP95Ms": 54.3},
+  "compiledProductStyles": {"activeAnimations": 0, "frameP95Ms": 6.3},
+  "repeat": {"activeAnimations": 0, "frameP95Ms": 6.2, "serializationMs": [129.4, 121.3, 108.2, 113.6, 105]},
+  "keyboardProbeInputToFrameMs": [248.8, 138],
+  "limitations": ["Not the user's document or installed WebView2", "No claim that all typing latency is resolved", "Frame times depend on host and browser scheduling"]
+}

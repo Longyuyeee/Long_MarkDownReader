@@ -6,6 +6,7 @@ export interface OutlineItem { id: string; text: string; level: number }
 export function useOutline(getVditor: () => any) {
   const outlineItems = ref<OutlineItem[]>([])
   let outlineObserver: MutationObserver | null = null
+  let outlineRefreshTimer: ReturnType<typeof setTimeout> | null = null
 
   const outlineTreeData = computed(() => {
     const result: TreeOption[] = []
@@ -32,9 +33,12 @@ export function useOutline(getVditor: () => any) {
     headings.forEach((h: HTMLElement, index: number) => {
       if (!h.id) h.id = `heading-${index}`
       const id = h.getAttribute('data-id') || h.id
-      newItems.push({ id: id, text: h.innerText.trim() || '未命名标题', level: parseInt(h.tagName.substring(1)) })
+      newItems.push({ id: id, text: h.textContent?.trim() || '未命名标题', level: parseInt(h.tagName.substring(1)) })
     })
-    outlineItems.value = newItems
+    if (newItems.length !== outlineItems.value.length || newItems.some((item, index) => {
+      const previous = outlineItems.value[index]
+      return item.id !== previous.id || item.text !== previous.text || item.level !== previous.level
+    })) outlineItems.value = newItems
   }
 
   const scrollToHeading = (id: string) => {
@@ -52,19 +56,26 @@ export function useOutline(getVditor: () => any) {
   }
 
   const setupOutlineObserver = (extraCallback?: () => void) => {
+    destroyOutlineObserver()
     const vditor = getVditor()
     if (!vditor) return
     const contentEl = vditor.vditor?.wysiwyg?.element
     if (!contentEl) return
     outlineObserver = new MutationObserver(() => {
-      syncOutlineManual()
-      if (extraCallback) extraCallback()
+      if (outlineRefreshTimer !== null) return
+      outlineRefreshTimer = setTimeout(() => {
+        outlineRefreshTimer = null
+        syncOutlineManual()
+        if (extraCallback) extraCallback()
+      }, 120)
     })
     outlineObserver.observe(contentEl, { childList: true, subtree: true, characterData: true })
   }
 
   const destroyOutlineObserver = () => {
     if (outlineObserver) { outlineObserver.disconnect(); outlineObserver = null }
+    if (outlineRefreshTimer !== null) clearTimeout(outlineRefreshTimer)
+    outlineRefreshTimer = null
   }
 
   return {

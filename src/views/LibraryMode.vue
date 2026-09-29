@@ -1465,6 +1465,13 @@ const EDITOR_MODE_SYNC_DELAY_MS = 300
 const IMAGE_FIX_DELAY_MS = 300
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
+const refreshVisibleOutline = () => {
+  destroyOutlineObserver()
+  if (activeSidebarTab.value !== 'outline' || isSidebarCollapsed.value || store.isZen || !vditor) return
+  syncOutlineManual()
+  setupOutlineObserver()
+}
+watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleOutline)
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
@@ -2101,8 +2108,7 @@ const loadFileToEditor = async (path: string) => {
       setTimeout(() => { 
         if (currentTab) currentTab.isDirty = false
         lastLoadedPath = path;
-        syncOutlineManual();
-        setupOutlineObserver();
+        refreshVisibleOutline();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
         scheduleWorkspaceTaskReveal();
@@ -2679,9 +2685,12 @@ const onMenuAction = async (key: string) => {
   } else if (key.startsWith('external-open:')) {
     await openFileExternally(path, key.slice('external-open:'.length))
   } else if (key === 'open-folder') {
-    const { openPath } = await import('@tauri-apps/plugin-opener')
-    const dir = contextMenu.isDir ? path : path.substring(0, Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')))
-    await openPath(dir)
+    try {
+      const { revealItemInDir } = await import('@tauri-apps/plugin-opener')
+      await revealItemInDir(path)
+    } catch (error) {
+      handleError(error, '无法在文件资源管理器中显示，请检查路径是否仍然存在', 'revealItemInDir')
+    }
   } else if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
   else if (key === 'edit-display-style') { openFileStyleEditor(path) }
   else if (key === 'rename') { openRename(path, contextMenu.isDir) }
@@ -3149,6 +3158,7 @@ const initVditor = () => {
           const viewport = contentEl.closest('.editor-viewport') as HTMLElement
           if (viewport) {
             const scrollHandler = () => {
+              if (activeSidebarTab.value !== 'outline' || isSidebarCollapsed.value || store.isZen) return
               const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6')
               let closestId = null as string | null
               headings.forEach((h: HTMLElement) => {

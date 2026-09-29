@@ -925,7 +925,7 @@ if (process.env.LONGEDIT_INSTALLED_SEARCH_SCENARIO === '1') {
 const capturedAt = new Date().toISOString()
 if (process.env.LONGEDIT_INSTALLED_V124_STABILITY === '1') {
   const { runInstalledStabilityScenario } = await import('./lib/installed-v124-stability.mjs')
-  await runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion })
+  await runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256, appVersion })
 }
 if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
   const { runInstalledVersionScenario } = await import('./lib/installed-version-identity.mjs')

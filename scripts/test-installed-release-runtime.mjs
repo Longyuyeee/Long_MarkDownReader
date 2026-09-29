@@ -81,6 +81,7 @@ function stabilityFixture() {
   f.records.stability = {
     appVersion:'1.0.24',sourceCommit:f.m.sourceCommit,installerSha256:f.records.workspace.installerSha256,
     status:'passed',sourceUserContentIncluded:false,
+    markdown:{status:'passed',activeAnimations:0,headings:225,typingVisible:true},
     observations: [[1280,820,false],[1280,820,true],[720,600,false],[720,600,true]].map(([width,height,expanded])=>({
       id:'graph-layout',status:'passed',width,height,expanded,tutorialUnobscured:true,
       rects:{options:{bottom:60},legend:{top:66,bottom:100},banner:{top:106,bottom:120},canvas:{top:126},tutorial:{top:130,bottom:500}}
@@ -89,7 +90,7 @@ function stabilityFixture() {
   return f
 }
 test('v1.0.24 requires its own stability observations',()=>validateSynthetic(stabilityFixture()))
-for (const kind of ['missing-stability','wrong-source','legend-overlap','tutorial-overflow','tutorial-obscured','missing-viewport','missing-close']) {
+for (const kind of ['missing-stability','wrong-source','legend-overlap','tutorial-overflow','tutorial-obscured','missing-viewport','missing-close','animated-markdown','missing-markdown-input']) {
   test(`v1.0.24 rejects ${kind}`,()=>{
     const f=stabilityFixture()
     if(kind==='missing-stability') delete f.records.stability
@@ -99,6 +100,8 @@ for (const kind of ['missing-stability','wrong-source','legend-overlap','tutoria
     if(kind==='tutorial-obscured') f.records.stability.observations[0].tutorialUnobscured=false
     if(kind==='missing-viewport') f.records.stability.observations[2].width=1280
     if(kind==='missing-close') f.records.stability.observations.pop()
+    if(kind==='animated-markdown') f.records.stability.markdown.activeAnimations=1
+    if(kind==='missing-markdown-input') f.records.stability.markdown.typingVisible=false
     assert.throws(()=>validateSynthetic(f))
   })
 }

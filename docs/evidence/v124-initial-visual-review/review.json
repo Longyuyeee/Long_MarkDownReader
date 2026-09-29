@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "status": "rejected-after-visual-review",
+  "buildRunId": 36535501168,
+  "reviewRunId": 36539596628,
+  "sourceCommit": "e3f4a268ca2c85b5ced87c078488dffb52c1690b",
+  "automatedChecksPassed": true,
+  "releaseAccepted": false,
+  "sourceUserContentIncluded": false,
+  "findings": [
+    "At 720px, minimap overlays tutorial content despite correct panel bounds.",
+    "Exit confirmation screenshot captured during fade-in; click/cancel behavior passed."
+  ],
+  "files": [
+    {
+      "fileName": "installed-v124-stability.json",
+      "sha256": "362592073156d9511d969fc7241951f164109535eb36ec4346ae4afa8bec38c7",
+      "sizeBytes": 4082
+    },
+    {
+      "fileName": "lifecycle-result.json",
+      "sha256": "6f2bdfea79b09d5fa095c8ea3122a54504830c8d416ad7d8e80e5be6eb0fc4a8",
+      "sizeBytes": 5803
+    },
+    {
+      "fileName": "installed-v124-graph-1280-expanded.jpg",
+      "sha256": "8f276b8cbbbc7a2125a3b453fb5eec4e8cab3135c9002818f5b937257514815f",
+      "sizeBytes": 94196
+    },
+    {
+      "fileName": "installed-v124-graph-720-expanded.jpg",
+      "sha256": "d9030f4f59079c63fcef4bbc601f766b98ab6d4255693deb7768a857c28a3d2b",
+      "sizeBytes": 61335
+    },
+    {
+      "fileName": "installed-v124-graph-720-collapsed.jpg",
+      "sha256": "05ecb1d3a9af19d15caa457f74850e5f2aff628cf44f56844c3e6eb18512d3a8",
+      "sizeBytes": 62623
+    },
+    {
+      "fileName": "installed-v124-close-cancel.jpg",
+      "sha256": "b2c1fba1fb0c04c227c859e009bad022c1fd0d74348e5996339ba1c4107302ec",
+      "sizeBytes": 124885
+    }
+  ]
+}

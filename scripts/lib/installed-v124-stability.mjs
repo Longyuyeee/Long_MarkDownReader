@@ -2,8 +2,9 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { visibleVersionSurfaceExpression } from './installed-version-identity.mjs'
+import { checkInstalledMarkdown } from './installed-markdown-performance.mjs'
 
-export async function runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion }) {
+export async function runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256, appVersion }) {
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.0.24') throw new Error('Requires disposable v1.0.24')
   const observations = []
   const report = { appVersion, sourceCommit, installerSha256, sourceUserContentIncluded: false, status: 'running', observations }
@@ -57,6 +58,7 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
     observations.push({id:'native-close-cancel-preserves-draft',status:'passed',syntheticDraft:true})
     await evaluate(`(() => {const s=${storeExpression};s.isTempDirty=false;s.exitStrategy=${JSON.stringify(previousStrategy)}})()`)
     assert.equal(await evaluate(`!!document.querySelector('#runtime-error-notice')`), false, 'Normal installed flows must not produce a runtime error notice')
+    report.markdown = await checkInstalledMarkdown({ send, evaluate, waitFor, navigate, capture, library })
     report.status = 'passed'
   } catch (error) {
     report.status = 'failed'; report.error = String(error); throw error
