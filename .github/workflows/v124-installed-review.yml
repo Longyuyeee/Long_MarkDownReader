@@ -1,9 +1,10 @@
 name: v1.0.24 Installed Acceptance Review
 "on":
-  push:
-    branches: [codex/v124-release-readiness]
-    paths: [.github/workflows/v124-installed-review.yml]
   workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Build run containing the frozen candidate installers
+        required: true
 permissions:
   contents: read
   actions: read
@@ -16,6 +17,7 @@ jobs:
       LONGEDIT_INSTALLED_VERSION_SCENARIO: "1"
       LONGEDIT_INSTALLED_V124_STABILITY: "1"
       GH_TOKEN: ${{ github.token }}
+      BUILD_RUN_ID: ${{ inputs.build_run_id }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -25,7 +27,8 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          gh run download 36535501168 --name v124-candidate-lifecycle-36535501168 --dir candidate
+          if ($env:BUILD_RUN_ID -notmatch '^\d+$') { throw 'Invalid build run id' }
+          gh run download $env:BUILD_RUN_ID --name "v124-candidate-lifecycle-$env:BUILD_RUN_ID" --dir candidate
           if ($LASTEXITCODE -ne 0) { throw 'Candidate download failed' }
           node scripts/verify-v124-installer-receipt.mjs candidate
           if ($LASTEXITCODE -ne 0) { throw 'Candidate byte verification failed' }
@@ -40,12 +43,13 @@ jobs:
           $previous = @(Get-ChildItem candidate -Recurse -Filter 'LongEdit_1.0.23_x64-setup.exe')
           if ($current.Count -ne 1 -or $previous.Count -ne 1) { throw 'Ambiguous installers' }
           $nsis = @($receipt.artifacts | Where-Object target -eq 'nsis')[0]
+          $policy = Get-Content shared/v124-candidate-lifecycle-policy.json -Raw | ConvertFrom-Json
           & ./scripts/run-r5i-isolated-install-lifecycle.ps1 `
             -InstallerDirectory $current[0].DirectoryName `
             -PreviousInstallerDirectory $previous[0].DirectoryName `
             -CurrentVersion '1.0.24' -PreviousVersion '1.0.23' `
             -ExpectedCurrentSha256 $nsis.sha256 `
-            -ExpectedSourceCommit 'e3f4a268ca2c85b5ced87c078488dffb52c1690b' `
+            -ExpectedSourceCommit $policy.candidateCommit `
             -NodeExecutable (Get-Command node.exe).Source `
             -InstalledSmokeScript "$pwd/scripts/capture-r5j-installed-artifact-smoke.mjs" `
             -ManagementRollbackSmokeScript "$pwd/scripts/capture-r5l-management-rollback-smoke.mjs" `

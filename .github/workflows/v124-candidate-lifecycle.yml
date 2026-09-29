@@ -1,9 +1,6 @@
 name: v1.0.24 Candidate Installer Lifecycle
 
 "on":
-  push:
-    branches: [codex/v124-release-readiness]
-    paths: [shared/v124-candidate-lifecycle-policy.json, .github/workflows/v124-candidate-lifecycle.yml]
   workflow_dispatch:
     inputs:
       candidate_commit:
