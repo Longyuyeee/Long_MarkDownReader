@@ -54,7 +54,7 @@ function versionCandidateFixture() {
 function validateSynthetic(f, corruptBytes = false) {
   const bytes = new Map()
   f.m.runtimeSmoke.reports = Object.fromEntries(Object.entries(f.records).map(([name, record])=> {
-    const file = `docs/evidence/v123-installed-visual-review/${name}.json`
+    const file = `docs/evidence/${f.m.appVersion === "1.0.24" ? "v124-candidate-lifecycle" : "v123-installed-visual-review"}/${name}.json`
     const buffer = Buffer.from(JSON.stringify(record))
     bytes.set(file, buffer)
     return [name, { path:file, sha256:crypto.createHash('sha256').update(buffer).digest('hex') }]
@@ -73,5 +73,31 @@ for (const kind of ['old-native-version','dev-marker','wrong-source','wrong-inst
     if(kind==='missing-version-report') delete f.records.version
     if(kind==='debug-status') f.m.runtimeSmoke.status='passed-real-tauri-debug-webview2'
     assert.throws(()=>validateSynthetic(f,kind==='changed-bytes'))
+  })
+}
+
+function stabilityFixture() {
+  const f = JSON.parse(JSON.stringify(versionCandidateFixture()).replaceAll('1.0.23','1.0.24'))
+  f.records.stability = {
+    appVersion:'1.0.24',sourceCommit:f.m.sourceCommit,installerSha256:f.records.workspace.installerSha256,
+    status:'passed',sourceUserContentIncluded:false,
+    observations: [[1280,820,false],[1280,820,true],[720,600,false],[720,600,true]].map(([width,height,expanded])=>({
+      id:'graph-layout',status:'passed',width,height,expanded,
+      rects:{options:{bottom:60},legend:{top:66,bottom:100},banner:{top:106,bottom:120},canvas:{top:126},tutorial:{top:130,bottom:500}}
+    })).concat([{id:'native-close-cancel-preserves-draft',status:'passed',syntheticDraft:true}])
+  }
+  return f
+}
+test('v1.0.24 requires its own stability observations',()=>validateSynthetic(stabilityFixture()))
+for (const kind of ['missing-stability','wrong-source','legend-overlap','tutorial-overflow','missing-viewport','missing-close']) {
+  test(`v1.0.24 rejects ${kind}`,()=>{
+    const f=stabilityFixture()
+    if(kind==='missing-stability') delete f.records.stability
+    if(kind==='wrong-source') f.records.stability.sourceCommit='0'.repeat(40)
+    if(kind==='legend-overlap') f.records.stability.observations[0].rects.legend.bottom=300
+    if(kind==='tutorial-overflow') f.records.stability.observations[0].rects.tutorial.bottom=900
+    if(kind==='missing-viewport') f.records.stability.observations[2].width=1280
+    if(kind==='missing-close') f.records.stability.observations.pop()
+    assert.throws(()=>validateSynthetic(f))
   })
 }

@@ -9,16 +9,16 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
   assert.equal(runtime.status, 'passed-installed-tauri-webview2')
   assert.equal(runtime.checksPassed, 18)
   assert.equal(runtime.routesPassed, 11)
-  assert.ok(['1.0.22', '1.0.23'].includes(manifest.appVersion))
-  const versionCandidate = manifest.appVersion === '1.0.23'
-  const evidenceRoot = versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
+  assert.ok(['1.0.22', '1.0.23', '1.0.24'].includes(manifest.appVersion))
+  const versionCandidate = manifest.appVersion !== '1.0.22'
+  const evidenceRoot = manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
   const reports = Object.fromEntries(Object.entries(runtime.reports).map(([name, item]) => {
     assert.equal(item.path, evidenceRoot + path.posix.basename(item.path))
     const bytes = read(item.path)
     assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), item.sha256, `${name} raw evidence changed`)
     return [name, JSON.parse(bytes)]
   }))
-  const { workspace, routes, search, version } = reports
+  const { workspace, routes, search, version, stability } = reports
   assert.equal(workspace.status, 'passed')
   assert.equal(workspace.appVersion, manifest.appVersion)
   assert.equal(workspace.installerSha256, manifest.artifacts.find(a => a.target === 'nsis').sha256)
@@ -32,6 +32,27 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
   assert.equal(routes.routes.length, 11)
   assert.equal(new Set(routes.routes.map(r => r.route)).size, 11)
   assert.ok(routes.routes.every(r => r.status === 'passed' && !r.crashFallbackVisible && r.routeWrapperMounted))
+  if (manifest.appVersion === '1.0.24') {
+    assert.equal(stability.status, 'passed')
+    assert.equal(stability.appVersion, manifest.appVersion)
+    assert.equal(stability.sourceCommit, manifest.sourceCommit)
+    assert.equal(stability.installerSha256, workspace.installerSha256)
+    assert.equal(stability.sourceUserContentIncluded, false)
+    assert.equal(stability.observations.length, 5)
+    assert.ok(stability.observations.every(item => item.status === 'passed'))
+    const layouts = stability.observations.filter(item => item.id === 'graph-layout')
+    assert.deepEqual(layouts.map(item => [item.width, item.height, item.expanded]), [[1280,820,false],[1280,820,true],[720,600,false],[720,600,true]])
+    for (const item of layouts) {
+      assert.ok(item.rects.options.bottom <= item.rects.legend.top + 1)
+      assert.ok(item.rects.legend.bottom <= item.rects.banner.top + 1)
+      assert.ok(item.rects.banner.bottom <= item.rects.canvas.top + 1)
+      assert.ok(item.rects.banner.bottom <= item.rects.tutorial.top + 1)
+      assert.ok(item.rects.legend.bottom <= item.rects.canvas.top + 1)
+      assert.ok(item.rects.legend.bottom <= item.rects.tutorial.top + 1)
+      assert.ok(item.rects.tutorial.bottom <= item.height + 1)
+    }
+    assert.equal(stability.observations.at(-1).id, 'native-close-cancel-preserves-draft')
+  }
   if (versionCandidate) {
     assert.equal(version.sourceCommit, manifest.sourceCommit)
     assert.equal(version.installerSha256, workspace.installerSha256)

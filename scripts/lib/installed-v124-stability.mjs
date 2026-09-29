@@ -12,7 +12,7 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
     for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', {type,...point,button:'left',clickCount:1})
   }
   try {
-    await navigate('#/graph', '.graph-container', 'graph layout regression')
+    await navigate('#/graph?focus=relations', '.graph-container', 'graph layout regression')
     await waitFor(`!document.querySelector('.graph-container .loading-overlay')`, 'graph load')
     // Real toolbar input opens the tutorial over the installed synthetic graph.
     await click('.tutorial-btn')
@@ -23,8 +23,12 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
         const isExpanded = await evaluate(`document.querySelector('.legend-toggle').getAttribute('aria-expanded')==='true'`)
         if (isExpanded !== expanded) await click('.legend-toggle')
         await evaluate('new Promise(resolve => setTimeout(resolve, 350))')
-        const rects = await evaluate(`(() => {const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height}};return {legend:rect('.graph-semantic-legend'),canvas:rect('.graph-main-canvas'),tutorial:rect('.tutorial-card')}})()`)
+        const rects = await evaluate(`(() => {const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height}};return {options:rect('.graph-options'),banner:rect('.remediation-banner'),legend:rect('.graph-semantic-legend'),canvas:rect('.graph-main-canvas'),tutorial:rect('.tutorial-card')}})()`)
         await capture(`installed-v124-graph-${width}-${expanded?'expanded':'collapsed'}.jpg`)
+        assert.ok(rects.options.bottom <= rects.legend.top + 1, JSON.stringify(rects))
+        assert.ok(rects.legend.bottom <= rects.banner.top + 1, JSON.stringify(rects))
+        assert.ok(rects.banner.bottom <= rects.canvas.top + 1, JSON.stringify(rects))
+        assert.ok(rects.banner.bottom <= rects.tutorial.top + 1, JSON.stringify(rects))
         assert.ok(rects.legend.bottom <= rects.canvas.top + 1, JSON.stringify(rects))
         assert.ok(rects.legend.bottom <= rects.tutorial.top + 1, JSON.stringify(rects))
         assert.ok(rects.tutorial.bottom <= height + 1 && rects.tutorial.left >= 0 && rects.tutorial.right <= width + 1, JSON.stringify(rects))

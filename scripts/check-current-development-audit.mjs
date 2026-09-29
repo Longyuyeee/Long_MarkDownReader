@@ -5,6 +5,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-window-close-lifecycle.m
 execFileSync(process.execPath, ['--test', 'scripts/test-library-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-text-save-lifecycle.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-version-transition.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-v124-installer-receipt.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v124-version-transition.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v123-version-transition.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v123-candidate-lifecycle.mjs'], { stdio: 'inherit' })

@@ -402,7 +402,7 @@ const confirmDiscardUnsaved = (title = '退出 Long编辑？') => {
   const dirtyCount = store.tabs.filter(tab => tab.isDirty).length + (store.isTempDirty ? 1 : 0) + windowDraftCount.value
   return dirtyCount === 0
     ? Promise.resolve(true)
-    : requestDiscardConfirm(title, `仍有 ${dirtyCount} 个文档包含未保存修改，继续后这些内容将无法恢复。`)
+    : requestDiscardConfirm(title, '仍有文档包含未保存修改，继续后这些内容将无法恢复。')
 }
 const handleHide = async () => {
   try {
