@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "M8-21",
   "status": "hosted-execution-pending",
-  "candidateCommit": "200b230e27444ed921d0bad27865766c5b4fbe69",
+  "candidateCommit": "7f9c101ff1aa1f6e678d57fa1fa097d00047339e",
   "appVersion": "1.0.24",
   "previousVersion": "1.0.23",
   "previousTagCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
@@ -40,6 +40,12 @@
       "candidateCommit": "8f2bac2ef6fae75f72c75c083c5f440019714d61",
       "accepted": false,
       "reason": "cancelled-before-packaging-after-quality-run-36540110276-found-PPTX-concurrent-temporary-name-collision"
+    },
+    {
+      "runId": 36542411410,
+      "candidateCommit": "200b230e27444ed921d0bad27865766c5b4fbe69",
+      "accepted": false,
+      "reason": "cancelled-before-packaging-to-fix-shared-Markdown-idle-rendering-and-opener-ACL-reported-by-user"
     }
   ]
 }
