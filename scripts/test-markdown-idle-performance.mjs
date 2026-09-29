@@ -97,12 +97,85 @@ for (const view of ['LibraryMode', 'TempMode']) {
   })
 }
 
-test('compiled shared Markdown styles disable decorative animation and backdrop work', () => {
+test('compiled shared Markdown styles preserve effects unless adaptive reduction is active', () => {
   const css = sass.compile('src/styles/vditor-content-themes.scss').css
-  const rule = css.slice(css.lastIndexOf('.vditor-reset,')).trim()
+  const rule = css.slice(css.lastIndexOf('.markdown-motion-reduced .vditor-reset,')).trim()
+  assert.match(rule, /^\.markdown-motion-reduced/)
+  assert.ok(css.includes('animation: twinkle 3s ease-in-out infinite'))
   assert.match(rule, /\.vditor-reset \*::before/)
   assert.match(rule, /\.vditor-reset \*::after/)
   for (const declaration of ['animation: none !important', 'transition: none !important', 'backdrop-filter: none !important']) {
     assert.ok(rule.includes(declaration))
   }
+})
+
+function frameMonitor() {
+  const context = vm.createContext({ exports: {} })
+  const source = fs.readFileSync('src/utils/markdownMotion.ts', 'utf8')
+  vm.runInContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context)
+  let reductions = 0
+  const monitor = context.exports.createMarkdownFrameMonitor(() => reductions++)
+  let now = 0
+  monitor.reset(now)
+  return { monitor, reductions: () => reductions,
+    run(count, delta) { for (let i = 0; i < count; i++) { now += delta; monitor.frame(now) } },
+    resume() { now += 60000; monitor.reset(now) } }
+}
+
+test('smooth frames keep normal effects even for a long-running document', () => {
+  const m = frameMonitor(); m.run(1800, 16.7); assert.equal(m.reductions(), 0)
+})
+test('startup and isolated stalls do not reduce effects', () => {
+  const m = frameMonitor(); m.run(10, 100); m.run(120, 16); m.run(1, 400); m.run(240, 16)
+  assert.equal(m.reductions(), 0)
+})
+test('persistent slow frames reduce once, including severe one-FPS stalls', () => {
+  for (const interval of [50, 1000]) {
+    const m = frameMonitor(); m.run(160, interval); assert.equal(m.reductions(), 1)
+  }
+})
+test('foreground resume discards background time and rewarms', () => {
+  const m = frameMonitor(); m.run(45, 50); m.resume(); m.run(240, 16)
+  assert.equal(m.reductions(), 0)
+})
+
+test('adaptive lifecycle preserves normal motion, degrades, resets per document and cleans up', () => {
+  const events = new Map(), windowEvents = new Map(), frames = new Map(), classes = new Set()
+  let now = 0, nextFrame = 0, intersection, dispose, prefChange, disconnected = false
+  const root = { dataset: {}, classList: { toggle(key, active) { active ? classes.add(key) : classes.delete(key) }, remove: key => classes.delete(key) } }
+  const preference = { matches: false, addEventListener(_name, fn) { prefChange = fn }, removeEventListener() { prefChange = null } }
+  const document = { hidden: false, hasFocus: () => true, addEventListener: (name, fn) => events.set(name, fn), removeEventListener: name => events.delete(name) }
+  const monitorContext = vm.createContext({ exports: {} })
+  const compile = file => ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText
+  vm.runInContext(compile('src/utils/markdownMotion.ts'), monitorContext)
+  const context = vm.createContext({ exports: {}, document, performance: { now: () => now },
+    window: { matchMedia: () => preference, addEventListener: (name, fn) => windowEvents.set(name, fn), removeEventListener: name => windowEvents.delete(name) },
+    requestAnimationFrame: fn => { frames.set(++nextFrame, fn); return nextFrame }, cancelAnimationFrame: id => frames.delete(id),
+    IntersectionObserver: class { constructor(fn) { intersection = fn } observe() {} disconnect() { disconnected = true } },
+    require: name => name === 'vue' ? { onUnmounted: fn => dispose = fn } : monitorContext.exports,
+  })
+  vm.runInContext(compile('src/composables/useAdaptiveMarkdownMotion.ts'), context)
+  const api = context.exports.useAdaptiveMarkdownMotion(() => ({ vditor: { element: root } }))
+  const run = (count, delta) => { for (let i = 0; i < count; i++) { now += delta; const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(now)) } }
+  api.startAdaptiveMotion(); intersection([{ isIntersecting: true }])
+  run(250, 16)
+  assert.equal(root.dataset.markdownMotion, 'full')
+  document.hidden = true; events.get('visibilitychange')()
+  assert.equal(frames.size, 0)
+  now += 60000; document.hidden = false; events.get('visibilitychange')()
+  run(60, 16)
+  assert.equal(root.dataset.markdownMotion, 'full')
+  run(120, 50)
+  assert.equal(root.dataset.markdownMotion, 'reduced')
+  assert.equal(root.dataset.markdownMotionReason, 'sustained-slow-frames')
+  assert.equal(frames.size, 0)
+  api.startAdaptiveMotion(); intersection([{ isIntersecting: true }])
+  assert.equal(root.dataset.markdownMotion, 'full')
+  preference.matches = true; prefChange()
+  assert.equal(root.dataset.markdownMotionReason, 'preference')
+  assert.equal(frames.size, 0)
+  dispose()
+  assert.equal(disconnected, true)
+  assert.equal(events.size + windowEvents.size + frames.size + classes.size, 0)
+  assert.equal(root.dataset.markdownMotion, undefined)
 })

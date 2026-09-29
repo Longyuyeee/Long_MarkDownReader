@@ -39,7 +39,14 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.equal(stability.installerSha256, workspace.installerSha256)
     assert.equal(stability.sourceUserContentIncluded, false)
     assert.equal(stability.markdown.status, 'passed')
-    assert.equal(stability.markdown.activeAnimations, 0)
+    assert.ok(['full', 'reduced'].includes(stability.markdown.motionMode))
+    if (stability.markdown.motionMode === 'reduced') {
+      assert.equal(stability.markdown.activeAnimations, 0)
+      assert.ok(['preference', 'sustained-slow-frames'].includes(stability.markdown.motionReason))
+    } else {
+      assert.ok(stability.markdown.activeAnimations > 0)
+      assert.equal(stability.markdown.motionReason, 'normal')
+    }
     assert.equal(stability.markdown.headings, 225)
     assert.equal(stability.markdown.typingVisible, true)
     assert.equal(stability.observations.length, 5)

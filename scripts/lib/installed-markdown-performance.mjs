@@ -15,12 +15,18 @@ export async function checkInstalledMarkdown({ send, evaluate, waitFor, navigate
   await waitFor(`document.querySelector(${JSON.stringify(selector)})?.querySelectorAll('h2').length === 225`, 'large Markdown rendered', 240)
   const idle = await evaluate(`new Promise(resolve => setTimeout(() => {
     const root=document.querySelector(${JSON.stringify(selector)});
-    const animations=root.getAnimations({subtree:true}).filter(a=>a.playState==='running');
     const frames=[];let previous=performance.now();
-    function frame(now){frames.push(now-previous);previous=now;if(frames.length<90)requestAnimationFrame(frame);else{frames.sort((a,b)=>a-b);resolve({activeAnimations:animations.length,frameP95:frames[Math.floor(frames.length*.95)],headings:root.querySelectorAll('h2').length,codeBlocks:root.querySelectorAll('pre').length})}}
+    function frame(now){frames.push(now-previous);previous=now;if(frames.length<90)requestAnimationFrame(frame);else{frames.sort((a,b)=>a-b);const host=root.closest('[data-markdown-motion]');resolve({activeAnimations:root.getAnimations({subtree:true}).filter(a=>a.playState==='running').length,motionMode:host?.dataset.markdownMotion,motionReason:host?.dataset.markdownMotionReason,frameP95:frames[Math.floor(frames.length*.95)],headings:root.querySelectorAll('h2').length,codeBlocks:root.querySelectorAll('pre').length})}}
     requestAnimationFrame(frame);
-  },1000))`)
-  assert.equal(idle.activeAnimations, 0, 'Idle document must not keep decorative animations running')
+  },4500))`)
+  assert.ok(['full','reduced'].includes(idle.motionMode), 'Adaptive observer must be attached')
+  if (idle.motionMode === 'reduced') {
+    assert.equal(idle.activeAnimations, 0)
+    assert.ok(['preference','sustained-slow-frames'].includes(idle.motionReason))
+  } else {
+    assert.ok(idle.activeAnimations > 0, 'Smooth documents retain their decorative animations')
+    assert.equal(idle.motionReason, 'normal')
+  }
   assert.equal(idle.headings, 225)
   // Hosted GPU/frame scheduling varies; retain measured timing rather than a flaky FPS gate.
   assert.ok(Number.isFinite(idle.frameP95))

@@ -787,6 +787,7 @@ import {
   DEVELOPMENT_CHANNEL_ACTIVE,
 } from '../config/releaseCapabilities'
 import { useOutline } from '../composables/useOutline'
+import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { useImageFix } from '../composables/useImageFix'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
@@ -1465,6 +1466,7 @@ const EDITOR_MODE_SYNC_DELAY_MS = 300
 const IMAGE_FIX_DELAY_MS = 300
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
+const { startAdaptiveMotion } = useAdaptiveMarkdownMotion(() => vditor)
 const refreshVisibleOutline = () => {
   destroyOutlineObserver()
   if (activeSidebarTab.value !== 'outline' || isSidebarCollapsed.value || store.isZen || !vditor) return
@@ -2098,6 +2100,7 @@ const loadFileToEditor = async (path: string) => {
     if (!isCurrentRequest()) return
     suppressEditorInput = true
     vditor.setValue(content)
+    startAdaptiveMotion()
     setTimeout(() => {
       suppressEditorInput = false
       if (readOnly) vditor?.disabled()

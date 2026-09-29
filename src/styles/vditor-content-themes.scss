@@ -1224,12 +1224,12 @@
 .hljs-addition { background: color-mix(in srgb, var(--markdown-code-string) 14%, transparent) !important; }
 .hljs-deletion { color: var(--markdown-code-keyword) !important; background: color-mix(in srgb, var(--markdown-code-keyword) 14%, transparent) !important; }
 
-/* Document content must remain static while reading and typing. Per-paragraph
-   animations and per-code-block glass effects multiply with document length. */
-.vditor-reset,
-.vditor-reset *,
-.vditor-reset *::before,
-.vditor-reset *::after {
+/* Preserve normal decoration; reduce it only after sustained slow frames or
+   an explicit OS reduced-motion preference. */
+.markdown-motion-reduced .vditor-reset,
+.markdown-motion-reduced .vditor-reset *,
+.markdown-motion-reduced .vditor-reset *::before,
+.markdown-motion-reduced .vditor-reset *::after {
   animation: none !important;
   transition: none !important;
   backdrop-filter: none !important;

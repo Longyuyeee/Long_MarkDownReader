@@ -81,7 +81,7 @@ function stabilityFixture() {
   f.records.stability = {
     appVersion:'1.0.24',sourceCommit:f.m.sourceCommit,installerSha256:f.records.workspace.installerSha256,
     status:'passed',sourceUserContentIncluded:false,
-    markdown:{status:'passed',activeAnimations:0,headings:225,typingVisible:true},
+    markdown:{status:'passed',activeAnimations:0,motionMode:'reduced',motionReason:'sustained-slow-frames',headings:225,typingVisible:true},
     observations: [[1280,820,false],[1280,820,true],[720,600,false],[720,600,true]].map(([width,height,expanded])=>({
       id:'graph-layout',status:'passed',width,height,expanded,tutorialUnobscured:true,
       rects:{options:{bottom:60},legend:{top:66,bottom:100},banner:{top:106,bottom:120},canvas:{top:126},tutorial:{top:130,bottom:500}}
@@ -90,6 +90,16 @@ function stabilityFixture() {
   return f
 }
 test('v1.0.24 requires its own stability observations',()=>validateSynthetic(stabilityFixture()))
+test('v1.0.24 accepts retained animations when the adaptive observer reports normal motion',()=>{
+  const f=stabilityFixture()
+  Object.assign(f.records.stability.markdown,{motionMode:'full',motionReason:'normal',activeAnimations:296})
+  validateSynthetic(f)
+})
+test('v1.0.24 rejects unconditional motion removal disguised as adaptive reduction',()=>{
+  const f=stabilityFixture()
+  f.records.stability.markdown.motionReason='normal'
+  assert.throws(()=>validateSynthetic(f))
+})
 for (const kind of ['missing-stability','wrong-source','legend-overlap','tutorial-overflow','tutorial-obscured','missing-viewport','missing-close','animated-markdown','missing-markdown-input']) {
   test(`v1.0.24 rejects ${kind}`,()=>{
     const f=stabilityFixture()
