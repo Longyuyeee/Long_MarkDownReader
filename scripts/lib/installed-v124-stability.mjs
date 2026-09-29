@@ -13,9 +13,9 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
   }
   try {
     await navigate('#/graph?focus=relations', '.graph-container', 'graph layout regression')
-    await waitFor(`!document.querySelector('.graph-container .loading-overlay')`, 'graph load')
-    // Real toolbar input opens the tutorial over the installed synthetic graph.
-    await click('.tutorial-btn')
+    await waitFor(`!document.querySelector('.graph-container .graph-loading')`, 'graph load')
+    // The relations guidance route may already open the tutorial automatically.
+    if (!await evaluate(`!!document.querySelector('.tutorial-card')`)) await click('.tutorial-btn')
     await waitFor(`document.querySelector('.tutorial-card')`, 'tutorial open')
     for (const [width,height] of [[1280,820],[720,600]]) {
       await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false})
@@ -52,6 +52,7 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
     assert.equal(await evaluate(`(${storeExpression}).isTempDirty`), true)
     observations.push({id:'native-close-cancel-preserves-draft',status:'passed',syntheticDraft:true})
     await evaluate(`(() => {const s=${storeExpression};s.isTempDirty=false;s.exitStrategy=${JSON.stringify(previousStrategy)}})()`)
+    assert.equal(await evaluate(`!!document.querySelector('#runtime-error-notice')`), false, 'Normal installed flows must not produce a runtime error notice')
     report.status = 'passed'
   } catch (error) {
     report.status = 'failed'; report.error = String(error); throw error

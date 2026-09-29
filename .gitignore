@@ -15,6 +15,7 @@ dist-ssr
 # Generated desktop artifacts belong in GitHub Releases or an explicit archive.
 /*.exe
 /*.msi
+/release-artifacts/
 /src-tauri/target/
 /src-tauri/gen/
 
