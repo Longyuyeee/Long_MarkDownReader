@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "stage": "M8-21",
   "status": "hosted-execution-pending",
-  "candidateCommit": "e3cb2dcf442dbc74802c605b4e6f913137a1e464",
+  "candidateCommit": "e3f4a268ca2c85b5ced87c078488dffb52c1690b",
   "appVersion": "1.0.24",
   "previousVersion": "1.0.23",
   "previousTagCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
@@ -19,5 +19,13 @@
   "githubRunId": null,
   "releaseCandidate": false,
   "sourceUserContentIncluded": false,
-  "officialManagedUpdateObservation": "pending-after-publication"
+  "officialManagedUpdateObservation": "pending-after-publication",
+  "attemptHistory": [
+    {
+      "runId": 36534725897,
+      "candidateCommit": "e3cb2dcf442dbc74802c605b4e6f913137a1e464",
+      "accepted": false,
+      "reason": "cancelled-before-packaging-to-reserve-toolbar-and-governance-layout-space"
+    }
+  ]
 }
