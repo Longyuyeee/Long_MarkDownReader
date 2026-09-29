@@ -3608,6 +3608,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 }
 
 .tutorial-card {
+  z-index: 12;
   border: 1px solid rgba(var(--theme-primary-rgb), 0.15);
   border-radius: calc(var(--theme-radius) * 1.5);
   background: color-mix(in srgb, var(--theme-card) 94%, transparent);

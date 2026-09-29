@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { visibleVersionSurfaceExpression } from './installed-version-identity.mjs'
 
 export async function runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion }) {
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.0.24') throw new Error('Requires disposable v1.0.24')
@@ -33,7 +34,9 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
         assert.ok(rects.legend.bottom <= rects.tutorial.top + 1, JSON.stringify(rects))
         assert.ok(rects.tutorial.bottom <= height + 1 && rects.tutorial.left >= 0 && rects.tutorial.right <= width + 1, JSON.stringify(rects))
         assert.ok(rects.canvas.height >= 100, JSON.stringify(rects))
-        observations.push({id:'graph-layout',width,height,expanded,rects,status:'passed'})
+        const tutorialUnobscured = await evaluate(`(() => {const e=document.querySelector('.tutorial-card'),r=e.getBoundingClientRect();for(let x=r.left+12;x<r.right-12;x+=30)for(let y=r.top+12;y<r.bottom-12;y+=30)if(!e.contains(document.elementFromPoint(x,y)))return false;return true})()`)
+        assert.equal(tutorialUnobscured, true, 'Graph controls must not cover tutorial content')
+        observations.push({id:'graph-layout',width,height,expanded,rects,tutorialUnobscured,status:'passed'})
       }
     }
     await send('Emulation.setDeviceMetricsOverride',{width:1280,height:820,deviceScaleFactor:1,mobile:false})
@@ -45,6 +48,7 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
     await evaluate(`(() => {const s=${storeExpression};s.isTempDirty=true;s.exitStrategy='quit'})()`)
     await evaluate(`window.__TAURI_INTERNALS__.invoke('plugin:window|close',{label:'main'})`)
     await waitFor(`document.querySelector('#discard-confirm-title')`, 'native close draft confirmation')
+    await waitFor(visibleVersionSurfaceExpression('.exit-modal-overlay .modal-footer'), 'exit confirmation animation settled')
     await capture('installed-v124-close-cancel.jpg')
     const cancelSelector = '.exit-modal-overlay .modal-footer button:first-child'
     await click(cancelSelector)

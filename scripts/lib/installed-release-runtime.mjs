@@ -43,6 +43,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     const layouts = stability.observations.filter(item => item.id === 'graph-layout')
     assert.deepEqual(layouts.map(item => [item.width, item.height, item.expanded]), [[1280,820,false],[1280,820,true],[720,600,false],[720,600,true]])
     for (const item of layouts) {
+      assert.equal(item.tutorialUnobscured, true)
       assert.ok(item.rects.options.bottom <= item.rects.legend.top + 1)
       assert.ok(item.rects.legend.bottom <= item.rects.banner.top + 1)
       assert.ok(item.rects.banner.bottom <= item.rects.canvas.top + 1)
