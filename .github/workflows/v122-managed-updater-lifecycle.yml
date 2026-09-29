@@ -2,6 +2,14 @@ name: V1.0.22 Managed Updater Lifecycle
 
 "on":
   workflow_dispatch:
+    inputs:
+      policy:
+        description: Managed updater policy file
+        type: choice
+        options:
+          - shared/v122-managed-updater-lifecycle-policy.json
+          - shared/v123-managed-updater-lifecycle-policy.json
+        default: shared/v122-managed-updater-lifecycle-policy.json
 
 permissions:
   contents: read
@@ -13,6 +21,7 @@ jobs:
     timeout-minutes: 35
 
     env:
+      UPDATE_POLICY: ${{ inputs.policy }}
       GH_TOKEN: ${{ github.token }}
       LONGEDIT_MANAGED_UPDATER_DISPOSABLE: "1"
 
@@ -32,7 +41,8 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
-          $policy = Get-Content -LiteralPath "shared\v122-managed-updater-lifecycle-policy.json" -Raw | ConvertFrom-Json
+          $policyPath = if ($env:UPDATE_POLICY) { $env:UPDATE_POLICY } else { "shared\v122-managed-updater-lifecycle-policy.json" }
+          $policy = Get-Content -LiteralPath $policyPath -Raw | ConvertFrom-Json
           "PREVIOUS_VERSION=$($policy.releases.previous.version)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "PREVIOUS_TAG=$($policy.releases.previous.tag)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "PREVIOUS_INSTALLER_NAME=$($policy.releases.previous.installer.fileName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
@@ -75,7 +85,7 @@ jobs:
           if ((Get-Item -LiteralPath $currentPath).Length -ne [long]$env:CURRENT_INSTALLER_SIZE) { throw "Downloaded current installer size drift." }
           $receipt = [ordered]@{
             schemaVersion = 1
-            stage = "V1.0.22-U1-ASSETS"
+            stage = "V$env:CURRENT_VERSION-U1-ASSETS"
             capturedAt = (Get-Date).ToUniversalTime().ToString("o")
             repository = "Longyuyeee/Long_MarkDownReader"
             latestTag = $latest.tag_name
