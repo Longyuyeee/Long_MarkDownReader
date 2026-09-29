@@ -881,6 +881,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
@@ -4733,6 +4734,7 @@ const handleShortcut = (event: KeyboardEvent) => {
   else if (!isExternal.value && !formulaFocused && key === 'z') { event.preventDefault(); undo() }
   else if (!isExternal.value && !formulaFocused && key === 'y') { event.preventDefault(); redo() }
 }
+useWindowDraft(() => dirtyCount.value > 0)
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
 const handleWindowPointerDown = (event: PointerEvent) => {
   if (!(event.target as HTMLElement | null)?.closest('.validation-picker, .validation-menu')) closeValidationMenu()

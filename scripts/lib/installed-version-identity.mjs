@@ -31,7 +31,7 @@ export function validateInstalledVersionObservations(observations, appVersion) {
 }
 
 export async function runInstalledVersionScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.0.23') throw new Error('Version scenario requires disposable v1.0.23 installer')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.0.23', '1.0.24'].includes(appVersion)) throw new Error('Version scenario requires a supported disposable installer')
   const observations = {}
   const report = { sourceCommit, installerSha256, appVersion, evidenceLevel: 'installed-webview-input-events', sourceUserContentIncluded: false, status: 'running', observations, checks: [] }
   const waitForVisibleSettings = async () => {
@@ -49,7 +49,7 @@ export async function runInstalledVersionScenario({ send, evaluate, waitFor, nav
   try {
     observations.nativeVersion = await evaluate(`window.__TAURI_INTERNALS__.invoke('plugin:app|version')`)
     await navigate('#/library', '.library-mode', 'installed version sidebar')
-    await waitFor(`document.querySelector('[data-testid="main-app-version"]')?.textContent.trim() === 'v1.0.23'`, 'native version on sidebar')
+    await waitFor(`document.querySelector('[data-testid="main-app-version"]')?.textContent.trim() === 'v${appVersion}'`, 'native version on sidebar')
     observations.badge = await evaluate(`document.querySelector('[data-testid="main-app-version"]').textContent`)
     observations.badgeLabel = await evaluate(`document.querySelector('[data-testid="main-app-version"]').getAttribute('aria-label')`)
     await capture('installed-version-library.jpg')

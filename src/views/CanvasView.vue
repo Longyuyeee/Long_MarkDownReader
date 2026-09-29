@@ -301,6 +301,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
@@ -1500,6 +1501,7 @@ const mayLeave = async () => !['dirty', 'error'].includes(saveState.value)
     positiveText: '放弃修改并离开',
     danger: true,
   })
+useWindowDraft(() => ['dirty', 'saving', 'error'].includes(saveState.value))
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (!['dirty', 'error'].includes(saveState.value)) return
   event.preventDefault()

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "V1.0.23-U1",
-  "status": "hosted-execution-pending",
+  "status": "hosted-managed-update-passed",
   "environment": "github-hosted-disposable-windows",
   "workflow": ".github/workflows/v122-managed-updater-lifecycle.yml",
   "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
@@ -56,25 +56,30 @@
     "sourceUserContentIncluded": false
   },
   "gates": {
-    "harnessImplemented": false,
-    "qualityGatePassed": false,
-    "hostedWorkflowPassed": false,
-    "releaseDiscoveryPassed": false,
-    "confirmationBoundaryPassed": false,
-    "downloadHashPassed": false,
-    "overwriteInstallPassed": false,
-    "automaticRelaunchPassed": false,
-    "firstLaunchPassed": false,
-    "postUpgradeCurrentPassed": false,
-    "userDataRetentionPassed": false,
-    "evidenceImported": false
+    "harnessImplemented": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true,
+    "qualityGatePassed": false
   },
   "expectedVsActualAtEntry": {
     "expected": "Official 1.0.22 updates to 1.0.23 and retains user data",
     "actual": "pending hosted execution"
   },
   "attemptHistory": [],
-  "githubRun": null,
+  "githubRun": {
+    "id": 36533293008,
+    "conclusion": "success",
+    "headCommit": "8059faa",
+    "artifactId": 11017172058
+  },
   "evidenceRoot": "docs/evidence/v1.0.23-managed-updater",
-  "nextAction": "run-official-update-observation"
+  "nextAction": "predecessor-update-observation-complete"
 }

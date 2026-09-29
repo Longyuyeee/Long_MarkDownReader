@@ -488,7 +488,9 @@ pub async fn scan_directory(library_root: String, path: String) -> Result<Vec<Fi
     let guard = WorkspaceGuard::new(&library_root)?;
     let root = guard.resolve_directory(&path, false)?;
     let mut physical_entries = HashMap::new();
-    if let Ok(entries) = fs::read_dir(root) {
+    {
+        let entries = fs::read_dir(root)
+            .map_err(|error| format!("知识库目录无法读取，请检查磁盘连接和文件夹权限：{error}"))?;
         for entry in entries.flatten() {
             let item_path = entry.path();
             let name = item_path

@@ -500,6 +500,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useDialog, useMessage } from 'naive-ui'
@@ -2624,6 +2625,7 @@ const mayDiscardPagePlan = async () => !pdfWorkspaceDirty.value || await confirm
   positiveText: '放弃草稿并离开',
   danger: true,
 })
+useWindowDraft(() => pdfWorkspaceDirty.value)
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   if (!pdfWorkspaceDirty.value) return
   event.preventDefault()

@@ -107,6 +107,18 @@
                     </template>
                   </n-empty>
                 </div>
+                <section v-else-if="libraryLoadError" class="library-recovery" role="status" aria-live="polite">
+                  <strong>知识库目录暂时不可用</strong>
+                  <span class="library-recovery-path">{{ store.libraryPath }}</span>
+                  <p>文件夹可能被移动、磁盘未连接，或当前账户没有访问权限。请连接磁盘后重试，或在设置中选择其他知识库。</p>
+                  <div class="library-recovery-actions">
+                    <n-button size="small" :loading="libraryLoading" @click="refreshLibrary">重试读取</n-button>
+                    <n-button size="small" type="primary" @click="router.push({ name: 'Settings', query: { category: 'library' } })">管理知识库</n-button>
+                  </div>
+                  <p>如果这里本来就要建立一个新库，可以创建缺失的目录；这不会找回原来的文件。</p>
+                  <n-button size="small" :loading="libraryCreating" @click="createMissingLibraryDirectory">在此创建文件夹</n-button>
+                  <details><summary>错误详情</summary><span>{{ libraryLoadError }}</span></details>
+                </section>
                 <div v-else-if="showKnowledgeResults" class="knowledge-search-results">
                   <div v-if="activeGraphCollection" class="graph-collection-state">
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
@@ -117,6 +129,7 @@
                     <button class="knowledge-result-open" type="button" :title="result.title" :aria-label="`打开 ${result.title}`" @click="openKnowledgeSearchResult(result)">
                       <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
                       <span class="knowledge-result-context">{{ result.context }}</span>
+                      <small class="knowledge-result-path" :title="result.path">{{ searchResultPath(result.path, store.libraryPath) }}</small>
                       <small v-if="result.objectType === 'pptx' && result.locationLabel">{{ result.locationLabel }}</small>
                       <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
@@ -739,6 +752,7 @@
 </template>
 
 <script setup lang="ts">
+import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
@@ -1285,6 +1299,10 @@ const sidebarTabsCompact = computed(() => sidebarWidth.value < 460)
 const activeResizer = ref<'sidebar' | null>(null)
 const treeInstRef = ref<any>(null)
 const treeData = ref<TreeOption[]>([])
+const libraryLoadError = ref('')
+const libraryLoading = ref(false)
+const libraryCreating = ref(false)
+let libraryLoadGeneration = 0
 const searchQuery = ref('')
 const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
@@ -1957,9 +1975,9 @@ const handleLoadChildren = async (option: TreeOption) => {
   }
 }
 
-const loadDirectory = async (path: string): Promise<TreeOption[]> => {
+const loadDirectory = async (path: string, libraryRoot = store.libraryPath): Promise<TreeOption[]> => {
   if (!path) return []
-  const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path })
+  const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot, path })
   return entries.map(entry => ({
     label: entry.name,
     key: entry.path,
@@ -1985,7 +2003,41 @@ const handleCodeThemeChange = async (val: string) => {
 const handleEditorBgChange = async (val: string) => { store.editorBgColor = val; await store.updateConfig({ editorBgColor: val }) }
 
 
-const refreshLibrary = async () => { if (store.libraryPath) treeData.value = await loadDirectory(store.libraryPath) }
+const refreshLibrary = async () => {
+  const path = store.libraryPath
+  const generation = ++libraryLoadGeneration
+  const isCurrent = () => generation === libraryLoadGeneration && store.libraryPath === path
+  libraryLoading.value = true
+  try {
+    const entries = path ? await loadDirectory(path, path) : []
+    if (!isCurrent()) return
+    const recovered = Boolean(libraryLoadError.value)
+    treeData.value = entries
+    libraryLoadError.value = ''
+    if (path && recovered) {
+      void fetchLibStats()
+      void fetchAllTags()
+      void refreshKnowledgeIndexStatus()
+    }
+  } catch (error) {
+    if (!isCurrent()) return
+    treeData.value = []
+    libraryLoadError.value = String(error)
+  } finally {
+    if (isCurrent()) libraryLoading.value = false
+  }
+}
+const createMissingLibraryDirectory = async () => {
+  if (libraryCreating.value || !store.libraryPath) return
+  const path = store.libraryPath
+  libraryCreating.value = true
+  try {
+    await invoke('prepare_library_path', { path })
+    if (store.libraryPath === path) await refreshLibrary()
+  } catch (error) {
+    if (store.libraryPath === path) libraryLoadError.value = String(error)
+  } finally { libraryCreating.value = false }
+}
 const revealLibraryFile = async (event: Event) => {
   const path = (event as CustomEvent<string>).detail
   if (!path) return
@@ -3272,6 +3324,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   ++knowledgeSearchGeneration
+  ++libraryLoadGeneration
   editorLoadGeneration += 1
   destroyImageFix()
   window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)
@@ -3525,6 +3578,9 @@ watch(() => store.libraryPath, (newPath) => {
   knowledgeSearchFailed.value = false
   searchQuery.value = ''
   relationSummaries.value = {}
+  libraryLoadError.value = ''
+  treeData.value = []
+  if (!newPath) void refreshLibrary()
   if (newPath) {
     searchQuery.value = ''
     searchObjectTypes.value = []
@@ -3627,6 +3683,11 @@ watch(activeTabId, (newId, oldId) => {
 </script>
 
 <style scoped>
+.library-recovery { display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow-wrap: anywhere; font-size: 12px; color: var(--theme-text); }
+.library-recovery p { margin: 0; line-height: 1.6; }
+.library-recovery-path { opacity: .7; }
+.library-recovery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.library-recovery details { max-height: 120px; overflow: auto; }
 .library-mode { position: relative; display: flex; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
 .is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
 
@@ -3927,6 +3988,7 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-result-open:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: var(--theme-radius-sm); }
 .knowledge-search-result > .relation-summary { justify-self: start; max-width: 100%; white-space: normal; text-align: left; }
 .graph-collection-state { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 10px; border-bottom: var(--theme-border); background: rgba(var(--theme-primary-rgb),.055); }.graph-collection-state>span { min-width: 0; display: grid; gap: 2px; }.graph-collection-state strong,.graph-collection-state small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-collection-state strong { font-size: var(--text-compact); }.graph-collection-state small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.graph-collection-state button { width: 26px; height: 26px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }
+.knowledge-result-path { overflow-wrap: anywhere; white-space: normal; }
 .knowledge-result-head { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 100%; min-width: 0; }.knowledge-result-head strong { display: -webkit-box; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: var(--text-body, 13px); line-height: 1.45; }.knowledge-result-head i { color: var(--theme-primary); font-size: var(--text-compact); font-style: normal; font-weight: 700; overflow-wrap: anywhere; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: var(--text-compact); }
 .knowledge-index-strip { min-height: 44px; display: grid; grid-template-columns:16px minmax(0,1fr) auto; grid-template-rows:auto auto; align-items:center; column-gap:7px; padding:5px 8px 5px 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size: var(--text-compact); }

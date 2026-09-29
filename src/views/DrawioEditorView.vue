@@ -156,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useDialog, useMessage } from 'naive-ui'
@@ -452,6 +453,7 @@ const mayLeave = async () => !dirty.value || await confirmAppAction(dialog, {
   content: '当前标签仍有未保存修改。磁盘文件不会改变，草稿会继续保留在标签中。',
   positiveText: '离开编辑器',
 })
+useWindowDraft(() => dirty.value)
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())

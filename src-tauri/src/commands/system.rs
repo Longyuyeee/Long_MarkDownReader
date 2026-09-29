@@ -333,8 +333,10 @@ pub async fn get_url_title(url: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn exit_app(app_handle: tauri::AppHandle) {
+pub fn exit_app(app_handle: tauri::AppHandle, window: tauri::Window) -> Result<(), String> {
+    super::lifecycle::ensure_saved(&app_handle, Some(window.label()))?;
     app_handle.exit(0);
+    Ok(())
 }
 
 #[cfg(test)]

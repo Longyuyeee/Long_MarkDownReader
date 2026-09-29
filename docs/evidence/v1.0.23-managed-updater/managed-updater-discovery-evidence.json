@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.23-U1-DISCOVERY",
+  "capturedAt": "2026-09-29T06:52:28.547Z",
+  "status": "passed",
+  "environment": "GitHub-hosted disposable Windows installed official v1.0.22",
+  "release": {
+    "available": true,
+    "currentVersion": "1.0.22",
+    "latestVersion": "1.0.23",
+    "releaseUrl": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.23",
+    "releaseNotes": "# v1.0.23 — 版本身份与更新提示修复\n\n本版集中修复“我到底运行哪个版本”以及发布页打开失败时的更新状态提示。\n\n- 侧栏、设置与能力页统一显示实际运行版本，不再把下一开发目标当作已安装版本。\n- DEV 只在开发前端显示；正式前端不因开发政策字段误标开发版。\n- 打开官方发布页不会冒充更新检查，也不会把“已是最新”改成“发现更新”。\n- 发布详情打开失败单独说明原因，不覆盖更新状态；可以重试，已有更新弹窗保持可见。\n\n安装生命周期 22 项、工作面 18 项、路由 11 项、管理回滚 7 项及版本身份 4 项通过；三张版本原图已核对。首轮设置截图过早捕获的缺口通过同包可见性复验收口，原始记录保留。\n\n不扩大现有格式编辑范围；社区包仍未签名，Windows 可能提示“未知发布者”。只从官方 Release 下载并核对 SHA-256。自动更新需要用户确认；官方 v1.0.22→v1.0.23 应用内更新仍需发布后独立观察，不能用安装流程代替。\n\n已知待改进：部分图谱操作说明仍有局部遮挡；关闭按钮与 Alt+F4 的策略一致性将作为下一版本优先方向。本版不宣称所有图谱体验问题已解决。\n",
+    "publishedAt": "2026-09-22T17:15:59Z",
+    "installerName": "LongEdit_1.0.23_x64-setup.exe",
+    "installerSize": 66803615,
+    "installerSha256": "b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a"
+  },
+  "confirmation": {
+    "title": "发现新版本已通过官方发布源检查",
+    "text": "发现新版本已通过官方发布源检查v1.0.22v1.0.23安装包将从官方 GitHub Relea e 下载，并在 SHA-256 校验通过后安装。63.7 MBWindow  x64覆盖安装本次更新v1.0.23 — 版本身份与更新提示修复本版集中修复“我到底运行哪个版本”以及发布页打开失败时的更新状态提示。侧栏、设置与能力页统一显示实际运行版本，不再把下一开发目标当作已安装版本。DEV 只在开发前端显示；正式前端不因开发政策字段误标开发版。安装完成后 Long编辑会自动重新打开。未签名社区版仍可能触发 Window “未知发布者”提示。发布详情稍后提醒 下载并安装",
+    "modalVisible": true,
+    "confirmationVisible": true,
+    "confirmationLabel": "下载并安装",
+    "userActionRequired": true,
+    "clicked": true,
+    "installerStartedBeforeConfirmation": false,
+    "clickedAt": "2026-09-29T06:52:28.570Z"
+  },
+  "screenshot": "managed-updater-available.jpg",
+  "sourceUserContentIncluded": false
+}

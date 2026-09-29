@@ -4,7 +4,14 @@ import fs from 'node:fs'
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'))
 const text = file => fs.readFileSync(file, 'utf8')
 const newlineVariants = file => {
-  const raw = fs.readFileSync(file)
+  // v1.0.24 adds only the shared exit guard; retain the full historical ODP
+  // implementation hash after removing those two explicitly permitted lines.
+  let source = fs.readFileSync(file, 'utf8')
+  if (file === 'src/views/OdfContentReaderView.vue' && development.runtimeBaseVersion === '1.0.24') {
+    source = source.replace(/import \{ useWindowDraft \} from '\.\.\/services\/windowDrafts'\r?\n/, '')
+      .replace(/useWindowDraft\(\(\) => draftDirty\.value\)\r?\n/, '')
+  }
+  const raw = Buffer.from(source)
   const lf = Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'))
   const crlf = Buffer.from(lf.toString('utf8').replace(/\n/g, '\r\n'))
   return [raw, lf, crlf]
@@ -71,7 +78,7 @@ if (evidence.stage !== 'M6-0' || evidence.status !== 'accepted' || evidence.actu
 const developmentStageAccepted = successor.status === 'accepted'
   ? /^M[678]-[0-9]+-/.test(development.currentStage)
   : development.currentStage === evidence.selectedNextStage
-if (!developmentStageAccepted || !['1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23'].includes(development.runtimeBaseVersion) || !['1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23'].includes(development.publicVersion)
+if (!developmentStageAccepted || !['1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23', '1.0.24'].includes(development.runtimeBaseVersion) || !['1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23'].includes(development.publicVersion)
   || !['1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23', '1.0.24'].includes(development.developmentTargetVersion) || development.releaseCandidate) fail('M6-1 development handoff drift')
 for (const [document, tokens] of [[audit, ['真实证据与预期差异', 'M6-1', '图谱有界全屏生命周期', 'F11']], [roadmap, ['M6-0', 'M6-1', '1280×800', '720×680']], [alignment, successor.status === 'accepted' ? ['M6-0 已完成', '唯一接续点为 M6-1'] : ['当前阶段：**M6-1 图谱有界全屏生命周期与真实桌面审计**', '唯一接续点为 M6-1']]]) {
   for (const token of tokens) if (!document.includes(token)) fail(`M6-0 document missing ${token}`)

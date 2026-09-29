@@ -43,12 +43,12 @@ const semanticColor = (id: string) => graphSemanticColor(id, props.dark)
 </script>
 
 <style scoped>
-.graph-semantic-legend { position: absolute; z-index: 8; top: 126px; left: 16px; width: min(260px, calc(100% - 32px)); border: 1px solid color-mix(in srgb, var(--theme-primary) 18%, var(--theme-border-color)); border-radius: 10px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); box-shadow: 0 10px 28px rgba(0,0,0,.12); backdrop-filter: blur(14px); }
-.graph-semantic-legend.collapsed { width: 260px; }
+.graph-semantic-legend { position: relative; flex: 0 0 auto; margin: 6px 16px; width: auto; max-height: 30%; overflow: auto; border: 1px solid color-mix(in srgb, var(--theme-primary) 18%, var(--theme-border-color)); border-radius: 10px; color: var(--theme-text); background: color-mix(in srgb, var(--theme-card) 94%, transparent); box-shadow: 0 10px 28px rgba(0,0,0,.12); backdrop-filter: blur(14px); }
+.graph-semantic-legend.collapsed { width: auto; }
 .legend-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
 .legend-toggle span, .legend-group strong { font-size: var(--text-compact); font-weight: 800; }
 .legend-toggle small, .legend-item small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
-.legend-body { display: grid; gap: 9px; max-height: min(420px, calc(100vh - 190px)); padding: 0 10px 10px; overflow: auto; }
+.legend-body { display: grid; gap: 9px; max-height: min(180px, 22vh); padding: 0 10px 10px; overflow: auto; }
 .interaction-help { margin: 0; padding: 7px 8px; border-radius: 6px; color: var(--theme-text-secondary); background: color-mix(in srgb, var(--theme-primary) 7%, transparent); font-size: var(--text-compact); line-height: 1.5; }
 .legend-group { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; }
 .legend-group strong { grid-column: 1 / -1; color: var(--theme-text-secondary); }
@@ -60,5 +60,5 @@ const semanticColor = (id: string) => graphSemanticColor(id, props.dark)
 .object-mark span { display: none; }
 .relation-mark { width: 16px; height: 0; border-top: 2px solid var(--semantic-color); }.relation-mark[data-line="dashed"] { border-top-style: dashed; }.relation-mark[data-line="dotted"] { border-top-style: dotted; }
 .status-legend strong { display: flex; align-items: baseline; justify-content: space-between; }.status-legend strong small { color: var(--theme-text-secondary); font-size: var(--text-compact); font-weight: 600; }.status-mark { width: 14px; height: 14px; box-sizing: border-box; border: 2px solid transparent; border-radius: 50%; }.status-mark.recency-fresh { border-top-color: #f59e0b; border-right-color: #f59e0b; border-bottom-color: #f59e0b; }.status-mark.recency-recent { border-top-color: #d97706; border-right-color: #d97706; }.status-mark.relation-strength { border-right-color: #38bdf8; border-bottom-color: #38bdf8; border-left-color: #38bdf8; }
-@media (max-width: 720px) { .graph-semantic-legend { top: 118px; left: 10px; }.legend-body { max-height: 240px; } }
+@media (max-width: 720px) { .graph-semantic-legend { margin: 4px 10px; }.legend-body { max-height: 240px; } }
 </style>
