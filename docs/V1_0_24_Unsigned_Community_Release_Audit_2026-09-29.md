@@ -1,4 +1,6 @@
-# v1.0.24 社区正式版候选验收
+# v1.0.24 社区正式版发布与验收
+
+2026-09-30 发布完成：用户授权后发布既有已验收安装包，Tag 固定 `9fa7ffa0f778773cfd999169e695e32a705168ae`。NSIS、MSI、SHA256SUMS 三个公开附件均已重新下载核对大小与 SHA-256。回执：`docs/evidence/v1.0.24-release/release-receipt.json`。当前公开版为 v1.0.24，官方 1.0.23 → 1.0.24 应用内更新仍待独立观察。以下为发布前验收记录。
 
 2026-09-30：v1.0.24 固定产品 9fa7ffa0 的既有 MSI/NSIS 已通过安装与原图复审，达到待发布状态，尚未创建公开 Release。构建运行 36549473490；同包最终验收运行 [36657882536](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/36657882536)。安装包字节与构建收据逐项校验一致。
 

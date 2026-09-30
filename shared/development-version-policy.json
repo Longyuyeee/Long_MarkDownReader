@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.0.24",
+  "developmentTargetVersion": "1.0.25",
   "runtimeBaseVersion": "1.0.24",
-  "publicVersion": "1.0.23",
-  "publicTag": "v1.0.23",
-  "publicTagCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+  "publicVersion": "1.0.24",
+  "publicTag": "v1.0.24",
+  "publicTagCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-22-v1.0.24-release-ready",
-  "binaryVersionTransition": "v1.0.24-release-ready",
-  "displayLabel": "v1.0.24 安装验收完成 · 待公开发布 · 当前公开 v1.0.23",
+  "currentStage": "M8-23-v1.0.24-published-update-pending",
+  "binaryVersionTransition": "v1.0.24-public-release-published",
+  "displayLabel": "v1.0.24 已公开发布 · 后续开发目标 v1.0.25",
   "activeSlice": {
     "id": "v1.0.24-library-recovery-and-close-safety",
-    "status": "release-ready-awaiting-publication",
+    "status": "published-official-update-observation-pending",
     "document": "docs/V1_0_24_Unsigned_Community_Release_Audit_2026-09-29.md"
   }
 }
