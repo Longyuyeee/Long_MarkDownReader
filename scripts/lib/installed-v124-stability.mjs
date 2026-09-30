@@ -58,7 +58,7 @@ export async function runInstalledStabilityScenario({ send, evaluate, waitFor, n
     observations.push({id:'native-close-cancel-preserves-draft',status:'passed',syntheticDraft:true})
     await evaluate(`(() => {const s=${storeExpression};s.isTempDirty=false;s.exitStrategy=${JSON.stringify(previousStrategy)}})()`)
     assert.equal(await evaluate(`!!document.querySelector('#runtime-error-notice')`), false, 'Normal installed flows must not produce a runtime error notice')
-    report.markdown = await checkInstalledMarkdown({ send, evaluate, waitFor, navigate, capture, library })
+    report.markdown = await checkInstalledMarkdown({ send, evaluate, waitFor, navigate, capture, library, output })
     report.status = 'passed'
   } catch (error) {
     report.status = 'failed'; report.error = String(error); throw error

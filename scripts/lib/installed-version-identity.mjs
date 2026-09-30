@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 // Read-only observation: never disable animations or change product styles for acceptance.
-export function visibleVersionSurfaceExpression(selector) {
+export function visibleVersionSurfaceExpression(selector, allowInfiniteAnimations = false) {
   return `(() => {
     const element = document.querySelector(${JSON.stringify(selector)});
     if (!element) return false;
@@ -12,7 +12,7 @@ export function visibleVersionSurfaceExpression(selector) {
     for (let ancestor = element; ancestor; ancestor = ancestor.parentElement) {
       const style = getComputedStyle(ancestor);
       if (style.display === 'none' || style.visibility !== 'visible' || Number(style.opacity) < 0.99) return false;
-      if (ancestor.getAnimations().some(animation => animation.playState === 'running' || animation.playState === 'pending')) return false;
+      if (ancestor.getAnimations().some(animation => (animation.playState === 'running' || animation.playState === 'pending') && !(${allowInfiniteAnimations} && animation.effect?.getTiming().iterations === Infinity))) return false;
     }
     return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
   })()`
