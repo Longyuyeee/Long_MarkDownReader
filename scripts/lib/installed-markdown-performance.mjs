@@ -78,6 +78,10 @@ export async function checkInstalledMarkdown({ send, evaluate, waitFor, navigate
     }
     assert.equal(received, media, 'Default handler must receive the actual authorized path')
     opener.receivedByDisposableHandler = true
+    await checkpoint('native-opener-verified', {opener})
+  } catch (error) {
+    await checkpoint('native-opener-failed', {error:String(error),opener})
+    throw error
   } finally { registration('Restore') }
   await checkpoint('complete', {opener})
   return {...idle, typingVisible:true, opener, status:'passed', fixture:'generated-225-headings-71-code-blocks'}

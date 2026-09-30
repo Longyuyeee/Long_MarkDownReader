@@ -36,7 +36,10 @@ if ($Mode -eq 'Setup') {
     if ((Get-Item -LiteralPath $extensionKey).GetValue('') -ne 'LongEdit.DisposableOpenerProbe') {
         throw 'Refusing to restore an association changed by another process.'
     }
-    if ($null -eq $state.previousDefault) { (Get-Item -LiteralPath $extensionKey).DeleteValue('', $false) }
+    if ($null -eq $state.previousDefault) {
+        $writableKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\Classes\.ogv', $true)
+        try { $writableKey.DeleteValue('', $false) } finally { $writableKey.Dispose() }
+    }
     else { Set-Item -LiteralPath $extensionKey -Value $state.previousDefault }
     # Exact disposable registry key; never remove the shared extension key.
     Remove-Item -LiteralPath $programKey -Recurse -Force
