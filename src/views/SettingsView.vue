@@ -66,11 +66,13 @@
 
               <div class="add-library-form">
                 <n-input-group>
-                  <n-input v-model:value="newLib.name" placeholder="库名称" style="width: 30%" />
-                  <n-input v-model:value="newLib.path" placeholder="库路径" style="flex: 1" />
-                  <n-button quaternary @click="chooseNewLibDir">选择</n-button>
-                  <n-button type="primary" @click="addLibrary">添加库</n-button>
+                  <n-input v-model:value="newLib.name" :disabled="libraryAdding" placeholder="库名称" style="width: 30%" />
+                  <n-input v-model:value="newLib.path" :disabled="libraryAdding" placeholder="完整文件夹路径（不存在时自动创建）" style="flex: 1" />
+                  <n-button quaternary :disabled="libraryAdding" @click="chooseNewLibDir">选择</n-button>
+                  <n-button type="primary" :loading="libraryAdding" @click="addLibrary">添加库</n-button>
                 </n-input-group>
+                <p>输入完整路径即可自动创建缺失的文件夹；已有文件会保留。添加后可点击“切换”使用。</p>
+                <p v-if="libraryAddError" role="alert">{{ libraryAddError }}</p>
               </div>
             </div>
           </n-grid-item>
@@ -719,6 +721,8 @@ interface KnowledgeGraphObservationSnapshot {
 }
 
 const newLib = reactive({ name: '', path: '' })
+const libraryAdding = ref(false)
+const libraryAddError = ref('')
 const expandedGitLib = ref<string>('')
 const toggleGitConfig = (index: number) => {
   const lib = config.value.libraries[index]
@@ -786,9 +790,11 @@ watch(() => [route.query.category, route.query.focus], () => {
 // 深度监听配置对象，实现实时保存
 let saveDebounce: any = null
 watch(config, (newVal) => {
-  if (isInitializing.value) return
+  if (isInitializing.value || libraryAdding.value) return
   if (saveDebounce) clearTimeout(saveDebounce)
-  saveDebounce = setTimeout(() => store.updateConfig(newVal), 500)
+  saveDebounce = setTimeout(() => {
+    void store.updateConfig(newVal).catch(error => message.error(`设置保存失败，请重试：${String(error)}`))
+  }, 500)
 }, { deep: true })
 
 const saveCredential = async () => {
@@ -1101,20 +1107,48 @@ const chooseNewLibDir = async () => {
   }
 }
 
-const addLibrary = () => {
-  if (!newLib.name || !newLib.path) {
+const addLibrary = async () => {
+  if (libraryAdding.value) return
+  const name = newLib.name.trim()
+  const inputPath = newLib.path.trim()
+  libraryAddError.value = ''
+  if (!name || !inputPath) {
     message.warning('请填写库名称和路径')
     return
   }
-  if (config.value.libraries.find(l => l.path === newLib.path)) {
+  const pathKey = (value: string) => value
+    .replace(/^\\\\\?\\/, '')
+    .replace(/\\/g, '/')
+    .toLocaleLowerCase()
+    .replace(/\/+$/, '')
+  if (config.value.libraries.find(l => pathKey(l.path) === pathKey(inputPath))) {
     message.warning('该路径已在列表中')
     return
   }
-  config.value.libraries.push({ ...newLib })
-  if (!config.value.activeLibraryPath) config.value.activeLibraryPath = newLib.path
-  newLib.name = ''
-  newLib.path = ''
-  message.success('已添加新库并保存')
+  libraryAdding.value = true
+  if (saveDebounce) clearTimeout(saveDebounce)
+  const previousLibraries = [...config.value.libraries]
+  const previousActivePath = config.value.activeLibraryPath
+  const previousStoreLibraries = [...store.libraries]
+  const previousStorePath = store.activeLibraryPath
+  try {
+    const path = await invoke<string>('prepare_library_path', { path: inputPath })
+    config.value.libraries = [...config.value.libraries, { name, path }]
+    if (!config.value.activeLibraryPath) config.value.activeLibraryPath = path
+    await store.updateConfig(config.value)
+    newLib.name = ''
+    newLib.path = ''
+    message.success('知识库目录已就绪，配置已保存')
+  } catch (error) {
+    config.value.libraries = previousLibraries
+    config.value.activeLibraryPath = previousActivePath
+    store.libraries = previousStoreLibraries
+    store.activeLibraryPath = previousStorePath
+    libraryAddError.value = `添加未完成：${String(error)}。请检查路径、磁盘连接和权限后重试。`
+  } finally {
+    await nextTick()
+    libraryAdding.value = false
+  }
 }
 
 const removeLibrary = (index: number) => {

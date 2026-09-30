@@ -38,3 +38,6 @@ jobs:
 
       - name: Run the v1 patch release quality gate
         run: npm run ci:patch-release
+
+      - name: Run Rust functional regression tests
+        run: npm run test:rust:functional

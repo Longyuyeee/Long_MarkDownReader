@@ -95,6 +95,7 @@ import { resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { useVditorTheme } from '../composables/useVditorTheme'
+import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { confirmAppAction } from '../services/appDialog'
 
 const route = useRoute()
@@ -126,8 +127,16 @@ let vditor: Vditor | null = null
 const leaveExternalEditor = () => router.push({ name: 'LibraryMode' })
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
+const refreshVisibleOutline = () => {
+  destroyOutlineObserver()
+  if (!showOutline.value || !vditor) return
+  syncOutlineManual()
+  setupOutlineObserver()
+}
+watch(showOutline, refreshVisibleOutline)
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => filePath.value, { external: true })
 useVditorTheme(() => vditor)
+const { startAdaptiveMotion } = useAdaptiveMarkdownMotion(() => vditor)
 
 const handleOutlineSelect = (keys: string[]) => {
   if (keys.length > 0) scrollToHeading(keys[0])
@@ -147,8 +156,9 @@ const loadFileContent = async () => {
     const result = await invoke<{content: string}>('read_external_markdown_file', { path: filePath.value })
     if (vditor) {
       vditor.setValue(result.content)
+      startAdaptiveMotion()
       isDirty.value = false
-      syncOutlineManual()
+      refreshVisibleOutline()
       nextTick(() => setTimeout(fixEditorImages, 300))
     }
   } catch (err: any) {
@@ -318,9 +328,9 @@ onMounted(async () => {
       isDirty.value = true
     },
     after: () => {
-      syncOutlineManual()
+      startAdaptiveMotion()
+      refreshVisibleOutline()
       setTimeout(fixEditorImages, 500)
-      setupOutlineObserver()
       const editorContainer = document.getElementById('vditor')
       if (editorContainer) {
         editorContainer.addEventListener('click', (e: MouseEvent) => {

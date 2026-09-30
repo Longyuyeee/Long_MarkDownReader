@@ -25,6 +25,7 @@ pub mod pptx;
 pub mod search;
 pub mod svg;
 pub mod system;
+pub mod lifecycle;
 pub mod table;
 pub mod toml;
 pub mod updater;

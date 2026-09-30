@@ -1,0 +1,195 @@
+{
+  "appVersion": "1.0.24",
+  "sourceCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
+  "installerSha256": "d78324590e0393414d10e18241e9e58479cacb7f9a7d5db9b9648ee3c9653e55",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "observations": [
+    {
+      "id": "graph-layout",
+      "width": 1280,
+      "height": 820,
+      "expanded": false,
+      "rects": {
+        "options": {
+          "top": 98,
+          "bottom": 132,
+          "left": 12,
+          "right": 1268,
+          "height": 34
+        },
+        "banner": {
+          "top": 178,
+          "bottom": 231.1875,
+          "left": 18,
+          "right": 1262,
+          "height": 53.1875
+        },
+        "legend": {
+          "top": 138,
+          "bottom": 172,
+          "left": 16,
+          "right": 1264,
+          "height": 34
+        },
+        "canvas": {
+          "top": 237.1875,
+          "bottom": 820,
+          "left": 0,
+          "right": 1280,
+          "height": 582.8125
+        },
+        "tutorial": {
+          "top": 247,
+          "bottom": 810,
+          "left": 360,
+          "right": 920,
+          "height": 563
+        }
+      },
+      "tutorialUnobscured": true,
+      "status": "passed"
+    },
+    {
+      "id": "graph-layout",
+      "width": 1280,
+      "height": 820,
+      "expanded": true,
+      "rects": {
+        "options": {
+          "top": 98,
+          "bottom": 132,
+          "left": 12,
+          "right": 1268,
+          "height": 34
+        },
+        "banner": {
+          "top": 358,
+          "bottom": 411.1875,
+          "left": 18,
+          "right": 1262,
+          "height": 53.1875
+        },
+        "legend": {
+          "top": 138,
+          "bottom": 352,
+          "left": 16,
+          "right": 1264,
+          "height": 214
+        },
+        "canvas": {
+          "top": 417.1875,
+          "bottom": 820,
+          "left": 0,
+          "right": 1280,
+          "height": 402.8125
+        },
+        "tutorial": {
+          "top": 427,
+          "bottom": 810,
+          "left": 360,
+          "right": 920,
+          "height": 383
+        }
+      },
+      "tutorialUnobscured": true,
+      "status": "passed"
+    },
+    {
+      "id": "graph-layout",
+      "width": 720,
+      "height": 600,
+      "expanded": false,
+      "rects": {
+        "options": {
+          "top": 98,
+          "bottom": 132,
+          "left": 12,
+          "right": 708,
+          "height": 34
+        },
+        "banner": {
+          "top": 174,
+          "bottom": 227.1875,
+          "left": 18,
+          "right": 702,
+          "height": 53.1875
+        },
+        "legend": {
+          "top": 136,
+          "bottom": 170,
+          "left": 10,
+          "right": 710,
+          "height": 34
+        },
+        "canvas": {
+          "top": 233.1875,
+          "bottom": 600,
+          "left": 0,
+          "right": 720,
+          "height": 366.8125
+        },
+        "tutorial": {
+          "top": 243,
+          "bottom": 590,
+          "left": 80,
+          "right": 640,
+          "height": 347
+        }
+      },
+      "tutorialUnobscured": true,
+      "status": "passed"
+    },
+    {
+      "id": "graph-layout",
+      "width": 720,
+      "height": 600,
+      "expanded": true,
+      "rects": {
+        "options": {
+          "top": 98,
+          "bottom": 132,
+          "left": 12,
+          "right": 708,
+          "height": 34
+        },
+        "banner": {
+          "top": 310.390625,
+          "bottom": 363.578125,
+          "left": 18,
+          "right": 702,
+          "height": 53.1875
+        },
+        "legend": {
+          "top": 136,
+          "bottom": 306.390625,
+          "left": 10,
+          "right": 710,
+          "height": 170.390625
+        },
+        "canvas": {
+          "top": 369.578125,
+          "bottom": 600,
+          "left": 0,
+          "right": 720,
+          "height": 230.421875
+        },
+        "tutorial": {
+          "top": 380,
+          "bottom": 590,
+          "left": 80,
+          "right": 640,
+          "height": 210
+        }
+      },
+      "tutorialUnobscured": true,
+      "status": "passed"
+    },
+    {
+      "id": "native-close-cancel-preserves-draft",
+      "status": "passed",
+      "syntheticDraft": true
+    }
+  ],
+  "error": "Error: Timed out after 60000 ms: installed CDP Runtime.evaluate"
+}

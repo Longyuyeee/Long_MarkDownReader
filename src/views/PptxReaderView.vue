@@ -693,6 +693,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { invoke } from '@tauri-apps/api/core'
 import {
   AlertTriangle as AlertTriangleIcon,
@@ -2300,6 +2301,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'ArrowLeft') previousSlide()
   if (event.key === 'ArrowRight' || event.key === ' ') nextSlide()
 }
+useWindowDraft(() => draftOperations.value.length > 0)
 const warnBeforeUnload = (event: BeforeUnloadEvent) => {
   if (draftOperations.value.length) event.preventDefault()
 }

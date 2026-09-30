@@ -12,7 +12,7 @@ use commands::canvas::{
     write_external_canvas_file,
 };
 use commands::config::{
-    clear_ai_credential, get_ai_credential_status, get_config, save_config, set_ai_credential,
+    clear_ai_credential, get_ai_credential_status, get_config, prepare_library_path, save_config, set_ai_credential,
 };
 use commands::diagnostics::export_privacy_diagnostic_bundle;
 use commands::diagram::{
@@ -162,7 +162,7 @@ use services::external_windows::{authorize_and_create_external_window, open_exte
 use services::knowledge_index::KnowledgeIndexRuntime;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use window_vibrancy::{apply_blur, apply_mica};
 
 fn open_external_arguments(app: &tauri::AppHandle, args: &[String]) -> bool {
@@ -211,6 +211,7 @@ pub fn run() {
 
     let builder = builder
         .manage(ExternalFileAccess::default())
+        .manage(commands::lifecycle::WindowDrafts::default())
         .manage(KnowledgeIndexRuntime::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -226,9 +227,12 @@ pub fn run() {
     builder
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
-                if window.label() == "main" {
-                    api.prevent_close();
-                    let _ = window.hide();
+                api.prevent_close();
+                let _ = window.emit_to(window.label(), "request-window-close", ());
+            }
+            tauri::WindowEvent::Destroyed => {
+                if let Ok(mut drafts) = window.state::<commands::lifecycle::WindowDrafts>().0.lock() {
+                    drafts.remove(window.label());
                 }
             }
             tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
@@ -283,7 +287,10 @@ pub fn run() {
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app: &tauri::AppHandle, event| match event.id.as_ref() {
                     "quit" => {
-                        app.exit(0);
+                        focus_main_window(app);
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit_to("main", "request-app-exit", ());
+                        }
                     }
                     "show" => {
                         let Some(win) = app.get_webview_window("main") else {
@@ -513,6 +520,7 @@ pub fn run() {
             delete_knowledge_index,
             export_to_html,
             get_config,
+            prepare_library_path,
             save_config,
             get_ai_credential_status,
             set_ai_credential,
@@ -540,6 +548,7 @@ pub fn run() {
             delete_history_version,
             clear_all_history,
             exit_app,
+            commands::lifecycle::set_window_dirty,
             check_community_update,
             install_community_update,
             ai_chat_completion,

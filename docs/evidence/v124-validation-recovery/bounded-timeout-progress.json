@@ -1,0 +1,38 @@
+{
+  "checkpoints": [
+    {
+      "phase": "create-fixture",
+      "at": "2026-09-30T01:53:36.523Z"
+    },
+    {
+      "phase": "sample-idle-frames",
+      "at": "2026-09-30T01:53:39.160Z"
+    },
+    {
+      "phase": "idle-sampling-complete",
+      "at": "2026-09-30T01:53:45.097Z",
+      "activeAnimations": 0,
+      "motionMode": "reduced",
+      "motionReason": "preference",
+      "frameP95": 15.700000000000728,
+      "headings": 225,
+      "codeBlocks": 142
+    },
+    {
+      "phase": "save-keydown",
+      "at": "2026-09-30T01:53:47.487Z"
+    },
+    {
+      "phase": "save-keyup",
+      "at": "2026-09-30T01:53:47.652Z"
+    },
+    {
+      "phase": "wait-for-saved-draft",
+      "at": "2026-09-30T01:53:47.657Z"
+    },
+    {
+      "phase": "probe-native-opener",
+      "at": "2026-09-30T01:53:47.978Z"
+    }
+  ]
+}

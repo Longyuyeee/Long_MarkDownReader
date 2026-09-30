@@ -260,13 +260,20 @@ struct TemporaryPptxCopy {
 
 impl TemporaryPptxCopy {
     fn create(bytes: &[u8]) -> Result<Self, String> {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|error| format!("创建 PPTX 临时副本时间戳失败: {error}"))?
+            .as_nanos();
+        Self::create_at(bytes, timestamp)
+    }
+
+    fn create_at(bytes: &[u8], timestamp: u128) -> Result<Self, String> {
+        // Windows clock resolution can give concurrent previews the same timestamp.
+        static SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let sequence = SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!(
-            "longedit-pptx-c4a-{}-{}.pptx",
-            std::process::id(),
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map_err(|error| format!("创建 PPTX 临时副本时间戳失败: {error}"))?
-                .as_nanos()
+            "longedit-pptx-c4a-{}-{timestamp}-{sequence}.pptx",
+            std::process::id()
         ));
         let mut file = OpenOptions::new()
             .create_new(true)
@@ -1670,6 +1677,28 @@ pub async fn save_pptx_patch_source_transaction(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn concurrent_temporary_copies_share_clock_tick_without_collision() {
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let barrier = std::sync::Arc::new(std::sync::Barrier::new(16));
+        let handles: Vec<_> = (0u8..16).map(|marker| {
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                barrier.wait();
+                (TemporaryPptxCopy::create_at(&[marker], timestamp).unwrap(), marker)
+            })
+        }).collect();
+        let copies: Vec<_> = handles.into_iter().map(|handle| handle.join().unwrap()).collect();
+        let paths: HashSet<_> = copies.iter().map(|(copy, _)| copy.path.clone()).collect();
+        assert_eq!(paths.len(), 16);
+        for (copy, marker) in &copies {
+            assert_eq!(fs::read(&copy.path).unwrap(), vec![*marker]);
+        }
+        drop(copies);
+        assert!(paths.iter().all(|path| !path.exists()));
+    }
+
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn read_test_zip_part(source: &[u8], part_name: &str) -> Vec<u8> {

@@ -7,6 +7,7 @@
     <div class="quick-content">
       <n-input
         v-model:value="content"
+        :disabled="saving"
         type="textarea"
         placeholder="写下这一刻的灵感..."
         autofocus
@@ -21,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { emit } from '@tauri-apps/api/event'
@@ -37,11 +38,16 @@ onMounted(async () => {
   await store.loadConfig()
 })
 
+watch(content, value => { store.isTempDirty = value.length > 0 }, { flush: 'sync' })
+onUnmounted(() => { store.isTempDirty = false })
+
 const close = async () => {
-  await getCurrentWindow().destroy()
+  if (saving.value) return
+  await getCurrentWindow().close()
 }
 
 const save = async () => {
+  if (saving.value) return
   if (!content.value.trim()) { message.warning('请输入内容'); return }
   saving.value = true
   try {
@@ -65,11 +71,13 @@ const save = async () => {
     const filePath = await invoke<string>('create_new_file', { libraryRoot: libPath, prefix })
     await invoke('write_markdown_file', { libraryRoot: libPath, path: filePath, content: content.value })
     
+    content.value = ''
     // 发送全局刷新事件
     await emit('refresh-library')
     
     message.success('已保存并同步')
-    setTimeout(close, 600)
+    saving.value = false
+    await close()
   } catch (err) {
     message.error('保存失败: ' + err)
   } finally {

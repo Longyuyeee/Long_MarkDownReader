@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-21",
+  "status": "hosted-lifecycle-and-visual-review-passed",
+  "candidateCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
+  "appVersion": "1.0.24",
+  "previousVersion": "1.0.23",
+  "previousTagCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+  "previousReleaseReceipt": "docs/evidence/v1.0.23-release/release-receipt.json",
+  "workflow": ".github/workflows/v124-candidate-lifecycle.yml",
+  "expectedChecks": {
+    "lifecycle": 22,
+    "installedWorkspace": 18,
+    "routes": 11,
+    "managementRollback": 7,
+    "versionIdentity": 4,
+    "stability": 5
+  },
+  "githubRunId": 36657882536,
+  "releaseCandidate": false,
+  "sourceUserContentIncluded": false,
+  "officialManagedUpdateObservation": "pending-after-publication",
+  "attemptHistory": [
+    {
+      "runId": 36534725897,
+      "candidateCommit": "e3cb2dcf442dbc74802c605b4e6f913137a1e464",
+      "accepted": false,
+      "reason": "cancelled-before-packaging-to-reserve-toolbar-and-governance-layout-space"
+    },
+    {
+      "runId": 36535501168,
+      "reviewRunId": 36539596628,
+      "candidateCommit": "e3f4a268ca2c85b5ced87c078488dffb52c1690b",
+      "automatedChecksPassed": true,
+      "accepted": false,
+      "reason": "visual-review-found-minimap-covering-tutorial-at-small-viewport; exit-capture-before-animation-settled"
+    },
+    {
+      "runId": 36540110212,
+      "candidateCommit": "8f2bac2ef6fae75f72c75c083c5f440019714d61",
+      "accepted": false,
+      "reason": "cancelled-before-packaging-after-quality-run-36540110276-found-PPTX-concurrent-temporary-name-collision"
+    },
+    {
+      "runId": 36542411410,
+      "candidateCommit": "200b230e27444ed921d0bad27865766c5b4fbe69",
+      "accepted": false,
+      "reason": "cancelled-before-packaging-to-fix-shared-Markdown-idle-rendering-and-opener-ACL-reported-by-user"
+    },
+    {
+      "runId": 36546416166,
+      "candidateCommit": "7f9c101ff1aa1f6e678d57fa1fa097d00047339e",
+      "accepted": false,
+      "reason": "cancelled-before-completion-at-user-request-to-preserve-normal-motion-and-reduce-effects-only-on-sustained-lag"
+    },
+    {
+      "runId": 36549473490,
+      "candidateCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
+      "installersBuilt": true,
+      "accepted": false,
+      "reason": "installed test awaited missing-media system opener without per-command deadline; final same-byte review passed separately"
+    },
+    {
+      "runId": 36657123926,
+      "accepted": false,
+      "reason": "bounded reproduction isolated native-opener probe timeout"
+    },
+    {
+      "runId": 36657637394,
+      "accepted": false,
+      "reason": "native dispatch succeeded; disposable registry restore used a read-only handle"
+    }
+  ],
+  "artifactId": 11073490067,
+  "visualReview": "docs/V1_0_24_Unsigned_Community_Release_Audit_2026-09-29.md",
+  "evidenceManifest": "docs/evidence/v1.0.24-release/import-manifest.json",
+  "buildRunId": 36549473490,
+  "buildArtifactId": 11027284699
+}

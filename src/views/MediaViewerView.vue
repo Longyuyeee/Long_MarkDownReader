@@ -737,7 +737,14 @@ const enterPictureInPicture = async () => {
   }
 }
 const onMediaError = () => { loadError.value = isVideo.value ? '当前系统缺少该视频的编解码器，请使用系统播放器打开。' : '图片数据无效或当前系统不支持该编码。' }
-const openExternally = () => { if (mediaPath.value) void openPath(mediaPath.value) }
+const openExternally = async () => {
+  if (!mediaPath.value) return
+  try {
+    await openPath(mediaPath.value)
+  } catch (error) {
+    playbackNotice.value = `无法使用系统应用打开，请检查文件是否存在、是否已安装对应播放器：${String(error).replace(/^Error:\s*/, '')}`
+  }
+}
 const leaveViewer = () => router.push({ name: 'LibraryMode' })
 
 const syncNaturalOutputSize = () => {

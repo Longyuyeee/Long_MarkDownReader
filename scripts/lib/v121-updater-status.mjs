@@ -1,6 +1,24 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (development.publicVersion === '1.0.24'
+    && development.publicTag === 'v1.0.24'
+    && development.publicTagCommit === '9fa7ffa0f778773cfd999169e695e32a705168ae'
+    && development.runtimeBaseVersion === '1.0.24'
+    && development.developmentTargetVersion === '1.0.25'
+    && community.appVersion === '1.0.24'
+    && community.gates?.githubReleasePublished === true
+    && community.release?.tag === 'v1.0.24'
+    && community.release?.taggedCommit === development.publicTagCommit) return
+  if (development.publicVersion === '1.0.23'
+    && development.publicTag === 'v1.0.23'
+    && development.publicTagCommit === '403a5122d169dfb238cd0a424d83e356f644fb08'
+    && development.runtimeBaseVersion === '1.0.24'
+    && development.developmentTargetVersion === '1.0.24'
+    && community.appVersion === '1.0.24'
+    && community.gates?.githubReleasePublished === false
+    && community.patchValidation?.previousPublicVersion === '1.0.23'
+    && community.targetRelease?.tag === 'v1.0.24') return
   if (development.publicVersion === '1.0.23'
     && development.publicTag === 'v1.0.23'
     && development.publicTagCommit === '403a5122d169dfb238cd0a424d83e356f644fb08'
@@ -46,6 +64,17 @@ export function assertV121UpdaterStatus(policy, community, receipt) {
   const expected = `1.0.20-to-1.0.21-${suffix}`
   if (receipt.managedUpdaterObservation !== expected) {
     throw new Error(`v1.0.21 updater status conflict: release receipt must be ${expected}`)
+  }
+  if (community.appVersion === '1.0.24') {
+    if (suffix !== 'passed' || community.patchValidation?.previousPublicVersion !== '1.0.23'
+      || community.targetRelease?.tag !== 'v1.0.24'
+      || !(community.gates?.githubReleasePublished === false && community.release === null
+        || community.gates?.githubReleasePublished === true && community.release?.tag === 'v1.0.24'
+          && community.release?.taggedCommit === '9fa7ffa0f778773cfd999169e695e32a705168ae')
+      || community.patchValidation?.managedUpdaterUpgradePath !== '1.0.23-to-1.0.24-pending') {
+      throw new Error('v1.0.24 candidate must retain its own pending official update observation')
+    }
+    return
   }
   if (community.appVersion === '1.0.23') {
     if (suffix !== 'passed'

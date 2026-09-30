@@ -279,6 +279,7 @@ pub async fn install_community_update(
     expected_version: String,
 ) -> Result<(), String> {
     let release = latest_release().await?;
+    super::lifecycle::ensure_saved(&app, None)?;
     if clean_version(&expected_version) != release.version {
         return Err("远端最新版本已经变化，请重新检查更新后再安装".to_string());
     }
@@ -361,6 +362,8 @@ pub async fn install_community_update(
 
     #[cfg(windows)]
     {
+        // Recheck after downloading: a user may have edited while waiting.
+        super::lifecycle::ensure_saved(&app, None)?;
         spawn_update_relauncher(&installer)?;
         app.exit(0);
         Ok(())

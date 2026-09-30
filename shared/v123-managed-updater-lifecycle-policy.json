@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.0.23-U1",
+  "status": "hosted-managed-update-passed",
+  "environment": "github-hosted-disposable-windows",
+  "workflow": ".github/workflows/v122-managed-updater-lifecycle.yml",
+  "workflowReuse": "parameterized-v109-runner-with-annotated-tag-verification",
+  "releases": {
+    "previous": {
+      "version": "1.0.22",
+      "tag": "v1.0.22",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.22",
+      "taggedCommit": "cc58aa68d1974ac2445ed4b884c7677f5a320e93",
+      "installer": {
+        "fileName": "LongEdit_1.0.22_x64-setup.exe",
+        "sizeBytes": 66806406,
+        "sha256": "0af4f446a8785c019f1d4426f7033de515e8bc6161e80ed0cd8a52c7322b6294",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 112886784,
+        "sha256": "884b555f4096aaa065713a6b78fa24553ba20ca137619e51d28f8aac0e68f3a2",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
+    },
+    "current": {
+      "version": "1.0.23",
+      "tag": "v1.0.23",
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.23",
+      "taggedCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
+      "installer": {
+        "fileName": "LongEdit_1.0.23_x64-setup.exe",
+        "sizeBytes": 66803615,
+        "sha256": "b5b144beba17c86e4bdd029bb3740f00e8b30b1a0243974dd714e6d63ca5054a",
+        "authenticodeStatus": "NotSigned"
+      },
+      "standaloneReleaseExecutableReferenceSha256": "4a05030f9b68e417fc3837ba4e0588bea9bde042a50ad00979d0c3b65e702cf7",
+      "installedPackageExecutable": {
+        "fileName": "tauri-app.exe",
+        "sizeBytes": 112890368,
+        "sha256": "4a05030f9b68e417fc3837ba4e0588bea9bde042a50ad00979d0c3b65e702cf7",
+        "authenticodeStatus": "NotSigned",
+        "trustAnchor": "verified-official-nsis-installer"
+      }
+    }
+  },
+  "requirements": {
+    "officialLatestRelease": true,
+    "explicitUserConfirmation": true,
+    "sha256BeforeInstall": true,
+    "silentOverwrite": true,
+    "sameInstallRoot": true,
+    "installedExecutableIdentityRecorded": true,
+    "automaticRelaunchAfterInstall": true,
+    "firstLaunchAfterUpdate": true,
+    "postUpgradeReportsCurrent": true,
+    "libraryDataRetained": true,
+    "configDataRetained": true,
+    "uninstallRetainsUserData": true,
+    "sourceUserContentIncluded": false
+  },
+  "gates": {
+    "harnessImplemented": true,
+    "hostedWorkflowPassed": true,
+    "releaseDiscoveryPassed": true,
+    "confirmationBoundaryPassed": true,
+    "downloadHashPassed": true,
+    "overwriteInstallPassed": true,
+    "automaticRelaunchPassed": true,
+    "firstLaunchPassed": true,
+    "postUpgradeCurrentPassed": true,
+    "userDataRetentionPassed": true,
+    "evidenceImported": true,
+    "qualityGatePassed": true
+  },
+  "expectedVsActualAtEntry": {
+    "expected": "Official 1.0.22 updates to 1.0.23 and retains user data",
+    "actual": "12 installed official update checks passed, including automatic relaunch and data retention"
+  },
+  "attemptHistory": [],
+  "githubRun": {
+    "id": 36533293008,
+    "conclusion": "success",
+    "headCommit": "8059faacc4b91194d1c830af1228c7a8b7c08049",
+    "artifactId": 11017172058,
+    "qualityGateRunId": 36533292103,
+    "artifactDigest": "sha256:7eee338cfcfdaf57a3217e6ba4a84173950d17b73b0ff0d0332816db5a233a5a"
+  },
+  "evidenceRoot": "docs/evidence/v1.0.23-managed-updater",
+  "nextAction": "predecessor-update-observation-complete"
+}

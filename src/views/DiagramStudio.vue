@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { Redo2 as RedoIcon, Undo2 as UndoIcon } from 'lucide-vue-next'
@@ -455,6 +456,7 @@ const mayLeave = async () => !dirty.value || await confirmAppAction(dialog, {
   positiveText: '放弃修改并离开',
   danger: true,
 })
+useWindowDraft(() => dirty.value)
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 
 watch([diagramPath, isExternal], loadDiagram)

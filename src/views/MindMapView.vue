@@ -177,6 +177,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -714,6 +715,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (viewMode.value === 'map' && event.key === 'ArrowDown') { event.preventDefault(); moveSelected(0, distance) }
 }
 const handleKeyup = (event: KeyboardEvent) => { if (event.code === 'Space') spacePressed = false }
+useWindowDraft(() => dirty.value)
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 const mayLeave = () => {
   if (!dirty.value) return Promise.resolve(true)

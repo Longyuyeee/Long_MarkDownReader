@@ -26,6 +26,7 @@ const harness = (vueWatchers = false) => {
   let timerId = 0
   const noop = () => {}
   const context = vm.createContext({
+    libraryLoadError: box(''), treeData: box([]), libraryLoadGeneration: 0,
     searchQuery: box(''), knowledgeSearchResults: box([]), knowledgeSearchRunning: box(false), knowledgeSearchFailed: box(false),
     activeCollectionId: box(''), store: reactive({ libraryPath: 'synthetic-library' }), knowledgeSearchGeneration: 0,
     relationSummaries: box({}), searchObjectTypes: box(['markdown']),

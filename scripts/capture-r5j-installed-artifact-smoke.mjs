@@ -4,6 +4,7 @@ import { once } from 'node:events'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { withDeadline } from './lib/with-deadline.mjs'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:9343'
 const library = path.resolve(process.env.LONGEDIT_R5J_LIBRARY || '')
@@ -78,11 +79,13 @@ const activateTarget = async target => {
     if (message.error) request.reject(new Error(`${message.error.message} (${message.error.code})`))
     else request.resolve(message.result)
   })
-  send = (method, params = {}) => new Promise((resolve, reject) => {
+  send = (method, params = {}) => {
     const id = ++sequence
-    pending.set(id, { resolve, reject })
-    socket.send(JSON.stringify({ id, method, params }))
-  })
+    return withDeadline(() => new Promise((resolve, reject) => {
+      pending.set(id, { resolve, reject })
+      socket.send(JSON.stringify({ id, method, params }))
+    }), 60000, `installed CDP ${method}`).finally(() => pending.delete(id))
+  }
   evaluate = async expression => {
     const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'WebView evaluation failed')
@@ -923,6 +926,10 @@ if (process.env.LONGEDIT_INSTALLED_SEARCH_SCENARIO === '1') {
   await runInstalledSearchScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256 })
 }
 const capturedAt = new Date().toISOString()
+if (process.env.LONGEDIT_INSTALLED_V124_STABILITY === '1') {
+  const { runInstalledStabilityScenario } = await import('./lib/installed-v124-stability.mjs')
+  await runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256, appVersion })
+}
 if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
   const { runInstalledVersionScenario } = await import('./lib/installed-version-identity.mjs')
   await runInstalledVersionScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion })

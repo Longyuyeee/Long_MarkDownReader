@@ -1,0 +1,56 @@
+{
+  "checkpoints": [
+    {
+      "phase": "create-fixture",
+      "at": "2026-09-30T02:02:51.726Z"
+    },
+    {
+      "phase": "sample-idle-frames",
+      "at": "2026-09-30T02:02:54.281Z"
+    },
+    {
+      "phase": "idle-sampling-complete",
+      "at": "2026-09-30T02:03:00.221Z",
+      "activeAnimations": 0,
+      "motionMode": "reduced",
+      "motionReason": "preference",
+      "frameP95": 15.700000000000728,
+      "headings": 225,
+      "codeBlocks": 142
+    },
+    {
+      "phase": "save-keydown",
+      "at": "2026-09-30T02:03:02.542Z"
+    },
+    {
+      "phase": "save-keyup",
+      "at": "2026-09-30T02:03:02.684Z"
+    },
+    {
+      "phase": "wait-for-saved-draft",
+      "at": "2026-09-30T02:03:02.688Z"
+    },
+    {
+      "phase": "probe-native-opener",
+      "at": "2026-09-30T02:03:02.843Z"
+    },
+    {
+      "phase": "native-opener-verified",
+      "at": "2026-09-30T02:03:04.054Z",
+      "opener": {
+        "media": "dispatched",
+        "executable": "Not allowed to open path C:\\LongEditR5ILibrary\\v124-missing.exe",
+        "receivedByDisposableHandler": true
+      }
+    },
+    {
+      "phase": "complete",
+      "at": "2026-09-30T02:03:04.500Z",
+      "opener": {
+        "media": "dispatched",
+        "executable": "Not allowed to open path C:\\LongEditR5ILibrary\\v124-missing.exe",
+        "receivedByDisposableHandler": true
+      }
+    }
+  ]
+}

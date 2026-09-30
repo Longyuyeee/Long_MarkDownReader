@@ -80,7 +80,7 @@ import { darkTheme, useOsTheme, GlobalThemeOverrides } from 'naive-ui'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
-import { emit } from '@tauri-apps/api/event'
+import { emit, type UnlistenFn } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
 import AppUpdater from './components/AppUpdater.vue'
@@ -88,6 +88,7 @@ import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
+import { windowDraftCount } from './services/windowDrafts'
 import { isTauriRuntime } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
@@ -300,7 +301,7 @@ const removeBeforeEach = router.beforeEach(async (to) => {
   routeErrorMessage.value = ''
   startRouteMeasurement(to.name)
   if (!isMainWindow && to.name === 'LibraryMode') {
-    if (await confirmDiscardUnsaved('关闭当前窗口？')) void appWindow?.close()
+    await closeWindow()
     return false
   }
   if (to.name === 'LibraryMode' && typeof to.query.path !== 'string' && store.activeTabId) {
@@ -361,26 +362,27 @@ const maximizeWindow = async () => {
   if (isMaximized) appWindow.unmaximize()
   else appWindow.maximize()
 }
+let closeBusy = false
+let lifecycleReady = false
+let lifecycleDisposed = false
+const lifecycleUnlisteners: UnlistenFn[] = []
 const closeWindow = async () => {
-  if (!isMainWindow) {
-    if (await confirmDiscardUnsaved('关闭当前窗口？')) await appWindow?.close()
-    return
-  }
-  // 识别当前路由：如果是临时编辑界面，关闭时应重置回到主库
-  if (router.currentRoute.value.name === 'TempMode') {
-    if (store.isTempDirty) {
-      if (!await requestDiscardConfirm('关闭临时编辑？', '当前临时文档还有未保存修改，关闭后将无法恢复。')) return
-      store.isTempDirty = false
+  if (!lifecycleReady || closeBusy) return
+  closeBusy = true
+  try {
+    if (!isMainWindow) {
+      if (await confirmDiscardUnsaved('关闭当前窗口？')) await appWindow?.destroy()
+    } else if (store.exitStrategy === 'quit') {
+      await handleExit()
+    } else if (store.exitStrategy === 'minimize') {
+      await handleHide()
+    } else {
+      showExitModal.value = true
     }
-    await router.push({ name: 'LibraryMode' })
-  }
-
-  if (store.exitStrategy === 'quit') {
-    handleExit()
-  } else if (store.exitStrategy === 'minimize') {
-    handleHide()
-  } else {
-    showExitModal.value = true 
+  } catch (error) {
+    routeErrorMessage.value = `关闭失败，请重试：${String(error)}`
+  } finally {
+    closeBusy = false
   }
 }
 const resolveDiscardConfirm = (confirmed: boolean) => {
@@ -397,39 +399,71 @@ const requestDiscardConfirm = (title: string, content: string) => {
   return new Promise<boolean>(resolve => { discardConfirmResolver = resolve })
 }
 const confirmDiscardUnsaved = (title = '退出 Long编辑？') => {
-  const dirtyCount = store.tabs.filter(tab => tab.isDirty).length + (store.isTempDirty ? 1 : 0)
+  const dirtyCount = store.tabs.filter(tab => tab.isDirty).length + (store.isTempDirty ? 1 : 0) + windowDraftCount.value
   return dirtyCount === 0
     ? Promise.resolve(true)
-    : requestDiscardConfirm(title, `仍有 ${dirtyCount} 个文档包含未保存修改，继续后这些内容将无法恢复。`)
+    : requestDiscardConfirm(title, '仍有文档包含未保存修改，继续后这些内容将无法恢复。')
 }
-const handleHide = () => { 
-  if (dontAskAgain.value) {
-    store.updateConfig({ exitStrategy: 'minimize' })
+const handleHide = async () => {
+  try {
+    if (dontAskAgain.value) await store.updateConfig({ exitStrategy: 'minimize' })
+    await appWindow?.hide()
+    showExitModal.value = false
+  } catch (error) {
+    routeErrorMessage.value = `最小化失败，请重试：${String(error)}`
   }
-  showExitModal.value = false; 
-  void appWindow?.hide()
 }
+let exitBusy = false
 const handleExit = async () => {
-  if (!await confirmDiscardUnsaved()) return
-  if (dontAskAgain.value) {
-    store.updateConfig({ exitStrategy: 'quit' })
+  if (!lifecycleReady || exitBusy) return
+  exitBusy = true
+  try {
+    showExitModal.value = false
+    if (!await confirmDiscardUnsaved()) return
+    if (dontAskAgain.value) await store.updateConfig({ exitStrategy: 'quit' })
+    await invoke('exit_app')
+  } catch (error) {
+    routeErrorMessage.value = String(error)
+  } finally {
+    exitBusy = false
   }
-  invoke('exit_app') 
 }
+const hasUnsavedChanges = computed(() => store.tabs.some(tab => tab.isDirty) || store.isTempDirty || windowDraftCount.value > 0)
+watch(hasUnsavedChanges, dirty => {
+  if (appWindow && lifecycleReady) void invoke('set_window_dirty', { dirty }).catch(error => {
+    routeErrorMessage.value = `无法同步未保存状态：${String(error)}`
+  })
+}, { immediate: true, flush: 'sync' })
 
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (!store.tabs.some(tab => tab.isDirty) && !store.isTempDirty) return
+  if (!hasUnsavedChanges.value) return
   event.preventDefault()
   event.returnValue = ''
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', handleGlobalKeydown)
   window.addEventListener('beforeunload', handleBeforeUnload)
-  void store.loadConfig()
+  try {
+    if (appWindow) {
+      for (const [event, handler] of [['request-window-close', closeWindow], ['request-app-exit', handleExit]] as const) {
+        const unlisten = await appWindow.listen(event, () => { void handler() })
+        if (lifecycleDisposed) unlisten()
+        else lifecycleUnlisteners.push(unlisten)
+      }
+    }
+    await store.loadConfig().catch(error => { routeErrorMessage.value = `读取设置失败：${String(error)}` })
+    lifecycleReady = !lifecycleDisposed
+    if (appWindow && lifecycleReady) await invoke('set_window_dirty', { dirty: hasUnsavedChanges.value })
+  } catch (error) {
+    routeErrorMessage.value = `初始化关闭保护失败，请重试启动：${String(error)}`
+  }
 })
 
 onUnmounted(() => {
+  lifecycleDisposed = true
+  lifecycleReady = false
+  lifecycleUnlisteners.splice(0).forEach(unlisten => unlisten())
   resolveDiscardConfirm(false)
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('beforeunload', handleBeforeUnload)

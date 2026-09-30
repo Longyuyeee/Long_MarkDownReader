@@ -351,12 +351,21 @@ fn debug_e2e_config() -> Option<AppConfig> {
 }
 
 fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
-    let mut path = app_handle
+    let base = app_handle
         .path()
         .document_dir()
-        .unwrap_or_else(|_| PathBuf::from("C:\\"));
-    path.push("Long编辑知识库");
+        .or_else(|_| app_handle.path().app_data_dir());
+    let Ok(base) = base else { return AppConfig::default() };
+    default_config_in(base.join("Long编辑知识库"))
+}
+
+fn default_config_in(path: PathBuf) -> AppConfig {
     let default_path = path.to_string_lossy().into_owned();
+    // Only a newly generated default is provisioned automatically. A saved path
+    // may be a disconnected drive; never silently recreate it during config load.
+    if let Err(error) = prepare_library_directory(&default_path) {
+        eprintln!("Default library preparation failed: {error}");
+    }
     AppConfig {
         libraries: vec![LibraryConfig {
             name: "默认知识库".into(),
@@ -366,6 +375,27 @@ fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
         active_library_path: default_path,
         ..Default::default()
     }
+}
+
+fn prepare_library_directory(input: &str) -> Result<String, String> {
+    let input = input.trim();
+    let path = Path::new(input);
+    if input.is_empty() || input.contains('\0') || !path.is_absolute()
+        || path.components().any(|part| matches!(part, Component::ParentDir)) {
+        return Err("请输入完整的文件夹路径，不要包含上级目录跳转".into());
+    }
+    fs::create_dir_all(path)
+        .map_err(|error| format!("无法创建或访问知识库目录，请检查磁盘连接和文件夹权限：{error}"))?;
+    fs::read_dir(path)
+        .map_err(|error| format!("知识库目录无法读取，请检查文件夹权限：{error}"))?;
+    Ok(input.to_string())
+}
+
+/// Explicit user action: create missing parents without changing existing files.
+#[tauri::command]
+pub async fn prepare_library_path(path: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || prepare_library_directory(&path))
+        .await.map_err(|error| format!("准备知识库目录失败：{error}"))?
 }
 
 #[tauri::command]
@@ -414,6 +444,52 @@ pub async fn clear_ai_credential() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn library_fixture() -> PathBuf {
+        std::env::temp_dir().join(format!("longedit-library-{}-{}", std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()))
+    }
+
+    #[test]
+    fn default_library_is_created_and_existing_notes_are_preserved() {
+        let root = library_fixture();
+        let path = root.join("nested").join("知识库");
+        let config = default_config_in(path.clone());
+        assert!(path.is_dir());
+        assert_eq!(config.active_library_path, path.to_string_lossy());
+        fs::write(path.join("note.md"), "保留资料").unwrap();
+        default_config_in(path.clone());
+        assert_eq!(fs::read_to_string(path.join("note.md")).unwrap(), "保留资料");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn explicit_library_creation_rejects_files_and_unsafe_paths() {
+        let root = library_fixture();
+        fs::create_dir_all(&root).unwrap();
+        let file = root.join("existing.txt");
+        fs::write(&file, "keep").unwrap();
+        for path in [file.clone(), file.join("child"), root.join("..").join("escape")] {
+            assert!(prepare_library_directory(&path.to_string_lossy()).is_err());
+        }
+        assert!(prepare_library_directory("relative/library").is_err());
+        assert!(prepare_library_directory("  ").is_err());
+        assert_eq!(fs::read_to_string(file).unwrap(), "keep");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn unavailable_default_keeps_attempted_path_for_recovery() {
+        let root = library_fixture();
+        fs::create_dir_all(&root).unwrap();
+        let file = root.join("blocked");
+        fs::write(&file, "keep").unwrap();
+        let path = file.join("library");
+        let config = default_config_in(path.clone());
+        assert_eq!(config.active_library_path, path.to_string_lossy());
+        assert!(!path.exists());
+        fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn app_config_never_serializes_legacy_api_key() {

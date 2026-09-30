@@ -177,6 +177,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -946,6 +947,7 @@ const mayLeave = () => {
   })
 }
 const leaveTable = () => { void router.push('/library') }
+useWindowDraft(() => dirty.value)
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (dirty.value) {
     event.preventDefault()

@@ -181,6 +181,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { invoke } from '@tauri-apps/api/core'
 import {
   ArrowLeft, ChevronDown, ChevronUp, Image, PencilLine, Presentation, Redo2, RefreshCw, Save, Search,
@@ -618,6 +619,7 @@ const onKeydown = (event: KeyboardEvent) => {
   else if (key === 'z') { event.preventDefault(); undoDraft() }
   else if (key === 'y') { event.preventDefault(); redoDraft() }
 }
+useWindowDraft(() => draftDirty.value)
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (!draftDirty.value) return
   event.preventDefault()

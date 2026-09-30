@@ -54,7 +54,7 @@ function versionCandidateFixture() {
 function validateSynthetic(f, corruptBytes = false) {
   const bytes = new Map()
   f.m.runtimeSmoke.reports = Object.fromEntries(Object.entries(f.records).map(([name, record])=> {
-    const file = `docs/evidence/v123-installed-visual-review/${name}.json`
+    const file = `docs/evidence/${f.m.appVersion === "1.0.24" ? "v124-candidate-lifecycle" : "v123-installed-visual-review"}/${name}.json`
     const buffer = Buffer.from(JSON.stringify(record))
     bytes.set(file, buffer)
     return [name, { path:file, sha256:crypto.createHash('sha256').update(buffer).digest('hex') }]
@@ -73,5 +73,45 @@ for (const kind of ['old-native-version','dev-marker','wrong-source','wrong-inst
     if(kind==='missing-version-report') delete f.records.version
     if(kind==='debug-status') f.m.runtimeSmoke.status='passed-real-tauri-debug-webview2'
     assert.throws(()=>validateSynthetic(f,kind==='changed-bytes'))
+  })
+}
+
+function stabilityFixture() {
+  const f = JSON.parse(JSON.stringify(versionCandidateFixture()).replaceAll('1.0.23','1.0.24'))
+  f.records.stability = {
+    appVersion:'1.0.24',sourceCommit:f.m.sourceCommit,installerSha256:f.records.workspace.installerSha256,
+    status:'passed',sourceUserContentIncluded:false,
+    markdown:{status:'passed',activeAnimations:0,motionMode:'reduced',motionReason:'sustained-slow-frames',headings:225,typingVisible:true},
+    observations: [[1280,820,false],[1280,820,true],[720,600,false],[720,600,true]].map(([width,height,expanded])=>({
+      id:'graph-layout',status:'passed',width,height,expanded,tutorialUnobscured:true,
+      rects:{options:{bottom:60},legend:{top:66,bottom:100},banner:{top:106,bottom:120},canvas:{top:126},tutorial:{top:130,bottom:500}}
+    })).concat([{id:'native-close-cancel-preserves-draft',status:'passed',syntheticDraft:true}])
+  }
+  return f
+}
+test('v1.0.24 requires its own stability observations',()=>validateSynthetic(stabilityFixture()))
+test('v1.0.24 accepts retained animations when the adaptive observer reports normal motion',()=>{
+  const f=stabilityFixture()
+  Object.assign(f.records.stability.markdown,{motionMode:'full',motionReason:'normal',activeAnimations:296})
+  validateSynthetic(f)
+})
+test('v1.0.24 rejects unconditional motion removal disguised as adaptive reduction',()=>{
+  const f=stabilityFixture()
+  f.records.stability.markdown.motionReason='normal'
+  assert.throws(()=>validateSynthetic(f))
+})
+for (const kind of ['missing-stability','wrong-source','legend-overlap','tutorial-overflow','tutorial-obscured','missing-viewport','missing-close','animated-markdown','missing-markdown-input']) {
+  test(`v1.0.24 rejects ${kind}`,()=>{
+    const f=stabilityFixture()
+    if(kind==='missing-stability') delete f.records.stability
+    if(kind==='wrong-source') f.records.stability.sourceCommit='0'.repeat(40)
+    if(kind==='legend-overlap') f.records.stability.observations[0].rects.legend.bottom=300
+    if(kind==='tutorial-overflow') f.records.stability.observations[0].rects.tutorial.bottom=900
+    if(kind==='tutorial-obscured') f.records.stability.observations[0].tutorialUnobscured=false
+    if(kind==='missing-viewport') f.records.stability.observations[2].width=1280
+    if(kind==='missing-close') f.records.stability.observations.pop()
+    if(kind==='animated-markdown') f.records.stability.markdown.activeAnimations=1
+    if(kind==='missing-markdown-input') f.records.stability.markdown.typingVisible=false
+    assert.throws(()=>validateSynthetic(f))
   })
 }

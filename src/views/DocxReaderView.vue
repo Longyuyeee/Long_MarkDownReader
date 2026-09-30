@@ -473,6 +473,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { NButton, useDialog, useMessage } from 'naive-ui'
@@ -1397,6 +1398,7 @@ const mayLeave = () => {
   })
 }
 const leaveDocx = () => { if (isExternal.value) void router.push({ name: 'LibraryMode' }); else router.back() }
+useWindowDraft(() => draftCount.value > 0)
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (draftCount.value) {
     event.preventDefault()
