@@ -8,12 +8,12 @@
   "publicTagCommit": "403a5122d169dfb238cd0a424d83e356f644fb08",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-21-v1.0.24-version-candidate",
-  "binaryVersionTransition": "v1.0.24-quality-gate-pending",
-  "displayLabel": "v1.0.24 知识库恢复与退出保护候选 · 当前公开 v1.0.23",
+  "currentStage": "M8-22-v1.0.24-release-ready",
+  "binaryVersionTransition": "v1.0.24-release-ready",
+  "displayLabel": "v1.0.24 安装验收完成 · 待公开发布 · 当前公开 v1.0.23",
   "activeSlice": {
     "id": "v1.0.24-library-recovery-and-close-safety",
-    "status": "runtime-transitioned-candidate-validation-pending",
+    "status": "release-ready-awaiting-publication",
     "document": "docs/V1_0_24_Unsigned_Community_Release_Audit_2026-09-29.md"
   }
 }

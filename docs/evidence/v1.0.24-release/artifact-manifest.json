@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "stage": "M8-22",
+  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "appVersion": "1.0.24",
+  "sourceVersion": "1.0.24",
+  "sourceCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
+  "hostedRunId": 36549473490,
+  "hostedArtifactId": 11027284699,
+  "installedReviewRunId": 36657882536,
+  "installedReviewArtifactId": 11073490067,
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 194,
+    "sha256": "a9f2c5c901a009216fb3579d7a9d8672a6256a70d1fc67560c71aa5e5b21ec8b"
+  },
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.0.24_x64_zh-CN.msi",
+      "sizeBytes": 75374592,
+      "sha256": "1dbd3b2dee51b76f3c7f57a778080fd366cbfe50249caacaf3f928eca5a441af",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.0.24_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.0.24_x64-setup.exe",
+      "sizeBytes": 66834296,
+      "sha256": "d78324590e0393414d10e18241e9e58479cacb7f9a7d5db9b9648ee3c9653e55",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.0.24_x64-setup.exe"
+    }
+  ],
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 36549473490
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "workspace": {
+        "path": "docs/evidence/v124-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "8de7f9a0ed72ffd539b5e6c162bf9957f325e5b14653b7dc08c66c2a96e8cb5f"
+      },
+      "routes": {
+        "path": "docs/evidence/v124-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "23478c4f1ebb66614e74126c587c8b4d6df343bc7f66ae86a4a9e3f7a57cda2e"
+      },
+      "version": {
+        "path": "docs/evidence/v124-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "ba1e4ba829d69c7162d2178c0ae96624441ef898ee9cdfa065af2ab8c928df72"
+      },
+      "stability": {
+        "path": "docs/evidence/v124-candidate-lifecycle/installed-v124-stability.json",
+        "sha256": "729b60c769f23164e8a64ab4fed9674f43d2e11c37c8a950e9007b19442031ef"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 36657882536,
+    "sourceCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
+    "evidenceRoot": "docs/evidence/v124-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.0.24-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false
+}

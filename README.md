@@ -1,4 +1,4 @@
-> 正在验收 v1.0.24 稳定性候选；当前公开正式版本仍为 v1.0.23。
+> v1.0.24 稳定性修复已通过安装验收，待公开发布；当前公开正式版本仍为 v1.0.23。
 
 <p align="center">
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
