@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { execFileSync } from 'node:child_process'
 import { markdownPerformanceFixture } from './markdown-performance-fixture.mjs'
 import { visibleVersionSurfaceExpression } from './installed-version-identity.mjs'
 
@@ -56,10 +57,28 @@ export async function checkInstalledMarkdown({ send, evaluate, waitFor, navigate
   await waitFor(`!document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app').tabs.some(t=>t.path===${JSON.stringify(fixture)}&&t.isDirty)`, 'generated Markdown saved')
   assert.ok((await fs.readFile(fixture, 'utf8')).includes('V124_TYPING_PROBE'))
   await checkpoint('probe-native-opener')
-  // Missing paths avoid opening a real user's media or starting another application.
-  const opener = await evaluate(`(async()=>{const invoke=window.__TAURI_INTERNALS__.invoke;const result={};for(const [kind,file] of Object.entries(${JSON.stringify({media:path.join(library,'v124-missing.Mp4'),executable:path.join(library,'v124-missing.exe')})})){try{await invoke('plugin:opener|open_path',{path:file});result[kind]='dispatched'}catch(error){result[kind]=String(error)}}return result})()`)
-  assert.doesNotMatch(opener.media, /not allowed|forbidden|denied by|scope/i, 'Supported media must pass the command and path ACL')
-  assert.match(opener.executable, /not allowed|forbidden|scope/i, 'Executable paths must remain outside the media scope')
+  // A missing file can leave ShellExecute waiting on an OS dialog. Use an existing
+  // synthetic file and a disposable default handler that records the path and exits.
+  // This proves native dispatch/ACL, not media decoding or third-party player behavior.
+  const media = path.join(library, 'v124-opener-probe.OgV')
+  await fs.writeFile(media, 'OggS synthetic opener dispatch fixture', {flag:'wx'})
+  const registration = mode => execFileSync('powershell.exe', ['-NoProfile','-ExecutionPolicy','Bypass','-File',
+    path.resolve('scripts/register-disposable-media-opener.ps1'),'-Mode',mode,'-OutputDirectory',output], {timeout:15000,windowsHide:true})
+  let opener
+  registration('Setup')
+  try {
+    opener = await evaluate(`(async()=>{const result={};for(const [kind,file] of Object.entries(${JSON.stringify({media,executable:path.join(library,'v124-missing.exe')})})){try{await window.__TAURI_INTERNALS__.invoke('plugin:opener|open_path',{path:file});result[kind]='dispatched'}catch(error){result[kind]=String(error)}}return result})()`)
+    assert.equal(opener.media, 'dispatched', 'Supported media must pass command and path ACL')
+    assert.match(opener.executable, /not allowed|forbidden|scope/i, 'Executable paths must remain outside the media scope')
+    let received = ''
+    for (let i=0;i<100;i++) {
+      received = await fs.readFile(path.join(output,'opener-received-path.txt'),'utf8').catch(()=> '')
+      if (received) break
+      await new Promise(resolve=>setTimeout(resolve,100))
+    }
+    assert.equal(received, media, 'Default handler must receive the actual authorized path')
+    opener.receivedByDisposableHandler = true
+  } finally { registration('Restore') }
   await checkpoint('complete', {opener})
   return {...idle, typingVisible:true, opener, status:'passed', fixture:'generated-225-headings-71-code-blocks'}
 }
