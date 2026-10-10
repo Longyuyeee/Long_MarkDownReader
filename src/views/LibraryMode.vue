@@ -5062,8 +5062,8 @@ watch(activeTabId, (newId, oldId) => {
 <style scoped>
 @media (max-width: 760px) {
   .library-mode.reference-pinned { flex-wrap: wrap; }
-  .reference-pinned > .sidebar, .reference-pinned > .local-graph-rail { display: none; }
-  .reference-pinned > .editor-main { flex: 1 1 100%; height: 60%; }
+  .reference-pinned > .sidebar, .reference-pinned > .resizer-area, .reference-pinned > .local-graph-rail { display: none; }
+  .reference-pinned > .editor-main { flex: 1 1 100%; height: 60%; min-height: 0; }
   .reference-pinned > .search-document-preview.pinned { width: 100%; max-width: 100%; height: 40%; }
 }
 </style>
