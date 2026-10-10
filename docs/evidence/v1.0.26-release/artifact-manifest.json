@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "stage": "UX26",
-  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
   "appVersion": "1.0.26",
   "sourceVersion": "1.0.26",
   "sourceCommit": "c5c136140ad68fefb81b50898051012cfc865a20",
@@ -69,10 +69,11 @@
   "boundaries": {
     "communityUnsigned": true,
     "enterprisePromotionEligible": false,
-    "releaseAssetsPublished": false,
-    "managedUpdaterReleaseAssetsPresent": false,
+    "releaseAssetsPublished": true,
+    "managedUpdaterReleaseAssetsPresent": true,
     "legacyTauriUpdaterArtifactsPresent": false
   },
   "sourceUserContentIncluded": false,
-  "releasePublished": false
+  "releasePublished": true,
+  "releaseReceipt": "release-receipt.json"
 }
