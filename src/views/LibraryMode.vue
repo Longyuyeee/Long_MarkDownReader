@@ -127,13 +127,18 @@
                   <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
                   <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.locatorObjectId || result.annotationId || index}`" class="knowledge-search-result">
                     <button class="knowledge-result-open" type="button" :title="result.title" :aria-label="`打开 ${result.title}`" @click="openKnowledgeSearchResult(result)">
-                      <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
-                      <span class="knowledge-result-context">{{ result.context }}</span>
+                      <span class="knowledge-result-head"><strong><SearchHighlight :text="result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '')" :query="searchQuery" /></strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
+                      <span class="knowledge-result-context"><SearchHighlight :text="result.context" :query="searchQuery" /></span>
                       <small class="knowledge-result-path" :title="result.path">{{ searchResultPath(result.path, store.libraryPath) }}</small>
                       <small v-if="result.objectType === 'pptx' && result.locationLabel">{{ result.locationLabel }}</small>
                       <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
+                    <details v-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
+                      <summary :aria-label="`查看 ${result.title} 的命中摘要`">查看命中摘要</summary>
+                      <p><SearchHighlight :text="result.context" :query="searchQuery" /></p>
+                      <small>搜索摘要，非全文；打开文件查看完整内容。</small>
+                    </details>
                     <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
                   </div>
                 </div>
@@ -755,6 +760,7 @@
 import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
+import SearchHighlight from '../components/SearchHighlight.vue'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -3999,6 +4005,10 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; font: inherit; }
 .knowledge-result-open:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: var(--theme-radius-sm); }
+.knowledge-result-summary { min-width: 0; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.knowledge-result-summary summary { cursor: pointer; padding: 5px 0; color: var(--theme-primary); }
+.knowledge-result-summary summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
+.knowledge-result-summary p { margin: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; line-height: 1.6; }
 .knowledge-search-result > .relation-summary { justify-self: start; max-width: 100%; white-space: normal; text-align: left; }
 .graph-collection-state { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 10px; border-bottom: var(--theme-border); background: rgba(var(--theme-primary-rgb),.055); }.graph-collection-state>span { min-width: 0; display: grid; gap: 2px; }.graph-collection-state strong,.graph-collection-state small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-collection-state strong { font-size: var(--text-compact); }.graph-collection-state small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.graph-collection-state button { width: 26px; height: 26px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }
 .knowledge-result-path { overflow-wrap: anywhere; white-space: normal; }

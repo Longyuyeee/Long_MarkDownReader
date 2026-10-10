@@ -250,11 +250,34 @@ fn snippet(value: &str) -> String {
 }
 
 fn text_match_context(value: &str, query: &str) -> Option<String> {
+    if query.is_empty() {
+        return None;
+    }
     value
         .lines()
         .find(|line| line.to_lowercase().contains(query))
-        .map(snippet)
-        .or_else(|| value.to_lowercase().contains(query).then(|| snippet(value)))
+        .map(|line| match_snippet(line, query))
+        .or_else(|| value.to_lowercase().contains(query).then(|| match_snippet(value, query)))
+}
+
+fn match_snippet(value: &str, query: &str) -> String {
+    // Lowercasing can expand Unicode characters: map folded bytes back to source chars.
+    let folded = value.to_lowercase();
+    let Some(byte_start) = folded.find(query) else { return snippet(value) };
+    let mut folded_bytes = 0;
+    let mut match_char: usize = 0;
+    for character in value.chars() {
+        let length = character.to_lowercase().map(char::len_utf8).sum::<usize>();
+        if folded_bytes + length > byte_start { break; }
+        folded_bytes += length;
+        match_char += 1;
+    }
+    let start = match_char.saturating_sub(40);
+    let mut chars = value.chars().skip(start);
+    let body = chars.by_ref().take(220).collect::<String>();
+    let suffix = if chars.next().is_some() { "…" } else { "" };
+    let prefix = if start > 0 { "…" } else { "" };
+    format!("{}{}{}", prefix, body.split_whitespace().collect::<Vec<_>>().join(" "), suffix)
 }
 
 fn decode_text_file(path: &Path) -> Option<String> {
@@ -752,6 +775,24 @@ pub async fn search_knowledge(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn search_context_keeps_late_unicode_match_visible() {
+        let text = format!("{}预算确认{}", "前言🙂".repeat(150), "后文".repeat(150));
+        let context = text_match_context(&text, "预算确认").unwrap();
+        assert!(context.contains("预算确认"));
+        assert!(context.starts_with('…') && context.ends_with('…'));
+        assert!(context.chars().count() <= 222);
+    }
+
+    #[test]
+    fn search_context_preserves_case_and_expanding_unicode_offsets() {
+        let text = format!("{} NEEDLE 中文结尾", "İ".repeat(300));
+        assert!(text_match_context(&text, "needle").unwrap().contains("NEEDLE 中文结尾"));
+        assert_eq!(text_match_context("第一行\n这里是匹配内容", "匹配"), Some("这里是匹配内容".into()));
+        assert_eq!(text_match_context("无关", "预算"), None);
+        assert_eq!(text_match_context("任意", ""), None);
+    }
     use crate::commands::graph::GraphData;
     use crate::services::pdf_index::clear_pdf_index_cache;
     use base64::{engine::general_purpose, Engine as _};
