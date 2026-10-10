@@ -521,6 +521,9 @@
         </div>
       </div>
       
+      <SearchMatchNavigation v-if="!activeEmbeddedEditor && activeTabId === route.query.path && route.query.searchLocator && !searchNavigationClosed"
+        :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" scope="当前编辑模式"
+        @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="closeSearchNavigation" />
       <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
         <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
           <component :is="activeEmbeddedEditor" :key="activeTabId" />
@@ -823,7 +826,8 @@ import {
   opensInLibraryShell,
   routeForFile,
 } from '../config/fileFormats'
-import { findEditorSearchRange } from '../utils/searchLocation'
+import SearchMatchNavigation from '../components/SearchMatchNavigation.vue'
+import { editorSearchMatches, wrapSearchIndex, scrollSearchRange } from '../utils/searchLocation'
 import { openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { promptAppAction } from '../services/appDialog'
 import { readLocalGraphPinned, writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -1507,18 +1511,30 @@ watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleO
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
+const searchMatchIndex = ref(0)
+const searchMatchCount = ref<number | null>(null)
+const searchNavigationClosed = ref(false)
+const moveSearchMatch = (direction: number) => revealSearchMatch(searchMatchCount.value === null ? 0 : searchMatchIndex.value + direction, true)
 let locatedSearchToken = ''
 let searchLocationTarget: HTMLElement | null = null
-const revealSearchMatch = () => {
+const closeSearchNavigation = () => {
+  searchNavigationClosed.value = true
+  searchLocationTarget?.classList.remove('workspace-task-locator-target')
+}
+const revealSearchMatch = (requestedIndex = 0, force = false) => {
   const token = String(route.query.searchLocator || '')
   const needle = String(route.query.searchNeedle || '')
-  if (!token || !needle || token === locatedSearchToken || !isVditorReady
+  if (!token || !needle || (token === locatedSearchToken && !force) || !isVditorReady
     || route.query.path !== activeTabId.value || lastLoadedPath !== activeTabId.value) return
   const root = vditor?.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
   if (!root) return
   locatedSearchToken = token
+  searchNavigationClosed.value = false
   searchLocationTarget?.classList.remove('workspace-task-locator-target')
-  const range = findEditorSearchRange(root, needle)
+  const matches = editorSearchMatches(root, needle)
+  searchMatchCount.value = matches.count
+  searchMatchIndex.value = wrapSearchIndex(requestedIndex, matches.count)
+  const range = matches.rangeAt(searchMatchIndex.value)
   if (!range) {
     message.info('当前显示内容中未找到该关键词，内容可能已修改，或关键词位于 Markdown 标记中。可使用文内查找，或切换源码模式查看。', { duration: 6500 })
     return
@@ -1530,6 +1546,7 @@ const revealSearchMatch = () => {
   const selection = window.getSelection()
   selection?.removeAllRanges()
   selection?.addRange(range)
+  scrollSearchRange(range)
 }
 let taskLocatorTarget: HTMLElement | null = null
 let relationEvidenceTarget: HTMLElement | null = null
@@ -3069,6 +3086,7 @@ const syncUserSelectedVditorMode = () => {
 const switchEditorMode = (mode: string) => {
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
   const content = vditor.getValue()
+  searchMatchCount.value = null
   editorLoading.value = true
   vditor.destroy(); vditor = null; isVditorReady = false
   void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
@@ -3174,7 +3192,8 @@ const initVditor = () => {
         { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>', click: () => handleAIAssist() },
         '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
       ],
-      input: (val) => { 
+      input: (val) => {
+        if (!suppressEditorInput) searchMatchCount.value = null
         if (suppressEditorInput) {
           wordCount.value = val.length
           return
@@ -3456,8 +3475,10 @@ watch(() => route.query.path, (path) => {
 }, { immediate: true })
 watch([() => route.query.searchLocator, () => route.query.path], () => {
   locatedSearchToken = ''
+  searchMatchCount.value = null
+  searchNavigationClosed.value = false
   searchLocationTarget?.classList.remove('workspace-task-locator-target')
-  void nextTick(revealSearchMatch)
+  void nextTick(() => revealSearchMatch())
 })
 watch(() => route.query.taskLocator, () => scheduleWorkspaceTaskReveal())
 watch(() => route.query.relationLocator, () => scheduleRelationEvidenceReveal())
