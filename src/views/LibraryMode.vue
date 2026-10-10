@@ -1,5 +1,5 @@
 <template>
-  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referencePinned && searchPreviewResult }" @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- 统一左侧侧边栏 -->
     <div class="sidebar" data-ui-region="navigation" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
@@ -140,7 +140,7 @@
                       <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
-                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`预览 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="searchPreviewResult = result">预览内容</button>
+                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`预览 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="showSearchPreview(result)">预览内容</button>
                     <details v-else-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
                       <summary :aria-label="`查看 ${result.title} 的命中摘要`">查看命中摘要</summary>
                       <p><SearchHighlight :text="result.context" :query="searchQuery" /></p>
@@ -533,7 +533,7 @@
             <template #description>同步中...</template>
           </n-spin>
         </div>
-        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
+        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @click.capture="openSourceReference"></div>
         <MarkdownChartEmbeds
           v-if="!activeEmbeddedEditor && activeIsMarkdown && activeMarkdownContent && activeTabId"
           :markdown="activeMarkdownContent"
@@ -563,6 +563,8 @@
       </div>
     </div>
 
+    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery" :pinned="referencePinned"
+      @pin="referencePinned = !referencePinned" @close="searchPreviewResult = null; referencePinned = false" @open="openSearchPreview" />
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
         <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
@@ -751,7 +753,7 @@
       </div>
     </n-modal>
 
-    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchQuery" @close="searchPreviewResult = null" @open="openKnowledgeSearchResult(searchPreviewResult!); searchPreviewResult = null" />
+
 
     <!-- AI 结果弹窗 -->
     <n-modal v-model:show="aiState.showResultModal" preset="dialog" title="AI 处理结果" positive-text="替换原文" negative-text="取消" @positive-click="replaceWithResult" @negative-click="aiState.showResultModal = false">
@@ -811,6 +813,7 @@ import {
 import { useOutline } from '../composables/useOutline'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { useImageFix } from '../composables/useImageFix'
+import { parseSourceReference } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
 import type { GraphData } from '../types/graph'
@@ -1333,7 +1336,23 @@ const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
-watch([searchQuery, () => store.libraryPath, searchObjectTypes, activeSidebarTab], () => { searchPreviewResult.value = null })
+const referencePinned = ref(false)
+const searchPreviewQuery = ref('')
+const showSearchPreview = (result: KnowledgeSearchResult) => {
+  searchPreviewQuery.value = searchQuery.value
+  searchPreviewResult.value = result
+}
+watch([searchQuery, searchObjectTypes, activeSidebarTab], () => { if (!referencePinned.value) searchPreviewResult.value = null })
+watch(() => store.libraryPath, () => { searchPreviewResult.value = null; referencePinned.value = false })
+const openSearchPreview = () => {
+  const result = searchPreviewResult.value
+  if (!result) return
+  if (['markdown', 'plain-text'].includes(result.objectType) && result.matchKind === 'body') {
+    searchReturn.remember(searchMatchKey(result))
+    void openManagedFile(router, result.path, { searchNeedle: searchPreviewQuery.value, searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
+  } else openKnowledgeSearchResult(result)
+  if (!referencePinned.value) searchPreviewResult.value = null
+}
 const knowledgeSearchRunning = ref(false)
 const knowledgeSearchFailed = ref(false)
 let knowledgeSearchGeneration = 0
@@ -3306,6 +3325,19 @@ const cleanupEditorListeners = () => {
   currentViewport = null
 }
 
+const openSourceReference = (event: MouseEvent) => {
+  const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
+  const href = anchor?.getAttribute('href') || ''
+  if (href.toLowerCase().startsWith('longedit://source')) {
+    event.preventDefault()
+    event.stopPropagation()
+    const source = parseSourceReference(href, store.libraryPath)
+    if (!source || !findFileFormat(source.path)) { message.warning('来源链接不可用，请在知识库中查找原文件'); return }
+    void openManagedFile(router, source.path, { page: source.page, annotation: source.annotation })
+    return
+  }
+}
+
 const openPdfReference = (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
@@ -5025,4 +5057,13 @@ watch(activeTabId, (newId, oldId) => {
 .external-compare-grid pre { min-height: 0; margin: 0; padding: 12px; overflow: auto; color: var(--theme-text); background: var(--theme-bg); font: 12px/1.65 var(--font-mono); white-space: pre; }
 .external-change-actions { width: 100%; display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; }
 @media (max-width: 700px) { .external-compare-grid { grid-template-columns: 1fr; max-height: 58vh; }.external-compare-grid section { min-height: 180px; }.external-change-actions { grid-template-columns: 1fr 1fr; }.external-change-actions span { display: none; } }
+</style>
+
+<style scoped>
+@media (max-width: 760px) {
+  .library-mode.reference-pinned { flex-wrap: wrap; }
+  .reference-pinned > .sidebar, .reference-pinned > .local-graph-rail { display: none; }
+  .reference-pinned > .editor-main { flex: 1 1 100%; height: 60%; }
+  .reference-pinned > .search-document-preview.pinned { width: 100%; max-width: 100%; height: 40%; }
+}
 </style>
