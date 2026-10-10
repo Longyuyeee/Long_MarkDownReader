@@ -45,16 +45,13 @@ test('failed preview can retry; closing discards pending responses', async () =>
 })
 
 
-test('excerpt uses selected text and resets on a different source, pinning does not reload', async () => {
+test('excerpt uses selected text and resets on a different source', async () => {
   const h = setup()
   h.requests[0].resolve({ text: '整段内容', label: 'Markdown', matchFound: true, truncated: false })
   await settle()
   h.state.selectedText.value = '选中部分'
   await h.state.copyExcerpt()
   assert.equal(h.copied[0], '选中部分\n来源：/library/a.md')
-  h.props.pinned = true
-  await settle()
-  assert.equal(h.requests.length, 1)
   h.props.result = { path: '/library/b.md', title: 'b', matchKind: 'body' }
   await settle()
   assert.equal(h.state.selectedText.value, '')
@@ -76,24 +73,82 @@ test('clipboard failure keeps the selection for retry', async () => {
   h.stop()
 })
 
-test('pinned reference retains its query across searches and resets on library change', async () => {
+test('explicit side reference docks immediately, survives searches and clears on library change', async () => {
   const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = source.slice(source.indexOf('const referencePinned ='), source.indexOf('const openSearchPreview ='))
   const scope = Vue.effectScope()
-  const context = { ref: Vue.ref, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
+  const context = { ref: Vue.ref, computed: Vue.computed, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
     activeSidebarTab: Vue.ref('files'), searchPreviewResult: Vue.ref(null), store: Vue.reactive({ libraryPath: '/a' }) }
   scope.run(() => vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.state = { referencePinned, searchPreviewQuery, showSearchPreview }', { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context))
   const result = { path: '/a/note.md', title: 'note', matchKind: 'body' }
   context.state.showSearchPreview(result)
-  context.state.referencePinned.value = true
+  assert.equal(context.state.referencePinned.value, true)
   context.searchQuery.value = '计划'
   context.activeSidebarTab.value = 'outline'
   await Vue.nextTick()
   assert.equal(context.searchPreviewResult.value.path, result.path)
   assert.equal(context.state.searchPreviewQuery.value, '预算')
+  context.state.showSearchPreview({ path: '/a/other.md', title: 'other', matchKind: 'body' })
+  assert.equal(context.searchPreviewResult.value.path, '/a/other.md')
+  assert.equal(context.state.searchPreviewQuery.value, '计划')
   context.store.libraryPath = '/b'
   await Vue.nextTick()
   assert.equal(context.searchPreviewResult.value, null)
   assert.equal(context.state.referencePinned.value, false)
   scope.stop()
+})
+
+test('normal result opens use main document navigation and never replace the reference', () => {
+  const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
+  const handler = library.slice(library.indexOf('const openKnowledgeSearchResult ='), library.indexOf('const handleLoadChildren ='))
+  const calls = []
+  const reference = { path: '/a/reference.md' }
+  const context = { searchReturn: { remember: key => calls.push(['remember', key]) }, searchMatchKey: r => r.path,
+    router: {}, searchQuery: { value: '预算' }, searchNavigationSequence: 0, searchPreviewResult: { value: reference },
+    openManagedFile: (...args) => calls.push(['file', ...args]), openManagedObject: (...args) => calls.push(['object', ...args]),
+    routeForFile: () => null, opensInLibraryShell: () => true, findFileFormat: () => 'markdown', handleNodeSelect: paths => calls.push(['select', paths]),
+  }
+  vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.open = openKnowledgeSearchResult', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
+  context.open({ path: '/a/note.md', objectType: 'markdown', matchKind: 'body' })
+  assert.equal(calls.at(-1)[0], 'file'); assert.equal(calls.at(-1)[2], '/a/note.md')
+  assert.equal(calls.at(-1)[3].searchNeedle, '预算')
+  context.open({ path: '/a/data.pdf', objectType: 'pdf', page: 4 })
+  assert.equal(calls.at(-1)[0], 'object'); assert.equal(calls.at(-1)[2].page, 4)
+  context.open({ path: '/a/title.md', objectType: 'markdown', matchKind: 'filename' })
+  assert.equal(calls.at(-1)[0], 'select')
+  assert.equal(context.searchPreviewResult.value, reference)
+  assert.doesNotMatch(handler, /showSearchPreview|searchPreviewResult\s*\./)
+})
+
+test('main open and side reference remain distinct accessible actions', () => {
+  const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
+  assert.match(library, /@click="openKnowledgeSearchResult\(result\)"/)
+  assert.match(library, /@click="showSearchPreview\(result\)">在侧边参考/)
+  assert.doesNotMatch(source, /固定为参考|取消固定|\$emit\('pin'\)/)
+  assert.match(source, /在主编辑区打开/)
+  assert.match(source, /返回编辑/)
+  assert.match(source, /关闭参考/)
+})
+
+test('arrow keys move between main-open actions without opening files or swallowing Enter', () => {
+  const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
+  const start = library.indexOf('const navigateSearchResults =')
+  const handler = library.slice(start, library.indexOf('const knowledgeSearchRunning =', start))
+  const context = {}
+  vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.navigate = navigateSearchResults', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
+  let focused = -1, prevented = 0
+  const buttons = [0, 1, 2].map(index => ({ focus: () => { focused = index } }))
+  const event = (key, index, matches = true) => ({ key, currentTarget: { querySelectorAll: () => buttons }, target: {
+    matches: () => matches, closest: () => ({ querySelector: () => buttons[index] }),
+  }, preventDefault: () => { prevented++ } })
+  context.navigate(event('ArrowDown', 0)); assert.equal(focused, 1)
+  context.navigate(event('ArrowUp', 1)); assert.equal(focused, 0)
+  context.navigate(event('ArrowUp', 0)); assert.equal(focused, 0)
+  context.navigate(event('ArrowDown', 2)); assert.equal(focused, 2)
+  assert.equal(prevented, 4)
+  context.navigate(event('Enter', 1))
+  context.navigate(event('ArrowDown', 1, false))
+  context.navigate({ ...event('ArrowDown', 1), isComposing: true })
+  context.navigate({ ...event('ArrowDown', 1), ctrlKey: true })
+  assert.equal(prevented, 4)
 })

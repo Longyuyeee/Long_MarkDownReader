@@ -121,7 +121,7 @@
                   <n-button size="small" :loading="libraryCreating" @click="createMissingLibraryDirectory">在此创建文件夹</n-button>
                   <details><summary>错误详情</summary><span>{{ libraryLoadError }}</span></details>
                 </section>
-                <div v-else-if="showKnowledgeResults" class="knowledge-search-results">
+                <div v-else-if="showKnowledgeResults" class="knowledge-search-results" @keydown="navigateSearchResults">
                   <div v-if="activeGraphCollection" class="graph-collection-state">
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
@@ -140,7 +140,7 @@
                       <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
-                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`预览 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="showSearchPreview(result)">预览内容</button>
+                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`在侧边参考 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="showSearchPreview(result)">在侧边参考</button>
                     <details v-else-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
                       <summary :aria-label="`查看 ${result.title} 的命中摘要`">查看命中摘要</summary>
                       <p><SearchHighlight :text="result.context" :query="searchQuery" /></p>
@@ -563,8 +563,8 @@
       </div>
     </div>
 
-    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery" :pinned="referencePinned"
-      @pin="referencePinned = !referencePinned" @close="searchPreviewResult = null; referencePinned = false" @open="openSearchPreview" />
+    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
+      @close="searchPreviewResult = null" @open="openSearchPreview" />
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
         <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
@@ -1336,14 +1336,14 @@ const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
-const referencePinned = ref(false)
+const referencePinned = computed(() => searchPreviewResult.value !== null)
 const searchPreviewQuery = ref('')
 const showSearchPreview = (result: KnowledgeSearchResult) => {
   searchPreviewQuery.value = searchQuery.value
   searchPreviewResult.value = result
 }
-watch([searchQuery, searchObjectTypes, activeSidebarTab], () => { if (!referencePinned.value) searchPreviewResult.value = null })
-watch(() => store.libraryPath, () => { searchPreviewResult.value = null; referencePinned.value = false })
+// Only an explicit reference action replaces this source; normal opens/searches do not.
+watch(() => store.libraryPath, () => { searchPreviewResult.value = null })
 const openSearchPreview = () => {
   const result = searchPreviewResult.value
   if (!result) return
@@ -1351,7 +1351,18 @@ const openSearchPreview = () => {
     searchReturn.remember(searchMatchKey(result))
     void openManagedFile(router, result.path, { searchNeedle: searchPreviewQuery.value, searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
   } else openKnowledgeSearchResult(result)
-  if (!referencePinned.value) searchPreviewResult.value = null
+}
+const navigateSearchResults = (event: KeyboardEvent) => {
+  if (!['ArrowUp', 'ArrowDown'].includes(event.key) || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return
+  const container = event.currentTarget as HTMLElement
+  const target = event.target as HTMLElement
+  if (!target.matches('button.knowledge-result-open, button.knowledge-preview-button')) return
+  const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.knowledge-result-open'))
+  const current = target.closest('.knowledge-search-result')?.querySelector('.knowledge-result-open')
+  const index = buttons.findIndex(button => button === current)
+  if (index < 0) return
+  event.preventDefault()
+  buttons[Math.max(0, Math.min(buttons.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))]?.focus()
 }
 const knowledgeSearchRunning = ref(false)
 const knowledgeSearchFailed = ref(false)
