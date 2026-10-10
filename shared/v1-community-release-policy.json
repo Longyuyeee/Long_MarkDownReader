@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.25",
-  "releaseCandidate": true,
+  "appVersion": "1.0.26",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-10",
-  "currentStatus": "v1.0.25-community-release-published",
+  "currentStatus": "v1.0.26-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,72 +24,40 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.24",
+    "previousPublicVersion": "1.0.25",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.24-to-1.0.25-pending",
-    "scope": "search-preview-location-return-and-reference-excerpts"
+    "managedUpdaterUpgradePath": "1.0.25-to-1.0.26-pending",
+    "scope": "search-reference-writing-loop"
   },
   "targetRelease": {
-    "tag": "v1.0.25",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.25",
+    "tag": "v1.0.26",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.26",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "2f44e143b32b2ac4fb317e24ff6beb9652b95429",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "qualityGateRunId": 38039833628,
-    "hostedBuildRunId": 38039833628,
-    "hostedInstalledLifecycleRunId": 38042755266,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.0.25_x64_zh-CN.msi",
-        "sizeBytes": 75403264,
-        "sha256": "cc4e41d5d4bc1c2bc03dab92a1d8aaec1a1aee1fa646b5f9f3d073b5f29b4c4d",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.0.25_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.0.25_x64-setup.exe",
-        "sizeBytes": 66814796,
-        "sha256": "8a11ee4db407b502c9b7d2ec3837aa156b24f9c54b4d7ec3138fa79ec1fb6986",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.0.25_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.0.25",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.25",
-    "databaseId": 408829239,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "2f44e143b32b2ac4fb317e24ff6beb9652b95429",
-    "publishedAt": "2026-10-10T09:53:17Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.24-to-v1.0.25-managed-update-observation-pending",
+    "v1.0.25-to-v1.0.26-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "v1.0.26-reference-writing-flow-and-independent-managed-update-observation"
+  "nextAction": "pass-v1.0.26-quality-gate-and-build-real-candidate-installers"
 }
