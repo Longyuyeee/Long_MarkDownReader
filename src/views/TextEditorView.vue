@@ -109,6 +109,9 @@
       <span>预览当前草稿，不会自动保存</span>
     </section>
 
+    <SearchMatchNavigation v-if="route.query.searchLocator && !searchNavigationClosed && !loading && !loadError"
+      :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" :scope="rangeMode ? '已加载内容' : '当前文档'"
+      @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="searchNavigationClosed = true" />
     <main class="editor-stage">
       <div v-if="loading" class="editor-state">
         <n-spin size="small" />
@@ -151,6 +154,8 @@
 </template>
 
 <script setup lang="ts">
+import SearchMatchNavigation from '../components/SearchMatchNavigation.vue'
+import { searchRanges, wrapSearchIndex } from '../utils/searchLocation'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { runTextSave, waitForTextSave } from '../utils/pendingTextSaves'
@@ -398,6 +403,7 @@ const editorExtensions = (isReadOnly: boolean) => [
   lintGutter(),
   EditorView.updateListener.of(update => {
     if (update.docChanged) {
+      searchMatchCount.value = null
       diagnosticSource.value = update.state.sliceDoc(0, Math.min(update.state.doc.length, MAX_DIAGNOSTIC_SCAN_CHARS))
       characterCount.value = update.state.doc.length
       lineCount.value = update.state.doc.lines
@@ -568,6 +574,34 @@ const load = async (encoding?: string, discardDraft = false) => {
     if (generation === loadGeneration) loading.value = false
   }
 }
+
+const searchMatchIndex = ref(0)
+const searchMatchCount = ref<number | null>(null)
+const searchNavigationClosed = ref(false)
+const moveSearchMatch = (direction: number) => revealSearchMatch(searchMatchCount.value === null ? 0 : searchMatchIndex.value + direction, true)
+let locatedSearchToken = ''
+const revealSearchMatch = (requestedIndex = 0, force = false) => {
+  const token = String(route.query.searchLocator || '')
+  if (!editor || loading.value || loadError.value || !token || (token === locatedSearchToken && !force)) return
+  const needle = String(route.query.searchNeedle || '')
+  if (!needle) return
+  locatedSearchToken = token
+  searchNavigationClosed.value = false
+  const matches = searchRanges(editor.state.doc.toString(), needle)
+  searchMatchCount.value = matches.length
+  searchMatchIndex.value = wrapSearchIndex(requestedIndex, matches.length)
+  const match = matches[searchMatchIndex.value]
+  if (!match) {
+    message.info(rangeMode.value
+      ? '已加载的内容中未找到关键词，可以继续加载后使用文内查找。'
+      : '当前内容中未找到关键词，内容可能已修改。可使用文内查找重新搜索。', { duration: 6000 })
+    return
+  }
+  viewMode.value = 'source'
+  editor.dispatch({ selection: { anchor: match.from, head: match.to }, effects: EditorView.scrollIntoView(match.from, { y: 'center' }) })
+  editor.focus()
+}
+watch([() => route.query.searchLocator, loading], () => { void nextTick(() => revealSearchMatch()) })
 
 const loadNextRange = async () => {
   if (!readOnlyReason.value || rangeEof.value || loadingRange.value) return

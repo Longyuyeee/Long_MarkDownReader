@@ -1,4 +1,4 @@
-> v1.0.24 已正式发布：修复知识库目录恢复、Markdown 卡顿与文件打开权限，保留正常动效并支持持续掉帧时自动降级。
+> v1.0.25 已正式发布：搜索预览与关键词定位、返回搜索恢复、固定参考文档，以及带来源链接的摘录。见 [更新内容](docs/RELEASE_NOTES_v1.0.25.md)。
 
 <p align="center">
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.24"><img src="https://img.shields.io/badge/Stable-v1.0.24-cca43b" alt="v1.0.24 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.25"><img src="https://img.shields.io/badge/Stable-v1.0.25-cca43b" alt="v1.0.25 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -33,28 +33,36 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.24 已正式发布，安装程序与校验文件已从公开地址重新下载并通过 SHA-256 核对。见 [v1.0.24 发布说明](docs/RELEASE_NOTES_v1.0.24.md)。
+> v1.0.25 已正式发布，安装程序与校验文件已从公开地址重新下载并通过 SHA-256 核对。见 [v1.0.25 发布说明](docs/RELEASE_NOTES_v1.0.25.md)。
 
 ## 下载
 
-当前公开稳定版为 v1.0.24。知识库目录不可用时可重试、重新选择或创建目录，错误提示不再阻塞整个页面；新建知识库支持自动创建多级目录。Markdown 保留正常动效，检测到持续掉帧后才降低装饰效果，并尊重系统减少动态效果偏好。安装、保存、回滚与关键页面均已验收，见 [发布审计](docs/V1_0_24_Unsigned_Community_Release_Audit_2026-09-29.md)。大型复杂文档仍可能存在输入延迟。
+当前公开稳定版为 v1.0.25。搜索结果支持命中上下文、关键词高亮、同文件分组和只读预览；打开 Markdown / 普通文本后可跳转上一处或下一处，返回搜索时恢复查询与列表位置。预览可固定为参考，选择文字后复制摘录与来源链接，粘贴到笔记并返回原资料。见 [发布记录](docs/V1_0_25_Unsigned_Community_Release_Audit_2026-10-10.md)。
 
-Long编辑 v1.0.24 支持 Windows 10/11 x64。
+继续保留知识库目录恢复、自动创建多级目录和持续掉帧时自适应降低动效；大型复杂文档仍可能存在输入延迟。
+
+Long编辑 v1.0.25 支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.24_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.24/LongEdit_1.0.24_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.24_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.24/LongEdit_1.0.24_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.24](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.24) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.0.25_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.25/LongEdit_1.0.25_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.0.25_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.25/LongEdit_1.0.25_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.0.25](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.25) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-d78324590e0393414d10e18241e9e58479cacb7f9a7d5db9b9648ee3c9653e55  LongEdit_1.0.24_x64-setup.exe
-1dbd3b2dee51b76f3c7f57a778080fd366cbfe50249caacaf3f928eca5a441af  LongEdit_1.0.24_x64_zh-CN.msi
+cc4e41d5d4bc1c2bc03dab92a1d8aaec1a1aee1fa646b5f9f3d073b5f29b4c4d  LongEdit_1.0.25_x64_zh-CN.msi
+8a11ee4db407b502c9b7d2ec3837aa156b24f9c54b4d7ec3138fa79ec1fb6986  LongEdit_1.0.25_x64-setup.exe
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。本版已通过 v1.0.23 → v1.0.24 覆盖安装、回滚及卸载保留数据验收；发布后的官方应用内更新观察仍待独立完成，不以安装验收代替。
+v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。本版已通过 v1.0.24 → v1.0.25 覆盖安装、回滚及卸载保留数据验收；发布后的官方应用内更新观察仍待独立完成，不以安装验收代替。
+
+## v1.0.25 使用流程
+
+搜索资料 → 预览内容 → 固定为参考 → 选中文字并复制来源 → 粘贴到笔记。窄窗口自动改为上下布局，保持编辑区可操作。
+
+参考展示磁盘上的部分文字，PDF 预览为提取文字；完整内容通过“打开文件”查看。返回状态和固定参考暂不跨重启保存，文件移动或改名后暂不自动修复来源链接。
 
 ## v1.0.17
 

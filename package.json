@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.0.24",
+  "version": "1.0.25",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -610,5 +610,8 @@
     "vite": "^6.0.3",
     "vite-plugin-static-copy": "^3.2.0",
     "vue-tsc": "^3.3.8"
+  },
+  "overrides": {
+    "katex": "0.18.2"
   }
 }

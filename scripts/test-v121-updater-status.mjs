@@ -4,8 +4,8 @@ import fs from 'node:fs'
 import { assertV121DevelopmentBoundary, assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
 
 test('published v1.0.24 requires its exact tag and keeps the new updater pending', () => {
-  const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json'))
-  const community = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json'))
+  const development = { publicVersion: '1.0.24', publicTag: 'v1.0.24', publicTagCommit: '9fa7ffa0f778773cfd999169e695e32a705168ae', runtimeBaseVersion: '1.0.24', developmentTargetVersion: '1.0.25' }
+  const community = { appVersion: '1.0.24', gates: { githubReleasePublished: true }, release: { tag: 'v1.0.24', taggedCommit: development.publicTagCommit }, targetRelease: { tag: 'v1.0.24' }, patchValidation: { previousPublicVersion: '1.0.23', managedUpdaterUpgradePath: '1.0.23-to-1.0.24-pending' } }
   assertV121DevelopmentBoundary(development, community)
   assert.equal(development.publicVersion, '1.0.24')
   assert.throws(() => assertV121DevelopmentBoundary({ ...development, publicTagCommit: '0'.repeat(40) }, community))

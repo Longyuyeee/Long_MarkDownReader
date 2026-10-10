@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.0.24",
+  "appVersion": "1.0.25",
   "releaseCandidate": true,
   "channel": "community-unsigned",
-  "generatedAt": "2026-09-29",
-  "currentStatus": "v1.0.24-community-release-published",
+  "generatedAt": "2026-10-10",
+  "currentStatus": "v1.0.25-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -30,66 +30,66 @@
     "msiBuilt": true,
     "nsisBuilt": true,
     "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": false,
+    "localRuntimeSmokePassed": true,
     "installedLifecyclePassed": true,
     "qualityGatePassed": true,
     "githubReleasePublished": true
   },
   "patchValidation": {
-    "previousPublicVersion": "1.0.23",
+    "previousPublicVersion": "1.0.24",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.0.23-to-1.0.24-pending",
-    "scope": "library-recovery-close-safety-search-identity-graph-layout"
+    "managedUpdaterUpgradePath": "1.0.24-to-1.0.25-pending",
+    "scope": "search-preview-location-return-and-reference-excerpts"
   },
   "targetRelease": {
-    "tag": "v1.0.24",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.24",
+    "tag": "v1.0.25",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.25",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
+    "artifactSourceCommit": "2f44e143b32b2ac4fb317e24ff6beb9652b95429",
     "qualityGateCommand": "npm run ci:patch-release",
-    "qualityGateRunId": 36549473490,
-    "hostedBuildRunId": 36549473490,
-    "hostedInstalledLifecycleRunId": 36657882536,
+    "qualityGateRunId": 38039833628,
+    "hostedBuildRunId": 38039833628,
+    "hostedInstalledLifecycleRunId": 38042755266,
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "LongEdit_1.0.24_x64_zh-CN.msi",
-        "sizeBytes": 75374592,
-        "sha256": "1dbd3b2dee51b76f3c7f57a778080fd366cbfe50249caacaf3f928eca5a441af",
+        "fileName": "LongEdit_1.0.25_x64_zh-CN.msi",
+        "sizeBytes": 75403264,
+        "sha256": "cc4e41d5d4bc1c2bc03dab92a1d8aaec1a1aee1fa646b5f9f3d073b5f29b4c4d",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.0.24_x64_zh-CN.msi"
+        "sourceFileName": "Long编辑_1.0.25_x64_zh-CN.msi"
       },
       {
         "target": "nsis",
-        "fileName": "LongEdit_1.0.24_x64-setup.exe",
-        "sizeBytes": 66834296,
-        "sha256": "d78324590e0393414d10e18241e9e58479cacb7f9a7d5db9b9648ee3c9653e55",
+        "fileName": "LongEdit_1.0.25_x64-setup.exe",
+        "sizeBytes": 66814796,
+        "sha256": "8a11ee4db407b502c9b7d2ec3837aa156b24f9c54b4d7ec3138fa79ec1fb6986",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.0.24_x64-setup.exe"
+        "sourceFileName": "Long编辑_1.0.25_x64-setup.exe"
       }
     ]
   },
   "release": {
-    "tag": "v1.0.24",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.24",
-    "databaseId": 399689237,
+    "tag": "v1.0.25",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.25",
+    "databaseId": 408829239,
     "isDraft": false,
     "isPrerelease": false,
-    "taggedCommit": "9fa7ffa0f778773cfd999169e695e32a705168ae",
-    "publishedAt": "2026-09-30T03:14:09Z"
+    "taggedCommit": "2f44e143b32b2ac4fb317e24ff6beb9652b95429",
+    "publishedAt": "2026-10-10T09:53:17Z"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
-    "v1.0.23-to-v1.0.24-managed-update-observation-pending",
+    "v1.0.24-to-v1.0.25-managed-update-observation-pending",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install"
   ],
-  "nextAction": "observe-official-1.0.23-to-1.0.24-managed-update"
+  "nextAction": "v1.0.26-reference-writing-flow-and-independent-managed-update-observation"
 }

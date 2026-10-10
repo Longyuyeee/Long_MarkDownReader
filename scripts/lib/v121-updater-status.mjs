@@ -1,6 +1,26 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (development.publicVersion === '1.0.25'
+    && development.publicTag === 'v1.0.25'
+    && /^[0-9a-f]{40}$/.test(development.publicTagCommit)
+    && development.runtimeBaseVersion === '1.0.25'
+    && development.developmentTargetVersion === '1.0.26'
+    && community.appVersion === '1.0.25'
+    && community.gates?.githubReleasePublished === true
+    && community.release?.tag === 'v1.0.25'
+    && community.release?.taggedCommit === development.publicTagCommit) return
+
+  if (development.publicVersion === '1.0.24'
+    && development.publicTag === 'v1.0.24'
+    && development.publicTagCommit === '9fa7ffa0f778773cfd999169e695e32a705168ae'
+    && development.runtimeBaseVersion === '1.0.25'
+    && development.developmentTargetVersion === '1.0.25'
+    && community.appVersion === '1.0.25'
+    && community.gates?.githubReleasePublished === false
+    && community.patchValidation?.previousPublicVersion === '1.0.24'
+    && community.targetRelease?.tag === 'v1.0.25') return
+
   if (development.publicVersion === '1.0.24'
     && development.publicTag === 'v1.0.24'
     && development.publicTagCommit === '9fa7ffa0f778773cfd999169e695e32a705168ae'
@@ -64,6 +84,15 @@ export function assertV121UpdaterStatus(policy, community, receipt) {
   const expected = `1.0.20-to-1.0.21-${suffix}`
   if (receipt.managedUpdaterObservation !== expected) {
     throw new Error(`v1.0.21 updater status conflict: release receipt must be ${expected}`)
+  }
+  if (community.appVersion === '1.0.25') {
+    if (suffix !== 'passed' || !(community.gates?.githubReleasePublished === false && community.release === null
+        || community.gates?.githubReleasePublished === true && community.release?.tag === 'v1.0.25' && /^(?!0{40})[0-9a-f]{40}$/.test(community.release?.taggedCommit || '')) || community.patchValidation?.previousPublicVersion !== '1.0.24'
+      || community.targetRelease?.tag !== 'v1.0.25'
+      || !['1.0.24-to-1.0.25-pending', '1.0.24-to-1.0.25-passed'].includes(community.patchValidation?.managedUpdaterUpgradePath)) {
+      throw new Error('v1.0.25 must retain its own update observation')
+    }
+    return
   }
   if (community.appVersion === '1.0.24') {
     if (suffix !== 'passed' || community.patchValidation?.previousPublicVersion !== '1.0.23'

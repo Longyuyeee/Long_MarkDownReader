@@ -23,6 +23,7 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 
 const MAX_SEARCH_RESULTS: usize = 200;
+const MAX_LOCATED_MATCHES_PER_KIND: usize = 5;
 const MAX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
 
 fn knowledge_index_cache_root(app: &AppHandle) -> Result<PathBuf, String> {
@@ -250,11 +251,34 @@ fn snippet(value: &str) -> String {
 }
 
 fn text_match_context(value: &str, query: &str) -> Option<String> {
+    if query.is_empty() {
+        return None;
+    }
     value
         .lines()
         .find(|line| line.to_lowercase().contains(query))
-        .map(snippet)
-        .or_else(|| value.to_lowercase().contains(query).then(|| snippet(value)))
+        .map(|line| match_snippet(line, query))
+        .or_else(|| value.to_lowercase().contains(query).then(|| match_snippet(value, query)))
+}
+
+fn match_snippet(value: &str, query: &str) -> String {
+    // Lowercasing can expand Unicode characters: map folded bytes back to source chars.
+    let folded = value.to_lowercase();
+    let Some(byte_start) = folded.find(query) else { return snippet(value) };
+    let mut folded_bytes = 0;
+    let mut match_char: usize = 0;
+    for character in value.chars() {
+        let length = character.to_lowercase().map(char::len_utf8).sum::<usize>();
+        if folded_bytes + length > byte_start { break; }
+        folded_bytes += length;
+        match_char += 1;
+    }
+    let start = match_char.saturating_sub(40);
+    let mut chars = value.chars().skip(start);
+    let body = chars.by_ref().take(220).collect::<String>();
+    let suffix = if chars.next().is_some() { "…" } else { "" };
+    let prefix = if start > 0 { "…" } else { "" };
+    format!("{}{}{}", prefix, body.split_whitespace().collect::<Vec<_>>().join(" "), suffix)
 }
 
 fn decode_text_file(path: &Path) -> Option<String> {
@@ -270,6 +294,71 @@ fn decode_text_file(path: &Path) -> Option<String> {
     Some(text.strip_prefix('\u{feff}').unwrap_or(&text).to_string())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchDocumentPreview {
+    text: String,
+    label: String,
+    truncated: bool,
+    match_found: bool,
+}
+
+fn preview_excerpt(text: &str, query: &str, label: String) -> SearchDocumentPreview {
+    let query = query.trim().to_lowercase();
+    let found = if query.is_empty() { None } else { text.to_lowercase().find(&query) };
+    let mut bytes = 0;
+    let mut position: usize = 0;
+    if let Some(at) = found {
+        for ch in text.chars() {
+            let len = ch.to_lowercase().map(char::len_utf8).sum::<usize>();
+            if bytes + len > at { break; }
+            bytes += len; position += 1;
+        }
+    }
+    let start = position.saturating_sub(400);
+    let mut chars = text.chars().skip(start);
+    let body = chars.by_ref().take(8000).collect::<String>();
+    let remaining = chars.next().is_some();
+    SearchDocumentPreview {
+        text: format!("{}{}{}", if start > 0 { "…\n" } else { "" }, body, if remaining { "\n…" } else { "" }),
+        label, truncated: start > 0 || remaining, match_found: found.is_some(),
+    }
+}
+
+#[tauri::command]
+pub async fn preview_search_document(
+    library_root: String, path: String, query: String, page: Option<u32>,
+    annotation_id: Option<String>, match_kind: String,
+) -> Result<SearchDocumentPreview, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let path = guard.resolve_existing(path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let format = file_format_for_path(&path)?;
+        if is_sensitive_path(&path) { return Err("此文件不提供搜索预览，请直接打开查看".into()); }
+        match format.id.as_str() {
+            "markdown" | "plain-text" => {
+                let text = decode_text_file(&path).ok_or("无法读取文字内容，文件可能过大或已不可访问，请直接打开查看")?;
+                Ok(preview_excerpt(&text, &query, if format.id == "markdown" { "Markdown 原文" } else { "文本内容" }.into()))
+            }
+            "pdf" => {
+                let index = load_pdf_index(&path);
+                if let Some(id) = annotation_id {
+                    let annotation = index.annotations.iter().find(|item| item.id == id).ok_or("该批注已不可用，请打开文件确认")?;
+                    return Ok(preview_excerpt(&annotation.text, &query, format!("第 {} 页 · 批注文字", annotation.page)));
+                }
+                let page = page.unwrap_or(1);
+                if page == 0 { return Err("页码不可用，请打开文件确认".into()); }
+                let text = if match_kind == "ocr" {
+                    index.ocr_pages.iter().find(|item| item.page == page).map(|item| item.text.as_str())
+                } else { index.pages.get((page - 1) as usize).map(String::as_str) };
+                let text = text.filter(|value| !value.trim().is_empty()).ok_or("这一页没有可提取的文字，请打开 PDF 查看原页面")?;
+                Ok(preview_excerpt(text, &query, format!("第 {} 页 · {}", page, if match_kind == "ocr" { "OCR 文字" } else { "PDF 提取文字" })))
+            }
+            _ => Err("此格式请打开文件查看".into()),
+        }
+    }).await.map_err(|error| format!("读取预览失败：{error}"))?
+}
+
 fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
     results.sort_by(|left, right| {
         right
@@ -283,6 +372,7 @@ fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
 
 fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<KnowledgeSearchResult> {
     let mut results = Vec::new();
+    let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
     for segment in segments {
@@ -313,11 +403,20 @@ fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<Knowle
         let Some(context) = text_match_context(&segment.text, query) else {
             continue;
         };
-        let limit = if segment.match_kind == "annotation" {
-            5
+        let located = segment.page.is_some()
+            || segment.annotation_id.is_some()
+            || (segment.locator_kind.is_some() && segment.locator_object_id.is_some());
+        let limit = if located {
+            MAX_LOCATED_MATCHES_PER_KIND
         } else {
             1
         };
+        if located && !seen_locations.insert((
+            &segment.path, &segment.match_kind, segment.page,
+            &segment.annotation_id, &segment.locator_kind, &segment.locator_object_id,
+        )) {
+            continue;
+        }
         let count = match_counts
             .entry((&segment.path, &segment.match_kind))
             .or_default();
@@ -424,14 +523,14 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                 .annotations
                 .iter()
                 .filter(|item| item.text.to_lowercase().contains(query))
-                .take(5)
+                .take(MAX_LOCATED_MATCHES_PER_KIND)
             {
                 results.push(KnowledgeSearchResult {
                     title: title.clone(),
                     path: path_string.clone(),
                     object_type: "pdf".into(),
                     match_kind: "annotation".into(),
-                    context: snippet(&annotation.text),
+                    context: match_snippet(&annotation.text, query),
                     page: Some(annotation.page),
                     annotation_id: Some(annotation.id.clone()),
                     locator_kind: None,
@@ -441,10 +540,10 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-            if let Some((page_index, context)) =
-                index.pages.iter().enumerate().find_map(|(page, text)| {
+            for (page_index, context) in
+                index.pages.iter().enumerate().filter_map(|(page, text)| {
                     text_match_context(text, query).map(|value| (page, value))
-                })
+                }).take(MAX_LOCATED_MATCHES_PER_KIND)
             {
                 results.push(KnowledgeSearchResult {
                     title: title.clone(),
@@ -461,12 +560,12 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-            if let Some((page, context)) = index.ocr_pages.iter().find_map(|item| {
+            for (page, context) in index.ocr_pages.iter().filter_map(|item| {
                 text_match_context(&item.text, query).map(|value| (item.page, value))
-            }) {
+            }).take(MAX_LOCATED_MATCHES_PER_KIND) {
                 results.push(KnowledgeSearchResult {
-                    title,
-                    path: path_string,
+                    title: title.clone(),
+                    path: path_string.clone(),
                     object_type: "pdf".into(),
                     match_kind: "ocr".into(),
                     context,
@@ -752,6 +851,57 @@ pub async fn search_knowledge(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn preview_preserves_lines_and_shows_late_match_without_returning_entire_file() {
+        let text = format!("{}\n目标段落\n保留换行{}", "前言🙂".repeat(5000), "后文".repeat(6000));
+        let preview = preview_excerpt(&text, "目标段落", "Markdown 原文".into());
+        assert!(preview.text.contains("\n目标段落\n保留换行"));
+        assert!(preview.match_found && preview.truncated);
+        assert!(preview.text.chars().count() <= 8004);
+        let short = preview_excerpt("第一行\n第二行", "文件名", "文本内容".into());
+        assert_eq!(short.text, "第一行\n第二行");
+        assert!(!short.match_found && !short.truncated);
+    }
+
+    #[test]
+    fn located_search_keeps_distinct_pages_deduplicates_and_bounds_results() {
+        let base = IndexedSearchSegment {
+            title: "report.pdf".into(), path: "/report.pdf".into(), object_type: "pdf".into(),
+            match_kind: "body".into(), text: "budget".into(), page: Some(1),
+            annotation_id: None, locator_kind: None, locator_object_id: None,
+            location_label: None, extraction_failed: false,
+        };
+        let mut segments = vec![base.clone(), base.clone()];
+        for page in 2..=8 { segments.push(IndexedSearchSegment { page: Some(page), ..base.clone() }); }
+        let hits = search_segments(&segments, "budget");
+        assert_eq!(hits.iter().map(|hit| hit.page.unwrap()).collect::<Vec<_>>(), vec![1, 2, 3, 4, 5]);
+        let unlocated = segments.iter().map(|segment| IndexedSearchSegment { page: None, ..segment.clone() }).collect::<Vec<_>>();
+        assert_eq!(search_segments(&unlocated, "budget").len(), 1);
+        let objects = (1..=3).map(|id| IndexedSearchSegment {
+            object_type: "docx".into(), page: None, locator_kind: Some("docx-block".into()),
+            locator_object_id: Some(format!("block-{id}")), ..base.clone()
+        }).collect::<Vec<_>>();
+        assert_eq!(search_segments(&objects, "budget").len(), 3);
+    }
+
+    #[test]
+    fn search_context_keeps_late_unicode_match_visible() {
+        let text = format!("{}预算确认{}", "前言🙂".repeat(150), "后文".repeat(150));
+        let context = text_match_context(&text, "预算确认").unwrap();
+        assert!(context.contains("预算确认"));
+        assert!(context.starts_with('…') && context.ends_with('…'));
+        assert!(context.chars().count() <= 222);
+    }
+
+    #[test]
+    fn search_context_preserves_case_and_expanding_unicode_offsets() {
+        let text = format!("{} NEEDLE 中文结尾", "İ".repeat(300));
+        assert!(text_match_context(&text, "needle").unwrap().contains("NEEDLE 中文结尾"));
+        assert_eq!(text_match_context("第一行\n这里是匹配内容", "匹配"), Some("这里是匹配内容".into()));
+        assert_eq!(text_match_context("无关", "预算"), None);
+        assert_eq!(text_match_context("任意", ""), None);
+    }
     use crate::commands::graph::GraphData;
     use crate::services::pdf_index::clear_pdf_index_cache;
     use base64::{engine::general_purpose, Engine as _};
@@ -820,6 +970,8 @@ mod tests {
         .unwrap();
 
         let body = search_workspace(&root, "second page beta", None);
+        let pages = search_workspace(&root, "a", None);
+        assert_eq!(pages.iter().filter(|hit| hit.match_kind == "body").map(|hit| hit.page).collect::<Vec<_>>(), vec![Some(1), Some(2)]);
         assert!(body.iter().any(|result| {
             result.match_kind == "body" && result.page == Some(2) && result.object_type == "pdf"
         }));
@@ -860,6 +1012,8 @@ mod tests {
         );
         write_snapshot(&cache, &root, &snapshot).unwrap();
         let indexed_body = search_workspace(&root, "second page beta", Some((&cache, false)));
+        let indexed_pages = search_workspace(&root, "a", Some((&cache, false)));
+        assert_eq!(indexed_pages.iter().filter(|hit| hit.match_kind == "body").map(|hit| hit.page).collect::<Vec<_>>(), vec![Some(1), Some(2)]);
         let indexed_annotation = search_workspace(&root, "critical insight", Some((&cache, false)));
         let indexed_ocr = search_workspace(&root, "unique scanned evidence", Some((&cache, false)));
         assert!(indexed_body

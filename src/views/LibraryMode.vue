@@ -1,5 +1,5 @@
 <template>
-  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referencePinned && searchPreviewResult }" @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- 统一左侧侧边栏 -->
     <div class="sidebar" data-ui-region="navigation" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
@@ -32,6 +32,7 @@
           </div>
         </div>
 
+        <button v-if="searchQuery.trim() && searchReturn.selectedKey.value" type="button" class="search-return-button" @click="searchReturn.returnToResults">返回刚才的搜索结果</button>
         <div class="sidebar-tab-content">
           <transition name="tab-fade" mode="out-in">
             <!-- 文件 tree 面板 -->
@@ -96,6 +97,7 @@
 
               <div
                 class="tree-viewport"
+                ref="searchViewport"
                 data-testid="library-tree-viewport"
                 :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }"
                 @contextmenu="openRootContextMenu"
@@ -125,17 +127,28 @@
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
                   <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
-                  <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.locatorObjectId || result.annotationId || index}`" class="knowledge-search-result">
+                  <p v-if="searchReturn.notice.value" role="status" class="knowledge-search-count">{{ searchReturn.notice.value }}</p>
+                  <p v-if="!knowledgeSearchRunning && !knowledgeSearchFailed && groupedKnowledgeSearchResults.length" class="knowledge-search-count">当前展示 {{ groupedKnowledgeSearchResults.length }} 个文件的结果。结果限量展示，不代表全部匹配次数。</p>
+                  <section v-for="group in groupedKnowledgeSearchResults" :key="group.path" class="knowledge-result-group" :aria-label="searchResultPath(group.path, store.libraryPath)">
+                  <p v-if="group.results.length > 1" class="knowledge-result-group-label">同一文件 · {{ group.results.length }} 条结果，可分别打开</p>
+                  <div v-for="result in group.results" :key="searchMatchKey(result)" class="knowledge-search-result" :class="{ 'is-search-selected': searchReturn.selectedKey.value === searchMatchKey(result) }" :data-search-key="searchMatchKey(result)">
                     <button class="knowledge-result-open" type="button" :title="result.title" :aria-label="`打开 ${result.title}`" @click="openKnowledgeSearchResult(result)">
-                      <span class="knowledge-result-head"><strong>{{ result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '') }}</strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
-                      <span class="knowledge-result-context">{{ result.context }}</span>
+                      <span class="knowledge-result-head"><strong><SearchHighlight :text="result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '')" :query="searchQuery" /></strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
+                      <span class="knowledge-result-context"><SearchHighlight :text="result.context" :query="searchQuery" /></span>
                       <small class="knowledge-result-path" :title="result.path">{{ searchResultPath(result.path, store.libraryPath) }}</small>
                       <small v-if="result.objectType === 'pptx' && result.locationLabel">{{ result.locationLabel }}</small>
                       <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
+                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`预览 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="showSearchPreview(result)">预览内容</button>
+                    <details v-else-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
+                      <summary :aria-label="`查看 ${result.title} 的命中摘要`">查看命中摘要</summary>
+                      <p><SearchHighlight :text="result.context" :query="searchQuery" /></p>
+                      <small>搜索摘要，非全文；打开文件查看完整内容。</small>
+                    </details>
                     <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
                   </div>
+                  </section>
                 </div>
                 <n-tree 
                   v-else
@@ -508,6 +521,9 @@
         </div>
       </div>
       
+      <SearchMatchNavigation v-if="!activeEmbeddedEditor && activeTabId === route.query.path && route.query.searchLocator && !searchNavigationClosed"
+        :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" scope="当前编辑模式"
+        @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="closeSearchNavigation" />
       <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
         <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
           <component :is="activeEmbeddedEditor" :key="activeTabId" />
@@ -517,7 +533,7 @@
             <template #description>同步中...</template>
           </n-spin>
         </div>
-        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance"></div>
+        <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @click.capture="openSourceReference"></div>
         <MarkdownChartEmbeds
           v-if="!activeEmbeddedEditor && activeIsMarkdown && activeMarkdownContent && activeTabId"
           :markdown="activeMarkdownContent"
@@ -547,6 +563,8 @@
       </div>
     </div>
 
+    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery" :pinned="referencePinned"
+      @pin="referencePinned = !referencePinned" @close="searchPreviewResult = null; referencePinned = false" @open="openSearchPreview" />
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
         <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
@@ -735,6 +753,8 @@
       </div>
     </n-modal>
 
+
+
     <!-- AI 结果弹窗 -->
     <n-modal v-model:show="aiState.showResultModal" preset="dialog" title="AI 处理结果" positive-text="替换原文" negative-text="取消" @positive-click="replaceWithResult" @negative-click="aiState.showResultModal = false">
       <div style="min-height: 80px;">
@@ -755,6 +775,10 @@
 import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
+import SearchHighlight from '../components/SearchHighlight.vue'
+import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
+import { useSearchReturn } from '../composables/useSearchReturn'
+import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -789,6 +813,7 @@ import {
 import { useOutline } from '../composables/useOutline'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { useImageFix } from '../composables/useImageFix'
+import { parseSourceReference } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
 import type { GraphData } from '../types/graph'
@@ -804,6 +829,8 @@ import {
   opensInLibraryShell,
   routeForFile,
 } from '../config/fileFormats'
+import SearchMatchNavigation from '../components/SearchMatchNavigation.vue'
+import { editorSearchMatches, wrapSearchIndex, scrollSearchRange } from '../utils/searchLocation'
 import { openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { promptAppAction } from '../services/appDialog'
 import { readLocalGraphPinned, writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -1308,6 +1335,24 @@ const searchQuery = ref('')
 const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
+const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
+const referencePinned = ref(false)
+const searchPreviewQuery = ref('')
+const showSearchPreview = (result: KnowledgeSearchResult) => {
+  searchPreviewQuery.value = searchQuery.value
+  searchPreviewResult.value = result
+}
+watch([searchQuery, searchObjectTypes, activeSidebarTab], () => { if (!referencePinned.value) searchPreviewResult.value = null })
+watch(() => store.libraryPath, () => { searchPreviewResult.value = null; referencePinned.value = false })
+const openSearchPreview = () => {
+  const result = searchPreviewResult.value
+  if (!result) return
+  if (['markdown', 'plain-text'].includes(result.objectType) && result.matchKind === 'body') {
+    searchReturn.remember(searchMatchKey(result))
+    void openManagedFile(router, result.path, { searchNeedle: searchPreviewQuery.value, searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
+  } else openKnowledgeSearchResult(result)
+  if (!referencePinned.value) searchPreviewResult.value = null
+}
 const knowledgeSearchRunning = ref(false)
 const knowledgeSearchFailed = ref(false)
 let knowledgeSearchGeneration = 0
@@ -1329,6 +1374,14 @@ const searchFormatOptions = FILE_FORMATS
 const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.length
   ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
   : knowledgeSearchResults.value)
+const groupedKnowledgeSearchResults = computed(() => groupSearchResults(visibleKnowledgeSearchResults.value))
+const searchViewport = ref<HTMLElement | null>(null)
+const searchReturn = useSearchReturn({
+  root: () => store.libraryPath, query: searchQuery, types: searchObjectTypes,
+  running: knowledgeSearchRunning, failed: knowledgeSearchFailed,
+  resultKeys: () => visibleKnowledgeSearchResults.value.map(searchMatchKey), viewport: searchViewport,
+  showResults: () => { activeSidebarTab.value = 'files'; isSidebarCollapsed.value = false },
+})
 const closeGraphCollection = () => {
   ++knowledgeSearchGeneration
   knowledgeSearchFailed.value = false
@@ -1477,6 +1530,43 @@ watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleO
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
+const searchMatchIndex = ref(0)
+const searchMatchCount = ref<number | null>(null)
+const searchNavigationClosed = ref(false)
+const moveSearchMatch = (direction: number) => revealSearchMatch(searchMatchCount.value === null ? 0 : searchMatchIndex.value + direction, true)
+let locatedSearchToken = ''
+let searchLocationTarget: HTMLElement | null = null
+const closeSearchNavigation = () => {
+  searchNavigationClosed.value = true
+  searchLocationTarget?.classList.remove('workspace-task-locator-target')
+}
+const revealSearchMatch = (requestedIndex = 0, force = false) => {
+  const token = String(route.query.searchLocator || '')
+  const needle = String(route.query.searchNeedle || '')
+  if (!token || !needle || (token === locatedSearchToken && !force) || !isVditorReady
+    || route.query.path !== activeTabId.value || lastLoadedPath !== activeTabId.value) return
+  const root = vditor?.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
+  if (!root) return
+  locatedSearchToken = token
+  searchNavigationClosed.value = false
+  searchLocationTarget?.classList.remove('workspace-task-locator-target')
+  const matches = editorSearchMatches(root, needle)
+  searchMatchCount.value = matches.count
+  searchMatchIndex.value = wrapSearchIndex(requestedIndex, matches.count)
+  const range = matches.rangeAt(searchMatchIndex.value)
+  if (!range) {
+    message.info('当前显示内容中未找到该关键词，内容可能已修改，或关键词位于 Markdown 标记中。可使用文内查找，或切换源码模式查看。', { duration: 6500 })
+    return
+  }
+  searchLocationTarget = range.startContainer.parentElement
+  searchLocationTarget?.classList.add('workspace-task-locator-target')
+  searchLocationTarget?.scrollIntoView({ behavior: 'auto', block: 'center' })
+  root.focus({ preventScroll: true })
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+  scrollSearchRange(range)
+}
 let taskLocatorTarget: HTMLElement | null = null
 let relationEvidenceTarget: HTMLElement | null = null
 const revealWorkspaceTask = () => {
@@ -1948,7 +2038,9 @@ const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
   ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
 }[kind])
 
+let searchNavigationSequence = 0
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
+  searchReturn.remember(searchMatchKey(result))
   if (
     result.locatorKind
     || result.annotationId
@@ -1967,6 +2059,10 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
       locationLabel: result.locationLabel,
       matchKind: result.matchKind,
     }, 'replace')
+    return
+  }
+  if (['markdown', 'plain-text'].includes(result.objectType) && result.matchKind === 'body') {
+    void openManagedFile(router, result.path, { searchNeedle: searchQuery.value.trim(), searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
     return
   }
   const target = routeForFile(result.path)
@@ -2098,6 +2194,7 @@ const loadFileToEditor = async (path: string) => {
   
   const setEditorValue = (content: string, readOnly = false) => {
     if (!isCurrentRequest()) return
+    const wasDirty = currentTab?.isDirty ?? false
     suppressEditorInput = true
     vditor.setValue(content)
     startAdaptiveMotion()
@@ -2109,11 +2206,13 @@ const loadFileToEditor = async (path: string) => {
     fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
-        if (currentTab) currentTab.isDirty = false
+        if (!isCurrentRequest()) return
+        if (currentTab) currentTab.isDirty = wasDirty
         lastLoadedPath = path;
         refreshVisibleOutline();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
+        revealSearchMatch();
         scheduleWorkspaceTaskReveal();
         scheduleRelationEvidenceReveal();
       }, 50) 
@@ -3006,6 +3105,7 @@ const syncUserSelectedVditorMode = () => {
 const switchEditorMode = (mode: string) => {
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
   const content = vditor.getValue()
+  searchMatchCount.value = null
   editorLoading.value = true
   vditor.destroy(); vditor = null; isVditorReady = false
   void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
@@ -3111,7 +3211,8 @@ const initVditor = () => {
         { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>', click: () => handleAIAssist() },
         '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
       ],
-      input: (val) => { 
+      input: (val) => {
+        if (!suppressEditorInput) searchMatchCount.value = null
         if (suppressEditorInput) {
           wordCount.value = val.length
           return
@@ -3224,6 +3325,19 @@ const cleanupEditorListeners = () => {
   currentViewport = null
 }
 
+const openSourceReference = (event: MouseEvent) => {
+  const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
+  const href = anchor?.getAttribute('href') || ''
+  if (href.toLowerCase().startsWith('longedit://source')) {
+    event.preventDefault()
+    event.stopPropagation()
+    const source = parseSourceReference(href, store.libraryPath)
+    if (!source || !findFileFormat(source.path)) { message.warning('来源链接不可用，请在知识库中查找原文件'); return }
+    void openManagedFile(router, source.path, { page: source.page, annotation: source.annotation })
+    return
+  }
+}
+
 const openPdfReference = (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
@@ -3258,6 +3372,7 @@ onMounted(async () => {
     store.activateTab(tabs.value[0]?.id || null)
   }
   window.addEventListener('keydown', handleKeyDown)
+  if (!route.query.search && !route.query.collection) searchReturn.restore()
   applyRouteSearch()
   if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
@@ -3390,6 +3505,13 @@ watch(() => route.query.path, (path) => {
   if (opensInLibraryShell(format)) handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
+watch([() => route.query.searchLocator, () => route.query.path], () => {
+  locatedSearchToken = ''
+  searchMatchCount.value = null
+  searchNavigationClosed.value = false
+  searchLocationTarget?.classList.remove('workspace-task-locator-target')
+  void nextTick(() => revealSearchMatch())
+})
 watch(() => route.query.taskLocator, () => scheduleWorkspaceTaskReveal())
 watch(() => route.query.relationLocator, () => scheduleRelationEvidenceReveal())
 const applyRouteSearch = () => {
@@ -3999,6 +4121,18 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; font: inherit; }
 .knowledge-result-open:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: var(--theme-radius-sm); }
+.search-return-button { margin: 6px 10px; padding: 7px; border: var(--theme-border); border-radius: 6px; background: transparent; color: var(--theme-primary); cursor: pointer; font: inherit; text-align: left; }
+.search-return-button:focus-visible { outline: 2px solid var(--theme-primary); }
+.knowledge-search-result.is-search-selected { box-shadow: inset 3px 0 var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 9%, transparent); }
+.knowledge-preview-button { justify-self: start; padding: 5px 9px; border: var(--theme-border); border-radius: 6px; background: transparent; color: var(--theme-primary); font: inherit; cursor: pointer; }
+.knowledge-preview-button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
+.knowledge-search-count { margin: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
+.knowledge-result-group { min-width: 0; margin-bottom: 8px; border-bottom: var(--theme-border); }
+.knowledge-result-group-label { margin: 0; padding: 6px 10px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); line-height: 1.5; }
+.knowledge-result-summary { min-width: 0; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.knowledge-result-summary summary { cursor: pointer; padding: 5px 0; color: var(--theme-primary); }
+.knowledge-result-summary summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
+.knowledge-result-summary p { margin: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; line-height: 1.6; }
 .knowledge-search-result > .relation-summary { justify-self: start; max-width: 100%; white-space: normal; text-align: left; }
 .graph-collection-state { min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 6px 10px; border-bottom: var(--theme-border); background: rgba(var(--theme-primary-rgb),.055); }.graph-collection-state>span { min-width: 0; display: grid; gap: 2px; }.graph-collection-state strong,.graph-collection-state small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.graph-collection-state strong { font-size: var(--text-compact); }.graph-collection-state small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.graph-collection-state button { width: 26px; height: 26px; border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 16px; }
 .knowledge-result-path { overflow-wrap: anywhere; white-space: normal; }
@@ -4923,4 +5057,13 @@ watch(activeTabId, (newId, oldId) => {
 .external-compare-grid pre { min-height: 0; margin: 0; padding: 12px; overflow: auto; color: var(--theme-text); background: var(--theme-bg); font: 12px/1.65 var(--font-mono); white-space: pre; }
 .external-change-actions { width: 100%; display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; }
 @media (max-width: 700px) { .external-compare-grid { grid-template-columns: 1fr; max-height: 58vh; }.external-compare-grid section { min-height: 180px; }.external-change-actions { grid-template-columns: 1fr 1fr; }.external-change-actions span { display: none; } }
+</style>
+
+<style scoped>
+@media (max-width: 760px) {
+  .library-mode.reference-pinned { flex-wrap: wrap; }
+  .reference-pinned > .sidebar, .reference-pinned > .resizer-area, .reference-pinned > .local-graph-rail { display: none; }
+  .reference-pinned > .editor-main { flex: 1 1 100%; height: 60%; min-height: 0; }
+  .reference-pinned > .search-document-preview.pinned { width: 100%; max-width: 100%; height: 40%; }
+}
 </style>
