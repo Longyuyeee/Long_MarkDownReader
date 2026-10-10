@@ -23,6 +23,7 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 
 const MAX_SEARCH_RESULTS: usize = 200;
+const MAX_LOCATED_MATCHES_PER_KIND: usize = 5;
 const MAX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
 
 fn knowledge_index_cache_root(app: &AppHandle) -> Result<PathBuf, String> {
@@ -306,6 +307,7 @@ fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
 
 fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<KnowledgeSearchResult> {
     let mut results = Vec::new();
+    let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
     for segment in segments {
@@ -336,11 +338,20 @@ fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<Knowle
         let Some(context) = text_match_context(&segment.text, query) else {
             continue;
         };
-        let limit = if segment.match_kind == "annotation" {
-            5
+        let located = segment.page.is_some()
+            || segment.annotation_id.is_some()
+            || (segment.locator_kind.is_some() && segment.locator_object_id.is_some());
+        let limit = if located {
+            MAX_LOCATED_MATCHES_PER_KIND
         } else {
             1
         };
+        if located && !seen_locations.insert((
+            &segment.path, &segment.match_kind, segment.page,
+            &segment.annotation_id, &segment.locator_kind, &segment.locator_object_id,
+        )) {
+            continue;
+        }
         let count = match_counts
             .entry((&segment.path, &segment.match_kind))
             .or_default();
@@ -447,14 +458,14 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                 .annotations
                 .iter()
                 .filter(|item| item.text.to_lowercase().contains(query))
-                .take(5)
+                .take(MAX_LOCATED_MATCHES_PER_KIND)
             {
                 results.push(KnowledgeSearchResult {
                     title: title.clone(),
                     path: path_string.clone(),
                     object_type: "pdf".into(),
                     match_kind: "annotation".into(),
-                    context: snippet(&annotation.text),
+                    context: match_snippet(&annotation.text, query),
                     page: Some(annotation.page),
                     annotation_id: Some(annotation.id.clone()),
                     locator_kind: None,
@@ -464,10 +475,10 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-            if let Some((page_index, context)) =
-                index.pages.iter().enumerate().find_map(|(page, text)| {
+            for (page_index, context) in
+                index.pages.iter().enumerate().filter_map(|(page, text)| {
                     text_match_context(text, query).map(|value| (page, value))
-                })
+                }).take(MAX_LOCATED_MATCHES_PER_KIND)
             {
                 results.push(KnowledgeSearchResult {
                     title: title.clone(),
@@ -484,12 +495,12 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-            if let Some((page, context)) = index.ocr_pages.iter().find_map(|item| {
+            for (page, context) in index.ocr_pages.iter().filter_map(|item| {
                 text_match_context(&item.text, query).map(|value| (item.page, value))
-            }) {
+            }).take(MAX_LOCATED_MATCHES_PER_KIND) {
                 results.push(KnowledgeSearchResult {
-                    title,
-                    path: path_string,
+                    title: title.clone(),
+                    path: path_string.clone(),
                     object_type: "pdf".into(),
                     match_kind: "ocr".into(),
                     context,
@@ -777,6 +788,27 @@ mod tests {
     use super::*;
 
     #[test]
+    fn located_search_keeps_distinct_pages_deduplicates_and_bounds_results() {
+        let base = IndexedSearchSegment {
+            title: "report.pdf".into(), path: "/report.pdf".into(), object_type: "pdf".into(),
+            match_kind: "body".into(), text: "budget".into(), page: Some(1),
+            annotation_id: None, locator_kind: None, locator_object_id: None,
+            location_label: None, extraction_failed: false,
+        };
+        let mut segments = vec![base.clone(), base.clone()];
+        for page in 2..=8 { segments.push(IndexedSearchSegment { page: Some(page), ..base.clone() }); }
+        let hits = search_segments(&segments, "budget");
+        assert_eq!(hits.iter().map(|hit| hit.page.unwrap()).collect::<Vec<_>>(), vec![1, 2, 3, 4, 5]);
+        let unlocated = segments.iter().map(|segment| IndexedSearchSegment { page: None, ..segment.clone() }).collect::<Vec<_>>();
+        assert_eq!(search_segments(&unlocated, "budget").len(), 1);
+        let objects = (1..=3).map(|id| IndexedSearchSegment {
+            object_type: "docx".into(), page: None, locator_kind: Some("docx-block".into()),
+            locator_object_id: Some(format!("block-{id}")), ..base.clone()
+        }).collect::<Vec<_>>();
+        assert_eq!(search_segments(&objects, "budget").len(), 3);
+    }
+
+    #[test]
     fn search_context_keeps_late_unicode_match_visible() {
         let text = format!("{}预算确认{}", "前言🙂".repeat(150), "后文".repeat(150));
         let context = text_match_context(&text, "预算确认").unwrap();
@@ -861,6 +893,8 @@ mod tests {
         .unwrap();
 
         let body = search_workspace(&root, "second page beta", None);
+        let pages = search_workspace(&root, "a", None);
+        assert_eq!(pages.iter().filter(|hit| hit.match_kind == "body").map(|hit| hit.page).collect::<Vec<_>>(), vec![Some(1), Some(2)]);
         assert!(body.iter().any(|result| {
             result.match_kind == "body" && result.page == Some(2) && result.object_type == "pdf"
         }));
@@ -901,6 +935,8 @@ mod tests {
         );
         write_snapshot(&cache, &root, &snapshot).unwrap();
         let indexed_body = search_workspace(&root, "second page beta", Some((&cache, false)));
+        let indexed_pages = search_workspace(&root, "a", Some((&cache, false)));
+        assert_eq!(indexed_pages.iter().filter(|hit| hit.match_kind == "body").map(|hit| hit.page).collect::<Vec<_>>(), vec![Some(1), Some(2)]);
         let indexed_annotation = search_workspace(&root, "critical insight", Some((&cache, false)));
         let indexed_ocr = search_workspace(&root, "unique scanned evidence", Some((&cache, false)));
         assert!(indexed_body

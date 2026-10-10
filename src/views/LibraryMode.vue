@@ -125,7 +125,10 @@
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
                   <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
-                  <div v-for="(result, index) in visibleKnowledgeSearchResults" :key="`${result.path}-${result.matchKind}-${result.page || 0}-${result.locatorObjectId || result.annotationId || index}`" class="knowledge-search-result">
+                  <p v-if="!knowledgeSearchRunning && !knowledgeSearchFailed && groupedKnowledgeSearchResults.length" class="knowledge-search-count">当前展示 {{ groupedKnowledgeSearchResults.length }} 个文件的结果。结果限量展示，不代表全部匹配次数。</p>
+                  <section v-for="group in groupedKnowledgeSearchResults" :key="group.path" class="knowledge-result-group" :aria-label="searchResultPath(group.path, store.libraryPath)">
+                  <p v-if="group.results.length > 1" class="knowledge-result-group-label">同一文件 · {{ group.results.length }} 条结果，可分别打开</p>
+                  <div v-for="result in group.results" :key="searchMatchKey(result)" class="knowledge-search-result">
                     <button class="knowledge-result-open" type="button" :title="result.title" :aria-label="`打开 ${result.title}`" @click="openKnowledgeSearchResult(result)">
                       <span class="knowledge-result-head"><strong><SearchHighlight :text="result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '')" :query="searchQuery" /></strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
                       <span class="knowledge-result-context"><SearchHighlight :text="result.context" :query="searchQuery" /></span>
@@ -141,6 +144,7 @@
                     </details>
                     <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
                   </div>
+                  </section>
                 </div>
                 <n-tree 
                   v-else
@@ -761,6 +765,7 @@ import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
+import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
@@ -1335,6 +1340,7 @@ const searchFormatOptions = FILE_FORMATS
 const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.length
   ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
   : knowledgeSearchResults.value)
+const groupedKnowledgeSearchResults = computed(() => groupSearchResults(visibleKnowledgeSearchResults.value))
 const closeGraphCollection = () => {
   ++knowledgeSearchGeneration
   knowledgeSearchFailed.value = false
@@ -4005,6 +4011,9 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; font: inherit; }
 .knowledge-result-open:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: var(--theme-radius-sm); }
+.knowledge-search-count { margin: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
+.knowledge-result-group { min-width: 0; margin-bottom: 8px; border-bottom: var(--theme-border); }
+.knowledge-result-group-label { margin: 0; padding: 6px 10px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); line-height: 1.5; }
 .knowledge-result-summary { min-width: 0; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .knowledge-result-summary summary { cursor: pointer; padding: 5px 0; color: var(--theme-primary); }
 .knowledge-result-summary summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
