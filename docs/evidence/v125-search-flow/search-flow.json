@@ -1,0 +1,15 @@
+{
+  "status": "passed-real-tauri-debug-webview2",
+  "checks": [
+    "reference is docked alongside current draft",
+    "excerpt includes quoted content and a source",
+    "reference survives changed search and draft survives navigation",
+    "narrow reference does not cover editor",
+    "Markdown next match",
+    "pasted excerpt source opens the original file",
+    "no global error overlay",
+    "source file remains unchanged"
+  ],
+  "clipboard": "payload-intercepted-system-clipboard-untouched",
+  "sourceUserContentIncluded": false
+}

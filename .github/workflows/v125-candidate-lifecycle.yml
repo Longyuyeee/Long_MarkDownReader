@@ -1,8 +1,6 @@
 name: v1.0.25 Candidate Installer Lifecycle
 
 "on":
-  push:
-    branches: [codex/v125-experience-roadmap]
   workflow_dispatch:
     inputs:
       candidate_commit:
