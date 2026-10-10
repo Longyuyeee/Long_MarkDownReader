@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import vm from 'node:vm'
+import ts from 'typescript'
+import * as Vue from 'vue'
+import { test } from 'node:test'
+let cleanupTarget
+const box = { exports: {}, require: () => ({ ...Vue, onBeforeUnmount: fn => cleanupTarget.push(fn) }) }
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/composables/useSearchReturn.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, box)
+function harness(root) {
+  const cleanups = []; cleanupTarget = cleanups
+  const scope = Vue.effectScope(), query = Vue.ref(''), types = Vue.ref([]), running = Vue.ref(false), failed = Vue.ref(false), keys = Vue.ref([]), library = Vue.ref(root)
+  let focus = 0, shown = 0
+  const node = { scrollTop: 0, querySelectorAll: () => keys.value.map(key => ({ dataset: { searchKey: key }, scrollIntoView: () => {}, querySelector: () => ({ focus: () => { focus++ } }) })) }
+  const viewport = Vue.shallowRef(node)
+  const state = scope.run(() => box.exports.useSearchReturn({ root: () => library.value, query, types, running, failed, resultKeys: () => keys.value, viewport, showResults: () => { shown++ } }))
+  return { state, query, types, running, failed, keys, library, viewport, node, focus: () => focus, shown: () => shown, stop: () => { cleanups.forEach(fn => fn()); scope.stop() } }
+}
+const settle = async () => { await Vue.nextTick(); await Vue.nextTick(); await Promise.resolve() }
+test('leaving and reopening restores query, filters, selected result and scroll after fresh results', async () => {
+  const first = harness('/return-a'); first.query.value = '预算'; first.types.value = ['pdf']; first.node.scrollTop = 420; first.state.remember('page-5'); first.stop()
+  const back = harness('/return-a'); back.running.value = true; back.state.restore(); await settle()
+  assert.equal(back.query.value, '预算'); assert.deepEqual([...back.types.value], ['pdf'])
+  assert.equal(back.node.scrollTop, 0)
+  back.keys.value = ['page-2', 'page-5']; back.running.value = false; await settle()
+  assert.equal(back.node.scrollTop, 420); assert.equal(back.state.selectedKey.value, 'page-5'); assert.equal(back.focus(), 0)
+  back.state.returnToResults(); await settle(); assert.equal(back.focus(), 1)
+  back.stop()
+})
+test('missing result is explained; a failed refresh does not discard the saved selection', async () => {
+  const first = harness('/return-b'); first.query.value = '项目'; first.state.remember('gone'); first.stop()
+  const back = harness('/return-b'); back.running.value = true; back.state.restore(); back.failed.value = true; back.running.value = false; await settle()
+  assert.equal(back.state.selectedKey.value, 'gone')
+  back.failed.value = false; back.keys.value = ['new']; await settle()
+  assert.equal(back.state.selectedKey.value, ''); assert.match(back.state.notice.value, /已变化/); assert.equal(back.query.value, '项目'); back.stop()
+})
+test('changing query or library clears selection and libraries never inherit one another', async () => {
+  const a = harness('/return-c'); a.query.value = '旧条件'; a.state.remember('old')
+  a.query.value = '新条件'; assert.equal(a.state.selectedKey.value, '')
+  a.state.remember('new'); a.library.value = '/return-d'; assert.equal(a.state.selectedKey.value, '')
+  a.query.value = ''; a.stop()
+  const d = harness('/return-d'); d.state.restore(); assert.equal(d.query.value, ''); d.stop()
+  const c = harness('/return-c'); c.running.value = true; c.state.restore(); assert.equal(c.query.value, '新条件'); assert.equal(c.state.selectedKey.value, 'new'); c.stop()
+})

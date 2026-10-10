@@ -40,7 +40,7 @@ test('actual result click forwards each PDF page and annotation to the existing 
   const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = source.slice(source.indexOf('const openKnowledgeSearchResult ='), source.indexOf('const handleLoadChildren ='))
   const routes = []
-  const box = { openManagedObject: navigation.openManagedObject, router: { replace: value => routes.push(value) } }
+  const box = { searchReturn: { remember: () => {} }, searchMatchKey, openManagedObject: navigation.openManagedObject, router: { replace: value => routes.push(value) } }
   vm.runInNewContext(compile(handler + '\nglobalThis.openResult = openKnowledgeSearchResult'), box)
   for (const hit of [result('/x.pdf', 2), result('/x.pdf', 5), result('/x.pdf', 5, { annotationId: 'note-2' })]) box.openResult(hit)
   assert.deepEqual(plain(routes.map(r => r.query)), [{ page: '2', path: '/x.pdf' }, { page: '5', path: '/x.pdf' }, { page: '5', annotation: 'note-2', path: '/x.pdf' }])
@@ -56,6 +56,7 @@ test('actual grouped results template exposes separate page actions and bounded-
   const app = Vue.createSSRApp({ render, setup: () => ({
     knowledgeSearchRunning: false, knowledgeSearchFailed: false,
     groupedKnowledgeSearchResults: groupSearchResults(items), searchMatchKey,
+    searchReturn: { selectedKey: { value: '' } },
     store: { libraryPath: '/' }, searchResultPath: path => path,
     searchQuery: '预算', resultFormatLabel: () => 'PDF', searchKindLabel: () => '正文',
     relationSummary: () => null, openKnowledgeSearchResult: () => {}, openRelationGraph: () => {},

@@ -32,6 +32,7 @@
           </div>
         </div>
 
+        <button v-if="searchQuery.trim() && searchReturn.selectedKey.value" type="button" class="search-return-button" @click="searchReturn.returnToResults">返回刚才的搜索结果</button>
         <div class="sidebar-tab-content">
           <transition name="tab-fade" mode="out-in">
             <!-- 文件 tree 面板 -->
@@ -96,6 +97,7 @@
 
               <div
                 class="tree-viewport"
+                ref="searchViewport"
                 data-testid="library-tree-viewport"
                 :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }"
                 @contextmenu="openRootContextMenu"
@@ -125,10 +127,11 @@
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
                   <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
+                  <p v-if="searchReturn.notice.value" role="status" class="knowledge-search-count">{{ searchReturn.notice.value }}</p>
                   <p v-if="!knowledgeSearchRunning && !knowledgeSearchFailed && groupedKnowledgeSearchResults.length" class="knowledge-search-count">当前展示 {{ groupedKnowledgeSearchResults.length }} 个文件的结果。结果限量展示，不代表全部匹配次数。</p>
                   <section v-for="group in groupedKnowledgeSearchResults" :key="group.path" class="knowledge-result-group" :aria-label="searchResultPath(group.path, store.libraryPath)">
                   <p v-if="group.results.length > 1" class="knowledge-result-group-label">同一文件 · {{ group.results.length }} 条结果，可分别打开</p>
-                  <div v-for="result in group.results" :key="searchMatchKey(result)" class="knowledge-search-result">
+                  <div v-for="result in group.results" :key="searchMatchKey(result)" class="knowledge-search-result" :class="{ 'is-search-selected': searchReturn.selectedKey.value === searchMatchKey(result) }" :data-search-key="searchMatchKey(result)">
                     <button class="knowledge-result-open" type="button" :title="result.title" :aria-label="`打开 ${result.title}`" @click="openKnowledgeSearchResult(result)">
                       <span class="knowledge-result-head"><strong><SearchHighlight :text="result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '')" :query="searchQuery" /></strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
                       <span class="knowledge-result-context"><SearchHighlight :text="result.context" :query="searchQuery" /></span>
@@ -769,6 +772,7 @@ import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, re
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
+import { useSearchReturn } from '../composables/useSearchReturn'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
@@ -1347,6 +1351,13 @@ const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.len
   ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
   : knowledgeSearchResults.value)
 const groupedKnowledgeSearchResults = computed(() => groupSearchResults(visibleKnowledgeSearchResults.value))
+const searchViewport = ref<HTMLElement | null>(null)
+const searchReturn = useSearchReturn({
+  root: () => store.libraryPath, query: searchQuery, types: searchObjectTypes,
+  running: knowledgeSearchRunning, failed: knowledgeSearchFailed,
+  resultKeys: () => visibleKnowledgeSearchResults.value.map(searchMatchKey), viewport: searchViewport,
+  showResults: () => { activeSidebarTab.value = 'files'; isSidebarCollapsed.value = false },
+})
 const closeGraphCollection = () => {
   ++knowledgeSearchGeneration
   knowledgeSearchFailed.value = false
@@ -1967,6 +1978,7 @@ const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
 }[kind])
 
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
+  searchReturn.remember(searchMatchKey(result))
   if (
     result.locatorKind
     || result.annotationId
@@ -3276,6 +3288,7 @@ onMounted(async () => {
     store.activateTab(tabs.value[0]?.id || null)
   }
   window.addEventListener('keydown', handleKeyDown)
+  if (!route.query.search && !route.query.collection) searchReturn.restore()
   applyRouteSearch()
   if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }
   unlistenRefresh = await listen('refresh-library', () => refreshLibrary())
@@ -4017,6 +4030,9 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; font: inherit; }
 .knowledge-result-open:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: var(--theme-radius-sm); }
+.search-return-button { margin: 6px 10px; padding: 7px; border: var(--theme-border); border-radius: 6px; background: transparent; color: var(--theme-primary); cursor: pointer; font: inherit; text-align: left; }
+.search-return-button:focus-visible { outline: 2px solid var(--theme-primary); }
+.knowledge-search-result.is-search-selected { box-shadow: inset 3px 0 var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 9%, transparent); }
 .knowledge-preview-button { justify-self: start; padding: 5px 9px; border: var(--theme-border); border-radius: 6px; background: transparent; color: var(--theme-primary); font: inherit; cursor: pointer; }
 .knowledge-preview-button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
 .knowledge-search-count { margin: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
