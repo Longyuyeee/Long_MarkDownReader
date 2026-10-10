@@ -4,6 +4,16 @@ export function assertV121DevelopmentBoundary(development, community) {
   if (development.publicVersion === '1.0.24'
     && development.publicTag === 'v1.0.24'
     && development.publicTagCommit === '9fa7ffa0f778773cfd999169e695e32a705168ae'
+    && development.runtimeBaseVersion === '1.0.25'
+    && development.developmentTargetVersion === '1.0.25'
+    && community.appVersion === '1.0.25'
+    && community.gates?.githubReleasePublished === false
+    && community.patchValidation?.previousPublicVersion === '1.0.24'
+    && community.targetRelease?.tag === 'v1.0.25') return
+
+  if (development.publicVersion === '1.0.24'
+    && development.publicTag === 'v1.0.24'
+    && development.publicTagCommit === '9fa7ffa0f778773cfd999169e695e32a705168ae'
     && development.runtimeBaseVersion === '1.0.24'
     && development.developmentTargetVersion === '1.0.25'
     && community.appVersion === '1.0.24'
@@ -64,6 +74,14 @@ export function assertV121UpdaterStatus(policy, community, receipt) {
   const expected = `1.0.20-to-1.0.21-${suffix}`
   if (receipt.managedUpdaterObservation !== expected) {
     throw new Error(`v1.0.21 updater status conflict: release receipt must be ${expected}`)
+  }
+  if (community.appVersion === '1.0.25') {
+    if (suffix !== 'passed' || community.release !== null || community.gates?.githubReleasePublished !== false || community.patchValidation?.previousPublicVersion !== '1.0.24'
+      || community.targetRelease?.tag !== 'v1.0.25'
+      || !['1.0.24-to-1.0.25-pending', '1.0.24-to-1.0.25-passed'].includes(community.patchValidation?.managedUpdaterUpgradePath)) {
+      throw new Error('v1.0.25 must retain its own update observation')
+    }
+    return
   }
   if (community.appVersion === '1.0.24') {
     if (suffix !== 'passed' || community.patchValidation?.previousPublicVersion !== '1.0.23'

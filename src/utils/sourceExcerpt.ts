@@ -1,8 +1,8 @@
 export interface ExcerptSource { path: string; title: string; page?: number; annotationId?: string }
-const normalize = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '')
+const normalize = (path: string) => path.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
 export function sourceExcerpt(text: string, source: ExcerptSource, libraryRoot: string) {
   const root = normalize(libraryRoot), path = normalize(source.path)
-  const insensitive = /^[a-z]:/i.test(root)
+  const insensitive = /^[a-z]:/i.test(root) || root.startsWith('//')
   if (!(insensitive ? path.toLowerCase().startsWith(root.toLowerCase() + '/') : path.startsWith(root + '/'))) throw new Error('来源不在当前知识库中')
   const relative = path.slice(root.length + 1)
   const params = new URLSearchParams({ path: relative })

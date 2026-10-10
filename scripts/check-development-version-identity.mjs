@@ -9,7 +9,7 @@ const tauri = readJson('src-tauri/tauri.conf.json')
 const matrix = readJson('shared/release-capability-matrix.json')
 const community = readJson('shared/v1-community-release-policy.json')
 let installedRuntimeVerified = false
-if (['1.0.22', '1.0.23', '1.0.24'].includes(community.appVersion) && community.gates?.githubReleasePublished === true) {
+if (['1.0.22', '1.0.23', '1.0.24', '1.0.25'].includes(community.appVersion) && community.gates?.githubReleasePublished === true) {
   assertInstalledReleaseRuntime(readJson(`docs/evidence/v${community.appVersion}-release/artifact-manifest.json`))
   installedRuntimeVerified = true
 }

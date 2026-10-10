@@ -37,3 +37,11 @@ test('actual Markdown source click opens the library file with PDF position', ()
   assert.equal(opened[0].query.annotation, 'note')
   assert.ok(source.includes('@click.capture="openSourceReference"'))
 })
+
+
+test('native canonical Windows and UNC source paths resolve within the library', () => {
+  const windows = sourceExcerpt('摘录', { path: String.raw`\\?\E:\笔记\a.md`, title: 'a' }, String.raw`E:\笔记`)
+  assert.ok(windows.includes('path=a.md'))
+  const unc = sourceExcerpt('摘录', { path: String.raw`\\?\UNC\SERVER\Share\a.md`, title: 'a' }, String.raw`\\server\share`)
+  assert.ok(unc.includes('path=a.md'))
+})
