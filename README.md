@@ -1,7 +1,3 @@
-> v1.0.25 已正式发布：搜索预览与关键词定位、返回搜索恢复、固定参考文档，以及带来源链接的摘录。见 [更新内容](docs/RELEASE_NOTES_v1.0.25.md)。
-
-> 开发进展：v1.0.26 已补参考摘录直插、来源定位、刷新和失效来源重新关联，正在验证参考写作闭环；完成闭环与发布门禁后才发布，尚无新安装包。见 [闭环记录与验证证据](docs/V1_0_26_Reference_Writing_Loop_2026-10-10.md)。
-
 <p align="center">
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
@@ -35,15 +31,9 @@
 
 > 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
 
-> v1.0.25 已正式发布，安装程序与校验文件已从公开地址重新下载并通过 SHA-256 核对。见 [v1.0.25 发布说明](docs/RELEASE_NOTES_v1.0.25.md)。
-
 ## 下载
 
-当前公开稳定版为 v1.0.25。搜索结果支持命中上下文、关键词高亮、同文件分组和只读预览；打开 Markdown / 普通文本后可跳转上一处或下一处，返回搜索时恢复查询与列表位置。预览可固定为参考，选择文字后复制摘录与来源链接，粘贴到笔记并返回原资料。见 [发布记录](docs/V1_0_25_Unsigned_Community_Release_Audit_2026-10-10.md)。
-
-继续保留知识库目录恢复、自动创建多级目录和持续掉帧时自适应降低动效；大型复杂文档仍可能存在输入延迟。
-
-Long编辑 v1.0.25 支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.0.25**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
@@ -58,115 +48,17 @@ cc4e41d5d4bc1c2bc03dab92a1d8aaec1a1aee1fa646b5f9f3d073b5f29b4c4d  LongEdit_1.0.2
 8a11ee4db407b502c9b7d2ec3837aa156b24f9c54b4d7ec3138fa79ec1fb6986  LongEdit_1.0.25_x64-setup.exe
 ```
 
-v1.0.5 是受控自动更新链的首个版本。v1.0.4 及更早版本需要手动安装 v1.0.5 或当前版本一次；之后应用可每 24 小时检查最新稳定 Release，也可在设置中手动检查。更新始终需要用户确认，并在安装前校验官方 NSIS 的大小与 SHA-256。本版已通过 v1.0.24 → v1.0.25 覆盖安装、回滚及卸载保留数据验收；发布后的官方应用内更新观察仍待独立完成，不以安装验收代替。
+应用可每 24 小时检查更新，也可在设置中手动检查；自动更新始终需要确认，并校验安装包大小与 SHA-256。v1.0.4 及更早版本需先手动安装当前版本。
 
-## v1.0.25 使用流程
+## 搜索与参考
 
 搜索资料 → 预览内容 → 固定为参考 → 选中文字并复制来源 → 粘贴到笔记。窄窗口自动改为上下布局，保持编辑区可操作。
 
 参考展示磁盘上的部分文字，PDF 预览为提取文字；完整内容通过“打开文件”查看。返回状态和固定参考暂不跨重启保存，文件移动或改名后暂不自动修复来源链接。
 
-## v1.0.17
-
-以下为 v1.0.17 发布时的历史能力记录，不代表当前 `main` 或最新下载版本。M1～M5 在该版本已完成分阶段真实审计：
-
-- XLSX 的数据验证、条件格式和 Table 进入统一对象草稿；DOCX/PPTX 深化已有段落样式与受限对象事务，仍不宣称完整 Office 等价编辑。
-- ODS 可编辑简单文本、有限数值和文件已有命名样式，并可靠另存新副本；ODP 简单正文页支持资料库内有界编辑副本，复杂对象页整页阻断，公式、自定义样式和外部 ODP 编辑继续关闭。
-- 大 JSON 渐进只读支持 512 KiB 分段导航与流式全文搜索，小 JSON 保持完整源码和树形编辑。
-- 资料库视频支持前后逐帧、原尺寸 PNG 截图、播放位置记忆，以及同目录同名 VTT/SRT 字幕选择与关闭。
-- 工作台围绕“继续工作、今天要做、需要处理”收敛；Markdown 待办与内部 Table 显式布尔任务行已通过真实确认写回、恢复、撤销、冲突拒绝、原对象定位和响应式验收。
-- 知识图谱 2.0 已完成稳定语义探索、专业视觉与 Worker 承载的大图性能收口；跨格式搜索、图谱和关系上下文现共享对象定位合同，Table 行/视图与 OPML 节点可被搜索并打开到内部位置。
-- M4 跨格式工作流与有界清理已完成：CSV/TSV→Table、OPML→Canvas、图谱→项目笔记/Canvas 均在写盘前披露来源、目标、编号策略和损失，成功后打开真实目标并保持来源不变；四个可重建的大图导出中间负载已在保留结构化指标后清理。
-
-M5-8 已完成：`v1.0.17` Tag 绑定精确产品提交 `2b6235d420ceffd291dab72c4af17caffe464333`，GitHub Release `379561360` 的 NSIS、MSI 和 `SHA256SUMS.txt` 已从公开地址重新下载并匹配冻结清单。此前托管运行 [33361759629](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33361759629) 已通过 22/22 安装生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。完整事实见 [v1.0.17 发布说明](docs/RELEASE_NOTES_v1.0.17.md) 与 [M5-8 正式发布审计](docs/Post_v1.0.16_M5_8_v1.0.17_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
-
-M5-9 已完成：最终托管运行 [33368732235](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33368732235) 从官方 v1.0.16 应用内发现并确认 v1.0.17，校验 NSIS、同目录覆盖、自动重启、最新版状态以及覆盖/卸载后资料保留共 12/12 通过。前两轮暴露并修正 Release 候选文案残留与动画截图重影，最终三张 UI 证据人工复核清晰。完整事实见 [M5-9 官方应用内更新审计](docs/Post_v1.0.16_M5_9_v1.0.17_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
-
-M6-0 已完成：真实代码和既有真实 Tauri 三视口证据只选择 **M6-1 图谱有界全屏生命周期与真实桌面审计**。F11 专注模式保持原语义；社区代理折叠、治理环、结构化 Schema 和 ODP 备注编辑继续延后。完整选择依据见 [M6-0 范围选择审计](docs/Post_v1.0.17_M6_0_v1.0.18_Scope_Selection_Audit_2026-08-31.md)。
-
-M6-1 已完成：图谱现在支持独立全屏进入/退出；暗色/reduced 与浅色/calm 的 1280、1000、720 三档真实 Tauri 共 6/6 循环通过，Escape、路由卸载、选择/相机/缩略图保持、0 运行时错误和源摘要不变均已验证。完整事实见 [M6-1 图谱全屏生命周期审计](docs/Post_v1.0.17_M6_1_Knowledge_Graph_Bounded_Fullscreen_Lifecycle_Audit_2026-08-31.md)。下一接续点为 **M6-2 v1.0.18 下一切片选择审计**，当前尚未进入版本打包。
-
-M6-2 已完成：本补丁停止扩大范围，下一步进入 **M6-3 v1.0.18 质量债与发布就绪审计**。完整 Rust 与补丁发布门未在当前产品提交全绿前，不提升版本、不打包；详见 [M6-2 下一切片选择审计](docs/Post_v1.0.17_M6_2_v1.0.18_Next_Slice_Selection_Audit_2026-08-31.md)。
-
-M6-3 已完成：Rust 全仓 **548/0/5**，完整 `ci:patch-release` 在补齐真实托管运行回执并对齐证据字段后从头复跑通过，生产构建 6,275 模块、43 格式/91 扩展名、Rust locked check 与生产依赖 0 漏洞均达标。下一步为 **M6-4 v1.0.18 原子版本迁移与候选打包**；详见 [M6-3 质量与发布就绪审计](docs/Post_v1.0.17_M6_3_v1.0.18_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md)。
-
-M6-4 已完成：44 项当前运行身份统一为 `1.0.18`，精确候选源码为 `5988c03c0167b00cb86ed9a5f3cfe85f0b280a6a`；完整发布门通过，真实 MSI/NSIS 已核验版本、大小、SHA-256 与 `NotSigned`，当前 Tauri WebView2 以 6/6 检查覆盖 11/11 路由及 TXT/JSON 保存重开。公开版本仍为 `v1.0.17`，尚未创建 v1.0.18 Tag/Release；唯一接续点为 **M6-5 v1.0.18 托管安装生命周期**。详见 [M6-4 候选打包审计](docs/Post_v1.0.17_M6_4_v1.0.18_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 与 [v1.0.18 Release Notes](docs/RELEASE_NOTES_v1.0.18.md)。
-
-M6-5 [v1.0.18 托管安装生命周期](docs/Post_v1.0.17_M6_5_v1.0.18_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 已通过：GitHub 一次性 Windows 从精确候选重建 MSI/NSIS，并以公开 `v1.0.17` 完成 22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚，失败 0；14 张截图已人工复核。M6-6 冻结最终制品，M6-7 完成 [v1.0.18 正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.18) 和三项附件回下载复核；M6-8 的 [真实运行 33397305847](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33397305847) 再以 12/12 验证官方应用内升级。v1.0.18 发布与更新链现已全部收口，下一目标为 v1.0.19 范围选择。
-
-### v1.0.16 发布链回顾
-
-M4F-5 已完成：精确候选通过完整 Quality Gate、真实 Tauri 烟测和托管 Windows 安装生命周期；[运行 33322246630](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33322246630) 的 MSI/NSIS 已按文件本体复核大小、SHA-256 与 `NotSigned`，最终 artifact manifest 和 `SHA256SUMS.txt` 已冻结。`v1.0.16` Tag 绑定实际产品提交，GitHub Release `379466292` 的三个附件也已重新下载并逐项复核。完整事实见 [v1.0.16 发布说明](docs/RELEASE_NOTES_v1.0.16.md) 与 [M4F-5 正式发布审计](docs/Post_v1.0.15_M4F5_v1.0.16_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md)。
-
-M4F-6 已完成：[真实运行 33350758818](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/33350758818) 从官方 v1.0.15 应用内发现并确认 v1.0.16，校验 NSIS 后同目录覆盖、自动重启、报告最新版并保留资料与配置，12/12 检查通过。完整事实见 [M4F-6 官方应用内更新审计](docs/Post_v1.0.15_M4F6_v1.0.16_Official_Managed_Updater_Observation_Audit_2026-08-31.md)。
-
-## v1.0.15
-
-这一补丁围绕专业桌面交互一致性和更新可靠性收口：
-
-- 顶部标签和全软件按钮提示统一为现代化、主题化应用提示层，支持完整路径、键盘与 ARIA。
-- 普通区域不再显示 WebView 默认右键菜单，真实编辑控件和文件树/画布专用菜单保持正确能力。
-- 原生确认、提示和参数输入全部迁移到软件内对话框。
-- 资料库约 30 项的“新建”菜单支持视口内滚动，修复窄屏越界、层级遮挡和过渡透明问题。
-- 更新界面提供下载进度、容量、SHA-256 校验和安装阶段反馈，并修复设置卡片缩放细节。
-- 亮色、深色、720×680 窄屏与 DPR 1.5 真实 Tauri 验收通过；安装生命周期 22/22、安装后工作区 18/18、远端附件回下载哈希复核全部通过。
-
-发布已通过完整 Quality Gate、22/22 安装生命周期、18/18 安装后工作区检查，以及三个公开附件重新下载哈希复核。完整范围与边界见 [v1.0.15 发布说明](docs/RELEASE_NOTES_v1.0.15.md) 和 [发布审计](docs/V1_0_15_Unsigned_Community_Release_Audit_2026-08-22.md)。
-
-## v1.0.14
-
-这一补丁围绕小窗口稳定性、资料库侧栏可理解性与标签可靠性收口：
-
-- 修复窄侧栏底部资料库卡片竖排、越界与版本徽标挤压。
-- 真实审计资料库、工作台、8 个设置分类、格式能力和两类图谱，共 26 个小窗口样本。
-- 侧栏按“文件、目录、最近、备份、常用搜索、关系、标签”排序；高频入口前置，Markdown 专属标签后移。
-- “常用搜索”明确保存并重放文件页关键词和格式条件，不复制或修改文件。
-- 关系面板收敛为链出、链入与完整知识图谱入口，不再在窄栏重复嵌入图谱。
-- 标签解析排除中英文句末标点，`#product.` 会正确识别为 `#product`。
-- 真实 Tauri 审计强制使用当前编译版本，并核对界面版本与发布事实源。
-
-发布已通过完整本地与远端 Quality Gate、22/22 安装生命周期检查和 18/18 安装后工作区检查。完整范围、测试事实与边界见 [v1.0.14 发布说明](docs/RELEASE_NOTES_v1.0.14.md) 和 [发布审计](docs/V1_0_14_Unsigned_Community_Release_Audit_2026-08-21.md)。
-
-## v1.0.13
-
-这一补丁围绕版本可见性、界面语言和发布事实可靠性收口：
-
-- 主资料库左下角直接显示真实运行版本；点击版本可进入“设置 → 系统与更新”，发现新版本时显示状态提示。
-- 更新提示以紧凑信息卡说明版本、安装校验和自动重启；桌面设置页左侧分类保持固定，切换分类只滚动右侧内容。
-- 工作台、知识图谱与演示文稿界面移除残余英文和内部开发编号，改用用户能够理解的中文能力名称。
-- 43 类格式、91 个扩展名统一核对路由、能力层级、保存模式、writer、发布配置、外部依赖与安全降级通道。
-- Windows 安装包证据采集兼容不同 PowerShell 模块环境，并继续记录真实 SHA-256 与 `NotSigned` 边界。
-- 官方 v1.0.11 -> v1.0.12 应用内更新已通过托管 Windows 12/12 检查，为 v1.0.13 发布建立更新基线。
-
-发布已通过完整 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及三个公开附件重新下载哈希复核。完整范围、测试事实与边界见 [v1.0.13 发布说明](docs/RELEASE_NOTES_v1.0.13.md) 和 [发布审计](docs/V1_0_13_Unsigned_Community_Release_Audit_2026-08-21.md)。
-
-## v1.0.12
-
-这一补丁围绕图片工作区和能力真实性收口：
-
-- 滚轮缩放会保持鼠标下方内容的视觉锚点，放大后可以按住图片进行横纵拖拽。
-- 双击在 100% 实际大小与适应窗口之间切换，方向键也能移动大图视口。
-- PNG/JPEG/WebP/BMP 新增亮度、对比度、饱和度和恢复原色，仍只生成经过验证的新副本。
-- PDF 格式能力页同步已完成的标准表单安全子集、永久脱敏、文字水印和文档属性，不再显示旧的只读阶段说明。
-- 图片功能已通过真实 Tauri 宽窄窗口、原生鼠标输入、Rust 像素测试、独立像素采样、源摘要和目标复开验证。
-
-发布已通过完整 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及三个公开附件重新下载哈希复核。完整范围、测试事实与边界见 [v1.0.12 发布说明](docs/RELEASE_NOTES_v1.0.12.md) 和 [发布审计](docs/V1_0_12_Unsigned_Community_Release_Audit_2026-08-20.md)。
-
-## v1.0.11
-
-这一版本完成 P1 有界格式编辑和知识工作台收口：
-
-- PNG/JPEG/WebP/BMP 在原右侧媒体工作区支持旋转、翻转、精确裁剪、缩放、格式转换、JPEG 质量和隐私元数据清理。
-- PDF 在原右侧工作区支持标准表单安全子集、图片型永久脱敏副本、中文矢量文字水印和四字段文档属性副本。
-- 43 类格式、91 个扩展名按“直接编辑 / 有界可靠副本 / 预览或外部依赖”公开，避免把不同能力夸大为完整 Office、WPS 或 PDF 等价编辑。
-- 知识图谱继续承担派生关系探索；Canvas、OPML、Mermaid 与 Draw.io 分别承担可编辑思维导图和图形源。
-- 延续默认打开管理、自动更新稳定重启、外部文件独立窗口、显式保存和冲突保护。
-
-发布已通过源码 Quality Gate、22/22 安装生命周期检查、18/18 安装后工作区检查，以及公开附件重新下载哈希复核。完整变更见 [v1.0.11 发布说明](docs/RELEASE_NOTES_v1.0.11.md)。
-
 ## 真实界面
 
-> 以下“真实界面”“核心能力”和“格式能力”描述当前 `main` 开发线；公开下载仍以 v1.0.15 Release 为准，开发线新增能力尚未进入安装包。
+界面截图用于展示主要工作区；不同版本的细节可能有所差异。
 
 ### 专业编辑工作区
 
@@ -240,7 +132,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | OPML / JSON Canvas | 思维导图、卡片与关系画布；OPML 可在完整披露后生成独立 Canvas 投影 | 修改需显式保存；投影副本不与源文件自动同步 |
 | 图片 | PNG、JPEG、GIF、WebP、BMP、ICO、AVIF | 查看支持光标锚定滚轮缩放、拖拽平移和双击 100%/适应窗口；PNG/JPEG/WebP/BMP 可旋转、翻转、精确裁剪、缩放、调整亮度/对比度/饱和度、转换并另存副本；GIF/ICO/AVIF 与外部图片只读 |
 | 视频 | MP4、WebM、OGV、M4V 及五种系统解码入口；资料库视频支持逐帧、PNG 截图、位置记忆和同名 VTT/SRT 字幕 | MOV/MKV/AVI/MPEG/MPG 取决于系统解码器；不提供嵌入字幕拆封、字幕编辑或转码 |
-| ODS / ODP / 旧 Office / WPS | ODS 支持简单值和已有命名样式的可靠副本，ODP 有界预览；旧 Office 转换，WPS 原生格式交给外部程序 | ODS 公式与自定义样式、ODP 编辑保持关闭；`.wps/.et/.dps` 不在软件内编辑 |
+| ODS / ODP / 旧 Office / WPS | ODS 支持简单值和已有命名样式的可靠副本，ODP 支持简单正文页的可靠副本；旧 Office 转换，WPS 原生格式交给外部程序 | ODS 公式与自定义样式只读；ODP 复杂对象整页阻断，备注、版式、动画及外部打开只读；`.wps/.et/.dps` 不在软件内编辑 |
 
 格式事实源位于 [`shared/file-formats.json`](shared/file-formats.json)，发布边界位于 [`shared/release-capability-matrix.json`](shared/release-capability-matrix.json)。
 
@@ -306,8 +198,15 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 安装包由 Tauri 生成 MSI 与 NSIS。社区发布包含两个安装器与 `SHA256SUMS.txt`；受控更新不依赖旧 Tauri 私钥，也不发布 `latest.json` 或 `.sig`。
 
-开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)。M5-3 已按 [ODP 简单页正文副本工作区审计](docs/Post_v1.0.16_M5_3_ODP_Simple_Slide_Body_Copy_Workspace_Audit_2026-08-31.md) 完成资料库内正文草稿、整页阻断解释、可靠新副本及真实 LibreOffice/PowerPoint 桌面复开；ODP 现登记为有界 `basic-edit / copy`，外部打开仍只读。M5-4 已按 [v1.0.17 质量债务与发布就绪审计](docs/Post_v1.0.16_M5_4_v1.0.17_Quality_Debt_and_Release_Readiness_Audit_2026-08-31.md) 将全仓 Rust 修正至 548 通过、0 失败、5 忽略并通过完整发布门。M5-5 已按 [v1.0.17 原子迁移与候选打包审计](docs/Post_v1.0.16_M5_5_v1.0.17_Atomic_Version_Transition_and_Candidate_Packaging_Audit_2026-08-31.md) 从精确提交构建真实 MSI/NSIS、记录 SHA-256 与 `NotSigned`，并通过当前 WebView2 6/6 检查和 11/11 路由。M5-6 已按 [托管安装生命周期审计](docs/Post_v1.0.16_M5_6_v1.0.17_Hosted_Installer_Lifecycle_Audit_2026-08-31.md) 通过 `v1.0.16 → v1.0.17` 升级、22/22 生命周期、18/18 安装态检查、11/11 路由和 7/7 管理回滚。M5-7 冻结最终清单，M5-8 已按 [正式发布与远端复核审计](docs/Post_v1.0.16_M5_8_v1.0.17_Published_Release_and_Remote_Asset_Verification_Audit_2026-08-31.md) 完成 [v1.0.17 正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.17) 和三项附件回下载校验；下一步 M5-9 观察官方应用内更新链。
+开发状态见 [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md)，详细测试和历史审计保存在 `docs/`，不在首页逐项展开。
 
 ## 许可证
 
 [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+
+## 更新摘要
+
+- **v1.0.25 · 已发布**：搜索定位、返回搜索恢复与带来源的参考摘录。[发布说明](docs/RELEASE_NOTES_v1.0.25.md)
+- **v1.0.26 · 发布准备中**：主区打开、显式侧边参考、摘录直插与来源修复；安装包构建及验收完成前不切换下载版本。[发布进度](docs/V1_0_26_Unsigned_Community_Release_Audit_2026-10-10.md)
+
+更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。

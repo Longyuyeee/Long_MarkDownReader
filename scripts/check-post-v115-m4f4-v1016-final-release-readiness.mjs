@@ -26,6 +26,7 @@ const checksumLf = Buffer.from(checksumBytes.toString('utf8').replace(/\r\n/g, '
 const checksumCrlf = Buffer.from(checksumLf.toString('utf8').replace(/\n/g, '\r\n'))
 const releaseNotes = fs.readFileSync('docs/RELEASE_NOTES_v1.0.16.md', 'utf8')
 const readme = fs.readFileSync('README.md', 'utf8')
+const releaseHistory = fs.readFileSync('docs/README_Release_History.md', 'utf8')
 const audit = fs.readFileSync('docs/Post_v1.0.15_M4F4_v1.0.16_Final_Artifact_Manifest_and_Release_Readiness_Audit_2026-08-31.md', 'utf8')
 const failures = []
 const fail = message => failures.push(message)
@@ -83,6 +84,6 @@ if (published) {
   if (development.currentStage !== 'M4F-5-v1.0.16-tag-release-and-remote-asset-verification' || development.binaryVersionTransition !== 'v1.0.16-release-ready' || development.publicVersion !== '1.0.15' || development.publicTag !== 'v1.0.15') fail('development/public handoff drifted')
   if (execFileSync('git', ['tag', '--list', 'v1.0.16'], { encoding: 'utf8' }).trim()) fail('v1.0.16 tag exists before M4F-5')
 }
-for (const [document, tokens] of [[releaseNotes, ['最终 artifact manifest', 'SHA256SUMS.txt']], [readme, ['M4F-5', '33322246630']], [audit, ['预期与实际差异', 'M4F-5', 'releaseCandidate=true']]]) for (const token of tokens) if (!document.includes(token)) fail(`M4F-4 document token missing: ${token}`)
+for (const [document, tokens] of [[releaseNotes, ['最终 artifact manifest', 'SHA256SUMS.txt']], [readme, ['docs/README_Release_History.md']], [releaseHistory, ['M4F-5', '33322246630']], [audit, ['预期与实际差异', 'M4F-5', 'releaseCandidate=true']]]) for (const token of tokens) if (!document.includes(token)) fail(`M4F-4 document token missing: ${token}`)
 if (failures.length) { console.error(`M4F-4 release readiness check failed:\n- ${failures.join('\n- ')}`); process.exit(1) }
 console.log(`M4F-4 accepted: two real unsigned installers, public-name mapping, SHA256SUMS, passed Tauri smoke, hosted lifecycle and cross-platform evidence are ${published ? 'preserved after publication' : 'ready; tag and GitHub Release remain M4F-5'}.`)
