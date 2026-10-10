@@ -1,7 +1,5 @@
 name: v1.0.25 Installed Acceptance Review
 "on":
-  push:
-    branches: [codex/v125-experience-roadmap]
   workflow_dispatch:
     inputs:
       build_run_id:
