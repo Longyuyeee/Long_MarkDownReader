@@ -564,6 +564,7 @@
     </div>
 
     <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
+      :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
       @close="searchPreviewResult = null" @return-to-editor="returnToEditorFromReference" @open="openSearchPreview" />
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
@@ -813,7 +814,7 @@ import {
 import { useOutline } from '../composables/useOutline'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { useImageFix } from '../composables/useImageFix'
-import { parseSourceReference } from '../utils/sourceExcerpt'
+import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
 import type { GraphData } from '../types/graph'
@@ -1512,6 +1513,34 @@ let lastLoadedPath = ''
 let externalCheckInFlight = false
 let lastPromptedExternalSignature = ''
 let suppressEditorInput = false
+let referenceBookmark: { path: string; root: HTMLElement; range: Range } | null = null
+watch(activeTabId, () => { referenceBookmark = null })
+const rememberReferenceInsertionPoint = () => {
+  if (!vditor || !isVditorReady || !activeTabId.value || lastLoadedPath !== activeTabId.value || !activeIsMarkdown.value || !activeFormatCanEdit.value) return
+  const root = vditor.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
+  const selection = window.getSelection()
+  if (!root || !selection?.rangeCount || !root.contains(selection.anchorNode) || !root.contains(selection.focusNode)) return
+  referenceBookmark = { path: activeTabId.value, root, range: selection.getRangeAt(0).cloneRange() }
+}
+const insertReferenceExcerpt = (text: string) => {
+  if (!text.trim() || !searchPreviewResult.value || !activeIsMarkdown.value || !activeFormatCanEdit.value || !isVditorReady || !vditor) return
+  const mark = referenceBookmark
+  const root = vditor.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
+  if (!mark || mark.path !== activeTabId.value || mark.root !== root || !root?.contains(mark.range.startContainer) || !root.contains(mark.range.endContainer)) {
+    message.warning('请先在当前笔记中点击插入位置，再选择参考文字插入；不会覆盖或猜测插入位置。')
+    return
+  }
+  const excerpt = sourceExcerpt(text, searchPreviewResult.value, store.libraryPath)
+  // Insert after the selected range; never replace existing note text.
+  const range = mark.range.cloneRange(); range.collapse(false)
+  root.focus({ preventScroll: true })
+  const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range)
+  vditor.vditor.undo.addToUndoStack(vditor.vditor)
+  vditor.insertMD(`\n\n${excerpt}\n`)
+  vditor.vditor.undo.addToUndoStack(vditor.vditor)
+  rememberReferenceInsertionPoint()
+  message.success('摘录和来源已插入当前笔记，可撤销；尚未保存。')
+}
 
 const externalChange = reactive({
   show: false,
@@ -2216,6 +2245,10 @@ const loadFileToEditor = async (path: string) => {
   
   const setEditorValue = (content: string, readOnly = false) => {
     if (!isCurrentRequest()) return
+    referenceBookmark = null
+    // Reusing Vditor must not leave a link-editing popover from another note.
+    const popover = vditor.vditor?.wysiwyg?.popover
+    if (popover) popover.style.display = 'none'
     const wasDirty = currentTab?.isDirty ?? false
     suppressEditorInput = true
     vditor.setValue(content)
@@ -3347,7 +3380,7 @@ const cleanupEditorListeners = () => {
   currentViewport = null
 }
 
-const openSourceReference = (event: MouseEvent) => {
+const openSourceReference = async (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
   if (href.toLowerCase().startsWith('longedit://source')) {
@@ -3355,7 +3388,46 @@ const openSourceReference = (event: MouseEvent) => {
     event.stopPropagation()
     const source = parseSourceReference(href, store.libraryPath)
     if (!source || !findFileFormat(source.path)) { message.warning('来源链接不可用，请在知识库中查找原文件'); return }
-    void openManagedFile(router, source.path, { page: source.page, annotation: source.annotation })
+    const libraryRoot = store.libraryPath
+    const notePath = activeTabId.value
+    const editor = vditor
+    const originalContent = editor?.getValue()
+    try {
+      await invoke('get_file_stats', { libraryRoot, path: source.path })
+    } catch {
+      if (store.libraryPath !== libraryRoot || activeTabId.value !== notePath) return
+      if (!activeIsMarkdown.value || !activeFormatCanEdit.value || !editor) {
+        message.warning('来源已移动或不可访问，请在资料库中查找原文件。')
+        return
+      }
+      const replacement = (await promptAppAction(dialog, {
+        title: '重新关联来源',
+        content: '原文件已移动或无法访问。输入当前知识库内的新相对路径；确认后只修改当前笔记中这个来源的链接，可撤销，需手动保存。取消不会修改笔记。',
+        initialValue: '', positiveText: '验证并重新关联',
+      }))?.trim()
+      if (!replacement) return
+      const url = new URL(href); url.searchParams.set('path', replacement)
+      const nextSource = parseSourceReference(url.toString(), libraryRoot)
+      if (!nextSource || !findFileFormat(nextSource.path)) { message.warning('请输入当前知识库内的有效相对路径。'); return }
+      try { await invoke('get_file_stats', { libraryRoot, path: nextSource.path }) }
+      catch { message.warning('新来源仍无法访问，未修改笔记。'); return }
+      if (store.libraryPath !== libraryRoot || activeTabId.value !== notePath || vditor !== editor || editor.getValue() !== originalContent || !activeFormatCanEdit.value) {
+        message.warning('笔记或知识库已变化，请重新点击来源链接后再关联。'); return
+      }
+      if (!originalContent?.includes(href)) { message.warning('当前链接内容已变化，未修改笔记。'); return }
+      const updated = originalContent.split(href).join(url.toString())
+      editor.vditor.undo.addToUndoStack(editor.vditor)
+      editor.setValue(updated)
+      editor.vditor.undo.addToUndoStack(editor.vditor)
+      store.updateTabContent(notePath!, updated)
+      const tab = tabs.value.find(item => item.path === notePath)
+      if (tab) tab.isDirty = true
+      message.success('来源已重新关联，可撤销；请手动保存。再次点击链接可打开新来源。')
+      return
+    }
+    if (store.libraryPath !== libraryRoot || activeTabId.value !== notePath) return
+    void openManagedFile(router, source.path, { page: source.page, annotation: source.annotation,
+      ...(source.quote ? { searchNeedle: source.quote, searchLocator: `${Date.now()}-${++searchNavigationSequence}` } : {}) })
     return
   }
 }
@@ -3382,6 +3454,7 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
   void initializeUpdater()
   window.addEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
@@ -3473,6 +3546,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  document.removeEventListener('selectionchange', rememberReferenceInsertionPoint)
   ++knowledgeSearchGeneration
   ++libraryLoadGeneration
   editorLoadGeneration += 1

@@ -8,6 +8,12 @@ export function sourceExcerpt(text: string, source: ExcerptSource, libraryRoot: 
   const params = new URLSearchParams({ path: relative })
   if (source.page) params.set('page', String(source.page))
   if (source.annotationId) params.set('annotation', source.annotationId)
+  // A bounded text anchor survives edits before the excerpt; missing or
+  // ambiguous matches use the existing search navigation instead of guessing.
+  if (!source.page && !source.annotationId) {
+    const quote = text.trim().split(/\r?\n/).find(line => line.trim())?.trim().slice(0, 160)
+    if (quote) params.set('quote', quote)
+  }
   const label = (source.title + (source.page ? ` · 第 ${source.page} 页` : '')).replace(/[\\[\]]/g, '\\$&').replace(/[\r\n]/g, ' ')
   const quote = text.trim().split(/\r?\n/).map(line => `> ${line}`).join('\n')
   return `${quote}\n\n来源：[${label}](longedit://source?${params})\n`
@@ -23,6 +29,7 @@ export function parseSourceReference(href: string, libraryRoot: string) {
     const page = url.searchParams.get('page') || undefined
     if (page && (!/^\d+$/.test(page) || Number(page) < 1)) return null
     const separator = libraryRoot.includes('\\') ? '\\' : '/'
-    return { path: `${libraryRoot.replace(/[\\/]+$/, '')}${separator}${relative.replace(/\//g, separator)}`, page, annotation: url.searchParams.get('annotation') || undefined }
+    const quote = url.searchParams.get('quote')?.slice(0, 160)
+    return { path: `${libraryRoot.replace(/[\\/]+$/, '')}${separator}${relative.replace(/\//g, separator)}`, page, annotation: url.searchParams.get('annotation') || undefined, ...(quote ? { quote } : {}) }
   } catch { return null }
 }

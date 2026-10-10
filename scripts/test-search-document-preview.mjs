@@ -172,3 +172,40 @@ test('explicit return closes the reference and focuses a visible writable editor
   assert.equal(order.at(-1), 'fallback')
   assert.match(source, /@click="\$emit\('returnToEditor'\)"/)
 })
+
+test('direct excerpt insertion requires a live bookmark in the current writable Markdown note', () => {
+  const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
+  const handler = library.slice(library.indexOf('let referenceBookmark:'), library.indexOf('const externalChange ='))
+  const calls = [], node = {}
+  const range = { startContainer: node, endContainer: node, cloneRange: () => ({ ...range }), collapse: end => calls.push(['collapse', end]) }
+  const root = { contains: n => n === node, focus: () => calls.push(['focus']) }
+  const selection = { rangeCount: 1, anchorNode: node, focusNode: node, getRangeAt: () => range, removeAllRanges() {}, addRange() {} }
+  const context = {
+    vditor: { getCurrentMode: () => 'wysiwyg', vditor: { wysiwyg: { element: root }, undo: { addToUndoStack: () => calls.push(['undo']) } }, insertMD: text => calls.push(['insert', text]) },
+    isVditorReady: true, lastLoadedPath: '/lib/note.md', watch: () => {}, activeIsMarkdown: { value: true }, activeFormatCanEdit: { value: true }, activeTabId: { value: '/lib/note.md' },
+    searchPreviewResult: { value: { path: '/lib/source.md' } }, store: { libraryPath: '/lib' },
+    sourceExcerpt: text => `> ${text}`, window: { getSelection: () => selection }, message: { warning: () => calls.push(['warning']), success() {} },
+  }
+  vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.run = insertReferenceExcerpt; globalThis.remember = rememberReferenceInsertionPoint', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
+  context.run('摘录'); assert.equal(calls.at(-1)[0], 'warning')
+  context.remember(); context.activeTabId.value = '/lib/other.md'
+  context.run('摘录'); assert.equal(calls.at(-1)[0], 'warning')
+  context.activeTabId.value = '/lib/note.md'; context.activeFormatCanEdit.value = false
+  context.run('摘录'); assert.equal(calls.filter(x => x[0] === 'insert').length, 0)
+  context.activeFormatCanEdit.value = true; context.run('摘录')
+  assert.equal(calls.filter(x => x[0] === 'insert').length, 1)
+  assert.equal(calls.filter(x => x[0] === 'undo').length, 2)
+  assert.equal(calls.find(x => x[0] === 'collapse')[1], false)
+})
+
+test('manual reference refresh clears selection and ignores an older read', async () => {
+  const h = setup()
+  h.requests[0].resolve({ text: '原文' }); await settle()
+  h.state.selectedText.value = '旧摘录'
+  const pending = h.state.load()
+  assert.equal(h.state.selectedText.value, '')
+  assert.equal(h.state.preview.value, null)
+  h.requests[1].resolve({ text: '保存后的新内容' }); await pending
+  assert.equal(h.state.preview.value.text, '保存后的新内容')
+  h.stop()
+})

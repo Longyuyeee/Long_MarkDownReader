@@ -2,6 +2,7 @@
   <aside ref="panel" class="search-document-preview pinned" role="region" aria-label="参考资料（只读）" tabindex="-1" @keydown.esc.stop.prevent="$emit('close')">
     <header>
       <div><small>参考 · 只读</small><strong>{{ result.title }}</strong><small :title="result.path">{{ relativePath }}</small></div>
+      <button type="button" :disabled="loading" @click="load">刷新参考</button>
       <button type="button" class="reference-return" @click="$emit('returnToEditor')">返回编辑</button>
       <button type="button" aria-label="关闭参考" @click="$emit('close')">×</button>
     </header>
@@ -12,6 +13,7 @@
     </div>
     <div v-if="preview && !loading && !error" ref="previewText" class="preview-text" @pointerup="captureSelection" @keyup="captureSelection"><SearchHighlight :text="preview.text || '此处暂无可预览的文字。'" :query="query" /></div>
     <div v-if="preview && !loading && !error && (selectedText || copyStatus)" class="excerpt-actions">
+      <button type="button" :disabled="!selectedText || !insertTarget" @pointerdown.prevent @click="$emit('insertExcerpt', selectedText)">{{ insertTarget ? `插入到 ${insertTarget}` : '打开可编辑 Markdown 笔记后可插入' }}</button>
       <button type="button" :disabled="!selectedText || copying" @pointerdown.prevent @click="copyExcerpt">复制选中文字及来源</button>
       <small role="status">{{ copyStatus || (selectedText ? `已选 ${selectedText.length} 字` : '先在参考内容中选择需要摘录的文字') }}</small>
     </div>
@@ -25,8 +27,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { sourceExcerpt } from '../utils/sourceExcerpt'
 import SearchHighlight from './SearchHighlight.vue'
 import { searchResultPath } from '../utils/searchResultPath'
-const props = defineProps<{ libraryRoot: string; query: string; result: { path: string; title: string; page?: number; annotationId?: string; matchKind: string } }>()
-defineEmits<{ close: []; open: []; returnToEditor: [] }>()
+const props = defineProps<{ libraryRoot: string; query: string; insertTarget?: string; result: { path: string; title: string; page?: number; annotationId?: string; matchKind: string } }>()
+defineEmits<{ close: []; open: []; returnToEditor: []; insertExcerpt: [text: string] }>()
 interface Preview { text: string; label: string; truncated: boolean; matchFound: boolean }
 const panel = ref<HTMLElement | null>(null)
 const preview = ref<Preview | null>(null)
@@ -93,7 +95,7 @@ button:disabled { opacity: .5; cursor: default; }
 header, footer { display: flex; align-items: center; gap: 12px; padding: 12px 16px; flex-shrink: 0; }
 header { border-bottom: var(--theme-border); }
 header div { flex: 1; min-width: 0; }
-header strong, header small { display: block; overflow-wrap: anywhere; }
+header strong, header small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
 button { font: inherit; color: var(--theme-primary); background: transparent; border: var(--theme-border); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
 button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
@@ -104,6 +106,10 @@ footer { flex-wrap: wrap; justify-content: space-between; border-top: var(--them
 .preview-open { flex-shrink: 0; }
 .reference-return { display: none; }
 @media (max-width: 760px) {
+  .search-document-preview.pinned { overflow-y: auto; }
+  .pinned .preview-text { flex: 1 0 80px; }
+  header { flex-wrap: wrap; }
+  header div { flex-basis: 100%; }
   .reference-return { display: inline-block; flex-shrink: 0; }
   header, footer { gap: 6px; padding: 8px; }
   .preview-state { padding: 4px 8px; }

@@ -35,6 +35,7 @@ const harness = (vueWatchers = false) => {
     watch: vueWatchers ? watch : () => {}, setTimeout: fn => { timers.set(++timerId, fn); return timerId }, clearTimeout: id => timers.delete(id),
     invoke: (command, args) => { const request = deferred(); pending.push({ command, args, ...request }); return request.promise },
     onUnmounted, editorLoadGeneration: 0, destroyImageFix: noop, window: { removeEventListener: noop },
+    document: { removeEventListener: noop }, rememberReferenceInsertionPoint: noop,
     revealLibraryFile: noop, refreshCreatedLibraryFile: noop, handleKeyDown: noop,
     shadowSaveTimer: null, gitStatusTimer: null, cleanupEditorListeners: noop, destroyOutlineObserver: noop,
     unlistenRefresh: null, unlistenExport: null, unlistenRefreshCmd: null, unlistenSaveCmd: null,
@@ -95,7 +96,7 @@ test('component keeps errors distinct and offers accessible retry', () => {
   const component = fs.readFileSync('src/components/SearchFeedback.vue', 'utf8')
   assert.match(component, /v-else-if="failed"[^>]*role="alert"/)
   assert.match(component, /\$emit\('retry'\)/)
-  assert.match(source, /onUnmounted\(\(\) => \{\s*\+\+knowledgeSearchGeneration/)
+  assert.match(source.slice(unmountStart, unmountEnd), /\+\+knowledgeSearchGeneration/)
   assert.match(source, /watch\(\(\) => store.libraryPath, \(newPath\) => \{\s*\+\+knowledgeSearchGeneration/)
   assert.match(source, /@retry="retryKnowledgeSearch"/)
 })

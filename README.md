@@ -1,6 +1,6 @@
 > v1.0.25 已正式发布：搜索预览与关键词定位、返回搜索恢复、固定参考文档，以及带来源链接的摘录。见 [更新内容](docs/RELEASE_NOTES_v1.0.25.md)。
 
-> 开发进展：v1.0.26 的“默认主区打开、显式侧边参考”交互已冻结，正在进入发布收尾；尚未提供新安装包。见 [收尾审计与验证证据](docs/V1_0_26_Search_Interaction_Closure_2026-10-10.md)。
+> 开发进展：v1.0.26 已补参考摘录直插、来源定位、刷新和失效来源重新关联，正在验证参考写作闭环；完成闭环与发布门禁后才发布，尚无新安装包。见 [闭环记录与验证证据](docs/V1_0_26_Reference_Writing_Loop_2026-10-10.md)。
 
 <p align="center">
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">

@@ -1,0 +1,44 @@
+{
+  "status": "passed-real-tauri-debug-webview2",
+  "capturedAt": "2026-10-10T14:33:01.819Z",
+  "baseCommit": "6188bae75a676bfec630dfc29fc9213697857162",
+  "sourceHashes": {
+    "src/utils/sourceExcerpt.ts": "699b93464eec1dd342d6f432b9b153088686cef5e7458b0800d723e5f2cbab66",
+    "src/views/LibraryMode.vue": "e34c50a8dd525c923daffe073f36e1ca6152b69bd48d9db06a8bb233e993d001",
+    "src/components/SearchDocumentPreview.vue": "4f187e85d0fd811a8246de545c0071761acea377a84248394f561307b22ace4a",
+    "scripts/capture-v126-reference-loop.mjs": "6a54fed4bed9716a1e8094b57086233f1d931de12f1b39caeb8b78d0248aca65",
+    "src-tauri/target/debug/tauri-app.exe": "3197ecc151a61ed10f7b2813a683ee1462ff4aa034d94ec5d5f45f015d4e4975"
+  },
+  "checks": [
+    "ordinary result click never opens side reference",
+    "reference is docked alongside current draft",
+    "excerpt includes quoted content and a source",
+    "direct insertion preserves existing draft",
+    "one undo preserves prior unsaved text",
+    "refresh clears stale selected excerpt",
+    "reference survives changed search and draft survives navigation",
+    "narrow reference does not cover editor",
+    "narrow reference text and main-open action remain visible",
+    "short window can reach reference footer",
+    "return to editor focuses the main editor",
+    "Markdown next match",
+    "pasted excerpt source opens the original file",
+    "source returns to quoted paragraph",
+    "no global error overlay",
+    "source file remains unchanged",
+    "IR inserts and undoes excerpt without losing existing text",
+    "源码 inserts and undoes excerpt without losing existing text",
+    "cancel source repair leaves old link intact",
+    "missing source repair supports cancel, undo, redo and explicit save without losing draft",
+    "saved repaired link opens the moved file",
+    "failed refresh removes stale reference text"
+  ],
+  "clipboard": "payload-intercepted-system-clipboard-untouched",
+  "sourceUserContentIncluded": false,
+  "limitations": [
+    "debug-native-backend-not-installed-release",
+    "generated-markdown-fixtures",
+    "range-selection-and-route-setup-automated",
+    "buttons-clicked-through-CDP-pointer-input"
+  ]
+}
