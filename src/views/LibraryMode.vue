@@ -823,6 +823,7 @@ import {
   opensInLibraryShell,
   routeForFile,
 } from '../config/fileFormats'
+import { findEditorSearchRange } from '../utils/searchLocation'
 import { openManagedFile, openManagedObject } from '../services/fileNavigation'
 import { promptAppAction } from '../services/appDialog'
 import { readLocalGraphPinned, writeLocalGraphPinned } from '../utils/localGraphPin'
@@ -1506,6 +1507,30 @@ watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleO
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
+let locatedSearchToken = ''
+let searchLocationTarget: HTMLElement | null = null
+const revealSearchMatch = () => {
+  const token = String(route.query.searchLocator || '')
+  const needle = String(route.query.searchNeedle || '')
+  if (!token || !needle || token === locatedSearchToken || !isVditorReady
+    || route.query.path !== activeTabId.value || lastLoadedPath !== activeTabId.value) return
+  const root = vditor?.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
+  if (!root) return
+  locatedSearchToken = token
+  searchLocationTarget?.classList.remove('workspace-task-locator-target')
+  const range = findEditorSearchRange(root, needle)
+  if (!range) {
+    message.info('当前显示内容中未找到该关键词，内容可能已修改，或关键词位于 Markdown 标记中。可使用文内查找，或切换源码模式查看。', { duration: 6500 })
+    return
+  }
+  searchLocationTarget = range.startContainer.parentElement
+  searchLocationTarget?.classList.add('workspace-task-locator-target')
+  searchLocationTarget?.scrollIntoView({ behavior: 'auto', block: 'center' })
+  root.focus({ preventScroll: true })
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+}
 let taskLocatorTarget: HTMLElement | null = null
 let relationEvidenceTarget: HTMLElement | null = null
 const revealWorkspaceTask = () => {
@@ -1977,6 +2002,7 @@ const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
   ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
 }[kind])
 
+let searchNavigationSequence = 0
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
   searchReturn.remember(searchMatchKey(result))
   if (
@@ -1997,6 +2023,10 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
       locationLabel: result.locationLabel,
       matchKind: result.matchKind,
     }, 'replace')
+    return
+  }
+  if (['markdown', 'plain-text'].includes(result.objectType) && result.matchKind === 'body') {
+    void openManagedFile(router, result.path, { searchNeedle: searchQuery.value.trim(), searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
     return
   }
   const target = routeForFile(result.path)
@@ -2128,6 +2158,7 @@ const loadFileToEditor = async (path: string) => {
   
   const setEditorValue = (content: string, readOnly = false) => {
     if (!isCurrentRequest()) return
+    const wasDirty = currentTab?.isDirty ?? false
     suppressEditorInput = true
     vditor.setValue(content)
     startAdaptiveMotion()
@@ -2139,11 +2170,13 @@ const loadFileToEditor = async (path: string) => {
     fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
-        if (currentTab) currentTab.isDirty = false
+        if (!isCurrentRequest()) return
+        if (currentTab) currentTab.isDirty = wasDirty
         lastLoadedPath = path;
         refreshVisibleOutline();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
+        revealSearchMatch();
         scheduleWorkspaceTaskReveal();
         scheduleRelationEvidenceReveal();
       }, 50) 
@@ -3421,6 +3454,11 @@ watch(() => route.query.path, (path) => {
   if (opensInLibraryShell(format)) handleNodeSelect([path])
   else router.replace({ name: format.routeName, query: { path } })
 }, { immediate: true })
+watch([() => route.query.searchLocator, () => route.query.path], () => {
+  locatedSearchToken = ''
+  searchLocationTarget?.classList.remove('workspace-task-locator-target')
+  void nextTick(revealSearchMatch)
+})
 watch(() => route.query.taskLocator, () => scheduleWorkspaceTaskReveal())
 watch(() => route.query.relationLocator, () => scheduleRelationEvidenceReveal())
 const applyRouteSearch = () => {

@@ -7,6 +7,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-search-highlight.mjs'], 
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-groups.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-document-preview.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-return.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-search-location.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-window-close-lifecycle.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-library-recovery.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-text-save-lifecycle.mjs'], { stdio: 'inherit' })

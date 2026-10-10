@@ -151,6 +151,7 @@
 </template>
 
 <script setup lang="ts">
+import { firstSearchRange } from '../utils/searchLocation'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { runTextSave, waitForTextSave } from '../utils/pendingTextSaves'
@@ -568,6 +569,26 @@ const load = async (encoding?: string, discardDraft = false) => {
     if (generation === loadGeneration) loading.value = false
   }
 }
+
+let locatedSearchToken = ''
+const revealSearchMatch = () => {
+  const token = String(route.query.searchLocator || '')
+  if (!editor || loading.value || loadError.value || !token || token === locatedSearchToken) return
+  const needle = String(route.query.searchNeedle || '')
+  if (!needle) return
+  locatedSearchToken = token
+  const match = firstSearchRange(editor.state.doc.toString(), needle)
+  if (!match) {
+    message.info(rangeMode.value
+      ? '已加载的内容中未找到关键词，可以继续加载后使用文内查找。'
+      : '当前内容中未找到关键词，内容可能已修改。可使用文内查找重新搜索。', { duration: 6000 })
+    return
+  }
+  viewMode.value = 'source'
+  editor.dispatch({ selection: { anchor: match.from, head: match.to }, effects: EditorView.scrollIntoView(match.from, { y: 'center' }) })
+  editor.focus()
+}
+watch([() => route.query.searchLocator, loading], () => { void nextTick(revealSearchMatch) })
 
 const loadNextRange = async () => {
   if (!readOnlyReason.value || rangeEof.value || loadingRange.value) return
