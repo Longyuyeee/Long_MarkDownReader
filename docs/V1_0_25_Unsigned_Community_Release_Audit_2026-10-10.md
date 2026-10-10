@@ -5,3 +5,5 @@
 当前状态：候选构建与安装流程检查中，尚未公开发布。旧版证据不作为本版通过依据。
 
 发布通道 community-unsigned，当前 releaseCandidate=false。安装包可能出现未知发布者提示；自动更新失败时支持手动下载安装，并提供 SHA-256 校验。
+
+真实 Tauri 调试流程已修复 Windows canonical 路径摘录和窄窗残留分隔条问题；宽窄截图已经人工检查。依赖更新为 Vue 3.5.43、DOMPurify 3.4.16、source-map-js 1.2.2，Mermaid 保留 11.16.1，仅覆盖 KaTeX 到修复版 0.18.2。生产依赖审计为 0 项。最终依赖构建与安装包验证仍在执行。
