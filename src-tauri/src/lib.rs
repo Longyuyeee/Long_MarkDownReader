@@ -64,7 +64,7 @@ use commands::history::{
 };
 use commands::index::{
     cancel_knowledge_index, delete_knowledge_index, get_knowledge_index_status,
-    rebuild_knowledge_index, recover_knowledge_index_cache, search_knowledge,
+    rebuild_knowledge_index, recover_knowledge_index_cache, search_knowledge, preview_search_document,
 };
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
@@ -513,6 +513,7 @@ pub fn run() {
             get_url_title,
             search_library,
             search_knowledge,
+            preview_search_document,
             get_knowledge_index_status,
             rebuild_knowledge_index,
             cancel_knowledge_index,

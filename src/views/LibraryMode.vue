@@ -137,7 +137,8 @@
                       <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
                       <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
                     </button>
-                    <details v-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
+                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`预览 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="searchPreviewResult = result">预览内容</button>
+                    <details v-else-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
                       <summary :aria-label="`查看 ${result.title} 的命中摘要`">查看命中摘要</summary>
                       <p><SearchHighlight :text="result.context" :query="searchQuery" /></p>
                       <small>搜索摘要，非全文；打开文件查看完整内容。</small>
@@ -744,6 +745,8 @@
       </div>
     </n-modal>
 
+    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchQuery" @close="searchPreviewResult = null" @open="openKnowledgeSearchResult(searchPreviewResult!); searchPreviewResult = null" />
+
     <!-- AI 结果弹窗 -->
     <n-modal v-model:show="aiState.showResultModal" preset="dialog" title="AI 处理结果" positive-text="替换原文" negative-text="取消" @positive-click="replaceWithResult" @negative-click="aiState.showResultModal = false">
       <div style="min-height: 80px;">
@@ -765,6 +768,7 @@ import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
+import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
@@ -1319,6 +1323,8 @@ const searchQuery = ref('')
 const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
+const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
+watch([searchQuery, () => store.libraryPath, searchObjectTypes, activeSidebarTab], () => { searchPreviewResult.value = null })
 const knowledgeSearchRunning = ref(false)
 const knowledgeSearchFailed = ref(false)
 let knowledgeSearchGeneration = 0
@@ -4011,6 +4017,8 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-search-result:hover { border-color: rgba(var(--theme-primary-rgb),.3); background: rgba(var(--theme-primary-rgb),.08); }
 .knowledge-result-open { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; font: inherit; }
 .knowledge-result-open:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; border-radius: var(--theme-radius-sm); }
+.knowledge-preview-button { justify-self: start; padding: 5px 9px; border: var(--theme-border); border-radius: 6px; background: transparent; color: var(--theme-primary); font: inherit; cursor: pointer; }
+.knowledge-preview-button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
 .knowledge-search-count { margin: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; }
 .knowledge-result-group { min-width: 0; margin-bottom: 8px; border-bottom: var(--theme-border); }
 .knowledge-result-group-label { margin: 0; padding: 6px 10px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); line-height: 1.5; }

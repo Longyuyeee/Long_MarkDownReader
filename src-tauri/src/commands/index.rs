@@ -294,6 +294,71 @@ fn decode_text_file(path: &Path) -> Option<String> {
     Some(text.strip_prefix('\u{feff}').unwrap_or(&text).to_string())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchDocumentPreview {
+    text: String,
+    label: String,
+    truncated: bool,
+    match_found: bool,
+}
+
+fn preview_excerpt(text: &str, query: &str, label: String) -> SearchDocumentPreview {
+    let query = query.trim().to_lowercase();
+    let found = if query.is_empty() { None } else { text.to_lowercase().find(&query) };
+    let mut bytes = 0;
+    let mut position: usize = 0;
+    if let Some(at) = found {
+        for ch in text.chars() {
+            let len = ch.to_lowercase().map(char::len_utf8).sum::<usize>();
+            if bytes + len > at { break; }
+            bytes += len; position += 1;
+        }
+    }
+    let start = position.saturating_sub(400);
+    let mut chars = text.chars().skip(start);
+    let body = chars.by_ref().take(8000).collect::<String>();
+    let remaining = chars.next().is_some();
+    SearchDocumentPreview {
+        text: format!("{}{}{}", if start > 0 { "…\n" } else { "" }, body, if remaining { "\n…" } else { "" }),
+        label, truncated: start > 0 || remaining, match_found: found.is_some(),
+    }
+}
+
+#[tauri::command]
+pub async fn preview_search_document(
+    library_root: String, path: String, query: String, page: Option<u32>,
+    annotation_id: Option<String>, match_kind: String,
+) -> Result<SearchDocumentPreview, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let path = guard.resolve_existing(path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let format = file_format_for_path(&path)?;
+        if is_sensitive_path(&path) { return Err("此文件不提供搜索预览，请直接打开查看".into()); }
+        match format.id.as_str() {
+            "markdown" | "plain-text" => {
+                let text = decode_text_file(&path).ok_or("无法读取文字内容，文件可能过大或已不可访问，请直接打开查看")?;
+                Ok(preview_excerpt(&text, &query, if format.id == "markdown" { "Markdown 原文" } else { "文本内容" }.into()))
+            }
+            "pdf" => {
+                let index = load_pdf_index(&path);
+                if let Some(id) = annotation_id {
+                    let annotation = index.annotations.iter().find(|item| item.id == id).ok_or("该批注已不可用，请打开文件确认")?;
+                    return Ok(preview_excerpt(&annotation.text, &query, format!("第 {} 页 · 批注文字", annotation.page)));
+                }
+                let page = page.unwrap_or(1);
+                if page == 0 { return Err("页码不可用，请打开文件确认".into()); }
+                let text = if match_kind == "ocr" {
+                    index.ocr_pages.iter().find(|item| item.page == page).map(|item| item.text.as_str())
+                } else { index.pages.get((page - 1) as usize).map(String::as_str) };
+                let text = text.filter(|value| !value.trim().is_empty()).ok_or("这一页没有可提取的文字，请打开 PDF 查看原页面")?;
+                Ok(preview_excerpt(text, &query, format!("第 {} 页 · {}", page, if match_kind == "ocr" { "OCR 文字" } else { "PDF 提取文字" })))
+            }
+            _ => Err("此格式请打开文件查看".into()),
+        }
+    }).await.map_err(|error| format!("读取预览失败：{error}"))?
+}
+
 fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
     results.sort_by(|left, right| {
         right
@@ -786,6 +851,18 @@ pub async fn search_knowledge(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn preview_preserves_lines_and_shows_late_match_without_returning_entire_file() {
+        let text = format!("{}\n目标段落\n保留换行{}", "前言🙂".repeat(5000), "后文".repeat(6000));
+        let preview = preview_excerpt(&text, "目标段落", "Markdown 原文".into());
+        assert!(preview.text.contains("\n目标段落\n保留换行"));
+        assert!(preview.match_found && preview.truncated);
+        assert!(preview.text.chars().count() <= 8004);
+        let short = preview_excerpt("第一行\n第二行", "文件名", "文本内容".into());
+        assert_eq!(short.text, "第一行\n第二行");
+        assert!(!short.match_found && !short.truncated);
+    }
 
     #[test]
     fn located_search_keeps_distinct_pages_deduplicates_and_bounds_results() {
