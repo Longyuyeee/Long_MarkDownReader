@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-26-v1.0.26-version-candidate",
-  "binaryVersionTransition": "v1.0.26-quality-gate-pending",
+  "binaryVersionTransition": "v1.0.26-release-ready",
   "displayLabel": "v1.0.26 参考写作闭环候选 · 当前公开 v1.0.25",
   "activeSlice": {
     "id": "v1.0.26-reference-writing-loop",
-    "status": "runtime-transitioned-candidate-validation-pending",
+    "status": "fixed-candidate-installed-lifecycle-passed",
     "document": "docs/V1_0_26_Unsigned_Community_Release_Audit_2026-10-10.md"
   }
 }

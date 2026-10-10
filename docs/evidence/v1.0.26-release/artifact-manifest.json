@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "stage": "UX26",
+  "status": "ready-to-publish-hosted-lifecycle-and-runtime-smoke-passed",
+  "appVersion": "1.0.26",
+  "sourceVersion": "1.0.26",
+  "sourceCommit": "c5c136140ad68fefb81b50898051012cfc865a20",
+  "hostedRunId": 38060835862,
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.0.26_x64_zh-CN.msi",
+      "sizeBytes": 75403264,
+      "sha256": "34ffc2e9ad792c497f67647262d49d5770dabe3523f1409739cc63f1e0f2c500",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.0.26_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.0.26_x64-setup.exe",
+      "sizeBytes": 66841236,
+      "sha256": "05bc2988746a998dda98de9bef61701c36ecf5d062ab7e808a709733b6d4c9d9",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.0.26_x64-setup.exe"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "a5329e23357a3f8cceea9046801593fdf4b9c5c1c1cfb9a5cfa58628ce1a4648"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 38060835862
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "workspace": {
+        "path": "docs/evidence/v126-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "395c18291f61c81259e3ac3991e462e869f7e535690a56811ae935634d8e48fb"
+      },
+      "routes": {
+        "path": "docs/evidence/v126-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "2adc9731b1f075bac882f3de4b1fc35e7880e13cd165f818d81aae75ff9bb00e"
+      },
+      "version": {
+        "path": "docs/evidence/v126-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "1fe8037277e3726200df233e22441d4ba4ee2d1502934764957cff1dcba8212b"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 38060835862,
+    "sourceCommit": "c5c136140ad68fefb81b50898051012cfc865a20",
+    "evidenceRoot": "docs/evidence/v126-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.0.26-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false
+}
