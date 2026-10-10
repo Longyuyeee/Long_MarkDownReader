@@ -34,13 +34,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Candidate download failed' }
           $receipts = @(Get-ChildItem candidate -Recurse -Filter installer-build-receipt.json)
           if ($receipts.Count -ne 1) { throw 'Ambiguous build receipt' }
-          $receipt = Get-Content -LiteralPath $receipts[0].FullName -Raw | ConvertFrom-Json
+          $receipt = Get-Content -LiteralPath $receipts[0].FullName -Raw -Encoding UTF8 | ConvertFrom-Json
           if ($receipt.appVersion -ne '1.0.25' -or $receipt.candidateSourceCommit -ne $env:PRODUCT_SOURCE_COMMIT -or $receipt.artifacts.Count -ne 2) { throw 'Frozen source/version mismatch' }
           foreach ($asset in $receipt.artifacts) {
             $files = @(Get-ChildItem candidate -Recurse -File | Where-Object Name -eq $asset.fileName)
             if ($files.Count -ne 1 -or $files[0].Length -ne $asset.sizeBytes -or (Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $asset.sha256) { throw 'Current installer byte mismatch' }
           }
-          $previousReceipt = Get-Content docs/evidence/v1.0.24-release/release-receipt.json -Raw | ConvertFrom-Json
+          $previousReceipt = Get-Content docs/evidence/v1.0.24-release/release-receipt.json -Raw -Encoding UTF8 | ConvertFrom-Json
           $previousAsset = @($previousReceipt.assets | Where-Object name -eq 'LongEdit_1.0.24_x64-setup.exe')[0]
           $previous = @(Get-ChildItem candidate -Recurse -Filter $previousAsset.name)
           if ($previous.Count -ne 1 -or $previous[0].Length -ne $previousAsset.sizeBytes -or (Get-FileHash -LiteralPath $previous[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $previousAsset.sha256) { throw 'Previous official installer byte mismatch' }
@@ -49,7 +49,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $receiptFile = @(Get-ChildItem candidate -Recurse -Filter installer-build-receipt.json)[0]
-          $receipt = Get-Content -LiteralPath $receiptFile.FullName -Raw | ConvertFrom-Json
+          $receipt = Get-Content -LiteralPath $receiptFile.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
           $current = @(Get-ChildItem candidate -Recurse -Filter '*_1.0.25_x64-setup.exe')[0]
           $previous = @(Get-ChildItem candidate -Recurse -Filter 'LongEdit_1.0.24_x64-setup.exe')[0]
           $nsis = @($receipt.artifacts | Where-Object target -eq 'nsis')[0]
