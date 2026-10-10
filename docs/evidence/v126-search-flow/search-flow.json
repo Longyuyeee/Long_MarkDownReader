@@ -1,0 +1,33 @@
+{
+  "status": "passed-real-tauri-debug-webview2",
+  "capturedAt": "2026-10-10T14:15:30.259Z",
+  "baseCommit": "61ad9ff8dc0d772629bd3b07308cc37b77327ead",
+  "sourceHashes": {
+    "src/views/LibraryMode.vue": "6fa63945f609c7cb40abd20af85eb4d90aaa0eedb68ff8aaf1578b0c2b5a89ce",
+    "src/components/SearchDocumentPreview.vue": "5f4a749a830fcebec6d6c0eb6373245ac5a813b7a9cd5095cde10c9fc22225ae",
+    "scripts/capture-v126-search-flow.mjs": "641918a32d93cc3ba399bd9df80afd9c7bc6d6e7f8ed7182aa872dfc9bcfe1fe",
+    "src-tauri/target/debug/tauri-app.exe": "3197ecc151a61ed10f7b2813a683ee1462ff4aa034d94ec5d5f45f015d4e4975"
+  },
+  "checks": [
+    "ordinary result click never opens side reference",
+    "reference is docked alongside current draft",
+    "excerpt includes quoted content and a source",
+    "reference survives changed search and draft survives navigation",
+    "narrow reference does not cover editor",
+    "narrow reference text and main-open action remain visible",
+    "short window can reach reference footer",
+    "return to editor focuses the main editor",
+    "Markdown next match",
+    "pasted excerpt source opens the original file",
+    "no global error overlay",
+    "source file remains unchanged"
+  ],
+  "clipboard": "payload-intercepted-system-clipboard-untouched",
+  "sourceUserContentIncluded": false,
+  "limitations": [
+    "debug-native-backend-not-installed-release",
+    "generated-markdown-fixtures",
+    "range-selection-and-route-setup-automated",
+    "buttons-clicked-through-CDP-pointer-input"
+  ]
+}

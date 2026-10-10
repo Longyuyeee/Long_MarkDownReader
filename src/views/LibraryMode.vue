@@ -564,7 +564,7 @@
     </div>
 
     <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
-      @close="searchPreviewResult = null" @open="openSearchPreview" />
+      @close="searchPreviewResult = null" @return-to-editor="returnToEditorFromReference" @open="openSearchPreview" />
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
         <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
@@ -1338,6 +1338,17 @@ const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
 const referencePinned = computed(() => searchPreviewResult.value !== null)
 const searchPreviewQuery = ref('')
+const returnToEditorFromReference = async () => {
+  searchPreviewResult.value = null
+  await nextTick()
+  // Explicit return means resume writing, not restore the search trigger.
+  const editor = document.querySelector<HTMLElement>('.editor-main')
+  if (!editor) return
+  const input = Array.from(editor.querySelectorAll<HTMLElement>('[contenteditable="true"], textarea, input'))
+    .find(element => element.getClientRects().length > 0 && !element.matches(':disabled, [readonly]'))
+  if (input) input.focus({ preventScroll: true })
+  else { editor.tabIndex = -1; editor.focus({ preventScroll: true }) }
+}
 const showSearchPreview = (result: KnowledgeSearchResult) => {
   searchPreviewQuery.value = searchQuery.value
   searchPreviewResult.value = result

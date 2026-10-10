@@ -152,3 +152,23 @@ test('arrow keys move between main-open actions without opening files or swallow
   context.navigate({ ...event('ArrowDown', 1), ctrlKey: true })
   assert.equal(prevented, 4)
 })
+
+test('explicit return closes the reference and focuses a visible writable editor after rendering', async () => {
+  const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
+  const handler = library.slice(library.indexOf('const returnToEditorFromReference ='), library.indexOf('const showSearchPreview ='))
+  const order = []
+  const hidden = { getClientRects: () => [], matches: () => false, focus: () => assert.fail('hidden editor') }
+  const readonly = { getClientRects: () => [1], matches: () => true, focus: () => assert.fail('readonly editor') }
+  const writable = { getClientRects: () => [1], matches: () => false, focus: () => order.push('focus') }
+  const editor = { querySelectorAll: () => [hidden, readonly, writable], focus: () => order.push('fallback') }
+  const context = { searchPreviewResult: { value: {} }, nextTick: async () => order.push('render'), document: { querySelector: () => editor } }
+  vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.run = returnToEditorFromReference', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
+  await context.run()
+  assert.equal(context.searchPreviewResult.value, null)
+  assert.deepEqual(order, ['render', 'focus'])
+  editor.querySelectorAll = () => []
+  await context.run()
+  assert.equal(editor.tabIndex, -1)
+  assert.equal(order.at(-1), 'fallback')
+  assert.match(source, /@click="\$emit\('returnToEditor'\)"/)
+})

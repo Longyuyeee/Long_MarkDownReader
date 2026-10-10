@@ -2,7 +2,7 @@
   <aside ref="panel" class="search-document-preview pinned" role="region" aria-label="参考资料（只读）" tabindex="-1" @keydown.esc.stop.prevent="$emit('close')">
     <header>
       <div><small>参考 · 只读</small><strong>{{ result.title }}</strong><small :title="result.path">{{ relativePath }}</small></div>
-      <button type="button" class="reference-return" @click="$emit('close')">返回编辑</button>
+      <button type="button" class="reference-return" @click="$emit('returnToEditor')">返回编辑</button>
       <button type="button" aria-label="关闭参考" @click="$emit('close')">×</button>
     </header>
     <div class="preview-state" aria-live="polite">
@@ -26,7 +26,7 @@ import { sourceExcerpt } from '../utils/sourceExcerpt'
 import SearchHighlight from './SearchHighlight.vue'
 import { searchResultPath } from '../utils/searchResultPath'
 const props = defineProps<{ libraryRoot: string; query: string; result: { path: string; title: string; page?: number; annotationId?: string; matchKind: string } }>()
-defineEmits<{ close: []; open: [] }>()
+defineEmits<{ close: []; open: []; returnToEditor: [] }>()
 interface Preview { text: string; label: string; truncated: boolean; matchFound: boolean }
 const panel = ref<HTMLElement | null>(null)
 const preview = ref<Preview | null>(null)
