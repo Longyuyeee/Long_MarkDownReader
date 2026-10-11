@@ -2806,13 +2806,23 @@ const applyAxisAction = async (event: Event) => {
   finally { updatingStructure.value = false }
 }
 const restoreAxisSelection = async (sheet: string, axis: 'row' | 'column', index: number, count: number, action: 'insert' | 'delete') => {
+  const document = workbook.value
+  const epoch = workbookDocumentEpoch
+  const path = workbookPath.value
+  const root = store.libraryPath
   generation += 1
   activeSheet.value = ''
-  await selectSheet(sheet)
+  const loading = selectSheet(sheet)
+  const currentGeneration = generation
+  const isCurrent = () => workbook.value === document && workbookDocumentEpoch === epoch
+    && workbookPath.value === path && store.libraryPath === root && generation === currentGeneration && activeSheet.value === sheet
+  await loading
+  if (!isCurrent()) return
   const total = axis === 'row' ? sheetInfo.value?.totalRows || 0 : sheetInfo.value?.totalColumns || 0
   const canvasLimit = axis === 'row' ? canvasRowCount.value : canvasColumnCount.value
   const focus = action === 'delete' ? Math.min(index, Math.max(0, total - 1), canvasLimit - 1) : Math.min(index, canvasLimit - 1)
   if (axis === 'row') await loadPage(focus)
+  if (!isCurrent()) return
   const end = action === 'insert' ? Math.min(canvasLimit - 1, focus + count - 1) : focus
   const row = axis === 'row' ? focus : 0
   const column = axis === 'column' ? focus : 0
@@ -2822,6 +2832,7 @@ const restoreAxisSelection = async (sheet: string, axis: 'row' | 'column', index
     : [{ top: 0, bottom: canvasRowCount.value - 1, left: focus, right: end }]
   setSelectionFocus(row, column)
   await nextTick()
+  if (!isCurrent()) return
   scrollRef.value?.scrollTo(axis === 'row'
     ? { top: Math.max(0, rowOffset(focus) - 38), behavior: 'smooth' }
     : { left: Math.max(0, 52 + columnPixels.value.slice(0, focus).reduce((total, width) => total + width, 0) - 80), behavior: 'smooth' })
@@ -2831,23 +2842,39 @@ const commitStructure = async (axis: 'row' | 'column', action: 'insert' | 'delet
   if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行列结构')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  const original = workbook.value
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const epoch = workbookDocumentEpoch
+  const submittedGeneration = generation
+  const sameContext = () => workbookPath.value === path && store.libraryPath === root
+    && workbookDocumentEpoch === epoch && !isExternal.value
+  saving.value = true
   updatingStructure.value = true
   const sheet = activeSheet.value
+  let finish: (() => void) | undefined
   try {
+    finish = beginWindowSave()
     const change: WorkbookStructureChange = { sheet, axis, action, index: start, count }
     const document = await invoke<WorkbookDocument>('update_workbook_structure', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
+      libraryRoot: root,
+      path,
+      payload: { expectedSignature: original.signature, change },
     })
+    if (!sameContext() || workbook.value !== original) return
     workbook.value = document
+    const applied = workbook.value
     undoStack.value = []
     redoStack.value = []
-    await restoreAxisSelection(sheet, axis, start, count, action)
+    if (generation === submittedGeneration && activeSheet.value === sheet) {
+      await restoreAxisSelection(sheet, axis, start, count, action)
+    } else {
+      await restoreTableSelection(activeSheet.value || sheet, selectionBounds.value ? { ...selectionBounds.value } : null)
+    }
     const axisLabel = axis === 'row' ? '行' : '列'
-    message.success(action === 'insert' ? `已插入 ${count.toLocaleString()} ${axisLabel}` : `已删除 ${count.toLocaleString()} ${axisLabel}`)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+    if (sameContext() && workbook.value === applied) message.success(action === 'insert' ? `已插入 ${count.toLocaleString()} ${axisLabel}` : `已删除 ${count.toLocaleString()} ${axisLabel}`)
+  } catch (cause) { message.error(`${path} 行列结构保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finish?.(); updatingStructure.value = false; saving.value = false }
 }
 const applyStructureAction = (event: Event) => {
   const select = event.target as HTMLSelectElement

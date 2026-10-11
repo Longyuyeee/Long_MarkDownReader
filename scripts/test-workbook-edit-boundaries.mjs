@@ -5,6 +5,34 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('structure receipts isolate stale documents and preserve a switched sheet', async () => {
+  for (const scenario of ['success', 'switch', 'replacement', 'epoch', 'failure']) {
+    let resolve, reject, pending = 0, restored
+    const errors = []
+    const ctx = extract('const commitStructure =', 'const applyStructureAction =', {
+      isExternal: box(false), workbook: box({ signature: 'initial' }), workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' },
+      workbookDocumentEpoch: 1, generation: 1, saving: box(false), updatingStructure: box(false), dirtyCount: box(0), sheetProtected: box(false),
+      activeSheet: box('Sheet1'), selectionBounds: box(null), undoStack: box(['history']), redoStack: box([]),
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: (_cmd, args) => { assert.equal(args.payload.change.sheet, 'Sheet1'); return new Promise((done, fail) => { resolve = done; reject = fail }) },
+      restoreAxisSelection: async sheet => { restored = `axis:${sheet}` }, restoreTableSelection: async sheet => { restored = `table:${sheet}` },
+      message: { error: value => errors.push(value), success() {} },
+    }, 'globalThis.action = commitStructure')
+    const writing = ctx.action('row', 'insert', 0, 1)
+    assert.equal(pending, 1); assert.equal(ctx.saving.value, true)
+    if (scenario === 'switch') { ctx.activeSheet.value = 'Sheet2'; ctx.generation++ }
+    if (scenario === 'replacement') ctx.workbook.value = { signature: 'other' }
+    if (scenario === 'epoch') ctx.workbookDocumentEpoch++
+    if (scenario === 'failure') { ctx.workbookPath.value = 'other.xlsx'; reject(new Error('磁盘失败')) }
+    else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(pending, 0); assert.equal(ctx.saving.value, false); assert.equal(ctx.updatingStructure.value, false)
+    assert.equal(restored, scenario === 'success' ? 'axis:Sheet1' : scenario === 'switch' ? 'table:Sheet2' : undefined)
+    if (!['success', 'switch'].includes(scenario)) assert.equal(ctx.undoStack.value[0], 'history')
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 行列结构保存失败/)
+    else assert.deepEqual(errors, [])
+  }
+})
 test('row/column deletion confirmation cannot follow a changed target', async () => {
   for (const kind of ['row', 'column']) for (const stale of [false, true]) {
     let current = true, confirm

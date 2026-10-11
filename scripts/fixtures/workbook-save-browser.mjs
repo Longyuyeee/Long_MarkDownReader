@@ -15,6 +15,19 @@ secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue:
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_structure') {
+    const change = structuredClone(args.payload.change)
+    if (change.axis !== 'row') throw Error('This fixture supports row operations only')
+    await new Promise((resolve, reject) => {
+      audit.pendingStructure = fail => { audit.pendingStructure = null; fail ? reject(new Error('模拟结构写入失败')) : resolve() }
+    })
+    const target = sheets[change.sheet]
+    if (change.action === 'insert') target.rows.splice(change.index, 0, ...Array.from({ length: change.count }, () => [{ value: '', kind: 'string' }]))
+    else target.rows.splice(change.index, change.count)
+    target.totalRows = target.rows.length
+    document.signature += '-structure'
+    return structuredClone(document)
+  }
   if (['update_workbook_page_layout', 'update_workbook_print_options', 'update_workbook_header_footer'].includes(command)) {
     const change = structuredClone(args.payload.change)
     await new Promise((resolve, reject) => {
