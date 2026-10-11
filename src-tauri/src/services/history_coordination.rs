@@ -11,6 +11,18 @@ fn active() -> &'static Mutex<HashSet<String>> {
 }
 
 pub(crate) struct HistoryLease(String);
+impl HistoryLease {
+    pub(crate) fn verify(&self, cache: &Path) -> Result<(), String> {
+        let mut key = cache.to_string_lossy().replace('\\', "/");
+        if cfg!(windows) {
+            key.make_ascii_lowercase();
+        }
+        if self.0 != key.trim_end_matches('/') {
+            return Err("历史锁与缓存不匹配".into());
+        }
+        Ok(())
+    }
+}
 impl Drop for HistoryLease {
     fn drop(&mut self) {
         if let Ok(mut active) = active().lock() {

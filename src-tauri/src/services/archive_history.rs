@@ -1,5 +1,5 @@
-//! Read-only inventory and internal verified staging; no publication or retirement.
-//! A future coordinator must lock/revalidate before committing either path.
+//! History inventory, staging, publication and internal document/history sequencing.
+//! No frontend execution permission, automatic recovery or source retirement.
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -170,12 +170,27 @@ fn prepare_with_hook(
     expected: &ArchiveHistoryPlan,
     after_copy: impl FnOnce(),
 ) -> Result<PreparedHistory, PrepareFailure> {
+    let lease = super::history_coordination::acquire(cache).map_err(|message| PrepareFailure {
+        message,
+        retained_staging_directory: None,
+    })?;
+    prepare_locked(cache, source, target, expected, &lease, after_copy)
+}
+
+fn prepare_locked(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    expected: &ArchiveHistoryPlan,
+    lease: &super::history_coordination::HistoryLease,
+    after_copy: impl FnOnce(),
+) -> Result<PreparedHistory, PrepareFailure> {
     use std::io::Write;
     let fail = |message| PrepareFailure {
         message,
         retained_staging_directory: None,
     };
-    let _lease = super::history_coordination::acquire(cache).map_err(fail)?;
+    lease.verify(cache).map_err(fail)?;
     let current = inspect(cache, source, target).map_err(fail)?;
     if &current != expected {
         return Err(fail("历史清单已变化，请重新预检".into()));
@@ -324,6 +339,18 @@ fn publish_with_hook(
     prepared: &PreparedHistory,
     after_publish: impl FnOnce(),
 ) -> Result<PublishedHistory, String> {
+    let lease = super::history_coordination::acquire(cache)?;
+    publish_locked(cache, source, target, prepared, &lease, after_publish)
+}
+
+fn publish_locked(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    prepared: &PreparedHistory,
+    lease: &super::history_coordination::HistoryLease,
+    after_publish: impl FnOnce(),
+) -> Result<PublishedHistory, String> {
     use std::io::Write;
     fn record(path: &Path, bytes: &[u8]) -> Result<(), String> {
         let mut file = fs::OpenOptions::new()
@@ -335,7 +362,7 @@ fn publish_with_hook(
             .and_then(|_| file.sync_all())
             .map_err(|e| e.to_string())
     }
-    let _lease = super::history_coordination::acquire(cache)?;
+    lease.verify(cache)?;
     if inspect(cache, source, target)? != prepared.plan {
         return Err("发布前历史已变化，请重新预检".into());
     }
@@ -397,6 +424,111 @@ fn publish_with_hook(
         target_directory: destination,
         marker_error,
     })
+}
+
+/// Internal disk sequence only. Not a frontend permission or complete archive.
+#[allow(dead_code)]
+#[derive(Debug)]
+pub(crate) struct CoordinatedReceipt {
+    pub stage: PathBuf,
+    pub document_moved: bool,
+    pub history_published: bool,
+    pub error: Option<String>,
+}
+
+#[allow(dead_code)]
+pub(crate) fn move_with_history(
+    root: &Path,
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+) -> Result<CoordinatedReceipt, String> {
+    move_with_history_hook(root, cache, source, target, || {})
+}
+
+fn move_with_history_hook(
+    root: &Path,
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    after_move: impl FnOnce(),
+) -> Result<CoordinatedReceipt, String> {
+    use std::io::Write;
+    let lease = super::history_coordination::acquire(cache)?;
+    let guard = super::workspace_guard::WorkspaceGuard::new(root)?;
+    let source_input = if source.is_absolute() {
+        source.to_path_buf()
+    } else {
+        guard.root().join(source)
+    };
+    let meta = fs::symlink_metadata(&source_input).map_err(|e| e.to_string())?;
+    if !meta.is_file() || meta.file_type().is_symlink() {
+        return Err("来源必须是普通文件".into());
+    }
+    let source = guard.resolve_existing_file(source, &[])?;
+    let name = target
+        .file_name()
+        .and_then(|s| s.to_str())
+        .ok_or("非法目标名称")?;
+    crate::commands::files::validate_item_name(name)?;
+    let parent = guard.resolve_directory(target.parent().ok_or("缺少目标目录")?, false)?;
+    let target = parent.join(name);
+    match fs::symlink_metadata(&target) {
+        Ok(_) => return Err("目标已存在，不移动".into()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(e) => return Err(e.to_string()),
+    }
+    let expected = inspect(cache, &source, &target)?;
+    // This first coordinator slice requires an existing history staging receipt.
+    // Do not move history-free files without their own durable transaction journal.
+    if expected.strategy == "none" {
+        return Err("无历史文件的执行日志尚未接入，不移动".into());
+    }
+    let prepared =
+        prepare_locked(cache, &source, &target, &expected, &lease, || {}).map_err(|e| {
+            format!(
+                "{}；保留暂存: {:?}",
+                e.message, e.retained_staging_directory
+            )
+        })?;
+    let stage = prepared
+        .staging_directory
+        .as_ref()
+        .ok_or("缺少暂存目录")?
+        .clone();
+    let mut receipt = CoordinatedReceipt {
+        stage: stage.clone(),
+        document_moved: false,
+        history_published: false,
+        error: None,
+    };
+    let result = (|| -> Result<(), String> {
+        let mut journal = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(stage.join("document-intent.json"))
+            .map_err(|e| e.to_string())?;
+        let bytes =
+            serde_json::to_vec(&serde_json::json!({"version":1,"source":source,"target":target}))
+                .map_err(|e| e.to_string())?;
+        journal
+            .write_all(&bytes)
+            .and_then(|_| journal.sync_all())
+            .map_err(|e| e.to_string())?;
+        drop(journal);
+        let moves = super::archive_move::move_batch(root, &[(source.clone(), target.clone())]);
+        moves.into_iter().next().ok_or("缺少移动回执")?.result?;
+        receipt.document_moved = true;
+        after_move();
+        let published = publish_locked(cache, &source, &target, &prepared, &lease, || {})?;
+        receipt.history_published = true;
+        if let Some(error) = published.marker_error {
+            return Err(format!("历史已发布，但标记失败: {error}"));
+        }
+        Ok(())
+    })();
+    receipt.error = result.err();
+    Ok(receipt)
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -1022,5 +1154,76 @@ mod tests {
         );
         assert!(f.old().join("1.md").exists());
         assert!(f.0.join("retained-target/2.md").exists());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coordinated_move_preserves_document_history_and_holds_one_lease() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "document").unwrap();
+        let source = root.join("old.md").canonicalize().unwrap();
+        let target = root.canonicalize().unwrap().join("new.md");
+        let old = history_path(&f.0, &source);
+        fs::create_dir(&old).unwrap();
+        fs::write(old.join("1.md"), "history").unwrap();
+        let receipt = move_with_history_hook(&root, &f.0, &source, &target, || {
+            assert!(super::super::history_coordination::acquire(&f.0).is_err());
+        })
+        .unwrap();
+        assert!(receipt.document_moved && receipt.history_published && receipt.error.is_none());
+        assert_eq!(fs::read_to_string(&target).unwrap(), "document");
+        assert!(!source.exists());
+        assert_eq!(
+            fs::read_to_string(history_path(&f.0, &target).join("1.md")).unwrap(),
+            "history"
+        );
+        assert!(old.join("1.md").exists());
+        assert!(receipt.stage.join("document-intent.json").exists());
+        assert!(super::super::history_coordination::acquire(&f.0).is_ok());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coordinated_partial_failure_reports_moved_document_and_retains_history() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "document").unwrap();
+        let source = root.join("old.md").canonicalize().unwrap();
+        let target = root.canonicalize().unwrap().join("new.md");
+        let old = history_path(&f.0, &source);
+        fs::create_dir(&old).unwrap();
+        fs::write(old.join("1.md"), "history").unwrap();
+        let receipt = move_with_history_hook(&root, &f.0, &source, &target, || {
+            fs::create_dir(history_path(&f.0, &target)).unwrap();
+            fs::write(history_path(&f.0, &target).join("2.md"), "conflict").unwrap();
+        })
+        .unwrap();
+        assert!(receipt.document_moved && !receipt.history_published && receipt.error.is_some());
+        assert_eq!(fs::read_to_string(&target).unwrap(), "document");
+        assert_eq!(fs::read_to_string(old.join("1.md")).unwrap(), "history");
+        assert_eq!(
+            fs::read_to_string(history_path(&f.0, &target).join("2.md")).unwrap(),
+            "conflict"
+        );
+        assert!(receipt.stage.join("1.md").exists());
+    }
+
+    #[test]
+    fn coordinated_no_history_or_conflicting_target_never_moves_source() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "keep").unwrap();
+        let source = root.join("old.md");
+        let target = root.join("new.md");
+        assert!(move_with_history(&root, &f.0, &source, &target).is_err());
+        assert!(!target.exists());
+        fs::write(&target, "other").unwrap();
+        assert!(move_with_history(&root, &f.0, &source, &target).is_err());
+        assert_eq!(fs::read_to_string(source).unwrap(), "keep");
+        assert_eq!(fs::read_to_string(target).unwrap(), "other");
     }
 }
