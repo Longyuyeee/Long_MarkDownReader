@@ -2777,7 +2777,8 @@ const applyAxisAction = async (event: Event) => {
   const action = select.value as 'hide' | 'show' | 'group' | 'ungroup' | ''
   select.value = ''
   const axis = selectedAxis.value
-  if (isExternal.value || !action || !axis || !workbook.value || updatingStructure.value || dirtyCount.value) return
+  if (isExternal.value || !action || !axis || !workbook.value || saving.value || updatingStructure.value || dirtyCount.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行列隐藏或分组')
   if (axis.end - axis.start + 1 > MAX_BATCH_CELLS) return void message.error(`单次最多修改 ${MAX_BATCH_CELLS.toLocaleString()} 行或列`)
   const rowEdits: WorkbookRowStateEdit[] = []
   const columnEdits: WorkbookColumnStateEdit[] = []
@@ -2789,21 +2790,30 @@ const applyAxisAction = async (event: Event) => {
     if (axis.kind === 'row') rowEdits.push({ sheet: activeSheet.value, row: index, hidden, outlineLevel, collapsed })
     else columnEdits.push({ sheet: activeSheet.value, startColumn: index, endColumn: index, hidden, outlineLevel, collapsed })
   }
+  const original = workbook.value
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const epoch = workbookDocumentEpoch
+  const sheet = activeSheet.value
+  const sameContext = () => workbookPath.value === path && store.libraryPath === root
+    && workbookDocumentEpoch === epoch && !isExternal.value
+  saving.value = true
   updatingStructure.value = true
+  let finish: (() => void) | undefined
   try {
+    finish = beginWindowSave()
     const document = await invoke<WorkbookDocument>('update_workbook_outline', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, rowEdits, columnEdits },
+      libraryRoot: root,
+      path,
+      payload: { expectedSignature: original.signature, rowEdits, columnEdits },
     })
+    if (!sameContext() || workbook.value !== original) return
     workbook.value = document
-    const sheet = activeSheet.value
-    generation += 1
-    activeSheet.value = ''
-    await selectSheet(sheet)
-    message.success(action === 'hide' ? '所选行列已隐藏' : action === 'show' ? '所选行列已显示' : action === 'group' ? '分组层级已增加' : '分组层级已减少')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+    const applied = workbook.value
+    await restoreTableSelection(activeSheet.value || sheet, selectionBounds.value ? { ...selectionBounds.value } : null)
+    if (sameContext() && workbook.value === applied) message.success(action === 'hide' ? '所选行列已隐藏' : action === 'show' ? '所选行列已显示' : action === 'group' ? '分组层级已增加' : '分组层级已减少')
+  } catch (cause) { message.error(`${path} 行列隐藏/分组保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finish?.(); updatingStructure.value = false; saving.value = false }
 }
 const restoreAxisSelection = async (sheet: string, axis: 'row' | 'column', index: number, count: number, action: 'insert' | 'delete') => {
   const document = workbook.value

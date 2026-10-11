@@ -15,6 +15,21 @@ secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue:
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_outline') {
+    const payload = structuredClone(args.payload)
+    await new Promise((resolve, reject) => {
+      audit.pendingOutline = fail => { audit.pendingOutline = null; fail ? reject(new Error('模拟分组写入失败')) : resolve() }
+    })
+    for (const [key, edits] of [['rowStates', payload.rowEdits], ['columnStates', payload.columnEdits]]) {
+      for (const edit of edits) {
+        const states = sheets[edit.sheet][key]
+        const index = states.findIndex(state => key === 'rowStates' ? state.row === edit.row : state.startColumn === edit.startColumn)
+        if (index < 0) states.push(edit); else states[index] = edit
+      }
+    }
+    document.signature += '-outline'
+    return structuredClone(document)
+  }
   if (command === 'update_workbook_structure') {
     const change = structuredClone(args.payload.change)
     if (change.axis !== 'row') throw Error('This fixture supports row operations only')

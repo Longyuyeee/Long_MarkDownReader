@@ -5,6 +5,34 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('outline writes guard ownership, locking and row/column payloads', async () => {
+  for (const kind of ['row', 'column']) for (const scenario of ['success', 'replacement', 'failure']) {
+    let resolve, reject, pending = 0, restored, payload
+    const errors = []
+    const ctx = extract('const applyAxisAction =', 'const restoreAxisSelection =', {
+      selectedAxis: box({ kind, start: 0, end: 0 }), isExternal: box(false), workbook: box({ signature: 'initial' }),
+      saving: box(false), updatingStructure: box(false), dirtyCount: box(0), sheetProtected: box(false), MAX_BATCH_CELLS: 1000,
+      rowState: () => ({ hidden: false, outlineLevel: 0, collapsed: false }), columnState: () => ({ hidden: false, outlineLevel: 0, collapsed: false }),
+      workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1, activeSheet: box('Sheet1'), selectionBounds: box(null),
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: (_cmd, args) => { payload = args.payload; return new Promise((done, fail) => { resolve = done; reject = fail }) },
+      restoreTableSelection: async sheet => { restored = sheet }, message: { error: value => errors.push(value), success() {} },
+    }, 'globalThis.action = applyAxisAction')
+    const writing = ctx.action({ target: { value: 'group' } })
+    assert.equal(pending, 1); assert.equal(ctx.saving.value, true)
+    assert.equal(payload[kind === 'row' ? 'rowEdits' : 'columnEdits'][0].outlineLevel, 1)
+    ctx.activeSheet.value = 'Sheet2'
+    if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookDocumentEpoch++ }
+    if (scenario === 'failure') reject(new Error('磁盘失败'))
+    else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(pending, 0); assert.equal(ctx.saving.value, false)
+    assert.equal(restored, scenario === 'success' ? 'Sheet2' : undefined)
+    if (scenario === 'replacement') assert.equal(ctx.workbook.value.signature, 'other')
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 行列隐藏\/分组保存失败/)
+    else assert.deepEqual(errors, [])
+  }
+})
 test('structure receipts isolate stale documents and preserve a switched sheet', async () => {
   for (const scenario of ['success', 'switch', 'replacement', 'epoch', 'failure']) {
     let resolve, reject, pending = 0, restored
