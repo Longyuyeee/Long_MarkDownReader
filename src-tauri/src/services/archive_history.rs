@@ -1,6 +1,6 @@
 //! Read-only inventory and internal verified staging; no publication or retirement.
 //! A future coordinator must lock/revalidate before committing either path.
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::Read;
@@ -16,7 +16,7 @@ pub(crate) fn history_path(cache: &Path, document: &Path) -> PathBuf {
     ))
 }
 
-#[derive(Debug, Serialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistorySnapshot {
     name: String,
@@ -24,13 +24,13 @@ pub(crate) struct HistorySnapshot {
     sha256: String,
 }
 
-#[derive(Debug, Serialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ArchiveHistoryPlan {
     source_directory: String,
     target_directory: String,
     snapshots: Vec<HistorySnapshot>,
-    strategy: &'static str,
+    strategy: String,
 }
 
 pub(crate) fn inspect(
@@ -63,7 +63,7 @@ pub(crate) fn inspect(
         source_directory: old.to_string_lossy().into_owned(),
         target_directory: new.to_string_lossy().into_owned(),
         snapshots: vec![],
-        strategy: "none",
+        strategy: "none".into(),
     };
     match fs::symlink_metadata(&old) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(plan),
@@ -132,7 +132,7 @@ pub(crate) fn inspect(
         });
     }
     plan.snapshots.sort_by(|a, b| a.name.cmp(&b.name));
-    plan.strategy = "copy_verify_then_retire_source";
+    plan.strategy = "copy_verify_then_retire_source".into();
     Ok(plan)
 }
 
@@ -197,6 +197,21 @@ fn prepare_with_hook(
     ));
     fs::create_dir(&stage).map_err(|e| fail(format!("无法创建历史暂存目录: {e}")))?;
     let copy_result = (|| -> Result<(), String> {
+        // Persist intent before copying the first byte. No overwrite or cleanup.
+        let journal = serde_json::to_vec(&serde_json::json!({
+            "version": 1, "plan": current
+        }))
+        .map_err(|e| e.to_string())?;
+        let mut intent = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(stage.join("intent.json"))
+            .map_err(|e| e.to_string())?;
+        intent
+            .write_all(&journal)
+            .and_then(|_| intent.sync_all())
+            .map_err(|e| e.to_string())?;
+        drop(intent);
         for snapshot in &current.snapshots {
             let from = Path::new(&current.source_directory).join(&snapshot.name);
             let meta = fs::symlink_metadata(&from).map_err(|e| e.to_string())?;
@@ -256,6 +271,17 @@ fn prepare_with_hook(
         if inspect(cache, source, target)? != current {
             return Err("复制期间历史清单发生变化，请重新预检".into());
         }
+        // Immutable completion marker binds to the exact intent; not a commit receipt.
+        let digest = format!("{:x}", Sha256::digest(&journal));
+        let mut marker = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(stage.join("prepared.sha256"))
+            .map_err(|e| e.to_string())?;
+        marker
+            .write_all(digest.as_bytes())
+            .and_then(|_| marker.sync_all())
+            .map_err(|e| e.to_string())?;
         Ok(())
     })();
     match copy_result {
@@ -268,6 +294,98 @@ fn prepare_with_hook(
             retained_staging_directory: Some(stage),
         }),
     }
+}
+
+/// Read-only restart diagnosis. Even Prepared requires live source/target checks.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum StagingState {
+    Incomplete,
+    Prepared,
+}
+
+#[allow(dead_code)] // Recovery UI/commit coordinator not wired yet.
+pub(crate) fn inspect_staging(cache: &Path, stage: &Path) -> Result<StagingState, String> {
+    fn read_regular(path: &Path, limit: u64) -> Result<Vec<u8>, String> {
+        let meta = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
+        if !meta.is_file() || meta.file_type().is_symlink() || meta.len() > limit {
+            return Err("恢复文件类型或大小不合法".into());
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(path)
+            .map_err(|e| e.to_string())?
+            .take(limit + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        if bytes.len() as u64 > limit {
+            return Err("恢复文件读取超限".into());
+        }
+        Ok(bytes)
+    }
+    let meta = fs::symlink_metadata(stage).map_err(|e| e.to_string())?;
+    if !meta.is_dir() || meta.file_type().is_symlink() {
+        return Err("历史暂存位置不是普通目录".into());
+    }
+    let cache = cache.canonicalize().map_err(|e| e.to_string())?;
+    let stage = stage.canonicalize().map_err(|e| e.to_string())?;
+    if stage.parent() != Some(cache.as_path())
+        || !stage
+            .file_name()
+            .and_then(|n| n.to_str())
+            .is_some_and(|n| n.starts_with(".archive-stage-"))
+    {
+        return Err("恢复目录不在指定历史缓存内".into());
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Intent {
+        version: u32,
+        plan: ArchiveHistoryPlan,
+    }
+    let bytes = read_regular(&stage.join("intent.json"), 1024 * 1024)?;
+    let intent: Intent =
+        serde_json::from_slice(&bytes).map_err(|e| format!("历史恢复日志损坏: {e}"))?;
+    if intent.version != 1
+        || intent.plan.strategy != "copy_verify_then_retire_source"
+        || intent.plan.snapshots.len() > MAX_SNAPSHOTS
+    {
+        return Err("不支持的历史恢复日志".into());
+    }
+    let mut names = std::collections::HashSet::new();
+    let mut total = 0u64;
+    for snapshot in &intent.plan.snapshots {
+        let stem = snapshot.name.strip_suffix(".md").ok_or("非法快照名称")?;
+        if stem.is_empty()
+            || !stem.bytes().all(|b| b.is_ascii_digit())
+            || stem.parse::<u64>().is_err()
+            || !names.insert(snapshot.name.as_str())
+        {
+            return Err("非法或重复快照名称".into());
+        }
+        total = total.checked_add(snapshot.bytes).ok_or("快照体积溢出")?;
+        if total > MAX_BYTES {
+            return Err("恢复历史超出体积上限".into());
+        }
+    }
+    match fs::symlink_metadata(stage.join("prepared.sha256")) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(StagingState::Incomplete),
+        Err(e) => return Err(e.to_string()),
+        Ok(_) => {}
+    }
+    if read_regular(&stage.join("prepared.sha256"), 64)?
+        != format!("{:x}", Sha256::digest(&bytes)).as_bytes()
+    {
+        return Err("历史暂存完成标记与日志不匹配".into());
+    }
+    for snapshot in &intent.plan.snapshots {
+        let stored = read_regular(&stage.join(&snapshot.name), snapshot.bytes)?;
+        if stored.len() as u64 != snapshot.bytes
+            || format!("{:x}", Sha256::digest(&stored)) != snapshot.sha256
+        {
+            return Err("恢复历史快照校验失败".into());
+        }
+    }
+    // Never follow the source/target paths from disk logs or mutate anything here.
+    Ok(StagingState::Prepared)
 }
 
 #[cfg(test)]
@@ -460,5 +578,69 @@ mod tests {
             fs::read_to_string(f.new_path().join("1.md")).unwrap(),
             "other history"
         );
+    }
+
+    #[test]
+    fn restart_diagnosis_rechecks_disk_and_rejects_corruption() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "original").unwrap();
+        let prepared = prepare(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+        )
+        .unwrap();
+        let stage = prepared.staging_directory.unwrap();
+        assert_eq!(
+            inspect_staging(&f.0, &stage).unwrap(),
+            StagingState::Prepared
+        );
+        fs::write(stage.join("1.md"), "tampered").unwrap();
+        assert!(inspect_staging(&f.0, &stage).is_err());
+        assert_eq!(
+            fs::read_to_string(f.old().join("1.md")).unwrap(),
+            "original"
+        );
+        assert!(!f.new_path().exists());
+    }
+
+    #[test]
+    fn interrupted_copy_is_incomplete_and_never_resumed_automatically() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "original").unwrap();
+        let failed = prepare_with_hook(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+            || {
+                fs::write(f.old().join("2.md"), "changed").unwrap();
+            },
+        )
+        .unwrap_err();
+        let stage = failed.retained_staging_directory.unwrap();
+        assert_eq!(
+            inspect_staging(&f.0, &stage).unwrap(),
+            StagingState::Incomplete
+        );
+        assert!(!stage.join("prepared.sha256").exists());
+        assert!(!f.new_path().exists());
+        fs::write(stage.join("intent.json"), "truncated {").unwrap();
+        assert!(inspect_staging(&f.0, &stage).is_err());
+    }
+
+    #[test]
+    fn recovery_rejects_outside_directory_and_traversal_in_manifest() {
+        let f = Fixture::new();
+        let stage = f.0.join(".archive-stage-test");
+        fs::create_dir(&stage).unwrap();
+        fs::write(stage.join("intent.json"), r#"{"version":1,"plan":{"sourceDirectory":"ignored","targetDirectory":"ignored","strategy":"copy_verify_then_retire_source","snapshots":[{"name":"../1.md","bytes":0,"sha256":""}]}}"#).unwrap();
+        assert!(inspect_staging(&f.0, &stage).is_err());
+        let other = Fixture::new();
+        assert!(inspect_staging(&other.0, &stage).is_err());
+        assert!(stage.join("intent.json").exists());
     }
 }
