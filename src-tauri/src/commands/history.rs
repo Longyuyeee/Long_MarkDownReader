@@ -15,6 +15,11 @@ pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<P
     Ok(crate::services::archive_history::history_path(&cache_dir, std::path::Path::new(path)))
 }
 
+pub(crate) fn history_lease(app: &tauri::AppHandle) -> Result<crate::services::history_coordination::HistoryLease, String> {
+    let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?.join("history_v2");
+    crate::services::history_coordination::acquire(&cache)
+}
+
 #[tauri::command]
 pub async fn save_history_version(
     app_handle: tauri::AppHandle,
@@ -56,6 +61,7 @@ fn save_history(
     max_count: u32,
 ) -> Result<(), String> {
     let file_history_dir = history_dir(app_handle, path)?;
+    let _lease = history_lease(app_handle)?;
     if !file_history_dir.exists() {
         fs::create_dir_all(&file_history_dir).map_err(|error| error.to_string())?;
     }
@@ -146,6 +152,7 @@ pub async fn delete_history_version(
     path: String,
     timestamp: u64,
 ) -> Result<(), String> {
+    let _lease = history_lease(&app_handle)?;
     let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
     let file_path =
         history_dir(&app_handle, path.to_string_lossy().as_ref())?.join(format!("{timestamp}.md"));
@@ -157,11 +164,13 @@ pub async fn delete_history_version(
 
 #[tauri::command]
 pub async fn clear_all_history(app_handle: tauri::AppHandle) -> Result<(), String> {
+    let _lease = history_lease(&app_handle)?;
     let cache_dir = app_handle
         .path()
         .app_cache_dir()
         .map_err(|error| error.to_string())?
         .join("history_v2");
+    crate::services::history_coordination::ensure_clearable(&cache_dir)?;
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir).map_err(|error| error.to_string())?;
     }

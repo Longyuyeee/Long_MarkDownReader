@@ -190,6 +190,7 @@ pub async fn rename_item(
     old_path: String,
     new_name: String,
 ) -> Result<String, String> {
+    let _history_lease = crate::commands::history::history_lease(&app_handle)?;
     validate_item_name(&new_name)?;
     let guard = WorkspaceGuard::new(&library_root)?;
     let old = guard.resolve_existing(&old_path)?;
@@ -222,6 +223,7 @@ pub async fn move_item(
     source_path: String,
     target_dir: String,
 ) -> Result<String, String> {
+    let _history_lease = crate::commands::history::history_lease(&app_handle)?;
     let guard = WorkspaceGuard::new(&library_root)?;
     let source = guard.resolve_existing(&source_path)?;
     reject_workspace_root(&source, &guard)?;
@@ -266,6 +268,7 @@ pub async fn delete_item(
     library_root: String,
     path: String,
 ) -> Result<(), String> {
+    let _history_lease = crate::commands::history::history_lease(&app_handle)?;
     let guard = WorkspaceGuard::new(&library_root)?;
     let target = guard.resolve_for_write(&path)?;
     reject_workspace_root(&target, &guard)?;

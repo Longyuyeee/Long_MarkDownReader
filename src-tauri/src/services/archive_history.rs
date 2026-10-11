@@ -175,6 +175,7 @@ fn prepare_with_hook(
         message,
         retained_staging_directory: None,
     };
+    let _lease = super::history_coordination::acquire(cache).map_err(fail)?;
     let current = inspect(cache, source, target).map_err(fail)?;
     if &current != expected {
         return Err(fail("历史清单已变化，请重新预检".into()));
@@ -642,5 +643,20 @@ mod tests {
         let other = Fixture::new();
         assert!(inspect_staging(&other.0, &stage).is_err());
         assert!(stage.join("intent.json").exists());
+    }
+
+    #[test]
+    fn history_writer_lease_blocks_preparation_before_any_staging_write() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "keep").unwrap();
+        let plan = f.inspect().unwrap();
+        let lease = super::super::history_coordination::acquire(&f.0).unwrap();
+        let failure = prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan).unwrap_err();
+        assert!(failure.message.contains("稍后重试"));
+        assert!(failure.retained_staging_directory.is_none());
+        assert_eq!(fs::read_dir(&f.0).unwrap().count(), 1);
+        drop(lease);
+        assert!(prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan).is_ok());
     }
 }
