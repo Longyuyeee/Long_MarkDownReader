@@ -2,6 +2,7 @@
 use crate::formats::markdown::{extract_pdf_reference_mentions, extract_wikilink_mentions};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::{
     fs,
     io::Read,
@@ -23,6 +24,7 @@ pub(crate) struct DependencyEvidence {
     pub kind: &'static str,
     pub resolution: Option<DependencyResolution>,
     pub destination_span: Option<DestinationSpan>,
+    pub snapshot_sha256: String,
 }
 
 /// UTF-8 byte offsets into the scanned document, not a current write permission.
@@ -165,8 +167,9 @@ fn local(value: &str) -> bool {
             .any(|prefix| value.starts_with(prefix))
 }
 
-fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
+pub(super) fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
     use pulldown_cmark::{Event, LinkType, Parser, Tag};
+    let snapshot_sha256 = format!("{:x}", Sha256::digest(text.as_bytes()));
     let mut found = vec![];
     let mut add = |target: &str, offset: usize, kind, destination_span| {
         if local(target) && !target.starts_with("longedit://pdf?") {
@@ -177,6 +180,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                 kind,
                 resolution: None,
                 destination_span,
+                snapshot_sha256: snapshot_sha256.clone(),
             });
         }
     };
@@ -249,6 +253,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                     kind,
                     resolution: None,
                     destination_span: None,
+                    snapshot_sha256: snapshot_sha256.clone(),
                 });
             }
         }
@@ -552,6 +557,7 @@ mod tests {
                     kind: "markdown",
                     resolution: None,
                     destination_span: None,
+                    snapshot_sha256: String::new(),
                 },
             )
         }

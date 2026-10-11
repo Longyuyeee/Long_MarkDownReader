@@ -1,6 +1,7 @@
 pub mod credentials;
 pub mod archive_history;
 pub mod archive_dependencies;
+pub(crate) mod archive_edits;
 pub(crate) mod archive_move;
 pub(crate) mod archive_document;
 pub(crate) mod history_coordination;
