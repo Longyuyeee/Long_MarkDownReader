@@ -799,6 +799,8 @@ import {
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
+import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
+import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { isActiveThemeDark } from '../config/themePresets'
 import { markdownCodeThemeChoices, resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { storeToRefs } from 'pinia'
@@ -3097,6 +3099,9 @@ const checkActiveTextIdentity = async () => {
 
 type TextSaveOptions = { savePolicy?: TextSavePolicy; successMessage?: string }
 
+const savingTextTabs = new Set<string>()
+watch(() => tabs.value.map(tab => [tab.id, tab.content]), recordWindowDraftActivity, { flush: 'sync' })
+
 const normalizeTextSaveOptions = (options: unknown): TextSaveOptions => {
   if (!options || typeof options !== 'object') return {}
   if ('savePolicy' in options || 'successMessage' in options) return options as TextSaveOptions
@@ -3107,9 +3112,19 @@ const saveCurrentFile = async (options: unknown = {}) => {
   const saveOptions = normalizeTextSaveOptions(options)
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
   if (t) { 
+    if (savingTextTabs.has(t.id)) {
+      message.warning('这篇文档正在保存，请稍后再保存新增内容')
+      return
+    }
+    const savingEditor = vditor
+    const submittedContent = savingEditor.getValue()
+    const savingLibraryRoot = store.libraryPath
+    const savingGitEnabled = currentLibGitEnabled.value
+    savingTextTabs.add(t.id)
+    const finishWindowSave = beginWindowSave()
     try { 
       if (t.textReadOnlyReason) throw new Error('大文件范围预览为只读模式，不能覆盖保存')
-      let content = vditor.getValue(); 
+      let content = submittedContent;
       
       const format = findFileFormat(t.path)
       if (!format || format.routeName !== 'LibraryMode') throw new Error('当前文件没有文本写入适配器')
@@ -3127,27 +3142,35 @@ const saveCurrentFile = async (options: unknown = {}) => {
 
       const savePolicy = saveOptions.savePolicy || (t.textReadEncoding ? { encoding: t.textReadEncoding } : undefined)
       const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
-        libraryRoot: store.libraryPath,
+        libraryRoot: savingLibraryRoot,
         path: t.path,
         formatId: format.id,
         content,
         expectedSignature: t.textSignature,
         savePolicy,
       });
+      const ownsEditor = vditor === savingEditor && activeTabId.value === t.id && tabs.value.includes(t)
+      const currentContent = ownsEditor ? savingEditor.getValue() : (t.content ?? submittedContent)
+      const receipt = reconcileTextSaveReceipt(submittedContent, currentContent, saved.content)
       updateTabFromTextSnapshot(t, saved, savePolicy?.encoding || t.textReadEncoding)
-      if (vditor.getValue() !== saved.content) {
+      t.content = receipt.content
+      t.isDirty = receipt.isDirty
+      if (ownsEditor && !receipt.isDirty && savingEditor.getValue() !== saved.content) {
         suppressEditorInput = true
-        vditor.setValue(saved.content)
+        savingEditor.setValue(saved.content)
         setTimeout(() => { suppressEditorInput = false }, 0)
       }
       lastPromptedExternalSignature = ''
-      message.success(saveOptions.successMessage || '已安全保存');
+      message.success(receipt.isDirty ? '已保存提交的内容，新增编辑尚未保存' : (saveOptions.successMessage || '已安全保存'));
       // Git 自动 commit（本地）
-      if (currentLibGitEnabled.value) {
-        invoke('git_commit', { libraryPath: store.libraryPath, message: `更新: ${t.title}` }).catch(() => {})
+      if (savingGitEnabled) {
+        invoke('git_commit', { libraryPath: savingLibraryRoot, message: `更新: ${t.title}` }).catch(() => {})
       }
     } catch (e: any) {
       handleError(e, '保存失败', 'saveCurrentFile')
+    } finally {
+      savingTextTabs.delete(t.id)
+      finishWindowSave()
     }
   }
 }
