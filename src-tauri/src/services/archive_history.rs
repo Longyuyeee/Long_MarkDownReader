@@ -474,6 +474,7 @@ fn move_with_history_hook(
     crate::commands::files::validate_item_name(name)?;
     let parent = guard.resolve_directory(target.parent().ok_or("缺少目标目录")?, false)?;
     let target = parent.join(name);
+    let _document_lease = super::document_coordination::acquire(&[&source, &target])?;
     match fs::symlink_metadata(&target) {
         Ok(_) => return Err("目标已存在，不移动".into()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
@@ -1344,6 +1345,8 @@ mod tests {
         fs::write(old.join("1.md"), "history").unwrap();
         let receipt = move_with_history_hook(&root, &f.0, &source, &target, || {
             assert!(super::super::history_coordination::acquire(&f.0).is_err());
+            assert!(super::super::document_coordination::acquire(&[&source]).is_err());
+            assert!(super::super::document_coordination::acquire(&[&target]).is_err());
         })
         .unwrap();
         assert!(receipt.document_moved && receipt.history_published && receipt.error.is_none());

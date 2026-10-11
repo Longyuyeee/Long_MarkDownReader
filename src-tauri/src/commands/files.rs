@@ -346,6 +346,7 @@ pub async fn write_markdown_file(
     content: String,
 ) -> Result<(), String> {
     let path = WorkspaceGuard::new(library_root)?.resolve_file_for_write(path, &["md"])?;
+    let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
     write_utf8(path, &content)
 }
 
@@ -371,6 +372,7 @@ pub async fn write_external_markdown_file(
     if file_format_for_path(&path)?.id != "markdown" {
         return Err("外部 Markdown 命令只接受 .md 文件".into());
     }
+    let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
     write_utf8(path, &content)
 }
 

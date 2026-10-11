@@ -114,6 +114,8 @@ fn write_resolved_text_document(
     expected_signature: Option<String>,
     save_policy: Option<TextSavePolicy>,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let _document_lease = crate::services::document_coordination::acquire(&[path])
+        .map_err(|error| text_boundary_error("document-busy", error))?;
     if content.len() as u64 > format.max_bytes {
         return Err(TextDocumentError::recoverable(
             "write-too-large",
@@ -605,6 +607,21 @@ pub async fn create_format_file(
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn archive_document_lease_blocks_text_save_without_changing_content() {
+        let path = std::env::temp_dir().join(format!("archive-save-{}-{}.md", std::process::id(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()));
+        fs::write(&path, "original").unwrap();
+        let format = file_format_by_id("markdown").unwrap();
+        let lease = crate::services::document_coordination::acquire(&[&path]).unwrap();
+        let error = write_resolved_text_document(&path, format, "changed".into(), None, None).unwrap_err();
+        assert_eq!(error.code, "document-busy");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "original");
+        drop(lease);
+        let saved = write_resolved_text_document(&path, format, "changed".into(), None, None).unwrap();
+        assert_eq!(saved.content, "changed");
+        fs::remove_file(path).unwrap();
+    }
 
     #[test]
     fn general_external_writer_rejects_specialized_sources() {

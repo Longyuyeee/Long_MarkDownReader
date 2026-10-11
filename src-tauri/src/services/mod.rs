@@ -5,6 +5,7 @@ pub(crate) mod archive_edits;
 pub(crate) mod archive_move;
 pub(crate) mod archive_document;
 pub(crate) mod history_coordination;
+pub(crate) mod document_coordination;
 pub mod data_migration;
 pub mod external_file_access;
 pub mod external_windows;
