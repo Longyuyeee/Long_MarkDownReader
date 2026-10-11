@@ -2582,8 +2582,8 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
     formulaInput.value = edit.input
   }
 }
-const undo = () => { const action = undoStack.value.pop(); if (action) { applyHistoryAction(action, 'undo'); redoStack.value.push(action) } }
-const redo = () => { const action = redoStack.value.pop(); if (action) { applyHistoryAction(action, 'redo'); undoStack.value.push(action) } }
+const undo = () => { if (saving.value) return; const action = undoStack.value.pop(); if (action) { applyHistoryAction(action, 'undo'); redoStack.value.push(action) } }
+const redo = () => { if (saving.value) return; const action = redoStack.value.pop(); if (action) { applyHistoryAction(action, 'redo'); undoStack.value.push(action) } }
 
 const cloneDraftData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const stageWorkbookObjectDraft = (draft: Omit<WorkbookObjectDraft, 'id'>) => {
@@ -3511,11 +3511,26 @@ const copySelection = async () => {
     return true
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return false }
 }
+// Clipboard permission/read/write can resolve after a save, selection or route change.
+const captureClipboardContext = () => {
+  const document = workbook.value
+  const epoch = workbookDocumentEpoch
+  const currentGeneration = generation
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const selection = JSON.stringify([selectedCell.value, selectionAreas.value])
+  return () => !saving.value && !isExternal.value && workbook.value === document
+    && workbookDocumentEpoch === epoch && generation === currentGeneration
+    && workbookPath.value === path && store.libraryPath === root
+    && JSON.stringify([selectedCell.value, selectionAreas.value]) === selection
+}
 const pasteSelection = async () => {
-  if (isExternal.value) return
+  if (isExternal.value || saving.value) return
   if (!selectedCell.value) return
+  const isCurrent = captureClipboardContext()
   try {
     const text = await navigator.clipboard.readText()
+    if (!isCurrent()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
     if (text.length > 10 * 1024 * 1024) throw new Error('剪贴板文本不能超过 10 MB')
     const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n$/, '')
     const matrix = normalized.split('\n').map(row => row.split('\t'))
@@ -3529,7 +3544,7 @@ const pasteSelection = async () => {
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const clearSelection = () => {
-  if (isExternal.value) return
+  if (isExternal.value || saving.value) return
   const focus = selectedCell.value
   if (!focus) return
   try {
@@ -3558,7 +3573,13 @@ const clearSelection = () => {
     formulaInput.value = originalInput(cellAt(focus.row, focus.column))
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
-const cutSelection = async () => { if (!isExternal.value && await copySelection()) clearSelection() }
+const cutSelection = async () => {
+  if (isExternal.value || saving.value) return
+  const isCurrent = captureClipboardContext()
+  if (!await copySelection()) return
+  if (!isCurrent()) { message.warning('编辑状态已变化，已复制内容但未清除单元格'); return }
+  clearSelection()
+}
 
 const styleAsPatch = (style: WorkbookCellStyle): WorkbookStylePatch => ({
   namedStyle: style.namedStyle,
@@ -4727,6 +4748,12 @@ const handleScroll = () => {
 }
 const handleShortcut = (event: KeyboardEvent) => {
   const formulaFocused = event.target === formulaInputRef.value
+  const modified = event.ctrlKey || event.metaKey
+  if (saving.value && ((!modified && event.key === 'Delete')
+    || (modified && ['s', 'v', 'x', 'z', 'y'].includes(event.key.toLowerCase())))) {
+    event.preventDefault()
+    return
+  }
   if (!(event.ctrlKey || event.metaKey)) {
     if (event.key === 'Escape' && validationMenuCell.value) { event.preventDefault(); closeValidationMenu(); return }
     if (!isExternal.value && !formulaFocused && event.key === 'Delete') { event.preventDefault(); clearSelection() }

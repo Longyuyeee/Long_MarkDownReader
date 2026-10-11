@@ -9,6 +9,14 @@ await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
+  // Isolated clipboard simulator: never reads or writes the user's clipboard.
+  await page.addInitScript(() => {
+    const audit = window.clipboardAudit = { read: null, write: null, copied: '' }
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+      readText: () => new Promise(resolve => { audit.read = value => { audit.read = null; resolve(value) } }),
+      writeText: text => new Promise(resolve => { audit.copied = text; audit.write = () => { audit.write = null; resolve() } }),
+    } })
+  })
   const errors = []; page.on('pageerror', error => { errors.push(error.message); console.error(error.message) })
   await page.goto('http://127.0.0.1:9000/scripts/fixtures/workbook-save-browser.html')
   const cell = page.locator('.workbook-cell').first()
@@ -19,6 +27,13 @@ try {
   await page.getByRole('button', { name: '保存 (1)', exact: true }).click()
   await page.waitForFunction(() => !!window.workbookAudit.pending)
   assert.equal(await formula.isDisabled(), true)
+  // The grid shortcut must respect the same save boundary as the disabled toolbar.
+  await cell.click()
+  await page.keyboard.press('Control+z')
+  assert.equal(await formula.inputValue(), '先核对交付日期')
+  assert.equal(await cell.locator('.cell-content').innerText(), '先核对交付日期')
+  await page.keyboard.press('Delete')
+  assert.equal(await formula.inputValue(), '先核对交付日期')
   await page.evaluate(() => { window.workbookAudit.failNext = true; window.workbookAudit.pending() })
   await page.getByText('tasks.xlsx 保存失败：模拟磁盘失败', { exact: true }).waitFor()
   await page.waitForTimeout(250) // Let the actual message enter animation finish for the screenshot.
@@ -61,6 +76,29 @@ try {
   assert.equal((await page.locator('.sheet-tabs button.active').innerText()).trim(), 'Sheet1')
   assert.equal(await page.getByText('过期读取失败', { exact: false }).count(), 0)
   await page.screenshot({ path: path.join(output, '06-sheet1-after-pending-read.png') })
+  await cell.click()
+  await page.keyboard.press('Control+v')
+  await page.waitForFunction(() => !!window.clipboardAudit.read)
+  await page.locator('.sheet-tabs button').filter({ hasText: 'Sheet2' }).click()
+  await page.getByText('第二张表补充客户记录', { exact: true }).waitFor()
+  await page.evaluate(() => window.clipboardAudit.read('不应该粘贴到新的工作表'))
+  await page.getByText('编辑状态已变化，请在目标选区重新粘贴', { exact: true }).waitFor()
+  assert.equal(await cell.locator('.cell-content').innerText(), '第二张表补充客户记录')
+  await cell.click()
+  await page.keyboard.press('Control+x')
+  await page.waitForFunction(() => !!window.clipboardAudit.write)
+  await page.locator('.sheet-tabs button').filter({ hasText: 'Sheet1' }).click()
+  await page.getByText('保存后不要跳回原工作表', { exact: true }).waitFor()
+  await page.evaluate(() => window.clipboardAudit.write())
+  await page.getByText('编辑状态已变化，已复制内容但未清除单元格', { exact: true }).waitFor()
+  assert.equal(await cell.locator('.cell-content').innerText(), '保存后不要跳回原工作表')
+  await page.waitForTimeout(250)
+  await page.screenshot({ path: path.join(output, '07-stale-clipboard-blocked.png') })
+  // Valid-context clipboard operations must still work.
+  await cell.click(); await page.keyboard.press('Control+v')
+  await page.waitForFunction(() => !!window.clipboardAudit.read)
+  await page.evaluate(() => window.clipboardAudit.read('当前选区正常粘贴'))
+  await page.getByText('当前选区正常粘贴', { exact: true }).waitFor()
   assert.deepEqual(errors, [])
-  console.log('PASS: WorkbookView edit, failure/retry, preserve selected sheet and stale pending read; simulated IPC only')
+  console.log('PASS: WorkbookView save shortcuts, clipboard context, failure/retry and sheet switching; simulated IPC/clipboard only')
 } finally { await browser.close() }
