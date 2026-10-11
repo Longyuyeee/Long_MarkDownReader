@@ -1,0 +1,41 @@
+<div class="viz-dotted-background" style="padding:16px">
+<section id="archive-recovery-proposal" aria-label="归档结果与恢复设计示意">
+  <style>
+    #archive-recovery-proposal{font:14px/1.6 'Segoe UI','Microsoft YaHei',sans-serif;color:light-dark(#252b34,#e5e9f0);background:light-dark(#fff,#252930);border:1px solid light-dark(#dfe3e8,#454b56);border-radius:10px;padding:24px;max-width:680px;margin:auto;box-sizing:border-box}
+    #archive-recovery-proposal *{box-sizing:border-box}
+    #archive-recovery-proposal h2{font-size:20px;font-weight:600;margin:8px 0}
+    #archive-recovery-proposal p{margin:8px 0 18px}
+    #archive-recovery-proposal small{font-size:12px;color:light-dark(#586274,#b5bfd0)}
+    #archive-recovery-proposal article{border-top:1px solid light-dark(#e5e8ed,#454b56);padding:14px 0;display:flex;gap:12px;justify-content:space-between;align-items:start}
+    #archive-recovery-proposal article div{min-width:0;overflow-wrap:anywhere}
+    #archive-recovery-proposal b{font-weight:600}
+    #archive-recovery-proposal button{font:inherit;color:inherit;background:light-dark(#f5f7f9,#363c45);border:1px solid light-dark(#d9dfe6,#596170);padding:7px 12px;border-radius:5px;white-space:nowrap}
+    #archive-recovery-proposal footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:16px}
+    #archive-recovery-proposal .primary{background:light-dark(#276c4d,#398962);color:#fff;border-color:transparent}
+    #archive-recovery-proposal details{margin-top:8px;overflow-wrap:anywhere}
+    #archive-recovery-proposal summary{cursor:pointer}
+    #archive-recovery-proposal .notice{padding:10px;background:light-dark(#fff5df,#443925);border-radius:5px}
+    @media(max-width:480px){#archive-recovery-proposal{padding:16px}#archive-recovery-proposal article{flex-direction:column}}
+  </style>
+  <small>Long编辑 · 设计示意，非已实现界面 · UI-F1-04</small>
+  <h2>归档未全部完成</h2>
+  <p>目标：项目 / 客户交付<br>1 项已完成，1 项未执行，1 项需要核对</p>
+  <article><div><b>会议记录.md · 已完成</b><br><small>收集箱 → 项目 / 客户交付</small></div><span>可在新位置打开</span></article>
+  <article><div><b>需求清单.md · 未执行</b><br><small>目标已有同名文件；原文件未移动</small></div><span>更改名称后重新预检</span></article>
+  <article><div><b>交付说明.md · 需要核对</b><br><small>正文已移动，历史发布状态尚未确认</small></div><span>不自动重试</span></article>
+  <p class="notice">已完成的文件不会再次移动。核对只读取磁盘状态，不自动覆盖或删除文件。</p>
+  <details><summary>查看处理记录</summary><small>会议记录.md：正文与历史已确认。<br>需求清单.md：目标名称冲突。<br>交付说明.md：保留恢复记录，等待磁盘核对。<br>以上为示例数据，不是实际执行结果。</small></details>
+  <footer><button type="button" data-action="close">关闭并保留记录</button><button type="button" class="primary" data-action="check">核对未完成项</button></footer>
+  <small id="recovery-proposal-status" role="status"></small>
+</section>
+</div>
+<script>
+(() => {
+ const root=document.getElementById('archive-recovery-proposal');
+ root.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
+   root.querySelector('[role="status"]').textContent=button.dataset.action==='check'?'示意：核对后逐项显示结果；不会执行移动。':'示意：关闭后可从收集箱再次查看处理记录。';
+ }));
+ const state={showRecord:false};
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=>{root.querySelector('details').open=state.showRecord}});tweak.addToggle(state,'showRecord',{label:'展开处理记录'})}
+})();
+</script>
