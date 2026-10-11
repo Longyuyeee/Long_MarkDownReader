@@ -9,6 +9,7 @@ pub mod drawio;
 pub mod external_apps;
 pub mod files;
 pub mod formats;
+pub mod quick_note;
 pub mod git;
 pub mod graph;
 pub mod history;

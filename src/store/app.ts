@@ -91,6 +91,7 @@ export const useAppStore = defineStore('app', {
     isAutostart: false,
     exitStrategy: 'ask' as 'ask' | 'quit' | 'minimize',
     isTempDirty: false,
+    isCaptureBusy: false,
     isZen: false,
     visualStyle: 'soft' as VisualStyle,
     motionSpeed: 'calm' as ThemeMotionSpeed,

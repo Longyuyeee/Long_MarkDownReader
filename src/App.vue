@@ -367,7 +367,7 @@ let lifecycleReady = false
 let lifecycleDisposed = false
 const lifecycleUnlisteners: UnlistenFn[] = []
 const closeWindow = async () => {
-  if (!lifecycleReady || closeBusy) return
+  if (!lifecycleReady || closeBusy || store.isCaptureBusy) return
   closeBusy = true
   try {
     if (!isMainWindow) {
@@ -415,7 +415,7 @@ const handleHide = async () => {
 }
 let exitBusy = false
 const handleExit = async () => {
-  if (!lifecycleReady || exitBusy) return
+  if (!lifecycleReady || exitBusy || store.isCaptureBusy) return
   exitBusy = true
   try {
     showExitModal.value = false

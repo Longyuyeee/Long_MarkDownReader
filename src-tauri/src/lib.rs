@@ -301,17 +301,7 @@ pub fn run() {
                         let _ = win.set_focus();
                     }
                     "quick" => {
-                        let _ = tauri::WebviewWindowBuilder::new(
-                            app,
-                            "quick-note",
-                            tauri::WebviewUrl::App("#/quick-note".into()),
-                        )
-                        .title("快速笔记")
-                        .inner_size(560.0, 460.0)
-                        .always_on_top(true)
-                        .decorations(false)
-                        .transparent(true)
-                        .build();
+                        let _ = commands::quick_note::open_quick_note_window(app.clone());
                     }
                     _ => {}
                 })
@@ -379,6 +369,8 @@ pub fn run() {
             read_external_text_document_range,
             write_external_text_document,
             create_format_file,
+            commands::quick_note::save_quick_note,
+            commands::quick_note::open_quick_note,
             read_opml_file,
             read_external_opml_file,
             write_opml_file,

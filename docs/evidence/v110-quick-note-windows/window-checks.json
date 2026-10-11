@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "real quick-note window identity",
+    "reopening reuses same window",
+    "cancel closing preserves draft",
+    "saved note opened in main editor",
+    "quick window closes after handoff"
+  ],
+  "scope": "Native window created through the same production command as tray action; tray icon not physically clicked"
+}

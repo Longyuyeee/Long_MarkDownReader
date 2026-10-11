@@ -28,14 +28,20 @@ const afterSave = ref('close'), status = ref('')
 const saving = ref(false), choosing = ref(false), ready = ref(false)
 const busy = computed(() => saving.value || choosing.value)
 const editor = ref<HTMLTextAreaElement>()
+// Retain identity across failed invocations; clear it only after an acknowledged save.
+let operationId = crypto.randomUUID().replace(/-/g, '')
+let operationTarget: { libraryRoot: string; targetDir: string } | null = null
 const inbox = computed(() => library.value.replace(/[\\/]$/, '') + '/Inbox')
 const preferenceKey = (root: string) => 'longedit.quick-note.target:' + root
 watch(library, root => {
   try { target.value = localStorage.getItem(preferenceKey(root)) || inbox.value }
   catch { target.value = inbox.value }
 })
-watch(content, value => { store.isTempDirty = value.length > 0 }, { flush: 'sync' })
-onUnmounted(() => { store.isTempDirty = false })
+watch([content, busy], ([value, active]) => {
+  store.isTempDirty = value.length > 0 || active
+  store.isCaptureBusy = active
+}, { flush: 'sync' })
+onUnmounted(() => { store.isTempDirty = false; store.isCaptureBusy = false })
 onMounted(async () => {
   try { await store.loadConfig(); library.value = store.activeLibraryPath; ready.value = true; await nextTick(); editor.value?.focus() }
   catch (error) { status.value = '读取资料库失败：' + String(error) }
@@ -87,12 +93,17 @@ const save = async () => {
   saving.value = true
   let savedPath = ''
   try {
-    savedPath = await invoke<string>('create_format_file', {
-      libraryRoot: library.value, targetDir: target.value, formatId: 'markdown',
-      prefix: '快速笔记_' + new Date().toISOString().replace(/[:.]/g, '-') + '_' + crypto.randomUUID().slice(0, 8),
+    if (operationTarget && (operationTarget.libraryRoot !== library.value || operationTarget.targetDir !== target.value)) {
+      throw new Error('上次保存结果尚未确认，请回到原目录重试，避免重复记录：' + operationTarget.targetDir)
+    }
+    operationTarget = { libraryRoot: library.value, targetDir: target.value }
+    savedPath = await invoke<string>('save_quick_note', {
+      ...operationTarget, operationId,
       content: content.value,
     })
   } catch (error) { status.value = '保存失败，输入已保留：' + String(error); saving.value = false; return }
+  operationId = crypto.randomUUID().replace(/-/g, '')
+  operationTarget = null
   content.value = ''; template.value = '空白笔记'
   status.value = '已保存：' + savedPath
   try { localStorage.setItem(preferenceKey(library.value), target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
