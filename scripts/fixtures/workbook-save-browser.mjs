@@ -19,7 +19,24 @@ if (new URLSearchParams(window.location.search).has('filter')) {
   sheet.rows.push([{ value: '客户交付', formattedValue: '客户交付', kind: 'string' }]); sheet.totalRows = 2
 }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
+if (new URLSearchParams(window.location.search).has('chart')) {
+  sheet.totalRows = 2; sheet.totalColumns = 2; sheet.returnedColumns = 2
+  sheet.rows = [
+    [{ value: '项目', kind: 'string' }, { value: '完成数', kind: 'string' }],
+    [{ value: '客户交付', kind: 'string' }, { value: '8', kind: 'number' }],
+  ]
+}
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_drawing') {
+    const change = structuredClone(args.payload.change)
+    audit.drawingChange = change
+    await new Promise((resolve, reject) => {
+      audit.pendingDrawing = fail => { audit.pendingDrawing = null; fail ? reject(new Error('模拟绘图写入失败')) : resolve() }
+    })
+    if (change.action !== 'create_chart') throw Error('Only create_chart supported in fixture')
+    sheets[change.sheet].drawings.push({ id: 'chart-1', kind: 'chart', name: change.chartTitle, editable: false, from: change.from, to: change.to, chart: { title: change.chartTitle, chartType: change.chartType, series: [] } })
+    document.signature += '-drawing'; return structuredClone(document)
+  }
   if (command === 'update_workbook_defined_name') {
     const change = structuredClone(args.payload.change)
     await new Promise((resolve, reject) => {

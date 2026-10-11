@@ -4470,37 +4470,56 @@ const loadChartPreview = async () => {
   } finally { if (current === chartPreviewGeneration) chartPreviewLoading.value = false }
 }
 const commitDrawingChange = async (change: WorkbookDrawingChange, area: WorkbookMergeRange, success: string, selectionMode: 'keep' | 'new' | 'clear' = 'keep') => {
-  if (isExternal.value || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑绘图对象')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
+  saving.value = true
+  const original = workbook.value
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const epoch = workbookDocumentEpoch
+  const submittedGeneration = generation
+  const current = () => workbookDocumentEpoch === epoch && workbookPath.value === path && store.libraryPath === root && !isExternal.value
   const sheet = activeSheet.value
   const drawingId = selectedDrawingId.value
   const previousDrawingIds = new Set(sheetInfo.value?.drawings.map(drawing => drawing.id) || [])
+  let finish: (() => void) | undefined
   try {
+    finish = beginWindowSave()
     const document = await invoke<WorkbookDocument>('update_workbook_drawing', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
+      libraryRoot: root,
+      path,
+      payload: { expectedSignature: original.signature, change: cloneDraftData(change) },
     })
+    if (!current() || workbook.value !== original) return
+    const keepTarget = generation === submittedGeneration && activeSheet.value === sheet && selectedDrawingId.value === drawingId
     workbook.value = document
+    const applied = workbook.value
     undoStack.value = []
     redoStack.value = []
-    await restoreTableSelection(sheet, area)
-    if (selectionMode === 'new') {
+    const targetSheet = activeSheet.value
+    const restoring = restoreTableSelection(targetSheet, keepTarget ? area : selectionBounds.value ? { ...selectionBounds.value } : null)
+    const restoreGeneration = generation
+    await restoring
+    if (!current() || workbook.value !== applied || activeSheet.value !== targetSheet || generation !== restoreGeneration) return
+    if (keepTarget && selectionMode === 'new') {
       selectedDrawingId.value = sheetInfo.value?.drawings.find(drawing => drawing.chart && !previousDrawingIds.has(drawing.id))?.id || ''
-    } else {
+    } else if (keepTarget) {
       selectedDrawingId.value = selectionMode === 'clear' ? '' : drawingId
     }
     message.success(success)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  } catch (cause) { message.error(`${path} 绘图对象保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finish?.(); saving.value = false; updatingStructure.value = false }
 }
 const createChartFromSelection = async () => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || !canCreateChart.value) return
+  const current = captureEditContext()
+  const chartType = newChartType.value
   const title = (await promptAppAction(dialog, { title: '创建图表', content: '输入图表标题，最多 1024 个字符。', initialValue: `${activeSheet.value} 图表`, positiveText: '创建图表' }))?.trim()
   if (!title) return
+  if (!current() || !canCreateChart.value || newChartType.value !== chartType) return void message.warning('编辑上下文已变化，请重新创建图表')
   const from: WorkbookDrawingAnchor = {
     row: area.top,
     column: Math.min(area.right + 2, 16_383),

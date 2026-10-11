@@ -6,6 +6,50 @@ import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
 
+test('chart creation rejects a stale prompt without changing chart creation requirements', async () => {
+  for (const stale of [false, true]) {
+    let current = true
+    const commits = []
+    const ctx = extract('const createChartFromSelection =', 'const changeSelectedChartType =', {
+      selectionAreas: box([{}]), selectionBounds: box({ top: 0, bottom: 1, left: 0, right: 1 }), canCreateChart: box(true),
+      captureEditContext: () => () => current, newChartType: box('column'), activeSheet: box('Sheet1'), dialog: {},
+      promptAppAction: async () => { if (stale) current = false; return '交付进度' },
+      message: { warning() {}, error() {} }, commitDrawingChange: change => commits.push(change),
+    }, 'globalThis.action = createChartFromSelection')
+    await ctx.action()
+    assert.equal(commits.length, stale ? 0 : 1)
+    if (!stale) assert.equal(commits[0].sheet, 'Sheet1')
+  }
+})
+
+test('drawing writes preserve switched sheets and isolate replaced documents', async () => {
+  for (const scenario of ['success', 'switch', 'replacement', 'failure']) {
+    let resolve, reject, pending = 0, restored
+    const errors = []
+    const ctx = extract('const commitDrawingChange =', 'const createChartFromSelection =', {
+      isExternal: box(false), workbook: box({ signature: 'initial' }), saving: box(false), updatingStructure: box(false), dirtyCount: box(0), sheetProtected: box(false),
+      workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1, generation: 1,
+      activeSheet: box('Sheet1'), selectedDrawingId: box('old'), sheetInfo: box({ drawings: [] }), selectionBounds: box(null),
+      undoStack: box(['history']), redoStack: box([]), cloneDraftData: value => value,
+      beginWindowSave: () => { pending++; return () => pending-- },
+      restoreTableSelection: async sheet => { restored = sheet },
+      invoke: () => new Promise((done, fail) => { resolve = done; reject = fail }),
+      message: { error: value => errors.push(value), success() {} },
+    }, 'globalThis.action = commitDrawingChange')
+    const writing = ctx.action({ action: 'create_chart' }, { top: 0 }, 'saved', 'new')
+    assert.equal(ctx.saving.value, true); assert.equal(pending, 1)
+    if (scenario === 'switch') { ctx.activeSheet.value = 'Sheet2'; ctx.generation++; ctx.selectedDrawingId.value = 'second' }
+    if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookDocumentEpoch++ }
+    if (scenario === 'failure') reject(Error('disk')); else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(ctx.saving.value, false); assert.equal(pending, 0)
+    assert.equal(restored, scenario === 'success' ? 'Sheet1' : scenario === 'switch' ? 'Sheet2' : undefined)
+    if (scenario === 'switch') assert.equal(ctx.selectedDrawingId.value, 'second')
+    if (scenario === 'replacement' || scenario === 'failure') assert.equal(ctx.undoStack.value[0], 'history')
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 绘图对象保存失败/)
+  }
+})
+
 test('defined name writes isolate receipts and release save locks', async () => {
   for (const scenario of ['success', 'replacement', 'failure']) {
     let resolve, reject, pending = 0
