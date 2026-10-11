@@ -12,8 +12,7 @@ pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<P
         .app_cache_dir()
         .map_err(|error| format!("cache dir error: {error}"))?
         .join("history_v2");
-    let file_hash = format!("{:x}", md5::compute(path));
-    Ok(cache_dir.join(file_hash))
+    Ok(crate::services::archive_history::history_path(&cache_dir, std::path::Path::new(path)))
 }
 
 #[tauri::command]

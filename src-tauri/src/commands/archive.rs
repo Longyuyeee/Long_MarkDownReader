@@ -1,9 +1,11 @@
 //! Read-only structural checks. This receipt is NOT permission to move files.
 use crate::commands::files::validate_item_name;
+use crate::services::archive_history::{self, ArchiveHistoryPlan};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use tauri::Manager;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,6 +29,7 @@ pub struct ArchiveItemCheck {
     source_path: String,
     target_path: Option<String>,
     issues: Vec<ArchiveIssue>,
+    history: Option<ArchiveHistoryPlan>,
 }
 
 #[derive(Debug, Serialize)]
@@ -72,6 +75,7 @@ fn check(
             source_path: item.source_path.clone(),
             target_path: None,
             issues: vec![],
+            history: None,
         };
         if item.has_unsaved_changes {
             result.issues.push(issue(
@@ -164,11 +168,43 @@ fn check(
 
 #[tauri::command]
 pub async fn preflight_archive(
+    app_handle: tauri::AppHandle,
     library_root: String,
     target_dir: String,
     items: Vec<ArchiveItem>,
 ) -> Result<ArchivePreflight, String> {
-    check(&library_root, &target_dir, items)
+    let mut result = check(&library_root, &target_dir, items)?;
+    let cache = app_handle
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("history_v2");
+    inspect_histories(&library_root, &cache, &mut result)?;
+    Ok(result)
+}
+
+fn inspect_histories(
+    root: &str,
+    cache: &Path,
+    result: &mut ArchivePreflight,
+) -> Result<(), String> {
+    let guard = WorkspaceGuard::new(root)?;
+    for item in &mut result.items {
+        if !item.issues.is_empty() {
+            continue;
+        }
+        let plan = (|| {
+            let source = guard.resolve_existing(&item.source_path)?;
+            let target =
+                guard.resolve_for_write(item.target_path.as_ref().ok_or("缺少目标路径")?)?;
+            archive_history::inspect(cache, &source, &target)
+        })();
+        match plan {
+            Ok(plan) => item.history = Some(plan),
+            Err(error) => item.issues.push(issue("history_conflict", error)),
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -306,6 +342,43 @@ mod tests {
             r#"{"sourcePath":"note.md","targetName":"n.md"}"#
         )
         .is_err());
+    }
+    #[test]
+    fn history_inventory_uses_the_same_canonical_identity_as_saving() {
+        let f = Fixture::new();
+        let cache = f.0.join("history-cache");
+        let source = f.0.join("note.md").canonicalize().unwrap();
+        let old = archive_history::history_path(&cache, &source);
+        fs::create_dir_all(&old).unwrap();
+        fs::write(old.join("1.md"), "past").unwrap();
+        let mut r = f.check(vec![item("note.md", "new.md")]);
+        inspect_histories(f.0.to_str().unwrap(), &cache, &mut r).unwrap();
+        let value = serde_json::to_value(&r).unwrap();
+        assert_eq!(value["items"][0]["history"]["snapshots"][0]["name"], "1.md");
+        assert_eq!(
+            value["items"][0]["history"]["strategy"],
+            "copy_verify_then_retire_source"
+        );
+        assert!(!r.can_execute);
+        assert_eq!(fs::read_to_string(old.join("1.md")).unwrap(), "past");
+    }
+    #[test]
+    fn history_failure_is_per_item_and_does_not_hide_other_results() {
+        let f = Fixture::new();
+        fs::write(f.0.join("other.md"), "other").unwrap();
+        let cache = f.0.join("history-cache");
+        let target = f.0.join("project").canonicalize().unwrap().join("new.md");
+        fs::create_dir_all(archive_history::history_path(&cache, &target)).unwrap();
+        let mut r = f.check(vec![
+            item("note.md", "new.md"),
+            item("other.md", "other.md"),
+        ]);
+        inspect_histories(f.0.to_str().unwrap(), &cache, &mut r).unwrap();
+        assert!(has(&r, 0, "history_conflict"));
+        assert!(r.items[0].history.is_none());
+        assert!(r.items[1].history.is_some());
+        assert!(r.structural_checks_passed); // This field describes paths, not history or execution readiness.
+        assert!(!r.can_execute);
     }
     #[cfg(windows)]
     #[test]

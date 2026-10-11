@@ -1,4 +1,5 @@
 pub mod credentials;
+pub mod archive_history;
 pub mod data_migration;
 pub mod external_file_access;
 pub mod external_windows;
