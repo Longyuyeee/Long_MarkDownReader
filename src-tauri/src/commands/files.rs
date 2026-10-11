@@ -41,7 +41,7 @@ pub(crate) fn sanitize_filename(name: &str) -> String {
         .collect()
 }
 
-fn validate_item_name(name: &str) -> Result<(), String> {
+pub(crate) fn validate_item_name(name: &str) -> Result<(), String> {
     if name.is_empty() {
         return Err("名称不能为空".into());
     }

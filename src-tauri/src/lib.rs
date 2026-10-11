@@ -3,6 +3,7 @@ mod formats;
 mod services;
 
 use commands::ai::ai_chat_completion;
+use commands::archive::preflight_archive;
 use commands::backup::{
     export_management_backup, preflight_management_backup_import, restore_management_backup,
 };
@@ -530,6 +531,7 @@ pub fn run() {
             delete_items,
             move_item,
             move_items,
+            preflight_archive,
             open_default_apps_settings,
             get_default_app_candidate_status,
             prepare_default_app_candidate,
