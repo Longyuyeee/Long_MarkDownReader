@@ -46,6 +46,8 @@ pub struct ArchivePreflight {
     pending_checks: Vec<&'static str>,
     edit_preview: Option<BatchPreview>,
     window_draft_audit: Option<super::lifecycle::ArchiveDraftAudit>,
+    window_confirmation_request_id: Option<String>,
+    window_confirmation_error: Option<String>,
 }
 
 fn issue(code: &'static str, message: impl Into<String>) -> ArchiveIssue {
@@ -168,6 +170,8 @@ fn check(
         can_execute: false,
         edit_preview: None,
         window_draft_audit: None,
+        window_confirmation_request_id: None,
+        window_confirmation_error: None,
         pending_checks: vec![
             "links_and_attachments",
             "history_and_identity",
@@ -206,6 +210,13 @@ pub async fn preflight_archive(
             .extend(audit.blockers.iter().map(|s| s.to_string()));
     }
     result.window_draft_audit = Some(audit);
+    // Start a fresh diagnostic round after the slow filesystem scan. Cached
+    // clean observations are not replies; the caller must query its status.
+    // This never changes can_execute or grants a file-mutation lease.
+    match super::lifecycle::begin_archive_window_confirmation(app_handle) {
+        Ok(id) => result.window_confirmation_request_id = Some(id),
+        Err(error) => result.window_confirmation_error = Some(error),
+    }
     Ok(result)
 }
 

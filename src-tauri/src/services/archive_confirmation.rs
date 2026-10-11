@@ -37,6 +37,57 @@ pub(crate) struct WindowRegistry {
 }
 
 impl WindowRegistry {
+    pub(crate) fn reply_session(
+        &mut self,
+        now: Instant,
+        request_id: u64,
+        sender: &str,
+        session: &str,
+        sequence: u32,
+        ready: bool,
+        dirty: bool,
+    ) -> Result<(), &'static str> {
+        let version = self
+            .windows
+            .get(sender)
+            .ok_or("unknown_window_session")?
+            .0
+            .clone();
+        if version.generation.to_string() != session || version.revision != u64::from(sequence) {
+            return Err("stale_window_confirmation");
+        }
+        self.active
+            .as_mut()
+            .ok_or("confirmation_not_started")?
+            .reply(
+                now,
+                request_id,
+                sender,
+                Reply {
+                    version,
+                    ready,
+                    dirty,
+                    saving: dirty,
+                },
+            )
+    }
+    /// Diagnostic only: a ready handshake is not an execution lease.
+    pub(crate) fn status(&mut self, now: Instant, request_id: u64) -> Result<bool, &'static str> {
+        self.invalidate_changed();
+        let active = self.active.as_ref().ok_or("confirmation_not_started")?;
+        if active.id != request_id {
+            return Err("confirmation_request_mismatch");
+        }
+        active.check(now)?;
+        Ok(active.replies.len() == active.expected.len())
+    }
+    pub(crate) fn cancel(&mut self, request_id: u64) {
+        if let Some(active) = &mut self.active {
+            if active.id == request_id {
+                active.invalidated = true;
+            }
+        }
+    }
     pub(crate) fn new_session(&mut self, label: &str) -> Result<String, &'static str> {
         if let Some(active) = &mut self.active {
             active.invalidated = true;
@@ -273,6 +324,73 @@ impl Confirmation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn archive_session_handshake_requires_every_live_reply_and_expires() {
+        let now = Instant::now();
+        let mut r = WindowRegistry::default();
+        let main = r.new_session("main").unwrap();
+        let quick = r.new_session("quick").unwrap();
+        r.report_session("main", &main, 1, false).unwrap();
+        r.report_session("quick", &quick, 1, false).unwrap();
+        let id = r.begin(now, Duration::from_secs(5)).unwrap();
+        assert_eq!(r.status(now, id), Ok(false));
+        assert!(r
+            .reply_session(now, id + 1, "main", &main, 1, true, false)
+            .is_err());
+        assert!(r
+            .reply_session(now, id, "main", &quick, 1, true, false)
+            .is_err());
+        assert!(r
+            .reply_session(now, id, "main", &main, 2, true, false)
+            .is_err());
+        r.reply_session(now, id, "main", &main, 1, true, false)
+            .unwrap();
+        assert_eq!(r.status(now, id), Ok(false));
+        r.reply_session(now, id, "quick", &quick, 1, true, false)
+            .unwrap();
+        assert_eq!(r.status(now, id), Ok(true));
+        assert_eq!(
+            r.status(now + Duration::from_secs(5), id),
+            Err("confirmation_expired")
+        );
+    }
+    #[test]
+    fn archive_session_handshake_dirty_unready_cancel_and_topology_fail_closed() {
+        for mode in [
+            "dirty",
+            "unready",
+            "cancel",
+            "new_window",
+            "report",
+            "reload",
+        ] {
+            let now = Instant::now();
+            let mut r = WindowRegistry::default();
+            let session = r.new_session("main").unwrap();
+            r.report_session("main", &session, 1, false).unwrap();
+            let id = r.begin(now, Duration::from_secs(5)).unwrap();
+            match mode {
+                "dirty" => {
+                    assert!(r
+                        .reply_session(now, id, "main", &session, 1, true, true)
+                        .is_err());
+                }
+                "unready" => {
+                    assert!(r
+                        .reply_session(now, id, "main", &session, 1, false, false)
+                        .is_err());
+                }
+                "cancel" => r.cancel(id),
+                "new_window" => r.reconcile(&["main".into(), "quick".into()]).unwrap(),
+                "report" => r.report_session("main", &session, 2, false).unwrap(),
+                "reload" => {
+                    r.new_session("main").unwrap();
+                }
+                _ => unreachable!(),
+            }
+            assert_eq!(r.status(now, id), Err("confirmation_invalidated"), "{mode}");
+        }
+    }
     #[test]
     fn archive_window_sessions_reject_old_pages_and_out_of_order_reports() {
         let mut r = WindowRegistry::default();

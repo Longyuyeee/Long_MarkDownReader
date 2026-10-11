@@ -1,6 +1,80 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
+use tauri::Emitter;
 use tauri::Manager;
+
+/// Diagnostic handshake only. This does not authorize file moves.
+#[tauri::command]
+pub fn begin_archive_window_confirmation(app: tauri::AppHandle) -> Result<String, String> {
+    let windows = app.webview_windows();
+    let state = app.state::<crate::services::archive_confirmation::WindowConfirmationState>();
+    let id = {
+        let mut registry = state.0.lock().map_err(|_| "无法核对窗口状态")?;
+        registry.reconcile(&windows.keys().cloned().collect::<Vec<_>>())?;
+        registry.begin(std::time::Instant::now(), std::time::Duration::from_secs(5))?
+    };
+    for window in windows.values() {
+        if let Err(error) = window.emit("archive-confirm-window-state", id.to_string()) {
+            state.0.lock().map_err(|_| "无法取消窗口确认")?.cancel(id);
+            return Err(format!("无法请求窗口确认：{error}"));
+        }
+    }
+    Ok(id.to_string())
+}
+
+#[tauri::command]
+pub fn reply_archive_window_confirmation(
+    window: tauri::Window,
+    request_id: String,
+    session: String,
+    sequence: u32,
+    ready: bool,
+    dirty: bool,
+) -> Result<(), String> {
+    let id = request_id
+        .parse::<u64>()
+        .map_err(|_| "无效的窗口确认编号")?;
+    window
+        .state::<crate::services::archive_confirmation::WindowConfirmationState>()
+        .0
+        .lock()
+        .map_err(|_| "无法核对窗口回执")?
+        .reply_session(
+            std::time::Instant::now(),
+            id,
+            window.label(),
+            &session,
+            sequence,
+            ready,
+            dirty,
+        )?;
+    Ok(())
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveConfirmationStatus {
+    ready: bool,
+    can_execute: bool,
+}
+
+#[tauri::command]
+pub fn archive_window_confirmation_status(
+    app: tauri::AppHandle,
+    request_id: String,
+) -> Result<ArchiveConfirmationStatus, String> {
+    let id = request_id
+        .parse::<u64>()
+        .map_err(|_| "无效的窗口确认编号")?;
+    let state = app.state::<crate::services::archive_confirmation::WindowConfirmationState>();
+    let mut registry = state.0.lock().map_err(|_| "无法读取窗口确认状态")?;
+    registry.reconcile(&app.webview_windows().keys().cloned().collect::<Vec<_>>())?;
+    let ready = registry.status(std::time::Instant::now(), id)?;
+    Ok(ArchiveConfirmationStatus {
+        ready,
+        can_execute: false,
+    })
+}
 
 #[derive(Default)]
 pub struct WindowDrafts(pub Mutex<HashMap<String, bool>>);

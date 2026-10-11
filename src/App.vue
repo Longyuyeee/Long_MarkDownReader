@@ -456,6 +456,18 @@ onMounted(async () => {
   try {
     if (appWindow) {
       draftSession = await invoke<string>('register_window_draft_session')
+      const stopArchiveConfirmation = await appWindow.listen<string>('archive-confirm-window-state', event => {
+        if (!draftSession || lifecycleDisposed) return
+        // Read current state at request time. No save, discard, navigation or focus.
+        // In-flight reports have higher local sequences and are rejected by native
+        // state until acknowledged, rather than treating cached clean as consent.
+        void invoke('reply_archive_window_confirmation', {
+          requestId: event.payload, session: draftSession, sequence: draftSequence,
+          ready: lifecycleReady, dirty: hasUnsavedChanges.value,
+        }).catch(error => console.warn('归档窗口确认未接受，需重新预检', error))
+      })
+      if (lifecycleDisposed) stopArchiveConfirmation()
+      else lifecycleUnlisteners.push(stopArchiveConfirmation)
       if (isMainWindow) {
         const unlisten = await appWindow.listen<{ requestId: string; path: string; libraryRoot: string; expiresAt: number }>('quick-note-open', async event => {
           const { requestId, path, libraryRoot, expiresAt } = event.payload

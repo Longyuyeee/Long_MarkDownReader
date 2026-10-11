@@ -4,6 +4,8 @@
 
 ## 本轮实际核查
 
+后续实施更新：[新鲜窗口确认链路](V1_1_0_F1_Live_Window_Handshake_2026-10-12.md) 已接入预检回执与 App 原生事件监听；仍无执行期租约和用户归档闭环。以下门禁仍有效，不能将诊断 ready 视为执行许可。
+
 - `package.json` 运行版本仍是 1.0.26，不提前升号。
 - `src-tauri/src/commands/archive.rs` 仍仅暴露预检，`can_execute` 保持 false；这是正确的安全门禁，不应为上线直接改为 true。
 - `src/components/InboxBrowser.vue` 有目录浏览、打开、刷新和目录设置，没有归档选择/执行/结果恢复闭环。
