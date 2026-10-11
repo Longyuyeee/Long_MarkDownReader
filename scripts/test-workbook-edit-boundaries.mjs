@@ -5,6 +5,49 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+
+test('defined name writes isolate receipts and release save locks', async () => {
+  for (const scenario of ['success', 'replacement', 'failure']) {
+    let resolve, reject, pending = 0
+    const errors = [], successes = []
+    const ctx = extract('const commitDefinedNameChange =', 'const createDefinedName =', {
+      isExternal: box(false), workbook: box({ signature: 'initial', protection: {} }), saving: box(false), updatingStructure: box(false), dirtyCount: box(0),
+      workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1,
+      undoStack: box(['history']), redoStack: box([]), selectedDefinedNameIndex: box(-1),
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: () => new Promise((done, fail) => { resolve = done; reject = fail }),
+      message: { error: value => errors.push(value), success: value => successes.push(value) },
+    }, 'globalThis.action = commitDefinedNameChange')
+    const writing = ctx.action({ action: 'create', name: 'Delivery' }, 'saved')
+    assert.equal(ctx.saving.value, true); assert.equal(pending, 1)
+    if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookDocumentEpoch++ }
+    if (scenario === 'failure') reject(Error('disk')); else resolve({ signature: 'saved', definedNames: [{ name: 'Delivery' }] })
+    await writing
+    assert.equal(ctx.saving.value, false); assert.equal(pending, 0)
+    assert.equal(successes.length, scenario === 'success' ? 1 : 0)
+    if (scenario !== 'success') assert.equal(ctx.undoStack.value[0], 'history')
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 命名区域保存失败/)
+  }
+})
+
+test('defined name prompts and deletion reject stale targets', async () => {
+  for (const action of ['create', 'rename', 'remove']) for (const stale of [false, true]) {
+    let current = true, confirm
+    const commits = []
+    const ctx = extract('const createDefinedName =', 'const navigateDefinedName =', {
+      definedNameSelection: box({ top: 0, bottom: 0, left: 0, right: 0 }), canEditDefinedNames: box(true),
+      workbook: box({ definedNames: [] }), selectedDefinedName: box({ name: 'Delivery' }), activeSheet: box('Sheet1'),
+      captureEditContext: () => () => current, promptDefinedNameScope: async () => undefined,
+      promptAppAction: async () => { if (stale) current = false; return 'NewDelivery' },
+      dialog: { warning: options => { confirm = options.onPositiveClick } }, message: { warning() {} },
+      commitDefinedNameChange: change => commits.push(change),
+    }, 'globalThis.create = createDefinedName; globalThis.rename = renameDefinedName; globalThis.remove = deleteDefinedName')
+    await ctx[action]()
+    if (action === 'remove') { if (stale) current = false; await confirm() }
+    assert.equal(commits.length, stale ? 0 : 1)
+    if (action === 'create' && !stale) assert.equal(commits[0].targetSheet, 'Sheet1')
+  }
+})
 test('filter clear confirmation rejects changed context or region', async () => {
   for (const scenario of ['valid', 'context', 'region']) {
     let current = true, confirm, commits = 0

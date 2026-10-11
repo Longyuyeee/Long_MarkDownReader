@@ -20,6 +20,18 @@ if (new URLSearchParams(window.location.search).has('filter')) {
 }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_defined_name') {
+    const change = structuredClone(args.payload.change)
+    await new Promise((resolve, reject) => {
+      audit.pendingName = fail => { audit.pendingName = null; fail ? reject(new Error('模拟名称写入失败')) : resolve() }
+    })
+    const index = document.definedNames.findIndex(item => item.name === change.name && item.scope === change.scope)
+    if (change.action === 'create') document.definedNames.push({ name: change.name, scope: change.scope, hidden: false, formula: `${change.targetSheet}!$A$1`, reference: { sheet: change.targetSheet, ...change.range } })
+    else if (change.action === 'delete') document.definedNames.splice(index, 1)
+    else if (change.action === 'rename') document.definedNames[index].name = change.newName
+    else throw Error('Unsupported name fixture action')
+    document.signature += '-name'; return structuredClone(document)
+  }
   if (command === 'update_workbook_filter') {
     const change = structuredClone(args.payload.change)
     await new Promise((resolve, reject) => {

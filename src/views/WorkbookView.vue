@@ -4229,45 +4229,59 @@ const promptDefinedNameScope = async (): Promise<string | undefined | null> => {
   return workbook.value.sheets.find(sheet => sheet.toLocaleLowerCase() === scope.toLocaleLowerCase())
 }
 const commitDefinedNameChange = async (change: WorkbookDefinedNameChange, success: string, selectedName?: string) => {
-  if (isExternal.value || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (workbook.value.protection.lockStructure) return void message.error('工作簿结构受保护，不能修改命名区域')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  const original = workbook.value
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const epoch = workbookDocumentEpoch
+  saving.value = true
   updatingStructure.value = true
+  let finish: (() => void) | undefined
   try {
+    finish = beginWindowSave()
     const document = await invoke<WorkbookDocument>('update_workbook_defined_name', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
+      libraryRoot: root,
+      path,
+      payload: { expectedSignature: original.signature, change },
     })
+    if (workbook.value !== original || workbookDocumentEpoch !== epoch || workbookPath.value !== path || store.libraryPath !== root || isExternal.value) return
     workbook.value = document
     undoStack.value = []
     redoStack.value = []
     const targetName = selectedName || change.newName || change.name
     selectedDefinedNameIndex.value = document.definedNames.findIndex(item => item.name.toLocaleLowerCase() === targetName.toLocaleLowerCase() && (item.scope || '').toLocaleLowerCase() === (change.scope || '').toLocaleLowerCase())
     message.success(success)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  } catch (cause) { message.error(`${path} 命名区域保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finish?.(); saving.value = false; updatingStructure.value = false }
 }
 const createDefinedName = async () => {
   const area = definedNameSelection.value
   if (!area || !canEditDefinedNames.value) return
+  const current = captureEditContext()
+  const targetSheet = activeSheet.value
   const name = (await promptAppAction(dialog, { title: '创建命名区域', initialValue: `Range${(workbook.value?.definedNames.filter(item => !item.hidden).length || 0) + 1}`, positiveText: '下一步' }))?.trim()
   if (!name) return
+  if (!current() || !canEditDefinedNames.value) return void message.warning('编辑上下文已变化，请重新创建命名区域')
   const scope = await promptDefinedNameScope()
   if (scope === null) return
+  if (!current() || !canEditDefinedNames.value) return void message.warning('编辑上下文已变化，请重新创建命名区域')
   void commitDefinedNameChange({
     action: 'create',
     name,
     scope,
-    targetSheet: activeSheet.value,
+    targetSheet,
     range: { ...area },
   }, `已创建命名区域 ${name}`)
 }
 const renameDefinedName = async () => {
   const item = selectedDefinedName.value
   if (!item || !canEditDefinedNames.value) return
+  const current = captureEditContext()
   const newName = (await promptAppAction(dialog, { title: '重命名命名区域', initialValue: item.name, positiveText: '保存名称' }))?.trim()
   if (!newName || newName === item.name) return
+  if (!current() || !canEditDefinedNames.value || selectedDefinedName.value !== item) return void message.warning('编辑上下文已变化，请重新选择要重命名的区域')
   void commitDefinedNameChange({
     action: 'rename',
     name: item.name,
@@ -4290,16 +4304,20 @@ const updateDefinedNameRange = () => {
 const deleteDefinedName = () => {
   const item = selectedDefinedName.value
   if (!item || !canEditDefinedNames.value) return
+  const current = captureEditContext()
   dialog.warning({
     title: `删除命名区域 ${item.name}？`,
     content: '删除后不能通过当前撤销栈恢复；如果名称被公式、验证或图表引用，后端会拒绝事务。',
     positiveText: '删除名称',
     negativeText: '取消',
-    onPositiveClick: () => commitDefinedNameChange({
+    onPositiveClick: () => {
+      if (!current() || !canEditDefinedNames.value || selectedDefinedName.value !== item) return void message.warning('编辑上下文已变化，请重新选择要删除的区域')
+      return commitDefinedNameChange({
       action: 'delete',
       name: item.name,
       scope: item.scope,
-    }, `已删除命名区域 ${item.name}`, ''),
+      }, `已删除命名区域 ${item.name}`, '')
+    },
   })
 }
 const navigateDefinedName = async (event: Event) => {
