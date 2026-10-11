@@ -1,5 +1,6 @@
 //! Read-only structural checks. This receipt is NOT permission to move files.
 use crate::commands::files::validate_item_name;
+use crate::services::archive_dependencies::{self, DependencyReport};
 use crate::services::archive_history::{self, ArchiveHistoryPlan};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::{Deserialize, Serialize};
@@ -30,6 +31,7 @@ pub struct ArchiveItemCheck {
     target_path: Option<String>,
     issues: Vec<ArchiveIssue>,
     history: Option<ArchiveHistoryPlan>,
+    dependencies: Option<DependencyReport>,
 }
 
 #[derive(Debug, Serialize)]
@@ -76,6 +78,7 @@ fn check(
             target_path: None,
             issues: vec![],
             history: None,
+            dependencies: None,
         };
         if item.has_unsaved_changes {
             result.issues.push(issue(
@@ -173,14 +176,46 @@ pub async fn preflight_archive(
     target_dir: String,
     items: Vec<ArchiveItem>,
 ) -> Result<ArchivePreflight, String> {
-    let mut result = check(&library_root, &target_dir, items)?;
     let cache = app_handle
         .path()
         .app_cache_dir()
         .map_err(|e| e.to_string())?
         .join("history_v2");
-    inspect_histories(&library_root, &cache, &mut result)?;
-    Ok(result)
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut result = check(&library_root, &target_dir, items)?;
+        inspect_histories(&library_root, &cache, &mut result)?;
+        inspect_dependencies(&library_root, &mut result)?;
+        Ok(result)
+    })
+    .await
+    .map_err(|e| format!("归档预检任务失败: {e}"))?
+}
+
+fn inspect_dependencies(root: &str, result: &mut ArchivePreflight) -> Result<(), String> {
+    let guard = WorkspaceGuard::new(root)?;
+    let inventory = archive_dependencies::scan(root);
+    for item in &mut result.items {
+        let source = match guard.resolve_existing(&item.source_path) {
+            Ok(p) if p.is_file() => p,
+            _ => continue,
+        };
+        match &inventory {
+            Err(error) => item
+                .issues
+                .push(issue("dependency_scan_incomplete", error.clone())),
+            Ok(inventory) => {
+                let report = inventory.report(&source);
+                if !report.outgoing.is_empty() || !report.incoming_candidates.is_empty() {
+                    item.issues.push(issue(
+                        "dependency_candidates",
+                        "发现本地链接或附件引用候选，需核对后才能归档",
+                    ));
+                }
+                item.dependencies = Some(report);
+            }
+        }
+    }
+    Ok(())
 }
 
 fn inspect_histories(
@@ -342,6 +377,50 @@ mod tests {
             r#"{"sourcePath":"note.md","targetName":"n.md"}"#
         )
         .is_err());
+    }
+    #[test]
+    fn dependency_inventory_reads_nested_files_and_preserves_content() {
+        let f = Fixture::new();
+        fs::write(f.0.join("note.md"), "![图](assets/photo.png)").unwrap();
+        fs::write(
+            f.0.join("project/ref.md"),
+            "[记录](../note.md)\n[[note|会议]]",
+        )
+        .unwrap();
+        let mut r = f.check(vec![item("note.md", "new.md")]);
+        inspect_dependencies(f.0.to_str().unwrap(), &mut r).unwrap();
+        let report = r.items[0].dependencies.as_ref().unwrap();
+        assert_eq!(report.outgoing.len(), 1);
+        assert_eq!(report.incoming_candidates.len(), 2);
+        assert!(!report.complete);
+        assert!(has(&r, 0, "dependency_candidates"));
+        assert_eq!(
+            fs::read_to_string(f.0.join("note.md")).unwrap(),
+            "![图](assets/photo.png)"
+        );
+        assert!(!f.0.join("project/new.md").exists());
+    }
+    #[test]
+    fn invalid_encoding_and_oversized_scan_are_not_clean_receipts() {
+        let f = Fixture::new();
+        fs::write(f.0.join("project/bad.md"), [0xff, 0xfe]).unwrap();
+        let mut r = f.check(vec![item("note.md", "new.md")]);
+        inspect_dependencies(f.0.to_str().unwrap(), &mut r).unwrap();
+        assert!(has(&r, 0, "dependency_scan_incomplete"));
+        assert!(r.items[0].dependencies.is_none());
+        let file = fs::File::create(f.0.join("project/bad.md")).unwrap();
+        file.set_len(2 * 1024 * 1024 + 1).unwrap();
+        assert!(archive_dependencies::scan(f.0.to_str().unwrap()).is_err());
+    }
+    #[test]
+    fn no_candidates_never_means_complete_dependency_safety() {
+        let f = Fixture::new();
+        let mut r = f.check(vec![item("note.md", "new.md")]);
+        inspect_dependencies(f.0.to_str().unwrap(), &mut r).unwrap();
+        let report = r.items[0].dependencies.as_ref().unwrap();
+        assert!(report.incoming_candidates.is_empty() && report.outgoing.is_empty());
+        assert!(!report.complete && !r.can_execute);
+        assert!(!report.limitations.is_empty());
     }
     #[test]
     fn history_inventory_uses_the_same_canonical_identity_as_saving() {
