@@ -590,7 +590,18 @@ pub(crate) fn inspect_publication(
     source: &Path,
     target: &Path,
 ) -> Result<PublicationState, String> {
-    let _lease = super::history_coordination::acquire(cache)?;
+    let lease = super::history_coordination::acquire(cache)?;
+    inspect_publication_locked(cache, stage, source, target, &lease)
+}
+
+fn inspect_publication_locked(
+    cache: &Path,
+    stage: &Path,
+    source: &Path,
+    target: &Path,
+    lease: &super::history_coordination::HistoryLease,
+) -> Result<PublicationState, String> {
+    lease.verify(cache)?;
     if inspect_staging(cache, stage)? != StagingState::Prepared {
         return Err("历史暂存未完成，不能判断发布结果".into());
     }
@@ -688,6 +699,126 @@ pub(crate) fn inspect_publication(
         }
     }
     Ok(PublicationState::TargetMatches)
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum RecoveryHistory {
+    NotRequired,
+    Pending,
+    TargetMatches,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct RecoveryAssessment {
+    pub document: super::archive_document::DocumentState,
+    pub history: RecoveryHistory,
+    // No current combination authorizes cleanup, retry, or UI success.
+    pub requires_review: bool,
+}
+
+#[allow(dead_code)]
+pub(crate) fn inspect_recovery(
+    root: &Path,
+    cache: &Path,
+    stage: &Path,
+) -> Result<RecoveryAssessment, String> {
+    use super::archive_document::DocumentState;
+    let lease = super::history_coordination::acquire(cache)?;
+    let (document, intent) =
+        super::archive_document::inspect_document_locked(root, cache, stage, &lease)?;
+    if matches!(
+        document,
+        DocumentState::BothPresent | DocumentState::NeitherPresent
+    ) {
+        return Err("正文位置有歧义，保留全部恢复材料并人工核对".into());
+    }
+    fn read_log<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
+        let meta = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
+        if !meta.is_file() || meta.file_type().is_symlink() || meta.len() > 1024 * 1024 {
+            return Err("恢复策略日志类型或大小异常".into());
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(path)
+            .map_err(|e| e.to_string())?
+            .take(1024 * 1024 + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        if bytes.len() > 1024 * 1024 {
+            return Err("恢复日志超限".into());
+        }
+        serde_json::from_slice(&bytes).map_err(|e| format!("恢复日志无效: {e}"))
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields, rename_all = "camelCase")]
+    struct Policy {
+        version: u32,
+        history_required: bool,
+        plan: ArchiveHistoryPlan,
+    }
+    let policy: Policy = read_log(&stage.join("history-policy.json"))?;
+    if policy.version != 1
+        || Path::new(&policy.plan.source_directory) != history_path(cache, &intent.source)
+        || Path::new(&policy.plan.target_directory) != history_path(cache, &intent.target)
+    {
+        return Err("正文与历史策略身份不一致".into());
+    }
+    let history = if !policy.history_required {
+        if policy.plan.strategy != "none"
+            || !policy.plan.snapshots.is_empty()
+            || inspect(cache, &intent.source, &intent.target)? != policy.plan
+        {
+            return Err("无历史策略与当前磁盘不一致".into());
+        }
+        // A no-history transaction must not silently absorb publication evidence.
+        for name in [
+            "intent.json",
+            "publish-intent.json",
+            "published",
+            "prepared.sha256",
+            "publish-payload",
+        ] {
+            match fs::symlink_metadata(stage.join(name)) {
+                Ok(_) => return Err("无历史策略包含冲突的历史发布材料".into()),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => return Err(e.to_string()),
+            }
+        }
+        RecoveryHistory::NotRequired
+    } else {
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Preparation {
+            version: u32,
+            plan: ArchiveHistoryPlan,
+        }
+        let preparation: Preparation = read_log(&stage.join("intent.json"))?;
+        if preparation.version != 1
+            || preparation.plan != policy.plan
+            || policy.plan.strategy != "copy_verify_then_retire_source"
+        {
+            return Err("历史策略与暂存清单不一致".into());
+        }
+        match inspect_publication_locked(cache, stage, &intent.source, &intent.target, &lease)? {
+            PublicationState::TargetMatches => {
+                if document != DocumentState::TargetMatches {
+                    return Err("历史目标已匹配但正文仍在来源，需要人工核对".into());
+                }
+                RecoveryHistory::TargetMatches
+            }
+            PublicationState::NotStarted | PublicationState::TargetAbsent => {
+                // NotStarted alone does not establish that the target is absent.
+                if inspect(cache, &intent.source, &intent.target)? != policy.plan {
+                    return Err("待发布历史来源已变化".into());
+                }
+                RecoveryHistory::Pending
+            }
+        }
+    };
+    Ok(RecoveryAssessment {
+        document,
+        history,
+        requires_review: true,
+    })
 }
 
 /// Read-only restart diagnosis. Even Prepared requires live source/target checks.
@@ -1328,6 +1459,77 @@ mod tests {
             "late history"
         );
         assert!(!history_path(&f.0, &target).exists());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn unified_recovery_covers_both_history_policies_and_rejects_conflicting_policy() {
+        for with_history in [false, true] {
+            let f = Fixture::new();
+            let root = f.0.join("library");
+            fs::create_dir(&root).unwrap();
+            fs::write(root.join("old.md"), "note").unwrap();
+            let source = root.join("old.md").canonicalize().unwrap();
+            let target = root.canonicalize().unwrap().join("new.md");
+            if with_history {
+                let old = history_path(&f.0, &source);
+                fs::create_dir(&old).unwrap();
+                fs::write(old.join("1.md"), "history").unwrap();
+            }
+            let receipt = move_with_history(&root, &f.0, &source, &target).unwrap();
+            let assessment = inspect_recovery(&root, &f.0, &receipt.stage).unwrap();
+            assert_eq!(
+                assessment.document,
+                super::super::archive_document::DocumentState::TargetMatches
+            );
+            assert_eq!(
+                assessment.history,
+                if with_history {
+                    RecoveryHistory::TargetMatches
+                } else {
+                    RecoveryHistory::NotRequired
+                }
+            );
+            assert!(assessment.requires_review);
+            let policy_path = receipt.stage.join("history-policy.json");
+            let mut policy: serde_json::Value =
+                serde_json::from_slice(&fs::read(&policy_path).unwrap()).unwrap();
+            policy["historyRequired"] = serde_json::json!(!with_history);
+            fs::write(&policy_path, serde_json::to_vec(&policy).unwrap()).unwrap();
+            assert!(inspect_recovery(&root, &f.0, &receipt.stage).is_err());
+            assert_eq!(fs::read_to_string(&target).unwrap(), "note");
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn unified_recovery_reports_pending_history_and_preserves_ambiguous_files() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "note").unwrap();
+        let source = root.join("old.md").canonicalize().unwrap();
+        let target = root.canonicalize().unwrap().join("new.md");
+        let old = history_path(&f.0, &source);
+        fs::create_dir(&old).unwrap();
+        fs::write(old.join("1.md"), "history").unwrap();
+        let receipt = move_with_history_hook(&root, &f.0, &source, &target, || {
+            fs::create_dir(history_path(&f.0, &target)).unwrap();
+        })
+        .unwrap();
+        assert!(receipt.document_moved && !receipt.history_published);
+        assert!(inspect_recovery(&root, &f.0, &receipt.stage).is_err());
+        fs::rename(history_path(&f.0, &target), f.0.join("retained-conflict")).unwrap();
+        assert_eq!(
+            inspect_recovery(&root, &f.0, &receipt.stage)
+                .unwrap()
+                .history,
+            RecoveryHistory::Pending
+        );
+        fs::write(&source, "another note").unwrap();
+        assert!(inspect_recovery(&root, &f.0, &receipt.stage).is_err());
+        assert_eq!(fs::read_to_string(&source).unwrap(), "another note");
+        assert_eq!(fs::read_to_string(&target).unwrap(), "note");
     }
 
     #[cfg(windows)]

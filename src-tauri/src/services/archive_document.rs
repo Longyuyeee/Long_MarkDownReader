@@ -65,7 +65,17 @@ pub(crate) fn inspect_document(
     cache: &Path,
     stage: &Path,
 ) -> Result<DocumentState, String> {
-    let _lease = super::history_coordination::acquire(cache)?;
+    let lease = super::history_coordination::acquire(cache)?;
+    inspect_document_locked(root, cache, stage, &lease).map(|(state, _)| state)
+}
+
+pub(crate) fn inspect_document_locked(
+    root: &Path,
+    cache: &Path,
+    stage: &Path,
+    lease: &super::history_coordination::HistoryLease,
+) -> Result<(DocumentState, DocumentIntent), String> {
+    lease.verify(cache)?;
     let stage_meta = fs::symlink_metadata(stage).map_err(|e| e.to_string())?;
     if !stage_meta.is_dir() || stage_meta.file_type().is_symlink() {
         return Err("正文日志目录异常".into());
@@ -124,9 +134,9 @@ pub(crate) fn inspect_document(
             Err(e) => Err(e.to_string()),
         }
     }
-    match (present(&intent.source)?, present(&intent.target)?) {
-        (true, true) => Ok(DocumentState::BothPresent),
-        (false, false) => Ok(DocumentState::NeitherPresent),
+    let state = match (present(&intent.source)?, present(&intent.target)?) {
+        (true, true) => DocumentState::BothPresent,
+        (false, false) => DocumentState::NeitherPresent,
         (source_present, _) => {
             let path = if source_present {
                 &intent.source
@@ -136,13 +146,14 @@ pub(crate) fn inspect_document(
             if fingerprint(path)? != intent.fingerprint {
                 return Err("正文与归档前内容不一致，不能确认移动状态".into());
             }
-            Ok(if source_present {
+            if source_present {
                 DocumentState::SourceMatches
             } else {
                 DocumentState::TargetMatches
-            })
+            }
         }
-    }
+    };
+    Ok((state, intent))
 }
 
 #[cfg(test)]
