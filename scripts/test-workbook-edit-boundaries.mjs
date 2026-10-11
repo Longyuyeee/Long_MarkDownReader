@@ -32,14 +32,56 @@ test('saving blocks editing shortcuts but preserves copying and navigation', () 
   assert.equal(calls.at(-1), 'undo')
 })
 test('clipboard context is invalidated by save, document, sheet and selection changes', () => {
-  const ctx = extract('const captureClipboardContext =', 'const pasteSelection =', {
+  const ctx = extract('const captureEditContext =', 'const pasteSelection =', {
     workbook: box({}), workbookDocumentEpoch: 1, generation: 1, workbookPath: box('a.xlsx'), store: { libraryPath: 'library' },
     saving: box(false), isExternal: box(false), selectedCell: box({ sheet: 'A', row: 0, column: 0 }), selectionAreas: box([]),
-  }, 'globalThis.capture = captureClipboardContext')
+  }, 'globalThis.capture = captureEditContext')
   const mutations = [() => { ctx.saving.value = true }, () => { ctx.saving.value = false; ctx.generation++ }, () => { ctx.workbookDocumentEpoch++ }, () => { ctx.workbook.value = {} }, () => { ctx.selectedCell.value.row++ }, () => { ctx.selectionAreas.value.push({ top: 0 }) }, () => { ctx.workbookPath.value = 'b.xlsx' }]
   for (const mutate of mutations) {
     ctx.saving.value = false
     const valid = ctx.capture(); assert.equal(valid(), true)
     mutate(); assert.equal(valid(), false)
   }
+})
+
+test('format dialogs ignore confirmations from a stale editing context', async () => {
+  for (const [name, end, result] of [['setCustomNumberFormat', 'const selectedRowsForResize', '0.000'], ['setSelectedRowHeight', 'const setSelectedColumnWidth', '30'], ['setSelectedColumnWidth', 'const applyAxisAction', '25']]) {
+    let answer, current = true
+    const warnings = [], patches = []
+    const ctx = extract(`const ${name} =`, end, {
+      isExternal: box(false), saving: box(false), selectedCell: box({ row: 0, column: 0 }), dialog: {},
+      captureEditContext: () => () => current, focusedStyle: box({ numberFormat: 'general' }),
+      selectedRowsForResize: () => [0], selectedColumnsForResize: () => [0], rowHeightPoints: () => 15, columnWidthUnits: () => 20,
+      promptAppAction: () => new Promise(resolve => { answer = resolve }),
+      message: { warning: value => warnings.push(value), error: value => { throw Error(value) } },
+      applyStylePatch: value => patches.push(value),
+    }, `globalThis.action = ${name}`)
+    const pending = ctx.action(); current = false; answer(result); await pending
+    assert.equal(warnings.length, 1); assert.deepEqual(patches, [])
+  }
+})
+
+test('custom format still applies when context is unchanged', async () => {
+  const patches = []
+  const ctx = extract('const setCustomNumberFormat =', 'const selectedRowsForResize', {
+    isExternal: box(false), saving: box(false), selectedCell: box({}), dialog: {}, focusedStyle: box({ numberFormat: 'general' }),
+    captureEditContext: () => () => true, promptAppAction: async () => '0.000', applyStylePatch: value => patches.push(value),
+  }, 'globalThis.action = setCustomNumberFormat')
+  await ctx.action(); assert.equal(patches[0].numberFormat, 'custom:0.000')
+})
+
+test('formula fill stops before applying edits when translation returns to a stale context', async () => {
+  let resolve, current = true
+  const warnings = [], errors = []
+  const ctx = extract('const commitFill =', 'const recalculateLoadedFormulas', {
+    isExternal: box(false), saving: box(false), captureEditContext: () => () => current,
+    patternIndex: (_value, start) => start, cellAt: () => ({ kind: 'formula', formula: 'A1' }),
+    originalInput: () => '=A1', MAX_BATCH_CELLS: 10000,
+    invoke: () => new Promise(done => { resolve = done }),
+    message: { warning: value => warnings.push(value), error: value => errors.push(value) },
+  }, 'globalThis.action = commitFill')
+  const pending = ctx.action({ top: 0, bottom: 0, left: 0, right: 0 }, { top: 0, bottom: 1, left: 0, right: 0 })
+  current = false; resolve(['=A2']); await pending
+  assert.deepEqual(errors, []); assert.equal(warnings.length, 1)
+  assert.match(warnings[0], /重新填充选区/)
 })

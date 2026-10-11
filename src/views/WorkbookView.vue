@@ -2675,9 +2675,12 @@ const applyBorderSide = (event: Event) => {
   if (side === 'left') applyStylePatch({ borderLeft: value })
 }
 const setCustomNumberFormat = async () => {
+  if (isExternal.value || saving.value || !selectedCell.value) return
+  const isCurrent = captureEditContext()
   const current = focusedStyle.value.numberFormat.startsWith('custom:') ? focusedStyle.value.numberFormat.slice(7) : '0.00'
   const code = await promptAppAction(dialog, { title: '自定义数字格式', content: '输入 Excel 自定义数字格式，最多 128 个字符。', initialValue: current, positiveText: '应用格式' })
   if (code === null) return
+  if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置数字格式'); return }
   const trimmed = code.trim()
   if (!trimmed || trimmed.length > 128 || /[\u0000-\u001f\u007f]/.test(trimmed)) return void message.error('自定义数字格式不能为空、不能包含控制字符且最多 128 个字符')
   applyStylePatch({ numberFormat: `custom:${trimmed}` })
@@ -2701,13 +2704,15 @@ const selectedColumnsForResize = () => {
   return Array.from(columns)
 }
 const setSelectedRowHeight = async () => {
-  if (isExternal.value) return
+  if (isExternal.value || saving.value) return
+  const isCurrent = captureEditContext()
   let rows: number[]
   try { rows = selectedRowsForResize() } catch (cause) { return void message.error(String(cause).replace(/^Error:\s*/, '')) }
   if (!rows.length) return
   const initial = rowHeightPoints(rows[0]).toFixed(2).replace(/\.00$/, '')
   const input = await promptAppAction(dialog, { title: '设置行高', content: '允许范围为 2–409.5 磅；留空恢复默认行高。', initialValue: initial, positiveText: '应用行高' })
   if (input === null) return
+  if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置行高'); return }
   const height = input.trim() ? Number(input) : null
   if (height !== null && (!Number.isFinite(height) || height < 2 || height > 409.5)) return void message.error('行高必须在 2 到 409.5 磅之间')
   const changes: RowHeightChange[] = []
@@ -2728,12 +2733,14 @@ const setSelectedRowHeight = async () => {
   redoStack.value = []
 }
 const setSelectedColumnWidth = async () => {
-  if (isExternal.value) return
+  if (isExternal.value || saving.value) return
+  const isCurrent = captureEditContext()
   const columns = selectedColumnsForResize()
   if (!columns.length) return
   const initial = columnWidthUnits(columns[0]).toFixed(2).replace(/\.00$/, '')
   const input = await promptAppAction(dialog, { title: '设置列宽', content: '允许范围为 0.1–255；留空恢复默认列宽。', initialValue: initial, positiveText: '应用列宽' })
   if (input === null) return
+  if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置列宽'); return }
   const width = input.trim() ? Number(input) : null
   if (width !== null && (!Number.isFinite(width) || width < 0.1 || width > 255)) return void message.error('列宽必须在 0.1 到 255 之间')
   const changes: ColumnWidthChange[] = []
@@ -3511,8 +3518,8 @@ const copySelection = async () => {
     return true
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return false }
 }
-// Clipboard permission/read/write can resolve after a save, selection or route change.
-const captureClipboardContext = () => {
+// Deferred editing actions can resolve after a save, selection or route change.
+const captureEditContext = () => {
   const document = workbook.value
   const epoch = workbookDocumentEpoch
   const currentGeneration = generation
@@ -3527,7 +3534,7 @@ const captureClipboardContext = () => {
 const pasteSelection = async () => {
   if (isExternal.value || saving.value) return
   if (!selectedCell.value) return
-  const isCurrent = captureClipboardContext()
+  const isCurrent = captureEditContext()
   try {
     const text = await navigator.clipboard.readText()
     if (!isCurrent()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
@@ -3575,7 +3582,7 @@ const clearSelection = () => {
 }
 const cutSelection = async () => {
   if (isExternal.value || saving.value) return
-  const isCurrent = captureClipboardContext()
+  const isCurrent = captureEditContext()
   if (!await copySelection()) return
   if (!isCurrent()) { message.warning('编辑状态已变化，已复制内容但未清除单元格'); return }
   clearSelection()
@@ -3592,7 +3599,8 @@ const styleAsPatch = (style: WorkbookCellStyle): WorkbookStylePatch => ({
 })
 const patternIndex = (value: number, start: number, size: number) => start + ((value - start) % size + size) % size
 const commitFill = async (source: SelectionArea | null, preview: SelectionArea | null) => {
-  if (isExternal.value || !source || !preview || JSON.stringify(source) === JSON.stringify(preview)) return
+  if (isExternal.value || saving.value || !source || !preview || JSON.stringify(source) === JSON.stringify(preview)) return
+  const isCurrent = captureEditContext()
   try {
     const destination: Array<{ row: number; column: number; sourceRow: number; sourceColumn: number; input: string }> = []
     const sourceHeight = source.bottom - source.top + 1
@@ -3633,6 +3641,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
     })
     if (formulaRequests.length) {
       const translated = await invoke<string[]>('translate_workbook_formulas', { requests: formulaRequests })
+      if (!isCurrent()) { message.warning('编辑状态已变化，请重新填充选区'); return }
       translated.forEach((formula, index) => { destination[formulaDestinations[index]].input = formula })
     }
 
