@@ -13,8 +13,21 @@ const secondSheet = structuredClone(sheet)
 secondSheet.sheet = 'Sheet2'
 secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue: '第二张表的客户清单', kind: 'string' }
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
+if (new URLSearchParams(window.location.search).has('filter')) {
+  sheet.autoFilter = { top: 0, bottom: 1, left: 0, right: 0 }
+  sheet.autoFilterState = { editable: true, columns: [], sortConditions: [] }
+  sheet.rows.push([{ value: '客户交付', formattedValue: '客户交付', kind: 'string' }]); sheet.totalRows = 2
+}
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_filter') {
+    const change = structuredClone(args.payload.change)
+    await new Promise((resolve, reject) => {
+      audit.pendingFilter = fail => { audit.pendingFilter = null; fail ? reject(new Error('模拟筛选写入失败')) : resolve() }
+    })
+    sheets[change.sheet].autoFilterState = { editable: true, columns: [], sortConditions: [], ...(change.action === 'apply' ? change : {}) }
+    document.signature += '-filter'; return structuredClone(document)
+  }
   if (command === 'update_workbook_outline') {
     const payload = structuredClone(args.payload)
     await new Promise((resolve, reject) => {

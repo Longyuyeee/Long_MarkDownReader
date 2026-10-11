@@ -5,6 +5,48 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('filter clear confirmation rejects changed context or region', async () => {
+  for (const scenario of ['valid', 'context', 'region']) {
+    let current = true, confirm, commits = 0
+    const warnings = []
+    const region = box({ target: 'worksheet', range: { top: 0 } })
+    const ctx = extract('const persistDataView =', 'const navigateDataResult =', {
+      commitFormulaInput() {}, captureEditContext: () => () => current, activeDataRegion: region,
+      dialog: { warning: options => { confirm = options.onPositiveClick } },
+      commitPersistedDataView: () => commits++, message: { warning: value => warnings.push(value) },
+    }, 'globalThis.action = persistDataView')
+    ctx.action('clear')
+    if (scenario === 'context') current = false
+    if (scenario === 'region') region.value.range.top = 5
+    await confirm()
+    assert.equal(commits, scenario === 'valid' ? 1 : 0)
+    assert.equal(warnings.length, scenario === 'valid' ? 0 : 1)
+  }
+})
+test('filter save isolates stale receipts and retains failure input', async () => {
+  for (const scenario of ['success', 'replacement', 'failure']) {
+    let resolve, reject, pending = 0, restored
+    const errors = []
+    const ctx = extract('const commitPersistedDataView =', 'const persistDataView =', {
+      activeDataRegion: box({ target: 'worksheet', range: { top: 0, bottom: 1, left: 0, right: 0 }, filterState: { editable: true } }),
+      isExternal: box(false), workbook: box({ signature: 'initial' }), saving: box(false), updatingStructure: box(false), sheetProtected: box(false), dirtyCount: box(0),
+      filterQuery: box('客户'), filterColumn: box(0), sortColumn: box(-1), sortDirection: box('asc'), activeSheet: box('Sheet1'), selectionBounds: box(null),
+      workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1, undoStack: box(['history']), redoStack: box([]),
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: (_cmd, args) => { assert.equal(args.payload.change.query, '客户'); return new Promise((done, fail) => { resolve = done; reject = fail }) },
+      restoreTableSelection: async sheet => { restored = sheet }, message: { error: value => errors.push(value), success() {} },
+    }, 'globalThis.action = commitPersistedDataView')
+    const writing = ctx.action('apply'); assert.equal(ctx.saving.value, true); assert.equal(pending, 1)
+    ctx.activeSheet.value = 'Sheet2'
+    if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookDocumentEpoch++ }
+    if (scenario === 'failure') reject(new Error('磁盘失败')); else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(pending, 0); assert.equal(ctx.saving.value, false)
+    assert.equal(restored, scenario === 'success' ? 'Sheet2' : undefined)
+    if (scenario !== 'success') assert.equal(ctx.undoStack.value[0], 'history')
+    if (scenario === 'failure') { assert.match(errors[0], /tasks.xlsx 筛选条件保存失败/); assert.equal(ctx.filterQuery.value, '客户') }
+  }
+})
 test('outline writes guard ownership, locking and row/column payloads', async () => {
   for (const kind of ['row', 'column']) for (const scenario of ['success', 'replacement', 'failure']) {
     let resolve, reject, pending = 0, restored, payload

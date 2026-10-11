@@ -639,17 +639,17 @@
       </template>
       <template v-if="activeDataRegion">
         <strong>{{ activeDataRegion.label }}</strong>
-        <select v-model.number="filterColumn" title="筛选字段" @focus="prepareDataView">
+        <select v-model.number="filterColumn" title="筛选字段" :disabled="saving || updatingStructure" @focus="prepareDataView">
           <option :value="-1">全部字段</option>
           <option v-for="column in activeDataColumns" :key="column.index" :value="column.index">{{ column.label }}</option>
         </select>
-        <input v-model="filterQuery" placeholder="包含筛选" @focus="prepareDataView" @input="prepareDataView">
-        <select v-model.number="sortColumn" title="排序字段" @focus="prepareDataView">
+        <input v-model="filterQuery" placeholder="包含筛选" :disabled="saving || updatingStructure" @focus="prepareDataView" @input="prepareDataView">
+        <select v-model.number="sortColumn" title="排序字段" :disabled="saving || updatingStructure" @focus="prepareDataView">
           <option :value="-1">不排序</option>
           <option v-for="column in activeDataColumns" :key="column.index" :value="column.index">{{ column.label }}</option>
         </select>
-        <button :class="{ active: sortDirection === 'asc' }" :disabled="sortColumn < 0" @click="sortDirection = 'asc'">升序</button>
-        <button :class="{ active: sortDirection === 'desc' }" :disabled="sortColumn < 0" @click="sortDirection = 'desc'">降序</button>
+        <button :class="{ active: sortDirection === 'asc' }" :disabled="saving || updatingStructure || sortColumn < 0" @click="sortDirection = 'asc'">升序</button>
+        <button :class="{ active: sortDirection === 'desc' }" :disabled="saving || updatingStructure || sortColumn < 0" @click="sortDirection = 'desc'">降序</button>
         <button title="把当前单列包含筛选和排序状态写入 XLSX" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount) || !activeDataRegion.filterState.editable" @click="persistDataView('apply')">应用到文件</button>
         <button title="清除 XLSX 中的筛选和排序条件" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="persistDataView('clear')">清除条件</button>
         <span v-if="!activeDataRegion.filterState.editable" class="validation-hint">高级筛选条件只读</span>
@@ -3974,7 +3974,7 @@ const prepareDataView = async () => {
 }
 const commitPersistedDataView = async (action: 'apply' | 'clear') => {
   const region = activeDataRegion.value
-  if (isExternal.value || !region || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !region || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改筛选条件')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   const query = filterQuery.value.trim()
@@ -3992,31 +3992,49 @@ const commitPersistedDataView = async (action: 'apply' | 'clear') => {
     sortColumn: action === 'apply' && sortColumn.value >= 0 ? sortColumn.value : undefined,
     sortDirection: action === 'apply' && sortColumn.value >= 0 ? sortDirection.value : undefined,
   }
+  const original = workbook.value
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const epoch = workbookDocumentEpoch
+  const sameContext = () => workbookPath.value === path && store.libraryPath === root
+    && workbookDocumentEpoch === epoch && !isExternal.value
+  saving.value = true
   updatingStructure.value = true
   const sheet = activeSheet.value
+  let finish: (() => void) | undefined
   try {
+    finish = beginWindowSave()
     const document = await invoke<WorkbookDocument>('update_workbook_filter', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
+      libraryRoot: root,
+      path,
+      payload: { expectedSignature: original.signature, change },
     })
+    if (!sameContext() || workbook.value !== original) return
     workbook.value = document
+    const applied = workbook.value
     undoStack.value = []
     redoStack.value = []
-    await restoreTableSelection(sheet, region.range)
-    message.success(action === 'apply' ? '筛选与排序条件已写入 XLSX' : '筛选与排序条件已清除')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+    await restoreTableSelection(activeSheet.value || sheet, selectionBounds.value ? { ...selectionBounds.value } : null)
+    if (sameContext() && workbook.value === applied) message.success(action === 'apply' ? '筛选与排序条件已写入 XLSX' : '筛选与排序条件已清除')
+  } catch (cause) { message.error(`${path} 筛选条件保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finish?.(); updatingStructure.value = false; saving.value = false }
 }
 const persistDataView = (action: 'apply' | 'clear') => {
   commitFormulaInput()
   if (action === 'apply') return void commitPersistedDataView(action)
+  const isCurrent = captureEditContext()
+  const regionSnapshot = JSON.stringify(activeDataRegion.value)
   dialog.warning({
     title: '清除筛选与排序条件？',
     content: '将清除当前 Table 或自动筛选区域保存在 XLSX 中的全部筛选与排序条件，但不会删除数据或筛选区域。复杂条件也会被清除，保存后不能通过当前撤销栈恢复。',
     positiveText: '清除条件',
     negativeText: '取消',
-    onPositiveClick: () => commitPersistedDataView(action),
+    onPositiveClick: () => {
+      if (!isCurrent() || JSON.stringify(activeDataRegion.value) !== regionSnapshot) {
+        message.warning('编辑状态已变化，请重新确认清除筛选条件'); return
+      }
+      return commitPersistedDataView(action)
+    },
   })
 }
 const navigateDataResult = async (direction: number) => {
