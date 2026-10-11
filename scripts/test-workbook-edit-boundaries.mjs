@@ -5,6 +5,31 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('clear confirmations reject changed targets, drafts and busy state', async () => {
+  for (const kind of ['print', 'header']) for (const scenario of ['valid', 'target', 'draft', 'busy']) {
+    let current = true, confirm, writes = 0
+    const warnings = []
+    const draft = box({ oddHeader: '客户清单', oddFooter: '', evenHeader: '', evenFooter: '', firstHeader: '', firstFooter: '' })
+    const allowed = box(true)
+    const ctx = extract(kind === 'print' ? 'const clearPrintArea =' : 'const clearHeaderFooter =',
+      kind === 'print' ? 'const savePrintOptions =' : 'const promptDefinedNameScope =', {
+        sheetInfo: box({ pageLayout: { printArea: {} } }), canEditPrintArea: allowed, canEditPageLayout: allowed,
+        hasHeaderFooterContent: box(true), pageLayoutDraft: draft, headerFooterDraft: draft,
+        captureEditContext: () => () => current, dialog: { warning: options => { confirm = options.onPositiveClick } },
+        message: { warning: value => warnings.push(value) }, savePageLayout: () => writes++, saveHeaderFooter: () => writes++,
+      }, `globalThis.action = ${kind === 'print' ? 'clearPrintArea' : 'clearHeaderFooter'}`)
+    ctx.action()
+    if (scenario === 'target') current = false
+    if (scenario === 'draft') draft.value.oddHeader = '新的草稿'
+    if (scenario === 'busy') allowed.value = false
+    const before = JSON.stringify(draft.value)
+    await confirm()
+    assert.equal(writes, scenario === 'valid' ? 1 : 0)
+    assert.equal(warnings.length, scenario === 'valid' ? 0 : 1)
+    if (scenario !== 'valid') assert.equal(JSON.stringify(draft.value), before)
+    else if (kind === 'header') assert.equal(draft.value.oddHeader, '')
+  }
+})
 test('page setting writes snapshot parameters and isolate stale receipts', async () => {
   for (const scenario of ['success', 'replacement', 'failure']) {
     let resolve, reject, pending = 0, received, closed = false, restored

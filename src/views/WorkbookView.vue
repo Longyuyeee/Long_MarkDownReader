@@ -4083,12 +4083,19 @@ const setSelectionAsPrintArea = () => {
 }
 const clearPrintArea = () => {
   if (!sheetInfo.value?.pageLayout.printArea || !canEditPrintArea.value) return
+  const isCurrent = captureEditContext()
+  const originalDraft = JSON.stringify(pageLayoutDraft.value)
   dialog.warning({
     title: '清除打印区域？',
     content: '将清除当前 Sheet 的打印区域定义，页面方向、纸张、缩放和页边距保持不变。',
     positiveText: '清除',
     negativeText: '取消',
-    onPositiveClick: () => savePageLayout(null),
+    onPositiveClick: () => {
+      if (!isCurrent() || !canEditPrintArea.value || JSON.stringify(pageLayoutDraft.value) !== originalDraft) {
+        message.warning('编辑状态已变化，请重新确认清除打印区域'); return
+      }
+      return savePageLayout(null)
+    },
   })
 }
 const savePrintOptions = async () => {
@@ -4128,12 +4135,17 @@ const saveHeaderFooter = async () => {
 }
 const clearHeaderFooter = () => {
   if (!hasHeaderFooterContent.value || !canEditPageLayout.value) return
+  const isCurrent = captureEditContext()
+  const originalDraft = JSON.stringify(headerFooterDraft.value)
   dialog.warning({
     title: '清空页眉页脚？',
     content: '将清空当前 Sheet 的奇数页、偶数页和首页页眉页脚文本。',
     positiveText: '清空',
     negativeText: '取消',
     onPositiveClick: () => {
+      if (!isCurrent() || !canEditPageLayout.value || JSON.stringify(headerFooterDraft.value) !== originalDraft) {
+        message.warning('编辑状态已变化，请重新确认清空页眉页脚'); return
+      }
       headerFooterDraft.value.oddHeader = ''
       headerFooterDraft.value.oddFooter = ''
       headerFooterDraft.value.evenHeader = ''
