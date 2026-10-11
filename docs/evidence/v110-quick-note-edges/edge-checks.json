@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "real quick-note window identity",
+    "reopening reuses same window",
+    "cancel closing preserves draft",
+    "cross-library capture saved to selected library",
+    "cross-library refusal leaves main route unchanged",
+    "cross-library result clearly says already saved",
+    "native close during pending handoff leaves quick window alive",
+    "busy close does not offer destructive discard",
+    "timeout keeps committed file",
+    "timeout does not ask to save again",
+    "expired handoff cannot navigate late",
+    "saved note opened in main editor",
+    "quick window closes after handoff"
+  ],
+  "scope": "Native two-window edge cases: fixture-only second library and debugger-paused main window; no physical tray click or slow-disk simulation"
+}

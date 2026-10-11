@@ -447,18 +447,26 @@ onMounted(async () => {
   try {
     if (appWindow) {
       if (isMainWindow) {
-        const unlisten = await appWindow.listen<{ requestId: string; path: string; libraryRoot: string }>('quick-note-open', async event => {
-          const { requestId, path, libraryRoot } = event.payload
+        const unlisten = await appWindow.listen<{ requestId: string; path: string; libraryRoot: string; expiresAt: number }>('quick-note-open', async event => {
+          const { requestId, path, libraryRoot, expiresAt } = event.payload
           let error: string | undefined
           try {
-            if (libraryRoot !== store.activeLibraryPath) throw new Error('文件已存入所选资料库。请先在主窗口切换到该库后打开，当前工作区未被切换')
+            const validateRequest = () => {
+              if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) throw new Error('打开请求已过期，已保存文件仍保留，请重新打开')
+              if (libraryRoot !== store.activeLibraryPath) throw new Error('文件已存入所选资料库。请先在主窗口切换到该库后打开，当前工作区未被切换')
+            }
+            validateRequest()
             await invoke('read_markdown_file', { libraryRoot, path })
+            // Reading can outlive the request or a user-initiated library switch.
+            validateRequest()
             const failure = await openManagedFile(router, path)
             if (failure) throw new Error('主窗口未完成导航，已保存文件仍保留')
             await appWindow?.show()
             await appWindow?.setFocus()
           } catch (cause) { error = String(cause) }
-          await emitTo('quick-note', 'quick-note-open-result', { requestId, error })
+          await emitTo('quick-note', 'quick-note-open-result', { requestId, error }).catch(cause => {
+            console.warn('快速笔记窗口已不可接收打开回执', cause)
+          })
         })
         if (lifecycleDisposed) unlisten()
         else lifecycleUnlisteners.push(unlisten)

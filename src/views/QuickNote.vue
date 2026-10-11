@@ -81,8 +81,10 @@ const openInMain = async (path: string, root: string) => {
   })
   try {
     timer = setTimeout(() => resolve('主窗口未响应，请在资料库中打开已保存文件'), 5000)
-    await emitTo('main', 'quick-note-open', { requestId, path, libraryRoot: root })
-    const error = await response
+    const error = await Promise.race([
+      emitTo('main', 'quick-note-open', { requestId, path, libraryRoot: root, expiresAt: Date.now() + 5000 }).then(() => response),
+      response,
+    ])
     if (error) throw new Error(error)
   } finally { clearTimeout(timer); unlisten() }
 }
