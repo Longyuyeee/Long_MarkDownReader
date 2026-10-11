@@ -68,7 +68,7 @@ pub(crate) struct DependencyResolution {
 }
 
 /// Resolve only ordinary relative file destinations. This is evidence, not permission.
-fn resolve_relative(root: &Path, evidence: &DependencyEvidence) -> DependencyResolution {
+pub(super) fn resolve_relative(root: &Path, evidence: &DependencyEvidence) -> DependencyResolution {
     let result = |status, path: Option<PathBuf>| DependencyResolution {
         status,
         path: path.map(|p| p.to_string_lossy().into_owned()),
@@ -144,6 +144,7 @@ pub(crate) struct MoveImpact {
     pub status: &'static str,
     pub intended_path: Option<String>,
     pub unchanged_link_path: Option<String>,
+    pub proposed_target: Option<String>,
 }
 
 fn same_path(a: &str, b: &str) -> bool {
@@ -315,6 +316,7 @@ impl Inventory {
                 status: "needs_review",
                 intended_path: None,
                 unchanged_link_path: None,
+                proposed_target: None,
             };
             if let Some(before) = &evidence.resolution {
                 if before.status == "resolved_file" {
@@ -350,6 +352,7 @@ impl Inventory {
                 status: "needs_review",
                 intended_path: None,
                 unchanged_link_path: None,
+                proposed_target: None,
             };
             if let Some(resolution) = &evidence.resolution {
                 if resolution.status == "resolved_file" {
@@ -381,6 +384,18 @@ impl Inventory {
                 }
             }
             report.move_impacts.push(impact);
+        }
+        for impact in &mut report.move_impacts {
+            if impact.status == "rewrite_required" && impact.evidence.destination_span.is_some() {
+                if let Some(intended) = &impact.intended_path {
+                    impact.proposed_target = super::archive_edits::relative_target(
+                        root,
+                        Path::new(&mapped(&impact.evidence.document)),
+                        Path::new(intended),
+                        &impact.evidence,
+                    );
+                }
+            }
         }
         report
     }
@@ -534,6 +549,95 @@ mod tests {
     }
 
     struct Fixture(PathBuf);
+    #[test]
+    fn archive_proposed_target_roundtrips_encoded_filename_and_unicode_fragment() {
+        let f = Fixture::new();
+        fs::create_dir(f.0.join("archive")).unwrap();
+        let source = f.0.join("notes/a.md");
+        let body = "中文 [附件](<图 #%.png?mode=1#章节>)";
+        // A literal # in a URL is a fragment delimiter, so the source must encode it.
+        let body = body.replace("图 #%.png", "图 %23%25.png");
+        fs::write(&source, &body).unwrap();
+        fs::write(f.0.join("notes/图 #%.png"), "image").unwrap();
+        let report = scan(f.0.to_str().unwrap()).unwrap().report_move(
+            &f.0,
+            &source,
+            &f.0.join("archive/a.md"),
+        );
+        let impact = &report.move_impacts[0];
+        assert_eq!(impact.status, "rewrite_required");
+        let proposed = impact.proposed_target.as_ref().unwrap();
+        assert_eq!(
+            proposed,
+            "../notes/%E5%9B%BE%20%23%25.png?mode=1#%E7%AB%A0%E8%8A%82"
+        );
+        let preview = super::super::archive_edits::preview(
+            source.to_str().unwrap(),
+            &body,
+            &[(impact.evidence.clone(), proposed.clone())],
+        )
+        .unwrap();
+        assert_eq!(preview, format!("中文 [附件](<{proposed}>)"));
+        assert_eq!(fs::read_to_string(&source).unwrap(), body);
+        assert!(!f.0.join("archive/a.md").exists());
+    }
+
+    #[test]
+    fn archive_proposed_target_follows_batch_rename_and_external_incoming() {
+        let f = Fixture::new();
+        fs::create_dir(f.0.join("archive")).unwrap();
+        let a = f.0.join("notes/a.md");
+        let b = f.0.join("notes/b.md");
+        fs::write(&a, "[b](b.md#part)").unwrap();
+        fs::write(&b, "B").unwrap();
+        fs::write(f.0.join("index.md"), "[a](notes/a.md)").unwrap();
+        let report = scan(f.0.to_str().unwrap()).unwrap().report_batch(
+            &f.0,
+            &a,
+            &[
+                (a.clone(), f.0.join("archive/a.md")),
+                (b, f.0.join("archive/new name.md")),
+            ],
+        );
+        assert!(report.move_impacts.iter().any(|i| i.direction == "outgoing"
+            && i.proposed_target.as_deref() == Some("new%20name.md#part")));
+        assert!(report
+            .move_impacts
+            .iter()
+            .any(|i| i.direction == "incoming"
+                && i.proposed_target.as_deref() == Some("archive/a.md")));
+        assert!(!report.complete);
+    }
+
+    #[test]
+    fn archive_proposed_target_does_not_guess_unsupported_or_outside_paths() {
+        let f = Fixture::new();
+        let source = f.0.join("notes/a.md");
+        fs::write(&source, "[b](b.md \"title\")").unwrap();
+        fs::write(f.0.join("notes/b.md"), "B").unwrap();
+        let report =
+            scan(f.0.to_str().unwrap())
+                .unwrap()
+                .report_move(&f.0, &source, &f.0.join("a.md"));
+        assert_eq!(report.move_impacts[0].status, "rewrite_required");
+        assert!(report.move_impacts[0].proposed_target.is_none());
+        let e = mentions(source.to_str().unwrap(), "[b](b.md#bad%)").remove(0);
+        assert!(super::super::archive_edits::relative_target(
+            &f.0,
+            &source,
+            &f.0.join("notes/b.md"),
+            &e
+        )
+        .is_none());
+        assert!(super::super::archive_edits::relative_target(
+            &f.0,
+            &source,
+            &f.0.parent().unwrap().join("outside.md"),
+            &e
+        )
+        .is_none());
+    }
+
     impl Fixture {
         fn new() -> Self {
             let path = std::env::temp_dir().join(format!(

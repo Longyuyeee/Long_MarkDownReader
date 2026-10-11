@@ -2,6 +2,90 @@
 #![allow(dead_code)]
 use super::archive_dependencies::{mentions, DependencyEvidence};
 use sha2::{Digest, Sha256};
+use std::path::{Component, Path};
+
+/// A predicted relative URL, not evidence that the destination already exists.
+pub(crate) fn relative_target(
+    root: &Path,
+    future_document: &Path,
+    intended: &Path,
+    evidence: &DependencyEvidence,
+) -> Option<String> {
+    if !root.is_absolute() {
+        return None;
+    }
+    let parent = future_document.parent()?.strip_prefix(root).ok()?;
+    let target = intended.strip_prefix(root).ok()?;
+    let components = |path: &Path| -> Option<Vec<String>> {
+        path.components()
+            .map(|c| match c {
+                Component::Normal(name) => Some(name.to_str()?.to_owned()),
+                _ => None,
+            })
+            .collect()
+    };
+    let from = components(parent)?;
+    let to = components(target)?;
+    if to.is_empty() {
+        return None;
+    }
+    let common = from.iter().zip(&to).take_while(|(a, b)| a == b).count();
+    let encode = |text: &str| -> String {
+        let mut encoded = String::new();
+        for b in text.bytes() {
+            if b.is_ascii_alphanumeric() || b"-._~".contains(&b) {
+                encoded.push(b as char);
+            } else {
+                encoded.push_str(&format!("%{b:02X}"));
+            }
+        }
+        encoded
+    };
+    let mut parts = vec!["..".to_owned(); from.len() - common];
+    parts.extend(to[common..].iter().map(|s| encode(s)));
+    if parts.is_empty() {
+        return None;
+    }
+    let mut replacement = parts.join("/");
+    // Keep URL delimiters and valid existing escapes; encode other suffix bytes.
+    let suffix = evidence
+        .target
+        .find(['?', '#'])
+        .map(|i| &evidence.target[i..])
+        .unwrap_or("");
+    let bytes = suffix.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if b == b'%' {
+            if i + 2 >= bytes.len()
+                || !bytes[i + 1].is_ascii_hexdigit()
+                || !bytes[i + 2].is_ascii_hexdigit()
+            {
+                return None;
+            }
+            replacement.push_str(&suffix[i..i + 3]);
+            i += 3;
+            continue;
+        }
+        if b.is_ascii_alphanumeric() || b"-._~/#?=&".contains(&b) {
+            replacement.push(b as char);
+        } else {
+            replacement.push_str(&format!("%{b:02X}"));
+        }
+        i += 1;
+    }
+    let mut shifted = evidence.clone();
+    shifted.document = future_document.to_str()?.into();
+    shifted.target = replacement.clone();
+    let resolved = super::archive_dependencies::resolve_relative(root, &shifted);
+    if !["resolved_file", "missing"].contains(&resolved.status)
+        || resolved.path.as_deref().map(Path::new) != Some(intended)
+    {
+        return None;
+    }
+    Some(replacement)
+}
 
 /// Proposed destinations must already be URL-encoded by the caller. This does
 /// not establish that they resolve to the intended file after a batch move.
