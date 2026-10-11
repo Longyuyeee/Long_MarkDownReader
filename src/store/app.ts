@@ -72,6 +72,7 @@ export interface RelationObjectFocus {
 const TABS_STORAGE_KEY = 'longedit_tabs_state'
 const GRAPH_COLLECTION_QUERY = '__longedit_graph_collection__'
 let configLoadPromise: Promise<void> | null = null
+let configWritePromise: Promise<void> = Promise.resolve()
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -179,70 +180,72 @@ export const useAppStore = defineStore('app', {
     async setInboxDirectory(root: string, path: string) {
       const relative = await invoke<string>('validate_inbox_location', { libraryRoot: root, path })
       if (!this.libraries.some(item => item.path === root)) throw new Error('资料库已移除')
-      const previous = this.libraries
-      try { await this.updateConfig({ libraries: this.libraries.map(item => item.path === root ? { ...item, inboxDirectory: relative } : item) }) }
-      catch (error) { this.libraries = previous; throw error }
+      await this.updateConfig({ libraries: this.libraries.map(item => item.path === root ? { ...item, inboxDirectory: relative } : item) })
       return relative
     },
     async updateConfig(patch: any) {
-      // 检测文件库切换，若切换则清空标签页
-      if (patch.activeLibraryPath !== undefined && patch.activeLibraryPath !== this.activeLibraryPath) {
-        this.tabs = []
-        this.activeTabId = null
-        this.relationObjectFocus = null
-        this.clearTabsState()
-      }
-
-      // 核心修复：真实调用自启插件
-      if (isTauriRuntime() && patch.isAutostart !== undefined && patch.isAutostart !== this.isAutostart) {
+      // Queue immutable snapshots; failed persistence must not discard open work.
+      const snapshot = JSON.parse(JSON.stringify(patch))
+      const task = configWritePromise.then(async () => {
+        const switchesLibrary = snapshot.activeLibraryPath !== undefined && snapshot.activeLibraryPath !== this.activeLibraryPath
+        const previousAutostart = this.isAutostart
+        let autostartChanged = false
+        const next = { ...this.$state, ...snapshot }
+        if (snapshot.libraries !== undefined) {
+          const libraryPaths = new Set(next.libraries.map((library: LibraryConfig) => library.path))
+          next.savedSearches = next.savedSearches.filter((search: SavedSearchConfig) => libraryPaths.has(search.libraryPath))
+        }
         try {
-          if (patch.isAutostart) await enable()
-          else await disable()
-        } catch (e) {
-          console.error('Autostart plugin error', e)
-          patch.isAutostart = this.isAutostart // 如果操作失败，回滚 patch 值
+          if (isTauriRuntime() && snapshot.isAutostart !== undefined && snapshot.isAutostart !== previousAutostart) {
+            if (snapshot.isAutostart) await enable()
+            else await disable()
+            autostartChanged = true
+          }
+          if (isTauriRuntime()) {
+            await invoke('save_config', { config: {
+              libraries: next.libraries,
+              activeLibraryPath: next.activeLibraryPath,
+              theme: next.theme,
+              codeTheme: next.codeTheme,
+              editorMode: next.editorMode,
+              editorModeExplicit: next.editorModeExplicit,
+              editorBgColor: next.editorBgColor,
+              heroIcon: next.heroIcon,
+              autoSaveInterval: next.autoSaveInterval,
+              textAutoSaveEnabled: next.textAutoSaveEnabled,
+              maxHistoryCount: next.maxHistoryCount,
+              isAutostart: next.isAutostart,
+              exitStrategy: next.exitStrategy,
+              visualStyle: next.visualStyle,
+              motionSpeed: next.motionSpeed,
+              aiEnabled: next.aiEnabled,
+              aiProvider: next.aiProvider,
+              aiEndpoint: next.aiEndpoint,
+              aiModel: next.aiModel,
+              savedSearches: next.savedSearches,
+              fileDisplayStyles: next.fileDisplayStyles,
+            } })
+          }
+        } catch (error) {
+          if (autostartChanged) {
+            try { if (previousAutostart) await enable(); else await disable() }
+            catch (rollbackError) { throw new Error(`配置未保存，恢复开机启动设置也失败：${String(error)}；${String(rollbackError)}`) }
+          }
+          throw error
         }
-      }
-
-      for (const key in patch) {
-        if (patch[key] !== undefined) {
-          (this as any)[key] = patch[key]
+        const applied = { ...snapshot }
+        if (snapshot.libraries !== undefined) applied.savedSearches = next.savedSearches
+        if (switchesLibrary) {
+          applied.tabs = []
+          applied.activeTabId = null
+          applied.relationObjectFocus = null
         }
-      }
-      if (patch.libraries !== undefined) {
-        const libraryPaths = new Set(this.libraries.map(library => library.path))
-        this.savedSearches = this.savedSearches.filter(search => libraryPaths.has(search.libraryPath))
-      }
-      
-      if (!isTauriRuntime()) {
-        this.saveTabsState()
-        return
-      }
-
-      await invoke('save_config', { config: {
-        libraries: this.libraries,
-        activeLibraryPath: this.activeLibraryPath,
-        theme: this.theme,
-        codeTheme: this.codeTheme,
-        editorMode: this.editorMode,
-        editorModeExplicit: this.editorModeExplicit,
-        editorBgColor: this.editorBgColor,
-        heroIcon: this.heroIcon,
-        autoSaveInterval: this.autoSaveInterval,
-        textAutoSaveEnabled: this.textAutoSaveEnabled,
-        maxHistoryCount: this.maxHistoryCount,
-        isAutostart: this.isAutostart,
-        exitStrategy: this.exitStrategy,
-        visualStyle: this.visualStyle,
-        motionSpeed: this.motionSpeed,
-        aiEnabled: this.aiEnabled,
-        aiProvider: this.aiProvider,
-        aiEndpoint: this.aiEndpoint,
-        aiModel: this.aiModel,
-        savedSearches: this.savedSearches,
-        fileDisplayStyles: this.fileDisplayStyles,
-      } })
-
+        this.$patch(applied)
+        if (switchesLibrary) this.clearTabsState()
+        if (!isTauriRuntime()) this.saveTabsState()
+      })
+      configWritePromise = task.catch(() => {})
+      return task
     },
     async applyThemePreset(presetId: string) {
       const selected = getThemePreset(presetId)
@@ -284,23 +287,20 @@ export const useAppStore = defineStore('app', {
         createdAt: Date.now(),
       }
       const previous = this.savedSearches
-      try { await this.updateConfig({ savedSearches: [savedSearch, ...previous] }) }
-      catch (error) { this.savedSearches = previous; throw error }
+      await this.updateConfig({ savedSearches: [savedSearch, ...previous] })
       return savedSearch
     },
     async setFileDisplayStyle(path: string, style: FileDisplayStyle) {
       const previous = this.fileDisplayStyles
       const next = { ...previous, [path]: style }
-      try { await this.updateConfig({ fileDisplayStyles: next }) }
-      catch (error) { this.fileDisplayStyles = previous; throw error }
+      await this.updateConfig({ fileDisplayStyles: next })
     },
     async clearFileDisplayStyle(path: string) {
       if (!this.fileDisplayStyles[path]) return
       const previous = this.fileDisplayStyles
       const next = { ...previous }
       delete next[path]
-      try { await this.updateConfig({ fileDisplayStyles: next }) }
-      catch (error) { this.fileDisplayStyles = previous; throw error }
+      await this.updateConfig({ fileDisplayStyles: next })
     },
     async moveFileDisplayStyles(oldPath: string, newPath: string) {
       const entries = Object.entries(this.fileDisplayStyles)
@@ -312,11 +312,9 @@ export const useAppStore = defineStore('app', {
         delete next[path]
         next[`${newPath}${path.slice(oldPath.length)}`] = style
       }
-      try { await this.updateConfig({ fileDisplayStyles: next }) }
-      catch (error) { this.fileDisplayStyles = previous; throw error }
+      await this.updateConfig({ fileDisplayStyles: next })
     },
     async removeFileDisplayStyles(paths: string[]) {
-      const previous = this.fileDisplayStyles
       const next = { ...this.fileDisplayStyles }
       let changed = false
       for (const candidate of Object.keys(next)) {
@@ -326,8 +324,7 @@ export const useAppStore = defineStore('app', {
         }
       }
       if (changed) {
-        try { await this.updateConfig({ fileDisplayStyles: next }) }
-        catch (error) { this.fileDisplayStyles = previous; throw error }
+        await this.updateConfig({ fileDisplayStyles: next })
       }
     },
     async addGraphCollection(name: string, centerPath: string, depth: number) {
@@ -350,14 +347,12 @@ export const useAppStore = defineStore('app', {
         createdAt: Date.now(),
       }
       const previous = this.savedSearches
-      try { await this.updateConfig({ savedSearches: [savedSearch, ...previous] }) }
-      catch (error) { this.savedSearches = previous; throw error }
+      await this.updateConfig({ savedSearches: [savedSearch, ...previous] })
       return savedSearch
     },
     async removeSavedSearch(id: string) {
       const previous = this.savedSearches
-      try { await this.updateConfig({ savedSearches: previous.filter(search => search.id !== id) }) }
-      catch (error) { this.savedSearches = previous; throw error }
+      await this.updateConfig({ savedSearches: previous.filter(search => search.id !== id) })
     },
     addTab(tab: TabInfo) {
       const idx = this.tabs.findIndex(t => t.path === tab.path)
