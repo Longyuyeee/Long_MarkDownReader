@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "missing Inbox is not reported empty",
+    "file and folder counts correct",
+    "inbox file opens in main editor",
+    "folder browsing returns to Inbox",
+    "refresh removes stale name",
+    "return restores existing file tree",
+    "typing search exits Inbox without losing query",
+    "all seven sidebar tabs retained",
+    "settings menu is discoverable by actual click",
+    "configured directory resets browsing root",
+    "configuration does not move previous files",
+    "quick capture and inbox share the same resolver",
+    "outside-library rejection preserves configuration",
+    "configured file opens in main editor",
+    "real quick note saved into configured inbox"
+  ],
+  "scope": "Isolated browsing and configuration integration; native picker and config disk persistence not simulated"
+}

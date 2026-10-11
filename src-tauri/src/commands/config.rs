@@ -22,6 +22,8 @@ pub struct LibraryConfig {
     pub name: String,
     pub path: String,
     #[serde(default)]
+    pub inbox_directory: String,
+    #[serde(default)]
     pub git_enabled: bool,
     #[serde(default)]
     pub git_remote: String,
@@ -398,8 +400,28 @@ pub async fn prepare_library_path(path: String) -> Result<String, String> {
         .await.map_err(|error| format!("准备知识库目录失败：{error}"))?
 }
 
+fn validate_inbox_directory(value: &str) -> Result<(), String> {
+    if value.is_empty() || value == "." { return Ok(()); }
+    for part in value.split('/') {
+        crate::commands::files::validate_item_name(part)?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn validate_inbox_location(library_root: String, path: String) -> Result<String, String> {
+    let guard = crate::services::workspace_guard::WorkspaceGuard::new(library_root)?;
+    let directory = guard.resolve_directory(path, false)?;
+    fs::read_dir(&directory).map_err(|e| format!("收集目录无法读取: {e}"))?;
+    let relative = directory.strip_prefix(guard.root()).map_err(|_| "收集目录必须位于当前资料库")?.to_string_lossy().replace('\\', "/");
+    let relative = if relative.is_empty() { ".".into() } else { relative };
+    validate_inbox_directory(&relative)?;
+    Ok(relative)
+}
+
 #[tauri::command]
 pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Result<(), String> {
+    for library in &config.libraries { validate_inbox_directory(&library.inbox_directory)?; }
     #[cfg(debug_assertions)]
     if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() {
         return Ok(());
@@ -506,6 +528,18 @@ mod tests {
         .unwrap();
         assert_eq!(legacy.ai_api_key, "legacy-value");
         assert!(legacy.text_auto_save_enabled);
+    }
+    #[test]
+    fn inbox_config_is_backward_compatible_and_library_scoped() {
+        let old: LibraryConfig = serde_json::from_str(r#"{"name":"old","path":"C:/Vault"}"#).unwrap();
+        assert_eq!(old.inbox_directory, "");
+        let mut custom = old.clone(); custom.inbox_directory = "项目/待整理".into();
+        let values = vec![old, custom];
+        let restored: Vec<LibraryConfig> = serde_json::from_str(&serde_json::to_string(&values).unwrap()).unwrap();
+        assert_eq!(restored[0].inbox_directory, "");
+        assert_eq!(restored[1].inbox_directory, "项目/待整理");
+        for valid in ["", ".", "Inbox", "项目/待整理"] { assert!(validate_inbox_directory(valid).is_ok()); }
+        for invalid in ["../outside", "/absolute", "C:/outside", "a\\b", "a//b", "a/../b", "CON", "a/."] { assert!(validate_inbox_directory(invalid).is_err()); }
     }
 
     #[test]

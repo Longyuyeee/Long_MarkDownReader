@@ -1,0 +1,43 @@
+import fs from 'node:fs/promises'
+// Reuse the unchanged real browsing regression, then add scoped configuration checks.
+const baseline = await fs.readFile(new URL('./capture-v110-inbox.mjs', import.meta.url), 'utf8')
+const marker = "  await fs.writeFile(path.join(output,'checks.json')"
+if (!baseline.includes(marker)) throw Error('Baseline insertion point changed')
+const extra = `
+  await evaluate("document.querySelector('.search-control-row input').value=''")
+  await click("document.querySelector('.inbox-shortcut')")
+  await wait("!!document.querySelector('.inbox-browser')", 'inbox config surface')
+  await click("document.querySelector('[aria-label=收集箱设置]')")
+  check('settings menu is discoverable by actual click', await evaluate("document.querySelector('.inbox-settings').textContent.includes('设置收集目录')"))
+  await fs.writeFile(path.join(output,'settings-menu.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'))
+  const custom=path.join(lib,'待整理')
+  await fs.mkdir(custom)
+  await fs.writeFile(path.join(custom,'新收集.md'),'# 新目录内容')
+  await evaluate("(async()=>{window.__inboxStore=(await import('/src/store/app.ts')).useAppStore();return true})()")
+  await evaluate('window.__inboxStore.setInboxDirectory('+JSON.stringify(lib)+','+JSON.stringify(custom)+')')
+  await wait("document.querySelector('.inbox-browser').textContent.includes('新收集.md')",'configured directory displayed')
+  check('configured directory resets browsing root',await evaluate("document.querySelector('.inbox-browser .location').textContent==='待整理'"))
+  check('configuration does not move previous files',!!await fs.stat(path.join(inbox,'重命名记录.md')))
+  const target=await evaluate('(async()=>(await import(\"/src/utils/inboxDirectory.ts\")).inboxDirectory('+JSON.stringify(lib)+',window.__inboxStore.libraries))()')
+  check('quick capture and inbox share the same resolver',target.replaceAll('\\\\','/')===custom.replaceAll('\\\\','/'))
+  const preserved=await evaluate('(async()=>{const s=window.__inboxStore,before=JSON.stringify(s.libraries);try{await s.setInboxDirectory('+JSON.stringify(lib)+','+JSON.stringify(path.dirname(lib))+');return false}catch{return JSON.stringify(s.libraries)===before}})()')
+  check('outside-library rejection preserves configuration',preserved)
+  await click("[...document.querySelectorAll('.inbox-browser li button')].find(e=>e.textContent.includes('新收集.md'))")
+  await wait("document.querySelector('#vditor-lib')?.textContent.includes('新目录内容')",'configured file opens in main')
+  await fs.writeFile(path.join(output,'configured-inbox.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'))
+  check('configured file opens in main editor',true)
+  await evaluate("(async()=>{await (await import('/src/router/index.ts')).default.push('/quick-note')})()")
+  await wait("!!document.querySelector('[aria-label=笔记正文]')", 'quick capture mounted')
+  await wait("document.querySelector('[aria-label=保存到]')?.value.includes('待整理')",'quick capture follows library setting')
+  await click("document.querySelector('[aria-label=笔记正文]')")
+  await send('Input.insertText',{text:'用户记录：整理周会资料'})
+  await evaluate("(()=>{const e=document.querySelector('[aria-label=保存后操作]');e.value='continue';e.dispatchEvent(new Event('change',{bubbles:true}))})()")
+  await click("[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='保存笔记')")
+  await wait("document.querySelector('.quick-note-window [role=status]').textContent.includes('已保存：')",'quick capture saved')
+  const saved=(await fs.readdir(custom)).find(name=>name.startsWith('快速笔记_'))
+  check('real quick note saved into configured inbox',!!saved && (await fs.readFile(path.join(custom,saved),'utf8'))==='用户记录：整理周会资料')
+  await fs.writeFile(path.join(output,'quick-note-configured.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'))
+`
+try {
+  await import('data:text/javascript;base64,'+Buffer.from(baseline.replace(marker,extra+'\n'+marker).replace('Isolated real library browsing; no archive implementation','Isolated browsing and configuration integration; native picker and config disk persistence not simulated')).toString('base64'))
+} catch (error) { console.error(error.message); process.exitCode = 1 }

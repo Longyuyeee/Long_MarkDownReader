@@ -45,6 +45,7 @@ export interface TabInfo {
 export interface LibraryConfig {
   name: string
   path: string
+  inboxDirectory?: string
   gitEnabled?: boolean
   gitRemote?: string
   gitBranch?: string
@@ -174,6 +175,14 @@ export const useAppStore = defineStore('app', {
       })()
       try { await configLoadPromise }
       finally { configLoadPromise = null }
+    },
+    async setInboxDirectory(root: string, path: string) {
+      const relative = await invoke<string>('validate_inbox_location', { libraryRoot: root, path })
+      if (!this.libraries.some(item => item.path === root)) throw new Error('资料库已移除')
+      const previous = this.libraries
+      try { await this.updateConfig({ libraries: this.libraries.map(item => item.path === root ? { ...item, inboxDirectory: relative } : item) }) }
+      catch (error) { this.libraries = previous; throw error }
+      return relative
     },
     async updateConfig(patch: any) {
       // 检测文件库切换，若切换则清空标签页

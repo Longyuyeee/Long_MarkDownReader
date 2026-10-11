@@ -21,6 +21,7 @@ import { confirm, open } from '@tauri-apps/plugin-dialog'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import { NOTE_TEMPLATES } from '../config/noteTemplates'
+import { inboxDirectory, rememberedCaptureTarget } from '../utils/inboxDirectory'
 
 const store = useAppStore(), message = useMessage()
 const content = ref(''), library = ref(''), target = ref(''), template = ref('空白笔记')
@@ -31,19 +32,30 @@ const editor = ref<HTMLTextAreaElement>()
 // Retain identity across failed invocations; clear it only after an acknowledged save.
 let operationId = crypto.randomUUID().replace(/-/g, '')
 let operationTarget: { libraryRoot: string; targetDir: string } | null = null
-const inbox = computed(() => library.value.replace(/[\\/]$/, '') + '/Inbox')
+const inbox = computed(() => inboxDirectory(library.value, store.libraries))
+let stopInboxUpdates: (() => void) | undefined
+let disposed = false
 const preferenceKey = (root: string) => 'longedit.quick-note.target:' + root
 watch(library, root => {
-  try { target.value = localStorage.getItem(preferenceKey(root)) || inbox.value }
+  try { target.value = rememberedCaptureTarget(root, inbox.value, localStorage.getItem(preferenceKey(root))) }
   catch { target.value = inbox.value }
 })
 watch([content, busy], ([value, active]) => {
   store.isTempDirty = value.length > 0 || active
   store.isCaptureBusy = active
 }, { flush: 'sync' })
-onUnmounted(() => { store.isTempDirty = false; store.isCaptureBusy = false })
+onUnmounted(() => { disposed = true; store.isTempDirty = false; store.isCaptureBusy = false; stopInboxUpdates?.() })
+watch(inbox, (next, previous) => {
+  if (target.value === previous && !busy.value && !operationTarget) target.value = next
+})
 onMounted(async () => {
-  try { await store.loadConfig(); library.value = store.activeLibraryPath; ready.value = true; await nextTick(); editor.value?.focus() }
+  try {
+    stopInboxUpdates = await listen<{ root: string; relative: string }>('inbox-directory-changed', event => {
+      store.libraries = store.libraries.map(item => item.path === event.payload.root ? { ...item, inboxDirectory: event.payload.relative } : item)
+    })
+    if (disposed) { stopInboxUpdates(); return }
+    await store.loadConfig(); library.value = store.activeLibraryPath; ready.value = true; await nextTick(); editor.value?.focus()
+  }
   catch (error) { status.value = '读取资料库失败：' + String(error) }
 })
 const close = async () => { if (!busy.value) await getCurrentWindow().close() }
@@ -108,7 +120,7 @@ const save = async () => {
   operationTarget = null
   content.value = ''; template.value = '空白笔记'
   status.value = '已保存：' + savedPath
-  try { localStorage.setItem(preferenceKey(library.value), target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
+  try { localStorage.setItem(preferenceKey(library.value), target.value === inbox.value ? '__inbox' : target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
   try {
     await emit('refresh-library')
     if (afterSave.value === 'open') await openInMain(savedPath, library.value)

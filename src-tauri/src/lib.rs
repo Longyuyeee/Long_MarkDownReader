@@ -13,7 +13,7 @@ use commands::canvas::{
     write_external_canvas_file,
 };
 use commands::config::{
-    clear_ai_credential, get_ai_credential_status, get_config, prepare_library_path, save_config, set_ai_credential,
+    clear_ai_credential, get_ai_credential_status, get_config, prepare_library_path, save_config, set_ai_credential, validate_inbox_location,
 };
 use commands::diagnostics::export_privacy_diagnostic_bundle;
 use commands::diagram::{
@@ -532,6 +532,7 @@ pub fn run() {
             move_item,
             move_items,
             preflight_archive,
+            validate_inbox_location,
             open_default_apps_settings,
             get_default_app_candidate_status,
             prepare_default_app_candidate,

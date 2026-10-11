@@ -535,12 +535,15 @@ fn restored_config_from_redacted(
             ));
         }
         libraries.push(LibraryConfig {
+            // Redacted management backups intentionally exclude directory choices.
             name: library.name.clone(),
             path,
             git_enabled: library.git_enabled,
             git_remote: String::new(),
             git_branch: library.git_branch.clone(),
+            inbox_directory: String::new(),
         });
+        warnings.push(format!("知识库「{}」的收集目录恢复为默认 Inbox；如使用自定义目录，请重新设置。", library.name));
     }
     let active_library_path = redacted
         .active_library_fingerprint
@@ -718,6 +721,7 @@ mod tests {
                 git_enabled: true,
                 git_remote: "https://token@example.com/private/repo.git".into(),
                 git_branch: "main".into(),
+                inbox_directory: String::new(),
             }],
             active_library_path: "C:\\Users\\Alice\\Documents\\Vault".into(),
             ai_api_key: "sk-should-never-export".into(),

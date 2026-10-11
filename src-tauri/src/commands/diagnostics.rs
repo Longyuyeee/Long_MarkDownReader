@@ -424,6 +424,7 @@ mod tests {
                 git_enabled: true,
                 git_remote: "https://token@example.com/private/repo.git".into(),
                 git_branch: "main".into(),
+                inbox_directory: String::new(),
             }],
             active_library_path: "C:\\Users\\Alice\\Documents\\SecretVault".into(),
             ai_enabled: true,
