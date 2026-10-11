@@ -1,4 +1,5 @@
-//! Read-only migration inventory. Execution must re-check it before changing either path.
+//! Read-only inventory and internal verified staging; no publication or retirement.
+//! A future coordinator must lock/revalidate before committing either path.
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -15,7 +16,7 @@ pub(crate) fn history_path(cache: &Path, document: &Path) -> PathBuf {
     ))
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistorySnapshot {
     name: String,
@@ -23,7 +24,7 @@ pub(crate) struct HistorySnapshot {
     sha256: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ArchiveHistoryPlan {
     source_directory: String,
@@ -135,6 +136,140 @@ pub(crate) fn inspect(
     Ok(plan)
 }
 
+/// Prepared copy only: no document move, history publication or source retirement.
+/// Caller must serialize history writers and revalidate again before committing.
+#[allow(dead_code)]
+#[derive(Debug)]
+pub(crate) struct PreparedHistory {
+    pub staging_directory: Option<PathBuf>,
+    pub plan: ArchiveHistoryPlan,
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+pub(crate) struct PrepareFailure {
+    pub message: String,
+    /// Partial copies are deliberately retained; never delete an unjournaled path.
+    pub retained_staging_directory: Option<PathBuf>,
+}
+
+#[allow(dead_code)] // Not exposed before the archive coordinator is implemented.
+pub(crate) fn prepare(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    expected: &ArchiveHistoryPlan,
+) -> Result<PreparedHistory, PrepareFailure> {
+    prepare_with_hook(cache, source, target, expected, || {})
+}
+
+fn prepare_with_hook(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    expected: &ArchiveHistoryPlan,
+    after_copy: impl FnOnce(),
+) -> Result<PreparedHistory, PrepareFailure> {
+    use std::io::Write;
+    let fail = |message| PrepareFailure {
+        message,
+        retained_staging_directory: None,
+    };
+    let current = inspect(cache, source, target).map_err(fail)?;
+    if &current != expected {
+        return Err(fail("历史清单已变化，请重新预检".into()));
+    }
+    if current.strategy == "none" {
+        return Ok(PreparedHistory {
+            staging_directory: None,
+            plan: current,
+        });
+    }
+    static SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| fail(e.to_string()))?
+        .as_nanos();
+    let stage = cache.join(format!(
+        ".archive-stage-{}-{nonce}-{}",
+        std::process::id(),
+        SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    ));
+    fs::create_dir(&stage).map_err(|e| fail(format!("无法创建历史暂存目录: {e}")))?;
+    let copy_result = (|| -> Result<(), String> {
+        for snapshot in &current.snapshots {
+            let from = Path::new(&current.source_directory).join(&snapshot.name);
+            let meta = fs::symlink_metadata(&from).map_err(|e| e.to_string())?;
+            if !meta.is_file() || meta.file_type().is_symlink() || meta.len() != snapshot.bytes {
+                return Err(format!("历史快照类型或长度已变化: {}", snapshot.name));
+            }
+            let mut input = fs::File::open(&from)
+                .map_err(|e| e.to_string())?
+                .take(snapshot.bytes + 1);
+            let mut output = fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(stage.join(&snapshot.name))
+                .map_err(|e| e.to_string())?;
+            let mut buffer = [0u8; 16 * 1024];
+            let mut bytes = 0u64;
+            let mut hash = Sha256::new();
+            loop {
+                let count = input.read(&mut buffer).map_err(|e| e.to_string())?;
+                if count == 0 {
+                    break;
+                }
+                bytes += count as u64;
+                if bytes > snapshot.bytes {
+                    return Err("历史快照读取期间变大".into());
+                }
+                output
+                    .write_all(&buffer[..count])
+                    .map_err(|e| e.to_string())?;
+                hash.update(&buffer[..count]);
+            }
+            output.sync_all().map_err(|e| e.to_string())?;
+            if bytes != snapshot.bytes || format!("{:x}", hash.finalize()) != snapshot.sha256 {
+                return Err(format!("历史快照摘要已变化: {}", snapshot.name));
+            }
+            // Verify the actual stored bytes, not only the buffer sent to write().
+            let mut stored = fs::File::open(stage.join(&snapshot.name))
+                .map_err(|e| e.to_string())?
+                .take(snapshot.bytes + 1);
+            let mut stored_hash = Sha256::new();
+            let mut stored_bytes = 0u64;
+            loop {
+                let count = stored.read(&mut buffer).map_err(|e| e.to_string())?;
+                if count == 0 {
+                    break;
+                }
+                stored_hash.update(&buffer[..count]);
+                stored_bytes += count as u64;
+            }
+            if stored_bytes != snapshot.bytes
+                || format!("{:x}", stored_hash.finalize()) != snapshot.sha256
+            {
+                return Err("暂存历史回读校验失败".into());
+            }
+        }
+        after_copy();
+        if inspect(cache, source, target)? != current {
+            return Err("复制期间历史清单发生变化，请重新预检".into());
+        }
+        Ok(())
+    })();
+    match copy_result {
+        Ok(()) => Ok(PreparedHistory {
+            staging_directory: Some(stage),
+            plan: current,
+        }),
+        Err(message) => Err(PrepareFailure {
+            message,
+            retained_staging_directory: Some(stage),
+        }),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -223,5 +358,107 @@ mod tests {
         let cache = f.0.join("file");
         fs::write(&cache, "not a directory").unwrap();
         assert!(inspect(&cache, Path::new("old.md"), Path::new("new.md")).is_err());
+    }
+
+    #[test]
+    fn preparation_copies_verified_bytes_without_publishing_or_retiring() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "历史\r\n正文").unwrap();
+        let plan = f.inspect().unwrap();
+        let prepared = prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan).unwrap();
+        assert_eq!(prepared.plan, plan);
+        let stage = prepared.staging_directory.unwrap();
+        assert_eq!(
+            fs::read(stage.join("1.md")).unwrap(),
+            fs::read(f.old().join("1.md")).unwrap()
+        );
+        assert!(!f.new_path().exists());
+    }
+
+    #[test]
+    fn stale_preflight_is_rejected_without_creating_staging() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "old").unwrap();
+        let plan = f.inspect().unwrap();
+        fs::write(f.old().join("1.md"), "new").unwrap();
+        let failure = prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan).unwrap_err();
+        assert!(failure.message.contains("变化"));
+        assert!(failure.retained_staging_directory.is_none());
+        assert_eq!(fs::read_dir(&f.0).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn concurrent_history_change_retains_copy_and_original_without_publication() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "old").unwrap();
+        let plan = f.inspect().unwrap();
+        let failure = prepare_with_hook(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &plan,
+            || fs::write(f.old().join("2.md"), "new snapshot").unwrap(),
+        )
+        .unwrap_err();
+        let stage = failure.retained_staging_directory.unwrap();
+        assert_eq!(fs::read_to_string(stage.join("1.md")).unwrap(), "old");
+        assert!(f.old().join("1.md").exists());
+        assert!(f.old().join("2.md").exists());
+        assert!(!f.new_path().exists());
+    }
+
+    #[test]
+    fn absent_history_creates_nothing_and_new_target_conflict_blocks() {
+        let f = Fixture::new();
+        let plan = f.inspect().unwrap();
+        assert!(
+            prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan)
+                .unwrap()
+                .staging_directory
+                .is_none()
+        );
+        assert_eq!(fs::read_dir(&f.0).unwrap().count(), 0);
+        fs::create_dir(f.new_path()).unwrap();
+        fs::write(f.new_path().join("1.md"), "unrelated").unwrap();
+        assert!(prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan).is_err());
+        assert_eq!(
+            fs::read_to_string(f.new_path().join("1.md")).unwrap(),
+            "unrelated"
+        );
+    }
+
+    #[test]
+    fn destination_appearing_during_copy_is_not_overwritten() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "original").unwrap();
+        let plan = f.inspect().unwrap();
+        let failure = prepare_with_hook(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &plan,
+            || {
+                fs::create_dir(f.new_path()).unwrap();
+                fs::write(f.new_path().join("1.md"), "other history").unwrap();
+            },
+        )
+        .unwrap_err();
+        assert!(failure
+            .retained_staging_directory
+            .unwrap()
+            .join("1.md")
+            .exists());
+        assert_eq!(
+            fs::read_to_string(f.old().join("1.md")).unwrap(),
+            "original"
+        );
+        assert_eq!(
+            fs::read_to_string(f.new_path().join("1.md")).unwrap(),
+            "other history"
+        );
     }
 }
