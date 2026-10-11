@@ -1,4 +1,4 @@
-//! Protocol core only. Not yet connected to window events or execution permission.
+//! Window-state protocol support, not execution permission.
 #![allow(dead_code)]
 use std::{
     collections::BTreeMap,
@@ -28,6 +28,112 @@ pub(crate) struct Confirmation {
     invalidated: bool,
     consumed: bool,
 }
+
+#[derive(Default)]
+pub(crate) struct WindowRegistry {
+    windows: BTreeMap<String, (WindowVersion, Option<bool>)>,
+    next_generation: u64,
+    active: Option<Confirmation>,
+}
+
+impl WindowRegistry {
+    fn versions(&self) -> BTreeMap<String, WindowVersion> {
+        self.windows
+            .iter()
+            .map(|(label, (version, _))| (label.clone(), version.clone()))
+            .collect()
+    }
+    fn invalidate_changed(&mut self) {
+        let versions = self.versions();
+        if let Some(active) = &mut self.active {
+            active.observe(&versions);
+        }
+    }
+    fn insert_unknown(&mut self, label: &str) -> Result<(), &'static str> {
+        if label.is_empty() || self.windows.len() >= 64 {
+            return Err("invalid_window_inventory");
+        }
+        self.next_generation = self
+            .next_generation
+            .checked_add(1)
+            .ok_or("window_generation_exhausted")?;
+        self.windows.insert(
+            label.into(),
+            (
+                WindowVersion {
+                    generation: self.next_generation,
+                    revision: 0,
+                },
+                None,
+            ),
+        );
+        Ok(())
+    }
+    /// Synchronize native inventory without marking a newly found window ready.
+    pub(crate) fn reconcile(&mut self, labels: &[String]) -> Result<(), &'static str> {
+        let labels: std::collections::BTreeSet<_> = labels.iter().cloned().collect();
+        if labels.len() > 64 || labels.iter().any(|s| s.is_empty()) {
+            if let Some(active) = &mut self.active {
+                active.invalidated = true;
+            }
+            return Err("invalid_window_inventory");
+        }
+        self.windows.retain(|label, _| labels.contains(label));
+        for label in labels {
+            if !self.windows.contains_key(&label) {
+                self.insert_unknown(&label)?;
+            }
+        }
+        self.invalidate_changed();
+        Ok(())
+    }
+    pub(crate) fn report(&mut self, label: &str, dirty: bool) -> Result<(), &'static str> {
+        // Every report is a revision, even if its boolean value is unchanged.
+        if let Some(active) = &mut self.active {
+            active.invalidated = true;
+        }
+        if !self.windows.contains_key(label) {
+            self.insert_unknown(label)?;
+        }
+        let (version, state) = self.windows.get_mut(label).ok_or("unknown_window")?;
+        version.revision = version
+            .revision
+            .checked_add(1)
+            .ok_or("window_revision_exhausted")?;
+        *state = Some(dirty);
+        Ok(())
+    }
+    pub(crate) fn destroyed(&mut self, label: &str) {
+        self.windows.remove(label);
+        if let Some(active) = &mut self.active {
+            active.invalidated = true;
+        }
+    }
+    /// Internal only; native inventory must be reconciled before this call.
+    pub(crate) fn begin(&mut self, now: Instant, timeout: Duration) -> Result<u64, &'static str> {
+        if self
+            .active
+            .as_ref()
+            .is_some_and(|request| request.check(now).is_ok())
+        {
+            return Err("confirmation_already_pending");
+        }
+        if self
+            .windows
+            .values()
+            .any(|(_, dirty)| *dirty != Some(false))
+        {
+            return Err("window_state_not_clean");
+        }
+        let request = Confirmation::new(now, timeout, self.versions())?;
+        let id = request.id();
+        self.active = Some(request);
+        Ok(id)
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct WindowConfirmationState(pub std::sync::Mutex<WindowRegistry>);
 
 impl Confirmation {
     pub(crate) fn new(
@@ -134,6 +240,48 @@ impl Confirmation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn archive_registry_unknown_windows_block_and_recreated_labels_get_new_generation() {
+        let mut r = WindowRegistry::default();
+        r.reconcile(&["main".into(), "quick".into()]).unwrap();
+        r.report("main", false).unwrap();
+        assert_eq!(
+            r.begin(Instant::now(), Duration::from_secs(2)),
+            Err("window_state_not_clean")
+        );
+        let old = r.versions()["quick"].generation;
+        r.destroyed("quick");
+        r.reconcile(&["main".into(), "quick".into()]).unwrap();
+        assert!(r.versions()["quick"].generation > old);
+        r.report("quick", false).unwrap();
+        assert!(r.begin(Instant::now(), Duration::from_secs(2)).is_ok());
+    }
+    #[test]
+    fn archive_registry_reports_and_topology_changes_invalidate_active_requests() {
+        let now = Instant::now();
+        let mut r = WindowRegistry::default();
+        r.report("main", false).unwrap();
+        r.begin(now, Duration::from_secs(2)).unwrap();
+        assert_eq!(
+            r.begin(now, Duration::from_secs(2)),
+            Err("confirmation_already_pending")
+        );
+        let old = r.versions()["main"].revision;
+        r.report("main", false).unwrap();
+        assert!(r.versions()["main"].revision > old);
+        assert_eq!(
+            r.active.as_ref().unwrap().check(now),
+            Err("confirmation_invalidated")
+        );
+        let id = r.begin(now, Duration::from_secs(2)).unwrap();
+        r.reconcile(&["main".into(), "new".into()]).unwrap();
+        assert_eq!(
+            r.active.as_ref().unwrap().check(now),
+            Err("confirmation_invalidated")
+        );
+        r.destroyed("new");
+        assert!(r.begin(now, Duration::from_secs(2)).unwrap() > id);
+    }
     fn windows() -> BTreeMap<String, WindowVersion> {
         BTreeMap::from([
             (

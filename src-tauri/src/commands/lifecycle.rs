@@ -36,7 +36,9 @@ fn observe(labels: Vec<String>, drafts: &HashMap<String, bool>) -> Vec<DraftObse
 pub(crate) fn observe_archive_drafts(
     app: &tauri::AppHandle,
 ) -> Result<Vec<DraftObservation>, String> {
-    let labels = app.webview_windows().into_keys().collect();
+    let labels: Vec<String> = app.webview_windows().into_keys().collect();
+    app.state::<crate::services::archive_confirmation::WindowConfirmationState>()
+        .0.lock().map_err(|_| "无法核对窗口确认登记")?.reconcile(&labels)?;
     let state = app.state::<WindowDrafts>();
     let drafts = state.0.lock().map_err(|_| "无法核对跨窗口草稿状态")?;
     Ok(observe(labels, &drafts))
@@ -122,6 +124,8 @@ mod archive_draft_tests {
 
 #[tauri::command]
 pub fn set_window_dirty(window: tauri::Window, dirty: bool) -> Result<(), String> {
+    window.state::<crate::services::archive_confirmation::WindowConfirmationState>()
+        .0.lock().map_err(|_| "无法更新窗口确认登记")?.report(window.label(), dirty)?;
     window
         .state::<WindowDrafts>()
         .0

@@ -213,6 +213,7 @@ pub fn run() {
     let builder = builder
         .manage(ExternalFileAccess::default())
         .manage(commands::lifecycle::WindowDrafts::default())
+        .manage(services::archive_confirmation::WindowConfirmationState::default())
         .manage(KnowledgeIndexRuntime::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -232,6 +233,9 @@ pub fn run() {
                 let _ = window.emit_to(window.label(), "request-window-close", ());
             }
             tauri::WindowEvent::Destroyed => {
+                if let Ok(mut registry) = window.state::<services::archive_confirmation::WindowConfirmationState>().0.lock() {
+                    registry.destroyed(window.label());
+                }
                 if let Ok(mut drafts) = window.state::<commands::lifecycle::WindowDrafts>().0.lock() {
                     drafts.remove(window.label());
                 }
