@@ -15,3 +15,4 @@ pub mod knowledge_index;
 pub mod pdf_index;
 pub mod reliable_write;
 pub mod workspace_guard;
+pub mod smart_collection;

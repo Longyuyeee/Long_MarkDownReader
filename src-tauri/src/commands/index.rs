@@ -370,7 +370,7 @@ fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
     results.truncate(MAX_SEARCH_RESULTS);
 }
 
-fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<KnowledgeSearchResult> {
+pub(crate) fn search_segments(segments: &[IndexedSearchSegment], query: &str) -> Vec<KnowledgeSearchResult> {
     let mut results = Vec::new();
     let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();

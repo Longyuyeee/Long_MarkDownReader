@@ -849,7 +849,7 @@ fn decode_searchable_text(path: &Path) -> Option<String> {
     Some(text.strip_prefix('\u{feff}').unwrap_or(&text).to_string())
 }
 
-fn build_search_segments_for_source(
+pub(crate) fn build_search_segments_for_source(
     workspace: &Path,
     source: &IndexedSource,
 ) -> Vec<IndexedSearchSegment> {

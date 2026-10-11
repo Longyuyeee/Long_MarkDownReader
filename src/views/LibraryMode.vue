@@ -200,16 +200,17 @@
             <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane" role="tabpanel" id="panel-collections" aria-labelledby="tab-collections">
               <div class="sidebar-panel-intro">
                 <n-icon :component="CollectionIcon" size="18" />
-                <div><strong>常用搜索</strong><span>记录文件页的关键词和格式条件，点击后会回到文件列表并重新执行搜索。</span></div>
+                <div><strong>常用搜索</strong><span>保存动态条件，每次打开重新查找；不复制、不移动文件。</span></div>
                 <small>{{ librarySavedSearches.length }} 项</small>
               </div>
-              <div class="collections-action">
+              <div v-if="searchQuery.trim()" class="collections-action">
                 <span>{{ searchQuery.trim() ? `当前：${searchQuery.trim()}` : '先在“文件”页输入搜索关键词' }}</span>
                 <n-button size="tiny" type="primary" title="保存当前关键词和格式条件" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
                   <template #icon><n-icon :component="BookmarkAddIcon" /></template>
                   保存当前条件
                 </n-button>
               </div>
+              <SmartCollectionPanel :selected="selectedSmartCollection" :formats="searchFormatOptions" @open="openKnowledgeSearchResult" />
               <div v-if="!librarySavedSearches.length" class="empty-state-hint"><n-empty description="还没有常用搜索" size="small" /></div>
               <div v-else class="collection-list">
                 <div v-for="search in librarySavedSearches" :key="search.id" class="collection-row">
@@ -800,6 +801,7 @@ import {
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
+import SmartCollectionPanel from '../components/SmartCollectionPanel.vue'
 import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
@@ -1289,8 +1291,11 @@ const searchByTag = (tag: string) => {
   activeSidebarTab.value = 'files'
 }
 const resultFormatLabel = (objectType: string) => findFileFormatById(objectType)?.label || objectType
+const selectedSmartCollection = ref<SavedSearchConfig | null>(null)
 const collectionFilterLabel = (search: SavedSearchConfig) => search.graphRoot
   ? `${search.graphDepth || 1} 层动态子图`
+  : search.filters
+    ? [search.filters.directory || '全部目录', search.filters.tag ? `#${search.filters.tag}` : '', search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(resultFormatLabel)].filter(Boolean).join(' · ')
   : search.objectTypes.length
     ? search.objectTypes.map(resultFormatLabel).join(' · ')
     : '全部格式'
@@ -1303,6 +1308,11 @@ const saveCurrentSearch = async () => {
   } catch (error) { message.error(`保存搜索失败：${String(error)}`) }
 }
 const openSavedSearch = (search: SavedSearchConfig) => {
+  if (search.filters) {
+    selectedSmartCollection.value = { ...search }
+    activeSidebarTab.value = 'collections'
+    return
+  }
   if (search.graphRoot) {
     void activateGraphCollection(search)
     return

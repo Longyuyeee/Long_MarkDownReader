@@ -317,7 +317,7 @@ const relativeLabel = (path: string) => {
 const iconForPath = (path: string) => formatIcons[findFileFormat(path)?.id || ''] || FileIcon
 const openSavedSearch = (search: SavedSearchConfig) => router.push({
   name: 'LibraryMode',
-  query: search.graphRoot
+  query: search.graphRoot || search.filters
     ? { collection: search.id }
     : { search: search.query, ...(search.objectTypes.length ? { types: search.objectTypes.join(',') } : {}) },
 })

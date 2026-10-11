@@ -142,6 +142,8 @@ struct RedactedLibraryConfig {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RedactedSavedSearchConfig {
+    #[serde(default)]
+    filters: Option<crate::services::smart_collection::CollectionFilters>,
     id: String,
     name: String,
     query: String,
@@ -201,6 +203,7 @@ fn redacted_library(library: &LibraryConfig) -> RedactedLibraryConfig {
 
 fn redacted_saved_search(search: &SavedSearchConfig) -> RedactedSavedSearchConfig {
     RedactedSavedSearchConfig {
+        filters: search.filters.clone(),
         id: search.id.clone(),
         name: search.name.clone(),
         query: search.query.clone(),
@@ -559,6 +562,7 @@ fn restored_config_from_redacted(
             .ok_or_else(|| format!("保存搜索「{}」缺少知识库目录映射。", search.name))?
             .clone();
         saved_searches.push(SavedSearchConfig {
+            filters: search.filters.clone(),
             id: search.id.clone(),
             name: search.name.clone(),
             query: search.query.clone(),
@@ -726,6 +730,7 @@ mod tests {
             active_library_path: "C:\\Users\\Alice\\Documents\\Vault".into(),
             ai_api_key: "sk-should-never-export".into(),
             saved_searches: vec![SavedSearchConfig {
+                filters: None,
                 id: "search-1".into(),
                 name: "Todo".into(),
                 query: "__longedit_graph_collection__".into(),
@@ -798,6 +803,7 @@ mod tests {
                 ..Default::default()
             }],
             saved_searches: vec![SavedSearchConfig {
+                filters: None,
                 id: "search-1".into(),
                 name: "Todo".into(),
                 query: "__longedit_graph_collection__".into(),

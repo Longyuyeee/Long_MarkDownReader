@@ -53,12 +53,18 @@ export interface LibraryConfig {
   gitBranch?: string
 }
 
+export interface CollectionFilters {
+  directory: string
+  tag: string
+  modifiedWithinDays: number | null
+}
 export interface SavedSearchConfig {
   id: string
   name: string
   query: string
   libraryPath: string
   objectTypes: string[]
+  filters?: CollectionFilters | null
   graphRoot?: string
   graphDepth?: number
   createdAt: number
@@ -275,7 +281,7 @@ export const useAppStore = defineStore('app', {
       const normalizedQuery = query.trim()
       if (!normalizedQuery || !this.activeLibraryPath) throw new Error('搜索查询或知识库为空')
       const normalizedTypes = [...new Set(objectTypes)].sort()
-      const duplicate = this.savedSearches.find(search => !search.graphRoot
+      const duplicate = this.savedSearches.find(search => !search.graphRoot && !search.filters
         && search.libraryPath === this.activeLibraryPath
         && search.query.toLowerCase() === normalizedQuery.toLowerCase()
         && [...search.objectTypes].sort().join('|') === normalizedTypes.join('|'))
@@ -294,6 +300,22 @@ export const useAppStore = defineStore('app', {
       const previous = this.savedSearches
       await this.updateConfig({ savedSearches: [savedSearch, ...previous] })
       return savedSearch
+    },
+    async saveSmartCollection(input: { id?: string; name: string; query: string; objectTypes: string[]; filters: CollectionFilters }) {
+      const root = this.activeLibraryPath
+      if (!root || !input.name.trim()) throw new Error('请填写集合名称')
+      const existing = input.id ? this.savedSearches.find(item => item.id === input.id && item.libraryPath === root && !item.graphRoot) : undefined
+      if (input.id && !existing) throw new Error('集合已删除或资料库已切换，请重新打开')
+      if (!existing && this.savedSearches.length >= 64) throw new Error('保存的搜索不能超过 64 个')
+      const entry: SavedSearchConfig = {
+        id: existing?.id || `collection-${crypto.randomUUID()}`, name: input.name.trim(),
+        query: input.query.trim(), libraryPath: root, objectTypes: [...new Set(input.objectTypes)].sort(),
+        filters: { ...input.filters }, createdAt: existing?.createdAt || Date.now(),
+      }
+      await this.updateConfig({ savedSearches: existing
+        ? this.savedSearches.map(item => item.id === existing.id ? entry : item)
+        : [entry, ...this.savedSearches] })
+      return entry
     },
     async setFileDisplayStyle(path: string, style: FileDisplayStyle) {
       const previous = this.fileDisplayStyles

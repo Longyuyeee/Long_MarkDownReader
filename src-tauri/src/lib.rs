@@ -517,6 +517,7 @@ pub fn run() {
             get_url_title,
             search_library,
             search_knowledge,
+            services::smart_collection::search_smart_collection,
             preview_search_document,
             get_knowledge_index_status,
             rebuild_knowledge_index,

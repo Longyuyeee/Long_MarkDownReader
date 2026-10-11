@@ -41,6 +41,8 @@ pub struct SavedSearchConfig {
     #[serde(default)]
     pub object_types: Vec<String>,
     #[serde(default)]
+    pub filters: Option<crate::services::smart_collection::CollectionFilters>,
+    #[serde(default)]
     pub graph_root: Option<String>,
     #[serde(default)]
     pub graph_depth: Option<usize>,
@@ -179,12 +181,13 @@ fn validate_saved_searches(
             return Err("保存的搜索名称为空或过长".into());
         }
         let graph_collection = search.graph_root.is_some() || search.graph_depth.is_some();
-        if search.query.trim().is_empty()
+        if (search.query.trim().is_empty() && search.filters.is_none())
             || search.query.chars().count() > MAX_SAVED_SEARCH_QUERY_CHARS
         {
             return Err("保存的搜索查询为空或过长".into());
         }
         if graph_collection {
+            if search.filters.is_some() { return Err("图谱集合不能使用文件筛选条件".into()); }
             if search.query != GRAPH_COLLECTION_QUERY || !search.object_types.is_empty() {
                 return Err("图谱集合查询标记或格式过滤器无效".into());
             }
@@ -213,6 +216,7 @@ fn validate_saved_searches(
                 return Err("图谱集合深度必须在 1 到 4 之间".into());
             }
         }
+        if let Some(filters) = &search.filters { filters.validate()?; }
         if search.library_path.trim().is_empty() || search.library_path.chars().count() > 4096 {
             return Err("保存的搜索知识库路径为空或过长".into());
         }
@@ -611,6 +615,7 @@ mod tests {
             query: "milestone".into(),
             library_path: "C:\\Knowledge".into(),
             object_types: vec!["markdown".into(), "pdf".into()],
+            filters: None,
             graph_root: None,
             graph_depth: None,
             created_at: 1,
@@ -636,6 +641,7 @@ mod tests {
             query: "query".into(),
             library_path: "C:\\Outside".into(),
             object_types: vec![],
+            filters: None,
             graph_root: None,
             graph_depth: None,
             created_at: 2,
@@ -650,6 +656,7 @@ mod tests {
             query: GRAPH_COLLECTION_QUERY.into(),
             library_path: libraries[0].path.clone(),
             object_types: vec![],
+            filters: None,
             graph_root: Some("Projects\\Alpha.md".into()),
             graph_depth: Some(2),
             created_at: 3,

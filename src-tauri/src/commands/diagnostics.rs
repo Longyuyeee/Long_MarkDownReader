@@ -436,6 +436,7 @@ mod tests {
                 query: "confidential project body".into(),
                 library_path: "C:\\Users\\Alice\\Documents\\SecretVault".into(),
                 object_types: vec!["markdown".into()],
+                filters: None,
                 graph_root: None,
                 graph_depth: None,
                 created_at: 1,
