@@ -276,11 +276,11 @@ fn validate_file_display_styles(styles: &HashMap<String, FileDisplayStyle>) -> R
 #[tauri::command]
 pub fn get_config(app_handle: tauri::AppHandle) -> AppConfig {
     #[cfg(debug_assertions)]
-    if let Some(config) = debug_e2e_config() {
+    if let Some(config) = debug_e2e_config().filter(|_| debug_e2e_config_dir().is_none()) {
         return config;
     }
 
-    let config_dir = match app_handle.path().app_config_dir() {
+    let config_dir = match config_directory(&app_handle) {
         Ok(directory) => directory,
         Err(_) => return get_default_config(&app_handle),
     };
@@ -352,7 +352,22 @@ fn debug_e2e_config() -> Option<AppConfig> {
     })
 }
 
+// Opt-in persistence for owned integration fixtures; release builds ignore these variables.
+#[cfg(debug_assertions)]
+fn debug_e2e_config_dir() -> Option<PathBuf> {
+    std::env::var_os("LONGEDIT_E2E_LIBRARY")?;
+    std::env::var_os("LONGEDIT_E2E_CONFIG_DIR").map(PathBuf::from)
+}
+
+fn config_directory(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+    #[cfg(debug_assertions)]
+    if let Some(directory) = debug_e2e_config_dir() { return Ok(directory); }
+    app_handle.path().app_config_dir().map_err(|e| e.to_string())
+}
+
 fn get_default_config(app_handle: &tauri::AppHandle) -> AppConfig {
+    #[cfg(debug_assertions)]
+    if let Some(config) = debug_e2e_config() { return config; }
     let base = app_handle
         .path()
         .document_dir()
@@ -423,14 +438,11 @@ pub fn validate_inbox_location(library_root: String, path: String) -> Result<Str
 pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Result<(), String> {
     for library in &config.libraries { validate_inbox_directory(&library.inbox_directory)?; }
     #[cfg(debug_assertions)]
-    if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() {
+    if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some() && debug_e2e_config_dir().is_none() {
         return Ok(());
     }
 
-    let config_dir = app_handle
-        .path()
-        .app_config_dir()
-        .map_err(|error| format!("config dir error: {error}"))?;
+    let config_dir = config_directory(&app_handle)?;
     if !config_dir.exists() {
         fs::create_dir_all(&config_dir).map_err(|error| error.to_string())?;
     }

@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "cancel keeps default Inbox",
+    "native choice persisted through production save_config",
+    "native outside selection keeps original directory",
+    "outside rejection preserves persisted configuration"
+  ]
+}
