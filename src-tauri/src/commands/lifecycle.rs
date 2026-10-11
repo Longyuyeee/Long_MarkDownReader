@@ -38,7 +38,10 @@ pub(crate) fn observe_archive_drafts(
 ) -> Result<Vec<DraftObservation>, String> {
     let labels: Vec<String> = app.webview_windows().into_keys().collect();
     app.state::<crate::services::archive_confirmation::WindowConfirmationState>()
-        .0.lock().map_err(|_| "无法核对窗口确认登记")?.reconcile(&labels)?;
+        .0
+        .lock()
+        .map_err(|_| "无法核对窗口确认登记")?
+        .reconcile(&labels)?;
     let state = app.state::<WindowDrafts>();
     let drafts = state.0.lock().map_err(|_| "无法核对跨窗口草稿状态")?;
     Ok(observe(labels, &drafts))
@@ -123,9 +126,48 @@ mod archive_draft_tests {
 }
 
 #[tauri::command]
+pub fn register_window_draft_session(window: tauri::Window) -> Result<String, String> {
+    let state = window.state::<crate::services::archive_confirmation::WindowConfirmationState>();
+    let mut registry = state.0.lock().map_err(|_| "无法登记窗口会话")?;
+    let session = registry.new_session(window.label())?;
+    window
+        .state::<WindowDrafts>()
+        .0
+        .lock()
+        .map_err(|_| "无法重置窗口草稿状态")?
+        .remove(window.label());
+    Ok(session)
+}
+
+#[tauri::command]
+pub fn report_window_draft_session(
+    window: tauri::Window,
+    session: String,
+    sequence: u32,
+    dirty: bool,
+) -> Result<(), String> {
+    let state = window.state::<crate::services::archive_confirmation::WindowConfirmationState>();
+    let mut registry = state.0.lock().map_err(|_| "无法更新窗口会话")?;
+    registry.report_session(window.label(), &session, sequence, dirty)?;
+    // Hold the registry lock until both records agree; rejected stale reports
+    // must never reach the legacy close/update dirty map.
+    window
+        .state::<WindowDrafts>()
+        .0
+        .lock()
+        .map_err(|_| "无法更新窗口草稿状态")?
+        .insert(window.label().into(), dirty);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn set_window_dirty(window: tauri::Window, dirty: bool) -> Result<(), String> {
-    window.state::<crate::services::archive_confirmation::WindowConfirmationState>()
-        .0.lock().map_err(|_| "无法更新窗口确认登记")?.report(window.label(), dirty)?;
+    window
+        .state::<crate::services::archive_confirmation::WindowConfirmationState>()
+        .0
+        .lock()
+        .map_err(|_| "无法更新窗口确认登记")?
+        .report(window.label(), dirty)?;
     window
         .state::<WindowDrafts>()
         .0

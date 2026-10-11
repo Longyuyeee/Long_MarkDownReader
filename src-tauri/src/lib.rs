@@ -549,6 +549,8 @@ pub fn run() {
             clear_all_history,
             exit_app,
             commands::lifecycle::set_window_dirty,
+            commands::lifecycle::register_window_draft_session,
+            commands::lifecycle::report_window_draft_session,
             check_community_update,
             install_community_update,
             ai_chat_completion,

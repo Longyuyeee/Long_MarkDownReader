@@ -429,8 +429,15 @@ const handleExit = async () => {
   }
 }
 const hasUnsavedChanges = computed(() => store.tabs.some(tab => tab.isDirty) || store.isTempDirty || windowDraftCount.value > 0)
+let draftSession: string | null = null
+let draftSequence = 0
+const reportDraftState = async (dirty: boolean) => {
+  if (!draftSession || lifecycleDisposed) return
+  if (draftSequence >= 0xffffffff) throw new Error('窗口状态序号已耗尽，请保留草稿并重新打开窗口')
+  await invoke('report_window_draft_session', { session: draftSession, sequence: ++draftSequence, dirty })
+}
 watch(hasUnsavedChanges, dirty => {
-  if (appWindow && lifecycleReady) void invoke('set_window_dirty', { dirty }).catch(error => {
+  if (appWindow && lifecycleReady) void reportDraftState(dirty).catch(error => {
     routeErrorMessage.value = `无法同步未保存状态：${String(error)}`
   })
 }, { immediate: true, flush: 'sync' })
@@ -446,6 +453,7 @@ onMounted(async () => {
   window.addEventListener('beforeunload', handleBeforeUnload)
   try {
     if (appWindow) {
+      draftSession = await invoke<string>('register_window_draft_session')
       if (isMainWindow) {
         const unlisten = await appWindow.listen<{ requestId: string; path: string; libraryRoot: string; expiresAt: number }>('quick-note-open', async event => {
           const { requestId, path, libraryRoot, expiresAt } = event.payload
@@ -479,7 +487,7 @@ onMounted(async () => {
     }
     await store.loadConfig().catch(error => { routeErrorMessage.value = `读取设置失败：${String(error)}` })
     lifecycleReady = !lifecycleDisposed
-    if (appWindow && lifecycleReady) await invoke('set_window_dirty', { dirty: hasUnsavedChanges.value })
+    if (appWindow && lifecycleReady) await reportDraftState(hasUnsavedChanges.value)
   } catch (error) {
     routeErrorMessage.value = `初始化关闭保护失败，请重试启动：${String(error)}`
   }

@@ -37,6 +37,39 @@ pub(crate) struct WindowRegistry {
 }
 
 impl WindowRegistry {
+    pub(crate) fn new_session(&mut self, label: &str) -> Result<String, &'static str> {
+        if let Some(active) = &mut self.active {
+            active.invalidated = true;
+        }
+        self.windows.remove(label);
+        self.insert_unknown(label)?;
+        Ok(self.windows[label].0.generation.to_string())
+    }
+    pub(crate) fn report_session(
+        &mut self,
+        label: &str,
+        session: &str,
+        sequence: u32,
+        dirty: bool,
+    ) -> Result<(), &'static str> {
+        let (version, _) = self.windows.get(label).ok_or("unknown_window_session")?;
+        if version.generation.to_string() != session {
+            return Err("stale_window_session");
+        }
+        if u64::from(sequence) <= version.revision {
+            return Err("stale_window_sequence");
+        }
+        if let Some(active) = &mut self.active {
+            active.invalidated = true;
+        }
+        let (version, state) = self
+            .windows
+            .get_mut(label)
+            .ok_or("unknown_window_session")?;
+        version.revision = u64::from(sequence);
+        *state = Some(dirty);
+        Ok(())
+    }
     fn versions(&self) -> BTreeMap<String, WindowVersion> {
         self.windows
             .iter()
@@ -240,6 +273,31 @@ impl Confirmation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn archive_window_sessions_reject_old_pages_and_out_of_order_reports() {
+        let mut r = WindowRegistry::default();
+        let old = r.new_session("main").unwrap();
+        r.report_session("main", &old, 1, false).unwrap();
+        let current = r.new_session("main").unwrap();
+        assert_ne!(old, current);
+        assert_eq!(
+            r.report_session("main", &old, 100, false),
+            Err("stale_window_session")
+        );
+        assert_eq!(r.windows["main"].1, None);
+        r.report_session("main", &current, 2, true).unwrap();
+        assert_eq!(
+            r.report_session("main", &current, 1, false),
+            Err("stale_window_sequence")
+        );
+        assert_eq!(
+            r.report_session("main", &current, 2, false),
+            Err("stale_window_sequence")
+        );
+        assert_eq!(r.windows["main"].1, Some(true));
+        r.report_session("main", &current, 3, false).unwrap();
+        assert_eq!(r.windows["main"].1, Some(false));
+    }
     #[test]
     fn archive_registry_unknown_windows_block_and_recreated_labels_get_new_generation() {
         let mut r = WindowRegistry::default();
