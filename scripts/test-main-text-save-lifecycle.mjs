@@ -8,6 +8,11 @@ import { test } from 'node:test'
 // Execute the production save action, replacing only its environment/IPC.
 const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 const receipt = fs.readFileSync('src/utils/textSaveReceipt.ts', 'utf8').replaceAll('export ', '')
+const ownershipSource = fs.readFileSync('src/utils/mainTextSaveOwnership.ts', 'utf8').replaceAll('export ', '')
+const ownershipContext = vm.createContext({})
+vm.runInContext(ts.transpileModule(ownershipSource + '\nglobalThis.acquire = tryAcquireMainTextSave', {
+  compilerOptions: { target: ts.ScriptTarget.ES2022 },
+}).outputText, ownershipContext)
 function harness(viewSource = source) {
   const tab = { id: 'note.md', path: 'note.md', title: '会议记录', content: '周五交付', isDirty: true, textSignature: 'old' }
   const requests = [], errors = [], messages = [], writes = []
@@ -17,6 +22,7 @@ function harness(viewSource = source) {
     vditor: editor, activeTabId: { value: tab.id }, tabs: { value: [tab] },
     store: { libraryPath: 'library-a' }, currentLibGitEnabled: { value: false },
     savingTextTabs: new Set(), suppressEditorInput: false, lastPromptedExternalSignature: '',
+    tryAcquireMainTextSave: ownershipContext.acquire,
     beginWindowSave: () => { guards++; return () => { guards-- } },
     normalizeTextSaveOptions: value => value && typeof value === 'object' ? value : {},
     findFileFormat: () => ({ id: 'markdown', routeName: 'LibraryMode' }), isFormatCapabilitySupported: () => true,
@@ -95,4 +101,31 @@ test('switching libraries does not retarget the follow-up Git commit', async () 
   const first = h.ctx.save(); h.ctx.store.libraryPath = 'library-b'; h.resolve(); await first
   assert.equal(h.requests[1].command, 'git_commit'); assert.equal(h.requests[1].args.libraryPath, 'library-a')
   h.requests[1].resolve()
+})
+
+test('a recreated component cannot resubmit the same path until the old receipt settles', async () => {
+  const oldView = harness(); const saving = oldView.ctx.save(); oldView.ctx.vditor = null
+  const newView = harness(); await newView.ctx.save()
+  assert.equal(newView.requests.length, 0); assert.equal(newView.guards(), 0)
+  assert.ok(newView.messages.some(value => value.includes('正在保存')))
+  oldView.resolve(); await saving
+  const retry = newView.ctx.save(); assert.equal(newView.requests.length, 1)
+  newView.resolve(); await retry
+})
+
+test('failure releases cross-instance ownership; different documents do not block one another', async () => {
+  const first = harness(); const saving = first.ctx.save()
+  const other = harness(); other.tab.path = 'other.md'
+  const otherSave = other.ctx.save(); assert.equal(other.requests.length, 1)
+  first.requests[0].reject(new Error('写入失败')); await saving
+  const reopened = harness(); const retry = reopened.ctx.save(); assert.equal(reopened.requests.length, 1)
+  reopened.resolve(); await retry; other.resolve(); await otherSave
+})
+
+test('releasing an old owner twice cannot release a newer owner', () => {
+  const releaseOld = ownershipContext.acquire('ownership-check.md'); assert.ok(releaseOld)
+  releaseOld()
+  const releaseNew = ownershipContext.acquire('ownership-check.md'); assert.ok(releaseNew)
+  releaseOld(); assert.equal(ownershipContext.acquire('ownership-check.md'), undefined)
+  releaseNew()
 })

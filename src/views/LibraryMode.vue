@@ -801,6 +801,7 @@ import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
+import { tryAcquireMainTextSave } from '../utils/mainTextSaveOwnership'
 import { isActiveThemeDark } from '../config/themePresets'
 import { markdownCodeThemeChoices, resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { storeToRefs } from 'pinia'
@@ -3099,7 +3100,6 @@ const checkActiveTextIdentity = async () => {
 
 type TextSaveOptions = { savePolicy?: TextSavePolicy; successMessage?: string }
 
-const savingTextTabs = new Set<string>()
 watch(() => tabs.value.map(tab => [tab.id, tab.content]), recordWindowDraftActivity, { flush: 'sync' })
 
 const normalizeTextSaveOptions = (options: unknown): TextSaveOptions => {
@@ -3112,17 +3112,18 @@ const saveCurrentFile = async (options: unknown = {}) => {
   const saveOptions = normalizeTextSaveOptions(options)
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
   if (t) { 
-    if (savingTextTabs.has(t.id)) {
+    const savingEditor = vditor
+    const submittedContent = savingEditor.getValue()
+    const releaseSaveOwnership = tryAcquireMainTextSave(t.path)
+    if (!releaseSaveOwnership) {
       message.warning('这篇文档正在保存，请稍后再保存新增内容')
       return
     }
-    const savingEditor = vditor
-    const submittedContent = savingEditor.getValue()
     const savingLibraryRoot = store.libraryPath
     const savingGitEnabled = currentLibGitEnabled.value
-    savingTextTabs.add(t.id)
-    const finishWindowSave = beginWindowSave()
+    let finishWindowSave: (() => void) | undefined
     try { 
+      finishWindowSave = beginWindowSave()
       if (t.textReadOnlyReason) throw new Error('大文件范围预览为只读模式，不能覆盖保存')
       let content = submittedContent;
       
@@ -3169,8 +3170,8 @@ const saveCurrentFile = async (options: unknown = {}) => {
     } catch (e: any) {
       handleError(e, '保存失败', 'saveCurrentFile')
     } finally {
-      savingTextTabs.delete(t.id)
-      finishWindowSave()
+      releaseSaveOwnership()
+      finishWindowSave?.()
     }
   }
 }
