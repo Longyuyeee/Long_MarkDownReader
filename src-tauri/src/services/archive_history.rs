@@ -432,6 +432,7 @@ fn publish_locked(
 pub(crate) struct CoordinatedReceipt {
     pub stage: PathBuf,
     pub document_moved: bool,
+    pub history_required: bool,
     pub history_published: bool,
     pub error: Option<String>,
 }
@@ -480,11 +481,6 @@ fn move_with_history_hook(
     }
     let expected = inspect(cache, &source, &target)?;
     let document_fingerprint = super::archive_document::fingerprint(&source)?;
-    // This first coordinator slice requires an existing history staging receipt.
-    // Do not move history-free files without their own durable transaction journal.
-    if expected.strategy == "none" {
-        return Err("无历史文件的执行日志尚未接入，不移动".into());
-    }
     let prepared =
         prepare_locked(cache, &source, &target, &expected, &lease, || {}).map_err(|e| {
             format!(
@@ -492,18 +488,45 @@ fn move_with_history_hook(
                 e.message, e.retained_staging_directory
             )
         })?;
-    let stage = prepared
-        .staging_directory
-        .as_ref()
-        .ok_or("缺少暂存目录")?
-        .clone();
+    let history_required = prepared.staging_directory.is_some();
+    let stage = if let Some(stage) = &prepared.staging_directory {
+        stage.clone()
+    } else {
+        // No history snapshots to copy, but the document still needs a journal.
+        fs::create_dir_all(cache).map_err(|e| e.to_string())?;
+        static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_nanos();
+        let stage = cache.join(format!(
+            ".archive-stage-document-{}-{nonce}-{}",
+            std::process::id(),
+            SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        fs::create_dir(&stage).map_err(|e| e.to_string())?;
+        stage
+    };
     let mut receipt = CoordinatedReceipt {
         stage: stage.clone(),
         document_moved: false,
+        history_required,
         history_published: false,
         error: None,
     };
     let result = (|| -> Result<(), String> {
+        // Persist the distinction between "not needed" and "not published".
+        let mut policy = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(stage.join("history-policy.json"))
+            .map_err(|e| e.to_string())?;
+        let policy_bytes = serde_json::to_vec(&serde_json::json!({"version":1,"historyRequired":history_required,"plan":prepared.plan})).map_err(|e| e.to_string())?;
+        policy
+            .write_all(&policy_bytes)
+            .and_then(|_| policy.sync_all())
+            .map_err(|e| e.to_string())?;
+        drop(policy);
         let mut journal = fs::OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -524,12 +547,21 @@ fn move_with_history_hook(
         if super::archive_document::fingerprint(&source)? != intent.fingerprint {
             return Err("准备期间正文发生变化，未移动".into());
         }
+        if inspect(cache, &source, &target)? != prepared.plan {
+            return Err("移动前历史状态变化，未移动".into());
+        }
         let moves = super::archive_move::move_batch(root, &[(source.clone(), target.clone())]);
         moves.into_iter().next().ok_or("缺少移动回执")?.result?;
         receipt.document_moved = true;
         after_move();
         if super::archive_document::fingerprint(&target)? != intent.fingerprint {
             return Err("正文已移动但内容发生变化，暂停历史发布".into());
+        }
+        if !history_required {
+            if inspect(cache, &source, &target)? != prepared.plan {
+                return Err("正文已移动但历史状态变化，需要恢复核对".into());
+            }
+            return Ok(());
         }
         let published = publish_locked(cache, &source, &target, &prepared, &lease, || {})?;
         receipt.history_published = true;
@@ -1223,19 +1255,79 @@ mod tests {
     }
 
     #[test]
-    fn coordinated_no_history_or_conflicting_target_never_moves_source() {
+    fn coordinated_conflicting_target_never_moves_source() {
         let f = Fixture::new();
         let root = f.0.join("library");
         fs::create_dir(&root).unwrap();
         fs::write(root.join("old.md"), "keep").unwrap();
         let source = root.join("old.md");
         let target = root.join("new.md");
-        assert!(move_with_history(&root, &f.0, &source, &target).is_err());
-        assert!(!target.exists());
         fs::write(&target, "other").unwrap();
         assert!(move_with_history(&root, &f.0, &source, &target).is_err());
         assert_eq!(fs::read_to_string(source).unwrap(), "keep");
         assert_eq!(fs::read_to_string(target).unwrap(), "other");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coordinated_no_history_creates_journal_not_fake_history() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        let cache = f.0.join("new-cache");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "fresh note").unwrap();
+        let source = root.join("old.md").canonicalize().unwrap();
+        let target = root.canonicalize().unwrap().join("new.md");
+        let receipt = move_with_history(&root, &cache, &source, &target).unwrap();
+        assert!(
+            receipt.document_moved
+                && !receipt.history_required
+                && !receipt.history_published
+                && receipt.error.is_none()
+        );
+        assert_eq!(fs::read_to_string(&target).unwrap(), "fresh note");
+        assert!(!source.exists());
+        assert!(!history_path(&cache, &source).exists());
+        assert!(!history_path(&cache, &target).exists());
+        assert!(receipt.stage.join("document-intent.json").exists());
+        let policy: serde_json::Value =
+            serde_json::from_slice(&fs::read(receipt.stage.join("history-policy.json")).unwrap())
+                .unwrap();
+        assert_eq!(policy["historyRequired"], false);
+        assert_eq!(
+            super::super::archive_document::inspect_document(&root, &cache, &receipt.stage)
+                .unwrap(),
+            super::super::archive_document::DocumentState::TargetMatches
+        );
+        assert!(super::super::history_coordination::ensure_clearable(&cache).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coordinated_no_history_detects_late_history_without_deleting_it() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "fresh note").unwrap();
+        let source = root.join("old.md").canonicalize().unwrap();
+        let target = root.canonicalize().unwrap().join("new.md");
+        let receipt = move_with_history_hook(&root, &f.0, &source, &target, || {
+            fs::create_dir(history_path(&f.0, &source)).unwrap();
+            fs::write(history_path(&f.0, &source).join("1.md"), "late history").unwrap();
+        })
+        .unwrap();
+        assert!(
+            receipt.document_moved
+                && !receipt.history_required
+                && !receipt.history_published
+                && receipt.error.is_some()
+        );
+        assert_eq!(fs::read_to_string(&target).unwrap(), "fresh note");
+        assert_eq!(
+            fs::read_to_string(history_path(&f.0, &source).join("1.md")).unwrap(),
+            "late history"
+        );
+        assert!(!history_path(&f.0, &target).exists());
     }
 
     #[cfg(windows)]
