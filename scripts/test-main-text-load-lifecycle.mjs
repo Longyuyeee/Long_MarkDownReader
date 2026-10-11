@@ -14,6 +14,7 @@ function harness(viewSource = source) {
   const ctx = vm.createContext({
     tabs: { value: [tab] }, activeTabId: { value: tab.path }, lastLoadedPath: '',
     suppressEditorInput: false, referenceBookmark: null,
+    pendingEditorSaveLoad: { value: false },
     vditor: { vditor: {}, setValue: value => writes.push(value), disabled: () => { enabled = false }, enable: () => { enabled = true } },
     setTimeout: (callback, delay) => timers.push({ callback, delay }), nextTick: callback => callback(),
     startAdaptiveMotion() {}, fetchHistory() {}, refreshVisibleOutline() {}, updateWordCount() {}, fixEditorImages() {},
@@ -34,8 +35,10 @@ test('reopening waits for receipt reconciliation before reading cached content',
   const h = harness(); const release = h.ctx.acquire('note.md')
   const loading = h.ctx.load('note.md')
   assert.equal(h.enabled(), false); assert.deepEqual(h.writes, [])
+  assert.equal(h.ctx.pendingEditorSaveLoad.value, true)
   h.tab.content = '回执归一化后的正文'; release(); await loading
   assert.deepEqual(h.writes, ['回执归一化后的正文'])
+  assert.equal(h.ctx.pendingEditorSaveLoad.value, false)
   h.timers.find(t => t.delay === 0).callback(); assert.equal(h.enabled(), true)
 })
 

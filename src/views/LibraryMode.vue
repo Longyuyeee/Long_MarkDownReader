@@ -531,7 +531,7 @@
         <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
           <component :is="activeEmbeddedEditor" :key="activeTabId" />
         </div>
-        <div v-if="!activeEmbeddedEditor && editorLoading && tabs.length > 0" class="editor-loading">
+        <div v-if="!activeEmbeddedEditor && (editorLoading || pendingEditorSaveLoad) && tabs.length > 0" class="editor-loading">
           <n-spin size="large">
             <template #description>同步中...</template>
           </n-spin>
@@ -2245,16 +2245,20 @@ const refreshNode = async (path: string) => {
   }
 }
 
+const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
 const loadFileToEditor = async (path: string) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
+  pendingEditorSaveLoad.value = false
   const loadingEditor = vditor
   const isCurrentRequest = () => generation === editorLoadGeneration && activeTabId.value === path && vditor === loadingEditor
   if (hasPendingMainTextSave(path)) {
+    pendingEditorSaveLoad.value = true
     loadingEditor.disabled()
     await waitForMainTextSave(path)
     if (!isCurrentRequest()) return
+    pendingEditorSaveLoad.value = false
   }
   const currentTab = tabs.value.find(t => t.path === path)
   
