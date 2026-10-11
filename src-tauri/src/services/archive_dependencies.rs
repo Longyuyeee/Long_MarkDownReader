@@ -23,6 +23,73 @@ pub(crate) struct DependencyEvidence {
     pub line: usize,
     pub target: String,
     pub kind: &'static str,
+    pub resolution: Option<DependencyResolution>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DependencyResolution {
+    pub status: &'static str,
+    pub path: Option<String>,
+}
+
+/// Resolve only ordinary relative file destinations. This is evidence, not permission.
+fn resolve_relative(root: &Path, evidence: &DependencyEvidence) -> DependencyResolution {
+    let result = |status, path: Option<PathBuf>| DependencyResolution {
+        status,
+        path: path.map(|p| p.to_string_lossy().into_owned()),
+    };
+    if !["markdown", "reference_definition", "html_attribute"].contains(&evidence.kind) {
+        return result("unsupported", None);
+    }
+    let raw = evidence.target.split(['#', '?']).next().unwrap_or("");
+    let decoded = match urlencoding::decode(raw) {
+        Ok(value) => value,
+        Err(_) => return result("unsupported", None),
+    };
+    // Escapes/entities need a syntax-aware parser. Do not guess root/drive/URI semantics.
+    if decoded.is_empty() || decoded.contains([':', '\\', '&', '\0']) || decoded.starts_with('/') {
+        return result("unsupported", None);
+    }
+    let document = Path::new(&evidence.document);
+    let mut path = match document.parent() {
+        Some(p) if p.starts_with(root) => p.to_owned(),
+        _ => return result("outside_library", None),
+    };
+    for part in decoded.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                if path == root || !path.pop() {
+                    return result("outside_library", None);
+                }
+            }
+            name => path.push(name),
+        }
+    }
+    if !path.starts_with(root) {
+        return result("outside_library", None);
+    }
+    // Reject linked ancestors rather than silently resolve an alternate location.
+    let mut cursor = root.to_owned();
+    if let Ok(relative) = path.strip_prefix(root) {
+        for component in relative.components() {
+            cursor.push(component);
+            match fs::symlink_metadata(&cursor) {
+                Ok(meta) if meta.file_type().is_symlink() => return result("unsupported", None),
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                    return result("missing", Some(path))
+                }
+                Err(_) => return result("unreadable", Some(path)),
+            }
+        }
+    }
+    match fs::metadata(&path) {
+        Ok(meta) if meta.is_file() => result("resolved_file", Some(path)),
+        Ok(_) => result("unsupported", Some(path)),
+        Err(_) => result("unreadable", Some(path)),
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -66,6 +133,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                         + 1,
                     target: target.into(),
                     kind,
+                    resolution: None,
                 });
             }
         }
@@ -81,6 +149,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                     line: mention.line,
                     target: mention.target,
                     kind,
+                    resolution: None,
                 });
             }
         }
@@ -197,6 +266,9 @@ pub(crate) fn scan(root: &str) -> Result<Inventory, String> {
             }
         }
     }
+    for item in &mut evidence {
+        item.resolution = Some(resolve_relative(guard.root(), item));
+    }
     evidence
         .sort_by(|a, b| (&a.document, a.line, &a.target).cmp(&(&b.document, b.line, &b.target)));
     Ok(Inventory { evidence })
@@ -205,6 +277,103 @@ pub(crate) fn scan(root: &str) -> Result<Inventory, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    struct Fixture(PathBuf);
+    impl Fixture {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "archive-resolve-{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+            fs::create_dir_all(path.join("notes")).unwrap();
+            Self(path.canonicalize().unwrap())
+        }
+        fn resolve(&self, target: &str) -> DependencyResolution {
+            resolve_relative(
+                &self.0,
+                &DependencyEvidence {
+                    document: self.0.join("notes/note.md").to_string_lossy().into_owned(),
+                    line: 1,
+                    target: target.into(),
+                    kind: "markdown",
+                    resolution: None,
+                },
+            )
+        }
+    }
+    impl Drop for Fixture {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+    #[test]
+    fn archive_relative_resolution_respects_document_directory_and_encoded_hash() {
+        let f = Fixture::new();
+        fs::write(f.0.join("a#b.md"), "root").unwrap();
+        fs::write(f.0.join("notes/a#b.md"), "local").unwrap();
+        assert_eq!(
+            f.resolve("../a%23b.md#heading").path.unwrap(),
+            f.0.join("a#b.md").to_string_lossy()
+        );
+        assert_eq!(
+            f.resolve("a%23b.md").path.unwrap(),
+            f.0.join("notes/a#b.md").to_string_lossy()
+        );
+        assert_eq!(f.resolve("../a%23b.md").status, "resolved_file");
+    }
+    #[test]
+    fn archive_relative_resolution_distinguishes_missing_outside_and_unsupported() {
+        let f = Fixture::new();
+        assert_eq!(f.resolve("../missing.md").status, "missing");
+        assert_eq!(f.resolve("../../outside.md").status, "outside_library");
+        assert_eq!(
+            f.resolve("%2e%2e/%2e%2e/outside.md").status,
+            "outside_library"
+        );
+        for target in [
+            "C:/file.md",
+            "/absolute.md",
+            "file:///a.md",
+            "a&amp;b.md",
+            "../notes",
+        ] {
+            assert_eq!(f.resolve(target).status, "unsupported");
+        }
+    }
+    #[test]
+    fn archive_scan_attaches_resolution_without_claiming_complete_safety() {
+        let f = Fixture::new();
+        fs::write(f.0.join("target.md"), "target").unwrap();
+        fs::write(
+            f.0.join("notes/note.md"),
+            "[target](../target.md)\n[[target]]",
+        )
+        .unwrap();
+        let inventory = scan(f.0.to_str().unwrap()).unwrap();
+        let report = inventory.report(&f.0.join("target.md"));
+        assert_eq!(report.incoming_candidates.len(), 2);
+        assert_eq!(
+            report.incoming_candidates[0]
+                .resolution
+                .as_ref()
+                .unwrap()
+                .status,
+            "resolved_file"
+        );
+        assert_eq!(
+            report.incoming_candidates[1]
+                .resolution
+                .as_ref()
+                .unwrap()
+                .status,
+            "unsupported"
+        );
+        assert!(!report.complete);
+        assert_eq!(fs::read_to_string(f.0.join("target.md")).unwrap(), "target");
+    }
     #[test]
     fn finds_images_reference_definitions_html_and_wiki_with_lines() {
         let e = mentions("note.md", "![图](assets/a.png)\n[doc]: ../other.md\n<img src='images/b.png'>\n[[计划|别名]]\n[web](https://example.com)\n[anchor](#part)");
