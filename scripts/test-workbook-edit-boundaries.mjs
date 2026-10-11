@@ -5,6 +5,33 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('page setting writes snapshot parameters and isolate stale receipts', async () => {
+  for (const scenario of ['success', 'replacement', 'failure']) {
+    let resolve, reject, pending = 0, received, closed = false, restored
+    const errors = []
+    const ctx = extract('const writePageSetting =', 'const savePageLayout =', {
+      workbook: box({ signature: 'initial' }), canEditPageLayout: box(true), workbookPath: box('tasks.xlsx'),
+      store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1, activeSheet: box('Sheet1'), selectionBounds: box(null),
+      isExternal: box(false), saving: box(false), updatingStructure: box(false), cloneDraftData: value => JSON.parse(JSON.stringify(value)),
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: (_command, args) => { received = args; return new Promise((done, fail) => { resolve = done; reject = fail }) },
+      restoreTableSelection: async sheet => { restored = sheet }, message: { error: value => errors.push(value), success() {} },
+    }, 'globalThis.action = writePageSetting')
+    const change = { margins: { left: 1 } }
+    const writing = ctx.action('update_workbook_page_layout', change, '页面设置已保存', () => { closed = true })
+    change.margins.left = 5; ctx.activeSheet.value = 'Sheet2'
+    assert.equal(received.payload.change.margins.left, 1); assert.equal(received.payload.change.sheet, 'Sheet1')
+    assert.equal(pending, 1); assert.equal(ctx.saving.value, true)
+    if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookDocumentEpoch++ }
+    if (scenario === 'failure') reject(new Error('磁盘失败'))
+    else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(closed, scenario === 'success'); assert.equal(restored, scenario === 'success' ? 'Sheet2' : undefined)
+    assert.equal(ctx.saving.value, false); assert.equal(pending, 0)
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 页面设置保存失败：磁盘失败/)
+    if (scenario === 'replacement') assert.equal(ctx.workbook.value.signature, 'other')
+  }
+})
 test('freeze writes lock editing, retain current sheet and reject old receipts', async () => {
   for (const scenario of ['success', 'replacement', 'epoch', 'failure']) {
     let resolve, reject, pending = 0, restored

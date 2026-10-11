@@ -15,6 +15,19 @@ secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue:
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (['update_workbook_page_layout', 'update_workbook_print_options', 'update_workbook_header_footer'].includes(command)) {
+    const change = structuredClone(args.payload.change)
+    await new Promise((resolve, reject) => {
+      audit.pendingPageSetting = fail => { audit.pendingPageSetting = null; fail ? reject(new Error('模拟页面设置写入失败')) : resolve() }
+    })
+    const layout = sheets[change.sheet].pageLayout
+    if (command === 'update_workbook_page_layout') {
+      layout.setup = { ...change }; layout.margins = change.margins; layout.printArea = change.printArea
+    } else if (command === 'update_workbook_print_options') layout.options = { ...change }
+    else layout.headerFooter = { ...change }
+    document.signature += '-page-setting'
+    return structuredClone(document)
+  }
   if (command === 'update_workbook_freeze_pane') {
     await new Promise((resolve, reject) => {
       audit.pendingFreeze = fail => { audit.pendingFreeze = null; fail ? reject(new Error('模拟冻结写入失败')) : resolve() }

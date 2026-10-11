@@ -356,7 +356,7 @@
     </div>
 
     <n-modal v-model:show="pageLayoutModalOpen" preset="card" title="页面设置" class="page-layout-modal">
-      <div class="page-layout-panel">
+      <div class="page-layout-panel" :inert="saving">
         <label>方向<select v-model="pageLayoutDraft.orientation"><option value="portrait">纵向</option><option value="landscape">横向</option></select></label>
         <label>纸张<select v-model.number="pageLayoutDraft.paperSize"><option :value="1">Letter</option><option :value="5">Legal</option><option :value="8">A3</option><option :value="9">A4</option><option :value="11">A5</option></select></label>
         <label>缩放<select v-model="pageLayoutDraft.scalingMode"><option value="scale">百分比</option><option value="fit">适合页数</option></select></label>
@@ -379,7 +379,7 @@
     </n-modal>
 
     <n-modal v-model:show="printOptionsModalOpen" preset="card" title="打印选项" class="print-options-modal">
-      <div class="print-options-panel">
+      <div class="print-options-panel" :inert="saving">
         <fieldset>
           <legend>打印内容</legend>
           <label><input v-model="printOptionsDraft.gridLines" type="checkbox">打印网格线</label>
@@ -410,24 +410,24 @@
     </n-modal>
 
     <n-modal v-model:show="headerFooterModalOpen" preset="card" title="页眉页脚" class="header-footer-modal">
-      <div class="header-footer-options">
+      <div class="header-footer-options" :inert="saving">
         <label><input v-model="headerFooterDraft.differentOddEven" type="checkbox">奇偶页不同</label>
         <label><input v-model="headerFooterDraft.differentFirstPage" type="checkbox">首页不同</label>
         <label><input v-model="headerFooterDraft.scaleWithDocument" type="checkbox">随文档缩放</label>
         <label><input v-model="headerFooterDraft.alignWithMargins" type="checkbox">与页边距对齐</label>
       </div>
-      <div class="header-footer-modes" role="tablist" aria-label="页眉页脚页面类型">
+      <div class="header-footer-modes" role="tablist" aria-label="页眉页脚页面类型" :inert="saving">
         <button :class="{ active: headerFooterMode === 'odd' }" @click="headerFooterMode = 'odd'">奇数页</button>
         <button :class="{ active: headerFooterMode === 'even' }" :disabled="!headerFooterDraft.differentOddEven" @click="headerFooterMode = 'even'">偶数页</button>
         <button :class="{ active: headerFooterMode === 'first' }" :disabled="!headerFooterDraft.differentFirstPage" @click="headerFooterMode = 'first'">首页</button>
       </div>
-      <div class="header-footer-fields">
+      <div class="header-footer-fields" :inert="saving">
         <label>页眉<textarea v-model="activeHeaderFooterFields.header" maxlength="255" rows="3"></textarea></label>
         <label>页脚<textarea v-model="activeHeaderFooterFields.footer" maxlength="255" rows="3"></textarea></label>
       </div>
       <template #footer>
         <div class="page-layout-actions">
-          <button :disabled="!hasHeaderFooterContent" @click="clearHeaderFooter">全部清空</button>
+          <button :disabled="saving || !hasHeaderFooterContent" @click="clearHeaderFooter">全部清空</button>
           <button @click="headerFooterModalOpen = false">取消</button>
           <button class="primary" :disabled="!canEditPageLayout" @click="saveHeaderFooter">应用</button>
         </div>
@@ -4026,6 +4026,30 @@ const setFreezePane = () => {
   void applyFreezePane(selectedCell.value.row, selectedCell.value.column)
 }
 const clearFreezePane = () => void applyFreezePane(0, 0)
+const writePageSetting = async (command: string, change: Record<string, unknown>, success: string, close: () => void) => {
+  if (!workbook.value || !canEditPageLayout.value) return
+  const original = workbook.value
+  const path = workbookPath.value
+  const root = store.libraryPath
+  const epoch = workbookDocumentEpoch
+  const sheet = activeSheet.value
+  const payload = cloneDraftData({ expectedSignature: original.signature, change: { ...change, sheet } })
+  const sameContext = () => workbookDocumentEpoch === epoch && workbookPath.value === path
+    && store.libraryPath === root && !isExternal.value
+  saving.value = true
+  updatingStructure.value = true
+  let finish: (() => void) | undefined
+  try {
+    finish = beginWindowSave()
+    const document = await invoke<WorkbookDocument>(command, { libraryRoot: root, path, payload })
+    if (!sameContext() || workbook.value !== original) return
+    workbook.value = document
+    const applied = workbook.value
+    await restoreTableSelection(activeSheet.value || sheet, selectionBounds.value ? { ...selectionBounds.value } : null)
+    if (sameContext() && workbook.value === applied) { close(); message.success(success) }
+  } catch (cause) { message.error(`${path} ${success.replace(/已保存$/, '')}保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finish?.(); updatingStructure.value = false; saving.value = false }
+}
 const savePageLayout = async (printArea: WorkbookMergeRange | null | undefined = pageLayoutDraft.value.printArea) => {
   if (!workbook.value || !sheetInfo.value || !canEditPageLayout.value) return
   const draft = pageLayoutDraft.value
@@ -4043,15 +4067,7 @@ const savePageLayout = async (printArea: WorkbookMergeRange | null | undefined =
   )) {
     return void message.error('适合页数必须在 0 到 100 之间，宽或高至少一项大于 0')
   }
-  updatingStructure.value = true
-  try {
-    const document = await invoke<WorkbookDocument>('update_workbook_page_layout', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: {
-        expectedSignature: workbook.value.signature,
-        change: {
-          sheet: activeSheet.value,
+  await writePageSetting('update_workbook_page_layout', {
           printArea: printArea === null ? undefined : printArea,
           orientation: draft.orientation,
           paperSize: draft.paperSize,
@@ -4059,18 +4075,7 @@ const savePageLayout = async (printArea: WorkbookMergeRange | null | undefined =
           scale: draft.scalingMode === 'scale' ? draft.scale : undefined,
           fitToWidth: draft.scalingMode === 'fit' ? draft.fitToWidth : undefined,
           fitToHeight: draft.scalingMode === 'fit' ? draft.fitToHeight : undefined,
-        },
-      },
-    })
-    workbook.value = document
-    const sheet = activeSheet.value
-    generation += 1
-    activeSheet.value = ''
-    await selectSheet(sheet)
-    pageLayoutModalOpen.value = false
-    message.success('页面设置已保存')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  }, '页面设置已保存', () => { pageLayoutModalOpen.value = false })
 }
 const setSelectionAsPrintArea = () => {
   if (!pageLayoutSelection.value || !canEditPrintArea.value) return
@@ -4096,15 +4101,7 @@ const savePrintOptions = async () => {
   )) {
     return void message.error('首页页码必须是 1 到 32767 之间的整数')
   }
-  updatingStructure.value = true
-  try {
-    const document = await invoke<WorkbookDocument>('update_workbook_print_options', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: {
-        expectedSignature: workbook.value.signature,
-        change: {
-          sheet: activeSheet.value,
+  await writePageSetting('update_workbook_print_options', {
           gridLines: draft.gridLines,
           headings: draft.headings,
           horizontalCentered: draft.horizontalCentered,
@@ -4112,18 +4109,7 @@ const savePrintOptions = async () => {
           blackAndWhite: draft.blackAndWhite,
           draft: draft.draft,
           firstPageNumber: draft.useFirstPageNumber ? draft.firstPageNumber : undefined,
-        },
-      },
-    })
-    workbook.value = document
-    const sheet = activeSheet.value
-    generation += 1
-    activeSheet.value = ''
-    await selectSheet(sheet)
-    printOptionsModalOpen.value = false
-    message.success('打印选项已保存')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  }, '打印选项已保存', () => { printOptionsModalOpen.value = false })
 }
 const saveHeaderFooter = async () => {
   if (!workbook.value || !sheetInfo.value || !canEditPageLayout.value) return
@@ -4138,28 +4124,7 @@ const saveHeaderFooter = async () => {
   }))) {
     return void message.error('页眉页脚包含不受支持的控制字符')
   }
-  updatingStructure.value = true
-  try {
-    const document = await invoke<WorkbookDocument>('update_workbook_header_footer', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: {
-        expectedSignature: workbook.value.signature,
-        change: {
-          sheet: activeSheet.value,
-          ...draft,
-        },
-      },
-    })
-    workbook.value = document
-    const sheet = activeSheet.value
-    generation += 1
-    activeSheet.value = ''
-    await selectSheet(sheet)
-    headerFooterModalOpen.value = false
-    message.success('页眉页脚已保存')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  await writePageSetting('update_workbook_header_footer', { ...draft }, '页眉页脚已保存', () => { headerFooterModalOpen.value = false })
 }
 const clearHeaderFooter = () => {
   if (!hasHeaderFooterContent.value || !canEditPageLayout.value) return
