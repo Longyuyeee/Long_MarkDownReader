@@ -12,11 +12,20 @@ pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<P
         .app_cache_dir()
         .map_err(|error| format!("cache dir error: {error}"))?
         .join("history_v2");
-    Ok(crate::services::archive_history::history_path(&cache_dir, std::path::Path::new(path)))
+    Ok(crate::services::archive_history::history_path(
+        &cache_dir,
+        std::path::Path::new(path),
+    ))
 }
 
-pub(crate) fn history_lease(app: &tauri::AppHandle) -> Result<crate::services::history_coordination::HistoryLease, String> {
-    let cache = app.path().app_cache_dir().map_err(|e| e.to_string())?.join("history_v2");
+pub(crate) fn history_lease(
+    app: &tauri::AppHandle,
+) -> Result<crate::services::history_coordination::HistoryLease, String> {
+    let cache = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("history_v2");
     crate::services::history_coordination::acquire(&cache)
 }
 
@@ -28,6 +37,7 @@ pub async fn save_history_version(
     content: String,
     max_count: u32,
 ) -> Result<(), String> {
+    let _lease = history_lease(&app_handle)?;
     let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
     save_history(
         &app_handle,
@@ -45,6 +55,7 @@ pub async fn save_external_history_version(
     content: String,
     max_count: u32,
 ) -> Result<(), String> {
+    let _lease = history_lease(&app_handle)?;
     let path = access.resolve_markdown(path)?;
     save_history(
         &app_handle,
@@ -61,15 +72,29 @@ fn save_history(
     max_count: u32,
 ) -> Result<(), String> {
     let file_history_dir = history_dir(app_handle, path)?;
-    let _lease = history_lease(app_handle)?;
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    save_history_in_dir(&file_history_dir, &content, max_count, timestamp)
+}
+
+// Caller holds history lease, including path resolution. Timestamp remains seconds
+// for compatibility; collisions advance monotonically rather than overwrite.
+fn save_history_in_dir(
+    file_history_dir: &std::path::Path,
+    content: &str,
+    max_count: u32,
+    timestamp: u64,
+) -> Result<(), String> {
     if !file_history_dir.exists() {
         fs::create_dir_all(&file_history_dir).map_err(|error| error.to_string())?;
     }
 
     let entries: Vec<_> = fs::read_dir(&file_history_dir)
         .map_err(|error| error.to_string())?
-        .filter_map(Result::ok)
-        .collect();
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|error| format!("历史目录读取不完整: {error}"))?;
     let normalized_content = normalize_line_endings(&content);
     for entry in &entries {
         if fs::read_to_string(entry.path())
@@ -80,10 +105,6 @@ fn save_history(
         }
     }
 
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
     let mut timestamps: Vec<u64> = entries
         .iter()
         .filter_map(|entry| {
@@ -95,7 +116,16 @@ fn save_history(
         })
         .collect();
 
-    write_utf8(file_history_dir.join(format!("{timestamp}.md")), &content)?;
+    let timestamp = match timestamps.iter().max() {
+        Some(latest) if *latest >= timestamp => latest
+            .checked_add(1)
+            .ok_or("历史快照编号已达上限，未覆盖原记录")?,
+        _ => timestamp,
+    };
+    crate::services::reliable_write::write_new_bytes(
+        file_history_dir.join(format!("{timestamp}.md")),
+        content.as_bytes(),
+    )?;
     timestamps.push(timestamp);
     if timestamps.len() > max_count as usize {
         timestamps.sort_unstable();
@@ -205,5 +235,60 @@ mod tests {
     fn history_deduplication_normalizes_line_endings() {
         assert_eq!(normalize_line_endings("a\r\nb\r"), "a\nb\n");
         assert_eq!(normalize_line_endings("a\nb\n"), "a\nb\n");
+    }
+
+    struct HistoryFixture(PathBuf);
+    impl HistoryFixture {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "longedit-history-save-{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+            fs::create_dir(&path).unwrap();
+            Self(path)
+        }
+    }
+    impl Drop for HistoryFixture {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn history_same_second_preserves_distinct_versions_and_clock_rollback() {
+        let f = HistoryFixture::new();
+        save_history_in_dir(&f.0, "first", 20, 100).unwrap();
+        save_history_in_dir(&f.0, "second", 20, 100).unwrap();
+        save_history_in_dir(&f.0, "third", 20, 90).unwrap();
+        assert_eq!(fs::read_to_string(f.0.join("100.md")).unwrap(), "first");
+        assert_eq!(fs::read_to_string(f.0.join("101.md")).unwrap(), "second");
+        assert_eq!(fs::read_to_string(f.0.join("102.md")).unwrap(), "third");
+    }
+
+    #[test]
+    fn history_dedup_and_retention_still_work_with_collisions() {
+        let f = HistoryFixture::new();
+        save_history_in_dir(&f.0, "first\r\n", 2, 100).unwrap();
+        save_history_in_dir(&f.0, "first\n", 2, 100).unwrap();
+        assert_eq!(fs::read_dir(&f.0).unwrap().count(), 1);
+        save_history_in_dir(&f.0, "second", 2, 100).unwrap();
+        save_history_in_dir(&f.0, "third", 2, 100).unwrap();
+        assert!(!f.0.join("100.md").exists());
+        assert_eq!(fs::read_to_string(f.0.join("101.md")).unwrap(), "second");
+        assert_eq!(fs::read_to_string(f.0.join("102.md")).unwrap(), "third");
+    }
+
+    #[test]
+    fn history_timestamp_overflow_preserves_existing_snapshot() {
+        let f = HistoryFixture::new();
+        let existing = f.0.join(format!("{}.md", u64::MAX));
+        fs::write(&existing, "keep").unwrap();
+        assert!(save_history_in_dir(&f.0, "new", 20, 100).is_err());
+        assert_eq!(fs::read_to_string(existing).unwrap(), "keep");
+        assert_eq!(fs::read_dir(&f.0).unwrap().count(), 1);
     }
 }
