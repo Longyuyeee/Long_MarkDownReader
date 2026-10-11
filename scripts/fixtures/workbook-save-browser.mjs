@@ -16,6 +16,9 @@ const sheets = { Sheet1: sheet, Sheet2: secondSheet }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
   if (command === 'update_workbook_data_validation') {
+    if (audit.holdValidation) await new Promise((resolve, reject) => {
+      audit.pendingValidation = fail => { audit.pendingValidation = null; fail ? reject(new Error('模拟规则写入失败')) : resolve() }
+    })
     const change = structuredClone(args.payload.change)
     audit.validationWrites.push(change)
     const rules = sheets[change.sheet].dataValidations

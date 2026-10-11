@@ -2978,24 +2978,33 @@ const promptDataValidationRule = async (existing: WorkbookDataValidation | undef
   }
 }
 const commitDataValidationChange = async (change: WorkbookDataValidationChange, area: WorkbookMergeRange, success: string) => {
-  if (isExternal.value || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改数据验证')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
   const sheet = activeSheet.value
+  const savedWorkbook = workbook.value
+  const savedPath = workbookPath.value
+  const savedRoot = store.libraryPath
+  const savedEpoch = workbookDocumentEpoch
+  const ownsDocument = () => workbook.value === savedWorkbook && workbookPath.value === savedPath
+    && store.libraryPath === savedRoot && !isExternal.value && workbookDocumentEpoch === savedEpoch
+  let finishWindowSave: (() => void) | undefined
   try {
+    finishWindowSave = beginWindowSave()
     const document = await invoke<WorkbookDocument>('update_workbook_data_validation', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      payload: { expectedSignature: workbook.value.signature, change },
+      libraryRoot: savedRoot,
+      path: savedPath,
+      payload: { expectedSignature: savedWorkbook.signature, change },
     })
+    if (!ownsDocument()) return
     workbook.value = document
     undoStack.value = []
     redoStack.value = []
     await restoreTableSelection(sheet, area)
     message.success(success)
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+  } catch (cause) { message.error(`${savedPath} 数据验证保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finishWindowSave?.(); updatingStructure.value = false }
 }
 const editDataValidationRule = async (action: 'create' | 'update') => {
   commitFormulaInput()

@@ -5,6 +5,36 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('validation write receipts respect document ownership and release window save guards', async () => {
+  for (const scenario of ['success', 'replacement', 'epoch', 'failure']) {
+    let resolve, reject, pending = 0, restored = 0
+    const errors = [], successes = []
+    const ctx = extract('const commitDataValidationChange =', 'const editDataValidationRule =', {
+      isExternal: box(false), workbook: box({ signature: 'initial' }), saving: box(false), updatingStructure: box(false),
+      sheetProtected: box(false), dirtyCount: box(0), activeSheet: box('Sheet1'), workbookPath: box('tasks.xlsx'),
+      store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1, undoStack: box(['history']), redoStack: box(['redo']),
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: () => new Promise((done, fail) => { resolve = done; reject = fail }),
+      restoreTableSelection: async () => { restored++ },
+      message: { error: value => errors.push(value), success: value => successes.push(value) },
+    }, 'globalThis.action = commitDataValidationChange')
+    const writing = ctx.action({ sheet: 'Sheet1', action: 'create' }, {}, '创建成功')
+    assert.equal(pending, 1)
+    if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookPath.value = 'other.xlsx' }
+    if (scenario === 'epoch') ctx.workbookDocumentEpoch++
+    if (scenario === 'failure') { ctx.workbookPath.value = 'other.xlsx'; reject(new Error('磁盘失败')) }
+    else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(pending, 0); assert.equal(ctx.updatingStructure.value, false)
+    assert.equal(restored, scenario === 'success' ? 1 : 0)
+    assert.equal(successes.length, scenario === 'success' ? 1 : 0)
+    if (scenario !== 'success') assert.equal(ctx.undoStack.value[0], 'history')
+    if (scenario === 'replacement') assert.equal(ctx.workbook.value.signature, 'other')
+    if (scenario === 'epoch') assert.equal(ctx.workbook.value.signature, 'initial')
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 数据验证保存失败：磁盘失败/)
+    else assert.deepEqual(errors, [])
+  }
+})
 test('formula flush preserves existing values but validates actual edits', () => {
   const errors = [], changes = []
   const ctx = extract('const commitFormulaInput =', 'const applyHistoryAction =', {
