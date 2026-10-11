@@ -1,15 +1,34 @@
 import { nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
 interface SearchSession { query: string; types: string[]; selected: string; scroll: number }
-// Only the current app session; no stale results or document text are persisted.
+// Persist only search context; results and document text are always read afresh.
 const sessions = new Map<string, SearchSession>()
+const searchSessionKey = (root: string) => `longedit.search.v1:${encodeURIComponent(root.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase())}`
+const persistSearchSession = (root: string, session?: SearchSession) => {
+  try {
+    if (typeof localStorage === 'undefined') return
+    if (session) localStorage.setItem(searchSessionKey(root), JSON.stringify(session))
+    else localStorage.removeItem(searchSessionKey(root))
+  } catch { /* Best effort auto-resume; never interrupt editing. */ }
+}
 export const snapshotSearchSession = (root: string) => {
-  const session = sessions.get(root)
+  let session = sessions.get(root)
+  if (!session) {
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(searchSessionKey(root)) : null
+      const saved = raw ? JSON.parse(raw) : null
+      if (saved && typeof saved.query === 'string' && Array.isArray(saved.types)) session = {
+        query: saved.query.slice(0, 500), types: saved.types.filter((type: unknown) => typeof type === 'string').slice(0, 8),
+        selected: typeof saved.selected === 'string' ? saved.selected : '', scroll: Number.isFinite(saved.scroll) ? Math.max(0, saved.scroll) : 0,
+      }
+    } catch { /* Keep unreadable data available for recovery. */ }
+  }
   return session ? { ...session, types: [...session.types] } : undefined
 }
 export const restoreSearchSession = (root: string, session?: SearchSession) => {
-  if (!session) { sessions.delete(root); return }
+  if (!session) { sessions.delete(root); persistSearchSession(root); return }
   sessions.set(root, { query: String(session.query || '').slice(0, 500), types: Array.isArray(session.types) ? session.types.filter(type => typeof type === 'string').slice(0, 8) : [], selected: '', scroll: 0 })
+  persistSearchSession(root, sessions.get(root))
 }
 export function useSearchReturn(options: {
   root: () => string; query: Ref<string>; types: Ref<string[]>;
@@ -21,10 +40,11 @@ export function useSearchReturn(options: {
   let scroll = 0, pending = false, focusResult = false, disposed = false
   const save = (root = options.root()) => {
     if (!root) return
-    if (!options.query.value.trim()) { sessions.delete(root); return }
+    if (!options.query.value.trim()) { sessions.delete(root); persistSearchSession(root); return }
     if (!pending && !options.running.value && options.viewport.value) scroll = options.viewport.value.scrollTop
     sessions.delete(root)
     sessions.set(root, { query: options.query.value, types: [...options.types.value], selected: selectedKey.value, scroll })
+    persistSearchSession(root, sessions.get(root))
     if (sessions.size > 8) sessions.delete(sessions.keys().next().value!)
   }
   const apply = async () => {
@@ -49,7 +69,7 @@ export function useSearchReturn(options: {
     save()
   }
   const restore = () => {
-    const session = sessions.get(options.root())
+    const session = snapshotSearchSession(options.root())
     if (!session) return
     options.query.value = session.query
     options.types.value = [...session.types]

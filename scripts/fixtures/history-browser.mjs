@@ -20,6 +20,7 @@ window.__TAURI_INTERNALS__ = {
     if (command === 'get_library_stats') return { file_count: 2, total_words: 100 }
     if (command === 'get_knowledge_index_status') return { state: 'ready', schemaVersion: 1, sourceCount: 2, objectCount: 2, relationCount: 0, progress: 100, cacheBytes: 0, recoveryAvailable: false }
     if (command === 'delete_history_version') return
+    if (command === 'read_text_document') throw Error('文件不存在或不可访问')
     if (['scan_directory', 'get_all_tags', 'discover_external_applications', 'summarize_graph_relations', 'find_backlinks', 'extract_wikilinks'].includes(command)) return []
     throw Error(`Unexpected audit IPC: ${command}`)
   },

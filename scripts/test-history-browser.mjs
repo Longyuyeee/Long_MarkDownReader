@@ -33,6 +33,16 @@ try {
   assert.equal(await page.evaluate(() => window.historyAudit.store.tabs.find(t => t.path.endsWith('/B.md')).isDirty), true)
   assert.equal(await page.evaluate(() => window.historyAudit.calls.some(c => /^(save_|write_)/.test(c.command))), false)
   await page.screenshot({ path: path.join(out, '02-restored-draft.png') })
+  await page.evaluate(() => {
+    window.historyAudit.store.tabs.push({ id: 'C:/audit/missing.md', path: 'C:/audit/missing.md', title: 'missing.md', isDirty: false })
+    window.historyAudit.store.activateTab('C:/audit/missing.md')
+  })
+  await page.waitForFunction(() => window.historyAudit.store.tabs.find(t => t.path.endsWith('/missing.md')).textReadOnlyReason)
+  assert.equal(await page.locator('#vditor-lib [contenteditable="true"]').evaluateAll(elements => elements.filter(element => element.getClientRects().length > 0).length), 0)
+  assert.equal(await page.locator('#vditor-lib').innerText().then(text => text.includes('B 的历史版本')), false)
+  assert.equal(await page.evaluate(() => window.historyAudit.store.tabs.find(t => t.path.endsWith('/B.md')).content.includes('B 的历史版本')), true)
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: path.join(out, '03-missing-file-safe.png') })
   assert.deepEqual(errors, [])
   console.log('PASS: actual LibraryMode, late A history ignored, B-only draft restoration; simulated IPC')
 } finally { await browser.close() }

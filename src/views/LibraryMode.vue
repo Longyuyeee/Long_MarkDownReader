@@ -783,6 +783,7 @@ import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
+import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
 import { 
@@ -1348,6 +1349,16 @@ const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
 const referencePinned = computed(() => searchPreviewResult.value !== null)
 const searchPreviewQuery = ref('')
+const rememberReference = (root: string) => {
+  try { writeWorkspaceReference(root, searchPreviewResult.value ? { ...searchPreviewResult.value, query: searchPreviewQuery.value } : undefined) }
+  catch { /* Auto-resume metadata must not interrupt editing. */ }
+}
+const restoreReference = (root: string) => {
+  const reference = readWorkspaceReference(root)
+  searchPreviewQuery.value = reference?.query || ''
+  searchPreviewResult.value = reference ? { ...reference, objectType: findFileFormat(reference.path)?.id || '', matchKind: 'title', context: '', score: 0, extractionFailed: false } : null
+}
+watch([searchPreviewResult, searchPreviewQuery], () => rememberReference(store.libraryPath))
 const returnToEditorFromReference = async () => {
   searchPreviewResult.value = null
   await nextTick()
@@ -1364,7 +1375,7 @@ const showSearchPreview = (result: KnowledgeSearchResult) => {
   searchPreviewResult.value = result
 }
 // Only an explicit reference action replaces this source; normal opens/searches do not.
-watch(() => store.libraryPath, () => { searchPreviewResult.value = null })
+watch(() => store.libraryPath, (root, previous) => { rememberReference(previous); restoreReference(root) })
 const openSearchPreview = () => {
   const result = searchPreviewResult.value
   if (!result) return
@@ -2282,6 +2293,7 @@ const loadFileToEditor = async (path: string) => {
   const generation = ++editorLoadGeneration
   pendingEditorSaveLoad.value = false
   const loadingEditor = vditor
+  loadingEditor.disabled()
   const isCurrentRequest = () => generation === editorLoadGeneration && activeTabId.value === path && vditor === loadingEditor
   if (hasPendingMainTextSave(path)) {
     pendingEditorSaveLoad.value = true
@@ -2291,6 +2303,15 @@ const loadFileToEditor = async (path: string) => {
     pendingEditorSaveLoad.value = false
   }
   const currentTab = tabs.value.find(t => t.path === path)
+  const showReadFailure = (error: unknown, label: string) => {
+    if (!isCurrentRequest()) return
+    suppressEditorInput = true
+    loadingEditor.setValue('')
+    loadingEditor.disabled()
+    wordCount.value = 0
+    if (currentTab) currentTab.textReadOnlyReason = '文件未能读取，请确认文件位置后刷新重试'
+    handleError(error, `${label}：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
+  }
   
   const setEditorValue = (content: string, readOnly = false) => {
     if (!isCurrentRequest()) return
@@ -2361,10 +2382,10 @@ const loadFileToEditor = async (path: string) => {
           setEditorValue(preview.content, true)
           message.warning('文件超过完整编辑上限，已进入大文件只读预览')
         } catch (previewError: any) {
-          handleError(previewError, '大文件预览失败', 'loadFileToEditor')
+          showReadFailure(previewError, '大文件预览失败')
         }
       } else {
-        handleError(err, '读取失败', 'loadFileToEditor')
+        showReadFailure(err, '读取失败')
       }
     }
   }
@@ -3532,6 +3553,7 @@ onMounted(async () => {
   window.addEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
   await store.loadConfig()
+  restoreReference(store.libraryPath)
   if (activeTabId.value && route.query.path !== activeTabId.value) {
     await router.replace({ name: 'LibraryMode', query: { ...route.query, path: activeTabId.value } })
   }

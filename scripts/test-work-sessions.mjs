@@ -52,3 +52,13 @@ test('actual store restores scoped tabs and safely filters legacy mixed-library 
   entries.set(exports.libraryTabsKey('C:/other'), '{broken'); store.restoreTabsState()
   assert.equal(entries.get(exports.libraryTabsKey('C:/other')), '{broken')
 })
+test('rename/delete preserve files and reject stale management dialogs', () => {
+  const entries = new Map(), storage = { getItem: key => entries.get(key) || null, setItem: (key, value) => entries.set(key, value) }
+  const session = captureWorkSession('C:/notes', [tab('C:/notes/a.md')], null, '原名称')
+  saveWorkSession(storage, session)
+  const original = readWorkSessions(storage, 'C:/notes')[0]
+  const renamed = exports.editWorkSession(storage, 'C:/notes', original, '新名称')
+  assert.equal(renamed[0].tabs[0].path, 'C:/notes/a.md')
+  assert.throws(() => exports.editWorkSession(storage, 'C:/notes', original, null), /已变化/)
+  assert.equal(exports.editWorkSession(storage, 'C:/notes', renamed[0], null).length, 0)
+})

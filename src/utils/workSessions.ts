@@ -9,6 +9,7 @@ export interface WorkSession {
   savedAt: number
   search?: { query: string; types: string[]; selected: string; scroll: number }
   views?: Record<string, { scrollTop: number; scrollLeft: number; section?: string; zoom?: number }>
+  reference?: { path: string; title: string; query: string; page?: number; annotationId?: string }
 }
 const identity = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
 export const workSessionKey = (root: string) => `longedit.work-sessions.v1:${encodeURIComponent(identity(root))}`
@@ -56,4 +57,15 @@ export function mergeSessionTabs<T extends { path: string; isDirty: boolean }>(c
   const dirty = current.filter(tab => tab.isDirty)
   const retained = new Set(dirty.map(tab => identity(tab.path)))
   return [...restored.filter(tab => !retained.has(identity(tab.path))), ...dirty]
+}
+export function editWorkSession(storage: Pick<Storage, 'getItem' | 'setItem'>, root: string, expected: WorkSession, name: string | null): WorkSession[] {
+  const current = readWorkSessions(storage, root)
+  const found = current.find(item => item.id === expected.id)
+  if (!found || JSON.stringify(found) !== JSON.stringify(expected)) throw new Error('工作现场已变化，请重新选择')
+  const normalized = name?.trim().slice(0, 60)
+  if (name !== null && !normalized) throw new Error('名称不能为空')
+  if (normalized && current.some(item => item.id !== expected.id && item.name.toLowerCase() === normalized.toLowerCase())) throw new Error('已有同名工作现场')
+  const next = name === null ? current.filter(item => item.id !== expected.id) : current.map(item => item.id === expected.id ? { ...item, name: normalized! } : item)
+  storage.setItem(workSessionKey(root), JSON.stringify(next))
+  return next
 }
