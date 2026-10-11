@@ -204,7 +204,10 @@ fn inspect_dependencies(root: &str, result: &mut ArchivePreflight) -> Result<(),
                 .issues
                 .push(issue("dependency_scan_incomplete", error.clone())),
             Ok(inventory) => {
-                let report = inventory.report(&source);
+                let report = match &item.target_path {
+                    Some(target) => inventory.report_move(guard.root(), &source, Path::new(target)),
+                    None => inventory.report(&source),
+                };
                 if !report.outgoing.is_empty() || !report.incoming_candidates.is_empty() {
                     item.issues.push(issue(
                         "dependency_candidates",

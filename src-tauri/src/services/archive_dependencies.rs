@@ -97,6 +97,25 @@ pub(crate) struct DependencyReport {
     pub incoming_candidates: Vec<DependencyEvidence>,
     pub complete: bool,
     pub limitations: Vec<&'static str>,
+    pub move_impacts: Vec<MoveImpact>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct MoveImpact {
+    pub evidence: DependencyEvidence,
+    pub direction: &'static str,
+    pub status: &'static str,
+    pub intended_path: Option<String>,
+    pub unchanged_link_path: Option<String>,
+}
+
+fn same_path(a: &str, b: &str) -> bool {
+    if cfg!(windows) {
+        a.eq_ignore_ascii_case(b)
+    } else {
+        a == b
+    }
 }
 
 pub(crate) struct Inventory {
@@ -197,6 +216,84 @@ fn basename(value: &str) -> String {
 }
 
 impl Inventory {
+    pub(crate) fn report_move(
+        &self,
+        root: &Path,
+        source: &Path,
+        destination: &Path,
+    ) -> DependencyReport {
+        let mut report = self.report(source);
+        let source_key = source.to_string_lossy();
+        let destination_key = destination.to_string_lossy();
+        for evidence in &report.outgoing {
+            let mut impact = MoveImpact {
+                evidence: evidence.clone(),
+                direction: "outgoing",
+                status: "needs_review",
+                intended_path: None,
+                unchanged_link_path: None,
+            };
+            if let Some(before) = &evidence.resolution {
+                if before.status == "resolved_file" {
+                    if let Some(before_path) = &before.path {
+                        // Self references must follow the moving document too.
+                        let intended = if same_path(before_path, &source_key) {
+                            destination_key.to_string()
+                        } else {
+                            before_path.clone()
+                        };
+                        let mut shifted = evidence.clone();
+                        shifted.document = destination_key.to_string();
+                        let after = resolve_relative(root, &shifted);
+                        impact.status = match after.path.as_ref() {
+                            Some(path)
+                                if ["resolved_file", "missing"].contains(&after.status)
+                                    && same_path(path, &intended) =>
+                            {
+                                "same_destination"
+                            }
+                            Some(_) if ["resolved_file", "missing"].contains(&after.status) => {
+                                "rewrite_required"
+                            }
+                            _ => "needs_review",
+                        };
+                        impact.intended_path = Some(intended);
+                        impact.unchanged_link_path = after.path;
+                    }
+                }
+            }
+            report.move_impacts.push(impact);
+        }
+        for evidence in &report.incoming_candidates {
+            let mut impact = MoveImpact {
+                evidence: evidence.clone(),
+                direction: "incoming",
+                status: "needs_review",
+                intended_path: None,
+                unchanged_link_path: None,
+            };
+            if let Some(resolution) = &evidence.resolution {
+                if resolution.status == "resolved_file" {
+                    if let Some(path) = &resolution.path {
+                        impact.status = if same_path(path, &source_key) {
+                            "rewrite_required"
+                        } else {
+                            "different_target"
+                        };
+                        impact.intended_path = Some(if impact.status == "rewrite_required" {
+                            destination_key.to_string()
+                        } else {
+                            path.clone()
+                        });
+                        impact.unchanged_link_path = Some(path.clone());
+                    }
+                }
+            }
+            report.move_impacts.push(impact);
+        }
+        report
+    }
+
     pub(crate) fn report(&self, source: &Path) -> DependencyReport {
         let source_key = source.to_string_lossy().to_lowercase();
         let name = source
@@ -229,6 +326,7 @@ impl Inventory {
                 .cloned()
                 .collect(),
             complete: false,
+            move_impacts: vec![],
             limitations: vec![
                 "candidate_matching_not_resolution",
                 "markdown_syntax_not_exhaustive",
@@ -476,5 +574,64 @@ mod tests {
         assert!(evidence
             .iter()
             .any(|e| e.target == "image.png" && e.line == 4));
+    }
+
+    #[test]
+    fn archive_move_impact_finds_changed_outgoing_and_exact_incoming_without_writes() {
+        let f = Fixture::new();
+        fs::create_dir(f.0.join("project")).unwrap();
+        fs::write(f.0.join("notes/image.png"), b"image").unwrap();
+        let source = f.0.join("notes/note.md");
+        fs::write(&source, "![image](image.png)\n[self](note.md)").unwrap();
+        fs::write(f.0.join("index.md"), "[note](notes/note.md)").unwrap();
+        let target = f.0.join("project/renamed.md");
+        let report = scan(f.0.to_str().unwrap())
+            .unwrap()
+            .report_move(&f.0, &source, &target);
+        assert_eq!(report.move_impacts.len(), 3);
+        assert!(report
+            .move_impacts
+            .iter()
+            .all(|impact| impact.status == "rewrite_required"));
+        assert!(report
+            .move_impacts
+            .iter()
+            .any(|impact| impact.direction == "incoming"
+                && impact.intended_path.as_deref() == target.to_str()));
+        assert!(!report.complete);
+        assert!(!target.exists());
+        assert_eq!(
+            fs::read_to_string(source).unwrap(),
+            "![image](image.png)\n[self](note.md)"
+        );
+    }
+
+    #[test]
+    fn archive_move_impact_preserves_shared_target_and_distinguishes_same_named_files() {
+        let f = Fixture::new();
+        fs::create_dir(f.0.join("project")).unwrap();
+        fs::write(f.0.join("shared.md"), "shared").unwrap();
+        fs::write(f.0.join("project/note.md"), "different").unwrap();
+        let source = f.0.join("notes/note.md");
+        fs::write(&source, "[shared](../shared.md)\n[[unknown]]").unwrap();
+        fs::write(f.0.join("index.md"), "[different](project/note.md)").unwrap();
+        let report = scan(f.0.to_str().unwrap()).unwrap().report_move(
+            &f.0,
+            &source,
+            &f.0.join("project/moved.md"),
+        );
+        assert!(report
+            .move_impacts
+            .iter()
+            .any(|i| i.status == "same_destination"));
+        assert!(report
+            .move_impacts
+            .iter()
+            .any(|i| i.status == "different_target"));
+        assert!(report
+            .move_impacts
+            .iter()
+            .any(|i| i.status == "needs_review"));
+        assert!(!report.complete);
     }
 }
