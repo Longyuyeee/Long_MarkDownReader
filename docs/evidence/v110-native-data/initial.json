@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "real native filtered search returns target",
+    "quick note writes directly to the chosen directory",
+    "same quick-save operation retries without duplication",
+    "collection written to isolated config on disk",
+    "copy contains historical content without overwriting original",
+    "replacement preparation returns selected snapshot",
+    "draft protection is physically persisted",
+    "external modification rejects stale recovery"
+  ],
+  "queryMs": 145,
+  "fixtureFiles": 1001,
+  "copyPath": "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v110-data-f6c25a6291ea41e88eaa573c1b2128e5\\library\\project\\target-恢复-1791742804-1.md",
+  "commit": "89c23d64b1f29df274ede30fb894bdd663d1165f",
+  "scope": "Real debug Tauri IPC and disk, not UI or release-package acceptance"
+}

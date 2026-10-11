@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "fresh process restores persisted smart collection",
+    "fresh process searches live matching files",
+    "protected draft survives process restart",
+    "recovery copy reopens from disk after restart"
+  ],
+  "scope": "Fresh isolated debug process, real Tauri IPC"
+}
