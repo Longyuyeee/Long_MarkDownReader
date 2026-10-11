@@ -17,6 +17,54 @@ use tauri::State;
 
 const MAX_LOG_EDIT_BYTES: usize = 8 * 1024 * 1024;
 
+// Fault injection is absent from release builds and scoped to the explicitly
+// isolated library/configuration used by desktop acceptance tests.
+#[cfg(debug_assertions)]
+async fn debug_text_save_fault(library_root: &str) -> Result<(), TextDocumentError> {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static FAILED_ONCE: AtomicBool = AtomicBool::new(false);
+    let (Some(root), Some(config)) = (
+        std::env::var_os("LONGEDIT_E2E_LIBRARY"),
+        std::env::var_os("LONGEDIT_E2E_CONFIG_DIR"),
+    ) else {
+        return Ok(());
+    };
+    if !Path::new(&config).is_dir() {
+        return Ok(());
+    }
+    let matches_root = match (fs::canonicalize(root), fs::canonicalize(library_root)) {
+        (Ok(expected), Ok(actual)) => expected == actual,
+        _ => false,
+    };
+    if !matches_root {
+        return Ok(());
+    }
+    let delay = std::env::var("LONGEDIT_E2E_TEXT_SAVE_DELAY_MS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(0)
+        .min(30_000);
+    let fail_once = std::env::var("LONGEDIT_E2E_TEXT_SAVE_FAIL_ONCE").as_deref() == Ok("1")
+        && !FAILED_ONCE.swap(true, Ordering::SeqCst);
+    if delay == 0 && !fail_once {
+        return Ok(());
+    }
+    eprintln!("[text-save-audit] begin delay_ms={delay} fail={fail_once}");
+    tauri::async_runtime::spawn_blocking(move || {
+        std::thread::sleep(std::time::Duration::from_millis(delay));
+    })
+    .await
+    .map_err(|error| TextDocumentError::simple("audit-delay-failed", error.to_string()))?;
+    eprintln!("[text-save-audit] end fail={fail_once}");
+    if fail_once {
+        return Err(TextDocumentError::simple(
+            "audit-injected-failure",
+            "隔离验收：模拟首次保存失败",
+        ));
+    }
+    Ok(())
+}
+
 fn ensure_capability(
     format_id: &str,
     capability: &str,
@@ -375,6 +423,8 @@ pub async fn write_text_document(
     expected_signature: Option<String>,
     save_policy: Option<TextSavePolicy>,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    #[cfg(debug_assertions)]
+    debug_text_save_fault(&library_root).await?;
     if matches!(format_id.as_str(), "json" | "jsonc") {
         return Err(TextDocumentError::simple(
             "specialized-writer-required",
