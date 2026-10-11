@@ -1,10 +1,13 @@
 //! Read-only structural checks. This receipt is NOT permission to move files.
 use crate::commands::files::validate_item_name;
 use crate::services::archive_dependencies::{self, DependencyReport};
+use crate::services::archive_edits::{self, BatchPreview};
 use crate::services::archive_history::{self, ArchiveHistoryPlan};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use tauri::Manager;
 
@@ -41,6 +44,7 @@ pub struct ArchivePreflight {
     structural_checks_passed: bool,
     can_execute: bool,
     pending_checks: Vec<&'static str>,
+    edit_preview: Option<BatchPreview>,
 }
 
 fn issue(code: &'static str, message: impl Into<String>) -> ArchiveIssue {
@@ -161,6 +165,7 @@ fn check(
         structural_checks_passed: results.iter().all(|item| item.issues.is_empty()),
         items: results,
         can_execute: false,
+        edit_preview: None,
         pending_checks: vec![
             "links_and_attachments",
             "history_and_identity",
@@ -185,6 +190,7 @@ pub async fn preflight_archive(
         let mut result = check(&library_root, &target_dir, items)?;
         inspect_histories(&library_root, &cache, &mut result)?;
         inspect_dependencies(&library_root, &mut result)?;
+        inspect_edit_preview(&library_root, &mut result);
         Ok(result)
     })
     .await
@@ -239,6 +245,110 @@ fn inspect_dependencies(root: &str, result: &mut ArchivePreflight) -> Result<(),
         }
     }
     Ok(())
+}
+
+fn inspect_edit_preview(root: &str, result: &mut ArchivePreflight) {
+    let build = || -> Result<BatchPreview, String> {
+        let guard = WorkspaceGuard::new(root)?;
+        let reports: Vec<_> = result
+            .items
+            .iter()
+            .map(|item| item.dependencies.as_ref())
+            .collect::<Option<Vec<_>>>()
+            .ok_or("missing_dependency_reports")?;
+        if reports.is_empty() {
+            return Err("missing_dependency_reports".into());
+        }
+        let count: usize = reports
+            .iter()
+            .map(|r| r.outgoing.len() + r.incoming_candidates.len() + r.move_impacts.len())
+            .sum();
+        if count > 20_000 {
+            return Err("edit_preview_evidence_limit".into());
+        }
+        let documents: BTreeSet<_> = reports
+            .iter()
+            .flat_map(|r| r.outgoing.iter().chain(&r.incoming_candidates))
+            .map(|e| e.document.clone())
+            .collect();
+        let mut remaining = 32 * 1024 * 1024;
+        let mut texts = BTreeMap::new();
+        let mut failures = Vec::new();
+        for document in documents {
+            match read_preview_source(&guard, &document, &mut remaining) {
+                Ok(text) => {
+                    texts.insert(document, text);
+                }
+                Err(error) => failures.push(format!("{document}: {error}")),
+            }
+        }
+        let mut preview = archive_edits::batch_preview(&reports, &texts);
+        preview.blockers.extend(failures);
+        // A preview is never allowed to hide structural/history/draft failures.
+        if result.items.iter().any(|item| !item.issues.is_empty()) {
+            preview.blockers.push("preflight_has_issues".into());
+        }
+        let mut output_budget = 32 * 1024 * 1024usize;
+        for document in &mut preview.documents {
+            if let Some(content) = &document.content {
+                if content.len() > output_budget {
+                    document.content = None;
+                    document.blockers.push("edit_preview_output_limit".into());
+                } else {
+                    output_budget -= content.len();
+                }
+            }
+        }
+        Ok(preview)
+    };
+    result.edit_preview = Some(build().unwrap_or_else(|error| BatchPreview {
+        documents: vec![],
+        blockers: vec![error],
+        can_execute: false,
+    }));
+}
+
+fn read_preview_source(
+    guard: &WorkspaceGuard,
+    document: &str,
+    remaining: &mut usize,
+) -> Result<String, String> {
+    let path = Path::new(document);
+    let relative = path
+        .strip_prefix(guard.root())
+        .map_err(|_| "preview_source_outside_library")?;
+    let mut cursor = guard.root().to_owned();
+    for part in relative.components() {
+        if !matches!(part, std::path::Component::Normal(_)) {
+            return Err("preview_source_invalid_path".into());
+        }
+        cursor.push(part);
+        if std::fs::symlink_metadata(&cursor)
+            .map_err(|e| e.to_string())?
+            .file_type()
+            .is_symlink()
+        {
+            return Err("preview_source_symlink".into());
+        }
+    }
+    if guard.resolve_existing(path)? != path {
+        return Err("preview_source_identity_changed".into());
+    }
+    let meta = std::fs::metadata(path).map_err(|e| e.to_string())?;
+    if !meta.is_file() || meta.len() > 2 * 1024 * 1024 || meta.len() > *remaining as u64 {
+        return Err("preview_source_size_limit".into());
+    }
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .map_err(|e| e.to_string())?
+        .take(meta.len() + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| e.to_string())?;
+    *remaining = remaining.saturating_sub(bytes.len());
+    if bytes.len() as u64 != meta.len() {
+        return Err("preview_source_changed_during_read".into());
+    }
+    String::from_utf8(bytes).map_err(|_| "preview_source_invalid_utf8".into())
 }
 
 fn inspect_histories(
@@ -318,6 +428,74 @@ mod tests {
         assert_eq!(result.pending_checks.len(), 3);
         assert_eq!(fs::read_to_string(f.0.join("note.md")).unwrap(), "原始正文");
         assert_eq!(fs::read_dir(f.0.join("project")).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn archive_command_preview_reads_sources_and_serializes_without_writes() {
+        let f = Fixture::new();
+        fs::write(f.0.join("note.md"), "[asset](asset.png)").unwrap();
+        fs::write(f.0.join("asset.png"), "asset").unwrap();
+        let mut result = f.check(vec![item("note.md", "note.md")]);
+        inspect_dependencies(f.0.to_str().unwrap(), &mut result).unwrap();
+        inspect_edit_preview(f.0.to_str().unwrap(), &mut result);
+        let preview = result.edit_preview.as_ref().unwrap();
+        assert_eq!(
+            preview.documents[0].content.as_deref(),
+            Some("[asset](../asset.png)")
+        );
+        assert!(!preview.can_execute && !result.can_execute);
+        let json = serde_json::to_value(&result).unwrap();
+        assert_eq!(json["editPreview"]["canExecute"], false);
+        assert_eq!(
+            fs::read_to_string(f.0.join("note.md")).unwrap(),
+            "[asset](asset.png)"
+        );
+        assert!(!f.0.join("project/note.md").exists());
+    }
+
+    #[test]
+    fn archive_command_preview_blocks_missing_reports_and_changed_sources() {
+        let f = Fixture::new();
+        let mut result = f.check(vec![item("note.md", "note.md")]);
+        inspect_edit_preview(f.0.to_str().unwrap(), &mut result);
+        assert!(result
+            .edit_preview
+            .as_ref()
+            .unwrap()
+            .blockers
+            .contains(&"missing_dependency_reports".into()));
+        fs::write(f.0.join("note.md"), "[asset](asset.png)").unwrap();
+        fs::write(f.0.join("asset.png"), "asset").unwrap();
+        inspect_dependencies(f.0.to_str().unwrap(), &mut result).unwrap();
+        fs::write(f.0.join("note.md"), "[asset](other.png)").unwrap();
+        inspect_edit_preview(f.0.to_str().unwrap(), &mut result);
+        let doc = &result.edit_preview.as_ref().unwrap().documents[0];
+        assert!(doc.content.is_none());
+        assert!(doc
+            .blockers
+            .contains(&"source_snapshot_missing_or_changed".into()));
+    }
+
+    #[test]
+    fn archive_preview_reader_rejects_budget_encoding_and_outside_sources() {
+        let f = Fixture::new();
+        let guard = WorkspaceGuard::new(&f.0).unwrap();
+        let path = guard.root().join("note.md");
+        assert!(read_preview_source(&guard, path.to_str().unwrap(), &mut 1).is_err());
+        fs::write(&path, [0xff]).unwrap();
+        assert!(read_preview_source(&guard, path.to_str().unwrap(), &mut 100).is_err());
+        assert!(read_preview_source(
+            &guard,
+            guard
+                .root()
+                .parent()
+                .unwrap()
+                .join("outside.md")
+                .to_str()
+                .unwrap(),
+            &mut 100
+        )
+        .is_err());
     }
     #[test]
     fn reports_every_conflict_without_short_circuiting() {

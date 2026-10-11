@@ -6,14 +6,16 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::path::{Component, Path};
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DocumentPreview {
     pub document: String,
     pub content: Option<String>,
     pub blockers: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct BatchPreview {
     pub documents: Vec<DocumentPreview>,
     pub blockers: Vec<String>,
@@ -73,13 +75,21 @@ pub(crate) fn batch_preview(
             }
         }
     }
+    let mut output_budget = 32 * 1024 * 1024usize;
     let documents = grouped
         .into_iter()
         .map(|(document, (proposals, mut issues))| {
             let content = if issues.is_empty() {
                 match current_texts.get(&document) {
                     Some(text) => match preview(&document, text, &proposals) {
-                        Ok(content) => Some(content),
+                        Ok(content) if content.len() <= output_budget => {
+                            output_budget -= content.len();
+                            Some(content)
+                        }
+                        Ok(_) => {
+                            issues.push("edit_preview_output_limit".into());
+                            None
+                        }
                         Err(error) => {
                             issues.push(error);
                             None
