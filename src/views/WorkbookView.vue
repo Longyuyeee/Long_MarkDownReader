@@ -881,7 +881,7 @@
 </template>
 
 <script setup lang="ts">
-import { useWindowDraft } from '../services/windowDrafts'
+import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
@@ -1210,6 +1210,8 @@ const scrollTop = ref(0)
 const viewportHeight = ref(600)
 let resizeObserver: ResizeObserver | null = null
 let generation = 0
+// Sheet selection changes generation too; save receipts belong to the document.
+let workbookDocumentEpoch = 0
 let wantedOffset = 0
 let dragSelecting = false
 let fillSource: SelectionArea | null = null
@@ -4594,6 +4596,7 @@ const navigateDrawing = async (drawing: WorkbookDrawingObject) => {
   })
 }
 const loadWorkbook = async () => {
+  workbookDocumentEpoch += 1
   const current = ++generation
   loading.value = true
   error.value = ''
@@ -4643,7 +4646,15 @@ const saveWorkbook = async () => {
   if (!workbook.value || !dirtyCount.value || saving.value) return
   saving.value = true
   const previousSheet = activeSheet.value
+  const savedWorkbook = workbook.value
+  const savedPath = workbookPath.value
+  const savedRoot = store.libraryPath
+  const savedEpoch = workbookDocumentEpoch
+  const ownsDocument = () => workbook.value === savedWorkbook && workbookPath.value === savedPath
+    && store.libraryPath === savedRoot && !isExternal.value && workbookDocumentEpoch === savedEpoch
+  let finishWindowSave: (() => void) | undefined
   try {
+    finishWindowSave = beginWindowSave()
     const styleEdits: WorkbookCellStyleEdit[] = Array.from(styleDrafts.value.entries()).map(([key, patch]) => {
       const [sheet, row, column] = key.split('\u0000')
       return { sheet, row: Number(row), column: Number(column), patch }
@@ -4657,8 +4668,8 @@ const saveWorkbook = async () => {
       return { sheet, startColumn: Number(column), endColumn: Number(column), width }
     })
     const document = await invoke<WorkbookDocument>('write_workbook_draft', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
+      libraryRoot: savedRoot,
+      path: savedPath,
       payload: {
         expectedSignature: workbook.value.signature,
         edits: Array.from(drafts.value.values()),
@@ -4670,6 +4681,7 @@ const saveWorkbook = async () => {
         tableChanges: objectDrafts.value.flatMap(draft => draft.tableChange ? [draft.tableChange] : []),
       },
     })
+    if (!ownsDocument()) return
     workbook.value = document
     drafts.value = new Map()
     styleDrafts.value = new Map()
@@ -4683,8 +4695,8 @@ const saveWorkbook = async () => {
     activeSheet.value = ''
     await selectSheet(previousSheet)
     message.success('工作簿已保存')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { saving.value = false }
+  } catch (cause) { message.error(`${savedPath.split(/[\\/]/).pop()} 保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { saving.value = false; finishWindowSave?.() }
 }
 const convertSheet = async () => {
   if (isExternal.value || !activeSheet.value || importing.value) return
@@ -4795,6 +4807,7 @@ onMounted(() => {
   window.addEventListener('beforeunload', warnBeforeUnload)
 })
 onBeforeUnmount(() => {
+  workbookDocumentEpoch += 1
   if (scrollRef.value) {
     rememberWorkspaceViewState(workbookPath.value, {
       scrollTop: scrollRef.value.scrollTop,

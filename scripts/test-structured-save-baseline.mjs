@@ -43,15 +43,17 @@ export function tableHarness(viewSource) {
   h.ctx.beginWindowSave = () => { h.ctx.windowSaves++; return () => { h.ctx.windowSaves-- } }
   return { ...h, tab }
 }
-function workbookHarness() {
+export function workbookHarness(viewSource) {
   const bindings = {
     isExternal: box(false), commitFormulaInput() {}, workbook: box({ signature: 'old' }), dirtyCount: box(1), saving: box(false),
     activeSheet: box('Sheet1'), workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' },
     drafts: box(new Map([['cell', { sheet: 'Sheet1', row: 0, column: 0, value: '先确认交付日期' }]])),
-    objectDrafts: box([]), undoStack: box(['edit']), redoStack: box([]), generation: 0, selectSheet: async () => {},
+    objectDrafts: box([]), undoStack: box(['edit']), redoStack: box([]), generation: 0, workbookDocumentEpoch: 0, windowSaves: 0, selectSheet: async () => {},
   }
   for (const key of ['styleDrafts', 'rowHeightDrafts', 'columnWidthDrafts', 'mergeDrafts']) bindings[key] = box(new Map())
-  return harness('WorkbookView', 'saveWorkbook', 'convertSheet', bindings)
+  const h = harness('WorkbookView', 'saveWorkbook', 'convertSheet', bindings, viewSource)
+  h.ctx.beginWindowSave = () => { h.ctx.windowSaves++; return () => { h.ctx.windowSaves-- } }
+  return h
 }
 
 test('historical Table: delayed receipt incorrectly marks newer cell edit saved', async () => {
