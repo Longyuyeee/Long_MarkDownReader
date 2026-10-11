@@ -194,6 +194,20 @@ pub async fn preflight_archive(
 fn inspect_dependencies(root: &str, result: &mut ArchivePreflight) -> Result<(), String> {
     let guard = WorkspaceGuard::new(root)?;
     let inventory = archive_dependencies::scan(root);
+    // Do not project a partially invalid batch as though every item will move.
+    let planned_moves: Option<Vec<(PathBuf, PathBuf)>> = result
+        .items
+        .iter()
+        .map(|item| {
+            if !item.issues.is_empty() {
+                return None;
+            }
+            Some((
+                guard.resolve_existing(&item.source_path).ok()?,
+                PathBuf::from(item.target_path.as_ref()?),
+            ))
+        })
+        .collect();
     for item in &mut result.items {
         let source = match guard.resolve_existing(&item.source_path) {
             Ok(p) if p.is_file() => p,
@@ -204,9 +218,15 @@ fn inspect_dependencies(root: &str, result: &mut ArchivePreflight) -> Result<(),
                 .issues
                 .push(issue("dependency_scan_incomplete", error.clone())),
             Ok(inventory) => {
-                let report = match &item.target_path {
-                    Some(target) => inventory.report_move(guard.root(), &source, Path::new(target)),
-                    None => inventory.report(&source),
+                let report = match &planned_moves {
+                    Some(moves) => inventory.report_batch(guard.root(), &source, moves),
+                    None => {
+                        let mut report = inventory.report(&source);
+                        report
+                            .limitations
+                            .push("batch_projection_unavailable_due_to_preflight_issues");
+                        report
+                    }
                 };
                 if !report.outgoing.is_empty() || !report.incoming_candidates.is_empty() {
                     item.issues.push(issue(
@@ -498,5 +518,24 @@ mod tests {
             0,
             "target_exists"
         ));
+    }
+
+    #[test]
+    fn archive_invalid_batch_keeps_evidence_without_projecting_partial_plan() {
+        let f = Fixture::new();
+        fs::write(f.0.join("note.md"), "[other](other.md)").unwrap();
+        fs::write(f.0.join("other.md"), "other").unwrap();
+        let mut dirty = item("other.md", "other.md");
+        dirty.has_unsaved_changes = true;
+        let mut result = f.check(vec![item("note.md", "note.md"), dirty]);
+        inspect_dependencies(f.0.to_str().unwrap(), &mut result).unwrap();
+        let report = result.items[0].dependencies.as_ref().unwrap();
+        assert!(!report.outgoing.is_empty());
+        assert!(report.move_impacts.is_empty());
+        assert!(report
+            .limitations
+            .contains(&"batch_projection_unavailable_due_to_preflight_issues"));
+        assert!(has(&result, 1, "unsaved_changes"));
+        assert!(!result.can_execute);
     }
 }

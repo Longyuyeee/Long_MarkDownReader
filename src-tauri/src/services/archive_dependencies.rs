@@ -216,15 +216,39 @@ fn basename(value: &str) -> String {
 }
 
 impl Inventory {
+    #[cfg(test)]
     pub(crate) fn report_move(
         &self,
         root: &Path,
         source: &Path,
         destination: &Path,
     ) -> DependencyReport {
+        self.report_batch(
+            root,
+            source,
+            &[(source.to_path_buf(), destination.to_path_buf())],
+        )
+    }
+
+    pub(crate) fn report_batch(
+        &self,
+        root: &Path,
+        source: &Path,
+        moves: &[(PathBuf, PathBuf)],
+    ) -> DependencyReport {
         let mut report = self.report(source);
         let source_key = source.to_string_lossy();
-        let destination_key = destination.to_string_lossy();
+        let mapped = |path: &str| {
+            moves
+                .iter()
+                .find(|(from, _)| same_path(&from.to_string_lossy(), path))
+                .map(|(_, to)| to.to_string_lossy().into_owned())
+                .unwrap_or_else(|| path.to_owned())
+        };
+        let destination_key = mapped(&source_key);
+        report
+            .limitations
+            .push("batch_projection_assumes_all_planned_moves_succeed");
         for evidence in &report.outgoing {
             let mut impact = MoveImpact {
                 evidence: evidence.clone(),
@@ -237,11 +261,7 @@ impl Inventory {
                 if before.status == "resolved_file" {
                     if let Some(before_path) = &before.path {
                         // Self references must follow the moving document too.
-                        let intended = if same_path(before_path, &source_key) {
-                            destination_key.to_string()
-                        } else {
-                            before_path.clone()
-                        };
+                        let intended = mapped(before_path);
                         let mut shifted = evidence.clone();
                         shifted.document = destination_key.to_string();
                         let after = resolve_relative(root, &shifted);
@@ -275,17 +295,29 @@ impl Inventory {
             if let Some(resolution) = &evidence.resolution {
                 if resolution.status == "resolved_file" {
                     if let Some(path) = &resolution.path {
-                        impact.status = if same_path(path, &source_key) {
-                            "rewrite_required"
+                        let intended = mapped(path);
+                        if same_path(path, &source_key) {
+                            let mut shifted = evidence.clone();
+                            shifted.document = mapped(&evidence.document);
+                            let after = resolve_relative(root, &shifted);
+                            impact.status = match after.path.as_ref() {
+                                Some(path)
+                                    if ["resolved_file", "missing"].contains(&after.status)
+                                        && same_path(path, &intended) =>
+                                {
+                                    "same_destination"
+                                }
+                                Some(_) if ["resolved_file", "missing"].contains(&after.status) => {
+                                    "rewrite_required"
+                                }
+                                _ => "needs_review",
+                            };
+                            impact.unchanged_link_path = after.path;
                         } else {
-                            "different_target"
-                        };
-                        impact.intended_path = Some(if impact.status == "rewrite_required" {
-                            destination_key.to_string()
-                        } else {
-                            path.clone()
-                        });
-                        impact.unchanged_link_path = Some(path.clone());
+                            impact.status = "different_target";
+                            impact.unchanged_link_path = Some(path.clone());
+                        }
+                        impact.intended_path = Some(intended);
                     }
                 }
             }
@@ -633,5 +665,59 @@ mod tests {
             .iter()
             .any(|i| i.status == "needs_review"));
         assert!(!report.complete);
+    }
+
+    #[test]
+    fn archive_batch_keeps_relative_links_when_both_documents_move_together() {
+        let f = Fixture::new();
+        fs::create_dir(f.0.join("project")).unwrap();
+        let a = f.0.join("notes/a.md");
+        let b = f.0.join("notes/b.md");
+        fs::write(&a, "[b](b.md)").unwrap();
+        fs::write(&b, "[a](a.md)").unwrap();
+        let moves = vec![
+            (a.clone(), f.0.join("project/a.md")),
+            (b.clone(), f.0.join("project/b.md")),
+        ];
+        let inventory = scan(f.0.to_str().unwrap()).unwrap();
+        let single = inventory.report_move(&f.0, &a, &moves[0].1);
+        assert!(single
+            .move_impacts
+            .iter()
+            .all(|i| i.status == "rewrite_required"));
+        let batch = inventory.report_batch(&f.0, &a, &moves);
+        assert_eq!(batch.move_impacts.len(), 2);
+        assert!(batch
+            .move_impacts
+            .iter()
+            .all(|i| i.status == "same_destination"));
+        assert!(!batch.complete);
+        assert!(batch
+            .limitations
+            .contains(&"batch_projection_assumes_all_planned_moves_succeed"));
+        assert!(a.exists() && b.exists() && !moves[0].1.exists());
+    }
+
+    #[test]
+    fn archive_batch_rename_and_unmoved_incoming_still_require_rewrites() {
+        let f = Fixture::new();
+        fs::create_dir(f.0.join("project")).unwrap();
+        let a = f.0.join("notes/a.md");
+        let b = f.0.join("notes/b.md");
+        fs::write(&a, "[b](b.md)").unwrap();
+        fs::write(&b, "b").unwrap();
+        fs::write(f.0.join("index.md"), "[a](notes/a.md)").unwrap();
+        let moves = vec![
+            (a.clone(), f.0.join("project/a.md")),
+            (b, f.0.join("project/renamed.md")),
+        ];
+        let report = scan(f.0.to_str().unwrap())
+            .unwrap()
+            .report_batch(&f.0, &a, &moves);
+        assert_eq!(report.move_impacts.len(), 2);
+        assert!(report
+            .move_impacts
+            .iter()
+            .all(|i| i.status == "rewrite_required"));
     }
 }
