@@ -22,6 +22,40 @@ pub(crate) struct DependencyEvidence {
     pub target: String,
     pub kind: &'static str,
     pub resolution: Option<DependencyResolution>,
+    pub destination_span: Option<DestinationSpan>,
+}
+
+/// UTF-8 byte offsets into the scanned document, not a current write permission.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DestinationSpan {
+    pub start: usize,
+    pub end: usize,
+    pub original: String,
+}
+
+// Deliberately narrow: inline destinations without titles or decoded escapes.
+// The parser establishes link semantics; raw equality establishes source identity.
+fn inline_destination_span(
+    text: &str,
+    range: std::ops::Range<usize>,
+    destination: &str,
+) -> Option<DestinationSpan> {
+    let syntax = text.get(range.clone())?.strip_suffix(')')?;
+    let (label, raw) = syntax.rsplit_once("](")?;
+    let (raw, angle_offset) = match raw.strip_prefix('<') {
+        Some(value) => (value.strip_suffix('>')?, 1),
+        None => (raw, 0),
+    };
+    if raw.is_empty() || raw != destination {
+        return None;
+    }
+    let start = range.start + label.len() + 2 + angle_offset;
+    Some(DestinationSpan {
+        start,
+        end: start + raw.len(),
+        original: raw.into(),
+    })
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -132,9 +166,9 @@ fn local(value: &str) -> bool {
 }
 
 fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
-    use pulldown_cmark::{Event, Parser, Tag};
+    use pulldown_cmark::{Event, LinkType, Parser, Tag};
     let mut found = vec![];
-    let mut add = |target: &str, offset: usize, kind| {
+    let mut add = |target: &str, offset: usize, kind, destination_span| {
         if local(target) && !target.starts_with("longedit://pdf?") {
             found.push(DependencyEvidence {
                 document: document.into(),
@@ -142,6 +176,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                 target: target.into(),
                 kind,
                 resolution: None,
+                destination_span,
             });
         }
     };
@@ -155,13 +190,30 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
             &definition.dest,
             definition.span.start,
             "reference_definition",
+            None,
         );
     }
     for (event, range) in parser.into_offset_iter() {
         match event {
             Event::Code(_) | Event::Start(Tag::CodeBlock(_)) => code_ranges.push(range),
-            Event::Start(Tag::Link { dest_url, .. } | Tag::Image { dest_url, .. }) => {
-                add(&dest_url, range.start, "markdown");
+            Event::Start(
+                Tag::Link {
+                    dest_url,
+                    link_type,
+                    ..
+                }
+                | Tag::Image {
+                    dest_url,
+                    link_type,
+                    ..
+                },
+            ) => {
+                let span = if link_type == LinkType::Inline {
+                    inline_destination_span(text, range.clone(), &dest_url)
+                } else {
+                    None
+                };
+                add(&dest_url, range.start, "markdown", span);
             }
             Event::Html(_) | Event::InlineHtml(_) => {
                 for capture in HTML.captures_iter(&text[range.clone()]) {
@@ -169,6 +221,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                         &capture[1],
                         range.start + capture.get(0).unwrap().start(),
                         "html_attribute",
+                        None,
                     );
                 }
             }
@@ -180,7 +233,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
         if !definition_offsets.contains(&offset)
             && !code_ranges.iter().any(|range| range.contains(&offset))
         {
-            add(&capture[1], offset, "unparsed_reference_candidate");
+            add(&capture[1], offset, "unparsed_reference_candidate", None);
         }
     }
     for (values, kind) in [
@@ -195,6 +248,7 @@ fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                     target: mention.target,
                     kind,
                     resolution: None,
+                    destination_span: None,
                 });
             }
         }
@@ -433,6 +487,47 @@ pub(crate) fn scan(root: &str) -> Result<Inventory, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn archive_destination_spans_preserve_unicode_duplicates_and_angle_syntax() {
+        let text =
+            "中文\r\n[甲](a.md#段落) ![图](<图 片.png>) [乙](a.md#段落) [嵌套](folder/a(b).md)";
+        let found = mentions("note.md", text);
+        assert_eq!(found.len(), 4);
+        let mut ranges = vec![];
+        for evidence in &found {
+            let span = evidence
+                .destination_span
+                .as_ref()
+                .expect("literal inline destination");
+            assert_eq!(&text[span.start..span.end], evidence.target);
+            assert_eq!(span.original, evidence.target);
+            assert_eq!(evidence.line, 2);
+            ranges.push(span.start);
+        }
+        ranges.sort();
+        ranges.dedup();
+        assert_eq!(ranges.len(), 4);
+        let span = found
+            .iter()
+            .find(|e| e.target == "图 片.png")
+            .unwrap()
+            .destination_span
+            .as_ref()
+            .unwrap();
+        let mut preview = text.to_string();
+        preview.replace_range(span.start..span.end, "新图.png");
+        assert_eq!(preview, text.replace("<图 片.png>", "<新图.png>"));
+    }
+
+    #[test]
+    fn archive_destination_spans_do_not_guess_reference_title_or_decoded_syntax() {
+        let text = "[ref][id]\n\n[id]: a.md\n\n[title](a.md \"说明\") [escaped](a\\(b\\).md) [entity](a&amp;b.md) ` [code](a.md) ` <a href=\"a.md\">a</a>";
+        let found = mentions("note.md", text);
+        assert!(found.len() >= 6);
+        assert!(found.iter().all(|e| e.destination_span.is_none()));
+        assert!(!found.iter().any(|e| e.line == 0));
+    }
+
     struct Fixture(PathBuf);
     impl Fixture {
         fn new() -> Self {
@@ -456,6 +551,7 @@ mod tests {
                     target: target.into(),
                     kind: "markdown",
                     resolution: None,
+                    destination_span: None,
                 },
             )
         }
