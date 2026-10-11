@@ -2865,11 +2865,22 @@ const applyStructureAction = (event: Event) => {
     onPositiveClick: () => commitStructure(axis.kind, action, axis.start, count),
   })
 }
-const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange) => {
+const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange | null) => {
+  const document = workbook.value
+  const epoch = workbookDocumentEpoch
+  const path = workbookPath.value
+  const root = store.libraryPath
   generation += 1
   activeSheet.value = ''
-  await selectSheet(sheet)
+  const loading = selectSheet(sheet)
+  const currentGeneration = generation
+  const isCurrent = () => generation === currentGeneration && workbook.value === document
+    && workbookDocumentEpoch === epoch && workbookPath.value === path && store.libraryPath === root
+    && activeSheet.value === sheet
+  await loading
+  if (!isCurrent() || !area) return
   await loadPage(area.top)
+  if (!isCurrent()) return
   selectionAnchor.value = { sheet, row: area.top, column: area.left }
   selectionAreas.value = [{ ...area }]
   setSelectionFocus(area.top, area.left)
@@ -2977,7 +2988,7 @@ const promptDataValidationRule = async (existing: WorkbookDataValidation | undef
     prompt: prompt.trim() || undefined,
   }
 }
-const commitDataValidationChange = async (change: WorkbookDataValidationChange, area: WorkbookMergeRange, success: string) => {
+const commitDataValidationChange = async (change: WorkbookDataValidationChange, _area: WorkbookMergeRange, success: string) => {
   if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改数据验证')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
@@ -2998,11 +3009,15 @@ const commitDataValidationChange = async (change: WorkbookDataValidationChange, 
       payload: { expectedSignature: savedWorkbook.signature, change },
     })
     if (!ownsDocument()) return
+    const sheetToRestore = activeSheet.value || sheet
+    const areaToRestore = selectionBounds.value ? { ...selectionBounds.value } : null
     workbook.value = document
+    const appliedDocument = workbook.value
     undoStack.value = []
     redoStack.value = []
-    await restoreTableSelection(sheet, area)
-    message.success(success)
+    await restoreTableSelection(sheetToRestore, areaToRestore)
+    if (workbook.value === appliedDocument && workbookDocumentEpoch === savedEpoch
+      && workbookPath.value === savedPath && store.libraryPath === savedRoot) message.success(success)
   } catch (cause) { message.error(`${savedPath} 数据验证保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
   finally { finishWindowSave?.(); updatingStructure.value = false }
 }

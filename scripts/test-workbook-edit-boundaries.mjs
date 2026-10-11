@@ -5,13 +5,35 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('selection restoration stops when another view wins either read', async () => {
+  for (const interruptAt of ['sheet', 'page', 'none']) {
+    let completeSheet, completePage, focused = 0, pageReads = 0
+    const ctx = extract('const restoreTableSelection =', 'const selectedDrawing =', {
+      workbook: box({}), workbookDocumentEpoch: 1, workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' },
+      generation: 0, activeSheet: box('Sheet1'), selectionAnchor: box(null), selectionAreas: box([]),
+      selectSheet: sheet => { ctx.generation++; ctx.activeSheet.value = sheet; return new Promise(resolve => { completeSheet = resolve }) },
+      loadPage: () => { pageReads++; return new Promise(resolve => { completePage = resolve }) },
+      setSelectionFocus: () => focused++, recalculateLoadedFormulas: async () => {},
+    }, 'globalThis.restore = restoreTableSelection')
+    const pending = ctx.restore('Sheet1', { top: 0, bottom: 0, left: 0, right: 0 })
+    if (interruptAt === 'sheet') ctx.generation++
+    completeSheet(); await new Promise(resolve => setImmediate(resolve))
+    if (interruptAt !== 'sheet') {
+      if (interruptAt === 'page') ctx.workbookDocumentEpoch++
+      completePage()
+    }
+    await pending
+    assert.equal(pageReads, interruptAt === 'sheet' ? 0 : 1)
+    assert.equal(focused, interruptAt === 'none' ? 1 : 0)
+  }
+})
 test('validation write receipts respect document ownership and release window save guards', async () => {
   for (const scenario of ['success', 'replacement', 'epoch', 'failure']) {
     let resolve, reject, pending = 0, restored = 0
     const errors = [], successes = []
     const ctx = extract('const commitDataValidationChange =', 'const editDataValidationRule =', {
       isExternal: box(false), workbook: box({ signature: 'initial' }), saving: box(false), updatingStructure: box(false),
-      sheetProtected: box(false), dirtyCount: box(0), activeSheet: box('Sheet1'), workbookPath: box('tasks.xlsx'),
+      sheetProtected: box(false), dirtyCount: box(0), activeSheet: box('Sheet1'), selectionBounds: box(null), workbookPath: box('tasks.xlsx'),
       store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1, undoStack: box(['history']), redoStack: box(['redo']),
       beginWindowSave: () => { pending++; return () => pending-- },
       invoke: () => new Promise((done, fail) => { resolve = done; reject = fail }),
