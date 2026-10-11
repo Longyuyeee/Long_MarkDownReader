@@ -10,7 +10,18 @@ const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
   const errors = []; page.on('pageerror', error => errors.push(error.message))
+  const validationErrors = []
+  await page.exposeFunction('recordValidationError', text => validationErrors.push(text))
   await page.goto('http://127.0.0.1:9000/scripts/fixtures/workbook-save-browser.html')
+  await page.evaluate(() => {
+    new MutationObserver(() => {
+      for (const element of document.querySelectorAll('.n-message--error-type')) {
+        if (element.dataset.auditRecorded) continue
+        element.dataset.auditRecorded = 'true'
+        window.recordValidationError(element.textContent)
+      }
+    }).observe(document.body, { childList: true, subtree: true })
+  })
   await page.locator('.workbook-cell').first().click()
   await page.locator('.tool-panel-trigger').click()
   await page.getByText('数据、Table 与规则', { exact: true }).click()
@@ -37,6 +48,15 @@ try {
   const writes = await page.evaluate(() => window.workbookAudit.validationWrites)
   assert.equal(writes.length, 1); assert.equal(writes[0].sheet, 'Sheet1')
   assert.equal(writes[0].validation.formula1, '"待处理,已完成"')
+  await page.waitForFunction(() => document.querySelectorAll('.n-message').length === 0)
+  assert.deepEqual(validationErrors, [], 'creating a rule must not report unchanged existing content as a new invalid edit')
+  const formula = page.locator('input[placeholder="当前单元格不可编辑"]')
+  await formula.fill('其他状态'); await formula.press('Enter')
+  await page.getByText('请从任务状态列表中选择', { exact: true }).waitFor()
+  assert.ok(validationErrors.some(text => text.includes('请从任务状态列表中选择')), 'error observer must capture genuine invalid input')
+  assert.equal(await page.locator('.workbook-cell').first().locator('.cell-content').innerText(), '确认交付日期')
+  await formula.press('Escape')
+  await page.waitForFunction(() => document.querySelectorAll('.n-message').length === 0)
   await page.getByRole('button', { name: '删除验证', exact: true }).click()
   await answer('删除数据验证规则？', null, '取消')
   assert.equal(await page.evaluate(() => window.workbookAudit.validationWrites.length), 1)

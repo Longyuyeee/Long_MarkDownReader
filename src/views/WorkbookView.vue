@@ -2514,6 +2514,9 @@ const resetFormulaInput = () => {
 const commitFormulaInput = () => {
   const selection = selectedCell.value
   if (!selection || !selectedEditable.value) return
+  // Reloads and recalculation also flush the formula bar. Validate only a new
+  // input, not an unchanged existing value that predates the validation rule.
+  if (formulaInput.value === originalInput(cellAt(selection.row, selection.column))) return
   const validation = validationAt(selection.row, selection.column)
   if (validation?.showErrorMessage && validation.kind === 'list' && formulaInput.value && !formulaInput.value.startsWith('=')) {
     const options = literalValidationOptions(validation)

@@ -5,6 +5,22 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('formula flush preserves existing values but validates actual edits', () => {
+  const errors = [], changes = []
+  const ctx = extract('const commitFormulaInput =', 'const applyHistoryAction =', {
+    selectedCell: box({ sheet: 'Sheet1', row: 0, column: 0 }), selectedEditable: box(true),
+    formulaInput: box('旧内容'), cellAt: () => ({ value: '旧内容' }), sourceCellAt: () => ({ value: '旧内容' }),
+    originalInput: cell => cell.value, validationAt: () => ({ kind: 'list', showErrorMessage: true, error: '请选择任务状态' }),
+    literalValidationOptions: () => ['待处理', '已完成'], message: { error: value => errors.push(value) },
+    editKey: () => 'A1', drafts: box(new Map()), inferEdit: (_selection, input) => ({ input }),
+    setDraft: (_key, value) => changes.push(value), invalidateCalculation() {}, undoStack: box([]), redoStack: box([]),
+  }, 'globalThis.action = commitFormulaInput')
+  ctx.action(); assert.deepEqual(errors, []); assert.deepEqual(changes, [])
+  ctx.formulaInput.value = '其他状态'; ctx.action()
+  assert.deepEqual(errors, ['请选择任务状态']); assert.deepEqual(changes, [])
+  ctx.formulaInput.value = '待处理'; ctx.action()
+  assert.equal(changes[0].input, '待处理'); assert.equal(ctx.undoStack.value.length, 1)
+})
 function extract(start, end, bindings, expose) {
   const from = source.indexOf(start), to = source.indexOf(end, from)
   assert.ok(from >= 0 && to > from)
