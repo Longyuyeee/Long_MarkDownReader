@@ -1,0 +1,8 @@
+# UI-F1-01 生成记录
+
+工具：内置 imagegen。用途：快速笔记界面设计审批，不是产品截图或测试证据。
+日期：2026-10-11。输出：`UI-F1-01-quick-note.png`。审批：待用户确认。
+
+## 提示词
+
+Create a polished UI design proposal image for a Chinese Windows desktop local Markdown app Long编辑. One single compact quick-note window centered on a pale gray presentation background, front-on flat crisp UI, no perspective, no device. Window approximate proportions 560 wide x 460 high, generously readable Chinese sans serif typography, white background, subtle borders, dark charcoal text, muted blue accent primary button, modest radius, no gradients or decorative effects. Above the window, outside application chrome, caption exactly 'UI-F1-01 · 快速笔记' and subcaption '设计示意 · 尚未实现 · 待确认'. Inside window: draggable header with small note line icon, title '快速笔记', right small status '未保存' and close X. Next compact row two clearly labeled dropdowns: '资料库' with selected '工作资料库', and '保存到' selected '收集箱' with folder icon. Next row small template dropdown '模板：空白笔记'. Main area large uncluttered text editor with actual note text '下周产品讨论' then newline '整理用户反馈，优先解决资料查找和归档的问题。' then blank space. Below editor muted hint '仅点击保存时写入本地文件'. Footer row left subtle text button '丢弃', middle dropdown '保存后：关闭窗口', right blue primary button '保存笔记'. Below the window outside chrome a tiny readable note '保存后也可选择：继续记录 / 在主编辑区打开'. This is a design proposal preserving explicit save, discard, close, editable note body, plus proposed target selection and template. No autosave indicator, no cloud sync, no AI features, no extra sidebar, no fake test results. Ensure Chinese typography clear and alignment meticulous. Entire image landscape 3:2.
