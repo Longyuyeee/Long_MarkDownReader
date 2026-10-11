@@ -48,7 +48,7 @@
     </nav>
 
     <main class="table-workspace">
-      <div v-if="loading" class="table-state"><div class="loader"></div><strong>正在解析 CSV/TSV</strong></div>
+      <div v-if="loading" class="table-state"><div class="loader"></div><strong>{{ waitingForSave ? '正在等待上次保存完成…' : '正在加载表格…' }}</strong></div>
       <div v-else-if="error" class="table-state error"><strong>无法打开表格</strong><p>{{ error }}</p><button @click="loadTable">重新加载</button></div>
       <template v-else-if="table">
         <section v-if="activeViewKind === 'board'" class="board-config-bar">
@@ -178,6 +178,7 @@
 
 <script setup lang="ts">
 import { beginWindowSave, recordWindowDraftActivity, useWindowDraft } from '../services/windowDrafts'
+import { hasPendingTableSave, tableSaveKey, tryAcquireTableSave, waitForTableSave } from '../utils/tableSaveOwnership'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -293,6 +294,7 @@ let resizeObserver: ResizeObserver | null = null
 let typeTimer = 0
 let loadGeneration = 0
 let editRevision = 0
+const waitingForSave = ref(false)
 
 const tablePath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
@@ -725,18 +727,28 @@ const toggleCardColumn = (id: string) => {
 
 const loadTable = async () => {
   const generation = ++loadGeneration
+  const requestedPath = tablePath.value
+  const requestedExternal = isExternal.value
   loading.value = true
+  waitingForSave.value = false
   error.value = ''
   dirty.value = false
   notice.value = ''
   try {
     await store.loadConfig()
     if (generation !== loadGeneration) return
-    if (!/(?:\.(csv|tsv)|\.table\.json)$/i.test(tablePath.value)) throw new Error('表格路径无效')
-    if (!isExternal.value && !store.libraryPath) throw new Error('知识库尚未配置')
-    const document = await invoke<TableDocument>(isExternal.value ? 'read_external_table_file' : 'read_table_file', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: tablePath.value,
+    const requestedRoot = store.libraryPath
+    if (!/(?:\.(csv|tsv)|\.table\.json)$/i.test(requestedPath)) throw new Error('表格路径无效')
+    if (!requestedExternal && !requestedRoot) throw new Error('知识库尚未配置')
+    const key = tableSaveKey(requestedRoot, requestedPath, requestedExternal)
+    waitingForSave.value = hasPendingTableSave(key)
+    await waitForTableSave(key)
+    if (generation !== loadGeneration || tablePath.value !== requestedPath
+      || isExternal.value !== requestedExternal || store.libraryPath !== requestedRoot) return
+    waitingForSave.value = false
+    const document = await invoke<TableDocument>(requestedExternal ? 'read_external_table_file' : 'read_table_file', {
+      ...(requestedExternal ? {} : { libraryRoot: requestedRoot }),
+      path: requestedPath,
     })
     if (generation !== loadGeneration) return
     table.value = document
@@ -776,7 +788,7 @@ const loadTable = async () => {
     if (generation !== loadGeneration) return
     table.value = null
     error.value = String(cause).replace(/^Error:\s*/, '')
-  } finally { if (generation === loadGeneration) loading.value = false }
+  } finally { if (generation === loadGeneration) { loading.value = false; waitingForSave.value = false } }
 }
 
 const saveTable = async () => {
@@ -792,6 +804,7 @@ const saveTable = async () => {
   // Reserve the action before awaiting the external-file confirmation.
   saving.value = true
   let finishWindowSave: (() => void) | undefined
+  let releaseSave: (() => void) | undefined
   try {
     if (savedExternal) {
       const confirmed = await new Promise<boolean>(resolve => {
@@ -808,6 +821,8 @@ const saveTable = async () => {
       })
       if (!confirmed || !isCurrent()) return
     }
+    releaseSave = tryAcquireTableSave(tableSaveKey(savedRoot, savedPath, savedExternal))
+    if (!releaseSave) { message.warning('该表格仍在保存，请等待完成后重试'); return }
     captureActiveView()
     const submittedRevision = editRevision
     finishWindowSave = beginWindowSave()
@@ -865,7 +880,10 @@ const saveTable = async () => {
         positiveText: '知道了',
       })
     } else message.error(detail)
-  } finally { saving.value = false; finishWindowSave?.() }
+  } finally {
+    saving.value = false
+    try { finishWindowSave?.() } finally { releaseSave?.() }
+  }
 }
 
 const convertToTable = async () => {

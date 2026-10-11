@@ -32,6 +32,7 @@ export function tableHarness(viewSource) {
     table: box({ signature: 'old', delimiter: ',', encoding: 'utf-8', hasBom: false, lineEnding: 'lf', headers: ['任务'], rows: [['先确认交付日期']], columnTypes: ['text'], columnIds: ['c1'], rowIds: ['r1'] }),
     dirty: box(true), saving: box(false), loading: box(false), isExternal: box(false), tablePath: box(tab.path),
     loadGeneration: 1, editRevision: 1, windowSaves: 0,
+    tableSaveKey: (...parts) => JSON.stringify(parts), tryAcquireTableSave: () => () => {},
     store: { libraryPath: 'isolated', tabs: [tab] }, captureActiveView() {},
     window: { dispatchEvent() {} }, CustomEvent: class { constructor(type, data) { this.type = type; this.detail = data.detail } },
   }

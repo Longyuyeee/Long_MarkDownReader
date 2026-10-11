@@ -9,9 +9,9 @@ import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
 const view = { filter: '', sortDirection: 'asc', frozenColumns: 0, columnWidths: [280, 240], cardColumns: [] }
 const disk = { path: 'tasks.csv', format: 'csv', delimiter: ',', encoding: 'utf-8', hasBom: false, lineEnding: 'lf', signature: 'initial', headers: ['任务', '备注'], rows: [['确认交付日期', '待处理']], columnTypes: ['text', 'text'], columnIds: ['task', 'note'], rowIds: ['r1'], view, views: [{ id: 'grid', name: '表格', kind: 'grid', config: view }], activeView: 'grid' }
-const audit = window.tableAudit = { disk, pending: null, writes: [], failNext: false }
+const audit = window.tableAudit = { disk, pending: null, writes: [], failNext: false, reads: 0 }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
-  if (command === 'read_table_file') return structuredClone(audit.disk)
+  if (command === 'read_table_file') { audit.reads++; return structuredClone(audit.disk) }
   if (command === 'write_table_file') {
     const payload = structuredClone(args.payload)
     audit.writes.push(payload)
@@ -27,10 +27,14 @@ window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
 const pinia = createPinia()
 const store = useAppStore(pinia)
 store.activeLibraryPath = 'isolated'; store.configReady = true
-const router = createRouter({ history: createWebHashHistory(), routes: [{ path: '/table', component: TableView }] })
+const router = createRouter({ history: createWebHashHistory(), routes: [
+  { path: '/table', component: TableView },
+  { path: '/library', component: { render: () => h('button', { onClick: () => router.push('/table?path=tasks.csv') }, '重新打开表格') } },
+] })
 await router.push('/table?path=tasks.csv')
 const app = createApp({ render: () => h(NConfigProvider, {}, { default: () => h(NDialogProvider, {}, { default: () => h(NMessageProvider, {}, { default: () => h(RouterView) }) }) }) })
 app.use(pinia).use(router).mount('#app')
 document.documentElement.dataset.theme = 'white'
 document.body.style.margin = '0'
 document.getElementById('app').style.height = '100vh'
+document.querySelector('.n-config-provider').style.height = '100%'
