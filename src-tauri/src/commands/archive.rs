@@ -45,6 +45,7 @@ pub struct ArchivePreflight {
     can_execute: bool,
     pending_checks: Vec<&'static str>,
     edit_preview: Option<BatchPreview>,
+    window_draft_audit: Option<super::lifecycle::ArchiveDraftAudit>,
 }
 
 fn issue(code: &'static str, message: impl Into<String>) -> ArchiveIssue {
@@ -166,6 +167,7 @@ fn check(
         items: results,
         can_execute: false,
         edit_preview: None,
+        window_draft_audit: None,
         pending_checks: vec![
             "links_and_attachments",
             "history_and_identity",
@@ -186,15 +188,25 @@ pub async fn preflight_archive(
         .app_cache_dir()
         .map_err(|e| e.to_string())?
         .join("history_v2");
-    tauri::async_runtime::spawn_blocking(move || {
+    let before = super::lifecycle::observe_archive_drafts(&app_handle)?;
+    let mut result = tauri::async_runtime::spawn_blocking(move || {
         let mut result = check(&library_root, &target_dir, items)?;
         inspect_histories(&library_root, &cache, &mut result)?;
         inspect_dependencies(&library_root, &mut result)?;
         inspect_edit_preview(&library_root, &mut result);
-        Ok(result)
+        Ok::<_, String>(result)
     })
     .await
-    .map_err(|e| format!("归档预检任务失败: {e}"))?
+    .map_err(|e| format!("归档预检任务失败: {e}"))??;
+    let after = super::lifecycle::observe_archive_drafts(&app_handle)?;
+    let audit = super::lifecycle::audit_archive_drafts(before, after);
+    if let Some(preview) = &mut result.edit_preview {
+        preview
+            .blockers
+            .extend(audit.blockers.iter().map(|s| s.to_string()));
+    }
+    result.window_draft_audit = Some(audit);
+    Ok(result)
 }
 
 fn inspect_dependencies(root: &str, result: &mut ArchivePreflight) -> Result<(), String> {
