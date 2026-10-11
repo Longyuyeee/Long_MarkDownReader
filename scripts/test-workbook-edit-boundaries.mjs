@@ -5,6 +5,32 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('row/column deletion confirmation cannot follow a changed target', async () => {
+  for (const kind of ['row', 'column']) for (const stale of [false, true]) {
+    let current = true, confirm
+    const calls = [], warnings = []
+    const ctx = extract('const applyStructureAction =', 'const restoreTableSelection =', {
+      commitFormulaInput() {}, selectedAxis: box({ kind, start: 1, end: 2 }), workbook: box({}),
+      saving: box(false), updatingStructure: box(false), sheetProtected: box(false), dirtyCount: box(0), MAX_BATCH_CELLS: 1000,
+      captureEditContext: () => () => current, dialog: { warning: options => { confirm = options.onPositiveClick } },
+      message: { warning: value => warnings.push(value), error: value => { throw Error(value) } },
+      commitStructure: (...args) => calls.push(args),
+    }, 'globalThis.action = applyStructureAction')
+    ctx.action({ target: { value: 'delete' } })
+    current = !stale; await confirm()
+    assert.equal(calls.length, stale ? 0 : 1); assert.equal(warnings.length, stale ? 1 : 0)
+    if (!stale) assert.deepEqual(calls[0], [kind, 'delete', 1, 2])
+  }
+})
+test('structure commit rechecks dirty and protected state after confirmation', async () => {
+  for (const state of ['saving', 'updatingStructure', 'dirtyCount', 'sheetProtected']) {
+    const bindings = { isExternal: box(false), workbook: box({}), saving: box(false), updatingStructure: box(false),
+      dirtyCount: box(0), sheetProtected: box(false), message: { error() {} } }
+    bindings[state].value = state === 'dirtyCount' ? 1 : true
+    const ctx = extract('const commitStructure =', 'const applyStructureAction =', bindings, 'globalThis.action = commitStructure')
+    await ctx.action('row', 'delete', 0, 1) // Any write would access an unbound invoke and fail.
+  }
+})
 test('clear confirmations reject changed targets, drafts and busy state', async () => {
   for (const kind of ['print', 'header']) for (const scenario of ['valid', 'target', 'draft', 'busy']) {
     let current = true, confirm, writes = 0

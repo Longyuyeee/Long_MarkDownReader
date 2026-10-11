@@ -2828,7 +2828,9 @@ const restoreAxisSelection = async (sheet: string, axis: 'row' | 'column', index
   await recalculateLoadedFormulas(false)
 }
 const commitStructure = async (axis: 'row' | 'column', action: 'insert' | 'delete', start: number, count: number) => {
-  if (isExternal.value || !workbook.value || updatingStructure.value) return
+  if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
+  if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行列结构')
+  if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   updatingStructure.value = true
   const sheet = activeSheet.value
   try {
@@ -2853,19 +2855,23 @@ const applyStructureAction = (event: Event) => {
   select.value = ''
   commitFormulaInput()
   const axis = selectedAxis.value
-  if (!action || !axis || !workbook.value || updatingStructure.value) return
+  if (!action || !axis || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改行列结构')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
   const count = axis.end - axis.start + 1
   const axisLabel = axis.kind === 'row' ? '行' : '列'
   if (count > MAX_BATCH_CELLS) return void message.error(`单次最多插入或删除 ${MAX_BATCH_CELLS.toLocaleString()} ${axisLabel}`)
   if (action === 'insert') return void commitStructure(axis.kind, action, axis.start, count)
+  const isCurrent = captureEditContext()
   dialog.warning({
     title: `删除 ${count.toLocaleString()} ${axisLabel}？`,
     content: `将删除第 ${axis.start + 1}${count > 1 ? ` 至 ${axis.end + 1}` : ''} ${axisLabel}，并迁移公式、Table、图表和相关工作表结构。不能安全迁移的复杂对象会拒绝事务；此操作保存后不能通过当前撤销栈恢复。`,
     positiveText: `删除${axisLabel}`,
     negativeText: '取消',
-    onPositiveClick: () => commitStructure(axis.kind, action, axis.start, count),
+    onPositiveClick: () => {
+      if (!isCurrent()) { message.warning('编辑状态已变化，请重新确认删除行列'); return }
+      return commitStructure(axis.kind, action, axis.start, count)
+    },
   })
 }
 const restoreTableSelection = async (sheet: string, area: WorkbookMergeRange | null) => {
