@@ -159,6 +159,7 @@ import { searchRanges, wrapSearchIndex } from '../utils/searchLocation'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { runTextSave, waitForTextSave } from '../utils/pendingTextSaves'
+import { beginWindowSave, recordWindowDraftActivity } from '../services/windowDrafts'
 import { basicSetup } from 'codemirror'
 import { autocompletion } from '@codemirror/autocomplete'
 import { undo, redo } from '@codemirror/commands'
@@ -331,6 +332,7 @@ const syncCurrentTab = (isDirty = dirty.value) => {
   tab.textRangeEof = rangeEof.value
   tab.textSize = fileSize.value
   tab.textModified = modified.value
+  recordWindowDraftActivity()
 }
 
 const registerCurrentTab = () => {
@@ -631,6 +633,7 @@ const save = async () => {
     path: savedPath, formatId: format.value.id, content, expectedSignature: signature.value,
     savePolicy: { expectedSignature: signature.value, encoding: saveEncoding.value, bom: saveBom.value, lineEnding: saveLineEnding.value, hasFinalNewline: saveFinalNewline.value },
   }
+  const finishWindowSave = beginWindowSave()
   return runTextSave(savedPath, async () => {
   try {
     const snapshot = await invoke<TextDocumentSnapshot>(command, args)
@@ -680,7 +683,7 @@ const save = async () => {
   } finally {
     saving.value = false
   }
-  })
+  }).finally(finishWindowSave)
 }
 
 const reloadCurrentEncoding = async () => {

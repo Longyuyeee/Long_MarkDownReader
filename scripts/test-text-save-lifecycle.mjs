@@ -12,6 +12,7 @@ function harness(viewSource = source) {
   const reply = new Promise((a, b) => { resolve = a; reject = b })
   const tab = { path: 'meeting.txt', content: '客户确认周五交付', isDirty: true, textSaveEncoding: 'utf-8', textSaveBom: 'none', textSaveLineEnding: 'lf', textSaveFinalNewline: false }
   const errors = [], applied = []
+  let windowSaves = 0
   const box = value => ({ value })
   const ctx = vm.createContext({
     editor: { state: { doc: { toString: () => tab.content } } }, loadGeneration: 1,
@@ -21,13 +22,14 @@ function harness(viewSource = source) {
     fileSize: box(0), modified: box(0), sourceEncoding: box('utf-8'),
     invoke: () => reply, applySnapshot: snapshot => applied.push(snapshot), syncCurrentTab: () => {},
     message: { success() {}, error: e => errors.push(e) }, dialog: { warning: e => errors.push(e) }, errorMessage: e => e.message,
+    beginWindowSave: () => { windowSaves++; return () => { windowSaves-- } },
   })
   const start = viewSource.indexOf('const save = async () => {')
   const end = viewSource.indexOf('const reloadCurrentEncoding', start)
   assert.ok(start > 0 && end > start)
   const script = helper + '\n' + viewSource.slice(start, end) + '\nglobalThis.saveAction = save; globalThis.waitAction = waitForTextSave;'
   vm.runInContext(ts.transpileModule(script, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, ctx)
-  return { ctx, tab, errors, applied, resolve, reject, snapshot: { content: tab.content, signature: 'new', size: 30, modified: 123 } }
+  return { ctx, tab, errors, applied, resolve, reject, windowSaves: () => windowSaves, snapshot: { content: tab.content, signature: 'new', size: 30, modified: 123 } }
 }
 test('original frozen candidate reproduces null-state save error after navigation', async () => {
   const old = execFileSync('git', ['show', 'ada0cd607ae64b03c7f8786cef68f7326a5a8663:src/views/TextEditorView.vue'], { encoding: 'utf8' })
@@ -68,4 +70,18 @@ test('load waits before draft restoration and unmount invalidates pending loads'
   const load = source.slice(source.indexOf('const load = async'), source.indexOf('const loadNextRange'))
   assert.ok(load.indexOf('await waitForTextSave(requestedPath)') < load.indexOf('const draft = currentTab.value'))
   assert.match(source, /onBeforeUnmount\(\(\) => \{\s*\+\+loadGeneration/)
+})
+
+test('window save guard spans queued write and survives destroyed editor until receipt', async () => {
+  const h = harness(); const saving = h.ctx.saveAction()
+  assert.equal(h.windowSaves(), 1)
+  h.ctx.editor = null; h.ctx.loadGeneration++
+  await Promise.resolve(); assert.equal(h.windowSaves(), 1)
+  h.resolve(h.snapshot); await saving; assert.equal(h.windowSaves(), 0)
+})
+
+test('failed native write releases window save guard without discarding dirty draft', async () => {
+  const h = harness(); const saving = h.ctx.saveAction()
+  h.reject(new Error('模拟保存失败')); await saving
+  assert.equal(h.windowSaves(), 0); assert.equal(h.tab.isDirty, true)
 })
