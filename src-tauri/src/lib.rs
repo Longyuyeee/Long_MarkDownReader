@@ -325,6 +325,13 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+            #[cfg(debug_assertions)]
+            if std::env::var_os("LONGEDIT_E2E_LIBRARY").is_some()
+                && std::env::var_os("LONGEDIT_E2E_CONFIG_DIR").is_some()
+                && std::env::var("LONGEDIT_E2E_QUICK_NOTE").as_deref() == Ok("1")
+            {
+                commands::quick_note::open_quick_note_window(app.handle().clone())?;
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

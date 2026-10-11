@@ -88,7 +88,8 @@ import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { openManagedFile } from './services/fileNavigation'
-import { windowDraftCount } from './services/windowDrafts'
+import { windowDraftCount, windowDraftActivity } from './services/windowDrafts'
+import { createSerialDraftReporter } from './utils/serialDraftReports'
 import { isTauriRuntime } from './services/tauriRuntime'
 
 const osTheme = useOsTheme()
@@ -431,12 +432,13 @@ const handleExit = async () => {
 const hasUnsavedChanges = computed(() => store.tabs.some(tab => tab.isDirty) || store.isTempDirty || windowDraftCount.value > 0)
 let draftSession: string | null = null
 let draftSequence = 0
+const sendDraftReport = createSerialDraftReporter(report => invoke<void>('report_window_draft_session', { ...report }))
 const reportDraftState = async (dirty: boolean) => {
   if (!draftSession || lifecycleDisposed) return
   if (draftSequence >= 0xffffffff) throw new Error('窗口状态序号已耗尽，请保留草稿并重新打开窗口')
-  await invoke('report_window_draft_session', { session: draftSession, sequence: ++draftSequence, dirty })
+  await sendDraftReport({ session: draftSession, sequence: ++draftSequence, dirty })
 }
-watch(hasUnsavedChanges, dirty => {
+watch([hasUnsavedChanges, windowDraftActivity], ([dirty]) => {
   if (appWindow && lifecycleReady) void reportDraftState(dirty).catch(error => {
     routeErrorMessage.value = `无法同步未保存状态：${String(error)}`
   })

@@ -22,6 +22,7 @@ import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
 import { NOTE_TEMPLATES } from '../config/noteTemplates'
 import { inboxDirectory, rememberedCaptureTarget } from '../utils/inboxDirectory'
+import { recordWindowDraftActivity } from '../services/windowDrafts'
 
 const store = useAppStore(), message = useMessage()
 const content = ref(''), library = ref(''), target = ref(''), template = ref('空白笔记')
@@ -45,6 +46,7 @@ watch(library, root => {
 watch([content, busy], ([value, active]) => {
   store.isTempDirty = value.length > 0 || active
   store.isCaptureBusy = active
+  recordWindowDraftActivity()
 }, { flush: 'sync' })
 onUnmounted(() => { disposed = true; store.isTempDirty = false; store.isCaptureBusy = false; stopInboxUpdates?.() })
 const applyPendingInbox = () => {
