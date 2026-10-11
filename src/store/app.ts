@@ -11,6 +11,7 @@ import {
 } from '../config/themePresets'
 import { toCollectionRelativePath } from '../utils/savedCollections'
 import type { FileDisplayStyle } from '../config/fileTreeAppearance'
+import { belongsToLibrary, libraryTabsKey, sessionTabs } from '../utils/workSessions'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
@@ -236,12 +237,15 @@ export const useAppStore = defineStore('app', {
         const applied = { ...snapshot }
         if (snapshot.libraries !== undefined) applied.savedSearches = next.savedSearches
         if (switchesLibrary) {
+          this.saveTabsState()
           applied.tabs = []
+          applied.recentFiles = []
+          applied.starredFiles = []
           applied.activeTabId = null
           applied.relationObjectFocus = null
         }
         this.$patch(applied)
-        if (switchesLibrary) this.clearTabsState()
+        if (switchesLibrary) this.restoreTabsState()
         if (!isTauriRuntime()) this.saveTabsState()
       })
       configWritePromise = task.catch(() => {})
@@ -433,6 +437,7 @@ export const useAppStore = defineStore('app', {
       return this.starredFiles.includes(path)
     },
     saveTabsState() {
+      if (!this.activeLibraryPath) return
       try {
         const persistentTabs = this.tabs
           .filter(tab => !tab.external)
@@ -451,32 +456,31 @@ export const useAppStore = defineStore('app', {
           recentFiles: this.recentFiles,
           starredFiles: this.starredFiles
         }
-        localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(state))
+        localStorage.setItem(libraryTabsKey(this.activeLibraryPath), JSON.stringify(state))
       } catch (e) { /* storage full or unavailable */ }
     },
     restoreTabsState() {
       try {
-        const raw = localStorage.getItem(TABS_STORAGE_KEY)
+        if (!this.activeLibraryPath) return
+        const raw = localStorage.getItem(libraryTabsKey(this.activeLibraryPath)) || localStorage.getItem(TABS_STORAGE_KEY)
         if (!raw) return
         const state = JSON.parse(raw)
         if (state.tabs && Array.isArray(state.tabs)) {
-          this.tabs = state.tabs
-            .filter((tab: any) => tab.path && !tab.external)
-            .map((tab: any) => ({ ...tab, isDirty: false }))
+          this.tabs = sessionTabs(this.activeLibraryPath, state.tabs)
           this.activeTabId = this.tabs.some(tab => tab.id === state.activeTabId)
             ? state.activeTabId
             : (this.tabs[0]?.id || null)
         }
         if (state.recentFiles && Array.isArray(state.recentFiles)) {
-          this.recentFiles = state.recentFiles
+          this.recentFiles = state.recentFiles.filter((file: any) => file && belongsToLibrary(this.activeLibraryPath, file.path))
         }
         if (state.starredFiles && Array.isArray(state.starredFiles)) {
-          this.starredFiles = state.starredFiles
+          this.starredFiles = state.starredFiles.filter((path: unknown) => belongsToLibrary(this.activeLibraryPath, path))
         }
-      } catch (e) { localStorage.removeItem(TABS_STORAGE_KEY) }
+      } catch (e) { /* Preserve unreadable records for recovery; never erase them on load. */ }
     },
     clearTabsState() {
-      try { localStorage.removeItem(TABS_STORAGE_KEY) } catch (e) {}
+      try { localStorage.removeItem(libraryTabsKey(this.activeLibraryPath)) } catch (e) {}
     }
   }
 })

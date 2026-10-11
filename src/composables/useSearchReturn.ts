@@ -3,6 +3,14 @@ import { nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 interface SearchSession { query: string; types: string[]; selected: string; scroll: number }
 // Only the current app session; no stale results or document text are persisted.
 const sessions = new Map<string, SearchSession>()
+export const snapshotSearchSession = (root: string) => {
+  const session = sessions.get(root)
+  return session ? { ...session, types: [...session.types] } : undefined
+}
+export const restoreSearchSession = (root: string, session?: SearchSession) => {
+  if (!session) { sessions.delete(root); return }
+  sessions.set(root, { query: String(session.query || '').slice(0, 500), types: Array.isArray(session.types) ? session.types.filter(type => typeof type === 'string').slice(0, 8) : [], selected: '', scroll: 0 })
+}
 export function useSearchReturn(options: {
   root: () => string; query: Ref<string>; types: Ref<string[]>;
   running: Ref<boolean>; failed: Ref<boolean>; resultKeys: () => string[];

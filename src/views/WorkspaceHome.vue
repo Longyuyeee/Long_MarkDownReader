@@ -37,6 +37,7 @@
         </div>
       </section>
 
+      <WorkSessionBar />
       <WorkspaceStateNotice v-if="loading" class="workspace-loading" kind="loading" tone="info" compact data-testid="m2-closure-loading" title="正在准备工作台"><span>正在读取最近文件和待办，完成后会自动更新。</span></WorkspaceStateNotice>
       <WorkspaceStateNotice v-if="error" class="workspace-alert" kind="error" tone="danger" compact><template #icon><AlertIcon /></template><span>{{ error }}</span><template #action><button @click="loadWorkspace">重试</button></template></WorkspaceStateNotice>
 
@@ -153,6 +154,7 @@ import { openManagedFile, openManagedObject } from '../services/fileNavigation'
 import RelationSummaryBadge, { type GraphRelationSummary } from '../components/RelationSummaryBadge.vue'
 import WorkspaceHealthQueue, { type WorkspaceAnnotationIssue, type WorkspaceGraphHealth, type WorkspaceHealthReport, type WorkspaceIndexStatus } from '../components/WorkspaceHealthQueue.vue'
 import WorkspaceEmptyState from '../components/workspace/WorkspaceEmptyState.vue'
+import WorkSessionBar from '../components/WorkSessionBar.vue'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import WorkspaceSegmentedControl from '../components/workspace/WorkspaceSegmentedControl.vue'

@@ -17,7 +17,7 @@ function setup() {
   })
   vm.runInContext(ts.transpile('let configWritePromise = Promise.resolve(); globalThis.action = ({' + method + '}).updateConfig;', { target: ts.ScriptTarget.ES2022 }), ctx)
   const store = { activeLibraryPath: 'A', tabs: [{ path: 'A/note.md', isDirty: true, content: '未保存正文' }], activeTabId: 'A/note.md', relationObjectFocus: { path: 'A/note.md' }, libraries: [{ path: 'A' }, { path: 'B' }], savedSearches: [], theme: 'white', isAutostart: false, cleared: 0,
-    get $state() { return this }, $patch(patch) { Object.assign(this, patch) }, clearTabsState() { this.cleared++ }, saveTabsState() {},
+    get $state() { return this }, $patch(patch) { Object.assign(this, patch) }, clearTabsState() { this.cleared++ }, saveTabsState() {}, restoreTabsState() {},
   }
   return { store, pending, autostart, update: patch => ctx.action.call(store, patch) }
 }
@@ -29,7 +29,7 @@ test('failed library persistence preserves tabs, drafts, active path and persist
   await assert.rejects(writing, /disk full/)
   assert.equal(x.store.activeLibraryPath, 'A'); assert.equal(x.store.tabs[0].content, '未保存正文'); assert.equal(x.store.cleared, 0)
   const retry = x.update({ activeLibraryPath: 'B' }); await tick(); x.pending[1].resolve(); await retry
-  assert.equal(x.store.activeLibraryPath, 'B'); assert.equal(x.store.tabs.length, 0); assert.equal(x.store.cleared, 1)
+  assert.equal(x.store.activeLibraryPath, 'B'); assert.equal(x.store.tabs.length, 0); assert.equal(x.store.cleared, 0)
 })
 test('config snapshots are immutable and writes are ordered, failures do not poison queue', async () => {
   const x = setup(), patch = { theme: 'dark' }
