@@ -1,158 +1,123 @@
 <template>
   <div class="quick-note-window">
-    <div class="quick-header" data-tauri-drag-region>
-      <div class="title">快速笔记 (存入 Inbox)</div>
-      <div class="close-btn" @click="close">✕</div>
+    <header data-tauri-drag-region><strong>快速笔记</strong><span>{{ saving ? '正在保存…' : content ? '未保存' : '空白笔记' }}</span><button aria-label="关闭快速笔记" :disabled="busy" @click="close">×</button></header>
+    <div class="capture-toolbar">
+      <label :title="library">资料库<select v-model="library" :disabled="busy || !ready" aria-label="资料库"><option value="" disabled>请选择</option><option v-for="item in store.libraries" :key="item.path" :value="item.path">{{ item.name }}</option></select></label>
+      <label :title="target">保存到<select :value="target" :disabled="busy || !library" aria-label="保存到" @change="selectTarget"><option :value="inbox">收集箱</option><option :value="library">根目录</option><option v-if="target && target !== inbox && target !== library" :value="target">{{ target }}</option><option value="__choose">选择目录…</option></select></label>
+      <label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-for="name in Object.keys(NOTE_TEMPLATES)" :key="name">{{ name }}</option></select></label>
     </div>
-    <div class="quick-content">
-      <n-input
-        v-model:value="content"
-        :disabled="saving"
-        type="textarea"
-        placeholder="写下这一刻的灵感..."
-        autofocus
-        class="note-input"
-      />
-    </div>
-    <div class="quick-footer">
-      <n-button size="small" quaternary @click="close">丢弃</n-button>
-      <n-button size="small" type="primary" :loading="saving" @click="save">立即存入文件库</n-button>
-    </div>
+    <main><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></main>
+    <p role="status">{{ status || '仅点击保存时写入本地文件' }}</p>
+    <footer><n-button size="small" quaternary :disabled="busy" @click="close">丢弃</n-button><label class="after-save">保存后<select v-model="afterSave" :disabled="busy" aria-label="保存后操作"><option value="close">关闭窗口</option><option value="continue">继续记录</option><option value="open">主编辑区打开</option></select></label><n-button size="small" type="primary" :loading="saving" :disabled="(busy && !saving) || !ready" @click="save">保存笔记</n-button></footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
-import { emit } from '@tauri-apps/api/event'
+import { emit, emitTo, listen } from '@tauri-apps/api/event'
+import { confirm, open } from '@tauri-apps/plugin-dialog'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
+import { NOTE_TEMPLATES } from '../config/noteTemplates'
 
-const content = ref('')
-const saving = ref(false)
-const message = useMessage()
-const store = useAppStore()
-
-onMounted(async () => {
-  await store.loadConfig()
+const store = useAppStore(), message = useMessage()
+const content = ref(''), library = ref(''), target = ref(''), template = ref('空白笔记')
+const afterSave = ref('close'), status = ref('')
+const saving = ref(false), choosing = ref(false), ready = ref(false)
+const busy = computed(() => saving.value || choosing.value)
+const editor = ref<HTMLTextAreaElement>()
+const inbox = computed(() => library.value.replace(/[\\/]$/, '') + '/Inbox')
+const preferenceKey = (root: string) => 'longedit.quick-note.target:' + root
+watch(library, root => {
+  try { target.value = localStorage.getItem(preferenceKey(root)) || inbox.value }
+  catch { target.value = inbox.value }
 })
-
 watch(content, value => { store.isTempDirty = value.length > 0 }, { flush: 'sync' })
 onUnmounted(() => { store.isTempDirty = false })
-
-const close = async () => {
-  if (saving.value) return
-  await getCurrentWindow().close()
-}
-
-const save = async () => {
-  if (saving.value) return
-  if (!content.value.trim()) { message.warning('请输入内容'); return }
-  saving.value = true
+onMounted(async () => {
+  try { await store.loadConfig(); library.value = store.activeLibraryPath; ready.value = true; await nextTick(); editor.value?.focus() }
+  catch (error) { status.value = '读取资料库失败：' + String(error) }
+})
+const close = async () => { if (!busy.value) await getCurrentWindow().close() }
+const selectTarget = async (event: Event) => {
+  const select = event.target as HTMLSelectElement, value = select.value
+  select.value = target.value
+  if (value !== '__choose') { target.value = value; return }
+  choosing.value = true
   try {
-    const libPath = store.activeLibraryPath
-    if (!libPath) {
-      message.error('未检测到活跃文件库路径')
-      return
+    const result = await open({ directory: true, multiple: false, defaultPath: library.value, title: '选择当前资料库内的目录' })
+    if (typeof result === 'string') {
+      await invoke('scan_directory', { libraryRoot: library.value, path: result })
+      target.value = result
     }
-    
-    // 生成格式：快速笔记_20260304_153022
-    const now = new Date()
-    const timestamp = now.getFullYear() + 
-      String(now.getMonth() + 1).padStart(2, '0') + 
-      String(now.getDate()).padStart(2, '0') + "_" +
-      String(now.getHours()).padStart(2, '0') + 
-      String(now.getMinutes()).padStart(2, '0') + 
-      String(now.getSeconds()).padStart(2, '0')
-    
-    const prefix = `快速笔记_${timestamp}`
-    
-    const filePath = await invoke<string>('create_new_file', { libraryRoot: libPath, prefix })
-    await invoke('write_markdown_file', { libraryRoot: libPath, path: filePath, content: content.value })
-    
-    content.value = ''
-    // 发送全局刷新事件
+  } catch (error) { message.error('无法选择目录：' + String(error)) }
+  finally { choosing.value = false }
+}
+const selectTemplate = async (event: Event) => {
+  const select = event.target as HTMLSelectElement, name = select.value
+  select.value = template.value
+  choosing.value = true
+  try {
+    if (content.value && !await confirm('应用模板会替换当前未保存内容，是否继续？', { title: '替换笔记内容', kind: 'warning' })) return
+    template.value = name; content.value = NOTE_TEMPLATES[name] || ''
+  } catch (error) { message.error('应用模板失败：' + String(error)) }
+  finally { choosing.value = false; await nextTick(); editor.value?.focus() }
+}
+const openInMain = async (path: string, root: string) => {
+  const requestId = crypto.randomUUID()
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let resolve!: (error?: string) => void
+  const response = new Promise<string | undefined>(r => { resolve = r })
+  const unlisten = await listen<{ requestId: string; error?: string }>('quick-note-open-result', event => {
+    if (event.payload.requestId === requestId) resolve(event.payload.error)
+  })
+  try {
+    timer = setTimeout(() => resolve('主窗口未响应，请在资料库中打开已保存文件'), 5000)
+    await emitTo('main', 'quick-note-open', { requestId, path, libraryRoot: root })
+    const error = await response
+    if (error) throw new Error(error)
+  } finally { clearTimeout(timer); unlisten() }
+}
+const save = async () => {
+  if (busy.value) return
+  if (!content.value.trim()) { message.warning('请输入内容'); return }
+  if (!library.value || !store.libraries.some(item => item.path === library.value)) { message.error('请选择有效资料库'); return }
+  saving.value = true
+  let savedPath = ''
+  try {
+    savedPath = await invoke<string>('create_format_file', {
+      libraryRoot: library.value, targetDir: target.value, formatId: 'markdown',
+      prefix: '快速笔记_' + new Date().toISOString().replace(/[:.]/g, '-') + '_' + crypto.randomUUID().slice(0, 8),
+      content: content.value,
+    })
+  } catch (error) { status.value = '保存失败，输入已保留：' + String(error); saving.value = false; return }
+  content.value = ''; template.value = '空白笔记'
+  status.value = '已保存：' + savedPath
+  try { localStorage.setItem(preferenceKey(library.value), target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
+  try {
     await emit('refresh-library')
-    
-    message.success('已保存并同步')
-    saving.value = false
-    await close()
-  } catch (err) {
-    message.error('保存失败: ' + err)
-  } finally {
-    saving.value = false
-  }
+    if (afterSave.value === 'open') await openInMain(savedPath, library.value)
+    if (afterSave.value !== 'continue') { saving.value = false; await close() }
+  } catch (error) { status.value = '文件已保存，无需重存。后续操作失败：' + String(error) + '。文件：' + savedPath }
+  finally { saving.value = false; await nextTick(); editor.value?.focus() }
 }
 </script>
 
 <style scoped>
-.quick-note-window {
-  height: 100vh;
-  background: var(--theme-bg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.quick-header {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  background: var(--theme-card);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  cursor: move;
-}
-
-.title { font-size: 13px; font-weight: 700; color: var(--theme-primary); }
-.close-btn { cursor: pointer; opacity: 0.6; font-size: 14px; transition: all 0.2s; }
-.close-btn:hover { opacity: 1; color: #ff3b30; }
-
-.quick-content {
-  flex: 1;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* 核心：允许 flex 子项缩小到小于内容高度 */
-}
-
-.note-input {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: transparent !important;
-  --n-border: none !important;
-  --n-border-hover: none !important;
-  --n-border-focus: none !important;
-  --n-box-shadow-focus: none !important;
-}
-
-:deep(.n-input__textarea-el) {
-  padding: 0 !important;
-  font-size: 14px !important;
-  line-height: 1.6 !important;
-  color: var(--theme-text) !important;
-}
-
-:deep(.n-input-wrapper) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.n-input__textarea) {
-  flex: 1;
-}
-
-.quick-footer {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  background: var(--theme-card);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  flex-shrink: 0; /* 核心：禁止页脚被挤出 */
-}
+.quick-note-window { height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+header { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 14px; background: var(--theme-card); cursor: move; flex-shrink: 0; }
+header strong { font-size: 14px; } header span { margin-left: auto; color: var(--theme-text-secondary); font-size: 12px; }
+header button { border: 0; background: transparent; color: inherit; font-size: 22px; width: 28px; height: 28px; cursor: pointer; }
+.capture-toolbar { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 7px; padding: 7px 12px; flex-shrink: 0; }
+label { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 12px; white-space: nowrap; }
+select { min-width: 0; width: 100%; height: 30px; padding: 0 3px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 4px; background: var(--theme-card); color: var(--theme-text); font: inherit; text-overflow: ellipsis; }
+main { flex: 1; min-height: 0; display: flex; padding: 0 12px; }
+textarea { width: 100%; min-height: 0; resize: none; box-sizing: border-box; padding: 12px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 4px; background: var(--theme-bg); color: var(--theme-text); font: inherit; font-size: 14px; line-height: 1.65; }
+p { flex-shrink: 0; font-size: 12px; color: var(--theme-text-secondary); margin: 5px 12px; max-height: 3.5em; overflow: auto; overflow-wrap: anywhere; }
+footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; flex-shrink: 0; background: var(--theme-card); }
+.after-save { margin-left: auto; } .after-save select { width: 116px; }
+button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
+@media (max-width: 450px) { .capture-toolbar { grid-template-columns: 1fr 1fr; } .capture-toolbar label:last-child { grid-column: 1 / -1; } }
 </style>

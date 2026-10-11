@@ -307,7 +307,7 @@ pub fn run() {
                             tauri::WebviewUrl::App("#/quick-note".into()),
                         )
                         .title("快速笔记")
-                        .inner_size(400.0, 300.0)
+                        .inner_size(560.0, 460.0)
                         .always_on_top(true)
                         .decorations(false)
                         .transparent(true)

@@ -80,7 +80,7 @@ import { darkTheme, useOsTheme, GlobalThemeOverrides } from 'naive-ui'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
-import { emit, type UnlistenFn } from '@tauri-apps/api/event'
+import { emit, emitTo, type UnlistenFn } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
 import AppUpdater from './components/AppUpdater.vue'
@@ -446,6 +446,23 @@ onMounted(async () => {
   window.addEventListener('beforeunload', handleBeforeUnload)
   try {
     if (appWindow) {
+      if (isMainWindow) {
+        const unlisten = await appWindow.listen<{ requestId: string; path: string; libraryRoot: string }>('quick-note-open', async event => {
+          const { requestId, path, libraryRoot } = event.payload
+          let error: string | undefined
+          try {
+            if (libraryRoot !== store.activeLibraryPath) throw new Error('文件已存入所选资料库。请先在主窗口切换到该库后打开，当前工作区未被切换')
+            await invoke('read_markdown_file', { libraryRoot, path })
+            const failure = await openManagedFile(router, path)
+            if (failure) throw new Error('主窗口未完成导航，已保存文件仍保留')
+            await appWindow?.show()
+            await appWindow?.setFocus()
+          } catch (cause) { error = String(cause) }
+          await emitTo('quick-note', 'quick-note-open-result', { requestId, error })
+        })
+        if (lifecycleDisposed) unlisten()
+        else lifecycleUnlisteners.push(unlisten)
+      }
       for (const [event, handler] of [['request-window-close', closeWindow], ['request-app-exit', handleExit]] as const) {
         const unlisten = await appWindow.listen(event, () => { void handler() })
         if (lifecycleDisposed) unlisten()

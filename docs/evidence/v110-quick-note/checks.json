@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "three selectors share one row at 560px",
+    "empty note does not create Inbox",
+    "one real note in Inbox",
+    "saved Chinese content matches",
+    "continue clears successfully saved body",
+    "existing meeting template reused",
+    "second note does not overwrite first",
+    "write failure preserves body",
+    "failure clearly reported",
+    "retry after target repair creates exactly one more note",
+    "narrow footer stays visible"
+  ],
+  "scope": "No tray creation, close confirmation, native directory picker or main-window handoff verified"
+}
