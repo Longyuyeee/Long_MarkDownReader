@@ -334,7 +334,7 @@
                 </div>
                 
                 <div v-else class="history-bubbles-wrapper">
-                  <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" @click="restoreHistory(h)">
+                  <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" role="button" tabindex="0" title="比较此历史版本" @click="restoreHistory(h)" @keydown.enter.self.prevent="restoreHistory(h)" @keydown.space.self.prevent="restoreHistory(h)">
                     <div class="bubble-accent-line"></div>
                     <div class="bubble-content">
                       <div class="bubble-top">
@@ -773,6 +773,7 @@
         <n-button quaternary @click="copyAIResult">复制结果</n-button>
       </template>
     </n-modal>
+    <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" />
   </div>
 </template>
 
@@ -802,6 +803,8 @@ import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import SmartCollectionPanel from '../components/SmartCollectionPanel.vue'
+import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
+import { confirmAppAction } from '../services/appDialog'
 import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
@@ -2009,6 +2012,12 @@ const handleExport = async (key: string) => {
 }
 interface HistoryEntry { timestamp: number; content: string; path: string; libraryRoot: string }
 const historyList = ref<HistoryEntry[]>([])
+interface HistoryComparison { entry: HistoryEntry; draft: string; content: string; disk: string; diskSignature: string; historySignature: string }
+const historyComparison = ref<HistoryComparison | null>(null)
+const historyActionBusy = ref(false), historyActionError = ref('')
+let comparisonGeneration = 0
+const closeHistoryComparison = () => { ++comparisonGeneration; historyComparison.value = null; historyActionError.value = '' }
+watch([activeTabId, () => store.libraryPath], closeHistoryComparison, { flush: 'sync' })
 let historyGeneration = 0
 const invalidateHistory = () => { ++historyGeneration; historyList.value = [] }
 watch([activeTabId, () => store.libraryPath], invalidateHistory, { flush: 'sync' })
@@ -2072,18 +2081,60 @@ const fetchHistory = async () => {
 
 const ownsHistoryEntry = (entry: HistoryEntry) => historyList.value.includes(entry)
   && entry.path === activeTabId.value && entry.libraryRoot === store.libraryPath
-const restoreHistory = (entry: HistoryEntry) => {
+const restoreHistory = async (entry: HistoryEntry) => {
   if (!ownsHistoryEntry(entry) || !vditor || !isVditorReady || lastLoadedPath !== entry.path
     || !activeFormatCanEdit.value || hasPendingMainTextSave(entry.path)) {
     message.warning('文件已切换或正在读写，请等待当前文件就绪后重试')
     return
   }
-  vditor.setValue(entry.content)
+  closeHistoryComparison()
+  const generation = comparisonGeneration, draft = vditor.getValue()
+  try {
+    const comparison = await invoke<Omit<HistoryComparison, 'entry' | 'draft'>>('compare_history_version', { libraryRoot: entry.libraryRoot, path: entry.path, timestamp: entry.timestamp })
+    if (generation !== comparisonGeneration || !ownsHistoryEntry(entry)) return
+    historyComparison.value = { ...comparison, entry, draft }
+  } catch (error) { if (generation === comparisonGeneration) message.error(`历史比较失败：${String(error)}`) }
+}
+const recoverHistory = async (mode: 'copy' | 'replace') => {
+  const comparison = historyComparison.value
+  if (!comparison || historyActionBusy.value) return
+  const { entry } = comparison
+  const current = () => historyComparison.value === comparison && ownsHistoryEntry(entry)
+    && vditor && isVditorReady && lastLoadedPath === entry.path && activeFormatCanEdit.value
+    && !hasPendingMainTextSave(entry.path) && vditor.getValue() === comparison.draft
+  if (!current()) { historyActionError.value = '文件或草稿已变化，请关闭后重新比较'; return }
+  historyActionBusy.value = true; historyActionError.value = ''
+  try {
+    if (mode === 'replace' && !await confirmAppAction(dialog, {
+      title: '替换当前编辑区？', content: '会先将当前草稿保存为历史快照，再载入所选历史版本。不会自动覆盖磁盘文件。',
+      positiveText: '保护草稿并替换', negativeText: '取消',
+    })) return
+    if (!current()) { if (historyComparison.value === comparison) historyActionError.value = '文件或草稿已变化，请重新比较'; return }
+    const args = { libraryRoot: entry.libraryRoot, path: entry.path, timestamp: entry.timestamp, diskSignature: comparison.diskSignature, historySignature: comparison.historySignature }
+    if (mode === 'copy') {
+      const path = await invoke<string>('restore_history_copy', args)
+      if (!current()) { message.info(`恢复副本已创建：${path}；当前工作现场未切换`); return }
+      closeHistoryComparison()
+      await refreshLibrary()
+      if (store.libraryPath === entry.libraryRoot && activeTabId.value === entry.path) openManagedFile(router, path)
+      message.success('历史副本已创建，原文件和草稿未覆盖')
+    } else {
+      const content = await invoke<string>('prepare_history_restore', { ...args, currentDraft: comparison.draft, maxCount: store.maxHistoryCount })
+      if (!current()) { if (historyComparison.value === comparison) historyActionError.value = '草稿已保护，但当前内容已变化，未替换；请重新比较'; return }
+      applyHistoryContent(entry, content)
+      closeHistoryComparison()
+      void fetchHistory()
+    }
+  } catch (error) { if (historyComparison.value === comparison) historyActionError.value = `恢复失败：${String(error)}` }
+  finally { historyActionBusy.value = false }
+}
+const applyHistoryContent = (entry: HistoryEntry, content: string) => {
+  vditor.setValue(content)
   // Programmatic Vditor updates do not reliably emit its input callback.
-  store.updateTabContent(entry.path, entry.content)
+  store.updateTabContent(entry.path, content)
   const tab = tabs.value.find(item => item.path === entry.path)
   if (tab) tab.isDirty = true
-  wordCount.value = entry.content.length
+  wordCount.value = content.length
   message.success('历史内容已载入编辑区，尚未保存到文件')
 }
 const deleteHistory = async (entry: HistoryEntry) => {
@@ -3660,6 +3711,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  closeHistoryComparison()
   invalidateHistory()
   document.removeEventListener('selectionchange', rememberReferenceInsertionPoint)
   ++knowledgeSearchGeneration

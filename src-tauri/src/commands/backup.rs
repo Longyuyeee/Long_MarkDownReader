@@ -841,6 +841,30 @@ mod tests {
     }
 
     #[test]
+    fn smart_collection_filters_survive_management_backup_mapping() {
+        let config = AppConfig {
+            libraries: vec![LibraryConfig { name: "Vault".into(), path: "C:\\Vault".into(), ..Default::default() }],
+            saved_searches: vec![SavedSearchConfig {
+                id: "collection-1".into(), name: "本周项目".into(), library_path: "C:\\Vault".into(),
+                filters: Some(crate::services::smart_collection::CollectionFilters {
+                    directory: "项目/设计".into(), tag: "项目".into(), modified_within_days: Some(7),
+                }), ..Default::default()
+            }], ..Default::default()
+        };
+        let redacted = redacted_config(&config);
+        let encoded = serde_json::to_string(&redacted).unwrap();
+        let decoded = serde_json::from_str(&encoded).unwrap();
+        let restored = restored_config_from_redacted(&decoded, vec![LibraryPathMapping {
+            path_fingerprint: fingerprint("C:\\Vault"), path: "D:\\Vault".into(),
+        }]).unwrap().0;
+        assert_eq!(restored.saved_searches[0].library_path, "D:\\Vault");
+        let filters = restored.saved_searches[0].filters.as_ref().unwrap();
+        assert_eq!(filters.directory, "项目/设计");
+        assert_eq!(filters.tag, "项目");
+        assert_eq!(filters.modified_within_days, Some(7));
+    }
+
+    #[test]
     fn management_backup_import_rejects_unexpected_zip_member() {
         let config = AppConfig::default();
         let (bytes, _) = build_management_backup_archive(&config, 100).unwrap();

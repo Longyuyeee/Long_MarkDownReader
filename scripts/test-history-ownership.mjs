@@ -9,13 +9,15 @@ function setup() {
   const requests = [], values = [], messages = []
   const ctx = vm.createContext({
     historyGeneration: 0, historyList: { value: [] }, activeTabId: { value: 'A' }, store: { libraryPath: 'root', updateTabContent: () => {} }, wordCount: { value: 0 },
-    vditor: { setValue: value => values.push(value) }, isVditorReady: true, lastLoadedPath: 'A', tabs: { value: [{ path: 'A', isDirty: false }] },
+    vditor: { setValue: value => values.push(value), getValue: () => '当前草稿' }, isVditorReady: true, lastLoadedPath: 'A', tabs: { value: [{ path: 'A', isDirty: false }] },
+    historyComparison: { value: null }, historyActionBusy: { value: false }, historyActionError: { value: '' }, comparisonGeneration: 0,
+    closeHistoryComparison: () => { ctx.comparisonGeneration++; ctx.historyComparison.value = null }, confirmAppAction: async () => true,
     activeFormatCanEdit: { value: true }, hasPendingMainTextSave: () => false,
     message: Object.fromEntries(['error', 'success', 'warning'].map(type => [type, value => messages.push({ type, value })])),
     invoke: (command, args) => new Promise((resolve, reject) => requests.push({ command, args, resolve, reject })),
     dialog: {},
   })
-  vm.runInContext(ts.transpile(code + '\nglobalThis.actions = { fetchHistory, restoreHistory, deleteHistory }', { target: ts.ScriptTarget.ES2022 }), ctx)
+  vm.runInContext(ts.transpile(code + '\nglobalThis.actions = { fetchHistory, restoreHistory, recoverHistory, deleteHistory }', { target: ts.ScriptTarget.ES2022 }), ctx)
   return { ctx, requests, values, messages, ...ctx.actions }
 }
 test('late history of A cannot populate B, even when timestamps collide', async () => {
@@ -40,10 +42,18 @@ test('restore rejects stale entries, loading editors, read-only and pending writ
   x.ctx.activeFormatCanEdit.value = true; x.ctx.hasPendingMainTextSave = () => true; x.restoreHistory(entry)
   x.ctx.hasPendingMainTextSave = () => false; x.restoreHistory({ ...entry })
   assert.equal(x.values.length, 0)
-  x.restoreHistory(entry); assert.deepEqual(x.values, ['历史正文'])
+  const preview = x.restoreHistory(entry)
+  assert.equal(x.requests[1].command, 'compare_history_version')
+  x.requests[1].resolve({ content: '历史正文', disk: '磁盘正文', diskSignature: 'disk', historySignature: 'history' }); await preview
+  assert.equal(x.values.length, 0)
+  const recovery = x.recoverHistory('replace'); await new Promise(resolve => setImmediate(resolve))
+  assert.equal(x.requests[2].command, 'prepare_history_restore')
+  assert.equal(x.requests[2].args.currentDraft, '当前草稿')
+  x.requests[2].resolve('历史正文'); await recovery
+  assert.deepEqual(x.values, ['历史正文'])
   assert.equal(x.ctx.tabs.value[0].isDirty, true)
   assert.match(x.messages.at(-1).value, /尚未保存/)
-  assert.equal(x.requests.length, 1)
+  assert.equal(x.requests[3].command, 'list_history')
 })
 test('delete is bound to its source and cannot refresh a different document', async () => {
   const x = setup(), load = x.fetchHistory(); x.requests[0].resolve([[1, 'A正文']]); await load
@@ -52,4 +62,17 @@ test('delete is bound to its source and cannot refresh a different document', as
   x.requests[1].resolve(); await deletion
   assert.equal(x.requests[1].args.path, 'A'); assert.equal(x.requests.length, 2)
   await x.deleteHistory(entry); assert.equal(x.requests.length, 2)
+})
+
+test('draft changes during protection and protection errors never replace the editor', async () => {
+  const x = setup(), load = x.fetchHistory(); x.requests[0].resolve([[1, '历史正文']]); await load
+  const entry = x.ctx.historyList.value[0], preview = x.restoreHistory(entry)
+  x.requests[1].resolve({ content: '历史正文', disk: '磁盘', diskSignature: 'd', historySignature: 'h' }); await preview
+  let recovery = x.recoverHistory('replace'); await new Promise(resolve => setImmediate(resolve))
+  x.requests[2].reject(Error('保护失败')); await recovery
+  assert.equal(x.values.length, 0); assert.match(x.ctx.historyActionError.value, /保护失败/)
+  recovery = x.recoverHistory('replace'); await new Promise(resolve => setImmediate(resolve))
+  x.ctx.vditor.getValue = () => '刚新增的草稿'
+  x.requests[3].resolve('历史正文'); await recovery
+  assert.equal(x.values.length, 0); assert.match(x.ctx.historyActionError.value, /未替换/)
 })
