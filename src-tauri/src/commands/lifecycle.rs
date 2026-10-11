@@ -6,12 +6,22 @@ use tauri::Manager;
 /// Diagnostic handshake only. This does not authorize file moves.
 #[tauri::command]
 pub fn begin_archive_window_confirmation(app: tauri::AppHandle) -> Result<String, String> {
+    begin_archive_confirmation(app, None)
+}
+
+pub(crate) fn begin_archive_confirmation(
+    app: tauri::AppHandle,
+    plan: Option<crate::services::archive_plan::ArchivePlan>,
+) -> Result<String, String> {
     let windows = app.webview_windows();
     let state = app.state::<crate::services::archive_confirmation::WindowConfirmationState>();
     let id = {
         let mut registry = state.0.lock().map_err(|_| "无法核对窗口状态")?;
         registry.reconcile(&windows.keys().cloned().collect::<Vec<_>>())?;
-        registry.begin(std::time::Instant::now(), std::time::Duration::from_secs(5))?
+        match plan {
+            Some(plan) => registry.begin_for_plan(std::time::Instant::now(), plan)?,
+            None => registry.begin(std::time::Instant::now(), std::time::Duration::from_secs(5))?,
+        }
     };
     for window in windows.values() {
         if let Err(error) = window.emit("archive-confirm-window-state", id.to_string()) {

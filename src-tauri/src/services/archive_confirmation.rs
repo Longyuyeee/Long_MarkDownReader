@@ -34,9 +34,43 @@ pub(crate) struct WindowRegistry {
     windows: BTreeMap<String, (WindowVersion, Option<bool>)>,
     next_generation: u64,
     active: Option<Confirmation>,
+    bound_plan: Option<(u64, super::archive_plan::ArchivePlan)>,
 }
 
 impl WindowRegistry {
+    pub(crate) fn begin_for_plan(
+        &mut self,
+        now: Instant,
+        plan: super::archive_plan::ArchivePlan,
+    ) -> Result<u64, &'static str> {
+        let id = self.begin(now, Duration::from_secs(5))?;
+        self.bound_plan = Some((id, plan));
+        Ok(id)
+    }
+    /// Internal only. A caller must additionally freeze editing and coordinate
+    /// dependencies/history; this lease alone is not a complete archive transaction.
+    #[allow(dead_code)]
+    pub(crate) fn consume_plan(
+        &mut self,
+        now: Instant,
+        id: u64,
+        digest: &str,
+    ) -> Result<super::document_coordination::DocumentLease, String> {
+        if !self.status(now, id)? {
+            return Err("confirmation_pending".into());
+        }
+        let (bound_id, plan) = self.bound_plan.as_ref().ok_or("confirmation_has_no_plan")?;
+        if *bound_id != id || plan.digest()? != digest {
+            return Err("confirmation_plan_mismatch".into());
+        }
+        let lease = plan.verify_and_lock()?;
+        let versions = self.versions();
+        self.active
+            .as_mut()
+            .ok_or("confirmation_not_started")?
+            .consume(now, &versions)?;
+        Ok(lease)
+    }
     pub(crate) fn reply_session(
         &mut self,
         now: Instant,
@@ -212,6 +246,7 @@ impl WindowRegistry {
         let request = Confirmation::new(now, timeout, self.versions())?;
         let id = request.id();
         self.active = Some(request);
+        self.bound_plan = None;
         Ok(id)
     }
 }
@@ -324,6 +359,46 @@ impl Confirmation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn archive_confirmation_binds_plan_and_consumes_once_under_path_lease() {
+        let root = std::env::temp_dir().join(format!(
+            "archive-bound-plan-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(root.join("target")).unwrap();
+        let source = root.join("a.md");
+        let target = root.join("target/a.md");
+        std::fs::write(&source, "original").unwrap();
+        let plan = super::super::archive_plan::ArchivePlan::capture(
+            &root,
+            &[(source.clone(), target.clone())],
+        )
+        .unwrap();
+        let digest = plan.digest().unwrap();
+        let now = Instant::now();
+        let mut r = WindowRegistry::default();
+        let session = r.new_session("main").unwrap();
+        r.report_session("main", &session, 1, false).unwrap();
+        let id = r.begin_for_plan(now, plan).unwrap();
+        assert!(r.consume_plan(now, id, &digest).is_err());
+        r.reply_session(now, id, "main", &session, 1, true, false)
+            .unwrap();
+        assert!(r.consume_plan(now, id, "wrong-plan").is_err());
+        std::fs::write(&source, "changed").unwrap();
+        assert!(r.consume_plan(now, id, &digest).is_err());
+        std::fs::write(&source, "original").unwrap();
+        let lease = r.consume_plan(now, id, &digest).unwrap();
+        assert!(super::super::document_coordination::acquire(&[&source, &target]).is_err());
+        assert!(r.consume_plan(now, id, &digest).is_err());
+        drop(lease);
+        assert!(super::super::document_coordination::acquire(&[&source, &target]).is_ok());
+        assert!(!target.exists());
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn archive_session_handshake_requires_every_live_reply_and_expires() {
         let now = Instant::now();

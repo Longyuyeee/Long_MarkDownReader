@@ -7,6 +7,7 @@ pub(crate) mod archive_document;
 pub(crate) mod history_coordination;
 pub(crate) mod document_coordination;
 pub(crate) mod archive_confirmation;
+pub(crate) mod archive_plan;
 pub mod data_migration;
 pub mod external_file_access;
 pub mod external_windows;

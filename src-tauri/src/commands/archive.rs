@@ -48,6 +48,7 @@ pub struct ArchivePreflight {
     window_draft_audit: Option<super::lifecycle::ArchiveDraftAudit>,
     window_confirmation_request_id: Option<String>,
     window_confirmation_error: Option<String>,
+    plan_digest: Option<String>,
 }
 
 fn issue(code: &'static str, message: impl Into<String>) -> ArchiveIssue {
@@ -172,6 +173,7 @@ fn check(
         window_draft_audit: None,
         window_confirmation_request_id: None,
         window_confirmation_error: None,
+        plan_digest: None,
         pending_checks: vec![
             "links_and_attachments",
             "history_and_identity",
@@ -193,15 +195,42 @@ pub async fn preflight_archive(
         .map_err(|e| e.to_string())?
         .join("history_v2");
     let before = super::lifecycle::observe_archive_drafts(&app_handle)?;
-    let mut result = tauri::async_runtime::spawn_blocking(move || {
+    let result = tauri::async_runtime::spawn_blocking(move || {
         let mut result = check(&library_root, &target_dir, items)?;
         inspect_histories(&library_root, &cache, &mut result)?;
         inspect_dependencies(&library_root, &mut result)?;
         inspect_edit_preview(&library_root, &mut result);
-        Ok::<_, String>(result)
+        let plan = if result.structural_checks_passed {
+            let paths: Vec<_> = result
+                .items
+                .iter()
+                .filter_map(|item| {
+                    item.target_path
+                        .as_ref()
+                        .map(|target| (PathBuf::from(&item.source_path), PathBuf::from(target)))
+                })
+                .collect();
+            match crate::services::archive_plan::ArchivePlan::capture(
+                Path::new(&library_root),
+                &paths,
+            ) {
+                Ok(plan) => {
+                    result.plan_digest = Some(plan.digest()?);
+                    Some(plan)
+                }
+                Err(error) => {
+                    result.window_confirmation_error = Some(error);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+        Ok::<_, String>((result, plan))
     })
     .await
     .map_err(|e| format!("归档预检任务失败: {e}"))??;
+    let (mut result, plan) = result;
     let after = super::lifecycle::observe_archive_drafts(&app_handle)?;
     let audit = super::lifecycle::audit_archive_drafts(before, after);
     if let Some(preview) = &mut result.edit_preview {
@@ -213,9 +242,11 @@ pub async fn preflight_archive(
     // Start a fresh diagnostic round after the slow filesystem scan. Cached
     // clean observations are not replies; the caller must query its status.
     // This never changes can_execute or grants a file-mutation lease.
-    match super::lifecycle::begin_archive_window_confirmation(app_handle) {
-        Ok(id) => result.window_confirmation_request_id = Some(id),
-        Err(error) => result.window_confirmation_error = Some(error),
+    if result.window_confirmation_error.is_none() {
+        match super::lifecycle::begin_archive_confirmation(app_handle, plan) {
+            Ok(id) => result.window_confirmation_request_id = Some(id),
+            Err(error) => result.window_confirmation_error = Some(error),
+        }
     }
     Ok(result)
 }
