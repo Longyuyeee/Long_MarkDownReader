@@ -3804,6 +3804,8 @@ const loadConditionalDependencyPages = async (offsets: number[]) => {
 const selectSheet = async (sheet: string) => {
   if (!sheet || (sheet === activeSheet.value && sheetInfo.value)) return
   generation += 1
+  // An older sheet request must not keep the new generation from loading.
+  pageLoading.value = false
   activeSheet.value = sheet
   selectedCell.value = null
   selectedDrawingId.value = ''
@@ -4682,6 +4684,7 @@ const saveWorkbook = async () => {
       },
     })
     if (!ownsDocument()) return
+    const sheetToReload = activeSheet.value || previousSheet
     workbook.value = document
     drafts.value = new Map()
     styleDrafts.value = new Map()
@@ -4693,7 +4696,7 @@ const saveWorkbook = async () => {
     redoStack.value = []
     generation += 1
     activeSheet.value = ''
-    await selectSheet(previousSheet)
+    await selectSheet(sheetToReload)
     message.success('工作簿已保存')
   } catch (cause) { message.error(`${savedPath.split(/[\\/]/).pop()} 保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
   finally { saving.value = false; finishWindowSave?.() }

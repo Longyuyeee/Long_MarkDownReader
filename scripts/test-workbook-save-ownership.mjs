@@ -26,9 +26,13 @@ test('document reload or unmount invalidates receipt even when path stays the sa
 })
 test('sheet generation alone does not invalidate document receipt', async () => {
   const h = harness(); const pending = h.ctx.saveAction()
+  let reloaded
+  h.ctx.selectSheet = async sheet => { reloaded = sheet }
+  h.ctx.activeSheet.value = 'Sheet2'
   h.ctx.generation++
   h.resolve({ signature: 'saved' }); await pending
   assert.equal(h.ctx.workbook.value.signature, 'saved')
+  assert.equal(reloaded, 'Sheet2')
   assert.equal(h.ctx.windowSaves, 0); assert.deepEqual(h.errors, [])
 })
 test('failure after navigation reports original filename and releases pending guard', async () => {
