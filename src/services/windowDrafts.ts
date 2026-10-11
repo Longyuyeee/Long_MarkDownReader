@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, reactive, ref, watchEffect } from 'vue'
+import { computed, onScopeDispose, reactive, ref, watch } from 'vue'
 
 const drafts = reactive(new Map<symbol, boolean>())
 const pendingSaves = ref(0)
@@ -25,6 +25,14 @@ export const beginWindowSave = () => {
 // Editors with local draft models participate in native close and update guards.
 export const useWindowDraft = (isDirty: () => boolean) => {
   const key = Symbol('editor draft')
-  watchEffect(() => { drafts.set(key, isDirty()) }, { flush: 'sync' })
-  onScopeDispose(() => { drafts.delete(key) })
+  // A second editor can change while the aggregate dirty boolean stays true.
+  // Keep activity reads in the callback, not a watchEffect dependency.
+  watch(isDirty, dirty => {
+    drafts.set(key, dirty)
+    recordWindowDraftActivity()
+  }, { immediate: true, flush: 'sync' })
+  onScopeDispose(() => {
+    drafts.delete(key)
+    recordWindowDraftActivity()
+  })
 }
