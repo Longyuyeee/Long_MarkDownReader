@@ -41,7 +41,7 @@ const preferenceKey = (root: string) => 'longedit.quick-note.target:' + root
 watch(library, root => {
   pendingInbox.value = null
   try { target.value = rememberedCaptureTarget(root, inbox.value, localStorage.getItem(preferenceKey(root))) }
-  catch { target.value = inbox.value }
+  catch { target.value = root }
 })
 watch([content, busy], ([value, active]) => {
   store.isTempDirty = value.length > 0 || active

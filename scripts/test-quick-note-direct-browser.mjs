@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+const require = createRequire(import.meta.url)
+const { chromium } = require(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
+const out = path.resolve('docs/evidence/v110-direct-save-browser')
+await fs.mkdir(out, { recursive: true })
+const browser = await chromium.launch({ headless: true })
+try {
+  const page = await browser.newPage({ viewport: { width: 560, height: 460 } })
+  const errors = []; page.on('pageerror', e => errors.push(e.message))
+  const url = 'http://127.0.0.1:9000/scripts/fixtures/quick-note-direct-browser.html'
+  await page.goto(url)
+  const target = page.getByRole('combobox', { name: '保存到', exact: true })
+  await page.waitForFunction(() => document.querySelector('[aria-label="资料库"]').value === 'C:/audit')
+  assert.equal(await target.inputValue(), 'C:/audit')
+  await target.selectOption('__choose')
+  await page.waitForFunction(() => document.querySelector('[aria-label="保存到"]').value === 'C:/audit/客户项目')
+  await page.getByRole('combobox', { name: '保存后操作' }).selectOption('continue')
+  const editor = page.getByRole('textbox', { name: '笔记正文' })
+  await editor.fill('今天与客户确认：周五交付初稿。')
+  await page.evaluate(() => { window.captureAudit.fail = true })
+  await page.getByRole('button', { name: '保存笔记', exact: true }).click()
+  await page.getByRole('status').filter({ hasText: '保存失败，输入已保留' }).waitFor()
+  assert.equal(await editor.inputValue(), '今天与客户确认：周五交付初稿。')
+  await page.screenshot({ path: path.join(out, '01-failure-retains-input.png') })
+  await page.getByRole('button', { name: '保存笔记', exact: true }).click()
+  await page.getByRole('status').filter({ hasText: '已保存：C:/audit/客户项目/' }).waitFor()
+  const audit = await page.evaluate(() => window.captureAudit)
+  const saves = audit.calls.filter(item => item.command === 'save_quick_note')
+  assert.equal(saves.length, 2); assert.equal(saves[0].args.operationId, saves[1].args.operationId)
+  assert.equal(Object.keys(audit.files).length, 1)
+  assert.equal(saves[1].args.targetDir, 'C:/audit/客户项目')
+  assert.equal(audit.calls.some(item => /archive|move_/.test(item.command)), false)
+  await page.screenshot({ path: path.join(out, '02-saved-directly.png') })
+  await page.reload()
+  await page.waitForFunction(() => document.querySelector('[aria-label="保存到"]').value === 'C:/audit/客户项目')
+  await page.screenshot({ path: path.join(out, '03-remembered-directory.png') })
+  assert.deepEqual(errors, [])
+  console.log('PASS: direct directory save, failure retains input, same-operation retry, remembered destination; simulated IPC')
+} finally { await browser.close() }

@@ -7,5 +7,5 @@ export const inboxDirectory = (root: string, libraries: LibraryConfig[]) => {
 }
 
 export const rememberedCaptureTarget = (root: string, inbox: string, remembered: string | null) =>
-  !remembered || remembered === '__inbox' || remembered === root.replace(/[\\/]$/, '') + '/Inbox'
+  !remembered ? root : remembered === '__inbox' || remembered === root.replace(/[\\/]$/, '') + '/Inbox'
     ? inbox : remembered
