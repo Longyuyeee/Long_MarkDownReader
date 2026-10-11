@@ -15,7 +15,7 @@ static HTML: LazyLock<regex::Regex> =
 static UNPARSED_DEFINITION: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r#"(?m)^[ \t]{0,3}\[[^\]\r\n]+\]:\s*<?([^\s>]+)"#).unwrap());
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct DependencyEvidence {
     pub document: String,
@@ -28,7 +28,7 @@ pub(crate) struct DependencyEvidence {
 }
 
 /// UTF-8 byte offsets into the scanned document, not a current write permission.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct DestinationSpan {
     pub start: usize,
@@ -60,7 +60,7 @@ fn inline_destination_span(
     })
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct DependencyResolution {
     pub status: &'static str,

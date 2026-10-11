@@ -1,8 +1,115 @@
 //! Internal, in-memory preview only. No filesystem write or archive permission.
 #![allow(dead_code)]
+use super::archive_dependencies::DependencyReport;
 use super::archive_dependencies::{mentions, DependencyEvidence};
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::path::{Component, Path};
+
+#[derive(Debug)]
+pub(crate) struct DocumentPreview {
+    pub document: String,
+    pub content: Option<String>,
+    pub blockers: Vec<String>,
+}
+
+#[derive(Debug)]
+pub(crate) struct BatchPreview {
+    pub documents: Vec<DocumentPreview>,
+    pub blockers: Vec<String>,
+    pub can_execute: bool,
+}
+
+/// Aggregate every supplied report, including unresolved candidates. Current
+/// texts are supplied by an internal caller; this helper never reads or writes disk.
+pub(crate) fn batch_preview(
+    reports: &[&DependencyReport],
+    current_texts: &BTreeMap<String, String>,
+) -> BatchPreview {
+    let mut blockers = Vec::new();
+    if reports.is_empty() {
+        blockers.push("missing_dependency_reports".into());
+    }
+    let mut grouped: BTreeMap<String, (Vec<(DependencyEvidence, String)>, Vec<String>)> =
+        BTreeMap::new();
+    let hashes: BTreeMap<_, _> = current_texts
+        .iter()
+        .map(|(document, text)| (document, format!("{:x}", Sha256::digest(text.as_bytes()))))
+        .collect();
+    for report in reports {
+        if !report.complete {
+            blockers.push("dependency_inventory_incomplete".into());
+        }
+        blockers.extend(report.limitations.iter().map(|s| s.to_string()));
+        for evidence in report.outgoing.iter().chain(&report.incoming_candidates) {
+            let entry = grouped.entry(evidence.document.clone()).or_default();
+            let hash_matches = hashes
+                .get(&evidence.document)
+                .is_some_and(|hash| *hash == evidence.snapshot_sha256);
+            if !hash_matches {
+                entry.1.push("source_snapshot_missing_or_changed".into());
+            }
+            // Full evidence equality keeps duplicate source ranges distinct while
+            // allowing the same reference to occur in multiple batch reports.
+            let impacts: Vec<_> = report
+                .move_impacts
+                .iter()
+                .filter(|impact| &impact.evidence == evidence)
+                .collect();
+            if impacts.is_empty() {
+                entry.1.push("candidate_without_impact".into());
+            }
+            for impact in impacts {
+                match impact.status {
+                    "same_destination" | "different_target" => {}
+                    "rewrite_required" => match &impact.proposed_target {
+                        Some(target) if evidence.destination_span.is_some() => {
+                            entry.0.push((evidence.clone(), target.clone()))
+                        }
+                        _ => entry.1.push("rewrite_without_safe_proposal".into()),
+                    },
+                    _ => entry.1.push("unresolved_dependency".into()),
+                }
+            }
+        }
+    }
+    let documents = grouped
+        .into_iter()
+        .map(|(document, (proposals, mut issues))| {
+            let content = if issues.is_empty() {
+                match current_texts.get(&document) {
+                    Some(text) => match preview(&document, text, &proposals) {
+                        Ok(content) => Some(content),
+                        Err(error) => {
+                            issues.push(error);
+                            None
+                        }
+                    },
+                    None => {
+                        issues.push("source_snapshot_missing_or_changed".into());
+                        None
+                    }
+                }
+            } else {
+                None
+            };
+            issues.sort();
+            issues.dedup();
+            DocumentPreview {
+                document,
+                content,
+                blockers: issues,
+            }
+        })
+        .collect();
+    blockers.sort();
+    blockers.dedup();
+    BatchPreview {
+        documents,
+        blockers,
+        can_execute: false,
+    }
+}
 
 /// A predicted relative URL, not evidence that the destination already exists.
 pub(crate) fn relative_target(
@@ -173,7 +280,90 @@ pub(crate) fn preview(
 
 #[cfg(test)]
 mod tests {
+    use super::super::archive_dependencies::MoveImpact;
     use super::*;
+
+    fn report_for(text: &str, target: Option<&str>) -> DependencyReport {
+        let evidence = mentions("note.md", text);
+        let impacts = evidence
+            .iter()
+            .map(|e| MoveImpact {
+                evidence: e.clone(),
+                direction: "outgoing",
+                status: "rewrite_required",
+                intended_path: None,
+                unchanged_link_path: None,
+                proposed_target: target.map(str::to_owned),
+            })
+            .collect();
+        DependencyReport {
+            outgoing: evidence,
+            incoming_candidates: vec![],
+            complete: false,
+            limitations: vec!["test_incomplete"],
+            move_impacts: impacts,
+        }
+    }
+
+    #[test]
+    fn archive_batch_preview_deduplicates_shared_evidence_without_execution_permission() {
+        let report = report_for("[a](a.md)", Some("new.md"));
+        let texts = BTreeMap::from([("note.md".into(), "[a](a.md)".into())]);
+        let batch = batch_preview(&[&report, &report], &texts);
+        assert_eq!(batch.documents.len(), 1);
+        assert_eq!(batch.documents[0].document, "note.md");
+        assert_eq!(batch.documents[0].content.as_deref(), Some("[a](new.md)"));
+        assert!(batch.documents[0].blockers.is_empty());
+        assert!(batch
+            .blockers
+            .contains(&"dependency_inventory_incomplete".into()));
+        assert!(!batch.can_execute);
+    }
+
+    #[test]
+    fn archive_batch_preview_never_drops_unhandled_candidates_or_stale_sources() {
+        let mut report = report_for("[a](a.md) [[unknown]]", Some("new.md"));
+        let texts = BTreeMap::from([("note.md".into(), "[a](a.md) [[unknown]]".into())]);
+        // A successful proposal beside an unsupported wiki must not yield a partial document.
+        let wiki = report
+            .move_impacts
+            .iter_mut()
+            .find(|i| i.evidence.kind == "wikilink")
+            .unwrap();
+        wiki.status = "needs_review";
+        wiki.proposed_target = None;
+        let batch = batch_preview(&[&report], &texts);
+        assert!(batch.documents[0].content.is_none());
+        assert!(batch.documents[0]
+            .blockers
+            .contains(&"unresolved_dependency".into()));
+        report.move_impacts.clear();
+        let batch = batch_preview(&[&report], &texts);
+        assert!(batch.documents[0]
+            .blockers
+            .contains(&"candidate_without_impact".into()));
+        let batch = batch_preview(&[&report], &BTreeMap::new());
+        assert!(batch.documents[0]
+            .blockers
+            .contains(&"source_snapshot_missing_or_changed".into()));
+        assert!(!batch.can_execute);
+    }
+
+    #[test]
+    fn archive_batch_preview_blocks_conflicting_reports_and_missing_proposals() {
+        let a = report_for("[a](a.md)", Some("one.md"));
+        let b = report_for("[a](a.md)", Some("two.md"));
+        let texts = BTreeMap::from([("note.md".into(), "[a](a.md)".into())]);
+        let batch = batch_preview(&[&a, &b], &texts);
+        assert!(batch.documents[0].content.is_none());
+        assert!(!batch.documents[0].blockers.is_empty());
+        let missing = report_for("[a](a.md)", None);
+        let batch = batch_preview(&[&missing], &texts);
+        assert!(batch.documents[0]
+            .blockers
+            .contains(&"rewrite_without_safe_proposal".into()));
+        assert!(!batch_preview(&[], &texts).blockers.is_empty());
+    }
 
     #[test]
     fn archive_edit_preview_preserves_prose_and_deduplicates_edits() {
