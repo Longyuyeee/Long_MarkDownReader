@@ -5,6 +5,34 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('freeze writes lock editing, retain current sheet and reject old receipts', async () => {
+  for (const scenario of ['success', 'replacement', 'epoch', 'failure']) {
+    let resolve, reject, pending = 0, restored
+    const errors = []
+    const ctx = extract('const applyFreezePane =', 'const setFreezePane =', {
+      isExternal: box(false), workbook: box({ signature: 'initial' }), sheetInfo: box({}), saving: box(false),
+      updatingStructure: box(false), dirtyCount: box(0), activeSheet: box('Sheet1'), selectionBounds: box(null),
+      workbookPath: box('tasks.xlsx'), store: { libraryPath: 'isolated' }, workbookDocumentEpoch: 1,
+      beginWindowSave: () => { pending++; return () => pending-- },
+      invoke: (_command, args) => { assert.equal(args.sheet, 'Sheet1'); return new Promise((done, fail) => { resolve = done; reject = fail }) },
+      restoreTableSelection: async sheet => { restored = sheet },
+      message: { error: value => errors.push(value), success() {} },
+    }, 'globalThis.action = applyFreezePane')
+    const writing = ctx.action(1, 1)
+    assert.equal(ctx.saving.value, true); assert.equal(pending, 1)
+    ctx.activeSheet.value = 'Sheet2'
+    if (scenario === 'replacement') ctx.workbook.value = { signature: 'other' }
+    if (scenario === 'epoch') ctx.workbookDocumentEpoch++
+    if (scenario === 'failure') { ctx.workbookPath.value = 'other.xlsx'; reject(new Error('磁盘失败')) }
+    else resolve({ signature: 'saved' })
+    await writing
+    assert.equal(ctx.saving.value, false); assert.equal(ctx.updatingStructure.value, false); assert.equal(pending, 0)
+    assert.equal(restored, scenario === 'success' ? 'Sheet2' : undefined)
+    assert.equal(ctx.workbook.value.signature, scenario === 'success' ? 'saved' : scenario === 'replacement' ? 'other' : 'initial')
+    if (scenario === 'failure') assert.match(errors[0], /tasks.xlsx 冻结窗格保存失败/)
+    else assert.deepEqual(errors, [])
+  }
+})
 test('saving blocks direct draft mutation entry points', () => {
   for (const [name, end] of [
     ['commitFormulaInput', 'const applyHistoryAction ='],

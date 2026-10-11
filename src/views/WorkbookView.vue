@@ -3989,25 +3989,37 @@ const navigateDataResult = async (direction: number) => {
   scrollRef.value?.scrollTo({ top: Math.max(0, rowOffset(row) - 80), behavior: 'smooth' })
 }
 const applyFreezePane = async (rows: number, columns: number) => {
-  if (isExternal.value || !workbook.value || !sheetInfo.value || updatingStructure.value || dirtyCount.value) return
+  if (isExternal.value || !workbook.value || !sheetInfo.value || saving.value || updatingStructure.value || dirtyCount.value) return
+  const savedWorkbook = workbook.value
+  const savedPath = workbookPath.value
+  const savedRoot = store.libraryPath
+  const savedEpoch = workbookDocumentEpoch
+  const targetSheet = activeSheet.value
+  const ownsDocument = () => workbook.value === savedWorkbook && workbookPath.value === savedPath
+    && store.libraryPath === savedRoot && workbookDocumentEpoch === savedEpoch && !isExternal.value
+  saving.value = true
   updatingStructure.value = true
+  let finishWindowSave: (() => void) | undefined
   try {
+    finishWindowSave = beginWindowSave()
     const document = await invoke<WorkbookDocument>('update_workbook_freeze_pane', {
-      libraryRoot: store.libraryPath,
-      path: workbookPath.value,
-      expectedSignature: workbook.value.signature,
-      sheet: activeSheet.value,
+      libraryRoot: savedRoot,
+      path: savedPath,
+      expectedSignature: savedWorkbook.signature,
+      sheet: targetSheet,
       rows,
       columns,
     })
+    if (!ownsDocument()) return
     workbook.value = document
-    const sheet = activeSheet.value
-    generation += 1
-    activeSheet.value = ''
-    await selectSheet(sheet)
-    message.success(rows || columns ? '冻结窗格已更新' : '冻结窗格已取消')
-  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
-  finally { updatingStructure.value = false }
+    const appliedDocument = workbook.value
+    await restoreTableSelection(activeSheet.value || targetSheet, selectionBounds.value ? { ...selectionBounds.value } : null)
+    if (workbook.value === appliedDocument && workbookDocumentEpoch === savedEpoch
+      && workbookPath.value === savedPath && store.libraryPath === savedRoot) {
+      message.success(rows || columns ? '冻结窗格已更新' : '冻结窗格已取消')
+    }
+  } catch (cause) { message.error(`${savedPath} 冻结窗格保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
+  finally { finishWindowSave?.(); updatingStructure.value = false; saving.value = false }
 }
 const setFreezePane = () => {
   if (!selectedCell.value) return

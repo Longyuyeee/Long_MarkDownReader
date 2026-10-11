@@ -15,6 +15,14 @@ secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue:
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_freeze_pane') {
+    await new Promise((resolve, reject) => {
+      audit.pendingFreeze = fail => { audit.pendingFreeze = null; fail ? reject(new Error('模拟冻结写入失败')) : resolve() }
+    })
+    sheets[args.sheet].freezePane = { rows: args.rows, columns: args.columns }
+    document.signature += '-freeze'
+    return structuredClone(document)
+  }
   if (command === 'update_workbook_data_validation') {
     if (audit.holdValidation) await new Promise((resolve, reject) => {
       audit.pendingValidation = fail => { audit.pendingValidation = null; fail ? reject(new Error('模拟规则写入失败')) : resolve() }
