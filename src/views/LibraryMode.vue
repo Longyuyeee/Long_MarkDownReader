@@ -801,7 +801,7 @@ import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
-import { tryAcquireMainTextSave } from '../utils/mainTextSaveOwnership'
+import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
 import { isActiveThemeDark } from '../config/themePresets'
 import { markdownCodeThemeChoices, resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { storeToRefs } from 'pinia'
@@ -2249,8 +2249,14 @@ let editorLoadGeneration = 0
 const loadFileToEditor = async (path: string) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
+  const loadingEditor = vditor
+  const isCurrentRequest = () => generation === editorLoadGeneration && activeTabId.value === path && vditor === loadingEditor
+  if (hasPendingMainTextSave(path)) {
+    loadingEditor.disabled()
+    await waitForMainTextSave(path)
+    if (!isCurrentRequest()) return
+  }
   const currentTab = tabs.value.find(t => t.path === path)
-  const isCurrentRequest = () => generation === editorLoadGeneration && activeTabId.value === path
   
   const setEditorValue = (content: string, readOnly = false) => {
     if (!isCurrentRequest()) return
@@ -2258,11 +2264,11 @@ const loadFileToEditor = async (path: string) => {
     // Reusing Vditor must not leave a link-editing popover from another note.
     const popover = vditor.vditor?.wysiwyg?.popover
     if (popover) popover.style.display = 'none'
-    const wasDirty = currentTab?.isDirty ?? false
     suppressEditorInput = true
     vditor.setValue(content)
     startAdaptiveMotion()
     setTimeout(() => {
+      if (!isCurrentRequest()) return
       suppressEditorInput = false
       if (readOnly) vditor?.disabled()
       else vditor?.enable()
@@ -2271,7 +2277,6 @@ const loadFileToEditor = async (path: string) => {
     nextTick(() => { 
       setTimeout(() => { 
         if (!isCurrentRequest()) return
-        if (currentTab) currentTab.isDirty = wasDirty
         lastLoadedPath = path;
         refreshVisibleOutline();
         updateWordCount();
