@@ -177,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { useWindowDraft } from '../services/windowDrafts'
+import { beginWindowSave, recordWindowDraftActivity, useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -292,6 +292,7 @@ const rowHeight = 34
 let resizeObserver: ResizeObserver | null = null
 let typeTimer = 0
 let loadGeneration = 0
+let editRevision = 0
 
 const tablePath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
@@ -345,8 +346,9 @@ const inferType = (column: number) => {
 
 const scheduleTypeRefresh = (column: number) => {
   window.clearTimeout(typeTimer)
+  const document = table.value
   typeTimer = window.setTimeout(() => {
-    if (table.value) table.value.columnTypes[column] = inferType(column)
+    if (document && table.value === document) document.columnTypes[column] = inferType(column)
   }, 180)
 }
 
@@ -418,10 +420,12 @@ const visibleRows = computed(() => {
 })
 
 const markDirty = () => {
+  editRevision += 1
   dirty.value = true
   notice.value = '有未保存修改'
   const tab = store.tabs.find(item => item.path === tablePath.value)
   if (tab) tab.isDirty = true
+  recordWindowDraftActivity()
 }
 const captureActiveView = () => {
   const current = activeView.value
@@ -776,27 +780,39 @@ const loadTable = async () => {
 }
 
 const saveTable = async () => {
-  if (!table.value || !dirty.value || saving.value) return
-  if (isExternal.value) {
-    const confirmed = await new Promise<boolean>(resolve => {
-      dialog.warning({
-        title: `覆盖外部 ${formatLabel.value}？`,
-        content: '保存将覆盖当前外部源文件。Long编辑会先检查文件是否被其他程序修改。',
-        positiveText: '确认保存',
-        negativeText: '取消',
-        closable: false,
-        maskClosable: false,
-        onPositiveClick: () => resolve(true),
-        onNegativeClick: () => resolve(false),
-      })
-    })
-    if (!confirmed) return
-  }
-  captureActiveView()
+  if (!table.value || loading.value || !dirty.value || saving.value) return
+  const savedDocument = table.value
+  const savedPath = tablePath.value
+  const savedRoot = store.libraryPath
+  const savedExternal = isExternal.value
+  const savedGeneration = loadGeneration
+  const savedTab = store.tabs.find(item => item.path === savedPath)
+  const isCurrent = () => table.value === savedDocument && tablePath.value === savedPath
+    && store.libraryPath === savedRoot && isExternal.value === savedExternal && loadGeneration === savedGeneration
+  // Reserve the action before awaiting the external-file confirmation.
   saving.value = true
-  notice.value = '正在可靠写入…'
+  let finishWindowSave: (() => void) | undefined
   try {
-    const payload = {
+    if (savedExternal) {
+      const confirmed = await new Promise<boolean>(resolve => {
+        dialog.warning({
+          title: `覆盖外部 ${formatLabel.value}？`,
+          content: '保存将覆盖当前外部源文件。Long编辑会先检查文件是否被其他程序修改。',
+          positiveText: '确认保存',
+          negativeText: '取消',
+          closable: false,
+          maskClosable: false,
+          onPositiveClick: () => resolve(true),
+          onNegativeClick: () => resolve(false),
+        })
+      })
+      if (!confirmed || !isCurrent()) return
+    }
+    captureActiveView()
+    const submittedRevision = editRevision
+    finishWindowSave = beginWindowSave()
+    notice.value = '正在可靠写入…'
+    const payload = JSON.parse(JSON.stringify({
       delimiter: table.value.delimiter,
       encoding: table.value.encoding,
       hasBom: table.value.hasBom,
@@ -827,28 +843,29 @@ const saveTable = async () => {
       },
       views: views.value,
       activeView: activeViewId.value,
-    }
-    const result = isExternal.value
-      ? await invoke<TableWriteResult>('write_external_table_file', { path: tablePath.value, payload })
-      : await invoke<TableWriteResult>('write_table_file', { libraryRoot: store.libraryPath, path: tablePath.value, payload })
-    table.value.signature = result.signature
-    window.dispatchEvent(new CustomEvent('longedit:table-saved', { detail: tablePath.value }))
-    dirty.value = false
-    const tab = store.tabs.find(item => item.path === tablePath.value)
-    if (tab) tab.isDirty = false
-    notice.value = `已保存 · ${(result.size / 1024).toFixed(1)} KB`
-    message.success('表格已保存')
+    }))
+    const result = savedExternal
+      ? await invoke<TableWriteResult>('write_external_table_file', { path: savedPath, payload })
+      : await invoke<TableWriteResult>('write_table_file', { libraryRoot: savedRoot, path: savedPath, payload })
+    window.dispatchEvent(new CustomEvent('longedit:table-saved', { detail: savedPath }))
+    if (!isCurrent()) return
+    savedDocument.signature = result.signature
+    dirty.value = editRevision !== submittedRevision
+    if (savedTab && store.tabs.includes(savedTab)) savedTab.isDirty = dirty.value
+    notice.value = dirty.value ? '已保存提交的内容，新增修改尚未保存' : `已保存 · ${(result.size / 1024).toFixed(1)} KB`
+    message.success(dirty.value ? '新增修改仍待保存' : '表格已保存')
   } catch (cause) {
-    notice.value = '保存失败'
     const detail = String(cause).replace(/^Error:\s*/, '')
-    if (isExternal.value && detail.includes('其他程序修改')) {
+    if (!isCurrent()) { message.error(`${savedPath.split(/[\\/]/).pop()} 保存失败：${detail}`); return }
+    notice.value = '保存失败'
+    if (savedExternal && detail.includes('其他程序修改')) {
       dialog.warning({
         title: '外部表格已发生变化',
         content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
         positiveText: '知道了',
       })
     } else message.error(detail)
-  } finally { saving.value = false }
+  } finally { saving.value = false; finishWindowSave?.() }
 }
 
 const convertToTable = async () => {
@@ -972,6 +989,7 @@ onMounted(() => {
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)
 })
 onBeforeUnmount(() => {
+  ++loadGeneration
   if (scrollRef.value) {
     rememberWorkspaceViewState(tablePath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
   }

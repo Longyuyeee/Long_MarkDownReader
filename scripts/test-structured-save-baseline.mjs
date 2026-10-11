@@ -8,8 +8,8 @@ import ts from 'typescript'
 
 const baseline = 'ce633e17'
 const box = value => ({ value })
-function harness(file, name, next, bindings) {
-  const source = execFileSync('git', ['show', `${baseline}:src/views/${file}.vue`], { encoding: 'utf8' })
+function harness(file, name, next, bindings, viewSource) {
+  const source = viewSource ?? execFileSync('git', ['show', `${baseline}:src/views/${file}.vue`], { encoding: 'utf8' })
   const start = source.indexOf(`const ${name} = async () => {`)
   const end = source.indexOf(`const ${next}`, start)
   assert.ok(start >= 0 && end > start)
@@ -26,18 +26,21 @@ function harness(file, name, next, bindings) {
   }).outputText, ctx)
   return { ctx, resolve, reject, errors, successes, submitted: () => submitted }
 }
-function tableHarness() {
+export function tableHarness(viewSource) {
   const tab = { path: 'tasks.csv', isDirty: true }
   const bindings = {
     table: box({ signature: 'old', delimiter: ',', encoding: 'utf-8', hasBom: false, lineEnding: 'lf', headers: ['任务'], rows: [['先确认交付日期']], columnTypes: ['text'], columnIds: ['c1'], rowIds: ['r1'] }),
-    dirty: box(true), saving: box(false), isExternal: box(false), tablePath: box(tab.path),
+    dirty: box(true), saving: box(false), loading: box(false), isExternal: box(false), tablePath: box(tab.path),
+    loadGeneration: 1, editRevision: 1, windowSaves: 0,
     store: { libraryPath: 'isolated', tabs: [tab] }, captureActiveView() {},
     window: { dispatchEvent() {} }, CustomEvent: class { constructor(type, data) { this.type = type; this.detail = data.detail } },
   }
   for (const key of ['notice', 'filterQuery', 'sortDirection', 'groupBy', 'titleColumn', 'categoryColumn', 'valueColumn', 'aggregation', 'chartType', 'seriesColumn', 'nullStrategy', 'activeViewId']) bindings[key] = box('')
   for (const key of ['columnWidths', 'cardColumns', 'dashboardItems', 'views']) bindings[key] = box([])
   bindings.sortColumn = box(-1); bindings.frozenColumns = box(0); bindings.showLegend = box(true)
-  return { ...harness('TableView', 'saveTable', 'convertToTable', bindings), tab }
+  const h = harness('TableView', 'saveTable', 'convertToTable', bindings, viewSource)
+  h.ctx.beginWindowSave = () => { h.ctx.windowSaves++; return () => { h.ctx.windowSaves-- } }
+  return { ...h, tab }
 }
 function workbookHarness() {
   const bindings = {
