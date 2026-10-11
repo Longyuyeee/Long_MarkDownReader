@@ -3195,15 +3195,23 @@ const syncUserSelectedVditorMode = () => {
 const switchEditorMode = (mode: string) => {
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
   const content = vditor.getValue()
+  const tab = tabs.value.find(item => item.id === activeTabId.value)
+  if (tab && tab.content !== content) {
+    tab.content = content
+    tab.isDirty = true
+  }
   searchMatchCount.value = null
   editorLoading.value = true
+  const generation = ++editorLoadGeneration
+  cleanupEditorListeners()
   vditor.destroy(); vditor = null; isVditorReady = false
   void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
   nextTick(() => {
+    if (generation !== editorLoadGeneration || vditor) return
+    // initVditor's after callback restores the current tab through the guarded
+    // load path, including pending-save coordination. Never replay a stale
+    // mode-switch snapshot through an unguarded polling timer.
     initVditor()
-    const check = setInterval(() => {
-      if (vditor && isVditorReady) { clearInterval(check); vditor.setValue(content); editorLoading.value = false }
-    }, 100)
   })
 }
 const ensureVditorModeForFile = (path: string) => {
