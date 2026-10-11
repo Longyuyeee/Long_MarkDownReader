@@ -399,6 +399,122 @@ fn publish_with_hook(
     })
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum PublicationState {
+    NotStarted,
+    TargetAbsent,
+    // Content matches, but this is NOT proof of ownership or document completion.
+    TargetMatches,
+}
+
+/// Diagnose only. Never retry a move, delete a file, or trust a marker as success.
+#[allow(dead_code)]
+pub(crate) fn inspect_publication(
+    cache: &Path,
+    stage: &Path,
+    source: &Path,
+    target: &Path,
+) -> Result<PublicationState, String> {
+    let _lease = super::history_coordination::acquire(cache)?;
+    if inspect_staging(cache, stage)? != StagingState::Prepared {
+        return Err("历史暂存未完成，不能判断发布结果".into());
+    }
+    fn read_bounded(path: &Path, limit: u64) -> Result<Vec<u8>, String> {
+        let meta = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
+        if !meta.is_file() || meta.file_type().is_symlink() || meta.len() > limit {
+            return Err("发布恢复文件类型或大小异常".into());
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(path)
+            .map_err(|e| e.to_string())?
+            .take(limit + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        if bytes.len() as u64 > limit {
+            return Err("发布恢复文件超限".into());
+        }
+        Ok(bytes)
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields, rename_all = "camelCase")]
+    struct PublicationIntent {
+        version: u32,
+        target_directory: PathBuf,
+        plan: ArchiveHistoryPlan,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct PreparationIntent {
+        version: u32,
+        plan: ArchiveHistoryPlan,
+    }
+    let marker_exists = match fs::symlink_metadata(stage.join("published")) {
+        Ok(_) => true,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => false,
+        Err(e) => return Err(e.to_string()),
+    };
+    let intent_path = stage.join("publish-intent.json");
+    match fs::symlink_metadata(&intent_path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound && !marker_exists => {
+            return Ok(PublicationState::NotStarted)
+        }
+        Err(e) => return Err(format!("发布日志缺失或不可读: {e}")),
+        Ok(_) => {}
+    }
+    let intent: PublicationIntent =
+        serde_json::from_slice(&read_bounded(&intent_path, 1024 * 1024)?)
+            .map_err(|e| e.to_string())?;
+    let original: PreparationIntent =
+        serde_json::from_slice(&read_bounded(&stage.join("intent.json"), 1024 * 1024)?)
+            .map_err(|e| e.to_string())?;
+    let destination = history_path(cache, target);
+    if intent.version != 1
+        || original.version != 1
+        || intent.plan != original.plan
+        || intent.target_directory != destination
+        || Path::new(&intent.plan.target_directory) != destination
+        || Path::new(&intent.plan.source_directory) != history_path(cache, source)
+    {
+        return Err("发布日志与当前归档身份或准备清单不一致".into());
+    }
+    match fs::symlink_metadata(&destination) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound && !marker_exists => {
+            return Ok(PublicationState::TargetAbsent)
+        }
+        Err(e) => return Err(format!("发布目标缺失或不可读，不能确认完成: {e}")),
+        Ok(meta) if !meta.is_dir() || meta.file_type().is_symlink() => {
+            return Err("发布目标不是普通目录".into())
+        }
+        Ok(_) => {}
+    }
+    let mut count = 0;
+    for entry in fs::read_dir(&destination).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        count += 1;
+        if count > intent.plan.snapshots.len()
+            || !intent
+                .plan
+                .snapshots
+                .iter()
+                .any(|s| entry.file_name() == std::ffi::OsStr::new(&s.name))
+        {
+            return Err("发布目标包含额外历史，不能自动合并或覆盖".into());
+        }
+    }
+    if count != intent.plan.snapshots.len() {
+        return Err("发布目标快照不完整".into());
+    }
+    for snapshot in &intent.plan.snapshots {
+        let bytes = read_bounded(&destination.join(&snapshot.name), snapshot.bytes)?;
+        if bytes.len() as u64 != snapshot.bytes
+            || format!("{:x}", Sha256::digest(bytes)) != snapshot.sha256
+        {
+            return Err("发布目标内容与历史清单不一致".into());
+        }
+    }
+    Ok(PublicationState::TargetMatches)
+}
+
 /// Read-only restart diagnosis. Even Prepared requires live source/target checks.
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum StagingState {
@@ -836,5 +952,75 @@ mod tests {
         assert!(publish(&f.0, Path::new("old.md"), Path::new("new.md"), &prepared).is_err());
         assert!(!f.new_path().exists());
         assert_eq!(fs::read_to_string(f.old().join("1.md")).unwrap(), "after!");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn publication_recovery_uses_target_bytes_without_completion_marker() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "history").unwrap();
+        let prepared = prepare(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+        )
+        .unwrap();
+        let stage = prepared.staging_directory.as_ref().unwrap();
+        assert_eq!(
+            inspect_publication(&f.0, stage, Path::new("old.md"), Path::new("new.md")).unwrap(),
+            PublicationState::NotStarted
+        );
+        publish(&f.0, Path::new("old.md"), Path::new("new.md"), &prepared).unwrap();
+        fs::remove_file(stage.join("published")).unwrap();
+        assert_eq!(
+            inspect_publication(&f.0, stage, Path::new("old.md"), Path::new("new.md")).unwrap(),
+            PublicationState::TargetMatches
+        );
+        assert!(
+            inspect_publication(&f.0, stage, Path::new("wrong.md"), Path::new("new.md")).is_err()
+        );
+        fs::write(f.new_path().join("1.md"), "changed").unwrap();
+        fs::write(stage.join("published"), "history-only-v1").unwrap();
+        assert!(
+            inspect_publication(&f.0, stage, Path::new("old.md"), Path::new("new.md")).is_err()
+        );
+        assert_eq!(
+            fs::read_to_string(f.new_path().join("1.md")).unwrap(),
+            "changed"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn publication_recovery_rejects_extra_files_and_missing_target_with_marker() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "history").unwrap();
+        let prepared = prepare(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+        )
+        .unwrap();
+        let stage = prepared.staging_directory.as_ref().unwrap();
+        publish(&f.0, Path::new("old.md"), Path::new("new.md"), &prepared).unwrap();
+        fs::write(f.new_path().join("2.md"), "extra").unwrap();
+        assert!(
+            inspect_publication(&f.0, stage, Path::new("old.md"), Path::new("new.md")).is_err()
+        );
+        fs::rename(f.new_path(), f.0.join("retained-target")).unwrap();
+        assert!(
+            inspect_publication(&f.0, stage, Path::new("old.md"), Path::new("new.md")).is_err()
+        );
+        fs::remove_file(stage.join("published")).unwrap();
+        assert_eq!(
+            inspect_publication(&f.0, stage, Path::new("old.md"), Path::new("new.md")).unwrap(),
+            PublicationState::TargetAbsent
+        );
+        assert!(f.old().join("1.md").exists());
+        assert!(f.0.join("retained-target/2.md").exists());
     }
 }
