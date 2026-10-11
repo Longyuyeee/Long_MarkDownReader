@@ -297,6 +297,108 @@ fn prepare_with_hook(
     }
 }
 
+#[allow(dead_code)]
+#[derive(Debug)]
+pub(crate) struct PublishedHistory {
+    pub target_directory: PathBuf,
+    // A marker error after rename must never be reported as "nothing moved".
+    pub marker_error: Option<String>,
+}
+
+/// Internal history-only publication. Does NOT move the document or retire source.
+/// Not exposed until the document/history coordinator and recovery are complete.
+#[allow(dead_code)]
+pub(crate) fn publish(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    prepared: &PreparedHistory,
+) -> Result<PublishedHistory, String> {
+    publish_with_hook(cache, source, target, prepared, || {})
+}
+
+fn publish_with_hook(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    prepared: &PreparedHistory,
+    after_publish: impl FnOnce(),
+) -> Result<PublishedHistory, String> {
+    use std::io::Write;
+    fn record(path: &Path, bytes: &[u8]) -> Result<(), String> {
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+            .map_err(|e| e.to_string())?;
+        file.write_all(bytes)
+            .and_then(|_| file.sync_all())
+            .map_err(|e| e.to_string())
+    }
+    let _lease = super::history_coordination::acquire(cache)?;
+    if inspect(cache, source, target)? != prepared.plan {
+        return Err("发布前历史已变化，请重新预检".into());
+    }
+    let stage = prepared
+        .staging_directory
+        .as_ref()
+        .ok_or("无历史副本，无需发布")?;
+    if inspect_staging(cache, stage)? != StagingState::Prepared {
+        return Err("历史暂存尚未准备完成".into());
+    }
+    let destination = history_path(cache, target);
+    // Persist intent before making the target visible. A retry is deliberately
+    // blocked by create_new until a recovery coordinator reconciles disk state.
+    record(
+        &stage.join("publish-intent.json"),
+        &serde_json::to_vec(&serde_json::json!({
+            "version": 1, "targetDirectory": destination, "plan": prepared.plan
+        }))
+        .map_err(|e| e.to_string())?,
+    )?;
+    let payload = stage.join("publish-payload");
+    fs::create_dir(&payload).map_err(|e| e.to_string())?;
+    for snapshot in &prepared.plan.snapshots {
+        let from = stage.join(&snapshot.name);
+        let meta = fs::symlink_metadata(&from).map_err(|e| e.to_string())?;
+        if !meta.is_file() || meta.file_type().is_symlink() || meta.len() != snapshot.bytes {
+            return Err("发布副本类型或长度变化".into());
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(from)
+            .map_err(|e| e.to_string())?
+            .take(snapshot.bytes + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        if bytes.len() as u64 != snapshot.bytes
+            || format!("{:x}", Sha256::digest(&bytes)) != snapshot.sha256
+        {
+            return Err("发布副本摘要与预检不一致".into());
+        }
+        record(&payload.join(&snapshot.name), &bytes)?;
+        let mut stored = Vec::new();
+        fs::File::open(payload.join(&snapshot.name))
+            .map_err(|e| e.to_string())?
+            .take(snapshot.bytes + 1)
+            .read_to_end(&mut stored)
+            .map_err(|e| e.to_string())?;
+        if stored != bytes {
+            return Err("发布副本回读不一致".into());
+        }
+    }
+    if inspect(cache, source, target)? != prepared.plan {
+        return Err("构建发布副本期间来源历史变化".into());
+    }
+    super::archive_move::rename_no_replace(&payload, &destination)
+        .map_err(|e| format!("历史发布失败，保留暂存和源历史: {e}"))?;
+    after_publish();
+    let marker_error = record(&stage.join("published"), b"history-only-v1").err();
+    Ok(PublishedHistory {
+        target_directory: destination,
+        marker_error,
+    })
+}
+
 /// Read-only restart diagnosis. Even Prepared requires live source/target checks.
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum StagingState {
@@ -658,5 +760,81 @@ mod tests {
         assert_eq!(fs::read_dir(&f.0).unwrap().count(), 1);
         drop(lease);
         assert!(prepare(&f.0, Path::new("old.md"), Path::new("new.md"), &plan).is_ok());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn history_publication_preserves_source_and_keeps_journal_out_of_target() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "history").unwrap();
+        let prepared = prepare(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+        )
+        .unwrap();
+        let receipt = publish(&f.0, Path::new("old.md"), Path::new("new.md"), &prepared).unwrap();
+        assert!(receipt.marker_error.is_none());
+        assert_eq!(receipt.target_directory, f.new_path());
+        assert_eq!(
+            fs::read_to_string(f.new_path().join("1.md")).unwrap(),
+            "history"
+        );
+        assert_eq!(fs::read_to_string(f.old().join("1.md")).unwrap(), "history");
+        assert_eq!(fs::read_dir(f.new_path()).unwrap().count(), 1);
+        assert!(publish(&f.0, Path::new("old.md"), Path::new("new.md"), &prepared).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn publication_marker_failure_reports_already_published_state() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "history").unwrap();
+        let prepared = prepare(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+        )
+        .unwrap();
+        let stage = prepared.staging_directory.as_ref().unwrap();
+        let receipt = publish_with_hook(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &prepared,
+            || {
+                fs::create_dir(stage.join("published")).unwrap();
+            },
+        )
+        .unwrap();
+        assert!(receipt.marker_error.is_some());
+        assert_eq!(
+            fs::read_to_string(receipt.target_directory.join("1.md")).unwrap(),
+            "history"
+        );
+        assert!(stage.join("publish-intent.json").exists());
+        assert!(f.old().join("1.md").exists());
+    }
+
+    #[test]
+    fn publication_rejects_source_change_before_creating_target() {
+        let f = Fixture::new();
+        fs::create_dir(f.old()).unwrap();
+        fs::write(f.old().join("1.md"), "before").unwrap();
+        let prepared = prepare(
+            &f.0,
+            Path::new("old.md"),
+            Path::new("new.md"),
+            &f.inspect().unwrap(),
+        )
+        .unwrap();
+        fs::write(f.old().join("1.md"), "after!").unwrap();
+        assert!(publish(&f.0, Path::new("old.md"), Path::new("new.md"), &prepared).is_err());
+        assert!(!f.new_path().exists());
+        assert_eq!(fs::read_to_string(f.old().join("1.md")).unwrap(), "after!");
     }
 }

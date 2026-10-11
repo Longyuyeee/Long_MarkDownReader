@@ -70,7 +70,7 @@ fn move_one(guard: &WorkspaceGuard, source: &Path, target: &Path) -> Result<(), 
 }
 
 #[cfg(windows)]
-fn rename_no_replace(source: &Path, target: &Path) -> io::Result<()> {
+pub(crate) fn rename_no_replace(source: &Path, target: &Path) -> io::Result<()> {
     use std::os::windows::ffi::OsStrExt;
     #[link(name = "kernel32")]
     extern "system" {
@@ -96,7 +96,7 @@ fn rename_no_replace(source: &Path, target: &Path) -> io::Result<()> {
 }
 
 #[cfg(not(windows))]
-fn rename_no_replace(_: &Path, _: &Path) -> io::Result<()> {
+pub(crate) fn rename_no_replace(_: &Path, _: &Path) -> io::Result<()> {
     Err(io::Error::new(
         io::ErrorKind::Unsupported,
         "此平台尚未实现无覆盖归档移动",
