@@ -504,7 +504,7 @@
               {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
             </span>
             <span v-if="activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
-            <n-button v-if="activeTextTab?.textReadOnlyReason && !activeTextTab.textRangeEof" text size="tiny" @click="loadNextTextRange">
+            <n-button v-if="activeTextTab?.textRangeNextOffset !== undefined && !activeTextTab.textRangeEof && !activeTextTab.textLoadError" text size="tiny" @click="loadNextTextRange">
               继续加载
             </n-button>
             <span>{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
@@ -1098,6 +1098,7 @@ const activeFormatCanEdit = computed(() => Boolean(
 ))
 const activeTextSnapshotLabel = computed(() => {
   const tab = activeTextTab.value
+  if (tab?.textLoadError) return '读取失败 · 只读'
   if (!tab?.textEncoding) return ''
   const bom = tab.textBom && tab.textBom !== 'none' ? ` · ${tab.textBom.toUpperCase()} BOM` : ''
   const lineEnding = tab.textLineEnding ? ` · ${tab.textLineEnding.toUpperCase()}` : ''
@@ -1106,6 +1107,7 @@ const activeTextSnapshotLabel = computed(() => {
 })
 const activeTextSnapshotTitle = computed(() => {
   const tab = activeTextTab.value
+  if (tab?.textLoadError) return tab.textLoadError
   if (tab?.textReadOnlyReason) {
     const loaded = tab.textRangeNextOffset || 0
     return `大文件范围预览 · 已加载 ${loaded} / ${tab.textSize || 0} 字节`
@@ -1116,6 +1118,7 @@ const activeTextSnapshotTitle = computed(() => {
 })
 const activeSaveTitle = computed(() => {
   if (!activeTabId.value) return '保存到磁盘 (Ctrl+S)'
+  if (activeTextTab.value?.textLoadError) return activeTextTab.value.textLoadError
   if (activeTextTab.value?.textReadOnlyReason) return '大文件范围预览为只读模式'
   if (!activeFormatCanEdit.value) return `${activeDocumentFormat.value?.label || '当前格式'}不可覆盖保存`
   return `保存到磁盘 (Ctrl+S) · ${activeDocumentFormat.value?.userCapability.label || '可编辑'}`
@@ -2309,7 +2312,10 @@ const loadFileToEditor = async (path: string) => {
     loadingEditor.setValue('')
     loadingEditor.disabled()
     wordCount.value = 0
-    if (currentTab) currentTab.textReadOnlyReason = '文件未能读取，请确认文件位置后刷新重试'
+    if (currentTab) {
+      currentTab.textLoadError = '文件未能读取，请确认文件位置后刷新重试'
+      currentTab.textReadOnlyReason = currentTab.textLoadError
+    }
     handleError(error, `${label}：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
   }
   
@@ -2355,6 +2361,7 @@ const loadFileToEditor = async (path: string) => {
     tab.textHasFinalNewline = snapshot.hasFinalNewline
     tab.textReadEncoding = readEncoding
     tab.textReadOnlyReason = undefined
+    tab.textLoadError = undefined
     tab.textRangeNextOffset = undefined
     tab.textRangeEof = undefined
     tab.textSize = snapshot.size
@@ -2402,6 +2409,7 @@ const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot,
   tab.textHasFinalNewline = snapshot.hasFinalNewline
   tab.textReadEncoding = readEncoding
   tab.textReadOnlyReason = undefined
+  tab.textLoadError = undefined
   tab.textRangeNextOffset = undefined
   tab.textRangeEof = undefined
   tab.textSize = snapshot.size
@@ -2422,6 +2430,7 @@ const applyTextRangeSnapshot = (tab: TabInfo, snapshot: TextDocumentRangeSnapsho
   tab.textHasFinalNewline = undefined
   tab.textReadEncoding = readEncoding || snapshot.encoding
   tab.textReadOnlyReason = snapshot.readOnlyReason
+  tab.textLoadError = undefined
   tab.textRangeNextOffset = snapshot.nextOffset
   tab.textRangeEof = snapshot.eof
   tab.textSize = snapshot.size

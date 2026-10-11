@@ -31,6 +31,7 @@ export interface TabInfo {
   textHasFinalNewline?: boolean
   textReadEncoding?: string
   textReadOnlyReason?: string
+  textLoadError?: string
   textRangeNextOffset?: number
   textRangeEof?: boolean
   textSize?: number

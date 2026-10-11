@@ -38,6 +38,8 @@ try {
     window.historyAudit.store.activateTab('C:/audit/missing.md')
   })
   await page.waitForFunction(() => window.historyAudit.store.tabs.find(t => t.path.endsWith('/missing.md')).textReadOnlyReason)
+  assert.equal(await page.getByRole('button', { name: '继续加载', exact: true }).count(), 0)
+  await page.getByText('读取失败 · 只读', { exact: true }).waitFor()
   assert.equal(await page.locator('#vditor-lib [contenteditable="true"]').evaluateAll(elements => elements.filter(element => element.getClientRects().length > 0).length), 0)
   assert.equal(await page.locator('#vditor-lib').innerText().then(text => text.includes('B 的历史版本')), false)
   assert.equal(await page.evaluate(() => window.historyAudit.store.tabs.find(t => t.path.endsWith('/B.md')).content.includes('B 的历史版本')), true)
