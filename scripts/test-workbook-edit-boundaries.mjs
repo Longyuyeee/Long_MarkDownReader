@@ -5,6 +5,19 @@ import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
+test('saving blocks direct draft mutation entry points', () => {
+  for (const [name, end] of [
+    ['commitFormulaInput', 'const applyHistoryAction ='],
+    ['stageWorkbookObjectDraft', 'const stylePatchMatchesSource ='],
+    ['applyStylePatch', 'const applyFontSize ='],
+    ['mergeSelection', 'const unmergeSelection ='],
+    ['unmergeSelection', 'const copySelection ='],
+  ]) {
+    // No other bindings: reaching any mutation logic fails the test.
+    const ctx = extract(`const ${name} =`, end, { saving: box(true) }, `globalThis.action = ${name}`)
+    ctx.action({})
+  }
+})
 test('selection restoration stops when another view wins either read', async () => {
   for (const interruptAt of ['sheet', 'page', 'none']) {
     let completeSheet, completePage, focused = 0, pageReads = 0
@@ -41,13 +54,13 @@ test('validation write receipts respect document ownership and release window sa
       message: { error: value => errors.push(value), success: value => successes.push(value) },
     }, 'globalThis.action = commitDataValidationChange')
     const writing = ctx.action({ sheet: 'Sheet1', action: 'create' }, {}, '创建成功')
-    assert.equal(pending, 1)
+    assert.equal(pending, 1); assert.equal(ctx.saving.value, true)
     if (scenario === 'replacement') { ctx.workbook.value = { signature: 'other' }; ctx.workbookPath.value = 'other.xlsx' }
     if (scenario === 'epoch') ctx.workbookDocumentEpoch++
     if (scenario === 'failure') { ctx.workbookPath.value = 'other.xlsx'; reject(new Error('磁盘失败')) }
     else resolve({ signature: 'saved' })
     await writing
-    assert.equal(pending, 0); assert.equal(ctx.updatingStructure.value, false)
+    assert.equal(pending, 0); assert.equal(ctx.updatingStructure.value, false); assert.equal(ctx.saving.value, false)
     assert.equal(restored, scenario === 'success' ? 1 : 0)
     assert.equal(successes.length, scenario === 'success' ? 1 : 0)
     if (scenario !== 'success') assert.equal(ctx.undoStack.value[0], 'history')
@@ -60,7 +73,7 @@ test('validation write receipts respect document ownership and release window sa
 test('formula flush preserves existing values but validates actual edits', () => {
   const errors = [], changes = []
   const ctx = extract('const commitFormulaInput =', 'const applyHistoryAction =', {
-    selectedCell: box({ sheet: 'Sheet1', row: 0, column: 0 }), selectedEditable: box(true),
+    selectedCell: box({ sheet: 'Sheet1', row: 0, column: 0 }), selectedEditable: box(true), saving: box(false),
     formulaInput: box('旧内容'), cellAt: () => ({ value: '旧内容' }), sourceCellAt: () => ({ value: '旧内容' }),
     originalInput: cell => cell.value, validationAt: () => ({ kind: 'list', showErrorMessage: true, error: '请选择任务状态' }),
     literalValidationOptions: () => ['待处理', '已完成'], message: { error: value => errors.push(value) },

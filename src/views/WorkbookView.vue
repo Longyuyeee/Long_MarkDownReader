@@ -2512,6 +2512,7 @@ const resetFormulaInput = () => {
   formulaInputRef.value?.blur()
 }
 const commitFormulaInput = () => {
+  if (saving.value) return
   const selection = selectedCell.value
   if (!selection || !selectedEditable.value) return
   // Reloads and recalculation also flush the formula bar. Validate only a new
@@ -2590,6 +2591,7 @@ const redo = () => { if (saving.value) return; const action = redoStack.value.po
 
 const cloneDraftData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const stageWorkbookObjectDraft = (draft: Omit<WorkbookObjectDraft, 'id'>) => {
+  if (saving.value) return
   const before = cloneDraftData(objectDrafts.value)
   const after = [...before, { ...cloneDraftData(draft), id: `${draft.kind}-${++objectDraftSequence}` }]
   objectDrafts.value = after
@@ -2630,6 +2632,7 @@ const selectedCoordinates = () => {
   return coordinates
 }
 const applyStylePatch = (patch: WorkbookStylePatch) => {
+  if (saving.value) return
   if (isExternal.value || !selectedCell.value) return
   if (patch.borderStyle !== undefined) {
     const side = { style: patch.borderStyle, ...(patch.borderColor ? { color: patch.borderColor } : {}) }
@@ -2992,6 +2995,8 @@ const commitDataValidationChange = async (change: WorkbookDataValidationChange, 
   if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改数据验证')
   if (dirtyCount.value) return void message.error('请先保存或放弃未保存的单元格与格式更改')
+  // This is a file write too: share the existing editor/shortcut save lock.
+  saving.value = true
   updatingStructure.value = true
   const sheet = activeSheet.value
   const savedWorkbook = workbook.value
@@ -3019,7 +3024,7 @@ const commitDataValidationChange = async (change: WorkbookDataValidationChange, 
     if (workbook.value === appliedDocument && workbookDocumentEpoch === savedEpoch
       && workbookPath.value === savedPath && store.libraryPath === savedRoot) message.success(success)
   } catch (cause) { message.error(`${savedPath} 数据验证保存失败：${String(cause).replace(/^Error:\s*/, '')}`) }
-  finally { finishWindowSave?.(); updatingStructure.value = false }
+  finally { finishWindowSave?.(); updatingStructure.value = false; saving.value = false }
 }
 const editDataValidationRule = async (action: 'create' | 'update') => {
   commitFormulaInput()
@@ -3477,6 +3482,7 @@ const editSelectedTable = async (action: 'create' | 'resize') => {
   commitTableLifecycleChange(change, area, action === 'create' ? `已创建 Table ${tableName}` : `已调整 Table ${tableName}`)
 }
 const mergeSelection = () => {
+  if (saving.value) return
   const area = canMergeSelection.value ? selectionBounds.value : null
   if (!area) return
   if ((area.bottom - area.top + 1) * (area.right - area.left + 1) > MAX_BATCH_CELLS) return void message.error(`单次合并不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
@@ -3492,6 +3498,7 @@ const mergeSelection = () => {
   redoStack.value = []
 }
 const unmergeSelection = () => {
+  if (saving.value) return
   const range = selectedMerge.value
   if (!range) return
   const key = mergeKey(activeSheet.value, range)
