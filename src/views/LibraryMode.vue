@@ -74,7 +74,9 @@
                 </div>
               </div>
 
-              <div v-if="store.libraryPath" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="knowledgeIndexExplanation">
+              <button v-if="store.libraryPath" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox">收集箱</button>
+              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" />
+              <div v-if="store.libraryPath && !showInbox" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="knowledgeIndexExplanation">
                 <n-icon :component="DatabaseIcon" />
                 <span>{{ knowledgeIndexLabel }}</span>
                 <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 个对象 · {{ knowledgeIndexStatus.relationCount }} 条关系</small>
@@ -97,6 +99,7 @@
 
               <div
                 class="tree-viewport"
+                v-show="!showInbox"
                 ref="searchViewport"
                 data-testid="library-tree-viewport"
                 :class="{ 'drop-active': virtualDrag.dropTarget === store.libraryPath }"
@@ -775,6 +778,7 @@
 <script setup lang="ts">
 import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
@@ -1142,6 +1146,7 @@ const handleError = (error: any, userMessage: string, logContext?: string) => {
 }
 
 const activeSidebarTab = ref<'files' | 'quick' | 'collections' | 'tags' | 'outline' | 'links' | 'history'>('files')
+const showInbox = ref(false)
 const localGraphPinned = ref(readLocalGraphPinned())
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
@@ -1333,6 +1338,7 @@ const libraryLoading = ref(false)
 const libraryCreating = ref(false)
 let libraryLoadGeneration = 0
 const searchQuery = ref('')
+watch(searchQuery, () => { showInbox.value = false })
 const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
@@ -3910,6 +3916,9 @@ watch(activeTabId, (newId, oldId) => {
 </script>
 
 <style scoped>
+.inbox-shortcut { margin: 0 10px 6px; padding: 8px 10px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; cursor: pointer; font: inherit; }
+.inbox-shortcut[aria-expanded="true"] { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); }
+.inbox-shortcut:focus-visible { outline: 2px solid var(--theme-primary); }
 .library-recovery { display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow-wrap: anywhere; font-size: 12px; color: var(--theme-text); }
 .library-recovery p { margin: 0; line-height: 1.6; }
 .library-recovery-path { opacity: .7; }

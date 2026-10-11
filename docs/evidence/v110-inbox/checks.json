@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "missing Inbox is not reported empty",
+    "file and folder counts correct",
+    "inbox file opens in main editor",
+    "folder browsing returns to Inbox",
+    "refresh removes stale name",
+    "return restores existing file tree",
+    "typing search exits Inbox without losing query",
+    "all seven sidebar tabs retained"
+  ],
+  "scope": "Isolated real library browsing; no archive implementation"
+}
