@@ -2,6 +2,7 @@ pub mod credentials;
 pub mod archive_history;
 pub mod archive_dependencies;
 pub(crate) mod archive_move;
+pub(crate) mod archive_document;
 pub(crate) mod history_coordination;
 pub mod data_migration;
 pub mod external_file_access;

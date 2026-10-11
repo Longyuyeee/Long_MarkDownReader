@@ -479,6 +479,7 @@ fn move_with_history_hook(
         Err(e) => return Err(e.to_string()),
     }
     let expected = inspect(cache, &source, &target)?;
+    let document_fingerprint = super::archive_document::fingerprint(&source)?;
     // This first coordinator slice requires an existing history staging receipt.
     // Do not move history-free files without their own durable transaction journal.
     if expected.strategy == "none" {
@@ -508,18 +509,28 @@ fn move_with_history_hook(
             .create_new(true)
             .open(stage.join("document-intent.json"))
             .map_err(|e| e.to_string())?;
-        let bytes =
-            serde_json::to_vec(&serde_json::json!({"version":1,"source":source,"target":target}))
-                .map_err(|e| e.to_string())?;
+        let intent = super::archive_document::DocumentIntent {
+            version: 2,
+            source: source.clone(),
+            target: target.clone(),
+            fingerprint: document_fingerprint,
+        };
+        let bytes = serde_json::to_vec(&intent).map_err(|e| e.to_string())?;
         journal
             .write_all(&bytes)
             .and_then(|_| journal.sync_all())
             .map_err(|e| e.to_string())?;
         drop(journal);
+        if super::archive_document::fingerprint(&source)? != intent.fingerprint {
+            return Err("准备期间正文发生变化，未移动".into());
+        }
         let moves = super::archive_move::move_batch(root, &[(source.clone(), target.clone())]);
         moves.into_iter().next().ok_or("缺少移动回执")?.result?;
         receipt.document_moved = true;
         after_move();
+        if super::archive_document::fingerprint(&target)? != intent.fingerprint {
+            return Err("正文已移动但内容发生变化，暂停历史发布".into());
+        }
         let published = publish_locked(cache, &source, &target, &prepared, &lease, || {})?;
         receipt.history_published = true;
         if let Some(error) = published.marker_error {
@@ -1225,5 +1236,30 @@ mod tests {
         assert!(move_with_history(&root, &f.0, &source, &target).is_err());
         assert_eq!(fs::read_to_string(source).unwrap(), "keep");
         assert_eq!(fs::read_to_string(target).unwrap(), "other");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coordinated_target_change_stops_history_publication_without_rollback() {
+        let f = Fixture::new();
+        let root = f.0.join("library");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("old.md"), "before").unwrap();
+        let source = root.join("old.md").canonicalize().unwrap();
+        let target = root.canonicalize().unwrap().join("new.md");
+        let old = history_path(&f.0, &source);
+        fs::create_dir(&old).unwrap();
+        fs::write(old.join("1.md"), "history").unwrap();
+        let receipt = move_with_history_hook(&root, &f.0, &source, &target, || {
+            fs::write(&target, "after!").unwrap()
+        })
+        .unwrap();
+        assert!(receipt.document_moved && !receipt.history_published && receipt.error.is_some());
+        assert_eq!(fs::read_to_string(&target).unwrap(), "after!");
+        assert!(!history_path(&f.0, &target).exists());
+        assert!(old.join("1.md").exists());
+        assert!(
+            super::super::archive_document::inspect_document(&root, &f.0, &receipt.stage).is_err()
+        );
     }
 }
