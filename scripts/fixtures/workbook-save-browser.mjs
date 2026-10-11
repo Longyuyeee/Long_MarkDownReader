@@ -19,6 +19,11 @@ if (new URLSearchParams(window.location.search).has('filter')) {
   sheet.rows.push([{ value: '客户交付', formattedValue: '客户交付', kind: 'string' }]); sheet.totalRows = 2
 }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
+if (new URLSearchParams(window.location.search).has('drawingEdit')) {
+  sheet.drawings.push({ id: 'editable-chart', kind: 'chart', editable: true, name: '客户交付', drawingPart: 'drawing1.xml', objectId: '1', anchorIndex: 0,
+    from: { row: 0, column: 0 }, to: { row: 1, column: 1 },
+    chart: { title: '交付进度', chartType: 'column', titleEditable: true, presentationEditable: true, series: [] } })
+}
 if (new URLSearchParams(window.location.search).has('chart')) {
   sheet.totalRows = 2; sheet.totalColumns = 2; sheet.returnedColumns = 2
   sheet.rows = [
@@ -33,8 +38,14 @@ window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
     await new Promise((resolve, reject) => {
       audit.pendingDrawing = fail => { audit.pendingDrawing = null; fail ? reject(new Error('模拟绘图写入失败')) : resolve() }
     })
-    if (change.action !== 'create_chart') throw Error('Only create_chart supported in fixture')
-    sheets[change.sheet].drawings.push({ id: 'chart-1', kind: 'chart', name: change.chartTitle, editable: false, from: change.from, to: change.to, chart: { title: change.chartTitle, chartType: change.chartType, series: [] } })
+    if (change.action === 'create_chart') sheets[change.sheet].drawings.push({ id: 'chart-1', kind: 'chart', name: change.chartTitle, editable: false, from: change.from, to: change.to, chart: { title: change.chartTitle, chartType: change.chartType, series: [] } })
+    else {
+      const drawing = sheets[change.sheet].drawings.find(item => item.objectId === change.objectId)
+      if (change.action === 'update_metadata') { drawing.name = change.name; drawing.description = change.description }
+      else if (change.action === 'move_resize') { drawing.from = change.from; drawing.to = change.to }
+      else if (change.action === 'delete_chart') sheets[change.sheet].drawings = sheets[change.sheet].drawings.filter(item => item !== drawing)
+      else throw Error('Unsupported drawing fixture action')
+    }
     document.signature += '-drawing'; return structuredClone(document)
   }
   if (command === 'update_workbook_defined_name') {

@@ -4582,13 +4582,26 @@ const commitChartPresentation = (
     legendPosition,
   }, area, success)
 }
+const captureDrawingContext = () => {
+  const current = captureEditContext()
+  const drawing = selectedDrawing.value
+  const series = selectedChartSeries.value
+  return () => {
+    if (current() && canEditDrawing.value && selectedDrawing.value === drawing && selectedChartSeries.value === series) return true
+    message.warning('编辑上下文已变化，请重新选择绘图对象后操作')
+    return false
+  }
+}
 const editChartAxes = async () => {
   const chart = selectedDrawing.value?.chart
   if (!chart || !canEditChartAxes.value) return
+  const current = captureDrawingContext()
   const categoryAxisTitle = await promptAppAction(dialog, { title: '分类轴标题', content: '留空可以移除分类轴标题。', initialValue: chart.categoryAxisTitle || '', positiveText: '下一步' })
   if (categoryAxisTitle === null) return
+  if (!current()) return
   const valueAxisTitle = await promptAppAction(dialog, { title: '数值轴标题', content: '留空可以移除数值轴标题。', initialValue: chart.valueAxisTitle || '', positiveText: '保存坐标轴' })
   if (valueAxisTitle === null) return
+  if (!current()) return
   if (categoryAxisTitle.trim() === (chart.categoryAxisTitle || '') && valueAxisTitle.trim() === (chart.valueAxisTitle || '')) return
   commitChartPresentation(categoryAxisTitle, valueAxisTitle, chart.legendPosition, '已更新图表坐标轴标题')
 }
@@ -4618,28 +4631,35 @@ const applyChartDataLabels = () => {
 const deleteSelectedChart = () => {
   const drawing = selectedDrawing.value
   if (!drawing?.chart || !canDeleteChart.value) return
+  const current = captureDrawingContext()
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   dialog.warning({
     title: '删除当前图表？',
     content: `将删除“${drawing.chart.title || drawing.name}”及其未被引用的图表部件。此操作不会删除源单元格数据。`,
     positiveText: '删除图表',
     negativeText: '取消',
-    onPositiveClick: () => commitDrawingChange({
-      sheet: activeSheet.value,
-      drawingPart: drawing.drawingPart,
-      anchorIndex: drawing.anchorIndex,
-      objectId: drawing.objectId,
-      action: 'delete_chart',
-    }, area, '已删除图表', 'clear'),
+    onPositiveClick: () => {
+      if (!current() || !canDeleteChart.value) return
+      return commitDrawingChange({
+        sheet: activeSheet.value,
+        drawingPart: drawing.drawingPart,
+        anchorIndex: drawing.anchorIndex,
+        objectId: drawing.objectId,
+        action: 'delete_chart',
+      }, area, '已删除图表', 'clear')
+    },
   })
 }
 const editDrawingMetadata = async () => {
   const drawing = selectedDrawing.value
   if (!drawing?.editable || !canEditDrawing.value) return
+  const current = captureDrawingContext()
   const name = (await promptAppAction(dialog, { title: '绘图对象名称', content: '最多 255 个字符。', initialValue: drawing.name, positiveText: '下一步' }))?.trim()
   if (!name) return
+  if (!current()) return
   const description = await promptAppAction(dialog, { title: '绘图对象替代文本', content: '可以留空，最多 1024 个字符。', initialValue: drawing.description || '', positiveText: '保存对象信息', multiline: true })
   if (description === null) return
+  if (!current()) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
     sheet: activeSheet.value,
@@ -4655,6 +4675,7 @@ const applyDrawingSelection = () => {
   const drawing = selectedDrawing.value
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!drawing?.editable || !area || !canApplyDrawingSelection.value) return
+  const current = captureDrawingContext()
   const from: WorkbookDrawingAnchor = { row: area.top, column: area.left, rowOffset: 0, columnOffset: 0 }
   const to: WorkbookDrawingAnchor = { row: area.bottom + 1, column: area.right + 1, rowOffset: 0, columnOffset: 0 }
   dialog.warning({
@@ -4662,22 +4683,27 @@ const applyDrawingSelection = () => {
     content: `对象“${drawing.name}”将对齐到 ${rangeLabel(area)}；图表内容、图片文件和关系部件保持不变。`,
     positiveText: '应用选区',
     negativeText: '取消',
-    onPositiveClick: () => commitDrawingChange({
-      sheet: activeSheet.value,
-      drawingPart: drawing.drawingPart,
-      anchorIndex: drawing.anchorIndex,
-      objectId: drawing.objectId,
-      action: 'move_resize',
-      from,
-      to,
-    }, area, '已移动并调整绘图对象'),
+    onPositiveClick: () => {
+      if (!current() || !canApplyDrawingSelection.value) return
+      return commitDrawingChange({
+        sheet: activeSheet.value,
+        drawingPart: drawing.drawingPart,
+        anchorIndex: drawing.anchorIndex,
+        objectId: drawing.objectId,
+        action: 'move_resize',
+        from,
+        to,
+      }, area, '已移动并调整绘图对象')
+    },
   })
 }
 const editChartTitle = async () => {
   const drawing = selectedDrawing.value
   if (!drawing?.chart?.titleEditable || !canEditChartTitle.value) return
+  const current = captureDrawingContext()
   const title = (await promptAppAction(dialog, { title: '编辑图表标题', content: '最多 1024 个字符。', initialValue: drawing.chart.title || '', positiveText: '保存标题' }))?.trim()
   if (!title || title === drawing.chart.title) return
+  if (!current()) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
     sheet: activeSheet.value,
@@ -4692,10 +4718,13 @@ const editChartSeries = async () => {
   const drawing = selectedDrawing.value
   const series = selectedChartSeries.value
   if (!drawing?.chart || !series?.editable || !canEditChartSeries.value) return
+  const current = captureDrawingContext()
   const categories = (await promptAppAction(dialog, { title: '系列分类引用', content: '输入内部工作表的一维 A1 区域。', initialValue: series.categories || '', positiveText: '下一步' }))?.trim()
   if (!categories) return
+  if (!current()) return
   const values = (await promptAppAction(dialog, { title: '系列数值引用', content: '必须与分类引用包含相同数量的数据点。', initialValue: series.values || '', positiveText: '保存系列引用' }))?.trim()
   if (!values || (categories === series.categories && values === series.values)) return
+  if (!current()) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
     sheet: activeSheet.value,
@@ -4712,8 +4741,10 @@ const editChartSeriesName = async () => {
   const drawing = selectedDrawing.value
   const series = selectedChartSeries.value
   if (!drawing?.chart || !series?.nameEditable || !canEditChartSeriesName.value) return
+  const current = captureDrawingContext()
   const seriesName = await promptAppAction(dialog, { title: '系列显示名称', content: '留空可以移除系列显示名称。', initialValue: series.name || '', positiveText: '保存系列名称' })
   if (seriesName === null || seriesName.trim() === (series.name || '')) return
+  if (!current()) return
   const area = selectionBounds.value || { top: drawing.from.row, bottom: drawing.from.row, left: drawing.from.column, right: drawing.from.column }
   void commitDrawingChange({
     sheet: activeSheet.value,

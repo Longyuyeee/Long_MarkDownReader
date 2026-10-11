@@ -6,6 +6,58 @@ import { test } from 'node:test'
 const source = fs.readFileSync('src/views/WorkbookView.vue', 'utf8')
 const box = value => ({ value })
 
+test('drawing context checks document, object, series and editability', () => {
+  let current = true
+  const ctx = extract('const captureDrawingContext =', 'const editChartAxes =', {
+    captureEditContext: () => () => current, selectedDrawing: box({}), selectedChartSeries: box({}), canEditDrawing: box(true), message: { warning() {} },
+  }, 'globalThis.capture = captureDrawingContext')
+  for (const mutate of [() => { current = false }, () => { ctx.selectedDrawing.value = {} }, () => { ctx.selectedChartSeries.value = {} }, () => { ctx.canEditDrawing.value = false }]) {
+    current = true; ctx.canEditDrawing.value = true
+    const valid = ctx.capture(); assert.equal(valid(), true); mutate(); assert.equal(valid(), false)
+  }
+})
+
+test('every drawing prompt rejects changed targets at each await and preserves cancellation', async () => {
+  for (const [name, end, answers] of [
+    ['editChartAxes', 'applyChartLegendPosition', ['月份', '数量']],
+    ['editDrawingMetadata', 'applyDrawingSelection', ['新名称', '说明']],
+    ['editChartTitle', 'editChartSeries', ['交付进度']],
+    ['editChartSeries', 'editChartSeriesName', ['Sheet1!A2:A3', 'Sheet1!B2:B3']],
+    ['editChartSeriesName', 'applyChartSeriesColor', ['客户']],
+  ]) for (const mode of ['valid', 'stale', 'cancel']) for (let stop = 0; stop < answers.length; stop++) {
+    let current = true, prompts = 0
+    const commits = []
+    const bindings = {
+      selectedDrawing: box({ editable: true, from: { row: 0, column: 0 }, chart: { titleEditable: true, title: 'old' } }),
+      selectedChartSeries: box({ index: 0, editable: true, nameEditable: true }),
+      selectionBounds: box(null), activeSheet: box('Sheet1'), dialog: {},
+      captureDrawingContext: () => () => current,
+      promptAppAction: async () => { const index = prompts++; if (index === stop && mode === 'stale') current = false; return index === stop && mode === 'cancel' ? null : answers[index] },
+      commitDrawingChange: change => commits.push(change), commitChartPresentation: (...args) => commits.push(args),
+    }
+    for (const key of ['canEditDrawing', 'canEditChartAxes', 'canEditChartTitle', 'canEditChartSeries', 'canEditChartSeriesName']) bindings[key] = box(true)
+    const ctx = extract(`const ${name} =`, `const ${end} =`, bindings, `globalThis.action = ${name}`)
+    await ctx.action()
+    assert.equal(commits.length, mode === 'valid' ? 1 : 0, `${name}/${mode}/${stop}`)
+    if (mode !== 'valid') assert.equal(prompts, stop + 1)
+  }
+})
+
+test('drawing delete and move confirmations reject changed contexts', async () => {
+  for (const [name, end] of [['deleteSelectedChart', 'editDrawingMetadata'], ['applyDrawingSelection', 'editChartTitle']]) for (const stale of [false, true]) {
+    let current = true, confirm
+    const commits = []
+    const ctx = extract(`const ${name} =`, `const ${end} =`, {
+      selectedDrawing: box({ editable: true, name: '交付', chart: {}, from: { row: 0, column: 0 } }),
+      canDeleteChart: box(true), canApplyDrawingSelection: box(true), selectionBounds: box({ top: 0, bottom: 1, left: 0, right: 1 }), selectionAreas: box([{}]),
+      activeSheet: box('Sheet1'), captureDrawingContext: () => () => current, rangeLabel: () => 'A1:B2',
+      dialog: { warning: options => { confirm = options.onPositiveClick } }, commitDrawingChange: change => commits.push(change),
+    }, `globalThis.action = ${name}`)
+    ctx.action(); if (stale) current = false; await confirm()
+    assert.equal(commits.length, stale ? 0 : 1)
+  }
+})
+
 test('chart creation rejects a stale prompt without changing chart creation requirements', async () => {
   for (const stale of [false, true]) {
     let current = true
