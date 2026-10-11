@@ -333,7 +333,7 @@
                 </div>
                 
                 <div v-else class="history-bubbles-wrapper">
-                  <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" @click="restoreHistory(h.content)">
+                  <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" @click="restoreHistory(h)">
                     <div class="bubble-accent-line"></div>
                     <div class="bubble-content">
                       <div class="bubble-top">
@@ -345,7 +345,7 @@
                       <div class="bubble-preview">{{ h.content.slice(0, 45).replace(/[\n#*`]/g, ' ') }}...</div>
                     </div>
                     <div class="bubble-actions">
-                      <n-button quaternary circle size="tiny" class="delete-trigger" @click.stop="deleteHistory(h.timestamp)">
+                      <n-button quaternary circle size="tiny" class="delete-trigger" @click.stop="deleteHistory(h)">
                         <template #icon><n-icon :component="CloseIcon" /></template>
                       </n-button>
                     </div>
@@ -1983,7 +1983,11 @@ const handleExport = async (key: string) => {
     } catch (e) { /* user cancelled */ }
   }
 }
-const historyList = ref<{timestamp: number, content: string}[]>([])
+interface HistoryEntry { timestamp: number; content: string; path: string; libraryRoot: string }
+const historyList = ref<HistoryEntry[]>([])
+let historyGeneration = 0
+const invalidateHistory = () => { ++historyGeneration; historyList.value = [] }
+watch([activeTabId, () => store.libraryPath], invalidateHistory, { flush: 'sync' })
 
 const openSettings = () => router.push('/settings')
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
@@ -2028,17 +2032,43 @@ const createMindMapFromCurrentMarkdown = async () => {
   }
 }
 const fetchHistory = async () => {
-  if (!activeTabId.value) return
+  const generation = ++historyGeneration
+  const path = activeTabId.value
+  const libraryRoot = store.libraryPath
+  historyList.value = []
+  if (!path || !libraryRoot) return
+  const isCurrent = () => generation === historyGeneration && path === activeTabId.value && libraryRoot === store.libraryPath
   try {
-    const res = await invoke<[number, string][]>('list_history', { libraryRoot: store.libraryPath, path: activeTabId.value })
-    historyList.value = res.map(([timestamp, content]) => ({ timestamp, content }))
-  } catch (e) { console.error('Failed to fetch history', e) }
+    const res = await invoke<[number, string][]>('list_history', { libraryRoot, path })
+    if (isCurrent()) historyList.value = res.map(([timestamp, content]) => ({ timestamp, content, path, libraryRoot }))
+  } catch (e) {
+    if (isCurrent()) message.error(`历史快照读取失败：${String(e)}`)
+  }
 }
 
-const restoreHistory = (content: string) => { if (!vditor || !isVditorReady) return; vditor.setValue(content); message.success('已恢复到该历史版本') }
-const deleteHistory = async (timestamp: number) => {
-  if (!activeTabId.value) return
-  try { await invoke('delete_history_version', { libraryRoot: store.libraryPath, path: activeTabId.value, timestamp }); await fetchHistory(); message.success('已移除该备份') }
+const ownsHistoryEntry = (entry: HistoryEntry) => historyList.value.includes(entry)
+  && entry.path === activeTabId.value && entry.libraryRoot === store.libraryPath
+const restoreHistory = (entry: HistoryEntry) => {
+  if (!ownsHistoryEntry(entry) || !vditor || !isVditorReady || lastLoadedPath !== entry.path
+    || !activeFormatCanEdit.value || hasPendingMainTextSave(entry.path)) {
+    message.warning('文件已切换或正在读写，请等待当前文件就绪后重试')
+    return
+  }
+  vditor.setValue(entry.content)
+  // Programmatic Vditor updates do not reliably emit its input callback.
+  store.updateTabContent(entry.path, entry.content)
+  const tab = tabs.value.find(item => item.path === entry.path)
+  if (tab) tab.isDirty = true
+  wordCount.value = entry.content.length
+  message.success('历史内容已载入编辑区，尚未保存到文件')
+}
+const deleteHistory = async (entry: HistoryEntry) => {
+  if (!ownsHistoryEntry(entry)) return
+  const { libraryRoot, path, timestamp } = entry
+  try {
+    await invoke('delete_history_version', { libraryRoot, path, timestamp })
+    if (ownsHistoryEntry(entry)) { await fetchHistory(); message.success('已移除该备份') }
+  }
   catch (e) { message.error('删除失败') }
 }
 const clearAllHistory = async () => {
@@ -2048,7 +2078,7 @@ const clearAllHistory = async () => {
     positiveText: '确认清空',
     negativeText: '取消',
     onPositiveClick: async () => {
-      try { await invoke('clear_all_history'); historyList.value = []; message.success('历史缓存已全部清空') }
+      try { await invoke('clear_all_history'); invalidateHistory(); message.success('历史缓存已全部清空') }
       catch (e) { message.error('清空失败') }
     }
   })
@@ -3589,6 +3619,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  invalidateHistory()
   document.removeEventListener('selectionchange', rememberReferenceInsertionPoint)
   ++knowledgeSearchGeneration
   ++libraryLoadGeneration
