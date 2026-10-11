@@ -13,8 +13,19 @@ const secondSheet = structuredClone(sheet)
 secondSheet.sheet = 'Sheet2'
 secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue: '第二张表的客户清单', kind: 'string' }
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
-const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [] }
+const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'update_workbook_data_validation') {
+    const change = structuredClone(args.payload.change)
+    audit.validationWrites.push(change)
+    const rules = sheets[change.sheet].dataValidations
+    if (change.action === 'create') rules.push(change.validation)
+    else if (change.action === 'delete') rules.splice(change.validationIndex, 1)
+    else if (change.action === 'update') rules[change.validationIndex] = change.validation
+    else throw Error(`Unexpected validation action ${change.action}`)
+    document.signature += '-validation'
+    return structuredClone(document)
+  }
   if (command === 'read_workbook_file') return structuredClone(document)
   if (command === 'read_workbook_sheet') {
     const snapshot = structuredClone(sheets[args.sheet])

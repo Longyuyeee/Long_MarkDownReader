@@ -2921,14 +2921,21 @@ const commitTableLifecycleChange = (change: WorkbookTableChange, area: WorkbookM
   stageWorkbookObjectDraft({ kind: 'table', label: success, area: { ...area }, tableChange: cloneDraftData(change) })
 }
 const promptDataValidationRule = async (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): Promise<WorkbookDataValidation | null> => {
-  const kindInput = await promptAppAction(dialog, { title: '数据验证类型', content: '可用类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）。', initialValue: existing?.kind || 'list', positiveText: '下一步' })
+  const isCurrent = captureEditContext()
+  const promptRule = async (options: Parameters<typeof promptAppAction>[1]) => {
+    const answer = await promptAppAction(dialog, options)
+    if (answer === null) return null
+    if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置数据验证'); return null }
+    return answer
+  }
+  const kindInput = await promptRule({ title: '数据验证类型', content: '可用类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）。', initialValue: existing?.kind || 'list', positiveText: '下一步' })
   if (kindInput === null) return null
   const kindAliases: Record<string, string> = { list: 'list', '列表': 'list', whole: 'whole', '整数': 'whole', decimal: 'decimal', '小数': 'decimal', textlength: 'textLength', '文本长度': 'textLength', custom: 'custom', '自定义': 'custom', '自定义公式': 'custom' }
   const kind = kindAliases[kindInput.trim().toLocaleLowerCase()] || kindAliases[kindInput.trim()]
   if (!kind) { message.error('不支持的数据验证类型'); return null }
   let operator: string | undefined
   if (['whole', 'decimal', 'textLength'].includes(kind)) {
-    const input = await promptAppAction(dialog, { title: '数据验证比较方式', content: '可用方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual。', initialValue: existing?.operator || 'between', positiveText: '下一步' })
+    const input = await promptRule({ title: '数据验证比较方式', content: '可用方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual。', initialValue: existing?.operator || 'between', positiveText: '下一步' })
     if (input === null) return null
     operator = input.trim()
     if (!['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual'].includes(operator)) {
@@ -2940,18 +2947,18 @@ const promptDataValidationRule = async (existing: WorkbookDataValidation | undef
     : kind === 'custom'
       ? '输入自定义公式，例如 A1>0；公式按选区左上角作为相对引用基准'
       : '输入第一个比较值或公式'
-  const formula1 = (await promptAppAction(dialog, { title: '数据验证来源或公式', content: formulaHint, initialValue: existing?.formula1 || (kind === 'list' ? '"是,否"' : kind === 'custom' ? `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""` : '0'), positiveText: '下一步' }))?.trim()
+  const formula1 = (await promptRule({ title: '数据验证来源或公式', content: formulaHint, initialValue: existing?.formula1 || (kind === 'list' ? '"是,否"' : kind === 'custom' ? `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""` : '0'), positiveText: '下一步' }))?.trim()
   if (!formula1) return null
   let formula2: string | undefined
   if (operator === 'between' || operator === 'notBetween') {
-    const input = await promptAppAction(dialog, { title: '第二个比较值', content: '输入第二个比较值或公式。', initialValue: existing?.formula2 || '100', positiveText: '下一步' })
+    const input = await promptRule({ title: '第二个比较值', content: '输入第二个比较值或公式。', initialValue: existing?.formula2 || '100', positiveText: '下一步' })
     if (input === null) return null
     formula2 = input.trim()
     if (!formula2) return null
   }
-  const error = await promptAppAction(dialog, { title: '数据验证错误提示', content: '留空表示仅保存规则，不阻止当前编辑器中的输入。', initialValue: existing?.error || '输入不符合此单元格的数据验证规则', positiveText: '下一步', multiline: true })
+  const error = await promptRule({ title: '数据验证错误提示', content: '留空表示仅保存规则，不阻止当前编辑器中的输入。', initialValue: existing?.error || '输入不符合此单元格的数据验证规则', positiveText: '下一步', multiline: true })
   if (error === null) return null
-  const prompt = await promptAppAction(dialog, { title: '单元格输入提示', content: '选中单元格时显示，可以留空。', initialValue: existing?.prompt || '', positiveText: '保存规则', multiline: true })
+  const prompt = await promptRule({ title: '单元格输入提示', content: '选中单元格时显示，可以留空。', initialValue: existing?.prompt || '', positiveText: '保存规则', multiline: true })
   if (prompt === null) return null
   return {
     ranges: ranges.map(range => ({ ...range })),
@@ -2991,11 +2998,13 @@ const editDataValidationRule = async (action: 'create' | 'update') => {
   commitFormulaInput()
   const area = validationSelection.value
   if (!area || !canEditDataValidation.value) return
+  const isCurrent = captureEditContext()
   const existing = action === 'update' ? selectedValidation.value : undefined
   const index = action === 'update' ? selectedValidationIndex.value : -1
   if (action === 'update' && (!existing || index < 0)) return void message.error('请选择一个已有数据验证规则')
   const validation = await promptDataValidationRule(existing, existing?.ranges || [{ ...area }])
   if (!validation) return
+  if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置数据验证'); return }
   void commitDataValidationChange({
     sheet: activeSheet.value,
     action,
@@ -3020,12 +3029,16 @@ const deleteDataValidationRule = () => {
   const index = selectedValidationIndex.value
   const area = validationSelection.value
   if (!existing || index < 0 || !area || !canEditDataValidation.value) return
+  const isCurrent = captureEditContext()
   dialog.warning({
     title: '删除数据验证规则？',
     content: '将从 XLSX 中删除当前单元格所属的整条验证规则；规则覆盖的其他单元格也会失去该规则，且不能通过当前撤销栈恢复。',
     positiveText: '删除规则',
     negativeText: '取消',
-    onPositiveClick: () => commitDataValidationChange({ sheet: activeSheet.value, action: 'delete', validationIndex: index }, area, '已删除数据验证规则'),
+    onPositiveClick: () => {
+      if (!isCurrent()) { message.warning('编辑状态已变化，请重新确认删除数据验证'); return }
+      return commitDataValidationChange({ sheet: activeSheet.value, action: 'delete', validationIndex: index }, area, '已删除数据验证规则')
+    },
   })
 }
 const CONDITIONAL_STYLE_PRESETS: Record<string, WorkbookConditionalFormatStyle> = {

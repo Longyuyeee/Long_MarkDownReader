@@ -12,6 +12,57 @@ function extract(start, end, bindings, expose) {
   vm.runInContext(ts.transpileModule(source.slice(from, to) + '\n' + expose, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, ctx)
   return ctx
 }
+
+test('data validation stops quietly on cancellation and rejects stale answers at every step', async () => {
+  const answers = ['whole', 'between', '0', '100', '请输入 0 到 100', '填写完成度']
+  for (const mode of ['cancel', 'stale', 'valid']) {
+    for (let stop = 0; stop < answers.length; stop++) {
+      let current = true, calls = 0
+      const warnings = [], errors = []
+      const ctx = extract('const promptDataValidationRule =', 'const commitDataValidationChange =', {
+        dialog: {}, captureEditContext: () => () => current,
+        promptAppAction: async () => {
+          const index = calls++
+          if (index === stop && mode === 'stale') current = false
+          return index === stop && mode === 'cancel' ? null : answers[index]
+        },
+        message: { warning: value => warnings.push(value), error: value => errors.push(value) },
+      }, 'globalThis.action = promptDataValidationRule')
+      const rule = await ctx.action(undefined, [{ top: 0, bottom: 0, left: 0, right: 0 }])
+      assert.deepEqual(errors, [])
+      if (mode === 'valid') {
+        assert.equal(rule.kind, 'whole'); assert.equal(rule.formula2, '100'); assert.equal(calls, 6)
+      } else {
+        assert.equal(rule, null); assert.equal(calls, stop + 1)
+      }
+      assert.equal(warnings.length, mode === 'stale' ? 1 : 0)
+    }
+  }
+})
+
+test('data validation edit and delete cannot commit to a changed sheet', async () => {
+  for (const stale of [false, true]) {
+    let current = true, confirmation
+    const commits = [], warnings = []
+    const bindings = {
+      commitFormulaInput() {}, validationSelection: box({ top: 0, bottom: 0, left: 0, right: 0 }),
+      canEditDataValidation: box(true), selectedValidation: box({ kind: 'list' }), selectedValidationIndex: box(0), activeSheet: box('Sheet1'),
+      captureEditContext: () => () => current, message: { warning: value => warnings.push(value) },
+      commitDataValidationChange: value => commits.push(value), dialog: { warning: value => { confirmation = value } },
+      promptDataValidationRule: async () => { if (stale) { current = false; bindings.activeSheet.value = 'Sheet2' }; return { kind: 'list' } },
+    }
+    const ctx = extract('const editDataValidationRule =', 'const CONDITIONAL_STYLE_PRESETS:', bindings, 'globalThis.edit = editDataValidationRule; globalThis.remove = deleteDataValidationRule')
+    await ctx.edit('create')
+    assert.equal(commits.length, stale ? 0 : 1)
+    commits.length = 0; current = true; bindings.activeSheet.value = 'Sheet1'
+    ctx.remove()
+    if (stale) { current = false; bindings.activeSheet.value = 'Sheet2' }
+    await confirmation.onPositiveClick()
+    assert.equal(commits.length, stale ? 0 : 1)
+    if (!stale) assert.equal(commits[0].sheet, 'Sheet1')
+    assert.equal(warnings.length, stale ? 2 : 0)
+  }
+})
 test('saving blocks editing shortcuts but preserves copying and navigation', () => {
   const calls = []
   const bindings = { saving: box(true), isExternal: box(false), formulaInputRef: box(null), selectedCell: box({ row: 0, column: 0 }), canvasRowCount: box(10), canvasColumnCount: box(10), validationMenuCell: box(null) }
