@@ -9,12 +9,10 @@ use std::{
     sync::LazyLock,
 };
 
-static INLINE: LazyLock<regex::Regex> =
-    LazyLock::new(|| regex::Regex::new(r#"!?\[[^\]\r\n]*\]\(\s*<?([^\s)>]+)"#).unwrap());
-static REFERENCE: LazyLock<regex::Regex> =
-    LazyLock::new(|| regex::Regex::new(r#"(?m)^\s{0,3}\[[^\]\r\n]+\]:\s*<?([^\s>]+)"#).unwrap());
 static HTML: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r#"(?i)\b(?:src|href)\s*=\s*["']([^"']+)["']"#).unwrap());
+static UNPARSED_DEFINITION: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(r#"(?m)^[ \t]{0,3}\[[^\]\r\n]+\]:\s*<?([^\s>]+)"#).unwrap());
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -115,27 +113,55 @@ fn local(value: &str) -> bool {
 }
 
 fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
+    use pulldown_cmark::{Event, Parser, Tag};
     let mut found = vec![];
-    for (pattern, kind) in [
-        (&*INLINE, "markdown"),
-        (&*REFERENCE, "reference_definition"),
-        (&*HTML, "html_attribute"),
-    ] {
-        for capture in pattern.captures_iter(text) {
-            let target = &capture[1];
-            if local(target) && !target.starts_with("longedit://pdf?") {
-                found.push(DependencyEvidence {
-                    document: document.into(),
-                    line: text[..capture.get(0).unwrap().start()]
-                        .bytes()
-                        .filter(|b| *b == b'\n')
-                        .count()
-                        + 1,
-                    target: target.into(),
-                    kind,
-                    resolution: None,
-                });
+    let mut add = |target: &str, offset: usize, kind| {
+        if local(target) && !target.starts_with("longedit://pdf?") {
+            found.push(DependencyEvidence {
+                document: document.into(),
+                line: text[..offset].bytes().filter(|b| *b == b'\n').count() + 1,
+                target: target.into(),
+                kind,
+                resolution: None,
+            });
+        }
+    };
+    let parser = Parser::new(text);
+    let mut definition_offsets = std::collections::HashSet::new();
+    let mut code_ranges = Vec::new();
+    // Keep unused definitions as conservative evidence as well as resolved uses.
+    for (_, definition) in parser.reference_definitions().iter() {
+        definition_offsets.insert(definition.span.start);
+        add(
+            &definition.dest,
+            definition.span.start,
+            "reference_definition",
+        );
+    }
+    for (event, range) in parser.into_offset_iter() {
+        match event {
+            Event::Code(_) | Event::Start(Tag::CodeBlock(_)) => code_ranges.push(range),
+            Event::Start(Tag::Link { dest_url, .. } | Tag::Image { dest_url, .. }) => {
+                add(&dest_url, range.start, "markdown");
             }
+            Event::Html(_) | Event::InlineHtml(_) => {
+                for capture in HTML.captures_iter(&text[range.clone()]) {
+                    add(
+                        &capture[1],
+                        range.start + capture.get(0).unwrap().start(),
+                        "html_attribute",
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+    for capture in UNPARSED_DEFINITION.captures_iter(text) {
+        let offset = capture.get(0).unwrap().start();
+        if !definition_offsets.contains(&offset)
+            && !code_ranges.iter().any(|range| range.contains(&offset))
+        {
+            add(&capture[1], offset, "unparsed_reference_candidate");
         }
     }
     for (values, kind) in [
@@ -378,6 +404,7 @@ mod tests {
     fn finds_images_reference_definitions_html_and_wiki_with_lines() {
         let e = mentions("note.md", "![图](assets/a.png)\n[doc]: ../other.md\n<img src='images/b.png'>\n[[计划|别名]]\n[web](https://example.com)\n[anchor](#part)");
         assert_eq!(e.len(), 4);
+        assert_eq!(e[1].kind, "unparsed_reference_candidate");
         assert_eq!(e[2].line, 3);
         assert_eq!(e[3].target, "计划");
     }
@@ -403,5 +430,51 @@ mod tests {
         assert_eq!(e[0].kind, "pdf_reference");
         assert_eq!(e[0].target, "files/paper.pdf");
         assert_eq!(basename("folder/a%23b.md#section"), "a#b.md");
+    }
+
+    #[test]
+    fn archive_markdown_parser_preserves_spaces_balanced_parentheses_and_references() {
+        let evidence = mentions("note.md", "[space](<folder/my note.md>)\n![image](images/a(b).png)\n[used][ref]\n\n[ref]: <folder/reference note.md> \"Title\"");
+        assert!(evidence
+            .iter()
+            .any(|e| e.target == "folder/my note.md" && e.line == 1));
+        assert!(evidence
+            .iter()
+            .any(|e| e.target == "images/a(b).png" && e.line == 2));
+        assert!(evidence
+            .iter()
+            .any(|e| e.target == "folder/reference note.md"
+                && e.line == 3
+                && e.kind == "markdown"));
+        assert!(evidence
+            .iter()
+            .any(|e| e.target == "folder/reference note.md"
+                && e.line == 5
+                && e.kind == "reference_definition"));
+    }
+
+    #[test]
+    fn archive_markdown_parser_ignores_standard_link_examples_in_code() {
+        let evidence = mentions("note.md", "`[inline](fake.md)`\n\n```md\n[fence](fake2.md)\n<img src='fake.png'>\n```\n\n    [indent](fake3.md)\n\n[real](real.md)");
+        assert_eq!(evidence.len(), 1);
+        assert_eq!(evidence[0].target, "real.md");
+        assert_eq!(evidence[0].line, 10);
+        assert!(mentions(
+            "note.md",
+            "```md\n[ref]: fake.md\n```\n\n    [other]: fake2.md"
+        )
+        .is_empty());
+    }
+
+    #[test]
+    fn archive_markdown_parser_handles_escaped_destination_and_html_line_number() {
+        let evidence = mentions(
+            "note.md",
+            "[escaped](folder/a\\(b\\).md)\n\n<img\n src='image.png'>",
+        );
+        assert!(evidence.iter().any(|e| e.target == "folder/a(b).md"));
+        assert!(evidence
+            .iter()
+            .any(|e| e.target == "image.png" && e.line == 4));
     }
 }
