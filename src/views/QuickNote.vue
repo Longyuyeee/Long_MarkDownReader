@@ -33,10 +33,12 @@ const editor = ref<HTMLTextAreaElement>()
 let operationId = crypto.randomUUID().replace(/-/g, '')
 let operationTarget: { libraryRoot: string; targetDir: string } | null = null
 const inbox = computed(() => inboxDirectory(library.value, store.libraries))
+const pendingInbox = ref<string | null>(null)
 let stopInboxUpdates: (() => void) | undefined
 let disposed = false
 const preferenceKey = (root: string) => 'longedit.quick-note.target:' + root
 watch(library, root => {
+  pendingInbox.value = null
   try { target.value = rememberedCaptureTarget(root, inbox.value, localStorage.getItem(preferenceKey(root))) }
   catch { target.value = inbox.value }
 })
@@ -45,9 +47,18 @@ watch([content, busy], ([value, active]) => {
   store.isCaptureBusy = active
 }, { flush: 'sync' })
 onUnmounted(() => { disposed = true; store.isTempDirty = false; store.isCaptureBusy = false; stopInboxUpdates?.() })
+const applyPendingInbox = () => {
+  if (pendingInbox.value !== null && !busy.value && !operationTarget) {
+    target.value = pendingInbox.value; pendingInbox.value = null
+  }
+}
 watch(inbox, (next, previous) => {
-  if (target.value === previous && !busy.value && !operationTarget) target.value = next
+  if (target.value === previous || pendingInbox.value !== null) {
+    pendingInbox.value = next
+    applyPendingInbox()
+  }
 })
+watch(busy, applyPendingInbox)
 onMounted(async () => {
   try {
     stopInboxUpdates = await listen<{ root: string; relative: string }>('inbox-directory-changed', event => {
@@ -62,12 +73,13 @@ const close = async () => { if (!busy.value) await getCurrentWindow().close() }
 const selectTarget = async (event: Event) => {
   const select = event.target as HTMLSelectElement, value = select.value
   select.value = target.value
-  if (value !== '__choose') { target.value = value; return }
+  if (value !== '__choose') { pendingInbox.value = null; target.value = value; return }
   choosing.value = true
   try {
     const result = await open({ directory: true, multiple: false, defaultPath: library.value, title: '选择当前资料库内的目录' })
     if (typeof result === 'string') {
       await invoke('scan_directory', { libraryRoot: library.value, path: result })
+      pendingInbox.value = null
       target.value = result
     }
   } catch (error) { message.error('无法选择目录：' + String(error)) }
@@ -120,7 +132,7 @@ const save = async () => {
   operationTarget = null
   content.value = ''; template.value = '空白笔记'
   status.value = '已保存：' + savedPath
-  try { localStorage.setItem(preferenceKey(library.value), target.value === inbox.value ? '__inbox' : target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
+  try { localStorage.setItem(preferenceKey(library.value), target.value === inbox.value || pendingInbox.value !== null ? '__inbox' : target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
   try {
     await emit('refresh-library')
     if (afterSave.value === 'open') await openInMain(savedPath, library.value)

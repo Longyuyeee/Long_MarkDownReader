@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "native quick window follows main library configuration event",
+    "busy operation retains original destination",
+    "after completed save, next capture follows newest inbox",
+    "first note remains in original destination",
+    "inbox preference retains semantic selection",
+    "next real note is written into latest inbox",
+    "explicit custom target is not redirected",
+    "configuration event preserves unsaved draft",
+    "failed operation keeps retry destination and draft",
+    "successful retry saves once before following latest inbox"
+  ]
+}

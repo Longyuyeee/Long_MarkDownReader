@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "native quick window follows main library configuration event",
+    "busy operation retains original destination"
+  ],
+  "followsLatestInboxAfterBusy": true,
+  "scope": "Native windows; setting event during paused-main handoff; not slow-disk simulation"
+}
