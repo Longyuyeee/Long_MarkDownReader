@@ -4,7 +4,7 @@
       class="workspace-header"
       title="工作台"
       :subtitle="store.currentLibraryName || '专业工作区概览'"
-      @back="router.push({ name: 'LibraryMode' })"
+      :show-back="false"
     >
       <template #icon>
         <img class="brand-mark" src="/icon.png" alt="Long编辑图标">

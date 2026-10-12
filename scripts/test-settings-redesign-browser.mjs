@@ -9,6 +9,7 @@ try{
  page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(10000)
  await page.goto('http://127.0.0.1:9000/scripts/fixtures/settings-redesign-browser.html')
  await page.getByRole('navigation',{name:'设置分类'}).waitFor()
+ assert.equal(await page.locator('.management-back').count(),0)
  await page.screenshot({path:output+(process.env.BEFORE?'/00-before.png':'/01-container.png'),animations:'disabled'})
  if(!process.env.BEFORE){
   const nav=page.getByRole('navigation',{name:'设置分类'})

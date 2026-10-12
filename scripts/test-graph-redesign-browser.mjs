@@ -9,6 +9,7 @@ try{
  page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(15000)
  await page.goto('http://127.0.0.1:9000/scripts/fixtures/graph-redesign-browser.html')
  await page.locator('.graph-container canvas').first().waitFor()
+ assert.equal(await page.locator('.graph-header .management-back').count(),0)
  await page.screenshot({path:output+(process.env.BEFORE?'/00-before.png':'/01-narrow.png'),animations:'disabled'})
  if(!process.env.BEFORE){
   const search=page.getByPlaceholder('搜索节点')

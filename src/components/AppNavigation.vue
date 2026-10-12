@@ -17,13 +17,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { LayoutDashboard, FolderOpen, Inbox, Network, Settings } from 'lucide-vue-next'
+import { LayoutDashboard, FolderOpen, Network, Settings } from 'lucide-vue-next'
 
 const route = useRoute()
 const destinations = [
   { name: 'WorkspaceHome', label: '工作台', icon: LayoutDashboard },
   { name: 'LibraryMode', label: '资料库', icon: FolderOpen },
-  { name: 'Inbox', label: '收集箱', icon: Inbox },
   { name: 'Graph', label: '图谱', icon: Network },
 ]
 const activeDestination = computed(() => {
@@ -42,7 +41,7 @@ a:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px;
 .navigation-settings { margin-top: auto; }
 @media (max-width: 760px) {
   .app-navigation { flex: 0 0 44px; width: 100%; flex-direction: row; padding: 3px 8px; gap: 4px; border-right: 0; border-bottom: var(--theme-border); overflow-y: hidden; }
-  .navigation-destinations { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+  .navigation-destinations { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; }
   a { min-height: 36px; flex-direction: row; gap: 5px; padding: 0 4px; }
   .navigation-settings { margin: 0; }
 }

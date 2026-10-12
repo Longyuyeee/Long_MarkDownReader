@@ -3,7 +3,7 @@
     <WorkspaceManagementHeader
       title="设置"
       subtitle="资料库、编辑器与应用偏好"
-      @back="router.push({ name: 'LibraryMode' })"
+      :show-back="false"
     />
 
     <WorkspaceManagementContent class="settings-content">

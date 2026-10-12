@@ -1,7 +1,7 @@
 <template>
-  <WorkspaceToolbar class="workspace-management-header">
+  <WorkspaceToolbar class="workspace-management-header" :class="{ 'is-root-page': !showBack }">
     <div class="management-leading">
-      <button class="management-back" type="button" :title="backLabel" @click="$emit('back')">
+      <button v-if="showBack" class="management-back" type="button" :title="backLabel" @click="$emit('back')">
         <ArrowLeft :size="16" />
         <span>{{ backLabel }}</span>
       </button>
@@ -13,7 +13,7 @@
         </div>
       </div>
     </div>
-    <div class="management-actions">
+    <div v-if="$slots.default" class="management-actions">
       <slot />
     </div>
   </WorkspaceToolbar>
@@ -27,9 +27,11 @@ withDefaults(defineProps<{
   title: string
   subtitle?: string
   backLabel?: string
+  showBack?: boolean
 }>(), {
   subtitle: '',
   backLabel: '返回资料库',
+  showBack: true,
 })
 
 defineEmits<{ back: [] }>()
@@ -57,6 +59,9 @@ defineEmits<{ back: [] }>()
 }
 
 .management-leading { gap: var(--space-3); }
+.is-root-page { padding: 10px var(--workspace-page-gutter); gap: var(--space-3); }
+.is-root-page .management-leading { flex-shrink: 0; }
+.is-root-page .management-identity strong { font-size: 18px; line-height: 1.4; }
 .management-actions { justify-content: flex-end; gap: var(--space-2); }
 
 .management-back {
