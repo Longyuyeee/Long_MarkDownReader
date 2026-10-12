@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Image loads",
+    "Source safety notice",
+    "Flip and reset",
+    "Copy format/quality settings",
+    "Close editor"
+  ],
+  "scope": "Production image view with public icon asset; native inspect mocked; no copy-save/video acceptance",
+  "errors": []
+}
