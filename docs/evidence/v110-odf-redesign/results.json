@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "ODS value draft enables copy-save",
+    "ODP text draft enables copy-save",
+    "480px content container preserves draft and status",
+    "ODP navigation responds to container width",
+    "No native write invoked"
+  ],
+  "errors": [],
+  "scope": "Actual OdfContentReaderView, mocked native reports; native copy output not tested"
+}
