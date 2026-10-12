@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Width shortcut",
+    "Export options",
+    "History navigation",
+    "Mode rebuild keeps content and single shortcut host",
+    "Narrow menu fallback"
+  ],
+  "errors": [],
+  "scope": "Actual Vue/Vditor, mocked IPC, no native export/write acceptance"
+}

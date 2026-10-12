@@ -531,6 +531,20 @@
           </n-spin>
         </div>
         <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @click.capture="openSourceReference"></div>
+        <Teleport v-if="documentShortcutHost && activeIsMarkdown && !activeEmbeddedEditor" :to="documentShortcutHost">
+          <div class="document-inline-shortcuts" aria-label="文档快捷操作">
+            <n-dropdown trigger="click" :options="[{label:'所见即所得',key:'wysiwyg'},{label:'即时渲染 IR',key:'ir'},{label:'源码编辑',key:'sv'}]" @select="switchEditorMode">
+              <n-button class="inline-mode" quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" title="切换编辑模式">{{ store.editorMode === 'wysiwyg' ? '所见' : store.editorMode === 'ir' ? 'IR' : '源码' }} ▾</n-button>
+            </n-dropdown>
+            <n-dropdown trigger="click" :options="[{label:'窄栏 600px',key:'narrow'},{label:'中栏 800px',key:'medium'},{label:'宽栏 全宽',key:'wide'}]" @select="value => editorWidthMode = value">
+              <n-button class="inline-width" quaternary size="tiny" title="调整正文宽度">{{ editorWidthMode === 'narrow' ? '窄栏' : editorWidthMode === 'medium' ? '中栏' : '宽栏' }} ▾</n-button>
+            </n-dropdown>
+            <n-dropdown trigger="click" :options="exportOptions" @select="handleExport">
+              <n-button quaternary size="tiny" title="导出文档"><template #icon><n-icon :component="DownloadIcon" /></template>导出</n-button>
+            </n-dropdown>
+            <n-button quaternary size="tiny" title="查看历史与差异" @click="activeSidebarTab = 'history'; isSidebarCollapsed = false"><template #icon><n-icon :component="ClockIcon" /></template>历史</n-button>
+          </div>
+        </Teleport>
         <MarkdownChartEmbeds
           v-if="!activeEmbeddedEditor && activeIsMarkdown && activeMarkdownContent && activeTabId"
           :markdown="activeMarkdownContent"
@@ -1578,6 +1592,7 @@ const knowledgeIndexMenuOptions = computed(() => [
 const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
+const documentShortcutHost = ref<HTMLElement | null>(null)
 let isVditorReady = false
 let lastLoadedPath = ''
 let externalCheckInFlight = false
@@ -3391,6 +3406,7 @@ const switchEditorMode = async (mode: string) => {
   editorLoading.value = true
   const generation = ++editorLoadGeneration
   cleanupEditorListeners()
+  documentShortcutHost.value = null
   vditor.destroy(); vditor = null; isVditorReady = false
   nextTick(() => {
     if (generation !== editorLoadGeneration || vditor) return
@@ -3408,6 +3424,7 @@ const ensureVditorModeForFile = (path: string) => {
   if (vditor.getCurrentMode() === desiredMode) return false
   editorLoading.value = true
   cleanupEditorListeners()
+  documentShortcutHost.value = null
   vditor.destroy()
   vditor = null
   isVditorReady = false
@@ -3514,6 +3531,13 @@ const initVditor = () => {
       after: () => {
         isVditorReady = true;
         editorLoading.value = false;
+        const toolbar = document.querySelector('#vditor-lib .vditor-toolbar')
+        if (toolbar) {
+          const host = document.createElement('div')
+          host.className = 'document-shortcut-host'
+          toolbar.appendChild(host)
+          documentShortcutHost.value = host
+        }
         const currentAppearance = resolveMarkdownEditorAppearance(store.theme, store.codeTheme)
         vditor.setTheme(currentAppearance.editorTheme, currentAppearance.contentTheme, currentAppearance.codeTheme)
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
@@ -3806,6 +3830,7 @@ onUnmounted(() => {
   if (unlistenFocus) unlistenFocus()
   if (unlistenDrop) unlistenDrop()
   if (vditor && isVditorReady) {
+    documentShortcutHost.value = null
     vditor.destroy()
     vditor = null
   }
@@ -4185,6 +4210,11 @@ watch(activeTabId, (newId, oldId) => {
 .reference-empty > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .reference-empty > p { font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.7; }
 .editor-main :deep(.vditor-toolbar-label) { white-space: nowrap; font-size: var(--text-compact); }
+.editor-main { container-type: inline-size; container-name: library-editor; }
+.editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+.document-inline-shortcuts { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: var(--theme-border); white-space: nowrap; }
+@container library-editor (max-width: 720px) { .document-inline-shortcuts .inline-mode, .document-inline-shortcuts .inline-width { display: none; } }
+@container library-editor (max-width: 520px) { .editor-main :deep(.document-shortcut-host) { display: none; } }
 .editor-main :deep(.vditor-toolbar > .vditor-toolbar__item:has([data-type="more"])) { width: auto; }
 .editor-main :deep(.vditor-toolbar [data-type="more"]) { width: auto; min-width: 68px; }
 .editor-main :deep(.vditor-toolbar .vditor-hint) { max-width: calc(100cqw - 32px); max-height: min(560px, calc(100vh - 200px)); overflow-y: auto; }
