@@ -10,6 +10,7 @@
       </div>
       <button :disabled="loading" title="重新识别" @click="load">
         <RefreshCw :size="16" :class="{ spinning: loading }" />
+        <span>重新识别</span>
       </button>
     </header>
 
@@ -17,9 +18,10 @@
       <RefreshCw :size="20" class="spinning" />
       <span>正在验证文件容器</span>
     </div>
-    <div v-else-if="loadError" class="state error">
+    <div v-else-if="loadError" class="state error" role="alert">
       <ShieldAlert :size="22" />
       <div><strong>无法确认文件身份</strong><p>{{ loadError }}</p></div>
+      <button @click="load">重试</button>
     </div>
     <main v-else-if="report">
       <div class="status">
@@ -29,15 +31,19 @@
           <span>识别过程只读，源文件摘要保持不变</span>
         </div>
       </div>
+      <p class="boundary">{{ format?.userCapability.description }}</p>
+      <ExternalApplicationPanel :path="documentPath" />
+      <details class="file-details">
+      <summary>文件详情与完整校验摘要</summary>
       <dl>
+        <div><dt>位置</dt><dd class="file-path">{{ documentPath }}</dd></div>
         <div><dt>格式</dt><dd>{{ report.formatLabel }} ({{ report.extension }})</dd></div>
         <div><dt>容器</dt><dd>{{ report.containerKind }}</dd></div>
         <div><dt>大小</dt><dd>{{ formatBytes(report.size) }}</dd></div>
         <div><dt>修改时间</dt><dd>{{ formatTime(report.modified) }}</dd></div>
         <div class="digest"><dt>SHA-256</dt><dd>{{ report.sha256 }}</dd></div>
       </dl>
-      <p class="boundary">{{ format?.userCapability.description }}</p>
-      <ExternalApplicationPanel :path="documentPath" />
+      </details>
     </main>
   </section>
 </template>
@@ -133,4 +139,12 @@ dd { min-width: 0; margin: 0; font-size: 12px; }
   main { width: calc(100% - 24px); margin-top: 22px; }
   dl div { grid-template-columns: 86px minmax(0, 1fr); }
 }
+.external-office { min-height: 0; }
+header { flex-shrink: 0; gap: 12px; }
+header > button, .state > button { width: auto; display: inline-flex; gap: 6px; padding: 0 10px; flex-shrink: 0; white-space: nowrap; }
+main { min-height: 0; overflow-y: auto; padding-bottom: 16px; }
+.file-details { margin-top: 20px; padding: 12px; border: 1px solid var(--workspace-border-color); border-radius: 8px; }
+.file-details summary { cursor: pointer; font-size: 12px; font-weight: 600; }
+.file-path, .state p { overflow-wrap: anywhere; }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
 </style>

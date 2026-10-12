@@ -10,6 +10,7 @@
       </div>
       <button class="icon-button" :disabled="loading || converting" title="重新预检" @click="load">
         <RefreshCw :size="16" :class="{ spinning: loading }" />
+        <span>重新预检</span>
       </button>
     </header>
 
@@ -17,9 +18,10 @@
       <RefreshCw :size="20" class="spinning" />
       <span>正在只读检查 OLE 复合容器</span>
     </div>
-    <div v-else-if="loadError" class="state error">
+    <div v-else-if="loadError" class="state error" role="alert">
       <ShieldAlert :size="22" />
       <div><strong>预检未通过</strong><p>{{ loadError }}</p></div>
+      <button @click="load">重试</button>
     </div>
     <main v-else-if="report">
       <div class="status" :class="{ blocked: !report.conversionEligible }">
@@ -30,7 +32,10 @@
         </div>
       </div>
 
+      <details class="file-details">
+      <summary>源文件详情与完整校验摘要</summary>
       <dl>
+        <div><dt>位置</dt><dd class="file-path">{{ documentPath }}</dd></div>
         <div><dt>格式</dt><dd>{{ formatLabel }}</dd></div>
         <div><dt>容器</dt><dd>OLE Compound File · {{ report.cfbVersion }}</dd></div>
         <div><dt>大小</dt><dd>{{ formatBytes(report.size) }}</dd></div>
@@ -40,6 +45,7 @@
         <div><dt>修改时间</dt><dd>{{ formatTime(report.modified) }}</dd></div>
         <div class="digest"><dt>源 SHA-256</dt><dd>{{ report.sha256 }}</dd></div>
       </dl>
+      </details>
 
       <section v-if="report.riskCodes.length" class="risk-section">
         <h2>风险预检</h2>
@@ -75,13 +81,11 @@
         <p>目标必须位于当前知识库内且尚不存在。外部转换器只接触临时源副本。</p>
       </section>
 
-      <ExternalApplicationPanel :path="documentPath" />
-
-      <div v-if="conversionError" class="result error">
+      <div v-if="conversionError" class="result error" role="alert">
         <CircleX :size="18" />
         <p>{{ conversionError }}</p>
       </div>
-      <div v-else-if="receipt" class="result success">
+      <div v-else-if="receipt" class="result success" role="status">
         <CircleCheck :size="18" />
         <div>
           <strong>{{ targetLabel }} 副本已生成并通过结构复读</strong>
@@ -89,6 +93,7 @@
           <span>{{ formatBytes(receipt.targetBytes) }} · {{ receiptItemCount }} 个{{ itemLabel }} · 源文件摘要未变化</span>
         </div>
       </div>
+      <ExternalApplicationPanel :path="documentPath" />
     </main>
   </section>
 </template>
@@ -304,4 +309,12 @@ input:focus { border-color: var(--theme-primary); }
   .target-row { grid-template-columns: 1fr; }
   .convert-button { justify-content: center; }
 }
+.legacy-office { min-height: 0; }
+header { flex-shrink: 0; gap: 12px; }
+header > .icon-button, .state > button { width: auto; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; flex-shrink: 0; white-space: nowrap; }
+main { min-height: 0; padding-bottom: 16px; }
+.file-details { margin-top: 14px; padding: 12px; border: 1px solid var(--workspace-border-color); border-radius: 8px; }
+.file-details summary { cursor: pointer; font-size: 12px; font-weight: 600; }
+.file-path, .state p { overflow-wrap: anywhere; }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
 </style>
