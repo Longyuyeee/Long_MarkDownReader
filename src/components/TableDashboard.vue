@@ -125,4 +125,11 @@ const dropOn = (targetId: string, event: DragEvent) => {
 .dashboard-empty { flex: 1; display: grid; place-content: center; justify-items: center; padding: 30px; color: var(--theme-text-secondary); text-align: center; }.dashboard-empty strong { color: var(--theme-text); font-size: 14px; }.dashboard-empty p { max-width: 520px; font-size: var(--text-compact); line-height: 1.7; }
 @media (max-width: 1000px) { .dashboard-card { grid-column: span 6 !important; } }
 @media (max-width: 700px) { .dashboard-toolbar { align-items: stretch; flex-direction: column; }.dashboard-toolbar label { display: grid; grid-template-columns: minmax(0,1fr) auto; }.dashboard-grid { grid-template-columns: 1fr; }.dashboard-card { grid-column: 1 !important; } }
+@container (max-width: 700px) {
+  .dashboard-toolbar { align-items: stretch; flex-direction: column; }
+  .dashboard-toolbar label { display: grid; grid-template-columns: minmax(0,1fr) auto; }
+  .dashboard-toolbar select { min-width: 0; }
+  .dashboard-grid { grid-template-columns: minmax(0,1fr); }
+  .dashboard-card { grid-column: 1 !important; }
+}
 </style>

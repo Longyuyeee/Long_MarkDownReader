@@ -394,4 +394,10 @@ const chartTypeLabel = computed(() => chartTypes.find(item => item.value === pro
 .grid-lines line { stroke: rgba(0,0,0,.07); }.grid-lines text,.x-labels text,.legend text,.pie-caption { fill: var(--theme-text-secondary); font-size: var(--text-compact); }.axis { stroke: rgba(0,0,0,.24); stroke-width: 1; }.axis-title { fill: var(--theme-text); font-size: 11px; font-weight: 600; }.legend text { fill: var(--theme-text); }.pie-total { fill: var(--theme-text); font-size: 20px; font-weight: 700; }.pie-caption { font-size: var(--text-compact); }
 .data-label { fill: var(--theme-text); font-size: var(--text-compact); font-weight: 600; paint-order: stroke; stroke: var(--theme-card); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
 @media (max-width: 860px) { .chart-editor { grid-template-columns: 190px minmax(0,1fr); }.chart-settings { padding: 11px; }.chart-preview { padding: 10px; } }
+@container (max-width: 760px) {
+  .chart-editor:not(.readonly) { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 220px) minmax(0, 1fr); }
+  .chart-settings { padding: 10px; border-right: 0; border-bottom: var(--theme-border); }
+  .chart-preview { padding: 10px; }
+  .chart-preview svg { min-width: 0; width: 100%; }
+}
 </style>
