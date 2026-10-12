@@ -644,8 +644,9 @@
       </div>
     </n-modal>
 
-    <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="编辑文件显示样式">
+    <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="文件显示样式" style="width: min(520px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); border-radius: var(--theme-radius);">
       <div class="file-style-editor">
+        <div class="file-style-preview-heading"><strong>实时预览</strong><span>仅改变资料库中的显示，不修改文件内容</span></div>
         <div
           class="file-style-preview"
           :style="{ backgroundColor: fileStyleEditor.backgroundColor || undefined, color: markerTextColor(fileStyleEditor) || undefined }"
@@ -666,6 +667,7 @@
               :style="color.value ? { backgroundColor: color.value } : undefined"
               :title="color.label"
               :aria-label="color.label"
+              :aria-pressed="fileStyleEditor.backgroundColor === color.value"
               @click="fileStyleEditor.backgroundColor = color.value"
             ><span v-if="!color.value">默认</span></button>
             <input
@@ -690,6 +692,7 @@
               :style="color.value ? { backgroundColor: color.value } : undefined"
               :title="color.label"
               :aria-label="color.label"
+              :aria-pressed="fileStyleEditor.textColor === color.value"
               @click="fileStyleEditor.textColor = color.value"
             ><span v-if="!color.value">默认</span></button>
             <input
@@ -712,6 +715,7 @@
               :class="{ active: fileStyleEditor.icon === option.id }"
               :title="option.label"
               :aria-label="option.label"
+              :aria-pressed="fileStyleEditor.icon === option.id"
               @click="fileStyleEditor.icon = option.id"
             ><n-icon size="18"><component :is="option.icon" /></n-icon></button>
           </div>
@@ -4303,20 +4307,22 @@ watch(activeTabId, (newId, oldId) => {
 .rename-confirmation span { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 
 .file-style-modal { width: min(520px, calc(100vw - 28px)); }
-.file-style-editor { display: grid; gap: 18px; }
+.file-style-editor { display: grid; gap: 16px; max-height: calc(100dvh - 210px); overflow-y: auto; padding: 3px; }
+.file-style-preview-heading { display: grid; gap: 3px; font-size: 12px; color: var(--theme-text); }
+.file-style-preview-heading span { color: var(--theme-text-secondary); font-size: 11px; line-height: 1.5; }
 .file-style-preview {
   min-height: 46px; display: flex; align-items: center; gap: 9px; padding: 8px 12px;
-  box-sizing: border-box; overflow: hidden; border: 1px solid var(--theme-border);
-  border-radius: 7px; background: var(--theme-surface-muted); color: var(--theme-text);
+  box-sizing: border-box; overflow: hidden; border: var(--theme-border);
+  border-radius: var(--theme-radius-sm); background: var(--theme-surface); color: var(--theme-text);
   font-size: 13px; font-weight: 650;
 }
 .file-style-preview span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-style-section { display: grid; gap: 9px; }
+.file-style-section { display: grid; gap: 10px; padding-top: 14px; border-top: var(--theme-border); }
 .file-style-section > label { color: var(--theme-text); font-size: 12px; font-weight: 700; }
 .file-color-options, .file-icon-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .file-color-swatch, .file-icon-options button, .file-color-options input[type="color"] {
   width: 34px; height: 34px; padding: 0; box-sizing: border-box;
-  border: 1px solid var(--theme-border); border-radius: 7px;
+  border: var(--theme-border); border-radius: 7px;
   background: var(--theme-surface); color: var(--theme-text-secondary); cursor: pointer;
   transition: border-color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-emphasized), box-shadow var(--motion-fast) var(--ease-standard);
 }
@@ -4331,6 +4337,8 @@ watch(activeTabId, (newId, oldId) => {
 .file-color-options input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
 .file-color-options input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 4px; }
 .file-style-actions { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; }
+.file-color-swatch:focus-visible, .file-icon-options button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; }
+@media (max-width: 400px) { .file-style-actions { grid-template-columns: 1fr 1fr; } .file-style-actions > span { display: none; } .file-style-actions > :first-child { grid-column: 1 / -1; justify-self: start; } }
 
 .tree-viewport {
   flex: 1;

@@ -257,6 +257,8 @@ export const useAppStore = defineStore('app', {
           applied.relationObjectFocus = null
         }
         this.$patch(applied)
+        // Pinia object patches merge nested maps; deleted file markers must not survive.
+        if (snapshot.fileDisplayStyles !== undefined) this.fileDisplayStyles = snapshot.fileDisplayStyles
         if (switchesLibrary) this.restoreTabsState()
         if (!isTauriRuntime()) this.saveTabsState()
       })

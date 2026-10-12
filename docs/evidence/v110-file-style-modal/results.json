@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "520px cap on 1600px window",
+    "Color/icon preview and selected state",
+    "Cancel without persistence",
+    "Save and reset",
+    "360x520 scrollable content and reachable footer"
+  ],
+  "errors": [],
+  "scope": "Actual Vue components, mocked config IPC"
+}

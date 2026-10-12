@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output='docs/evidence/v110-file-style-modal';await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch(),errors=[]
+try{
+ const page=await browser.newPage({viewport:{width:1600,height:900}})
+ page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message))
+ await page.goto('http://127.0.0.1:9000/scripts/fixtures/library-shell-browser.html')
+ const open=async()=>{await page.locator('.library-file-tree').getByText('项目方案.md',{exact:true}).click({button:'right'});await page.getByText('编辑显示样式',{exact:true}).click();await page.locator('.file-style-modal').waitFor()}
+ await open()
+ const modal=page.locator('.file-style-modal')
+ assert.ok((await modal.boundingBox()).width<=520)
+ await modal.locator('.file-style-section').nth(0).locator('button').nth(1).click()
+ await modal.locator('.file-style-section').nth(1).locator('button').nth(2).click()
+ await modal.locator('.file-icon-options button').nth(1).click()
+ assert.equal(await modal.locator('.file-icon-options button').nth(1).getAttribute('aria-pressed'),'true')
+ await page.screenshot({path:output+'/01-wide.png',animations:'disabled'})
+ await modal.getByRole('button',{name:'取消',exact:true}).click()
+ assert.equal(await page.evaluate(()=>Object.keys(window.shellAudit.store.fileDisplayStyles).length),0)
+ await open();await modal.locator('.file-icon-options button').nth(1).click()
+ await modal.getByRole('button',{name:'保存样式',exact:true}).click()
+ await modal.waitFor({state:'hidden'})
+ assert.ok(await page.evaluate(()=>window.shellAudit.store.fileDisplayStyles['C:/shell-fixture/项目方案.md']))
+ await open();await page.setViewportSize({width:360,height:520})
+ assert.ok((await modal.boundingBox()).width<=332)
+ await modal.getByRole('button',{name:'保存样式',exact:true}).scrollIntoViewIfNeeded()
+ await page.screenshot({path:output+'/02-small.png',animations:'disabled'})
+ await modal.getByRole('button',{name:'恢复默认',exact:true}).click()
+ await modal.waitFor({state:'hidden'})
+ assert.equal(await page.evaluate(()=>Object.keys(window.shellAudit.store.fileDisplayStyles).length),0)
+ assert.deepEqual(errors,[])
+ await fs.writeFile(output+'/results.json',JSON.stringify({checks:['520px cap on 1600px window','Color/icon preview and selected state','Cancel without persistence','Save and reset','360x520 scrollable content and reachable footer'],errors,scope:'Actual Vue components, mocked config IPC'},null,2)+'\n')
+ console.log('File style modal checks passed')
+}finally{await browser.close()}
