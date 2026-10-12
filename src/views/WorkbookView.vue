@@ -622,7 +622,7 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection || conditionalSelection)" class="data-toolbar" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection || conditionalSelection)" class="data-toolbar" role="region" aria-label="数据与规则" data-horizontal-wheel="always">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
@@ -5398,5 +5398,21 @@ onBeforeUnmount(() => {
   .workbook-toolbar { padding-inline: 7px; }
   .formula-bar select { width: 104px; }
   .formula-bar output { width: 58px; }
+  .format-toolbar, .data-toolbar {
+    flex-wrap: wrap;
+    align-content: flex-start;
+    height: auto;
+    max-height: min(180px, 30vh);
+    overflow: auto;
+    padding: 6px 8px;
+    box-sizing: border-box;
+  }
+  .format-toolbar > *, .data-toolbar > * { flex-shrink: 0; }
+  .data-toolbar .validation-hint {
+    margin-left: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 </style>
