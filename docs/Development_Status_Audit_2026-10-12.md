@@ -1,5 +1,9 @@
 # 当前开发审计与接续方向
 
+最新实装（2026-10-13）：文档 DIY 已从示意进入正式设置。保留原四种字体选项，增加微软雅黑、宋体、楷体、仿宋、Noto Sans/Serif SC、Consolas、自定义本机字体；新增字距 0–4px、段后间距 0–3em、左/两端对齐，放入可折叠“更多排版选项”。共享排版变量用于预览和实际 App 编辑区，代码保留等宽字体，PDF/Office 不变；未安装字体回退，不下载字体。恢复默认及 Rust 配置字段向后兼容已接通。
+
+验证：`scripts/test-document-diy.mjs` 通过（实际设置操作、模拟保存参数、预览计算样式、480px 布局、恢复默认、真实 App 编辑区应用）；宽窄截图已查看，证据 `docs/evidence/v110-document-diy/`。`npm run build` 通过；Rust `display_preferences_keep_old_configs_readable_and_round_trip_custom_values` 测试通过；`git diff --check` 通过。浏览器原生 IPC 为模拟，不能替代安装包验收。当前已运行的旧原生进程必须重新构建启动才支持新字段持久化；本轮未强制关闭用户窗口、未发布新版本。文件栏风格冲突的诊断保留，尚未实现其修复。
+
 最新修复（2026-10-13）：专注模式去掉旧的 `padding-top: 30vh` 和 `min-height: 70vh`。旧规则把包括工具栏在内的整个编辑区下推，造成顶部大空白；现沿用正常 flex/滚动布局，仅隐藏外围导航。`scripts/test-focus-layout.mjs` 在实际 App/Vditor 页面点击专注与退出，验证 1280×900、760×540 下工具栏贴近顶部、退出按钮在视口内、正文保留及导航恢复，均通过且无页面异常。两张实际页面截图已查看，证据 `docs/evidence/v110-focus-layout/`；原生 IPC 模拟。`git diff --check` 通过。本次仅删除错误 CSS，未发版；字体 DIY 仍是待确认示意，未实装。
 
 最新用户调整（2026-10-13）：移除左侧主导航工作台、资料库、图谱、设置的重复悬停提示，仅删除 title，保留可见文字、无障碍名称、路由及选中状态。`scripts/test-navigation-no-tooltip.mjs` 在真实 App 浏览器页面启用实际 tooltip policy，逐项悬停确认无原生 title 或自定义浮窗，页面截图已查看；证据 `docs/evidence/v110-navigation-no-tooltip/`。原生 IPC 使用模拟；本次未改动其他图标按钮的必要提示。

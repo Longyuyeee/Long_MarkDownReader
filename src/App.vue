@@ -91,7 +91,7 @@ import AppNavigation from './components/AppNavigation.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
-import { normalizeDisplayPreferences, VISUAL_STYLE_RADII } from './config/displayPreferences'
+import { normalizeDisplayPreferences, documentTypographyStyle, VISUAL_STYLE_RADII } from './config/displayPreferences'
 import { openManagedFile } from './services/fileNavigation'
 import { windowDraftCount, windowDraftActivity } from './services/windowDrafts'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
@@ -162,8 +162,10 @@ watch(() => store.displayPreferences, (value) => {
     const attribute = key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)
     document.body.setAttribute(`data-${attribute}`, preferences[key])
   }
-  document.body.style.setProperty('--document-font-size', `${preferences.documentFontSize}px`)
-  document.body.style.setProperty('--document-line-height', String(preferences.documentLineHeight))
+  for (const [key, value] of Object.entries(documentTypographyStyle(preferences))) {
+    if (value) document.body.style.setProperty(key, value)
+    else document.body.style.removeProperty(key)
+  }
 }, { immediate: true, deep: true })
 
 const styleRadii = computed(() => VISUAL_STYLE_RADII[store.visualStyle] || VISUAL_STYLE_RADII.soft)

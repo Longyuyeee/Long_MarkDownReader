@@ -64,6 +64,10 @@ pub struct DisplayPreferences {
     pub document_font: String,
     pub document_font_size: f64,
     pub document_line_height: f64,
+    pub document_custom_font: String,
+    pub document_letter_spacing: f64,
+    pub document_paragraph_spacing: f64,
+    pub document_text_align: String,
     pub file_density: String,
     pub file_row_style: String,
     pub file_icon_style: String,
@@ -74,6 +78,8 @@ impl Default for DisplayPreferences {
         Self {
             document_style: "auto".into(), document_font: "auto".into(),
             document_font_size: 16.0, document_line_height: 1.75,
+            document_custom_font: String::new(), document_letter_spacing: 0.0,
+            document_paragraph_spacing: 1.0, document_text_align: "left".into(),
             file_density: "auto".into(), file_row_style: "auto".into(), file_icon_style: "color".into(),
         }
     }
@@ -578,6 +584,12 @@ mod tests {
         config.display_preferences.document_style = "paper".into();
         config.display_preferences.document_font = "serif".into();
         config.display_preferences.document_font_size = 20.0;
+        assert_eq!(config.display_preferences.document_letter_spacing, 0.0);
+        assert_eq!(config.display_preferences.document_text_align, "left");
+        config.display_preferences.document_custom_font = "Microsoft YaHei".into();
+        config.display_preferences.document_letter_spacing = 0.75;
+        config.display_preferences.document_paragraph_spacing = 1.5;
+        config.display_preferences.document_text_align = "justify".into();
         config.display_preferences.file_density = "spacious".into();
         config.display_preferences.file_row_style = "cards".into();
         let reopened: AppConfig = serde_json::from_str(&serde_json::to_string(&config).unwrap()).unwrap();
@@ -585,6 +597,10 @@ mod tests {
         assert_eq!(reopened.visual_style, "glass");
         assert_eq!(reopened.display_preferences.document_style, "paper");
         assert_eq!(reopened.display_preferences.document_font_size, 20.0);
+        assert_eq!(reopened.display_preferences.document_custom_font, "Microsoft YaHei");
+        assert_eq!(reopened.display_preferences.document_letter_spacing, 0.75);
+        assert_eq!(reopened.display_preferences.document_paragraph_spacing, 1.5);
+        assert_eq!(reopened.display_preferences.document_text_align, "justify");
         assert_eq!(reopened.display_preferences.file_density, "spacious");
         assert_eq!(reopened.display_preferences.file_row_style, "cards");
     }

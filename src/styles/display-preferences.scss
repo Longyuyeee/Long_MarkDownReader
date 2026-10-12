@@ -133,6 +133,8 @@ body .vditor-reset,
   h3 { font-size: 1.2em; }
   > :first-child { margin-top: 0; }
   p, li { line-height: var(--document-line-height, 1.75); }
+  p, li { letter-spacing: var(--document-letter-spacing, 0px); text-align: var(--document-text-align, left); }
+  p { margin-bottom: var(--document-paragraph-spacing, 1em); }
   p:first-of-type::first-letter { float: none; font-size: inherit; font-weight: inherit; color: inherit; line-height: inherit; margin: 0; }
   blockquote {
     margin: 1.2em 0; padding: .7em 1em;
@@ -150,7 +152,7 @@ body .vditor-reset,
     th { background: var(--theme-surface-2); }
   }
   pre { border-radius: var(--document-code-radius); box-shadow: none; }
-  pre, code { font-family: var(--font-mono); }
+  pre, code { font-family: var(--font-mono); letter-spacing: normal; text-align: left; }
 }
 body[data-document-style="paper"] .library-mode .editor-viewport:has(.vditor-reset),
 body[data-document-style="paper"] .temp-mode .editor-container { background: var(--theme-bg); }
