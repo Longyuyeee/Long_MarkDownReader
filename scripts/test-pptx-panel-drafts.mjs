@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output='docs/evidence/v110-pptx-panels';await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch(),errors=[]
+try{
+ const page=await browser.newPage({viewport:{width:480,height:650}})
+ page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(10000)
+ await page.goto('http://127.0.0.1:9000/scripts/fixtures/pptx-redesign-browser.html?panels')
+ await page.getByTitle('验证隔离编辑基线').click()
+ await page.getByTestId('c4b-text-value').fill('用户正在编辑的标题')
+ await page.getByTestId('c4c-font-size').fill('32')
+ await page.getByTestId('c5b-shape-type').selectOption('ellipse')
+ await page.getByTestId('c5c-reorder-mode').click()
+ await page.getByTestId('c5c-order-down-0').click()
+ assert.match(await page.getByTestId('c5c-slide-order').innerText(),/1\s+交付安排/)
+ await page.screenshot({path:output+'/01-slide-tools.png'})
+ await page.getByTitle('关闭文档详情').click()
+ await page.getByTitle('备注与兼容画像').click()
+ assert.equal(await page.getByTestId('c4b-text-value').inputValue(),'用户正在编辑的标题')
+ assert.equal(await page.getByTestId('c4c-font-size').inputValue(),'32')
+ assert.equal(await page.getByTestId('c5b-shape-type').inputValue(),'ellipse')
+ assert.match(await page.getByTestId('c5c-slide-order').innerText(),/1\s+交付安排/)
+ await page.getByTestId('c4b-text-preview').click()
+ await page.locator('.isolated-text-patch .baseline-error').waitFor()
+ assert.equal(await page.getByTestId('c4b-text-value').inputValue(),'用户正在编辑的标题')
+ assert.equal(await page.getByTitle('保存到原文件').isDisabled(),true)
+ await page.screenshot({path:output+'/02-retained-draft.png'})
+ assert.equal(await page.evaluate(()=>window.pptxAudit.calls.some(c=>c.command.startsWith('save_pptx'))),false)
+ assert.deepEqual(errors,[])
+ await fs.writeFile(output+'/results.json',JSON.stringify({checks:['Long panel scroll and slide order','Text/style/shape/order values survive closing details','Patch failure retains input and prevents source save'],errors,scope:'UI fixture baseline only, patch validation deliberately fails. Not native baseline or output acceptance.'},null,2)+'\n')
+ console.log('PPTX panel draft checks passed')
+}finally{await browser.close()}

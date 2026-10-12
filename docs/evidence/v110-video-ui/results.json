@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Actual WebM decoding",
+    "Play/pause",
+    "Loop",
+    "Mute",
+    "Playback rate",
+    "Narrow controls"
+  ],
+  "scope": "Synthetic MediaRecorder clip; native inspection mocked; no native streaming/subtitle/export acceptance",
+  "errors": []
+}

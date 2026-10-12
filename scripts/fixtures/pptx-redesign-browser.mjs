@@ -15,6 +15,16 @@ for(const slide of slides)for(const object of slide.objects)for(const key of ['x
 window.__TAURI_INTERNALS__={transformCallback:()=>1,metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},invoke:async(command,args)=>{
  calls.push({command,args})
  if(['read_pptx_presentation','read_external_pptx_presentation'].includes(command))return structuredClone(report)
+ if(command==='audit_pptx_edit_baseline' && location.search.includes('panels'))return {
+  status:'fixture-only',sourcePackageDigest:'UI-fixture-not-native-evidence',partCount:4,unchangedPartCount:4,
+  editableCandidateParts:slides.map(s=>s.partName),changedParts:[],exactPackageCopyVerified:true,unchangedPartsVerified:true,
+  structuralReparseVerified:true,temporaryCopyReopenVerified:true,sourceUnchanged:true,writesUserFile:false,editingEnabled:false,
+  editableTextTargets:slides.map((s,i)=>({id:'text'+i,kind:'slide-text',slideNumber:i+1,slideId:s.id,partName:s.partName,objectId:s.objects[0].id,objectName:s.title,text:s.text})),
+  editableNotesTargets:[],editableStyleTargets:[{id:'style0',slideNumber:1,kind:'shape-text-style',objectName:'标题',fontSizeHundredthPoints:2800,fontFamily:'Arial',color:'#182b49',alignment:'left',bold:false,italic:false,underline:false}],
+  editableAltTextTargets:[{id:'alt0',slideNumber:1,objectName:'配图',altText:'产品示意'}],editableImageTargets:[],
+  editableShapeSlides:[{id:'shape0',slideNumber:1,slideId:'s0',partName:slides[0].partName,nextObjectId:3}],editableShapeTargets:[],
+  editableSlideTargets:slides.map((s,i)=>({id:'slide'+i,slideNumber:i+1,slideId:s.id,partName:s.partName,title:s.title,safeCopy:true,safeDelete:true,blockers:[]})),
+ }
  if(command==='save_config'||command==='report_window_draft_session')return
  if(command==='register_window_draft_session')return 'pptx-audit'
  if(command==='plugin:event|listen')return 1
