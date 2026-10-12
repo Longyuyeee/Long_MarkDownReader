@@ -6,7 +6,7 @@ import { textEvidenceMatchesSha256 } from './lib/text-evidence-integrity.mjs'
 const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(`UX-38D1 PDF workspace rejected: ${message}`); process.exit(1) }
 const pdf = read('src/views/PdfView.vue')
-for (const token of ['recallWorkspaceViewState(pdfPath.value)', 'rememberPdfViewState()', '@container (max-width: 980px)', '@container (max-width: 760px)', 'grid-template-columns: repeat(3,minmax(0,1fr))']) {
+for (const token of ['recallWorkspaceViewState(pdfPath.value)', 'rememberPdfViewState()', 'class="pdf-task-navigation"', '@container (max-width: 760px)', 'grid-template-columns: repeat(3, minmax(0, 1fr))', 'overflow-x: auto']) {
   if (!pdf.includes(token)) fail(`product token missing: ${token}`)
 }
 

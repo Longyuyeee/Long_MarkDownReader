@@ -7,12 +7,15 @@
         <button class="icon-btn" :class="{ active: sidebarOpen }" :aria-pressed="sidebarOpen" title="缩略图与目录" @click="sidebarOpen = !sidebarOpen">☰</button>
         <div class="document-title"><strong>{{ fileName }}<i v-if="pdfWorkspaceDirty" class="page-plan-dirty" aria-live="polite">{{ pdfWorkspaceDraftLabel }}</i></strong><span v-if="pdfDocument"><template v-if="isExternal">外部文件 · 只读 · </template>{{ pdfDocument.numPages }} 页 · {{ loadModeLabel }}<template v-if="firstPageReadyMs"> · 首屏 {{ firstPageReadyMs }} ms</template><template v-if="isExternal"> · 不会写回</template></span></div>
       </WorkspaceFileIdentity>
+      <nav v-if="pdfDocument && !isExternal" class="pdf-task-navigation" aria-label="PDF 工具分组">
+        <button v-for="task in pdfTasks" :key="task.id" :aria-pressed="activePdfTask === task.id" @click="activePdfTask = task.id">{{ task.label }}</button>
+      </nav>
       <div v-if="pdfDocument" class="toolbar-center">
         <button class="icon-btn" title="上一页" aria-label="上一页" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
-        <label class="page-jump"><input v-model.number="pageInput" type="number" min="1" :max="pdfDocument.numPages" @keydown.enter="commitPageInput" @blur="commitPageInput"/><span>/ {{ pdfDocument.numPages }}</span></label>
+        <label class="page-jump"><input v-model.number="pageInput" aria-label="跳转到 PDF 页码" type="number" min="1" :max="pdfDocument.numPages" @keydown.enter="commitPageInput" @blur="commitPageInput"/><span>/ {{ pdfDocument.numPages }}</span></label>
         <button class="icon-btn" title="下一页" aria-label="下一页" :disabled="currentPage >= pdfDocument.numPages" @click="goToPage(currentPage + 1)">›</button>
       </div>
-      <div v-if="pdfDocument" class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
+      <div v-if="pdfDocument" ref="toolbarActionsRef" class="toolbar-actions" aria-label="PDF 阅读和当前分组工具" data-command-strip data-horizontal-wheel="always">
         <div class="pdf-search" :class="{ active: searchQuery }">
           <span aria-hidden="true">⌕</span>
           <input ref="searchInputRef" v-model="searchQuery" aria-label="搜索 PDF 正文" placeholder="搜索 PDF" @keydown.enter.prevent="navigateMatch($event.shiftKey ? -1 : 1)" @keydown.esc="clearSearch"/>
@@ -25,14 +28,21 @@
         <button class="scale-label" title="恢复 100%" @click="setScale(1)">{{ Math.round(scale * 100) }}%</button>
         <button class="icon-btn" title="放大" @click="changeScale(0.1)">＋</button>
         <button class="fit-btn" :class="{ active: fitWidth }" :aria-pressed="fitWidth" title="适合宽度" @click="toggleFitWidth"><Columns3Icon :size="14"/><span class="action-label">适合宽度</span></button>
+        <div v-if="!isExternal" v-show="activePdfTask === 'document'" class="pdf-task-tools" role="group" aria-label="文档工具">
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'forms' }" :aria-pressed="sidebarOpen && sidebarTab === 'forms'" title="检查并填写 PDF 表单副本" @click="openPdfFormPanel"><ListChecksIcon :size="14"/><span class="action-label">表单</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'metadata' }" :aria-pressed="sidebarOpen && sidebarTab === 'metadata'" title="编辑 PDF 标题、作者、主题和关键词并可靠另存" @click="openPdfMetadataPanel"><FilePenLineIcon :size="14"/><span class="action-label">文档属性</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'redaction' }" :aria-pressed="sidebarOpen && sidebarTab === 'redaction'" title="永久移除敏感区域并另存图片型副本" @click="openRedactionPanel"><ShieldXIcon :size="14"/><span class="action-label">永久脱敏</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'watermark' }" :aria-pressed="sidebarOpen && sidebarTab === 'watermark'" title="为全部页面添加文字水印并可靠另存" @click="openWatermarkPanel"><StampIcon :size="14"/><span class="action-label">文字水印</span></button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'ocr' }" :aria-pressed="sidebarOpen && sidebarTab === 'ocr'" title="离线识别扫描页" @click="openOcrPanel"><ScanTextIcon :size="14"/><span class="action-label">OCR</span></button>
+        </div>
+        <div v-if="!isExternal" v-show="activePdfTask === 'pages'" class="pdf-task-tools" role="group" aria-label="页面工具">
         <button v-if="!isExternal" class="fit-btn" :class="{ active: sidebarTab === 'organize' }" :aria-pressed="sidebarOpen && sidebarTab === 'organize'" title="非破坏式页面整理预览" @click="openPageOrganizer"><ListOrderedIcon :size="14"/><span class="action-label">页面整理</span></button>
+        </div>
+        <div v-if="!isExternal" v-show="activePdfTask === 'annotations'" class="pdf-task-tools" role="group" aria-label="批注工具">
+        <button class="fit-btn" :aria-pressed="sidebarOpen && sidebarTab === 'annotations'" @click="sidebarOpen = true; sidebarTab = 'annotations'">批注列表</button>
         <button v-if="!isExternal" class="fit-btn" :class="{ active: areaMode }" :aria-pressed="areaMode" :disabled="!annotationWritable" title="在页面拖出矩形区域" @click="areaMode = !areaMode"><ScanLineIcon :size="14"/><span class="action-label">区域批注</span></button>
         <button v-if="!isExternal" class="fit-btn" :disabled="!annotationWritable" title="为当前页添加评论" @click="createPageComment"><MessageSquareTextIcon :size="14"/><span class="action-label">页评论</span></button>
+        </div>
       </div>
     </WorkspaceToolbar>
 
@@ -677,6 +687,18 @@ const POSITION_KEY = 'longedit.pdf.positions.v1'
 const route = useRoute()
 const router = useRouter()
 const store = useAppStore()
+const pdfTasks = [
+  { id: 'read', label: '阅读' },
+  { id: 'annotations', label: '批注' },
+  { id: 'pages', label: '页面' },
+  { id: 'document', label: '文档工具' },
+] as const
+const activePdfTask = ref<typeof pdfTasks[number]['id']>('read')
+const toolbarActionsRef = ref<HTMLElement | null>(null)
+watch(activePdfTask, async () => {
+  await nextTick()
+  toolbarActionsRef.value?.scrollTo({ left: 0, behavior: 'instant' })
+})
 const message = useMessage()
 const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
@@ -2677,9 +2699,17 @@ onBeforeUnmount(async () => {
 
 <style scoped>
 .pdf-view { width: 100%; height: 100%; min-width: 0; min-height: 0; container-type: inline-size; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 92%, var(--theme-text-secondary)); outline: none; }
-.pdf-toolbar { min-height: 58px; display: grid; grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr); align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
+.pdf-toolbar { min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px 14px; padding: 8px 12px; overflow: hidden; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); box-shadow: var(--workspace-shadow-sm); z-index: 5; }
 .toolbar-leading,.toolbar-center,.toolbar-actions { display: flex; align-items: center; gap: 7px; }
-.toolbar-actions { justify-content: flex-end; }
+.toolbar-leading { min-width: 0; }
+.toolbar-center { grid-column: 3; }
+.toolbar-actions { grid-column: 1 / -1; min-width: 0; overflow-x: auto; padding: 2px 0; scrollbar-width: thin; }
+.toolbar-actions > * { flex-shrink: 0; }
+.pdf-task-navigation { display: flex; gap: 4px; }
+.pdf-task-navigation button { min-height: 32px; padding: 0 12px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; white-space: nowrap; }
+.pdf-task-navigation button[aria-pressed="true"] { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); font-weight: 650; }
+.pdf-task-tools { display: flex; align-items: center; gap: 7px; padding-left: 10px; border-left: 1px solid var(--workspace-border-color); }
+.pdf-toolbar button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .document-title { min-width: 0; display: flex; flex-direction: column; }
 .document-title strong { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .document-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
@@ -2702,7 +2732,7 @@ onBeforeUnmount(async () => {
 .pdf-sidebar { width: 220px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--workspace-border-color); background: color-mix(in srgb, var(--theme-card) 96%, #d9dde3); }
 .pdf-sidebar.organize-open,.pdf-sidebar.forms-open { width: 272px; }
 .pdf-sidebar.redaction-open,.pdf-sidebar.watermark-open,.pdf-sidebar.metadata-open { width: 300px; }
-.sidebar-switch { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; padding: 9px; border-bottom: 1px solid var(--workspace-border-color); }
+.sidebar-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 9px; border-bottom: 1px solid var(--workspace-border-color); }
 .sidebar-switch button { height: 28px; border: 0; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); white-space: nowrap; }
 .sidebar-switch button.active { color: var(--workspace-on-accent); background: var(--theme-primary); }
 .thumbnail-list,.outline-list { min-height: 0; flex: 1; overflow: auto; padding: 12px; }
@@ -2792,8 +2822,13 @@ onBeforeUnmount(async () => {
 .pdf-state.error button { padding: 7px 16px; border: 0; border-radius: 7px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; }.toolbar-actions .fit-btn { width: 32px; padding: 0; }.toolbar-actions .fit-btn .action-label { display: none; } }
-@media (max-width: 760px) { .pdf-toolbar { grid-template-columns: 1fr auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
-@container (max-width: 980px) { .pdf-search { width: 150px; }.pdf-search.active { width: 220px; }.document-title strong { max-width: 160px; }.toolbar-actions .fit-btn { width: 32px; padding: 0; }.toolbar-actions .fit-btn .action-label { display: none; } }
-@container (max-width: 760px) { .pdf-toolbar { grid-template-columns: minmax(0,1fr) auto; }.toolbar-center { order: 3; grid-column: 1 / -1; justify-content: center; padding-bottom: 7px; }.pdf-sidebar { width: 176px; }.sidebar-switch { grid-template-columns: repeat(3,minmax(0,1fr)); }.fit-btn,.scale-label { display: none; }.pdf-search { width: 130px; }.pdf-search.active { width: 190px; } }
+@container (max-width: 760px) {
+  .pdf-toolbar { grid-template-columns: minmax(0,1fr) auto; gap: 6px; padding: 6px 8px; }
+  .toolbar-center { grid-column: 2; grid-row: 1; }
+  .pdf-task-navigation { grid-column: 1 / -1; grid-row: 2; }
+  .pdf-sidebar { width: 176px; }
+  .document-title strong { max-width: 100%; }
+  .document-title span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .pdf-search { width: 170px; }.pdf-search.active { width: 250px; }
+}
 </style>
