@@ -3933,7 +3933,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 
 @media (max-width: 640px) {
   .view-switch button { padding: 0 7px; }
-  .graph-search { display: none; }
+  .graph-search { display: flex; width: 142px; }
   .tutorial-btn { width: var(--workspace-control-height); }
   .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }
   .tutorial-card { padding: 24px 18px; }

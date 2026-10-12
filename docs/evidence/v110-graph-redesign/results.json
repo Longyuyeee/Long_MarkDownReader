@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Narrow search and Enter selection",
+    "Node details",
+    "Tools/export entries"
+  ],
+  "scope": "Production GraphView, 12-node fixture; no export/native writes or large graph performance acceptance",
+  "errors": []
+}
