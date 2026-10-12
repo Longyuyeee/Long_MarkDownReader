@@ -1,5 +1,5 @@
 <template>
-  <section class="odt-workspace" data-testid="e1b-odt-workspace">
+  <section ref="workspaceRef" class="odt-workspace" data-testid="e1b-odt-workspace">
     <header class="odt-toolbar">
       <div class="document-identity">
         <FileText :size="18" aria-hidden="true" />
@@ -9,9 +9,10 @@
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
+        <button class="outline-toggle" :aria-pressed="outlineVisible" @click="toggleOutline">目录与详情</button>
         <label class="odt-search">
           <Search :size="14" aria-hidden="true" />
-          <input v-model="query" data-testid="e1b-odt-search" type="search" placeholder="搜索文档" />
+          <input v-model="query" data-testid="e1b-odt-search" type="search" aria-label="搜索 ODT 正文" placeholder="搜索文档" @keydown.enter.prevent="moveMatch($event.shiftKey ? -1 : 1)" />
           <span data-testid="e1b-odt-search-count">{{ matches.length ? `${matchIndex + 1}/${matches.length}` : '0' }}</span>
         </label>
         <button data-testid="e1b-odt-search-previous" :disabled="!matches.length" title="上一个匹配" @click="moveMatch(-1)">
@@ -30,35 +31,37 @@
       <RefreshCw :size="18" class="spinning" />
       <span>正在验证并解析 ODT</span>
     </div>
-    <div v-else-if="loadError" class="odt-state error">
+    <div v-else-if="loadError" class="odt-state error" role="alert">
       <ShieldAlert :size="20" />
       <div><strong>无法打开文档</strong><p>{{ loadError }}</p></div>
+      <button @click="load">重试</button>
     </div>
     <template v-else-if="report">
       <div v-if="allWarnings.length" class="risk-banner">
         <ShieldAlert :size="16" />
         <div><strong>文档包含已隔离内容</strong><span>{{ allWarnings.join('；') }}</span></div>
       </div>
-      <div class="odt-layout">
-        <aside class="odt-outline">
-          <div class="outline-heading"><strong>文档结构</strong><span>{{ report.model.headings.length }}</span></div>
-          <nav v-if="report.model.headings.length">
+      <div class="odt-layout" :class="{ 'outline-visible': outlineVisible }">
+        <aside v-show="outlineVisible" class="odt-outline">
+          <div class="outline-heading"><strong>文档结构</strong><span>{{ report.model.headings.length }}</span><button aria-label="关闭目录与详情" @click="toggleOutline">×</button></div>
+          <nav v-if="report.model.headings.length" aria-label="ODT 文档目录">
             <button
               v-for="heading in report.model.headings"
               :key="heading.id"
               :style="{ paddingLeft: `${8 + (heading.level - 1) * 10}px` }"
-              @click="scrollToBlock(heading.id)"
+              @click="scrollToBlock(heading.id); outlineOverlay = false"
             >
               <span>H{{ heading.level }}</span>{{ heading.text }}
             </button>
           </nav>
           <p v-else class="outline-empty">没有标题结构</p>
-          <div class="package-summary">
+          <details class="package-summary">
+            <summary>文档包详情</summary>
             <div><ShieldCheck :size="14" /><strong>可信包验证通过</strong></div>
             <span>ODF {{ report.model.package.manifestVersion || '1.x' }}</span>
             <span>{{ report.model.package.entryCount }} 个包条目</span>
             <span>{{ formatBytes(report.model.package.uncompressedBytes) }} 解压预算</span>
-          </div>
+          </details>
         </aside>
 
         <main ref="stageRef" class="odt-stage" data-testid="e1b-odt-stage" @scroll.passive="rememberOdtViewState()">
@@ -134,7 +137,7 @@ import { invoke } from '@tauri-apps/api/core'
 import {
   ChevronDown, ChevronUp, FileText, ImageOff, RefreshCw, Search, ShieldAlert, ShieldCheck,
 } from 'lucide-vue-next'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '../store/app'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
@@ -180,6 +183,18 @@ interface OdtReadReport {
 
 const route = useRoute()
 const store = useAppStore()
+const workspaceRef = ref<HTMLElement | null>(null)
+const workspaceWidth = ref(0)
+const outlinePinned = ref(true)
+const outlineOverlay = ref(false)
+const outlineVisible = computed(() => workspaceWidth.value > 820 ? outlinePinned.value : outlineOverlay.value)
+const toggleOutline = () => {
+  if (workspaceWidth.value > 820) outlinePinned.value = !outlinePinned.value
+  else outlineOverlay.value = !outlineOverlay.value
+}
+const workspaceObserver = new ResizeObserver(entries => { workspaceWidth.value = entries[0]?.contentRect.width || 0 })
+onMounted(() => { if (workspaceRef.value) workspaceObserver.observe(workspaceRef.value) })
+onBeforeUnmount(() => workspaceObserver.disconnect())
 const report = ref<OdtReadReport>()
 const loading = ref(false)
 const loadError = ref('')
@@ -334,9 +349,27 @@ h4.odt-heading, h5.odt-heading, h6.odt-heading { font-size: 15px; }
 @container (max-width: 560px) {
   .odt-toolbar { flex-wrap: wrap; }
   .document-identity { flex: 1 1 100%; }
-  .document-identity span { display: none; }
+  .document-identity span { display: block; }
   .toolbar-actions { width: 100%; justify-content: flex-end; }
   .odt-search { flex: 1; }
   .odt-search input { min-width: 0; width: 100%; }
+}
+.toolbar-actions { min-width: 0; max-width: 100%; overflow-x: auto; }
+.toolbar-actions > * { flex-shrink: 0; }
+.toolbar-actions .outline-toggle { width: auto; padding: 0 8px; white-space: nowrap; }
+.outline-heading button { border: 0; color: var(--text-secondary); background: transparent; cursor: pointer; }
+.package-summary summary { cursor: pointer; font-weight: 600; }
+.package-summary > span { display: block; }
+.package-summary[open] > * { margin-bottom: 6px; }
+.odt-layout { position: relative; }
+.odt-layout:not(.outline-visible) { grid-template-columns: minmax(0, 1fr); }
+.odt-status { overflow-x: auto; white-space: nowrap; }
+.odt-status > * { flex-shrink: 0; }
+@container (max-width: 820px) {
+  .odt-layout.outline-visible .odt-outline { display: block; position: absolute; inset: 0 auto 0 0; width: min(250px, 80%); z-index: 5; box-shadow: var(--workspace-shadow); }
+}
+@container (max-width: 560px) {
+  .toolbar-actions { justify-content: flex-start; }
+  .odt-search { flex: 0 0 160px; }
 }
 </style>
