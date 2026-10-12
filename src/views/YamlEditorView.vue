@@ -15,8 +15,9 @@
       </div>
 
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
-        <n-button quaternary circle size="small" title="查找（Ctrl+F）" @click="openSourceSearch">
+        <n-button quaternary size="small" title="查找（Ctrl+F）" @click="openSourceSearch">
           <template #icon><n-icon :component="SearchIcon" /></template>
+          查找
         </n-button>
         <n-button quaternary circle size="small" title="折叠全部" @click="foldSource">
           <template #icon><n-icon :component="FoldIcon" /></template>
@@ -27,8 +28,9 @@
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reloadFromDisk">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏文档结构与问题' : '显示文档结构与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector">
+        <n-button quaternary size="small" :title="inspectorVisible ? '隐藏文档结构与问题' : '显示文档结构与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector">
           <template #icon><n-icon :component="InspectorIcon" /></template>
+          结构与问题
         </n-button>
         <n-button
           type="primary"
@@ -597,6 +599,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .yaml-workspace {
+  container-type: inline-size;
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -608,8 +611,10 @@ onBeforeUnmount(() => {
 }
 
 .yaml-toolbar {
+  flex-shrink: 0;
+  flex-wrap: wrap;
   min-height: 54px;
-  padding: 0 14px;
+  padding: 6px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -630,6 +635,14 @@ onBeforeUnmount(() => {
 .valid {
   color: var(--theme-primary);
 }
+
+.yaml-workspace > :deep(.workspace-tabs) {
+  flex: 0 0 34px;
+}
+
+.document-identity { flex: 1; }
+.toolbar-actions { max-width: 100%; overflow-x: auto; padding-block: 2px; }
+.toolbar-actions > * { flex-shrink: 0; }
 
 .invalid,
 .error {
@@ -706,6 +719,7 @@ onBeforeUnmount(() => {
 }
 
 .inspector {
+  overflow: auto;
   min-height: 0;
   padding: 14px;
   display: flex;
@@ -810,7 +824,7 @@ onBeforeUnmount(() => {
 }
 
 .outline-list {
-  min-height: 0;
+  min-height: 96px;
   flex: 1;
   overflow: auto;
 }
@@ -857,6 +871,9 @@ onBeforeUnmount(() => {
 }
 
 .yaml-statusbar {
+  flex-shrink: 0;
+  overflow-x: auto;
+  white-space: nowrap;
   min-height: 28px;
   padding: 0 14px;
   display: flex;
@@ -868,37 +885,31 @@ onBeforeUnmount(() => {
   font-size: 11px;
 }
 
-@media (max-width: 900px) {
-  .yaml-stage {
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 42vw);
-  }
+.yaml-statusbar > * { flex-shrink: 0; }
 
-  .toolbar-actions :deep(.n-button:nth-child(2)),
-  .toolbar-actions :deep(.n-button:nth-child(3)) {
-    display: none;
-  }
-}
-
-@media (max-width: 760px) {
+@container (max-width: 760px) {
   .yaml-toolbar {
     gap: 8px;
     padding-inline: 9px;
   }
 
   .document-title strong {
-    max-width: 34vw;
+    max-width: 100%;
   }
+
+  .toolbar-actions { width: 100%; }
 
   .yaml-stage {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .yaml-stage:not(.inspector-hidden) .source-pane {
-    display: none;
+  .yaml-stage:not(.inspector-hidden) {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 42%);
   }
 
   .inspector {
     border-left: 0;
+    border-top: var(--theme-border);
   }
 
   .yaml-statusbar {
@@ -906,9 +917,7 @@ onBeforeUnmount(() => {
     padding-inline: 9px;
   }
 
-  .yaml-statusbar span:nth-child(3),
-  .yaml-statusbar span:nth-child(5) {
-    display: none;
-  }
 }
+
+.inspector > :not(.outline-list) { flex-shrink: 0; }
 </style>
