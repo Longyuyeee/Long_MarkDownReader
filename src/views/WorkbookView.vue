@@ -5384,7 +5384,19 @@ onBeforeUnmount(() => {
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
-@media (max-width: 1050px) { .workbook-title span { display: none; } .workbook-title strong { max-width: 34vw; } }
-@container (max-width: 900px) { .workbook-title span { display: none; } .workbook-title strong { max-width: min(34cqw, 280px); } }
-@container (max-width: 680px) { .workbook-toolbar { padding-inline: 7px; } .workbook-title strong { max-width: 22cqw; } .workbook-actions .tool-panel-trigger { width: 30px; min-width: 30px; padding: 0; } .workbook-actions .tool-panel-trigger span { display: none; } .workbook-actions button.primary { width: 30px; justify-content: center; padding: 0; } .workbook-actions button.primary span { display: none; } .formula-bar select { width: 104px; } .formula-bar output { width: 58px; } }
+.workbook-toolbar { flex-shrink: 0; }
+.sheet-tabs { flex-shrink: 0; }
+.sheet-tabs > * { flex-shrink: 0; }
+@container (max-width: 900px) {
+  .workbook-toolbar { height: auto; flex-wrap: wrap; padding-block: 6px; }
+  .workbook-title { width: 100%; min-width: 0; }
+  .workbook-title > div { min-width: 0; }
+  .workbook-title strong { max-width: 100%; }
+  .workbook-actions { max-width: 100%; overflow-x: auto; padding-block: 2px; }
+}
+@container (max-width: 680px) {
+  .workbook-toolbar { padding-inline: 7px; }
+  .formula-bar select { width: 104px; }
+  .formula-bar output { width: 58px; }
+}
 </style>

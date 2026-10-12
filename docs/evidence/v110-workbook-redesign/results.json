@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "File metadata, tool and save labels retained at 480px",
+    "Sheet switching",
+    "Format/drawing panel open and close",
+    "More-actions menu"
+  ],
+  "errors": [],
+  "scope": "Actual WorkbookView with existing native IPC fixture; no saving, no full advanced-panel acceptance",
+  "releaseCandidate": false
+}

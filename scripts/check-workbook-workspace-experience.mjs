@@ -10,6 +10,9 @@ const requireTokens = (source, label, tokens) => {
 }
 
 const view = read('src/views/WorkbookView.vue')
+for (const selector of ['.workbook-actions .tool-panel-trigger span', '.workbook-actions button.primary span', '.workbook-title span']) {
+  if (view.includes(`${selector} { display: none; }`)) fail(`Workbook essential label hidden: ${selector}`)
+}
 requireTokens(view, 'Workbook linked data entry', [
   'workbookActionOptions',
   "key: 'linked-data'",
@@ -32,8 +35,8 @@ requireTokens(view, 'Workbook progressive tool shell', [
   'height: 44px; min-height: 44px',
   '.sheet-tabs { min-height: 32px',
   '@container (max-width: 680px)',
-  '.workbook-actions .tool-panel-trigger span { display: none; }',
-  '.workbook-actions button.primary span { display: none; }',
+  '.workbook-toolbar { height: auto; flex-wrap: wrap; padding-block: 6px; }',
+  '.workbook-title strong { max-width: 100%; }',
 ])
 requireTokens(view, 'Workbook compact formula bar', [
   ':options="definedNameActionOptions"',
