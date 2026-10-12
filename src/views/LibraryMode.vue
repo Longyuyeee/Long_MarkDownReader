@@ -452,7 +452,7 @@
     <!-- 中间编辑区 -->
     <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
       <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
-        <span class="document-breadcrumb" :title="activeTabId">{{ activeTabId.split(/[\\/]/).pop() }}</span>
+        <button type="button" class="document-breadcrumb" :title="`${activeTabId} · 点击重命名`" aria-label="重命名当前文档" @click="openRename(activeTabId, false)"><span>{{ activeTabId.split(/[\\/]/).pop() }}</span><n-icon :component="EditIcon" size="12" /></button>
         <div class="document-primary-actions">
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
           <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
@@ -4204,6 +4204,11 @@ watch(activeTabId, (newId, oldId) => {
 .shell-search-area { padding: 12px 10px 6px; flex-shrink: 0; }
 .document-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 7px 12px; border-bottom: var(--theme-border); flex-shrink: 0; }
 .document-breadcrumb { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.document-breadcrumb { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid transparent; border-radius: var(--theme-radius-sm); background: transparent; cursor: pointer; font-family: inherit; }
+.document-breadcrumb:hover { color: var(--theme-primary); background: var(--workspace-control-hover-bg); }
+.document-breadcrumb:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
+.document-breadcrumb .n-icon { flex-shrink: 0; opacity: .65; }
+.document-breadcrumb > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .document-primary-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 .document-menu-content { display: flex; flex-direction: column; width: min(228px, calc(100vw - 80px)); gap: 4px; color: var(--theme-text); }
 .document-menu-content .n-button { justify-content: flex-start; }

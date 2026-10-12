@@ -34,6 +34,7 @@ window.__TAURI_INTERNALS__ = {
     if (command === 'read_text_document') { if (!disk.has(args.path)) throw Error('文件不存在'); return snapshot(args.path) }
     if (command === 'write_text_document') { if (window.shellAudit.failSave) throw Error('保存失败，请重试'); disk.set(args.path,args.content); return snapshot(args.path) }
     if (command === 'create_new_folder') { const path = args.parentPath + '/新建文件夹'; directories.push(path); return path }
+    if (command === 'rename_item') { const path=args.oldPath.slice(0,args.oldPath.lastIndexOf('/')+1)+args.newName; if(disk.has(path))throw Error('同名文件已存在'); disk.set(path,disk.get(args.oldPath));disk.delete(args.oldPath);return path }
     if (command === 'create_format_file') { const path = args.targetDir + '/' + (args.prefix || '新笔记') + '.md'; disk.set(path, args.content || '# 新笔记\n'); return path }
     if (command === 'search_knowledge') return [...disk.keys()].filter(path => disk.get(path).includes(args.query)).map(path => ({title:path.split('/').pop(),path,objectType:'markdown',matchKind:'body',context:'保存的位置应该在记录的时候就确定。',score:100,extractionFailed:false}))
     if (command === 'preview_search_document') return { text: disk.get(args.path), label: 'Markdown', matchFound: true, truncated: false }

@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Click name opens original rename dialog",
+    "Cancel does not rename",
+    "Name collision retains dialog",
+    "Rename updates active path/name and preserves dirty content"
+  ],
+  "errors": [],
+  "scope": "Actual Vue/store; simulated rename IPC, not native filesystem acceptance"
+}
