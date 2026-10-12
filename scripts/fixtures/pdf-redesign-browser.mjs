@@ -17,7 +17,10 @@ window.__TAURI_INTERNALS__ = {transformCallback:()=>1, metadata:{currentWindow:{
  if(command==='read_pdf_annotations')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1,fingerprint:''},annotations:[]}
  if(command==='read_pdf_ocr')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1,fingerprint:''},provider:{id:'tesseract-wasm',version:'fixture',languages:['eng']},updatedAt:1,pages:[]}
  if(command==='inspect_pdf_form_structure')return {status:'no_form',sourceDigest:'fixture',sourceBytes:bytes.length,pageCount:2,hasAcroForm:false,needAppearances:false,fieldCount:0,widgetCount:0,fieldTypeCounts:{},duplicateFieldNames:[],orphanWidgetCount:0,missingAppearanceCount:0,fillableCandidateCount:0,blockers:[],diagnostics:[],fields:[],widgets:[]}
- if(command==='preview_pdf_metadata_copy')throw Error('测试场景：属性读取失败，请重试')
+ if(command==='preview_pdf_metadata_copy'){
+  if(!window.pdfAudit.metadataRecovery)throw Error('测试场景：属性读取失败，请重试')
+  return {status:'blocked',existingValues:{title:'磁盘原始标题',author:'',subject:'',keywords:''},blockers:['xmp_packet_present_write_unverified'],updatedFields:[],removedFields:[]}
+ }
  if(command==='write_pdf_annotations'||command==='save_config')return
  if(command==='plugin:event|listen')return 1
  if(command.startsWith('plugin:event|'))return

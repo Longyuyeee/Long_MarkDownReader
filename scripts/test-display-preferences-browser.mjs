@@ -3,7 +3,7 @@ import {createRequire} from 'node:module'
 import fs from 'node:fs/promises'
 const require = createRequire(import.meta.url)
 const {chromium} = require(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const browser = await chromium.launch({channel:'msedge', headless:true})
+const browser = await chromium.launch({channel:process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless:true})
 const output = 'docs/evidence/v110-display-preferences'
 await fs.mkdir(output,{recursive:true})
 const checks = [], errors = []

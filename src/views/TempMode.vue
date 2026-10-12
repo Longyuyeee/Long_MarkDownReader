@@ -406,9 +406,9 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 .ai-result-content { white-space: pre-wrap; line-height: 1.7; font-size: 14px; color: var(--theme-text); max-height: 400px; overflow-y: auto; }
 
 @media (max-width: 760px) {
-  .save-boundary { display: none; }
+  .save-boundary { flex-basis: 100%; white-space: normal; }
   .temp-header { flex-wrap: wrap; padding-block: 7px; }
-  .temp-info { flex: 1 1 100%; }
+  .temp-info { flex: 1 1 100%; flex-wrap: wrap; }
   .actions { max-width: 100%; margin-left: auto; overflow-x: auto; }
 }
 </style>

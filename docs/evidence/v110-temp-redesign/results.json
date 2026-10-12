@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Actual external Markdown editor",
+    "Narrow save notice and actions",
+    "Outline hide/show"
+  ],
+  "scope": "Production TempMode with native read mocked; no write/import acceptance",
+  "errors": []
+}

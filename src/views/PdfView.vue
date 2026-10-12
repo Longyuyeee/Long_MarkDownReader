@@ -1355,24 +1355,33 @@ const updatePdfMetadataValues = (values: PdfMetadataValues) => {
 const loadPdfMetadataValues = async () => {
   const document = pdfDocument.value
   if (!document || isExternal.value || pdfMetadataLoaded.value || pdfMetadataLoading.value) return
+  const sourcePath = pdfPath.value
+  const sourceRoot = store.libraryPath
+  const ownsDocument = () => pdfDocument.value === document && pdfPath.value === sourcePath && store.libraryPath === sourceRoot && !isExternal.value
+  const preserveDraft = pdfMetadataDirty.value
+  const initialDraft = JSON.stringify(pdfMetadataValues.value)
   pdfMetadataLoading.value = true
   pdfMetadataError.value = ''
   try {
     const sourceDigest = await digestPdfDocument(document)
+    if (!ownsDocument()) return
     const report = await invoke<PdfMetadataCopyReport>('preview_pdf_metadata_copy', {
-      libraryRoot: store.libraryPath,
-      path: pdfPath.value,
+      libraryRoot: sourceRoot,
+      path: sourcePath,
       expectedSourceDigest: sourceDigest,
       values: emptyPdfMetadataValues(),
     })
-    pdfMetadataValues.value = { ...report.existingValues }
+    if (!ownsDocument()) return
+    if (!preserveDraft && JSON.stringify(pdfMetadataValues.value) === initialDraft) {
+      pdfMetadataValues.value = { ...report.existingValues }
+    }
     pdfMetadataBaseline.value = { ...report.existingValues }
     pdfMetadataLoaded.value = true
     pdfMetadataVerification.value = report.status === 'blocked' ? report : null
   } catch (cause) {
-    pdfMetadataError.value = String(cause).replace(/^Error:\s*/, '')
+    if (ownsDocument()) pdfMetadataError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
-    pdfMetadataLoading.value = false
+    if (ownsDocument()) pdfMetadataLoading.value = false
   }
 }
 

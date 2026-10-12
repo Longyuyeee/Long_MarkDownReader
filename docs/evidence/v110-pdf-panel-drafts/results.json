@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Metadata failure draft retained after retry",
+    "Watermark draft retained across panels",
+    "Narrow preview action reachable"
+  ],
+  "scope": "Real PDF.js and panels; metadata IPC simulated, no PDF output acceptance",
+  "errors": []
+}

@@ -5,7 +5,7 @@ const require=createRequire(import.meta.url)
 const {chromium}=require(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
 const output='docs/evidence/v110-workflow-redesign'
 await fs.mkdir(output,{recursive:true})
-const browser=await chromium.launch({channel:'msedge',headless:true})
+const browser=await chromium.launch({channel:process.env.LONGEDIT_BROWSER_CHANNEL || undefined,headless:true})
 const checks=[],errors=[],surfaces=[],palettes=[]
 let page
 try {

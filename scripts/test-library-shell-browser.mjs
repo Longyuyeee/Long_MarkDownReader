@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url)
 const { chromium } = require(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
 const output = 'docs/evidence/v110-shell-r3'
 await fs.mkdir(output, {recursive:true})
-const browser = await chromium.launch({channel:'msedge',headless:true})
+const browser = await chromium.launch({channel:process.env.LONGEDIT_BROWSER_CHANNEL || undefined,headless:true})
 const checks = [], errors = []
 try {
   const page = await browser.newPage({viewport:{width:1280,height:820}})
