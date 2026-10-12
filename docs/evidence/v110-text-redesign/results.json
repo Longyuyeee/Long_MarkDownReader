@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Text input, undo/redo, find and narrow encoding controls retained",
+    "HTML source/preview preserves draft; sandbox and narrow security notice retained"
+  ],
+  "errors": [],
+  "scope": "Actual TextEditorView and CodeMirror; native read mocked, no native write tested",
+  "releaseCandidate": false
+}

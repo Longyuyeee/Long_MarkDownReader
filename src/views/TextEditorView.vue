@@ -19,7 +19,7 @@
         </div>
       </div>
 
-      <div class="editor-actions">
+      <div class="editor-actions" data-command-strip data-horizontal-wheel="always">
         <n-button-group v-if="isHtmlDocument" size="small" aria-label="HTML 工作模式">
           <n-button :type="viewMode === 'source' ? 'primary' : 'default'" @click="viewMode = 'source'">
             <template #icon><n-icon :component="CodeIcon" /></template>
@@ -46,11 +46,13 @@
         <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="重做" :disabled="loading || readOnly" @click="runRedo">
           <template #icon><n-icon :component="RedoIcon" /></template>
         </n-button>
-        <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="查找与替换" :disabled="loading" @click="openFind">
+        <n-button v-if="viewMode === 'source'" quaternary size="small" title="查找与替换" :disabled="loading" @click="openFind">
           <template #icon><n-icon :component="SearchIcon" /></template>
+          查找替换
         </n-button>
-        <n-button v-if="viewMode === 'source'" quaternary circle size="small" title="跳转到行" :disabled="loading" @click="openGoToLine">
+        <n-button v-if="viewMode === 'source'" quaternary size="small" title="跳转到行" :disabled="loading" @click="openGoToLine">
           <template #icon><n-icon :component="ListOrderedIcon" /></template>
+          跳转行
         </n-button>
         <n-button quaternary circle size="small" title="重新从磁盘读取" :disabled="loading || saving" @click="reloadCurrentEncoding">
           <template #icon><n-icon :component="RefreshIcon" /></template>
@@ -109,7 +111,7 @@
       <span>预览当前草稿，不会自动保存</span>
     </section>
 
-    <SearchMatchNavigation v-if="route.query.searchLocator && !searchNavigationClosed && !loading && !loadError"
+    <SearchMatchNavigation class="search-navigation" v-if="route.query.searchLocator && !searchNavigationClosed && !loading && !loadError"
       :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" :scope="rangeMode ? '已加载内容' : '当前文档'"
       @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="searchNavigationClosed = true" />
     <main class="editor-stage">
@@ -780,11 +782,12 @@ onBeforeUnmount(() => {
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 48px 38px minmax(0, 1fr) 28px;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) 28px;
   grid-template-areas:
     "tabs"
     "toolbar"
     "format"
+    "search"
     "editor"
     "status";
   overflow: hidden;
@@ -798,6 +801,7 @@ onBeforeUnmount(() => {
 .preview-bar { grid-area: format; }
 .editor-stage { grid-area: editor; }
 .status-bar { grid-area: status; }
+.search-navigation { grid-area: search; }
 
 .text-toolbar,
 .format-bar,
@@ -813,6 +817,7 @@ onBeforeUnmount(() => {
 }
 
 .text-toolbar {
+  min-height: 48px;
   justify-content: space-between;
   padding: 0 12px;
 }
@@ -855,6 +860,7 @@ onBeforeUnmount(() => {
 }
 
 .format-bar {
+  min-height: 38px;
   padding: 0 14px;
   gap: 18px;
   background: var(--theme-surface-2);
@@ -1002,13 +1008,27 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
-  .text-workspace { grid-template-rows: auto 48px auto minmax(0, 1fr) 32px; }
   .format-bar { min-height: 42px; padding: 6px 10px; gap: 8px; overflow-x: auto; }
   .preview-bar { min-height: 42px; padding: 6px 10px; }
-  .preview-bar > div span { display: none; }
-  .format-bar label > span:first-child, .confidence-label { display: none; }
   .document-title strong { max-width: 32vw; }
   .status-bar { padding: 0 8px; }
   .status-bar > div { gap: 7px; }
+}
+.text-workspace { container-type: inline-size; }
+.text-toolbar { flex-wrap: wrap; padding-block: 6px; gap: 6px; }
+.editor-actions { max-width: 100%; min-width: 0; overflow-x: auto; padding-block: 2px; }
+.editor-actions > * { flex-shrink: 0; }
+.format-bar { overflow-x: auto; padding-block: 5px; }
+.format-bar > * { flex-shrink: 0; }
+.preview-bar { min-height: 38px; padding-block: 6px; flex-wrap: wrap; }
+.preview-bar > div { flex-wrap: wrap; }
+.preview-bar span { white-space: normal; overflow: visible; }
+.status-bar { overflow-x: auto; white-space: nowrap; }
+.status-bar > * { flex-shrink: 0; }
+@container (max-width: 900px) {
+  .document-identity { flex: 1 1 100%; }
+  .document-title strong { max-width: 100%; }
+  .editor-actions { flex: 1 1 100%; }
+  .format-bar { gap: 10px; padding-inline: 10px; }
 }
 </style>
