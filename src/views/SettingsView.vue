@@ -284,7 +284,7 @@
                   :class="{ active: isPresetActive(preset) }"
                   @click="applyPreset(preset)"
                 >
-                  <div class="preset-visual" :style="getPresetPreviewStyle(preset)">
+                  <div class="preset-visual" :data-style="preset.style" :style="getPresetPreviewStyle(preset)">
                     <div class="preset-window">
                       <span></span><span></span><span></span>
                       <div class="preset-sidebar"></div>
@@ -358,6 +358,10 @@
                 </n-form-item>
               </n-grid-item>
             </n-grid>
+            <div id="document-display" ref="documentDisplaySection" class="display-settings-section">
+              <div class="section-title">文档与文件显示</div>
+              <DisplayPreferencesEditor v-model="config.displayPreferences" />
+            </div>
             <div class="section-title">实时预览</div>
             <div class="theme-preview-card" :style="{ backgroundColor: config.editorBgColor }">
               <div class="preview-content">
@@ -385,6 +389,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
+import DisplayPreferencesEditor from '../components/DisplayPreferencesEditor.vue'
+import { normalizeDisplayPreferences, VISUAL_STYLE_RADII } from '../config/displayPreferences'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Trash as TrashIcon,
@@ -560,6 +566,7 @@ const config = ref({
   exitStrategy: store.exitStrategy,
   visualStyle: store.visualStyle,
   motionSpeed: store.motionSpeed,
+  displayPreferences: normalizeDisplayPreferences(store.displayPreferences),
   aiEnabled: store.aiEnabled,
   aiProvider: store.aiProvider,
   aiEndpoint: store.aiEndpoint,
@@ -575,6 +582,7 @@ const observationComparisonExporting = ref(false)
 const observationReviewing = ref(false)
 const observationReview = ref<KnowledgeGraphObservationComparison | null>(null)
 const formatCapabilityRow = ref<HTMLElement | null>(null)
+const documentDisplaySection = ref<HTMLElement | null>(null)
 const knowledgeObservationRow = ref<HTMLElement | null>(null)
 const formatCapabilityRouteFocused = computed(() => route.query.focus === 'format-capabilities')
 const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
@@ -761,6 +769,7 @@ const syncLocalConfigFromStore = () => {
     exitStrategy: store.exitStrategy,
     visualStyle: store.visualStyle,
     motionSpeed: store.motionSpeed,
+    displayPreferences: normalizeDisplayPreferences(store.displayPreferences),
     aiEnabled: store.aiEnabled,
     aiProvider: store.aiProvider,
     aiEndpoint: store.aiEndpoint,
@@ -777,6 +786,7 @@ onMounted(async () => {
     isInitializing.value = false
     alignActiveSettingsCategory()
     if (formatCapabilityRouteFocused.value) formatCapabilityRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (route.query.focus === 'document-display') documentDisplaySection.value?.scrollIntoView({ block: 'start' })
     if (observationRouteFocused.value) knowledgeObservationRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     if (softwareUpdateRouteFocused.value) document.querySelector<HTMLElement>('[data-testid="app-update-settings"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
@@ -1186,6 +1196,7 @@ const getPresetPreviewStyle = (preset: ThemePreset) => {
     '--preset-bg': colors.background,
     '--preset-surface': colors.surface,
     '--preset-accent': colors.accent,
+    '--preset-radius': VISUAL_STYLE_RADII[preset.style].normal,
   }
 }
 
@@ -2036,6 +2047,15 @@ onUnmounted(() => {
 .preset-document i:nth-child(1) { width: 62%; height: 6px; background: var(--preset-accent); }
 .preset-document i:nth-child(2) { width: 100%; opacity: 0.48; }
 .preset-document i:nth-child(3) { width: 78%; opacity: 0.32; }
+
+.preset-visual .preset-window { border-radius: var(--preset-radius); }
+.preset-visual[data-style="soft"] .preset-window { box-shadow: 0 8px 18px rgba(0,0,0,.09); }
+.preset-visual[data-style="neo"] .preset-window { border: 1px solid var(--preset-accent); box-shadow: 4px 4px 0 color-mix(in srgb, var(--preset-accent) 18%, transparent); }
+.preset-visual[data-style="glass"] .preset-window { background: color-mix(in srgb, var(--preset-surface) 72%, transparent); border: 1px solid color-mix(in srgb, var(--preset-accent) 25%, transparent); box-shadow: inset 0 1px 0 #ffffff88, 0 8px 18px #0001; }
+.preset-visual[data-style="airy"] .preset-document { margin: 6px; padding: 9px; background: var(--preset-surface); box-shadow: 0 3px 12px #0001; }
+.preset-visual[data-style="minimal"] .preset-window { box-shadow: none; }
+.preset-visual[data-style="sharp"] .preset-window { border: 2px solid var(--preset-accent); box-shadow: 4px 4px 0 color-mix(in srgb, var(--preset-accent) 16%, transparent); }
+.display-settings-section { margin-top: 24px; }
 
 .preset-icon {
   position: absolute;

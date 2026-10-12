@@ -59,6 +59,28 @@ pub struct FileDisplayStyle {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", default)]
+pub struct DisplayPreferences {
+    pub document_style: String,
+    pub document_font: String,
+    pub document_font_size: f64,
+    pub document_line_height: f64,
+    pub file_density: String,
+    pub file_row_style: String,
+    pub file_icon_style: String,
+}
+
+impl Default for DisplayPreferences {
+    fn default() -> Self {
+        Self {
+            document_style: "auto".into(), document_font: "auto".into(),
+            document_font_size: 16.0, document_line_height: 1.75,
+            file_density: "auto".into(), file_row_style: "auto".into(), file_icon_style: "color".into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase", default)]
 pub struct AppConfig {
     pub libraries: Vec<LibraryConfig>,
     pub active_library_path: String,
@@ -78,6 +100,7 @@ pub struct AppConfig {
     pub visual_style: String,
     #[serde(default = "default_motion_speed")]
     pub motion_speed: String,
+    pub display_preferences: DisplayPreferences,
     pub ai_enabled: bool,
     #[serde(default = "default_ai_provider")]
     pub ai_provider: String,
@@ -133,6 +156,7 @@ impl Default for AppConfig {
             exit_strategy: default_exit_strategy(),
             visual_style: default_visual_style(),
             motion_speed: default_motion_speed(),
+            display_preferences: DisplayPreferences::default(),
             ai_enabled: false,
             ai_provider: default_ai_provider(),
             ai_endpoint: default_ai_endpoint(),
@@ -544,6 +568,25 @@ mod tests {
         .unwrap();
         assert_eq!(legacy.ai_api_key, "legacy-value");
         assert!(legacy.text_auto_save_enabled);
+    }
+
+    #[test]
+    fn display_preferences_keep_old_configs_readable_and_round_trip_custom_values() {
+        let mut config: AppConfig = serde_json::from_str(r#"{"theme":"cream","visualStyle":"glass"}"#).unwrap();
+        assert_eq!(config.display_preferences.document_style, "auto");
+        assert_eq!(config.display_preferences.document_font_size, 16.0);
+        config.display_preferences.document_style = "paper".into();
+        config.display_preferences.document_font = "serif".into();
+        config.display_preferences.document_font_size = 20.0;
+        config.display_preferences.file_density = "spacious".into();
+        config.display_preferences.file_row_style = "cards".into();
+        let reopened: AppConfig = serde_json::from_str(&serde_json::to_string(&config).unwrap()).unwrap();
+        assert_eq!(reopened.theme, "cream");
+        assert_eq!(reopened.visual_style, "glass");
+        assert_eq!(reopened.display_preferences.document_style, "paper");
+        assert_eq!(reopened.display_preferences.document_font_size, 20.0);
+        assert_eq!(reopened.display_preferences.file_density, "spacious");
+        assert_eq!(reopened.display_preferences.file_row_style, "cards");
     }
     #[test]
     fn inbox_config_is_backward_compatible_and_library_scoped() {

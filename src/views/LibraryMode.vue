@@ -24,11 +24,10 @@
           </div>
           <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
         </div>
-        <!-- 侧边栏导航根据可用宽度统一切换文字标签。 -->
+        <!-- 七个入口始终为一行图标；提示和无障碍名称保留功能说明。 -->
         <div
           class="sidebar-tabs-header"
-          :class="{ compact: sidebarTabsCompact }"
-          :data-layout="sidebarTabsCompact ? 'wrapped' : 'labels'"
+          data-layout="icons"
           data-ui-region="sidebar-tabs"
           role="tablist"
           aria-label="侧边栏导航"
@@ -65,16 +64,10 @@
                     :options="templateOptions"
                     @select="handleTemplateCreate"
                   >
-                    <n-button data-testid="library-create-menu" quaternary size="small" title="新建笔记或画布">
+                    <n-button data-testid="library-create-menu" type="primary" size="small" :title="`在 ${creationTargetLabel} 中新建`">
                       <template #icon><n-icon :component="PlusIcon" /></template>新建
                     </n-button>
                   </n-dropdown>
-                  <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
-                    <template #icon><n-icon :component="FolderPlusIcon" /></template>
-                  </n-button>
-                  <n-button quaternary circle size="small" @click="createDailyNote" title="今日笔记">
-                    <template #icon><n-icon :component="CalendarIcon" /></template>
-                  </n-button>
                   <n-button quaternary circle size="small" @click="refreshLibrary" title="刷新列表">
                     <template #icon><n-icon :component="RefreshIcon" /></template>
                   </n-button>
@@ -516,6 +509,7 @@
           </div>
         </div>
         <n-button quaternary size="small" @click="activeSidebarTab = 'history'; isSidebarCollapsed = false">历史与差异</n-button>
+        <n-button quaternary size="small" @click="router.push({ name: 'Settings', query: { category: 'appearance', focus: 'document-display' } })">显示设置</n-button>
         <n-button quaternary size="small" @click="store.toggleZen()">专注写作 · F11</n-button>
         <p class="document-menu-capability">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.description }}</p>
             </div>
@@ -529,7 +523,7 @@
       <SearchMatchNavigation v-if="!activeEmbeddedEditor && activeTabId === route.query.path && route.query.searchLocator && !searchNavigationClosed"
         :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" scope="当前编辑模式"
         @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="closeSearchNavigation" />
-      <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
+      <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'var(--theme-surface)' }">
         <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
           <component :is="activeEmbeddedEditor" :key="activeTabId" />
         </div>
@@ -803,7 +797,7 @@ import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
-import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
+import { useMessage, useDialog, TreeOption, NIcon, NDropdown, type DropdownOption } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
@@ -1390,7 +1384,6 @@ const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
 )
 watch(editorWidthMode, (v) => { localStorage.setItem('longedit_editor_width', v) })
 const sidebarWidth = ref(260)
-const sidebarTabsCompact = computed(() => sidebarWidth.value < 460)
 const activeResizer = ref<'sidebar' | null>(null)
 const treeInstRef = ref<any>(null)
 const treeData = ref<TreeOption[]>([])
@@ -2226,8 +2219,10 @@ const startShadowSaveTimer = () => {
 const startResizing = (type: 'sidebar') => { activeResizer.value = type }
 
 const handleNodeSelect = (keys: string[]) => {
+  selectedKeys.value = keys
   if (keys.length === 0) return
   const lastKey = keys[keys.length - 1]
+  if (findTreeOptionByKey(treeData.value, lastKey)?.isLeaf === false) return
   const format = lastKey ? findFileFormat(lastKey) : undefined
   if (format && opensInLibraryShell(format)) {
     if (route.name !== 'LibraryMode' || route.query.path !== lastKey) {
@@ -3043,14 +3038,31 @@ const onMenuAction = async (key: string) => {
 // Keep library and quick capture templates identical.
 import { NOTE_TEMPLATES as TEMPLATES } from '../config/noteTemplates'
 
-const templateOptions = [
-  ...Object.keys(TEMPLATES).map(k => ({ label: k, key: k })),
-  { type: 'divider', key: 'format-divider' },
-  ...CREATABLE_FILE_FORMATS.filter(format => format.id !== 'markdown').map(format => ({
-    label: `新建${format.label}`,
-    key: `__format:${format.id}`,
-  })),
-]
+const creationTargetLabel = computed(() => {
+  const target = selectedTargetDirectory()
+  return sameWorkspacePath(target, store.libraryPath)
+    ? store.currentLibraryName
+    : target.replace(/[\\/]$/, '').split(/[\\/]/).pop() || store.currentLibraryName
+})
+const templateOptions = computed<DropdownOption[]>(() => {
+  const selected = selectedKeys.value[selectedKeys.value.length - 1]
+  const node = selected ? findTreeOptionByKey(treeData.value, selected) : undefined
+  const format = selected && node?.isLeaf !== false ? findFileFormat(selected) : undefined
+  const suggested = format?.id !== 'markdown' && format?.creation && format.adapters.creator
+    ? [{ label: `新建${format.label}`, key: `__format:${format.id}` }]
+    : []
+  return [
+    { type: 'group', label: `在「${creationTargetLabel.value}」中新建`, key: 'creation-location', children: [
+      ...suggested,
+      { label: 'Markdown 笔记', key: '空白笔记', icon: () => h(NIcon, null, { default: () => h(FileIcon) }) },
+      { label: '文件夹', key: '__folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) },
+      { label: selected ? '今日笔记' : '今日笔记（Daily）', key: '__daily', icon: () => h(NIcon, null, { default: () => h(CalendarIcon) }) },
+    ] },
+    { type: 'divider', key: 'template-divider' },
+    { label: '笔记模板', key: 'note-templates', children: Object.keys(TEMPLATES).filter(key => key !== '空白笔记').map(key => ({ label: key, key })) },
+    { label: '其他格式', key: 'other-formats', children: CREATABLE_FILE_FORMATS.filter(item => item.id !== 'markdown' && (!suggested.length || item.id !== format?.id)).map(item => ({ label: `新建${item.label}`, key: `__format:${item.id}` })) },
+  ]
+})
 
 const templateMenuProps = () => ({
   class: 'library-create-dropdown-menu',
@@ -3059,8 +3071,9 @@ const templateMenuProps = () => ({
 
 const selectedTargetDirectory = () => {
   if (!selectedKeys.value.length) return store.libraryPath
-  const selected = selectedKeys.value[0]
-  if (!findFileFormat(selected)) return selected
+  const selected = selectedKeys.value[selectedKeys.value.length - 1]
+  const node = findTreeOptionByKey(treeData.value, selected)
+  if (node ? !node.isLeaf : !findFileFormat(selected)) return selected
   return selected.substring(0, Math.max(selected.lastIndexOf('\\'), selected.lastIndexOf('/')))
 }
 
@@ -3082,6 +3095,8 @@ const createRegisteredFile = async (formatId: string, target: string, prefix?: s
 
 const handleTemplateCreate = async (key: string) => {
   if (!store.libraryPath) { openSettings(); return }
+  if (key === '__folder') { await handleToolbarAction('folder'); return }
+  if (key === '__daily') { await createDailyNote(); return }
   const tmpl = TEMPLATES[key] || ''
   try {
     const formatId = key.startsWith('__format:') ? key.slice('__format:'.length) : 'markdown'
@@ -3105,7 +3120,7 @@ const createDailyNote = async () => {
   if (!store.libraryPath) { openSettings(); return }
   const now = new Date()
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const dailyDir = store.libraryPath.replace(/[\\/]$/, '') + '/Daily'
+  const dailyDir = selectedKeys.value.length ? selectedTargetDirectory() : store.libraryPath.replace(/[\\/]$/, '') + '/Daily'
   try {
     const p = await createRegisteredFile('markdown', dailyDir, dateStr)
     await refreshNode(dailyDir)
@@ -4187,10 +4202,9 @@ watch(activeTabId, (newId, oldId) => {
 
 /* === 顶部 Tabs 优化 === */
 .sidebar-tabs-header {
-  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
-  padding: 8px; flex-shrink: 0; overflow: hidden;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;
+  padding: 6px; flex-shrink: 0; overflow: hidden;
 }
-.sidebar-tabs-header.compact { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .icon-tab {
   display: flex; align-items: center; justify-content: center; gap: 4px;
   width: 100%; min-width: 0; height: 34px; padding: 0 4px;
@@ -4210,16 +4224,9 @@ watch(activeTabId, (newId, oldId) => {
 .icon-tab :deep(svg) { flex: none; transition: transform var(--motion-base) var(--ease-emphasized); }
 .icon-tab.active :deep(svg) { transform: scale(1.08); }
 .icon-tab-text {
-  min-width: 0; max-width: 48px; overflow: hidden;
-  white-space: nowrap; font-size: 11px; font-weight: 600;
-  opacity: 1; transform: translateX(0);
-  transition: max-width var(--motion-base) var(--ease-emphasized),
-              opacity var(--motion-fast) var(--ease-standard),
-              transform var(--motion-base) var(--ease-emphasized);
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
 }
-.sidebar-tabs-header.compact .icon-tab { gap: 0; padding: 0 3px; }
-.sidebar-tabs-header.compact .icon-tab :deep(.n-icon) { display: none; }
-.sidebar-tabs-header.compact .icon-tab-text { max-width: none; opacity: 1; transform: none; }
 .icon-tab:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .is-dark .icon-tab:hover { background: rgba(255,255,255,0.08); }
 .is-dark .icon-tab.active { background: rgba(255,255,255,0.12); }

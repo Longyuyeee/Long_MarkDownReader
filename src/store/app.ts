@@ -11,6 +11,7 @@ import {
 } from '../config/themePresets'
 import { toCollectionRelativePath } from '../utils/savedCollections'
 import type { FileDisplayStyle } from '../config/fileTreeAppearance'
+import { normalizeDisplayPreferences } from '../config/displayPreferences'
 import { belongsToLibrary, libraryTabsKey, sessionTabs } from '../utils/workSessions'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
@@ -105,6 +106,7 @@ export const useAppStore = defineStore('app', {
     isZen: false,
     visualStyle: 'soft' as VisualStyle,
     motionSpeed: 'calm' as ThemeMotionSpeed,
+    displayPreferences: normalizeDisplayPreferences(undefined),
     aiEnabled: false,
     aiProvider: 'openai',
     aiEndpoint: 'https://api.openai.com/v1',
@@ -157,6 +159,7 @@ export const useAppStore = defineStore('app', {
           this.exitStrategy = config.exitStrategy || 'ask'
           this.visualStyle = config.visualStyle || 'soft'
           this.motionSpeed = config.motionSpeed || 'calm'
+          this.displayPreferences = normalizeDisplayPreferences(config.displayPreferences)
           this.aiEnabled = config.aiEnabled || false
           this.aiProvider = config.aiProvider || 'openai'
           this.aiEndpoint = config.aiEndpoint || 'https://api.openai.com/v1'
@@ -226,6 +229,7 @@ export const useAppStore = defineStore('app', {
               exitStrategy: next.exitStrategy,
               visualStyle: next.visualStyle,
               motionSpeed: next.motionSpeed,
+              displayPreferences: normalizeDisplayPreferences(next.displayPreferences),
               aiEnabled: next.aiEnabled,
               aiProvider: next.aiProvider,
               aiEndpoint: next.aiEndpoint,
@@ -242,6 +246,7 @@ export const useAppStore = defineStore('app', {
           throw error
         }
         const applied = { ...snapshot }
+        if (snapshot.displayPreferences !== undefined) applied.displayPreferences = normalizeDisplayPreferences(snapshot.displayPreferences)
         if (snapshot.libraries !== undefined) applied.savedSearches = next.savedSearches
         if (switchesLibrary) {
           this.saveTabsState()

@@ -87,6 +87,7 @@ import AppUpdater from './components/AppUpdater.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
+import { normalizeDisplayPreferences, VISUAL_STYLE_RADII } from './config/displayPreferences'
 import { openManagedFile } from './services/fileNavigation'
 import { windowDraftCount, windowDraftActivity } from './services/windowDrafts'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
@@ -151,10 +152,22 @@ watch(() => store.motionSpeed, (v) => {
   document.body.setAttribute('data-motion', v)
 }, { immediate: true })
 
+watch(() => store.displayPreferences, (value) => {
+  const preferences = normalizeDisplayPreferences(value)
+  for (const key of ['documentStyle', 'documentFont', 'fileDensity', 'fileRowStyle', 'fileIconStyle'] as const) {
+    const attribute = key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)
+    document.body.setAttribute(`data-${attribute}`, preferences[key])
+  }
+  document.body.style.setProperty('--document-font-size', `${preferences.documentFontSize}px`)
+  document.body.style.setProperty('--document-line-height', String(preferences.documentLineHeight))
+}, { immediate: true, deep: true })
+
+const styleRadii = computed(() => VISUAL_STYLE_RADII[store.visualStyle] || VISUAL_STYLE_RADII.soft)
+
 const themeOverrides = computed<GlobalThemeOverrides>(() => ({
   common: {
-    borderRadius: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '8px',
-    borderRadiusSmall: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '6px',
+    borderRadius: styleRadii.value.normal,
+    borderRadiusSmall: styleRadii.value.small,
     primaryColor: currentThemeTone.value.ui.primary,
     primaryColorHover: currentThemeTone.value.ui.primary,
     primaryColorPressed: currentThemeTone.value.ui.primary,
@@ -202,7 +215,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
     },
   },
   Dropdown: {
-    borderRadius: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '7px',
+    borderRadius: styleRadii.value.small,
     color: currentThemeTone.value.ui.surface,
     dividerColor: `${currentThemeTone.value.ui.text}20`,
     optionTextColor: currentThemeTone.value.ui.text,
