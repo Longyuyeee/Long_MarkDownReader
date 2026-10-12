@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Short inspector bounds",
+    "Relation editing and undo/redo",
+    "Scroll to color control",
+    "Narrow viewport"
+  ],
+  "scope": "Production CanvasView; native IPC mocked; no native save acceptance",
+  "errors": []
+}
