@@ -1,5 +1,7 @@
 # 当前开发审计与接续方向
 
+最新修复（2026-10-13）：专注模式去掉旧的 `padding-top: 30vh` 和 `min-height: 70vh`。旧规则把包括工具栏在内的整个编辑区下推，造成顶部大空白；现沿用正常 flex/滚动布局，仅隐藏外围导航。`scripts/test-focus-layout.mjs` 在实际 App/Vditor 页面点击专注与退出，验证 1280×900、760×540 下工具栏贴近顶部、退出按钮在视口内、正文保留及导航恢复，均通过且无页面异常。两张实际页面截图已查看，证据 `docs/evidence/v110-focus-layout/`；原生 IPC 模拟。`git diff --check` 通过。本次仅删除错误 CSS，未发版；字体 DIY 仍是待确认示意，未实装。
+
 最新用户调整（2026-10-13）：移除左侧主导航工作台、资料库、图谱、设置的重复悬停提示，仅删除 title，保留可见文字、无障碍名称、路由及选中状态。`scripts/test-navigation-no-tooltip.mjs` 在真实 App 浏览器页面启用实际 tooltip policy，逐项悬停确认无原生 title 或自定义浮窗，页面截图已查看；证据 `docs/evidence/v110-navigation-no-tooltip/`。原生 IPC 使用模拟；本次未改动其他图标按钮的必要提示。
 
 最新用户调整（2026-10-13）：修复编辑工具栏上下错位。原 Vditor 格式项高 35px，追加快捷项仅高 22px，浮动布局下顶部对齐导致中心错开；追加容器改用 Vditor 的 `--toolbar-height`，内部垂直居中，不增加工具栏高度或删减功能。`scripts/test-toolbar-alignment.mjs` 在浅色、粉色、深色下检查两组按钮中心误差不超过 1px，通过且无页面异常；实际粉色页面截图已查看。证据：`docs/evidence/v110-toolbar-alignment/`（浏览器真实 Vue/Vditor，原生 IPC 模拟）。`npm run build` 通过。

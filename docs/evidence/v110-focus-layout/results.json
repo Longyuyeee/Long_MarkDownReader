@@ -1,0 +1,28 @@
+{
+  "checks": [
+    {
+      "width": 1280,
+      "height": 900,
+      "geometry": {
+        "toolbarTop": 1,
+        "exitBottom": 892,
+        "height": 900
+      },
+      "contentRetained": true,
+      "exitRestoresNavigation": true
+    },
+    {
+      "width": 760,
+      "height": 540,
+      "geometry": {
+        "toolbarTop": 1,
+        "exitBottom": 532,
+        "height": 540
+      },
+      "contentRetained": true,
+      "exitRestoresNavigation": true
+    }
+  ],
+  "errors": [],
+  "scope": "Actual App/Vditor browser, mocked native IPC"
+}

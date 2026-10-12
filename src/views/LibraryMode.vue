@@ -5437,13 +5437,8 @@ watch(activeTabId, (newId, oldId) => {
 .mode-toggle { display: flex; gap: 2px; }
 .width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: var(--theme-border); }
 .is-dark .width-toggle { border-left-color: rgba(255,255,255,0.08); }
-/* Zen 模式打字机滚动：增大顶部留白让光标居中 */
-.editor-main.zen-mode .editor-viewport {
-  padding-top: 30vh;
-}
-.editor-main.zen-mode :deep(.vditor-content) {
-  min-height: 70vh;
-}
+/* Focus mode hides chrome; it must not offset the toolbar or force content
+   beyond the available viewport. Keep the normal flex/scroll layout. */
 
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; overflow: hidden; }
 .ambient-glow {
