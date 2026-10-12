@@ -409,13 +409,12 @@ export const useAppStore = defineStore('app', {
         if (tab.textSaveLineEnding !== undefined) existing.textSaveLineEnding = tab.textSaveLineEnding
         if (tab.textSaveFinalNewline !== undefined) existing.textSaveFinalNewline = tab.textSaveFinalNewline
         if (tab.external !== undefined) existing.external = tab.external
-        const [removed] = this.tabs.splice(idx, 1)
-        this.tabs.unshift(removed)
+        // Activation preserves the user's spatial order; only recent-files is MRU.
         if (this.activeTabId !== existing.id) {
           this.activeTabId = existing.id
         }
       } else {
-        this.tabs.unshift(tab)
+        this.tabs.push(tab)
         this.activeTabId = tab.id
       }
       // 最近文件追踪

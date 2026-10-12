@@ -21,7 +21,7 @@ for (const token of [
   "scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })",
   '@keydown.left.prevent="focusAdjacentTab(tab, -1)"',
   '@keydown.right.prevent="focusAdjacentTab(tab, 1)"',
-  'new ResizeObserver(updateScrollState)',
+  'new ResizeObserver(() => { updateScrollState(); void revealActiveTab() })',
   'resizeObserver?.disconnect()',
   "import { NTooltip, useDialog } from 'naive-ui'",
   'const tooltipDelay = 420',

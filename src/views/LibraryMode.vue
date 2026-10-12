@@ -1,13 +1,14 @@
 <template>
   <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referenceVisible && !store.isZen }" @mousemove="onMouseMove" @mouseup="onMouseUp">
     <header v-if="!store.isZen" class="library-shell-toolbar" aria-label="资料库操作">
-      <n-button quaternary size="small" :aria-expanded="!isSidebarCollapsed" aria-controls="library-navigation" @click="isSidebarCollapsed = !isSidebarCollapsed">
-        <template #icon><n-icon :component="ListIcon" /></template>导航
+      <n-button class="shell-navigation-action" quaternary size="small" aria-label="导航" :aria-expanded="!isSidebarCollapsed" aria-controls="library-navigation" @click="isSidebarCollapsed = !isSidebarCollapsed">
+        <template #icon><n-icon :component="ListIcon" /></template><span class="shell-action-label">导航</span>
       </n-button>
       <n-button class="library-picker" quaternary size="small" :title="store.libraryPath || '管理资料库'" @click="openSettings">{{ store.currentLibraryName || '选择资料库' }}</n-button>
-      <span class="shell-toolbar-spacer"></span>
-      <n-button quaternary size="small" @click="openQuickNote"><template #icon><n-icon :component="EditIcon" /></template>快速笔记</n-button>
-      <n-button quaternary size="small" title="命令 Ctrl+P" @click="requestCommandPalette"><template #icon><n-icon :component="SearchIcon" /></template>命令</n-button>
+      <WorkspaceTabs v-if="store.tabs.length" class="shell-document-tabs" />
+      <span v-else class="shell-toolbar-spacer"></span>
+      <n-button class="shell-quick-action" quaternary size="small" aria-label="快速笔记" title="快速笔记" @click="openQuickNote"><template #icon><n-icon :component="EditIcon" /></template><span class="shell-action-label">快速笔记</span></n-button>
+      <n-button class="shell-command-action" quaternary size="small" aria-label="命令" title="命令 Ctrl+P" @click="requestCommandPalette"><template #icon><n-icon :component="SearchIcon" /></template><span class="shell-action-label">命令</span></n-button>
     </header>
     <div class="library-workspace">
     <!-- 统一左侧侧边栏 -->
@@ -450,9 +451,6 @@
 
     <!-- 中间编辑区 -->
     <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
-      <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
-        <WorkspaceTabs />
-      </div>
       <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
         <span class="document-breadcrumb" :title="activeTabId">{{ activeTabId.split(/[\\/]/).pop() }}</span>
         <div class="document-primary-actions">
@@ -4187,8 +4185,19 @@ watch(activeTabId, (newId, oldId) => {
 .library-recovery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .library-recovery details { max-height: 120px; overflow: auto; }
 .library-mode { position: relative; display: flex; flex-direction: column; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); container-type: inline-size; container-name: library-shell; }
-.library-shell-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 12px; flex-shrink: 0; border-bottom: var(--theme-border); background: var(--theme-surface); }
-.library-picker { min-width: 0; max-width: min(280px, 40cqw); }
+.library-shell-toolbar { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; padding: 6px 12px; flex-shrink: 0; border-bottom: var(--theme-border); background: var(--theme-surface); }
+.library-shell-toolbar > .n-button { flex-shrink: 0; }
+.library-shell-toolbar > .library-picker { flex: 0 0 auto; min-width: 36px; width: clamp(52px, 12cqw, 160px); }
+.shell-document-tabs { align-self: stretch; border-bottom: 0; }
+@container library-shell (max-width: 600px) {
+  .shell-action-label { display: none; }
+  .library-shell-toolbar > .n-button { padding: 0 5px; }
+  .library-shell-toolbar :deep(.n-button__icon) { margin-right: 0; }
+  .library-shell-toolbar > .library-picker { max-width: 52px; }
+  .shell-document-tabs :deep(.workspace-tabs-scroll) { padding: 0 20px; }
+  .shell-document-tabs :deep(.tab-scroll-button) { width: 18px; }
+  .shell-document-tabs :deep(.workspace-tab) { flex-basis: 128px; min-width: 108px; }
+}
 .library-picker :deep(.n-button__content) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .shell-toolbar-spacer { flex: 1; }
 .library-workspace { position: relative; display: flex; flex: 1; width: 100%; min-width: 0; min-height: 0; }

@@ -193,7 +193,7 @@ const close = async (tab: TabInfo) => {
 watch([() => store.activeTabId, () => store.tabs.length], revealActiveTab)
 
 onMounted(() => {
-  resizeObserver = new ResizeObserver(updateScrollState)
+  resizeObserver = new ResizeObserver(() => { updateScrollState(); void revealActiveTab() })
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)
   updateScrollState()
   void revealActiveTab()
@@ -221,6 +221,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   scrollbar-width: none;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
+  scroll-padding-inline: 34px;
   padding: 0 34px;
 }
 
