@@ -2,13 +2,12 @@
   <nav class="app-navigation" aria-label="主导航">
     <div class="navigation-destinations">
       <router-link v-for="item in destinations" :key="item.name" :to="{ name: item.name }"
-        :class="{ active: activeDestination === item.name }" :aria-current="activeDestination === item.name ? 'page' : undefined"
-        :title="item.label">
+        :class="{ active: activeDestination === item.name }" :aria-current="activeDestination === item.name ? 'page' : undefined">
         <component :is="item.icon" :size="19" aria-hidden="true" /><span>{{ item.label }}</span>
       </router-link>
     </div>
     <router-link class="navigation-settings" :class="{ active: activeDestination === 'Settings' }"
-      :to="{ name: 'Settings' }" :aria-current="activeDestination === 'Settings' ? 'page' : undefined" title="设置">
+      :to="{ name: 'Settings' }" :aria-current="activeDestination === 'Settings' ? 'page' : undefined">
       <Settings :size="19" aria-hidden="true" /><span>设置</span>
     </router-link>
   </nav>

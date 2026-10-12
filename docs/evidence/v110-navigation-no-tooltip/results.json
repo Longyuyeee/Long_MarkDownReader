@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "Four text-labelled links retain accessible names",
+    "No native or application tooltip after hovering each link"
+  ],
+  "scope": "Actual App browser fixture with tooltip policy; mocked native IPC"
+}
