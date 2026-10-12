@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Level and text filtering",
+    "Named refresh and tail switches",
+    "Narrow container labels",
+    "Editing notice preserved",
+    "Undo/redo and viewer/editor draft restoration"
+  ],
+  "errors": [],
+  "scope": "Actual LogViewerView and CodeMirror; native read/range mocked; no native writes, growing-file or large-file acceptance",
+  "releaseCandidate": false
+}

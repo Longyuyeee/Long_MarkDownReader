@@ -27,11 +27,11 @@
         <template v-if="workspaceMode === 'viewer'">
           <label class="toggle-control">
             <span>自动刷新</span>
-            <n-switch v-model:value="autoRefresh" size="small" />
+            <n-switch v-model:value="autoRefresh" size="small" aria-label="自动刷新" />
           </label>
           <label class="toggle-control">
             <span>跟随尾部</span>
-            <n-switch v-model:value="followTail" size="small" />
+            <n-switch v-model:value="followTail" size="small" aria-label="跟随尾部" />
           </label>
           <n-button v-if="tailMode" size="small" secondary @click="loadFromStart">读取前段</n-button>
         </template>
@@ -604,9 +604,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .log-workspace {
+  container-type: inline-size;
   width: 100%; height: 100%; min-width: 0; min-height: 0;
   display: grid; grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 48px 46px minmax(0, 1fr) 28px;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   grid-template-areas: "tabs" "toolbar" "filter" "viewer" "status";
   overflow: hidden; color: var(--theme-text); background: var(--theme-bg);
 }
@@ -621,7 +622,14 @@ onBeforeUnmount(() => {
   display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0 16px;
   border-bottom: var(--theme-border); background: var(--theme-surface);
 }
-.log-toolbar { justify-content: space-between; }
+.log-toolbar { justify-content: space-between; flex-wrap: wrap; min-height: 48px; padding-block: 6px; }
+.document-identity { flex: 1; }
+.toolbar-actions { max-width: 100%; overflow-x: auto; padding-block: 2px; }
+.toolbar-actions > * { flex-shrink: 0; }
+.toggle-control { white-space: nowrap; }
+.filter-bar { min-height: 46px; padding-block: 6px; }
+.edit-bar { min-height: 46px; padding-block: 6px; }
+.edit-actions { flex-shrink: 0; }
 .document-identity, .toolbar-actions, .toggle-control, .status-bar > div, .edit-actions {
   display: flex; align-items: center; gap: 10px; min-width: 0;
 }
@@ -640,9 +648,9 @@ onBeforeUnmount(() => {
 .level-filter button span { min-width: 14px; color: inherit; font-size: var(--text-compact); text-align: right; }
 .result-count { margin-left: auto; white-space: nowrap; }
 .edit-bar { justify-content: space-between; background: color-mix(in srgb, var(--theme-primary) 7%, var(--theme-surface)); }
-.edit-notice { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.edit-notice { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; min-width: 0; }
 .edit-notice strong { color: var(--theme-primary); font-size: 12px; white-space: nowrap; }
-.edit-notice span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.edit-notice span { white-space: normal; }
 .log-stage { min-height: 0; overflow: auto; background: var(--code-editor-surface); }
 .log-editor-stage { min-height: 0; overflow: hidden; position: relative; background: var(--code-editor-surface); }
 .log-editor-host { width: 100%; height: 100%; min-height: 0; }
@@ -661,18 +669,16 @@ onBeforeUnmount(() => {
 .log-lines .level-info { border-left-color: var(--status-info); color: var(--code-editor-text); }
 .log-lines .level-debug { border-left-color: var(--code-editor-string); color: var(--code-editor-string); }
 .log-lines .level-trace { border-left-color: var(--code-editor-function); color: var(--code-editor-function); }
-.status-bar { justify-content: space-between; overflow: hidden; border-top: var(--theme-border); border-bottom: 0; white-space: nowrap; }
-.status-bar > div { overflow: hidden; white-space: nowrap; }
+.status-bar { min-height: 28px; justify-content: space-between; overflow-x: auto; border-top: var(--theme-border); border-bottom: 0; white-space: nowrap; }
+.status-bar > div { flex-shrink: 0; white-space: nowrap; }
 .status-bar > div:last-child { justify-content: flex-end; }
-@media (max-width: 860px) {
-  .log-workspace { grid-template-rows: auto 54px auto minmax(0, 1fr) 28px; }
-  .log-toolbar { padding: 0 10px; }
-  .toggle-control > span, .document-title span { display: none; }
+@container (max-width: 860px) {
+  .log-toolbar { padding-inline: 10px; }
+  .toolbar-actions { width: 100%; }
   .filter-bar { flex-wrap: wrap; padding: 8px 10px; }
   .filter-bar :deep(.n-input) { flex-basis: 100%; max-width: none; }
-  .level-filter { max-width: calc(100vw - 96px); }
+  .level-filter { flex: 1; }
   .edit-bar { min-height: 46px; padding: 6px 10px; }
-  .edit-notice span { display: none; }
   .log-lines { padding-left: 56px; }
 }
 </style>
