@@ -52,6 +52,7 @@
         </button>
         <button type="button" :class="{ active: showDetails }" :aria-pressed="showDetails" title="备注与兼容画像" @click="showDetails = !showDetails">
           <PanelRightIcon :size="16" />
+          <span>备注与详情</span>
         </button>
         <button type="button" :disabled="loading" title="重新读取" @click="requestReloadPresentation">
           <RefreshCwIcon :size="16" :class="{ spin: loading }" />
@@ -129,6 +130,7 @@
       </main>
 
       <aside v-if="showDetails" class="pptx-details">
+        <header class="details-heading"><strong>文档工具与详情</strong><button type="button" title="关闭文档详情" @click="showDetails = false"><XIcon :size="16" /></button></header>
         <section v-if="!isExternal" class="edit-baseline">
           <header>
             <LockKeyholeIcon :size="15" />
@@ -1141,7 +1143,7 @@ const loadError = ref('')
 const activeSlideIndex = ref(0)
 const searchQuery = ref('')
 const activeMatch = ref(0)
-const showDetails = ref(true)
+const showDetails = ref(false)
 const presenting = ref(false)
 const presentButtonRef = ref<HTMLButtonElement>()
 const presenterRef = ref<HTMLElement>()
@@ -1507,6 +1509,7 @@ const moveSearch = (direction: -1 | 1) => {
 }
 const prepareEditBaseline = async () => {
   if (!report.value || baselineLoading.value || isExternal.value) return
+  showDetails.value = true
   baselineLoading.value = true
   baselineError.value = ''
   try {
@@ -2460,7 +2463,12 @@ onBeforeUnmount(() => {
 .document-identity > div { min-width: 0; display: flex; flex-direction: column; }
 .document-identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .document-identity span { color: var(--text-muted); font-size: var(--text-compact); }
-.toolbar-actions { gap: 4px; }
+.toolbar-actions { gap: 4px; min-width: 0; max-width: 100%; overflow-x: auto; padding: 2px 0; }
+.toolbar-actions > * { flex-shrink: 0; }
+.toolbar-actions > button { white-space: nowrap; }
+.details-heading { justify-content: space-between; }
+.details-heading button { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; }
+.details-heading button:focus-visible, .toolbar-actions button:focus-visible { outline: 2px solid var(--primary-color); outline-offset: -2px; }
 .toolbar-actions > button { min-width: 30px; height: 30px; padding: 0 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid transparent; border-radius: 5px; color: var(--text-secondary); background: transparent; cursor: pointer; font: inherit; }
 .toolbar-actions > button:hover:not(:disabled), .toolbar-actions > button.active { border-color: var(--border-color); background: var(--hover-bg); color: var(--text-primary); }
 .toolbar-actions > button:disabled { opacity: .38; cursor: default; }
@@ -2595,8 +2603,8 @@ onBeforeUnmount(() => {
 @media (max-width: 760px) {
   .pptx-toolbar { align-items: flex-start; flex-direction: column; }
   .toolbar-actions { width: 100%; }
-  .pptx-search { min-width: 0; flex: 1; }
-  .toolbar-actions > button span { display: none; }
+  .pptx-search { min-width: 200px; flex: 0 0 200px; }
+  .toolbar-actions > button span { display: inline; }
   .pptx-layout, .pptx-layout.details-open { grid-template-columns: 118px minmax(0, 1fr); }
   .pptx-layout.details-open .pptx-details { width: min(270px, calc(100% - 118px)); }
   .pptx-stage { padding: 14px; }
@@ -2616,8 +2624,8 @@ onBeforeUnmount(() => {
 @container (max-width: 760px) {
   .pptx-toolbar { align-items: flex-start; flex-direction: column; }
   .toolbar-actions { width: 100%; }
-  .pptx-search { min-width: 0; flex: 1; }
-  .toolbar-actions > button span { display: none; }
+  .pptx-search { min-width: 200px; flex: 0 0 200px; }
+  .toolbar-actions > button span { display: inline; }
   .pptx-layout, .pptx-layout.details-open { grid-template-columns: 118px minmax(0, 1fr); }
   .pptx-layout.details-open .pptx-details { width: min(270px, calc(100% - 118px)); }
   .pptx-stage { padding: 14px; }
