@@ -1,0 +1,12 @@
+{
+  "scope": "interactive design proposal, not production UI",
+  "checks": [
+    "navigation toggle preserves access",
+    "all seven navigation panels remain reachable",
+    "reference excerpt insertion marks draft and explicit save updates state",
+    "focus mode has a visible exit",
+    "search filters file list and clears correctly",
+    "736px and 320px layouts and document menu fit",
+    "no browser script errors"
+  ]
+}

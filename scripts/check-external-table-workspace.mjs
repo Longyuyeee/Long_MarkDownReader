@@ -44,7 +44,9 @@ for (const token of [
 ]) requireText(backend, token, `external Table backend is missing ${token}`)
 for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
-  "isExternal.value ? 'read_external_table_file' : 'read_table_file'",
+  'const requestedExternal = isExternal.value',
+  'isExternal.value !== requestedExternal',
+  "requestedExternal ? 'read_external_table_file' : 'read_table_file'",
   "invoke<TableWriteResult>('write_external_table_file'",
   '保存将覆盖当前外部',
   '外部表格 · 仅点击保存写回',

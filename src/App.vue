@@ -216,6 +216,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 }))
 
 const showPalette = ref(false)
+const openCommandPalette = () => { showPalette.value = true }
 const showExitModal = ref(false)
 const showDiscardConfirm = ref(false)
 const discardConfirmTitle = ref('放弃未保存修改？')
@@ -452,6 +453,7 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleGlobalKeydown)
+  window.addEventListener('longedit:open-command-palette', openCommandPalette)
   window.addEventListener('beforeunload', handleBeforeUnload)
   try {
     if (appWindow) {
@@ -513,6 +515,7 @@ onUnmounted(() => {
   lifecycleUnlisteners.splice(0).forEach(unlisten => unlisten())
   resolveDiscardConfirm(false)
   window.removeEventListener('keydown', handleGlobalKeydown)
+  window.removeEventListener('longedit:open-command-palette', openCommandPalette)
   window.removeEventListener('beforeunload', handleBeforeUnload)
   removeBeforeEach()
   removeAfterEach()

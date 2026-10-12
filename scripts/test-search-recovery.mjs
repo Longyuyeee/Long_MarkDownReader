@@ -36,6 +36,7 @@ const harness = (vueWatchers = false) => {
     invoke: (command, args) => { const request = deferred(); pending.push({ command, args, ...request }); return request.promise },
     onUnmounted, editorLoadGeneration: 0, destroyImageFix: noop, window: { removeEventListener: noop },
     document: { removeEventListener: noop }, rememberReferenceInsertionPoint: noop,
+    closeHistoryComparison: noop, invalidateHistory: noop,
     revealLibraryFile: noop, refreshCreatedLibraryFile: noop, handleKeyDown: noop,
     shadowSaveTimer: null, gitStatusTimer: null, cleanupEditorListeners: noop, destroyOutlineObserver: noop,
     unlistenRefresh: null, unlistenExport: null, unlistenRefreshCmd: null, unlistenSaveCmd: null,

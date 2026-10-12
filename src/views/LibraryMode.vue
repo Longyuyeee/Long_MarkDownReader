@@ -1,18 +1,39 @@
 <template>
-  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referencePinned && searchPreviewResult }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referenceVisible && !store.isZen }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+    <header v-if="!store.isZen" class="library-shell-toolbar" aria-label="资料库操作">
+      <n-button quaternary size="small" :aria-expanded="!isSidebarCollapsed" aria-controls="library-navigation" @click="isSidebarCollapsed = !isSidebarCollapsed">
+        <template #icon><n-icon :component="ListIcon" /></template>导航
+      </n-button>
+      <n-button class="library-picker" quaternary size="small" :title="store.libraryPath || '管理资料库'" @click="openSettings">{{ store.currentLibraryName || '选择资料库' }}</n-button>
+      <span class="shell-toolbar-spacer"></span>
+      <n-button quaternary size="small" @click="openQuickNote"><template #icon><n-icon :component="EditIcon" /></template>快速笔记</n-button>
+      <n-button quaternary size="small" title="命令 Ctrl+P" @click="requestCommandPalette"><template #icon><n-icon :component="SearchIcon" /></template>命令</n-button>
+    </header>
+    <div class="library-workspace">
     <!-- 统一左侧侧边栏 -->
-    <div class="sidebar" data-ui-region="navigation" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
+    <div id="library-navigation" class="sidebar" data-ui-region="navigation" :aria-hidden="isSidebarCollapsed" :inert="isSidebarCollapsed || undefined" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
+        <div class="search-area shell-search-area">
+          <div class="search-control-row">
+            <n-input v-model:value="searchQuery" placeholder="搜索文件与正文" aria-label="搜索文件与正文" size="small" clearable @focus="activeSidebarTab = 'files'">
+              <template #prefix><n-icon :component="SearchIcon" /></template>
+            </n-input>
+            <n-button quaternary circle size="small" title="保存为常用搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
+              <template #icon><n-icon :component="BookmarkAddIcon" /></template>
+            </n-button>
+          </div>
+          <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
+        </div>
         <!-- 侧边栏导航根据可用宽度统一切换文字标签。 -->
         <div
           class="sidebar-tabs-header"
           :class="{ compact: sidebarTabsCompact }"
-          :data-layout="sidebarTabsCompact ? 'icons' : 'labels'"
+          :data-layout="sidebarTabsCompact ? 'wrapped' : 'labels'"
           data-ui-region="sidebar-tabs"
           role="tablist"
           aria-label="侧边栏导航"
         >
-          <div
+          <button type="button"
             v-for="tab in sidebarTabs" :key="tab.key"
             class="icon-tab"
             :class="{ active: activeSidebarTab === tab.key }"
@@ -21,15 +42,12 @@
             :aria-selected="activeSidebarTab === tab.key"
             :aria-label="tab.description"
             :aria-controls="`panel-${tab.key}`"
-            tabindex="0"
             @click="activeSidebarTab = tab.key"
-            @keydown.enter="activeSidebarTab = tab.key"
-            @keydown.space.prevent="activeSidebarTab = tab.key"
             :title="tab.description"
           >
             <n-icon :component="tab.icon" size="18" />
             <span class="icon-tab-text">{{ tab.label }}</span>
-          </div>
+          </button>
         </div>
 
         <button v-if="searchQuery.trim() && searchReturn.selectedKey.value" type="button" class="search-return-button" @click="searchReturn.returnToResults">返回刚才的搜索结果</button>
@@ -38,17 +56,6 @@
             <!-- 文件 tree 面板 -->
             <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane" role="tabpanel" :id="`panel-files`" :aria-labelledby="`tab-files`">
               <div class="sidebar-header">
-                <div class="search-area">
-                  <div class="search-control-row">
-                    <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
-                      <template #prefix><n-icon :component="SearchIcon" /></template>
-                    </n-input>
-                    <n-button quaternary circle size="small" title="保存为常用搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
-                      <template #icon><n-icon :component="BookmarkAddIcon" /></template>
-                    </n-button>
-                  </div>
-                  <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
-                </div>
                 <div class="toolbar-area">
                   <n-dropdown
                     trigger="click"
@@ -58,8 +65,8 @@
                     :options="templateOptions"
                     @select="handleTemplateCreate"
                   >
-                    <n-button data-testid="library-create-menu" quaternary circle size="small" title="新建笔记或画布">
-                      <template #icon><n-icon :component="PlusIcon" /></template>
+                    <n-button data-testid="library-create-menu" quaternary size="small" title="新建笔记或画布">
+                      <template #icon><n-icon :component="PlusIcon" /></template>新建
                     </n-button>
                   </n-dropdown>
                   <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
@@ -454,6 +461,15 @@
     <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
       <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
         <WorkspaceTabs />
+      </div>
+      <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
+        <span class="document-breadcrumb" :title="activeTabId">{{ activeTabId.split(/[\\/]/).pop() }}</span>
+        <div class="document-primary-actions">
+          <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
+          <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
+          <n-popover trigger="click" placement="bottom-end" class="document-actions-popover">
+            <template #trigger><n-button data-testid="library-document-menu" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
+            <div class="document-menu-content" aria-label="文档操作菜单">
         <n-dropdown
           v-if="activeTabId"
           trigger="click"
@@ -462,67 +478,52 @@
         >
           <n-button
             quaternary
-            circle
             size="small"
             :loading="externalAppsLoading || externalOpenBusy"
             title="使用外部应用打开"
           >
-            <template #icon><n-icon :component="ExternalOpenIcon" /></template>
+            <template #icon><n-icon :component="ExternalOpenIcon" /></template>外部应用打开
           </n-button>
         </n-dropdown>
         <div v-if="!activeEmbeddedEditor" class="tab-actions">
           <div class="action-btn-group">
-            <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
-              <template #icon><n-icon :component="RefreshIcon" /></template>
-            </n-button>
-            <n-button data-testid="library-explicit-save" quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle">
-              <template #icon><n-icon :component="SaveIcon" /></template>
+            <n-button quaternary size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
+              <template #icon><n-icon :component="RefreshIcon" /></template>重新读取文件
             </n-button>
             <n-dropdown trigger="click" :options="textEncodingMenuOptions" @select="handleTextEncodingAction" v-if="activeTabId && activeDocumentFormat?.routeName === 'LibraryMode'">
-              <n-button quaternary circle size="small" title="文本编码">
-                <template #icon><n-icon :component="LanguagesIcon" /></template>
+              <n-button quaternary size="small" title="文本编码">
+                <template #icon><n-icon :component="LanguagesIcon" /></template>编码与换行
               </n-button>
             </n-dropdown>
             <n-dropdown trigger="click" :options="exportOptions" @select="handleExport" v-if="activeTabId">
-              <n-button quaternary circle size="small" title="导出">
-                <template #icon><n-icon :component="DownloadIcon" /></template>
+              <n-button quaternary size="small" title="导出">
+                <template #icon><n-icon :component="DownloadIcon" /></template>导出
               </n-button>
             </n-dropdown>
             <n-button quaternary size="tiny" v-if="activeTabId && activeIsMarkdown" @click="createMindMapFromCurrentMarkdown" title="将当前文档标题和列表转换为可编辑思维导图">转脑图</n-button>
             <div class="mode-toggle" v-if="activeTabId && activeIsMarkdown">
-              <n-button quaternary size="tiny" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
-              <n-button quaternary size="tiny" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
-              <n-button quaternary size="tiny" :type="store.editorMode === 'sv' ? 'primary' : 'default'" @click="switchEditorMode('sv')" title="源码编辑">源码</n-button>
+              <span>编辑模式</span>
+              <n-button quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
+              <n-button quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
+              <n-button quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" :type="store.editorMode === 'sv' ? 'primary' : 'default'" @click="switchEditorMode('sv')" title="源码编辑">源码</n-button>
             </div>
             <div class="width-toggle" v-if="activeTabId">
+              <span>正文宽度</span>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'narrow' ? 'primary' : 'default'" @click="editorWidthMode = 'narrow'" title="窄栏 600px">窄</n-button>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'medium' ? 'primary' : 'default'" @click="editorWidthMode = 'medium'" title="中栏 800px">中</n-button>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'wide' ? 'primary' : 'default'" @click="editorWidthMode = 'wide'" title="宽栏 全宽">宽</n-button>
             </div>
           </div>
-          <div class="word-count-info" v-if="activeTabId">
-            <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
-              {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
-            </span>
-            <span v-if="activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
-            <n-button v-if="activeTextTab?.textRangeNextOffset !== undefined && !activeTextTab.textRangeEof && !activeTextTab.textLoadError" text size="tiny" @click="loadNextTextRange">
-              继续加载
-            </n-button>
-            <span>{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
-          </div>
-          <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
-            <n-color-picker 
-              v-model:value="store.editorBgColor" 
-              :modes="['hex']" 
-              @update:value="handleEditorBgChange"
-            />
-          </div>
         </div>
-        <div v-else-if="activeTabId" class="embedded-format-capability">
-          <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
-            {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
-          </span>
+        <n-button quaternary size="small" @click="activeSidebarTab = 'history'; isSidebarCollapsed = false">历史与差异</n-button>
+        <n-button quaternary size="small" @click="store.toggleZen()">专注写作 · F11</n-button>
+        <p class="document-menu-capability">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.description }}</p>
+            </div>
+          </n-popover>
         </div>
+      </div>
+      <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
+        <n-color-picker v-model:value="store.editorBgColor" :modes="['hex']" @update:value="handleEditorBgChange" />
       </div>
       
       <SearchMatchNavigation v-if="!activeEmbeddedEditor && activeTabId === route.query.path && route.query.searchLocator && !searchNavigationClosed"
@@ -565,11 +566,25 @@
           </div>
         </div>
       </div>
+      <footer v-if="activeTabId" class="document-status" aria-label="文档状态">
+        <span v-if="!activeEmbeddedEditor" class="document-save-state">{{ activeTextTab?.isDirty ? '● 未保存 · Ctrl+S' : '已保存' }}</span>
+        <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}</span>
+        <span v-if="!activeEmbeddedEditor && activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
+        <n-button v-if="!activeEmbeddedEditor && activeTextTab?.textRangeNextOffset !== undefined && !activeTextTab.textRangeEof && !activeTextTab.textLoadError" text size="tiny" @click="loadNextTextRange">继续加载</n-button>
+        <span v-if="!activeEmbeddedEditor" class="document-reading-status">{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
+        <n-button data-testid="library-focus-toggle" quaternary size="tiny" @click="store.toggleZen()">{{ store.isZen ? '退出专注' : '专注' }}</n-button>
+      </footer>
     </div>
 
-    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
+    <SearchDocumentPreview v-if="searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
       :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
-      @close="searchPreviewResult = null" @return-to-editor="returnToEditorFromReference" @open="openSearchPreview" />
+      @close="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
+    <aside v-else-if="referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
+      <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button></header>
+      <p>选择一份资料作为参考，边看边写。</p>
+      <p>在搜索结果旁点击“在侧边参考”即可打开。参考内容不会替换当前草稿。</p>
+      <n-button secondary size="small" @click="findReferenceDocument">查找资料</n-button>
+    </aside>
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
         <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
@@ -583,6 +598,7 @@
         @open-canvas="createPinnedLocalCanvas"
       />
     </aside>
+    </div>
 
     <HoverPreview :show="preview.show" :title="preview.title" :path="preview.path" :x="preview.x" :y="preview.y" />
     
@@ -779,7 +795,7 @@
 
 <script setup lang="ts">
 import { searchResultPath } from '../utils/searchResultPath'
-import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
@@ -1162,12 +1178,12 @@ const showInbox = ref(false)
 const localGraphPinned = ref(readLocalGraphPinned())
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
-  { key: 'outline' as const, icon: ListIcon, label: '目录', description: '目录：查看当前文档的标题大纲' },
+  { key: 'outline' as const, icon: ListIcon, label: '大纲', description: '大纲：查看当前文档的标题大纲' },
   { key: 'quick' as const, icon: ClockIcon, label: '最近', description: '最近：打开收藏文件和最近访问记录' },
-  { key: 'history' as const, icon: SaveIcon, label: '备份', description: '备份：恢复当前文件的本地历史快照' },
-  { key: 'collections' as const, icon: CollectionIcon, label: '常用搜索', description: '常用搜索：保存并重复使用文件搜索的关键词与格式条件' },
-  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '智能集合', description: '智能集合：保存并重复使用文件搜索的关键词、目录、格式、标签与时间条件' },
   { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown' },
+  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'history' as const, icon: SaveIcon, label: '历史', description: '历史：先比较当前内容，再恢复本地历史快照' },
 ]
 const outgoingLinks = ref<string[]>([])
 const backlinks = ref<{ title: string; path: string; context: string }[]>([])
@@ -1338,6 +1354,31 @@ const confirmRemoveSavedSearch = (id: string, name: string) => {
   })
 }
 const isSidebarCollapsed = ref(false)
+const libraryShell = ref<HTMLElement | null>(null)
+let shellResizeObserver: ResizeObserver | undefined
+let shellWasNarrow = false
+watch(libraryShell, element => {
+  shellResizeObserver?.disconnect()
+  if (!element) return
+  shellResizeObserver = new ResizeObserver(() => {
+    const narrow = element.clientWidth <= 760
+    if (narrow !== shellWasNarrow) isSidebarCollapsed.value = narrow
+    shellWasNarrow = narrow
+  })
+  shellResizeObserver.observe(element)
+})
+onBeforeUnmount(() => shellResizeObserver?.disconnect())
+const openQuickNote = async () => {
+  try { await invoke('open_quick_note') }
+  catch (error) { message.error(`无法打开快速笔记：${String(error)}`) }
+}
+const requestCommandPalette = () => window.dispatchEvent(new CustomEvent('longedit:open-command-palette'))
+const findReferenceDocument = async () => {
+  activeSidebarTab.value = 'files'
+  isSidebarCollapsed.value = false
+  await nextTick()
+  libraryShell.value?.querySelector<HTMLInputElement>('.shell-search-area input')?.focus()
+}
 const tagFilterText = ref('')
 const filteredTags = computed(() => {
   if (!tagFilterText.value.trim()) return allTags.value
@@ -1364,6 +1405,7 @@ const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
 const referencePinned = computed(() => searchPreviewResult.value !== null)
+const referenceVisible = ref(false)
 const searchPreviewQuery = ref('')
 const rememberReference = (root: string) => {
   try { writeWorkspaceReference(root, searchPreviewResult.value ? { ...searchPreviewResult.value, query: searchPreviewQuery.value } : undefined) }
@@ -1373,6 +1415,7 @@ const restoreReference = (root: string) => {
   const reference = readWorkspaceReference(root)
   searchPreviewQuery.value = reference?.query || ''
   searchPreviewResult.value = reference ? { ...reference, objectType: findFileFormat(reference.path)?.id || '', matchKind: 'title', context: '', score: 0, extractionFailed: false } : null
+  referenceVisible.value = !!reference
 }
 watch([searchPreviewResult, searchPreviewQuery], () => rememberReference(store.libraryPath))
 const returnToEditorFromReference = async () => {
@@ -1387,6 +1430,7 @@ const returnToEditorFromReference = async () => {
   else { editor.tabIndex = -1; editor.focus({ preventScroll: true }) }
 }
 const showSearchPreview = (result: KnowledgeSearchResult) => {
+  referenceVisible.value = true
   searchPreviewQuery.value = searchQuery.value
   searchPreviewResult.value = result
 }
@@ -3313,8 +3357,18 @@ const syncUserSelectedVditorMode = () => {
     void store.updateConfig({ editorMode: currentMode as any, editorModeExplicit: true })
   }
 }
-const switchEditorMode = (mode: string) => {
+const editorModeChangeBusy = ref(false)
+const switchEditorMode = async (mode: string) => {
+  if (editorModeChangeBusy.value) return
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
+  const requestedEditor = vditor
+  const requestedPath = activeTabId.value
+  const requestedGeneration = editorLoadGeneration
+  editorModeChangeBusy.value = true
+  try { await store.updateConfig({ editorMode: mode, editorModeExplicit: true }) }
+  catch (error) { message.error(`无法切换编辑模式：${String(error)}`); return }
+  finally { editorModeChangeBusy.value = false }
+  if (vditor !== requestedEditor || activeTabId.value !== requestedPath || editorLoadGeneration !== requestedGeneration) return
   const content = vditor.getValue()
   const tab = tabs.value.find(item => item.id === activeTabId.value)
   if (tab && tab.content !== content) {
@@ -3326,7 +3380,6 @@ const switchEditorMode = (mode: string) => {
   const generation = ++editorLoadGeneration
   cleanupEditorListeners()
   vditor.destroy(); vditor = null; isVditorReady = false
-  void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
   nextTick(() => {
     if (generation !== editorLoadGeneration || vditor) return
     // initVditor's after callback restores the current tab through the guarded
@@ -3416,19 +3469,22 @@ const initVditor = () => {
       } as any,
       toolbar: [
         { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
-        { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
-        { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
+        { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'list', tip: '无序列表' }, { name: 'link', tip: '插入链接' }, '|',
+        { name: 'more', tip: '更多格式与工具', icon: '<span class="vditor-toolbar-label">更多格式</span>', toolbar: [
+        { name: 'emoji', tip: '表情' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
+        { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
         { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' },
-        { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' },
-        { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', click: () => { void insertTableChartReference() } }, '|',
+        { name: 'table', tip: '插入表格' },
+        { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<span class="vditor-toolbar-label">实时 Table 图表</span>', click: () => { void insertTableChartReference() } }, '|',
         { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
           const themes = markdownCodeThemeChoices(store.theme)
           const nextTheme = themes[(themes.indexOf(store.codeTheme) + 1) % themes.length]
           handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
         }},
-        { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
-        { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>', click: () => handleAIAssist() },
+        { name: 'editor-bg', tip: '修改文章背景色', icon: '<span class="vditor-toolbar-label">文章背景色</span>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
+        { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<span class="vditor-toolbar-label">AI 辅助</span>', click: () => handleAIAssist() },
         '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
+        ] }
       ],
       input: (val) => {
         if (!suppressEditorInput) searchMatchCount.value = null
@@ -4089,7 +4145,34 @@ watch(activeTabId, (newId, oldId) => {
 .library-recovery-path { opacity: .7; }
 .library-recovery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .library-recovery details { max-height: 120px; overflow: auto; }
-.library-mode { position: relative; display: flex; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
+.library-mode { position: relative; display: flex; flex-direction: column; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); container-type: inline-size; container-name: library-shell; }
+.library-shell-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 12px; flex-shrink: 0; border-bottom: var(--theme-border); background: var(--theme-surface); }
+.library-picker { min-width: 0; max-width: min(280px, 40cqw); }
+.library-picker :deep(.n-button__content) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-toolbar-spacer { flex: 1; }
+.library-workspace { position: relative; display: flex; flex: 1; width: 100%; min-width: 0; min-height: 0; }
+.shell-search-area { padding: 12px 10px 6px; flex-shrink: 0; }
+.document-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 7px 12px; border-bottom: var(--theme-border); flex-shrink: 0; }
+.document-breadcrumb { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.document-primary-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.document-menu-content { display: flex; flex-direction: column; width: min(228px, calc(100vw - 80px)); gap: 4px; color: var(--theme-text); }
+.document-menu-content .n-button { justify-content: flex-start; }
+.document-menu-content .tab-actions { padding: 0; align-items: stretch; }
+.document-menu-content .action-btn-group { align-items: stretch; flex-direction: column; }
+.document-menu-content .mode-toggle, .document-menu-content .width-toggle { align-items: center; flex-wrap: wrap; padding: 8px 0 4px; margin: 0; border-left: 0; border-top: var(--theme-border); }
+.document-menu-content .mode-toggle > span, .document-menu-content .width-toggle > span { flex-basis: 100%; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.document-menu-capability { margin: 4px 0; font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.6; }
+.document-status { position: relative; z-index: 11; background: var(--theme-surface); display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 4px 10px; border-top: var(--theme-border); flex-shrink: 0; font-size: var(--text-compact); color: var(--theme-text-secondary); }
+.document-save-state { color: var(--theme-primary); }
+.document-reading-status { margin-left: auto; }
+.reference-empty { box-sizing: border-box; width: clamp(260px, 28vw, 360px); flex: none; height: 100%; padding: 12px 16px; border-left: var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
+.reference-empty > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.reference-empty > p { font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.7; }
+.editor-main :deep(.vditor-toolbar-label) { white-space: nowrap; font-size: var(--text-compact); }
+.editor-main :deep(.vditor-toolbar > .vditor-toolbar__item:has([data-type="more"])) { width: auto; }
+.editor-main :deep(.vditor-toolbar [data-type="more"]) { width: auto; min-width: 68px; }
+.editor-main :deep(.vditor-toolbar .vditor-hint) { max-width: calc(100cqw - 32px); max-height: min(560px, calc(100vh - 200px)); overflow-y: auto; }
+.document-menu-content, .document-menu-content * { box-sizing: border-box; }
 .is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
 
 .sidebar {
@@ -4107,12 +4190,13 @@ watch(activeTabId, (newId, oldId) => {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
   padding: 8px; flex-shrink: 0; overflow: hidden;
 }
+.sidebar-tabs-header.compact { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .icon-tab {
   display: flex; align-items: center; justify-content: center; gap: 4px;
   width: 100%; min-width: 0; height: 34px; padding: 0 4px;
   box-sizing: border-box;
   border-radius: var(--theme-radius-sm); cursor: pointer;
-  background: transparent; color: var(--theme-text, #1d1d1f);
+  border: 0; font: inherit; background: transparent; color: var(--theme-text, #1d1d1f);
   opacity: 0.55; overflow: hidden;
   transition: background var(--motion-base) var(--ease-standard),
               color var(--motion-base) var(--ease-standard),
@@ -4133,8 +4217,10 @@ watch(activeTabId, (newId, oldId) => {
               opacity var(--motion-fast) var(--ease-standard),
               transform var(--motion-base) var(--ease-emphasized);
 }
-.sidebar-tabs-header.compact .icon-tab { gap: 0; padding: 0; }
-.sidebar-tabs-header.compact .icon-tab-text { max-width: 0; opacity: 0; transform: translateX(-4px); }
+.sidebar-tabs-header.compact .icon-tab { gap: 0; padding: 0 3px; }
+.sidebar-tabs-header.compact .icon-tab :deep(.n-icon) { display: none; }
+.sidebar-tabs-header.compact .icon-tab-text { max-width: none; opacity: 1; transform: none; }
+.icon-tab:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .is-dark .icon-tab:hover { background: rgba(255,255,255,0.08); }
 .is-dark .icon-tab.active { background: rgba(255,255,255,0.12); }
 
@@ -5017,7 +5103,8 @@ watch(activeTabId, (newId, oldId) => {
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .local-graph-rail { width: clamp(300px,28vw,380px); height: 100%; min-width: 0; min-height: 0; flex: none; overflow: auto; box-sizing: border-box; border-left: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 97%,transparent); box-shadow: -8px 0 24px rgba(0,0,0,.06); }.local-graph-rail > header { position: sticky; z-index: 2; top: 0; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px 7px 14px; box-sizing: border-box; border-bottom: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 98%,transparent); }.local-graph-rail > header div { min-width: 0; display: grid; gap: 2px; }.local-graph-rail > header strong { font-size: 11px; }.local-graph-rail > header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.local-graph-rail > header button { width: 28px; height: 28px; flex: none; border: 0; border-radius: 5px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 18px; }.local-graph-rail > header button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }
-.tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
+.tabs-bar { display: flex; align-items: center; padding: 0 8px; min-width: 0; border-bottom: var(--theme-border); flex-shrink: 0; }
+.tabs-bar :deep(.workspace-tabs) { flex: 1; min-width: 0; }
 .embedded-format-capability {
   display: flex;
   min-width: 0;
@@ -5245,10 +5332,6 @@ watch(activeTabId, (newId, oldId) => {
 /* 响应式布局优化 - 小屏幕断点 */
 @media (max-width: 1024px) {
   .local-graph-rail { position: absolute; z-index: 60; top: 0; right: 0; width: min(380px,calc(100% - 16px)); }
-  .sidebar {
-    width: 200px !important;
-  }
-
   .tabs-bar {
     padding: 8px 8px 0 !important;
   }
@@ -5257,15 +5340,6 @@ watch(activeTabId, (newId, oldId) => {
     padding: 10px 12px !important;
   }
 
-  .icon-tab {
-    width: 28px !important;
-    min-width: 28px !important;
-    height: 28px !important;
-  }
-
-  .icon-tab.active {
-    padding: 0 10px !important;
-  }
 }
 .mode-toggle { display: flex; gap: 2px; }
 .width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: var(--theme-border); }
@@ -5327,9 +5401,16 @@ watch(activeTabId, (newId, oldId) => {
 
 <style scoped>
 @media (max-width: 760px) {
-  .library-mode.reference-pinned { flex-wrap: wrap; }
-  .reference-pinned > .sidebar, .reference-pinned > .resizer-area, .reference-pinned > .local-graph-rail { display: none; }
-  .reference-pinned > .editor-main { flex: 1 1 100%; height: 60%; min-height: 0; }
-  .reference-pinned > .search-document-preview.pinned { width: 100%; max-width: 100%; height: 40%; }
+  .reference-pinned > .library-workspace { flex-wrap: wrap; }
+  .reference-pinned > .library-workspace > .local-graph-rail { display: none; }
+  .reference-pinned > .library-workspace > .editor-main { flex: 1 1 100%; height: 60%; min-height: 0; }
+  .reference-pinned > .library-workspace > .search-document-preview.pinned, .reference-pinned > .library-workspace > .reference-empty { width: 100%; max-width: 100%; height: 40%; overflow: auto; }
+}
+@container library-shell (max-width: 760px) {
+  .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 80; max-width: 100%; box-shadow: var(--theme-shadow); }
+  .resizer-area { display: none; }
+  .library-shell-toolbar { padding: 6px 8px; gap: 4px; }
+  .document-toolbar { padding: 6px 8px; }
+  .document-reading-status { margin-left: 0; }
 }
 </style>

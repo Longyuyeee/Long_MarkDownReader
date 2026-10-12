@@ -30,7 +30,7 @@ requireTokens(store, 'Markdown preference state', [
   'this.editorModeExplicit = config.editorModeExplicit === true',
   "this.editorMode = this.editorModeExplicit && ['wysiwyg', 'ir', 'sv'].includes(config.editorMode)",
   "? config.editorMode\n            : 'wysiwyg'",
-  'editorModeExplicit: this.editorModeExplicit',
+  'editorModeExplicit: next.editorModeExplicit',
 ])
 
 for (const [path, label, modeToken] of [

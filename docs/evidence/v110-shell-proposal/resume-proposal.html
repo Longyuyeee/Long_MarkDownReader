@@ -1,0 +1,153 @@
+<div id="le110-proposal" aria-label="Long编辑主编辑区设计示意">
+  <div class="le-design-label">主编辑区 · 设计示意，待确认</div>
+  <div class="le-window">
+    <header class="le-chrome">
+      <strong class="le-brand">Long<span>编辑</span></strong>
+      <button type="button" data-action="navigation" aria-expanded="true" aria-controls="le-navigation"><span data-lucide="panel-left" aria-hidden="true"></span>导航</button>
+      <details class="le-picker"><summary>工作资料库 <span data-lucide="chevron-down" aria-hidden="true"></span></summary><div class="le-popover"><button type="button" data-message="切换资料库，保留各自的工作现场">切换资料库</button><button type="button" data-message="管理资料库及目录">管理资料库</button><button type="button" data-message="创建资料库；不存在的目录会一并创建">新建资料库</button></div></details>
+      <span class="le-chrome-space"></span>
+      <button type="button" data-action="quick-note"><span data-lucide="square-pen" aria-hidden="true"></span>快速笔记</button>
+      <button type="button" data-message="查找命令、打开文件和常用操作"><span data-lucide="search" aria-hidden="true"></span>命令</button>
+    </header>
+    <div class="le-workspace">
+      <aside id="le-navigation" class="le-navigation" aria-label="资料库导航">
+        <label class="le-search"><span data-lucide="search" aria-hidden="true"></span><input type="search" placeholder="搜索文件与正文" aria-label="搜索文件与正文"></label>
+        <nav class="le-nav-tabs" aria-label="资料库内容">
+          <button type="button" data-panel="files" aria-pressed="true">文件</button><button type="button" data-panel="outline" aria-pressed="false">大纲</button><button type="button" data-panel="recent" aria-pressed="false">最近</button><button type="button" data-panel="collections" aria-pressed="false">智能集合</button>
+        </nav>
+        <div class="le-nav-secondary"><button type="button" data-panel="tags">标签</button><button type="button" data-panel="links">关系</button><button type="button" data-panel="history">历史</button></div>
+        <section class="le-panel" data-panel-content="files" aria-label="资料库文件">
+          <div class="le-panel-heading"><span>工作资料库</span><details class="le-create"><summary aria-label="新建文件与文件夹"><span data-lucide="plus" aria-hidden="true"></span>新建</summary><div class="le-popover"><button type="button" data-message="新建 Markdown、文本、表格、画布等文件">新建文件…</button><button type="button" data-message="新建文件夹">新建文件夹</button><button type="button" data-message="从模板创建笔记">从模板创建</button><button type="button" data-message="打开或创建今天的每日笔记">每日笔记</button><button type="button" data-message="重新读取文件列表">刷新列表</button></div></details></div>
+          <div class="le-folder"><span data-lucide="folder-open" aria-hidden="true"></span>项目 / 产品升级</div>
+          <button type="button" class="le-file le-selected" data-file="项目方案"><span data-lucide="file-text" aria-hidden="true"></span>项目方案.md <span class="le-dot" aria-label="未保存"></span></button>
+          <button type="button" class="le-file" data-file="会议记录"><span data-lucide="file-text" aria-hidden="true"></span>会议记录.md</button>
+          <button type="button" class="le-file" data-file="参考资料"><span data-lucide="file" aria-hidden="true"></span>参考资料.pdf</button>
+          <div class="le-folder"><span data-lucide="folder" aria-hidden="true"></span>工作笔记</div>
+          <button type="button" class="le-file" data-file="工作笔记"><span data-lucide="file-text" aria-hidden="true"></span>今天的工作.md</button>
+        </section>
+        <section class="le-panel" data-panel-content="outline" aria-label="当前文档大纲" hidden><div class="le-panel-heading">项目方案 · 大纲</div><button type="button" class="le-list-item" data-anchor="le-doc-title">项目方案</button><button type="button" class="le-list-item" data-anchor="le-section-goal">让记录更顺手</button><button type="button" class="le-list-item" data-anchor="le-section-next">下一步</button></section>
+        <section class="le-panel" data-panel-content="recent" aria-label="收藏与最近文件" hidden><div class="le-panel-heading">收藏</div><button type="button" class="le-list-item" data-file="项目方案">☆ 项目方案.md</button><div class="le-panel-heading">最近打开</div><button type="button" class="le-list-item" data-file="会议记录">会议记录.md</button><button type="button" class="le-list-item" data-file="参考资料">参考资料.pdf</button></section>
+        <section class="le-panel" data-panel-content="collections" aria-label="智能集合" hidden><div class="le-panel-heading">智能集合<button type="button" data-message="创建集合：关键词、目录、格式、标签与修改时间">新建</button></div><button type="button" class="le-list-item le-selected" data-action="collection">项目近期资料</button><p class="le-meta">产品升级 · Markdown / PDF · 近 30 天</p><button type="button" data-message="编辑现有集合条件，不创建重复记录">修改条件</button><div class="le-panel-heading">匹配文件</div><button type="button" class="le-file" data-file="项目方案">项目方案.md</button><button type="button" class="le-file" data-file="参考资料">参考资料.pdf</button></section>
+        <section class="le-panel" data-panel-content="tags" aria-label="Markdown 标签" hidden><div class="le-panel-heading">Markdown 标签</div><button type="button" class="le-list-item" data-message="按 #产品升级 标签筛选 Markdown">#产品升级</button><button type="button" class="le-list-item" data-message="按 #会议 标签筛选 Markdown">#会议</button></section>
+        <section class="le-panel" data-panel-content="links" aria-label="文档关系" hidden><div class="le-panel-heading">引用此文档</div><button type="button" class="le-list-item" data-file="会议记录">会议记录.md</button><div class="le-panel-heading">当前文档引用</div><button type="button" class="le-list-item" data-file="参考资料">参考资料.pdf</button></section>
+        <section class="le-panel" data-panel-content="history" aria-label="本地历史" hidden><div class="le-panel-heading">项目方案 · 本地历史</div><button type="button" class="le-list-item" data-message="先比较当前内容与快照，可恢复为新副本">今天 14:20 · 查看差异</button><button type="button" class="le-list-item" data-message="先比较当前内容与快照，可恢复为新副本">昨天 18:05 · 查看差异</button><p class="le-meta">先比较，再选择恢复为副本或替换当前草稿。</p></section>
+        <div class="le-index"><span class="le-ready-dot"></span>搜索已就绪<details><summary aria-label="索引选项">选项</summary><div class="le-popover"><button type="button" data-message="重新建立搜索索引">重建索引</button><button type="button" data-message="查看准备进度；可取消正在进行的任务">查看准备进度</button></div></details></div>
+        <footer class="le-nav-footer"><button type="button" data-message="工作台：继续工作、工作现场与近期文件"><span data-lucide="layout-dashboard" aria-hidden="true"></span>工作台</button><button type="button" data-message="查看和编辑知识图谱"><span data-lucide="network" aria-hidden="true"></span>图谱</button><button type="button" data-message="浏览可选的收集箱目录">收集箱</button><button type="button" data-message="打开设置、格式能力和更新信息"><span data-lucide="settings" aria-hidden="true"></span>设置</button></footer>
+      </aside>
+      <main class="le-main" aria-label="主编辑区">
+        <div class="le-doc-tabs"><button type="button" class="le-active-tab" data-file="项目方案">项目方案 <span class="le-dot" aria-label="未保存"></span></button><button type="button" data-file="会议记录">会议记录</button><button type="button" data-message="关闭当前标签；未保存内容先提示" aria-label="关闭当前标签"><span data-lucide="x" aria-hidden="true"></span></button></div>
+        <div class="le-document-bar"><span class="le-document-path">项目 / 产品升级 / <span data-current-file>项目方案.md</span></span><div class="le-document-actions"><button type="button" data-action="reference" aria-expanded="false" aria-controls="le-reference"><span data-lucide="panel-right" aria-hidden="true"></span>参考</button><button type="button" class="le-save" data-action="save"><span data-lucide="save" aria-hidden="true"></span>保存</button><details class="le-document-menu"><summary>文档操作 <span data-lucide="chevron-down" aria-hidden="true"></span></summary><div class="le-popover"><label>编辑模式<select aria-label="编辑模式"><option>所见即所得</option><option>即时渲染 IR</option><option>Markdown 源码</option></select></label><label>正文宽度<select aria-label="正文宽度"><option>适中 · 800</option><option>紧凑 · 600</option><option>宽屏</option></select></label><button type="button" data-panel="history">历史与差异</button><button type="button" data-action="zen">专注写作</button><button type="button" data-message="选择导出格式与保存位置">导出…</button><button type="button" data-message="将 Markdown 转为脑图">转为脑图</button><button type="button" data-message="查看编码、换行与 BOM；转换前确认">编码与换行…</button><button type="button" data-message="选择外部应用打开当前文件">外部应用打开…</button><button type="button" data-message="从磁盘重新读取；未保存内容先提示">重新读取文件</button><button type="button" data-message="查看当前格式的编辑与保存能力">格式能力说明</button></div></details></div></div>
+        <div class="le-format-bar" aria-label="Markdown 格式工具"><button type="button" data-message="撤销上一步编辑" aria-label="撤销"><span data-lucide="undo-2" aria-hidden="true"></span></button><button type="button" data-message="重做上一步编辑" aria-label="重做"><span data-lucide="redo-2" aria-hidden="true"></span></button><span class="le-divider"></span><button type="button" data-message="设置标题级别">标题</button><button type="button" data-message="切换粗体"><b>B</b></button><button type="button" data-message="切换列表"><span data-lucide="list" aria-hidden="true"></span>列表</button><button type="button" data-message="插入或编辑链接"><span data-lucide="link" aria-hidden="true"></span>链接</button><details><summary>更多格式 <span data-lucide="chevron-down" aria-hidden="true"></span></summary><div class="le-popover"><button type="button" data-message="斜体、删除线与行内代码">文字样式</button><button type="button" data-message="引用、有序列表与任务列表">引用与列表</button><button type="button" data-message="插入表格">表格</button><button type="button" data-message="插入图片、代码块、公式与图表">插入…</button><button type="button" data-message="查看其余现有 Markdown 格式工具">全部格式工具</button></div></details></div>
+        <div class="le-content-row">
+          <article class="le-editor" contenteditable="true" aria-label="项目方案正文" spellcheck="false"><p class="le-eyebrow">产品升级 / 写作计划</p><h1 id="le-doc-title">项目方案</h1><p class="le-lead">记录想法，整理资料，继续昨天的工作。</p><h2 id="le-section-goal">让记录更顺手</h2><p>快速笔记保存前就能选好位置。第一次默认在资料库根目录，之后记住上次使用的目录。</p><p>搜索找到的资料直接在主编辑区打开。需要边看边写时，再展开参考栏。</p><blockquote>把常用操作留在手边，让正文拥有更多空间。</blockquote><h2 id="le-section-next">下一步</h2><ul><li>用智能集合找到项目最近的资料</li><li>重开软件后继续上次的阅读与写作</li><li>恢复历史前先比较，再决定保存为副本</li></ul><p class="le-doc-tag">#产品升级</p></article>
+          <aside id="le-reference" class="le-reference" aria-label="只读参考文档" hidden><div class="le-reference-title"><strong>参考</strong><button type="button" data-action="reference" aria-label="关闭参考栏"><span data-lucide="x" aria-hidden="true"></span></button></div><h3>会议记录.md</h3><p class="le-meta">只读 · 项目 / 产品升级</p><div class="le-reference-actions"><button type="button" data-message="从源文件重新读取参考内容">刷新</button><button type="button" data-file="会议记录">主区打开</button><button type="button" data-message="源文件失效时手动选择新位置">重新关联</button></div><p>保存的位置应该在记录的时候就确定，用户不需要再完成一次归档。</p><p>常用工具容易找到，其他功能仍能通过有名称的菜单进入。</p><button type="button" class="le-insert" data-action="insert">插入所选摘录</button><button type="button" data-message="复制参考摘录及来源">复制摘录</button><p class="le-meta">来源：会议记录.md · 第 6 行</p></aside>
+        </div>
+        <footer class="le-status"><span data-save-state>● 未保存 · Ctrl+S</span><span data-document-info>Markdown · UTF-8 · 286 字</span><button type="button" data-action="zen">专注</button></footer>
+      </main>
+    </div>
+    <div class="le-feedback" aria-live="polite">正在编辑：项目方案.md</div>
+  </div>
+</div>
+<style>
+#le110-proposal{--le-bg:light-dark(#fff,#202123);--le-chrome:light-dark(#f5f6f7,#26282b);--le-soft:light-dark(#f9fafb,#24262a);--le-text:light-dark(#292d33,#e6e9ed);--le-muted:light-dark(#64707d,#acb6c2);--le-line:light-dark(#e5e8ed,#3b4048);--le-accent:light-dark(#376eb3,#90bafa);--le-selected:light-dark(#eaf1fb,#303f54);--le-success:light-dark(#45816b,#91c9b4);color:var(--le-text);font:14px/1.5 "Segoe UI","Microsoft YaHei",sans-serif;width:100%;color-scheme:light dark}
+#le110-proposal *{box-sizing:border-box}#le110-proposal [hidden]{display:none!important}#le110-proposal .le-design-label{color:var(--le-muted);font-size:12px;margin:0 0 8px}#le110-proposal .le-window{background:var(--le-bg);border:1px solid var(--le-line);border-radius:9px}#le110-proposal button,#le110-proposal summary{font:inherit;color:inherit;border:0;background:transparent;min-height:30px;padding:5px 8px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:left}#le110-proposal button:hover,#le110-proposal summary:hover{background:var(--le-selected)}#le110-proposal button:focus-visible,#le110-proposal summary:focus-visible{outline:2px solid var(--le-accent);outline-offset:2px}#le110-proposal button:disabled{opacity:.5}#le110-proposal [data-lucide]{width:16px;height:16px;flex-shrink:0}#le110-proposal details{position:relative}#le110-proposal summary{list-style:none}#le110-proposal summary::-webkit-details-marker{display:none}#le110-proposal .le-popover{position:absolute;z-index:5;top:100%;left:0;background:var(--le-bg);border:1px solid var(--le-line);border-radius:8px;padding:7px;min-width:184px;max-width:260px;box-shadow:0 8px 22px light-dark(#27334b20,#0005)}#le110-proposal .le-popover button{display:flex;width:100%;justify-content:flex-start}#le110-proposal .le-popover label{display:block;font-size:12px;color:var(--le-muted);padding:6px}#le110-proposal select{font:inherit;background:var(--le-bg);color:var(--le-text);border:1px solid var(--le-line);border-radius:4px;padding:4px;width:100%;margin-top:5px}#le110-proposal .le-chrome{padding:10px 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--le-chrome);border-bottom:1px solid var(--le-line);border-radius:9px 9px 0 0;padding-right:96px}#le110-proposal .le-brand{font-size:18px;letter-spacing:-.4px;font-weight:600;margin-right:8px}#le110-proposal .le-brand span{font-size:13px;font-weight:400;margin-left:4px}#le110-proposal .le-chrome-space{flex:1}#le110-proposal .le-workspace{display:grid;grid-template-columns:228px minmax(0,1fr)}#le110-proposal .le-navigation{background:var(--le-soft);border-right:1px solid var(--le-line);padding:12px 10px;min-width:0;display:flex;flex-direction:column}#le110-proposal .le-search{display:flex;align-items:center;gap:6px;border:1px solid var(--le-line);border-radius:6px;background:var(--le-bg);padding:6px 8px}#le110-proposal input{width:100%;min-width:0;border:0;background:transparent;color:var(--le-text);font:inherit}#le110-proposal input::placeholder{color:var(--le-muted)}#le110-proposal .le-nav-tabs{display:flex;flex-wrap:wrap;margin:10px 0 3px;gap:2px}#le110-proposal .le-nav-tabs button{font-size:12px;flex:1;padding:4px 5px;white-space:nowrap}#le110-proposal .le-nav-tabs button[aria-pressed=true],#le110-proposal .le-selected{background:var(--le-selected);color:var(--le-accent)}#le110-proposal .le-nav-secondary{display:flex;gap:5px;padding-bottom:8px;border-bottom:1px solid var(--le-line)}#le110-proposal .le-nav-secondary button{font-size:12px;color:var(--le-muted);min-height:26px}#le110-proposal .le-panel{min-height:260px;padding-top:8px}#le110-proposal .le-panel-heading{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--le-muted);margin:8px 0}#le110-proposal .le-panel-heading button,#le110-proposal .le-panel-heading summary{font-size:12px}#le110-proposal .le-folder{display:flex;align-items:center;gap:7px;padding:9px 6px;font-size:12px}#le110-proposal .le-file,#le110-proposal .le-list-item{display:flex;width:100%;justify-content:flex-start;margin:2px 0;overflow-wrap:anywhere}#le110-proposal .le-file{padding-left:20px;font-size:12px}#le110-proposal .le-dot{width:6px;height:6px;display:inline-block;border-radius:50%;background:var(--le-accent);flex-shrink:0;margin-left:2px}#le110-proposal .le-meta{color:var(--le-muted);font-size:12px;overflow-wrap:anywhere}#le110-proposal .le-index{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--le-muted);margin-top:auto;padding:12px 4px;border-bottom:1px solid var(--le-line)}#le110-proposal .le-index details{margin-left:auto}#le110-proposal .le-index .le-popover{top:auto;bottom:100%;left:auto;right:0}#le110-proposal .le-ready-dot{width:6px;height:6px;border-radius:50%;background:var(--le-success)}#le110-proposal .le-nav-footer{display:grid;grid-template-columns:1fr 1fr;padding-top:7px;gap:3px}#le110-proposal .le-nav-footer button{font-size:12px;justify-content:flex-start}#le110-proposal .le-main{min-width:0}#le110-proposal .le-doc-tabs{display:flex;align-items:center;background:var(--le-chrome);gap:2px;flex-wrap:wrap;padding:7px 12px 0;border-bottom:1px solid var(--le-line)}#le110-proposal .le-doc-tabs button{padding:7px 12px;border-radius:6px 6px 0 0;font-size:12px}#le110-proposal .le-doc-tabs .le-active-tab{background:var(--le-bg);box-shadow:inset 0 -2px var(--le-accent)}#le110-proposal .le-doc-tabs>button:last-child{margin-left:auto}#le110-proposal .le-document-bar{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--le-line)}#le110-proposal .le-document-path{font-size:12px;color:var(--le-muted);overflow-wrap:anywhere}#le110-proposal .le-document-actions{display:flex;gap:3px;align-items:center;flex-wrap:wrap}#le110-proposal .le-document-actions button,#le110-proposal .le-document-actions summary{font-size:12px}#le110-proposal .le-save{background:var(--le-selected);color:var(--le-accent)}#le110-proposal .le-document-menu>.le-popover{left:auto;right:0}#le110-proposal .le-format-bar{display:flex;flex-wrap:wrap;align-items:center;gap:3px;padding:6px 12px;border-bottom:1px solid var(--le-line)}#le110-proposal .le-format-bar button,#le110-proposal .le-format-bar summary{font-size:12px}#le110-proposal .le-divider{height:17px;width:1px;background:var(--le-line);margin:0 4px}#le110-proposal .le-content-row{display:flex;min-width:0}#le110-proposal .le-editor{flex:1;min-width:0;padding:32px 38px;min-height:470px;outline-offset:-4px;overflow-wrap:anywhere}#le110-proposal .le-editor p{margin:12px 0}#le110-proposal .le-editor h1{font-size:28px;font-weight:600;margin:12px 0 8px;line-height:1.35}#le110-proposal .le-editor h2{font-size:18px;font-weight:600;margin:24px 0 10px}#le110-proposal .le-editor .le-eyebrow{font-size:12px;color:var(--le-muted);margin-top:0}#le110-proposal .le-lead{color:var(--le-muted)}#le110-proposal blockquote{margin:18px 0;border-left:3px solid var(--le-line);padding:6px 15px;color:var(--le-muted)}#le110-proposal ul{padding-left:20px;line-height:1.9}#le110-proposal .le-doc-tag{color:var(--le-accent);font-size:12px}#le110-proposal .le-reference{width:260px;flex-shrink:0;background:var(--le-soft);border-left:1px solid var(--le-line);padding:14px 16px;overflow-wrap:anywhere}#le110-proposal .le-reference-title{display:flex;align-items:center;justify-content:space-between;font-size:12px}#le110-proposal .le-reference h3{font-size:15px;font-weight:500;margin:12px 0 3px}#le110-proposal .le-reference p{font-size:13px;line-height:1.8}#le110-proposal .le-reference .le-meta{font-size:12px}#le110-proposal .le-reference-actions{display:flex;flex-wrap:wrap;gap:2px;margin:8px 0 20px}#le110-proposal .le-reference button{font-size:12px}#le110-proposal .le-reference .le-insert{background:var(--le-selected);color:var(--le-accent);margin:8px 0}#le110-proposal .le-status{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-top:1px solid var(--le-line);padding:5px 12px;color:var(--le-muted);font-size:12px}#le110-proposal .le-status [data-save-state]{color:var(--le-accent)}#le110-proposal .le-status [data-document-info]{margin-left:auto}#le110-proposal .le-status button{font-size:12px;min-height:24px}#le110-proposal .le-feedback{background:var(--le-chrome);border-top:1px solid var(--le-line);border-radius:0 0 9px 9px;padding:6px 12px;font-size:12px;color:var(--le-muted);overflow-wrap:anywhere}#le110-proposal.le-nav-hidden .le-workspace{grid-template-columns:minmax(0,1fr)}#le110-proposal.le-nav-hidden .le-navigation{display:none}#le110-proposal.le-zen .le-chrome,#le110-proposal.le-zen .le-navigation,#le110-proposal.le-zen .le-doc-tabs,#le110-proposal.le-zen .le-document-bar,#le110-proposal.le-zen .le-format-bar{display:none}#le110-proposal.le-zen .le-workspace{grid-template-columns:minmax(0,1fr)}
+@media(max-width:880px){#le110-proposal .le-content-row{flex-direction:column}#le110-proposal .le-reference{width:100%;border-left:0;border-top:1px solid var(--le-line)}#le110-proposal .le-editor{padding:26px 24px}#le110-proposal .le-chrome{padding-right:12px}}
+@media(max-width:600px){#le110-proposal .le-workspace{grid-template-columns:minmax(0,1fr)}#le110-proposal .le-navigation{border-right:0;border-bottom:1px solid var(--le-line)}#le110-proposal .le-panel{min-height:0;padding-bottom:12px}#le110-proposal .le-nav-footer{grid-template-columns:repeat(4,minmax(0,1fr))}#le110-proposal .le-nav-footer button{padding:4px;font-size:12px}#le110-proposal .le-chrome{gap:5px}#le110-proposal .le-brand{margin-right:0}#le110-proposal .le-chrome-space{display:none}#le110-proposal .le-chrome button,#le110-proposal .le-chrome summary{font-size:12px}#le110-proposal .le-document-bar{align-items:flex-start}#le110-proposal .le-editor{padding:24px 20px;min-height:420px}#le110-proposal .le-status [data-document-info]{margin-left:0}#le110-proposal .le-format-bar{padding-left:8px;gap:1px}#le110-proposal .le-nav-secondary{gap:12px}}
+@media(pointer:coarse){#le110-proposal button,#le110-proposal summary,#le110-proposal .le-nav-secondary button,#le110-proposal .le-status button{min-height:44px}#le110-proposal input,#le110-proposal select{font-size:16px}}
+</style>
+<style>
+@media(max-width:600px){#le110-proposal .le-nav-footer [data-lucide],#le110-proposal .le-nav-footer svg{display:none}#le110-proposal .le-nav-footer button{white-space:nowrap}}
+</style>
+<script>
+(() => {
+  const root = document.getElementById('le110-proposal');
+  const state = { navigation: true, reference: false, zen: false, density: '适中' };
+  const feedback = root.querySelector('.le-feedback');
+  const editor = root.querySelector('.le-editor');
+  const originalDocument = [...editor.childNodes].map(node => node.cloneNode(true));
+  root.querySelectorAll('button[aria-label]').forEach(button => {
+    if (!button.textContent.trim()) { const label = document.createElement('span'); label.textContent = button.getAttribute('aria-label').replace('当前标签','').replace('参考栏',''); button.append(label); }
+  });
+  const announce = text => { feedback.textContent = text; };
+  const render = () => {
+    root.classList.toggle('le-nav-hidden', !state.navigation);
+    root.classList.toggle('le-zen', state.zen);
+    root.querySelector('#le-reference').hidden = !state.reference;
+    root.querySelector('[data-action="navigation"]').setAttribute('aria-expanded', String(state.navigation));
+    root.querySelector('.le-document-actions [data-action="reference"]').setAttribute('aria-expanded', String(state.reference));
+    root.querySelector('.le-status [data-action="zen"]').textContent = state.zen ? '退出专注' : '专注';
+    editor.style.padding = state.density === '紧凑' ? '24px' : '';
+  };
+  const remember = () => {
+    if (window.openai && window.openai.setWidgetState) window.openai.setWidgetState({modelContent:{proposal:'UI-SHELL-01',navigation:state.navigation,reference:state.reference,density:state.density},privateContent:{zen:state.zen}}).catch(() => {});
+  };
+  const applySaved = value => {
+    const saved = value && value.modelContent;
+    if (saved && saved.proposal === 'UI-SHELL-01') {
+      if (typeof saved.navigation === 'boolean') state.navigation = saved.navigation;
+      if (typeof saved.reference === 'boolean') state.reference = saved.reference;
+      if (['适中','紧凑'].includes(saved.density)) state.density = saved.density;
+      state.zen = !!(value.privateContent && value.privateContent.zen);
+    }
+    render();
+  };
+  const showPanel = name => {
+    state.navigation = true;
+    root.querySelectorAll('[data-panel-content]').forEach(panel => panel.hidden = panel.dataset.panelContent !== name);
+    root.querySelectorAll('[data-panel]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.panel === name)));
+    render();
+  };
+  root.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button || !root.contains(button)) return;
+    if (button.dataset.panel) { showPanel(button.dataset.panel); announce('已切换导航：' + button.textContent.trim()); }
+    if (button.dataset.file) {
+      const name = button.dataset.file;
+      if (name === '参考资料') announce('PDF 文件保留独立的阅读工具；此示意展示 Markdown 主编辑区');
+      else {
+        root.querySelector('[data-current-file]').textContent = name + '.md';
+        if (name === '项目方案') editor.replaceChildren(...originalDocument.map(node => node.cloneNode(true)));
+        else {
+          const heading = document.createElement('h1'); heading.textContent = name;
+          const paragraph = document.createElement('p'); paragraph.textContent = name === '会议记录' ? '保存的位置应该在记录的时候就确定，用户不需要再完成一次归档。' : '记录今天的工作与想法。';
+          editor.replaceChildren(heading, paragraph);
+        }
+        root.querySelectorAll('.le-doc-tabs [data-file]').forEach(tab => tab.classList.toggle('le-active-tab', tab.dataset.file === name));
+        announce('在主区打开：' + name + '.md');
+      }
+    }
+    if (button.dataset.message) announce(button.dataset.message);
+    if (button.dataset.anchor) root.querySelector('#' + button.dataset.anchor).scrollIntoView({block:'nearest'});
+    const action = button.dataset.action;
+    if (action === 'navigation') { state.navigation = !state.navigation; render(); }
+    if (action === 'reference') { state.reference = !state.reference; render(); announce(state.reference ? '参考文档已展开，正文仍可编辑' : '参考栏已关闭'); }
+    if (action === 'save') { root.querySelector('[data-save-state]').textContent = '已保存'; announce('示意：当前编辑内容已保存'); }
+    if (action === 'zen') { state.zen = !state.zen; render(); announce(state.zen ? '专注写作 · 点击“退出专注”返回' : '已返回完整工作区'); }
+    if (action === 'insert') { const paragraph = document.createElement('p'); paragraph.textContent = '“保存的位置应该在记录的时候就确定。” —— 会议记录.md，第 6 行'; editor.append(paragraph); root.querySelector('[data-save-state]').textContent = '● 未保存 · Ctrl+S'; announce('摘录已插入当前草稿，保留来源；可撤销'); }
+    if (action === 'quick-note') announce('快速笔记直接选择资料库与目录，保存后可继续记录或打开文件');
+    if (action === 'collection') announce('集合条件保留，结果来自当前资料库');
+    if (button.closest('.le-popover')) button.closest('details').open = false;
+    remember();
+  });
+  root.querySelector('input[type="search"]').addEventListener('input', event => {
+    showPanel('files');
+    const query = event.target.value.trim().toLowerCase();
+    root.querySelectorAll('[data-panel-content="files"] .le-file').forEach(file => file.hidden = query && !file.textContent.toLowerCase().includes(query));
+    announce(query ? '搜索：' + query + ' · 打开结果仍在主区' : '正在编辑：项目方案.md');
+  });
+  editor.addEventListener('input', () => root.querySelector('[data-save-state]').textContent = '● 未保存 · Ctrl+S');
+  root.querySelectorAll('select').forEach(select => select.addEventListener('change', () => announce(select.getAttribute('aria-label') + '：' + select.value)));
+  root.addEventListener('keydown', event => { if (event.key === 'Escape') { root.querySelectorAll('details[open]').forEach(menu => menu.open = false); if (state.zen) { state.zen = false; render(); } } });
+  applySaved(window.openai && window.openai.widgetState);
+  let narrow = root.clientWidth < 600;
+  if (narrow && !(window.openai && window.openai.widgetState)) { state.navigation = false; render(); }
+  new ResizeObserver(() => { const nextNarrow = root.clientWidth < 600; if (nextNarrow !== narrow) { state.navigation = !nextNarrow; narrow = nextNarrow; render(); } }).observe(root);
+  window.addEventListener('openai:set_globals', event => { if (event.detail && event.detail.globals && event.detail.globals.widgetState) applySaved(event.detail.globals.widgetState); });
+  if (globalThis.Tweak) {
+    const tweak = new Tweak({container:root,onChange:render});
+    tweak.addToggle(state,'navigation',{label:'显示导航'});
+    tweak.addToggle(state,'reference',{label:'显示参考栏'});
+    tweak.addSelect(state,'density',{label:'正文留白',options:['适中','紧凑']});
+  }
+})();
+</script>
