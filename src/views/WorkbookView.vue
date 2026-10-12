@@ -356,6 +356,7 @@
     </div>
 
     <n-modal v-model:show="pageLayoutModalOpen" preset="card" title="页面设置" class="page-layout-modal">
+      <p class="page-settings-save-notice">点击“应用”会直接保存到当前工作表；取消不会写入文件。</p>
       <div class="page-layout-panel" :inert="saving">
         <label>方向<select v-model="pageLayoutDraft.orientation"><option value="portrait">纵向</option><option value="landscape">横向</option></select></label>
         <label>纸张<select v-model.number="pageLayoutDraft.paperSize"><option :value="1">Letter</option><option :value="5">Legal</option><option :value="8">A3</option><option :value="9">A4</option><option :value="11">A5</option></select></label>
@@ -379,6 +380,7 @@
     </n-modal>
 
     <n-modal v-model:show="printOptionsModalOpen" preset="card" title="打印选项" class="print-options-modal">
+      <p class="page-settings-save-notice">点击“应用”会直接保存到当前工作表；取消不会写入文件。</p>
       <div class="print-options-panel" :inert="saving">
         <fieldset>
           <legend>打印内容</legend>
@@ -410,6 +412,7 @@
     </n-modal>
 
     <n-modal v-model:show="headerFooterModalOpen" preset="card" title="页眉页脚" class="header-footer-modal">
+      <p class="page-settings-save-notice">点击“应用”会直接保存到当前工作表；取消不会写入文件。</p>
       <div class="header-footer-options" :inert="saving">
         <label><input v-model="headerFooterDraft.differentOddEven" type="checkbox">奇偶页不同</label>
         <label><input v-model="headerFooterDraft.differentFirstPage" type="checkbox">首页不同</label>
@@ -5385,6 +5388,10 @@ onBeforeUnmount(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
 .workbook-toolbar { flex-shrink: 0; }
+.page-settings-save-notice { margin: 0 0 12px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.6; }
+:global(.page-layout-modal), :global(.print-options-modal), :global(.header-footer-modal) { max-height: calc(100dvh - 32px); }
+:global(.page-layout-modal > .n-card__content), :global(.print-options-modal > .n-card__content), :global(.header-footer-modal > .n-card__content) { min-height: 0; overflow-y: auto; }
+:global(.page-layout-modal > .n-card-header), :global(.print-options-modal > .n-card-header), :global(.header-footer-modal > .n-card-header), :global(.page-layout-modal > .n-card__footer), :global(.print-options-modal > .n-card__footer), :global(.header-footer-modal > .n-card__footer) { flex-shrink: 0; }
 .sheet-tabs { flex-shrink: 0; }
 .sheet-tabs > * { flex-shrink: 0; }
 @container (max-width: 900px) {
