@@ -12,9 +12,10 @@
           <span aria-live="polite"><template v-if="isExternal">外部文件 · </template>{{ formatLabel }} · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span>
         </div>
       </div>
-      <div class="actions">
-        <n-button quaternary circle size="small" title="查找" @click="editor && openSearchPanel(editor)">
+      <div class="actions" data-command-strip data-horizontal-wheel="always">
+        <n-button quaternary size="small" title="查找" @click="editor && openSearchPanel(editor)">
           <template #icon><n-icon :component="SearchIcon" /></template>
+          查找
         </n-button>
         <n-button quaternary circle size="small" title="折叠全部" @click="editor && foldAll(editor)">
           <template #icon><n-icon :component="FoldIcon" /></template>
@@ -25,8 +26,9 @@
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload">
           <template #icon><n-icon :component="RefreshIcon" /></template>
         </n-button>
-        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏元素导航与问题' : '显示元素导航与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector">
+        <n-button quaternary size="small" :title="inspectorVisible ? '隐藏元素导航与问题' : '显示元素导航与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector">
           <template #icon><n-icon :component="InspectorIcon" /></template>
+          元素与问题
         </n-button>
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
@@ -373,14 +375,24 @@ onBeforeUnmount(() => {
 .outline em { padding: 1px 5px; border-radius: 8px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.1); font-size: var(--text-compact); font-style: normal; }
 .outline > p { padding: 14px 6px; color: var(--theme-text-secondary); font-size: 12px; text-align: center; }.outline > p.warning { color: var(--theme-warning, #f0a020); }
 footer { min-height: 28px; padding: 0 14px; display: flex; align-items: center; gap: 14px; border-top: var(--theme-border); color: var(--theme-text-secondary); background: var(--theme-surface); font-size: 11px; }
-@media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 1fr) minmax(240px, 42vw); } }
-@media (max-width: 760px) {
+.xml-workspace { container-type: inline-size; }
+.xml-workspace > :deep(.workspace-tabs) { flex: 0 0 34px; }
+.toolbar { flex-shrink: 0; flex-wrap: wrap; padding-block: 6px; }
+.identity { flex: 1; }
+.actions { max-width: 100%; overflow-x: auto; padding-block: 2px; }
+.actions > * { flex-shrink: 0; }
+.inspector { overflow: auto; }
+.inspector > :not(.outline) { flex-shrink: 0; }
+.outline { min-height: 96px; }
+footer { flex-shrink: 0; overflow-x: auto; white-space: nowrap; }
+footer > * { flex-shrink: 0; }
+@container (max-width: 760px) {
   .toolbar { gap: 8px; padding-inline: 9px; }
-  .identity strong { max-width: 34vw; }
+  .identity strong { max-width: 100%; }
+  .actions { width: 100%; }
   .stage { grid-template-columns: minmax(0, 1fr); }
-  .stage:not(.inspector-hidden) .source { display: none; }
-  .inspector { border-left: 0; }
+  .stage:not(.inspector-hidden) { grid-template-rows: minmax(0, 1fr) minmax(0, 42%); }
+  .inspector { border-left: 0; border-top: var(--theme-border); }
   footer { gap: 8px; padding-inline: 9px; }
-  footer span:nth-child(3), footer span:nth-child(5) { display: none; }
 }
 </style>
