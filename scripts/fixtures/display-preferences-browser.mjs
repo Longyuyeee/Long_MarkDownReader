@@ -24,6 +24,7 @@ const app = createApp({render: () => h(naive.NConfigProvider,{}, {default:() => 
   modelValue:preferences.value,
   'onUpdate:modelValue': value => {preferences.value=value; void store.updateConfig({displayPreferences:value})},
 })})})
-for(const [name,component] of Object.entries(naive)) if(/^N[A-Z]/.test(name)) app.component(name,component)
+const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts')
+registerNaiveComponents(app)
 app.use(pinia).mount('#app')
 

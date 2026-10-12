@@ -25,5 +25,6 @@ const router=createRouter({history:createMemoryHistory(),routes:[{path:'/text',c
 await router.push('/text?path=C:/ui/项目说明.'+(html?'html':'txt'))
 document.body.dataset.theme='white';document.body.style.margin='0';document.querySelector('#app').style.height='100vh'
 const app=createApp({render:()=>h(naive.NDialogProvider,{},()=>h(naive.NMessageProvider,{},()=>h(RouterView)))})
-for(const [name,component]of Object.entries(naive))if(/^N[A-Z]/.test(name))app.component(name,component)
+const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts')
+registerNaiveComponents(app)
 app.use(pinia).use(router).mount('#app')

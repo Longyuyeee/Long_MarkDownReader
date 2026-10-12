@@ -798,7 +798,7 @@ import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
-import { useMessage, useDialog, TreeOption, NIcon, NDropdown, type DropdownOption } from 'naive-ui'
+import { useMessage, useDialog, TreeOption, NIcon, NDropdown, NPopover, type DropdownOption } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,

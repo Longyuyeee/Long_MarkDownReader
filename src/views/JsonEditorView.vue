@@ -659,7 +659,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { useRoute, useRouter } from 'vue-router'
-import { useDialog, useMessage } from 'naive-ui'
+import { useDialog, useMessage, NProgress } from 'naive-ui'
 import {
   AlertCircle as AlertCircleIcon,
   AlertTriangle as AlertIcon,

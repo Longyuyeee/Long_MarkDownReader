@@ -24,7 +24,8 @@ const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '
 await router.push('/')
 window.sessionAudit.store = store; window.sessionAudit.router = router
 const app = createApp({ render: () => h(naive.NConfigProvider, {}, { default: () => h(naive.NDialogProvider, {}, { default: () => h(naive.NMessageProvider, {}, { default: () => h(WorkspaceHome) }) }) }) })
-for (const [name, component] of Object.entries(naive)) if (/^N[A-Z]/.test(name)) app.component(name, component)
+const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts')
+registerNaiveComponents(app)
 app.use(pinia).use(router).mount('#app')
 document.body.style.margin = '0'; document.body.style.fontFamily = 'Segoe UI, Microsoft YaHei, sans-serif'; document.body.dataset.theme = 'white'
 document.querySelector('#app').style.height = '100vh'

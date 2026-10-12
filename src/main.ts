@@ -1,32 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import {
-  NButton,
-  NButtonGroup,
-  NCheckbox,
-  NColorPicker,
-  NConfigProvider,
-  NDialogProvider,
-  NDropdown,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NMessageProvider,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpin,
-  NSwitch,
-  NTag,
-  NTree,
-} from 'naive-ui'
+import { registerNaiveComponents } from './services/naiveComponents'
 import App from './App.vue'
 import router from './router'
 import { useAppStore } from './store/app'
@@ -64,37 +38,7 @@ const pinia = createPinia()
 app.use(pinia)
 const store = useAppStore(pinia)
 
-const naiveComponents = {
-  NButton,
-  NButtonGroup,
-  NCheckbox,
-  NColorPicker,
-  NConfigProvider,
-  NDialogProvider,
-  NDropdown,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NMessageProvider,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpin,
-  NSwitch,
-  NTag,
-  NTree,
-}
-
-for (const [name, component] of Object.entries(naiveComponents)) {
-  app.component(name, component)
-}
+registerNaiveComponents(app)
 
 app.config.errorHandler = (err, _instance, info) => {
   console.error('[Long编辑 Error]', err, '\nInfo:', info)

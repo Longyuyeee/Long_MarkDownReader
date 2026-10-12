@@ -82,6 +82,7 @@ const router=createRouter({history:createMemoryHistory(),routes:[
 await router.push('/')
 window.workflowAudit.router=router
 const app=createApp(App)
-for(const [name,component]of Object.entries(naive))if(/^N[A-Z]/.test(name))app.component(name,component)
+const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts')
+registerNaiveComponents(app)
 app.use(pinia).use(router).mount('#app')
 document.querySelector('#app').style.height='100vh'
