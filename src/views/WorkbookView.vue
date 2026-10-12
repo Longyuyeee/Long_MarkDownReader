@@ -5054,7 +5054,12 @@ onBeforeUnmount(() => {
 .sheet-tabs button.active { color: var(--theme-primary); border-color: var(--workspace-border-color); background: var(--theme-surface); }
 .sheet-tabs small { margin: 0 5px 6px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: var(--text-compact); }
 .formula-bar { height: 34px; flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
-:deep(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); }
+:global(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+:global(.linked-data-modal > .n-card__content) { min-height: 0; overflow-y: auto; }
+:global(.linked-data-modal > .n-card-header), :global(.linked-data-modal > .n-card__footer) { flex-shrink: 0; }
+.linked-data-policy { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 700px) { .linked-data-policy { grid-template-columns: minmax(0, 1fr); } }
+.linked-data-policy span { white-space: nowrap; }
 .linked-data-audit { display: grid; gap: 14px; max-height: min(680px, calc(100vh - 190px)); overflow-y: auto; padding-right: 3px; }
 .linked-data-policy { padding: 14px 16px; border-color: var(--status-success-border); background: var(--status-success-bg); }
 .linked-data-policy p { margin: 4px 0 0; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.55; }

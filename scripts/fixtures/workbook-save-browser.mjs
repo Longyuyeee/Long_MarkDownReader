@@ -13,6 +13,15 @@ const secondSheet = structuredClone(sheet)
 secondSheet.sheet = 'Sheet2'
 secondSheet.rows[0][0] = { value: '第二张表的客户清单', formattedValue: '第二张表的客户清单', kind: 'string' }
 const sheets = { Sheet1: sheet, Sheet2: secondSheet }
+if (new URLSearchParams(window.location.search).has('linkedLayout')) {
+  document.linkedData = {
+    pivotTables: [{ part: 'pivot1.xml', name: '交付汇总', sheet: 'Sheet2', cacheId: 1, sourceSheet: 'Sheet1', sourceRange: 'A1:A2', refreshOnLoad: false,
+      audit: { rebuildCandidate: false, blockers: ['示例仅用于查看布局'], fields: [], dataFields: [], cacheFieldCount: 1, cacheRecordCount: 2, rowFieldCount: 1, columnFieldCount: 0, pageFieldCount: 0, dataFieldCount: 1, writeback: { status: 'blocked', blockers: ['缺少输出验证'], pivotFieldItemsComplete: false, rowItemsComplete: false, columnItemsComplete: false, outputCellsPresent: false } } }],
+    slicers: [], connections: [{ id: 1, name: '交付数据来源', kind: 'database', refreshOnLoad: true }],
+    externalLinks: [{ part: 'external1.xml', kind: 'external_workbook', targetKind: 'file', cachedItemCount: 2 }],
+    externalRelationshipCount: 1, summary: { totalObjectCount: 3, localPivotCount: 1, externalLinkCount: 1, connectionCount: 1, refreshRiskCount: 1 }, policy: {},
+  }
+}
 if (new URLSearchParams(window.location.search).has('filter')) {
   sheet.autoFilter = { top: 0, bottom: 1, left: 0, right: 0 }
   sheet.autoFilterState = { editable: true, columns: [], sortConditions: [] }

@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Short modal dimensions",
+    "Pivot and connection sections scroll into view",
+    "Navigate linked worksheet"
+  ],
+  "errors": [],
+  "scope": "Actual WorkbookView with mocked linked-data summaries; no external access, rebuild or native write acceptance",
+  "releaseCandidate": false
+}
