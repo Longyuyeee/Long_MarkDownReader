@@ -1256,6 +1256,7 @@ onUnmounted(() => {
 
 <style scoped>
 .settings-view {
+  container-type: inline-size;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1728,7 +1729,7 @@ onUnmounted(() => {
 .observation-review-achievements { display: flex; flex-wrap: wrap; gap: 6px; }
 .observation-review-achievements span { padding: 3px 7px; border-radius: 999px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.09); font-size: var(--text-compact); }
 
-@media (max-width: 720px) {
+@container (max-width: 720px) {
   .observation-session-steps li { grid-template-columns: 26px minmax(0, 1fr); }
   .observation-session-steps li > .n-button,
   .observation-step-actions { grid-column: 2; justify-self: start; }
@@ -2432,7 +2433,7 @@ onUnmounted(() => {
 .theme-vscode .string { color: #ce9178; }
 .theme-vscode .method { color: #dcdcaa; }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .settings-content { overflow-y: auto; }
   .settings-layout { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; gap: 16px; }
   .settings-navigation {
@@ -2448,7 +2449,7 @@ onUnmounted(() => {
   .settings-category-heading { margin-bottom: 14px; }
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .settings-navigation button { min-height: 36px; padding: 0 8px; }
   .settings-navigation .n-icon { font-size: 15px; }
   .setting-row { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 14px; }

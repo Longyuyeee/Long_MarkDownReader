@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Eight category transitions",
+    "520px content in 1280px browser",
+    "Appearance panel full-width"
+  ],
+  "scope": "Production SettingsView; configuration loading/native IPC isolated; no persistent preference changes",
+  "errors": []
+}
