@@ -3690,6 +3690,8 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
+  document.addEventListener('pointerup', rememberReferenceInsertionPoint)
+  document.addEventListener('keyup', rememberReferenceInsertionPoint)
   void initializeUpdater()
   window.addEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
@@ -3785,6 +3787,8 @@ onUnmounted(() => {
   closeHistoryComparison()
   invalidateHistory()
   document.removeEventListener('selectionchange', rememberReferenceInsertionPoint)
+  document.removeEventListener('pointerup', rememberReferenceInsertionPoint)
+  document.removeEventListener('keyup', rememberReferenceInsertionPoint)
   ++knowledgeSearchGeneration
   ++libraryLoadGeneration
   editorLoadGeneration += 1
