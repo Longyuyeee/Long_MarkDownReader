@@ -1,10 +1,12 @@
 <template>
-  <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referenceVisible && !store.isZen }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :inert="librarySwitchBusy || undefined" :aria-busy="librarySwitchBusy" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referenceVisible && !store.isZen }" @mousemove="onMouseMove" @mouseup="onMouseUp">
     <header v-if="!store.isZen" class="library-shell-toolbar" aria-label="资料库操作">
       <n-button class="shell-navigation-action" quaternary size="small" aria-label="导航" :aria-expanded="!isSidebarCollapsed" aria-controls="library-navigation" @click="isSidebarCollapsed = !isSidebarCollapsed">
         <template #icon><n-icon :component="ListIcon" /></template><span class="shell-action-label">导航</span>
       </n-button>
-      <n-button class="library-picker" quaternary size="small" :title="store.libraryPath || '管理资料库'" @click="openSettings">{{ store.currentLibraryName || '选择资料库' }}</n-button>
+      <n-dropdown trigger="click" :options="librarySwitchOptions" @select="selectLibrary">
+        <n-button class="library-picker" quaternary size="small" aria-label="切换资料库" :loading="librarySwitchBusy" :disabled="librarySwitchBusy" :title="store.libraryPath || '选择资料库'">{{ store.currentLibraryName || '选择资料库' }} ▾</n-button>
+      </n-dropdown>
       <WorkspaceTabs v-if="store.tabs.length" class="shell-document-tabs" />
       <span v-else class="shell-toolbar-spacer"></span>
       <n-button class="shell-quick-action" quaternary size="small" aria-label="快速笔记" title="快速笔记" @click="openQuickNote"><template #icon><n-icon :component="EditIcon" /></template><span class="shell-action-label">快速笔记</span></n-button>
@@ -2074,6 +2076,37 @@ const invalidateHistory = () => { ++historyGeneration; historyList.value = [] }
 watch([activeTabId, () => store.libraryPath], invalidateHistory, { flush: 'sync' })
 
 const openSettings = () => router.push('/settings')
+const librarySwitchBusy = ref(false)
+const librarySwitchOptions = computed<DropdownOption[]>(() => [
+  ...store.libraries.map(library => ({
+    key: library.path,
+    label: `${library.path === store.libraryPath ? '✓ ' : ''}${library.name}`,
+    props: { title: library.path },
+    disabled: librarySwitchBusy.value || library.path === store.libraryPath,
+  })),
+  { key: 'library-divider', type: 'divider' },
+  { key: 'manage-libraries', label: '管理资料库…' },
+])
+const selectLibrary = async (path: string) => {
+  if (librarySwitchBusy.value) return
+  if (path === 'manage-libraries') { openSettings(); return }
+  if (path === store.libraryPath || !store.libraries.some(library => library.path === path)) return
+  // Capture input before Vditor's debounced callback so a fast click cannot
+  // discard the last keystrokes when the store restores another library.
+  const tab = tabs.value.find(item => item.id === activeTabId.value)
+  if (tab && vditor && isVditorReady && activeIsMarkdown.value) {
+    const content = vditor.getValue()
+    if (tab.content !== content) { tab.content = content; tab.isDirty = true }
+  }
+  if (store.tabs.some(item => item.isDirty)) {
+    message.warning('有未保存的文档，请先保存后再切换资料库。')
+    return
+  }
+  librarySwitchBusy.value = true
+  try { await store.updateConfig({ activeLibraryPath: path }) }
+  catch (error) { message.error(`切换资料库失败：${String(error)}`) }
+  finally { librarySwitchBusy.value = false }
+}
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
 const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
