@@ -45,6 +45,7 @@ import './styles/themes.scss'
 import './styles/motion.scss'
 import './styles/vditor-content-themes.scss'
 import './styles/display-preferences.scss'
+import './styles/workflow-surfaces.scss'
 
 const removeRecoverableLayoutErrorBoundary = installRecoverableLayoutErrorBoundary()
 const removeHorizontalWheelNavigation = installHorizontalWheelNavigation()

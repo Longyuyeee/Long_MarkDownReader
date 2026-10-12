@@ -17,6 +17,8 @@
           </div>
         </div>
         <div class="app-content">
+          <AppNavigation v-if="isMainWindow && router.currentRoute.value.name !== 'QuickNote' && !store.isZen" />
+          <div class="app-route-content">
           <router-view v-slot="{ Component }">
             <div :key="$route.path" class="route-wrapper">
               <component :is="Component" />
@@ -34,6 +36,7 @@
             <span>{{ routeErrorMessage }}</span>
             <button type="button" @click="reloadApplication">重新载入界面</button>
             <button type="button" class="route-error-close" title="关闭提示" aria-label="关闭提示" @click="routeErrorMessage = ''">×</button>
+          </div>
           </div>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
@@ -84,6 +87,7 @@ import { emit, emitTo, type UnlistenFn } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
 import AppUpdater from './components/AppUpdater.vue'
+import AppNavigation from './components/AppNavigation.vue'
 import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
@@ -599,7 +603,9 @@ body {
 body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
-.app-content { flex: 1; position: relative; overflow: hidden; }
+.app-content { flex: 1; min-height: 0; display: flex; position: relative; overflow: hidden; }
+.app-route-content { flex: 1; min-width: 0; min-height: 0; position: relative; overflow: hidden; }
+@media (max-width: 760px) { .app-content { flex-direction: column; } }
 .route-error-notice {
   position: absolute;
   z-index: 9000;

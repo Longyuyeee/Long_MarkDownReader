@@ -13,6 +13,11 @@ const routes = [
     component: () => import('../views/WorkspaceHome.vue')
   },
   {
+    path: '/inbox',
+    name: 'Inbox',
+    component: () => import('../views/InboxView.vue')
+  },
+  {
     path: '/temp',
     name: 'TempMode',
     component: () => import('../views/TempMode.vue')

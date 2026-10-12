@@ -19,8 +19,8 @@
     <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content" data-testid="m2a2-workspace-primary" :data-primary-state="loading ? 'loading' : 'ready'">
       <section class="workspace-identity">
         <div>
-          <span class="section-kicker">当前工作区</span>
-          <h1>{{ store.currentLibraryName }}</h1>
+          <span class="section-kicker">{{ store.currentLibraryName }}</span>
+          <h1>从这里继续</h1>
           <p :title="store.libraryPath">{{ store.libraryPath }}</p>
         </div>
         <div class="workspace-meta">
@@ -110,6 +110,8 @@
         </section>
 
         <section class="workspace-section governance-section">
+          <details class="workspace-organization">
+            <summary><span><strong>资料整理与关联</strong><small>查看重复文件、批注和链接，处理搜索与关联状态</small></span></summary>
           <WorkspaceHealthQueue
             :report="workspaceHealth"
             :graph-health="health"
@@ -122,6 +124,7 @@
             @prepare-index="prepareWorkspaceSearch(store.libraryPath)"
             @retry="loadSecondaryAnalysis(store.libraryPath)"
           />
+          </details>
         </section>
       </div>
     </WorkspaceManagementContent>
@@ -202,7 +205,8 @@ const workspaceCreateOptions = [
   { type: 'divider', key: 'create-divider' },
   createGroup('数据与结构', 'group-data', ['json', 'jsonc', 'yaml', 'xml', 'toml', 'table']),
   createGroup('更多图表', 'group-visual', ['drawio', 'diagram', 'opml', 'svg']),
-].filter(Boolean)
+  createGroup('其他格式', 'group-other', CREATABLE_FILE_FORMATS.filter(format => !['markdown', 'plain-text', 'canvas', 'json', 'jsonc', 'yaml', 'xml', 'toml', 'table', 'drawio', 'diagram', 'opml', 'svg'].includes(format.id)).map(format => format.id)),
+].filter(item => item && (!('children' in item) || (Array.isArray(item.children) && item.children.length)))
 const workspaceCreateMenuProps = () => ({ class: 'workspace-create-menu', style: 'max-height: min(460px, calc(100vh - 24px)); min-width: 190px;' })
 const createWorkspaceFile = async (formatId: string) => {
   workspaceCreateMenuOpen.value = false
@@ -493,6 +497,10 @@ onMounted(async () => {
 
 <style scoped>
 .workspace-home { height: 100%; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.workspace-organization > summary { cursor: pointer; padding: 4px 0 14px; }
+.workspace-organization > summary > span { display: inline-grid; gap: 5px; vertical-align: middle; }
+.workspace-organization > summary strong { font-size: var(--text-md); }
+.workspace-organization > summary small { color: var(--theme-text-secondary); font-size: var(--text-sm); }
 .workspace-header { flex: none; }
 .brand-mark { width: 28px; height: 28px; display: block; border-radius: 7px; object-fit: cover; }.brand-mark.large { width: 44px; height: 44px; border-radius: 10px; }
 .workspace-nav { display: flex; align-items: center; gap: 4px; }.workspace-nav button { min-width: 34px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.workspace-nav button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.22); background: rgba(var(--theme-primary-rgb),.06); }.workspace-nav button:disabled { opacity: .35; cursor: default; }.workspace-nav svg { width: 15px; }.spinning { animation: spin .8s linear infinite; }

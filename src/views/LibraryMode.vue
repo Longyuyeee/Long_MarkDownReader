@@ -125,6 +125,7 @@
                   <details><summary>错误详情</summary><span>{{ libraryLoadError }}</span></details>
                 </section>
                 <div v-else-if="showKnowledgeResults" class="knowledge-search-results" @keydown="navigateSearchResults">
+                  <div class="search-results-heading"><strong>搜索结果</strong><span>{{ searchObjectTypes.length ? `${searchObjectTypes.length} 种格式` : '全部格式' }}</span></div>
                   <div v-if="activeGraphCollection" class="graph-collection-state">
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
@@ -572,7 +573,7 @@
 
     <SearchDocumentPreview v-if="searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
       :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
-      @close="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
+      @close="referenceVisible = false" @clear-source="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
     <aside v-else-if="referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
       <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button></header>
       <p>选择一份资料作为参考，边看边写。</p>
@@ -1412,7 +1413,6 @@ const restoreReference = (root: string) => {
 }
 watch([searchPreviewResult, searchPreviewQuery], () => rememberReference(store.libraryPath))
 const returnToEditorFromReference = async () => {
-  searchPreviewResult.value = null
   await nextTick()
   // Explicit return means resume writing, not restore the search trigger.
   const editor = document.querySelector<HTMLElement>('.editor-main')

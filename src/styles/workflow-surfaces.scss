@@ -1,0 +1,55 @@
+// Shared workflow surfaces inherit color, motion and document/file preferences.
+body {
+  --workflow-panel-padding: 16px;
+  --workflow-panel-gap: 18px;
+  --workflow-panel-shadow: var(--theme-shadow-sm);
+  --workflow-row-padding: 8px;
+}
+body[data-style="soft"] { --workflow-panel-padding: 18px; --workflow-panel-gap: 20px; }
+body[data-style="neo"] { --workflow-panel-padding: 14px; --workflow-panel-shadow: var(--theme-shadow-sm); }
+body[data-style="glass"] { --workflow-panel-padding: 18px; --workflow-panel-gap: 20px; }
+body[data-style="airy"] { --workflow-panel-padding: 24px; --workflow-panel-gap: 24px; --workflow-row-padding: 10px; }
+body[data-style="minimal"] { --workflow-panel-padding: 14px; --workflow-panel-gap: 16px; --workflow-panel-shadow: none; --workflow-row-padding: 5px; }
+body[data-style="sharp"] { --workflow-panel-padding: 14px; --workflow-panel-gap: 16px; --workflow-panel-shadow: var(--theme-shadow-sm); --workflow-row-padding: 6px; }
+
+.workflow-page-heading { margin: 0 0 var(--workflow-panel-gap); }
+.workflow-page-heading h1 { margin: 0 0 8px; font-size: var(--text-2xl); }
+.workflow-page-heading p, .workflow-action-error { color: var(--theme-text-secondary); font-size: var(--text-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.workflow-action-error { color: var(--status-danger); }
+
+body .workspace-home .workspace-grid { gap: var(--workflow-panel-gap); margin-top: var(--workflow-panel-gap); align-items: start; }
+body .workspace-home .workspace-section { padding: var(--workflow-panel-padding); border: var(--theme-border); border-radius: var(--theme-radius); background: var(--style-card-gradient, var(--theme-surface)); box-shadow: var(--workflow-panel-shadow); }
+body .workspace-home .task-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+body .workspace-home .task-status { grid-column: 1 / -1; min-width: 0; }
+body .workspace-home .task-status { gap: 3px; padding: 3px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--workspace-control-bg); }
+body .workspace-home .task-status > button { flex: 1; min-height: 30px; padding: 0 8px; border: 0; border-radius: var(--theme-radius-sm); color: var(--theme-text-secondary); background: transparent; font: inherit; font-size: var(--text-sm); cursor: pointer; white-space: nowrap; }
+body .workspace-home .task-status > button.active { color: var(--theme-primary); background: var(--theme-surface); box-shadow: var(--theme-shadow-sm); }
+body .workspace-home .task-status > button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
+body .workspace-home :is(.quick-command, .signal, .workspace-nav button, .task-filters select, .file-icon, .task-undo) { border-radius: var(--theme-radius-sm); }
+body .workspace-home .workspace-identity { padding-bottom: 18px; border-bottom: var(--theme-border-strong); }
+body .app-content:has(> .app-navigation) .library-mode .sidebar-actions,
+body .app-content:has(> .app-navigation) .workspace-nav button[title="知识图谱"],
+body .app-content:has(> .app-navigation) .workspace-nav button[title="设置"] { display: none; }
+body .workspace-home .work-session-bar { margin-top: var(--workflow-panel-gap); margin-bottom: 0; }
+body .workspace-home .file-row { border: var(--file-row-border); border-radius: var(--theme-radius-sm); margin-block: calc(var(--file-row-gap) / 2); background: var(--file-row-bg); box-shadow: var(--file-row-shadow); min-height: 0; }
+body .workspace-home .file-open { min-height: calc(var(--file-row-height) + 12px); padding: var(--workflow-row-padding) 4px; }
+body[data-file-icon-style="muted"] .workspace-home .file-icon { color: var(--theme-text-secondary); background: var(--workspace-control-bg); }
+body[data-file-icon-style="muted"] .inbox-browser li button > svg { color: var(--theme-text-secondary) !important; }
+body .search-results-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 0; color: var(--theme-text); font-size: var(--text-sm); }
+body .search-results-heading span { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+body .library-mode .knowledge-search-result { padding: var(--workflow-row-padding); background: var(--style-card-gradient, var(--theme-surface)); box-shadow: var(--workflow-panel-shadow); }
+body .library-mode .knowledge-search-result.is-search-selected { border-color: var(--theme-primary); box-shadow: inset 3px 0 var(--theme-primary); }
+body .library-mode :is(.knowledge-preview-button, .collection-row) { border-radius: var(--theme-radius-sm); }
+
+body[data-style="minimal"] .workspace-home .workspace-section { border-inline: 0; border-top: 0; background: var(--theme-surface); }
+body[data-style="glass"] :is(.work-session-bar, .smart-collection, .inbox-browser.standalone, .search-document-preview.pinned) { background: var(--style-card-gradient); box-shadow: var(--workflow-panel-shadow); }
+body[data-style="neo"] :is(.work-session-bar, .inbox-browser.standalone) { border-color: rgba(var(--theme-primary-rgb), .3); }
+body[data-style="airy"] .search-document-preview .preview-text { padding: 18px; }
+body[data-style="sharp"] :is(.work-session-bar, .inbox-browser.standalone, .workspace-home .workspace-section) { border: var(--theme-border-strong); }
+body[data-theme="contrast"][data-style] { --workflow-panel-shadow: none; }
+
+@media (max-width: 560px) {
+  body[data-style] { --workflow-panel-padding: 12px; --workflow-panel-gap: 12px; }
+  body .workspace-home .task-filters { grid-template-columns: 1fr; }
+  .workflow-page-heading h1 { font-size: var(--text-xl); }
+}

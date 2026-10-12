@@ -1,14 +1,14 @@
 <template>
-  <section class="inbox-browser" aria-label="收集箱文件" :aria-busy="loading">
-    <div class="actions"><button @click="$emit('close')">← 全部文件</button><button :disabled="loading" @click="reload">刷新</button><button aria-label="收集箱设置" :aria-expanded="menu" :disabled="choosing" @click="menu = !menu">…</button></div>
+  <section class="inbox-browser" :class="{ standalone }" aria-label="收集箱文件" :aria-busy="loading">
+    <div class="actions"><button v-if="!standalone" @click="$emit('close')">← 全部文件</button><strong v-else>收集目录</strong><button :disabled="loading" @click="reload">刷新</button><button aria-label="收集箱设置" :aria-expanded="menu" :disabled="choosing" @click="menu = !menu">收集目录</button></div>
     <div v-if="menu" class="inbox-settings"><button :disabled="choosing" @click="chooseDirectory">设置收集目录…</button><small>仅更改收集位置，不移动已有文件</small></div>
     <p v-if="settingStatus" role="status">{{ settingStatus }}</p>
-    <div class="location" :title="directory">{{ breadcrumb }}</div>
+    <div class="location" :title="directory"><Folder :size="15" aria-hidden="true" />{{ breadcrumb }}</div>
     <button v-if="parents.length" @click="up">↑ 上一级</button>
     <p v-if="loading" role="status">正在读取收集箱…</p>
     <div v-else-if="error" role="alert"><strong>收集箱暂时不可用</strong><p>目录尚未创建、已移动或不可读。可先通过快速笔记保存到收集箱；已有资料请检查目录后重试。</p><button @click="reload">重试读取</button><details><summary>错误详情</summary>{{ error }}</details></div>
     <p v-else-if="!entries.length" role="status">此目录暂无可浏览的资料文件</p>
-    <template v-else><p>{{ entries.filter(item => !item.is_dir).length }} 个文件 · {{ entries.filter(item => item.is_dir).length }} 个文件夹</p><ul><li v-for="item in entries" :key="item.path"><button :title="item.path" @click="activate(item)"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path v-if="item.is_dir" d="M3 7V5h6l2 2h10v13H3Z"/><path v-else d="M6 3h8l4 4v14H6ZM14 3v5h4M9 12h6M9 16h6"/></svg><span>{{ item.name }}</span><small v-if="item.is_dir">进入</small></button></li></ul></template>
+    <template v-else><p>{{ entries.filter(item => !item.is_dir).length }} 个文件 · {{ entries.filter(item => item.is_dir).length }} 个文件夹</p><ul><li v-for="item in entries" :key="item.path"><button :title="item.path" @click="activate(item)"><component :is="entryVisual(item).icon" :style="{ color: entryVisual(item).color }" aria-hidden="true" /><span>{{ item.name }}</span><small>{{ item.is_dir ? '进入' : findFileFormat(item.path)?.label || '文件' }}</small></button></li></ul></template>
   </section>
 </template>
 <script setup lang="ts">
@@ -18,10 +18,14 @@ import { emit as broadcast } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-dialog'
 import { useAppStore } from '../store/app'
 import { inboxDirectory } from '../utils/inboxDirectory'
+import { Folder } from 'lucide-vue-next'
+import { findFileFormat } from '../config/fileFormats'
+import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
 interface Entry { name: string; path: string; is_dir: boolean }
-const props = defineProps<{ libraryRoot: string }>()
+const props = withDefaults(defineProps<{ libraryRoot: string; standalone?: boolean }>(), { standalone: false })
 const emit = defineEmits<{ close: []; open: [path: string] }>()
 const store = useAppStore()
+const entryVisual = (item: Entry) => item.is_dir ? { icon: Folder, color: 'var(--theme-text-secondary)' } : resolveFileTreeVisual(findFileFormat(item.path)?.id)
 const menu = ref(false), choosing = ref(false), settingStatus = ref('')
 const inbox = computed(() => inboxDirectory(props.libraryRoot, store.libraries))
 const directory = ref(''), entries = ref<Entry[]>([]), parents = ref<string[]>([])
@@ -67,18 +71,22 @@ onUnmounted(() => { disposed = true; ++generation; unlisten?.() })
 </script>
 <style scoped>
 .inbox-browser { flex: 1; padding: 8px 10px; min-height: 0; overflow: auto; color: var(--theme-text); }
-.actions { display: flex; justify-content: space-between; gap: 8px; }
-.inbox-settings { padding: 4px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 4px; }
+.inbox-browser.standalone { padding: var(--workflow-panel-padding); border: var(--theme-border); border-radius: var(--theme-radius); background: var(--theme-surface); box-shadow: var(--workflow-panel-shadow); }
+.actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.actions > :first-child { margin-right: auto; }
+.actions strong { font-size: var(--text-md); }
+.inbox-settings { padding: 8px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }
 .inbox-settings small { display: block; padding: 4px; }
-button { color: inherit; background: transparent; border: 0; padding: 6px; cursor: pointer; font: inherit; text-align: left; }
+button { color: inherit; background: transparent; border: 0; border-radius: var(--theme-radius-sm); padding: 7px; cursor: pointer; font: inherit; text-align: left; }
 button:hover { background: rgba(var(--theme-primary-rgb), .08); }
 button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 button:disabled { opacity: .5; cursor: default; }
-.location { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px; font-size: 12px; }
-p, details { font-size: 12px; color: var(--theme-text-secondary); overflow-wrap: anywhere; }
+.location { display: flex; align-items: center; gap: 7px; overflow-wrap: anywhere; padding: 8px 0; font-size: var(--text-sm); border-bottom: var(--theme-border); }
+p, details { font-size: var(--text-sm); line-height: 1.65; color: var(--theme-text-secondary); overflow-wrap: anywhere; }
 ul { list-style: none; padding: 0; margin: 0; }
-li button { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
+li button { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: var(--file-row-height, 34px); border: var(--file-row-border, 1px solid transparent); margin-block: calc(var(--file-row-gap, 3px) / 2); background: var(--file-row-bg, transparent); box-shadow: var(--file-row-shadow, none); }
 li button span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-small { font-size: 11px; color: var(--theme-text-secondary); }
+small { font-size: var(--text-compact); color: var(--theme-text-secondary); }
+li button > small { max-width: 35%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 svg { width: 16px; height: 16px; flex-shrink: 0; }
 </style>

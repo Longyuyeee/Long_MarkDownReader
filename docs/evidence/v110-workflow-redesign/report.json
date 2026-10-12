@@ -1,0 +1,104 @@
+{
+  "scope": "actual App/Vue components; mocked Tauri IPC, not native install or disk evidence",
+  "checks": [
+    "actual App shell retains 19 presets and adapts workflow surfaces to all six styles and ten color choices",
+    "workspace keeps task filters, completion/undo and the named organization entry",
+    "visible session management renames a saved session and continues in the main editor",
+    "collection identity, all scope controls, results and save remain reachable",
+    "reference source, refresh, selection/insertion and return/close keep the writing workflow",
+    "standalone inbox keeps subdirectories, parent navigation, settings, read retry and original file opening",
+    "736 and 320 widths retain all global destinations and workflow actions without page overflow",
+    "quick note keeps destination/template/after-save choices and failed-save retry with its own window layout"
+  ],
+  "errors": [],
+  "surfaces": [
+    {
+      "style": "soft",
+      "radius": "12px",
+      "padding": "18px",
+      "shadow": "rgba(30, 41, 59, 0.06) 0px 6px 18px 0px, rgba(30, 41, 59, 0.03) 0px 2px 8px 0px"
+    },
+    {
+      "style": "neo",
+      "radius": "4px",
+      "padding": "14px",
+      "shadow": "rgba(0, 0, 0, 0.12) 4px 4px 12px 0px, rgba(255, 255, 255, 0.5) -2px -2px 8px 0px"
+    },
+    {
+      "style": "glass",
+      "radius": "14px",
+      "padding": "18px",
+      "shadow": "rgba(20, 24, 32, 0.08) 0px 10px 25px 0px, rgba(20, 24, 32, 0.05) 0px 4px 10px 0px, rgba(255, 255, 255, 0.3) 0px 1px 0px 0px inset"
+    },
+    {
+      "style": "airy",
+      "radius": "10px",
+      "padding": "24px",
+      "shadow": "rgba(30, 41, 59, 0.04) 0px 12px 32px 0px, rgba(30, 41, 59, 0.02) 0px 4px 8px 0px"
+    },
+    {
+      "style": "minimal",
+      "radius": "6px",
+      "padding": "14px",
+      "shadow": "none"
+    },
+    {
+      "style": "sharp",
+      "radius": "0px",
+      "padding": "14px",
+      "shadow": "rgba(20, 24, 32, 0.08) 3px 3px 0px 0px, rgba(19, 25, 35, 0.1) 0px 0px 0px 1px"
+    }
+  ],
+  "palettes": [
+    {
+      "theme": "white",
+      "color": "rgb(23, 26, 31)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "green",
+      "color": "rgb(23, 33, 28)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "blue",
+      "color": "rgb(20, 32, 51)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "pink",
+      "color": "rgb(42, 24, 32)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "cream",
+      "color": "rgb(45, 36, 22)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "purple",
+      "color": "rgb(32, 24, 51)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "amber",
+      "color": "rgb(45, 31, 10)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "dark",
+      "color": "rgb(244, 246, 248)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "theme": "contrast",
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(17, 17, 17)"
+    },
+    {
+      "theme": "white",
+      "color": "rgb(23, 26, 31)",
+      "background": "rgba(0, 0, 0, 0)"
+    }
+  ]
+}

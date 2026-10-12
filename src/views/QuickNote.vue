@@ -4,9 +4,9 @@
     <div class="capture-toolbar">
       <label :title="library">资料库<select v-model="library" :disabled="busy || !ready" aria-label="资料库"><option value="" disabled>请选择</option><option v-for="item in store.libraries" :key="item.path" :value="item.path">{{ item.name }}</option></select></label>
       <label :title="target">保存到<select :value="target" :disabled="busy || !library" aria-label="保存到" @change="selectTarget"><option :value="inbox">收集箱</option><option :value="library">根目录</option><option v-if="target && target !== inbox && target !== library" :value="target">{{ target }}</option><option value="__choose">选择目录…</option></select></label>
-      <label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-for="name in Object.keys(NOTE_TEMPLATES)" :key="name">{{ name }}</option></select></label>
     </div>
-    <main><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></main>
+    <div class="capture-destination" :title="target">{{ target ? `当前保存位置：${target}` : '先选择资料库和保存位置' }}</div>
+    <main><div class="capture-composer"><div class="capture-composer-heading"><span>写下想法</span><label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-for="name in Object.keys(NOTE_TEMPLATES)" :key="name">{{ name }}</option></select></label></div><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></div></main>
     <p role="status">{{ status || '仅点击保存时写入本地文件' }}</p>
     <footer><n-button size="small" quaternary :disabled="busy" @click="close">丢弃</n-button><label class="after-save">保存后<select v-model="afterSave" :disabled="busy" aria-label="保存后操作"><option value="close">关闭窗口</option><option value="continue">继续记录</option><option value="open">主编辑区打开</option></select></label><n-button size="small" type="primary" :loading="saving" :disabled="(busy && !saving) || !ready" @click="save">保存笔记</n-button></footer>
   </div>
@@ -146,17 +146,22 @@ const save = async () => {
 
 <style scoped>
 .quick-note-window { height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
-header { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 14px; background: var(--theme-card); cursor: move; flex-shrink: 0; }
-header strong { font-size: 14px; } header span { margin-left: auto; color: var(--theme-text-secondary); font-size: 12px; }
+header { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; background: var(--style-card-gradient, var(--theme-surface)); border-bottom: var(--theme-border); cursor: move; flex-shrink: 0; }
+header strong { font-size: var(--text-md); } header span { margin-left: auto; color: var(--theme-text-secondary); font-size: var(--text-sm); }
 header button { border: 0; background: transparent; color: inherit; font-size: 22px; width: 28px; height: 28px; cursor: pointer; }
-.capture-toolbar { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 7px; padding: 7px 12px; flex-shrink: 0; }
-label { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 12px; white-space: nowrap; }
-select { min-width: 0; width: 100%; height: 30px; padding: 0 3px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 4px; background: var(--theme-card); color: var(--theme-text); font: inherit; text-overflow: ellipsis; }
-main { flex: 1; min-height: 0; display: flex; padding: 0 12px; }
-textarea { width: 100%; min-height: 0; resize: none; box-sizing: border-box; padding: 12px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 4px; background: var(--theme-bg); color: var(--theme-text); font: inherit; font-size: 14px; line-height: 1.65; }
-p { flex-shrink: 0; font-size: 12px; color: var(--theme-text-secondary); margin: 5px 12px; max-height: 3.5em; overflow: auto; overflow-wrap: anywhere; }
-footer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; flex-shrink: 0; background: var(--theme-card); }
+.capture-toolbar { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; padding: 12px 16px 6px; flex-shrink: 0; }
+label { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--text-sm); white-space: nowrap; }
+.capture-toolbar label { display: grid; gap: 5px; }
+select { min-width: 0; width: 100%; height: 32px; padding: 0 6px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); color: var(--theme-text); font: inherit; text-overflow: ellipsis; }
+.capture-destination { flex: none; padding: 0 16px 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+main { flex: 1; min-height: 0; display: flex; padding: 0 16px; }
+.capture-composer { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; overflow: hidden; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--theme-surface); box-shadow: var(--workflow-panel-shadow, none); }
+.capture-composer-heading { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: var(--theme-border); color: var(--theme-text-secondary); font-size: var(--text-sm); }
+.capture-composer-heading select { max-width: 150px; }
+textarea { flex: 1; width: 100%; min-height: 0; resize: none; box-sizing: border-box; padding: var(--workflow-panel-padding, 16px); border: 0; background: transparent; color: var(--theme-text); font-family: var(--document-font-family, var(--font-sans)); font-size: var(--document-font-size, 16px); line-height: var(--document-line-height, 1.75); }
+p { flex-shrink: 0; font-size: var(--text-sm); color: var(--theme-text-secondary); margin: 8px 16px; max-height: 3.5em; overflow: auto; overflow-wrap: anywhere; }
+footer { display: flex; align-items: center; gap: 8px; padding: 10px 16px; flex-shrink: 0; background: var(--style-card-gradient, var(--theme-surface)); border-top: var(--theme-border); }
 .after-save { margin-left: auto; } .after-save select { width: 116px; }
 button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
-@media (max-width: 450px) { .capture-toolbar { grid-template-columns: 1fr 1fr; } .capture-toolbar label:last-child { grid-column: 1 / -1; } }
+@media (max-width: 450px) { .capture-toolbar { gap: 8px; } footer { flex-wrap: wrap; } .after-save select { width: 105px; } .capture-composer-heading select { max-width: 125px; } }
 </style>

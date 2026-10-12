@@ -64,7 +64,7 @@ defineEmits<{ back: [] }>()
   gap: 6px;
   padding: 0 9px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--theme-radius-sm);
   color: var(--theme-text-secondary);
   background: transparent;
   cursor: pointer;
