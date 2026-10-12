@@ -7,16 +7,22 @@ const source = fs.readFileSync('src/store/app.ts', 'utf8')
 const start = source.indexOf('    async updateConfig(patch: any) {')
 const end = source.indexOf('    async applyThemePreset', start)
 const method = source.slice(start, end)
+const displayExports = {}
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/config/displayPreferences.ts', 'utf8'), {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+}).outputText, { exports: displayExports })
+const { normalizeDisplayPreferences } = displayExports
 const tick = () => new Promise(resolve => setImmediate(resolve))
 function setup() {
   const pending = [], autostart = []
   const ctx = vm.createContext({
+    normalizeDisplayPreferences,
     isTauriRuntime: () => true,
     enable: async () => autostart.push(true), disable: async () => autostart.push(false),
     invoke: (command, args) => new Promise((resolve, reject) => pending.push({ command, args, resolve, reject })),
   })
   vm.runInContext(ts.transpile('let configWritePromise = Promise.resolve(); globalThis.action = ({' + method + '}).updateConfig;', { target: ts.ScriptTarget.ES2022 }), ctx)
-  const store = { activeLibraryPath: 'A', tabs: [{ path: 'A/note.md', isDirty: true, content: '未保存正文' }], activeTabId: 'A/note.md', relationObjectFocus: { path: 'A/note.md' }, libraries: [{ path: 'A' }, { path: 'B' }], savedSearches: [], theme: 'white', isAutostart: false, cleared: 0,
+  const store = { activeLibraryPath: 'A', tabs: [{ path: 'A/note.md', isDirty: true, content: '未保存正文' }], activeTabId: 'A/note.md', relationObjectFocus: { path: 'A/note.md' }, libraries: [{ path: 'A' }, { path: 'B' }], savedSearches: [], theme: 'white', displayPreferences: normalizeDisplayPreferences(undefined), isAutostart: false, cleared: 0,
     get $state() { return this }, $patch(patch) { Object.assign(this, patch) }, clearTabsState() { this.cleared++ }, saveTabsState() {}, restoreTabsState() {},
   }
   return { store, pending, autostart, update: patch => ctx.action.call(store, patch) }
@@ -55,5 +61,28 @@ test('a later partial write serializes the latest committed configuration', asyn
   assert.equal(x.pending[1].args.config.theme, 'dark')
   assert.equal(x.pending[1].args.config.codeTheme, 'new-theme')
   x.pending[1].resolve(); await second
+  assert.equal(x.store.theme, 'dark')
+})
+
+test('display changes retain an immutable snapshot, preserve preferences on failure and survive a later partial write', async () => {
+  const x = setup(), original = x.store.displayPreferences
+  const choice = { documentStyle: 'paper', documentFont: 'serif', documentFontSize: 22, fileDensity: 'compact' }
+  const patch = { displayPreferences: { ...choice } }
+  const first = x.update(patch)
+  patch.displayPreferences.documentFontSize = 28
+  await tick()
+  assert.equal(x.pending[0].args.config.displayPreferences.documentFontSize, 22)
+  assert.equal(x.store.displayPreferences, original)
+  x.pending[0].reject(Error('disk full'))
+  await assert.rejects(first, /disk full/)
+  assert.equal(x.store.displayPreferences, original)
+  const retry = x.update({ displayPreferences: choice })
+  const later = x.update({ theme: 'dark' })
+  await tick(); x.pending[1].resolve(); await retry; await tick()
+  assert.equal(x.pending[2].args.config.displayPreferences.documentFontSize, 22)
+  assert.equal(x.pending[2].args.config.displayPreferences.documentFont, 'serif')
+  assert.equal(x.pending[2].args.config.displayPreferences.fileDensity, 'compact')
+  x.pending[2].resolve(); await later
+  assert.equal(x.store.displayPreferences.documentFontSize, 22)
   assert.equal(x.store.theme, 'dark')
 })

@@ -167,7 +167,7 @@ test('arrow keys move between main-open actions without opening files or swallow
   assert.equal(prevented, 4)
 })
 
-test('explicit return closes the reference and focuses a visible writable editor after rendering', async () => {
+test('explicit return hides the reference, retains its source and focuses a visible writable editor after rendering', async () => {
   const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = library.slice(library.indexOf('const returnToEditorFromReference ='), library.indexOf('const showSearchPreview ='))
   const order = []
@@ -175,16 +175,20 @@ test('explicit return closes the reference and focuses a visible writable editor
   const readonly = { getClientRects: () => [1], matches: () => true, focus: () => assert.fail('readonly editor') }
   const writable = { getClientRects: () => [1], matches: () => false, focus: () => order.push('focus') }
   const editor = { querySelectorAll: () => [hidden, readonly, writable], focus: () => order.push('fallback') }
-  const context = { searchPreviewResult: { value: {} }, nextTick: async () => order.push('render'), document: { querySelector: () => editor } }
+  const reference = { path: 'source.md', title: '参考资料' }
+  const context = { searchPreviewResult: { value: reference }, nextTick: async () => order.push('render'), document: { querySelector: () => editor } }
   vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.run = returnToEditorFromReference', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
   await context.run()
-  assert.equal(context.searchPreviewResult.value, null)
+  assert.equal(context.searchPreviewResult.value, reference)
   assert.deepEqual(order, ['render', 'focus'])
   editor.querySelectorAll = () => []
   await context.run()
   assert.equal(editor.tabIndex, -1)
   assert.equal(order.at(-1), 'fallback')
   assert.match(source, /@click="\$emit\('returnToEditor'\)"/)
+  assert.match(library, /@return-to-editor="referenceVisible = false; returnToEditorFromReference\(\)"/)
+  assert.match(library, /@close="referenceVisible = false"/)
+  assert.match(library, /@clear-source="referenceVisible = false; searchPreviewResult = null"/)
 })
 
 test('direct excerpt insertion requires a live bookmark in the current writable Markdown note', () => {
