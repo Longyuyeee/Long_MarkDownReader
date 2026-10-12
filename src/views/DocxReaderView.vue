@@ -1,5 +1,5 @@
 <template>
-  <div class="docx-workspace">
+  <div ref="workspaceRef" class="docx-workspace">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <header class="docx-toolbar">
       <div class="document-identity">
@@ -13,6 +13,7 @@
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
+        <button type="button" class="named-action" :aria-pressed="outlineVisible" @click="toggleOutline">目录与详情</button>
         <button v-if="!isExternal" type="button" :disabled="!draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
           <UndoIcon :size="15" />
         </button>
@@ -48,6 +49,7 @@
           @click="editorOpen = !editorOpen"
         >
           <FilePenLineIcon :size="15" />
+          <span>页面编辑</span>
         </button>
         <button
           v-if="!isExternal"
@@ -57,6 +59,7 @@
           @click="confirmSaveSource"
         >
           <SaveIcon :size="15" />
+          <span>保存</span>
         </button>
       </div>
     </header>
@@ -80,11 +83,12 @@
         </div>
       </section>
 
-      <div class="docx-layout" :class="{ 'editor-open': editorOpen && !isExternal }">
-        <aside class="docx-outline">
+      <div class="docx-layout" :class="{ 'editor-open': editorOpen && !isExternal, 'outline-visible': outlineVisible }">
+        <aside v-show="outlineVisible" class="docx-outline" aria-label="文档目录与详情">
           <div class="outline-heading">
             <strong>文档目录</strong>
             <span>{{ report.model.headings.length }} 项</span>
+            <button class="outline-close" aria-label="关闭目录与详情" @click="toggleOutline">×</button>
           </div>
           <nav v-if="report.model.headings.length" aria-label="DOCX 文档目录">
             <button
@@ -92,7 +96,7 @@
               :key="heading.blockId"
               type="button"
               :style="{ paddingLeft: `${10 + (heading.level - 1) * 12}px` }"
-              @click="scrollToBlock(heading.blockId)"
+              @click="scrollToBlock(heading.blockId); outlineOverlay = false"
             >
               <span>H{{ heading.level }}</span>
               {{ heading.text }}
@@ -100,8 +104,8 @@
           </nav>
           <p v-else class="outline-empty">文档没有可识别的标题层级。</p>
 
-          <div class="compatibility-card">
-            <strong>兼容画像</strong>
+          <details class="compatibility-card">
+            <summary>文档详情与兼容画像</summary>
             <span>{{ producerLabel }}</span>
             <div class="metric-grid">
               <span><b>{{ profile.paragraphCount }}</b>段落</span>
@@ -118,7 +122,7 @@
               </span>
             </div>
             <small>{{ packageFeatureLabel }}</small>
-          </div>
+          </details>
         </aside>
 
         <main ref="stageRef" class="docx-stage" aria-label="DOCX 分页正文" @scroll.passive="rememberDocxViewState()">
@@ -729,6 +733,18 @@ const stageRef = ref<HTMLElement | null>(null)
 const query = ref('')
 const matchIndex = ref(-1)
 const editorOpen = ref(false)
+const workspaceRef = ref<HTMLElement | null>(null)
+const workspaceWidth = ref(0)
+const outlinePinned = ref(true)
+const outlineOverlay = ref(false)
+const outlineVisible = computed(() => workspaceWidth.value > 1180 ? outlinePinned.value : outlineOverlay.value)
+const toggleOutline = () => {
+  if (workspaceWidth.value > 1180) outlinePinned.value = !outlinePinned.value
+  else outlineOverlay.value = !outlineOverlay.value
+}
+const workspaceResizeObserver = new ResizeObserver(entries => {
+  workspaceWidth.value = entries[0]?.contentRect.width || 0
+})
 const editMode = ref<DocxEditMode>('text')
 const selectedTargetId = ref('')
 const replacementText = ref('')
@@ -953,7 +969,7 @@ const captureDraftHistory = (force = false) => {
   const snapshot = draftSnapshot()
   const previous = draftUndoStack.value[draftUndoStack.value.length - 1]
   const now = performance.now()
-  if (!force && now - lastDraftHistoryAt < 650) return
+  if (!force && previous && now - lastDraftHistoryAt < 650) return
   if (!previous || !sameDraftSnapshot(previous, snapshot)) {
     draftUndoStack.value.push(snapshot)
     if (draftUndoStack.value.length > 80) draftUndoStack.value.shift()
@@ -1508,8 +1524,12 @@ watch(
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
-onMounted(() => window.addEventListener('beforeunload', beforeUnload))
+onMounted(() => {
+  window.addEventListener('beforeunload', beforeUnload)
+  if (workspaceRef.value) workspaceResizeObserver.observe(workspaceRef.value)
+})
 onBeforeUnmount(() => {
+  workspaceResizeObserver.disconnect()
   rememberDocxViewState()
   window.removeEventListener('beforeunload', beforeUnload)
 })
@@ -1517,7 +1537,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .docx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
-.docx-toolbar { min-height: 52px; padding: 7px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
+.docx-toolbar { min-height: 52px; padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .docx-search, .compatibility-warning, .docx-status > div { display: flex; align-items: center; }
 .document-identity { gap: 9px; min-width: 0; }
 .toolbar-icon { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
@@ -1525,8 +1545,14 @@ onBeforeUnmount(() => {
 .document-title { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .document-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .document-title span { color: var(--text-muted); font-size: 11px; }
-.toolbar-actions { gap: 5px; }
-.toolbar-actions button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
+.toolbar-actions { gap: 5px; max-width: 100%; min-width: 0; overflow-x: auto; padding: 2px 0; }
+.toolbar-actions > * { flex-shrink: 0; }
+.toolbar-actions button { min-width: 30px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; white-space: nowrap; }
+.toolbar-actions button:has(span), .toolbar-actions .named-action { padding: 0 10px; }
+.toolbar-actions button:focus-visible, .outline-close:focus-visible { outline: 2px solid var(--primary-color); outline-offset: -2px; }
+.outline-close { border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 18px; }
+.compatibility-card summary { cursor: pointer; font-weight: 600; }
+.compatibility-card[open] > :not(summary) { margin-top: 8px; }
 .toolbar-actions button:disabled { opacity: .4; cursor: default; }
 .toolbar-actions button.active { border-color: var(--primary-color); color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, var(--bg-primary)); }
 .docx-search { height: 29px; gap: 6px; padding: 0 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary); }
@@ -1646,7 +1672,8 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 .copy-save { margin-top: 12px; padding-top: 1px; border-top: 1px solid var(--border-color); }
 .save-boundary { margin: 7px 0 2px; color: var(--text-muted); font-size: var(--text-compact); line-height: 1.5; }
 .copy-save > small { display: block; margin-top: 7px; color: var(--error-color); }
-.docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
+.docx-status { min-height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; overflow-x: auto; white-space: nowrap; border-top: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: var(--text-compact); }
+.docx-status > * { flex-shrink: 0; }
 .docx-status > div { gap: 10px; }
 @media (max-width: 820px) {
   .docx-layout { grid-template-columns: 180px minmax(0, 1fr); }
@@ -1673,10 +1700,21 @@ h4.docx-heading, h5.docx-heading, h6.docx-heading { font-size: 15px; }
 @container (max-width: 680px) {
   .docx-toolbar { flex-wrap: wrap; }
   .document-identity { flex: 1 1 100%; }
-  .document-title span { display: none; }
-  .toolbar-actions { width: 100%; justify-content: flex-end; }
+  .document-title span { display: block; }
+  .toolbar-actions { width: 100%; justify-content: flex-start; }
   .docx-layout, .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr); }
   .docx-outline, .docx-layout.editor-open .docx-outline { display: none; }
   .docx-editor { position: absolute; inset: 0 0 0 auto; z-index: 6; width: min(310px, 88%); box-shadow: -8px 0 24px rgba(0,0,0,.16); }
+}
+.docx-layout:not(.outline-visible) { grid-template-columns: minmax(0, 1fr); }
+.docx-layout.editor-open:not(.outline-visible) { grid-template-columns: minmax(0, 1fr) 310px; }
+@container (max-width: 1180px) {
+  .docx-layout, .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr); }
+  .docx-layout.editor-open { grid-template-columns: minmax(0, 1fr) 280px; }
+  .docx-layout.editor-open:not(.outline-visible) { grid-template-columns: minmax(0, 1fr) 280px; }
+  .docx-layout.outline-visible .docx-outline { display: block; position: absolute; inset: 0 auto 0 0; z-index: 7; width: min(260px, 80%); box-shadow: var(--workspace-shadow); }
+}
+@container (max-width: 680px) {
+  .docx-layout.editor-open, .docx-layout.editor-open:not(.outline-visible) { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
