@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "white/github: empty preview and ordinary code selection",
+    "dark/dracula: empty preview and ordinary code selection",
+    "contrast/a11y-dark: empty preview and ordinary code selection",
+    "white/xcode: empty preview and ordinary code selection",
+    "Real code edit/save retains HTML comment and body (mocked filesystem)"
+  ],
+  "errors": [],
+  "scope": "Actual Vue/Vditor browser; mocked native IPC. Empty-preview click dispatched because it has no hit area; ordinary code clicked and edited normally."
+}
