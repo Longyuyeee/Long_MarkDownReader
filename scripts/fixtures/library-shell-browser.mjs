@@ -18,6 +18,7 @@ const disk = new Map([
 ])
 const snapshot = path => ({path,content:disk.get(path),encoding:'utf-8',encodingConfidence:'high',bom:'none',lineEnding:'lf',hasFinalNewline:true,signature:disk.get(path),contentDigest:disk.get(path),size:disk.get(path)?.length || 0,modified:1})
 window.shellAudit = { calls: [], store, disk, failSave: false, commands: 0 }
+window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener: () => {} }
 window.addEventListener('longedit:open-command-palette', () => window.shellAudit.commands++)
 window.__TAURI_INTERNALS__ = {
   metadata: { currentWindow: { label: 'main' }, currentWebview: { label: 'main' } }, transformCallback: () => 1,

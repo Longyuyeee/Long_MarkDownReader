@@ -64,27 +64,21 @@
                     :options="templateOptions"
                     @select="handleTemplateCreate"
                   >
-                    <n-button data-testid="library-create-menu" type="primary" size="small" :title="`在 ${creationTargetLabel} 中新建`">
+                    <n-button data-testid="library-create-menu" type="primary" size="tiny" :title="`在 ${creationTargetLabel} 中新建`">
                       <template #icon><n-icon :component="PlusIcon" /></template>新建
                     </n-button>
                   </n-dropdown>
-                  <n-button quaternary circle size="small" @click="refreshLibrary" title="刷新列表">
+                  <n-button quaternary circle size="tiny" @click="refreshLibrary" title="刷新列表">
                     <template #icon><n-icon :component="RefreshIcon" /></template>
                   </n-button>
-                </div>
-              </div>
-
-              <button v-if="store.libraryPath" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox">收集箱</button>
-              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" />
-              <div v-if="store.libraryPath && !showInbox" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="knowledgeIndexExplanation">
-                <n-icon :component="DatabaseIcon" />
-                <span>{{ knowledgeIndexLabel }}</span>
-                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 个对象 · {{ knowledgeIndexStatus.relationCount }} 条关系</small>
-                <small v-else-if="knowledgeIndexStatus.state === 'building'">{{ knowledgeIndexStatus.progress }}%</small>
+              <button v-if="store.libraryPath" type="button" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox">收集箱</button>
+              <div v-if="store.libraryPath && !showInbox" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="`${knowledgeIndexLabel}；${knowledgeIndexStatus.objectCount} 个对象 · ${knowledgeIndexStatus.relationCount} 条关系；${knowledgeIndexExplanation}`" :aria-label="knowledgeIndexLabel">
+                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }}对象·{{ knowledgeIndexStatus.relationCount }}关系</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'building'">准备中 {{ knowledgeIndexStatus.progress }}%</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'cancelled'">已停止，可随时重新准备</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'missing'">首次打开会自动准备</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'stale'">{{ knowledgeIndexStatus.staleSourceCount || knowledgeIndexStatus.sourceCount }} 个文件需要更新</small>
-                <small v-else>打开更多菜单处理</small>
+                <small v-else>需要处理</small>
                 <div class="knowledge-index-actions">
                   <n-button v-if="knowledgeIndexBusy" quaternary circle size="tiny" :loading="knowledgeIndexCancelling" title="停止准备" @click="cancelKnowledgeIndex">
                     <template #icon><n-icon :component="StopIcon" /></template>
@@ -96,6 +90,9 @@
                   </n-dropdown>
                 </div>
               </div>
+                </div>
+              </div>
+              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" />
 
               <div
                 class="tree-viewport"
@@ -4156,7 +4153,7 @@ watch(activeTabId, (newId, oldId) => {
 </script>
 
 <style scoped>
-.inbox-shortcut { margin: 0 10px 6px; padding: 8px 10px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; cursor: pointer; font: inherit; }
+.inbox-shortcut { flex-shrink: 0; margin: 0; padding: 3px 4px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; cursor: pointer; font: inherit; font-size: var(--text-compact); white-space: nowrap; }
 .inbox-shortcut[aria-expanded="true"] { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); }
 .inbox-shortcut:focus-visible { outline: 2px solid var(--theme-primary); }
 .library-recovery { display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow-wrap: anywhere; font-size: 12px; color: var(--theme-text); }
@@ -4246,7 +4243,9 @@ watch(activeTabId, (newId, oldId) => {
 .tab-fade-enter-from { opacity: 0; transform: translateY(10px); }
 .tab-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 
-.sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.sidebar-header { padding: 6px 8px; flex-shrink: 0; border-bottom: var(--theme-border); }
+.sidebar-header .toolbar-area { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.sidebar-header .toolbar-area > .n-button { flex-shrink: 0; }
 .search-area { display: grid; gap: 7px; }.search-control-row { display: grid; grid-template-columns: minmax(0,1fr) 30px; align-items: center; gap: 4px; }.search-format-filter { width: 100%; }
 
 .rename-editor { display: grid; gap: 9px; padding-top: 4px; }
@@ -4501,8 +4500,10 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-result-path { overflow-wrap: anywhere; white-space: normal; }
 .knowledge-result-head { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 100%; min-width: 0; }.knowledge-result-head strong { display: -webkit-box; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: var(--text-body, 13px); line-height: 1.45; }.knowledge-result-head i { color: var(--theme-primary); font-size: var(--text-compact); font-style: normal; font-weight: 700; overflow-wrap: anywhere; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: var(--text-compact); }
-.knowledge-index-strip { min-height: 44px; display: grid; grid-template-columns:16px minmax(0,1fr) auto; grid-template-rows:auto auto; align-items:center; column-gap:7px; padding:5px 8px 5px 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size: var(--text-compact); }
-.knowledge-index-strip>svg { grid-row:1 / 3; }.knowledge-index-strip>span { align-self:end; overflow:hidden; color:var(--theme-text); font-weight:650; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip>small { grid-column:2; align-self:start; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip.state-ready>svg { color:#168a52; }.knowledge-index-strip.state-stale>svg,.knowledge-index-strip.state-corrupt>svg,.knowledge-index-strip.state-error>svg { color:#c47a16; }.knowledge-index-actions { grid-column:3; grid-row:1 / 3; display:flex; align-items:center; }
+.knowledge-index-strip { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.knowledge-index-strip > small { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: inherit; }
+.knowledge-index-strip.state-stale, .knowledge-index-strip.state-corrupt, .knowledge-index-strip.state-error { color: var(--warning-color, #a66513); }
+.knowledge-index-actions { display: flex; align-items: center; flex-shrink: 0; }
 
 .tag-row {
   width: 100%;
@@ -5345,10 +5346,6 @@ watch(activeTabId, (newId, oldId) => {
   .local-graph-rail { position: absolute; z-index: 60; top: 0; right: 0; width: min(380px,calc(100% - 16px)); }
   .tabs-bar {
     padding: 8px 8px 0 !important;
-  }
-
-  .sidebar-header {
-    padding: 10px 12px !important;
   }
 
 }
