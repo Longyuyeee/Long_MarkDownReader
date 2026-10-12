@@ -437,30 +437,30 @@ function extract(start, end, bindings, expose) {
   return ctx
 }
 
-test('data validation stops quietly on cancellation and rejects stale answers at every step', async () => {
-  const answers = ['whole', 'between', '0', '100', '请输入 0 到 100', '填写完成度']
-  for (const mode of ['cancel', 'stale', 'valid']) {
-    for (let stop = 0; stop < answers.length; stop++) {
-      let current = true, calls = 0
-      const warnings = [], errors = []
-      const ctx = extract('const promptDataValidationRule =', 'const commitDataValidationChange =', {
-        dialog: {}, captureEditContext: () => () => current,
-        promptAppAction: async () => {
-          const index = calls++
-          if (index === stop && mode === 'stale') current = false
-          return index === stop && mode === 'cancel' ? null : answers[index]
-        },
-        message: { warning: value => warnings.push(value), error: value => errors.push(value) },
-      }, 'globalThis.action = promptDataValidationRule')
-      const rule = await ctx.action(undefined, [{ top: 0, bottom: 0, left: 0, right: 0 }])
-      assert.deepEqual(errors, [])
-      if (mode === 'valid') {
-        assert.equal(rule.kind, 'whole'); assert.equal(rule.formula2, '100'); assert.equal(calls, 6)
-      } else {
-        assert.equal(rule, null); assert.equal(calls, stop + 1)
-      }
-      assert.equal(warnings.length, mode === 'stale' ? 1 : 0)
+test('data validation single form preserves cancellation, stale-context and metadata guards', async () => {
+  for (const mode of ['cancel', 'close', 'esc', 'mask', 'leave', 'stale', 'valid']) {
+    let current = true, options, props
+    const warnings = []
+    const ctx = extract('const promptDataValidationRule =', 'const commitDataValidationChange =', {
+      dialog: { create: value => { options = value; return { destroy() {} } } },
+      h: (_component, value) => { props = value }, WorkbookValidationForm: {},
+      columnLabel: () => 'A', captureEditContext: () => () => current,
+      message: { warning: value => warnings.push(value) },
+    }, 'globalThis.action = promptDataValidationRule')
+    const promise = ctx.action({ kind: 'whole', operator: 'between', allowBlank: false, errorTitle: '原错误标题', promptTitle: '原提示标题' }, [{ top: 0, bottom: 0, left: 0, right: 0 }])
+    options.content()
+    if (mode === 'cancel') props.onCancel()
+    else if (['close','esc','mask','leave'].includes(mode)) options[{ close: 'onClose', esc: 'onEsc', mask: 'onMaskClick', leave: 'onAfterLeave' }[mode]]()
+    else {
+      current = mode !== 'stale'
+      props.onApply({ kind: 'whole', operator: 'between', formula1: '0', formula2: '100', error: '输入无效', prompt: '填写完成度' })
     }
+    const rule = await promise
+    if (mode === 'valid') {
+      assert.equal(rule.kind, 'whole'); assert.equal(rule.formula2, '100')
+      assert.equal(rule.allowBlank, false); assert.equal(rule.errorTitle, '原错误标题'); assert.equal(rule.promptTitle, '原提示标题')
+    } else assert.equal(rule, null)
+    assert.equal(warnings.length, mode === 'stale' ? 1 : 0)
   }
 })
 
