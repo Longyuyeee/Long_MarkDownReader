@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output='docs/evidence/v110-json-redesign'
+await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch(),errors=[],checks=[]
+try {
+ for(const jsonc of [false,true]) {
+  const page=await browser.newPage({viewport:{width:1280,height:900}})
+  page.setDefaultTimeout(10000)
+  page.on('pageerror',e=>errors.push(e.message))
+  await page.goto('http://127.0.0.1:9000/scripts/fixtures/json-redesign-browser.html'+(jsonc?'?jsonc':''))
+  await page.locator('.cm-content').waitFor()
+  await page.getByRole('button',{name:'树形',exact:true}).waitFor()
+  await page.locator('.cm-content').click()
+  await page.keyboard.press('Control+End')
+  await page.keyboard.insertText('\n ')
+  assert.equal(await page.getByTestId('json-save').isEnabled(),true)
+  const draft=await page.locator('.cm-content').innerText()
+  await page.getByTitle('搜索源码',{exact:true}).click()
+  await page.locator('.cm-search').waitFor()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button',{name:'编辑工具',exact:true}).click()
+  assert.equal(await page.getByTitle('搜索源码',{exact:true}).isVisible(),false)
+  await page.getByRole('button',{name:'编辑工具',exact:true}).click()
+  await page.screenshot({path:output+`/01-${jsonc?'jsonc':'json'}-wide.png`})
+  await page.evaluate(()=>document.querySelector('#app').style.width='480px')
+  const source=await page.locator('.source-pane').boundingBox()
+  const inspector=await page.locator('.analysis-pane').boundingBox()
+  assert.ok(source.width>450,'Source retains container width')
+  assert.ok(inspector.y>=source.y+source.height-1,'Inspector stacks below source')
+  const save=await page.getByTestId('json-save').boundingBox()
+  assert.ok(save.x>=0 && save.x+save.width<=480,'Save stays fully visible')
+  await page.screenshot({path:output+`/02-${jsonc?'jsonc':'json'}-480.png`})
+  await page.getByRole('button',{name:'结构与诊断',exact:true}).click()
+  assert.equal(await page.locator('.analysis-pane').isVisible(),false)
+  await page.getByRole('button',{name:'结构与诊断',exact:true}).click()
+  await page.getByRole('button',{name:'树形',exact:true}).click()
+  await page.getByRole('tree',{name:'JSON 节点'}).waitFor()
+  assert.ok(await page.getByRole('treeitem').count()>=1)
+  await page.screenshot({path:output+`/03-${jsonc?'jsonc':'json'}-tree.png`})
+  await page.getByRole('button',{name:'源码',exact:true}).click()
+  assert.equal(await page.locator('.cm-content').innerText(),draft)
+  assert.equal(await page.evaluate(()=>window.jsonAudit.calls.filter(c=>c.command.startsWith('write_')).length),0)
+  checks.push(`${jsonc?'JSONC':'JSON'}: draft, search, tools, inspector, narrow layout, tree/source retained`)
+  await page.close()
+ }
+ assert.deepEqual(errors,[])
+ await fs.writeFile(output+'/results.json',JSON.stringify({checks,errors,scope:'Production JsonEditorView and CodeMirror; native reading/analysis/schema mocked; no native writes or structural mutation tested',releaseCandidate:false},null,2)+'\n')
+ console.log(checks.join('\n'))
+} finally {await browser.close()}

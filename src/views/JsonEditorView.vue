@@ -35,7 +35,7 @@
           树形
         </n-button>
       </n-button-group>
-      <div class="editor-actions">
+      <div class="editor-actions" data-command-strip data-horizontal-wheel="always">
         <div v-show="advancedToolsVisible" class="advanced-editor-actions">
           <n-button quaternary circle size="small" title="搜索源码" :disabled="loading || viewMode !== 'source'" @click="openSourceSearch">
             <template #icon><n-icon :component="SearchIcon" /></template>
@@ -58,23 +58,23 @@
         </div>
         <n-button
           quaternary
-          circle
           size="small"
           :title="advancedToolsVisible ? '收起编辑工具' : '展开编辑工具'"
           :aria-pressed="advancedToolsVisible"
           @click="advancedToolsVisible = !advancedToolsVisible"
         >
           <template #icon><n-icon :component="ToolsIcon" /></template>
+          编辑工具
         </n-button>
         <n-button
           quaternary
-          circle
           size="small"
           :title="inspectorVisible ? '隐藏结构与诊断' : '显示结构与诊断'"
           :aria-pressed="inspectorVisible"
           @click="toggleInspector"
         >
           <template #icon><n-icon :component="InspectorIcon" /></template>
+          结构与诊断
         </n-button>
         <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
@@ -2011,6 +2011,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .json-workspace {
+  container-type: inline-size;
+  min-height: 0;
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -2759,7 +2761,7 @@ onBeforeUnmount(() => {
   font-size: var(--text-compact);
 }
 
-@media (max-width: 780px) {
+@container (max-width: 780px) {
   .view-switch {
     margin-left: auto;
   }
@@ -2774,7 +2776,7 @@ onBeforeUnmount(() => {
 
   .editor-actions {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 
   .json-main {
@@ -2793,7 +2795,7 @@ onBeforeUnmount(() => {
   }
 
   .range-summary span {
-    display: none;
+    display: block;
   }
 
   .json-main.inspector-hidden {
@@ -2807,7 +2809,14 @@ onBeforeUnmount(() => {
 
   .json-statusbar span:nth-child(2),
   .json-statusbar span:last-child {
-    display: none;
+    display: inline;
   }
 }
+.json-toolbar { flex-wrap: wrap; height: auto; flex-basis: auto; min-height: 48px; padding-block: 6px; }
+.editor-actions { min-width: 0; max-width: 100%; overflow-x: auto; padding-block: 2px; }
+.editor-actions > *, .advanced-editor-actions > * { flex-shrink: 0; }
+.editor-actions > .advanced-editor-actions { flex-shrink: 1; min-width: 32px; overflow-x: auto; }
+.document-identity { flex: 1; }
+.json-statusbar { overflow-x: auto; white-space: nowrap; }
+.json-statusbar > * { flex-shrink: 0; }
 </style>

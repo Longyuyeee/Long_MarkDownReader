@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "JSON: draft, search, tools, inspector, narrow layout, tree/source retained",
+    "JSONC: draft, search, tools, inspector, narrow layout, tree/source retained"
+  ],
+  "errors": [],
+  "scope": "Production JsonEditorView and CodeMirror; native reading/analysis/schema mocked; no native writes or structural mutation tested",
+  "releaseCandidate": false
+}
