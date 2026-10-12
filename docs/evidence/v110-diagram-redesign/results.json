@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Narrow full tools",
+    "Zoom",
+    "Structure field reachable",
+    "Source edit undo redo",
+    "Short export settings"
+  ],
+  "scope": "Production DiagramStudio and Mermaid render; native read/analysis mocked; no structure mutation or export/save output acceptance",
+  "errors": []
+}
