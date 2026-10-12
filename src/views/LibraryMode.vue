@@ -4262,7 +4262,7 @@ watch(activeTabId, (newId, oldId) => {
 .reference-empty > p { font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.7; }
 .editor-main :deep(.vditor-toolbar-label) { white-space: nowrap; font-size: var(--text-compact); }
 .editor-main { container-type: inline-size; container-name: library-editor; }
-.editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; margin-left: 8px; vertical-align: middle; }
+.editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; height: var(--toolbar-height); margin-left: 8px; vertical-align: middle; }
 .document-inline-shortcuts { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: var(--theme-border); white-space: nowrap; }
 @container library-editor (max-width: 720px) { .document-inline-shortcuts .inline-mode, .document-inline-shortcuts .inline-width { display: none; } }
 @container library-editor (max-width: 520px) { .editor-main :deep(.document-shortcut-host) { display: none; } }

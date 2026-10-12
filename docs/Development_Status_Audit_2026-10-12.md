@@ -1,5 +1,7 @@
 # 当前开发审计与接续方向
 
+最新用户调整（2026-10-13）：修复编辑工具栏上下错位。原 Vditor 格式项高 35px，追加快捷项仅高 22px，浮动布局下顶部对齐导致中心错开；追加容器改用 Vditor 的 `--toolbar-height`，内部垂直居中，不增加工具栏高度或删减功能。`scripts/test-toolbar-alignment.mjs` 在浅色、粉色、深色下检查两组按钮中心误差不超过 1px，通过且无页面异常；实际粉色页面截图已查看。证据：`docs/evidence/v110-toolbar-alignment/`（浏览器真实 Vue/Vditor，原生 IPC 模拟）。`npm run build` 通过。
+
 最新用户调整（2026-10-13）：[顶部资料库直接切换](V1_1_0_UI_Library_Picker_2026-10-13.md)，点击名称展开资料库列表，保留管理入口。未保存拦截、失败保留、切回恢复标签和宽窄页面已验证，构建通过。
 
 最新修复（2026-10-13）：[Vditor 空预览点击异常](V1_1_0_Vditor_Empty_Preview_Fix_2026-10-13.md)。修复 HTML 注释等空预览读取 `null.classList`；四组主题/代码风格及正常代码编辑保存的浏览器回归通过，不等同完整原生验收。
