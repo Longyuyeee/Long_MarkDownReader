@@ -57,6 +57,40 @@ test('explicit creation failure stays recoverable and does not escape to global 
   assert.match(ctx.libraryLoadError.value, /access denied/)
   assert.equal(ctx.libraryCreating.value, false)
 })
+function childLoader() {
+  const requests = [], errors = []
+  const ctx = vm.createContext({
+    store: { libraryPath: 'library-a' }, libraryLoadGeneration: 1,
+    loadDirectory: (path, root) => { const task = deferred(); requests.push({ path, root, ...task }); return task.promise },
+    handleError: (...args) => errors.push(args), console: { error() {} },
+  })
+  vm.runInContext(compile(source.slice(source.indexOf('const handleLoadChildren = async'), source.indexOf('const isLibraryMetadata =')) + '\nglobalThis.load = handleLoadChildren'), ctx)
+  return { ctx, requests, errors }
+}
+test('unavailable child folder is not cached as empty and expanding after recovery retries', async () => {
+  const { ctx, requests, errors } = childLoader(), option = { key: 'library-a/project', label: 'project' }
+  const first = ctx.load(option)
+  requests[0].reject('path not found')
+  assert.equal(await first, false)
+  assert.equal(option.children, undefined)
+  assert.equal(errors.length, 1)
+  const retry = ctx.load(option)
+  requests[1].resolve(['child.md'])
+  await retry
+  assert.deepEqual(option.children, ['child.md'])
+})
+test('late child directory results do not mutate the tree after switching or refreshing a library', async () => {
+  for (const change of ['switch', 'refresh']) {
+    const { ctx, requests, errors } = childLoader(), option = { key: 'library-a/project', label: 'project' }
+    const work = ctx.load(option)
+    if (change === 'switch') ctx.store.libraryPath = 'library-b'
+    else ctx.libraryLoadGeneration++
+    requests[0].resolve(['old.md'])
+    assert.equal(await work, false)
+    assert.equal(option.children, undefined)
+    assert.equal(errors.length, 0)
+  }
+})
 function creation(prepare = async () => 'C:/new/library', persist = async () => {}) {
   const ctx = vm.createContext({
     newLib: { name: '新知识库', path: 'C:/new/library' }, libraryAdding: box(false), libraryAddError: box(''),

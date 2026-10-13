@@ -1,0 +1,23 @@
+{
+  "checks": [
+    "Moved folder causes real scan failure; restoring and expanding retries instead of caching empty children",
+    "Missing root stays in sidebar; real retry restores files and navigation",
+    "File moved after listing produces recoverable read failure; reload uses real restored file",
+    "Cancel and failed native reload retain unsaved draft; successful confirmed reload replaces it"
+  ],
+  "errors": [],
+  "failures": [
+    "[handleLoadChildren] 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2) 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2)",
+    "[loadFileToEditor] 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2) {code: path-outside-workspace, message: 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2), recoverable: false, suggestion: null}",
+    "Failed to get file stats 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2)",
+    "[loadFileToEditor] 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2) {code: path-outside-workspace, message: 路径不存在或不可访问: 系统找不到指定的文件。 (os error 2), recoverable: false, suggestion: null}"
+  ],
+  "baseCommit": "df51cc8ab74a92e7c66257cb5ac359257322b33a",
+  "productSourceSha256": {
+    "src/views/LibraryMode.vue": "6beceadab3c29fd9cf7def26512893cdad47e7961358df5b292ad09dd6da379a",
+    "src/components/WorkspaceErrorBoundary.vue": "f163f809ff9db90cc19da7a4b69e267170abb45f4aa7ddfcce3add0595a0d17d",
+    "src/services/runtimeErrorNotice.ts": "a0b935c1da245505b15b080524129bfaed7a86d5cbfee4fd8e20f9a13fe94472",
+    "public/app-recovery.js": "24b825c16d6f4b4c03b6487455533f2a1208c5a5eac51668fa21a15642ccb745"
+  },
+  "scope": "Isolated debug Tauri/WebView2, actual UI events and real IPC/filesystem; no desktop focus/input takeover. Not installer acceptance."
+}

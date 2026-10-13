@@ -464,7 +464,7 @@
           <n-button data-testid="library-focus-toggle" quaternary size="small" title="专注写作 F11" @click="store.toggleZen()"><template #icon><n-icon :component="FocusIcon" /></template>专注</n-button>
           <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template>AI 辅助</n-button>
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
-          <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
+          <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit || currentFileReloadBusy" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
           <n-popover trigger="click" placement="bottom-end" class="document-actions-popover">
             <template #trigger><n-button data-testid="library-document-menu" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
             <div class="document-menu-content" aria-label="文档操作菜单">
@@ -485,7 +485,7 @@
         </n-dropdown>
         <div v-if="!activeEmbeddedEditor" class="tab-actions">
           <div class="action-btn-group">
-            <n-button quaternary size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
+            <n-button quaternary size="small" @click="refreshCurrentFile" :disabled="!activeTabId || currentFileReloadBusy" :loading="currentFileReloadBusy" title="从磁盘同步内容">
               <template #icon><n-icon :component="RefreshIcon" /></template>重新读取文件
             </n-button>
             <n-dropdown trigger="click" :options="textEncodingMenuOptions" @select="handleTextEncodingAction" v-if="activeTabId && activeDocumentFormat?.routeName === 'LibraryMode'">
@@ -2434,12 +2434,20 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
 }
 
 const handleLoadChildren = async (option: TreeOption) => {
+  const libraryRoot = store.libraryPath
+  const generation = libraryLoadGeneration
+  const isCurrent = () => store.libraryPath === libraryRoot && libraryLoadGeneration === generation
   try {
-    const children = await loadDirectory(option.key as string)
+    const children = await loadDirectory(option.key as string, libraryRoot)
+    if (!isCurrent()) return false
     option.children = children
   } catch (e) {
-    option.children = []
-    console.error('Failed to load directory:', option.key, e)
+    if (!isCurrent()) return false
+    // Keep children unloaded: a disconnected/moved folder is not an empty
+    // folder. The next expansion must perform a new read after it returns.
+    const name = typeof option.label === 'string' ? option.label : fileNameWithExtension(option.key as string)
+    handleError(e, `文件夹「${name}」读取失败，请确认位置后重新展开`, 'handleLoadChildren')
+    return false
   }
 }
 
@@ -2551,7 +2559,7 @@ const refreshNode = async (path: string) => {
 
 const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
-const loadFileToEditor = async (path: string) => {
+const loadFileToEditor = async (path: string, forceRead = false) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
   pendingEditorSaveLoad.value = false
@@ -2568,6 +2576,13 @@ const loadFileToEditor = async (path: string) => {
   const currentTab = tabs.value.find(t => t.path === path)
   const showReadFailure = (error: unknown, label: string) => {
     if (!isCurrentRequest()) return
+    if (forceRead && currentTab?.content !== undefined) {
+      // Reload is transactional: unavailable disk content must not replace the
+      // existing draft or its save identity with an empty editor.
+      setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason), false)
+      handleError(error, `${label}，已保留当前内容：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
+      return
+    }
     suppressEditorInput = true
     loadingEditor.setValue('')
     loadingEditor.disabled()
@@ -2579,7 +2594,7 @@ const loadFileToEditor = async (path: string) => {
     handleError(error, `${label}：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
   }
   
-  const setEditorValue = (content: string, readOnly = false) => {
+  const setEditorValue = (content: string, readOnly = false, refreshHistory = true) => {
     if (!isCurrentRequest()) return
     referenceBookmark = null
     // Reusing Vditor must not leave a link-editing popover from another note.
@@ -2594,7 +2609,7 @@ const loadFileToEditor = async (path: string) => {
       if (readOnly) vditor?.disabled()
       else vditor?.enable()
     }, 0)
-    fetchHistory()
+    if (refreshHistory) fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
         if (!isCurrentRequest()) return
@@ -2629,8 +2644,10 @@ const loadFileToEditor = async (path: string) => {
     lastPromptedExternalSignature = ''
   }
 
-  if (currentTab?.content !== undefined) {
+  let readSucceeded = false
+  if (currentTab?.content !== undefined && !forceRead) {
     setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason))
+    readSucceeded = true
   } else {
     try {
       const format = findFileFormat(path)
@@ -2640,6 +2657,7 @@ const loadFileToEditor = async (path: string) => {
       if (!isCurrentRequest()) return
       applyTextSnapshot(currentTab, res, currentTab?.textReadEncoding)
       setEditorValue(res.content)
+      readSucceeded = true
     } catch (err: any) {
       if (!isCurrentRequest()) return
       if (err?.code === 'read-too-large' && currentTab) {
@@ -2647,6 +2665,7 @@ const loadFileToEditor = async (path: string) => {
           const preview = await readLargeTextPreview(currentTab, 0, currentTab.textReadEncoding)
           if (!isCurrentRequest()) return
           setEditorValue(preview.content, true)
+          readSucceeded = true
           message.warning('文件超过完整编辑上限，已进入大文件只读预览')
         } catch (previewError: any) {
           showReadFailure(previewError, '大文件预览失败')
@@ -2656,6 +2675,7 @@ const loadFileToEditor = async (path: string) => {
       }
     }
   }
+  return readSucceeded && isCurrentRequest()
 }
 
 const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot, readEncoding?: string) => {
@@ -3462,15 +3482,33 @@ const applyRename = () => {
   return false
 }
 
+const currentFileReloadBusy = ref(false)
 const refreshCurrentFile = async () => {
-  if (!activeTabId.value) return
-  const currentTab = tabs.value.find(t => t.id === activeTabId.value)
-  if (currentTab) {
-    // 强制清除内容缓存，使 loadFileToEditor 重新触发磁盘读取
-    currentTab.content = undefined
-    await loadFileToEditor(activeTabId.value)
-    message.success('已同步磁盘最新内容')
+  const path = activeTabId.value, libraryRoot = store.libraryPath, editor = vditor
+  const tab = tabs.value.find(t => t.id === path)
+  if (!path || !tab || !editor || !isVditorReady || currentFileReloadBusy.value || hasPendingMainTextSave(path)) return
+  if (!tab.textReadOnlyReason && tab.content !== undefined && tab.content !== editor.getValue()) {
+    tab.content = editor.getValue(); tab.isDirty = true
   }
+  const draft = tab.content
+  const run = async () => {
+    if (path !== activeTabId.value || libraryRoot !== store.libraryPath || editor !== vditor || !tabs.value.includes(tab)
+      || draft !== tab.content || (draft !== undefined && !tab.textReadOnlyReason && editor.getValue() !== draft)) {
+      message.warning('文档或内容已变化，请重新发起读取。')
+      return
+    }
+    if (currentFileReloadBusy.value || hasPendingMainTextSave(path)) return
+    currentFileReloadBusy.value = true
+    try {
+      if (await loadFileToEditor(path, true)) message.success('已同步磁盘最新内容')
+    } finally { currentFileReloadBusy.value = false }
+  }
+  if (tab.isDirty) {
+    dialog.warning({
+      title: '重新读取会覆盖未保存内容', content: '继续后将使用磁盘内容替换当前修改。读取失败时会保留当前内容。',
+      positiveText: '继续重读', negativeText: '取消', onPositiveClick: run,
+    })
+  } else await run()
 }
 
 const compareExternalChange = async () => {
@@ -3564,6 +3602,7 @@ const normalizeTextSaveOptions = (options: unknown): TextSaveOptions => {
 }
 
 const saveCurrentFile = async (options: unknown = {}) => {
+  if (currentFileReloadBusy.value) { message.warning('正在重新读取文件，请稍后再保存'); return }
   const saveOptions = normalizeTextSaveOptions(options)
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
   if (t) { 
