@@ -1,0 +1,14 @@
+{
+  "sourceSha256": "790674f376fd42a6c3c38a29d08d0bd99eb38507e9eaed848eb660abfc9e151e",
+  "checks": [
+    "Real two-page PDF.js rendering, page navigation, zoom/reset/fit and text search",
+    "Annotation group retains area mode and creates editable page comments",
+    "Page organizer still exposes both source pages",
+    "All five document tools open their original panels; metadata failure stays visible",
+    "736px and 480px: reading tools and last document action remain operable without root overflow",
+    "External PDF remains read-only with only thumbnail/outline tabs"
+  ],
+  "errors": [],
+  "scope": "Actual PdfView + PDF.js; Tauri IPC mocked; not native write/export acceptance",
+  "releaseCandidate": false
+}

@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Wide package details",
+    "736/480px directory navigation, close and no overflow",
+    "Keyboard search",
+    "Read failure and retry",
+    "Read-only label retained"
+  ],
+  "errors": [],
+  "scope": "Real OdtReaderView with mocked native read report; not native ODT parsing acceptance"
+}

@@ -1,0 +1,46 @@
+{
+  "status": "用户已确认，主编辑区高频操作已实施",
+  "implementation": "../../../V1_1_0_UI_Document_Shortcuts_2026-10-13.md",
+  "date": "2026-10-13",
+  "sourceCommit": "bb1e0f1c",
+  "tool": "built-in image_gen",
+  "image": "main-editor.png",
+  "sourceScreenshot": "release-artifacts/ui-discoverability-20261013/current-full-app-1280.png",
+  "designIntent": "保留当前布局，利用工具栏与文档操作行的横向空白，只提供精选高频工具的直接入口。正文不增加功能卡片。",
+  "directFormatting": [
+    "撤销",
+    "重做",
+    "标题",
+    "加粗",
+    "斜体",
+    "引用",
+    "无序列表",
+    "有序列表",
+    "任务列表",
+    "代码块",
+    "行内代码",
+    "链接",
+    "表格"
+  ],
+  "documentActions": [
+    "重命名",
+    "收藏",
+    "预览",
+    "专注",
+    "AI 辅助",
+    "参考",
+    "保存",
+    "文档操作"
+  ],
+  "existingShortcuts": [
+    "编辑模式",
+    "正文宽度",
+    "导出",
+    "历史"
+  ],
+  "preserved": "七个左侧导航仍为一行；新建文件夹和今日笔记继续放入新建；刷新、收集箱、菜单、资料库切换、标签、快速笔记、命令保留。低频功能保留在菜单。未来实施应继续适配六种风格、原有主题与窄窗口。",
+  "prompts": [
+    "Use case: ui-mockup / precise-object-edit.\nCreate ONE high-fidelity static desktop UI mockup by editing the attached screenshot of the Chinese Markdown editor Long编辑. The screenshot is the edit target and exact layout reference. Output a clean, straight-on, full-window application screenshot, landscape, similar proportions to 1280 x 820. No device frame, no poster, no comparison collage, no outside annotation or arrows.\n\nUser's requested design: selectively bring high-frequency existing commands into the unused horizontal space of the current interface. Preserve the new spacious layout. This is NOT a restoration of every old button. Do NOT fill empty document writing space with controls.\n\nINVARIANTS:\nPreserve the light white/very pale gray theme, restrained blue active state, slim monochrome Lucide-like line icons, realistic small Chinese interface typography, subtle thin borders and compact control heights. Keep the Windows title bar, left global rail with 工作台 / 资料库 / 图谱 and bottom 设置, the single file-navigation pane, library picker, inline document tabs, top-right 快速笔记 / 命令, sidebar search, ONE ROW of exactly seven navigation icons, the sidebar 新建 dropdown and 收集箱, folder/file tree, library footer, and large spacious document body. No right sidebar. Keep new folder and today's note within 新建 instead of creating individual sidebar buttons. Do not simplify away document tabs, reference action, save, export, history, or the low-frequency menus.\n\nPRECISE CHANGES:\n1. Current document action row (the row with 项目方案.md below tabs): keep the filename and rename pencil on the left; add a small outlined star icon beside the filename for the existing favorite action. Use the generous empty area towards the right for three compact, named frequent actions: eye icon + \"预览\", focus-frame icon + \"专注\", sparkle icon + \"AI 辅助\". Then retain the existing chain-link \"参考\", disk \"保存\" and ellipsis \"文档操作\" at the far right. Make every action well spaced and easily clickable, no overlap, no heavy filled tiles; 保存 can retain its faint tinted background. This whole document action row remains a single neat line.\n2. The formatting toolbar directly above the body: expose compact ICON buttons in this order, separated into small groups by thin separators: undo, redo | headings H, bold B, italic I, blockquote | unordered list, ordered list, task checkbox | code block </>, inline code, link, table grid | text button \"更多格式\". Restore these selected frequent tools only. On the right side of the same formatting line retain concise named controls \"所见 ▾\", \"中栏 ▾\", download icon + \"导出\", clock icon + \"历史\". Fit the entire toolbar comfortably inside the editor column using realistic 24-30px icon targets and balanced gaps. No extra toolbar row, no clutter, no icon duplication.\n3. Preserve document content in the spacious main body: large title \"项目方案\", paragraph \"让阅读、记录和继续工作更顺手。\", section title \"下一步\", one task-checkbox item \"整理项目需求\". Align the body as in the source screenshot with generous side margins. Do not add a dashboard or new content cards.\n4. Preserve the bottom saved/format/word count status bar. The design should clearly appear to offer more useful commands while retaining plenty of writing space.\n\nRender ALL listed Chinese labels cleanly and correctly. Existing low-frequency capabilities remain represented by \"更多格式\" and \"文档操作\" menus; neither menu is expanded in this image. Maintain the recognizable current UI, changing only action placement and toolbar density. Polished practical shipping-quality application UI, not concept art.",
+    "Edit the attached UI mockup with exactly ONE small correction: in the file-navigation sidebar action row, insert the existing small circular refresh-arrow ICON button immediately after the blue \"新建 ▾\" button and before \"收集箱\". Keep \"收集箱\", the small object/relation status, and the ellipsis menu on that same single row with comfortable spacing. The original application has this refresh action; preserve it. Change nothing else. Keep every other button, all seven sidebar navigation icons, all toolbar formatting icons and text, document content, dimensions, colors, typography and spacing exactly as in the input. Full-window screenshot, no outside annotations."
+  ]
+}

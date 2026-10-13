@@ -36,6 +36,11 @@ for (const token of ['fileDisplayStyles', 'setFileDisplayStyle', 'clearFileDispl
 for (const token of ['FileDisplayStyle', 'file_display_styles', 'validate_file_display_styles', 'styles.len() > 512']) {
   requireText(backend, token, `backend marker boundary missing: ${token}`)
 }
+for (const [, icon] of appearance.matchAll(/\{\s*id:\s*'([^']+)'/g)) {
+  requireText(backend, `"${icon}"`, `native config cannot persist marker icon: ${icon}`)
+}
+for (const field of ['selection_style', 'selected_background_color', 'selected_text_color', 'selected_accent_color']) requireText(backend, field, `selected appearance cannot persist: ${field}`)
+if (library.includes('store.fileDisplayStyles[')) failures.push('file tree still uses raw path keys for marker lookup')
 
 if (failures.length) {
   console.error(`File tree appearance check failed:\n- ${failures.join('\n- ')}`)

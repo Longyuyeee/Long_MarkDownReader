@@ -114,9 +114,40 @@ body {
   transition-delay: 0s;
 }
 
+// Opening a menu cancels pending hints in the policy; keep the active hint's
+// normal fade instead of making visibility and opacity jump in one frame.
+body[data-app-popup-open='true'] .n-tooltip {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition:
+    opacity var(--motion-fast, 120ms) var(--ease-standard, ease),
+    visibility 0s linear var(--motion-fast, 120ms) !important;
+}
+
+body:has(.drag-ghost) .app-tooltip-surface,
+body:has(.drag-ghost) .n-tooltip {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+body[data-app-popup-open='true'] .vditor-tooltipped::before,
+body[data-app-popup-open='true'] .vditor-tooltipped::after {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition:
+    opacity var(--motion-fast, 120ms) var(--ease-standard, ease),
+    visibility 0s linear var(--motion-fast, 120ms) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .app-tooltip-surface {
-    transition: none;
+  .app-tooltip-surface,
+  body[data-app-popup-open='true'] .n-tooltip,
+  body[data-app-popup-open='true'] .vditor-tooltipped::before,
+  body[data-app-popup-open='true'] .vditor-tooltipped::after {
+    transition: none !important;
   }
 }
 

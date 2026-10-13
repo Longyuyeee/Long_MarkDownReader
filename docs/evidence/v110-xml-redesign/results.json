@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "XML and SVG draft/search/folding",
+    "Container and viewport 480px source retained",
+    "Element filtering and source navigation",
+    "Inspector toggle preserves draft",
+    "SVG sanitized fixture preview displayed"
+  ],
+  "errors": [],
+  "scope": "Actual XmlEditorView and CodeMirror; native read/analysis and sanitized SVG response mocked; no native save or sanitization acceptance",
+  "releaseCandidate": false
+}

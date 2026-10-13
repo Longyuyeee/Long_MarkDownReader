@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "One compact row at 240/260/320px",
+    "Original index menu reachable",
+    "Inbox toggle retained",
+    "Refresh still scans library"
+  ],
+  "errors": [],
+  "scope": "Actual LibraryMode, mocked native IPC"
+}

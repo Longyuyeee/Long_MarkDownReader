@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Root and nested internal ordering files are hidden; legitimate JSON and dotfiles remain visible",
+    "Folder feedback is explicit and stable without preview popups or parent rerenders; moving keeps drafts, favorites, file markers and expanded destination contents",
+    "Legacy mixed-case/backslash marker keys survive moving; seven theme presets retain the exact custom background, selected text/border and new icon",
+    "Dropping on a file sorts within its parent instead of treating a file as a directory",
+    "Hovering a folder loads its children before expanding; target feedback remains stable and Escape cancels",
+    "Invalid destinations and release outside the file pane do not move files or leave stale highlights"
+  ],
+  "errors": [],
+  "scope": "Production App/LibraryMode/Vditor. Mock IPC performs in-memory moves and order writes only; no user files modified."
+}

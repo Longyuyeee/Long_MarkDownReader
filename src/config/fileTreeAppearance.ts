@@ -24,14 +24,23 @@ import {
   Star,
   Table2,
   Workflow,
+  BookOpen, CalendarDays, Clock, Coffee, GraduationCap, Link, ListTodo,
+  Music, PenLine, Pin, Rocket, StickyNote, Tag, Target, Terminal, Users, Bell,
 } from 'lucide-vue-next'
 
 export type FileMarkerIconId = 'auto' | 'star' | 'flag' | 'bookmark' | 'briefcase' | 'idea' | 'alert' | 'check' | 'heart' | 'archive'
+  | 'note' | 'book' | 'pen' | 'tasks' | 'calendar' | 'clock' | 'target' | 'rocket' | 'bell' | 'pin'
+  | 'tag' | 'coffee' | 'study' | 'code' | 'terminal' | 'database' | 'image' | 'music' | 'link' | 'users'
+export type FileSelectionStyle = 'fill' | 'outline' | 'marker'
 
 export interface FileDisplayStyle {
   backgroundColor: string
   textColor: string
   icon: FileMarkerIconId
+  selectionStyle?: FileSelectionStyle
+  selectedBackgroundColor?: string
+  selectedTextColor?: string
+  selectedAccentColor?: string
 }
 
 export interface FileTreeVisual {
@@ -50,6 +59,26 @@ export const FILE_MARKER_ICON_OPTIONS: { id: FileMarkerIconId; label: string; ic
   { id: 'check', label: '已完成', icon: CircleCheck },
   { id: 'heart', label: '喜爱', icon: Heart },
   { id: 'archive', label: '归档', icon: Archive },
+  { id: 'note', label: '便签', icon: StickyNote },
+  { id: 'book', label: '阅读', icon: BookOpen },
+  { id: 'pen', label: '写作', icon: PenLine },
+  { id: 'tasks', label: '清单', icon: ListTodo },
+  { id: 'calendar', label: '日程', icon: CalendarDays },
+  { id: 'clock', label: '时间', icon: Clock },
+  { id: 'target', label: '目标', icon: Target },
+  { id: 'rocket', label: '项目', icon: Rocket },
+  { id: 'bell', label: '提醒', icon: Bell },
+  { id: 'pin', label: '置顶', icon: Pin },
+  { id: 'tag', label: '标签', icon: Tag },
+  { id: 'coffee', label: '生活', icon: Coffee },
+  { id: 'study', label: '学习', icon: GraduationCap },
+  { id: 'code', label: '代码', icon: FileCode2 },
+  { id: 'terminal', label: '命令', icon: Terminal },
+  { id: 'database', label: '数据', icon: Database },
+  { id: 'image', label: '图片', icon: Image },
+  { id: 'music', label: '音乐', icon: Music },
+  { id: 'link', label: '链接', icon: Link },
+  { id: 'users', label: '团队', icon: Users },
 ]
 
 const customIconMap = new Map(FILE_MARKER_ICON_OPTIONS.map(option => [option.id, option.icon]))

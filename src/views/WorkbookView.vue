@@ -356,6 +356,7 @@
     </div>
 
     <n-modal v-model:show="pageLayoutModalOpen" preset="card" title="页面设置" class="page-layout-modal">
+      <p class="page-settings-save-notice">点击“应用”会直接保存到当前工作表；取消不会写入文件。</p>
       <div class="page-layout-panel" :inert="saving">
         <label>方向<select v-model="pageLayoutDraft.orientation"><option value="portrait">纵向</option><option value="landscape">横向</option></select></label>
         <label>纸张<select v-model.number="pageLayoutDraft.paperSize"><option :value="1">Letter</option><option :value="5">Legal</option><option :value="8">A3</option><option :value="9">A4</option><option :value="11">A5</option></select></label>
@@ -379,6 +380,7 @@
     </n-modal>
 
     <n-modal v-model:show="printOptionsModalOpen" preset="card" title="打印选项" class="print-options-modal">
+      <p class="page-settings-save-notice">点击“应用”会直接保存到当前工作表；取消不会写入文件。</p>
       <div class="print-options-panel" :inert="saving">
         <fieldset>
           <legend>打印内容</legend>
@@ -410,6 +412,7 @@
     </n-modal>
 
     <n-modal v-model:show="headerFooterModalOpen" preset="card" title="页眉页脚" class="header-footer-modal">
+      <p class="page-settings-save-notice">点击“应用”会直接保存到当前工作表；取消不会写入文件。</p>
       <div class="header-footer-options" :inert="saving">
         <label><input v-model="headerFooterDraft.differentOddEven" type="checkbox">奇偶页不同</label>
         <label><input v-model="headerFooterDraft.differentFirstPage" type="checkbox">首页不同</label>
@@ -622,7 +625,7 @@
       <button title="取消当前工作表冻结窗格" :disabled="(!effectiveFreeze.rows && !effectiveFreeze.columns) || saving || updatingStructure || Boolean(dirtyCount)" @click="clearFreezePane">取消冻结</button>
     </div>
 
-    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection || conditionalSelection)" class="data-toolbar" data-horizontal-wheel="always">
+    <div v-if="workbook && sheetInfo && !isExternal && activeToolPanel === 'data' && (activeDataRegion || selectedValidation || tableSelection || validationSelection || conditionalSelection)" class="data-toolbar" role="region" aria-label="数据与规则" data-horizontal-wheel="always">
       <button v-if="tableSelection && !selectedTable" title="从选区创建 Excel Table" :disabled="saving || updatingStructure || sheetProtected" @click="editSelectedTable('create')">创建 Table</button>
       <button v-if="tableSelection && selectedTable" title="把 Excel Table 调整到选区并同步表头" :disabled="saving || updatingStructure || sheetProtected" @click="editSelectedTable('resize')">调整 Table</button>
       <template v-if="selectedTable">
@@ -894,6 +897,8 @@ import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
+import WorkbookValidationForm, { type ValidationFields } from '../components/WorkbookValidationForm.vue'
+import { h } from 'vue'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlignCenter as AlignCenterIcon, AlignLeft as AlignLeftIcon, AlignRight as AlignRightIcon, ArrowLeft as ArrowLeftIcon, Bold as BoldIcon, Check as CheckIcon, ChevronDown as ChevronDownIcon, FileSpreadsheet as SheetIcon, FunctionSquare as FunctionIcon, Grid2X2 as BorderIcon, Italic as ItalicIcon, MoreHorizontal as MoreIcon, PaintBucket as FillIcon, Printer as PrinterIcon, Redo2 as RedoIcon, Save as SaveIcon, SlidersHorizontal as SlidersIcon, Type as TypeIcon, Underline as UnderlineIcon, Undo2 as UndoIcon, WrapText as WrapIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
@@ -2980,60 +2985,42 @@ const commitTableLifecycleChange = (change: WorkbookTableChange, area: WorkbookM
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能编辑 Table')
   stageWorkbookObjectDraft({ kind: 'table', label: success, area: { ...area }, tableChange: cloneDraftData(change) })
 }
-const promptDataValidationRule = async (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): Promise<WorkbookDataValidation | null> => {
+const promptDataValidationRule = (existing: WorkbookDataValidation | undefined, ranges: WorkbookMergeRange[]): Promise<WorkbookDataValidation | null> => new Promise(resolve => {
   const isCurrent = captureEditContext()
-  const promptRule = async (options: Parameters<typeof promptAppAction>[1]) => {
-    const answer = await promptAppAction(dialog, options)
-    if (answer === null) return null
-    if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置数据验证'); return null }
-    return answer
+  const kinds = ['list', 'whole', 'decimal', 'textLength', 'custom']
+  const operators = ['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual']
+  if (existing && (!kinds.includes(existing.kind) || (existing.operator && !operators.includes(existing.operator)))) {
+    message.warning('当前规则超出支持范围，请保留原规则')
+    resolve(null)
+    return
   }
-  const kindInput = await promptRule({ title: '数据验证类型', content: '可用类型：list（列表）、whole（整数）、decimal（小数）、textLength（文本长度）或 custom（自定义公式）。', initialValue: existing?.kind || 'list', positiveText: '下一步' })
-  if (kindInput === null) return null
-  const kindAliases: Record<string, string> = { list: 'list', '列表': 'list', whole: 'whole', '整数': 'whole', decimal: 'decimal', '小数': 'decimal', textlength: 'textLength', '文本长度': 'textLength', custom: 'custom', '自定义': 'custom', '自定义公式': 'custom' }
-  const kind = kindAliases[kindInput.trim().toLocaleLowerCase()] || kindAliases[kindInput.trim()]
-  if (!kind) { message.error('不支持的数据验证类型'); return null }
-  let operator: string | undefined
-  if (['whole', 'decimal', 'textLength'].includes(kind)) {
-    const input = await promptRule({ title: '数据验证比较方式', content: '可用方式：between、notBetween、equal、notEqual、lessThan、lessThanOrEqual、greaterThan、greaterThanOrEqual。', initialValue: existing?.operator || 'between', positiveText: '下一步' })
-    if (input === null) return null
-    operator = input.trim()
-    if (!['between', 'notBetween', 'equal', 'notEqual', 'lessThan', 'lessThanOrEqual', 'greaterThan', 'greaterThanOrEqual'].includes(operator)) {
-      message.error('不支持的比较方式'); return null
-    }
-  }
-  const formulaHint = kind === 'list'
-    ? '输入列表来源：字面量示例 "是,否"，或区域公式示例 Options!$A$1:$A$10'
-    : kind === 'custom'
-      ? '输入自定义公式，例如 A1>0；公式按选区左上角作为相对引用基准'
-      : '输入第一个比较值或公式'
-  const formula1 = (await promptRule({ title: '数据验证来源或公式', content: formulaHint, initialValue: existing?.formula1 || (kind === 'list' ? '"是,否"' : kind === 'custom' ? `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""` : '0'), positiveText: '下一步' }))?.trim()
-  if (!formula1) return null
-  let formula2: string | undefined
-  if (operator === 'between' || operator === 'notBetween') {
-    const input = await promptRule({ title: '第二个比较值', content: '输入第二个比较值或公式。', initialValue: existing?.formula2 || '100', positiveText: '下一步' })
-    if (input === null) return null
-    formula2 = input.trim()
-    if (!formula2) return null
-  }
-  const error = await promptRule({ title: '数据验证错误提示', content: '留空表示仅保存规则，不阻止当前编辑器中的输入。', initialValue: existing?.error || '输入不符合此单元格的数据验证规则', positiveText: '下一步', multiline: true })
-  if (error === null) return null
-  const prompt = await promptRule({ title: '单元格输入提示', content: '选中单元格时显示，可以留空。', initialValue: existing?.prompt || '', positiveText: '保存规则', multiline: true })
-  if (prompt === null) return null
-  return {
-    ranges: ranges.map(range => ({ ...range })),
-    kind,
-    operator,
-    formula1,
-    formula2,
-    allowBlank: existing?.allowBlank ?? true,
-    showErrorMessage: Boolean(error.trim()),
-    errorTitle: error.trim() ? (existing?.errorTitle || '输入无效') : undefined,
-    error: error.trim() || undefined,
-    promptTitle: prompt.trim() ? (existing?.promptTitle || '数据验证') : undefined,
-    prompt: prompt.trim() || undefined,
-  }
-}
+  let settled = false
+  const settle = (value: WorkbookDataValidation | null) => { if (!settled) { settled = true; resolve(value) } }
+  const handle = dialog.create({
+    title: '设置数据验证',
+    style: { width: '520px', maxWidth: 'calc(100vw - 32px)' },
+    content: () => h(WorkbookValidationForm, {
+      rangeLabel: ranges.map(r => `${columnLabel(r.left)}${r.top + 1}:${columnLabel(r.right)}${r.bottom + 1}`).join(', '),
+      customDefault: `${columnLabel(ranges[0].left)}${ranges[0].top + 1}<>""`,
+      initial: { kind: existing?.kind || 'list', operator: existing?.operator || 'between', formula1: existing?.formula1 || '"是,否"', formula2: existing?.formula2 || '100', error: existing?.error ?? '输入不符合此单元格的数据验证规则', prompt: existing?.prompt || '' },
+      onCancel: () => { settle(null); handle.destroy() },
+      onApply: (fields: ValidationFields) => {
+        if (!isCurrent()) { message.warning('编辑状态已变化，请重新设置数据验证'); settle(null); handle.destroy(); return }
+        settle({
+          ranges: ranges.map(range => ({ ...range })), kind: fields.kind,
+          operator: fields.operator || undefined, formula1: fields.formula1, formula2: fields.formula2 || undefined,
+          allowBlank: existing?.allowBlank ?? true, showErrorMessage: Boolean(fields.error.trim()),
+          errorTitle: fields.error.trim() ? (existing?.errorTitle || '输入无效') : undefined,
+          error: fields.error.trim() || undefined,
+          promptTitle: fields.prompt.trim() ? (existing?.promptTitle || '数据验证') : undefined,
+          prompt: fields.prompt.trim() || undefined,
+        })
+        handle.destroy()
+      },
+    }),
+    onClose: () => settle(null), onEsc: () => settle(null), onMaskClick: () => settle(null), onAfterLeave: () => settle(null),
+  })
+})
 const commitDataValidationChange = async (change: WorkbookDataValidationChange, _area: WorkbookMergeRange, success: string) => {
   if (isExternal.value || !workbook.value || saving.value || updatingStructure.value) return
   if (sheetProtected.value) return void message.error('当前 Sheet 受保护，不能修改数据验证')
@@ -5051,7 +5038,12 @@ onBeforeUnmount(() => {
 .sheet-tabs button.active { color: var(--theme-primary); border-color: var(--workspace-border-color); background: var(--theme-surface); }
 .sheet-tabs small { margin: 0 5px 6px auto; color: var(--theme-text-secondary); white-space: nowrap; font-size: var(--text-compact); }
 .formula-bar { height: 34px; flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--workspace-border-color); background: var(--theme-card); }
-:deep(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); }
+:global(.linked-data-modal) { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+:global(.linked-data-modal > .n-card__content) { min-height: 0; overflow-y: auto; }
+:global(.linked-data-modal > .n-card-header), :global(.linked-data-modal > .n-card__footer) { flex-shrink: 0; }
+.linked-data-policy { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 700px) { .linked-data-policy { grid-template-columns: minmax(0, 1fr); } }
+.linked-data-policy span { white-space: nowrap; }
 .linked-data-audit { display: grid; gap: 14px; max-height: min(680px, calc(100vh - 190px)); overflow-y: auto; padding-right: 3px; }
 .linked-data-policy { padding: 14px 16px; border-color: var(--status-success-border); background: var(--status-success-bg); }
 .linked-data-policy p { margin: 4px 0 0; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.55; }
@@ -5384,7 +5376,39 @@ onBeforeUnmount(() => {
 .loader { width: 26px; height: 26px; border: 3px solid rgba(var(--theme-primary-rgb),.18); border-top-color: var(--theme-primary); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .page-layout-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-layout-panel fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); } .print-options-panel { grid-template-columns: 1fr; } .header-footer-fields { grid-template-columns: 1fr; } .header-footer-modes { width: 100%; } .linked-data-policy { align-items: flex-start; flex-direction: column; } .linked-data-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .linked-data-group article { grid-template-columns: 1fr; gap: 6px; } .linked-data-group article > button { justify-self: start; } .pivot-audit-status,.pivot-rebuild-plan > header,.pivot-cache-rebuild-result > header,.pivot-synchronized-rebuild-result > header,.pivot-expanded-rebuild-result > header,.pivot-variant-verification-result > header { align-items: flex-start; flex-direction: column; gap: 4px; } .pivot-impact-parts,.pivot-cache-fields,.pivot-sync-facts,.pivot-variant-grid,.pivot-layout-variants,.pivot-copy-save { grid-template-columns: 1fr; } .pivot-preview-result > header { align-items: flex-start; flex-direction: column; } .linked-data-group article .pivot-preview-grid article { grid-template-columns: 1fr; } }
-@media (max-width: 1050px) { .workbook-title span { display: none; } .workbook-title strong { max-width: 34vw; } }
-@container (max-width: 900px) { .workbook-title span { display: none; } .workbook-title strong { max-width: min(34cqw, 280px); } }
-@container (max-width: 680px) { .workbook-toolbar { padding-inline: 7px; } .workbook-title strong { max-width: 22cqw; } .workbook-actions .tool-panel-trigger { width: 30px; min-width: 30px; padding: 0; } .workbook-actions .tool-panel-trigger span { display: none; } .workbook-actions button.primary { width: 30px; justify-content: center; padding: 0; } .workbook-actions button.primary span { display: none; } .formula-bar select { width: 104px; } .formula-bar output { width: 58px; } }
+.workbook-toolbar { flex-shrink: 0; }
+.page-settings-save-notice { margin: 0 0 12px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.6; }
+:global(.page-layout-modal), :global(.print-options-modal), :global(.header-footer-modal) { max-height: calc(100dvh - 32px); }
+:global(.page-layout-modal > .n-card__content), :global(.print-options-modal > .n-card__content), :global(.header-footer-modal > .n-card__content) { min-height: 0; overflow-y: auto; }
+:global(.page-layout-modal > .n-card-header), :global(.print-options-modal > .n-card-header), :global(.header-footer-modal > .n-card-header), :global(.page-layout-modal > .n-card__footer), :global(.print-options-modal > .n-card__footer), :global(.header-footer-modal > .n-card__footer) { flex-shrink: 0; }
+.sheet-tabs { flex-shrink: 0; }
+.sheet-tabs > * { flex-shrink: 0; }
+@container (max-width: 900px) {
+  .workbook-toolbar { height: auto; flex-wrap: wrap; padding-block: 6px; }
+  .workbook-title { width: 100%; min-width: 0; }
+  .workbook-title > div { min-width: 0; }
+  .workbook-title strong { max-width: 100%; }
+  .workbook-actions { max-width: 100%; overflow-x: auto; padding-block: 2px; }
+}
+@container (max-width: 680px) {
+  .workbook-toolbar { padding-inline: 7px; }
+  .formula-bar select { width: 104px; }
+  .formula-bar output { width: 58px; }
+  .format-toolbar, .data-toolbar {
+    flex-wrap: wrap;
+    align-content: flex-start;
+    height: auto;
+    max-height: min(180px, 30vh);
+    overflow: auto;
+    padding: 6px 8px;
+    box-sizing: border-box;
+  }
+  .format-toolbar > *, .data-toolbar > * { flex-shrink: 0; }
+  .data-toolbar .validation-hint {
+    margin-left: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 </style>

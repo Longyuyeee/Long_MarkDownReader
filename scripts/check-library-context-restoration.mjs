@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { spawnSync } from 'node:child_process'
 
 const read = path => fs.readFileSync(path, 'utf8')
 const fail = message => {
@@ -47,9 +48,11 @@ requireTokens(app, 'Library navigation guard', [
 
 const graph = read('src/components/GraphView.vue')
 requireTokens(graph, 'Graph return context', [
-  '@back="returnToLibrary"',
-  '@click="returnToLibrary"',
+  'returnToLibrary',
   'managedFileLocation(store.activeTabId)',
+])
+requireTokens(read('src/components/AppNavigation.vue'), 'Global library tab', [
+  "{ name: 'LibraryMode', label: '资料库'", ':to="{ name: item.name }"',
 ])
 
 const library = read('src/views/LibraryMode.vue')
@@ -74,14 +77,20 @@ for (const [path, label, pathToken] of [
 }
 
 const viewState = read('src/services/workspaceViewState.ts')
-requireTokens(viewState, 'Bounded in-memory workspace state', [
+requireTokens(viewState, 'Bounded workspace view metadata', [
   'const MAX_ENTRIES = 24',
   'const states = new Map<string, WorkspaceViewState>()',
+  'const safeView = (state: WorkspaceViewState): WorkspaceViewState =>',
+  'saved[path] = safeView(state)',
+  'Object.entries(saved).slice(-MAX_ENTRIES)',
   'rememberWorkspaceViewState',
   'recallWorkspaceViewState',
 ])
-if (viewState.includes('localStorage') || viewState.includes('sessionStorage')) {
-  fail('Workspace scroll state must remain in memory and must not persist full paths.')
+// F2 restores reading positions after restart. Verify the persisted metadata
+// excludes document/draft contents instead of prohibiting persistence entirely.
+const contextTests = spawnSync(process.execPath, ['--test', 'scripts/test-work-session-context.mjs'], { encoding: 'utf8' })
+if (contextTests.status !== 0) {
+  fail(contextTests.error?.message || contextTests.stdout + contextTests.stderr)
 }
 
-console.log('Library configuration, graph return, active file, and workspace view-state restoration contract passed.')
+console.log('Library configuration, graph return, active file, and bounded restart context restoration contract passed (3 behavioral checks).')

@@ -1,18 +1,41 @@
 <template>
-  <div class="library-mode" data-ui-shell="library-editor" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referencePinned && searchPreviewResult }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :inert="librarySwitchBusy || undefined" :aria-busy="librarySwitchBusy" :class="{ 'is-dragging': !!activeResizer, 'file-dragging': virtualDrag.active, 'reference-pinned': referenceVisible && !store.isZen }">
+    <header v-if="!store.isZen" class="library-shell-toolbar" aria-label="资料库操作">
+      <n-button class="shell-navigation-action" quaternary size="small" aria-label="导航" :aria-expanded="!isSidebarCollapsed" aria-controls="library-navigation" @click="isSidebarCollapsed = !isSidebarCollapsed">
+        <template #icon><n-icon :component="ListIcon" /></template><span class="shell-action-label">导航</span>
+      </n-button>
+      <n-dropdown trigger="click" :options="librarySwitchOptions" @select="selectLibrary">
+        <n-button class="library-picker" quaternary size="small" aria-label="切换资料库" :loading="librarySwitchBusy" :disabled="librarySwitchBusy" :title="store.libraryPath || '选择资料库'"><template #icon><n-icon :component="FolderOpenIcon" /></template><span class="library-picker-label">{{ store.currentLibraryName || '选择资料库' }}</span><span aria-hidden="true"> ▾</span></n-button>
+      </n-dropdown>
+      <WorkspaceTabs v-if="store.tabs.length" class="shell-document-tabs" />
+      <span v-else class="shell-toolbar-spacer"></span>
+      <n-button class="shell-quick-action" quaternary size="small" aria-label="快速笔记" title="快速笔记" @click="openQuickNote"><template #icon><n-icon :component="EditIcon" /></template><span class="shell-action-label">快速笔记</span></n-button>
+      <n-button class="shell-command-action" quaternary size="small" aria-label="命令" title="命令 Ctrl+P" @click="requestCommandPalette"><template #icon><n-icon :component="SearchIcon" /></template><span class="shell-action-label">命令</span></n-button>
+    </header>
+    <div class="library-workspace">
     <!-- 统一左侧侧边栏 -->
-    <div class="sidebar" data-ui-region="navigation" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
+    <div id="library-navigation" class="sidebar" data-ui-region="navigation" :aria-hidden="isSidebarCollapsed" :inert="isSidebarCollapsed || undefined" :style="{ width: isSidebarCollapsed ? '0px' : 'var(--library-sidebar-width, 260px)', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
-        <!-- 侧边栏导航根据可用宽度统一切换文字标签。 -->
+        <div class="search-area shell-search-area">
+          <div class="search-control-row">
+            <n-input v-model:value="searchQuery" placeholder="搜索文件与正文" aria-label="搜索文件与正文" size="small" clearable @focus="activeSidebarTab = 'files'">
+              <template #prefix><n-icon :component="SearchIcon" /></template>
+            </n-input>
+            <n-button quaternary circle size="small" title="保存为常用搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
+              <template #icon><n-icon :component="BookmarkAddIcon" /></template>
+            </n-button>
+          </div>
+          <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
+        </div>
+        <!-- 七个入口始终为一行图标；提示和无障碍名称保留功能说明。 -->
         <div
           class="sidebar-tabs-header"
-          :class="{ compact: sidebarTabsCompact }"
-          :data-layout="sidebarTabsCompact ? 'icons' : 'labels'"
+          data-layout="icons"
           data-ui-region="sidebar-tabs"
           role="tablist"
           aria-label="侧边栏导航"
         >
-          <div
+          <button type="button"
             v-for="tab in sidebarTabs" :key="tab.key"
             class="icon-tab"
             :class="{ active: activeSidebarTab === tab.key }"
@@ -21,15 +44,12 @@
             :aria-selected="activeSidebarTab === tab.key"
             :aria-label="tab.description"
             :aria-controls="`panel-${tab.key}`"
-            tabindex="0"
             @click="activeSidebarTab = tab.key"
-            @keydown.enter="activeSidebarTab = tab.key"
-            @keydown.space.prevent="activeSidebarTab = tab.key"
             :title="tab.description"
           >
             <n-icon :component="tab.icon" size="18" />
             <span class="icon-tab-text">{{ tab.label }}</span>
-          </div>
+          </button>
         </div>
 
         <button v-if="searchQuery.trim() && searchReturn.selectedKey.value" type="button" class="search-return-button" @click="searchReturn.returnToResults">返回刚才的搜索结果</button>
@@ -38,17 +58,6 @@
             <!-- 文件 tree 面板 -->
             <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane" role="tabpanel" :id="`panel-files`" :aria-labelledby="`tab-files`">
               <div class="sidebar-header">
-                <div class="search-area">
-                  <div class="search-control-row">
-                    <n-input v-model:value="searchQuery" placeholder="搜索文档..." size="small" round clearable>
-                      <template #prefix><n-icon :component="SearchIcon" /></template>
-                    </n-input>
-                    <n-button quaternary circle size="small" title="保存为常用搜索" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
-                      <template #icon><n-icon :component="BookmarkAddIcon" /></template>
-                    </n-button>
-                  </div>
-                  <n-select v-if="searchQuery.trim()" v-model:value="searchObjectTypes" class="search-format-filter" size="tiny" multiple clearable :max-tag-count="1" placeholder="全部格式" :options="searchFormatOptions" />
-                </div>
                 <div class="toolbar-area">
                   <n-dropdown
                     trigger="click"
@@ -58,33 +67,21 @@
                     :options="templateOptions"
                     @select="handleTemplateCreate"
                   >
-                    <n-button data-testid="library-create-menu" quaternary circle size="small" title="新建笔记或画布">
-                      <template #icon><n-icon :component="PlusIcon" /></template>
+                    <n-button data-testid="library-create-menu" type="primary" size="tiny" :title="`在 ${creationTargetLabel} 中新建`">
+                      <template #icon><n-icon :component="PlusIcon" /></template>新建
                     </n-button>
                   </n-dropdown>
-                  <n-button quaternary circle size="small" @click="handleToolbarAction('folder')" title="新建文件夹">
-                    <template #icon><n-icon :component="FolderPlusIcon" /></template>
-                  </n-button>
-                  <n-button quaternary circle size="small" @click="createDailyNote" title="今日笔记">
-                    <template #icon><n-icon :component="CalendarIcon" /></template>
-                  </n-button>
-                  <n-button quaternary circle size="small" @click="refreshLibrary" title="刷新列表">
+                  <n-button quaternary circle size="tiny" @click="refreshLibrary" title="刷新列表">
                     <template #icon><n-icon :component="RefreshIcon" /></template>
                   </n-button>
-                </div>
-              </div>
-
-              <button v-if="store.libraryPath" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox">收集箱</button>
-              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" />
-              <div v-if="store.libraryPath && !showInbox" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="knowledgeIndexExplanation">
-                <n-icon :component="DatabaseIcon" />
-                <span>{{ knowledgeIndexLabel }}</span>
-                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }} 个对象 · {{ knowledgeIndexStatus.relationCount }} 条关系</small>
-                <small v-else-if="knowledgeIndexStatus.state === 'building'">{{ knowledgeIndexStatus.progress }}%</small>
+              <button v-if="store.libraryPath" type="button" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox"><InboxIcon :size="13" aria-hidden="true" /><span>收集箱</span></button>
+              <div v-if="store.libraryPath && !showInbox" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="`${knowledgeIndexLabel}；${knowledgeIndexStatus.objectCount} 个对象 · ${knowledgeIndexStatus.relationCount} 条关系；${knowledgeIndexExplanation}`" :aria-label="knowledgeIndexLabel">
+                <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }}对象·{{ knowledgeIndexStatus.relationCount }}关系</small>
+                <small v-else-if="knowledgeIndexStatus.state === 'building'">准备中 {{ knowledgeIndexStatus.progress }}%</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'cancelled'">已停止，可随时重新准备</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'missing'">首次打开会自动准备</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'stale'">{{ knowledgeIndexStatus.staleSourceCount || knowledgeIndexStatus.sourceCount }} 个文件需要更新</small>
-                <small v-else>打开更多菜单处理</small>
+                <small v-else>需要处理</small>
                 <div class="knowledge-index-actions">
                   <n-button v-if="knowledgeIndexBusy" quaternary circle size="tiny" :loading="knowledgeIndexCancelling" title="停止准备" @click="cancelKnowledgeIndex">
                     <template #icon><n-icon :component="StopIcon" /></template>
@@ -96,6 +93,9 @@
                   </n-dropdown>
                 </div>
               </div>
+                </div>
+              </div>
+              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" />
 
               <div
                 class="tree-viewport"
@@ -125,6 +125,7 @@
                   <details><summary>错误详情</summary><span>{{ libraryLoadError }}</span></details>
                 </section>
                 <div v-else-if="showKnowledgeResults" class="knowledge-search-results" @keydown="navigateSearchResults">
+                  <div class="search-results-heading"><strong>搜索结果</strong><span>{{ searchObjectTypes.length ? `${searchObjectTypes.length} 种格式` : '全部格式' }}</span></div>
                   <div v-if="activeGraphCollection" class="graph-collection-state">
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
@@ -157,12 +158,14 @@
                   v-else
                   ref="treeInstRef"
                   class="library-file-tree"
+                  :theme-overrides="fileTreeThemeOverrides"
                   aria-label="知识库文件树"
                   :aria-describedby="preview.focusPath ? 'file-tree-detail-preview' : undefined"
                   :data="treeData" 
                   lazy
                   multiple
                   block-line
+                  show-line
                   expand-on-click
                   :on-load="handleLoadChildren"
                   :node-props="nodeProps"
@@ -437,14 +440,14 @@
     </div>
 
     <!-- 虚拟拖拽影子 -->
-    <div v-if="virtualDrag.active" class="drag-ghost" :style="{ left: virtualDrag.x + 'px', top: virtualDrag.y + 'px' }">
+    <Teleport to="body"><div v-if="virtualDrag.active" ref="fileDragGhost" class="drag-ghost" :class="{ 'drop-invalid': !!fileDropProblem }">
       <n-icon :component="virtualDrag.dragNode?.isLeaf ? FileIcon : FolderIcon" />
-      <span>{{ virtualDrag.ghostText }}</span>
-    </div>
+      <span><strong>{{ virtualDrag.ghostText }}</strong><small>{{ fileDropHint }}</small></span>
+    </div></Teleport>
 
     <!-- 左侧分隔条 -->
     <div class="resizer-area" v-if="!store.isZen">
-      <div class="drag-handle" @mousedown="startResizing('sidebar')"></div>
+      <div class="drag-handle" role="separator" aria-label="调整文件栏宽度" aria-orientation="vertical" aria-controls="library-navigation" :tabindex="isSidebarCollapsed ? -1 : 0" :aria-valuenow="Math.round(sidebarWidth)" :aria-valuemin="220" :aria-valuemax="600" @pointerdown.stop.prevent="startSidebarResize" @pointermove="moveSidebarResize" @pointerup="finishSidebarResize" @pointercancel="finishSidebarResize" @lostpointercapture="finishSidebarResize" @keydown="resizeSidebarByKey"></div>
       <div class="collapse-btn left" @click="isSidebarCollapsed = !isSidebarCollapsed">
         <n-icon :component="isSidebarCollapsed ? ChevronRightIcon : ChevronLeftIcon" />
       </div>
@@ -452,8 +455,20 @@
 
     <!-- 中间编辑区 -->
     <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
-      <div class="tabs-bar" v-if="!store.isZen && store.tabs.length > 0">
-        <WorkspaceTabs />
+      <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
+        <div class="document-identity">
+          <button :key="activeTabId" type="button" class="document-breadcrumb" aria-label="重命名当前文档" @click="openRename(activeTabId, false)"><n-icon class="document-type-icon" :component="activeDocumentVisual.icon" :color="activeDocumentVisual.color" size="16" /><span>{{ activeTabId.split(/[\\/]/).pop() }}</span><n-icon :component="EditIcon" size="12" /></button>
+          <n-button data-testid="library-document-favorite" quaternary circle size="small" :type="store.isStarred(activeTabId) ? 'primary' : 'default'" :aria-pressed="store.isStarred(activeTabId)" :aria-label="store.isStarred(activeTabId) ? '取消收藏当前文档' : '收藏当前文档'" :title="store.isStarred(activeTabId) ? '取消收藏当前文档' : '收藏当前文档'" @click="store.toggleStar(activeTabId)"><template #icon><n-icon :component="StarIcon" :style="{ fill: store.isStarred(activeTabId) ? 'currentColor' : 'none' }" /></template></n-button>
+        </div>
+        <div class="document-primary-actions">
+          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-preview" quaternary size="small" :type="documentPreviewActive ? 'primary' : 'default'" :aria-pressed="documentPreviewActive" :disabled="editorLoading || editorModeChangeBusy || !documentPreviewAvailable" :title="documentPreviewActive ? '返回编辑' : '预览当前文档'" @click="toggleDocumentPreview"><template #icon><n-icon :component="EyeIcon" /></template>{{ documentPreviewActive ? '返回编辑' : '预览' }}</n-button>
+          <n-button data-testid="library-focus-toggle" quaternary size="small" title="专注写作 F11" @click="store.toggleZen()"><template #icon><n-icon :component="FocusIcon" /></template>专注</n-button>
+          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template>AI 辅助</n-button>
+          <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
+          <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit || currentFileReloadBusy" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
+          <n-popover trigger="click" placement="bottom-end" class="document-actions-popover">
+            <template #trigger><n-button data-testid="library-document-menu" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
+            <div class="document-menu-content" aria-label="文档操作菜单">
         <n-dropdown
           v-if="activeTabId"
           trigger="click"
@@ -462,73 +477,59 @@
         >
           <n-button
             quaternary
-            circle
             size="small"
             :loading="externalAppsLoading || externalOpenBusy"
             title="使用外部应用打开"
           >
-            <template #icon><n-icon :component="ExternalOpenIcon" /></template>
+            <template #icon><n-icon :component="ExternalOpenIcon" /></template>外部应用打开
           </n-button>
         </n-dropdown>
         <div v-if="!activeEmbeddedEditor" class="tab-actions">
           <div class="action-btn-group">
-            <n-button quaternary circle size="small" @click="refreshCurrentFile" :disabled="!activeTabId" title="从磁盘同步内容">
-              <template #icon><n-icon :component="RefreshIcon" /></template>
-            </n-button>
-            <n-button data-testid="library-explicit-save" quaternary circle size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle">
-              <template #icon><n-icon :component="SaveIcon" /></template>
+            <n-button quaternary size="small" @click="refreshCurrentFile" :disabled="!activeTabId || currentFileReloadBusy" :loading="currentFileReloadBusy" title="从磁盘同步内容">
+              <template #icon><n-icon :component="RefreshIcon" /></template>重新读取文件
             </n-button>
             <n-dropdown trigger="click" :options="textEncodingMenuOptions" @select="handleTextEncodingAction" v-if="activeTabId && activeDocumentFormat?.routeName === 'LibraryMode'">
-              <n-button quaternary circle size="small" title="文本编码">
-                <template #icon><n-icon :component="LanguagesIcon" /></template>
+              <n-button quaternary size="small" title="文本编码">
+                <template #icon><n-icon :component="LanguagesIcon" /></template>编码与换行
               </n-button>
             </n-dropdown>
             <n-dropdown trigger="click" :options="exportOptions" @select="handleExport" v-if="activeTabId">
-              <n-button quaternary circle size="small" title="导出">
-                <template #icon><n-icon :component="DownloadIcon" /></template>
+              <n-button quaternary size="small" title="导出">
+                <template #icon><n-icon :component="DownloadIcon" /></template>导出
               </n-button>
             </n-dropdown>
             <n-button quaternary size="tiny" v-if="activeTabId && activeIsMarkdown" @click="createMindMapFromCurrentMarkdown" title="将当前文档标题和列表转换为可编辑思维导图">转脑图</n-button>
             <div class="mode-toggle" v-if="activeTabId && activeIsMarkdown">
-              <n-button quaternary size="tiny" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
-              <n-button quaternary size="tiny" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
-              <n-button quaternary size="tiny" :type="store.editorMode === 'sv' ? 'primary' : 'default'" @click="switchEditorMode('sv')" title="源码编辑">源码</n-button>
+              <span>编辑模式</span>
+              <n-button quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" :type="store.editorMode === 'wysiwyg' ? 'primary' : 'default'" @click="switchEditorMode('wysiwyg')" title="所见即所得">所见</n-button>
+              <n-button quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" :type="store.editorMode === 'ir' ? 'primary' : 'default'" @click="switchEditorMode('ir')" title="即时渲染">IR</n-button>
+              <n-button quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" :type="store.editorMode === 'sv' ? 'primary' : 'default'" @click="switchEditorMode('sv')" title="源码编辑">源码</n-button>
             </div>
             <div class="width-toggle" v-if="activeTabId">
+              <span>正文宽度</span>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'narrow' ? 'primary' : 'default'" @click="editorWidthMode = 'narrow'" title="窄栏 600px">窄</n-button>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'medium' ? 'primary' : 'default'" @click="editorWidthMode = 'medium'" title="中栏 800px">中</n-button>
               <n-button quaternary size="tiny" :type="editorWidthMode === 'wide' ? 'primary' : 'default'" @click="editorWidthMode = 'wide'" title="宽栏 全宽">宽</n-button>
             </div>
           </div>
-          <div class="word-count-info" v-if="activeTabId">
-            <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
-              {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
-            </span>
-            <span v-if="activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
-            <n-button v-if="activeTextTab?.textRangeNextOffset !== undefined && !activeTextTab.textRangeEof && !activeTextTab.textLoadError" text size="tiny" @click="loadNextTextRange">
-              继续加载
-            </n-button>
-            <span>{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
-          </div>
-          <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
-            <n-color-picker 
-              v-model:value="store.editorBgColor" 
-              :modes="['hex']" 
-              @update:value="handleEditorBgChange"
-            />
-          </div>
         </div>
-        <div v-else-if="activeTabId" class="embedded-format-capability">
-          <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">
-            {{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}
-          </span>
+        <n-button quaternary size="small" @click="activeSidebarTab = 'history'; isSidebarCollapsed = false">历史与差异</n-button>
+        <n-button quaternary size="small" @click="router.push({ name: 'Settings', query: { category: 'appearance', focus: 'document-display' } })">显示设置</n-button>
+        <n-button quaternary size="small" @click="store.toggleZen()">专注写作 · F11</n-button>
+        <p class="document-menu-capability">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.description }}</p>
+            </div>
+          </n-popover>
         </div>
+      </div>
+      <div class="hidden-picker-trigger" style="position: absolute; opacity: 0; pointer-events: none;">
+        <n-color-picker v-model:value="store.editorBgColor" :modes="['hex']" @update:value="handleEditorBgChange" />
       </div>
       
       <SearchMatchNavigation v-if="!activeEmbeddedEditor && activeTabId === route.query.path && route.query.searchLocator && !searchNavigationClosed"
         :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" scope="当前编辑模式"
         @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="closeSearchNavigation" />
-      <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'transparent' }">
+      <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'var(--theme-surface)' }">
         <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
           <component :is="activeEmbeddedEditor" :key="activeTabId" />
         </div>
@@ -538,6 +539,20 @@
           </n-spin>
         </div>
         <div v-show="!activeEmbeddedEditor && tabs.length > 0" id="vditor-lib" class="vditor-instance" @click.capture="openSourceReference"></div>
+        <Teleport v-if="documentShortcutHost && activeIsMarkdown && !activeEmbeddedEditor" :to="documentShortcutHost">
+          <div class="document-inline-shortcuts" aria-label="文档快捷操作">
+            <n-dropdown trigger="click" :options="[{label:'所见即所得',key:'wysiwyg'},{label:'即时渲染 IR',key:'ir'},{label:'源码编辑',key:'sv'}]" @select="switchEditorMode">
+              <n-button class="inline-mode" quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" title="切换编辑模式"><template #icon><n-icon :component="store.editorMode === 'sv' ? CodeIcon : SquarePenIcon" /></template>{{ store.editorMode === 'wysiwyg' ? '所见' : store.editorMode === 'ir' ? 'IR' : '源码' }} ▾</n-button>
+            </n-dropdown>
+            <n-dropdown trigger="click" :options="[{label:'窄栏 600px',key:'narrow'},{label:'中栏 800px',key:'medium'},{label:'宽栏 全宽',key:'wide'}]" @select="value => editorWidthMode = value">
+              <n-button class="inline-width" quaternary size="tiny" title="调整正文宽度"><template #icon><n-icon :component="ColumnsIcon" /></template>{{ editorWidthMode === 'narrow' ? '窄栏' : editorWidthMode === 'medium' ? '中栏' : '宽栏' }} ▾</n-button>
+            </n-dropdown>
+            <n-dropdown trigger="click" :options="exportOptions" @select="handleExport">
+              <n-button quaternary size="tiny" title="导出文档"><template #icon><n-icon :component="DownloadIcon" /></template>导出</n-button>
+            </n-dropdown>
+            <n-button quaternary size="tiny" title="查看历史与差异" @click="activeSidebarTab = 'history'; isSidebarCollapsed = false"><template #icon><n-icon :component="ClockIcon" /></template>历史</n-button>
+          </div>
+        </Teleport>
         <MarkdownChartEmbeds
           v-if="!activeEmbeddedEditor && activeIsMarkdown && activeMarkdownContent && activeTabId"
           :markdown="activeMarkdownContent"
@@ -565,11 +580,25 @@
           </div>
         </div>
       </div>
+      <footer v-if="activeTabId" class="document-status" aria-label="文档状态">
+        <span v-if="!activeEmbeddedEditor" class="document-save-state">{{ activeTextTab?.isDirty ? '● 未保存 · Ctrl+S' : '已保存' }}</span>
+        <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}</span>
+        <span v-if="!activeEmbeddedEditor && activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
+        <n-button v-if="!activeEmbeddedEditor && activeTextTab?.textRangeNextOffset !== undefined && !activeTextTab.textRangeEof && !activeTextTab.textLoadError" text size="tiny" @click="loadNextTextRange">继续加载</n-button>
+        <span v-if="!activeEmbeddedEditor" class="document-reading-status">{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
+        <n-button v-if="store.isZen" data-testid="library-focus-toggle" quaternary size="tiny" @click="store.toggleZen()">退出专注</n-button>
+      </footer>
     </div>
 
-    <SearchDocumentPreview v-if="searchPreviewResult" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
+    <SearchDocumentPreview v-if="searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
       :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
-      @close="searchPreviewResult = null" @return-to-editor="returnToEditorFromReference" @open="openSearchPreview" />
+      @close="referenceVisible = false" @clear-source="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
+    <aside v-else-if="referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
+      <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button></header>
+      <p>选择一份资料作为参考，边看边写。</p>
+      <p>在搜索结果旁点击“在侧边参考”即可打开。参考内容不会替换当前草稿。</p>
+      <n-button secondary size="small" @click="findReferenceDocument">查找资料</n-button>
+    </aside>
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
       <header>
         <div><strong>已固定局部关系</strong><span>跟随当前活动标签页</span></div>
@@ -583,6 +612,7 @@
         @open-canvas="createPinnedLocalCanvas"
       />
     </aside>
+    </div>
 
     <HoverPreview :show="preview.show" :title="preview.title" :path="preview.path" :x="preview.x" :y="preview.y" />
     
@@ -624,14 +654,16 @@
       </div>
     </n-modal>
 
-    <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="编辑文件显示样式">
+    <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="文件显示样式" style="width: min(520px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); border-radius: var(--theme-radius);">
       <div class="file-style-editor">
-        <div
-          class="file-style-preview"
-          :style="{ backgroundColor: fileStyleEditor.backgroundColor || undefined, color: markerTextColor(fileStyleEditor) || undefined }"
-        >
-          <n-icon size="19" :color="fileStylePreviewVisual.color"><component :is="fileStylePreviewVisual.icon" /></n-icon>
-          <span>{{ fileStyleEditor.name }}</span>
+        <div class="file-style-preview-heading"><strong>实时预览</strong><span>仅改变资料库中的显示，不修改文件内容</span></div>
+        <div class="file-style-previews">
+          <div><small>普通</small><div class="file-style-preview" :style="{ backgroundColor: fileStylePreviewColors.background, color: fileStylePreviewColors.text }">
+            <n-icon size="19" :color="fileStylePreviewVisual.color"><component :is="fileStylePreviewVisual.icon" /></n-icon><span>{{ fileStyleEditor.name }}</span>
+          </div></div>
+          <div><small>选中</small><div class="file-style-preview is-selected" :style="{ backgroundColor: fileStylePreviewColors.selectedBackground, color: fileStylePreviewColors.selectedText, borderColor: fileStyleEditor.selectionStyle === 'outline' ? fileStylePreviewColors.selectedAccent : 'transparent', '--preview-accent': fileStylePreviewColors.selectedAccent }">
+            <n-icon size="19"><component :is="fileStylePreviewVisual.icon" /></n-icon><span>{{ fileStyleEditor.name }}</span>
+          </div></div>
         </div>
 
         <section class="file-style-section">
@@ -646,6 +678,7 @@
               :style="color.value ? { backgroundColor: color.value } : undefined"
               :title="color.label"
               :aria-label="color.label"
+              :aria-pressed="fileStyleEditor.backgroundColor === color.value"
               @click="fileStyleEditor.backgroundColor = color.value"
             ><span v-if="!color.value">默认</span></button>
             <input
@@ -670,6 +703,7 @@
               :style="color.value ? { backgroundColor: color.value } : undefined"
               :title="color.label"
               :aria-label="color.label"
+              :aria-pressed="fileStyleEditor.textColor === color.value"
               @click="fileStyleEditor.textColor = color.value"
             ><span v-if="!color.value">默认</span></button>
             <input
@@ -683,6 +717,19 @@
         </section>
 
         <section class="file-style-section">
+          <label>选中高亮</label>
+          <div class="file-selection-options" role="group" aria-label="选中高亮样式">
+            <button v-for="option in FILE_SELECTION_OPTIONS" :key="option.id" type="button" :class="{ active: fileStyleEditor.selectionStyle === option.id }" :aria-pressed="fileStyleEditor.selectionStyle === option.id" @click="fileStyleEditor.selectionStyle = option.id">{{ option.label }}</button>
+          </div>
+          <div class="file-selection-colors">
+            <label><span>高亮背景</span><div><button type="button" :disabled="fileStyleEditor.selectionStyle !== 'fill'" @click="fileStyleEditor.selectedBackgroundColor = ''">自动</button><input type="color" aria-label="选中背景色" :disabled="fileStyleEditor.selectionStyle !== 'fill'" :value="fileStyleEditor.selectedBackgroundColor || '#dcecff'" @input="fileStyleEditor.selectedBackgroundColor = ($event.target as HTMLInputElement).value"></div></label>
+            <label><span>选中文字</span><div><button type="button" @click="fileStyleEditor.selectedTextColor = ''">自动</button><input type="color" aria-label="选中文字色" :value="fileStyleEditor.selectedTextColor || '#253041'" @input="fileStyleEditor.selectedTextColor = ($event.target as HTMLInputElement).value"></div></label>
+            <label><span>高亮标记</span><div><button type="button" @click="fileStyleEditor.selectedAccentColor = ''">自动</button><input type="color" aria-label="选中标记色" :value="fileStyleEditor.selectedAccentColor || '#245ca6'" @input="fileStyleEditor.selectedAccentColor = ($event.target as HTMLInputElement).value"></div></label>
+          </div>
+          <p class="file-style-help">自动颜色会兼顾文字可读性。描边和侧边标记保留原背景。</p>
+        </section>
+
+        <section class="file-style-section">
           <label>文件图标</label>
           <div class="file-icon-options">
             <button
@@ -692,8 +739,9 @@
               :class="{ active: fileStyleEditor.icon === option.id }"
               :title="option.label"
               :aria-label="option.label"
+              :aria-pressed="fileStyleEditor.icon === option.id"
               @click="fileStyleEditor.icon = option.id"
-            ><n-icon size="18"><component :is="option.icon" /></n-icon></button>
+            ><n-icon size="18"><component :is="option.icon" /></n-icon><span>{{ option.id === 'auto' ? '自动' : option.label }}</span></button>
           </div>
         </section>
       </div>
@@ -779,7 +827,7 @@
 
 <script setup lang="ts">
 import { searchResultPath } from '../utils/searchResultPath'
-import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
@@ -787,7 +835,7 @@ import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
-import { useMessage, useDialog, TreeOption, NIcon, NDropdown } from 'naive-ui'
+import { useMessage, useDialog, TreeOption, NIcon, NDropdown, NPopover, type DropdownOption } from 'naive-ui'
 import { 
   Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
@@ -797,7 +845,9 @@ import {
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
   BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
-  MoreHorizontal as MoreIcon, Palette as PaletteIcon, Square as StopIcon
+  MoreHorizontal as MoreIcon, Palette as PaletteIcon, Square as StopIcon,
+  Eye as EyeIcon, Focus as FocusIcon, Sparkles as SparklesIcon,
+  Inbox as InboxIcon, Code2 as CodeIcon, SquarePen as SquarePenIcon, Columns2 as ColumnsIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -853,7 +903,9 @@ import {
   resolveFileTreeVisual,
   type FileDisplayStyle,
   type FileMarkerIconId,
+  type FileSelectionStyle,
 } from '../config/fileTreeAppearance'
+import { markerTextColor, fileMarkerColors, fileStylePathKey } from '../utils/fileDisplayStyles'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 
@@ -994,6 +1046,7 @@ const tabs = computed(() => allTabs.value.filter(tab => findFileFormat(tab.path)
 const router = useRouter()
 const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
+const activeDocumentVisual = computed(() => resolveFileTreeVisual(activeDocumentFormat.value?.id, 'auto'))
 const externalApplications = ref<ExternalApplicationCapability[]>([])
 const externalAppsLoading = ref(false)
 const externalOpenBusy = ref(false)
@@ -1162,12 +1215,12 @@ const showInbox = ref(false)
 const localGraphPinned = ref(readLocalGraphPinned())
 const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
-  { key: 'outline' as const, icon: ListIcon, label: '目录', description: '目录：查看当前文档的标题大纲' },
+  { key: 'outline' as const, icon: ListIcon, label: '大纲', description: '大纲：查看当前文档的标题大纲' },
   { key: 'quick' as const, icon: ClockIcon, label: '最近', description: '最近：打开收藏文件和最近访问记录' },
-  { key: 'history' as const, icon: SaveIcon, label: '备份', description: '备份：恢复当前文件的本地历史快照' },
-  { key: 'collections' as const, icon: CollectionIcon, label: '常用搜索', description: '常用搜索：保存并重复使用文件搜索的关键词与格式条件' },
-  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '智能集合', description: '智能集合：保存并重复使用文件搜索的关键词、目录、格式、标签与时间条件' },
   { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown' },
+  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'history' as const, icon: SaveIcon, label: '历史', description: '历史：先比较当前内容，再恢复本地历史快照' },
 ]
 const outgoingLinks = ref<string[]>([])
 const backlinks = ref<{ title: string; path: string; context: string }[]>([])
@@ -1338,6 +1391,31 @@ const confirmRemoveSavedSearch = (id: string, name: string) => {
   })
 }
 const isSidebarCollapsed = ref(false)
+const libraryShell = ref<HTMLElement | null>(null)
+let shellResizeObserver: ResizeObserver | undefined
+let shellWasNarrow = false
+watch(libraryShell, element => {
+  shellResizeObserver?.disconnect()
+  if (!element) return
+  shellResizeObserver = new ResizeObserver(() => {
+    const narrow = element.clientWidth <= 760
+    if (narrow !== shellWasNarrow) isSidebarCollapsed.value = narrow
+    shellWasNarrow = narrow
+  })
+  shellResizeObserver.observe(element)
+})
+onBeforeUnmount(() => shellResizeObserver?.disconnect())
+const openQuickNote = async () => {
+  try { await invoke('open_quick_note') }
+  catch (error) { message.error(`无法打开快速笔记：${String(error)}`) }
+}
+const requestCommandPalette = () => window.dispatchEvent(new CustomEvent('longedit:open-command-palette'))
+const findReferenceDocument = async () => {
+  activeSidebarTab.value = 'files'
+  isSidebarCollapsed.value = false
+  await nextTick()
+  libraryShell.value?.querySelector<HTMLInputElement>('.shell-search-area input')?.focus()
+}
 const tagFilterText = ref('')
 const filteredTags = computed(() => {
   if (!tagFilterText.value.trim()) return allTags.value
@@ -1349,9 +1427,18 @@ const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
 )
 watch(editorWidthMode, (v) => { localStorage.setItem('longedit_editor_width', v) })
 const sidebarWidth = ref(260)
-const sidebarTabsCompact = computed(() => sidebarWidth.value < 460)
 const activeResizer = ref<'sidebar' | null>(null)
+let sidebarResize: { pointerId: number; startX: number; startWidth: number; handle: HTMLElement } | null = null
+let sidebarResizeFrame = 0
+let pendingSidebarWidth = sidebarWidth.value
 const treeInstRef = ref<any>(null)
+const fileTreeThemeOverrides = {
+  nodeColorHover: 'transparent', nodeColorActive: 'transparent', nodeColorPressed: 'transparent',
+  nodeTextColor: 'var(--theme-text)', arrowColor: 'var(--theme-text-secondary)',
+  lineColor: 'color-mix(in srgb, var(--theme-text-secondary) 65%, transparent)',
+  nodeBorderRadius: 'var(--theme-radius-sm)', nodeWrapperPadding: '0px',
+  nodeHeight: 'calc(var(--file-row-height) - 2px)',
+}
 const treeData = ref<TreeOption[]>([])
 const libraryLoadError = ref('')
 const libraryLoading = ref(false)
@@ -1364,6 +1451,7 @@ const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
 const referencePinned = computed(() => searchPreviewResult.value !== null)
+const referenceVisible = ref(false)
 const searchPreviewQuery = ref('')
 const rememberReference = (root: string) => {
   try { writeWorkspaceReference(root, searchPreviewResult.value ? { ...searchPreviewResult.value, query: searchPreviewQuery.value } : undefined) }
@@ -1373,10 +1461,10 @@ const restoreReference = (root: string) => {
   const reference = readWorkspaceReference(root)
   searchPreviewQuery.value = reference?.query || ''
   searchPreviewResult.value = reference ? { ...reference, objectType: findFileFormat(reference.path)?.id || '', matchKind: 'title', context: '', score: 0, extractionFailed: false } : null
+  referenceVisible.value = !!reference
 }
 watch([searchPreviewResult, searchPreviewQuery], () => rememberReference(store.libraryPath))
 const returnToEditorFromReference = async () => {
-  searchPreviewResult.value = null
   await nextTick()
   // Explicit return means resume writing, not restore the search trigger.
   const editor = document.querySelector<HTMLElement>('.editor-main')
@@ -1387,6 +1475,7 @@ const returnToEditorFromReference = async () => {
   else { editor.tabIndex = -1; editor.focus({ preventScroll: true }) }
 }
 const showSearchPreview = (result: KnowledgeSearchResult) => {
+  referenceVisible.value = true
   searchPreviewQuery.value = searchQuery.value
   searchPreviewResult.value = result
 }
@@ -1544,6 +1633,21 @@ const knowledgeIndexMenuOptions = computed(() => [
 const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
+const documentShortcutHost = ref<HTMLElement | null>(null)
+const documentPreviewActive = ref(false)
+const documentPreviewAvailable = ref(false)
+let documentPreviewButton: HTMLElement | null = null
+let documentPreviewObserver: MutationObserver | undefined
+const syncDocumentPreview = () => {
+  documentPreviewActive.value = documentPreviewButton?.classList.contains('vditor-menu--current') ?? false
+  documentPreviewAvailable.value = !!documentPreviewButton && !documentPreviewButton.classList.contains('vditor-menu--disabled')
+}
+const toggleDocumentPreview = () => {
+  if (editorLoading.value || editorModeChangeBusy.value || !documentPreviewAvailable.value) return
+  // Reuse Vditor's native preview toggle in all three editing modes. Observe
+  // only its button class so menu actions and this shortcut share one state.
+  documentPreviewButton?.click()
+}
 let isVditorReady = false
 let lastLoadedPath = ''
 let externalCheckInFlight = false
@@ -1749,6 +1853,10 @@ const fileStyleEditor = reactive({
   backgroundColor: '',
   textColor: '',
   icon: 'auto' as FileMarkerIconId,
+  selectionStyle: 'fill' as FileSelectionStyle,
+  selectedBackgroundColor: '',
+  selectedTextColor: '',
+  selectedAccentColor: '',
 })
 const FILE_MARKER_BACKGROUND_OPTIONS = [
   { label: '默认背景', value: '' },
@@ -1768,16 +1876,9 @@ const FILE_MARKER_TEXT_OPTIONS = [
   { label: '深紫', value: '#6740a5' },
   { label: '棕色', value: '#81511c' },
 ]
-const readableMarkerText = (backgroundColor: string) => {
-  if (!/^#[0-9a-f]{6}$/i.test(backgroundColor)) return ''
-  const channels = [1, 3, 5].map(offset => Number.parseInt(backgroundColor.slice(offset, offset + 2), 16) / 255)
-  const luminance = channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
-  return luminance > 0.52 ? '#253041' : '#f8fafc'
-}
-const markerTextColor = (style?: FileDisplayStyle) => style?.textColor || readableMarkerText(style?.backgroundColor || '')
 const fileNameWithExtension = (path: string) => path.split(/[\\/]/).pop() || path
 const fileTreeVisualForPath = (path: string) => {
-  const marker = store.fileDisplayStyles[path]
+  const marker = store.fileDisplayStyleForPath(path)
   const visual = resolveFileTreeVisual(findFileFormat(path)?.id, marker?.icon || 'auto')
   return { ...visual, color: markerTextColor(marker) || visual.color }
 }
@@ -1785,16 +1886,25 @@ const fileStylePreviewVisual = computed(() => {
   const base = resolveFileTreeVisual(fileStyleEditor.formatId, fileStyleEditor.icon)
   return { ...base, color: markerTextColor(fileStyleEditor) || base.color }
 })
+const fileStylePreviewColors = computed(() => fileMarkerColors(fileStyleEditor))
+const FILE_SELECTION_OPTIONS: { id: FileSelectionStyle; label: string }[] = [
+  { id: 'fill', label: '填色' }, { id: 'outline', label: '描边' }, { id: 'marker', label: '侧边标记' },
+]
 
 const refreshFileTreePresentation = () => { treeData.value = [...treeData.value] }
+watch([() => store.fileDisplayStyles, () => store.theme, () => store.visualStyle], refreshFileTreePresentation, { deep: true })
 const openFileStyleEditor = (path: string) => {
-  const existing = store.fileDisplayStyles[path]
+  const existing = store.fileDisplayStyleForPath(path)
   fileStyleEditor.path = path
   fileStyleEditor.name = path.split(/[\\/]/).pop() || path
   fileStyleEditor.formatId = findFileFormat(path)?.id || ''
   fileStyleEditor.backgroundColor = existing?.backgroundColor || ''
   fileStyleEditor.textColor = existing?.textColor || ''
   fileStyleEditor.icon = existing?.icon || 'auto'
+  fileStyleEditor.selectionStyle = existing?.selectionStyle || 'fill'
+  fileStyleEditor.selectedBackgroundColor = existing?.selectedBackgroundColor || ''
+  fileStyleEditor.selectedTextColor = existing?.selectedTextColor || ''
+  fileStyleEditor.selectedAccentColor = existing?.selectedAccentColor || ''
   fileStyleEditor.show = true
 }
 const saveFileDisplayStyle = async () => {
@@ -1805,8 +1915,12 @@ const saveFileDisplayStyle = async () => {
       backgroundColor: fileStyleEditor.backgroundColor,
       textColor: fileStyleEditor.textColor,
       icon: fileStyleEditor.icon,
+      selectionStyle: fileStyleEditor.selectionStyle,
+      selectedBackgroundColor: fileStyleEditor.selectedBackgroundColor,
+      selectedTextColor: fileStyleEditor.selectedTextColor,
+      selectedAccentColor: fileStyleEditor.selectedAccentColor,
     }
-    if (!style.backgroundColor && !style.textColor && style.icon === 'auto') await store.clearFileDisplayStyle(fileStyleEditor.path)
+    if (!style.backgroundColor && !style.textColor && style.icon === 'auto' && style.selectionStyle === 'fill' && !style.selectedBackgroundColor && !style.selectedTextColor && !style.selectedAccentColor) await store.clearFileDisplayStyle(fileStyleEditor.path)
     else await store.setFileDisplayStyle(fileStyleEditor.path, style)
     refreshFileTreePresentation()
     fileStyleEditor.show = false
@@ -2023,6 +2137,37 @@ const invalidateHistory = () => { ++historyGeneration; historyList.value = [] }
 watch([activeTabId, () => store.libraryPath], invalidateHistory, { flush: 'sync' })
 
 const openSettings = () => router.push('/settings')
+const librarySwitchBusy = ref(false)
+const librarySwitchOptions = computed<DropdownOption[]>(() => [
+  ...store.libraries.map(library => ({
+    key: library.path,
+    label: `${library.path === store.libraryPath ? '✓ ' : ''}${library.name}`,
+    props: { title: library.path },
+    disabled: librarySwitchBusy.value || library.path === store.libraryPath,
+  })),
+  { key: 'library-divider', type: 'divider' },
+  { key: 'manage-libraries', label: '管理资料库…' },
+])
+const selectLibrary = async (path: string) => {
+  if (librarySwitchBusy.value) return
+  if (path === 'manage-libraries') { openSettings(); return }
+  if (path === store.libraryPath || !store.libraries.some(library => library.path === path)) return
+  // Capture input before Vditor's debounced callback so a fast click cannot
+  // discard the last keystrokes when the store restores another library.
+  const tab = tabs.value.find(item => item.id === activeTabId.value)
+  if (tab && vditor && isVditorReady && activeIsMarkdown.value) {
+    const content = vditor.getValue()
+    if (tab.content !== content) { tab.content = content; tab.isDirty = true }
+  }
+  if (store.tabs.some(item => item.isDirty)) {
+    message.warning('有未保存的文档，请先保存后再切换资料库。')
+    return
+  }
+  librarySwitchBusy.value = true
+  try { await store.updateConfig({ activeLibraryPath: path }) }
+  catch (error) { message.error(`切换资料库失败：${String(error)}`) }
+  finally { librarySwitchBusy.value = false }
+}
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
 const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
@@ -2179,11 +2324,66 @@ const startShadowSaveTimer = () => {
   }, interval)
 }
 
-const startResizing = (type: 'sidebar') => { activeResizer.value = type }
+const clampSidebarWidth = (width: number) => Math.max(220, Math.min(width, 600))
+const applySidebarWidth = (width: number) => {
+  libraryShell.value?.style.setProperty('--library-sidebar-width', `${width}px`)
+  sidebarResize?.handle.setAttribute('aria-valuenow', String(Math.round(width)))
+}
+const finishSidebarResize = (event?: PointerEvent) => {
+  const resize = sidebarResize
+  if (!resize || (event && event.pointerId !== resize.pointerId)) return
+  if (event?.type === 'pointerup') pendingSidebarWidth = clampSidebarWidth(resize.startWidth + event.clientX - resize.startX)
+  cancelAnimationFrame(sidebarResizeFrame)
+  sidebarResizeFrame = 0
+  applySidebarWidth(pendingSidebarWidth)
+  // Commit the final geometry while transitions are still disabled, so releasing
+  // the pointer cannot animate the last pending movement.
+  libraryShell.value?.querySelector('.sidebar')?.getBoundingClientRect()
+  sidebarWidth.value = pendingSidebarWidth
+  sidebarResize = null
+  activeResizer.value = null
+  window.removeEventListener('blur', cancelSidebarResize)
+  if (resize.handle.hasPointerCapture(resize.pointerId)) resize.handle.releasePointerCapture(resize.pointerId)
+}
+const cancelSidebarResize = () => finishSidebarResize()
+const startSidebarResize = (event: PointerEvent) => {
+  if (event.button !== 0 || isSidebarCollapsed.value || sidebarResize) return
+  const sidebar = libraryShell.value?.querySelector('.sidebar')
+  if (!sidebar) return
+  const handle = event.currentTarget as HTMLElement
+  pendingSidebarWidth = sidebar.getBoundingClientRect().width
+  sidebarResize = { pointerId: event.pointerId, startX: event.clientX, startWidth: pendingSidebarWidth, handle }
+  handle.setPointerCapture(event.pointerId)
+  activeResizer.value = 'sidebar'
+  window.addEventListener('blur', cancelSidebarResize)
+}
+const moveSidebarResize = (event: PointerEvent) => {
+  if (!sidebarResize || event.pointerId !== sidebarResize.pointerId) return
+  pendingSidebarWidth = clampSidebarWidth(sidebarResize.startWidth + event.clientX - sidebarResize.startX)
+  if (sidebarResizeFrame) return
+  // Resize the shell once per frame without rerendering the file tree and editor.
+  sidebarResizeFrame = requestAnimationFrame(() => {
+    sidebarResizeFrame = 0
+    applySidebarWidth(pendingSidebarWidth)
+  })
+}
+const resizeSidebarByKey = (event: KeyboardEvent) => {
+  if (isSidebarCollapsed.value || sidebarResize) return
+  const step = event.shiftKey ? 40 : 10
+  const width = event.key === 'Home' ? 220 : event.key === 'End' ? 600
+    : event.key === 'ArrowLeft' ? sidebarWidth.value - step : event.key === 'ArrowRight' ? sidebarWidth.value + step : null
+  if (width === null) return
+  event.preventDefault()
+  sidebarWidth.value = clampSidebarWidth(width)
+  applySidebarWidth(sidebarWidth.value)
+}
+onBeforeUnmount(cancelSidebarResize)
 
 const handleNodeSelect = (keys: string[]) => {
+  selectedKeys.value = keys
   if (keys.length === 0) return
   const lastKey = keys[keys.length - 1]
+  if (findTreeOptionByKey(treeData.value, lastKey)?.isLeaf === false) return
   const format = lastKey ? findFileFormat(lastKey) : undefined
   if (format && opensInLibraryShell(format)) {
     if (route.name !== 'LibraryMode' || route.query.path !== lastKey) {
@@ -2236,25 +2436,34 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
 }
 
 const handleLoadChildren = async (option: TreeOption) => {
+  const libraryRoot = store.libraryPath
+  const generation = libraryLoadGeneration
+  const isCurrent = () => store.libraryPath === libraryRoot && libraryLoadGeneration === generation
   try {
-    const children = await loadDirectory(option.key as string)
+    const children = await loadDirectory(option.key as string, libraryRoot)
+    if (!isCurrent()) return false
     option.children = children
   } catch (e) {
-    option.children = []
-    console.error('Failed to load directory:', option.key, e)
+    if (!isCurrent()) return false
+    // Keep children unloaded: a disconnected/moved folder is not an empty
+    // folder. The next expansion must perform a new read after it returns.
+    const name = typeof option.label === 'string' ? option.label : fileNameWithExtension(option.key as string)
+    handleError(e, `文件夹「${name}」读取失败，请确认位置后重新展开`, 'handleLoadChildren')
+    return false
   }
 }
 
+const isLibraryMetadata = (name: string) => name.toLowerCase() === '.misty_order.json'
 const loadDirectory = async (path: string, libraryRoot = store.libraryPath): Promise<TreeOption[]> => {
   if (!path) return []
   const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot, path })
-  return entries.map(entry => ({
+  return entries.filter(entry => !isLibraryMetadata(entry.name)).map(entry => ({
     label: entry.name,
     key: entry.path,
     isLeaf: !entry.is_dir,
     prefix: () => {
       const format = entry.is_dir ? undefined : findFileFormat(entry.path)
-      const marker = entry.is_dir ? undefined : store.fileDisplayStyles[entry.path]
+      const marker = entry.is_dir ? undefined : store.fileDisplayStyleForPath(entry.path)
       const formatVisual = resolveFileTreeVisual(format?.id, marker?.icon || 'auto')
       return h(entry.is_dir ? FolderIcon : formatVisual.icon, {
         size: 14,
@@ -2352,7 +2561,7 @@ const refreshNode = async (path: string) => {
 
 const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
-const loadFileToEditor = async (path: string) => {
+const loadFileToEditor = async (path: string, forceRead = false) => {
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
   pendingEditorSaveLoad.value = false
@@ -2369,6 +2578,13 @@ const loadFileToEditor = async (path: string) => {
   const currentTab = tabs.value.find(t => t.path === path)
   const showReadFailure = (error: unknown, label: string) => {
     if (!isCurrentRequest()) return
+    if (forceRead && currentTab?.content !== undefined) {
+      // Reload is transactional: unavailable disk content must not replace the
+      // existing draft or its save identity with an empty editor.
+      setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason), false)
+      handleError(error, `${label}，已保留当前内容：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
+      return
+    }
     suppressEditorInput = true
     loadingEditor.setValue('')
     loadingEditor.disabled()
@@ -2380,7 +2596,7 @@ const loadFileToEditor = async (path: string) => {
     handleError(error, `${label}：${path.split(/[\\/]/).pop()}`, 'loadFileToEditor')
   }
   
-  const setEditorValue = (content: string, readOnly = false) => {
+  const setEditorValue = (content: string, readOnly = false, refreshHistory = true) => {
     if (!isCurrentRequest()) return
     referenceBookmark = null
     // Reusing Vditor must not leave a link-editing popover from another note.
@@ -2395,7 +2611,7 @@ const loadFileToEditor = async (path: string) => {
       if (readOnly) vditor?.disabled()
       else vditor?.enable()
     }, 0)
-    fetchHistory()
+    if (refreshHistory) fetchHistory()
     nextTick(() => { 
       setTimeout(() => { 
         if (!isCurrentRequest()) return
@@ -2430,8 +2646,10 @@ const loadFileToEditor = async (path: string) => {
     lastPromptedExternalSignature = ''
   }
 
-  if (currentTab?.content !== undefined) {
+  let readSucceeded = false
+  if (currentTab?.content !== undefined && !forceRead) {
     setEditorValue(currentTab.content, Boolean(currentTab.textReadOnlyReason))
+    readSucceeded = true
   } else {
     try {
       const format = findFileFormat(path)
@@ -2441,6 +2659,7 @@ const loadFileToEditor = async (path: string) => {
       if (!isCurrentRequest()) return
       applyTextSnapshot(currentTab, res, currentTab?.textReadEncoding)
       setEditorValue(res.content)
+      readSucceeded = true
     } catch (err: any) {
       if (!isCurrentRequest()) return
       if (err?.code === 'read-too-large' && currentTab) {
@@ -2448,6 +2667,7 @@ const loadFileToEditor = async (path: string) => {
           const preview = await readLargeTextPreview(currentTab, 0, currentTab.textReadEncoding)
           if (!isCurrentRequest()) return
           setEditorValue(preview.content, true)
+          readSucceeded = true
           message.warning('文件超过完整编辑上限，已进入大文件只读预览')
         } catch (previewError: any) {
           showReadFailure(previewError, '大文件预览失败')
@@ -2457,6 +2677,7 @@ const loadFileToEditor = async (path: string) => {
       }
     }
   }
+  return readSucceeded && isCurrentRequest()
 }
 
 const updateTabFromTextSnapshot = (tab: TabInfo, snapshot: TextDocumentSnapshot, readEncoding?: string) => {
@@ -2544,8 +2765,68 @@ const virtualDrag = reactive({
   expandTimer: null as any,
   scrollTimer: null as any
 })
+const fileDragGhost = ref<HTMLElement | null>(null)
+const fileDropBusy = ref(false)
+const fileDropProblem = ref('')
+let externalFileDrag = false
+let fileDragOption: TreeOption | null = null
+let fileDragPoint = { x: 0, y: 0 }
+let fileDragFrame = 0
+let fileDragGeneration = 0
+let fileDragScrollSpeed = 0
+const fileDropHint = computed(() => {
+  if (fileDropProblem.value) return fileDropProblem.value
+  const target = virtualDrag.dropTarget
+  if (!target) return '拖到文件夹内，或在文件间排序'
+  if (target === store.libraryPath) return '移入资料库根目录'
+  const name = fileNameWithExtension(target)
+  return virtualDrag.dropPosition === 'inside' ? `移入「${name}」`
+    : `放到「${name}」${virtualDrag.dropPosition === 'before' ? '前' : '后'}`
+})
+const positionFileDragGhost = () => {
+  fileDragGhost.value?.style.setProperty('transform', `translate3d(${fileDragPoint.x + 10}px, ${fileDragPoint.y + 10}px, 0)`)
+}
+watch(fileDragGhost, positionFileDragGhost, { flush: 'post' })
+const clearFileDragTimers = () => {
+  for (const key of ['timer', 'expandTimer', 'scrollTimer'] as const) {
+    if (virtualDrag[key]) clearTimeout(virtualDrag[key])
+    virtualDrag[key] = null
+  }
+  fileDragScrollSpeed = 0
+}
+const resetFileDrag = () => {
+  ++fileDragGeneration
+  clearFileDragTimers()
+  cancelAnimationFrame(fileDragFrame)
+  fileDragFrame = 0
+  fileDragOption = null
+  window.removeEventListener('mousemove', onMouseMove, true)
+  window.removeEventListener('mouseup', onMouseUp, true)
+  window.removeEventListener('blur', cancelFileDrag)
+  window.removeEventListener('keydown', cancelFileDragByKey, true)
+  virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
+  fileDropProblem.value = ''
+}
+const cancelFileDrag = () => { if (virtualDrag.active || virtualDrag.timer) resetFileDrag() }
+const cancelFileDragByKey = (event: KeyboardEvent) => { if (event.key === 'Escape') cancelFileDrag() }
+const beginFileDrag = () => {
+  if (!fileDragOption || fileDropBusy.value) return
+  if (virtualDrag.timer) clearTimeout(virtualDrag.timer)
+  virtualDrag.timer = null
+  preview.focusPath = ''
+  hideFilePreview()
+  virtualDrag.dragNode = fileDragOption
+  virtualDrag.selectedPaths = selectedKeys.value.includes(fileDragOption.key as string)
+    ? [...selectedKeys.value] : [fileDragOption.key as string]
+  virtualDrag.ghostText = virtualDrag.selectedPaths.length > 1 ? `移动 ${virtualDrag.selectedPaths.length} 个项目` : fileDragOption.label as string
+  virtualDrag.active = true
+}
+const normalizedDragPath = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+const dragPathContains = (parent: string, child: string) => normalizedDragPath(child).startsWith(`${normalizedDragPath(parent)}/`)
 
 const updateDropTarget = (x: number, y: number) => {
+  const previousTarget = virtualDrag.dropTarget
+  const previousPosition = virtualDrag.dropPosition
   const elements = document.elementsFromPoint(x, y)
   let foundKey = null
   let isViewport = false
@@ -2568,23 +2849,30 @@ const updateDropTarget = (x: number, y: number) => {
     const relativeY = (y - rect.top) / rect.height
     const isDir = foundEl.getAttribute('data-drop-dir') === 'true'
 
-    // 探测感应区：25% Before, 50% Inside, 25% After
-    if (relativeY < 0.25) {
-      virtualDrag.dropPosition = 'before'
-    } else if (relativeY > 0.75) {
-      virtualDrag.dropPosition = 'after'
+    // Folder bodies mean "move inside"; files always provide a sorting target.
+    // Retain a small boundary band so tiny pointer movements do not flip feedback.
+    const previous = previousTarget === foundKey ? previousPosition : null
+    if (isDir) {
+      const top = previous === 'before' ? .2 : previous === 'inside' ? .1 : .15
+      const bottom = previous === 'after' ? .8 : previous === 'inside' ? .9 : .85
+      virtualDrag.dropPosition = relativeY < top ? 'before' : relativeY > bottom ? 'after' : 'inside'
     } else {
-      virtualDrag.dropPosition = 'inside'
+      const middle = previous === 'before' ? .55 : previous === 'after' ? .45 : .5
+      virtualDrag.dropPosition = relativeY < middle ? 'before' : 'after'
     }
 
     // 文件夹自动展开逻辑优化：只有当目标 Key 变化或不再是 inside 时才重置计时器
-    if (isDir && virtualDrag.dropPosition === 'inside') {
-      if (virtualDrag.dropTarget !== foundKey) {
+    if (isDir && virtualDrag.dropPosition === 'inside' && !expandedKeys.value.includes(foundKey)) {
+      if (previousTarget !== foundKey || previousPosition !== 'inside') {
         if (virtualDrag.expandTimer) clearTimeout(virtualDrag.expandTimer)
-        virtualDrag.expandTimer = setTimeout(() => {
-          if (virtualDrag.dropTarget === foundKey && !expandedKeys.value.includes(foundKey!)) {
-            expandedKeys.value.push(foundKey!)
-            expandedKeys.value = [...expandedKeys.value]
+        const generation = fileDragGeneration
+        virtualDrag.expandTimer = setTimeout(async () => {
+          virtualDrag.expandTimer = null
+          if ((!virtualDrag.active && !externalFileDrag) || fileDropProblem.value || generation !== fileDragGeneration || virtualDrag.dropTarget !== foundKey || virtualDrag.dropPosition !== 'inside') return
+          const option = findTreeOptionByKey(treeData.value, foundKey!)
+          if (option && option.children === undefined) await handleLoadChildren(option)
+          if ((virtualDrag.active || externalFileDrag) && generation === fileDragGeneration && virtualDrag.dropTarget === foundKey && virtualDrag.dropPosition === 'inside') {
+            expandedKeys.value = [...new Set([...expandedKeys.value, foundKey!])]
           }
         }, 600)
       }
@@ -2605,28 +2893,37 @@ const updateDropTarget = (x: number, y: number) => {
     virtualDrag.dropPosition = null
     if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
   }
+  const target = virtualDrag.dropTarget
+  fileDropProblem.value = virtualDrag.active && target && virtualDrag.selectedPaths.some(source => normalizedDragPath(source) === normalizedDragPath(target) || dragPathContains(source, target))
+    ? '不能放到自身或子文件夹中' : ''
 }
 
-const onMouseUp = async () => {
-  activeResizer.value = null
-  if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
-  if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
-  if (virtualDrag.scrollTimer) { clearInterval(virtualDrag.scrollTimer); virtualDrag.scrollTimer = null }
+const onMouseUp = async (event: MouseEvent) => {
+  if (!virtualDrag.active) { resetFileDrag(); return }
+  updateDropTarget(event.clientX, event.clientY)
+  const blocked = Boolean(fileDropProblem.value)
+  const suppressClick = (click: MouseEvent) => { click.preventDefault(); click.stopImmediatePropagation() }
+  window.addEventListener('click', suppressClick, { capture: true, once: true })
+  window.setTimeout(() => window.removeEventListener('click', suppressClick, true), 0)
   
   if (virtualDrag.active) {
     const targetPath = virtualDrag.dropTarget
-    const sourcePaths = virtualDrag.selectedPaths.length > 0 ? virtualDrag.selectedPaths : (virtualDrag.dragNode ? [virtualDrag.dragNode.key] : [])
+    const selected: string[] = virtualDrag.selectedPaths.length > 0 ? virtualDrag.selectedPaths : (virtualDrag.dragNode ? [virtualDrag.dragNode.key] : [])
+    const sourcePaths = selected.filter(path => !selected.some(parent => parent !== path && dragPathContains(parent, path)))
     const position = virtualDrag.dropPosition
+    resetFileDrag()
+    if (blocked || fileDropBusy.value) return
 
     if (sourcePaths.length > 0 && targetPath) {
       // 保护：如果目标在源路径中且是前后排序，视为原地操作
       if (sourcePaths.includes(targetPath) && (position === 'before' || position === 'after')) {
-        virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
-        message.destroyAll(); return
+        return
       }
 
+      let moveMessage: ReturnType<typeof message.loading> | undefined
       try {
-        message.loading(`正在处理移动...`)
+        fileDropBusy.value = true
+        moveMessage = message.loading(`正在移动...`, { duration: 0 })
         
         // 识别目标目录和目标参考项
         let finalTargetDir = targetPath
@@ -2647,12 +2944,20 @@ const onMouseUp = async () => {
 
         if (moveTasks.length > 0) {
           await invoke('move_items', { libraryRoot: store.libraryPath, sourcePaths: moveTasks, targetDir: finalTargetDir })
+          for (const oldPath of moveTasks) {
+            const separator = finalTargetDir.includes('\\') ? '\\' : '/'
+            const newPath = `${finalTargetDir}${separator}${fileNameWithExtension(oldPath)}`
+            syncRenamedWorkspaceReferences(oldPath, newPath)
+            try { await store.moveFileDisplayStyles(oldPath, newPath) }
+            catch (error) { message.warning(`文件已移动，样式已保留，但设置暂未保存：${String(error)}`) }
+          }
         }
 
         // 2. 逻辑排序逻辑 (Misty Order)
         // 获取目标文件夹的当前顺序
         const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
         let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
+          .filter(entry => !isLibraryMetadata(entry.name))
           .map(e => e.name)
         
         // 移除正在移动的项
@@ -2692,25 +2997,35 @@ const onMouseUp = async () => {
         })
         for (const p of parentsToRefresh) await refreshNode(p)
 
-        selectedKeys.value = []
-        message.destroyAll()
-        message.success('操作成功')
+        if (!expandedKeys.value.includes(finalTargetDir)) expandedKeys.value = [...expandedKeys.value, finalTargetDir]
+        const separator = finalTargetDir.includes('\\') ? '\\' : '/'
+        selectedKeys.value = sourcePaths.map(path => `${finalTargetDir}${separator}${fileNameWithExtension(path)}`)
+        await nextTick()
+        treeInstRef.value?.scrollTo({ key: selectedKeys.value[0], behavior: 'auto' })
+        const targetLabel = finalTargetDir === store.libraryPath ? '资料库根目录' : fileNameWithExtension(finalTargetDir)
+        message.success(moveTasks.length ? `已移入「${targetLabel}」` : '已调整排列顺序')
       } catch (err: any) {
-        message.destroyAll()
         message.error('操作失败: ' + err)
+      } finally {
+        moveMessage?.destroy()
+        fileDropBusy.value = false
       }
     }
-    virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
   }
 }
 
 const onMouseMove = (e: MouseEvent) => {
-  if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
-  // 影子偏移，确保不挡住探测
-  virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
-  
-  if (virtualDrag.active) {
-    updateDropTarget(e.clientX, e.clientY)
+  if (!virtualDrag.active && !virtualDrag.timer) return
+  fileDragPoint = { x: e.clientX, y: e.clientY }
+  if (!virtualDrag.active && Math.hypot(e.clientX - virtualDrag.startX, e.clientY - virtualDrag.startY) >= 6) beginFileDrag()
+  if (virtualDrag.active) e.preventDefault()
+  if (virtualDrag.active && !fileDragFrame) {
+    fileDragFrame = requestAnimationFrame(() => {
+      fileDragFrame = 0
+      if (!virtualDrag.active) return
+      positionFileDragGhost()
+      updateDropTarget(fileDragPoint.x, fileDragPoint.y)
+    })
 
     // 边缘自动滚动逻辑
     const viewport = document.querySelector('.tree-viewport')
@@ -2719,16 +3034,20 @@ const onMouseMove = (e: MouseEvent) => {
       const threshold = 40 // 感应区高度
       let scrollSpeed = 0
 
-      if (e.clientY < rect.top + threshold) {
+      if (e.clientX < rect.left || e.clientX > rect.right) {
+        scrollSpeed = 0
+      } else if (e.clientY < rect.top + threshold) {
         scrollSpeed = -10 // 向上滚动
       } else if (e.clientY > rect.bottom - threshold) {
         scrollSpeed = 10 // 向下滚动
       }
 
       if (scrollSpeed !== 0) {
+        fileDragScrollSpeed = scrollSpeed
         if (!virtualDrag.scrollTimer) {
           virtualDrag.scrollTimer = setInterval(() => {
-            viewport.scrollTop += scrollSpeed
+            viewport.scrollTop += fileDragScrollSpeed
+            updateDropTarget(fileDragPoint.x, fileDragPoint.y)
           }, 20)
         }
       } else {
@@ -2773,9 +3092,10 @@ const hideFilePreview = () => {
   preview.show = false
 }
 const scheduleFilePreview = (option: TreeOption, x: number, y: number, delay: number) => {
-  if (!option.isLeaf) return
+  if (!option.isLeaf || virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
   hideFilePreview()
   preview.timer = setTimeout(() => {
+    if (virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
     preview.show = true
     preview.title = option.label as string
     preview.path = option.key as string
@@ -2892,41 +3212,51 @@ const openRootContextMenu = (event: MouseEvent) => {
   contextMenu.options = buildCreateMenuOptions()
   contextMenu.show = true
 }
-const nodeProps = ({ option }: { option: TreeOption }) => ({
+const nodeProps = ({ option }: { option: TreeOption }) => {
+  const rootKey = fileStylePathKey(store.libraryPath).replace(/\/$/, '')
+  const nodeKey = fileStylePathKey(option.key as string)
+  const depth = nodeKey.startsWith(`${rootKey}/`) ? Math.max(0, nodeKey.slice(rootKey.length + 1).split('/').length - 1) : 0
+  const marker = option.isLeaf ? store.fileDisplayStyleForPath(option.key as string) : undefined
+  const colors = marker ? fileMarkerColors(marker) : undefined
+  return ({
   'data-key': option.key,
   'data-drop-path': option.key,
   'data-drop-dir': !option.isLeaf ? 'true' : 'false',
+  'data-tree-depth': depth,
   'aria-describedby': option.isLeaf ? 'file-tree-detail-preview' : undefined,
   class: [
-    option.isLeaf && store.fileDisplayStyles[option.key as string] ? 'has-file-display-style' : '',
-    virtualDrag.dropTarget === option.key ? 'drop-active' : '',
-    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
-    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'after' ? 'is-drop-after' : '',
-    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'inside' ? 'is-drop-inside' : '',
+    marker ? `has-file-display-style selection-${marker.selectionStyle || 'fill'}` : '',
+    virtualDrag.active && virtualDrag.selectedPaths.includes(option.key as string) ? 'is-drag-source' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key ? 'drop-active' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'after' ? 'is-drop-after' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'inside' ? 'is-drop-inside' : '',
   ].join(' '),
-  style: option.isLeaf && store.fileDisplayStyles[option.key as string] ? {
-    '--file-marker-bg': store.fileDisplayStyles[option.key as string].backgroundColor || 'transparent',
-    '--file-marker-text': markerTextColor(store.fileDisplayStyles[option.key as string]) || 'inherit',
-    '--file-marker-accent': markerTextColor(store.fileDisplayStyles[option.key as string]) || 'var(--theme-primary)',
+  style: colors ? {
+    '--file-marker-bg': colors.background,
+    '--file-marker-text': colors.text,
+    '--file-marker-accent': markerTextColor(marker) || 'var(--theme-primary)',
+    '--file-marker-selected-bg': colors.selectedBackground,
+    '--file-marker-selected-text': colors.selectedText,
+    '--file-marker-selected-accent': colors.selectedAccent,
   } : undefined,
   onMousedown: (e: MouseEvent) => { 
-    if (e.button !== 0) return; 
+    if (e.button !== 0 || fileDropBusy.value || (e.target as Element).closest('.n-tree-node-switcher')) return;
+    resetFileDrag()
+    preview.focusPath = ''; hideFilePreview()
+    fileDragOption = option
+    fileDragPoint = { x: e.clientX, y: e.clientY }
     virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; 
+    virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
     if (virtualDrag.timer) clearTimeout(virtualDrag.timer); 
-    virtualDrag.timer = setTimeout(() => { 
-      virtualDrag.active = true; virtualDrag.dragNode = option; 
-      if (selectedKeys.value.includes(option.key as string)) {
-        virtualDrag.selectedPaths = [...selectedKeys.value]
-        virtualDrag.ghostText = `移动 ${selectedKeys.value.length} 个项目`
-      } else {
-        virtualDrag.selectedPaths = [option.key as string]
-        virtualDrag.ghostText = option.label as string
-      }
-      virtualDrag.timer = null 
-    }, 350) 
+    virtualDrag.timer = setTimeout(beginFileDrag, 350)
+    window.addEventListener('mousemove', onMouseMove, true)
+    window.addEventListener('mouseup', onMouseUp, true)
+    window.addEventListener('blur', cancelFileDrag)
+    window.addEventListener('keydown', cancelFileDragByKey, true)
   },
   onMouseenter: (e: MouseEvent) => {
-    if (!option.isLeaf || virtualDrag.active) return
+    if (!option.isLeaf || virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
     scheduleFilePreview(option, e.clientX, e.clientY, 600)
   },
   onMouseleave: () => {
@@ -2957,6 +3287,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
     }, 50)
   }
 })
+}
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
@@ -2999,14 +3330,31 @@ const onMenuAction = async (key: string) => {
 // Keep library and quick capture templates identical.
 import { NOTE_TEMPLATES as TEMPLATES } from '../config/noteTemplates'
 
-const templateOptions = [
-  ...Object.keys(TEMPLATES).map(k => ({ label: k, key: k })),
-  { type: 'divider', key: 'format-divider' },
-  ...CREATABLE_FILE_FORMATS.filter(format => format.id !== 'markdown').map(format => ({
-    label: `新建${format.label}`,
-    key: `__format:${format.id}`,
-  })),
-]
+const creationTargetLabel = computed(() => {
+  const target = selectedTargetDirectory()
+  return sameWorkspacePath(target, store.libraryPath)
+    ? store.currentLibraryName
+    : target.replace(/[\\/]$/, '').split(/[\\/]/).pop() || store.currentLibraryName
+})
+const templateOptions = computed<DropdownOption[]>(() => {
+  const selected = selectedKeys.value[selectedKeys.value.length - 1]
+  const node = selected ? findTreeOptionByKey(treeData.value, selected) : undefined
+  const format = selected && node?.isLeaf !== false ? findFileFormat(selected) : undefined
+  const suggested = format?.id !== 'markdown' && format?.creation && format.adapters.creator
+    ? [{ label: `新建${format.label}`, key: `__format:${format.id}` }]
+    : []
+  return [
+    { type: 'group', label: `在「${creationTargetLabel.value}」中新建`, key: 'creation-location', children: [
+      ...suggested,
+      { label: 'Markdown 笔记', key: '空白笔记', icon: () => h(NIcon, null, { default: () => h(FileIcon) }) },
+      { label: '文件夹', key: '__folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) },
+      { label: selected ? '今日笔记' : '今日笔记（Daily）', key: '__daily', icon: () => h(NIcon, null, { default: () => h(CalendarIcon) }) },
+    ] },
+    { type: 'divider', key: 'template-divider' },
+    { label: '笔记模板', key: 'note-templates', children: Object.keys(TEMPLATES).filter(key => key !== '空白笔记').map(key => ({ label: key, key })) },
+    { label: '其他格式', key: 'other-formats', children: CREATABLE_FILE_FORMATS.filter(item => item.id !== 'markdown' && (!suggested.length || item.id !== format?.id)).map(item => ({ label: `新建${item.label}`, key: `__format:${item.id}` })) },
+  ]
+})
 
 const templateMenuProps = () => ({
   class: 'library-create-dropdown-menu',
@@ -3015,8 +3363,9 @@ const templateMenuProps = () => ({
 
 const selectedTargetDirectory = () => {
   if (!selectedKeys.value.length) return store.libraryPath
-  const selected = selectedKeys.value[0]
-  if (!findFileFormat(selected)) return selected
+  const selected = selectedKeys.value[selectedKeys.value.length - 1]
+  const node = findTreeOptionByKey(treeData.value, selected)
+  if (node ? !node.isLeaf : !findFileFormat(selected)) return selected
   return selected.substring(0, Math.max(selected.lastIndexOf('\\'), selected.lastIndexOf('/')))
 }
 
@@ -3038,6 +3387,8 @@ const createRegisteredFile = async (formatId: string, target: string, prefix?: s
 
 const handleTemplateCreate = async (key: string) => {
   if (!store.libraryPath) { openSettings(); return }
+  if (key === '__folder') { await handleToolbarAction('folder'); return }
+  if (key === '__daily') { await createDailyNote(); return }
   const tmpl = TEMPLATES[key] || ''
   try {
     const formatId = key.startsWith('__format:') ? key.slice('__format:'.length) : 'markdown'
@@ -3061,7 +3412,7 @@ const createDailyNote = async () => {
   if (!store.libraryPath) { openSettings(); return }
   const now = new Date()
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const dailyDir = store.libraryPath.replace(/[\\/]$/, '') + '/Daily'
+  const dailyDir = selectedKeys.value.length ? selectedTargetDirectory() : store.libraryPath.replace(/[\\/]$/, '') + '/Daily'
   try {
     const p = await createRegisteredFile('markdown', dailyDir, dateStr)
     await refreshNode(dailyDir)
@@ -3109,7 +3460,7 @@ const executeRename = async () => {
       newName: renameState.newName,
     })
     try { await store.moveFileDisplayStyles(oldPath, newPath) }
-    catch (error) { message.warning(`文件已重命名，但显示标记迁移失败：${String(error)}`) }
+    catch (error) { message.warning(`文件已重命名，样式已保留，但设置暂未保存：${String(error)}`) }
     syncRenamedWorkspaceReferences(oldPath, newPath)
     await refreshNode(parentPath)
     renameState.show = false
@@ -3137,15 +3488,33 @@ const applyRename = () => {
   return false
 }
 
+const currentFileReloadBusy = ref(false)
 const refreshCurrentFile = async () => {
-  if (!activeTabId.value) return
-  const currentTab = tabs.value.find(t => t.id === activeTabId.value)
-  if (currentTab) {
-    // 强制清除内容缓存，使 loadFileToEditor 重新触发磁盘读取
-    currentTab.content = undefined
-    await loadFileToEditor(activeTabId.value)
-    message.success('已同步磁盘最新内容')
+  const path = activeTabId.value, libraryRoot = store.libraryPath, editor = vditor
+  const tab = tabs.value.find(t => t.id === path)
+  if (!path || !tab || !editor || !isVditorReady || currentFileReloadBusy.value || hasPendingMainTextSave(path)) return
+  if (!tab.textReadOnlyReason && tab.content !== undefined && tab.content !== editor.getValue()) {
+    tab.content = editor.getValue(); tab.isDirty = true
   }
+  const draft = tab.content
+  const run = async () => {
+    if (path !== activeTabId.value || libraryRoot !== store.libraryPath || editor !== vditor || !tabs.value.includes(tab)
+      || draft !== tab.content || (draft !== undefined && !tab.textReadOnlyReason && editor.getValue() !== draft)) {
+      message.warning('文档或内容已变化，请重新发起读取。')
+      return
+    }
+    if (currentFileReloadBusy.value || hasPendingMainTextSave(path)) return
+    currentFileReloadBusy.value = true
+    try {
+      if (await loadFileToEditor(path, true)) message.success('已同步磁盘最新内容')
+    } finally { currentFileReloadBusy.value = false }
+  }
+  if (tab.isDirty) {
+    dialog.warning({
+      title: '重新读取会覆盖未保存内容', content: '继续后将使用磁盘内容替换当前修改。读取失败时会保留当前内容。',
+      positiveText: '继续重读', negativeText: '取消', onPositiveClick: run,
+    })
+  } else await run()
 }
 
 const compareExternalChange = async () => {
@@ -3239,6 +3608,7 @@ const normalizeTextSaveOptions = (options: unknown): TextSaveOptions => {
 }
 
 const saveCurrentFile = async (options: unknown = {}) => {
+  if (currentFileReloadBusy.value) { message.warning('正在重新读取文件，请稍后再保存'); return }
   const saveOptions = normalizeTextSaveOptions(options)
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)
   if (t) { 
@@ -3313,8 +3683,18 @@ const syncUserSelectedVditorMode = () => {
     void store.updateConfig({ editorMode: currentMode as any, editorModeExplicit: true })
   }
 }
-const switchEditorMode = (mode: string) => {
+const editorModeChangeBusy = ref(false)
+const switchEditorMode = async (mode: string) => {
+  if (editorModeChangeBusy.value) return
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return
+  const requestedEditor = vditor
+  const requestedPath = activeTabId.value
+  const requestedGeneration = editorLoadGeneration
+  editorModeChangeBusy.value = true
+  try { await store.updateConfig({ editorMode: mode, editorModeExplicit: true }) }
+  catch (error) { message.error(`无法切换编辑模式：${String(error)}`); return }
+  finally { editorModeChangeBusy.value = false }
+  if (vditor !== requestedEditor || activeTabId.value !== requestedPath || editorLoadGeneration !== requestedGeneration) return
   const content = vditor.getValue()
   const tab = tabs.value.find(item => item.id === activeTabId.value)
   if (tab && tab.content !== content) {
@@ -3325,8 +3705,8 @@ const switchEditorMode = (mode: string) => {
   editorLoading.value = true
   const generation = ++editorLoadGeneration
   cleanupEditorListeners()
+  documentShortcutHost.value = null
   vditor.destroy(); vditor = null; isVditorReady = false
-  void store.updateConfig({ editorMode: mode, editorModeExplicit: true })
   nextTick(() => {
     if (generation !== editorLoadGeneration || vditor) return
     // initVditor's after callback restores the current tab through the guarded
@@ -3343,6 +3723,7 @@ const ensureVditorModeForFile = (path: string) => {
   if (vditor.getCurrentMode() === desiredMode) return false
   editorLoading.value = true
   cleanupEditorListeners()
+  documentShortcutHost.value = null
   vditor.destroy()
   vditor = null
   isVditorReady = false
@@ -3416,19 +3797,21 @@ const initVditor = () => {
       } as any,
       toolbar: [
         { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
-        { name: 'emoji', tip: '表情' }, { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
-        { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
-        { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' },
-        { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' },
-        { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>', click: () => { void insertTableChartReference() } }, '|',
+        { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'quote', tip: '引用' }, '|',
+        { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
+        { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' }, { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' }, '|',
+        { name: 'more', tip: '更多格式与工具', icon: '<span class="vditor-toolbar-label">更多格式</span>', toolbar: [
+        { name: 'emoji', tip: '表情' }, { name: 'strike', tip: '删除线' }, { name: 'line', tip: '分割线' }, '|',
+        { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<span class="vditor-toolbar-label">实时 Table 图表</span>', click: () => { void insertTableChartReference() } }, '|',
         { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
           const themes = markdownCodeThemeChoices(store.theme)
           const nextTheme = themes[(themes.indexOf(store.codeTheme) + 1) % themes.length]
           handleCodeThemeChange(nextTheme); message.info(`代码风格: ${nextTheme.toUpperCase()}`)
         }},
-        { name: 'editor-bg', tip: '修改文章背景色', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
-        { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>', click: () => handleAIAssist() },
+        { name: 'editor-bg', tip: '修改文章背景色', icon: '<span class="vditor-toolbar-label">文章背景色</span>', click: () => { (document.querySelector('.hidden-picker-trigger .n-color-picker-trigger') as HTMLElement)?.click() }},
+        { name: 'ai-assist', tip: 'AI 辅助 (Alt+A)', icon: '<span class="vditor-toolbar-label">AI 辅助</span>', click: () => handleAIAssist() },
         '|', { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
+        ] }
       ],
       input: (val) => {
         if (!suppressEditorInput) searchMatchCount.value = null
@@ -3444,16 +3827,27 @@ const initVditor = () => {
         wordCount.value = val.length;
       },
       after: () => {
+        cleanupEditorListeners()
         isVditorReady = true;
         editorLoading.value = false;
+        const toolbar = document.querySelector('#vditor-lib .vditor-toolbar')
+        if (toolbar) {
+          const host = document.createElement('div')
+          host.className = 'document-shortcut-host'
+          toolbar.appendChild(host)
+          documentShortcutHost.value = host
+        }
+        documentPreviewButton = toolbar?.querySelector<HTMLElement>('[data-type="preview"]') ?? null
+        syncDocumentPreview()
+        if (documentPreviewButton) {
+          documentPreviewObserver = new MutationObserver(syncDocumentPreview)
+          documentPreviewObserver.observe(documentPreviewButton, { attributes: true, attributeFilter: ['class'] })
+        }
         const currentAppearance = resolveMarkdownEditorAppearance(store.theme, store.codeTheme)
         vditor.setTheme(currentAppearance.editorTheme, currentAppearance.contentTheme, currentAppearance.codeTheme)
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
         const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
         if (contentEl) {
-          // 清理旧的监听器
-          cleanupEditorListeners()
-
           const getEditEl = () => vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element || contentEl
           const updateCursor = () => {
             const el = getEditEl()
@@ -3527,6 +3921,10 @@ let currentContentEl: HTMLElement | null = null
 let currentViewport: HTMLElement | null = null
 
 const cleanupEditorListeners = () => {
+  documentPreviewObserver?.disconnect()
+  documentPreviewObserver = undefined
+  documentPreviewButton = null
+  syncDocumentPreview()
   if (currentContentEl && cursorUpdateHandler) {
     currentContentEl.removeEventListener('keyup', cursorUpdateHandler)
     currentContentEl.removeEventListener('click', cursorUpdateHandler)
@@ -3619,6 +4017,8 @@ const handleExportHtml = async () => {
 
 onMounted(async () => {
   document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
+  document.addEventListener('pointerup', rememberReferenceInsertionPoint)
+  document.addEventListener('keyup', rememberReferenceInsertionPoint)
   void initializeUpdater()
   window.addEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
@@ -3651,6 +4051,7 @@ onMounted(async () => {
   if (isTauriRuntime()) {
     unlistenDrop = await getCurrentWindow().onDragDropEvent(async (event) => {
     if (event.payload.type === 'over') {
+      externalFileDrag = true
       updateDropTarget(event.payload.position.x, event.payload.position.y)
     } else if (event.payload.type === 'drop') {
       const targetPath = virtualDrag.dropTarget || store.libraryPath
@@ -3681,6 +4082,7 @@ onMounted(async () => {
           // 逻辑排序 JSON 更新
           const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
           let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
+            .filter(entry => !isLibraryMetadata(entry.name))
             .map(e => e.name)
           
           const newNames = importedPaths.map(p => p.split(/[\\/]/).pop() || '')
@@ -3705,15 +4107,23 @@ onMounted(async () => {
         } catch (err) { message.destroyAll(); message.error('导入失败') }
       }
       virtualDrag.dropTarget = null; virtualDrag.dropPosition = null
+      externalFileDrag = false
+      clearFileDragTimers()
+    } else if (event.payload.type === 'leave') {
+      externalFileDrag = false
+      resetFileDrag()
     }
     })
   }
 })
 
 onUnmounted(() => {
+  resetFileDrag()
   closeHistoryComparison()
   invalidateHistory()
   document.removeEventListener('selectionchange', rememberReferenceInsertionPoint)
+  document.removeEventListener('pointerup', rememberReferenceInsertionPoint)
+  document.removeEventListener('keyup', rememberReferenceInsertionPoint)
   ++knowledgeSearchGeneration
   ++libraryLoadGeneration
   editorLoadGeneration += 1
@@ -3734,6 +4144,7 @@ onUnmounted(() => {
   if (unlistenFocus) unlistenFocus()
   if (unlistenDrop) unlistenDrop()
   if (vditor && isVditorReady) {
+    documentShortcutHost.value = null
     vditor.destroy()
     vditor = null
   }
@@ -4081,7 +4492,7 @@ watch(activeTabId, (newId, oldId) => {
 </script>
 
 <style scoped>
-.inbox-shortcut { margin: 0 10px 6px; padding: 8px 10px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; cursor: pointer; font: inherit; }
+.inbox-shortcut { flex-shrink: 0; margin: 0; padding: 3px 4px; border: 1px solid var(--workspace-border-color, #8885); border-radius: 5px; color: var(--theme-text); background: var(--theme-card); text-align: left; cursor: pointer; font: inherit; font-size: var(--text-compact); white-space: nowrap; }
 .inbox-shortcut[aria-expanded="true"] { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); }
 .inbox-shortcut:focus-visible { outline: 2px solid var(--theme-primary); }
 .library-recovery { display: flex; flex-direction: column; gap: 10px; padding: 14px; overflow-wrap: anywhere; font-size: 12px; color: var(--theme-text); }
@@ -4089,10 +4500,68 @@ watch(activeTabId, (newId, oldId) => {
 .library-recovery-path { opacity: .7; }
 .library-recovery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .library-recovery details { max-height: 120px; overflow: auto; }
-.library-mode { position: relative; display: flex; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); }
-.is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
+.library-mode { position: relative; display: flex; flex-direction: column; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); container-type: inline-size; container-name: library-shell; }
+.library-shell-toolbar { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; padding: 2px 12px; flex-shrink: 0; border-bottom: var(--theme-border); background: var(--theme-surface); }
+.library-shell-toolbar > .n-button { flex-shrink: 0; }
+.library-shell-toolbar > .library-picker { flex: 0 0 auto; min-width: 36px; width: clamp(52px, 12cqw, 160px); }
+.shell-document-tabs { --workspace-tabs-height: 30px; --workspace-tab-height: 28px; align-self: stretch; border-bottom: 0; }
+@container library-shell (max-width: 600px) {
+  .shell-action-label { display: none; }
+  .library-shell-toolbar > .n-button { padding: 0 5px; }
+  .library-shell-toolbar :deep(.n-button__icon) { margin-right: 0; }
+  .library-shell-toolbar > .library-picker { max-width: 52px; }
+  .shell-document-tabs :deep(.workspace-tabs-scroll) { padding: 0 20px; }
+  .shell-document-tabs :deep(.tab-scroll-button) { width: 18px; }
+  .shell-document-tabs :deep(.workspace-tab) { flex-basis: 128px; min-width: 108px; }
+}
+.library-picker :deep(.n-button__content) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-toolbar-spacer { flex: 1; }
+.library-workspace { position: relative; display: flex; flex: 1; width: 100%; min-width: 0; min-height: 0; gap: 0; }
+.shell-search-area { padding: 12px 10px 6px; flex-shrink: 0; }
+.document-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 7px 12px; border-bottom: var(--theme-border); flex-shrink: 0; }
+.document-identity { display: flex; align-items: center; flex: 1 1 140px; min-width: 0; gap: 4px; }
+.document-identity > .n-button { flex-shrink: 0; }
+.document-breadcrumb { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.document-breadcrumb { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid transparent; border-radius: var(--theme-radius-sm); background: transparent; cursor: pointer; font-family: inherit; }
+.document-breadcrumb:hover { color: var(--theme-primary); background: var(--workspace-control-hover-bg); }
+.document-breadcrumb:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
+.document-breadcrumb .n-icon { flex-shrink: 0; opacity: .65; }
+.document-breadcrumb > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.document-primary-actions { display: flex; align-items: center; flex-wrap: wrap; max-width: 100%; gap: 4px; margin-left: auto; }
+.document-primary-actions > .n-button { flex-shrink: 0; }
+.document-menu-content { display: flex; flex-direction: column; width: min(228px, calc(100vw - 80px)); gap: 4px; color: var(--theme-text); }
+.document-menu-content .n-button { justify-content: flex-start; }
+.document-menu-content .tab-actions { padding: 0; align-items: stretch; }
+.document-menu-content .action-btn-group { align-items: stretch; flex-direction: column; }
+.document-menu-content .mode-toggle, .document-menu-content .width-toggle { align-items: center; flex-wrap: wrap; padding: 8px 0 4px; margin: 0; border-left: 0; border-top: var(--theme-border); }
+.document-menu-content .mode-toggle > span, .document-menu-content .width-toggle > span { flex-basis: 100%; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.document-menu-capability { margin: 4px 0; font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.6; }
+.document-status { position: relative; z-index: 11; background: var(--theme-surface); display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 4px 10px; border-top: var(--theme-border); flex-shrink: 0; font-size: var(--text-compact); color: var(--theme-text-secondary); }
+.document-save-state { color: var(--theme-primary); }
+.document-reading-status { margin-left: auto; }
+.reference-empty { box-sizing: border-box; width: clamp(260px, 28vw, 360px); flex: none; height: 100%; padding: 12px 16px; border-left: var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
+.reference-empty > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.reference-empty > p { font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.7; }
+.editor-main :deep(.vditor-toolbar-label) { white-space: nowrap; font-size: var(--text-compact); }
+.editor-main { container-type: inline-size; container-name: library-editor; }
+.editor-main :deep(.vditor-toolbar) { display: flex; flex-wrap: wrap; align-items: center; padding-inline: 8px !important; }
+.editor-main :deep(.vditor-toolbar > .vditor-toolbar__item) { flex-shrink: 0; }
+.editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; min-height: var(--toolbar-height); margin-left: auto; padding-left: 8px; vertical-align: middle; }
+.document-inline-shortcuts { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: var(--theme-border); white-space: nowrap; }
+@container library-editor (max-width: 520px) {
+  .document-toolbar { padding-inline: 8px; gap: 4px; }
+  .document-primary-actions { gap: 2px; }
+  .editor-main :deep(.document-shortcut-host) { padding-left: 0; padding-right: 40px; }
+  .document-inline-shortcuts { padding-left: 4px; gap: 2px; }
+}
+.editor-main :deep(.vditor-toolbar > .vditor-toolbar__item:has([data-type="more"])) { width: auto; }
+.editor-main :deep(.vditor-toolbar [data-type="more"]) { width: auto; min-width: 68px; }
+.editor-main :deep(.vditor-toolbar .vditor-hint) { max-width: calc(100cqw - 32px); max-height: min(560px, calc(100vh - 200px)); overflow-y: auto; }
+.document-menu-content, .document-menu-content * { box-sizing: border-box; }
+.is-dragging, .is-dragging * { transition: none !important; user-select: none !important; cursor: col-resize !important; }
 
 .sidebar {
+  flex-shrink: 0;
   height: 100%; background: color-mix(in srgb, var(--theme-surface) 84%, var(--theme-bg)); backdrop-filter: none;
   border-right: var(--theme-border); display: flex; flex-direction: column; overflow: hidden;
   transition: width var(--motion-page) var(--ease-emphasized), opacity var(--motion-slow) var(--ease-standard); z-index: 20;
@@ -4104,15 +4573,15 @@ watch(activeTabId, (newId, oldId) => {
 
 /* === 顶部 Tabs 优化 === */
 .sidebar-tabs-header {
-  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;
-  padding: 8px; flex-shrink: 0; overflow: hidden;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;
+  padding: 6px; flex-shrink: 0; overflow: hidden;
 }
 .icon-tab {
   display: flex; align-items: center; justify-content: center; gap: 4px;
   width: 100%; min-width: 0; height: 34px; padding: 0 4px;
   box-sizing: border-box;
   border-radius: var(--theme-radius-sm); cursor: pointer;
-  background: transparent; color: var(--theme-text, #1d1d1f);
+  border: 0; font: inherit; background: transparent; color: var(--theme-text, #1d1d1f);
   opacity: 0.55; overflow: hidden;
   transition: background var(--motion-base) var(--ease-standard),
               color var(--motion-base) var(--ease-standard),
@@ -4126,15 +4595,10 @@ watch(activeTabId, (newId, oldId) => {
 .icon-tab :deep(svg) { flex: none; transition: transform var(--motion-base) var(--ease-emphasized); }
 .icon-tab.active :deep(svg) { transform: scale(1.08); }
 .icon-tab-text {
-  min-width: 0; max-width: 48px; overflow: hidden;
-  white-space: nowrap; font-size: 11px; font-weight: 600;
-  opacity: 1; transform: translateX(0);
-  transition: max-width var(--motion-base) var(--ease-emphasized),
-              opacity var(--motion-fast) var(--ease-standard),
-              transform var(--motion-base) var(--ease-emphasized);
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
 }
-.sidebar-tabs-header.compact .icon-tab { gap: 0; padding: 0; }
-.sidebar-tabs-header.compact .icon-tab-text { max-width: 0; opacity: 0; transform: translateX(-4px); }
+.icon-tab:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .is-dark .icon-tab:hover { background: rgba(255,255,255,0.08); }
 .is-dark .icon-tab.active { background: rgba(255,255,255,0.12); }
 
@@ -4149,7 +4613,9 @@ watch(activeTabId, (newId, oldId) => {
 .tab-fade-enter-from { opacity: 0; transform: translateY(10px); }
 .tab-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 
-.sidebar-header { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.sidebar-header { padding: 6px 8px; flex-shrink: 0; border-bottom: var(--theme-border); }
+.sidebar-header .toolbar-area { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.sidebar-header .toolbar-area > .n-button { flex-shrink: 0; }
 .search-area { display: grid; gap: 7px; }.search-control-row { display: grid; grid-template-columns: minmax(0,1fr) 30px; align-items: center; gap: 4px; }.search-format-filter { width: 100%; }
 
 .rename-editor { display: grid; gap: 9px; padding-top: 4px; }
@@ -4163,20 +4629,36 @@ watch(activeTabId, (newId, oldId) => {
 .rename-confirmation span { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
 
 .file-style-modal { width: min(520px, calc(100vw - 28px)); }
-.file-style-editor { display: grid; gap: 18px; }
+.file-style-editor { display: grid; gap: 16px; max-height: calc(100dvh - 210px); overflow-y: auto; padding: 3px; }
+.file-style-preview-heading { display: grid; gap: 3px; font-size: 12px; color: var(--theme-text); }
+.file-style-preview-heading span { color: var(--theme-text-secondary); font-size: 11px; line-height: 1.5; }
 .file-style-preview {
   min-height: 46px; display: flex; align-items: center; gap: 9px; padding: 8px 12px;
-  box-sizing: border-box; overflow: hidden; border: 1px solid var(--theme-border);
-  border-radius: 7px; background: var(--theme-surface-muted); color: var(--theme-text);
+  box-sizing: border-box; overflow: hidden; border: var(--theme-border);
+  border-radius: var(--theme-radius-sm); background: var(--theme-surface); color: var(--theme-text);
   font-size: 13px; font-weight: 650;
 }
 .file-style-preview span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-style-section { display: grid; gap: 9px; }
+.file-style-preview .n-icon { flex: none; }
+.file-style-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.file-style-previews small { display: block; margin-bottom: 5px; color: var(--theme-text-secondary); }
+.file-style-preview.is-selected { position: relative; }
+.file-style-preview.is-selected::after { content: ''; position: absolute; left: 3px; top: 8px; bottom: 8px; width: 2px; border-radius: 999px; background: var(--preview-accent); }
+.file-selection-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.file-selection-options button, .file-selection-colors button { min-height: 30px; padding: 0 9px; border: var(--theme-border); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: var(--theme-surface); cursor: pointer; font: inherit; font-size: 12px; }
+.file-selection-options button.active { color: var(--theme-primary); border-color: var(--theme-primary); background: var(--workspace-control-hover-bg); }
+.file-selection-colors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.file-selection-colors label { display: grid; gap: 5px; font-size: 11px; color: var(--theme-text-secondary); }
+.file-selection-colors label > div { display: flex; gap: 5px; align-items: center; }
+.file-selection-colors input { width: 32px; height: 30px; padding: 2px; border: var(--theme-border); border-radius: 5px; background: var(--theme-surface); cursor: pointer; }
+.file-selection-colors :disabled { cursor: default; opacity: .4; }
+.file-style-help { margin: 0; font-size: 11px; color: var(--theme-text-secondary); line-height: 1.6; }
+.file-style-section { display: grid; gap: 10px; padding-top: 14px; border-top: var(--theme-border); }
 .file-style-section > label { color: var(--theme-text); font-size: 12px; font-weight: 700; }
 .file-color-options, .file-icon-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .file-color-swatch, .file-icon-options button, .file-color-options input[type="color"] {
   width: 34px; height: 34px; padding: 0; box-sizing: border-box;
-  border: 1px solid var(--theme-border); border-radius: 7px;
+  border: var(--theme-border); border-radius: 7px;
   background: var(--theme-surface); color: var(--theme-text-secondary); cursor: pointer;
   transition: border-color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-emphasized), box-shadow var(--motion-fast) var(--ease-standard);
 }
@@ -4186,158 +4668,182 @@ watch(activeTabId, (newId, oldId) => {
   box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), .14);
 }
 .file-color-swatch:hover, .file-icon-options button:hover, .file-color-options input[type="color"]:hover { transform: translateY(-1px); }
-.file-icon-options button { display: grid; place-items: center; }
+.file-icon-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
+.file-icon-options button { display: grid; place-items: center; width: 100%; height: 50px; padding: 5px 2px; gap: 3px; }
+.file-icon-options button > span { font-size: 11px; }
 .file-color-options input[type="color"] { overflow: hidden; }
 .file-color-options input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
 .file-color-options input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 4px; }
 .file-style-actions { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 8px; }
+.file-color-swatch:focus-visible, .file-icon-options button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 3px; }
+@media (max-width: 400px) { .file-style-actions { grid-template-columns: 1fr 1fr; } .file-style-actions > span { display: none; } .file-style-actions > :first-child { grid-column: 1 / -1; justify-self: start; } }
 
 .tree-viewport {
   flex: 1;
   overflow-y: auto;
   padding: 6px 10px;
   border: 2px solid transparent;
-  transition: all var(--motion-base) var(--ease-standard);
-  animation: treeContainerFade 0.6s var(--ease-premium);
+  transition: background-color var(--motion-base) var(--ease-standard), border-color var(--motion-base) var(--ease-standard);
+  animation: treeContainerFade var(--motion-page) var(--ease-premium);
 }
 
 .tree-viewport.drop-active {
-  background: linear-gradient(135deg,
-    rgba(0, 122, 255, 0.06) 0%,
-    rgba(0, 122, 255, 0.03) 100%);
-  border-color: rgba(0, 122, 255, 0.35);
+  background: rgba(var(--theme-primary-rgb), 0.05);
+  border-color: rgba(var(--theme-primary-rgb), 0.35);
   border-radius: var(--theme-radius);
-  box-shadow: inset 0 0 0 1px rgba(0, 122, 255, 0.15);
 }
 
-:deep(.n-tree-node-content) {
+/* One row owns every visual state; content and switcher never paint a second surface. */
+.library-file-tree :deep(.n-tree-node-wrapper) {
+  padding-block: calc(var(--file-row-gap) / 2);
+}
+.library-mode .library-file-tree :deep(.n-tree-node) {
+  --tree-row-fill: var(--file-row-bg);
+  --tree-row-text: var(--theme-text);
+  --tree-row-accent: var(--theme-primary);
+  position: relative;
+  box-sizing: border-box;
+  min-height: var(--file-row-height);
+  margin-block: 0;
+  --n-line-offset-top: calc(var(--file-row-gap) / -2);
+  --n-line-offset-bottom: calc(var(--file-row-gap) / -2);
+  background: var(--tree-row-fill);
+  color: var(--tree-row-text);
+  transition: background-color var(--motion-base) var(--ease-standard), border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
+}
+.library-file-tree :deep(.n-tree-node-content) {
   flex: 1;
   min-width: 0;
+  min-height: calc(var(--file-row-height) - 2px);
   overflow: hidden;
-  border-radius: var(--theme-radius-sm);
-  transition:
-    all var(--motion-base) var(--ease-premium),
-    transform var(--motion-fast) var(--ease-emphasized);
-  position: relative;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  transition: color var(--motion-fast) var(--ease-standard);
 }
+.library-file-tree :deep(.n-tree-node-content::before),
+.library-file-tree :deep(.n-tree-node-content::after) { content: none; }
 
-:deep(.n-tree-node-content::before) {
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style) {
+  --tree-row-fill: var(--file-marker-bg);
+  --tree-row-text: var(--file-marker-text);
+  --tree-row-accent: var(--file-marker-accent);
+}
+.library-mode .library-file-tree :deep(.n-tree-node:not(.n-tree-node--disabled):hover),
+.library-mode .library-file-tree :deep(.n-tree-node.n-tree-node--selectable:not(.n-tree-node--disabled):not(.n-tree-node--selected):active),
+.library-mode .library-file-tree :deep(.n-tree-node--pending:not(.n-tree-node--selected)) {
+  background: color-mix(in srgb, var(--theme-primary) 6%, var(--tree-row-fill));
+  border-color: rgba(var(--theme-primary-rgb), .16);
+  box-shadow: var(--file-row-hover-shadow);
+}
+.library-mode .library-file-tree :deep(.n-tree-node.n-tree-node--selected) {
+  background: color-mix(in srgb, var(--theme-primary) 12%, var(--tree-row-fill));
+  border-color: rgba(var(--theme-primary-rgb), .24);
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+.library-mode .library-file-tree :deep(.n-tree-node.n-tree-node--selected:hover) {
+  background: color-mix(in srgb, var(--theme-primary) 16%, var(--tree-row-fill));
+}
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.n-tree-node--selected),
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.n-tree-node--selected:hover) {
+  background: var(--file-marker-selected-bg);
+  color: var(--file-marker-selected-text);
+  --tree-row-accent: var(--file-marker-selected-accent);
+  border-color: transparent;
+}
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.selection-outline.n-tree-node--selected) {
+  border: 1px solid var(--file-marker-selected-accent);
+}
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style .n-tree-node-content__prefix svg) { color: var(--tree-row-text); }
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.n-tree-node--selected .n-tree-node-content__prefix svg) { color: var(--file-marker-selected-text); stroke: currentColor; }
+
+.library-file-tree :deep(.n-tree-node::after) {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: var(--theme-radius-sm);
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.08),
-    transparent 60%);
-  opacity: 0;
-  transition: opacity var(--motion-base) var(--ease-standard);
-}
-
-:deep(.n-tree-node-content:hover) {
-  background: rgba(var(--theme-primary-rgb), 0.06) !important;
-  transform: translateX(2px);
-}
-
-:deep(.n-tree-node-content:hover::before) {
-  opacity: 1;
-}
-
-:deep(.n-tree-node.has-file-display-style .n-tree-node-content) {
-  background: var(--file-marker-bg) !important;
-  color: var(--file-marker-text) !important;
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--file-marker-accent) 55%, var(--theme-primary));
-}
-:deep(.n-tree-node.has-file-display-style .n-tree-node-content:hover) {
-  filter: saturate(1.04) brightness(1.015);
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--file-marker-accent) 70%, var(--theme-primary)), var(--theme-shadow-sm);
-}
-:deep(.n-tree-node.has-file-display-style .n-tree-node-content__text) { color: inherit; }
-
-:deep(.n-tree-node-content.n-tree-node-content--selected) {
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.15) 0%,
-    rgba(var(--theme-primary-rgb), 0.1) 100%) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(var(--theme-primary-rgb), 0.2),
-    var(--style-glow);
-  color: var(--theme-primary) !important;
-  font-weight: 650;
-}
-
-:deep(.n-tree-node-content.n-tree-node-content--selected::after) {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
   border-radius: 999px;
-  background: linear-gradient(180deg,
-    var(--theme-primary) 0%,
-    rgba(var(--theme-primary-rgb), 0.6) 100%);
-  box-shadow: 0 0 8px rgba(var(--theme-primary-rgb), 0.5);
+  background: var(--tree-row-accent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scaleY(.45);
+  transition: opacity var(--motion-fast) var(--ease-standard), transform var(--motion-base) var(--ease-emphasized);
 }
+.library-file-tree :deep(.n-tree-node--selected::after) { opacity: 1; transform: scaleY(1); }
+.library-file-tree :deep(.n-tree-node.has-file-display-style:not(.n-tree-node--selected)::after) { opacity: .35; transform: scaleY(.8); }
+.library-file-tree:focus-visible :deep(.n-tree-node--pending) { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 
-:deep(.n-tree-node-content__text) {
+.library-file-tree :deep(.n-tree-node-content__text) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
-  position: relative;
-  z-index: 1;
+  min-width: 0;
 }
-
-:deep(.n-tree-node.drop-active .n-tree-node-content) {
-  background: transparent !important;
+.library-file-tree :deep(.n-tree-node[data-tree-depth="0"] .n-tree-node-indent::before),
+.library-file-tree :deep(.n-tree-node[data-tree-depth="0"] .n-tree-node-indent::after) { content: none; }
+.library-file-tree :deep(.n-tree-node[data-drop-dir="true"] .n-tree-node-content__text) { font-weight: 600; }
+.library-file-tree :deep(.n-tree-node-content__prefix) {
+  flex-shrink: 0;
+  transition: transform var(--motion-base) var(--ease-emphasized);
 }
-
-:deep(.n-tree-node.is-drop-inside .n-tree-node-content) {
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.12) 0%,
-    rgba(var(--theme-primary-rgb), 0.08) 100%) !important;
-  box-shadow: 0 0 0 2px var(--theme-primary) inset;
-  border-radius: var(--theme-radius-sm);
+.library-file-tree :deep(.n-tree-node:hover .n-tree-node-content__prefix),
+.library-file-tree :deep(.n-tree-node--pending .n-tree-node-content__prefix) {
+  transform: translateY(var(--file-row-icon-lift)) scale(var(--file-row-icon-scale));
 }
-
-:deep(.n-tree-node) {
-  position: relative;
+.library-mode .library-file-tree :deep(.n-tree-node.is-drop-inside),
+.library-mode .library-file-tree :deep(.n-tree-node.is-drop-inside:hover) {
+  background: color-mix(in srgb, var(--theme-primary) 24%, var(--tree-row-fill));
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  font-weight: 600;
 }
-
-:deep(.n-tree-node.is-drop-before::before),
-:deep(.n-tree-node.is-drop-after::after) {
+.library-file-tree :deep(.n-tree-node.is-drop-before::before),
+.library-file-tree :deep(.n-tree-node.is-drop-after::after) {
   content: "";
   position: absolute;
   left: 36px;
   right: 12px;
-  height: 3px;
-  background: linear-gradient(90deg,
-    var(--theme-primary) 0%,
-    rgba(var(--theme-primary-rgb), 0.8) 100%);
+  width: auto;
+  height: 2px;
+  background: var(--theme-primary);
   z-index: 10;
   pointer-events: none;
   border-radius: 999px;
-  box-shadow:
-    0 0 8px rgba(var(--theme-primary-rgb), 0.6),
-    -6px 0 0 var(--theme-primary),
-    6px 0 0 var(--theme-primary);
+  transform: none;
+  opacity: 1;
+  transition: none;
 }
+.library-file-tree :deep(.n-tree-node.is-drop-before::before) { top: -2px; bottom: auto; }
+.library-file-tree :deep(.n-tree-node.is-drop-after::after) { bottom: -2px; top: auto; }
+.file-dragging .library-file-tree :deep(.n-tree-node),
+.file-dragging .library-file-tree :deep(.n-tree-node-content__prefix),
+.file-dragging .library-file-tree :deep(.n-tree-motion-wrapper) { transition: none !important; animation: none !important; user-select: none; }
+.file-dragging .library-file-tree :deep(.n-tree-node-content__prefix) { transform: none !important; }
+.file-dragging .library-file-tree :deep(.n-tree-node.is-drag-source) { opacity: .55; }
 
-:deep(.n-tree-node.is-drop-before::before) { top: -2px; }
-:deep(.n-tree-node.is-drop-after::after) { bottom: -2px; }
-
-/* 文件夹图标动画 */
-:deep(.n-tree-node-switcher) {
-  transition: transform var(--motion-base) var(--ease-emphasized);
+/* Rotate the inner arrow while the switcher's hit area stays still. */
+.library-file-tree :deep(.n-tree-node-switcher) { align-self: center; transform: none; }
+.library-file-tree :deep(.n-tree-node-switcher__icon) {
+  transition: transform var(--motion-base) var(--ease-emphasized), color var(--motion-fast) var(--ease-standard);
 }
-
-:deep(.n-tree-node--expanded > .n-tree-node-content .n-tree-node-switcher) {
-  transform: rotate(90deg);
+.library-file-tree :deep(.n-tree-node-switcher--expanded > .n-tree-node-switcher__icon) { transform: rotate(90deg); }
+.library-file-tree :deep(.n-tree-node-switcher:hover .n-tree-node-switcher__icon) { color: var(--theme-primary); }
+.library-file-tree :deep(.n-tree-motion-wrapper[class*="-active"]) {
+  transition-duration: var(--motion-base);
+  transition-timing-function: var(--ease-standard);
 }
-
-:deep(.n-tree-node-switcher:hover) {
-  transform: scale(1.15);
-}
-
-:deep(.n-tree-node--expanded > .n-tree-node-content:hover .n-tree-node-switcher) {
-  transform: rotate(90deg) scale(1.15);
+@media (prefers-reduced-motion: reduce) {
+  .library-file-tree :deep(.n-tree-node),
+  .library-file-tree :deep(.n-tree-node::after),
+  .library-file-tree :deep(.n-tree-node-content__prefix),
+  .library-file-tree :deep(.n-tree-node-switcher__icon),
+  .library-file-tree :deep(.n-tree-motion-wrapper[class*="-active"]) { transition-duration: 1ms; }
 }
 
 .quick-pane { padding: 8px 0; overflow-y: auto; }
@@ -4404,8 +4910,10 @@ watch(activeTabId, (newId, oldId) => {
 .knowledge-result-path { overflow-wrap: anywhere; white-space: normal; }
 .knowledge-result-head { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 100%; min-width: 0; }.knowledge-result-head strong { display: -webkit-box; overflow: hidden; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: var(--text-body, 13px); line-height: 1.45; }.knowledge-result-head i { color: var(--theme-primary); font-size: var(--text-compact); font-style: normal; font-weight: 700; overflow-wrap: anywhere; }
 .knowledge-result-context { display: -webkit-box; overflow: hidden; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }.knowledge-search-result small { color: var(--theme-primary); font-size: var(--text-compact); }
-.knowledge-index-strip { min-height: 44px; display: grid; grid-template-columns:16px minmax(0,1fr) auto; grid-template-rows:auto auto; align-items:center; column-gap:7px; padding:5px 8px 5px 12px; border-bottom:var(--theme-border); color:var(--theme-text-secondary); background:var(--theme-surface); font-size: var(--text-compact); }
-.knowledge-index-strip>svg { grid-row:1 / 3; }.knowledge-index-strip>span { align-self:end; overflow:hidden; color:var(--theme-text); font-weight:650; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip>small { grid-column:2; align-self:start; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.knowledge-index-strip.state-ready>svg { color:#168a52; }.knowledge-index-strip.state-stale>svg,.knowledge-index-strip.state-corrupt>svg,.knowledge-index-strip.state-error>svg { color:#c47a16; }.knowledge-index-actions { grid-column:3; grid-row:1 / 3; display:flex; align-items:center; }
+.knowledge-index-strip { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.knowledge-index-strip > small { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: inherit; }
+.knowledge-index-strip.state-stale, .knowledge-index-strip.state-corrupt, .knowledge-index-strip.state-error { color: var(--warning-color, #a66513); }
+.knowledge-index-actions { display: flex; align-items: center; flex-shrink: 0; }
 
 .tag-row {
   width: 100%;
@@ -5008,16 +5516,19 @@ watch(activeTabId, (newId, oldId) => {
   .meta-path { font-size: var(--text-body-sm); }
 }
 
-.resizer-area { position: relative; width: 1px; height: 100%; z-index: 100; background: rgba(0, 0, 0, 0.03); cursor: col-resize; }
-.resizer-area:hover { background: var(--theme-primary); }
-.drag-handle { position: absolute; top: 0; left: -8px; right: -8px; bottom: 0; z-index: 101; cursor: col-resize; }
+.resizer-area { position: relative; flex: none; width: max(1px, var(--surface-panel-gap, 0px)); height: 100%; z-index: 100; cursor: col-resize; }
+.resizer-area::before { content: ''; position: absolute; top: 0; bottom: 0; left: calc(50% - .5px); width: 1px; background: rgba(var(--theme-primary-rgb), .12); pointer-events: none; }
+.resizer-area:hover::before { background: var(--theme-primary); }
+.drag-handle { position: absolute; top: 0; left: 50%; width: 17px; bottom: 0; transform: translateX(-50%); z-index: 101; cursor: col-resize; touch-action: none; }
+.drag-handle:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -6px; }
 .collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: var(--theme-card); color: var(--theme-text); border: var(--theme-border); box-shadow: var(--theme-shadow-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; transition: all 0.3s var(--ease-premium); }
 .collapse-btn:hover { background: var(--theme-primary); color: #fff; transform: translateY(-50%) scale(1.1); }
-.collapse-btn.left { left: 0px; border-radius: 0 var(--theme-radius) var(--theme-radius) 0; }
+.collapse-btn.left { left: 50%; border-radius: 0 var(--theme-radius) var(--theme-radius) 0; }
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .local-graph-rail { width: clamp(300px,28vw,380px); height: 100%; min-width: 0; min-height: 0; flex: none; overflow: auto; box-sizing: border-box; border-left: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 97%,transparent); box-shadow: -8px 0 24px rgba(0,0,0,.06); }.local-graph-rail > header { position: sticky; z-index: 2; top: 0; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px 7px 14px; box-sizing: border-box; border-bottom: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 98%,transparent); }.local-graph-rail > header div { min-width: 0; display: grid; gap: 2px; }.local-graph-rail > header strong { font-size: 11px; }.local-graph-rail > header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.local-graph-rail > header button { width: 28px; height: 28px; flex: none; border: 0; border-radius: 5px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 18px; }.local-graph-rail > header button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }
-.tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; gap: 12px; }
+.tabs-bar { display: flex; align-items: center; padding: 0 8px; min-width: 0; border-bottom: var(--theme-border); flex-shrink: 0; }
+.tabs-bar :deep(.workspace-tabs) { flex: 1; min-width: 0; }
 .embedded-format-capability {
   display: flex;
   min-width: 0;
@@ -5245,38 +5756,16 @@ watch(activeTabId, (newId, oldId) => {
 /* 响应式布局优化 - 小屏幕断点 */
 @media (max-width: 1024px) {
   .local-graph-rail { position: absolute; z-index: 60; top: 0; right: 0; width: min(380px,calc(100% - 16px)); }
-  .sidebar {
-    width: 200px !important;
-  }
-
   .tabs-bar {
     padding: 8px 8px 0 !important;
   }
 
-  .sidebar-header {
-    padding: 10px 12px !important;
-  }
-
-  .icon-tab {
-    width: 28px !important;
-    min-width: 28px !important;
-    height: 28px !important;
-  }
-
-  .icon-tab.active {
-    padding: 0 10px !important;
-  }
 }
 .mode-toggle { display: flex; gap: 2px; }
 .width-toggle { display: flex; gap: 2px; margin-left: 8px; padding-left: 8px; border-left: var(--theme-border); }
 .is-dark .width-toggle { border-left-color: rgba(255,255,255,0.08); }
-/* Zen 模式打字机滚动：增大顶部留白让光标居中 */
-.editor-main.zen-mode .editor-viewport {
-  padding-top: 30vh;
-}
-.editor-main.zen-mode :deep(.vditor-content) {
-  min-height: 70vh;
-}
+/* Focus mode hides chrome; it must not offset the toolbar or force content
+   beyond the available viewport. Keep the normal flex/scroll layout. */
 
 .hero-viewport { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: inherit; z-index: 5; overflow: hidden; }
 .ambient-glow {
@@ -5296,7 +5785,11 @@ watch(activeTabId, (newId, oldId) => {
 .hero-subtitle { font-size: 16px; opacity: 0.6; margin-bottom: 32px; animation: slideUp 0.8s var(--ease-premium) 0.4s both; }
 .hero-actions { display: flex; gap: 16px; justify-content: center; animation: slideUp 0.8s var(--ease-premium) 0.6s both; }
 
-.drag-ghost { position: fixed; pointer-events: none !important; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid var(--theme-primary); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
+.drag-ghost { position: fixed; left: 0; top: 0; pointer-events: none !important; z-index: 9999; max-width: min(320px, calc(100vw - 24px)); padding: 8px 12px; background: var(--theme-surface); border: 1px solid var(--theme-primary); border-radius: var(--theme-radius-sm); box-shadow: var(--workspace-shadow-sm); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
+.drag-ghost > span { min-width: 0; display: grid; gap: 3px; }
+.drag-ghost strong { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drag-ghost small { color: var(--theme-text); font-size: var(--text-compact); }
+.drag-ghost.drop-invalid { border-color: var(--status-danger); color: var(--status-danger); }
 .drag-ghost * { pointer-events: none !important; }
 
 @keyframes treeContainerFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -5327,9 +5820,16 @@ watch(activeTabId, (newId, oldId) => {
 
 <style scoped>
 @media (max-width: 760px) {
-  .library-mode.reference-pinned { flex-wrap: wrap; }
-  .reference-pinned > .sidebar, .reference-pinned > .resizer-area, .reference-pinned > .local-graph-rail { display: none; }
-  .reference-pinned > .editor-main { flex: 1 1 100%; height: 60%; min-height: 0; }
-  .reference-pinned > .search-document-preview.pinned { width: 100%; max-width: 100%; height: 40%; }
+  .reference-pinned > .library-workspace { flex-wrap: wrap; }
+  .reference-pinned > .library-workspace > .local-graph-rail { display: none; }
+  .reference-pinned > .library-workspace > .editor-main { flex: 1 1 100%; height: 60%; min-height: 0; }
+  .reference-pinned > .library-workspace > .search-document-preview.pinned, .reference-pinned > .library-workspace > .reference-empty { width: 100%; max-width: 100%; height: 40%; overflow: auto; }
+}
+@container library-shell (max-width: 760px) {
+  .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 80; max-width: 100%; box-shadow: var(--theme-shadow); }
+  .resizer-area { display: none; }
+  .library-shell-toolbar { padding: 2px 8px; gap: 4px; }
+  .document-toolbar { padding: 6px 8px; }
+  .document-reading-status { margin-left: 0; }
 }
 </style>

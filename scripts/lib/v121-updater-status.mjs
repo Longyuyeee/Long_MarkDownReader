@@ -1,6 +1,18 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (community.appVersion === '1.1.0'
+    && community.patchValidation?.previousPublicVersion === '1.0.26'
+    && development.runtimeBaseVersion === '1.1.0'
+    && community.targetRelease?.tag === 'v1.1.0'
+    && /^[0-9a-f]{40}$/.test(development.publicTagCommit)
+    && (community.gates?.githubReleasePublished === true
+      ? development.publicVersion === '1.1.0' && development.publicTag === 'v1.1.0'
+        && development.developmentTargetVersion === '1.1.1'
+        && community.release?.taggedCommit === development.publicTagCommit
+      : development.publicVersion === '1.0.26' && development.publicTag === 'v1.0.26'
+        && development.publicTagCommit === 'c5c136140ad68fefb81b50898051012cfc865a20'
+        && development.developmentTargetVersion === '1.1.0')) return
   if (development.publicVersion === '1.0.26'
     && development.publicTag === 'v1.0.26'
     && /^[0-9a-f]{40}$/.test(development.publicTagCommit)
@@ -97,6 +109,15 @@ export function assertV121DevelopmentBoundary(development, community) {
 }
 
 export function assertV121UpdaterStatus(policy, community, receipt) {
+  if (community.appVersion === '1.1.0') {
+    if (policy.status !== 'hosted-managed-update-passed'
+      || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'
+      || community.patchValidation?.previousPublicVersion !== '1.0.26'
+      || community.patchValidation?.managedUpdaterUpgradePath !== '1.0.26-to-1.1.0-pending') {
+      throw new Error('1.1.0 must retain a separate official update observation and closed historical predecessor')
+    }
+    return
+  }
   if (!['hosted-execution-pending', 'hosted-managed-update-passed'].includes(policy.status)) {
     throw new Error('Unknown v1.0.21 updater observation status')
   }

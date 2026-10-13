@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Narrow content container",
+    "Search and empty results",
+    "Format detail",
+    "Save boundary visible"
+  ],
+  "scope": "Actual capability registry; native default-app read intentionally fails; no registration mutations",
+  "errors": []
+}

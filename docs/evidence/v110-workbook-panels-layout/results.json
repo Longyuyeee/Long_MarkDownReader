@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Narrow format panel wraps with bounded height",
+    "Bold and number format draft undo",
+    "Validation entry and cancel without writing",
+    "480px rule dialog"
+  ],
+  "errors": [],
+  "scope": "Actual WorkbookView; native IPC fixture, no native write or full rule matrix acceptance",
+  "releaseCandidate": false
+}

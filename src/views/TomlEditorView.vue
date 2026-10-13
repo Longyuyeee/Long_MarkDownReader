@@ -9,12 +9,12 @@
         <n-icon :component="FileCodeIcon" size="22" class="accent" />
         <div><strong :title="path">{{ fileName }}</strong><span aria-live="polite"><template v-if="isExternal">外部文件 · </template>TOML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span></div>
       </div>
-      <div class="actions">
-        <n-button quaternary circle size="small" title="查找" @click="editor && openSearchPanel(editor)"><template #icon><n-icon :component="SearchIcon" /></template></n-button>
+      <div class="actions" data-command-strip data-horizontal-wheel="always">
+        <n-button quaternary size="small" title="查找" @click="editor && openSearchPanel(editor)"><template #icon><n-icon :component="SearchIcon" /></template>查找</n-button>
         <n-button quaternary circle size="small" title="折叠全部" @click="editor && foldAll(editor)"><template #icon><n-icon :component="FoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="展开全部" @click="editor && unfoldAll(editor)"><template #icon><n-icon :component="UnfoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload"><template #icon><n-icon :component="RefreshIcon" /></template></n-button>
-        <n-button quaternary circle size="small" :title="inspectorVisible ? '隐藏配置分区与问题' : '显示配置分区与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template></n-button>
+        <n-button quaternary size="small" :title="inspectorVisible ? '隐藏配置分区与问题' : '显示配置分区与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template>分区与问题</n-button>
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</n-button>
       </div>
     </header>
@@ -137,5 +137,24 @@ onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = nul
 <style scoped>
 .workspace{width:100%;height:100%;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--theme-bg);color:var(--theme-text)}header{min-height:54px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:var(--theme-border);background:var(--theme-surface)}.identity,.actions{display:flex;align-items:center;gap:8px;min-width:0}.identity>div,.heading>div{display:flex;flex-direction:column;min-width:0}.identity strong{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.identity span,.heading span{font-size:11px;color:var(--theme-text-secondary)}.accent{color:var(--theme-primary)}.error{color:var(--theme-danger,#d03050)}main{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px)}.source{position:relative;min-width:0;min-height:0}.editor{width:100%;height:100%}.hidden{visibility:hidden}.state{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}aside{min-height:0;padding:14px;display:flex;flex-direction:column;gap:12px;border-left:var(--theme-border);background:var(--theme-surface)}.heading{display:flex;align-items:center;justify-content:space-between}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.metrics div{padding:8px 3px;display:flex;flex-direction:column;align-items:center;border:var(--theme-border);border-radius:8px}.metrics span{font-size: var(--text-compact);color:var(--theme-text-secondary)}.diagnostic{padding:8px;display:flex;gap:8px;border:0;border-radius:7px;color:var(--theme-danger,#d03050);background:rgba(208,48,80,.08);text-align:left}.diagnostic span,.outline button span{min-width:0;display:flex;flex:1;flex-direction:column}.diagnostic small,.outline small{overflow:hidden;color:var(--theme-text-secondary);text-overflow:ellipsis;white-space:nowrap}.valid{padding:9px;display:flex;gap:8px;border-radius:8px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08)}.outline{min-height:0;flex:1;overflow:auto}.outline button{width:100%;min-height:48px;padding-top:6px;padding-right:8px;padding-bottom:6px;display:flex;align-items:center;gap:7px;border:0;border-bottom:var(--theme-border);color:inherit;background:transparent;text-align:left;cursor:pointer}.outline button:hover{background:rgba(var(--theme-primary-rgb),.07)}.outline p{padding:14px 6px;color:var(--theme-text-secondary);font-size:12px;text-align:center}.outline .warning{color:var(--theme-warning,#f0a020)}footer{min-height:28px;padding:0 14px;display:flex;align-items:center;gap:14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size:11px}
 main.inspector-hidden{grid-template-columns:minmax(0,1fr)}main.inspector-hidden aside{display:none}
-@media (max-width:760px){header{gap:8px;padding-inline:9px}.identity strong{max-width:34vw}main{grid-template-columns:minmax(0,1fr)}main:not(.inspector-hidden) .source{display:none}aside{border-left:0}footer{gap:8px;padding-inline:9px}footer span:nth-child(3){display:none}}
+.toml-workspace { container-type: inline-size; }
+.toml-workspace > :deep(.workspace-tabs) { flex: 0 0 34px; }
+header { flex-shrink: 0; flex-wrap: wrap; gap: 8px; padding-block: 6px; }
+.identity { flex: 1; }
+.actions { max-width: 100%; overflow-x: auto; padding-block: 2px; }
+.actions > * { flex-shrink: 0; }
+aside { overflow: auto; }
+aside > :not(.outline) { flex-shrink: 0; }
+.outline { min-height: 96px; }
+footer { flex-shrink: 0; overflow-x: auto; white-space: nowrap; }
+footer > * { flex-shrink: 0; }
+@container (max-width: 760px) {
+  header { padding-inline: 9px; }
+  .identity strong { max-width: 100%; }
+  .actions { width: 100%; }
+  main { grid-template-columns: minmax(0, 1fr); }
+  main:not(.inspector-hidden) { grid-template-rows: minmax(0, 1fr) minmax(0, 42%); }
+  aside { border-left: 0; border-top: var(--theme-border); }
+  footer { gap: 8px; padding-inline: 9px; }
+}
 </style>

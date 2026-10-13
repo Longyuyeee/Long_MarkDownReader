@@ -73,3 +73,51 @@ test('previous code demonstrates early stale restoration and delayed dirty reset
   h.tab.isDirty = true; h.timers.find(t => t.delay === 50).callback()
   assert.equal(h.tab.isDirty, false)
 })
+
+test('failed explicit reload retains dirty content and disk identity, including an empty draft', async () => {
+  for (const draft of ['用户刚写的正文', '']) {
+    const h = harness(), failures = []
+    h.tab.content = draft; h.tab.isDirty = true; h.tab.textSignature = 'previous-disk'
+    h.ctx.store = { libraryPath: 'library' }
+    h.ctx.findFileFormat = () => ({ id: 'markdown', routeName: 'LibraryMode' })
+    h.ctx.invoke = async () => { throw { code: 'path-outside-workspace', message: 'path not found' } }
+    h.ctx.handleError = (...args) => failures.push(args)
+    assert.equal(await h.ctx.load('note.md', true), false)
+    assert.equal(h.tab.content, draft)
+    assert.equal(h.tab.isDirty, true)
+    assert.equal(h.tab.textSignature, 'previous-disk')
+    assert.equal(h.tab.textLoadError, undefined)
+    assert.deepEqual(h.writes, [draft])
+    assert.equal(failures.length, 1)
+    h.timers.find(t => t.delay === 0).callback()
+    assert.equal(h.enabled(), true)
+  }
+})
+
+test('explicit reload applies only successful disk content; late results cannot overwrite another editor', async () => {
+  for (const navigates of [false, true]) {
+    const h = harness()
+    h.tab.isDirty = true
+    h.ctx.store = { libraryPath: 'library' }
+    h.ctx.findFileFormat = () => ({ id: 'markdown', routeName: 'LibraryMode' })
+    let resolve
+    h.ctx.invoke = () => new Promise(done => { resolve = done })
+    const work = h.ctx.load('note.md', true)
+    assert.equal(h.tab.content, '保存前缓存')
+    if (navigates) h.ctx.activeTabId.value = 'other.md'
+    resolve({ content: '磁盘新正文', signature: 'new-disk', contentDigest: 'digest' })
+    const success = await work
+    if (navigates) {
+      assert.equal(success, undefined)
+      assert.equal(h.tab.content, '保存前缓存')
+      assert.equal(h.tab.isDirty, true)
+      assert.deepEqual(h.writes, [])
+    } else {
+      assert.equal(success, true)
+      assert.equal(h.tab.content, '磁盘新正文')
+      assert.equal(h.tab.isDirty, false)
+      assert.equal(h.tab.textSignature, 'new-disk')
+      assert.deepEqual(h.writes, ['磁盘新正文'])
+    }
+  }
+})

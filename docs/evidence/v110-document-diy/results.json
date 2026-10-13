@@ -1,0 +1,30 @@
+{
+  "appearance": {
+    "font": "\"Microsoft YaHei\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable Text\", \"Segoe UI\", \"SF Pro Text\", \"Helvetica Neue\", \"Microsoft YaHei\", sans-serif",
+    "spacing": "1px",
+    "margin": "24px",
+    "align": "justify"
+  },
+  "saved": {
+    "documentStyle": "auto",
+    "documentFont": "custom",
+    "documentCustomFont": "Microsoft YaHei",
+    "documentLetterSpacing": 1,
+    "documentParagraphSpacing": 1.5,
+    "documentTextAlign": "justify",
+    "documentFontSize": 16,
+    "documentLineHeight": 1.75,
+    "fileDensity": "auto",
+    "fileRowStyle": "auto",
+    "fileIconStyle": "color"
+  },
+  "checks": [
+    "UI edit and preview",
+    "Config payload retains new fields",
+    "Narrow layout",
+    "Reset",
+    "Real App editor uses saved preferences"
+  ],
+  "errors": [],
+  "scope": "Actual Vue/Vditor; mocked native IPC"
+}

@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output='docs/evidence/v110-pptx-redesign'
+await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch(),errors=[],checks=[]
+try{
+ const page=await browser.newPage({viewport:{width:1280,height:900}})
+ page.setDefaultTimeout(12000);page.on('pageerror',error=>errors.push(error.message))
+ await page.goto('http://127.0.0.1:9000/scripts/fixtures/pptx-redesign-browser.html')
+ await page.locator('.pptx-stage').waitFor()
+ assert.equal(await page.locator('.pptx-details').count(),0)
+ await page.screenshot({path:output+'/01-reading.png'})
+ await page.getByTitle('备注与兼容画像').click()
+ await page.locator('.notes').getByText('先解决用户使用中的问题。',{exact:true}).waitFor()
+ await page.getByTitle('关闭文档详情').click()
+ await page.getByLabel('搜索 PPTX 文本与备注').fill('交付')
+ await page.getByTitle('下一个结果',{exact:true}).click()
+ assert.equal(await page.locator('.slide-strip button.active').getAttribute('data-slide-index'),'1')
+ await page.getByTitle('放映',{exact:true}).click()
+ await page.getByRole('dialog',{name:'演示文稿放映'}).waitFor()
+ await page.keyboard.press('ArrowLeft')
+ await page.getByRole('dialog').getByText('1 / 2',{exact:true}).waitFor()
+ await page.keyboard.press('Escape')
+ assert.equal(await page.getByRole('dialog').count(),0)
+ checks.push('Default reading space, notes/details, text search and slideshow keyboard navigation/exit')
+ await page.getByTitle('验证隔离编辑基线').click()
+ await page.locator('.baseline-error').getByText('Error: 测试场景：暂时无法完成编辑验证',{exact:true}).waitFor()
+ assert.equal(await page.getByTitle('保存到原文件').isDisabled(),true)
+ await page.screenshot({path:output+'/02-edit-error.png'})
+ checks.push('Editing preparation opens its panel and exposes failure without enabling source save')
+ for(const width of [900,480]){
+  await page.setViewportSize({width,height:900})
+  await page.getByTitle('关闭文档详情').click()
+  await page.getByTitle('备注与兼容画像').click()
+  assert.equal(await page.getByTitle('备注与兼容画像').locator('span').isVisible(),true)
+  assert.ok(await page.locator('.pptx-search').evaluate(el=>el.getBoundingClientRect().width>=200))
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1))
+  await page.screenshot({path:output+`/03-details-${width}.png`})
+ }
+ checks.push('900px/480px details open/close and named toolbar buttons remain reachable')
+ await page.getByTitle('关闭文档详情').click()
+ await page.evaluate(()=>window.pptxAudit.router.push('/pptx?path=C:/ui/产品方向.pptx&external=1'))
+ await page.getByText('外部演示文稿 · 只读 · 不会写回',{exact:true}).waitFor()
+ assert.equal(await page.getByTitle('验证隔离编辑基线').count(),0)
+ assert.equal(await page.getByTitle('保存到原文件').count(),0)
+ assert.deepEqual(errors,[])
+ checks.push('External presentation does not expose editing preparation or source save')
+ await fs.writeFile(output+'/results.json',JSON.stringify({checks,errors,scope:'Production PPTX Vue component with mocked native parse report; editing preparation deliberately fails; not native output acceptance',releaseCandidate:false},null,2)+'\n')
+ console.log(checks.join('\n'))
+}finally{await browser.close()}

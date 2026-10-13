@@ -45,11 +45,12 @@ for (const workspace of workspaces) {
   for (const assignment of workspace.assignments) {
     if (!source.includes(assignment)) fail(`${workspace.label} grid assignment is missing: ${assignment}`)
   }
-  if (!/grid-template-rows:[^;]*minmax\(0, 1fr\)[^;]*28px;/.test(source)) {
+  if (!/grid-template-rows:[^;]*minmax\(0, 1fr\)[^;]*(?:28px|auto);/.test(source)
+    || (workspace.label === 'LOG' && !/\.status-bar\s*\{[^}]*min-height:\s*28px;/s.test(source))) {
     fail(`${workspace.label} must reserve the remaining height for content and a fixed compact status row.`)
   }
   if (!/\.\w+-workspace\s*\{[^}]*min-height:\s*0;/s.test(source)) fail(`${workspace.label} workspace must be allowed to shrink inside the library shell.`)
-  if (!/\.status-bar\s*\{[^}]*overflow:\s*hidden;[^}]*white-space:\s*nowrap;/s.test(source)) {
+  if (!/\.status-bar\s*\{[^}]*(?:overflow:\s*hidden|overflow-x:\s*auto);[^}]*white-space:\s*nowrap;/s.test(source)) {
     fail(`${workspace.label} status bar must stay on one compact line.`)
   }
 }

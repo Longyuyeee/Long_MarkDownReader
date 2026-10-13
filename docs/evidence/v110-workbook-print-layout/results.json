@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Three settings dialogs at 480x400",
+    "Fit-page fields",
+    "First-page number",
+    "First-page header editing",
+    "Apply/cancel remain within viewport",
+    "Cancel does not begin native fixture write"
+  ],
+  "errors": [],
+  "scope": "Actual WorkbookView; native read mocked; no real print or native save acceptance",
+  "releaseCandidate": false
+}

@@ -9,9 +9,30 @@ const host = process.env.TAURI_DEV_HOST;
 const devPort = Number(process.env.LONGEDIT_DEV_PORT || 9000);
 const explicitSaveBaselineSource = process.env.LONGEDIT_EXPLICIT_SAVE_BASELINE_SOURCE;
 
+// Vditor 3.11.2 showCode assumes every preview has an element child.
+// HTML comments legitimately render an empty preview. Keep source selection and
+// scrolling intact; only make the optional mindmap check null-safe. Apply in
+// both dependency prebundling and production, without editing node_modules.
+function patchVditorEmptyPreview(code: string) {
+  const original = 'previewElement.firstElementChild.classList.contains("language-mindmap")';
+  if (code.split(original).length !== 2) {
+    throw new Error('Vditor empty-preview patch no longer matches; review the dependency before building.');
+  }
+  return code.replace(original, '(previewElement.firstElementChild && previewElement.firstElementChild.classList.contains("language-mindmap"))');
+}
+
 // https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [
+    {
+      name: 'longedit-vditor-empty-preview',
+      enforce: 'pre',
+      transform(code, id) {
+        return id.replaceAll('\\', '/').endsWith('/vditor/dist/index.js')
+          ? { code: patchVditorEmptyPreview(code), map: null }
+          : null;
+      },
+    },
     ...(explicitSaveBaselineSource ? [{
       name: 'longedit-explicit-save-baseline',
       enforce: 'pre' as const,
@@ -37,6 +58,19 @@ export default defineConfig(async () => ({
     }),
   ],
   base: './',
+  optimizeDeps: {
+    esbuildOptions: {
+      plugins: [{
+        name: 'longedit-vditor-empty-preview',
+        setup(build) {
+          build.onLoad({ filter: /[\\/]vditor[\\/]dist[\\/]index\.js$/ }, args => ({
+            contents: patchVditorEmptyPreview(readFileSync(args.path, 'utf8')),
+            loader: 'js',
+          }));
+        },
+      }],
+    },
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

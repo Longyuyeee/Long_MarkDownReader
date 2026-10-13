@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Hover hints remain available; light and dark dropdowns start dismissing them on activation and keep them hidden while open",
+    "Active and inactive document tabs and the current filename show no hover popup in light and dark styles",
+    "A quick click cancels pending hover/focus hint timers",
+    "Keyboard activation dismisses the hint and restores the original accessible description",
+    "Dropdown selection still works; hints return on the next hover after closing",
+    "Document action popovers take priority over application hints; document tabs stay free of popups before and after closing",
+    "Tab switching, arrow-key navigation, filename rename entry and closing an inactive tab remain usable without hints",
+    "Vditor format menus suppress their own CSS tooltip while expanded",
+    "Manual context menus use the same hint suppression",
+    "Reusable select lists suppress hints while open and release suppression when closed"
+  ],
+  "errors": [],
+  "scope": "Production App, LibraryMode, Vditor, SettingsView and tooltip policy; mock native IPC. No document writes."
+}

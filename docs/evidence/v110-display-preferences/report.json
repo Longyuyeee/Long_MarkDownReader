@@ -1,0 +1,45 @@
+{
+  "checks": [
+    "six existing surface styles change row shape and density",
+    "document presentation and file controls preview and persist together",
+    "display reset preserves chosen color theme and per-file markers"
+  ],
+  "errors": [],
+  "surfaces": [
+    {
+      "height": "36px",
+      "radius": "8px",
+      "border": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "height": "34px",
+      "radius": "3px",
+      "border": "rgba(37, 99, 235, 0.16)"
+    },
+    {
+      "height": "34px",
+      "radius": "10px",
+      "border": "rgba(37, 99, 235, 0.15)"
+    },
+    {
+      "height": "40px",
+      "radius": "7px",
+      "border": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "height": "28px",
+      "radius": "4px",
+      "border": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "height": "30px",
+      "radius": "0px",
+      "border": "color(srgb 0.0901961 0.101961 0.121569 / 0.12)"
+    }
+  ],
+  "appearance": {
+    "fontSize": "20px",
+    "shadow": "color(srgb 0.0901961 0.101961 0.121569 / 0.09) 0px 6px 26px 0px",
+    "border": "1px"
+  }
+}

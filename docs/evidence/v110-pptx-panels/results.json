@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Long panel scroll and slide order",
+    "Text/style/shape/order values survive closing details",
+    "Patch failure retains input and prevents source save"
+  ],
+  "errors": [],
+  "scope": "UI fixture baseline only, patch validation deliberately fails. Not native baseline or output acceptance."
+}

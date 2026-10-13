@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output='docs/evidence/v110-workbook-redesign'
+await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch(),errors=[]
+try {
+ const page=await browser.newPage({viewport:{width:1280,height:900}})
+ page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message))
+ await page.goto('http://127.0.0.1:9000/scripts/fixtures/workbook-save-browser.html')
+ await page.locator('.workbook-cell').first().waitFor()
+ await page.screenshot({path:output+'/01-wide.png',animations:'disabled'})
+ await page.evaluate(()=>document.querySelector('#app').style.width='480px')
+ assert.ok(await page.locator('.workbook-title span').isVisible())
+ assert.ok(await page.locator('.workbook-actions button.primary span').isVisible())
+ assert.ok(await page.locator('.tool-panel-trigger span').isVisible())
+ const save=await page.locator('.workbook-actions button.primary').boundingBox()
+ assert.ok(save.x>=0 && save.x+save.width<=480)
+ await page.getByRole('button',{name:'Sheet2',exact:true}).click()
+ await page.getByText('第二张表的客户清单',{exact:true}).waitFor()
+ await page.getByRole('button',{name:'Sheet1',exact:true}).click()
+ await page.getByText('确认交付日期',{exact:true}).waitFor()
+ await page.locator('.tool-panel-trigger').click()
+ await page.getByText('单元格格式',{exact:true}).click()
+ await page.locator('.format-toolbar').waitFor()
+ await page.screenshot({path:output+'/02-format-container.png',animations:'disabled'})
+ await page.locator('.tool-panel-trigger').click()
+ await page.getByText('图表与绘图对象',{exact:true}).click()
+ await page.locator('.drawing-toolbar').waitFor()
+ await page.screenshot({path:output+'/03-drawing-container.png',animations:'disabled'})
+ await page.locator('.tool-panel-trigger').click()
+ await page.getByText('收起工具面板',{exact:true}).click()
+ assert.equal(await page.locator('.drawing-toolbar').count(),0)
+ await page.setViewportSize({width:480,height:900})
+ await page.getByTitle('更多工作簿操作').click()
+ await page.getByText('重新读取工作簿',{exact:true}).waitFor()
+ await page.keyboard.press('Escape')
+ await page.screenshot({path:output+'/04-window.png',animations:'disabled'})
+ assert.deepEqual(errors,[])
+ await fs.writeFile(output+'/results.json',JSON.stringify({checks:['File metadata, tool and save labels retained at 480px','Sheet switching','Format/drawing panel open and close','More-actions menu'],errors,scope:'Actual WorkbookView with existing native IPC fixture; no saving, no full advanced-panel acceptance',releaseCandidate:false},null,2)+'\n')
+ console.log('Workbook layout and entry checks passed')
+} finally {await browser.close()}

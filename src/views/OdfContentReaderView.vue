@@ -10,13 +10,13 @@
           <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · {{ workspaceCapabilityLabel }}<template v-if="isExternal"> · 不会写回</template></span>
         </div>
       </div>
-      <div class="toolbar">
+      <div class="toolbar" data-command-strip data-horizontal-wheel="always">
         <button v-if="workspaceEditable" :disabled="!canUndo" :aria-label="undoLabel" :title="`${undoLabel} Ctrl+Z`" @click="undoDraft"><Undo2 :size="15" /></button>
         <button v-if="workspaceEditable" :disabled="!canRedo" :aria-label="redoLabel" :title="`${redoLabel} Ctrl+Y`" @click="redoDraft"><Redo2 :size="15" /></button>
-        <button v-if="workspaceEditable" :disabled="!draftDirty || saving" :aria-label="saveLabel" :title="`${saveLabel} Ctrl+S`" @click="saveCopy"><Save :size="15" /></button>
+        <button v-if="workspaceEditable" class="save-copy-action" :disabled="!draftDirty || saving" :aria-label="saveLabel" :title="`${saveLabel} Ctrl+S`" @click="saveCopy"><Save :size="15" /><span>另存副本</span></button>
         <label class="search-box">
           <Search :size="14" aria-hidden="true" />
-          <input v-model="query" data-testid="e1c-odf-search" type="search" :placeholder="isOds ? '搜索单元格' : '搜索幻灯片'" />
+          <input v-model="query" data-testid="e1c-odf-search" type="search" :aria-label="isOds ? '搜索单元格' : '搜索幻灯片'" :placeholder="isOds ? '搜索单元格' : '搜索幻灯片'" @keydown.enter.prevent="moveMatch($event.shiftKey ? -1 : 1)" />
           <span>{{ matches.length ? `${matchIndex + 1}/${matches.length}` : '0' }}</span>
         </label>
         <button :disabled="!matches.length" title="上一个匹配" @click="moveMatch(-1)"><ChevronUp :size="15" /></button>
@@ -28,8 +28,9 @@
     <div v-if="loading && !report" class="state">
       <RefreshCw :size="18" class="spinning" /><span>正在验证并解析 {{ extension.toUpperCase() }}</span>
     </div>
-    <div v-else-if="loadError" class="state error">
+    <div v-else-if="loadError" class="state error" role="alert">
       <ShieldAlert :size="20" /><div><strong>无法打开文档</strong><p>{{ loadError }}</p></div>
+      <button @click="reloadDocument">重试</button>
     </div>
     <template v-else-if="report">
       <div v-if="warnings.length" class="risk-banner">
@@ -829,10 +830,24 @@ footer > div { gap: 10px; }
   .toolbar { width: 100%; }
   .search-box { min-width: 0; flex: 1; }
   .search-box input { width: 100%; min-width: 0; }
-  footer > span { display: none; }
+  footer > span { display: block; }
   .edit-banner { align-items: flex-start; flex-wrap: wrap; }
   .style-controls { width: 100%; margin-left: 23px; }
   .style-controls select { width: min(210px, calc(100% - 80px)); }
   .draft-status { width: 100%; margin-left: 23px; }
+}
+.toolbar { min-width: 0; max-width: 100%; overflow-x: auto; }
+.toolbar > * { flex-shrink: 0; }
+.toolbar .save-copy-action { display: inline-flex; align-items: center; gap: 5px; width: auto; padding: 0 9px; white-space: nowrap; }
+.toolbar button:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
+footer { overflow-x: auto; white-space: nowrap; }
+footer > * { flex-shrink: 0; }
+@container (max-width: 700px) {
+  .search-box { flex: 0 0 160px; }
+  .odp-layout { grid-template-columns: minmax(0, 1fr); }
+  .odp-layout aside { display: flex; max-height: 86px; border-right: 0; border-bottom: 1px solid var(--border-color); }
+  .odp-layout aside button { min-width: 180px; }
+  .slide-stage { padding: 12px; }
+  .slide, .odp-edit-panel { width: 100%; }
 }
 </style>

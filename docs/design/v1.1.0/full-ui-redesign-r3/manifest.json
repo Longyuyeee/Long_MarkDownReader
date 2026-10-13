@@ -1,0 +1,21 @@
+{
+  "version": "R3",
+  "date": "2026-10-12",
+  "status": "implementing-approved-direction-with-user-refinements",
+  "generator": "built-in image_gen.imagegen",
+  "supersedesForMainAndAppearance": "../full-ui-redesign-r2/manifest.json",
+  "selectedImages": [
+    "00-editor-context-create.png",
+    "01-six-style-structure.png",
+    "02-document-file-display.png"
+  ],
+  "functionalPlacement": "../full-ui-redesign-r2/README.md",
+  "appearancePreservation": "../full-ui-redesign-r2/appearance-and-preservation.md",
+  "prompts": "prompts.json",
+  "runtimeUiChanges": true,
+  "implementedBatch": "Main navigation/context creation/display preferences and shared appearance foundation",
+  "workflowBatchReference": "../../../V1_1_0_UI_Workflows_2026-10-12.md",
+  "workflowBatchImplemented": "Shared global navigation, workspace/sessions, collections/search reference, standalone inbox and quick note",
+  "remainingWork": "Dedicated reading/Office, structured/text, data, graphical/media and settings layouts in R2 phased plan",
+  "publicVersionUnchanged": "1.0.26"
+}

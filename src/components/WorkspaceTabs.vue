@@ -15,44 +15,28 @@
       向左浏览标签
     </n-tooltip>
     <div ref="scrollRef" class="workspace-tabs-scroll" role="tablist" aria-label="打开的文档" @scroll="updateScrollState" @wheel="handleWheel">
-      <n-tooltip
+      <div
         v-for="tab in store.tabs"
         :key="tab.id"
-        placement="bottom-start"
-        :delay="tooltipDelay"
-        :duration="tooltipDuration"
-        :show-arrow="false"
-        :theme-overrides="documentTooltipTheme"
-        :content-style="documentTooltipStyle"
+        class="workspace-tab"
+        :class="{ active: store.activeTabId === tab.id }"
+        role="tab"
+        :tabindex="store.activeTabId === tab.id ? 0 : -1"
+        :aria-selected="store.activeTabId === tab.id"
+        :aria-label="`${tab.title}${tab.isDirty ? '，有未保存的修改' : ''}`"
+        @click="activate(tab)"
+        @keydown.enter.prevent="activate(tab)"
+        @keydown.space.prevent="activate(tab)"
+        @keydown.left.prevent="focusAdjacentTab(tab, -1)"
+        @keydown.right.prevent="focusAdjacentTab(tab, 1)"
       >
-        <template #trigger>
-          <div
-            class="workspace-tab"
-            :class="{ active: store.activeTabId === tab.id }"
-            role="tab"
-            :tabindex="store.activeTabId === tab.id ? 0 : -1"
-            :aria-selected="store.activeTabId === tab.id"
-            :aria-label="`${tab.title}${tab.isDirty ? '，有未保存的修改' : ''}`"
-            @click="activate(tab)"
-            @keydown.enter.prevent="activate(tab)"
-            @keydown.space.prevent="activate(tab)"
-            @keydown.left.prevent="focusAdjacentTab(tab, -1)"
-            @keydown.right.prevent="focusAdjacentTab(tab, 1)"
-          >
-            <FileTextIcon :size="13" />
-            <span>{{ tab.title }}</span>
-            <i :class="{ visible: tab.isDirty }" aria-hidden="true"></i>
-            <button type="button" class="close-tab" :aria-label="`关闭标签：${tab.title}`" @click.stop="close(tab)" @keydown.stop>
-              <XIcon :size="12" />
-            </button>
-          </div>
-        </template>
-        <div class="workspace-tab-tooltip">
-          <strong>{{ tab.title }}</strong>
-          <span>{{ tab.path }}</span>
-          <small v-if="tab.isDirty">有未保存的修改</small>
-        </div>
-      </n-tooltip>
+        <FileTextIcon :size="13" />
+        <span>{{ tab.title }}</span>
+        <i :class="{ visible: tab.isDirty }" aria-hidden="true"></i>
+        <button type="button" class="close-tab" :aria-label="`关闭标签：${tab.title}`" @click.stop="close(tab)" @keydown.stop>
+          <XIcon :size="12" />
+        </button>
+      </div>
     </div>
     <n-tooltip placement="bottom-end" :delay="tooltipDelay" :duration="tooltipDuration" :show-arrow="false" :theme-overrides="compactTooltipTheme" :content-style="compactTooltipStyle">
       <template #trigger>
@@ -100,16 +84,7 @@ const compactTooltipTheme = {
   ...tooltipThemeBase,
   padding: '7px 9px',
 }
-const documentTooltipTheme = {
-  ...tooltipThemeBase,
-  padding: '9px 11px',
-}
 const compactTooltipStyle: CSSProperties = {
-  fontSize: '12px',
-  lineHeight: '1.45',
-}
-const documentTooltipStyle: CSSProperties = {
-  maxWidth: 'min(420px, calc(100vw - 24px))',
   fontSize: '12px',
   lineHeight: '1.45',
 }
@@ -193,7 +168,7 @@ const close = async (tab: TabInfo) => {
 watch([() => store.activeTabId, () => store.tabs.length], revealActiveTab)
 
 onMounted(() => {
-  resizeObserver = new ResizeObserver(updateScrollState)
+  resizeObserver = new ResizeObserver(() => { updateScrollState(); void revealActiveTab() })
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)
   updateScrollState()
   void revealActiveTab()
@@ -207,7 +182,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
-  height: 34px;
+  height: var(--workspace-tabs-height, 34px);
   border-bottom: var(--theme-border);
   background: var(--theme-surface);
 }
@@ -221,6 +196,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   scrollbar-width: none;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
+  scroll-padding-inline: 34px;
   padding: 0 34px;
 }
 
@@ -233,7 +209,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   flex: 0 0 176px;
   min-width: 156px;
   max-width: 210px;
-  height: 30px;
+  height: var(--workspace-tab-height, 30px);
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) 8px 20px;
   align-items: center;
@@ -251,7 +227,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
 .tab-scroll-button {
   position: absolute;
   z-index: 3;
-  top: 3px;
+  top: calc((var(--workspace-tabs-height, 34px) - 28px) / 2);
   width: 28px;
   height: 28px;
   display: grid;
@@ -344,29 +320,4 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   background: rgba(var(--theme-primary-rgb), 0.1);
 }
 
-.workspace-tab-tooltip {
-  display: grid;
-  gap: 3px;
-  min-width: 150px;
-}
-
-.workspace-tab-tooltip strong,
-.workspace-tab-tooltip span {
-  overflow-wrap: anywhere;
-}
-
-.workspace-tab-tooltip strong {
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.workspace-tab-tooltip span,
-.workspace-tab-tooltip small {
-  color: var(--theme-text-secondary);
-  font-size: 11px;
-}
-
-.workspace-tab-tooltip small {
-  color: var(--theme-primary);
-}
 </style>

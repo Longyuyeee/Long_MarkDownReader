@@ -1,0 +1,42 @@
+{
+  "version": "R2",
+  "status": "approved-with-followup-refinements",
+  "followupRevision": "../full-ui-redesign-r3/manifest.json",
+  "date": "2026-10-12",
+  "generator": "built-in image_gen.imagegen",
+  "runtimeUiChanges": false,
+  "supersedes": "../full-ui-redesign-r1/manifest.json",
+  "userRequestedCorrections": [
+    "Single left navigation owner; no repeated outline/relations/history on right",
+    "Default closed optional reference pane",
+    "All existing appearance presets, surface styles and motion settings preserved",
+    "All existing functionality and explanatory content preserved"
+  ],
+  "selectedImages": [
+    "00-editor-default.png",
+    "01-editor-reference.png",
+    "02-style-families.png",
+    "03-responsive-recovery.png"
+  ],
+  "retainedCategoryImages": [
+    "../full-ui-redesign-r1/01-workflows.png",
+    "../full-ui-redesign-r1/02-reading-office-r2.png",
+    "../full-ui-redesign-r1/03-structured-text-r2.png",
+    "../full-ui-redesign-r1/04-data-r2.png",
+    "../full-ui-redesign-r1/05-visual-editors-r2.png",
+    "../full-ui-redesign-r1/06-graph-media.png",
+    "../full-ui-redesign-r1/07-settings-history-r2.png"
+  ],
+  "sourceInventory": "source-inventory.json",
+  "functionalPlacement": "README.md",
+  "appearanceAndPreservation": "appearance-and-preservation.md",
+  "prompts": "prompts.json",
+  "coverage": {
+    "independentRoutes": 27,
+    "sharedFlows": 8,
+    "appearancePresets": 19,
+    "themeOptionsIncludingSystem": 10,
+    "styles": 6,
+    "motionOptions": 4
+  }
+}

@@ -17,9 +17,13 @@
           </div>
         </div>
         <div class="app-content">
+          <AppNavigation v-if="isMainWindow && router.currentRoute.value.name !== 'QuickNote' && !store.isZen" />
+          <div class="app-route-content">
           <router-view v-slot="{ Component }">
             <div :key="$route.path" class="route-wrapper">
-              <component :is="Component" />
+              <WorkspaceErrorBoundary :reset-key="$route.fullPath" :initial-error="Component ? '' : routeErrorMessage" @error="handleWorkspaceError" @home="openRecoveryPage('WorkspaceHome')" @settings="openRecoveryPage('Settings')" @retry="retryFailedRoute">
+                <component :is="Component" />
+              </WorkspaceErrorBoundary>
             </div>
           </router-view>
           <FileRelationContext
@@ -32,8 +36,9 @@
           />
           <div v-if="routeErrorMessage" class="route-error-notice" role="alert">
             <span>{{ routeErrorMessage }}</span>
-            <button type="button" @click="reloadApplication">重新载入界面</button>
+            <button v-if="failedRouteTarget" type="button" @click="retryFailedRoute">重试打开</button>
             <button type="button" class="route-error-close" title="关闭提示" aria-label="关闭提示" @click="routeErrorMessage = ''">×</button>
+          </div>
           </div>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
@@ -84,9 +89,13 @@ import { emit, emitTo, type UnlistenFn } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
 import AppUpdater from './components/AppUpdater.vue'
+import AppNavigation from './components/AppNavigation.vue'
+import WorkspaceErrorBoundary from './components/WorkspaceErrorBoundary.vue'
+import { showRuntimeErrorNotice } from './services/runtimeErrorNotice'
 import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
+import { normalizeDisplayPreferences, documentTypographyStyle, VISUAL_STYLE_RADII } from './config/displayPreferences'
 import { openManagedFile } from './services/fileNavigation'
 import { windowDraftCount, windowDraftActivity } from './services/windowDrafts'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
@@ -151,10 +160,24 @@ watch(() => store.motionSpeed, (v) => {
   document.body.setAttribute('data-motion', v)
 }, { immediate: true })
 
+watch(() => store.displayPreferences, (value) => {
+  const preferences = normalizeDisplayPreferences(value)
+  for (const key of ['documentStyle', 'documentFont', 'fileDensity', 'fileRowStyle', 'fileIconStyle'] as const) {
+    const attribute = key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)
+    document.body.setAttribute(`data-${attribute}`, preferences[key])
+  }
+  for (const [key, value] of Object.entries(documentTypographyStyle(preferences))) {
+    if (value) document.body.style.setProperty(key, value)
+    else document.body.style.removeProperty(key)
+  }
+}, { immediate: true, deep: true })
+
+const styleRadii = computed(() => VISUAL_STYLE_RADII[store.visualStyle] || VISUAL_STYLE_RADII.soft)
+
 const themeOverrides = computed<GlobalThemeOverrides>(() => ({
   common: {
-    borderRadius: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '8px',
-    borderRadiusSmall: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '6px',
+    borderRadius: styleRadii.value.normal,
+    borderRadiusSmall: styleRadii.value.small,
     primaryColor: currentThemeTone.value.ui.primary,
     primaryColorHover: currentThemeTone.value.ui.primary,
     primaryColorPressed: currentThemeTone.value.ui.primary,
@@ -202,7 +225,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
     },
   },
   Dropdown: {
-    borderRadius: getComputedStyle(document.body).getPropertyValue('--theme-radius-sm').trim() || '7px',
+    borderRadius: styleRadii.value.small,
     color: currentThemeTone.value.ui.surface,
     dividerColor: `${currentThemeTone.value.ui.text}20`,
     optionTextColor: currentThemeTone.value.ui.text,
@@ -216,6 +239,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 }))
 
 const showPalette = ref(false)
+const openCommandPalette = () => { showPalette.value = true }
 const showExitModal = ref(false)
 const showDiscardConfirm = ref(false)
 const discardConfirmTitle = ref('放弃未保存修改？')
@@ -223,6 +247,20 @@ const discardConfirmContent = ref('未保存内容将无法恢复。')
 let discardConfirmResolver: ((confirmed: boolean) => void) | null = null
 const dontAskAgain = ref(false)
 const routeErrorMessage = ref('')
+const failedRouteTarget = ref('')
+const openRecoveryPage = (name: string) => {
+  void router.push({ name, ...(name === 'Settings' ? { query: { category: 'library' } } : {}) }).catch(error => handleWorkspaceError(error, false))
+}
+const handleWorkspaceError = (error: unknown, blocking: boolean) => {
+  console.error('[Long编辑 Workspace Error]', error)
+  if (!blocking) showRuntimeErrorNotice(error, () => openRecoveryPage('Settings'), () => openRecoveryPage('LibraryMode'))
+}
+const retryFailedRoute = () => {
+  if (!failedRouteTarget.value) return
+  const target = failedRouteTarget.value
+  routeErrorMessage.value = ''
+  void router.push(target).catch(error => handleWorkspaceError(error, false))
+}
 let routeMeasurementStartedAt = performance.now()
 let routeMeasurementName = 'initial'
 let routeMeasurementSequence = 0
@@ -300,6 +338,7 @@ const finishRouteMeasurement = (sequence = routeMeasurementSequence) => {
 
 const removeBeforeEach = router.beforeEach(async (to) => {
   routeErrorMessage.value = ''
+  failedRouteTarget.value = ''
   startRouteMeasurement(to.name)
   if (!isMainWindow && to.name === 'LibraryMode') {
     await closeWindow()
@@ -323,11 +362,10 @@ const removeAfterEach = router.afterEach(() => {
   setTimeout(finishOnce, 250)
 })
 const removeRouteError = router.onError((cause, to) => {
-  const target = typeof to?.fullPath === 'string' ? to.fullPath : '目标页面'
-  routeErrorMessage.value = `无法打开 ${target}。当前文档仍然保留，可以重新载入界面后再试。`
+  failedRouteTarget.value = typeof to?.fullPath === 'string' ? to.fullPath : ''
+  routeErrorMessage.value = '目标页面暂时无法打开。当前页面仍可使用，可以重试或选择其他页面。'
   console.error('[Long编辑 Route Error]', cause)
 })
-const reloadApplication = () => window.location.reload()
 
 const handleGlobalKeydown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
@@ -452,6 +490,7 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 
 onMounted(async () => {
   window.addEventListener('keydown', handleGlobalKeydown)
+  window.addEventListener('longedit:open-command-palette', openCommandPalette)
   window.addEventListener('beforeunload', handleBeforeUnload)
   try {
     if (appWindow) {
@@ -513,6 +552,7 @@ onUnmounted(() => {
   lifecycleUnlisteners.splice(0).forEach(unlisten => unlisten())
   resolveDiscardConfirm(false)
   window.removeEventListener('keydown', handleGlobalKeydown)
+  window.removeEventListener('longedit:open-command-palette', openCommandPalette)
   window.removeEventListener('beforeunload', handleBeforeUnload)
   removeBeforeEach()
   removeAfterEach()
@@ -583,13 +623,18 @@ body {
 body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .win-btn.close:hover { background: #ff3b30 !important; color: #fff !important; }
 
-.app-content { flex: 1; position: relative; overflow: hidden; }
+.app-content { flex: 1; min-height: 0; display: flex; position: relative; overflow: hidden; }
+.app-route-content { flex: 1; min-width: 0; min-height: 0; position: relative; overflow: hidden; }
+@media (max-width: 760px) { .app-content { flex-direction: column; } }
 .route-error-notice {
   position: absolute;
-  z-index: 9000;
-  top: 10px;
-  left: 50%;
-  width: min(680px, calc(100% - 32px));
+  z-index: 3000;
+  bottom: 12px;
+  right: 12px;
+  width: min(380px, calc(100% - 24px));
+  max-height: 35vh;
+  overflow: auto;
+  overflow-wrap: anywhere;
   min-height: 38px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto 28px;
@@ -602,7 +647,6 @@ body[data-theme="dark"] .win-btn:hover, body[data-theme="contrast"] .win-btn:hov
   color: var(--status-danger);
   background: var(--status-danger-bg);
   box-shadow: var(--workspace-shadow-md);
-  transform: translateX(-50%);
   font-size: var(--text-compact);
 }
 

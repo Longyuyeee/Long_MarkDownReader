@@ -1,0 +1,22 @@
+{
+  "version": "R1",
+  "status": "superseded-after-user-feedback",
+  "supersededBy": "../full-ui-redesign-r2/manifest.json",
+  "date": "2026-10-12",
+  "generator": "built-in image_gen.imagegen",
+  "selectedImages": [
+    "00-editor-r2.png",
+    "01-workflows.png",
+    "02-reading-office-r2.png",
+    "03-structured-text-r2.png",
+    "04-data-r2.png",
+    "05-visual-editors-r2.png",
+    "06-graph-media.png",
+    "07-settings-history-r2.png",
+    "08-themes-recovery-r2.png"
+  ],
+  "sourceInventory": "source-inventory.json",
+  "functionalPlacement": "README.md",
+  "prompts": "prompts.json",
+  "runtimeUiChanges": false
+}

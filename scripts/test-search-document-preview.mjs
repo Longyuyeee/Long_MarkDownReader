@@ -77,8 +77,18 @@ test('explicit side reference docks immediately, survives searches and clears on
   const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = source.slice(source.indexOf('const referencePinned ='), source.indexOf('const openSearchPreview ='))
   const scope = Vue.effectScope()
+  const entries = new Map()
+  const localStorage = { getItem: key => entries.get(key) || null, setItem: (key, value) => entries.set(key, value), removeItem: key => entries.delete(key) }
+  const moduleAt = (path, dependencies = {}) => {
+    const exports = {}
+    vm.runInNewContext(ts.transpileModule(fs.readFileSync(path, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText,
+      { exports, localStorage, require: name => dependencies[name] })
+    return exports
+  }
+  const reference = moduleAt('src/services/workspaceReference.ts', { '../utils/workSessions': moduleAt('src/utils/workSessions.ts') })
   const context = { ref: Vue.ref, computed: Vue.computed, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
-    activeSidebarTab: Vue.ref('files'), searchPreviewResult: Vue.ref(null), store: Vue.reactive({ libraryPath: '/a' }) }
+    activeSidebarTab: Vue.ref('files'), searchPreviewResult: Vue.ref(null), store: Vue.reactive({ libraryPath: '/a' }),
+    findFileFormat: () => ({ id: 'markdown' }), ...reference }
   scope.run(() => vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.state = { referencePinned, searchPreviewQuery, showSearchPreview }', { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context))
   const result = { path: '/a/note.md', title: 'note', matchKind: 'body' }
   context.state.showSearchPreview(result)
@@ -95,6 +105,10 @@ test('explicit side reference docks immediately, survives searches and clears on
   await Vue.nextTick()
   assert.equal(context.searchPreviewResult.value, null)
   assert.equal(context.state.referencePinned.value, false)
+  context.store.libraryPath = '/a'
+  await Vue.nextTick()
+  assert.equal(context.searchPreviewResult.value.path, '/a/other.md')
+  assert.equal(context.state.searchPreviewQuery.value, '计划')
   scope.stop()
 })
 
@@ -153,7 +167,7 @@ test('arrow keys move between main-open actions without opening files or swallow
   assert.equal(prevented, 4)
 })
 
-test('explicit return closes the reference and focuses a visible writable editor after rendering', async () => {
+test('explicit return hides the reference, retains its source and focuses a visible writable editor after rendering', async () => {
   const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = library.slice(library.indexOf('const returnToEditorFromReference ='), library.indexOf('const showSearchPreview ='))
   const order = []
@@ -161,16 +175,20 @@ test('explicit return closes the reference and focuses a visible writable editor
   const readonly = { getClientRects: () => [1], matches: () => true, focus: () => assert.fail('readonly editor') }
   const writable = { getClientRects: () => [1], matches: () => false, focus: () => order.push('focus') }
   const editor = { querySelectorAll: () => [hidden, readonly, writable], focus: () => order.push('fallback') }
-  const context = { searchPreviewResult: { value: {} }, nextTick: async () => order.push('render'), document: { querySelector: () => editor } }
+  const reference = { path: 'source.md', title: '参考资料' }
+  const context = { searchPreviewResult: { value: reference }, nextTick: async () => order.push('render'), document: { querySelector: () => editor } }
   vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.run = returnToEditorFromReference', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
   await context.run()
-  assert.equal(context.searchPreviewResult.value, null)
+  assert.equal(context.searchPreviewResult.value, reference)
   assert.deepEqual(order, ['render', 'focus'])
   editor.querySelectorAll = () => []
   await context.run()
   assert.equal(editor.tabIndex, -1)
   assert.equal(order.at(-1), 'fallback')
   assert.match(source, /@click="\$emit\('returnToEditor'\)"/)
+  assert.match(library, /@return-to-editor="referenceVisible = false; returnToEditorFromReference\(\)"/)
+  assert.match(library, /@close="referenceVisible = false"/)
+  assert.match(library, /@clear-source="referenceVisible = false; searchPreviewResult = null"/)
 })
 
 test('direct excerpt insertion requires a live bookmark in the current writable Markdown note', () => {

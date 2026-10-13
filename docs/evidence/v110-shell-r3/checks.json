@@ -1,0 +1,17 @@
+{
+  "scope": "actual Vue LibraryMode and Vditor, mocked Tauri IPC; no native disk/install evidence",
+  "checks": [
+    "seven icons remain in one row and each navigation panel is reachable",
+    "file density and muted icons apply to actual tree rows",
+    "navigation toggle updates visibility and keyboard access",
+    "document menu keeps modes, widths and export submenu",
+    "low-frequency Vditor tools remain in native more menu",
+    "visible explicit save retains failed draft and retries through production handler",
+    "reference search, explicit dock and toggle retain source identity",
+    "focus mode exits visibly and reference returns",
+    "736 and 320 widths keep editor, navigation, reference and menu reachable",
+    "quick note and command entry trigger existing actions",
+    "context New honors selected folders, including names that look like file extensions"
+  ],
+  "errors": []
+}

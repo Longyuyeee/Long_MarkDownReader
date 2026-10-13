@@ -345,6 +345,7 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
 
 <style scoped>
 .release-capabilities {
+  container-type: inline-size;
   height: 100%;
   overflow-y: auto;
   color: var(--theme-text);
@@ -562,7 +563,7 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
 .gate-row p { margin: 0; color: var(--theme-text-secondary); }
 .gate-status { color: var(--theme-warning, #b77813); }
 
-@media (max-width: 760px) {
+@container (max-width: 760px) {
   .external-opening-summary { grid-template-columns: 24px minmax(0, 1fr); }
   .managed-here { grid-column: 1 / -1; justify-content: center; }
   .toolbar { align-items: stretch; flex-direction: column; }
@@ -572,7 +573,8 @@ const dependencyLabel = (dependency: ReleaseDependency) => ({
     grid-template-columns: minmax(130px, 1fr) minmax(100px, auto) 18px;
     gap: 8px;
   }
-  .save-mode, .dependency { display: none; }
+  .save-mode, .dependency { grid-column: 1 / -1; }
+  .chevron { grid-column: 3; grid-row: 1; }
   .row-detail { grid-template-columns: 1fr; }
   .default-app-control { align-items: stretch; flex-direction: column; }
   .default-app-actions { align-items: stretch; flex-direction: column; }

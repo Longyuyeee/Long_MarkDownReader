@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Draft and search",
+    "Fold/unfold remain available",
+    "Filtered outline locates source without hiding it",
+    "480px container and window layout",
+    "Inspector toggle preserves draft"
+  ],
+  "errors": [],
+  "scope": "Actual YamlEditorView and CodeMirror; native read and analysis mocked, no native writing or YAML parser acceptance",
+  "releaseCandidate": false
+}

@@ -3,7 +3,7 @@
     <WorkspaceManagementHeader
       title="设置"
       subtitle="资料库、编辑器与应用偏好"
-      @back="router.push({ name: 'LibraryMode' })"
+      :show-back="false"
     />
 
     <WorkspaceManagementContent class="settings-content">
@@ -270,6 +270,7 @@
           <n-grid-item v-if="activeCategory === 'appearance'" class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观主题</div>
             <section class="theme-preset-group">
+              <p class="theme-library-intro">选择一套主题，一起调整配色、界面质感和动效。文档排版与文件显示仍可单独设置。</p>
               <div class="theme-library-toolbar" aria-label="主题类型筛选" data-horizontal-wheel="always">
                 <button v-for="filter in themeFilters" :key="filter.id" type="button" :class="{ active: activeThemeFilter === filter.id }" @click="activeThemeFilter = filter.id">
                   {{ filter.label }}
@@ -277,20 +278,23 @@
                 </button>
               </div>
               <div class="theme-preset-grid">
-                <div
+                <button
+                  type="button"
                   v-for="preset in filteredThemePresets"
                   :key="preset.id"
                   class="theme-preset-card"
                   :class="{ active: isPresetActive(preset) }"
+                  :aria-pressed="isPresetActive(preset)"
+                  :data-theme-preset="preset.id"
                   @click="applyPreset(preset)"
                 >
-                  <div class="preset-visual" :style="getPresetPreviewStyle(preset)">
+                  <div class="preset-visual" :data-style="preset.style" :style="getPresetPreviewStyle(preset)">
                     <div class="preset-window">
                       <span></span><span></span><span></span>
-                      <div class="preset-sidebar"></div>
+                      <div class="preset-sidebar"><n-icon :component="LibraryIcon" size="11" /><i></i><i></i><i></i></div>
                       <div class="preset-document"><i></i><i></i><i></i></div>
                     </div>
-                    <div class="preset-icon">{{ preset.icon }}</div>
+                    <div class="preset-icon" aria-hidden="true"><n-icon :component="presetStyleIcons[preset.style]" size="20" /></div>
                   </div>
                   <div class="preset-name">{{ preset.name }}</div>
                   <div class="preset-desc">{{ preset.description }}</div>
@@ -299,7 +303,7 @@
                     <span class="tag">{{ getThemeLabel(preset.theme) }}</span>
                     <span class="tag">{{ getStyleLabel(preset.style) }}</span>
                   </div>
-                </div>
+                </button>
               </div>
             </section>
 
@@ -358,6 +362,10 @@
                 </n-form-item>
               </n-grid-item>
             </n-grid>
+            <div id="document-display" ref="documentDisplaySection" class="display-settings-section">
+              <div class="section-title">文档与文件显示</div>
+              <DisplayPreferencesEditor v-model="config.displayPreferences" />
+            </div>
             <div class="section-title">实时预览</div>
             <div class="theme-preview-card" :style="{ backgroundColor: config.editorBgColor }">
               <div class="preview-content">
@@ -385,6 +393,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
+import DisplayPreferencesEditor from '../components/DisplayPreferencesEditor.vue'
+import { normalizeDisplayPreferences, VISUAL_STYLE_RADII } from '../config/displayPreferences'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Trash as TrashIcon,
@@ -400,6 +410,7 @@ import {
   MonitorCog as SystemIcon,
   ShieldCheck as PrivacyIcon,
   Sparkles as AiIcon,
+  Layers as LayersIcon, Code2 as CodeIcon, Feather as FeatherIcon, LayoutGrid as LayoutIcon, PanelsTopLeft as PanelsIcon,
 } from 'lucide-vue-next'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
@@ -504,6 +515,7 @@ const styleOptions: { label: string; value: 'soft' | 'neo' | 'glass' | 'airy' | 
   { label: '极简', value: 'minimal' },
   { label: '锐利', value: 'sharp' },
 ]
+const presetStyleIcons = { soft: LayersIcon, neo: CodeIcon, glass: PanelsIcon, airy: FeatherIcon, minimal: LayoutIcon, sharp: FilesIcon }
 
 const motionOptions: { label: string; desc: string; value: 'calm' | 'swift' | 'expressive' | 'reduced' }[] = [
   { label: '舒展', desc: '稳定、柔和、适合长时间写作', value: 'calm' },
@@ -560,6 +572,7 @@ const config = ref({
   exitStrategy: store.exitStrategy,
   visualStyle: store.visualStyle,
   motionSpeed: store.motionSpeed,
+  displayPreferences: normalizeDisplayPreferences(store.displayPreferences),
   aiEnabled: store.aiEnabled,
   aiProvider: store.aiProvider,
   aiEndpoint: store.aiEndpoint,
@@ -575,6 +588,7 @@ const observationComparisonExporting = ref(false)
 const observationReviewing = ref(false)
 const observationReview = ref<KnowledgeGraphObservationComparison | null>(null)
 const formatCapabilityRow = ref<HTMLElement | null>(null)
+const documentDisplaySection = ref<HTMLElement | null>(null)
 const knowledgeObservationRow = ref<HTMLElement | null>(null)
 const formatCapabilityRouteFocused = computed(() => route.query.focus === 'format-capabilities')
 const observationRouteFocused = computed(() => route.query.focus === 'knowledge-observation')
@@ -761,6 +775,7 @@ const syncLocalConfigFromStore = () => {
     exitStrategy: store.exitStrategy,
     visualStyle: store.visualStyle,
     motionSpeed: store.motionSpeed,
+    displayPreferences: normalizeDisplayPreferences(store.displayPreferences),
     aiEnabled: store.aiEnabled,
     aiProvider: store.aiProvider,
     aiEndpoint: store.aiEndpoint,
@@ -777,6 +792,7 @@ onMounted(async () => {
     isInitializing.value = false
     alignActiveSettingsCategory()
     if (formatCapabilityRouteFocused.value) formatCapabilityRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (route.query.focus === 'document-display') documentDisplaySection.value?.scrollIntoView({ block: 'start' })
     if (observationRouteFocused.value) knowledgeObservationRow.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     if (softwareUpdateRouteFocused.value) document.querySelector<HTMLElement>('[data-testid="app-update-settings"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
@@ -1186,6 +1202,7 @@ const getPresetPreviewStyle = (preset: ThemePreset) => {
     '--preset-bg': colors.background,
     '--preset-surface': colors.surface,
     '--preset-accent': colors.accent,
+    '--preset-radius': VISUAL_STYLE_RADII[preset.style].normal,
   }
 }
 
@@ -1245,6 +1262,7 @@ onUnmounted(() => {
 
 <style scoped>
 .settings-view {
+  container-type: inline-size;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1717,7 +1735,7 @@ onUnmounted(() => {
 .observation-review-achievements { display: flex; flex-wrap: wrap; gap: 6px; }
 .observation-review-achievements span { padding: 3px 7px; border-radius: 999px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), 0.09); font-size: var(--text-compact); }
 
-@media (max-width: 720px) {
+@container (max-width: 720px) {
   .observation-session-steps li { grid-template-columns: 26px minmax(0, 1fr); }
   .observation-session-steps li > .n-button,
   .observation-step-actions { grid-column: 2; justify-self: start; }
@@ -2036,6 +2054,15 @@ onUnmounted(() => {
 .preset-document i:nth-child(1) { width: 62%; height: 6px; background: var(--preset-accent); }
 .preset-document i:nth-child(2) { width: 100%; opacity: 0.48; }
 .preset-document i:nth-child(3) { width: 78%; opacity: 0.32; }
+
+.preset-visual .preset-window { border-radius: var(--preset-radius); }
+.preset-visual[data-style="soft"] .preset-window { box-shadow: 0 8px 18px rgba(0,0,0,.09); }
+.preset-visual[data-style="neo"] .preset-window { border: 1px solid var(--preset-accent); box-shadow: 4px 4px 0 color-mix(in srgb, var(--preset-accent) 18%, transparent); }
+.preset-visual[data-style="glass"] .preset-window { background: color-mix(in srgb, var(--preset-surface) 72%, transparent); border: 1px solid color-mix(in srgb, var(--preset-accent) 25%, transparent); box-shadow: inset 0 1px 0 #ffffff88, 0 8px 18px #0001; }
+.preset-visual[data-style="airy"] .preset-document { margin: 6px; padding: 9px; background: var(--preset-surface); box-shadow: 0 3px 12px #0001; }
+.preset-visual[data-style="minimal"] .preset-window { box-shadow: none; }
+.preset-visual[data-style="sharp"] .preset-window { border: 2px solid var(--preset-accent); box-shadow: 4px 4px 0 color-mix(in srgb, var(--preset-accent) 16%, transparent); }
+.display-settings-section { margin-top: 24px; }
 
 .preset-icon {
   position: absolute;
@@ -2412,7 +2439,7 @@ onUnmounted(() => {
 .theme-vscode .string { color: #ce9178; }
 .theme-vscode .method { color: #dcdcaa; }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .settings-content { overflow-y: auto; }
   .settings-layout { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; gap: 16px; }
   .settings-navigation {
@@ -2428,7 +2455,7 @@ onUnmounted(() => {
   .settings-category-heading { margin-bottom: 14px; }
 }
 
-@media (max-width: 640px) {
+@container (max-width: 640px) {
   .settings-navigation button { min-height: 36px; padding: 0 8px; }
   .settings-navigation .n-icon { font-size: 15px; }
   .setting-row { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 14px; }

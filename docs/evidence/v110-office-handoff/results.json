@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "External: metadata, unavailable app disabled, failed handoff, narrow layout and retry",
+    "Legacy: metadata, failed conversion retains target, blocked conversion, narrow layout and retry"
+  ],
+  "errors": [],
+  "scope": "Actual Office views and ExternalApplicationPanel with mocked IPC; no desktop app launched or native conversion performed",
+  "releaseCandidate": false
+}

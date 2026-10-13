@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import fs from 'node:fs/promises'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output='docs/evidence/v110-workbook-panels-layout'
+await fs.mkdir(output,{recursive:true})
+const browser=await chromium.launch(),errors=[]
+try {
+ const page=await browser.newPage({viewport:{width:1280,height:900}})
+ page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message))
+ await page.goto('http://127.0.0.1:9000/scripts/fixtures/workbook-save-browser.html')
+ await page.locator('.workbook-cell').first().click()
+ await page.evaluate(()=>document.querySelector('#app').style.width='480px')
+ await page.locator('.tool-panel-trigger').click()
+ await page.getByText('单元格格式',{exact:true}).click()
+ await page.getByTitle('粗体',{exact:true}).click()
+ assert.ok((await page.getByTitle('粗体',{exact:true}).getAttribute('class')).includes('active'))
+ await page.getByTitle('撤销',{exact:true}).click()
+ await page.getByTitle('数字格式',{exact:true}).selectOption('text')
+ await page.getByTitle('撤销',{exact:true}).click()
+ const panel=await page.locator('.format-toolbar').boundingBox()
+ assert.ok(panel.height>40 && panel.height<=180)
+ await page.screenshot({path:output+'/01-format.png',animations:'disabled'})
+ await page.locator('.tool-panel-trigger').click()
+ await page.getByText('数据、Table 与规则',{exact:true}).click()
+ await page.getByRole('button',{name:'新建验证',exact:true}).click()
+ const dialog=page.getByRole('dialog').filter({hasText:'设置数据验证'})
+ await dialog.waitFor()
+ await dialog.getByRole('button',{name:'取消',exact:true}).click()
+ await dialog.waitFor({state:'hidden'})
+ assert.equal(await page.evaluate(()=>window.workbookAudit.validationWrites.length),0)
+ await page.screenshot({path:output+'/02-data.png',animations:'disabled'})
+ await page.setViewportSize({width:480,height:900})
+ await page.getByRole('button',{name:'新建验证',exact:true}).click()
+ await dialog.waitFor()
+ await dialog.locator('input').first().click()
+ await page.screenshot({path:output+'/03-rule-dialog.png',animations:'disabled'})
+ await dialog.getByRole('button',{name:'取消',exact:true}).click()
+ await dialog.waitFor({state:'hidden'})
+ assert.deepEqual(errors,[])
+ await fs.writeFile(output+'/results.json',JSON.stringify({checks:['Narrow format panel wraps with bounded height','Bold and number format draft undo','Validation entry and cancel without writing','480px rule dialog'],errors,scope:'Actual WorkbookView; native IPC fixture, no native write or full rule matrix acceptance',releaseCandidate:false},null,2)+'\n')
+ console.log('Workbook format/data layout checks passed')
+} finally {await browser.close()}

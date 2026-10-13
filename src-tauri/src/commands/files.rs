@@ -551,6 +551,10 @@ pub async fn scan_directory(library_root: String, path: String) -> Result<Vec<Fi
 }
 
 fn is_workspace_file(name: &str) -> bool {
+    // Folder ordering is application metadata, even though JSON is editable.
+    if name.eq_ignore_ascii_case(".misty_order.json") {
+        return false;
+    }
     file_format_registry()
         .ok()
         .and_then(|registry| registry.by_path(name))
@@ -799,6 +803,9 @@ mod tests {
 
     #[test]
     fn workspace_file_filter_rejects_disguised_extensions() {
+        assert!(!is_workspace_file(".misty_order.json"));
+        assert!(!is_workspace_file(".MISTY_ORDER.JSON"));
+        assert!(is_workspace_file("settings.json"));
         assert!(is_workspace_file("diagram.MERMAID"));
         assert!(is_workspace_file("data.table.json"));
         assert!(is_workspace_file("notes.txt"));

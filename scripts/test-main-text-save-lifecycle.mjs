@@ -21,6 +21,7 @@ function harness(viewSource = source) {
   const ctx = vm.createContext({
     vditor: editor, activeTabId: { value: tab.id }, tabs: { value: [tab] },
     store: { libraryPath: 'library-a' }, currentLibGitEnabled: { value: false },
+    currentFileReloadBusy: { value: false },
     savingTextTabs: new Set(), suppressEditorInput: false, lastPromptedExternalSignature: '',
     tryAcquireMainTextSave: ownershipContext.acquire,
     beginWindowSave: () => { guards++; return () => { guards-- } },
@@ -50,6 +51,19 @@ test('pre-fix code reproduces lost subsequent typing and cross-tab overwrite', a
   switching.ctx.activeTabId.value = 'budget.md'
   switching.ctx.vditor = { getValue: () => '预算 3000', setValue: value => switching.writes.push(value) }
   switching.resolve(); await second; assert.deepEqual(switching.writes, ['周五交付'])
+})
+
+test('saving during a disk reload is blocked until the read completes', async () => {
+  const h = harness()
+  h.ctx.currentFileReloadBusy.value = true
+  await h.ctx.save()
+  assert.equal(h.requests.length, 0)
+  assert.equal(h.tab.isDirty, true)
+  assert.equal(h.tab.textSignature, 'old')
+  assert.equal(h.guards(), 0)
+  h.ctx.currentFileReloadBusy.value = false
+  const retry = h.ctx.save(); h.resolve(); await retry
+  assert.equal(h.tab.isDirty, false)
 })
 
 test('slow save retains subsequent typing and advances signature for the next save', async () => {

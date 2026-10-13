@@ -1,0 +1,229 @@
+{
+  "checks": [
+    "Card styles use an 8px gutter instead of 17px; flat styles retain a 1px separator and all styles retain the 17px drag target",
+    "Six styles follow five pointer displacements within one frame without initial jumps; normal animations return after release",
+    "Bounds remain 220–600px; pointer capture completes a drag released outside the library shell",
+    "Pointer cancellation and window focus loss end dragging at the last width",
+    "Keyboard adjustment, collapse/reopen and the unsaved document draft remain intact",
+    "Idle mouse movement and drag frames do not rerender the parent file-tree/editor component",
+    "Existing file long-press dragging keeps its ghost at the pointer without changing files",
+    "Narrow windows keep navigation in an overlay and let the editor fill the available width; reopening does not reserve a gutter",
+    "Leaving the page cancels pointer capture and pending resize frames"
+  ],
+  "movements": [
+    {
+      "style": "soft",
+      "pointerDelta": 1,
+      "sidebarDelta": 1,
+      "dividerDelta": 1
+    },
+    {
+      "style": "soft",
+      "pointerDelta": 32,
+      "sidebarDelta": 32,
+      "dividerDelta": 32
+    },
+    {
+      "style": "soft",
+      "pointerDelta": 96,
+      "sidebarDelta": 96,
+      "dividerDelta": 96
+    },
+    {
+      "style": "soft",
+      "pointerDelta": -32,
+      "sidebarDelta": -32,
+      "dividerDelta": -32
+    },
+    {
+      "style": "soft",
+      "pointerDelta": 0,
+      "sidebarDelta": 0,
+      "dividerDelta": 0
+    },
+    {
+      "style": "neo",
+      "pointerDelta": 1,
+      "sidebarDelta": 1,
+      "dividerDelta": 1
+    },
+    {
+      "style": "neo",
+      "pointerDelta": 32,
+      "sidebarDelta": 32,
+      "dividerDelta": 32
+    },
+    {
+      "style": "neo",
+      "pointerDelta": 96,
+      "sidebarDelta": 96,
+      "dividerDelta": 96
+    },
+    {
+      "style": "neo",
+      "pointerDelta": -32,
+      "sidebarDelta": -32,
+      "dividerDelta": -32
+    },
+    {
+      "style": "neo",
+      "pointerDelta": 0,
+      "sidebarDelta": 0,
+      "dividerDelta": 0
+    },
+    {
+      "style": "glass",
+      "pointerDelta": 1,
+      "sidebarDelta": 1,
+      "dividerDelta": 1
+    },
+    {
+      "style": "glass",
+      "pointerDelta": 32,
+      "sidebarDelta": 32,
+      "dividerDelta": 32
+    },
+    {
+      "style": "glass",
+      "pointerDelta": 96,
+      "sidebarDelta": 96,
+      "dividerDelta": 96
+    },
+    {
+      "style": "glass",
+      "pointerDelta": -32,
+      "sidebarDelta": -32,
+      "dividerDelta": -32
+    },
+    {
+      "style": "glass",
+      "pointerDelta": 0,
+      "sidebarDelta": 0,
+      "dividerDelta": 0
+    },
+    {
+      "style": "airy",
+      "pointerDelta": 1,
+      "sidebarDelta": 1,
+      "dividerDelta": 1
+    },
+    {
+      "style": "airy",
+      "pointerDelta": 32,
+      "sidebarDelta": 32,
+      "dividerDelta": 32
+    },
+    {
+      "style": "airy",
+      "pointerDelta": 96,
+      "sidebarDelta": 96,
+      "dividerDelta": 96
+    },
+    {
+      "style": "airy",
+      "pointerDelta": -32,
+      "sidebarDelta": -32,
+      "dividerDelta": -32
+    },
+    {
+      "style": "airy",
+      "pointerDelta": 0,
+      "sidebarDelta": 0,
+      "dividerDelta": 0
+    },
+    {
+      "style": "minimal",
+      "pointerDelta": 1,
+      "sidebarDelta": 1.046875,
+      "dividerDelta": 1.046875
+    },
+    {
+      "style": "minimal",
+      "pointerDelta": 32,
+      "sidebarDelta": 32.046875,
+      "dividerDelta": 32.046875
+    },
+    {
+      "style": "minimal",
+      "pointerDelta": 96,
+      "sidebarDelta": 96.046875,
+      "dividerDelta": 96.046875
+    },
+    {
+      "style": "minimal",
+      "pointerDelta": -32,
+      "sidebarDelta": -31.953125,
+      "dividerDelta": -31.953125
+    },
+    {
+      "style": "minimal",
+      "pointerDelta": 0,
+      "sidebarDelta": 0.046875,
+      "dividerDelta": 0.046875
+    },
+    {
+      "style": "sharp",
+      "pointerDelta": 1,
+      "sidebarDelta": 1,
+      "dividerDelta": 1
+    },
+    {
+      "style": "sharp",
+      "pointerDelta": 32,
+      "sidebarDelta": 32,
+      "dividerDelta": 32
+    },
+    {
+      "style": "sharp",
+      "pointerDelta": 96,
+      "sidebarDelta": 96,
+      "dividerDelta": 96
+    },
+    {
+      "style": "sharp",
+      "pointerDelta": -32,
+      "sidebarDelta": -32,
+      "dividerDelta": -32
+    },
+    {
+      "style": "sharp",
+      "pointerDelta": 0,
+      "sidebarDelta": 0,
+      "dividerDelta": 0
+    }
+  ],
+  "gutters": [
+    {
+      "style": "soft",
+      "gap": 8,
+      "dragTarget": 17
+    },
+    {
+      "style": "neo",
+      "gap": 1,
+      "dragTarget": 17
+    },
+    {
+      "style": "glass",
+      "gap": 8,
+      "dragTarget": 17
+    },
+    {
+      "style": "airy",
+      "gap": 8,
+      "dragTarget": 17
+    },
+    {
+      "style": "minimal",
+      "gap": 1,
+      "dragTarget": 17
+    },
+    {
+      "style": "sharp",
+      "gap": 1,
+      "dragTarget": 17
+    }
+  ],
+  "errors": [],
+  "scope": "Production App/LibraryMode/Vditor with mock native IPC; actual browser pointer capture and layout. No native performance benchmark."
+}

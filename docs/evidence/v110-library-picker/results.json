@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Dropdown lists libraries and management",
+    "Dirty document blocks switching without loss",
+    "Config failure retains library and tabs; retry works",
+    "Direct switch updates active library",
+    "Switching back restores tabs",
+    "Narrow screen dropdown"
+  ],
+  "errors": [],
+  "scope": "Actual Vue, mocked native IPC"
+}

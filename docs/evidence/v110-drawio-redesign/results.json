@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Long filename narrow toolbar",
+    "Page switching",
+    "Node selection",
+    "Property input and apply entry reachable"
+  ],
+  "scope": "Production DrawioEditorView; native read/analysis mocked; no transform/save acceptance",
+  "errors": []
+}

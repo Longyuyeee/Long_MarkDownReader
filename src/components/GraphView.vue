@@ -1,6 +1,6 @@
 <template>
   <div class="graph-container" ref="containerRef" :class="[`graph-canvas-theme-${graphCanvasTheme}`, { 'neighbor-focus-active': neighborFocusRoot, 'graph-path-active': pathOpen, 'graph-comparison-active': comparisonOpen, 'community-focus-active': activeCommunity && !communityOpen, 'node-details-active': selectedNode && selectedNodeIds.length === 1, 'community-overview-active': showCommunityOverview, 'graph-fullscreen-active': graphFullscreenActive }]" data-testid="graph-container" :data-active-exploration-scopes="activeExplorationScopes.join(',')" :data-semantic-zoom-level="semanticZoomLevel" :data-community-contour-count="communityContourCount" :data-fullscreen-active="String(graphFullscreenActive)" :data-fullscreen-supported="String(graphFullscreenSupported)">
-    <WorkspaceManagementHeader class="graph-header" title="知识图谱" @back="returnToLibrary">
+    <WorkspaceManagementHeader class="graph-header" title="知识图谱" :show-back="false">
       <template #icon><Network class="graph-header-icon" :size="18" /></template>
       <div class="graph-controls" data-horizontal-wheel="always">
         <WorkspaceSegmentedControl class="view-switch" aria-label="图谱布局模式">
@@ -3933,7 +3933,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 
 @media (max-width: 640px) {
   .view-switch button { padding: 0 7px; }
-  .graph-search { display: none; }
+  .graph-search { display: flex; width: 142px; }
   .tutorial-btn { width: var(--workspace-control-height); }
   .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }
   .tutorial-card { padding: 24px 18px; }

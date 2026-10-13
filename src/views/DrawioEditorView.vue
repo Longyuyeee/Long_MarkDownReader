@@ -1,5 +1,5 @@
 <template>
-  <div class="drawio-workspace">
+  <div class="drawio-workspace" :class="{ 'with-tabs': !store.isZen && store.tabs.length }">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header class="toolbar">
       <div class="identity">
@@ -474,6 +474,7 @@ onBeforeUnmount(() => {
 .toolbar { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 14px; border-bottom: var(--theme-border); background: var(--theme-surface); }
 .identity,.actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .identity>div { min-width: 0; display: grid; gap: 2px; }
+.drawio-workspace:not(.with-tabs) { grid-template-rows: auto minmax(0, 1fr); }
 .identity strong,.identity span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .identity strong { font-size: 12px; }.identity span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.accent { color: var(--theme-primary); }
 .stage { min-height: 0; display: grid; grid-template-columns: 190px minmax(320px, 1fr) 280px; overflow: hidden; }
@@ -501,8 +502,15 @@ onBeforeUnmount(() => {
 .geometry-grid,.color-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .color-grid input { width: 100%; height: 30px; padding: 2px; border: var(--theme-border); border-radius: 4px; background: var(--theme-surface); cursor: pointer; }
 .properties>small,.empty-inspector,.empty-state { color: var(--theme-text-secondary); font-size: var(--text-compact); }.empty-inspector { padding: 16px 4px; line-height: 1.6; }.empty-state { display: grid; place-items: center; height: 100%; }
-@media (max-width: 980px) { .stage { grid-template-columns: 150px minmax(300px, 1fr) 230px; }.diagram-canvas { width: 700px; } }
-@media (max-width: 760px) { .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(420px, 1fr) auto; overflow-y: auto; }.pages-pane { max-height: 150px; border-right: 0; border-bottom: var(--theme-border); }.inspector-pane { min-height: 330px; border-left: 0; border-top: var(--theme-border); }.canvas-pane { min-height: 480px; }.toolbar { align-items: flex-start; }.identity { max-width: 58%; }.actions .n-button { min-width: 32px; } }
-@container (max-width: 980px) { .stage { grid-template-columns: 150px minmax(300px, 1fr) 230px; }.diagram-canvas { width: 700px; } }
-@container (max-width: 760px) { .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(420px, 1fr) auto; overflow-y: auto; }.pages-pane { max-height: 150px; border-right: 0; border-bottom: var(--theme-border); }.inspector-pane { min-height: 330px; border-left: 0; border-top: var(--theme-border); }.canvas-pane { min-height: 480px; }.toolbar { align-items: flex-start; }.identity { max-width: 58%; }.actions .n-button { min-width: 32px; } }
+.pages-pane { overflow-y: auto; }
+@container (max-width: 980px) { .stage { grid-template-columns: 150px minmax(0, 1fr) 230px; }.diagram-canvas { width: 700px; } }
+@container (max-width: 760px) {
+  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: 150px 480px minmax(400px, auto); overflow-y: auto; }
+  .pages-pane { border-right: 0; border-bottom: var(--theme-border); overflow-y: auto; }
+  .inspector-pane { border-left: 0; border-top: var(--theme-border); }
+  .toolbar { flex-wrap: wrap; gap: 6px; }
+  .identity { min-width: 0; max-width: 100%; width: 100%; }
+  .actions { margin-left: auto; }
+  .actions .n-button { min-width: 32px; }
+}
 </style>

@@ -22,9 +22,11 @@ const releaseUrl = `https://github.com/Longyuyeee/Long_MarkDownReader/releases/t
 const auditPath = `docs/V${pkg.version.replaceAll('.', '_')}_Unsigned_Community_Release_Audit_${policy.generatedAt}.md`
 const notesPath = `docs/RELEASE_NOTES_v${pkg.version}.md`
 const [major, minor, patch] = pkg.version.split('.').map(Number)
-const previousPublicVersion = `${major}.${minor}.${patch - 1}`
+// Minor releases have an explicit public predecessor, not the nonexistent 1.1.-1.
+const previousPublicVersion = minor === 1 && patch === 0
+  ? '1.0.26' : `${major}.${minor}.${patch - 1}`
 const managedUpdaterUpgradePrefix = `${previousPublicVersion}-to-${pkg.version}`
-const managedUpdaterPolicyToken = `${major}${patch - 1}`
+const managedUpdaterPolicyToken = `${previousPublicVersion.split('.')[0]}${previousPublicVersion.split('.')[2]}`
 const managedUpdaterLifecyclePath = `shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`
 const managedUpdaterLifecycle = fs.existsSync(managedUpdaterLifecyclePath) ? json(managedUpdaterLifecyclePath) : null
 const previousReleaseReceiptPath = `docs/evidence/v${previousPublicVersion}-release/release-receipt.json`
@@ -131,7 +133,7 @@ if ((ready && !lifecycleVerified) || published) {
     const manifest = json(manifestPath)
     if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 2 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
-    if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26'].includes(pkg.version)) {
+    if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0'].includes(pkg.version)) {
       try { assertInstalledReleaseRuntime(manifest) } catch (error) { fail(`installed release runtime: ${error.message}`) }
     } else if (manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2' || manifest.runtimeSmoke?.checksPassed !== 6 || manifest.runtimeSmoke?.routesPassed !== 11) fail('legacy debug runtime evidence drift')
     if (manifest.qualityGate?.status !== 'passed'

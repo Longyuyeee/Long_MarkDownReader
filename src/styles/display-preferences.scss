@@ -1,0 +1,213 @@
+// Shared appearance: surface shape and document/file presentation are separate preferences.
+body {
+  --document-font-family: var(--font-sans);
+  --document-heading-family: var(--document-font-family);
+  --document-quote-radius: var(--theme-radius-sm);
+  --document-quote-bg: rgba(var(--theme-primary-rgb), .055);
+  --document-heading-rule: 0;
+  --document-table-radius: var(--theme-radius-sm);
+  --document-page-shadow: none;
+  --document-page-border: 0;
+  --document-code-radius: var(--theme-radius-sm);
+  --file-row-height: 34px;
+  --file-row-gap: 3px;
+  --file-row-bg: transparent;
+  --file-row-border: 1px solid transparent;
+  --file-row-shadow: none;
+  --file-row-hover-shadow: var(--file-row-shadow);
+  --file-row-icon-lift: -1px;
+  --file-row-icon-scale: 1.035;
+  --surface-panel-inset: 0px;
+  --surface-panel-gap: 0px;
+}
+body[data-style="soft"] {
+  --surface-panel-gap: 8px;
+  --file-row-height: 36px; --file-row-gap: 4px;
+  --file-row-bg: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+  --file-row-shadow: 0 2px 6px color-mix(in srgb, var(--theme-text) 5%, transparent);
+  --file-row-hover-shadow: 0 3px 9px color-mix(in srgb, var(--theme-text) 7%, transparent);
+  --document-quote-radius: 12px;
+}
+body[data-style="neo"] {
+  --file-row-border: 1px solid rgba(var(--theme-primary-rgb), .16);
+  --document-heading-rule: 1px;
+  --document-code-radius: 3px;
+  --document-table-radius: 3px;
+}
+body[data-style="glass"] {
+  --file-row-gap: 5px; --file-row-bg: color-mix(in srgb, var(--theme-surface) 76%, transparent);
+  --file-row-border: 1px solid rgba(var(--theme-primary-rgb), .15);
+  --file-row-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text) 7%, transparent);
+  --file-row-hover-shadow: var(--file-row-shadow), 0 2px 8px color-mix(in srgb, var(--theme-text) 5%, transparent);
+  --surface-panel-inset: 8px; --surface-panel-gap: 8px;
+  --document-page-shadow: var(--theme-shadow-sm); --document-page-border: var(--theme-border);
+  --document-quote-radius: 14px;
+}
+body[data-style="airy"] {
+  --file-row-height: 40px; --file-row-gap: 6px;
+  --file-row-hover-shadow: 0 2px 6px color-mix(in srgb, var(--theme-text) 5%, transparent);
+  --surface-panel-inset: 10px; --surface-panel-gap: 8px;
+  --document-heading-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+  --document-page-shadow: 0 5px 22px color-mix(in srgb, var(--theme-text) 5%, transparent);
+  --document-quote-bg: transparent;
+}
+body[data-style="minimal"] {
+  --file-row-height: 28px; --file-row-gap: 1px;
+  --document-quote-radius: 0px; --document-table-radius: 0px; --document-code-radius: 4px;
+  --document-quote-bg: transparent;
+}
+body[data-style="sharp"] {
+  --file-row-height: 30px; --file-row-gap: 2px;
+  --file-row-border: 1px solid var(--workspace-border-color);
+  --document-heading-rule: 2px; --document-quote-radius: 0px;
+  --document-table-radius: 0px; --document-code-radius: 0px;
+}
+
+// These variables flow to settings preview as well as the real editor.
+:is(body, .display-preferences-editor)[data-document-style="plain"] {
+  --document-heading-family: var(--document-font-family); --document-heading-rule: 0;
+  --document-quote-bg: transparent; --document-quote-radius: 0px;
+  --document-page-shadow: none; --document-page-border: 0;
+  --document-table-radius: 0px; --document-code-radius: 4px;
+}
+:is(body, .display-preferences-editor)[data-document-style="paper"] {
+  --document-heading-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+  --document-page-shadow: 0 6px 26px color-mix(in srgb, var(--theme-text) 9%, transparent);
+  --document-page-border: 1px solid var(--workspace-border-color);
+  --document-quote-bg: transparent; --document-quote-radius: 0px; --document-heading-rule: 0;
+  --document-table-radius: 0px; --document-code-radius: 3px;
+}
+:is(body, .display-preferences-editor)[data-document-style="editorial"] {
+  --document-heading-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+  --document-heading-rule: 1px; --document-quote-radius: 0px;
+  --document-quote-bg: transparent; --document-table-radius: 0px;
+  --document-page-shadow: none; --document-page-border: 0;
+}
+:is(body, .display-preferences-editor)[data-document-font="sans"] { --document-font-family: var(--font-sans); --document-heading-family: var(--font-sans); }
+:is(body, .display-preferences-editor)[data-document-font="serif"] { --document-font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif; --document-heading-family: var(--document-font-family); }
+:is(body, .display-preferences-editor)[data-document-font="mono"] { --document-font-family: var(--font-mono); --document-heading-family: var(--font-mono); }
+:is(body, .display-preferences-editor)[data-document-style="paper"][data-document-font="auto"] { --document-font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif; }
+
+:is(body, .display-preferences-editor)[data-file-density="compact"] { --file-row-height: 26px; --file-row-gap: 0px; }
+:is(body, .display-preferences-editor)[data-file-density="comfortable"] { --file-row-height: 34px; --file-row-gap: 3px; }
+:is(body, .display-preferences-editor)[data-file-density="spacious"] { --file-row-height: 42px; --file-row-gap: 7px; }
+:is(body, .display-preferences-editor)[data-file-row-style="flat"] { --file-row-bg: transparent; --file-row-border: 1px solid transparent; --file-row-shadow: none; --file-row-hover-shadow: none; }
+:is(body, .display-preferences-editor)[data-file-row-style="cards"] {
+  --file-row-bg: var(--theme-surface);
+  --file-row-border: 1px solid var(--workspace-border-color);
+  --file-row-shadow: var(--theme-shadow-sm);
+  --file-row-hover-shadow: var(--file-row-shadow);
+}
+
+// File rows retain tree hierarchy, custom markers, drag targets and selected states.
+body .library-file-tree .n-tree-node,
+body .recent-item,
+.display-file-row {
+  min-height: var(--file-row-height);
+  margin-block: calc(var(--file-row-gap) / 2);
+  border: var(--file-row-border);
+  border-radius: var(--theme-radius-sm);
+  background: var(--file-row-bg);
+  box-shadow: var(--file-row-shadow);
+}
+body .library-file-tree .n-tree-node-content { height: auto; }
+body[data-motion="reduced"] { --file-row-icon-lift: 0px; --file-row-icon-scale: 1; }
+@media (prefers-reduced-motion: reduce) {
+  body { --file-row-icon-lift: 0px; --file-row-icon-scale: 1; }
+}
+body[data-file-icon-style="muted"] .library-file-tree .n-tree-node:not(.has-file-display-style) .n-tree-node-content__prefix .n-icon,
+body[data-file-icon-style="muted"] .library-file-tree .n-tree-node:not(.has-file-display-style) .n-tree-node-content__prefix > svg,
+body[data-file-icon-style="muted"] .recent-item .n-icon,
+[data-file-icon-style="muted"] .display-file-row > svg { color: var(--theme-text-secondary) !important; }
+
+// All Markdown modes and quick capture share the same readable content treatment.
+// Source editors keep their code font and PDF/Office keep producer-authored typography.
+body .vditor-reset,
+.display-document-preview {
+  font-family: var(--document-font-family);
+  font-size: var(--document-font-size, 16px);
+  line-height: var(--document-line-height, 1.75);
+  color: var(--text-primary, var(--theme-text));
+  box-shadow: var(--document-page-shadow);
+  border: var(--document-page-border);
+  border-radius: var(--theme-radius-sm);
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--document-heading-family);
+    color: var(--text-primary, var(--theme-text));
+    background: none; -webkit-text-fill-color: currentColor;
+    text-shadow: none; padding-left: 0;
+    border-image: none; border-bottom: var(--document-heading-rule) solid var(--workspace-border-color);
+    border-radius: 0;
+    &::before, &::after { display: none; }
+  }
+  h1 { font-size: 2em; margin: 1.2em 0 .6em; }
+  h2 { font-size: 1.45em; margin: 1.2em 0 .55em; }
+  h3 { font-size: 1.2em; }
+  > :first-child { margin-top: 0; }
+  p, li { line-height: var(--document-line-height, 1.75); }
+  p, li { letter-spacing: var(--document-letter-spacing, 0px); text-align: var(--document-text-align, left); }
+  p { margin-bottom: var(--document-paragraph-spacing, 1em); }
+  p:first-of-type::first-letter { float: none; font-size: inherit; font-weight: inherit; color: inherit; line-height: inherit; margin: 0; }
+  blockquote {
+    margin: 1.2em 0; padding: .7em 1em;
+    border: 0; border-left: 3px solid var(--theme-primary);
+    background: var(--document-quote-bg); color: var(--theme-text);
+    border-radius: var(--document-quote-radius);
+    box-shadow: none;
+    &::before, &::after { display: none; }
+    > :first-child { margin-top: 0; } > :last-child { margin-bottom: 0; }
+  }
+  table {
+    border-radius: var(--document-table-radius); border-collapse: collapse;
+    border: 1px solid var(--workspace-border-color); box-shadow: none;
+    th, td { border: 1px solid var(--workspace-border-color); padding: .5em .75em; }
+    th { background: var(--theme-surface-2); }
+  }
+  pre { border-radius: var(--document-code-radius); box-shadow: none; }
+  pre, code { font-family: var(--font-mono); letter-spacing: normal; text-align: left; }
+}
+body[data-document-style="paper"] .library-mode .editor-viewport:has(.vditor-reset),
+body[data-document-style="paper"] .temp-mode .editor-container { background: var(--theme-bg); }
+body[data-document-style="paper"] .vditor-reset,
+[data-document-style="paper"] .display-document-preview { background: var(--custom-editor-bg, var(--theme-surface)) !important; }
+body[data-document-style="editorial"] .vditor-reset h1,
+[data-document-style="editorial"] .display-document-preview h1 { font-size: 2.3em; letter-spacing: -.02em; padding-bottom: .35em; }
+body[data-document-style="editorial"] .vditor-reset table td,
+[data-document-style="editorial"] .display-document-preview table td { border-inline: 0; }
+body[data-document-style="auto"][data-style="neo"] .vditor-reset pre { border: 1px solid rgba(var(--theme-primary-rgb), .3); }
+body[data-document-style="auto"][data-style="sharp"] .vditor-reset blockquote { border: 1px solid var(--workspace-border-color); border-left: 3px solid var(--theme-primary); }
+.display-document-preview { overflow-x: auto; background: var(--theme-surface); }
+body .vditor-sv { font-family: var(--font-mono); box-shadow: none; border: 0; }
+.display-document-preview table { width: 100%; font-size: .8em; }
+.display-document-preview pre { padding: 10px; background: var(--markdown-code-surface); font-size: .75em; overflow: auto; }
+
+// Common shells use the whole surface language; nothing depends on a fixed accent color.
+body .workspace-tabs { background: var(--style-card-gradient); border-bottom: var(--theme-border); }
+body .workspace-tab { border-radius: var(--theme-radius-sm) var(--theme-radius-sm) 0 0; }
+body .workspace-toolbar-shell,
+body .library-shell-toolbar,
+body .temp-header { background: var(--style-card-gradient); border-bottom: var(--theme-border); }
+body .workspace-state-notice,
+body .settings-navigation { border-radius: var(--theme-radius); box-shadow: var(--theme-shadow-sm); }
+body[data-style="glass"] .library-workspace,
+body[data-style="airy"] .library-workspace { padding: 4px var(--surface-panel-inset) var(--surface-panel-inset); }
+body[data-style="glass"] .library-workspace > .sidebar,
+body[data-style="glass"] .library-workspace > .editor-main,
+body[data-style="airy"] .library-workspace > .sidebar,
+body[data-style="airy"] .library-workspace > .editor-main {
+  border: var(--theme-border); border-radius: var(--theme-radius);
+  overflow: hidden; box-shadow: var(--theme-shadow-sm);
+}
+body[data-style="glass"] .library-workspace > .sidebar { background: var(--style-card-gradient); }
+body[data-style="neo"] .workspace-tabs,
+body[data-style="sharp"] .workspace-tabs { border-bottom: var(--theme-border-strong); }
+
+// High contrast overrides apply after style and display settings.
+body[data-theme="contrast"][data-style],
+body[data-theme="contrast"] .display-preferences-editor {
+  --file-row-bg: #111111; --file-row-border: 1px solid #ffffff; --file-row-shadow: none; --file-row-hover-shadow: none;
+  --document-quote-bg: #111111; --document-page-shadow: none;
+}
+body[data-theme="contrast"] .vditor-reset,
+body[data-theme="contrast"] .display-document-preview { color: #ffffff; }
+

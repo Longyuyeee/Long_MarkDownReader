@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Grid filter/add/undo",
+    "Visible save at 480px",
+    "Board field menu click",
+    "Chart type switch and stacked preview",
+    "Dashboard card width and edit-source navigation"
+  ],
+  "errors": [],
+  "scope": "Actual TableView/ChartEditor/Dashboard, native read mocked; no write/export or drag-drop acceptance",
+  "releaseCandidate": false
+}

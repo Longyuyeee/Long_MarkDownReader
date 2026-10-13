@@ -55,6 +55,38 @@ pub struct FileDisplayStyle {
     pub background_color: String,
     pub text_color: String,
     pub icon: String,
+    pub selection_style: String,
+    pub selected_background_color: String,
+    pub selected_text_color: String,
+    pub selected_accent_color: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DisplayPreferences {
+    pub document_style: String,
+    pub document_font: String,
+    pub document_font_size: f64,
+    pub document_line_height: f64,
+    pub document_custom_font: String,
+    pub document_letter_spacing: f64,
+    pub document_paragraph_spacing: f64,
+    pub document_text_align: String,
+    pub file_density: String,
+    pub file_row_style: String,
+    pub file_icon_style: String,
+}
+
+impl Default for DisplayPreferences {
+    fn default() -> Self {
+        Self {
+            document_style: "auto".into(), document_font: "auto".into(),
+            document_font_size: 16.0, document_line_height: 1.75,
+            document_custom_font: String::new(), document_letter_spacing: 0.0,
+            document_paragraph_spacing: 1.0, document_text_align: "left".into(),
+            file_density: "auto".into(), file_row_style: "auto".into(), file_icon_style: "color".into(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -78,6 +110,7 @@ pub struct AppConfig {
     pub visual_style: String,
     #[serde(default = "default_motion_speed")]
     pub motion_speed: String,
+    pub display_preferences: DisplayPreferences,
     pub ai_enabled: bool,
     #[serde(default = "default_ai_provider")]
     pub ai_provider: String,
@@ -133,6 +166,7 @@ impl Default for AppConfig {
             exit_strategy: default_exit_strategy(),
             visual_style: default_visual_style(),
             motion_speed: default_motion_speed(),
+            display_preferences: DisplayPreferences::default(),
             ai_enabled: false,
             ai_provider: default_ai_provider(),
             ai_endpoint: default_ai_endpoint(),
@@ -251,6 +285,26 @@ fn validate_file_display_styles(styles: &HashMap<String, FileDisplayStyle>) -> R
         "check",
         "heart",
         "archive",
+        "note",
+        "book",
+        "pen",
+        "tasks",
+        "calendar",
+        "clock",
+        "target",
+        "rocket",
+        "bell",
+        "pin",
+        "tag",
+        "coffee",
+        "study",
+        "code",
+        "terminal",
+        "database",
+        "image",
+        "music",
+        "link",
+        "users",
     ];
     let valid_color = |value: &str| {
         value.is_empty()
@@ -267,11 +321,23 @@ fn validate_file_display_styles(styles: &HashMap<String, FileDisplayStyle>) -> R
         if path.trim().is_empty() || path.chars().count() > 4096 {
             return Err("文件显示标记路径为空或过长".into());
         }
-        if !valid_color(&style.background_color) || !valid_color(&style.text_color) {
+        if [
+            &style.background_color,
+            &style.text_color,
+            &style.selected_background_color,
+            &style.selected_text_color,
+            &style.selected_accent_color,
+        ]
+        .iter()
+        .any(|color| !valid_color(color))
+        {
             return Err("文件显示标记颜色必须使用 #RRGGBB".into());
         }
         if !ICONS.contains(&style.icon.as_str()) {
             return Err("文件显示标记图标无效".into());
+        }
+        if !["", "fill", "outline", "marker"].contains(&style.selection_style.as_str()) {
+            return Err("文件选中高亮样式无效".into());
         }
     }
     Ok(())
@@ -545,6 +611,35 @@ mod tests {
         assert_eq!(legacy.ai_api_key, "legacy-value");
         assert!(legacy.text_auto_save_enabled);
     }
+
+    #[test]
+    fn display_preferences_keep_old_configs_readable_and_round_trip_custom_values() {
+        let mut config: AppConfig = serde_json::from_str(r#"{"theme":"cream","visualStyle":"glass"}"#).unwrap();
+        assert_eq!(config.display_preferences.document_style, "auto");
+        assert_eq!(config.display_preferences.document_font_size, 16.0);
+        config.display_preferences.document_style = "paper".into();
+        config.display_preferences.document_font = "serif".into();
+        config.display_preferences.document_font_size = 20.0;
+        assert_eq!(config.display_preferences.document_letter_spacing, 0.0);
+        assert_eq!(config.display_preferences.document_text_align, "left");
+        config.display_preferences.document_custom_font = "Microsoft YaHei".into();
+        config.display_preferences.document_letter_spacing = 0.75;
+        config.display_preferences.document_paragraph_spacing = 1.5;
+        config.display_preferences.document_text_align = "justify".into();
+        config.display_preferences.file_density = "spacious".into();
+        config.display_preferences.file_row_style = "cards".into();
+        let reopened: AppConfig = serde_json::from_str(&serde_json::to_string(&config).unwrap()).unwrap();
+        assert_eq!(reopened.theme, "cream");
+        assert_eq!(reopened.visual_style, "glass");
+        assert_eq!(reopened.display_preferences.document_style, "paper");
+        assert_eq!(reopened.display_preferences.document_font_size, 20.0);
+        assert_eq!(reopened.display_preferences.document_custom_font, "Microsoft YaHei");
+        assert_eq!(reopened.display_preferences.document_letter_spacing, 0.75);
+        assert_eq!(reopened.display_preferences.document_paragraph_spacing, 1.5);
+        assert_eq!(reopened.display_preferences.document_text_align, "justify");
+        assert_eq!(reopened.display_preferences.file_density, "spacious");
+        assert_eq!(reopened.display_preferences.file_row_style, "cards");
+    }
     #[test]
     fn inbox_config_is_backward_compatible_and_library_scoped() {
         let old: LibraryConfig = serde_json::from_str(r#"{"name":"old","path":"C:/Vault"}"#).unwrap();
@@ -560,15 +655,37 @@ mod tests {
 
     #[test]
     fn file_display_styles_accept_bounded_markers_and_reject_invalid_values() {
-        let valid = HashMap::from([(
+        let mut valid = HashMap::from([(
             r"C:\Vault\plan.md".into(),
             FileDisplayStyle {
                 background_color: "#fff1a8".into(),
                 text_color: "#253041".into(),
                 icon: "flag".into(),
+                selection_style: "outline".into(),
+                selected_background_color: "#243e59".into(),
+                selected_text_color: "#f8fafc".into(),
+                selected_accent_color: "#4d8fde".into(),
+                ..Default::default()
             },
         )]);
         assert!(validate_file_display_styles(&valid).is_ok());
+        let json = serde_json::to_string(&valid).unwrap();
+        let restored: HashMap<String, FileDisplayStyle> = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored[r"C:\Vault\plan.md"].selection_style, "outline");
+        assert_eq!(
+            restored[r"C:\Vault\plan.md"].selected_accent_color,
+            "#4d8fde"
+        );
+        for icon in ["rocket", "study", "calendar", "users", "terminal"] {
+            valid.get_mut(r"C:\Vault\plan.md").unwrap().icon = icon.into();
+            assert!(validate_file_display_styles(&valid).is_ok());
+        }
+        let legacy: FileDisplayStyle = serde_json::from_str(
+            r##"{"backgroundColor":"#ffe0eb","textColor":"","icon":"heart"}"##,
+        )
+        .unwrap();
+        assert!(legacy.selection_style.is_empty());
+        assert!(legacy.selected_background_color.is_empty());
 
         let mut invalid_color = valid.clone();
         invalid_color

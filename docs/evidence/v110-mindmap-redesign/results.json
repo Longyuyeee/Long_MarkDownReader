@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Narrow note editing",
+    "Undo redo",
+    "Outline/map switching",
+    "Wide page"
+  ],
+  "scope": "Actual MindMapView; native read mocked, no native writes or drag acceptance",
+  "errors": []
+}

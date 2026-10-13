@@ -4,7 +4,7 @@
       class="workspace-header"
       title="工作台"
       :subtitle="store.currentLibraryName || '专业工作区概览'"
-      @back="router.push({ name: 'LibraryMode' })"
+      :show-back="false"
     >
       <template #icon>
         <img class="brand-mark" src="/icon.png" alt="Long编辑图标">
@@ -19,8 +19,8 @@
     <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content" data-testid="m2a2-workspace-primary" :data-primary-state="loading ? 'loading' : 'ready'">
       <section class="workspace-identity">
         <div>
-          <span class="section-kicker">当前工作区</span>
-          <h1>{{ store.currentLibraryName }}</h1>
+          <span class="section-kicker">{{ store.currentLibraryName }}</span>
+          <h1>从这里继续</h1>
           <p :title="store.libraryPath">{{ store.libraryPath }}</p>
         </div>
         <div class="workspace-meta">
@@ -110,6 +110,8 @@
         </section>
 
         <section class="workspace-section governance-section">
+          <details class="workspace-organization">
+            <summary><span><strong>资料整理与关联</strong><small>查看重复文件、批注和链接，处理搜索与关联状态</small></span></summary>
           <WorkspaceHealthQueue
             :report="workspaceHealth"
             :graph-health="health"
@@ -122,6 +124,7 @@
             @prepare-index="prepareWorkspaceSearch(store.libraryPath)"
             @retry="loadSecondaryAnalysis(store.libraryPath)"
           />
+          </details>
         </section>
       </div>
     </WorkspaceManagementContent>
@@ -202,7 +205,8 @@ const workspaceCreateOptions = [
   { type: 'divider', key: 'create-divider' },
   createGroup('数据与结构', 'group-data', ['json', 'jsonc', 'yaml', 'xml', 'toml', 'table']),
   createGroup('更多图表', 'group-visual', ['drawio', 'diagram', 'opml', 'svg']),
-].filter(Boolean)
+  createGroup('其他格式', 'group-other', CREATABLE_FILE_FORMATS.filter(format => !['markdown', 'plain-text', 'canvas', 'json', 'jsonc', 'yaml', 'xml', 'toml', 'table', 'drawio', 'diagram', 'opml', 'svg'].includes(format.id)).map(format => format.id)),
+].filter(item => item && (!('children' in item) || (Array.isArray(item.children) && item.children.length)))
 const workspaceCreateMenuProps = () => ({ class: 'workspace-create-menu', style: 'max-height: min(460px, calc(100vh - 24px)); min-width: 190px;' })
 const createWorkspaceFile = async (formatId: string) => {
   workspaceCreateMenuOpen.value = false
@@ -493,10 +497,15 @@ onMounted(async () => {
 
 <style scoped>
 .workspace-home { height: 100%; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
+.workspace-organization > summary { cursor: pointer; padding: 4px 0 14px; }
+.workspace-organization > summary > span { display: inline-grid; gap: 5px; vertical-align: middle; }
+.workspace-organization > summary strong { font-size: var(--text-md); }
+.workspace-organization > summary small { color: var(--theme-text-secondary); font-size: var(--text-sm); }
 .workspace-header { flex: none; }
 .brand-mark { width: 28px; height: 28px; display: block; border-radius: 7px; object-fit: cover; }.brand-mark.large { width: 44px; height: 44px; border-radius: 10px; }
 .workspace-nav { display: flex; align-items: center; gap: 4px; }.workspace-nav button { min-width: 34px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.workspace-nav button:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.22); background: rgba(var(--theme-primary-rgb),.06); }.workspace-nav button:disabled { opacity: .35; cursor: default; }.workspace-nav svg { width: 15px; }.spinning { animation: spin .8s linear infinite; }
-.workspace-content { flex: 1; overflow: auto; }
+.workspace-content { flex: 1; overflow: auto; scrollbar-width: none; }
+.workspace-content::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.workspace-meta { min-width: 0; display: grid; justify-items: end; gap: 7px; }.workspace-quick-actions,.configured-empty>div { display: flex; gap: 6px; flex-wrap: wrap; }.quick-command { min-height: 31px; display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; font-size: var(--text-compact); }.quick-command:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.35); }.quick-command svg { width: 14px; }
 .section-kicker { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); }.signal svg { width: 13px; }.signal.index-ready { color: var(--status-success); }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: var(--status-warning); }
 .workspace-loading,.workspace-alert { min-height: 38px; margin-top: 10px; border-radius: 5px; }.workspace-alert { color: var(--status-danger); border-color: var(--status-danger-border); background: var(--status-danger-bg); }.workspace-alert svg { width: 14px; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.configured-empty { min-height: 360px; border-bottom: var(--theme-border); }.configured-empty>svg { width: 30px; color: var(--theme-primary); }.configured-empty h2 { margin: 5px 0 0; font-size: 18px; }.configured-empty p { margin: 0 0 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.configured-empty button { min-height: 33px; display: inline-flex; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid var(--theme-primary); border-radius: 5px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.configured-empty button.secondary { color: var(--theme-primary); background: transparent; }.configured-empty button svg { width: 14px; }

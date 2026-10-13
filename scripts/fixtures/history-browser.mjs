@@ -50,7 +50,8 @@ store.loadConfig = async () => {}
 const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'LibraryMode', component: LibraryMode }] })
 await router.push({ name: 'LibraryMode', query: { path: store.activeTabId } })
 const app = createApp({ render: () => h(naive.NConfigProvider, {}, { default: () => h(naive.NDialogProvider, {}, { default: () => h(naive.NMessageProvider, {}, { default: () => h(LibraryMode) }) }) }) })
-for (const [name, component] of Object.entries(naive)) if (/^N[A-Z]/.test(name)) app.component(name, component)
+const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts')
+registerNaiveComponents(app)
 app.use(pinia).use(router).mount('#app')
 document.body.style.margin = '0'; document.body.dataset.theme = 'white'
 document.querySelector('#app').style.height = '100vh'

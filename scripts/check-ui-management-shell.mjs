@@ -26,12 +26,20 @@ for (const filePath of [
   requireTokens(filePath, [
     '<WorkspaceManagementHeader',
     '<WorkspaceManagementContent',
-    "router.push({ name: 'LibraryMode' })",
   ])
   if (read(filePath).includes('router.back()')) {
     failures.push(`${filePath} must return explicitly to LibraryMode instead of browser history`)
   }
 }
+
+// Global tabs replace duplicate page-level return buttons (approved v1.1.0 UI).
+requireTokens('src/components/AppNavigation.vue', [
+  "{ name: 'LibraryMode', label: '资料库'",
+  "{ name: 'WorkspaceHome', label: '工作台'",
+  "{ name: 'Graph', label: '图谱'",
+  ':to="{ name: item.name }"',
+])
+requireTokens('src/App.vue', ['<AppNavigation', "to.name === 'LibraryMode'", 'path: store.activeTabId'])
 
 requireTokens('src/router/index.ts', ["path: '/'", "redirect: '/library'"])
 

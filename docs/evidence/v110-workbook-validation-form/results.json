@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Chinese type/operator selectors",
+    "Conditional second value",
+    "Cancel no write",
+    "List rule IPC payload and readback",
+    "Existing rule values",
+    "Custom relative default"
+  ],
+  "scope": "Production WorkbookView, native IPC simulated; not native XLSX acceptance",
+  "errors": []
+}

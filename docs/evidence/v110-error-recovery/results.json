@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Real rejected promises in light/dark keep the mounted editor, dirty draft and continued editing; notices are bounded, dismissible and deduplicate repeats",
+    "Uncaught script errors still offer working library settings and global navigation",
+    "Vue event and subwidget errors keep the page alive; page-root render errors are contained to the route, retain shared drafts, and recover by retry or navigation",
+    "Recoverable ResizeObserver notifications still stay silent",
+    "A previously ready shell that actually disappears gets a visible recovery card while shared draft data is retained",
+    "Actual entry-module failure shows a readable startup recovery card with reload/settings actions instead of a black debug overlay"
+  ],
+  "unexpected": [],
+  "scope": "Actual App/LibraryMode and entry HTML; mocked native IPC; real promise rejection, Vue event/render errors and blocked main-module loading."
+}

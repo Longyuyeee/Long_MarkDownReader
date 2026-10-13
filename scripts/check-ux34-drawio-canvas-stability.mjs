@@ -15,6 +15,7 @@ const evidence = json(path.join(root, manifest.evidenceFile))
 const index = text('index.html')
 const main = text('src/main.ts')
 const runtimeBoundary = text('src/services/recoverableRuntimeErrors.ts')
+const startupBoundary = text('public/app-recovery.js')
 const canvas = text('src/views/CanvasView.vue')
 const capture = text('scripts/capture-ux34-drawio-canvas-stability.mjs')
 const runner = text('scripts/run-ux34-drawio-canvas-stability-audit.ps1')
@@ -26,14 +27,14 @@ if (!textEvidenceMatchesSha256(path.join(root, manifest.evidenceFile), manifest.
 const screenshot = path.join(root, manifest.screenshotFile)
 if (fs.statSync(screenshot).size !== manifest.screenshotBytes || manifest.screenshotBytes < 100000 || sha256(screenshot) !== manifest.screenshotSha256) fail('screenshot integrity drift')
 
-for (const source of [index, runtimeBoundary]) {
+for (const source of [startupBoundary, runtimeBoundary]) {
   for (const token of ['ResizeObserver loop limit exceeded', 'ResizeObserver loop completed with undelivered notifications.']) {
     if (!source.includes(token)) fail(`recoverable message missing: ${token}`)
   }
 }
-for (const token of ['if (isRecoverableLayoutError(msg) || isRecoverableLayoutError(err)) return true', "document.getElementById('crash-screen').style.display = 'block'"]) {
-  if (!index.includes(token)) fail(`startup error boundary missing: ${token}`)
-}
+for (const token of ['/app-recovery.js', 'id="app-entry"']) if (!index.includes(token)) fail(`startup recovery entry missing: ${token}`)
+for (const token of ['function usableUI()', 'function showStartupError(error)', 'runtimeHandler(error)', "'unhandledrejection'", 'event.reason', 'markReady: function']) if (!startupBoundary.includes(token)) fail(`scoped recovery behavior missing: ${token}`)
+if (index.includes('crash-screen') || index.includes('window.onerror')) fail('blanket full-screen crash handling returned')
 for (const token of ['installRecoverableLayoutErrorBoundary()', 'import.meta.hot?.dispose']) if (!main.includes(token)) fail(`runtime boundary installation missing: ${token}`)
 for (const token of ["target.addEventListener('error', handleError, true)", 'event.preventDefault()', "target.removeEventListener('error', handleError, true)"]) if (!runtimeBoundary.includes(token)) fail(`runtime recovery token missing: ${token}`)
 for (const token of ['requestAnimationFrame(() =>', 'next.width === viewportSize.width && next.height === viewportSize.height', 'viewportResizeObserver?.disconnect()', 'cancelAnimationFrame(viewportResizeFrame)', 'pendingViewportSize = null']) if (!canvas.includes(token)) fail(`Canvas resize lifecycle missing: ${token}`)

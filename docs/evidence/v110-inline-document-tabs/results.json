@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Switch and reopen preserve order",
+    "New tabs append",
+    "One top row at 1280/600/320",
+    "Many tabs scroll; quick note and commands remain accessible"
+  ],
+  "errors": [],
+  "scope": "Actual Vue/store with mocked IPC"
+}
