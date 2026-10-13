@@ -165,6 +165,7 @@
                   lazy
                   multiple
                   block-line
+                  show-line
                   expand-on-click
                   :on-load="handleLoadChildren"
                   :node-props="nodeProps"
@@ -904,7 +905,7 @@ import {
   type FileMarkerIconId,
   type FileSelectionStyle,
 } from '../config/fileTreeAppearance'
-import { markerTextColor, fileMarkerColors } from '../utils/fileDisplayStyles'
+import { markerTextColor, fileMarkerColors, fileStylePathKey } from '../utils/fileDisplayStyles'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 
@@ -1434,6 +1435,7 @@ const treeInstRef = ref<any>(null)
 const fileTreeThemeOverrides = {
   nodeColorHover: 'transparent', nodeColorActive: 'transparent', nodeColorPressed: 'transparent',
   nodeTextColor: 'var(--theme-text)', arrowColor: 'var(--theme-text-secondary)',
+  lineColor: 'color-mix(in srgb, var(--theme-text-secondary) 65%, transparent)',
   nodeBorderRadius: 'var(--theme-radius-sm)', nodeWrapperPadding: '0px',
   nodeHeight: 'calc(var(--file-row-height) - 2px)',
 }
@@ -3211,12 +3213,16 @@ const openRootContextMenu = (event: MouseEvent) => {
   contextMenu.show = true
 }
 const nodeProps = ({ option }: { option: TreeOption }) => {
+  const rootKey = fileStylePathKey(store.libraryPath).replace(/\/$/, '')
+  const nodeKey = fileStylePathKey(option.key as string)
+  const depth = nodeKey.startsWith(`${rootKey}/`) ? Math.max(0, nodeKey.slice(rootKey.length + 1).split('/').length - 1) : 0
   const marker = option.isLeaf ? store.fileDisplayStyleForPath(option.key as string) : undefined
   const colors = marker ? fileMarkerColors(marker) : undefined
   return ({
   'data-key': option.key,
   'data-drop-path': option.key,
   'data-drop-dir': !option.isLeaf ? 'true' : 'false',
+  'data-tree-depth': depth,
   'aria-describedby': option.isLeaf ? 'file-tree-detail-preview' : undefined,
   class: [
     marker ? `has-file-display-style selection-${marker.selectionStyle || 'fill'}` : '',
@@ -4688,6 +4694,9 @@ watch(activeTabId, (newId, oldId) => {
 }
 
 /* One row owns every visual state; content and switcher never paint a second surface. */
+.library-file-tree :deep(.n-tree-node-wrapper) {
+  padding-block: calc(var(--file-row-gap) / 2);
+}
 .library-mode .library-file-tree :deep(.n-tree-node) {
   --tree-row-fill: var(--file-row-bg);
   --tree-row-text: var(--theme-text);
@@ -4695,6 +4704,9 @@ watch(activeTabId, (newId, oldId) => {
   position: relative;
   box-sizing: border-box;
   min-height: var(--file-row-height);
+  margin-block: 0;
+  --n-line-offset-top: calc(var(--file-row-gap) / -2);
+  --n-line-offset-bottom: calc(var(--file-row-gap) / -2);
   background: var(--tree-row-fill);
   color: var(--tree-row-text);
   transition: background-color var(--motion-base) var(--ease-standard), border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
@@ -4721,6 +4733,7 @@ watch(activeTabId, (newId, oldId) => {
   --tree-row-accent: var(--file-marker-accent);
 }
 .library-mode .library-file-tree :deep(.n-tree-node:not(.n-tree-node--disabled):hover),
+.library-mode .library-file-tree :deep(.n-tree-node.n-tree-node--selectable:not(.n-tree-node--disabled):not(.n-tree-node--selected):active),
 .library-mode .library-file-tree :deep(.n-tree-node--pending:not(.n-tree-node--selected)) {
   background: color-mix(in srgb, var(--theme-primary) 6%, var(--tree-row-fill));
   border-color: rgba(var(--theme-primary-rgb), .16);
@@ -4772,6 +4785,9 @@ watch(activeTabId, (newId, oldId) => {
   text-overflow: ellipsis;
   min-width: 0;
 }
+.library-file-tree :deep(.n-tree-node[data-tree-depth="0"] .n-tree-node-indent::before),
+.library-file-tree :deep(.n-tree-node[data-tree-depth="0"] .n-tree-node-indent::after) { content: none; }
+.library-file-tree :deep(.n-tree-node[data-drop-dir="true"] .n-tree-node-content__text) { font-weight: 600; }
 .library-file-tree :deep(.n-tree-node-content__prefix) {
   flex-shrink: 0;
   transition: transform var(--motion-base) var(--ease-emphasized);

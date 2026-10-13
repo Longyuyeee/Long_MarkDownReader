@@ -31,6 +31,7 @@ try{
   assert.deepEqual(hovered.rect,normal.rect,`${theme}/${style}: hovering keeps the hit area still`)
   assert.equal(hovered.rowTransform,'none')
   await row.locator('.n-tree-node-content').click();await page.waitForTimeout(30)
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.library-file-tree .n-tree-node[data-drop-path="C:/workflow-fixture/会议记录.md"]'),'::after').opacity==='1')
   const selected=await inspect()
   assert.equal(selected.selected,true)
   assert.equal(selected.indicator,'1')
