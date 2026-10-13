@@ -18,7 +18,7 @@ test('all runtime identities advance together without rewriting historical recei
   assert.equal(json('package-lock.json').packages[''].version, version)
   assert.equal(json('src-tauri/tauri.conf.json').version, version)
   assert.ok(fs.readFileSync('src-tauri/Cargo.toml','utf8').includes(`version = "${version}"`))
-  assert.ok(fs.readFileSync('src-tauri/Cargo.lock','utf8').includes(`name = "tauri-app"\nversion = "${version}"`))
+  assert.ok(fs.readFileSync('src-tauri/Cargo.lock','utf8').replace(/\r\n/g, '\n').includes(`name = "tauri-app"\nversion = "${version}"`))
   const list = fs.readFileSync('scripts/apply-post-v116-m5-5-v1017-atomic-version-transition.mjs','utf8')
     .match(/const activeSharedFiles = \[([\s\S]*?)\]/)[1]
   const files = [...list.matchAll(/'(shared\/[^']+)'/g)].map(m=>m[1])
