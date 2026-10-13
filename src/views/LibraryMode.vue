@@ -1,11 +1,11 @@
 <template>
-  <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :inert="librarySwitchBusy || undefined" :aria-busy="librarySwitchBusy" :class="{ 'is-dragging': !!activeResizer, 'reference-pinned': referenceVisible && !store.isZen }" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div ref="libraryShell" class="library-mode" data-ui-shell="library-editor" :inert="librarySwitchBusy || undefined" :aria-busy="librarySwitchBusy" :class="{ 'is-dragging': !!activeResizer, 'file-dragging': virtualDrag.active, 'reference-pinned': referenceVisible && !store.isZen }">
     <header v-if="!store.isZen" class="library-shell-toolbar" aria-label="资料库操作">
       <n-button class="shell-navigation-action" quaternary size="small" aria-label="导航" :aria-expanded="!isSidebarCollapsed" aria-controls="library-navigation" @click="isSidebarCollapsed = !isSidebarCollapsed">
         <template #icon><n-icon :component="ListIcon" /></template><span class="shell-action-label">导航</span>
       </n-button>
       <n-dropdown trigger="click" :options="librarySwitchOptions" @select="selectLibrary">
-        <n-button class="library-picker" quaternary size="small" aria-label="切换资料库" :loading="librarySwitchBusy" :disabled="librarySwitchBusy" :title="store.libraryPath || '选择资料库'">{{ store.currentLibraryName || '选择资料库' }} ▾</n-button>
+        <n-button class="library-picker" quaternary size="small" aria-label="切换资料库" :loading="librarySwitchBusy" :disabled="librarySwitchBusy" :title="store.libraryPath || '选择资料库'"><template #icon><n-icon :component="FolderOpenIcon" /></template><span class="library-picker-label">{{ store.currentLibraryName || '选择资料库' }}</span><span aria-hidden="true"> ▾</span></n-button>
       </n-dropdown>
       <WorkspaceTabs v-if="store.tabs.length" class="shell-document-tabs" />
       <span v-else class="shell-toolbar-spacer"></span>
@@ -14,7 +14,7 @@
     </header>
     <div class="library-workspace">
     <!-- 统一左侧侧边栏 -->
-    <div id="library-navigation" class="sidebar" data-ui-region="navigation" :aria-hidden="isSidebarCollapsed" :inert="isSidebarCollapsed || undefined" :style="{ width: isSidebarCollapsed ? '0px' : sidebarWidth + 'px', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
+    <div id="library-navigation" class="sidebar" data-ui-region="navigation" :aria-hidden="isSidebarCollapsed" :inert="isSidebarCollapsed || undefined" :style="{ width: isSidebarCollapsed ? '0px' : 'var(--library-sidebar-width, 260px)', opacity: isSidebarCollapsed ? 0 : 1 }" v-if="!store.isZen">
       <div class="sidebar-inner">
         <div class="search-area shell-search-area">
           <div class="search-control-row">
@@ -74,7 +74,7 @@
                   <n-button quaternary circle size="tiny" @click="refreshLibrary" title="刷新列表">
                     <template #icon><n-icon :component="RefreshIcon" /></template>
                   </n-button>
-              <button v-if="store.libraryPath" type="button" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox">收集箱</button>
+              <button v-if="store.libraryPath" type="button" class="inbox-shortcut" :aria-expanded="showInbox" @click="showInbox = !showInbox"><InboxIcon :size="13" aria-hidden="true" /><span>收集箱</span></button>
               <div v-if="store.libraryPath && !showInbox" class="knowledge-index-strip" :class="`state-${knowledgeIndexStatus.state}`" :title="`${knowledgeIndexLabel}；${knowledgeIndexStatus.objectCount} 个对象 · ${knowledgeIndexStatus.relationCount} 条关系；${knowledgeIndexExplanation}`" :aria-label="knowledgeIndexLabel">
                 <small v-if="knowledgeIndexStatus.state === 'ready'">{{ knowledgeIndexStatus.objectCount }}对象·{{ knowledgeIndexStatus.relationCount }}关系</small>
                 <small v-else-if="knowledgeIndexStatus.state === 'building'">准备中 {{ knowledgeIndexStatus.progress }}%</small>
@@ -158,6 +158,7 @@
                   v-else
                   ref="treeInstRef"
                   class="library-file-tree"
+                  :theme-overrides="fileTreeThemeOverrides"
                   aria-label="知识库文件树"
                   :aria-describedby="preview.focusPath ? 'file-tree-detail-preview' : undefined"
                   :data="treeData" 
@@ -438,14 +439,14 @@
     </div>
 
     <!-- 虚拟拖拽影子 -->
-    <div v-if="virtualDrag.active" class="drag-ghost" :style="{ left: virtualDrag.x + 'px', top: virtualDrag.y + 'px' }">
+    <Teleport to="body"><div v-if="virtualDrag.active" ref="fileDragGhost" class="drag-ghost" :class="{ 'drop-invalid': !!fileDropProblem }">
       <n-icon :component="virtualDrag.dragNode?.isLeaf ? FileIcon : FolderIcon" />
-      <span>{{ virtualDrag.ghostText }}</span>
-    </div>
+      <span><strong>{{ virtualDrag.ghostText }}</strong><small>{{ fileDropHint }}</small></span>
+    </div></Teleport>
 
     <!-- 左侧分隔条 -->
     <div class="resizer-area" v-if="!store.isZen">
-      <div class="drag-handle" @mousedown="startResizing('sidebar')"></div>
+      <div class="drag-handle" role="separator" aria-label="调整文件栏宽度" aria-orientation="vertical" aria-controls="library-navigation" :tabindex="isSidebarCollapsed ? -1 : 0" :aria-valuenow="Math.round(sidebarWidth)" :aria-valuemin="220" :aria-valuemax="600" @pointerdown.stop.prevent="startSidebarResize" @pointermove="moveSidebarResize" @pointerup="finishSidebarResize" @pointercancel="finishSidebarResize" @lostpointercapture="finishSidebarResize" @keydown="resizeSidebarByKey"></div>
       <div class="collapse-btn left" @click="isSidebarCollapsed = !isSidebarCollapsed">
         <n-icon :component="isSidebarCollapsed ? ChevronRightIcon : ChevronLeftIcon" />
       </div>
@@ -454,8 +455,14 @@
     <!-- 中间编辑区 -->
     <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
       <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
-        <button type="button" class="document-breadcrumb" :title="`${activeTabId} · 点击重命名`" aria-label="重命名当前文档" @click="openRename(activeTabId, false)"><span>{{ activeTabId.split(/[\\/]/).pop() }}</span><n-icon :component="EditIcon" size="12" /></button>
+        <div class="document-identity">
+          <button :key="activeTabId" type="button" class="document-breadcrumb" aria-label="重命名当前文档" @click="openRename(activeTabId, false)"><n-icon class="document-type-icon" :component="activeDocumentVisual.icon" :color="activeDocumentVisual.color" size="16" /><span>{{ activeTabId.split(/[\\/]/).pop() }}</span><n-icon :component="EditIcon" size="12" /></button>
+          <n-button data-testid="library-document-favorite" quaternary circle size="small" :type="store.isStarred(activeTabId) ? 'primary' : 'default'" :aria-pressed="store.isStarred(activeTabId)" :aria-label="store.isStarred(activeTabId) ? '取消收藏当前文档' : '收藏当前文档'" :title="store.isStarred(activeTabId) ? '取消收藏当前文档' : '收藏当前文档'" @click="store.toggleStar(activeTabId)"><template #icon><n-icon :component="StarIcon" :style="{ fill: store.isStarred(activeTabId) ? 'currentColor' : 'none' }" /></template></n-button>
+        </div>
         <div class="document-primary-actions">
+          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-preview" quaternary size="small" :type="documentPreviewActive ? 'primary' : 'default'" :aria-pressed="documentPreviewActive" :disabled="editorLoading || editorModeChangeBusy || !documentPreviewAvailable" :title="documentPreviewActive ? '返回编辑' : '预览当前文档'" @click="toggleDocumentPreview"><template #icon><n-icon :component="EyeIcon" /></template>{{ documentPreviewActive ? '返回编辑' : '预览' }}</n-button>
+          <n-button data-testid="library-focus-toggle" quaternary size="small" title="专注写作 F11" @click="store.toggleZen()"><template #icon><n-icon :component="FocusIcon" /></template>专注</n-button>
+          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template>AI 辅助</n-button>
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
           <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
           <n-popover trigger="click" placement="bottom-end" class="document-actions-popover">
@@ -534,10 +541,10 @@
         <Teleport v-if="documentShortcutHost && activeIsMarkdown && !activeEmbeddedEditor" :to="documentShortcutHost">
           <div class="document-inline-shortcuts" aria-label="文档快捷操作">
             <n-dropdown trigger="click" :options="[{label:'所见即所得',key:'wysiwyg'},{label:'即时渲染 IR',key:'ir'},{label:'源码编辑',key:'sv'}]" @select="switchEditorMode">
-              <n-button class="inline-mode" quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" title="切换编辑模式">{{ store.editorMode === 'wysiwyg' ? '所见' : store.editorMode === 'ir' ? 'IR' : '源码' }} ▾</n-button>
+              <n-button class="inline-mode" quaternary size="tiny" :disabled="editorModeChangeBusy || editorLoading" title="切换编辑模式"><template #icon><n-icon :component="store.editorMode === 'sv' ? CodeIcon : SquarePenIcon" /></template>{{ store.editorMode === 'wysiwyg' ? '所见' : store.editorMode === 'ir' ? 'IR' : '源码' }} ▾</n-button>
             </n-dropdown>
             <n-dropdown trigger="click" :options="[{label:'窄栏 600px',key:'narrow'},{label:'中栏 800px',key:'medium'},{label:'宽栏 全宽',key:'wide'}]" @select="value => editorWidthMode = value">
-              <n-button class="inline-width" quaternary size="tiny" title="调整正文宽度">{{ editorWidthMode === 'narrow' ? '窄栏' : editorWidthMode === 'medium' ? '中栏' : '宽栏' }} ▾</n-button>
+              <n-button class="inline-width" quaternary size="tiny" title="调整正文宽度"><template #icon><n-icon :component="ColumnsIcon" /></template>{{ editorWidthMode === 'narrow' ? '窄栏' : editorWidthMode === 'medium' ? '中栏' : '宽栏' }} ▾</n-button>
             </n-dropdown>
             <n-dropdown trigger="click" :options="exportOptions" @select="handleExport">
               <n-button quaternary size="tiny" title="导出文档"><template #icon><n-icon :component="DownloadIcon" /></template>导出</n-button>
@@ -578,7 +585,7 @@
         <span v-if="!activeEmbeddedEditor && activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
         <n-button v-if="!activeEmbeddedEditor && activeTextTab?.textRangeNextOffset !== undefined && !activeTextTab.textRangeEof && !activeTextTab.textLoadError" text size="tiny" @click="loadNextTextRange">继续加载</n-button>
         <span v-if="!activeEmbeddedEditor" class="document-reading-status">{{ wordCount }} 字 · 约 {{ Math.max(1, Math.ceil(wordCount / 300)) }} 分钟 · 行 {{ cursorLine }}:{{ cursorCol }}</span>
-        <n-button data-testid="library-focus-toggle" quaternary size="tiny" @click="store.toggleZen()">{{ store.isZen ? '退出专注' : '专注' }}</n-button>
+        <n-button v-if="store.isZen" data-testid="library-focus-toggle" quaternary size="tiny" @click="store.toggleZen()">退出专注</n-button>
       </footer>
     </div>
 
@@ -649,12 +656,13 @@
     <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="文件显示样式" style="width: min(520px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); border-radius: var(--theme-radius);">
       <div class="file-style-editor">
         <div class="file-style-preview-heading"><strong>实时预览</strong><span>仅改变资料库中的显示，不修改文件内容</span></div>
-        <div
-          class="file-style-preview"
-          :style="{ backgroundColor: fileStyleEditor.backgroundColor || undefined, color: markerTextColor(fileStyleEditor) || undefined }"
-        >
-          <n-icon size="19" :color="fileStylePreviewVisual.color"><component :is="fileStylePreviewVisual.icon" /></n-icon>
-          <span>{{ fileStyleEditor.name }}</span>
+        <div class="file-style-previews">
+          <div><small>普通</small><div class="file-style-preview" :style="{ backgroundColor: fileStylePreviewColors.background, color: fileStylePreviewColors.text }">
+            <n-icon size="19" :color="fileStylePreviewVisual.color"><component :is="fileStylePreviewVisual.icon" /></n-icon><span>{{ fileStyleEditor.name }}</span>
+          </div></div>
+          <div><small>选中</small><div class="file-style-preview is-selected" :style="{ backgroundColor: fileStylePreviewColors.selectedBackground, color: fileStylePreviewColors.selectedText, borderColor: fileStyleEditor.selectionStyle === 'outline' ? fileStylePreviewColors.selectedAccent : 'transparent', '--preview-accent': fileStylePreviewColors.selectedAccent }">
+            <n-icon size="19"><component :is="fileStylePreviewVisual.icon" /></n-icon><span>{{ fileStyleEditor.name }}</span>
+          </div></div>
         </div>
 
         <section class="file-style-section">
@@ -708,6 +716,19 @@
         </section>
 
         <section class="file-style-section">
+          <label>选中高亮</label>
+          <div class="file-selection-options" role="group" aria-label="选中高亮样式">
+            <button v-for="option in FILE_SELECTION_OPTIONS" :key="option.id" type="button" :class="{ active: fileStyleEditor.selectionStyle === option.id }" :aria-pressed="fileStyleEditor.selectionStyle === option.id" @click="fileStyleEditor.selectionStyle = option.id">{{ option.label }}</button>
+          </div>
+          <div class="file-selection-colors">
+            <label><span>高亮背景</span><div><button type="button" :disabled="fileStyleEditor.selectionStyle !== 'fill'" @click="fileStyleEditor.selectedBackgroundColor = ''">自动</button><input type="color" aria-label="选中背景色" :disabled="fileStyleEditor.selectionStyle !== 'fill'" :value="fileStyleEditor.selectedBackgroundColor || '#dcecff'" @input="fileStyleEditor.selectedBackgroundColor = ($event.target as HTMLInputElement).value"></div></label>
+            <label><span>选中文字</span><div><button type="button" @click="fileStyleEditor.selectedTextColor = ''">自动</button><input type="color" aria-label="选中文字色" :value="fileStyleEditor.selectedTextColor || '#253041'" @input="fileStyleEditor.selectedTextColor = ($event.target as HTMLInputElement).value"></div></label>
+            <label><span>高亮标记</span><div><button type="button" @click="fileStyleEditor.selectedAccentColor = ''">自动</button><input type="color" aria-label="选中标记色" :value="fileStyleEditor.selectedAccentColor || '#245ca6'" @input="fileStyleEditor.selectedAccentColor = ($event.target as HTMLInputElement).value"></div></label>
+          </div>
+          <p class="file-style-help">自动颜色会兼顾文字可读性。描边和侧边标记保留原背景。</p>
+        </section>
+
+        <section class="file-style-section">
           <label>文件图标</label>
           <div class="file-icon-options">
             <button
@@ -719,7 +740,7 @@
               :aria-label="option.label"
               :aria-pressed="fileStyleEditor.icon === option.id"
               @click="fileStyleEditor.icon = option.id"
-            ><n-icon size="18"><component :is="option.icon" /></n-icon></button>
+            ><n-icon size="18"><component :is="option.icon" /></n-icon><span>{{ option.id === 'auto' ? '自动' : option.label }}</span></button>
           </div>
         </section>
       </div>
@@ -823,7 +844,9 @@ import {
   Star as StarIcon, CalendarDays as CalendarIcon, Link as LinkIcon, Tag as TagIcon, Download as DownloadIcon,
   Database as DatabaseIcon, LayoutDashboard as DashboardIcon, ListFilter as CollectionIcon,
   BookmarkPlus as BookmarkAddIcon, Languages as LanguagesIcon, ExternalLink as ExternalOpenIcon,
-  MoreHorizontal as MoreIcon, Palette as PaletteIcon, Square as StopIcon
+  MoreHorizontal as MoreIcon, Palette as PaletteIcon, Square as StopIcon,
+  Eye as EyeIcon, Focus as FocusIcon, Sparkles as SparklesIcon,
+  Inbox as InboxIcon, Code2 as CodeIcon, SquarePen as SquarePenIcon, Columns2 as ColumnsIcon
 } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -879,7 +902,9 @@ import {
   resolveFileTreeVisual,
   type FileDisplayStyle,
   type FileMarkerIconId,
+  type FileSelectionStyle,
 } from '../config/fileTreeAppearance'
+import { markerTextColor, fileMarkerColors } from '../utils/fileDisplayStyles'
 
 interface FileEntry { name: string; path: string; is_dir: boolean; }
 
@@ -1020,6 +1045,7 @@ const tabs = computed(() => allTabs.value.filter(tab => findFileFormat(tab.path)
 const router = useRouter()
 const route = useRoute()
 const activeDocumentFormat = computed(() => activeTabId.value ? findFileFormat(activeTabId.value) : undefined)
+const activeDocumentVisual = computed(() => resolveFileTreeVisual(activeDocumentFormat.value?.id, 'auto'))
 const externalApplications = ref<ExternalApplicationCapability[]>([])
 const externalAppsLoading = ref(false)
 const externalOpenBusy = ref(false)
@@ -1401,7 +1427,16 @@ const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
 watch(editorWidthMode, (v) => { localStorage.setItem('longedit_editor_width', v) })
 const sidebarWidth = ref(260)
 const activeResizer = ref<'sidebar' | null>(null)
+let sidebarResize: { pointerId: number; startX: number; startWidth: number; handle: HTMLElement } | null = null
+let sidebarResizeFrame = 0
+let pendingSidebarWidth = sidebarWidth.value
 const treeInstRef = ref<any>(null)
+const fileTreeThemeOverrides = {
+  nodeColorHover: 'transparent', nodeColorActive: 'transparent', nodeColorPressed: 'transparent',
+  nodeTextColor: 'var(--theme-text)', arrowColor: 'var(--theme-text-secondary)',
+  nodeBorderRadius: 'var(--theme-radius-sm)', nodeWrapperPadding: '0px',
+  nodeHeight: 'calc(var(--file-row-height) - 2px)',
+}
 const treeData = ref<TreeOption[]>([])
 const libraryLoadError = ref('')
 const libraryLoading = ref(false)
@@ -1597,6 +1632,20 @@ const selectedKeys = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
 const documentShortcutHost = ref<HTMLElement | null>(null)
+const documentPreviewActive = ref(false)
+const documentPreviewAvailable = ref(false)
+let documentPreviewButton: HTMLElement | null = null
+let documentPreviewObserver: MutationObserver | undefined
+const syncDocumentPreview = () => {
+  documentPreviewActive.value = documentPreviewButton?.classList.contains('vditor-menu--current') ?? false
+  documentPreviewAvailable.value = !!documentPreviewButton && !documentPreviewButton.classList.contains('vditor-menu--disabled')
+}
+const toggleDocumentPreview = () => {
+  if (editorLoading.value || editorModeChangeBusy.value || !documentPreviewAvailable.value) return
+  // Reuse Vditor's native preview toggle in all three editing modes. Observe
+  // only its button class so menu actions and this shortcut share one state.
+  documentPreviewButton?.click()
+}
 let isVditorReady = false
 let lastLoadedPath = ''
 let externalCheckInFlight = false
@@ -1802,6 +1851,10 @@ const fileStyleEditor = reactive({
   backgroundColor: '',
   textColor: '',
   icon: 'auto' as FileMarkerIconId,
+  selectionStyle: 'fill' as FileSelectionStyle,
+  selectedBackgroundColor: '',
+  selectedTextColor: '',
+  selectedAccentColor: '',
 })
 const FILE_MARKER_BACKGROUND_OPTIONS = [
   { label: '默认背景', value: '' },
@@ -1821,16 +1874,9 @@ const FILE_MARKER_TEXT_OPTIONS = [
   { label: '深紫', value: '#6740a5' },
   { label: '棕色', value: '#81511c' },
 ]
-const readableMarkerText = (backgroundColor: string) => {
-  if (!/^#[0-9a-f]{6}$/i.test(backgroundColor)) return ''
-  const channels = [1, 3, 5].map(offset => Number.parseInt(backgroundColor.slice(offset, offset + 2), 16) / 255)
-  const luminance = channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
-  return luminance > 0.52 ? '#253041' : '#f8fafc'
-}
-const markerTextColor = (style?: FileDisplayStyle) => style?.textColor || readableMarkerText(style?.backgroundColor || '')
 const fileNameWithExtension = (path: string) => path.split(/[\\/]/).pop() || path
 const fileTreeVisualForPath = (path: string) => {
-  const marker = store.fileDisplayStyles[path]
+  const marker = store.fileDisplayStyleForPath(path)
   const visual = resolveFileTreeVisual(findFileFormat(path)?.id, marker?.icon || 'auto')
   return { ...visual, color: markerTextColor(marker) || visual.color }
 }
@@ -1838,16 +1884,25 @@ const fileStylePreviewVisual = computed(() => {
   const base = resolveFileTreeVisual(fileStyleEditor.formatId, fileStyleEditor.icon)
   return { ...base, color: markerTextColor(fileStyleEditor) || base.color }
 })
+const fileStylePreviewColors = computed(() => fileMarkerColors(fileStyleEditor))
+const FILE_SELECTION_OPTIONS: { id: FileSelectionStyle; label: string }[] = [
+  { id: 'fill', label: '填色' }, { id: 'outline', label: '描边' }, { id: 'marker', label: '侧边标记' },
+]
 
 const refreshFileTreePresentation = () => { treeData.value = [...treeData.value] }
+watch([() => store.fileDisplayStyles, () => store.theme, () => store.visualStyle], refreshFileTreePresentation, { deep: true })
 const openFileStyleEditor = (path: string) => {
-  const existing = store.fileDisplayStyles[path]
+  const existing = store.fileDisplayStyleForPath(path)
   fileStyleEditor.path = path
   fileStyleEditor.name = path.split(/[\\/]/).pop() || path
   fileStyleEditor.formatId = findFileFormat(path)?.id || ''
   fileStyleEditor.backgroundColor = existing?.backgroundColor || ''
   fileStyleEditor.textColor = existing?.textColor || ''
   fileStyleEditor.icon = existing?.icon || 'auto'
+  fileStyleEditor.selectionStyle = existing?.selectionStyle || 'fill'
+  fileStyleEditor.selectedBackgroundColor = existing?.selectedBackgroundColor || ''
+  fileStyleEditor.selectedTextColor = existing?.selectedTextColor || ''
+  fileStyleEditor.selectedAccentColor = existing?.selectedAccentColor || ''
   fileStyleEditor.show = true
 }
 const saveFileDisplayStyle = async () => {
@@ -1858,8 +1913,12 @@ const saveFileDisplayStyle = async () => {
       backgroundColor: fileStyleEditor.backgroundColor,
       textColor: fileStyleEditor.textColor,
       icon: fileStyleEditor.icon,
+      selectionStyle: fileStyleEditor.selectionStyle,
+      selectedBackgroundColor: fileStyleEditor.selectedBackgroundColor,
+      selectedTextColor: fileStyleEditor.selectedTextColor,
+      selectedAccentColor: fileStyleEditor.selectedAccentColor,
     }
-    if (!style.backgroundColor && !style.textColor && style.icon === 'auto') await store.clearFileDisplayStyle(fileStyleEditor.path)
+    if (!style.backgroundColor && !style.textColor && style.icon === 'auto' && style.selectionStyle === 'fill' && !style.selectedBackgroundColor && !style.selectedTextColor && !style.selectedAccentColor) await store.clearFileDisplayStyle(fileStyleEditor.path)
     else await store.setFileDisplayStyle(fileStyleEditor.path, style)
     refreshFileTreePresentation()
     fileStyleEditor.show = false
@@ -2263,7 +2322,60 @@ const startShadowSaveTimer = () => {
   }, interval)
 }
 
-const startResizing = (type: 'sidebar') => { activeResizer.value = type }
+const clampSidebarWidth = (width: number) => Math.max(220, Math.min(width, 600))
+const applySidebarWidth = (width: number) => {
+  libraryShell.value?.style.setProperty('--library-sidebar-width', `${width}px`)
+  sidebarResize?.handle.setAttribute('aria-valuenow', String(Math.round(width)))
+}
+const finishSidebarResize = (event?: PointerEvent) => {
+  const resize = sidebarResize
+  if (!resize || (event && event.pointerId !== resize.pointerId)) return
+  if (event?.type === 'pointerup') pendingSidebarWidth = clampSidebarWidth(resize.startWidth + event.clientX - resize.startX)
+  cancelAnimationFrame(sidebarResizeFrame)
+  sidebarResizeFrame = 0
+  applySidebarWidth(pendingSidebarWidth)
+  // Commit the final geometry while transitions are still disabled, so releasing
+  // the pointer cannot animate the last pending movement.
+  libraryShell.value?.querySelector('.sidebar')?.getBoundingClientRect()
+  sidebarWidth.value = pendingSidebarWidth
+  sidebarResize = null
+  activeResizer.value = null
+  window.removeEventListener('blur', cancelSidebarResize)
+  if (resize.handle.hasPointerCapture(resize.pointerId)) resize.handle.releasePointerCapture(resize.pointerId)
+}
+const cancelSidebarResize = () => finishSidebarResize()
+const startSidebarResize = (event: PointerEvent) => {
+  if (event.button !== 0 || isSidebarCollapsed.value || sidebarResize) return
+  const sidebar = libraryShell.value?.querySelector('.sidebar')
+  if (!sidebar) return
+  const handle = event.currentTarget as HTMLElement
+  pendingSidebarWidth = sidebar.getBoundingClientRect().width
+  sidebarResize = { pointerId: event.pointerId, startX: event.clientX, startWidth: pendingSidebarWidth, handle }
+  handle.setPointerCapture(event.pointerId)
+  activeResizer.value = 'sidebar'
+  window.addEventListener('blur', cancelSidebarResize)
+}
+const moveSidebarResize = (event: PointerEvent) => {
+  if (!sidebarResize || event.pointerId !== sidebarResize.pointerId) return
+  pendingSidebarWidth = clampSidebarWidth(sidebarResize.startWidth + event.clientX - sidebarResize.startX)
+  if (sidebarResizeFrame) return
+  // Resize the shell once per frame without rerendering the file tree and editor.
+  sidebarResizeFrame = requestAnimationFrame(() => {
+    sidebarResizeFrame = 0
+    applySidebarWidth(pendingSidebarWidth)
+  })
+}
+const resizeSidebarByKey = (event: KeyboardEvent) => {
+  if (isSidebarCollapsed.value || sidebarResize) return
+  const step = event.shiftKey ? 40 : 10
+  const width = event.key === 'Home' ? 220 : event.key === 'End' ? 600
+    : event.key === 'ArrowLeft' ? sidebarWidth.value - step : event.key === 'ArrowRight' ? sidebarWidth.value + step : null
+  if (width === null) return
+  event.preventDefault()
+  sidebarWidth.value = clampSidebarWidth(width)
+  applySidebarWidth(sidebarWidth.value)
+}
+onBeforeUnmount(cancelSidebarResize)
 
 const handleNodeSelect = (keys: string[]) => {
   selectedKeys.value = keys
@@ -2331,16 +2443,17 @@ const handleLoadChildren = async (option: TreeOption) => {
   }
 }
 
+const isLibraryMetadata = (name: string) => name.toLowerCase() === '.misty_order.json'
 const loadDirectory = async (path: string, libraryRoot = store.libraryPath): Promise<TreeOption[]> => {
   if (!path) return []
   const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot, path })
-  return entries.map(entry => ({
+  return entries.filter(entry => !isLibraryMetadata(entry.name)).map(entry => ({
     label: entry.name,
     key: entry.path,
     isLeaf: !entry.is_dir,
     prefix: () => {
       const format = entry.is_dir ? undefined : findFileFormat(entry.path)
-      const marker = entry.is_dir ? undefined : store.fileDisplayStyles[entry.path]
+      const marker = entry.is_dir ? undefined : store.fileDisplayStyleForPath(entry.path)
       const formatVisual = resolveFileTreeVisual(format?.id, marker?.icon || 'auto')
       return h(entry.is_dir ? FolderIcon : formatVisual.icon, {
         size: 14,
@@ -2630,8 +2743,68 @@ const virtualDrag = reactive({
   expandTimer: null as any,
   scrollTimer: null as any
 })
+const fileDragGhost = ref<HTMLElement | null>(null)
+const fileDropBusy = ref(false)
+const fileDropProblem = ref('')
+let externalFileDrag = false
+let fileDragOption: TreeOption | null = null
+let fileDragPoint = { x: 0, y: 0 }
+let fileDragFrame = 0
+let fileDragGeneration = 0
+let fileDragScrollSpeed = 0
+const fileDropHint = computed(() => {
+  if (fileDropProblem.value) return fileDropProblem.value
+  const target = virtualDrag.dropTarget
+  if (!target) return '拖到文件夹内，或在文件间排序'
+  if (target === store.libraryPath) return '移入资料库根目录'
+  const name = fileNameWithExtension(target)
+  return virtualDrag.dropPosition === 'inside' ? `移入「${name}」`
+    : `放到「${name}」${virtualDrag.dropPosition === 'before' ? '前' : '后'}`
+})
+const positionFileDragGhost = () => {
+  fileDragGhost.value?.style.setProperty('transform', `translate3d(${fileDragPoint.x + 10}px, ${fileDragPoint.y + 10}px, 0)`)
+}
+watch(fileDragGhost, positionFileDragGhost, { flush: 'post' })
+const clearFileDragTimers = () => {
+  for (const key of ['timer', 'expandTimer', 'scrollTimer'] as const) {
+    if (virtualDrag[key]) clearTimeout(virtualDrag[key])
+    virtualDrag[key] = null
+  }
+  fileDragScrollSpeed = 0
+}
+const resetFileDrag = () => {
+  ++fileDragGeneration
+  clearFileDragTimers()
+  cancelAnimationFrame(fileDragFrame)
+  fileDragFrame = 0
+  fileDragOption = null
+  window.removeEventListener('mousemove', onMouseMove, true)
+  window.removeEventListener('mouseup', onMouseUp, true)
+  window.removeEventListener('blur', cancelFileDrag)
+  window.removeEventListener('keydown', cancelFileDragByKey, true)
+  virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
+  fileDropProblem.value = ''
+}
+const cancelFileDrag = () => { if (virtualDrag.active || virtualDrag.timer) resetFileDrag() }
+const cancelFileDragByKey = (event: KeyboardEvent) => { if (event.key === 'Escape') cancelFileDrag() }
+const beginFileDrag = () => {
+  if (!fileDragOption || fileDropBusy.value) return
+  if (virtualDrag.timer) clearTimeout(virtualDrag.timer)
+  virtualDrag.timer = null
+  preview.focusPath = ''
+  hideFilePreview()
+  virtualDrag.dragNode = fileDragOption
+  virtualDrag.selectedPaths = selectedKeys.value.includes(fileDragOption.key as string)
+    ? [...selectedKeys.value] : [fileDragOption.key as string]
+  virtualDrag.ghostText = virtualDrag.selectedPaths.length > 1 ? `移动 ${virtualDrag.selectedPaths.length} 个项目` : fileDragOption.label as string
+  virtualDrag.active = true
+}
+const normalizedDragPath = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+const dragPathContains = (parent: string, child: string) => normalizedDragPath(child).startsWith(`${normalizedDragPath(parent)}/`)
 
 const updateDropTarget = (x: number, y: number) => {
+  const previousTarget = virtualDrag.dropTarget
+  const previousPosition = virtualDrag.dropPosition
   const elements = document.elementsFromPoint(x, y)
   let foundKey = null
   let isViewport = false
@@ -2654,23 +2827,30 @@ const updateDropTarget = (x: number, y: number) => {
     const relativeY = (y - rect.top) / rect.height
     const isDir = foundEl.getAttribute('data-drop-dir') === 'true'
 
-    // 探测感应区：25% Before, 50% Inside, 25% After
-    if (relativeY < 0.25) {
-      virtualDrag.dropPosition = 'before'
-    } else if (relativeY > 0.75) {
-      virtualDrag.dropPosition = 'after'
+    // Folder bodies mean "move inside"; files always provide a sorting target.
+    // Retain a small boundary band so tiny pointer movements do not flip feedback.
+    const previous = previousTarget === foundKey ? previousPosition : null
+    if (isDir) {
+      const top = previous === 'before' ? .2 : previous === 'inside' ? .1 : .15
+      const bottom = previous === 'after' ? .8 : previous === 'inside' ? .9 : .85
+      virtualDrag.dropPosition = relativeY < top ? 'before' : relativeY > bottom ? 'after' : 'inside'
     } else {
-      virtualDrag.dropPosition = 'inside'
+      const middle = previous === 'before' ? .55 : previous === 'after' ? .45 : .5
+      virtualDrag.dropPosition = relativeY < middle ? 'before' : 'after'
     }
 
     // 文件夹自动展开逻辑优化：只有当目标 Key 变化或不再是 inside 时才重置计时器
-    if (isDir && virtualDrag.dropPosition === 'inside') {
-      if (virtualDrag.dropTarget !== foundKey) {
+    if (isDir && virtualDrag.dropPosition === 'inside' && !expandedKeys.value.includes(foundKey)) {
+      if (previousTarget !== foundKey || previousPosition !== 'inside') {
         if (virtualDrag.expandTimer) clearTimeout(virtualDrag.expandTimer)
-        virtualDrag.expandTimer = setTimeout(() => {
-          if (virtualDrag.dropTarget === foundKey && !expandedKeys.value.includes(foundKey!)) {
-            expandedKeys.value.push(foundKey!)
-            expandedKeys.value = [...expandedKeys.value]
+        const generation = fileDragGeneration
+        virtualDrag.expandTimer = setTimeout(async () => {
+          virtualDrag.expandTimer = null
+          if ((!virtualDrag.active && !externalFileDrag) || fileDropProblem.value || generation !== fileDragGeneration || virtualDrag.dropTarget !== foundKey || virtualDrag.dropPosition !== 'inside') return
+          const option = findTreeOptionByKey(treeData.value, foundKey!)
+          if (option && option.children === undefined) await handleLoadChildren(option)
+          if ((virtualDrag.active || externalFileDrag) && generation === fileDragGeneration && virtualDrag.dropTarget === foundKey && virtualDrag.dropPosition === 'inside') {
+            expandedKeys.value = [...new Set([...expandedKeys.value, foundKey!])]
           }
         }, 600)
       }
@@ -2691,28 +2871,37 @@ const updateDropTarget = (x: number, y: number) => {
     virtualDrag.dropPosition = null
     if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
   }
+  const target = virtualDrag.dropTarget
+  fileDropProblem.value = virtualDrag.active && target && virtualDrag.selectedPaths.some(source => normalizedDragPath(source) === normalizedDragPath(target) || dragPathContains(source, target))
+    ? '不能放到自身或子文件夹中' : ''
 }
 
-const onMouseUp = async () => {
-  activeResizer.value = null
-  if (virtualDrag.timer) { clearTimeout(virtualDrag.timer); virtualDrag.timer = null }
-  if (virtualDrag.expandTimer) { clearTimeout(virtualDrag.expandTimer); virtualDrag.expandTimer = null }
-  if (virtualDrag.scrollTimer) { clearInterval(virtualDrag.scrollTimer); virtualDrag.scrollTimer = null }
+const onMouseUp = async (event: MouseEvent) => {
+  if (!virtualDrag.active) { resetFileDrag(); return }
+  updateDropTarget(event.clientX, event.clientY)
+  const blocked = Boolean(fileDropProblem.value)
+  const suppressClick = (click: MouseEvent) => { click.preventDefault(); click.stopImmediatePropagation() }
+  window.addEventListener('click', suppressClick, { capture: true, once: true })
+  window.setTimeout(() => window.removeEventListener('click', suppressClick, true), 0)
   
   if (virtualDrag.active) {
     const targetPath = virtualDrag.dropTarget
-    const sourcePaths = virtualDrag.selectedPaths.length > 0 ? virtualDrag.selectedPaths : (virtualDrag.dragNode ? [virtualDrag.dragNode.key] : [])
+    const selected: string[] = virtualDrag.selectedPaths.length > 0 ? virtualDrag.selectedPaths : (virtualDrag.dragNode ? [virtualDrag.dragNode.key] : [])
+    const sourcePaths = selected.filter(path => !selected.some(parent => parent !== path && dragPathContains(parent, path)))
     const position = virtualDrag.dropPosition
+    resetFileDrag()
+    if (blocked || fileDropBusy.value) return
 
     if (sourcePaths.length > 0 && targetPath) {
       // 保护：如果目标在源路径中且是前后排序，视为原地操作
       if (sourcePaths.includes(targetPath) && (position === 'before' || position === 'after')) {
-        virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
-        message.destroyAll(); return
+        return
       }
 
+      let moveMessage: ReturnType<typeof message.loading> | undefined
       try {
-        message.loading(`正在处理移动...`)
+        fileDropBusy.value = true
+        moveMessage = message.loading(`正在移动...`, { duration: 0 })
         
         // 识别目标目录和目标参考项
         let finalTargetDir = targetPath
@@ -2733,12 +2922,20 @@ const onMouseUp = async () => {
 
         if (moveTasks.length > 0) {
           await invoke('move_items', { libraryRoot: store.libraryPath, sourcePaths: moveTasks, targetDir: finalTargetDir })
+          for (const oldPath of moveTasks) {
+            const separator = finalTargetDir.includes('\\') ? '\\' : '/'
+            const newPath = `${finalTargetDir}${separator}${fileNameWithExtension(oldPath)}`
+            syncRenamedWorkspaceReferences(oldPath, newPath)
+            try { await store.moveFileDisplayStyles(oldPath, newPath) }
+            catch (error) { message.warning(`文件已移动，样式已保留，但设置暂未保存：${String(error)}`) }
+          }
         }
 
         // 2. 逻辑排序逻辑 (Misty Order)
         // 获取目标文件夹的当前顺序
         const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
         let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
+          .filter(entry => !isLibraryMetadata(entry.name))
           .map(e => e.name)
         
         // 移除正在移动的项
@@ -2778,25 +2975,35 @@ const onMouseUp = async () => {
         })
         for (const p of parentsToRefresh) await refreshNode(p)
 
-        selectedKeys.value = []
-        message.destroyAll()
-        message.success('操作成功')
+        if (!expandedKeys.value.includes(finalTargetDir)) expandedKeys.value = [...expandedKeys.value, finalTargetDir]
+        const separator = finalTargetDir.includes('\\') ? '\\' : '/'
+        selectedKeys.value = sourcePaths.map(path => `${finalTargetDir}${separator}${fileNameWithExtension(path)}`)
+        await nextTick()
+        treeInstRef.value?.scrollTo({ key: selectedKeys.value[0], behavior: 'auto' })
+        const targetLabel = finalTargetDir === store.libraryPath ? '资料库根目录' : fileNameWithExtension(finalTargetDir)
+        message.success(moveTasks.length ? `已移入「${targetLabel}」` : '已调整排列顺序')
       } catch (err: any) {
-        message.destroyAll()
         message.error('操作失败: ' + err)
+      } finally {
+        moveMessage?.destroy()
+        fileDropBusy.value = false
       }
     }
-    virtualDrag.active = false; virtualDrag.dragNode = null; virtualDrag.dropTarget = null; virtualDrag.dropPosition = null; virtualDrag.selectedPaths = []
   }
 }
 
 const onMouseMove = (e: MouseEvent) => {
-  if (activeResizer.value === 'sidebar') { sidebarWidth.value = Math.max(220, Math.min(e.clientX, 600)) }
-  // 影子偏移，确保不挡住探测
-  virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
-  
-  if (virtualDrag.active) {
-    updateDropTarget(e.clientX, e.clientY)
+  if (!virtualDrag.active && !virtualDrag.timer) return
+  fileDragPoint = { x: e.clientX, y: e.clientY }
+  if (!virtualDrag.active && Math.hypot(e.clientX - virtualDrag.startX, e.clientY - virtualDrag.startY) >= 6) beginFileDrag()
+  if (virtualDrag.active) e.preventDefault()
+  if (virtualDrag.active && !fileDragFrame) {
+    fileDragFrame = requestAnimationFrame(() => {
+      fileDragFrame = 0
+      if (!virtualDrag.active) return
+      positionFileDragGhost()
+      updateDropTarget(fileDragPoint.x, fileDragPoint.y)
+    })
 
     // 边缘自动滚动逻辑
     const viewport = document.querySelector('.tree-viewport')
@@ -2805,16 +3012,20 @@ const onMouseMove = (e: MouseEvent) => {
       const threshold = 40 // 感应区高度
       let scrollSpeed = 0
 
-      if (e.clientY < rect.top + threshold) {
+      if (e.clientX < rect.left || e.clientX > rect.right) {
+        scrollSpeed = 0
+      } else if (e.clientY < rect.top + threshold) {
         scrollSpeed = -10 // 向上滚动
       } else if (e.clientY > rect.bottom - threshold) {
         scrollSpeed = 10 // 向下滚动
       }
 
       if (scrollSpeed !== 0) {
+        fileDragScrollSpeed = scrollSpeed
         if (!virtualDrag.scrollTimer) {
           virtualDrag.scrollTimer = setInterval(() => {
-            viewport.scrollTop += scrollSpeed
+            viewport.scrollTop += fileDragScrollSpeed
+            updateDropTarget(fileDragPoint.x, fileDragPoint.y)
           }, 20)
         }
       } else {
@@ -2859,9 +3070,10 @@ const hideFilePreview = () => {
   preview.show = false
 }
 const scheduleFilePreview = (option: TreeOption, x: number, y: number, delay: number) => {
-  if (!option.isLeaf) return
+  if (!option.isLeaf || virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
   hideFilePreview()
   preview.timer = setTimeout(() => {
+    if (virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
     preview.show = true
     preview.title = option.label as string
     preview.path = option.key as string
@@ -2978,41 +3190,47 @@ const openRootContextMenu = (event: MouseEvent) => {
   contextMenu.options = buildCreateMenuOptions()
   contextMenu.show = true
 }
-const nodeProps = ({ option }: { option: TreeOption }) => ({
+const nodeProps = ({ option }: { option: TreeOption }) => {
+  const marker = option.isLeaf ? store.fileDisplayStyleForPath(option.key as string) : undefined
+  const colors = marker ? fileMarkerColors(marker) : undefined
+  return ({
   'data-key': option.key,
   'data-drop-path': option.key,
   'data-drop-dir': !option.isLeaf ? 'true' : 'false',
   'aria-describedby': option.isLeaf ? 'file-tree-detail-preview' : undefined,
   class: [
-    option.isLeaf && store.fileDisplayStyles[option.key as string] ? 'has-file-display-style' : '',
-    virtualDrag.dropTarget === option.key ? 'drop-active' : '',
-    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
-    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'after' ? 'is-drop-after' : '',
-    virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'inside' ? 'is-drop-inside' : '',
+    marker ? `has-file-display-style selection-${marker.selectionStyle || 'fill'}` : '',
+    virtualDrag.active && virtualDrag.selectedPaths.includes(option.key as string) ? 'is-drag-source' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key ? 'drop-active' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'before' ? 'is-drop-before' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'after' ? 'is-drop-after' : '',
+    !fileDropProblem.value && virtualDrag.dropTarget === option.key && virtualDrag.dropPosition === 'inside' ? 'is-drop-inside' : '',
   ].join(' '),
-  style: option.isLeaf && store.fileDisplayStyles[option.key as string] ? {
-    '--file-marker-bg': store.fileDisplayStyles[option.key as string].backgroundColor || 'transparent',
-    '--file-marker-text': markerTextColor(store.fileDisplayStyles[option.key as string]) || 'inherit',
-    '--file-marker-accent': markerTextColor(store.fileDisplayStyles[option.key as string]) || 'var(--theme-primary)',
+  style: colors ? {
+    '--file-marker-bg': colors.background,
+    '--file-marker-text': colors.text,
+    '--file-marker-accent': markerTextColor(marker) || 'var(--theme-primary)',
+    '--file-marker-selected-bg': colors.selectedBackground,
+    '--file-marker-selected-text': colors.selectedText,
+    '--file-marker-selected-accent': colors.selectedAccent,
   } : undefined,
   onMousedown: (e: MouseEvent) => { 
-    if (e.button !== 0) return; 
+    if (e.button !== 0 || fileDropBusy.value || (e.target as Element).closest('.n-tree-node-switcher')) return;
+    resetFileDrag()
+    preview.focusPath = ''; hideFilePreview()
+    fileDragOption = option
+    fileDragPoint = { x: e.clientX, y: e.clientY }
     virtualDrag.startX = e.clientX; virtualDrag.startY = e.clientY; 
+    virtualDrag.x = e.clientX + 10; virtualDrag.y = e.clientY + 10
     if (virtualDrag.timer) clearTimeout(virtualDrag.timer); 
-    virtualDrag.timer = setTimeout(() => { 
-      virtualDrag.active = true; virtualDrag.dragNode = option; 
-      if (selectedKeys.value.includes(option.key as string)) {
-        virtualDrag.selectedPaths = [...selectedKeys.value]
-        virtualDrag.ghostText = `移动 ${selectedKeys.value.length} 个项目`
-      } else {
-        virtualDrag.selectedPaths = [option.key as string]
-        virtualDrag.ghostText = option.label as string
-      }
-      virtualDrag.timer = null 
-    }, 350) 
+    virtualDrag.timer = setTimeout(beginFileDrag, 350)
+    window.addEventListener('mousemove', onMouseMove, true)
+    window.addEventListener('mouseup', onMouseUp, true)
+    window.addEventListener('blur', cancelFileDrag)
+    window.addEventListener('keydown', cancelFileDragByKey, true)
   },
   onMouseenter: (e: MouseEvent) => {
-    if (!option.isLeaf || virtualDrag.active) return
+    if (!option.isLeaf || virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
     scheduleFilePreview(option, e.clientX, e.clientY, 600)
   },
   onMouseleave: () => {
@@ -3043,6 +3261,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => ({
     }, 50)
   }
 })
+}
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
@@ -3215,7 +3434,7 @@ const executeRename = async () => {
       newName: renameState.newName,
     })
     try { await store.moveFileDisplayStyles(oldPath, newPath) }
-    catch (error) { message.warning(`文件已重命名，但显示标记迁移失败：${String(error)}`) }
+    catch (error) { message.warning(`文件已重命名，样式已保留，但设置暂未保存：${String(error)}`) }
     syncRenamedWorkspaceReferences(oldPath, newPath)
     await refreshNode(parentPath)
     renameState.show = false
@@ -3533,12 +3752,11 @@ const initVditor = () => {
       } as any,
       toolbar: [
         { name: 'undo', tip: '撤销 Ctrl+Z' }, { name: 'redo', tip: '重做 Ctrl+Y' }, '|',
-        { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'list', tip: '无序列表' }, { name: 'link', tip: '插入链接' }, '|',
+        { name: 'headings', tip: '标题' }, { name: 'bold', tip: '加粗 Ctrl+B' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'quote', tip: '引用' }, '|',
+        { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
+        { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' }, { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' }, '|',
         { name: 'more', tip: '更多格式与工具', icon: '<span class="vditor-toolbar-label">更多格式</span>', toolbar: [
-        { name: 'emoji', tip: '表情' }, { name: 'italic', tip: '斜体 Ctrl+I' }, { name: 'strike', tip: '删除线' }, '|',
-        { name: 'line', tip: '分割线' }, { name: 'quote', tip: '引用' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
-        { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' },
-        { name: 'table', tip: '插入表格' },
+        { name: 'emoji', tip: '表情' }, { name: 'strike', tip: '删除线' }, { name: 'line', tip: '分割线' }, '|',
         { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<span class="vditor-toolbar-label">实时 Table 图表</span>', click: () => { void insertTableChartReference() } }, '|',
         { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
           const themes = markdownCodeThemeChoices(store.theme)
@@ -3564,6 +3782,7 @@ const initVditor = () => {
         wordCount.value = val.length;
       },
       after: () => {
+        cleanupEditorListeners()
         isVditorReady = true;
         editorLoading.value = false;
         const toolbar = document.querySelector('#vditor-lib .vditor-toolbar')
@@ -3573,14 +3792,17 @@ const initVditor = () => {
           toolbar.appendChild(host)
           documentShortcutHost.value = host
         }
+        documentPreviewButton = toolbar?.querySelector<HTMLElement>('[data-type="preview"]') ?? null
+        syncDocumentPreview()
+        if (documentPreviewButton) {
+          documentPreviewObserver = new MutationObserver(syncDocumentPreview)
+          documentPreviewObserver.observe(documentPreviewButton, { attributes: true, attributeFilter: ['class'] })
+        }
         const currentAppearance = resolveMarkdownEditorAppearance(store.theme, store.codeTheme)
         vditor.setTheme(currentAppearance.editorTheme, currentAppearance.contentTheme, currentAppearance.codeTheme)
         // 光标位置追踪（兼容 WYSIWYG / IR / SV 三种模式）
         const contentEl = vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element
         if (contentEl) {
-          // 清理旧的监听器
-          cleanupEditorListeners()
-
           const getEditEl = () => vditor.vditor.wysiwyg?.element || vditor.vditor.ir?.element || vditor.vditor.sv?.element || contentEl
           const updateCursor = () => {
             const el = getEditEl()
@@ -3654,6 +3876,10 @@ let currentContentEl: HTMLElement | null = null
 let currentViewport: HTMLElement | null = null
 
 const cleanupEditorListeners = () => {
+  documentPreviewObserver?.disconnect()
+  documentPreviewObserver = undefined
+  documentPreviewButton = null
+  syncDocumentPreview()
   if (currentContentEl && cursorUpdateHandler) {
     currentContentEl.removeEventListener('keyup', cursorUpdateHandler)
     currentContentEl.removeEventListener('click', cursorUpdateHandler)
@@ -3780,6 +4006,7 @@ onMounted(async () => {
   if (isTauriRuntime()) {
     unlistenDrop = await getCurrentWindow().onDragDropEvent(async (event) => {
     if (event.payload.type === 'over') {
+      externalFileDrag = true
       updateDropTarget(event.payload.position.x, event.payload.position.y)
     } else if (event.payload.type === 'drop') {
       const targetPath = virtualDrag.dropTarget || store.libraryPath
@@ -3810,6 +4037,7 @@ onMounted(async () => {
           // 逻辑排序 JSON 更新
           const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
           let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
+            .filter(entry => !isLibraryMetadata(entry.name))
             .map(e => e.name)
           
           const newNames = importedPaths.map(p => p.split(/[\\/]/).pop() || '')
@@ -3834,12 +4062,18 @@ onMounted(async () => {
         } catch (err) { message.destroyAll(); message.error('导入失败') }
       }
       virtualDrag.dropTarget = null; virtualDrag.dropPosition = null
+      externalFileDrag = false
+      clearFileDragTimers()
+    } else if (event.payload.type === 'leave') {
+      externalFileDrag = false
+      resetFileDrag()
     }
     })
   }
 })
 
 onUnmounted(() => {
+  resetFileDrag()
   closeHistoryComparison()
   invalidateHistory()
   document.removeEventListener('selectionchange', rememberReferenceInsertionPoint)
@@ -4222,10 +4456,10 @@ watch(activeTabId, (newId, oldId) => {
 .library-recovery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .library-recovery details { max-height: 120px; overflow: auto; }
 .library-mode { position: relative; display: flex; flex-direction: column; height: 100%; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: transparent; box-sizing: border-box; animation: fadeIn 0.6s var(--ease-premium); container-type: inline-size; container-name: library-shell; }
-.library-shell-toolbar { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; padding: 6px 12px; flex-shrink: 0; border-bottom: var(--theme-border); background: var(--theme-surface); }
+.library-shell-toolbar { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; padding: 2px 12px; flex-shrink: 0; border-bottom: var(--theme-border); background: var(--theme-surface); }
 .library-shell-toolbar > .n-button { flex-shrink: 0; }
 .library-shell-toolbar > .library-picker { flex: 0 0 auto; min-width: 36px; width: clamp(52px, 12cqw, 160px); }
-.shell-document-tabs { align-self: stretch; border-bottom: 0; }
+.shell-document-tabs { --workspace-tabs-height: 30px; --workspace-tab-height: 28px; align-self: stretch; border-bottom: 0; }
 @container library-shell (max-width: 600px) {
   .shell-action-label { display: none; }
   .library-shell-toolbar > .n-button { padding: 0 5px; }
@@ -4237,16 +4471,19 @@ watch(activeTabId, (newId, oldId) => {
 }
 .library-picker :deep(.n-button__content) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .shell-toolbar-spacer { flex: 1; }
-.library-workspace { position: relative; display: flex; flex: 1; width: 100%; min-width: 0; min-height: 0; }
+.library-workspace { position: relative; display: flex; flex: 1; width: 100%; min-width: 0; min-height: 0; gap: 0; }
 .shell-search-area { padding: 12px 10px 6px; flex-shrink: 0; }
 .document-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 7px 12px; border-bottom: var(--theme-border); flex-shrink: 0; }
+.document-identity { display: flex; align-items: center; flex: 1 1 140px; min-width: 0; gap: 4px; }
+.document-identity > .n-button { flex-shrink: 0; }
 .document-breadcrumb { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .document-breadcrumb { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid transparent; border-radius: var(--theme-radius-sm); background: transparent; cursor: pointer; font-family: inherit; }
 .document-breadcrumb:hover { color: var(--theme-primary); background: var(--workspace-control-hover-bg); }
 .document-breadcrumb:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
 .document-breadcrumb .n-icon { flex-shrink: 0; opacity: .65; }
 .document-breadcrumb > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.document-primary-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.document-primary-actions { display: flex; align-items: center; flex-wrap: wrap; max-width: 100%; gap: 4px; margin-left: auto; }
+.document-primary-actions > .n-button { flex-shrink: 0; }
 .document-menu-content { display: flex; flex-direction: column; width: min(228px, calc(100vw - 80px)); gap: 4px; color: var(--theme-text); }
 .document-menu-content .n-button { justify-content: flex-start; }
 .document-menu-content .tab-actions { padding: 0; align-items: stretch; }
@@ -4262,17 +4499,24 @@ watch(activeTabId, (newId, oldId) => {
 .reference-empty > p { font-size: var(--text-compact); color: var(--theme-text-secondary); line-height: 1.7; }
 .editor-main :deep(.vditor-toolbar-label) { white-space: nowrap; font-size: var(--text-compact); }
 .editor-main { container-type: inline-size; container-name: library-editor; }
-.editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; height: var(--toolbar-height); margin-left: 8px; vertical-align: middle; }
+.editor-main :deep(.vditor-toolbar) { display: flex; flex-wrap: wrap; align-items: center; padding-inline: 8px !important; }
+.editor-main :deep(.vditor-toolbar > .vditor-toolbar__item) { flex-shrink: 0; }
+.editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; min-height: var(--toolbar-height); margin-left: auto; padding-left: 8px; vertical-align: middle; }
 .document-inline-shortcuts { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: var(--theme-border); white-space: nowrap; }
-@container library-editor (max-width: 720px) { .document-inline-shortcuts .inline-mode, .document-inline-shortcuts .inline-width { display: none; } }
-@container library-editor (max-width: 520px) { .editor-main :deep(.document-shortcut-host) { display: none; } }
+@container library-editor (max-width: 520px) {
+  .document-toolbar { padding-inline: 8px; gap: 4px; }
+  .document-primary-actions { gap: 2px; }
+  .editor-main :deep(.document-shortcut-host) { padding-left: 0; padding-right: 40px; }
+  .document-inline-shortcuts { padding-left: 4px; gap: 2px; }
+}
 .editor-main :deep(.vditor-toolbar > .vditor-toolbar__item:has([data-type="more"])) { width: auto; }
 .editor-main :deep(.vditor-toolbar [data-type="more"]) { width: auto; min-width: 68px; }
 .editor-main :deep(.vditor-toolbar .vditor-hint) { max-width: calc(100cqw - 32px); max-height: min(560px, calc(100vh - 200px)); overflow-y: auto; }
 .document-menu-content, .document-menu-content * { box-sizing: border-box; }
-.is-dragging, .is-dragging * { transition: none !important; user-select: none !important; }
+.is-dragging, .is-dragging * { transition: none !important; user-select: none !important; cursor: col-resize !important; }
 
 .sidebar {
+  flex-shrink: 0;
   height: 100%; background: color-mix(in srgb, var(--theme-surface) 84%, var(--theme-bg)); backdrop-filter: none;
   border-right: var(--theme-border); display: flex; flex-direction: column; overflow: hidden;
   transition: width var(--motion-page) var(--ease-emphasized), opacity var(--motion-slow) var(--ease-standard); z-index: 20;
@@ -4350,6 +4594,20 @@ watch(activeTabId, (newId, oldId) => {
   font-size: 13px; font-weight: 650;
 }
 .file-style-preview span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-style-preview .n-icon { flex: none; }
+.file-style-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.file-style-previews small { display: block; margin-bottom: 5px; color: var(--theme-text-secondary); }
+.file-style-preview.is-selected { position: relative; }
+.file-style-preview.is-selected::after { content: ''; position: absolute; left: 3px; top: 8px; bottom: 8px; width: 2px; border-radius: 999px; background: var(--preview-accent); }
+.file-selection-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.file-selection-options button, .file-selection-colors button { min-height: 30px; padding: 0 9px; border: var(--theme-border); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: var(--theme-surface); cursor: pointer; font: inherit; font-size: 12px; }
+.file-selection-options button.active { color: var(--theme-primary); border-color: var(--theme-primary); background: var(--workspace-control-hover-bg); }
+.file-selection-colors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.file-selection-colors label { display: grid; gap: 5px; font-size: 11px; color: var(--theme-text-secondary); }
+.file-selection-colors label > div { display: flex; gap: 5px; align-items: center; }
+.file-selection-colors input { width: 32px; height: 30px; padding: 2px; border: var(--theme-border); border-radius: 5px; background: var(--theme-surface); cursor: pointer; }
+.file-selection-colors :disabled { cursor: default; opacity: .4; }
+.file-style-help { margin: 0; font-size: 11px; color: var(--theme-text-secondary); line-height: 1.6; }
 .file-style-section { display: grid; gap: 10px; padding-top: 14px; border-top: var(--theme-border); }
 .file-style-section > label { color: var(--theme-text); font-size: 12px; font-weight: 700; }
 .file-color-options, .file-icon-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -4365,7 +4623,9 @@ watch(activeTabId, (newId, oldId) => {
   box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), .14);
 }
 .file-color-swatch:hover, .file-icon-options button:hover, .file-color-options input[type="color"]:hover { transform: translateY(-1px); }
-.file-icon-options button { display: grid; place-items: center; }
+.file-icon-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
+.file-icon-options button { display: grid; place-items: center; width: 100%; height: 50px; padding: 5px 2px; gap: 3px; }
+.file-icon-options button > span { font-size: 11px; }
 .file-color-options input[type="color"] { overflow: hidden; }
 .file-color-options input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
 .file-color-options input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 4px; }
@@ -4378,147 +4638,157 @@ watch(activeTabId, (newId, oldId) => {
   overflow-y: auto;
   padding: 6px 10px;
   border: 2px solid transparent;
-  transition: all var(--motion-base) var(--ease-standard);
-  animation: treeContainerFade 0.6s var(--ease-premium);
+  transition: background-color var(--motion-base) var(--ease-standard), border-color var(--motion-base) var(--ease-standard);
+  animation: treeContainerFade var(--motion-page) var(--ease-premium);
 }
 
 .tree-viewport.drop-active {
-  background: linear-gradient(135deg,
-    rgba(0, 122, 255, 0.06) 0%,
-    rgba(0, 122, 255, 0.03) 100%);
-  border-color: rgba(0, 122, 255, 0.35);
+  background: rgba(var(--theme-primary-rgb), 0.05);
+  border-color: rgba(var(--theme-primary-rgb), 0.35);
   border-radius: var(--theme-radius);
-  box-shadow: inset 0 0 0 1px rgba(0, 122, 255, 0.15);
 }
 
-:deep(.n-tree-node-content) {
+/* One row owns every visual state; content and switcher never paint a second surface. */
+.library-mode .library-file-tree :deep(.n-tree-node) {
+  --tree-row-fill: var(--file-row-bg);
+  --tree-row-text: var(--theme-text);
+  --tree-row-accent: var(--theme-primary);
+  position: relative;
+  box-sizing: border-box;
+  min-height: var(--file-row-height);
+  background: var(--tree-row-fill);
+  color: var(--tree-row-text);
+  transition: background-color var(--motion-base) var(--ease-standard), border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
+}
+.library-file-tree :deep(.n-tree-node-content) {
   flex: 1;
   min-width: 0;
+  min-height: calc(var(--file-row-height) - 2px);
   overflow: hidden;
-  border-radius: var(--theme-radius-sm);
-  transition:
-    all var(--motion-base) var(--ease-premium),
-    transform var(--motion-fast) var(--ease-emphasized);
-  position: relative;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  transition: color var(--motion-fast) var(--ease-standard);
 }
+.library-file-tree :deep(.n-tree-node-content::before),
+.library-file-tree :deep(.n-tree-node-content::after) { content: none; }
 
-:deep(.n-tree-node-content::before) {
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style) {
+  --tree-row-fill: var(--file-marker-bg);
+  --tree-row-text: var(--file-marker-text);
+  --tree-row-accent: var(--file-marker-accent);
+}
+.library-mode .library-file-tree :deep(.n-tree-node:not(.n-tree-node--disabled):hover),
+.library-mode .library-file-tree :deep(.n-tree-node--pending:not(.n-tree-node--selected)) {
+  background: color-mix(in srgb, var(--theme-primary) 6%, var(--tree-row-fill));
+  border-color: rgba(var(--theme-primary-rgb), .16);
+  box-shadow: var(--file-row-hover-shadow);
+}
+.library-mode .library-file-tree :deep(.n-tree-node.n-tree-node--selected) {
+  background: color-mix(in srgb, var(--theme-primary) 12%, var(--tree-row-fill));
+  border-color: rgba(var(--theme-primary-rgb), .24);
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+.library-mode .library-file-tree :deep(.n-tree-node.n-tree-node--selected:hover) {
+  background: color-mix(in srgb, var(--theme-primary) 16%, var(--tree-row-fill));
+}
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.n-tree-node--selected),
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.n-tree-node--selected:hover) {
+  background: var(--file-marker-selected-bg);
+  color: var(--file-marker-selected-text);
+  --tree-row-accent: var(--file-marker-selected-accent);
+  border-color: transparent;
+}
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.selection-outline.n-tree-node--selected) {
+  border: 1px solid var(--file-marker-selected-accent);
+}
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style .n-tree-node-content__prefix svg) { color: var(--tree-row-text); }
+.library-mode .library-file-tree :deep(.n-tree-node.has-file-display-style.n-tree-node--selected .n-tree-node-content__prefix svg) { color: var(--file-marker-selected-text); stroke: currentColor; }
+
+.library-file-tree :deep(.n-tree-node::after) {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: var(--theme-radius-sm);
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.08),
-    transparent 60%);
-  opacity: 0;
-  transition: opacity var(--motion-base) var(--ease-standard);
-}
-
-:deep(.n-tree-node-content:hover) {
-  background: rgba(var(--theme-primary-rgb), 0.06) !important;
-  transform: translateX(2px);
-}
-
-:deep(.n-tree-node-content:hover::before) {
-  opacity: 1;
-}
-
-:deep(.n-tree-node.has-file-display-style .n-tree-node-content) {
-  background: var(--file-marker-bg) !important;
-  color: var(--file-marker-text) !important;
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--file-marker-accent) 55%, var(--theme-primary));
-}
-:deep(.n-tree-node.has-file-display-style .n-tree-node-content:hover) {
-  filter: saturate(1.04) brightness(1.015);
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--file-marker-accent) 70%, var(--theme-primary)), var(--theme-shadow-sm);
-}
-:deep(.n-tree-node.has-file-display-style .n-tree-node-content__text) { color: inherit; }
-
-:deep(.n-tree-node-content.n-tree-node-content--selected) {
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.15) 0%,
-    rgba(var(--theme-primary-rgb), 0.1) 100%) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(var(--theme-primary-rgb), 0.2),
-    var(--style-glow);
-  color: var(--theme-primary) !important;
-  font-weight: 650;
-}
-
-:deep(.n-tree-node-content.n-tree-node-content--selected::after) {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
   border-radius: 999px;
-  background: linear-gradient(180deg,
-    var(--theme-primary) 0%,
-    rgba(var(--theme-primary-rgb), 0.6) 100%);
-  box-shadow: 0 0 8px rgba(var(--theme-primary-rgb), 0.5);
+  background: var(--tree-row-accent);
+  pointer-events: none;
+  opacity: 0;
+  transform: scaleY(.45);
+  transition: opacity var(--motion-fast) var(--ease-standard), transform var(--motion-base) var(--ease-emphasized);
 }
+.library-file-tree :deep(.n-tree-node--selected::after) { opacity: 1; transform: scaleY(1); }
+.library-file-tree :deep(.n-tree-node.has-file-display-style:not(.n-tree-node--selected)::after) { opacity: .35; transform: scaleY(.8); }
+.library-file-tree:focus-visible :deep(.n-tree-node--pending) { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 
-:deep(.n-tree-node-content__text) {
+.library-file-tree :deep(.n-tree-node-content__text) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
-  position: relative;
-  z-index: 1;
+  min-width: 0;
 }
-
-:deep(.n-tree-node.drop-active .n-tree-node-content) {
-  background: transparent !important;
+.library-file-tree :deep(.n-tree-node-content__prefix) {
+  flex-shrink: 0;
+  transition: transform var(--motion-base) var(--ease-emphasized);
 }
-
-:deep(.n-tree-node.is-drop-inside .n-tree-node-content) {
-  background: linear-gradient(135deg,
-    rgba(var(--theme-primary-rgb), 0.12) 0%,
-    rgba(var(--theme-primary-rgb), 0.08) 100%) !important;
-  box-shadow: 0 0 0 2px var(--theme-primary) inset;
-  border-radius: var(--theme-radius-sm);
+.library-file-tree :deep(.n-tree-node:hover .n-tree-node-content__prefix),
+.library-file-tree :deep(.n-tree-node--pending .n-tree-node-content__prefix) {
+  transform: translateY(var(--file-row-icon-lift)) scale(var(--file-row-icon-scale));
 }
-
-:deep(.n-tree-node) {
-  position: relative;
+.library-mode .library-file-tree :deep(.n-tree-node.is-drop-inside),
+.library-mode .library-file-tree :deep(.n-tree-node.is-drop-inside:hover) {
+  background: color-mix(in srgb, var(--theme-primary) 24%, var(--tree-row-fill));
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+  font-weight: 600;
 }
-
-:deep(.n-tree-node.is-drop-before::before),
-:deep(.n-tree-node.is-drop-after::after) {
+.library-file-tree :deep(.n-tree-node.is-drop-before::before),
+.library-file-tree :deep(.n-tree-node.is-drop-after::after) {
   content: "";
   position: absolute;
   left: 36px;
   right: 12px;
-  height: 3px;
-  background: linear-gradient(90deg,
-    var(--theme-primary) 0%,
-    rgba(var(--theme-primary-rgb), 0.8) 100%);
+  width: auto;
+  height: 2px;
+  background: var(--theme-primary);
   z-index: 10;
   pointer-events: none;
   border-radius: 999px;
-  box-shadow:
-    0 0 8px rgba(var(--theme-primary-rgb), 0.6),
-    -6px 0 0 var(--theme-primary),
-    6px 0 0 var(--theme-primary);
+  transform: none;
+  opacity: 1;
+  transition: none;
 }
+.library-file-tree :deep(.n-tree-node.is-drop-before::before) { top: -2px; bottom: auto; }
+.library-file-tree :deep(.n-tree-node.is-drop-after::after) { bottom: -2px; top: auto; }
+.file-dragging .library-file-tree :deep(.n-tree-node),
+.file-dragging .library-file-tree :deep(.n-tree-node-content__prefix),
+.file-dragging .library-file-tree :deep(.n-tree-motion-wrapper) { transition: none !important; animation: none !important; user-select: none; }
+.file-dragging .library-file-tree :deep(.n-tree-node-content__prefix) { transform: none !important; }
+.file-dragging .library-file-tree :deep(.n-tree-node.is-drag-source) { opacity: .55; }
 
-:deep(.n-tree-node.is-drop-before::before) { top: -2px; }
-:deep(.n-tree-node.is-drop-after::after) { bottom: -2px; }
-
-/* 文件夹图标动画 */
-:deep(.n-tree-node-switcher) {
-  transition: transform var(--motion-base) var(--ease-emphasized);
+/* Rotate the inner arrow while the switcher's hit area stays still. */
+.library-file-tree :deep(.n-tree-node-switcher) { align-self: center; transform: none; }
+.library-file-tree :deep(.n-tree-node-switcher__icon) {
+  transition: transform var(--motion-base) var(--ease-emphasized), color var(--motion-fast) var(--ease-standard);
 }
-
-:deep(.n-tree-node--expanded > .n-tree-node-content .n-tree-node-switcher) {
-  transform: rotate(90deg);
+.library-file-tree :deep(.n-tree-node-switcher--expanded > .n-tree-node-switcher__icon) { transform: rotate(90deg); }
+.library-file-tree :deep(.n-tree-node-switcher:hover .n-tree-node-switcher__icon) { color: var(--theme-primary); }
+.library-file-tree :deep(.n-tree-motion-wrapper[class*="-active"]) {
+  transition-duration: var(--motion-base);
+  transition-timing-function: var(--ease-standard);
 }
-
-:deep(.n-tree-node-switcher:hover) {
-  transform: scale(1.15);
-}
-
-:deep(.n-tree-node--expanded > .n-tree-node-content:hover .n-tree-node-switcher) {
-  transform: rotate(90deg) scale(1.15);
+@media (prefers-reduced-motion: reduce) {
+  .library-file-tree :deep(.n-tree-node),
+  .library-file-tree :deep(.n-tree-node::after),
+  .library-file-tree :deep(.n-tree-node-content__prefix),
+  .library-file-tree :deep(.n-tree-node-switcher__icon),
+  .library-file-tree :deep(.n-tree-motion-wrapper[class*="-active"]) { transition-duration: 1ms; }
 }
 
 .quick-pane { padding: 8px 0; overflow-y: auto; }
@@ -5191,12 +5461,14 @@ watch(activeTabId, (newId, oldId) => {
   .meta-path { font-size: var(--text-body-sm); }
 }
 
-.resizer-area { position: relative; width: 1px; height: 100%; z-index: 100; background: rgba(0, 0, 0, 0.03); cursor: col-resize; }
-.resizer-area:hover { background: var(--theme-primary); }
-.drag-handle { position: absolute; top: 0; left: -8px; right: -8px; bottom: 0; z-index: 101; cursor: col-resize; }
+.resizer-area { position: relative; flex: none; width: max(1px, var(--surface-panel-gap, 0px)); height: 100%; z-index: 100; cursor: col-resize; }
+.resizer-area::before { content: ''; position: absolute; top: 0; bottom: 0; left: calc(50% - .5px); width: 1px; background: rgba(var(--theme-primary-rgb), .12); pointer-events: none; }
+.resizer-area:hover::before { background: var(--theme-primary); }
+.drag-handle { position: absolute; top: 0; left: 50%; width: 17px; bottom: 0; transform: translateX(-50%); z-index: 101; cursor: col-resize; touch-action: none; }
+.drag-handle:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -6px; }
 .collapse-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 24px; height: 48px; background: var(--theme-card); color: var(--theme-text); border: var(--theme-border); box-shadow: var(--theme-shadow-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150; transition: all 0.3s var(--ease-premium); }
 .collapse-btn:hover { background: var(--theme-primary); color: #fff; transform: translateY(-50%) scale(1.1); }
-.collapse-btn.left { left: 0px; border-radius: 0 var(--theme-radius) var(--theme-radius) 0; }
+.collapse-btn.left { left: 50%; border-radius: 0 var(--theme-radius) var(--theme-radius) 0; }
 
 .editor-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 0 4px 4px; }
 .local-graph-rail { width: clamp(300px,28vw,380px); height: 100%; min-width: 0; min-height: 0; flex: none; overflow: auto; box-sizing: border-box; border-left: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 97%,transparent); box-shadow: -8px 0 24px rgba(0,0,0,.06); }.local-graph-rail > header { position: sticky; z-index: 2; top: 0; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px 7px 14px; box-sizing: border-box; border-bottom: var(--theme-border); background: color-mix(in srgb,var(--theme-surface) 98%,transparent); }.local-graph-rail > header div { min-width: 0; display: grid; gap: 2px; }.local-graph-rail > header strong { font-size: 11px; }.local-graph-rail > header span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.local-graph-rail > header button { width: 28px; height: 28px; flex: none; border: 0; border-radius: 5px; color: var(--theme-text-secondary); background: transparent; cursor: pointer; font-size: 18px; }.local-graph-rail > header button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); }
@@ -5458,7 +5730,11 @@ watch(activeTabId, (newId, oldId) => {
 .hero-subtitle { font-size: 16px; opacity: 0.6; margin-bottom: 32px; animation: slideUp 0.8s var(--ease-premium) 0.4s both; }
 .hero-actions { display: flex; gap: 16px; justify-content: center; animation: slideUp 0.8s var(--ease-premium) 0.6s both; }
 
-.drag-ghost { position: fixed; pointer-events: none !important; z-index: 9999; padding: 8px 12px; background: rgba(255, 255, 255, 0.9); border: 1px solid var(--theme-primary); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
+.drag-ghost { position: fixed; left: 0; top: 0; pointer-events: none !important; z-index: 9999; max-width: min(320px, calc(100vw - 24px)); padding: 8px 12px; background: var(--theme-surface); border: 1px solid var(--theme-primary); border-radius: var(--theme-radius-sm); box-shadow: var(--workspace-shadow-sm); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--theme-primary); }
+.drag-ghost > span { min-width: 0; display: grid; gap: 3px; }
+.drag-ghost strong { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drag-ghost small { color: var(--theme-text); font-size: var(--text-compact); }
+.drag-ghost.drop-invalid { border-color: var(--status-danger); color: var(--status-danger); }
 .drag-ghost * { pointer-events: none !important; }
 
 @keyframes treeContainerFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -5497,7 +5773,7 @@ watch(activeTabId, (newId, oldId) => {
 @container library-shell (max-width: 760px) {
   .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 80; max-width: 100%; box-shadow: var(--theme-shadow); }
   .resizer-area { display: none; }
-  .library-shell-toolbar { padding: 6px 8px; gap: 4px; }
+  .library-shell-toolbar { padding: 2px 8px; gap: 4px; }
   .document-toolbar { padding: 6px 8px; }
   .document-reading-status { margin-left: 0; }
 }

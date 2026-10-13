@@ -31,12 +31,14 @@ try{
  await page.locator('.vditor-wysiwyg').getByText('让记录更顺手',{exact:true}).waitFor()
  await page.screenshot({path:output+'/02-editing.png',animations:'disabled'})
  await page.setViewportSize({width:480,height:850})
- await page.getByTitle('导出文档',{exact:true}).waitFor({state:'hidden'})
+  for (const title of ['切换编辑模式','调整正文宽度','导出文档','查看历史与差异']) {
+    assert.equal(await page.getByTitle(title,{exact:true}).isVisible(),true,'Frequent shortcuts remain visible in narrow windows: '+title)
+  }
  await page.getByTestId('library-document-menu').click()
  await page.locator('.document-menu-content').waitFor()
  assert.equal(await page.locator('.document-menu-content').getByTitle('导出',{exact:true}).isVisible(),true)
  await page.screenshot({path:output+'/03-narrow.png',animations:'disabled'})
  assert.deepEqual(errors,[])
- await fs.writeFile(output+'/results.json',JSON.stringify({checks:['Width shortcut','Export options','History navigation','Mode rebuild keeps content and single shortcut host','Narrow menu fallback'],errors,scope:'Actual Vue/Vditor, mocked IPC, no native export/write acceptance'},null,2)+'\n')
+  await fs.writeFile(output+'/results.json',JSON.stringify({checks:['Width shortcut','Export options','History navigation','Mode rebuild keeps content and single shortcut host','Narrow shortcuts wrap and document menu remains reachable'],errors,scope:'Actual Vue/Vditor, mocked IPC, no native export/write acceptance'},null,2)+'\n')
  console.log('Document inline shortcut checks passed')
 }finally{await browser.close()}

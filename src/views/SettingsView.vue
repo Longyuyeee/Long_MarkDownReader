@@ -270,6 +270,7 @@
           <n-grid-item v-if="activeCategory === 'appearance'" class="animate-item" style="--delay: 0.4s">
             <div class="section-title">外观主题</div>
             <section class="theme-preset-group">
+              <p class="theme-library-intro">选择一套主题，一起调整配色、界面质感和动效。文档排版与文件显示仍可单独设置。</p>
               <div class="theme-library-toolbar" aria-label="主题类型筛选" data-horizontal-wheel="always">
                 <button v-for="filter in themeFilters" :key="filter.id" type="button" :class="{ active: activeThemeFilter === filter.id }" @click="activeThemeFilter = filter.id">
                   {{ filter.label }}
@@ -277,20 +278,23 @@
                 </button>
               </div>
               <div class="theme-preset-grid">
-                <div
+                <button
+                  type="button"
                   v-for="preset in filteredThemePresets"
                   :key="preset.id"
                   class="theme-preset-card"
                   :class="{ active: isPresetActive(preset) }"
+                  :aria-pressed="isPresetActive(preset)"
+                  :data-theme-preset="preset.id"
                   @click="applyPreset(preset)"
                 >
                   <div class="preset-visual" :data-style="preset.style" :style="getPresetPreviewStyle(preset)">
                     <div class="preset-window">
                       <span></span><span></span><span></span>
-                      <div class="preset-sidebar"></div>
+                      <div class="preset-sidebar"><n-icon :component="LibraryIcon" size="11" /><i></i><i></i><i></i></div>
                       <div class="preset-document"><i></i><i></i><i></i></div>
                     </div>
-                    <div class="preset-icon">{{ preset.icon }}</div>
+                    <div class="preset-icon" aria-hidden="true"><n-icon :component="presetStyleIcons[preset.style]" size="20" /></div>
                   </div>
                   <div class="preset-name">{{ preset.name }}</div>
                   <div class="preset-desc">{{ preset.description }}</div>
@@ -299,7 +303,7 @@
                     <span class="tag">{{ getThemeLabel(preset.theme) }}</span>
                     <span class="tag">{{ getStyleLabel(preset.style) }}</span>
                   </div>
-                </div>
+                </button>
               </div>
             </section>
 
@@ -406,6 +410,7 @@ import {
   MonitorCog as SystemIcon,
   ShieldCheck as PrivacyIcon,
   Sparkles as AiIcon,
+  Layers as LayersIcon, Code2 as CodeIcon, Feather as FeatherIcon, LayoutGrid as LayoutIcon, PanelsTopLeft as PanelsIcon,
 } from 'lucide-vue-next'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
@@ -510,6 +515,7 @@ const styleOptions: { label: string; value: 'soft' | 'neo' | 'glass' | 'airy' | 
   { label: '极简', value: 'minimal' },
   { label: '锐利', value: 'sharp' },
 ]
+const presetStyleIcons = { soft: LayersIcon, neo: CodeIcon, glass: PanelsIcon, airy: FeatherIcon, minimal: LayoutIcon, sharp: FilesIcon }
 
 const motionOptions: { label: string; desc: string; value: 'calm' | 'swift' | 'expressive' | 'reduced' }[] = [
   { label: '舒展', desc: '稳定、柔和、适合长时间写作', value: 'calm' },

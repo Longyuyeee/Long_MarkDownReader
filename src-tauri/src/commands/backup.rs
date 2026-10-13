@@ -750,6 +750,7 @@ mod tests {
                     background_color: "#fff1a8".into(),
                     text_color: "#253041".into(),
                     icon: "flag".into(),
+                    ..Default::default()
                 },
             )]),
             ..Default::default()

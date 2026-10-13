@@ -14,13 +14,18 @@ body {
   --file-row-bg: transparent;
   --file-row-border: 1px solid transparent;
   --file-row-shadow: none;
+  --file-row-hover-shadow: var(--file-row-shadow);
+  --file-row-icon-lift: -1px;
+  --file-row-icon-scale: 1.035;
   --surface-panel-inset: 0px;
   --surface-panel-gap: 0px;
 }
 body[data-style="soft"] {
+  --surface-panel-gap: 8px;
   --file-row-height: 36px; --file-row-gap: 4px;
   --file-row-bg: color-mix(in srgb, var(--theme-surface) 88%, transparent);
   --file-row-shadow: 0 2px 6px color-mix(in srgb, var(--theme-text) 5%, transparent);
+  --file-row-hover-shadow: 0 3px 9px color-mix(in srgb, var(--theme-text) 7%, transparent);
   --document-quote-radius: 12px;
 }
 body[data-style="neo"] {
@@ -33,12 +38,14 @@ body[data-style="glass"] {
   --file-row-gap: 5px; --file-row-bg: color-mix(in srgb, var(--theme-surface) 76%, transparent);
   --file-row-border: 1px solid rgba(var(--theme-primary-rgb), .15);
   --file-row-shadow: inset 0 1px 0 color-mix(in srgb, var(--theme-text) 7%, transparent);
+  --file-row-hover-shadow: var(--file-row-shadow), 0 2px 8px color-mix(in srgb, var(--theme-text) 5%, transparent);
   --surface-panel-inset: 8px; --surface-panel-gap: 8px;
   --document-page-shadow: var(--theme-shadow-sm); --document-page-border: var(--theme-border);
   --document-quote-radius: 14px;
 }
 body[data-style="airy"] {
   --file-row-height: 40px; --file-row-gap: 6px;
+  --file-row-hover-shadow: 0 2px 6px color-mix(in srgb, var(--theme-text) 5%, transparent);
   --surface-panel-inset: 10px; --surface-panel-gap: 8px;
   --document-heading-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
   --document-page-shadow: 0 5px 22px color-mix(in srgb, var(--theme-text) 5%, transparent);
@@ -84,15 +91,16 @@ body[data-style="sharp"] {
 :is(body, .display-preferences-editor)[data-file-density="compact"] { --file-row-height: 26px; --file-row-gap: 0px; }
 :is(body, .display-preferences-editor)[data-file-density="comfortable"] { --file-row-height: 34px; --file-row-gap: 3px; }
 :is(body, .display-preferences-editor)[data-file-density="spacious"] { --file-row-height: 42px; --file-row-gap: 7px; }
-:is(body, .display-preferences-editor)[data-file-row-style="flat"] { --file-row-bg: transparent; --file-row-border: 1px solid transparent; --file-row-shadow: none; }
+:is(body, .display-preferences-editor)[data-file-row-style="flat"] { --file-row-bg: transparent; --file-row-border: 1px solid transparent; --file-row-shadow: none; --file-row-hover-shadow: none; }
 :is(body, .display-preferences-editor)[data-file-row-style="cards"] {
   --file-row-bg: var(--theme-surface);
   --file-row-border: 1px solid var(--workspace-border-color);
   --file-row-shadow: var(--theme-shadow-sm);
+  --file-row-hover-shadow: var(--file-row-shadow);
 }
 
 // File rows retain tree hierarchy, custom markers, drag targets and selected states.
-body .library-file-tree .n-tree-node-content,
+body .library-file-tree .n-tree-node,
 body .recent-item,
 .display-file-row {
   min-height: var(--file-row-height);
@@ -103,6 +111,10 @@ body .recent-item,
   box-shadow: var(--file-row-shadow);
 }
 body .library-file-tree .n-tree-node-content { height: auto; }
+body[data-motion="reduced"] { --file-row-icon-lift: 0px; --file-row-icon-scale: 1; }
+@media (prefers-reduced-motion: reduce) {
+  body { --file-row-icon-lift: 0px; --file-row-icon-scale: 1; }
+}
 body[data-file-icon-style="muted"] .library-file-tree .n-tree-node:not(.has-file-display-style) .n-tree-node-content__prefix .n-icon,
 body[data-file-icon-style="muted"] .library-file-tree .n-tree-node:not(.has-file-display-style) .n-tree-node-content__prefix > svg,
 body[data-file-icon-style="muted"] .recent-item .n-icon,
@@ -178,7 +190,7 @@ body .temp-header { background: var(--style-card-gradient); border-bottom: var(-
 body .workspace-state-notice,
 body .settings-navigation { border-radius: var(--theme-radius); box-shadow: var(--theme-shadow-sm); }
 body[data-style="glass"] .library-workspace,
-body[data-style="airy"] .library-workspace { padding: var(--surface-panel-inset); gap: var(--surface-panel-gap); }
+body[data-style="airy"] .library-workspace { padding: 4px var(--surface-panel-inset) var(--surface-panel-inset); }
 body[data-style="glass"] .library-workspace > .sidebar,
 body[data-style="glass"] .library-workspace > .editor-main,
 body[data-style="airy"] .library-workspace > .sidebar,
@@ -193,7 +205,7 @@ body[data-style="sharp"] .workspace-tabs { border-bottom: var(--theme-border-str
 // High contrast overrides apply after style and display settings.
 body[data-theme="contrast"][data-style],
 body[data-theme="contrast"] .display-preferences-editor {
-  --file-row-bg: #111111; --file-row-border: 1px solid #ffffff; --file-row-shadow: none;
+  --file-row-bg: #111111; --file-row-border: 1px solid #ffffff; --file-row-shadow: none; --file-row-hover-shadow: none;
   --document-quote-bg: #111111; --document-page-shadow: none;
 }
 body[data-theme="contrast"] .vditor-reset,

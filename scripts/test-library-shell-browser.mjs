@@ -31,7 +31,7 @@ try {
   checks.push('seven icons remain in one row and each navigation panel is reachable')
   await page.locator('.library-file-tree .n-tree-node-content').first().waitFor()
   await page.evaluate(() => {document.body.dataset.fileDensity='compact'; document.body.dataset.fileIconStyle='muted'})
-  await page.waitForFunction(() => getComputedStyle(document.querySelector('.library-file-tree .n-tree-node-content')).minHeight === '26px')
+  await page.waitForFunction(() => document.querySelector('.library-file-tree .n-tree-node').getBoundingClientRect().height === 26)
   const mutedIcon = await page.locator('.library-file-tree .n-tree-node-content__prefix > svg').first().evaluate(svg => {
     const probe = document.createElement('span'); probe.style.color='var(--theme-text-secondary)'; document.body.append(probe)
     const result = {color:getComputedStyle(svg).color,expected:getComputedStyle(probe).color}; probe.remove(); return result
@@ -65,10 +65,10 @@ try {
   await menu.waitFor({state:'hidden'})
   checks.push('document menu keeps modes, widths and export submenu')
   await page.locator('#vditor-lib [data-type="more"]').first().click()
-  for (const name of ['table','code','editor-bg','ai-assist','preview','edit-mode']) assert.equal(await page.locator(`#vditor-lib [data-type="${name}"]`).count() > 0,true)
+  for (const name of ['emoji','strike','line','table-chart','code-theme','editor-bg','ai-assist','preview','edit-mode']) assert.equal(await page.locator(`#vditor-lib .vditor-hint [data-type="${name}"]`).count() > 0,true)
   await page.screenshot({path:output+'/03-more-format.png'})
   await page.mouse.click(800,200)
-  checks.push('all secondary Vditor tools remain in native more menu')
+  checks.push('low-frequency Vditor tools remain in native more menu')
   const input = page.locator('.vditor-wysiwyg [contenteditable="true"]').first()
   await input.click(); await page.keyboard.press('Control+End'); await page.keyboard.type(' appended draft')
   await page.waitForFunction(() => window.shellAudit.store.tabs.find(t => t.id === window.shellAudit.store.activeTabId).isDirty)

@@ -11,6 +11,7 @@ import {
 } from '../config/themePresets'
 import { toCollectionRelativePath } from '../utils/savedCollections'
 import type { FileDisplayStyle } from '../config/fileTreeAppearance'
+import { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries } from '../utils/fileDisplayStyles'
 import { normalizeDisplayPreferences } from '../config/displayPreferences'
 import { belongsToLibrary, libraryTabsKey, sessionTabs } from '../utils/workSessions'
 
@@ -120,6 +121,10 @@ export const useAppStore = defineStore('app', {
     configReady: false,
   }),
   getters: {
+    fileDisplayStylesByPath: state => normalizeFileDisplayStyles(state.fileDisplayStyles),
+    fileDisplayStyleForPath(): (path: string) => FileDisplayStyle | undefined {
+      return path => this.fileDisplayStylesByPath[fileStylePathKey(path)]
+    },
     libraryPath: (state) => state.activeLibraryPath,
     currentLibraryName: (state) => {
       const lib = state.libraries.find(l => l.path === state.activeLibraryPath)
@@ -167,7 +172,7 @@ export const useAppStore = defineStore('app', {
           catch { this.aiCredentialStored = false }
           this.aiModel = config.aiModel || 'gpt-4o-mini'
           this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
-          this.fileDisplayStyles = config.fileDisplayStyles && typeof config.fileDisplayStyles === 'object' ? config.fileDisplayStyles : {}
+          this.fileDisplayStyles = normalizeFileDisplayStyles(config.fileDisplayStyles && typeof config.fileDisplayStyles === 'object' ? config.fileDisplayStyles : {})
 
           // 同步系统真实的自启状态，以系统为准
           try {
@@ -326,33 +331,34 @@ export const useAppStore = defineStore('app', {
     },
     async setFileDisplayStyle(path: string, style: FileDisplayStyle) {
       const previous = this.fileDisplayStyles
-      const next = { ...previous, [path]: style }
+      const next = { ...normalizeFileDisplayStyles(previous), [fileStylePathKey(path)]: style }
       await this.updateConfig({ fileDisplayStyles: next })
     },
     async clearFileDisplayStyle(path: string) {
-      if (!this.fileDisplayStyles[path]) return
+      const key = fileStylePathKey(path)
       const previous = this.fileDisplayStyles
-      const next = { ...previous }
-      delete next[path]
+      const next = normalizeFileDisplayStyles(previous)
+      if (!next[key]) return
+      delete next[key]
       await this.updateConfig({ fileDisplayStyles: next })
     },
     async moveFileDisplayStyles(oldPath: string, newPath: string) {
-      const entries = Object.entries(this.fileDisplayStyles)
-      const affected = entries.filter(([path]) => path === oldPath || path.startsWith(`${oldPath}\\`) || path.startsWith(`${oldPath}/`))
-      if (!affected.length) return
-      const previous = this.fileDisplayStyles
-      const next = { ...previous }
-      for (const [path, style] of affected) {
-        delete next[path]
-        next[`${newPath}${path.slice(oldPath.length)}`] = style
+      const oldKey = fileStylePathKey(oldPath)
+      if (!Object.keys(this.fileDisplayStyles).some(path => fileStylePathKey(path) === oldKey || fileStylePathKey(path).startsWith(`${oldKey}/`))) return
+      const next = moveFileDisplayStyleEntries(this.fileDisplayStyles, oldPath, newPath)
+      try { await this.updateConfig({ fileDisplayStyles: next }) }
+      catch (error) {
+        // The file has already moved; keep its appearance at the real location.
+        this.fileDisplayStyles = next
+        throw error
       }
-      await this.updateConfig({ fileDisplayStyles: next })
     },
     async removeFileDisplayStyles(paths: string[]) {
-      const next = { ...this.fileDisplayStyles }
+      const next = normalizeFileDisplayStyles(this.fileDisplayStyles)
+      const keys = paths.map(fileStylePathKey)
       let changed = false
       for (const candidate of Object.keys(next)) {
-        if (paths.some(path => candidate === path || candidate.startsWith(`${path}\\`) || candidate.startsWith(`${path}/`))) {
+        if (keys.some(path => candidate === path || candidate.startsWith(`${path}/`))) {
           delete next[candidate]
           changed = true
         }

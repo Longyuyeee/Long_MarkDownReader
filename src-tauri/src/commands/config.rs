@@ -55,6 +55,10 @@ pub struct FileDisplayStyle {
     pub background_color: String,
     pub text_color: String,
     pub icon: String,
+    pub selection_style: String,
+    pub selected_background_color: String,
+    pub selected_text_color: String,
+    pub selected_accent_color: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -281,6 +285,26 @@ fn validate_file_display_styles(styles: &HashMap<String, FileDisplayStyle>) -> R
         "check",
         "heart",
         "archive",
+        "note",
+        "book",
+        "pen",
+        "tasks",
+        "calendar",
+        "clock",
+        "target",
+        "rocket",
+        "bell",
+        "pin",
+        "tag",
+        "coffee",
+        "study",
+        "code",
+        "terminal",
+        "database",
+        "image",
+        "music",
+        "link",
+        "users",
     ];
     let valid_color = |value: &str| {
         value.is_empty()
@@ -297,11 +321,23 @@ fn validate_file_display_styles(styles: &HashMap<String, FileDisplayStyle>) -> R
         if path.trim().is_empty() || path.chars().count() > 4096 {
             return Err("文件显示标记路径为空或过长".into());
         }
-        if !valid_color(&style.background_color) || !valid_color(&style.text_color) {
+        if [
+            &style.background_color,
+            &style.text_color,
+            &style.selected_background_color,
+            &style.selected_text_color,
+            &style.selected_accent_color,
+        ]
+        .iter()
+        .any(|color| !valid_color(color))
+        {
             return Err("文件显示标记颜色必须使用 #RRGGBB".into());
         }
         if !ICONS.contains(&style.icon.as_str()) {
             return Err("文件显示标记图标无效".into());
+        }
+        if !["", "fill", "outline", "marker"].contains(&style.selection_style.as_str()) {
+            return Err("文件选中高亮样式无效".into());
         }
     }
     Ok(())
@@ -619,15 +655,37 @@ mod tests {
 
     #[test]
     fn file_display_styles_accept_bounded_markers_and_reject_invalid_values() {
-        let valid = HashMap::from([(
+        let mut valid = HashMap::from([(
             r"C:\Vault\plan.md".into(),
             FileDisplayStyle {
                 background_color: "#fff1a8".into(),
                 text_color: "#253041".into(),
                 icon: "flag".into(),
+                selection_style: "outline".into(),
+                selected_background_color: "#243e59".into(),
+                selected_text_color: "#f8fafc".into(),
+                selected_accent_color: "#4d8fde".into(),
+                ..Default::default()
             },
         )]);
         assert!(validate_file_display_styles(&valid).is_ok());
+        let json = serde_json::to_string(&valid).unwrap();
+        let restored: HashMap<String, FileDisplayStyle> = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored[r"C:\Vault\plan.md"].selection_style, "outline");
+        assert_eq!(
+            restored[r"C:\Vault\plan.md"].selected_accent_color,
+            "#4d8fde"
+        );
+        for icon in ["rocket", "study", "calendar", "users", "terminal"] {
+            valid.get_mut(r"C:\Vault\plan.md").unwrap().icon = icon.into();
+            assert!(validate_file_display_styles(&valid).is_ok());
+        }
+        let legacy: FileDisplayStyle = serde_json::from_str(
+            r##"{"backgroundColor":"#ffe0eb","textColor":"","icon":"heart"}"##,
+        )
+        .unwrap();
+        assert!(legacy.selection_style.is_empty());
+        assert!(legacy.selected_background_color.is_empty());
 
         let mut invalid_color = valid.clone();
         invalid_color

@@ -110,13 +110,13 @@ export const themePresetGroups = [
   {
     id: 'release',
     label: '专业与场景预设',
-    description: '经过契约门禁的核心预设与首批场景化方案',
+    description: '配色、界面质感与动效的一键组合，应用后仍可按偏好调整',
     presets: releaseThemePresets,
   },
   {
     id: 'legacy',
     label: '更多外观组合',
-    description: '保留已有组合与配置兼容，可继续按偏好使用',
+    description: '更多色彩与质感组合，找到适合自己的工作氛围',
     presets: legacyThemePresets,
   },
 ] as const

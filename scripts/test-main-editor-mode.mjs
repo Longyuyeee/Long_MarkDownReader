@@ -8,6 +8,7 @@ import { test } from 'node:test'
 const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
 function harness(viewSource = source) {
   const tab = { id: 'note.md', content: '会议记录', isDirty: false }
+  const shortcutHost = {}
   const ticks = [], polls = [], writes = []
   const ctx = vm.createContext({
     tabs: { value: [tab] }, activeTabId: { value: tab.id },
@@ -15,6 +16,7 @@ function harness(viewSource = source) {
     vditor: { getValue: () => tab.content, destroy() {} }, isVditorReady: true,
     editorLoadGeneration: 0, searchMatchCount: { value: null }, editorLoading: { value: false },
     editorModeChangeBusy: { value: false }, message: { error() {} },
+    documentShortcutHost: { value: shortcutHost },
     cleanupEditorListeners() {}, nextTick: callback => ticks.push(callback),
     setInterval: callback => polls.push(callback), clearInterval() {},
     initVditor: () => {
@@ -28,12 +30,13 @@ function harness(viewSource = source) {
   vm.runInContext(ts.transpileModule(viewSource.slice(start, end) + '\nglobalThis.switchMode = switchEditorMode', {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
   }).outputText, ctx)
-  return { ctx, tab, ticks, polls, writes }
+  return { ctx, tab, ticks, polls, writes, shortcutHost }
 }
 
 test('clean mode switch uses initialization without a second unguarded write', async () => {
   const h = harness(); await h.ctx.switchMode('sv'); h.ticks[0]()
   assert.equal(h.polls.length, 0); assert.deepEqual(h.writes, []); assert.equal(h.tab.isDirty, false)
+  assert.equal(h.ctx.documentShortcutHost.value, null)
 })
 test('latest editor text is cached and genuinely changed text stays dirty', async () => {
   const h = harness(); h.ctx.vditor.getValue = () => '刚输入但还未同步的文字'
@@ -68,6 +71,7 @@ test('failed preference save leaves the existing editor and draft intact', async
   await h.ctx.switchMode('sv')
   assert.equal(h.ctx.vditor, editor); assert.equal(h.tab.content, '会议记录'); assert.equal(h.tab.isDirty, false)
   assert.equal(h.ticks.length, 0); assert.equal(h.ctx.editorModeChangeBusy.value, false)
+  assert.equal(h.ctx.documentShortcutHost.value, h.shortcutHost)
   assert.match(messages[0], /无法切换编辑模式/)
 })
 
@@ -80,6 +84,7 @@ test('leaving the requested document during preference save does not destroy the
   h.ctx.vditor = nextEditor; h.ctx.activeTabId.value = 'next.md'
   resolve(); await change
   assert.equal(h.ctx.vditor, nextEditor); assert.equal(h.ticks.length, 0)
+  assert.equal(h.ctx.documentShortcutHost.value, h.shortcutHost)
 })
 test('old implementation reproduces a stale replay and dirty input after initialization', () => {
   const old = execFileSync('git', ['show', '2f2c80e0:src/views/LibraryMode.vue'], { encoding: 'utf8' })

@@ -1,9 +1,11 @@
 {
   "checks": [
     "520px cap on 1600px window",
-    "Color/icon preview and selected state",
+    "30 labelled icon choices",
+    "Normal/selected previews with exact custom colors",
     "Cancel without persistence",
-    "Save and reset",
+    "Save, canonical-path lookup, reopen and reset",
+    "Fill, outline and side-marker modes preserve their independent choices",
     "360x520 scrollable content and reachable footer"
   ],
   "errors": [],

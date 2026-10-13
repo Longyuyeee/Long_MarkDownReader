@@ -1,0 +1,117 @@
+{
+  "checks": [
+    "Eight actual presets apply without resetting document/file preferences",
+    "Six distinct workspace surface treatments",
+    "Default sidebar statistics remain readable",
+    "Theme cards apply by keyboard and expose the active state",
+    "Theme changes do not write documents or send AI requests"
+  ],
+  "surfaces": [
+    {
+      "id": "forest-green",
+      "style": "soft",
+      "theme": "green",
+      "ground": "color(srgb 0.864706 0.925882 0.889412) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.870118 0.933529 0.902235) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "color(srgb 0.922824 0.960588 0.940118) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "12px",
+      "tools": "color(srgb 0.940392 0.969608 0.952745) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "color(srgb 0.0901961 0.129412 0.109804 / 0.08) 0px 5px 16px 0px",
+      "selectedIcon": "rgb(27, 138, 90)",
+      "countsClipped": false
+    },
+    {
+      "id": "tech-blue",
+      "style": "neo",
+      "theme": "blue",
+      "ground": "color(srgb 0.836863 0.903059 0.968314) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.833725 0.905569 0.976157) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "color(srgb 0.90902 0.948863 0.988078) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "tools": "color(srgb 0.899608 0.943451 0.986588) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "none",
+      "selectedIcon": "rgb(11, 115, 217)",
+      "countsClipped": false
+    },
+    {
+      "id": "ocean-glass",
+      "style": "glass",
+      "theme": "blue",
+      "ground": "rgba(0, 0, 0, 0) linear-gradient(130deg, color(srgb 0.782745 0.872235 0.960314), rgb(241, 246, 251) 55%, color(srgb 0.836863 0.903059 0.968314)) repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.833725 0.905569 0.976157) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "rgba(0, 0, 0, 0) linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.8) 100%) repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "14px",
+      "tools": "color(srgb 0.918431 0.954274 0.989569) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "rgba(20, 24, 32, 0.08) 0px 10px 25px 0px, rgba(20, 24, 32, 0.05) 0px 4px 10px 0px, rgba(255, 255, 255, 0.3) 0px 1px 0px 0px inset",
+      "selectedIcon": "rgb(11, 115, 217)",
+      "countsClipped": false
+    },
+    {
+      "id": "cream-airy",
+      "style": "airy",
+      "theme": "cream",
+      "ground": "color(srgb 0.940196 0.927255 0.905882) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.989216 0.937373 0.909255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "color(srgb 0.994118 0.962274 0.943373) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "10px",
+      "tools": "color(srgb 0.996078 0.972235 0.95702) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "rgba(30, 41, 59, 0.04) 0px 12px 32px 0px, rgba(30, 41, 59, 0.02) 0px 4px 8px 0px",
+      "selectedIcon": "rgb(230, 126, 77)",
+      "countsClipped": false
+    },
+    {
+      "id": "professional-light",
+      "style": "minimal",
+      "theme": "white",
+      "ground": "rgb(241, 243, 246) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.881098 0.907765 0.961255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "rgb(247, 248, 250) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "tools": "rgb(247, 248, 250) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "none",
+      "selectedIcon": "rgb(37, 99, 235)",
+      "countsClipped": false
+    },
+    {
+      "id": "sharp-business",
+      "style": "sharp",
+      "theme": "white",
+      "ground": "rgb(241, 243, 246) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.897412 0.926588 0.990588) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "tools": "color(srgb 0.940157 0.957176 0.99451) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "none",
+      "selectedIcon": "rgb(37, 99, 235)",
+      "countsClipped": false
+    },
+    {
+      "id": "professional-dark",
+      "style": "minimal",
+      "theme": "dark",
+      "ground": "rgb(32, 36, 43) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "color(srgb 0.146824 0.197961 0.19749) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "rgb(17, 19, 22) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "tools": "rgb(17, 19, 22) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "none",
+      "selectedIcon": "rgb(100, 217, 135)",
+      "countsClipped": false
+    },
+    {
+      "id": "high-contrast",
+      "style": "sharp",
+      "theme": "contrast",
+      "ground": "rgb(0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "rail": "rgb(0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "sidebar": "rgb(17, 17, 17) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "tools": "rgb(0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "shadow": "none",
+      "selectedIcon": "rgb(255, 212, 0)",
+      "countsClipped": false
+    }
+  ],
+  "errors": [],
+  "scope": "Production App, LibraryMode, Vditor and SettingsView with mock native IPC; actual page renders."
+}

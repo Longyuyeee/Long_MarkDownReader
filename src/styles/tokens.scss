@@ -114,6 +114,22 @@ body {
   transition-delay: 0s;
 }
 
+.app-tooltip-surface[data-dismissed='true'],
+body[data-app-popup-open='true'] .app-tooltip-surface,
+body[data-app-popup-open='true'] .n-tooltip,
+body:has(.drag-ghost) .app-tooltip-surface,
+body:has(.drag-ghost) .n-tooltip {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+body[data-app-popup-open='true'] .vditor-tooltipped::before,
+body[data-app-popup-open='true'] .vditor-tooltipped::after {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-tooltip-surface {
     transition: none;

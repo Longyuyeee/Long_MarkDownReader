@@ -1,0 +1,495 @@
+{
+  "checks": [
+    "Favorite shortcut updates the existing persistent favorite list in both directions",
+    "Preview and return work in WYSIWYG, source and IR after editor rebuilds, retaining unsaved content",
+    "Native preview menu and new shortcut share their active state",
+    "AI shortcut preserves the selected text and opens the existing actions without sending a request",
+    "Focus has a visible exit and returns to the same draft",
+    "Six styles at 1280, 1024, 480 and 320 keep frequent tools and named document shortcuts visible without horizontal clipping",
+    "Main tabs occupy 35–36px with at most a 4px gap below; labels and button click areas remain readable and reachable across all six styles and four window widths"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "editorWidth": 928,
+      "toolbarHeight": 36,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "soft",
+      "width": 1024,
+      "editorWidth": 672,
+      "toolbarHeight": 71,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "editorWidth": 472,
+      "toolbarHeight": 106,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "soft",
+      "width": 320,
+      "editorWidth": 312,
+      "toolbarHeight": 141,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "editorWidth": 951,
+      "toolbarHeight": 36,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "neo",
+      "width": 1024,
+      "editorWidth": 695,
+      "toolbarHeight": 71,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "editorWidth": 480,
+      "toolbarHeight": 106,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "neo",
+      "width": 320,
+      "editorWidth": 320,
+      "toolbarHeight": 141,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "editorWidth": 928,
+      "toolbarHeight": 36,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "glass",
+      "width": 1024,
+      "editorWidth": 672,
+      "toolbarHeight": 71,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "editorWidth": 464,
+      "toolbarHeight": 106,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "glass",
+      "width": 320,
+      "editorWidth": 304,
+      "toolbarHeight": 176,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "editorWidth": 924,
+      "toolbarHeight": 36,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "airy",
+      "width": 1024,
+      "editorWidth": 668,
+      "toolbarHeight": 71,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "editorWidth": 460,
+      "toolbarHeight": 106,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "airy",
+      "width": 320,
+      "editorWidth": 300,
+      "toolbarHeight": 176,
+      "tabRowHeight": 35,
+      "topGap": 4,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "editorWidth": 951,
+      "toolbarHeight": 36,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "minimal",
+      "width": 1024,
+      "editorWidth": 695,
+      "toolbarHeight": 71,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "editorWidth": 480,
+      "toolbarHeight": 106,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "minimal",
+      "width": 320,
+      "editorWidth": 320,
+      "toolbarHeight": 141,
+      "tabRowHeight": 35,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "editorWidth": 951,
+      "toolbarHeight": 36,
+      "tabRowHeight": 36,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "sharp",
+      "width": 1024,
+      "editorWidth": 695,
+      "toolbarHeight": 71,
+      "tabRowHeight": 36,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "editorWidth": 480,
+      "toolbarHeight": 106,
+      "tabRowHeight": 36,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    },
+    {
+      "style": "sharp",
+      "width": 320,
+      "editorWidth": 320,
+      "toolbarHeight": 141,
+      "tabRowHeight": 36,
+      "topGap": 0,
+      "tabHeight": 28,
+      "shellButtonHeights": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "closeButtonHeight": 20,
+      "shellObscured": [],
+      "outside": [],
+      "obscured": [],
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "scope": "Production App/LibraryMode/Vditor with mock native IPC. No native save/export acceptance."
+}
