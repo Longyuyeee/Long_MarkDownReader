@@ -19,6 +19,22 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     return [name, JSON.parse(bytes)]
   }))
   const { workspace, routes, search, version, stability } = reports
+  if (manifest.appVersion === '1.1.0') {
+    const workflow = reports.workflow
+    assert.equal(workflow.status, 'passed')
+    assert.equal(workflow.appVersion, manifest.appVersion)
+    assert.equal(workflow.sourceCommit, manifest.sourceCommit)
+    assert.equal(workflow.installerSha256, manifest.artifacts.find(a => a.target === 'nsis').sha256)
+    assert.equal(workflow.evidenceLevel, 'installed-tauri-ipc-and-disk')
+    assert.equal(workflow.sourceUserContentIncluded, false)
+    assert.deepEqual(workflow.checks.map(c=>[c.id,c.status]), [
+      'smart-collection-live-directory-tag-filter', 'quick-note-direct-selected-directory',
+      'quick-note-idempotent-retry', 'smart-collection-reflects-new-save',
+      'history-copy-preserves-original', 'history-prepare-protects-draft',
+      'stale-history-restore-is-rejected', 'installed-main-editor-layout',
+    ].map(id=>[id,'passed']))
+    assert.ok(workflow.layout.editor.height > 150 && workflow.layout.nav.width > 0 && workflow.layout.tabs.height > 0 && !workflow.layout.errors)
+  }
   assert.equal(workspace.status, 'passed')
   assert.equal(workspace.appVersion, manifest.appVersion)
   assert.equal(workspace.installerSha256, manifest.artifacts.find(a => a.target === 'nsis').sha256)
