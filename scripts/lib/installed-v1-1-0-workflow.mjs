@@ -22,7 +22,9 @@ export async function runInstalledV110Workflow({ evaluate, navigate, waitFor, ca
     check('smart-collection-live-directory-tag-filter', initial.results.length === 1 && initial.results[0].path.endsWith('project.md'))
     const args = { libraryRoot: library, targetDir: dir, operationId: '1123456789abcdef0123456789abcdef', content: 'Meeting note #project' }
     const saved = await invoke('save_quick_note', args)
-    check('quick-note-direct-selected-directory', path.dirname(saved) === dir && await fs.readFile(saved, 'utf8') === args.content)
+    // Rust canonicalizes Windows paths with the extended-length prefix. Compare
+    // actual directories on disk, not two different spellings of the same path.
+    check('quick-note-direct-selected-directory', await fs.realpath(path.dirname(saved)) === await fs.realpath(dir) && await fs.readFile(saved, 'utf8') === args.content)
     check('quick-note-idempotent-retry', await invoke('save_quick_note', args) === saved)
     check('smart-collection-reflects-new-save', (await search()).results.length === 2)
     await invoke('save_history_version', { libraryRoot: library, path: file, content: 'Historical project #project', maxCount: 20 })
@@ -39,7 +41,7 @@ export async function runInstalledV110Workflow({ evaluate, navigate, waitFor, ca
     check('stale-history-restore-is-rejected', await fs.readFile(file, 'utf8') === 'External project modification #project')
     await navigate('#/library?path=' + encodeURIComponent(file), '.library-mode', 'installed 1.1.0 document layout')
     await waitFor(`document.querySelector('.vditor-wysiwyg')?.innerText.includes('External project modification')`, 'real installed Markdown content')
-    const rects = await evaluate(`(() => { const q=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height}}; return {editor:q('.vditor'),nav:q('.app-navigation'),tabs:q('.workspace-tabs'),errors:!!document.querySelector('.route-error-fallback')} })()`)
+    const rects = await evaluate(`(() => { const q=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height}}; return {editor:q('.vditor'),nav:q('.app-navigation'),tabs:q('.workspace-tabs'),errors:!!document.querySelector('.workspace-error-state, .route-error-fallback')} })()`)
     check('installed-main-editor-layout', rects.editor?.height > 150 && rects.nav?.width > 0 && rects.tabs?.height > 0 && !rects.errors)
     report.layout = rects
     await capture('installed-v110-workflow.jpg')
