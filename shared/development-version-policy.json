@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-28-v1.1.0-version-candidate",
-  "binaryVersionTransition": "v1.1.0-quality-gate-pending",
-  "displayLabel": "v1.1.0 界面与工作流升级候选 · 当前公开 v1.0.26",
+  "binaryVersionTransition": "v1.1.0-release-ready",
+  "displayLabel": "v1.1.0 发布就绪 · 当前公开 v1.0.26",
   "activeSlice": {
     "id": "v1.1.0-ui-and-workflow",
-    "status": "candidate-validation-pending",
+    "status": "ready-to-publish-same-installers-verified",
     "document": "docs/V1_1_0_Unsigned_Community_Release_Audit_2026-10-13.md"
   }
 }

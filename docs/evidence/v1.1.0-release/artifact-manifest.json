@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.1.0",
+  "status": "ready-for-community-release-same-installers-verified",
+  "appVersion": "1.1.0",
+  "sourceVersion": "1.1.0",
+  "sourceCommit": "a65c534b261e42e22f62061fa5fc086325ffe030",
+  "hostedRunId": 38425394753,
+  "artifactBuildRunId": 38418003190,
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.1.0_x64_zh-CN.msi",
+      "sizeBytes": 75849728,
+      "sha256": "c16ceabc9861eee788ff158b6561336ca23211caf4ab528849fac55e2b0adcb9",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.0_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.1.0_x64-setup.exe",
+      "sizeBytes": 67124782,
+      "sha256": "cbd10a7c8c5c02209b807bdf3cafee3a2b419b8f25eae22a4f7fdd168b5cab62",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.0_x64-setup.exe"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 190,
+    "sha256": "b47dc6553c04660bc0914ce748f6d965507b821e80d4f566e0cc270d269e2d83"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 38418003190,
+    "independentQualityGateRunId": 38417757389
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "workspace": {
+        "path": "docs/evidence/v1-1-0-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "98cf6d8a585ee4f47f19dfabb13206c594a5b29ca0f3e583a21a77360638d7bf"
+      },
+      "routes": {
+        "path": "docs/evidence/v1-1-0-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "a5c750201ee985a87bb745b6271f3dfdd53f2349ab72e8994fb90daf0a9449da"
+      },
+      "version": {
+        "path": "docs/evidence/v1-1-0-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "45c140ebbea2069a9ddecd2925bd21472c1ea2c6d4c769b3f1c08c8a162ebed0"
+      },
+      "workflow": {
+        "path": "docs/evidence/v1-1-0-candidate-lifecycle/installed-v110-workflow.json",
+        "sha256": "0987c6585a65aef75b1e85635a85ce3d72ec6489a01c846f2deb4dec02e2a576"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 38425394753,
+    "sourceCommit": "a65c534b261e42e22f62061fa5fc086325ffe030",
+    "evidenceRoot": "docs/evidence/v1-1-0-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.1.0-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "workflowChecksPassed": 8,
+    "versionChecksPassed": 4,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false
+}

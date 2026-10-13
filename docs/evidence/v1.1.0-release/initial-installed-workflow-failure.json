@@ -1,0 +1,35 @@
+{
+  "appVersion": "1.1.0",
+  "sourceCommit": "a65c534b261e42e22f62061fa5fc086325ffe030",
+  "installerSha256": "cbd10a7c8c5c02209b807bdf3cafee3a2b419b8f25eae22a4f7fdd168b5cab62",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "smart-collection-live-directory-tag-filter",
+      "status": "passed"
+    },
+    {
+      "id": "quick-note-direct-selected-directory",
+      "status": "passed"
+    },
+    {
+      "id": "quick-note-idempotent-retry",
+      "status": "passed"
+    },
+    {
+      "id": "smart-collection-reflects-new-save",
+      "status": "passed"
+    },
+    {
+      "id": "history-copy-preserves-original",
+      "status": "passed"
+    },
+    {
+      "id": "history-prepare-protects-draft",
+      "status": "passed"
+    }
+  ],
+  "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /变化/. Input:\n\n'Error: Uncaught (in promise)'\n"
+}
