@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.26"><img src="https://img.shields.io/badge/Stable-v1.0.26-cca43b" alt="v1.0.26 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/Stable-v1.1.0-cca43b" alt="v1.1.0 stable"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/Formats-43-0f766e" alt="43 registered formats">
   <img src="https://img.shields.io/badge/Local--first-Yes-16a34a" alt="Local-first">
@@ -26,35 +26,37 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/readme/workspace-markdown-dark.png" width="100%" alt="Long编辑深色主题主工作区，包含资料库文件树、多文档标签和 Markdown 所见即所得编辑器">
+  <img src="docs/evidence/v1-1-0-candidate-lifecycle/installed-version-library.jpg" width="100%" alt="Long编辑 v1.1.0 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
-> 截图来自真实安装版与多格式测试资料库。截图中的测试库名称、文件名和示例内容仅用于功能验证，不代表当前软件版本；当前公开版本以本页徽章与 Release 为准。
+> 主图与图谱来自 v1.1.0 真实安装版，其余多格式截图保留历史安装验收场景；测试库名称和文件名不代表版本，当前公开版本以本页徽章与 Release 为准。
 
 ## 下载
 
-当前公开稳定版为 **v1.0.26**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.0**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.0.26_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.26/LongEdit_1.0.26_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.0.26_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.0.26/LongEdit_1.0.26_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.0.26](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.0.26) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.0_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.0/LongEdit_1.1.0_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.0_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.0/LongEdit_1.1.0_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.0](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.0) | Release Notes 与 SHA-256 |
 
 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 `SHA256SUMS.txt` 核对文件。
 
 ```text
-34ffc2e9ad792c497f67647262d49d5770dabe3523f1409739cc63f1e0f2c500  LongEdit_1.0.26_x64_zh-CN.msi
-05bc2988746a998dda98de9bef61701c36ecf5d062ab7e808a709733b6d4c9d9  LongEdit_1.0.26_x64-setup.exe
+c16ceabc9861eee788ff158b6561336ca23211caf4ab528849fac55e2b0adcb9  LongEdit_1.1.0_x64_zh-CN.msi
+cbd10a7c8c5c02209b807bdf3cafee3a2b419b8f25eae22a4f7fdd168b5cab62  LongEdit_1.1.0_x64-setup.exe
 ```
 
 应用可每 24 小时检查更新，也可在设置中手动检查；自动更新始终需要确认，并校验安装包大小与 SHA-256。v1.0.4 及更早版本需先手动安装当前版本。
 
 ## 搜索与参考
 
+快速笔记可直接选择资料库、保存位置和模板；工作台可命名保存工作现场并继续工作；智能集合按目录、标签、时间和关键词动态查找资料。Markdown 历史可先对比差异，再恢复为副本或在保护当前草稿后恢复。
+
 点击搜索结果直接在主编辑区打开；需要对照资料时，选择“在侧边参考”。打开自己的 Markdown 笔记并选定插入位置后，可将参考选文及来源直接插入，支持撤销，仍需手动保存。窄窗口自动改为上下布局。
 
-参考只读，展示磁盘上的部分文字；PDF 参考为提取文字，完整内容可在主编辑区打开。支持手动刷新和失效来源重新关联；返回状态及参考暂不跨重启保存，不自动跟踪全库重命名。
+参考只读，展示磁盘上的部分文字；PDF 参考为提取文字，完整内容可在主编辑区打开。支持手动刷新和失效来源重新关联；阅读位置、搜索条件和参考资料身份按资料库记住，重启后重新读取内容，不保存参考选文，不自动跟踪全库重命名。
 
 ## 真实界面
 
@@ -81,7 +83,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/images/readme/knowledge-graph-dark.png" width="100%" alt="Long编辑知识图谱，包含关系网络、节点详情、布局主题、导出和画布操作">
+  <img src="docs/evidence/v1-1-0-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.1.0 知识图谱与关系健康面板">
 </p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
@@ -206,6 +208,6 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 ## 更新摘要
 
-**v1.1.0 发布准备中**：全界面改版、工作会话、智能集合、Markdown 历史差异恢复与交互稳定性修复。[发布说明](docs/RELEASE_NOTES_v1.1.0.md)
+**v1.1.0**：全界面改版、工作会话、智能集合、Markdown 历史差异恢复与交互稳定性修复。[发布说明](docs/RELEASE_NOTES_v1.1.0.md)
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
