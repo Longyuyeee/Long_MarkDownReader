@@ -2,6 +2,11 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+export async function sameDiskDirectory(left, right) {
+  const [a, b] = await Promise.all([fs.stat(left, { bigint: true }), fs.stat(right, { bigint: true })])
+  return a.isDirectory() && b.isDirectory() && a.ino !== 0n && a.dev === b.dev && a.ino === b.ino
+}
+
 // Real packaged WebView2 IPC and files in the disposable install runner only.
 export async function runInstalledV110Workflow({ evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.1.0') throw Error('Disposable 1.1.0 installation required')
@@ -24,7 +29,7 @@ export async function runInstalledV110Workflow({ evaluate, navigate, waitFor, ca
     const saved = await invoke('save_quick_note', args)
     // Rust canonicalizes Windows paths with the extended-length prefix. Compare
     // actual directories on disk, not two different spellings of the same path.
-    check('quick-note-direct-selected-directory', await fs.realpath(path.dirname(saved)) === await fs.realpath(dir) && await fs.readFile(saved, 'utf8') === args.content)
+    check('quick-note-direct-selected-directory', await sameDiskDirectory(path.dirname(saved), dir) && await fs.readFile(saved, 'utf8') === args.content)
     check('quick-note-idempotent-retry', await invoke('save_quick_note', args) === saved)
     check('smart-collection-reflects-new-save', (await search()).results.length === 2)
     await invoke('save_history_version', { libraryRoot: library, path: file, content: 'Historical project #project', maxCount: 20 })
