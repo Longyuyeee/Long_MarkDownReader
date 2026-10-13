@@ -11,7 +11,13 @@ export async function sameDiskDirectory(left, right) {
 export async function runInstalledV110Workflow({ evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.1.0') throw Error('Disposable 1.1.0 installation required')
   const report = { appVersion, sourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
-  const invoke = (command, args = {}) => evaluate(`window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})`)
+  const invoke = async (command, args = {}) => {
+    // CDP reduces a rejected string promise to "Uncaught (in promise)" unless
+    // the actual native reason is caught and serialized in the page context.
+    const result = await evaluate(`(async () => { try { return { ok: true, value: await window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)}) }; } catch (error) { return { ok: false, error: String(error) }; } })()`)
+    if (!result.ok) throw Error(result.error)
+    return result.value
+  }
   const check = (id, condition) => { assert.ok(condition, id); report.checks.push({ id, status: 'passed' }) }
   const dir = path.join(library, 'release-v110-workflow')
   const file = path.join(dir, 'project.md')
@@ -42,7 +48,9 @@ export async function runInstalledV110Workflow({ evaluate, navigate, waitFor, ca
     const recovered = await invoke('prepare_history_restore', { ...restore, currentDraft: draft, maxCount: 20 })
     check('history-prepare-protects-draft', recovered === 'Historical project #project' && (await invoke('list_history', { libraryRoot: library, path: file })).some(([, content]) => content === draft))
     await fs.writeFile(file, 'External project modification #project')
+    const beforeRejectedRestore = await fs.readdir(dir)
     await assert.rejects(invoke('restore_history_copy', restore), /变化/)
+    assert.deepEqual(await fs.readdir(dir), beforeRejectedRestore, 'stale restore must not create an output file')
     check('stale-history-restore-is-rejected', await fs.readFile(file, 'utf8') === 'External project modification #project')
     await navigate('#/library?path=' + encodeURIComponent(file), '.library-mode', 'installed 1.1.0 document layout')
     await waitFor(`document.querySelector('.vditor-wysiwyg')?.innerText.includes('External project modification')`, 'real installed Markdown content')
