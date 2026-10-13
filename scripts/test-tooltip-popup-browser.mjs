@@ -22,7 +22,8 @@ try {
   const create = page.getByTestId('library-create-menu')
   const assertHidden = async () => {
     assert.equal(await tooltip.getAttribute('aria-hidden'), 'true')
-    assert.equal(await tooltip.evaluate(element => getComputedStyle(element).visibility), 'hidden')
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('#longedit-app-tooltip')).visibility === 'hidden')
+    assert.equal(await tooltip.evaluate(element => getComputedStyle(element).opacity), '0')
   }
   const waitClosed = () => page.waitForFunction(() => document.body.dataset.appPopupOpen === 'false')
   const assertNoDocumentHint = async target => {
@@ -63,7 +64,7 @@ try {
     await waitClosed()
     await page.mouse.move(800, 500)
   }
-  checks.push('Hover hints remain available; light and dark dropdowns dismiss them immediately and keep them hidden while open')
+  checks.push('Hover hints remain available; light and dark dropdowns start dismissing them on activation and keep them hidden while open')
   checks.push('Active and inactive document tabs and the current filename show no hover popup in light and dark styles')
 
   // Click before the delayed hover hint has fired, then remain on the trigger.
@@ -139,7 +140,8 @@ try {
   await more.hover()
   await more.click()
   await page.waitForFunction(() => document.body.dataset.appPopupOpen === 'true')
-  assert.equal(await more.evaluate(element => getComputedStyle(element, '::after').display), 'none')
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('#vditor-lib [data-type="more"]'), '::after').visibility === 'hidden')
+  assert.equal(await more.evaluate(element => getComputedStyle(element, '::after').opacity), '0')
   await page.screenshot({ path: `${output}/format-menu.png`, animations: 'disabled' })
   await more.click()
   await waitClosed()

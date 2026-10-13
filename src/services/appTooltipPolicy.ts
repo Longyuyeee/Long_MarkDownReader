@@ -71,8 +71,6 @@ export const installAppTooltipPolicy = () => {
 
   const dismiss = () => {
     hide()
-    // Menus should be readable from their first frame, without a fading bubble.
-    host.dataset.dismissed = 'true'
   }
 
   const refreshPopupState = () => {
@@ -125,7 +123,6 @@ export const installAppTooltipPolicy = () => {
     activeTarget = target
     activeDescribedBy = target.getAttribute('aria-describedby')
     host.textContent = text
-    delete host.dataset.dismissed
     host.dataset.visible = 'true'
     host.setAttribute('aria-hidden', 'false')
     const describedBy = activeDescribedBy?.split(/\s+/).filter(Boolean) || []

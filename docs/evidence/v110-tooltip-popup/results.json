@@ -1,6 +1,6 @@
 {
   "checks": [
-    "Hover hints remain available; light and dark dropdowns dismiss them immediately and keep them hidden while open",
+    "Hover hints remain available; light and dark dropdowns start dismissing them on activation and keep them hidden while open",
     "Active and inactive document tabs and the current filename show no hover popup in light and dark styles",
     "A quick click cancels pending hover/focus hint timers",
     "Keyboard activation dismisses the hint and restores the original accessible description",
