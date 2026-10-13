@@ -48,9 +48,11 @@ requireTokens(app, 'Library navigation guard', [
 
 const graph = read('src/components/GraphView.vue')
 requireTokens(graph, 'Graph return context', [
-  '@back="returnToLibrary"',
-  '@click="returnToLibrary"',
+  'returnToLibrary',
   'managedFileLocation(store.activeTabId)',
+])
+requireTokens(read('src/components/AppNavigation.vue'), 'Global library tab', [
+  "{ name: 'LibraryMode', label: '资料库'", ':to="{ name: item.name }"',
 ])
 
 const library = read('src/views/LibraryMode.vue')

@@ -14,7 +14,8 @@ const audit = read('docs/P1_Final_Capability_Closure_Audit_2026-08-16.md')
 const plan = read('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md')
 const handoff = read('docs/Development_Handoff.md')
 
-if (closure.stage !== 'P1-FINAL' || closure.status !== 'accepted-bounded-ready-for-patch-release' || closure.appVersion !== packageJson.version || closure.releaseCandidate !== false || closure.nextStage !== `V${packageJson.version}-UNSIGNED-PATCH-RELEASE`) fail('P1 final identity is stale')
+const releaseStage = packageJson.version === '1.1.0' ? 'V1.1.0-UNSIGNED-RELEASE' : `V${packageJson.version}-UNSIGNED-PATCH-RELEASE`
+if (closure.stage !== 'P1-FINAL' || closure.status !== 'accepted-bounded-ready-for-patch-release' || closure.appVersion !== packageJson.version || closure.releaseCandidate !== false || closure.nextStage !== releaseStage) fail('P1 final identity is stale')
 const readiness = release.formats.reduce((counts, item) => ({ ...counts, [item.readiness]: (counts[item.readiness] || 0) + 1 }), {})
 const extensionCount = registry.formats.reduce((sum, item) => sum + item.extensions.length, 0)
 const expected = { registeredFormats: registry.formats.length, registeredExtensions: extensionCount, verifiedFormats: readiness.verified, limitedFormats: readiness['verified-with-limitations'], externalDependencyFormats: readiness['external-dependency'], releaseProfiles: release.profiles.length }

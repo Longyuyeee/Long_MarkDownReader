@@ -206,6 +206,6 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 ## 更新摘要
 
-**v1.0.26**：搜索结果主区打开、显式侧边参考、摘录直插与撤销、来源定位和失效关联修复。[发布说明](docs/RELEASE_NOTES_v1.0.26.md)
+**v1.1.0 发布准备中**：全界面改版、工作会话、智能集合、Markdown 历史差异恢复与交互稳定性修复。[发布说明](docs/RELEASE_NOTES_v1.1.0.md)
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。

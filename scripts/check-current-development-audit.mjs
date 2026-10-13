@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 execFileSync(process.execPath, ['--test', 'scripts/test-v126-version-transition.mjs'], { stdio: 'inherit' })
+if (JSON.parse(fs.readFileSync('package.json', 'utf8')).version === '1.1.0') {
+  execFileSync(process.execPath, ['--test', 'scripts/test-v1-1-0-version-identity.mjs'], { stdio: 'inherit' })
+}
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-deadline.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-markdown-idle-performance.mjs', 'scripts/test-opener-acl.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-source-path.mjs'], { stdio: 'inherit' })
@@ -141,6 +144,17 @@ const required = [
 [v126Published ? '当前阶段：**v1.0.26 已发布**' : v126Candidate ? '当前阶段：**v1.0.26 参考写作闭环候选**' : v125Published ? '当前阶段：**v1.0.25 已发布**' : v125Candidate ? '当前阶段：**v1.0.25 搜索与参考阅读候选**' : v124Published ? '当前阶段：**v1.0.24 已发布（官方更新观察待完成）**' : v124Ready ? '当前阶段：**v1.0.24 安装与稳定性验收完成（待公开发布）**' : v124Candidate ? '当前阶段：**v1.0.24 稳定性候选（发布验收中）**' : v123Published ? '当前阶段：**v1.0.23 已发布（官方更新观察待完成）**' : v123Ready ? '当前阶段：**v1.0.23 安装与视觉验收完成（待公开发布）**' : v123Candidate ? '当前阶段：**v1.0.23 版本身份修复候选（安装态待验证）**' : v122Published ? '当前阶段：**v1.0.23 版本身份修复（页面与安装态待验证）**' : '当前阶段：**v1.0.22 搜索补丁候选安装验收准备**', development.currentStage === (v126Published ? 'M8-27-v1.0.26-published' : v126Candidate ? 'M8-26-v1.0.26-version-candidate' : v125Published ? 'M8-25-v1.0.25-published' : v125Candidate ? 'M8-24-v1.0.25-version-candidate' : v124Published ? 'M8-23-v1.0.24-published-update-pending' : v124Ready ? 'M8-22-v1.0.24-release-ready' : v124Candidate ? 'M8-21-v1.0.24-version-candidate' : v123Published ? 'M8-20-v1.0.23-published-update-pending' : v123Ready ? 'M8-19-v1.0.23-release-ready' : v123Candidate ? 'M8-18-v1.0.23-version-candidate' : v122Published ? 'M8-17-v1.0.23-version-identity' : 'M8-14-v1.0.22-search-candidate') && development.activeSlice?.id === (v126Published || v126Candidate ? 'v1.0.26-reference-writing-loop' : v125Published || v125Candidate ? 'v1.0.25-search-and-reference' : v124Published || v124Candidate ? 'v1.0.24-library-recovery-and-close-safety' : afterV122 ? 'v1.0.23-version-identity' : 'v1.0.22-search-scope-freeze') && fs.existsSync(development.activeSlice.document)],
   ['M8 更新观察已收口', JSON.parse(fs.readFileSync('shared/v121-managed-updater-lifecycle-policy.json', 'utf8')).status === 'hosted-managed-update-passed'],
 ]
+
+// The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
+// Retain all capability counts and historical acceptance checks above.
+if (pkg.version === '1.1.0') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.1.1' : '1.1.0')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.1.0' : '1.0.26') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.1.0 已发布**' : '当前阶段：**v1.1.0 界面与工作流升级候选**',
+    development.currentStage === (published ? 'M8-29-v1.1.0-published' : 'M8-28-v1.1.0-version-candidate')
+    && development.activeSlice?.id === 'v1.1.0-ui-and-workflow' && fs.existsSync(development.activeSlice.document)]
+}
 
 for (const [token, condition] of required) {
   if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)

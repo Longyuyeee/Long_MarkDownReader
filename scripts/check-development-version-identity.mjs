@@ -9,7 +9,7 @@ const tauri = readJson('src-tauri/tauri.conf.json')
 const matrix = readJson('shared/release-capability-matrix.json')
 const community = readJson('shared/v1-community-release-policy.json')
 let installedRuntimeVerified = false
-if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26'].includes(community.appVersion) && community.gates?.githubReleasePublished === true) {
+if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0'].includes(community.appVersion) && community.gates?.githubReleasePublished === true) {
   assertInstalledReleaseRuntime(readJson(`docs/evidence/v${community.appVersion}-release/artifact-manifest.json`))
   installedRuntimeVerified = true
 }
@@ -85,7 +85,8 @@ const capabilities = fs.readFileSync('src/views/ReleaseCapabilitiesView.vue', 'u
 const audit = fs.readFileSync('docs/Development_Alignment_and_Closure_Plan_2026-08-02.md', 'utf8')
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim()
 const [publicMajor, publicMinor, publicPatch] = policy.publicVersion.split('.').map(Number)
-const expectedTarget = `${publicMajor}.${publicMinor}.${publicPatch + 1}`
+const expectedTarget = policy.publicVersion === '1.0.26' && policy.developmentTargetVersion === '1.1.0'
+  ? '1.1.0' : `${publicMajor}.${publicMinor}.${publicPatch + 1}`
 const tagCommit = git('rev-list', '-n', '1', policy.publicTag)
 const headCommit = git('rev-parse', 'HEAD')
 const commitsAhead = Number(git('rev-list', '--count', `${policy.publicTag}..HEAD`))
@@ -113,7 +114,7 @@ const checks = {
         && community.gates?.githubReleasePublished === true
         && community.release?.taggedCommit === policy.publicTagCommit),
   publicFactsFrozen: policy.publicTag === `v${policy.publicVersion}`
-    && ['1.0.16', '1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26'].includes(policy.publicVersion),
+    && ['1.0.16', '1.0.17', '1.0.18', '1.0.19', '1.0.20', '1.0.21', '1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0'].includes(policy.publicVersion),
   publicTagImmutable: tagCommit === policy.publicTagCommit,
   developmentAhead: !policy.requiresHeadAheadOfPublicTag || (tagIsAncestor && commitsAhead > 0),
   enterpriseNotReleaseCandidate: policy.releaseCandidate === false && matrix.releaseCandidate === false,

@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.0.27",
-  "runtimeBaseVersion": "1.0.26",
+  "developmentTargetVersion": "1.1.0",
+  "runtimeBaseVersion": "1.1.0",
   "publicVersion": "1.0.26",
   "publicTag": "v1.0.26",
   "publicTagCommit": "c5c136140ad68fefb81b50898051012cfc865a20",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-27-v1.0.26-published",
-  "binaryVersionTransition": "v1.0.26-public-release-published",
-  "displayLabel": "v1.0.26 已发布 · v1.0.27 范围待定",
+  "currentStage": "M8-28-v1.1.0-version-candidate",
+  "binaryVersionTransition": "v1.1.0-quality-gate-pending",
+  "displayLabel": "v1.1.0 界面与工作流升级候选 · 当前公开 v1.0.26",
   "activeSlice": {
-    "id": "v1.0.26-reference-writing-loop",
-    "status": "published-official-update-observation-pending",
-    "document": "docs/V1_0_26_Unsigned_Community_Release_Audit_2026-10-10.md"
+    "id": "v1.1.0-ui-and-workflow",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_1_0_Unsigned_Community_Release_Audit_2026-10-13.md"
   }
 }
