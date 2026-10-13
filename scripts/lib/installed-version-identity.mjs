@@ -59,7 +59,10 @@ export async function runInstalledVersionScenario({ send, evaluate, waitFor, nav
     await waitForVisibleSettings()
     observations.settings = await evaluate(`document.querySelector('[data-testid="app-update-settings"]').innerText`)
     await click(`[...document.querySelectorAll('[data-testid="app-update-settings"] button')].find(e=>e.textContent.includes('检查更新'))`)
-    await waitFor(`document.querySelector('.update-status')?.textContent.includes('当前已是最新版本')`, 'real official update check', 1200)
+    // The previous successful status remains visible while a new check runs.
+    // Wait for the clicked request to settle, not just that stale status text.
+    await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+    await waitFor(`(() => { const panel=document.querySelector('[data-testid="app-update-settings"]'); const button=[...panel.querySelectorAll('button')].find(e=>e.textContent.includes('检查更新')); return button && !button.disabled && !button.querySelector('.n-base-loading') && document.querySelector('.update-status')?.textContent.includes('当前已是最新版本'); })()`, 'completed real official update check with enabled control', 1200)
     observations.checkedSettings = await evaluate(`document.querySelector('[data-testid="app-update-settings"]').innerText`)
     await waitForVisibleSettings()
     await capture('installed-version-settings.jpg')
