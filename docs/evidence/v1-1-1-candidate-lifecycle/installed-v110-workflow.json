@@ -1,0 +1,63 @@
+{
+  "appVersion": "1.1.1",
+  "sourceCommit": "4d3e0550132acb341f1277ec0113e15dfb4b4f32",
+  "installerSha256": "6f09ec8161a4cc920a83d6c9e28839a61e0f5c2867298a3abf1332e56f61d07e",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "smart-collection-live-directory-tag-filter",
+      "status": "passed"
+    },
+    {
+      "id": "quick-note-direct-selected-directory",
+      "status": "passed"
+    },
+    {
+      "id": "quick-note-idempotent-retry",
+      "status": "passed"
+    },
+    {
+      "id": "smart-collection-reflects-new-save",
+      "status": "passed"
+    },
+    {
+      "id": "history-copy-preserves-original",
+      "status": "passed"
+    },
+    {
+      "id": "history-prepare-protects-draft",
+      "status": "passed"
+    },
+    {
+      "id": "stale-history-restore-is-rejected",
+      "status": "passed"
+    },
+    {
+      "id": "installed-main-editor-layout",
+      "status": "passed"
+    }
+  ],
+  "layout": {
+    "editor": {
+      "top": 111.1875,
+      "bottom": 789.40625,
+      "width": 943,
+      "height": 678.21875
+    },
+    "nav": {
+      "top": 32,
+      "bottom": 820,
+      "width": 68,
+      "height": 788
+    },
+    "tabs": {
+      "top": 34,
+      "bottom": 64,
+      "width": 774.5625,
+      "height": 30
+    },
+    "errors": false
+  }
+}

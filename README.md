@@ -29,7 +29,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-1-0-candidate-lifecycle/installed-version-library.jpg" width="100%" alt="Long编辑 v1.1.0 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-1-1-candidate-lifecycle/installed-version-library.jpg" width="100%" alt="Long编辑 v1.1.1 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/Stable-v1.1.0-cca43b" alt="v1.1.0 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/Stable-v1.1.1-cca43b" alt="v1.1.1 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.0**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.1**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.0_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.0/LongEdit_1.1.0_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.0_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.0/LongEdit_1.1.0_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.0](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.0) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.1_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.1/LongEdit_1.1.1_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.1_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.1/LongEdit_1.1.1_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.1](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.1) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.0/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.1/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.0_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.1_x64-setup.exe
 ```
 
 ```text
-c16ceabc9861eee788ff158b6561336ca23211caf4ab528849fac55e2b0adcb9  LongEdit_1.1.0_x64_zh-CN.msi
-cbd10a7c8c5c02209b807bdf3cafee3a2b419b8f25eae22a4f7fdd168b5cab62  LongEdit_1.1.0_x64-setup.exe
+0fd36534688e7be7bc41d7d6407d80cfda1af551375f9390304e0a73242b90c3  LongEdit_1.1.1_x64_zh-CN.msi
+6f09ec8161a4cc920a83d6c9e28839a61e0f5c2867298a3abf1332e56f61d07e  LongEdit_1.1.1_x64-setup.exe
 ```
 
 </details>
@@ -129,11 +129,15 @@ cbd10a7c8c5c02209b807bdf3cafee3a2b419b8f25eae22a4f7fdd168b5cab62  LongEdit_1.1.0
 
 快速笔记可直接选择**资料库、保存位置和模板**。日常记录可以留在收集箱，也可以直接放入项目目录，不需要强制进行额外的归档操作。保存失败会保留内容，重试不会因为同一次保存操作而重复创建笔记。
 
+收集箱从“新建笔记”开始使用，首次新建会自动准备文件夹。空目录与暂时无法访问会明确区分；路径失效时可重试或更换位置，继续使用其他区域。
+
 ### ③ 把常用筛选变成智能集合
 
 智能集合是动态查找资料的视图，不是另一份文件副本。按目录、标签、时间、对象类型和关键词组合条件，源资料变化后重新查询，即可得到符合条件的内容。
 
 例如：为项目相关资料建立集合，或把某个目录里带指定标签的笔记集中查看。文件依然留在原来的目录，不需要为了加入集合而搬家。
+
+默认先看“我的集合”，也可以从最近修改、全部笔记或标签示例开始；需要新建或调整时再展开筛选条件。文内标签则用于按主题找笔记，点击标签即可查看相关笔记。
 
 ### ④ 保存现场，下次从这里继续
 
@@ -147,9 +151,15 @@ Markdown 历史提供差异预览，区分当前来源与历史版本的增删�
 
 恢复前会核对当前文件与历史来源是否变化。发现来源过期时先拒绝执行，而不是用旧结果覆盖新内容。本版不把这一能力泛化为所有格式的历史恢复。
 
+### ⑥ 给不同类型的资料建立关系
+
+在文档工具栏“专注”旁点击 **添加关系**，选择另一份文件和关系类型，按需补充说明，保存后即可在图谱中看到联系。PDF、表格、图片和其他附件也能使用，不需要先写 Markdown 链接；图谱顶部及选中文件后也有同一入口。
+
+关系页用“我提到的 / 提到我的”查看正文引用，图谱用于查看整个资料网络。手动关系关联当前资料库内的整份文件，单独保存于 `.longedit/file-relations.json`，原文保持不变；整体搬迁资料库时请保留此目录，应用内改名或移动会同步关系位置。
+
 ## 真实界面
 
-主图与下方图谱来自 **v1.1.0 真实安装版**。JSON、工作簿和外观截图保留历史安装验收场景，展示对应功能，不代表新版布局；测试库名称、示例文件中的版本文字也不代表当前软件版本。
+主图与下方图谱来自 **v1.1.1 真实安装版**。JSON、工作簿和外观截图保留历史安装验收场景，展示对应功能，不代表新版布局；测试库名称、示例文件中的版本文字也不代表当前软件版本。
 
 ### 专业编辑工作区
 
@@ -176,10 +186,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-1-0-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.1.0 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-1-1-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.1.1 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.1.0 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.1.1 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -204,7 +214,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 | --- | --- |
 | 本地资料库 | 多资料库、文件树、全文搜索、标签、保存视图、历史、管理备份 |
 | 专业编辑 | 多标签、撤销/重做、显式保存、外部修改冲突保护、语法诊断 |
-| 知识组织 | 引用、反向链接、知识图谱、思维导图、JSON Canvas、关系定位 |
+| 知识组织 | 文内标签、智能集合、引用、反向链接、跨格式手动关系、知识图谱、思维导图、JSON Canvas、关系定位 |
 | 表格数据 | CSV/TSV/Table 网格与看板，XLSX/ODS 工作区和有界高级对象支持 |
 | 文档与演示 | PDF 阅读与页面工具，DOCX/PPTX 阅读、受控草稿和可靠副本 |
 | 图形与媒体 | Mermaid、Draw.io、SVG、图片基础编辑器，以及支持逐帧、截图、位置记忆和同名字幕的流式视频播放器 |
@@ -227,6 +237,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 - 文件、目录、最近访问、大纲、标签、集合、关系与历史保留各自入口。
 - 文件树通过缩进与层级引导表达父子关系；文件可使用独立图标、文字颜色和背景标记。
 - 搜索、保存视图与智能集合用于找到内容；链接、反向链接与图谱用于理解联系。
+- 点击“添加关系”即可关联库内任意类型文件；不改变该格式原有的阅读、编辑或只读范围。
 - 路径暂不可用时可以重试；重新读取失败会保留当前未保存内容，不把空内容误当作读取成功。
 
 ### 结构与源码：为数据提供专用工具
@@ -436,7 +447,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布审计](docs/V1_1_0_Unsigned_Community_Release_Audit_2026-10-13.md) |
+| 当前公开版本的实际发布证据 | [社区版发布审计](docs/V1_1_1_Unsigned_Community_Release_Audit_2026-10-14.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
 欢迎围绕真实使用任务提出问题、补充最小复现或贡献改进。开发 UI 时先查看相关实际页面，保留现有能力；修改后验证草稿保护、保存复开与错误反馈，不能仅为了通过验收而降低要求。
@@ -451,7 +462,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
-| v1.1.1（发布准备中） | 收集箱、集合、标签与关系体验重排；跨格式添加关系；更平滑的标签切换 | [发布说明](docs/RELEASE_NOTES_v1.1.1.md) |
+| v1.1.1 | 收集箱、集合、标签与关系体验重排；跨格式添加关系；更平滑的标签切换 | [发布说明](docs/RELEASE_NOTES_v1.1.1.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.1) |
 | v1.1.0 | 全界面改版；工作会话、智能集合、Markdown 历史差异恢复；文件树、浮窗、专注模式和编辑器交互修复 | [发布说明](docs/RELEASE_NOTES_v1.1.0.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.0) |
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。

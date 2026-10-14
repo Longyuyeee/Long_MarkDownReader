@@ -141,6 +141,16 @@ try {
       if (await page.getByRole('button', { name: '导航', exact: true }).getAttribute('aria-expanded') === 'false') await page.getByRole('button', { name: '导航', exact: true }).click()
       await page.evaluate(style => { window.workflowAudit.store.visualStyle = style; window.workflowAudit.store.theme = style === 'glass' ? 'dark' : 'green' }, style)
       await page.waitForFunction(style => document.body.dataset.style === style, style)
+      // Resizing can collapse/reopen navigation. Measure its settled width;
+      // measuring during the retained sidebar transition reports false overflow.
+      await page.waitForFunction(() => {
+        const panel = document.querySelector('.inline-tags')
+        if (!panel || panel.clientWidth < 100) return false
+        for (let el = panel; el; el = el.parentElement) {
+          if (el.getAnimations().some(a => ['running', 'pending'].includes(a.playState) && a.effect?.getTiming().iterations !== Infinity)) return false
+        }
+        return true
+      })
       assert.equal(await panel.evaluate(el => el.scrollWidth > el.clientWidth), false)
       await current.getByRole('button', { name: '添加标签', exact: true }).click()
       await input.waitFor()

@@ -111,6 +111,14 @@ try {
       if (await page.getByRole('button', { name: '导航', exact: true }).getAttribute('aria-expanded') === 'false') await page.getByRole('button', { name: '导航', exact: true }).click()
       await page.evaluate(style => { window.workflowAudit.store.visualStyle = style; window.workflowAudit.store.theme = style === 'glass' ? 'dark' : 'green' }, style)
       await page.waitForFunction(style => document.body.dataset.style === style, style)
+      await page.waitForFunction(() => {
+        const panel = document.querySelector('.smart-collection')
+        if (!panel || panel.clientWidth < 100) return false
+        for (let el = panel; el; el = el.parentElement) {
+          if (el.getAnimations().some(a => ['running', 'pending'].includes(a.playState) && a.effect?.getTiming().iterations !== Infinity)) return false
+        }
+        return true
+      })
       const layout = await panel.evaluate(el => ({ style: document.body.dataset.style, width: innerWidth, overflow: el.scrollWidth > el.clientWidth, radius: getComputedStyle(el.querySelector('.collection-card')).borderRadius }))
       assert.equal(layout.overflow, false); layouts.push(layout)
       await panel.getByRole('button', { name: '新建集合', exact: true }).click()

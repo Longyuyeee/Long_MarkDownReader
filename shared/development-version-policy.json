@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.1",
+  "developmentTargetVersion": "1.1.2",
   "runtimeBaseVersion": "1.1.1",
-  "publicVersion": "1.1.0",
-  "publicTag": "v1.1.0",
-  "publicTagCommit": "a65c534b261e42e22f62061fa5fc086325ffe030",
+  "publicVersion": "1.1.1",
+  "publicTag": "v1.1.1",
+  "publicTagCommit": "4d3e0550132acb341f1277ec0113e15dfb4b4f32",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-30-v1.1.1-version-candidate",
-  "binaryVersionTransition": "v1.1.1-quality-gate-pending",
-  "displayLabel": "v1.1.1 体验改进候选 · 当前公开 v1.1.0",
+  "currentStage": "M8-31-v1.1.1-published",
+  "binaryVersionTransition": "v1.1.1-public-release-published",
+  "displayLabel": "v1.1.1 已发布 · 后续继续按用户反馈推进",
   "activeSlice": {
     "id": "v1.1.1-library-experience",
-    "status": "release-quality-and-installers-pending",
+    "status": "published-official-update-observation-pending",
     "document": "docs/V1_1_1_Unsigned_Community_Release_Audit_2026-10-14.md"
   }
 }
