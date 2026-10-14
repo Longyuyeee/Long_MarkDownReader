@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v111-smart-collections'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v112-sidebar-density/collections'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const checks = [], errors = [], layouts = []
@@ -36,6 +36,22 @@ try {
   await panel.getByRole('button', { name: /继续设置 最近更新/ }).click()
   assert.equal(await panel.getByLabel('集合名称', { exact: true }).inputValue(), '最近更新')
   checks.push('The default page is a saved-collection home without an expanded form or automatic search; starter conditions lead straight to results and unfinished settings can be resumed')
+
+  await panel.getByRole('button', { name: '我的集合', exact: true }).click()
+  await panel.getByRole('button', { name: '全部笔记', exact: true }).click()
+  await panel.getByText('1 项', { exact: true }).waitFor()
+  assert.deepEqual(await page.evaluate(() => window.workflowAudit.calls.filter(c => c.command === 'search_smart_collection').at(-1).args.objectTypes), ['markdown'])
+  await panel.getByRole('button', { name: '我的集合', exact: true }).click()
+  const searchesBeforeTag = await page.evaluate(() => window.workflowAudit.calls.filter(c => c.command === 'search_smart_collection').length)
+  await panel.getByRole('button', { name: '按标签查找', exact: true }).click()
+  assert.equal(await panel.locator('.collection-range').evaluate(el => el.open), true)
+  assert.equal(await panel.getByLabel('笔记标签', { exact: true }).evaluate(el => el === document.activeElement), true)
+  assert.equal(await page.evaluate(() => window.workflowAudit.calls.filter(c => c.command === 'search_smart_collection').length), searchesBeforeTag)
+  await panel.getByLabel('笔记标签', { exact: true }).fill('#工作')
+  await panel.getByRole('button', { name: '查看资料', exact: true }).click()
+  await panel.getByText('1 项', { exact: true }).waitFor()
+  assert.equal(await page.evaluate(() => window.workflowAudit.calls.filter(c => c.command === 'search_smart_collection').at(-1).args.filters.tag), '工作')
+  checks.push('All three compact starter buttons remain actionable: recent updates, Markdown-only notes and focused tag conditions send the intended search filters')
 
   await panel.getByRole('button', { name: '我的集合', exact: true }).click()
   await panel.getByRole('button', { name: '新建集合', exact: true }).click()

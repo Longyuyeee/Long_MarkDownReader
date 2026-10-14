@@ -10,6 +10,7 @@ pub mod drawio;
 pub mod external_apps;
 pub mod files;
 pub mod file_relations;
+pub mod file_management;
 pub mod formats;
 pub mod quick_note;
 pub mod git;

@@ -1,0 +1,85 @@
+{
+  "checks": [
+    "The default page is a saved-collection home without an expanded form or automatic search; starter conditions lead straight to results and unfinished settings can be resumed",
+    "All three compact starter buttons remain actionable: recent updates, Markdown-only notes and focused tag conditions send the intended search filters",
+    "Folder choice, keyword, type, tag and time retain their native arguments; save leads to a reusable collection, and results retain full locations/excerpts and open the original file",
+    "Read failures show a short local recovery with collapsed technical details; empty matches and limited results remain understandable",
+    "Saved legacy keyword searches, related graph collections, edit and confirmed delete retain their existing entry points without moving or deleting documents"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "overflow": false,
+      "radius": "8px"
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "overflow": false,
+      "radius": "8px"
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "overflow": false,
+      "radius": "3px"
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "overflow": false,
+      "radius": "3px"
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "overflow": false,
+      "radius": "7px"
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "overflow": false,
+      "radius": "7px"
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "overflow": false,
+      "radius": "0px"
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "overflow": false,
+      "radius": "0px"
+    }
+  ],
+  "errors": [],
+  "scope": "Real App/LibraryMode/SmartCollectionPanel; mocked native lookup/config and graph replies. Existing native collection engine unchanged."
+}

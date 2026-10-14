@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Shift selects a visible range without changing the active editor",
+    "A plain click selects and opens one document",
+    "Ctrl+C/V while the file tree is focused copies the selected file through the destination flow"
+  ],
+  "errors": [],
+  "scope": "Actual App and file-tree input events with isolated IPC"
+}

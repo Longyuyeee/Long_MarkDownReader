@@ -11,7 +11,7 @@ import {
 } from '../config/themePresets'
 import { toCollectionRelativePath } from '../utils/savedCollections'
 import type { FileDisplayStyle } from '../config/fileTreeAppearance'
-import { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries } from '../utils/fileDisplayStyles'
+import { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries, copyFileDisplayStyleEntries } from '../utils/fileDisplayStyles'
 import { normalizeDisplayPreferences } from '../config/displayPreferences'
 import { belongsToLibrary, libraryTabsKey, sessionTabs } from '../utils/workSessions'
 
@@ -352,6 +352,11 @@ export const useAppStore = defineStore('app', {
         this.fileDisplayStyles = next
         throw error
       }
+    },
+    async copyFileDisplayStyles(oldPath: string, newPath: string) {
+      const next = copyFileDisplayStyleEntries(this.fileDisplayStyles, oldPath, newPath)
+      try { await this.updateConfig({ fileDisplayStyles: next }) }
+      catch (error) { this.fileDisplayStyles = next; throw error }
     },
     async removeFileDisplayStyles(paths: string[]) {
       const next = normalizeFileDisplayStyles(this.fileDisplayStyles)

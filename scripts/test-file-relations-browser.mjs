@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v111-file-relations'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v112-sidebar-density/file-relations'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const checks = [], errors = [], layouts = []
@@ -46,7 +46,9 @@ try {
   await dialog.waitFor({ state: 'hidden' })
   checks.push('The common editor action sits next to Focus for an actual CSV editor; choosing PDF, relation type and note saves through the shared dialog, failure retains the inputs and repeated save keeps one record')
 
-  await trigger.click()
+  await page.locator('#tab-links').click()
+  const relationPanel = page.getByRole('region', { name: '笔记关系', exact: true })
+  await relationPanel.getByRole('button', { name: '添加资料关系', exact: true }).click()
   await dialog.waitFor()
   await choose(0, '图片.png')
   await choose(1, '配置.json')
@@ -79,7 +81,7 @@ try {
   await dialog.getByRole('button', { name: '移除与 配置.json 的关系', exact: true }).click()
   await page.waitForFunction(() => window.fileRelationsAudit.records.length === 0)
   await dialog.getByRole('button', { name: '完成', exact: true }).click()
-  checks.push('Image/JSON relationships use the same flow; the actual graph exposes non-Markdown creation, cross-format help and immediate refresh, with manual removal from graph details or the shared dialog')
+  checks.push('The compact sidebar exposes adding relations for a CSV directly; Image/JSON relationships save from this entry, and the graph supports creation, immediate refresh and removal')
 
   for (const style of ['soft', 'neo', 'glass', 'airy', 'minimal', 'sharp']) {
     for (const width of [1280, 480]) {

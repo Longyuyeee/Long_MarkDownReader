@@ -1,30 +1,27 @@
 <template>
   <section class="smart-collection" aria-label="智能集合条件">
     <template v-if="mode === 'home'">
-      <header class="collection-heading"><span class="heading-icon"><FolderSearch /></span><div><h2>智能集合</h2><p>按条件找资料，打开就能看到最新结果</p></div></header>
-      <button class="primary wide" @click="beginNew"><Plus />新建集合</button>
+      <button class="primary" @click="beginNew"><Plus />新建集合</button>
       <div v-if="currentQuery" class="current-search"><span>当前搜索：{{ currentQuery }}</span><button @click="$emit('save-search')"><BookmarkPlus />保存这个搜索</button></div>
       <button v-if="hasDraft" class="resume-draft" @click="mode = 'editor'"><PencilLine /><span>继续设置 {{ name || '未命名集合' }}</span></button>
       <div class="section-label"><strong>我的集合</strong><small>{{ collections.length }}</small></div>
-      <div v-if="!collections.length" class="empty-collections"><FolderSearch /><strong>还没有保存的集合</strong><p>试一个常用条件，找到资料后再保存。</p></div>
+      <p v-if="!collections.length" class="empty-label">暂无集合</p>
       <div v-else class="collection-list">
         <div v-for="entry in collections" :key="entry.id" class="collection-card">
           <button class="collection-open" @click="$emit('select', entry)"><component :is="entry.graphRoot ? Network : entry.filters ? FolderSearch : Search" /><span><strong>{{ entry.name }}</strong><small>{{ summaryFor(entry) }}</small></span><ChevronRight /></button>
           <n-dropdown trigger="click" :options="entryOptions(entry)" @select="action => collectionAction(String(action), entry)"><button class="icon-button" :aria-label="`集合操作 ${entry.name}`"><Ellipsis /></button></n-dropdown>
         </div>
       </div>
-      <div class="section-label"><strong>试一试</strong></div>
+      <div class="section-label"><strong>常用条件</strong></div>
       <div class="collection-presets">
-        <button @click="preset('recent')"><Clock /><span><strong>最近更新</strong><small>最近 7 天修改过的资料</small></span><ChevronRight /></button>
-        <button @click="preset('notes')"><NotebookPen /><span><strong>全部笔记</strong><small>集中查看 Markdown 笔记</small></span><ChevronRight /></button>
-        <button @click="preset('tag')"><Tag /><span><strong>按标签查找</strong><small>例如带有 #工作 的笔记</small></span><ChevronRight /></button>
+        <button @click="preset('recent')"><Clock />最近更新</button>
+        <button @click="preset('notes')"><NotebookPen />全部笔记</button>
+        <button @click="preset('tag')"><Tag />按标签查找</button>
       </div>
-      <details class="collection-help"><summary><CircleHelp />什么是智能集合？</summary><p>例如保存“最近 7 天修改的笔记”，下次打开会重新找出匹配资料。文件仍在原来的文件夹里，点击结果即可继续阅读或编辑。</p></details>
     </template>
 
     <template v-else>
-      <button class="back-button" @click="goHome"><ArrowLeft />我的集合</button>
-      <header class="detail-heading"><span class="heading-icon"><FolderSearch /></span><div><h2>{{ mode === 'editor' ? editingId ? '调整集合' : '新建集合' : name || '查找结果' }}</h2><p>{{ mode === 'editor' ? '想经常查看哪些资料？' : '打开文件即可继续阅读或编辑' }}</p></div></header>
+      <header class="detail-heading"><button class="icon-button back-button" aria-label="我的集合" @click="goHome"><ArrowLeft /></button><h2>{{ mode === 'editor' ? editingId ? '调整集合' : '新建集合' : name || '查找结果' }}</h2></header>
       <form v-if="mode === 'editor'" class="collection-form" @submit.prevent="run">
         <label>集合名称<input ref="nameInput" v-model="name" :disabled="saving" maxlength="80" placeholder="例如：本周项目资料" /></label>
         <label>关键词（可不填）<input v-model="query" :disabled="saving" maxlength="500" placeholder="例如：周会，查找文件名和正文" /></label>
@@ -67,7 +64,7 @@ import { computed, nextTick, ref, watch, onBeforeUnmount } from 'vue'
 import { NDropdown, NSelect } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
-import { ArrowLeft, BookmarkPlus, Check, ChevronDown, ChevronRight, CircleHelp, Clock, Ellipsis, FolderOpen, FolderSearch, Network, NotebookPen, PencilLine, Plus, RefreshCw, Search, SlidersHorizontal, Tag } from 'lucide-vue-next'
+import { ArrowLeft, BookmarkPlus, Check, ChevronDown, ChevronRight, Clock, Ellipsis, FolderOpen, FolderSearch, Network, NotebookPen, PencilLine, Plus, RefreshCw, Search, SlidersHorizontal, Tag } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
 import { sameWorkspacePath, toCollectionRelativePath } from '../utils/savedCollections'
@@ -165,13 +162,11 @@ onBeforeUnmount(() => { disposed = true; invalidate() })
 
 <style scoped>
 .smart-collection { padding: 14px 12px 20px; min-width: 0; box-sizing: border-box; color: var(--theme-text); font-size: var(--text-sm); }
-.collection-heading, .detail-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.collection-heading > div, .detail-heading > div { min-width: 0; }
-.heading-icon { width: 36px; height: 36px; display: grid; place-items: center; flex-shrink: 0; border-radius: var(--theme-radius-sm); color: var(--theme-primary); background: var(--chrome-icon-surface, rgba(var(--theme-primary-rgb), .1)); }
-.heading-icon svg { width: 21px; height: 21px; }
+.detail-heading { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+
 h2 { font-size: 15px; margin: 0; line-height: 1.4; overflow-wrap: anywhere; }
 p { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.6; overflow-wrap: anywhere; }
-.collection-heading p, .detail-heading p { margin: 4px 0 0; }
+
 button, input, select { box-sizing: border-box; min-width: 0; max-width: 100%; font: inherit; color: var(--theme-text); border: 1px solid var(--workspace-border-color); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }
 button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 9px; min-height: 32px; cursor: pointer; transition: background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard); }
 button:hover { background: rgba(var(--theme-primary-rgb), .08); border-color: rgba(var(--theme-primary-rgb), .35); }
@@ -181,24 +176,24 @@ input::placeholder { color: var(--theme-text-secondary); font-size: var(--text-c
 button:focus-visible, input:focus, select:focus, summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
 .primary { background: var(--theme-primary); border-color: transparent; color: var(--workspace-on-accent, var(--theme-bg)); font-weight: 600; }
 .primary:hover { background: color-mix(in srgb, var(--theme-primary) 88%, var(--theme-text)); }
-.wide { width: 100%; }
+
 svg { width: 16px; height: 16px; flex-shrink: 0; }
-.section-label { display: flex; align-items: center; gap: 7px; margin: 18px 0 9px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.section-label { display: flex; align-items: center; gap: 7px; margin: 12px 0 7px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .section-label small { color: var(--theme-primary); padding: 1px 5px; background: rgba(var(--theme-primary-rgb), .08); border-radius: var(--theme-radius-sm); }
-.empty-collections { padding: 22px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: var(--theme-surface); border: var(--theme-border); border-radius: var(--theme-radius); }
-.empty-collections > svg { width: 30px; height: 30px; color: var(--theme-primary); }
+.empty-label { margin: 8px 0; }.empty-collections { padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: var(--theme-surface); border: var(--theme-border); border-radius: var(--theme-radius); }
+
 .empty-collections strong { font-size: var(--text-sm); }.empty-collections p { margin: 0; }
-.collection-presets { display: grid; gap: 6px; }.collection-presets button { width: 100%; justify-content: start; gap: 9px; padding: 9px; text-align: left; }
-.collection-presets button > svg:first-child { color: var(--theme-primary); }.collection-presets button > svg:last-child { width: 13px; color: var(--theme-text-secondary); }
-.collection-presets span { display: grid; gap: 4px; flex: 1; min-width: 0; }.collection-presets strong { font-size: var(--text-sm); }.collection-presets small { color: var(--theme-text-secondary); font-size: 11px; }
+.collection-presets { display: flex; flex-wrap: wrap; gap: 6px; }.collection-presets button { gap: 5px; padding: 5px 7px; font-size: var(--text-compact); }
+.collection-presets button > svg:first-child { color: var(--theme-primary); }
+
 .collection-list { display: grid; gap: 6px; }.collection-card { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: center; padding: 5px 4px; background: var(--file-row-bg, var(--theme-surface)); border: var(--file-row-border); border-radius: var(--theme-radius-sm); box-shadow: var(--file-row-shadow); }
 .collection-open { width: 100%; min-width: 0; display: flex; justify-content: start; gap: 8px; border: 0; text-align: left; background: transparent; padding: 6px; min-height: var(--file-row-height); }
 .collection-open > span { display: grid; gap: 4px; flex: 1; min-width: 0; }.collection-open > svg:first-child { color: var(--theme-primary); }.collection-open > svg:last-child { width: 12px; color: var(--theme-text-secondary); }
 .collection-open strong { font-size: var(--text-sm); }.collection-open strong, .collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open small { font-size: var(--text-compact); color: var(--theme-text-secondary); }
 .icon-button { width: 26px; min-height: 28px; padding: 0; border: 0; background: transparent; }
 .current-search, .resume-draft { margin-top: 10px; padding: 9px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }.current-search { display: grid; gap: 7px; }.current-search > span { color: var(--theme-text-secondary); font-size: var(--text-compact); overflow-wrap: anywhere; }.resume-draft { width: 100%; text-align: left; justify-content: start; color: var(--theme-primary); }.resume-draft span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.collection-help { margin-top: 16px; padding-top: 12px; border-top: var(--theme-border); font-size: var(--text-compact); color: var(--theme-text-secondary); }.collection-help > summary { display: flex; align-items: center; gap: 7px; }.collection-help p { margin-bottom: 0; }
-summary { cursor: pointer; }.back-button { margin-bottom: 13px; min-height: 24px; padding: 0; border: 0; background: transparent; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+
+summary { cursor: pointer; }.back-button { margin-bottom: 0; min-height: 24px; padding: 0; border: 0; background: transparent; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .collection-form, label { display: grid; min-width: 0; }.collection-form { gap: 14px; }label { gap: 7px; font-size: var(--text-compact); }label > small { color: var(--theme-text-secondary); font-size: 11px; }
 .collection-range { padding: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }.collection-range > summary { display: flex; align-items: center; gap: 7px; }.collection-range > summary > span { flex: 1; min-width: 0; }.collection-range summary small { display: block; margin-top: 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.4; overflow-wrap: anywhere; }.collection-range > summary > svg:first-child { color: var(--theme-primary); }.collection-range[open] > summary > svg:last-child { transform: rotate(180deg); }
 fieldset { display: grid; gap: 12px; padding: 14px 0 0; border: 0; margin: 0; min-width: 0; }.directory-field { display: grid; grid-template-columns: minmax(0, 1fr) 32px; gap: 5px; }.directory-field button { padding: 0; }

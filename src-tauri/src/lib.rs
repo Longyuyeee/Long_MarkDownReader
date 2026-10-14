@@ -34,6 +34,7 @@ use commands::drawio::{
 };
 use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
 use commands::file_relations::{list_relation_files, list_file_relations, save_file_relation, remove_file_relation};
+use commands::file_management::{transfer_library_items, undo_library_moves, trash_library_items, list_library_trash, restore_library_trash, purge_library_trash};
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
@@ -550,6 +551,12 @@ pub fn run() {
             delete_items,
             move_item,
             move_items,
+            transfer_library_items,
+            undo_library_moves,
+            trash_library_items,
+            list_library_trash,
+            restore_library_trash,
+            purge_library_trash,
             preflight_archive,
             validate_inbox_location,
             open_default_apps_settings,

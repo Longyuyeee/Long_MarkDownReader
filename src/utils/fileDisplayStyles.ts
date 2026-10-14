@@ -18,6 +18,12 @@ export const moveFileDisplayStyleEntries = (styles: Record<string, FileDisplaySt
   return next
 }
 
+export const copyFileDisplayStyleEntries = (styles: Record<string, FileDisplayStyle>, oldPath: string, newPath: string) => {
+  const next = normalizeFileDisplayStyles(styles), oldKey = fileStylePathKey(oldPath), newKey = fileStylePathKey(newPath)
+  for (const [key, style] of Object.entries(next)) if (key === oldKey || key.startsWith(`${oldKey}/`)) next[`${newKey}${key.slice(oldKey.length)}`] = { ...style }
+  return next
+}
+
 const channels = (color: string) => /^#[0-9a-f]{6}$/i.test(color)
   ? [1, 3, 5].map(offset => Number.parseInt(color.slice(offset, offset + 2), 16) / 255) : null
 const luminance = (color: string) => channels(color)?.reduce((sum, channel, index) =>

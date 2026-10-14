@@ -1,0 +1,86 @@
+{
+  "checks": [
+    "A focused current-note page explains both citation directions, deduplicates repeated targets, keeps graph folded and adding relations directly available and opens citing notes with their original context",
+    "Nested references open without expanding file-tree folders, ambiguous names offer the actual paths, missing targets retain a file-search recovery; lookup uses namesOnly",
+    "Each citation direction can fail and retry independently without erasing the other, and delayed replies from an old document do not replace the current note",
+    "Graph navigation stays centered on the current file; the actual local graph can pin, follow the active document and unpin from the relation panel",
+    "Typing a new reference in the actual Vditor editor updates outgoing links from the draft without saving or repeatedly scanning incoming references",
+    "No-document and non-Markdown guidance stays understandable, and both directions plus expanded graph actions fit all six styles at desktop and narrow widths"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "overflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "overflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "overflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "overflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "overflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "overflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "overflow": false,
+      "radius": "0px"
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "overflow": false,
+      "radius": "0px"
+    }
+  ],
+  "errors": [],
+  "scope": "Actual App/LibraryMode/NoteRelationsPanel/Vditor/LocalGraph with isolated native lookup replies; graph workspace route is a fixture destination."
+}

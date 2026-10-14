@@ -1,0 +1,87 @@
+{
+  "checks": [
+    "A never-created default inbox is a normal empty state; one deliberate click creates its folder and opens one editable note in that inbox",
+    "A previously available default inbox that disappears is reported as unavailable rather than as a new empty collection",
+    "The root file list starts within 120px of the panel top, without a repeated title, root breadcrumb, tutorial or file-count row",
+    "File filtering, clear, subfolder/up navigation and choosing a new folder work; previous files stay in place and quick-note windows receive the position change",
+    "A missing custom collection location shows recovery actions and is created only by the explicit create/write action",
+    "Actual access errors stay local with collapsed details, retry works and write failure does not create a note; the rest of the workspace stays usable",
+    "Standalone and sidebar keep opening files, six theme styles and narrow layouts; both retain the original functionality"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "overflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "soft",
+      "width": 320,
+      "overflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "neo",
+      "width": 320,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "overflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "glass",
+      "width": 320,
+      "overflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "airy",
+      "width": 320,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "overflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "minimal",
+      "width": 320,
+      "overflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "overflow": false,
+      "radius": "0px"
+    },
+    {
+      "style": "sharp",
+      "width": 320,
+      "overflow": false,
+      "radius": "0px"
+    }
+  ],
+  "errors": [],
+  "scope": "Actual App/LibraryMode/InboxView with isolated mocked native IPC; native folder semantics tested separately."
+}
