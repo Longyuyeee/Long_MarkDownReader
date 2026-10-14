@@ -207,7 +207,7 @@ pub async fn rename_item(
     if new_path.exists() {
         return Err("目标目录已存在同名项目，请使用其他名称".into());
     }
-    fs::rename(&old, &new_path).map_err(|error| format!("重命名失败: {error}"))?;
+    super::file_relations::rename_with_relations(guard.root(), &old, &new_path).map_err(|error| format!("重命名失败: {error}"))?;
     let old_history = history_dir(&app_handle, &old_path)?;
     if old_history.exists() {
         let new_history = history_dir(&app_handle, &new_path.to_string_lossy())?;
@@ -234,7 +234,7 @@ pub async fn move_item(
         return Err("目标目录已存在同名项".into());
     }
     let new_path = guard.resolve_for_write(&new_path)?;
-    fs::rename(&source, &new_path).map_err(|error| error.to_string())?;
+    super::file_relations::rename_with_relations(guard.root(), &source, &new_path)?;
     let old_history = history_dir(&app_handle, &source_path)?;
     if old_history.exists() {
         let new_history = history_dir(&app_handle, &new_path.to_string_lossy())?;

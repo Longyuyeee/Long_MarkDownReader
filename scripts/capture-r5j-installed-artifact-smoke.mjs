@@ -931,11 +931,15 @@ if (process.env.LONGEDIT_INSTALLED_V124_STABILITY === '1') {
   await runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256, appVersion })
 }
 if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
-  if (appVersion === '1.1.0') {
+  if (['1.1.0', '1.1.1'].includes(appVersion)) {
     const { runInstalledV110Workflow } = await import('./lib/installed-v1-1-0-workflow.mjs')
     await runInstalledV110Workflow({ evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
   const { runInstalledVersionScenario } = await import('./lib/installed-version-identity.mjs')
+  if (appVersion === '1.1.1') {
+    const { runInstalledV111Workflow } = await import('./lib/installed-v1-1-1-workflow.mjs')
+    await runInstalledV111Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
+  }
   await runInstalledVersionScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion })
 }
 await fs.writeFile(path.join(output, 'installed-knowledge-network-evidence.json'), `${JSON.stringify({

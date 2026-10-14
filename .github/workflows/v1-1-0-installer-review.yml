@@ -1,11 +1,19 @@
-name: v1.1.0 Same Installer Review
+name: Community Release Same Installer Review
 
 "on":
   workflow_dispatch:
     inputs:
       installer_run_id:
-        description: Build run containing the immutable v1.1.0 MSI and NSIS
+        description: Build run containing immutable MSI and NSIS
         required: true
+      current_version:
+        description: Current package version
+        required: true
+        default: "1.1.0"
+      previous_version:
+        description: Previous official version
+        required: true
+        default: "1.0.26"
       candidate_commit:
         description: Exact source commit from the original installer build receipt
         required: true
@@ -21,6 +29,8 @@ jobs:
     env:
       LONGEDIT_INSTALLED_VERSION_SCENARIO: "1"
       LONGEDIT_R5I_DISPOSABLE: "1"
+      RELEASE_VERSION: ${{ inputs.current_version }}
+      PREVIOUS_VERSION: ${{ inputs.previous_version }}
       CANDIDATE_COMMIT: ${{ inputs.candidate_commit }}
       INSTALLER_RUN_ID: ${{ inputs.installer_run_id }}
     steps:
@@ -30,7 +40,7 @@ jobs:
       - name: Validate immutable review inputs
         shell: powershell
         run: |
-          if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$') { throw 'Invalid immutable review inputs' }
+          if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -38,7 +48,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.installer_run_id }}
-          name: v1-1-0-candidate-lifecycle-${{ inputs.installer_run_id }}
+          name: community-release-candidate-lifecycle-${{ inputs.installer_run_id }}
           path: immutable-build
       - name: Verify same installers and successful original build gates
         shell: powershell
@@ -55,16 +65,16 @@ jobs:
             if ($step.Count -ne 1 -or $step[0].conclusion -ne 'success') { throw "Original gate did not pass: $name" }
           }
           $root = Join-Path $env:GITHUB_WORKSPACE 'immutable-build'
-          $receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'v1-1-0-output\installer-build-receipt.json') -Raw | ConvertFrom-Json
-          $previous = Get-Content -Encoding UTF8 -LiteralPath 'docs/evidence/v1.0.26-release/release-receipt.json' -Raw | ConvertFrom-Json
-          if ($receipt.candidateSourceCommit -ne $env:CANDIDATE_COMMIT -or $receipt.appVersion -ne '1.1.0' -or $receipt.previousVersion -ne '1.0.26' -or $receipt.previousSourceCommit -ne $previous.release.taggedCommit -or $receipt.previousInstallerSource -ne 'official-github-release' -or $receipt.sourceUserContentIncluded -ne $false -or $receipt.artifacts.Count -ne 2) { throw 'Installer receipt identity or boundary drifted' }
+          $receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'community-release-output\installer-build-receipt.json') -Raw | ConvertFrom-Json
+          $previous = Get-Content -Encoding UTF8 -LiteralPath "docs/evidence/v$($env:PREVIOUS_VERSION)-release/release-receipt.json" -Raw | ConvertFrom-Json
+          if ($receipt.candidateSourceCommit -ne $env:CANDIDATE_COMMIT -or $receipt.appVersion -ne $env:RELEASE_VERSION -or $receipt.previousVersion -ne $env:PREVIOUS_VERSION -or $receipt.previousSourceCommit -ne $previous.release.taggedCommit -or $receipt.previousInstallerSource -ne 'official-github-release' -or $receipt.sourceUserContentIncluded -ne $false -or $receipt.artifacts.Count -ne 2) { throw 'Installer receipt identity or boundary drifted' }
           foreach ($artifact in $receipt.artifacts) {
             if ($artifact.target -notin @('msi','nsis') -or $artifact.authenticodeStatus -ne 'NotSigned') { throw 'Unexpected installer target or signing status' }
             $folder = Join-Path $root "current-product\src-tauri\target\release\bundle\$($artifact.target)"
             $file = Get-Item -LiteralPath (Join-Path $folder $artifact.fileName)
             if ($file.Length -ne $artifact.sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName).Hash.ToLowerInvariant() -ne $artifact.sha256) { throw 'Current installer size/hash drifted' }
           }
-          $old = Get-Item -LiteralPath (Join-Path $root 'previous-official\LongEdit_1.0.26_x64-setup.exe')
+          $old = Get-Item -LiteralPath (Join-Path $root "previous-official\LongEdit_$($env:PREVIOUS_VERSION)_x64-setup.exe")
           $oldAsset = @($previous.assets | Where-Object { $_.name -eq $old.Name })
           if ($oldAsset.Count -ne 1 -or $old.Length -ne $oldAsset[0].sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $old.FullName).Hash.ToLowerInvariant() -ne $oldAsset[0].sha256 -or $receipt.previousInstallerSha256 -ne $oldAsset[0].sha256) { throw 'Previous official installer drifted' }
           "CURRENT_INSTALLER_DIRECTORY=$(Join-Path $root 'current-product\src-tauri\target\release\bundle\nsis')" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
@@ -78,7 +88,7 @@ jobs:
           & powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `
             -InstallerDirectory $env:CURRENT_INSTALLER_DIRECTORY `
             -PreviousInstallerDirectory $env:PREVIOUS_INSTALLER_DIRECTORY `
-            -CurrentVersion '1.1.0' -PreviousVersion '1.0.26' `
+            -CurrentVersion $env:RELEASE_VERSION -PreviousVersion $env:PREVIOUS_VERSION `
             -ExpectedCurrentSha256 $env:CURRENT_INSTALLER_SHA256 `
             -NodeExecutable (Get-Command node.exe).Source `
             -InstalledSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5j-installed-artifact-smoke.mjs') `
@@ -91,7 +101,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v1-1-0-installer-review-${{ github.run_id }}
+          name: community-release-installer-review-${{ github.run_id }}
           retention-days: 14
           if-no-files-found: error
           path: same-installer-review

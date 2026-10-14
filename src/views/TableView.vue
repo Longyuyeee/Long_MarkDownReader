@@ -1,5 +1,6 @@
 <template>
-  <div class="table-view" :class="{ 'external-table': isExternal }" tabindex="-1" @keydown="handleKeydown">
+  <div class="table-view" :class="{ 'external-table': isExternal }" :inert="loading && !!table" :aria-busy="loading" tabindex="-1" @keydown="handleKeydown">
+    <div v-if="loading && table" class="table-switch-progress" role="status">正在切换表格…</div>
     <WorkspaceTabs v-if="isExternal" />
     <header class="table-toolbar">
       <div class="table-title">
@@ -48,7 +49,7 @@
     </nav>
 
     <main class="table-workspace">
-      <div v-if="loading" class="table-state"><div class="loader"></div><strong>{{ waitingForSave ? '正在等待上次保存完成…' : '正在加载表格…' }}</strong></div>
+      <div v-if="loading && !table" class="table-state"><div class="loader"></div><strong>{{ waitingForSave ? '正在等待上次保存完成…' : '正在加载表格…' }}</strong></div>
       <div v-else-if="error" class="table-state error"><strong>无法打开表格</strong><p>{{ error }}</p><button @click="loadTable">重新加载</button></div>
       <template v-else-if="table">
         <section v-if="activeViewKind === 'board'" class="board-config-bar">
@@ -260,6 +261,7 @@ const message = useMessage()
 const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
 const table = ref<TableDocument | null>(null)
+const presentedPath = ref('')
 const loading = ref(true)
 const error = ref('')
 const dirty = ref(false)
@@ -299,7 +301,7 @@ const waitingForSave = ref(false)
 const tablePath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
 const requestedRowId = computed(() => typeof route.query.row === 'string' ? route.query.row : '')
-const fileName = computed(() => tablePath.value.split(/[\\/]/).pop() || '数据表')
+const fileName = computed(() => (table.value ? presentedPath.value : tablePath.value).split(/[\\/]/).pop() || '数据表')
 const formatLabel = computed(() => table.value?.format === 'longedit-table' ? '开放 Table' : table.value?.format?.toUpperCase() || 'CSV')
 const tableWidth = computed(() => 52 + (columnWidths.value.length ? columnWidths.value.reduce((sum, width) => sum + width, 0) : 160))
 const gridStyle = computed(() => ({ gridTemplateColumns: `52px ${columnWidths.value.map(width => `${width}px`).join(' ') || '160px'}` }))
@@ -726,9 +728,17 @@ const toggleCardColumn = (id: string) => {
 }
 
 const loadTable = async () => {
+  if (scrollRef.value && presentedPath.value) {
+    rememberWorkspaceViewState(presentedPath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
+  }
   const generation = ++loadGeneration
   const requestedPath = tablePath.value
   const requestedExternal = isExternal.value
+  if (dirty.value && presentedPath.value && presentedPath.value !== requestedPath) {
+    // The route guard has already accepted discarding this draft.
+    const previousTab = store.tabs.find(tab => tab.path === presentedPath.value)
+    if (previousTab) previousTab.isDirty = false
+  }
   loading.value = true
   waitingForSave.value = false
   error.value = ''
@@ -752,6 +762,7 @@ const loadTable = async () => {
     })
     if (generation !== loadGeneration) return
     table.value = document
+    presentedPath.value = requestedPath
     selectedRowId.value = ''
     rowUndoStack.value = []
     rowRedoStack.value = []
@@ -771,6 +782,7 @@ const loadTable = async () => {
     loading.value = false
     if (requestedRow) {
       await nextTick()
+      if (generation !== loadGeneration) return
       const rowIndex = document.rowIds.indexOf(requestedRow)
       const virtualIndex = filteredIndices.value.indexOf(rowIndex)
       const top = Math.max(0, virtualIndex * rowHeight - Math.max(0, viewportHeight.value / 2 - rowHeight))
@@ -780,8 +792,14 @@ const loadTable = async () => {
     } else if (viewState) {
       if (typeof viewState.frozenColumns === 'number') frozenColumns.value = Math.min(maxFrozenColumns.value, Math.max(0, Math.trunc(viewState.frozenColumns)))
       await nextTick()
+      if (generation !== loadGeneration) return
       scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
       scrollTop.value = viewState.scrollTop
+    } else {
+      await nextTick()
+      if (generation !== loadGeneration) return
+      scrollRef.value?.scrollTo({ top: 0, left: 0 })
+      scrollTop.value = 0
     }
     if (!requestedRow) notice.value = `已解析 ${table.value.rows.length.toLocaleString()} 行`
   } catch (cause) {
@@ -951,13 +969,14 @@ const startColumnResize = (column: number, event: PointerEvent) => {
 const handleScroll = () => {
   if (!scrollRef.value) return
   scrollTop.value = scrollRef.value.scrollTop
-  rememberWorkspaceViewState(tablePath.value, {
+  rememberWorkspaceViewState(presentedPath.value, {
     scrollTop: scrollRef.value.scrollTop,
     scrollLeft: scrollRef.value.scrollLeft,
     frozenColumns: frozenColumns.value,
   })
 }
 const handleKeydown = (event: KeyboardEvent) => {
+  if (loading.value) return
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void saveTable() }
   const target = event.target as HTMLElement | null
   const isEditing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable
@@ -1009,7 +1028,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   ++loadGeneration
   if (scrollRef.value) {
-    rememberWorkspaceViewState(tablePath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
+    rememberWorkspaceViewState(presentedPath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
   }
   window.clearTimeout(typeTimer)
   window.removeEventListener('beforeunload', beforeUnload)
@@ -1018,6 +1037,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.table-view { position: relative; }
+.table-switch-progress { position: absolute; top: 0; right: 0; z-index: 8; padding: 4px 10px; border-radius: 0 0 var(--theme-radius-sm) var(--theme-radius-sm); color: var(--theme-primary); background: var(--theme-surface); font-size: var(--text-compact); pointer-events: none; animation: table-switch-notice var(--motion-fast) ease 180ms both; }
+@keyframes table-switch-notice { from { opacity: 0; } to { opacity: 1; } }
 .table-view { width: 100%; height: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--theme-text); background: color-mix(in srgb, var(--theme-bg) 94%, var(--theme-primary)); outline: none; container-type: inline-size; }
 .table-toolbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,.09); background: var(--theme-card); box-shadow: 0 2px 10px rgba(0,0,0,.06); z-index: 5; }
 .table-title,.table-tools { display: flex; align-items: center; gap: 8px; }.table-tools { min-width: 0; max-width: 100%; scroll-padding-inline: 8px; }.table-title > button,.table-tools > button { min-width: max-content; height: 32px; padding: 0 10px; border: 1px solid rgba(0,0,0,.1); border-radius: 7px; color: var(--theme-text); background: rgba(0,0,0,.035); cursor: pointer; }.table-tools > button:disabled { opacity: .42; cursor: default; }.table-tools > .icon-tool { min-width: 32px; width: 32px; display: grid; place-items: center; padding: 0; }.table-tools > .icon-tool svg { width: 16px; height: 16px; }.table-title > button { width: 32px; padding: 0; font-size: 18px; }.table-title div { display: flex; flex-direction: column; }.table-title strong { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }.table-title span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.table-tools > button.active { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.4); background: rgba(var(--theme-primary-rgb),.08); }.table-tools .save-button { min-width: 72px; color: #fff; border-color: var(--theme-primary); background: var(--theme-primary); }.table-tools .save-button:disabled { color: var(--theme-text-secondary); border-color: rgba(0,0,0,.08); background: rgba(0,0,0,.04); cursor: default; }

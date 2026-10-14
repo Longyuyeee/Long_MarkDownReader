@@ -1,0 +1,44 @@
+{
+  "checks": [
+    "All six styles retain the exact same table surface and visible cells on every sampled frame while delayed tab reads finish; the old table cannot be edited or saved during the switch",
+    "Each table keeps its own reading position; a first visit starts at the top and returning restores the previous scroll",
+    "Rapid A/B/CSV switching discards stale reads and keeps the latest selected file",
+    "Existing unsaved-draft confirmation still cancels navigation without losing content; explicit discard switches without writing the source",
+    "A failed target still has a real error and working retry instead of leaving old data editable under the new path",
+    "Sidebar tabs crossfade with overlapping content rather than fading out to an empty panel before the next one appears"
+  ],
+  "transitions": [
+    {
+      "style": "soft",
+      "frames": 52,
+      "blankFrames": 0
+    },
+    {
+      "style": "neo",
+      "frames": 37,
+      "blankFrames": 0
+    },
+    {
+      "style": "glass",
+      "frames": 38,
+      "blankFrames": 0
+    },
+    {
+      "style": "airy",
+      "frames": 43,
+      "blankFrames": 0
+    },
+    {
+      "style": "minimal",
+      "frames": 57,
+      "blankFrames": 0
+    },
+    {
+      "style": "sharp",
+      "frames": 59,
+      "blankFrames": 0
+    }
+  ],
+  "errors": [],
+  "scope": "Real App, LibraryMode, WorkspaceTabs and TableView; controlled native read latency in mocked IPC. No installed performance claim."
+}

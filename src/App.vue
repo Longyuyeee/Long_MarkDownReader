@@ -42,6 +42,7 @@
           </div>
         </div>
         <CommandPalette :show="showPalette" @close="showPalette = false" @execute="handleCommand" />
+        <FileRelationDialog />
         <AppUpdater v-if="isMainWindow" />
 
         <!-- 手写极简退出确认弹窗 (无侵入式) -->
@@ -88,6 +89,7 @@ import { useRouter } from 'vue-router'
 import { emit, emitTo, type UnlistenFn } from '@tauri-apps/api/event'
 import CommandPalette from './components/CommandPalette.vue'
 import FileRelationContext from './components/FileRelationContext.vue'
+import FileRelationDialog from './components/FileRelationDialog.vue'
 import AppUpdater from './components/AppUpdater.vue'
 import AppNavigation from './components/AppNavigation.vue'
 import WorkspaceErrorBoundary from './components/WorkspaceErrorBoundary.vue'

@@ -208,6 +208,7 @@ pub struct GraphContextRelation {
     pub directed: bool,
     pub evidence: Vec<GraphRelationEvidence>,
     pub decision_status: String,
+    pub manual_relation_ids: Vec<String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -304,6 +305,7 @@ pub struct GraphEdge {
     pub(crate) relation_type: String,
     pub(crate) directed: bool,
     pub(crate) mentions: Vec<WikilinkMention>,
+    pub(crate) manual_relation_ids: Vec<String>,
 }
 
 impl GraphEdge {
@@ -315,6 +317,7 @@ impl GraphEdge {
             directed: relation_type != "related",
             relation_type,
             mentions: vec![mention],
+            manual_relation_ids: Vec::new(),
         }
     }
 
@@ -325,6 +328,7 @@ impl GraphEdge {
             relation_type: relation_type.into(),
             directed: relation_type != "related",
             mentions: Vec::new(),
+            manual_relation_ids: Vec::new(),
         }
     }
 
@@ -336,6 +340,7 @@ impl GraphEdge {
             relation_type: "links-to".into(),
             directed: true,
             mentions: Vec::new(),
+            manual_relation_ids: Vec::new(),
         }
     }
 }
@@ -394,6 +399,7 @@ pub(crate) async fn build_link_graph_cancellable(
         }
         edges.retain(|edge| node_ids.contains(&edge.source) && node_ids.contains(&edge.target));
         append_confirmed_relation_edges(&nodes, &mut edges, &decisions);
+        super::file_relations::append_to_graph(&root, &mut nodes, &mut edges)?;
         edges = merge_graph_edges(edges);
         let mut degrees = HashMap::new();
         for edge in &edges {
@@ -421,6 +427,7 @@ pub(crate) fn merge_graph_edges(edges: Vec<GraphEdge>) -> Vec<GraphEdge> {
         );
         if let Some(index) = indexes.get(&key).copied() {
             merged[index].mentions.extend(edge.mentions);
+            merged[index].manual_relation_ids.extend(edge.manual_relation_ids);
         } else {
             indexes.insert(key, merged.len());
             merged.push(edge);
@@ -1295,6 +1302,7 @@ fn append_confirmed_relation_edges(
             relation_type: relation_type.clone(),
             directed: false,
             mentions: Vec::new(),
+            manual_relation_ids: Vec::new(),
         });
     }
 }
@@ -1386,6 +1394,7 @@ fn relation_context_for_locator(
                 })
                 .collect(),
             decision_status: "explicit".into(),
+            manual_relation_ids: edge.manual_relation_ids.clone(),
         });
     }
     let mut hidden_relations = Vec::new();
@@ -1437,6 +1446,7 @@ fn relation_context_for_locator(
                         syntax,
                     }],
                     decision_status: decision_status.clone(),
+                    manual_relation_ids: Vec::new(),
                 };
                 if decision_status == "hidden" {
                     hidden_relations.push(relation);
@@ -3976,6 +3986,7 @@ mod tests {
                     relation_type: "related".into(),
                     directed: false,
                     mentions: Vec::new(),
+                    manual_relation_ids: Vec::new(),
                 },
             ],
         };
@@ -4035,6 +4046,7 @@ mod tests {
                     relation_type: "related".into(),
                     directed: false,
                     mentions: Vec::new(),
+                    manual_relation_ids: Vec::new(),
                 },
             ],
         };

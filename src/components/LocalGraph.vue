@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import GraphFilterControls from './GraphFilterControls.vue'
 import { applyGraphFilters, useGraphFilters } from '../composables/useGraphFilters'
@@ -103,6 +103,7 @@ import { graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '
 import { isActiveThemeDark } from '../config/themePresets'
 import { useAppStore } from '../store/app'
 import { sameWorkspacePath } from '../utils/savedCollections'
+import { onFileRelationsChanged } from '../services/fileRelations'
 import type { GraphObjectSemantic } from '../config/graphSemantics'
 import type { GraphData, GraphNode } from '../types/graph'
 interface PositionedNode extends GraphNode { x: number; y: number; level: number; semantic: GraphObjectSemantic }
@@ -214,6 +215,8 @@ const nodeColor = (node: PositionedNode) => graphSemanticColor(node.objectType, 
 
 watch(depth, value => localStorage.setItem(LOCAL_GRAPH_DEPTH_KEY, String(value)))
 watch([() => props.libraryRoot, () => props.currentPath, depth], loadGraph, { immediate: true })
+const stopRelationChanges = onFileRelationsChanged(root => { if (sameWorkspacePath(root, props.libraryRoot)) void loadGraph() })
+onBeforeUnmount(stopRelationChanges)
 </script>
 
 <style scoped>

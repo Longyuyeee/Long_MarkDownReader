@@ -11,9 +11,10 @@
           <Search :size="14" />
           <input v-model="searchQuery" placeholder="搜索节点" @keydown.enter="focusFirstMatch" />
         </label>
-        <button class="tutorial-btn" :class="{ active: showTutorial }" @click="showTutorial = !showTutorial" title="如何建立链接">
+        <button class="tutorial-btn add-relation-entry" data-testid="graph-add-relation" aria-label="添加关系" @click="requestFileRelation(selectedNode?.path)"><Link2 :size="16" /><span>添加关系</span></button>
+        <button class="tutorial-btn" :class="{ active: showTutorial }" @click="showTutorial = !showTutorial" aria-label="如何关联资料">
           <CircleHelp :size="16" />
-          <span>如何建立链接</span>
+          <span>如何关联资料</span>
         </button>
         <button class="graph-tools-entry" type="button" data-testid="graph-tools-entry" title="探索、导出、布局与视图工具" :aria-expanded="graphToolsOpen" @click="graphToolsOpen = !graphToolsOpen"><SlidersHorizontal :size="16" /><span>图谱工具</span></button>
           <div v-if="graphToolsOpen" class="graph-tools-menu" data-testid="graph-tools-menu" @click="graphToolsOpen = false">
@@ -321,26 +322,24 @@
           <line x1="15.5" y1="17.5" x2="13.5" y2="13.5"/>
         </svg>
       </div>
-      <h3>{{ graphData.nodes.length === 0 ? '用双向链接点亮知识图谱' : '如何建立笔记链接' }}</h3>
-      <p class="tutorial-intro">在任意 Markdown 笔记中输入双方括号语法，保存后即可生成节点与连线。</p>
+      <h3>把相关资料连起来，方便来回查看</h3>
+      <p class="tutorial-intro">笔记、PDF、表格、图片等文件，都可以直接添加关系。</p>
       <div class="tutorial-steps">
         <div class="tutorial-step">
           <span class="step-number">1</span>
-          <div><strong>准备目标笔记</strong><p>例如已有一篇名为“会议记录.md”的笔记</p></div>
+          <div><strong>点击“添加关系”</strong><p>在图谱顶部，或文件页面的“专注”旁打开</p></div>
         </div>
         <div class="tutorial-step">
           <span class="step-number">2</span>
-          <div><strong>在另一篇笔记中输入链接</strong><code>[[会议记录]]</code></div>
+          <div><strong>选择两份资料</strong><p>例如“项目方案.md”和“测试结果.xlsx”</p></div>
         </div>
         <div class="tutorial-step">
           <span class="step-number">3</span>
-          <div><strong>保存并返回知识图谱</strong><p>图谱会自动识别链接并建立连线</p></div>
+          <div><strong>选关系类型，再保存</strong><p>例如“相关资料”或“参考依据”，图谱会立即显示连线</p></div>
         </div>
       </div>
-      <div class="tutorial-note">
-        跨目录可写 <code>[[子目录/文件名]]</code>；文件名在知识库中唯一时，也可直接写 <code>[[文件名]]</code>。
-      </div>
-      <button class="tutorial-action" @click="returnToLibrary">返回编辑器试一试</button>
+      <details class="tutorial-note"><summary>Markdown 也可以写正文链接</summary><p>在笔记里输入 <code>[[会议记录]]</code> 并保存，引用就会出现在图谱中。跨目录可写 <code>[[子目录/文件名]]</code>。</p><button @click="returnToLibrary">返回编辑器</button></details>
+      <button class="tutorial-action" @click="showTutorial = false; requestFileRelation(selectedNode?.path)">现在添加关系</button>
     </div>
     </transition>
 
@@ -391,20 +390,23 @@
         <p class="details-path">{{ displayWorkspacePath(selectedNode.path) }}<template v-if="selectedNode.locationLabel"> · {{ selectedNode.locationLabel }}</template></p>
         <div class="details-metrics">
           <div><strong>{{ nodeDegree(selectedNode.id) }}</strong><span>关系</span></div>
-          <div><strong>{{ incomingCount(selectedNode.id) }}</strong><span>反向链接</span></div>
-          <div><strong>{{ outgoingCount(selectedNode.id) }}</strong><span>出链</span></div>
+          <div><strong>{{ incomingCount(selectedNode.id) }}</strong><span>指向这里</span></div>
+          <div><strong>{{ outgoingCount(selectedNode.id) }}</strong><span>指向其他</span></div>
         </div>
         <div class="details-actions">
           <button class="primary-action" @click="openNode(selectedNode)">打开{{ objectTypeLabel(selectedNode.objectType) }}</button>
+          <button class="relation-quick-add" @click="requestFileRelation(selectedNode.path)"><Link2 :size="15" />为这份资料添加关系</button>
           <button data-testid="graph-neighbor-focus-action" :disabled="!selectedNeighbors.length" @click="focusSelectedNeighbors">聚焦直接邻居</button>
+          <details class="more-node-actions"><summary>更多图谱操作</summary><div>
           <button data-testid="graph-neighbor-pin-action" :disabled="Boolean(selectedNode.parentId)" @click="pinSelectedNeighborsToEditor">固定局部关系到编辑器右栏</button>
           <button @click="useAsMindmapRoot(selectedNode)">设为思维导图中心</button>
           <button data-testid="m4c5-send-to-canvas" :disabled="isCreatingCanvas || !canSendToCanvas(selectedNode)" @click="requestSendToCanvas(selectedNode)">{{ isCreatingCanvas ? '正在生成…' : '发送到可编辑画布' }}</button>
           <button data-testid="m4c4-create-project-note" :disabled="isCreatingProject || !canCreateProjectNote(selectedNode)" @click="requestCreateProjectNote(selectedNode)">{{ isCreatingProject ? '正在生成…' : '生成项目笔记' }}</button>
           <button :disabled="isSavingCollection || !canCreateProjectNote(selectedNode)" @click="saveGraphCollection(selectedNode)">{{ isSavingCollection ? '正在保存…' : '保存视图' }}</button>
+          </div></details>
         </div>
         <div v-if="selectedNode.objectType === 'markdown'" class="relation-editor">
-          <span class="neighbor-title">建立语义关系</span>
+          <details v-if="selectedNode.objectType === 'markdown'"><summary>Markdown 正文关系</summary><span class="neighbor-title">将关系写入笔记</span>
           <div class="relation-editor-grid">
             <select v-model="relationDraftType" aria-label="关系类型">
               <option v-for="option in relationTypeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
@@ -415,7 +417,7 @@
             </select>
             <button :disabled="relationSaving || !relationDraftTarget" @click="addGraphRelation">{{ relationSaving ? '写入中…' : '添加关系' }}</button>
           </div>
-          <small>关系写入源笔记 Frontmatter，Markdown 始终是事实源。</small>
+          <small>此方式会修改笔记内容；上方“添加关系”适用于所有文件，原文件内容保持不变。</small></details>
         </div>
         <div v-if="selectedRelations.length" class="details-relations">
           <span class="neighbor-title">关系依据</span>
@@ -435,7 +437,7 @@
                 <span>{{ relationTypeLabel(relation.edge.relationType) }}<template v-if="relation.evidence?.line"> · 第 {{ relation.evidence.line }} 行</template><template v-if="relation.edge.mentions.length > 1"> · {{ relation.edge.mentions.length }} 处</template></span>
               </span>
             </button>
-            <button v-if="canDeleteRelation(relation)" class="relation-delete" :disabled="relationSaving" title="从源笔记删除此语义关系" @click="removeGraphRelation(relation)">删除</button>
+            <button v-if="canDeleteRelation(relation)" class="relation-delete" :disabled="relationSaving" :aria-label="relation.edge.manualRelationIds?.length ? '移除手动关系' : '从源笔记删除此关系'" @click="removeGraphRelation(relation)">{{ relation.edge.manualRelationIds?.length ? '移除关系' : '删除' }}</button>
           </div>
         </div>
         <div v-if="selectedNeighbors.length" class="neighbor-list">
@@ -482,6 +484,7 @@ import type { GraphMinimapProjection } from '../utils/graphMinimap'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
+import { announceFileRelationsChanged, onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphPathResult } from '../utils/graphPath'
 import type { GraphData, GraphNode, RelationMention } from '../types/graph'
@@ -802,8 +805,8 @@ const returnToLibrary = () => store.activeTabId
   ? router.push(managedFileLocation(store.activeTabId))
   : router.push({ name: 'LibraryMode' })
 const nodeDegree = (id: string) => degreeMap.value.get(id) || 0
-const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.target === id).length
-const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.source === id).length
+const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.directed && edge.target === id).length
+const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.directed && edge.source === id).length
 const selectedNeighbors = computed(() => {
   if (!selectedNode.value) return []
   const ids = new Set<string>()
@@ -841,6 +844,7 @@ const relationTypeLabel = (type: string) => graphRelationSemantic(type).label
 type SelectedRelation = (typeof selectedRelations.value)[number]
 const relationSourceNode = (relation: SelectedRelation) => graphData.value.nodes.find(node => node.id === relation.edge.source)
 const canDeleteRelation = (relation: SelectedRelation) => {
+  if (relation.edge.manualRelationIds?.length) return true
   const source = relationSourceNode(relation)
   return Boolean(source?.objectType === 'markdown'
     && source.contentSignature
@@ -881,6 +885,15 @@ const addGraphRelation = async () => {
 }
 
 const removeGraphRelation = async (relation: SelectedRelation) => {
+  if (relation.edge.manualRelationIds?.length) {
+    if (relationSaving.value) return
+    relationSaving.value = true
+    const libraryRoot = store.libraryPath
+    try { for (const relationId of relation.edge.manualRelationIds) await invoke('remove_file_relation', { libraryRoot, relationId }); announceFileRelationsChanged(libraryRoot) }
+    catch (error) { message.error(`移除关系失败：${String(error)}`) }
+    finally { relationSaving.value = false }
+    return
+  }
   const source = relationSourceNode(relation)
   const evidence = relation.evidence
   if (!source?.contentSignature || !evidence || relationSaving.value) return
@@ -3073,6 +3086,8 @@ onMounted(() => {
   if (containerRef.value) graphResizeObserver.observe(containerRef.value)
   if (canvasRef.value) graphResizeObserver.observe(canvasRef.value)
 })
+const stopRelationChanges = onFileRelationsChanged(root => { if (root === store.libraryPath && props.show !== false) void reloadAfterRelationMutation(selectedNode.value?.path || '') })
+onUnmounted(stopRelationChanges)
 onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); window.clearTimeout(autoFitTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
 
@@ -3942,6 +3957,16 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
 }
 
 :global(.graph-project-note-disclosure) { max-width: 580px; display: grid; gap: 8px; line-height: 1.55; }
+.graph-controls .add-relation-entry { width: auto; padding: 0 10px; }
+.graph-controls .add-relation-entry span { display: inline; }
+.tutorial-action, .details-actions .primary-action { color: var(--workspace-on-accent, var(--theme-bg)); }
+.details-actions .relation-quick-add { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .07); }
+.more-node-actions { border: var(--theme-border); border-radius: var(--theme-radius-sm); padding: 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.more-node-actions summary { cursor: pointer; }
+.more-node-actions > div { display: grid; gap: 6px; margin-top: 9px; }
+.relation-editor details { margin-top: 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.relation-editor details summary { cursor: pointer; margin-bottom: 8px; }
+.relation-editor details small { display: block; margin-top: 7px; line-height: 1.5; }
 :global(.graph-project-note-disclosure p) { margin: 0; overflow-wrap: anywhere; }
 :global(.graph-project-note-disclosure ul) { display: grid; gap: 4px; margin: 0; padding-left: 20px; }
 :global(.graph-project-note-disclosure .graph-project-source-safety) { padding: 7px 9px; border-radius: 6px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb), .08); font-weight: 650; }

@@ -1,25 +1,34 @@
-name: v1.1.0 Candidate Installer Lifecycle
+name: Community Release Installer Lifecycle
 
 "on":
   workflow_dispatch:
     inputs:
       candidate_commit:
-        description: Exact 40-character frozen v1.1.0 candidate commit
+        description: Exact 40-character frozen product commit
         required: true
+      current_version:
+        description: Current package version
+        required: true
+        default: "1.1.0"
+      previous_version:
+        description: Previous official public version
+        required: true
+        default: "1.0.26"
 
 permissions:
   contents: read
 
 jobs:
   candidate-lifecycle:
-    name: Build MSI/NSIS and exercise v1.0.26 to v1.1.0
+    name: Build MSI/NSIS and exercise official upgrade
     runs-on: windows-latest
     timeout-minutes: 75
     env:
       CARGO_TERM_COLOR: always
       LONGEDIT_INSTALLED_VERSION_SCENARIO: "1"
       LONGEDIT_R5I_DISPOSABLE: "1"
-      PREVIOUS_VERSION: "1.0.26"
+      PREVIOUS_VERSION: ${{ inputs.previous_version }}
+      RELEASE_VERSION: ${{ inputs.current_version }}
       CANDIDATE_COMMIT: ${{ inputs.candidate_commit || github.sha }}
 
     steps:
@@ -32,7 +41,7 @@ jobs:
       - name: Reject mutable candidate references
         shell: powershell
         run: |
-          if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$') { throw 'Invalid frozen candidate commit' }
+          if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid frozen candidate commit or release versions' }
           "CANDIDATE_COMMIT=$env:CANDIDATE_COMMIT" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Check out frozen candidate
@@ -45,7 +54,7 @@ jobs:
       - name: Check out previous public release
         uses: actions/checkout@v6
         with:
-          ref: v1.0.26
+          ref: v${{ env.PREVIOUS_VERSION }}
           path: previous-product
 
       - name: Resolve and verify source identities
@@ -54,11 +63,11 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $candidate = (& git -C (Join-Path $env:GITHUB_WORKSPACE 'current-product') rev-parse HEAD).Trim().ToLowerInvariant()
           $previous = (& git -C (Join-Path $env:GITHUB_WORKSPACE 'previous-product') rev-parse HEAD).Trim().ToLowerInvariant()
-          $expectedPrevious = (& git -C (Join-Path $env:GITHUB_WORKSPACE 'orchestration') rev-list -n 1 v1.0.26).Trim().ToLowerInvariant()
+          $expectedPrevious = (& git -C (Join-Path $env:GITHUB_WORKSPACE 'orchestration') rev-list -n 1 "v$env:PREVIOUS_VERSION").Trim().ToLowerInvariant()
           $package = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'current-product\package.json') -Raw | ConvertFrom-Json
           $previousPackage = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'previous-product\package.json') -Raw | ConvertFrom-Json
           if ($candidate -ne $env:CANDIDATE_COMMIT -or $previous -ne $expectedPrevious) { throw 'Resolved source identity does not match the immutable inputs.' }
-          if ($package.version -ne '1.1.0' -or $previousPackage.version -ne $env:PREVIOUS_VERSION) { throw 'Candidate or previous package version drifted.' }
+          if ($package.version -ne $env:RELEASE_VERSION -or $previousPackage.version -ne $env:PREVIOUS_VERSION) { throw 'Candidate or previous package version drifted.' }
           "PRODUCT_SOURCE_COMMIT=$candidate" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PREVIOUS_SOURCE_COMMIT=$previous" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CURRENT_APP_VERSION=$($package.version)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -71,6 +80,11 @@ jobs:
           cache-dependency-path: |
             current-product/package-lock.json
             previous-product/package-lock.json
+
+      - name: Cache Rust build dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: current-product/src-tauri -> target
 
       - name: Install frozen candidate dependencies
         working-directory: current-product
@@ -94,12 +108,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $receipt = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'orchestration\docs\evidence\v1.0.26-release\release-receipt.json') -Raw | ConvertFrom-Json
-          $asset = @($receipt.assets | Where-Object { $_.name -eq 'LongEdit_1.0.26_x64-setup.exe' })
-          if ($receipt.release.tag -ne 'v1.0.26' -or $receipt.release.taggedCommit -ne $env:PREVIOUS_SOURCE_COMMIT -or $asset.Count -ne 1) { throw 'Previous release identity drift.' }
+          $receipt = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "orchestration\docs\evidence\v$($env:PREVIOUS_VERSION)-release\release-receipt.json") -Raw | ConvertFrom-Json
+          $asset = @($receipt.assets | Where-Object { $_.name -eq "LongEdit_$($env:PREVIOUS_VERSION)_x64-setup.exe" })
+          if ($receipt.release.tag -ne "v$env:PREVIOUS_VERSION" -or $receipt.release.taggedCommit -ne $env:PREVIOUS_SOURCE_COMMIT -or $asset.Count -ne 1) { throw 'Previous release identity drift.' }
           $destination = Join-Path $env:GITHUB_WORKSPACE 'previous-official'
           New-Item -ItemType Directory -Path $destination -Force | Out-Null
-          gh release download v1.0.26 --repo Longyuyeee/Long_MarkDownReader --pattern $asset[0].name --dir $destination
+          gh release download "v$env:PREVIOUS_VERSION" --repo Longyuyeee/Long_MarkDownReader --pattern $asset[0].name --dir $destination
           if ($LASTEXITCODE -ne 0) { throw 'Official installer download failed.' }
           $installer = Get-Item -LiteralPath (Join-Path $destination $asset[0].name)
           if ($installer.Length -ne $asset[0].sizeBytes -or (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $asset[0].sha256) { throw 'Previous official installer digest/size mismatch.' }
@@ -115,11 +129,11 @@ jobs:
           foreach ($artifact in @($msi[0], $nsis[0], $previousNsis[0])) {
             if ((Get-AuthenticodeSignature -LiteralPath $artifact.FullName).Status -ne 'NotSigned') { throw "Unexpected signature status: $($artifact.Name)" }
           }
-          $output = Join-Path $env:GITHUB_WORKSPACE 'v1-1-0-output'
+          $output = Join-Path $env:GITHUB_WORKSPACE 'community-release-output'
           New-Item -ItemType Directory -Path $output -Force | Out-Null
           $receipt = [ordered]@{
             schemaVersion = 1
-            stage = 'V1.1.0'
+            stage = "V$env:RELEASE_VERSION"
             status = 'hosted-installers-built'
             candidateSourceCommit = $env:PRODUCT_SOURCE_COMMIT
             previousSourceCommit = $env:PREVIOUS_SOURCE_COMMIT
@@ -161,15 +175,15 @@ jobs:
             -ConfirmDisposableMachine `
             -AllowInstallerMutation
 
-      - name: Upload v1.1.0 lifecycle evidence and unsigned installers
+      - name: Upload community release lifecycle evidence and unsigned installers
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: v1-1-0-candidate-lifecycle-${{ github.run_id }}
+          name: community-release-candidate-lifecycle-${{ github.run_id }}
           if-no-files-found: error
           retention-days: 14
           path: |
-            v1-1-0-output
-            current-product/src-tauri/target/release/bundle/msi/*_1.1.0_x64_zh-CN.msi
-            current-product/src-tauri/target/release/bundle/nsis/*_1.1.0_x64-setup.exe
-            previous-official/*_1.0.26_x64-setup.exe
+            community-release-output
+            current-product/src-tauri/target/release/bundle/msi/*_${{ inputs.current_version }}_x64_zh-CN.msi
+            current-product/src-tauri/target/release/bundle/nsis/*_${{ inputs.current_version }}_x64-setup.exe
+            previous-official/*_${{ inputs.previous_version }}_x64-setup.exe

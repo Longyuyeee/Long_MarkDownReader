@@ -33,6 +33,7 @@ use commands::drawio::{
     write_external_drawio_source_document,
 };
 use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
+use commands::file_relations::{list_relation_files, list_file_relations, save_file_relation, remove_file_relation};
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
@@ -48,6 +49,7 @@ use commands::formats::{
     write_log_document, write_text_document,
 };
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
+use commands::inbox::{create_inbox_directory, read_inbox_directory};
 pub(crate) use commands::graph::GraphData;
 use commands::graph::{
     analyze_graph_health, build_link_graph, build_local_graph, export_knowledge_graph_observation,
@@ -510,6 +512,8 @@ pub fn run() {
             update_graph_relation_decision,
             open_external_file_window,
             scan_directory,
+            read_inbox_directory,
+            create_inbox_directory,
             get_folder_order,
             save_folder_order,
             import_to_library,
@@ -595,6 +599,10 @@ pub fn run() {
             analyze_workspace_health,
             extract_wikilinks,
             find_backlinks,
+            list_relation_files,
+            list_file_relations,
+            save_file_relation,
+            remove_file_relation,
             get_all_tags,
             search_by_tag,
             build_link_graph,

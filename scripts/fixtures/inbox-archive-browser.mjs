@@ -9,7 +9,7 @@ import '/src/styles/themes.scss'
 window.inboxAudit = { calls: [], opened: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
   window.inboxAudit.calls.push({ command, args })
-  if (command === 'scan_directory') return [{ name: '会议记录.md', path: 'C:/audit/Inbox/会议记录.md', is_dir: false }, { name: '需求清单.md', path: 'C:/audit/Inbox/需求清单.md', is_dir: false }]
+  if (command === 'read_inbox_directory') return { entries: [{ name: '会议记录.md', path: 'C:/audit/Inbox/会议记录.md', is_dir: false }, { name: '需求清单.md', path: 'C:/audit/Inbox/需求清单.md', is_dir: false }], directoryMissing: false }
   if (command === 'plugin:event|listen') return 1
   if (command === 'preflight_archive') return { items: args.items.map(item => ({ sourcePath: item.sourcePath, targetPath: `C:/audit/项目/${item.targetName}`, issues: [], dependencies: { complete: false, limitations: ['dependency_inventory_incomplete'] } })), structuralChecksPassed: true, canExecute: false, pendingChecks: ['execution_time_revalidation'], windowConfirmationError: 'window_state_not_clean' }
   throw Error(`Unexpected IPC ${command}`)

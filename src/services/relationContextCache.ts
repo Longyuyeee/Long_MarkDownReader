@@ -40,3 +40,8 @@ export const clearRelationContextCache = (libraryRoot: string, path: string) => 
     if (key.endsWith(suffix)) cache.delete(key)
   }
 }
+
+export const clearLibraryRelationCache = (libraryRoot: string) => {
+  const marker = `:${normalize(libraryRoot)}:`
+  for (const key of cache.keys()) if (key.includes(marker)) cache.delete(key)
+}

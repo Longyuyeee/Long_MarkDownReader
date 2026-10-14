@@ -28,7 +28,7 @@ const tasks = [
   {title:'项目方案.md',path:root+'/项目方案.md',relativePath:'项目方案.md',line:7,text:'整理项目需求',signature:'fixture-1',completed:false,priority:'high',dueDate:'2026-10-12',sourceType:'markdown'},
   {title:'会议记录.md',path:root+'/会议记录.md',relativePath:'会议记录.md',line:3,text:'补充会议结论',signature:'fixture-1',completed:false,priority:'normal',dueDate:null,sourceType:'markdown'},
 ]
-window.workflowAudit = {calls:[],store,disk,presets:themePresets,failCapture:false,failInbox:false,failConfig:false}
+window.workflowAudit = {calls:[],store,disk,directories,presets:themePresets,failCapture:false,failInbox:false,failConfig:false}
 const snapshot = path => ({path,content:disk.get(path),encoding:'utf-8',encodingConfidence:'high',bom:'none',lineEnding:'lf',hasFinalNewline:true,signature:disk.get(path),contentDigest:disk.get(path),size:disk.get(path)?.length||0,modified:1})
 window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener:()=>{} }
 window.__TAURI_INTERNALS__ = {
@@ -49,6 +49,25 @@ window.__TAURI_INTERNALS__ = {
   if(command==='analyze_workspace_health')return {duplicateGroups:[],unreferencedAnnotations:[],scannedFiles:4,hashedFiles:4,scannedAnnotations:0,truncated:false}
   if(command==='get_folder_order')return {items:[],pinned:[]}
   if(command==='get_library_stats')return {file_count:4,total_words:100}
+  if(command==='read_inbox_directory'){
+   if(window.workflowAudit.failInbox)throw Error('模拟目录不可读 (os error 5)')
+   const base=root+'/'+(args.inboxDirectory||'Inbox')
+   if(args.path===base&&!directories.includes(base))return {entries:[],directoryMissing:true}
+   if(!directories.includes(args.path))throw Error('模拟子目录已移动 (os error 2)')
+   return {entries:[...directories.map(path=>({path,name:path.split('/').pop(),is_dir:true})),...[...disk.keys()].map(path=>({path,name:path.split('/').pop(),is_dir:false}))].filter(entry=>entry.path.slice(0,entry.path.lastIndexOf('/'))===args.path),directoryMissing:false}
+  }
+  if(command==='create_inbox_directory'){
+   if(window.workflowAudit.failInbox)throw Error('模拟目录不可写 (os error 5)')
+   const path=args.libraryRoot+'/'+(args.inboxDirectory||'Inbox')
+   if(!directories.includes(path))directories.push(path)
+   return path
+  }
+  if(command==='create_new_file'){
+   let count=0,path
+   do{path=(args.targetDir||args.libraryRoot)+`/未命名${count?` ${count}`:''}.md`;count++}while(disk.has(path))
+   disk.set(path,'');return path
+  }
+  if(command==='validate_inbox_location')return args.path.slice(args.libraryRoot.length+1)||'.'
   if(command==='scan_directory'){
    if(window.workflowAudit.failInbox&&args.path.includes('/Inbox'))throw Error('模拟目录不可读')
    return [...directories.map(path=>({path,name:path.split('/').pop(),is_dir:true})),...[...disk.keys()].map(path=>({path,name:path.split('/').pop(),is_dir:false}))].filter(entry=>entry.path.slice(0,entry.path.lastIndexOf('/'))===args.path)

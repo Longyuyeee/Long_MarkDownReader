@@ -27,6 +27,7 @@ const harness = (vueWatchers = false) => {
   const noop = () => {}
   const context = vm.createContext({
     libraryLoadError: box(''), treeData: box([]), libraryLoadGeneration: 0,
+    tagsGeneration: 0, tagsRoot: '', allTags: box([]), tagsError: box(''), tagsLoading: box(false),
     searchQuery: box(''), knowledgeSearchResults: box([]), knowledgeSearchRunning: box(false), knowledgeSearchFailed: box(false),
     activeCollectionId: box(''), store: reactive({ libraryPath: 'synthetic-library' }), knowledgeSearchGeneration: 0,
     relationSummaries: box({}), searchObjectTypes: box(['markdown']),
@@ -101,7 +102,7 @@ test('component keeps errors distinct and offers accessible retry', () => {
   assert.match(component, /v-else-if="failed"[^>]*role="alert"/)
   assert.match(component, /\$emit\('retry'\)/)
   assert.match(source.slice(unmountStart, unmountEnd), /\+\+knowledgeSearchGeneration/)
-  assert.match(source, /watch\(\(\) => store.libraryPath, \(newPath\) => \{\s*\+\+knowledgeSearchGeneration/)
+  assert.match(source.slice(libraryStart, libraryEnd), /\+\+knowledgeSearchGeneration/)
   assert.match(source, /@retry="retryKnowledgeSearch"/)
 })
 

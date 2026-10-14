@@ -16,7 +16,7 @@ if (/\.icon-tab\.active\s*\{[^}]*width\s*:/s.test(library)) failures.push('activ
 // The user's R3 correction requests one row of icons; accessible labels and
 // explanations remain, and all seven functions must stay reachable.
 for (const label of ['文件', '大纲', '最近', '历史', '智能集合', '关系', '标签']) requireText(library, `label: '${label}'`, `sidebar label missing: ${label}`)
-for (const description of ['智能集合：保存并重复使用文件搜索的关键词、目录、格式、标签与时间条件', '标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown', '关系：查看当前 Markdown 的链出与反向链接']) {
+for (const description of ['智能集合：打开常看的资料清单，按保存的条件自动更新', '标签：用正文中的 #标签 按主题查找笔记，仅适用于 Markdown', '关系：查看我提到的笔记，以及哪些笔记提到我']) {
   requireText(library, description, `sidebar purpose missing: ${description}`)
 }
 if (library.includes("label: '保存'") || library.includes("label: '引用'") || library.includes("label: '搜索'")) failures.push('misleading legacy sidebar labels remain visible')

@@ -23,8 +23,10 @@ requireFact(policy.stage === 'M3A-7' && policy.neighborPinning.meaning === 'pin-
 const graphView = await fs.readFile('src/components/GraphView.vue', 'utf8')
 const libraryMode = await fs.readFile('src/views/LibraryMode.vue', 'utf8')
 const localGraph = await fs.readFile('src/components/LocalGraph.vue', 'utf8')
+const noteRelations = await fs.readFile('src/components/NoteRelationsPanel.vue', 'utf8')
 for (const token of ['graph-neighbor-pin-action', 'graph-selection-history-entry', 'graph-selection-history-panel', 'graph-selection-history-back', 'graph-selection-history-forward', 'graph-selection-history-item']) requireFact(graphView.includes(token), `M3A-7 graph UI contract missing: ${token}`)
-for (const token of ['local-graph-pin', 'local-graph-rail', 'local-graph-unpin', 'LocalGraph']) requireFact(libraryMode.includes(token), `M3A-7 editor rail contract missing: ${token}`)
+for (const token of ['local-graph-rail', 'local-graph-unpin', 'LocalGraph']) requireFact(libraryMode.includes(token), `M3A-7 editor rail contract missing: ${token}`)
+requireFact(noteRelations.includes('local-graph-pin') && libraryMode.includes('@pin="setLocalGraphPinned"'), 'M3A-7 relation panel must retain its working editor pin action')
 requireFact(localGraph.includes('local-graph-card') && localGraph.includes('local-graph-summary'), 'M3A-7 local graph evidence hooks missing')
 let desktop = null
 try { desktop = JSON.parse(await fs.readFile('docs/evidence/post-v115-m3a7-neighbor-pinning-history/desktop.json', 'utf8')) } catch {}

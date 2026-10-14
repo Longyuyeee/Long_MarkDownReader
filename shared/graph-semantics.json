@@ -22,17 +22,17 @@
     { "id": "ods_sheet", "order": 73, "label": "ODS 工作表", "shortLabel": "工作表", "glyph": "S", "shape": "diamond", "color": { "light": "#3f6212", "dark": "#bef264" } }
   ],
   "relationTypes": [
-    { "id": "links-to", "order": 10, "label": "普通引用", "directed": true, "line": "solid", "color": "#64748b" },
+    { "id": "links-to", "order": 10, "label": "引用", "directed": true, "line": "solid", "color": "#64748b" },
     { "id": "parent", "order": 20, "label": "父级", "directed": true, "line": "solid", "color": "#7c3aed" },
     { "id": "child", "order": 21, "label": "子级", "directed": true, "line": "solid", "color": "#8b5cf6" },
     { "id": "contains", "order": 30, "label": "包含", "directed": true, "line": "solid", "color": "#0f766e" },
     { "id": "embeds", "order": 31, "label": "嵌入", "directed": true, "line": "solid", "color": "#0891b2" },
     { "id": "depends-on", "order": 40, "label": "依赖", "directed": true, "line": "dashed", "color": "#dc2626" },
-    { "id": "cites", "order": 50, "label": "引用文献", "directed": true, "line": "dashed", "color": "#d97706" },
+    { "id": "cites", "order": 50, "label": "参考依据", "directed": true, "line": "dashed", "color": "#d97706" },
     { "id": "annotates", "order": 51, "label": "批注", "directed": true, "line": "dotted", "color": "#ea580c" },
-    { "id": "derived-from", "order": 60, "label": "派生自", "directed": true, "line": "dashed", "color": "#2563eb" },
+    { "id": "derived-from", "order": 60, "label": "整理自", "directed": true, "line": "dashed", "color": "#2563eb" },
     { "id": "supports", "order": 61, "label": "支持", "directed": true, "line": "solid", "color": "#16a34a" },
-    { "id": "related", "order": 70, "label": "相关", "directed": false, "line": "dashed", "color": "#9333ea" },
+    { "id": "related", "order": 70, "label": "相关资料", "directed": false, "line": "dashed", "color": "#9333ea" },
     { "id": "shares-tag", "order": 71, "label": "共同标签", "directed": false, "line": "dotted", "color": "#db2777" }
   ],
   "fallback": {

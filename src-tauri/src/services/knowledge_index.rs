@@ -99,6 +99,8 @@ pub struct KnowledgeIndexSnapshot {
     pub schema_version: u32,
     pub workspace_fingerprint: String,
     pub source_digest: String,
+    #[serde(default)]
+    pub file_relations_digest: String,
     pub built_at: u64,
     pub sources: Vec<IndexedSource>,
     pub objects: Vec<IndexedKnowledgeObject>,
@@ -1139,6 +1141,13 @@ pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndex
     snapshot_from_graph_with_sources(workspace, graph, sources)
 }
 
+pub fn file_relations_digest(workspace: &Path) -> String {
+    let path = workspace.join(".longedit/file-relations.json");
+    if !path.exists() { return String::new(); }
+    if path.metadata().map(|metadata| metadata.len() > 8 * 1024 * 1024).unwrap_or(true) { return "unavailable".into(); }
+    match fs::read(path) { Ok(bytes) => format!("{:x}", md5::compute(bytes)), Err(_) => "unavailable".into() }
+}
+
 pub fn snapshot_from_graph_with_sources(
     workspace: &Path,
     graph: GraphData,
@@ -1231,6 +1240,7 @@ pub fn snapshot_from_graph_with_sources(
         schema_version: KNOWLEDGE_INDEX_SCHEMA_VERSION,
         workspace_fingerprint: workspace_fingerprint(workspace),
         source_digest,
+        file_relations_digest: file_relations_digest(workspace),
         built_at: std::time::SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|value| value.as_secs())
@@ -1247,6 +1257,7 @@ pub fn refresh_snapshot_incremental_for_paths(
     mut snapshot: KnowledgeIndexSnapshot,
     changed_paths: &[PathBuf],
 ) -> Option<KnowledgeIndexSnapshot> {
+    if snapshot.file_relations_digest != file_relations_digest(workspace) { return None; }
     let current_sources = if changed_paths.is_empty() {
         collect_index_sources(workspace)
     } else {
@@ -1423,6 +1434,7 @@ pub fn read_ready_snapshot(
     let snapshot = read_snapshot(cache_root, workspace).ok().flatten()?;
     if snapshot.search_segments.is_empty()
         || source_digest(&collect_index_sources(workspace)) != snapshot.source_digest
+        || snapshot.file_relations_digest != file_relations_digest(workspace)
     {
         return None;
     }
@@ -1450,7 +1462,7 @@ pub fn inspect_index(
             let stale_source_count = if changed_paths.is_empty() {
                 let current_sources = collect_index_sources(workspace);
                 let current_source_digest = source_digest(&current_sources);
-                if current_source_digest == snapshot.source_digest {
+                if current_source_digest == snapshot.source_digest && snapshot.file_relations_digest == file_relations_digest(workspace) {
                     return ready_status_from_snapshot(cache_root, workspace, &snapshot);
                 }
                 runtime.invalidate_snapshot(workspace);
@@ -1489,7 +1501,7 @@ pub fn inspect_index(
         Ok(Some(snapshot)) => {
             let current_sources = collect_index_sources(workspace);
             let current_source_digest = source_digest(&current_sources);
-            let state = if current_source_digest == snapshot.source_digest {
+            let state = if current_source_digest == snapshot.source_digest && snapshot.file_relations_digest == file_relations_digest(workspace) {
                 "ready"
             } else {
                 "stale"

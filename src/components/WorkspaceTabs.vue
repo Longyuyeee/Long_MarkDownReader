@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { NTooltip, useDialog } from 'naive-ui'
-import { useRouter } from 'vue-router'
+import { isNavigationFailure, useRouter } from 'vue-router'
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, FileText as FileTextIcon, X as XIcon } from 'lucide-vue-next'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
@@ -113,11 +113,11 @@ const handleWheel = (event: WheelEvent) => {
 
 const routeToTab = async (tab: TabInfo) => {
   const target = routeForFile(tab.path)
-  if (!target) return
+  if (!target) return false
   if (!tab.external && opensInLibraryShell(findFileFormat(tab.path))) {
-    await openManagedFile(router, tab.path)
+    return await openManagedFile(router, tab.path)
   } else {
-    await router.push({
+    return await router.push({
       ...target,
       query: {
         ...(target.query || {}),
@@ -128,7 +128,8 @@ const routeToTab = async (tab: TabInfo) => {
 }
 
 const activate = async (tab: TabInfo) => {
-  await routeToTab(tab)
+  const failure = await routeToTab(tab)
+  if (failure === false || isNavigationFailure(failure)) return
   store.activateTab(tab.id)
 }
 
