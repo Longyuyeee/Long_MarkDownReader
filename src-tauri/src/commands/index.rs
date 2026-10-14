@@ -831,7 +831,7 @@ pub async fn search_knowledge(
         .flatten();
     tauri::async_runtime::spawn_blocking(move || {
         if let Some(snapshot) = cached {
-            if changed_paths.is_empty() {
+            if changed_paths.is_empty() && snapshot.file_relations_digest == crate::services::knowledge_index::file_relations_digest(&root) {
                 return search_segments(&snapshot.search_segments, &query);
             }
             if let Some(overlay) =

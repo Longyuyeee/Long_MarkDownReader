@@ -23,6 +23,7 @@
       </header>
 
       <div class="context-actions">
+        <button type="button" @click="requestFileRelation(filePath)"><NetworkIcon />添加关系</button>
         <button type="button" :disabled="!context?.node" @click="openCenteredGraph">
           <NetworkIcon />{{ contextCenterLabel }}
         </button>
@@ -131,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
 import { openManagedObject } from '../services/fileNavigation'
@@ -146,6 +147,7 @@ import {
 } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { clearRelationContextCache, getRelationContextCache, setRelationContextCache } from '../services/relationContextCache'
+import { onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { resolveCollectionPath } from '../utils/savedCollections'
 import type { GraphData } from '../types/graph'
 
@@ -311,6 +313,8 @@ const loadContext = async (force = false) => {
     if (currentRequest === requestId) loading.value = false
   }
 }
+const stopRelationChanges = onFileRelationsChanged(root => { if (samePath(root, props.libraryRoot) && open.value) void loadContext(true) })
+onBeforeUnmount(stopRelationChanges)
 
 const toggle = () => {
   open.value = !open.value

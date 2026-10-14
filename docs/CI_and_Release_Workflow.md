@@ -5,14 +5,14 @@
 ## 日常开发
 
 1. 按改动范围运行对应的 `check:*`，再运行 `npm run build`；涉及 Rust 时补充 `cargo check --locked`。
-2. 目标配置是功能分支只通过 Pull Request 触发一份 Quality Gate，`main` 的直接推送保留验证。当前 GitHub 凭据缺少修改 Actions 工作流所需的 `workflow` 权限，YAML 去重待使用具备该权限的凭据落地；在此之前避免为纯说明性提交连续推送。
+2. 功能分支只通过 Pull Request 触发一份 Quality Gate；`main` 推送和版本标签保留验证，避免分支推送与 PR 重复运行。
 3. 日常开发不运行 U2 安装、升级与回滚生命周期，不构建发布安装包。
 
 ## 发布候选
 
 1. 功能、版本号和发布说明全部对齐后冻结一个产品源码提交。
 2. 冻结提交的 Quality Gate 通过后，在干净工作树构建一次正式 MSI 与 NSIS，并记录大小、SHA-256 和签名状态。
-3. 手动运行一次 U2 完整生命周期，验证安装、格式工作区、升级、卸载与回滚。
+3. 手动运行 `Community Release Installer Lifecycle`，传入冻结提交、当前版本和上一公开版本，验证安装、格式工作区、升级、卸载与回滚。沿用历史工作流文件 `v1-1-0-candidate-lifecycle.yml`，版本与附件路径已参数化；不需要每版复制 YAML。
 4. 若仅审计脚本有误，复用同一候选安装器重跑；若产品源码发生变化，先在本地完成针对性回归，再重新构建一次完整候选。
 5. U2 与 Quality Gate 均通过后才固化证据、合并、打标签并发布 Release。
 

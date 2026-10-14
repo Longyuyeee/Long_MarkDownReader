@@ -54,7 +54,7 @@
 
         <button v-if="searchQuery.trim() && searchReturn.selectedKey.value" type="button" class="search-return-button" @click="searchReturn.returnToResults">返回刚才的搜索结果</button>
         <div class="sidebar-tab-content">
-          <transition name="tab-fade" mode="out-in">
+          <transition name="tab-fade">
             <!-- 文件 tree 面板 -->
             <div v-if="activeSidebarTab === 'files'" :key="'files'" class="tab-pane files-pane" role="tabpanel" :id="`panel-files`" :aria-labelledby="`tab-files`">
               <div class="sidebar-header">
@@ -95,7 +95,7 @@
               </div>
                 </div>
               </div>
-              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" />
+              <InboxBrowser v-if="showInbox && store.libraryPath" :library-root="store.libraryPath" @close="showInbox = false" @open="path => handleNodeSelect([path])" @changed="refreshLibrary" @manage="router.push({ name: 'Settings', query: { category: 'library' } })" />
 
               <div
                 class="tree-viewport"
@@ -201,66 +201,14 @@
             </div>
 
             <div v-else-if="activeSidebarTab === 'collections'" :key="'collections'" class="tab-pane collections-pane" role="tabpanel" id="panel-collections" aria-labelledby="tab-collections">
-              <div class="sidebar-panel-intro">
-                <n-icon :component="CollectionIcon" size="18" />
-                <div><strong>常用搜索</strong><span>保存动态条件，每次打开重新查找；不复制、不移动文件。</span></div>
-                <small>{{ librarySavedSearches.length }} 项</small>
-              </div>
-              <div v-if="searchQuery.trim()" class="collections-action">
-                <span>{{ searchQuery.trim() ? `当前：${searchQuery.trim()}` : '先在“文件”页输入搜索关键词' }}</span>
-                <n-button size="tiny" type="primary" title="保存当前关键词和格式条件" :disabled="!searchQuery.trim()" @click="saveCurrentSearch">
-                  <template #icon><n-icon :component="BookmarkAddIcon" /></template>
-                  保存当前条件
-                </n-button>
-              </div>
-              <SmartCollectionPanel :selected="selectedSmartCollection" :formats="searchFormatOptions" @open="openKnowledgeSearchResult" />
-              <div v-if="!librarySavedSearches.length" class="empty-state-hint"><n-empty description="还没有常用搜索" size="small" /></div>
-              <div v-else class="collection-list">
-                <div v-for="search in librarySavedSearches" :key="search.id" class="collection-row">
-                  <button class="collection-open" @click="openSavedSearch(search)">
-                    <n-icon :component="CollectionIcon" />
-                    <span><strong>{{ search.name }}</strong><small>{{ collectionFilterLabel(search) }}</small></span>
-                  </button>
-                  <n-button quaternary circle size="tiny" title="删除常用搜索" @click="confirmRemoveSavedSearch(search.id, search.name)">
-                    <template #icon><n-icon :component="TrashIcon" /></template>
-                  </n-button>
-                </div>
-              </div>
+              <SmartCollectionPanel :selected="selectedSmartCollection" :editing="editingSmartCollection" :formats="searchFormatOptions" :collections="librarySavedSearches" :current-query="searchQuery.trim()" :summary-for="collectionFilterLabel"
+                @open="openKnowledgeSearchResult" @select="openSavedSearch" @edit="editSavedCollection" @remove="entry => confirmRemoveSavedSearch(entry.id, entry.name)" @saved="smartCollectionSaved" @reset="selectedSmartCollection = null" @save-search="saveCurrentSearch" />
             </div>
 
-            <!-- 标签管理面板 -->
+            <!-- 正文标签与相关笔记 -->
             <div v-else-if="activeSidebarTab === 'tags'" :key="'tags'" class="tab-pane tags-pane" role="tabpanel" id="panel-tags" aria-labelledby="tab-tags">
-              <div class="sidebar-panel-intro tags-intro">
-                <n-icon :component="TagIcon" size="18" />
-                <div><strong>文内标签</strong><span>读取 Markdown 正文中的 <code>#标签名</code>；保存后自动汇总。</span></div>
-                <small>仅 Markdown</small>
-              </div>
-
-              <!-- 给当前文件加标签 -->
-              <div class="tag-add-area" v-if="activeTabId && activeIsMarkdown">
-                <span>添加到当前笔记</span>
-                <div class="tag-add-row">
-                  <n-input v-model:value="newTagName" placeholder="标签名" size="small" @keydown.enter="addTagToCurrentFile" />
-                  <n-button size="small" type="primary" title="写入当前 Markdown 笔记" @click="addTagToCurrentFile" :disabled="!newTagName.trim()">添加</n-button>
-                </div>
-              </div>
-              <div v-else-if="activeTabId" class="panel-guide">当前格式不使用 Markdown 标签。打开 Markdown 笔记后可以在这里添加。</div>
-
-              <div v-if="allTags.length === 0" class="empty-state-hint">
-                <n-empty description="暂无标签" size="small" />
-              </div>
-              <div v-else class="tags-manage">
-                <div class="tags-search">
-                  <n-input v-model:value="tagFilterText" placeholder="筛选标签..." size="small" clearable />
-                </div>
-                <div class="tag-cloud">
-                  <button type="button" class="tag-row" v-for="t in filteredTags" :key="t.tag" :title="`查找带有 #${t.tag} 的 Markdown 笔记`" @click="searchByTag(t.tag)">
-                    <n-icon :component="TagIcon" size="14" />
-                    <span class="tag-name">#{{ t.tag }}</span>
-                    <span class="tag-count">{{ t.count }} 篇</span>
-                  </button>
-                </div>
-              </div>
+              <InlineTagsPanel :tags="allTags" :loading="tagsLoading" :error="tagsError" :current-note="currentTaggedNote" :other-file-open="Boolean(activeTabId && !activeIsMarkdown)" :add-tag="addTagToCurrentFile"
+                @refresh="fetchAllTags" @open="path => handleNodeSelect([path])" @search="searchByTag" @browse="activeSidebarTab = 'files'" @save="saveCurrentFile" />
             </div>
 
             <!-- 大纲面板 -->
@@ -288,32 +236,8 @@
 
             <!-- 当前文件关系面板 -->
             <div v-else-if="activeSidebarTab === 'links'" :key="'links'" class="tab-pane links-pane" role="tabpanel" id="panel-links" aria-labelledby="tab-links">
-              <div v-if="!activeTabId" class="path-guide"><n-empty description="未打开文件" size="small" /></div>
-              <div v-else-if="!activeIsMarkdown" class="path-guide"><n-empty description="当前格式没有 Markdown 文件关系" size="small" /></div>
-              <div v-else class="links-content">
-                <div class="relation-overview">
-                  <div><strong>当前文件关系</strong><span>来自正文中的 <code>[[笔记名]]</code> 双向链接</span></div>
-                  <div class="relation-counts">
-                    <span><b>{{ outgoingLinks.length }}</b> 链出</span>
-                    <span><b>{{ backlinks.length }}</b> 链入</span>
-                  </div>
-                  <button type="button" @click="openCurrentRelations">在知识图谱中查看</button>
-                  <button type="button" data-testid="local-graph-pin" @click="setLocalGraphPinned(true)">固定局部图谱到编辑器右栏</button>
-                </div>
-                <div class="links-section">
-                  <div class="links-section-title">链出到其他文件 ({{ outgoingLinks.length }})</div>
-                  <div v-if="outgoingLinks.length === 0" class="links-empty">正文中还没有 <code>[[笔记名]]</code> 链接</div>
-                  <div class="link-item" v-for="link in outgoingLinks" :key="link" @click="navigateToLink(link)">{{ link }}</div>
-                </div>
-                <div class="links-section">
-                  <div class="links-section-title">链接到当前文件 ({{ backlinks.length }})</div>
-                  <div v-if="backlinks.length === 0" class="links-empty">暂无其他文件链接到此处</div>
-                  <div class="backlink-item" v-for="bl in backlinks" :key="bl.path" @click="handleNodeSelect([bl.path])" :title="bl.path">
-                    <div class="bl-title">{{ bl.title }}</div>
-                    <div class="bl-context">{{ bl.context }}</div>
-                  </div>
-                </div>
-              </div>
+              <NoteRelationsPanel :note="currentLinkedNote" :other-file-open="Boolean(activeTabId && !activeIsMarkdown)" :pinned="localGraphPinned"
+                @open="path => handleNodeSelect([path])" @graph="openCurrentRelations" @pin="setLocalGraphPinned" @browse="findReferenceDocument" @search="searchReferencedNote" />
             </div>
 
             <!-- 历史面板 -->
@@ -463,6 +387,7 @@
         <div class="document-primary-actions">
           <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-preview" quaternary size="small" :type="documentPreviewActive ? 'primary' : 'default'" :aria-pressed="documentPreviewActive" :disabled="editorLoading || editorModeChangeBusy || !documentPreviewAvailable" :title="documentPreviewActive ? '返回编辑' : '预览当前文档'" @click="toggleDocumentPreview"><template #icon><n-icon :component="EyeIcon" /></template>{{ documentPreviewActive ? '返回编辑' : '预览' }}</n-button>
           <n-button data-testid="library-focus-toggle" quaternary size="small" title="专注写作 F11" @click="store.toggleZen()"><template #icon><n-icon :component="FocusIcon" /></template>专注</n-button>
+          <n-button data-testid="library-add-relation" quaternary size="small" :disabled="!activeTabId" @click="requestFileRelation(activeTabId || undefined)"><template #icon><n-icon :component="LinkIcon" /></template>添加关系</n-button>
           <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template>AI 辅助</n-button>
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
           <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit || currentFileReloadBusy" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
@@ -531,7 +456,7 @@
         @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="closeSearchNavigation" />
       <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'var(--theme-surface)' }">
         <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
-          <component :is="activeEmbeddedEditor" :key="activeTabId" />
+          <component :is="activeEmbeddedEditor" :key="activeDocumentFormat?.routeName === 'Table' ? `table:${store.libraryPath}:${route.query.external === '1'}` : activeTabId" />
         </div>
         <div v-if="!activeEmbeddedEditor && (editorLoading || pendingEditorSaveLoad) && tabs.length > 0" class="editor-loading">
           <n-spin size="large">
@@ -853,6 +778,10 @@ import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import SmartCollectionPanel from '../components/SmartCollectionPanel.vue'
+import InlineTagsPanel from '../components/InlineTagsPanel.vue'
+import NoteRelationsPanel from '../components/NoteRelationsPanel.vue'
+import { onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
+import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
 import { confirmAppAction } from '../services/appDialog'
 import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
@@ -1217,45 +1146,19 @@ const sidebarTabs = [
   { key: 'files' as const, icon: FileIcon, label: '文件', description: '文件：浏览和管理资料库文件' },
   { key: 'outline' as const, icon: ListIcon, label: '大纲', description: '大纲：查看当前文档的标题大纲' },
   { key: 'quick' as const, icon: ClockIcon, label: '最近', description: '最近：打开收藏文件和最近访问记录' },
-  { key: 'collections' as const, icon: CollectionIcon, label: '智能集合', description: '智能集合：保存并重复使用文件搜索的关键词、目录、格式、标签与时间条件' },
-  { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：管理 Markdown 正文中的 #标签名，仅适用于 Markdown' },
-  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看当前 Markdown 的链出与反向链接' },
+  { key: 'collections' as const, icon: CollectionIcon, label: '智能集合', description: '智能集合：打开常看的资料清单，按保存的条件自动更新' },
+  { key: 'tags' as const, icon: TagIcon, label: '标签', description: '标签：用正文中的 #标签 按主题查找笔记，仅适用于 Markdown' },
+  { key: 'links' as const, icon: LinkIcon, label: '关系', description: '关系：查看我提到的笔记，以及哪些笔记提到我' },
   { key: 'history' as const, icon: SaveIcon, label: '历史', description: '历史：先比较当前内容，再恢复本地历史快照' },
 ]
-const outgoingLinks = ref<string[]>([])
-const backlinks = ref<{ title: string; path: string; context: string }[]>([])
-
-const fetchLinks = async () => {
-  if (!activeTabId.value || !activeIsMarkdown.value) { outgoingLinks.value = []; backlinks.value = []; return }
-  try {
-    const content = vditor?.getValue() || ''
-    outgoingLinks.value = await invoke<string[]>('extract_wikilinks', { content })
-    backlinks.value = await invoke<any[]>('find_backlinks', { filePath: activeTabId.value, libraryRoot: store.libraryPath })
-  } catch (e) { outgoingLinks.value = []; backlinks.value = [] }
-}
-
-const navigateToLink = (title: string) => {
-  // Try to find and open the linked file
-  const candidates = [
-    store.libraryPath + '/' + title + '.md',
-    store.libraryPath + '/' + title,
-  ]
-  for (const p of candidates) {
-    const tab = store.tabs.find(t => t.path === p)
-    if (tab) { store.addTab(tab); expandedKeys.value = [...new Set([...expandedKeys.value, store.libraryPath])]; return }
-  }
-  // Try to find in tree data
-  const findInTree = (nodes: any[]): string | null => {
-    for (const n of nodes) {
-      const nodeTitle = (n.label as string || '').replace('.md', '')
-      if (nodeTitle === title || n.key === title) return n.key as string
-      if (n.children) { const r = findInTree(n.children); if (r) return r }
-    }
-    return null
-  }
-  const found = findInTree(treeData.value)
-  if (found) handleNodeSelect([found])
-  else message.warning('未找到链接目标: ' + title)
+const currentLinkedNote = computed(() => activeTabId.value && activeIsMarkdown.value ? {
+  path: activeTabId.value, name: fileNameWithExtension(activeTabId.value), content: activeMarkdownContent.value, dirty: Boolean(activeTextTab.value?.isDirty),
+} : null)
+const searchReferencedNote = (target: string) => {
+  activeCollectionId.value = ''
+  searchObjectTypes.value = ['markdown']
+  searchQuery.value = target.replace(/\\/g, '/').split('/').pop()?.replace(/\.md$/i, '') || target
+  activeSidebarTab.value = 'files'
 }
 const editorLoading = ref(false)
 const wordCount = ref(0)
@@ -1314,6 +1217,15 @@ const gitPull = async () => {
   } catch (e: any) { message.destroyAll(); message.error('Pull 失败: ' + (e?.toString() || '')) }
 }
 const allTags = ref<{ tag: string; count: number }[]>([])
+const tagsLoading = ref(false), tagsError = ref('')
+let tagsGeneration = 0, tagsRoot = ''
+const currentTaggedNote = computed(() => activeTabId.value && activeIsMarkdown.value ? {
+  path: activeTabId.value,
+  name: fileNameWithExtension(activeTabId.value),
+  content: activeMarkdownContent.value,
+  dirty: Boolean(activeTextTab.value?.isDirty),
+  editable: activeFormatCanEdit.value && !editorLoading.value && !editorModeChangeBusy.value && !currentFileReloadBusy.value,
+} : null)
 
 const fetchLibStats = async () => {
   if (!store.libraryPath) return
@@ -1322,53 +1234,65 @@ const fetchLibStats = async () => {
 }
 
 const fetchAllTags = async () => {
-  if (!store.libraryPath) return
-  try { allTags.value = await invoke<any[]>('get_all_tags', { libraryRoot: store.libraryPath }) }
-  catch (e) { allTags.value = [] }
+  const root = store.libraryPath, token = ++tagsGeneration
+  if (tagsRoot !== root) { tagsRoot = root; allTags.value = [] }
+  tagsError.value = ''
+  tagsLoading.value = Boolean(root)
+  if (!root) return
+  try {
+    const entries = await invoke<{ tag: string; count: number }[]>('get_all_tags', { libraryRoot: root })
+    if (token === tagsGeneration && root === store.libraryPath) allTags.value = entries
+  } catch (error) { if (token === tagsGeneration && root === store.libraryPath) tagsError.value = String(error) }
+  finally { if (token === tagsGeneration) tagsLoading.value = false }
 }
+onBeforeUnmount(() => { ++tagsGeneration })
 
-const newTagName = ref('')
-const addTagToCurrentFile = () => {
-  const tag = newTagName.value.trim()
-  if (!tag || !vditor) return
-  const tagStr = ' #' + tag.replace(/\s/g, '')
-  if (vditor.getCurrentMode() === 'wysiwyg') {
-    vditor.insertValue(tagStr)
-  } else {
-    vditor.setValue(vditor.getValue() + tagStr)
-  }
-  newTagName.value = ''
-  fetchAllTags()
+const addTagToCurrentFile = (tag: string) => {
+  const note = currentTaggedNote.value
+  if (!note?.editable || !vditor || !isVditorReady || lastLoadedPath !== note.path) throw new Error('请等当前笔记加载完成后再添加标签。')
+  const content = appendInlineTag(vditor.getValue(), tag)
+  vditor.setValue(content)
+  // setValue does not emit input; keep the draft, dirty state and save action in sync.
+  store.updateTabContent(note.path, vditor.getValue())
+  const tab = tabs.value.find(item => item.path === note.path)
+  if (tab) tab.isDirty = true
+  wordCount.value = content.length
 }
 
 const searchByTag = (tag: string) => {
+  activeCollectionId.value = ''
   searchObjectTypes.value = []
   searchQuery.value = '#' + tag
   activeSidebarTab.value = 'files'
 }
 const resultFormatLabel = (objectType: string) => findFileFormatById(objectType)?.label || objectType
 const selectedSmartCollection = ref<SavedSearchConfig | null>(null)
+const editingSmartCollection = ref(false)
+const editSavedCollection = (search: SavedSearchConfig) => { editingSmartCollection.value = true; selectedSmartCollection.value = { ...search }; activeSidebarTab.value = 'collections' }
+const smartCollectionSaved = (search: SavedSearchConfig) => { editingSmartCollection.value = false; selectedSmartCollection.value = { ...search } }
 const collectionFilterLabel = (search: SavedSearchConfig) => search.graphRoot
-  ? `${search.graphDepth || 1} 层动态子图`
+  ? `关联资料 · ${search.graphDepth || 1} 层关联`
   : search.filters
-    ? [search.filters.directory || '全部目录', search.filters.tag ? `#${search.filters.tag}` : '', search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(resultFormatLabel)].filter(Boolean).join(' · ')
+    ? [search.query ? `包含「${search.query}」` : '', search.filters.directory || '整个资料库', search.filters.tag ? `#${search.filters.tag}` : '', search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(type => type === 'markdown' ? '笔记' : resultFormatLabel(type))].filter(Boolean).join(' · ')
   : search.objectTypes.length
     ? search.objectTypes.map(resultFormatLabel).join(' · ')
-    : '全部格式'
+    : '关键词搜索'
 const saveCurrentSearch = async () => {
   if (!searchQuery.value.trim()) return
   try {
     const before = store.savedSearches.length
     await store.addSavedSearch(searchQuery.value, searchObjectTypes.value)
-    message.success(store.savedSearches.length === before ? '该条件已在常用搜索中' : '已加入常用搜索')
+    message.success(store.savedSearches.length === before ? '“我的集合”中已有这个搜索' : '已保存到“我的集合”')
   } catch (error) { message.error(`保存搜索失败：${String(error)}`) }
 }
 const openSavedSearch = (search: SavedSearchConfig) => {
   if (search.filters) {
+    editingSmartCollection.value = false
     selectedSmartCollection.value = { ...search }
     activeSidebarTab.value = 'collections'
     return
   }
+  selectedSmartCollection.value = null
   if (search.graphRoot) {
     void activateGraphCollection(search)
     return
@@ -1380,12 +1304,12 @@ const openSavedSearch = (search: SavedSearchConfig) => {
 }
 const confirmRemoveSavedSearch = (id: string, name: string) => {
   dialog.warning({
-    title: '删除常用搜索',
-    content: `删除“${name}”？这不会删除任何知识库文件。`,
+    title: '删除集合？',
+    content: `将移除“${name}”这个入口，资料文件仍在原来的文件夹里。`,
     positiveText: '删除',
     negativeText: '取消',
     onPositiveClick: async () => {
-      try { await store.removeSavedSearch(id); message.success('保存视图已删除') }
+      try { await store.removeSavedSearch(id); message.success('集合已删除') }
       catch (error) { message.error(`删除失败：${String(error)}`) }
     },
   })
@@ -1416,12 +1340,6 @@ const findReferenceDocument = async () => {
   await nextTick()
   libraryShell.value?.querySelector<HTMLInputElement>('.shell-search-area input')?.focus()
 }
-const tagFilterText = ref('')
-const filteredTags = computed(() => {
-  if (!tagFilterText.value.trim()) return allTags.value
-  const q = tagFilterText.value.toLowerCase()
-  return allTags.value.filter(t => t.tag.toLowerCase().includes(q))
-})
 const editorWidthMode = ref<'narrow' | 'medium' | 'wide'>(
   (localStorage.getItem('longedit_editor_width') as any) || 'medium'
 )
@@ -2529,6 +2447,8 @@ const revealLibraryFile = async (event: Event) => {
   window.setTimeout(() => treeInstRef.value?.scrollTo({ key: path, behavior: 'smooth' }), 120)
 }
 const refreshCreatedLibraryFile = () => { void refreshLibrary() }
+const stopRelationChanges = onFileRelationsChanged(root => { if (sameWorkspacePath(root, store.libraryPath)) void refreshRelationSummaries() })
+onBeforeUnmount(stopRelationChanges)
 const refreshNode = async (path: string) => {
   if (!path || !store.libraryPath) return
   const newEntries = await loadDirectory(path)
@@ -3663,6 +3583,7 @@ const saveCurrentFile = async (options: unknown = {}) => {
       }
       lastPromptedExternalSignature = ''
       message.success(receipt.isDirty ? '已保存提交的内容，新增编辑尚未保存' : (saveOptions.successMessage || '已安全保存'));
+      if (format.id === 'markdown' && savingLibraryRoot === store.libraryPath) void fetchAllTags()
       // Git 自动 commit（本地）
       if (savingGitEnabled) {
         invoke('git_commit', { libraryPath: savingLibraryRoot, message: `更新: ${t.title}` }).catch(() => {})
@@ -4149,7 +4070,7 @@ onUnmounted(() => {
     vditor = null
   }
 })
-watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'links') fetchLinks() })
+watch(activeSidebarTab, (newTab) => { if (newTab === 'history') fetchHistory(); if (newTab === 'tags') void fetchAllTags() })
 watch(() => store.theme, (newTheme) => {
   if (vditor && isVditorReady) {
     const isDark = isActiveThemeDark(newTheme)
@@ -4379,6 +4300,11 @@ const handleKnowledgeIndexAction = (key: string) => {
 }
 
 watch(() => store.libraryPath, (newPath) => {
+  ++tagsGeneration
+  tagsRoot = newPath
+  allTags.value = []
+  tagsError.value = ''
+  tagsLoading.value = false
   ++knowledgeSearchGeneration
   if (searchTimer) clearTimeout(searchTimer)
   activeCollectionId.value = ''
@@ -4461,7 +4387,6 @@ watch(activeTabId, (newId, oldId) => {
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
     if (t && findFileFormat(t.path)?.routeName === 'LibraryMode' && !ensureVditorModeForFile(t.path)) loadFileToEditor(t.path)
-    if (activeSidebarTab.value === 'links') fetchLinks()
 
     // 侧边栏自动同步逻辑
     selectedKeys.value = [newId]
@@ -4606,12 +4531,13 @@ watch(activeTabId, (newId, oldId) => {
   .icon-tab, .icon-tab :deep(svg), .icon-tab-text { transition-duration: 0.01ms; }
 }
 
-.sidebar-tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-tab-content { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .tab-pane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
-.tab-fade-enter-active, .tab-fade-leave-active { transition: all 0.3s var(--ease-premium); }
-.tab-fade-enter-from { opacity: 0; transform: translateY(10px); }
-.tab-fade-leave-to { opacity: 0; transform: translateY(-10px); }
+.tab-fade-enter-active, .tab-fade-leave-active { transition: opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard); }
+.tab-fade-leave-active { position: absolute; inset: 0; width: 100%; pointer-events: none; }
+.tab-fade-enter-from { opacity: 0; transform: translateY(3px); }
+.tab-fade-leave-to { opacity: 0; transform: translateY(-3px); }
 
 .sidebar-header { padding: 6px 8px; flex-shrink: 0; border-bottom: var(--theme-border); }
 .sidebar-header .toolbar-area { display: flex; align-items: center; gap: 4px; min-width: 0; }

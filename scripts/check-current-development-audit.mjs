@@ -4,6 +4,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-v126-version-transition.
 if (JSON.parse(fs.readFileSync('package.json', 'utf8')).version === '1.1.0') {
   execFileSync(process.execPath, ['--test', 'scripts/test-v1-1-0-version-identity.mjs'], { stdio: 'inherit' })
 }
+execFileSync(process.execPath, ['--test', 'scripts/test-inline-tags.mjs', 'scripts/test-note-link-targets.mjs', 'scripts/test-capture-destination.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-deadline.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-markdown-idle-performance.mjs', 'scripts/test-opener-acl.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-source-path.mjs'], { stdio: 'inherit' })
@@ -147,13 +148,16 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (pkg.version === '1.1.0') {
+if (['1.1.0', '1.1.1'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
-  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.1.1' : '1.1.0')]
-  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.1.0' : '1.0.26') && development.publicTag === `v${development.publicVersion}`]
-  required[9] = [published ? '当前阶段：**v1.1.0 已发布**' : '当前阶段：**v1.1.0 界面与工作流升级候选**',
-    development.currentStage === (published ? 'M8-29-v1.1.0-published' : 'M8-28-v1.1.0-version-candidate')
-    && development.activeSlice?.id === 'v1.1.0-ui-and-workflow' && fs.existsSync(development.activeSlice.document)]
+  const version = pkg.version
+  const next = version === '1.1.0' ? '1.1.1' : '1.1.2'
+  const previous = version === '1.1.0' ? '1.0.26' : '1.1.0'
+  const slice = version === '1.1.0' ? 'v1.1.0-ui-and-workflow' : 'v1.1.1-library-experience'
+  const stage = version === '1.1.0' ? (published ? 'M8-29-v1.1.0-published' : 'M8-28-v1.1.0-version-candidate') : (published ? 'M8-31-v1.1.1-published' : 'M8-30-v1.1.1-version-candidate')
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? next : version)]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? version : previous) && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? `当前阶段：**v${version} 已发布**` : version === '1.1.0' ? '当前阶段：**v1.1.0 界面与工作流升级候选**' : '当前阶段：**v1.1.1 资料库体验升级候选**', development.currentStage === stage && development.activeSlice?.id === slice && fs.existsSync(development.activeSlice.document)]
 }
 
 for (const [token, condition] of required) {

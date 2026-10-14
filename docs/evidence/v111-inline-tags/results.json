@@ -1,0 +1,85 @@
+{
+  "checks": [
+    "The default panel shows current-note tags and a searchable library list, with adding/help collapsed; selecting a tag stays in the panel, opens original notes and retains file-search navigation",
+    "Adding validates one label, accepts a leading hash, prevents duplicate labels and marks only the draft; saving persists through the existing text writer and refreshes both counts and selected results",
+    "Overview and query failures stay local with folded technical details and retry, preserve the editor and cached tag list; stale tag replies cannot replace a newer selection",
+    "Read-only notes cannot be tagged; no open note and non-Markdown files have short guidance while the saved tag library remains usable",
+    "Six existing styles at desktop and narrow widths retain the home, add form and results without horizontal overflow"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "overflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "overflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "overflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "overflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "overflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "overflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "overflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "overflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "overflow": false,
+      "radius": "0px"
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "overflow": false,
+      "radius": "0px"
+    }
+  ],
+  "errors": [],
+  "scope": "Real App/LibraryMode/InlineTagsPanel and Vditor; isolated native IPC responses. Native tag counting is also checked separately on the filesystem."
+}

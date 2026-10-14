@@ -1,100 +1,214 @@
 <template>
   <section class="smart-collection" aria-label="智能集合条件">
-    <details :open="expanded" @toggle="expanded = ($event.target as HTMLDetailsElement).open">
-    <summary><strong>{{ name || '新建智能集合' }}</strong><small>{{ conditionSummary }}</small><span>筛选条件</span></summary>
-    <form @submit.prevent="run">
-      <strong>{{ editingId ? '修改集合条件' : '新建智能集合' }}</strong>
-      <div class="collection-identity-fields">
-      <label>名称<input v-model="name" maxlength="80" placeholder="例如：本周项目笔记" /></label>
-      <label>关键词（可不填）<input v-model="query" maxlength="500" placeholder="搜索文件名和正文" /></label>
+    <template v-if="mode === 'home'">
+      <header class="collection-heading"><span class="heading-icon"><FolderSearch /></span><div><h2>智能集合</h2><p>按条件找资料，打开就能看到最新结果</p></div></header>
+      <button class="primary wide" @click="beginNew"><Plus />新建集合</button>
+      <div v-if="currentQuery" class="current-search"><span>当前搜索：{{ currentQuery }}</span><button @click="$emit('save-search')"><BookmarkPlus />保存这个搜索</button></div>
+      <button v-if="hasDraft" class="resume-draft" @click="mode = 'editor'"><PencilLine /><span>继续设置 {{ name || '未命名集合' }}</span></button>
+      <div class="section-label"><strong>我的集合</strong><small>{{ collections.length }}</small></div>
+      <div v-if="!collections.length" class="empty-collections"><FolderSearch /><strong>还没有保存的集合</strong><p>试一个常用条件，找到资料后再保存。</p></div>
+      <div v-else class="collection-list">
+        <div v-for="entry in collections" :key="entry.id" class="collection-card">
+          <button class="collection-open" @click="$emit('select', entry)"><component :is="entry.graphRoot ? Network : entry.filters ? FolderSearch : Search" /><span><strong>{{ entry.name }}</strong><small>{{ summaryFor(entry) }}</small></span><ChevronRight /></button>
+          <n-dropdown trigger="click" :options="entryOptions(entry)" @select="action => collectionAction(String(action), entry)"><button class="icon-button" :aria-label="`集合操作 ${entry.name}`"><Ellipsis /></button></n-dropdown>
+        </div>
       </div>
-      <fieldset><legend>查找范围</legend>
-      <label>目录<input v-model="directory" placeholder="全部目录；或填写 项目/设计" /></label>
-      <label>格式<n-select v-model:value="objectTypes" multiple clearable :options="formats" placeholder="全部格式" size="small" /></label>
-      <label>文内标签（仅 Markdown）<input v-model="tag" maxlength="80" placeholder="不含 #，例如 项目" /></label>
-      <label>修改时间<select v-model="days"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option></select></label>
-      </fieldset>
-      <div class="actions"><button class="collection-run" type="submit" :disabled="running">{{ running ? '正在查找…' : '查看结果 / 刷新' }}</button><button type="button" :disabled="saving || !name.trim()" @click="save">{{ saving ? '正在保存…' : editingId ? '保存修改' : '保存为常用搜索' }}</button></div>
-      <button v-if="editingId" type="button" @click="reset">新建其他集合</button>
-    </form>
-    </details>
-    <button v-if="!expanded" type="button" :disabled="running" @click="run">{{ running ? '正在查找…' : '刷新结果' }}</button>
-    <p role="status" v-if="notice">{{ notice }}</p><p role="alert" v-if="error">{{ error }}</p>
-    <p v-if="searched && !running">{{ results.length ? `已显示 ${results.length} 条结果` : '没有符合条件的文件' }}{{ truncated ? '（最多 200 条，请缩小条件）' : '' }}</p>
-    <div class="results"><button v-for="(result, i) in results" :key="`${result.path}-${i}`" type="button" @click="$emit('open', result)"><strong>{{ result.title }}</strong><small>{{ formats.find(format => format.value === result.objectType)?.label || result.objectType }}<template v-if="result.locationLabel"> · {{ result.locationLabel }}</template><template v-else-if="result.page"> · 第 {{ result.page }} 页</template></small><small :title="result.path">{{ result.path }}</small><span>{{ result.context }}</span></button></div>
+      <div class="section-label"><strong>试一试</strong></div>
+      <div class="collection-presets">
+        <button @click="preset('recent')"><Clock /><span><strong>最近更新</strong><small>最近 7 天修改过的资料</small></span><ChevronRight /></button>
+        <button @click="preset('notes')"><NotebookPen /><span><strong>全部笔记</strong><small>集中查看 Markdown 笔记</small></span><ChevronRight /></button>
+        <button @click="preset('tag')"><Tag /><span><strong>按标签查找</strong><small>例如带有 #工作 的笔记</small></span><ChevronRight /></button>
+      </div>
+      <details class="collection-help"><summary><CircleHelp />什么是智能集合？</summary><p>例如保存“最近 7 天修改的笔记”，下次打开会重新找出匹配资料。文件仍在原来的文件夹里，点击结果即可继续阅读或编辑。</p></details>
+    </template>
+
+    <template v-else>
+      <button class="back-button" @click="goHome"><ArrowLeft />我的集合</button>
+      <header class="detail-heading"><span class="heading-icon"><FolderSearch /></span><div><h2>{{ mode === 'editor' ? editingId ? '调整集合' : '新建集合' : name || '查找结果' }}</h2><p>{{ mode === 'editor' ? '想经常查看哪些资料？' : '打开文件即可继续阅读或编辑' }}</p></div></header>
+      <form v-if="mode === 'editor'" class="collection-form" @submit.prevent="run">
+        <label>集合名称<input ref="nameInput" v-model="name" :disabled="saving" maxlength="80" placeholder="例如：本周项目资料" /></label>
+        <label>关键词（可不填）<input v-model="query" :disabled="saving" maxlength="500" placeholder="例如：周会，查找文件名和正文" /></label>
+        <details class="collection-range" :open="advanced" @toggle="advanced = ($event.target as HTMLDetailsElement).open">
+          <summary><SlidersHorizontal /><span>进一步筛选<small>{{ conditionSummary }}</small></span><ChevronDown /></summary>
+          <fieldset :disabled="saving">
+            <label>文件夹<div class="directory-field"><input v-model="directory" aria-label="文件夹" maxlength="4096" placeholder="整个资料库" /><button type="button" :disabled="choosing" aria-label="选择文件夹" @click="chooseDirectory"><FolderOpen /></button></div></label>
+            <label>文件类型<n-select v-model:value="objectTypes" multiple clearable :max-tag-count="1" :disabled="saving" :options="formatOptions" placeholder="不限类型" size="small" /></label>
+            <label>笔记标签<div class="tag-field"><span>#</span><input ref="tagInput" v-model="tag" aria-label="笔记标签" maxlength="80" placeholder="例如：工作" /></div></label>
+            <label>修改时间<select v-model="days" aria-label="修改时间"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option></select></label>
+          </fieldset>
+        </details>
+        <div class="actions"><button class="primary" type="submit" :disabled="running || saving"><Search />{{ running ? '正在查找…' : '查看资料' }}</button><button type="button" :disabled="saving || running || !name.trim()" @click="save"><BookmarkPlus />{{ saving ? '正在保存…' : editingId ? '保存修改' : '保存集合' }}</button></div>
+        <button v-if="editingId" type="button" class="new-another" :disabled="saving" @click="beginNew"><Plus />新建其他集合</button>
+      </form>
+      <template v-else>
+        <div class="condition-chips"><span v-if="query.trim()">包含「{{ query.trim() }}」</span><span>{{ conditionSummary }}</span></div>
+        <div class="result-actions"><button :disabled="running || saving" @click="run"><RefreshCw :class="{ spinning: running }" />刷新</button><button :disabled="saving" @click="mode = 'editor'; advanced = Boolean(directory || tag || days || objectTypes.length)"><SlidersHorizontal />调整条件</button><button v-if="!editingId" class="primary" :disabled="running || saving" @click="save"><BookmarkPlus />保存集合</button></div>
+      </template>
+      <p v-if="notice" class="collection-notice" role="status"><Check />{{ notice }}</p>
+      <div v-if="error" class="collection-error" role="alert"><p>{{ error }}</p><button v-if="errorKind === 'run'" :disabled="running" @click="run"><RefreshCw />再试一次</button><details><summary>错误详情</summary><pre>{{ errorDetails }}</pre></details></div>
+      <div v-if="mode === 'results'" class="results">
+        <p v-if="running" class="result-waiting" role="status"><RefreshCw class="spinning" />正在查找匹配的资料…</p>
+        <template v-else-if="searched && !error">
+          <div class="section-label"><strong>匹配资料</strong><small>{{ results.length }} 项</small></div>
+          <p v-if="truncated" class="result-limit">显示前 200 项，可调整条件缩小范围。</p>
+          <div v-if="!results.length" class="empty-collections"><Search /><strong>还没有匹配的资料</strong><p>换个关键词，或放宽筛选条件试试。</p><button @click="mode = 'editor'">调整条件</button></div>
+          <article v-for="(result, i) in results" :key="`${result.path}-${i}`" class="collection-result">
+            <button class="result-open" @click="$emit('open', result)"><component :is="resultVisual(result).icon" :style="{ color: resultVisual(result).color }" /><span><strong>{{ result.title }}</strong><small>{{ formatLabel(result.objectType) }}<template v-if="result.locationLabel"> · {{ result.locationLabel }}</template><template v-else-if="result.page"> · 第 {{ result.page }} 页</template></small><span v-if="result.context && result.context !== '符合集合条件'" class="result-excerpt">{{ result.context }}</span></span><ChevronRight /></button>
+            <details class="result-details"><summary>{{ relativeResultPath(result) }}</summary><p v-if="result.context">{{ result.context }}</p><small>{{ result.path }}</small><small v-if="result.extractionFailed">正文暂未解析</small></details>
+          </article>
+        </template>
+      </div>
+    </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
-import { NSelect } from 'naive-ui'
+import { computed, nextTick, ref, watch, onBeforeUnmount } from 'vue'
+import { NDropdown, NSelect } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
+import { open } from '@tauri-apps/plugin-dialog'
+import { ArrowLeft, BookmarkPlus, Check, ChevronDown, ChevronRight, CircleHelp, Clock, Ellipsis, FolderOpen, FolderSearch, Network, NotebookPen, PencilLine, Plus, RefreshCw, Search, SlidersHorizontal, Tag } from 'lucide-vue-next'
 import { useAppStore, type SavedSearchConfig } from '../store/app'
+import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
+import { sameWorkspacePath, toCollectionRelativePath } from '../utils/savedCollections'
+import { searchResultPath } from '../utils/searchResultPath'
 interface Result {
   title: string; path: string; objectType: string; matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
   context: string; page?: number; annotationId?: string; locatorKind?: string; locatorObjectId?: string; locationLabel?: string; score: number; extractionFailed: boolean
 }
-const props = defineProps<{ selected: SavedSearchConfig | null; formats: { label: string; value: string }[] }>()
-defineEmits<{ open: [result: Result] }>()
+const props = withDefaults(defineProps<{ selected: SavedSearchConfig | null; editing?: boolean; formats: { label: string; value: string }[]; collections: SavedSearchConfig[]; currentQuery?: string; summaryFor: (entry: SavedSearchConfig) => string }>(), { editing: false, currentQuery: '' })
+const emit = defineEmits<{ open: [result: Result]; select: [entry: SavedSearchConfig]; edit: [entry: SavedSearchConfig]; remove: [entry: SavedSearchConfig]; saved: [entry: SavedSearchConfig]; reset: []; 'save-search': [] }>()
 const store = useAppStore()
+const mode = ref<'home' | 'editor' | 'results'>('home'), advanced = ref(false)
 const name = ref(''), query = ref(''), directory = ref(''), tag = ref(''), editingId = ref('')
 const objectTypes = ref<string[]>([]), days = ref<number | null>(null)
-const results = ref<Result[]>([]), running = ref(false), saving = ref(false), searched = ref(false), truncated = ref(false)
-const error = ref(''), notice = ref('')
-const expanded = ref(true)
-const conditionSummary = computed(() => [directory.value.trim() || '全部目录', objectTypes.value.length ? `${objectTypes.value.length} 种格式` : '全部格式', tag.value.trim() ? `#${tag.value.trim()}` : '', days.value ? `最近 ${days.value} 天` : ''].filter(Boolean).join(' · '))
-let generation = 0
-const invalidate = () => { generation++; results.value = []; searched.value = false; running.value = false; error.value = ''; notice.value = '' }
+const results = ref<Result[]>([]), running = ref(false), saving = ref(false), choosing = ref(false), searched = ref(false), truncated = ref(false)
+const error = ref(''), errorDetails = ref(''), errorKind = ref(''), notice = ref('')
+const nameInput = ref<HTMLInputElement>(), tagInput = ref<HTMLInputElement>()
+const filters = () => ({ directory: directory.value.trim(), tag: tag.value.trim().replace(/^#+/, ''), modifiedWithinDays: days.value })
+const fingerprint = () => JSON.stringify({ name: name.value.trim(), query: query.value.trim(), objectTypes: [...objectTypes.value].sort(), filters: filters() })
+const baseline = ref(fingerprint())
+const hasDraft = computed(() => fingerprint() !== baseline.value)
+const conditionSummary = computed(() => [directory.value.trim() || '整个资料库', objectTypes.value.length ? `${objectTypes.value.length} 种类型` : '', filters().tag ? `#${filters().tag}` : '', days.value ? `最近 ${days.value} 天` : ''].filter(Boolean).join(' · '))
+const formatLabel = (type: string) => type === 'markdown' ? '笔记' : props.formats.find(format => format.value === type)?.label || type
+const formatOptions = computed(() => props.formats.map(format => ({ ...format, disabled: objectTypes.value.length >= 8 && !objectTypes.value.includes(format.value) })))
+const relativeResultPath = (result: Result) => searchResultPath(result.path, store.libraryPath)
+const resultVisual = (result: Result) => { const visual = resolveFileTreeVisual(result.objectType); return { ...visual, color: store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : visual.color } }
+const entryOptions = (entry: SavedSearchConfig) => [{ label: '打开集合', key: 'open' }, ...(!entry.graphRoot ? [{ label: '修改条件', key: 'edit' }] : []), { label: '删除集合', key: 'remove' }]
+const collectionAction = (action: string, entry: SavedSearchConfig) => { if (action === 'open') emit('select', entry); else if (action === 'edit') emit('edit', entry); else if (action === 'remove') emit('remove', entry) }
+let generation = 0, previousRoot = '', disposed = false
+const invalidate = () => { generation++; results.value = []; searched.value = false; running.value = false; error.value = ''; errorDetails.value = ''; notice.value = '' }
 watch([query, directory, tag, days, objectTypes], invalidate, { deep: true, flush: 'sync' })
-const reset = () => { invalidate(); expanded.value = true; editingId.value = ''; name.value = ''; query.value = ''; directory.value = ''; tag.value = ''; days.value = null; objectTypes.value = [] }
+watch(name, () => { notice.value = '' })
+const resetFields = () => { invalidate(); editingId.value = ''; name.value = ''; query.value = ''; directory.value = ''; tag.value = ''; days.value = null; objectTypes.value = []; advanced.value = false; baseline.value = fingerprint() }
+const goHome = () => { mode.value = 'home'; emit('reset') }
+const beginNew = async () => { resetFields(); mode.value = 'editor'; emit('reset'); await nextTick(); nameInput.value?.focus() }
+const preset = async (kind: string) => {
+  await beginNew()
+  if (kind === 'recent') { name.value = '最近更新'; days.value = 7; void run() }
+  else if (kind === 'notes') { name.value = '全部笔记'; objectTypes.value = ['markdown']; void run() }
+  else { name.value = '标签笔记'; advanced.value = true; await nextTick(); tagInput.value?.focus() }
+}
+const fail = (message: string, cause: unknown, kind: string) => { error.value = message; errorDetails.value = String(cause); errorKind.value = kind }
 async function run() {
-  invalidate()
+  if (running.value || saving.value) return
+  invalidate(); mode.value = 'results'
   const token = generation, root = store.libraryPath
   running.value = true
   try {
-    const response = await invoke<{ results: Result[]; truncated: boolean }>('search_smart_collection', {
-      libraryRoot: root, query: query.value, objectTypes: [...objectTypes.value],
-      filters: { directory: directory.value.trim(), tag: tag.value.trim(), modifiedWithinDays: days.value },
-    })
-    if (generation !== token || store.libraryPath !== root) return
-    results.value = response.results; truncated.value = response.truncated; searched.value = true; expanded.value = false
-  } catch (cause) { if (generation === token) error.value = `查找失败：${String(cause)}` }
+    const response = await invoke<{ results: Result[]; truncated: boolean }>('search_smart_collection', { libraryRoot: root, query: query.value, objectTypes: [...objectTypes.value], filters: filters() })
+    if (disposed || generation !== token || store.libraryPath !== root) return
+    results.value = response.results; truncated.value = response.truncated; searched.value = true
+  } catch (cause) { if (generation === token && !disposed) fail('暂时没能找到资料，请重试或调整条件。', cause, 'run') }
   finally { if (generation === token) running.value = false }
 }
 async function save() {
-  if (saving.value) return
+  if (saving.value || running.value) return
+  if (!name.value.trim()) { mode.value = 'editor'; await nextTick(); nameInput.value?.focus(); return }
   const root = store.libraryPath, token = generation
   saving.value = true; error.value = ''; notice.value = ''
   try {
-    const entry = await store.saveSmartCollection({ id: editingId.value || undefined, name: name.value, query: query.value,
-      objectTypes: [...objectTypes.value], filters: { directory: directory.value.trim(), tag: tag.value.trim(), modifiedWithinDays: days.value } })
-    if (store.libraryPath === root && generation === token) { editingId.value = entry.id; notice.value = '条件已保存；每次打开会重新查找，不复制或移动文件。' }
-  } catch (cause) { if (store.libraryPath === root && generation === token) error.value = `保存失败：${String(cause)}` }
+    const entry = await store.saveSmartCollection({ id: editingId.value || undefined, name: name.value, query: query.value, objectTypes: [...objectTypes.value], filters: filters() })
+    if (disposed || store.libraryPath !== root || generation !== token) return
+    editingId.value = entry.id; name.value = entry.name; query.value = entry.query; directory.value = entry.filters?.directory || ''; tag.value = entry.filters?.tag || ''
+    baseline.value = fingerprint(); mode.value = 'results'; saving.value = false
+    emit('saved', entry)
+    const lookup = run(), shownGeneration = generation
+    void lookup.then(() => { if (!disposed && store.libraryPath === root && editingId.value === entry.id && generation === shownGeneration) notice.value = '集合已保存，下次从“我的集合”打开。' })
+  } catch (cause) { if (!disposed && store.libraryPath === root && generation === token) fail('集合没有保存成功，设置已保留。', cause, 'save') }
   finally { saving.value = false }
 }
-watch(() => [props.selected, store.libraryPath] as const, ([selected]) => {
-  reset()
+const chooseDirectory = async () => {
+  if (choosing.value || saving.value) return
+  const root = store.libraryPath, token = generation
+  choosing.value = true
+  try {
+    const path = await open({ directory: true, multiple: false, defaultPath: root, title: '选择要查找的文件夹' })
+    if (typeof path !== 'string' || disposed || root !== store.libraryPath || token !== generation) return
+    directory.value = sameWorkspacePath(root, path) ? '' : toCollectionRelativePath(root, path)
+  } catch (cause) { if (!disposed && root === store.libraryPath && token === generation) fail('请选择当前资料库里的文件夹。', cause, 'directory') }
+  finally { choosing.value = false }
+}
+watch(() => [props.selected, props.editing, store.libraryPath] as const, ([selected]) => {
+  if (store.libraryPath !== previousRoot) { previousRoot = store.libraryPath; resetFields(); mode.value = 'home' }
   if (!selected || selected.libraryPath !== store.libraryPath || selected.graphRoot) return
-  editingId.value = selected.id; name.value = selected.name; query.value = selected.query; objectTypes.value = [...selected.objectTypes]
+  if (selected.id === editingId.value && mode.value === 'results' && !props.editing && selected.name === name.value && selected.query === query.value && JSON.stringify(selected.filters || { directory: '', tag: '', modifiedWithinDays: null }) === JSON.stringify(filters()) && JSON.stringify([...selected.objectTypes].sort()) === JSON.stringify([...objectTypes.value].sort())) return
+  resetFields(); editingId.value = selected.id; name.value = selected.name; query.value = selected.query; objectTypes.value = [...selected.objectTypes]
   directory.value = selected.filters?.directory || ''; tag.value = selected.filters?.tag || ''; days.value = selected.filters?.modifiedWithinDays ?? null
-  void run()
+  baseline.value = fingerprint(); advanced.value = Boolean(directory.value || tag.value || days.value || objectTypes.value.length)
+  mode.value = props.editing ? 'editor' : 'results'
+  if (!props.editing) void run()
 }, { immediate: true })
-onBeforeUnmount(invalidate)
+watch(() => props.collections, entries => { if (editingId.value && !entries.some(entry => entry.id === editingId.value)) { resetFields(); mode.value = 'home'; emit('reset') } })
+onBeforeUnmount(() => { disposed = true; invalidate() })
 </script>
 
 <style scoped>
-.smart-collection { padding: 12px; margin: 10px; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--theme-surface); font-size: var(--text-sm); }
-summary { cursor: pointer; padding: 8px 0; overflow-wrap: anywhere; } details { margin-bottom: 8px; }
-summary strong, summary small, summary span { display: block; margin-top: 4px; }
-summary small { color: var(--theme-text-secondary); line-height: 1.6; }
-summary span { color: var(--theme-primary); font-size: var(--text-compact); }
-form, label, .results { display: grid; gap: 6px; min-width: 0; } form { gap: 10px; }
-.collection-identity-fields { display: grid; gap: 10px; }
-fieldset { min-width: 0; margin: 0; padding: 10px; display: grid; gap: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); }
-legend { color: var(--theme-text-secondary); padding: 0 5px; }
-input, select, button { box-sizing: border-box; min-width: 0; max-width: 100%; color: var(--theme-text); background: var(--theme-bg); border: var(--theme-border); border-radius: var(--theme-radius-sm); padding: 8px; font: inherit; }
-button { cursor: pointer; } button:disabled { cursor: default; opacity: .6; } input:focus, button:focus-visible, select:focus { outline: 2px solid var(--theme-primary); }
-.actions { display: flex; gap: 6px; flex-wrap: wrap; }.actions button { flex: 1 1 100px; }
-.actions .collection-run { color: var(--workspace-on-accent); background: var(--theme-primary); border-color: var(--theme-primary); }
-.results button { display: grid; gap: 4px; text-align: left; overflow-wrap: anywhere; }.results small { opacity: .65; }.results span { white-space: pre-wrap; } p { overflow-wrap: anywhere; } [role=alert] { color: var(--theme-error, #d45959); }
+.smart-collection { padding: 14px 12px 20px; min-width: 0; box-sizing: border-box; color: var(--theme-text); font-size: var(--text-sm); }
+.collection-heading, .detail-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.collection-heading > div, .detail-heading > div { min-width: 0; }
+.heading-icon { width: 36px; height: 36px; display: grid; place-items: center; flex-shrink: 0; border-radius: var(--theme-radius-sm); color: var(--theme-primary); background: var(--chrome-icon-surface, rgba(var(--theme-primary-rgb), .1)); }
+.heading-icon svg { width: 21px; height: 21px; }
+h2 { font-size: 15px; margin: 0; line-height: 1.4; overflow-wrap: anywhere; }
+p { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.6; overflow-wrap: anywhere; }
+.collection-heading p, .detail-heading p { margin: 4px 0 0; }
+button, input, select { box-sizing: border-box; min-width: 0; max-width: 100%; font: inherit; color: var(--theme-text); border: 1px solid var(--workspace-border-color); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }
+button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 9px; min-height: 32px; cursor: pointer; transition: background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard); }
+button:hover { background: rgba(var(--theme-primary-rgb), .08); border-color: rgba(var(--theme-primary-rgb), .35); }
+button:disabled { opacity: .5; cursor: default; }
+input, select { width: 100%; padding: 7px 9px; font-size: var(--text-sm); min-height: 34px; }
+input::placeholder { color: var(--theme-text-secondary); font-size: var(--text-compact); }
+button:focus-visible, input:focus, select:focus, summary:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 2px; }
+.primary { background: var(--theme-primary); border-color: transparent; color: var(--workspace-on-accent, var(--theme-bg)); font-weight: 600; }
+.primary:hover { background: color-mix(in srgb, var(--theme-primary) 88%, var(--theme-text)); }
+.wide { width: 100%; }
+svg { width: 16px; height: 16px; flex-shrink: 0; }
+.section-label { display: flex; align-items: center; gap: 7px; margin: 18px 0 9px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.section-label small { color: var(--theme-primary); padding: 1px 5px; background: rgba(var(--theme-primary-rgb), .08); border-radius: var(--theme-radius-sm); }
+.empty-collections { padding: 22px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: var(--theme-surface); border: var(--theme-border); border-radius: var(--theme-radius); }
+.empty-collections > svg { width: 30px; height: 30px; color: var(--theme-primary); }
+.empty-collections strong { font-size: var(--text-sm); }.empty-collections p { margin: 0; }
+.collection-presets { display: grid; gap: 6px; }.collection-presets button { width: 100%; justify-content: start; gap: 9px; padding: 9px; text-align: left; }
+.collection-presets button > svg:first-child { color: var(--theme-primary); }.collection-presets button > svg:last-child { width: 13px; color: var(--theme-text-secondary); }
+.collection-presets span { display: grid; gap: 4px; flex: 1; min-width: 0; }.collection-presets strong { font-size: var(--text-sm); }.collection-presets small { color: var(--theme-text-secondary); font-size: 11px; }
+.collection-list { display: grid; gap: 6px; }.collection-card { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 28px; align-items: center; padding: 5px 4px; background: var(--file-row-bg, var(--theme-surface)); border: var(--file-row-border); border-radius: var(--theme-radius-sm); box-shadow: var(--file-row-shadow); }
+.collection-open { width: 100%; min-width: 0; display: flex; justify-content: start; gap: 8px; border: 0; text-align: left; background: transparent; padding: 6px; min-height: var(--file-row-height); }
+.collection-open > span { display: grid; gap: 4px; flex: 1; min-width: 0; }.collection-open > svg:first-child { color: var(--theme-primary); }.collection-open > svg:last-child { width: 12px; color: var(--theme-text-secondary); }
+.collection-open strong { font-size: var(--text-sm); }.collection-open strong, .collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open small { font-size: var(--text-compact); color: var(--theme-text-secondary); }
+.icon-button { width: 26px; min-height: 28px; padding: 0; border: 0; background: transparent; }
+.current-search, .resume-draft { margin-top: 10px; padding: 9px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }.current-search { display: grid; gap: 7px; }.current-search > span { color: var(--theme-text-secondary); font-size: var(--text-compact); overflow-wrap: anywhere; }.resume-draft { width: 100%; text-align: left; justify-content: start; color: var(--theme-primary); }.resume-draft span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.collection-help { margin-top: 16px; padding-top: 12px; border-top: var(--theme-border); font-size: var(--text-compact); color: var(--theme-text-secondary); }.collection-help > summary { display: flex; align-items: center; gap: 7px; }.collection-help p { margin-bottom: 0; }
+summary { cursor: pointer; }.back-button { margin-bottom: 13px; min-height: 24px; padding: 0; border: 0; background: transparent; color: var(--theme-text-secondary); font-size: var(--text-compact); }
+.collection-form, label { display: grid; min-width: 0; }.collection-form { gap: 14px; }label { gap: 7px; font-size: var(--text-compact); }label > small { color: var(--theme-text-secondary); font-size: 11px; }
+.collection-range { padding: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }.collection-range > summary { display: flex; align-items: center; gap: 7px; }.collection-range > summary > span { flex: 1; min-width: 0; }.collection-range summary small { display: block; margin-top: 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.4; overflow-wrap: anywhere; }.collection-range > summary > svg:first-child { color: var(--theme-primary); }.collection-range[open] > summary > svg:last-child { transform: rotate(180deg); }
+fieldset { display: grid; gap: 12px; padding: 14px 0 0; border: 0; margin: 0; min-width: 0; }.directory-field { display: grid; grid-template-columns: minmax(0, 1fr) 32px; gap: 5px; }.directory-field button { padding: 0; }
+.tag-field { display: flex; align-items: center; gap: 7px; }.tag-field > span { color: var(--theme-primary); }.tag-field input { flex: 1; min-width: 0; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }.actions button { padding: 6px; font-size: var(--text-compact); }.new-another { justify-self: start; font-size: var(--text-compact); border: 0; background: transparent; color: var(--theme-text-secondary); }
+.condition-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }.condition-chips span { font-size: 11px; line-height: 1.5; padding: 4px 7px; border-radius: var(--theme-radius-sm); background: rgba(var(--theme-primary-rgb), .07); color: var(--theme-text-secondary); overflow-wrap: anywhere; }
+.result-actions { display: flex; flex-wrap: wrap; gap: 6px; }.result-actions button { font-size: var(--text-compact); padding: 5px 7px; }
+.collection-notice, .result-waiting { display: flex; align-items: start; gap: 6px; }.collection-notice { color: var(--theme-primary); }.collection-error { margin: 12px 0; padding: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }.collection-error p { margin-top: 0; }.collection-error details { margin-top: 9px; font-size: 11px; color: var(--theme-text-secondary); }pre { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: auto; }
+.result-limit { font-size: 11px; }.collection-result { margin-bottom: 8px; background: var(--file-row-bg, var(--theme-surface)); border: var(--file-row-border); border-radius: var(--theme-radius-sm); box-shadow: var(--file-row-shadow); }
+.result-open { justify-content: start; align-items: start; gap: 8px; padding: 10px 7px; width: 100%; border: 0; background: transparent; text-align: left; min-height: var(--file-row-height); }.result-open > svg { margin-top: 2px; }.result-open > span { flex: 1; min-width: 0; display: grid; gap: 5px; }.result-open strong { overflow-wrap: anywhere; font-size: var(--text-sm); line-height: 1.5; }.result-open small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.result-open > svg:last-child { width: 12px; color: var(--theme-text-secondary); }.result-excerpt { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.result-details { padding: 0 8px 8px 31px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.result-details summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.result-details p { font-size: var(--text-compact); }.result-details small { display: block; overflow-wrap: anywhere; line-height: 1.5; }
+.spinning { animation: collection-spin 1s linear infinite; }@keyframes collection-spin { to { transform: rotate(360deg); } }@media (prefers-reduced-motion: reduce) { .spinning { animation: none; } }:global(body[data-motion="reduced"]) .spinning { animation: none; }
 </style>

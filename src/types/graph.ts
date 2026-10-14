@@ -39,6 +39,7 @@ export interface GraphEdge {
   relationType: string
   directed: boolean
   mentions: RelationMention[]
+  manualRelationIds?: string[]
 }
 
 export interface GraphData {
