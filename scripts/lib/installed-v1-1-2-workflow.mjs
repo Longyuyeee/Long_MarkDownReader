@@ -15,6 +15,7 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
   const exists = file => fs.stat(file).then(() => true, () => false)
   const point = expression => `(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
   const mouse = async (expression, button = 'left') => {
+    await waitFor(`!!(${expression})`, 'file operation control exists: ' + expression)
     await evaluate(`(${expression})?.scrollIntoView({block:'nearest'})`)
     await waitFor(point(expression), 'visible file operation control: ' + expression)
     const coordinates = await evaluate(point(expression))
@@ -25,7 +26,10 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
   const row = name => `[...document.querySelectorAll('[data-drop-path]')].find(e=>e.dataset.dropPath.replaceAll('\\\\','/').endsWith(${JSON.stringify(name.replaceAll('\\', '/'))}))`
   const menu = async (name, label) => { await mouse(row(name), 'right'); await mouse(item(label)) }
   const more = async (name, label) => {
-    await mouse(row(name), 'right'); await waitFor(point(item('更多操作')), 'more file operations')
+    await mouse(row(name), 'right')
+    await waitFor(`!!(${item('更多操作')})`, 'more file operations menu item')
+    await evaluate(`(${item('更多操作')}).scrollIntoView({block:'nearest'})`)
+    await waitFor(point(item('更多操作')), 'more file operations')
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...await evaluate(point(item('更多操作'))) })
     await mouse(item(label))
   }
