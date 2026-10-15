@@ -85,6 +85,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: current-product/src-tauri -> target
+          cache-on-failure: true
 
       - name: Install frozen candidate dependencies
         working-directory: current-product
