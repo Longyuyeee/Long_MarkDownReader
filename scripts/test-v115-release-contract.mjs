@@ -20,7 +20,7 @@ const fixture = () => {
     item.path = item.path.replace('v1-1-4-candidate-lifecycle', 'v1-1-5-candidate-lifecycle')
     const encoded = Buffer.from(JSON.stringify(data)); item.sha256 = crypto.createHash('sha256').update(encoded).digest('hex'); bytes.set(item.path, encoded)
   }
-  const report = { appVersion: '1.1.5', sourceCommit: manifest.sourceCommit, installerSha256: manifest.artifacts.find(a => a.target === 'nsis').sha256, status: 'passed', evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, checks: ids.map(id => ({ id, status: 'passed' })) }
+  const report = { appVersion: '1.1.5', sourceCommit: manifest.sourceCommit, harnessSourceCommit: manifest.sourceCommit, installerSha256: manifest.artifacts.find(a => a.target === 'nsis').sha256, status: 'passed', evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, checks: ids.map(id => ({ id, status: 'passed' })) }
   const set = () => { const data = Buffer.from(JSON.stringify(report)), file = 'docs/evidence/v1-1-5-candidate-lifecycle/installed-v115-workflow.json'; bytes.set(file, data); manifest.runtimeSmoke.reports.foundationHardening = { path: file, sha256: crypto.createHash('sha256').update(data).digest('hex') } }
   set(); return { manifest, report, set, read: file => bytes.get(file) }
 }
@@ -37,6 +37,10 @@ test('v115 installer workflow retains ten explicit user-task checks and producti
   assert.equal(ids.length, 10); assert.equal(new Set(ids).size, 10)
   assert.match(workflow, /open_external_file_window/); assert.match(workflow, /Input\.insertText/)
   assert.doesNotMatch(workflow, /authorize_import|\.isDirty\s*=|prefers-reduced-motion/)
+  assert.doesNotMatch(workflow, /localStorage\.(?:clear|removeItem)/)
+  assert.match(workflow, /prior synthetic drafts must be saved, not discarded/)
+  assert.match(workflow, /reloadPersistedConfig/)
+  assert.match(workflow, /Only the disposable installer fixture library may be changed/)
 })
 test('v115 rejects missing or altered new installed evidence', () => {
   const f = fixture()
@@ -45,6 +49,9 @@ test('v115 rejects missing or altered new installed evidence', () => {
   f.set(); f.report.checks[0].id = 'fake-success'; f.set()
   assert.throws(() => assertInstalledReleaseRuntime(f.manifest, f.read))
   f.report.checks = ids.map(id => ({ id, status: 'passed' })); f.report.installerSha256 = '0'.repeat(64); f.set()
+  assert.throws(() => assertInstalledReleaseRuntime(f.manifest, f.read))
+  f.report.installerSha256 = f.manifest.artifacts.find(a => a.target === 'nsis').sha256
+  delete f.report.harnessSourceCommit; f.set()
   assert.throws(() => assertInstalledReleaseRuntime(f.manifest, f.read))
 })
 test('v115 accepts complete correctly bound evidence without inheriting predecessor version', () => {

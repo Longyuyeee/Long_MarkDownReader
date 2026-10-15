@@ -65,7 +65,7 @@ const manifest = {
     evidenceManifest: releaseRoot + '/import-manifest.json', lifecycleChecksPassed: 22, installedWorkspaceChecksPassed: 18,
     installedRoutesPassed: 11, managementRollbackChecksPassed: 7, workflowChecksPassed: 8,
     experienceChecksPassed: 8, fileManagementChecksPassed: 9, foundationChecksPassed: 8, ...(['1.1.4', '1.1.5'].includes(version) ? { foundationExtendedChecksPassed: 8 } : {}),
-    ...(version === '1.1.5' ? { foundationHardeningChecksPassed: 10 } : {}),
+    ...(version === '1.1.5' ? { foundationHardeningChecksPassed: 10, harnessSourceCommit: reports.foundationHardening.report.harnessSourceCommit } : {}),
     versionChecksPassed: 4, failedChecks: 0, sourceUserContentIncluded: false,
   },
   boundaries: { communityUnsigned: true, enterprisePromotionEligible: false, releaseAssetsPublished: false, managedUpdaterReleaseAssetsPresent: false, legacyTauriUpdaterArtifactsPresent: false },

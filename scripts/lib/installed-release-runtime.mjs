@@ -23,6 +23,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     const hardening = reports.foundationHardening
     assert.equal(hardening.status, 'passed'); assert.equal(hardening.appVersion, manifest.appVersion)
     assert.equal(hardening.sourceCommit, manifest.sourceCommit)
+    assert.match(hardening.harnessSourceCommit, /^[a-f0-9]{40}$/, 'v115 installer harness revision is required independently of the product revision')
     assert.equal(hardening.installerSha256, manifest.artifacts.find(item => item.target === 'nsis').sha256)
     assert.equal(hardening.evidenceLevel, 'installed-tauri-ipc-and-disk'); assert.equal(hardening.sourceUserContentIncluded, false)
     assert.deepEqual(hardening.checks.map(check => [check.id, check.status]), [

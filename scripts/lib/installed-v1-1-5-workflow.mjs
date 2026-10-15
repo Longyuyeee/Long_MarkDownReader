@@ -5,7 +5,10 @@ import path from 'node:path'
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.1.5') throw Error('Disposable 1.1.5 installation required')
-  const report = { appVersion, sourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
+  if (path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') throw Error('Only the disposable installer fixture library may be changed')
+  const harnessSourceCommit = process.env.GITHUB_SHA || process.env.LONGEDIT_INSTALLED_HARNESS_COMMIT || ''
+  assert.match(harnessSourceCommit, /^[a-f0-9]{40}$/, 'record the exact installer verification harness revision')
+  const report = { appVersion, sourceCommit, harnessSourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
   const invoke = async (command, args = {}) => {
     const r = await evaluate(`(async()=>{try{return {ok:true,value:await window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})}}catch(e){return {ok:false,error:String(e)}}})()`)
     if (!r.ok) throw Error(r.error); return r.value
@@ -37,8 +40,33 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
   const contains = (results, file) => results.some(r => normalize(r.path) === normalize(file))
   const snap = async name => { await waitFor(`!document.querySelector('.n-message')&&!document.getAnimations().some(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity)`, 'v115 natural motion completed'); await capture(name) }
+  const reloadPersistedConfig = async () => {
+    const previousOrigin = await evaluate('performance.timeOrigin')
+    await send('Page.reload')
+    for (let attempt = 0; attempt < 300; attempt++) {
+      try {
+        if (await evaluate(`performance.timeOrigin!==${previousOrigin}&&document.readyState==='complete'&&!!window.__TAURI_INTERNALS__?.invoke`)) return
+      } catch (cause) {
+        if (!/context|navigat/i.test(String(cause))) throw cause
+      }
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    throw Error('Packaged application did not reload its persisted configuration')
+  }
   let config
   try {
+    // Finish the previous synthetic workflow as a user would. Never clear dirty
+    // flags or discard its restored draft merely to make cross-library tests pass.
+    await navigate('#/library', '.library-mode', 'finish prior synthetic edits')
+    for (let index = 0; index < 64; index++) {
+      const dirtyLabel = await evaluate(`document.querySelector('.workspace-tab[aria-label*="有未保存的修改"]')?.getAttribute('aria-label')`)
+      if (!dirtyLabel) break
+      await mouse(`[...document.querySelectorAll('.workspace-tab')].find(e=>e.getAttribute('aria-label')===${JSON.stringify(dirtyLabel)})`)
+      await waitFor(`document.querySelector('.workspace-tab.active')?.getAttribute('aria-label')===${JSON.stringify(dirtyLabel)}`, 'prior dirty tab selected')
+      await mouse(button('保存'))
+      await waitFor(`!!document.querySelector('.workspace-tab.active')&&!document.querySelector('.workspace-tab.active[aria-label*="有未保存的修改"]')`, 'prior draft explicitly saved')
+    }
+    assert.equal(await evaluate(`document.querySelectorAll('.workspace-tab[aria-label*="有未保存的修改"]').length`), 0, 'prior synthetic drafts must be saved, not discarded')
     const base = path.join(path.dirname(library), 'release-v115-external'), second = path.join(path.dirname(library), 'release-v115-other-library')
     await fs.mkdir(base); await fs.mkdir(second)
     const imageBytes = await fs.readFile(new URL('../../src-tauri/icons/32x32.png', import.meta.url))
@@ -52,7 +80,12 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     const denied = await batch([source])
     check('unauthorized-import-is-rejected-without-changing-library', denied.items.length === 0 && denied.errors.length === 1 && await fs.readFile(path.join(library, '资料.md'), 'utf8') === '已有正文不可覆盖')
     // The production external-open command authorizes the selected file. No access-state injection.
-    for (const file of [source, bad, txt]) await invoke('open_external_file_window', { path: file })
+    for (const file of [source, bad, txt]) {
+      const label = await invoke('open_external_file_window', { path: file })
+      assert.match(label, /^external-\d+-\d+$/)
+      await invoke('plugin:window|close', { label })
+    }
+    await invoke('plugin:window|set_focus', { label: await evaluate('window.__TAURI_INTERNALS__.metadata.currentWindow.label') })
     const imported = await batch([source, bad, txt]), copy = imported.items.find(item => item.oldPath === source || normalize(item.oldPath) === normalize(source))
     assert.ok(copy)
     const content = await fs.readFile(copy.newPath, 'utf8'), image = content.match(/!\[图\]\(([^)]+)\)/)?.[1]
@@ -66,6 +99,9 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await fs.writeFile(main, '项目批准\n预算已确认\n', { flag: 'wx' }); await fs.writeFile(data, '{"项目":"预算已确认"}', { flag: 'wx' }); await fs.writeFile(old, '项目预算旧版', { flag: 'wx' }); await fs.writeFile(remote, '项目预算另库资料', { flag: 'wx' }); await fs.writeFile(draft, '# 安装态草稿\n\n尚未修改\n', { flag: 'wx' })
     config = await invoke('get_config')
     await invoke('save_config', { config: { ...config, libraries: [...config.libraries, { id: 'v115-release-other', name: '另一个资料库', path: second }], activeLibraryPath: library } })
+    // Native save_config writes disk but does not mutate an already mounted Pinia
+    // store. Reload normally to represent the next launch with two saved libraries.
+    await reloadPersistedConfig()
     for (const root of [library, second]) {
       await waitFor(`(async()=>{const s=await window.__TAURI_INTERNALS__.invoke('get_knowledge_index_status',{libraryRoot:${JSON.stringify(root)}});return s.state!=='building'})()`, 'automatic index preparation settled', 240)
       assert.equal((await invoke('rebuild_knowledge_index', { libraryRoot: root })).state, 'ready', 'real native index must be ready before indexed-search assertions')
@@ -101,7 +137,14 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     report.status = 'passed'
   } catch (error) { report.status = 'failed'; report.error = String(error); await capture('installed-v115-failure.jpg').catch(() => {}); throw error }
   finally {
-    if (config) await invoke('save_config', { config }).catch(() => {})
+    let cleanupError
+    if (config) {
+      try { await invoke('save_config', { config }); await evaluate("location.hash='#/library'"); await reloadPersistedConfig() }
+      catch (cause) { cleanupError = cause; report.cleanupError = String(cause) }
+    }
+    const passedBeforeCleanup = report.status === 'passed'
+    if (cleanupError) report.status = 'failed'
     await fs.writeFile(path.join(output, 'installed-v115-workflow.json'), JSON.stringify(report, null, 2) + '\n')
+    if (cleanupError && passedBeforeCleanup) throw cleanupError
   }
 }
