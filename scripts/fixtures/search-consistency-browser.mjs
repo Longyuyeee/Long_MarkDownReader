@@ -1,12 +1,14 @@
 import './file-management-browser.mjs'
 const audit = window.workflowAudit, original = window.__TAURI_INTERNALS__.invoke, root = audit.store.libraryPath
 audit.store.motionSpeed = 'calm'; audit.searchCalls = []; audit.slow = []
+audit.holdConfigSave = false; audit.configSaves = []
 audit.store.libraries.push({ name: '学习资料库', path: 'C:/study-fixture' })
 audit.disk.set(root + '/项目预算.txt', '项目预算确认'); audit.disk.set(root + '/预算配置.json', '{"项目":"预算确认"}')
 audit.disk.set('C:/study-fixture/跨库笔记.md', '# 跨库笔记\n\n保留原项目资料。')
 const hit = (title, path, objectType, context) => ({ title, path, objectType, context, matchKind: 'body', score: 60, extractionFailed: false })
 const hits = [hit('项目预算.txt', root + '/项目预算.txt', 'plain-text', '项目预算确认'), hit('预算配置.json', root + '/预算配置.json', 'json', '项目预算参数')]
 window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
+  if (command === 'save_config' && audit.holdConfigSave) return new Promise((resolve, reject) => audit.configSaves.push(async () => { try { resolve(await original(command, args)) } catch (cause) { reject(cause) } }))
   if (command === 'search_knowledge_libraries' || command === 'search_knowledge') {
     audit.searchCalls.push({ command, args })
     if (args.query === '错误') throw Error('模拟资料库不可读，请检查路径后重试')

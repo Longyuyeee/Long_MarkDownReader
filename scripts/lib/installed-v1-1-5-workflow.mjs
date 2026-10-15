@@ -66,7 +66,10 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await fs.writeFile(main, '项目批准\n预算已确认\n', { flag: 'wx' }); await fs.writeFile(data, '{"项目":"预算已确认"}', { flag: 'wx' }); await fs.writeFile(old, '项目预算旧版', { flag: 'wx' }); await fs.writeFile(remote, '项目预算另库资料', { flag: 'wx' }); await fs.writeFile(draft, '# 安装态草稿\n\n尚未修改\n', { flag: 'wx' })
     config = await invoke('get_config')
     await invoke('save_config', { config: { ...config, libraries: [...config.libraries, { id: 'v115-release-other', name: '另一个资料库', path: second }], activeLibraryPath: library } })
-    for (const root of [library, second]) await invoke('rebuild_knowledge_index', { libraryRoot: root })
+    for (const root of [library, second]) {
+      await waitFor(`(async()=>{const s=await window.__TAURI_INTERNALS__.invoke('get_knowledge_index_status',{libraryRoot:${JSON.stringify(root)}});return s.state!=='building'})()`, 'automatic index preparation settled', 240)
+      assert.equal((await invoke('rebuild_knowledge_index', { libraryRoot: root })).state, 'ready', 'real native index must be ready before indexed-search assertions')
+    }
     const expression = '项目 预算 -旧版', local = await invoke('search_knowledge_libraries', { libraryRoot: library, query: expression }), all = await invoke('search_knowledge_libraries', { libraryRoot: null, query: expression }), legacy = await invoke('search_knowledge', { libraryRoot: library, query: expression })
     check('shared-native-search-matches-txt-json-and-configured-library-scope', contains(local.results, main) && contains(local.results, data) && !contains(local.results, old) && !contains(local.results, remote) && contains(all.results, remote) && contains(legacy, main) && contains(legacy, data))
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 actual command panel')

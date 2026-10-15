@@ -23,6 +23,7 @@
         <n-select v-if="!query.startsWith('>')" v-model:value="scope" class="palette-scope" aria-label="搜索范围" :to="overlayHost || undefined" :disabled="opening" :options="scopeOptions" size="small" />
         </div>
         <div v-if="searching" class="palette-status" role="status">正在查找资料…</div>
+        <div v-if="opening" class="palette-status" role="status">正在打开资料，请稍候…</div>
         <div v-if="error" class="palette-status palette-error" role="alert">{{ error }}<n-button v-if="!opening" size="tiny" @click="scheduleSearch">重试</n-button></div>
         <div v-if="warnings.length" class="palette-status" role="status">{{ warnings.join('；') }}</div>
         <div class="results-list" v-if="results.length > 0" :aria-busy="searching || opening" role="listbox" aria-label="资料与命令结果">
@@ -58,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NButton, NSelect } from 'naive-ui'
 import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon, Clock as ClockIcon } from 'lucide-vue-next'
 import { InputInst } from 'naive-ui'
@@ -82,12 +83,26 @@ const store = useAppStore(), scope = ref<'current' | 'all'>('current')
 const scopeOptions = [{ label: '当前资料库', value: 'current' }, { label: '全部资料库', value: 'all' }]
 const searching = ref(false), opening = ref(false), error = ref(''), warnings = ref<string[]>([]), limitReached = ref(false)
 let generation = 0, disposed = false
+let previousFocus: HTMLElement | null = null
+let restoreFocusOnClose = true
 
-const close = () => { invalidateSearch(); emitEvent('close') }
+const close = () => { if (opening.value) return; invalidateSearch(); emitEvent('close') }
+const handleEscape = (event: KeyboardEvent) => {
+  if (!props.show || event.key !== 'Escape') return
+  event.preventDefault(); event.stopPropagation(); close()
+}
+onMounted(() => window.addEventListener('keydown', handleEscape, true))
 
 watch(() => props.show, (newVal) => {
-  if (newVal) { query.value = ''; selectedIndex.value = 0; scheduleSearch(); nextTick(() => inputInst.value?.focus()) }
-  else invalidateSearch()
+  if (newVal) {
+    restoreFocusOnClose = true
+    const focused = document.activeElement
+    if (focused instanceof HTMLElement && !overlayHost.value?.contains(focused)) previousFocus = focused
+    query.value = ''; selectedIndex.value = 0; scheduleSearch(); nextTick(() => inputInst.value?.focus())
+  } else {
+    invalidateSearch()
+    nextTick(() => { if (!props.show && restoreFocusOnClose && previousFocus?.isConnected) previousFocus.focus({ preventScroll: true }) })
+  }
 })
 
 const moveSelection = (dir: number) => {
@@ -101,7 +116,7 @@ const handleEnter = () => {
 }
 
 const execute = async (item: any) => {
-  if (searching.value || opening.value) return
+  if (!props.show || disposed || searching.value || opening.value) return
   opening.value = true; error.value = ''
   try {
     if (item.type === 'file') {
@@ -113,7 +128,8 @@ const execute = async (item: any) => {
         await store.updateConfig({ activeLibraryPath: library.path })
       }
     }
-    emitEvent('execute', item); close()
+    if (disposed || !props.show) return
+    restoreFocusOnClose = false; opening.value = false; emitEvent('execute', item); close()
   } catch (cause) { error.value = String(cause).replace(/^Error:\s*/, '') }
   finally { opening.value = false }
 }
@@ -239,6 +255,7 @@ function scheduleSearch() {
 watch([query, scope, () => store.libraryPath], scheduleSearch)
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleEscape, true)
   disposed = true; invalidateSearch()
 })
 </script>
