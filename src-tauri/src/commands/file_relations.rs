@@ -419,10 +419,12 @@ pub(crate) fn rename_with_relations(root: &Path, old: &Path, new: &Path) -> Resu
             }
         }
     }
-    fs::rename(old, new).map_err(|e| e.to_string())?;
+    // A target can appear after preview; the OS operation must refuse replacement.
+    crate::services::archive_move::rename_no_replace(old, new)
+        .map_err(|e| format!("无法安全移动，未覆盖任何同名项：{e}"))?;
     if changed {
         if let Err(error) = write(root, &file) {
-            fs::rename(new, old).map_err(|rollback| {
+            crate::services::archive_move::rename_no_replace(new, old).map_err(|rollback| {
                 format!("文件位置已改变，但关系保存失败：{error}；恢复位置失败：{rollback}")
             })?;
             return Err(error);
@@ -505,6 +507,37 @@ mod tests {
         assert!(source.exists() && target.exists());
         fs::remove_dir_all(root).unwrap();
     }
+    #[test]
+    fn rename_rejects_destination_created_after_preflight() {
+        let root = fixture("rename-collision");
+        let source = root.join("原记录.md");
+        let target = root.join("新记录.md");
+        let peer = root.join("资料.pdf");
+        fs::write(&source, "用户正在整理的原记录").unwrap();
+        fs::write(&peer, "reference").unwrap();
+        save(
+            root.to_str().unwrap(),
+            source.to_str().unwrap(),
+            peer.to_str().unwrap(),
+            "related",
+            "关系也必须保持原样",
+        )
+        .unwrap();
+        let relations = fs::read(root.join(DIRECTORY).join(FILE)).unwrap();
+        assert!(!target.exists());
+        // Another process can create this after the caller's preflight check.
+        fs::write(&target, "其他程序刚刚保存的内容").unwrap();
+        let outcome = rename_with_relations(&root, &source, &target);
+        let original = fs::read_to_string(&source);
+        let occupied = fs::read_to_string(&target).unwrap();
+        let after = fs::read(root.join(DIRECTORY).join(FILE)).unwrap();
+        fs::remove_dir_all(&root).unwrap();
+        assert!(outcome.is_err(), "a late destination must reject the rename");
+        assert_eq!(original.unwrap(), "用户正在整理的原记录");
+        assert_eq!(occupied, "其他程序刚刚保存的内容");
+        assert_eq!(after, relations);
+    }
+
     #[test]
     fn related_pairs_dedupe_and_folder_moves_keep_relations() {
         let root = fixture("move");

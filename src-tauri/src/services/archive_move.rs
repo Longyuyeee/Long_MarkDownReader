@@ -174,6 +174,25 @@ mod tests {
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
+    fn primitive_moves_directories_without_replacing_existing_content() {
+        let root = fixture();
+        let source = root.join("源目录");
+        let occupied = root.join("占用目录");
+        let destination = root.join("移动后");
+        fs::create_dir(&source).unwrap();
+        fs::create_dir(&occupied).unwrap();
+        fs::write(source.join("记录.md"), "source").unwrap();
+        fs::write(occupied.join("记录.md"), "keep").unwrap();
+        assert!(rename_no_replace(&source, &occupied).is_err());
+        assert_eq!(fs::read_to_string(source.join("记录.md")).unwrap(), "source");
+        assert_eq!(fs::read_to_string(occupied.join("记录.md")).unwrap(), "keep");
+        rename_no_replace(&source, &destination).unwrap();
+        assert!(!source.exists());
+        assert_eq!(fs::read_to_string(destination.join("记录.md")).unwrap(), "source");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn concurrent_destination_has_exactly_one_winner() {
         let root = fixture();
         let gate = std::sync::Arc::new(std::sync::Barrier::new(2));

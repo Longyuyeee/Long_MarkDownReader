@@ -376,7 +376,8 @@ fn trash_items(library_root: &str, paths: &[String]) -> Result<OperationResult, 
             )?;
             let payload = slot.join("content");
             // Preserve links, display preferences and history at the original identity.
-            fs::rename(source, &payload).map_err(|e| e.to_string())?;
+            crate::services::archive_move::rename_no_replace(source, &payload)
+                .map_err(|e| format!("无法移入回收站，未覆盖已有内容：{e}"))?;
             Ok(PathChange {
                 old_path: source.to_string_lossy().into_owned(),
                 new_path: entry.id,
@@ -457,7 +458,8 @@ fn restore_items(library_root: &str, ids: &[String]) -> Result<OperationResult, 
             fs::create_dir_all(original.parent().ok_or("原目录不可用")?)
                 .map_err(|e| e.to_string())?;
             let payload = guard.resolve_existing(slot.join("content"))?;
-            fs::rename(payload, &original).map_err(|e| e.to_string())?;
+            crate::services::archive_move::rename_no_replace(&payload, &original)
+                .map_err(|e| format!("无法恢复，未覆盖原位置的同名项：{e}"))?;
             let _ = fs::remove_file(slot.join("entry.json"));
             let _ = fs::remove_dir(slot);
             Ok(PathChange {
