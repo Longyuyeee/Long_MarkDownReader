@@ -40,3 +40,4 @@ pub mod wps_native;
 pub mod xml;
 pub mod yaml;
 pub mod inbox;
+pub mod batch_rename;

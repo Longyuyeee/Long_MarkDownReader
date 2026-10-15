@@ -1800,8 +1800,12 @@ const applyFileOperation = async (result: FileOperationResult, operation: FileOp
   try {
     const parents = new Set<string>()
     for (const item of result.items) {
-      if (operation === 'move' || operation === 'undo') {
+      if (operation === 'move' || operation === 'undo' || operation === 'rename') {
         await syncRenamedWorkspaceReferences(item.oldPath, item.newPath)
+        if (operation === 'rename') {
+          const clipboard = libraryFileClipboard.value
+          if (clipboard && sameLibrary(clipboard.root, library)) clipboard.paths = clipboard.paths.map(path => replaceRenamedPath(path, item.oldPath, item.newPath))
+        }
         try { await store.moveFileDisplayStyles(item.oldPath, item.newPath) } catch { message.warning('位置已更新，样式已保留；设置保存可稍后重试') }
       } else if (operation === 'copy') {
         try { await store.copyFileDisplayStyles(item.oldPath, item.newPath) } catch { message.warning('副本已创建，样式已保留；设置保存可稍后重试') }
@@ -3343,7 +3347,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
         { type: 'divider', key: 'file-existing-divider' },
         !isMulti ? { label: '打开所在文件夹', key: 'open-folder', icon: () => h(NIcon, null, { default: () => h(FolderOpenIcon) }) } : null,
         !contextMenu.isDir && !isMulti ? { label: isStarred ? '取消收藏' : '收藏文件', key: 'star', icon: () => h(NIcon, { color: isStarred ? '#f5a623' : undefined }, { default: () => h(StarIcon) }) } : null,
-        { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti || fileOperationBusy.value, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
+        { label: isMulti ? '批量重命名…' : '重命名 (F2)', key: 'rename', disabled: fileOperationBusy.value, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
         { label: isMulti ? `移到回收站（${targets.length} 项）` : '移到回收站 (Del)', key: 'file-recycle', disabled: fileOperationBusy.value, icon: fileMenuIcon(TrashIcon) },
         { label: '更多操作', key: 'file-more', children: [
           ...destinationMenuOptions().slice(1),
@@ -3405,7 +3409,7 @@ const onMenuAction = async (key: string) => {
     }
   } else if (key === 'star') { store.toggleStar(path); message.info(store.isStarred(path) ? '已收藏' : '已取消收藏') }
   else if (key === 'edit-display-style') { openFileStyleEditor(path) }
-  else if (key === 'rename') { openRename(path, contextMenu.isDir) }
+  else if (key === 'rename') { if (selection.length > 1) fileOperations.value?.openRename(selection); else openRename(path, contextMenu.isDir) }
   else if (key === 'delete') {
     const targets = selectedKeys.value.includes(path) ? selectedKeys.value : [path]
     await deleteAction(targets)

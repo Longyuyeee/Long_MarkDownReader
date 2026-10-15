@@ -4,7 +4,7 @@ import path from 'node:path'
 
 // Packaged UI, native IPC and a synthetic library on the disposable runner.
 export async function runInstalledV112Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.2', '1.1.3'].includes(appVersion)) throw Error('Disposable compatible installation required')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.2', '1.1.3', '1.1.4'].includes(appVersion)) throw Error('Disposable compatible installation required')
   const report = { appVersion, sourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
   const invoke = async (command, args = {}) => {
     const result = await evaluate(`(async()=>{try{return {ok:true,value:await window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})}}catch(error){return {ok:false,error:String(error)}}})()`)

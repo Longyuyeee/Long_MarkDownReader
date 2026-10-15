@@ -56,7 +56,7 @@ try {
   checks.push('Import previews conflicts, can cancel or skip, retries failed persistence, preserves local content/default and pending editor draft')
   await manager.getByRole('button', { name: '保存模板', exact: true }).click()
   await transfer('导入模板…')
-  for (const width of [1280, 760]) for (const style of ['soft', 'neon', 'glass', 'airy', 'minimal', 'sharp']) {
+  for (const width of [1280, 760]) for (const style of ['soft', 'neo', 'glass', 'airy', 'minimal', 'sharp']) {
     await page.setViewportSize({ width, height: 950 }); await page.evaluate(style => { window.workflowAudit.store.visualStyle = style; document.documentElement.setAttribute('data-style', style) }, style)
     await settled(page)
     const button = importer.getByRole('button', { name: '导入所选模板', exact: true }); await button.click({ trial: true })

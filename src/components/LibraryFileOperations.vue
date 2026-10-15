@@ -1,4 +1,5 @@
 <template>
+  <BatchRenameDialog ref="renameDialog" :library-root="libraryRoot" :before-operate="beforeOperate" :after-operate="afterOperate" />
   <n-modal :show="showTransfer" preset="card" :title="operation === 'move' ? '移动到' : '复制到'" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTransfer = show }">
     <form class="file-operation-form" @submit.prevent="executeTransfer">
       <p class="file-operation-selection">{{ paths.length === 1 ? filename(paths[0]) : `已选择 ${paths.length} 项` }}</p>
@@ -23,6 +24,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import BatchRenameDialog from './BatchRenameDialog.vue'
 import { NModal, NInput, NButton, useDialog, useMessage } from 'naive-ui'
 import { FolderOpen, Folder, FileText, RefreshCw } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -33,6 +35,8 @@ import { searchResultPath } from '../utils/searchResultPath'
 import { beginWindowSave } from '../services/windowDrafts'
 const props = defineProps<{ libraryRoot: string; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void> }>()
 const dialog = useDialog(), message = useMessage()
+const renameDialog = ref<InstanceType<typeof BatchRenameDialog> | null>(null)
+const openRename = (paths: string[]) => renameDialog.value?.open(paths)
 const modalStyle = { width: 'min(560px, calc(100vw - 28px))' }
 const showTransfer = ref(false), showTrash = ref(false), loadingTrash = ref(false), operation = ref<'move' | 'copy'>('move')
 const showFeedback = ref(false), retryUndo = ref(false)
@@ -141,7 +145,7 @@ const undoMove = async () => {
   finally { busy.value = false; finish() }
 }
 watch(() => props.libraryRoot, () => { showTransfer.value = false; showTrash.value = false; showFeedback.value = false })
-defineExpose({ openTransfer, openTrash, duplicate, recycle, undoMove })
+defineExpose({ openTransfer, openTrash, duplicate, recycle, undoMove, openRename })
 </script>
 
 <style scoped>
