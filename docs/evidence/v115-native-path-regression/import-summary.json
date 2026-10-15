@@ -1,0 +1,16 @@
+{
+  "status": "failed-not-release-acceptance",
+  "productSourceCommit": "fa18bdb7e4657747c4b7708cedc9824f3d2561e8",
+  "harnessSourceCommit": "c3ce8c751d74b5d9c90e91e27408212ee36b0083",
+  "sourceUserContentIncluded": false,
+  "runs": [
+    { "id": "38788347346", "passedChecks": 8, "reason": "Search returned a Windows extended path; configured-library membership rejected it, so the actual result click did not open the main editor." },
+    { "id": "38788480881", "passedChecks": 6, "reason": "The actual visible Markdown editor was in source mode; the controller incorrectly waited on the hidden wysiwyg surface." }
+  ],
+  "files": [
+    { "path": "38788347346/installed-v115-workflow.json", "sha256": "d654e93858f580ab4392ad958e315b78f2dd29d534f49b2a19cb55535a77a85a" },
+    { "path": "38788347346/installed-v115-failure.jpg", "sha256": "0528854ebbeb26762576df5d5a603d5fd1b1c520650d2e54e5c275313d47225d" },
+    { "path": "38788480881/installed-v115-workflow.json", "sha256": "d89e722b713e171c23ff80ff49439869ec2aac4fbd339a6429228551a0ce844f" },
+    { "path": "38788480881/installed-v115-failure.jpg", "sha256": "5b86262b88c20b12082684f5eaf2c6eb603273494897a7faeb2906a0faaa8af7" }
+  ]
+}

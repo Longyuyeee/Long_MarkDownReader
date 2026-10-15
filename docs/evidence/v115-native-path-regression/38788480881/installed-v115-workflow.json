@@ -1,0 +1,153 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "fa18bdb7e4657747c4b7708cedc9824f3d2561e8",
+  "harnessSourceCommit": "c3ce8c751d74b5d9c90e91e27408212ee36b0083",
+  "installerSha256": "a7f1d13c245bd4b4d2f723172cc2845d209c15b56a64659f8cb01437e9fcc54b",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T18:49:30.804Z",
+      "completedAt": "2026-10-15T18:49:30.811Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T18:49:30.811Z",
+      "completedAt": "2026-10-15T18:49:30.893Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T18:49:30.893Z",
+      "completedAt": "2026-10-15T18:49:30.955Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T18:49:30.955Z",
+      "completedAt": "2026-10-15T18:49:30.967Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T18:49:30.967Z",
+      "completedAt": "2026-10-15T18:49:30.972Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T18:49:30.972Z",
+      "completedAt": "2026-10-15T18:49:30.992Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T18:49:30.992Z",
+      "completedAt": "2026-10-15T18:49:31.115Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-15T18:49:31.162Z",
+      "completedAt": "2026-10-15T18:49:31.228Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-15T18:49:31.228Z",
+      "completedAt": "2026-10-15T18:49:31.467Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T18:49:31.468Z",
+      "completedAt": "2026-10-15T18:49:31.782Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T18:49:31.796Z",
+      "completedAt": "2026-10-15T18:49:32.039Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T18:49:32.104Z",
+      "completedAt": "2026-10-15T18:49:32.204Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T18:49:32.204Z",
+      "completedAt": "2026-10-15T18:49:32.251Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T18:49:32.591Z",
+      "completedAt": "2026-10-15T18:49:32.674Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T18:49:32.675Z",
+      "completedAt": "2026-10-15T18:49:32.798Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T18:49:32.798Z",
+      "completedAt": "2026-10-15T18:49:32.846Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T18:49:32.846Z",
+      "completedAt": "2026-10-15T18:49:32.853Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-15T18:49:32.853Z",
+      "completedAt": "2026-10-15T18:49:32.861Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T18:50:05.807Z",
+      "completedAt": "2026-10-15T18:50:05.878Z",
+      "status": "completed"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "error": "Error: Timed out waiting for v115 draft ready"
+}

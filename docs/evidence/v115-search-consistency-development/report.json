@@ -9,7 +9,8 @@
     "Loading, unavailable libraries, partial results, invalid phrases and genuine empty results remain distinct",
     "Closing invalidates pending requests; reopening clears the query without stale-result flash",
     "Cross-library open blocks unsaved drafts; a clean open switches to the configured library and opens in the main workspace",
-    "Escape closes the panel after scope selection or a rejected click without refocusing the input; pending library persistence is announced and cannot be canceled or double-submitted mid-write"
+    "Escape closes the panel after scope selection or a rejected click without refocusing the input; pending library persistence is announced and cannot be canceled or double-submitted mid-write",
+    "Windows canonical search paths with the native extended prefix open in the actual main TXT editor, without claiming the configured library was removed"
   ],
   "layouts": [
     {

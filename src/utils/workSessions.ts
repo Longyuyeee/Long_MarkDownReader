@@ -12,12 +12,15 @@ export interface WorkSession {
   reference?: { path: string; title: string; query: string; page?: number; annotationId?: string }
 }
 const identity = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+// Windows canonicalize returns extended paths even when the configured root is
+// ordinary. Normalize only membership checks; retain existing storage keys.
+const membershipIdentity = (path: string) => identity(path).replace(/^\/\/\?\/unc\//, '//').replace(/^\/\/\?\//, '')
 export const workSessionKey = (root: string) => `longedit.work-sessions.v1:${encodeURIComponent(identity(root))}`
 export const libraryTabsKey = (root: string) => `longedit.tabs.v2:${encodeURIComponent(identity(root))}`
 export function belongsToLibrary(root: string, path: unknown): path is string {
   if (!root || typeof path !== 'string') return false
-  const normalized = identity(path)
-  return normalized.startsWith(`${identity(root)}/`) && !normalized.split('/').some(part => part === '.' || part === '..')
+  const normalized = membershipIdentity(path)
+  return normalized.startsWith(`${membershipIdentity(root)}/`) && !normalized.split('/').some(part => part === '.' || part === '..')
 }
 export function sessionTabs(root: string, tabs: unknown): SessionTab[] {
   if (!Array.isArray(tabs)) return []

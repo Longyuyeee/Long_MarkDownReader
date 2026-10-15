@@ -8,6 +8,21 @@ const exports = {}
 vm.runInNewContext(ts.transpile(fs.readFileSync('src/utils/workSessions.ts', 'utf8'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }), { exports, crypto: webcrypto })
 const { captureWorkSession, sessionTabs, belongsToLibrary, mergeSessionTabs, saveWorkSession, readWorkSessions, workSessionKey } = exports
 const tab = (path, isDirty = false) => ({ id: path, path, title: path, isDirty, content: 'private draft' })
+
+test('native Windows canonical search paths belong to their configured drive or UNC library', () => {
+  assert.equal(belongsToLibrary('C:/notes', '\\\\?\\C:\\notes\\预算.txt'), true)
+  assert.equal(belongsToLibrary('\\\\?\\C:\\notes', 'c:/notes/预算.txt'), true)
+  assert.equal(belongsToLibrary('\\\\server\\share\\notes', '\\\\?\\UNC\\server\\share\\notes\\预算.txt'), true)
+  assert.equal(belongsToLibrary('\\\\?\\UNC\\server\\share\\notes', '//SERVER/share/notes/预算.txt'), true)
+  // Existing persistence keys must not be silently migrated by a membership fix.
+  assert.equal(workSessionKey('C:/notes'), 'longedit.work-sessions.v1:c%3A%2Fnotes')
+  assert.equal(workSessionKey('\\\\?\\C:\\notes'), 'longedit.work-sessions.v1:%2F%2F%3F%2Fc%3A%2Fnotes')
+})
+
+test('canonical Windows membership still rejects adjacent roots, traversal and device paths', () => {
+  for (const path of ['\\\\?\\C:\\notes2\\a.md', '\\\\?\\C:\\notes\\..\\secret.md', '\\\\?\\C:\\notes\\.\\a.md', '\\\\.\\C:\\notes\\a.md']) assert.equal(belongsToLibrary('C:/notes', path), false)
+  assert.equal(belongsToLibrary('//server/share/notes', '\\\\?\\UNC\\other\\share\\notes\\a.md'), false)
+})
 test('session capture excludes text, external files, traversal, duplicate and adjacent libraries', () => {
   const session = captureWorkSession('C:/notes', [tab('C:/notes/a.md'), tab('c:\\notes\\a.md'), tab('C:/notes2/b.md'), tab('C:/notes/../secret.md'), { ...tab('C:/notes/external.md'), external: true }], 'C:/notes/a.md', '项目')
   assert.equal(session.tabs.length, 1); assert.equal(JSON.stringify(session).includes('private draft'), false)
