@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.4",
+  "developmentTargetVersion": "1.1.5",
   "runtimeBaseVersion": "1.1.4",
-  "publicVersion": "1.1.3",
-  "publicTag": "v1.1.3",
-  "publicTagCommit": "2854d7792caee2027e1138491a4754fa7a4871cc",
+  "publicVersion": "1.1.4",
+  "publicTag": "v1.1.4",
+  "publicTagCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-36-v1.1.4-version-candidate",
-  "binaryVersionTransition": "v1.1.4-release-ready",
-  "displayLabel": "v1.1.4 发布就绪 · 当前公开 v1.1.3",
+  "currentStage": "M8-37-v1.1.4-published",
+  "binaryVersionTransition": "v1.1.4-public-release-published",
+  "displayLabel": "v1.1.4 已发布 · v1.1.5 范围待确定",
   "activeSlice": {
     "id": "v1.1.4-foundation-workflow",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-official-update-observation-pending",
     "document": "docs/V1_1_4_Unsigned_Community_Release_Audit_2026-10-15.md"
   }
 }

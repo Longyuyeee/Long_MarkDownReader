@@ -29,7 +29,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/evidence/v1-1-3-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.1.3 真实安装版，紧凑导航、多文档标签与主编辑区">
+  <img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-main.jpg" width="100%" alt="Long编辑 v1.1.4 真实安装版，紧凑导航、多文档标签与主编辑区">
 </p>
 
 <p align="center"><sub>真实安装版工作区：紧凑导航、稳定的多文档标签与主编辑区，把更多空间留给内容。</sub></p>
@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3"><img src="https://img.shields.io/badge/Stable-v1.1.3-cca43b" alt="v1.1.3 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4"><img src="https://img.shields.io/badge/Stable-v1.1.4-cca43b" alt="v1.1.4 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.3**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.4**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.3_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.3/LongEdit_1.1.3_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.3_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.3/LongEdit_1.1.3_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.3](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.4_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.4/LongEdit_1.1.4_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.4_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.4/LongEdit_1.1.4_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.4](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.3/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.4/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.3_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.4_x64-setup.exe
 ```
 
 ```text
-91ddccc556645e6517972217104a97e9e68e9720e4b5fe0f5e6ea4fbd3fca995  LongEdit_1.1.3_x64_zh-CN.msi
-dd9d12308a963f572b56020cf15ee7ceb4866bb7d34764ae134fb8f33fde518b  LongEdit_1.1.3_x64-setup.exe
+5de35732716e899efe8221f620546ca445b24d1b1313b32ae03537c3967bcc1a  LongEdit_1.1.4_x64_zh-CN.msi
+ad36cc821cebec1aab80f7e1b8b2eb0503fc649109fb15bb93196670b0a077cd  LongEdit_1.1.4_x64-setup.exe
 ```
 
 </details>
@@ -147,7 +147,7 @@ dd9d12308a963f572b56020cf15ee7ceb4866bb7d34764ae134fb8f33fde518b  LongEdit_1.1.3
 
 ### ⑤ 先看历史差异，再决定如何恢复
 
-Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与历史版本的增删内容。可以恢复为独立副本，也可以在保护当前草稿后替换编辑区；替换之后仍需手动保存。
+Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与历史版本的增删内容。可以恢复为独立副本，也可以在保护当前草稿后替换编辑区；完整差异块还可点击“恢复此处”，只找回需要的一段，保留其他修改。恢复可撤销，仍需手动保存；简化或截断的差异不提供局部恢复。
 
 恢复前会核对当前文件与历史来源是否变化。发现来源过期时先拒绝执行，而不是用旧结果覆盖新内容。本版不把这一能力泛化为所有格式的历史恢复。
 
@@ -161,29 +161,33 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 在文件栏右键选择“移动到”“复制到”或“创建副本”；按住 Ctrl/Shift 多选后可一次处理多项。目录选择使用弹窗，输入新目录会自动创建，重名时保留两份。移动后，打开的文档、收藏、关系和显示样式继续跟随。
 
+多选文件后右键选择“批量重命名…”，可添加前后缀、查找替换或添加序号。先预览原名称、新名称和冲突，再执行；保留 `.table.json` 等复合扩展名，失败时只重试未完成项目。改名、移动和回收恢复在系统执行时仍拒绝覆盖其他程序刚创建的同名内容。
+
 普通删除进入资料库回收站，可从文件栏空白处右键或“更多操作”打开回收站恢复；“撤销上次移动”可撤销本次应用会话最近一次成功移动。剪切、复制和粘贴使用应用内当前资料库的文件剪贴板。回收内容保存在资料库的 `.longedit/trash`，整体搬迁资料库时请一并保留。
 
 ### ⑧ 让经常写的内容成为模板
 
 在“新建 → 笔记模板 → 管理模板”新增或修改模板，也可从当前 Markdown 的“文档操作 → 保存为模板…”保存当前草稿。支持标题、日期、时间变量；默认模板按资料库选择，快速笔记可复用。模板保存在本机，管理备份不包含模板正文。
 
+需要换电脑或分享模板时，在模板管理的“更多操作”导出当前模板或全部已保存模板；导入时勾选、预览正文，同名项可保留两份或跳过。模板文件保留变量，不携带本机目录和资料库默认设置；原有模板及未保存编辑保持不变。
+
 标签右键可固定、关闭其他/右侧未固定标签或恢复关闭；可拖动排序，使用 Ctrl+Shift+T 恢复最近关闭的文档入口。Markdown 和文本保留阅读位置；已明确放弃的未保存内容不会随关闭入口恢复。文内标签可右键固定常用项，智能集合支持顺序调整和多个标签同时筛选。
 
 ## 真实界面
 
-主图、模板、TXT 恢复、文件整理与下方图谱来自 **v1.1.3 真实安装版**。JSON、工作簿和外观截图保留历史安装验收场景，展示对应功能，不代表新版布局；测试库名称、示例文件中的版本文字也不代表当前软件版本。
+主图、模板、TXT 恢复、文件整理与下方图谱来自 **v1.1.4 真实安装版**。JSON、工作簿和外观截图保留历史安装验收场景，展示对应功能，不代表新版布局；测试库名称、示例文件及原始证据文件名中的旧版本文字也不代表当前软件版本。
 
 ### 模板与文本历史
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-1-3-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.1.3 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-1-3-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.1.3 从 TXT 历史恢复独立副本"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-template-dialog.jpg" alt="v1.1.4 自定义模板管理与资料库默认模板"></td><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-text-history-result.jpg" alt="v1.1.4 从 TXT 历史恢复独立副本"></td></tr>
   <tr><td align="center"><sub>在弹窗中编辑模板与变量</sub></td><td align="center"><sub>TXT 恢复副本，保留原文件</sub></td></tr>
 </table>
 
 ### 文件整理与回收
 
 <table>
-  <tr><td width="50%"><img src="docs/evidence/v1-1-3-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.1.3 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-1-3-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.1.3 资料库回收站，选择文件后恢复"></td></tr>
+  <tr><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v112-move-dialog.jpg" alt="v1.1.4 移动到弹窗，可输入新目录"></td><td width="50%"><img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-v112-trash-dialog.jpg" alt="v1.1.4 资料库回收站，选择文件后恢复"></td></tr>
   <tr><td align="center"><sub>选择或输入目标目录</sub></td><td align="center"><sub>在回收站选择恢复</sub></td></tr>
 </table>
 
@@ -212,10 +216,10 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 ### 知识图谱与思维导图
 
 <p align="center">
-  <img src="docs/evidence/v1-1-3-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.1.3 知识图谱与关系健康面板">
+  <img src="docs/evidence/v1-1-4-candidate-lifecycle/installed-knowledge-guidance-graph.jpg" width="100%" alt="Long编辑 v1.1.4 知识图谱与关系健康面板">
 </p>
 
-<p align="center"><sub>v1.1.3 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
+<p align="center"><sub>v1.1.4 安装场景 · 关系网络与知识图谱治理面板；数据来自独立测试资料库。</sub></p>
 
 知识图谱把文件、标题、链接与 Canvas 节点组织成可交互网络。支持稳定后自动全图适配、搜索、筛选、多种布局与主题、框选和拖动、缩放、适应当前选择、有界且尊重减少动效设置的选择反馈、可点击/拖动/键盘操作的语义缩略导航、右键操作、中心节点、视图保存以及 SVG/PNG 导出；密集中景会主动降低普通箭头和状态环噪声，近景仍保留方向语义。
 
@@ -431,7 +435,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 基础功能深化路线
 
-文件整理、自定义模板、多文档操作、标签/集合、关系维护和 TXT 历史已交付。当前开发线已实现模板迁移、历史局部恢复和批量重命名，固定包已通过安装验收、尚未公开；未发布的能力不纳入上方稳定版承诺。入口继续按使用频率放在右键、新建菜单和按需弹窗中。已完成内容与后续范围见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)。
+现有基础能力持续围绕实际使用任务深化，入口按使用频率放在右键、新建菜单和按需弹窗中，不为新功能挤占主编辑区。后续优先依据真实反馈改进文件整理、模板、历史、关系和查找体验；跨库剪贴板、持久化文件操作历史及其他格式的历史恢复尚未交付。已完成内容与后续范围见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)。
 
 ### 从源码启动
 
@@ -481,7 +485,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_3_Unsigned_Community_Release_Audit_2026-10-15.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_4_Unsigned_Community_Release_Audit_2026-10-15.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
 欢迎围绕真实使用任务提出问题、补充最小复现或贡献改进。开发 UI 时先查看相关实际页面，保留现有能力；修改后验证草稿保护、保存复开与错误反馈，不能仅为了通过验收而降低要求。
@@ -496,7 +500,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
-| v1.1.4（已验收，未公开） | 批量重命名、模板导入/导出、Markdown/TXT 历史局部恢复及文件无覆盖移动；双包与同包安装验收完成 | [发布就绪记录](docs/V1_1_4_Unsigned_Community_Release_Audit_2026-10-15.md) |
+| v1.1.4 | 批量重命名、模板导入/导出、Markdown/TXT 历史局部恢复；修复文件操作的同名覆盖风险 | [发布说明](docs/RELEASE_NOTES_v1.1.4.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4) |
 | v1.1.3 | 自定义模板、多文档固定/排序/恢复、标签与集合整理、关系编辑、TXT 历史与恢复 | [发布说明](docs/RELEASE_NOTES_v1.1.3.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3) |
 | v1.1.2 | 文件右键整理、多选、复制与移动、撤销和回收恢复；侧栏精简 | [发布说明](docs/RELEASE_NOTES_v1.1.2.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.2) |
 | v1.1.1 | 收集箱、集合、标签与关系体验重排；跨格式添加关系；更平滑的标签切换 | [发布说明](docs/RELEASE_NOTES_v1.1.1.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.1) |

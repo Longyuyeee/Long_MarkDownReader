@@ -1,8 +1,8 @@
 # v1.1.4 基础功能深化发布记录
 
-> **2026-10-15 已达到发布就绪**：用户要求“推进到能发版的程度”。修复后的固定源码已通过完整质量门、709 项 Rust 功能回归、独立性能回归、双包构建及两轮同包安装验收，原始报告与实际截图已归档。本轮没有创建 Tag 或 Release，公开版仍为 1.1.3。不增加跨库剪贴板等新范围。
+> **2026-10-15 v1.1.4 已正式发布**：按用户确认，等待 `main` CI `38752186522` 成功后，直接使用已经验收的同一批安装包发布，没有重建。Release `413927115` 于北京时间 22:45:38 公开，三个附件完整回下载摘要一致。完整质量门、709 项 Rust 功能回归、独立性能回归、双包构建及两轮同包安装验收均已通过，原始报告与实际截图已归档。不增加跨库剪贴板等新范围。
 
-当前公开版为 1.1.3，1.1.4 已完成开发和发布前验收，可以使用下述已验收的同一批安装包发版。正式公开发布、公开附件回下载以及发布后的官方应用内升级观察尚未执行。
+当前公开稳定版为 [v1.1.4](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4)。开发、安装验收、正式发布和公开附件回下载已完成；发布后的官方 1.1.3→1.1.4 应用内升级观察仍单独待执行，不能用覆盖安装替代。
 
 发布通道为 `community-unsigned`，企业 `releaseCandidate=false`；用户可手动下载安装。安装结果、发布就绪状态和应用内更新观察分别记录。
 
@@ -39,7 +39,7 @@
 
 修复后四组真实原生测试共 **21 项通过**：文件关系 5、文件管理 6、批量重命名 5、无覆盖原语 5。新复现确认来源、抢先创建的目标及关系记录均不变；已有移动、复制、撤销、回收、恢复、复合扩展名和关系迁移回归通过。本地 Rust 另有增量缓存目录收尾权限警告，但编译和上述测试退出成功，未删除缓存或改变用户程序。
 
-上述版本迁移、冻结源码检查、MSI/NSIS 构建和隔离安装步骤均已执行。下节固化实际结果与附件摘要；公开 Release 和公开回下载仍留到用户确认发布后执行。
+上述版本迁移、冻结源码检查、MSI/NSIS 构建和隔离安装步骤均已执行。下节保留发布前就绪结果与固定附件摘要；用户确认后的正式发布和公开回下载结果另列在后，原始报告不改写。
 
 ## 最终发布就绪结果
 
@@ -75,15 +75,21 @@
 
 原始构建收据、逐文件证据大小/摘要和运行时合同分别见 [构建收据](evidence/v1.1.4-release/installer-build-receipt.json)、[证据导入清单](evidence/v1.1.4-release/import-manifest.json)、[制品清单](evidence/v1.1.4-release/artifact-manifest.json) 与 [校验文件](evidence/v1.1.4-release/SHA256SUMS.txt)。报告和原图已提交仓库，不依赖聊天上下文或单台电脑。
 
-完整安装器在 [构建制品](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38742946044/artifacts/11980660778) 中，名称 `community-release-candidate-lifecycle-38742946044`，GitHub 保留期为 14 天。下载时核对上述摘要；后续发布流程可以直接在云端取同一制品，不依赖本机下载是否完成。
+原始安装器构建制品为 [community-release-candidate-lifecycle-38742946044](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38742946044/artifacts/11980660778)，GitHub 保留期为 14 天。正式包已发布到 [Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4)，不再依赖构建制品保留期或本机下载是否完成；上述摘要保持不变。
 
 本机两次完整安装器下载连接未完成，已仅停止本轮下载助手，不把它记为“本地安装包已下载”。小体积的完整复核材料已成功取回，48 个原始文件逐个核对大小和 SHA-256，安装态运行时合同通过；安装器本体在两次云端验收中均核对相同摘要。本机发布就绪元数据的 `npm run check:current-development-audit` 全套复验及 README 引用/GFM 渲染也通过。文档保留“候选”正式身份并明确“已验收、未公开”，与版本合同一致。
 
-## 下一步：只做正式发布，不再重新开发或重建
+## 正式发布与公开附件核验
 
-用户确认公开后，将 `v1.1.4` Tag 精确绑定 `970a9fe18a74b6ad1d78304ae15b18178bf47057`，准备草稿 Release，再运行已有 `community-release-publish.yml`：`installer_run_id=38742946044`、`review_run_id=38749423630`、`source_commit=970a9fe18a74b6ad1d78304ae15b18178bf47057`、`version=1.1.4`。该流程重新核对成功门禁、原生报告、固定包字节及 Tag 后才公开，并回下载核对附件。
+用户确认“等 main 的 CI 通过后发布，直接用已经验收的安装包”。[main CI 38752186522](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38752186522) 已成功，受检提交为 `8aeeab802368edf6259f2aa2a4c2a3f59b36a3af`，其相对固定产品源码的变更仅为文档、发布元数据和验收证据。随后创建注释 Tag `v1.1.4`，Tag 对象 `80bdbed323589a4f3b97f178339512b37fbdb50f`，剥离后精确指向 `970a9fe18a74b6ad1d78304ae15b18178bf47057`。
 
-公开成功后再更新 README 稳定版下载、发布收据与下一开发目标。当前公开下载保持 1.1.3；没有预填发布 ID 或伪造公开回下载结果。官方 1.1.3→1.1.4 应用内升级只能在实际公开后独立观察；不把覆盖安装当作该证据。
+[发布运行 38754100509](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38754100509) 成功，使用 `installer_run_id=38742946044`、`review_run_id=38749423630`、`source_commit=970a9fe18a74b6ad1d78304ae15b18178bf47057`、`version=1.1.4`。流程重新核对成功门禁、原生报告、固定包字节及 Tag，直接上传原包，没有构建步骤。
+
+Release 数据库 ID 为 `413927115`，公开时间 `2026-10-15T14:45:38Z`，非草稿、非预发布，并已设为 Latest。公开 EXE/MSI 大小与 SHA-256 均和上表完全一致；`SHA256SUMS.txt` 为 190 字节，SHA-256 为 `3e24fff57fd2f29e495e59e9ef92fd62299ac957c7eabee2fe255b7345e55d67`。发布任务对三个公开附件完整回下载，逐个核对大小、SHA-256 和 GitHub 附件摘要，通过后才形成 [原始公开回下载证据](evidence/v1.1.4-release/public-download-verification.json) 与 [发布收据](evidence/v1.1.4-release/release-receipt.json)。
+
+README 稳定版入口、安装包摘要、当前安装版截图及功能说明已更新，开头原图标保留，版本更新摘要放在末尾。开发合同同步为公开版本 1.1.4、下一目标 1.1.5，具体下一版范围尚未确认；未改产品代码或安装器。正式官方应用内升级观察仍为 `1.1.3-to-1.1.4-pending`，本次公开不将其自动改为通过。
+
+发布状态同步后，`npm run check:current-development-audit` 全套通过；发布收据与原始公开回下载报告、GitHub API 的三份附件 ID/大小/摘要逐项一致，实际安装态身份合同通过。48 个安装验收原始文件保持原摘要；README 本地引用、原图标、末尾更新摘要及 GitHub GFM 渲染已核对。
 
 ## 后续
 
