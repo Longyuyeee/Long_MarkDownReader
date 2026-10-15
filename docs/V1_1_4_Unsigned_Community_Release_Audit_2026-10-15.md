@@ -31,6 +31,8 @@
 
 ### 实际发现并修复的文件覆盖风险
 
+修复后产品源码冻结为 **`970a9fe18a74b6ad1d78304ae15b18178bf47057`**；[本次固定包构建与完整验收 38742946044](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38742946044) 已启动。后续纯文档和证据提交不改变安装包源码身份；如再改产品，必须另行冻结并重建。
+
 文件整理的外层检查与 `rename_with_relations` 中的 `fs::rename` 存在检查后使用间隔。在 Windows 上，目标若被其他程序抢先创建，`fs::rename` 可以覆盖目标。先添加 `rename_rejects_destination_created_after_preflight` 原生复现：模拟用户完成预览后外部程序创建目标，修复前真实失败于 `a late destination must reject the rename`，并非推测性问题。
 
 改名/移动与关系失败回滚、回收移入和回收恢复改为复用现有 `MoveFileExW(..., 0)` 无覆盖原语；由系统在最后一步拒绝同名项，不加入复制或覆盖回退。新增目录原语测试确保文件夹正常移动、已存在文件夹内容不变。只复用底层安全接口，不恢复已取消的强制归档流程；本项目公开平台仍仅为 Windows。
