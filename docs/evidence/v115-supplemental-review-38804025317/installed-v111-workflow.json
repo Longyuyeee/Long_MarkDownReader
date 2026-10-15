@@ -1,0 +1,23 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "installerSha256": "543cc83df368a17bf14ada05d972d339a2d18064d1ab10f231331f69a2a744db",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "missing-default-inbox-is-normal-empty",
+      "status": "passed"
+    },
+    {
+      "id": "first-inbox-note-is-created-in-place",
+      "status": "passed"
+    },
+    {
+      "id": "any-file-catalog-includes-attachments",
+      "status": "passed"
+    }
+  ],
+  "error": "Error: Timed out waiting for visible file relation control"
+}

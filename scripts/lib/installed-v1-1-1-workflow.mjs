@@ -13,7 +13,8 @@ export async function runInstalledV111Workflow({ send, evaluate, navigate, waitF
   }
   const check = (id, condition) => { assert.ok(condition,id); report.checks.push({id,status:'passed'}) }
   const click = async selector => {
-    const point = `(()=>{const e=${selector};if(!e||e.disabled)return null;const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
+    report.lastControlSelector = selector
+    const point = `(()=>{const e=${selector};if(!e||e.disabled)return null;e.scrollIntoView({block:'nearest',inline:'nearest'});const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
     await waitFor(point,'visible file relation control')
     const coordinates=await evaluate(point)
     for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...coordinates,button:'left',clickCount:1})
@@ -58,6 +59,6 @@ export async function runInstalledV111Workflow({ send, evaluate, navigate, waitF
     await invoke('remove_file_relation',{libraryRoot:library,relationId:entry.id})
     check('removing-relation-retains-both-files',(await invoke('list_file_relations',{libraryRoot:library,path:source})).length===0 && (await fs.readFile(newPath)).equals(original) && (await fs.stat(source)).isFile())
     report.status='passed'
-  } catch(error) {report.status='failed';report.error=String(error);throw error}
+  } catch(error) {report.status='failed';report.error=String(error);await capture('installed-v111-failure.jpg').catch(()=>{});throw error}
   finally {await fs.writeFile(path.join(output,'installed-v111-workflow.json'),JSON.stringify(report,null,2)+'\n')}
 }

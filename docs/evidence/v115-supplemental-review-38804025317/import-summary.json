@@ -1,0 +1,11 @@
+{
+  "status": "failed-before-supplemental-v115-check",
+  "runId": "38804025317",
+  "productSourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "harnessSourceCommit": "32c057a46a41f68722cdabf94ccf06fb030faae0",
+  "sourceUserContentIncluded": false,
+  "reason": "An inherited v111 relation-control visibility check timed out after three checks, before any v115 workflow ran. Its controller had no scroll-into-view step or failure screenshot. This does not establish the cause of the observed v115 file-tree empty state.",
+  "files": [
+    { "name": "installed-v111-workflow.json", "sha256": "9152d8c078c50772965b9d5f26e21754b6a85e82384ec8dbd39df7b704f2c9ae" }
+  ]
+}
