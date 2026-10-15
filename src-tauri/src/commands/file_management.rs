@@ -143,20 +143,6 @@ fn copy_tree(source: &Path, target: &Path, created: &mut bool) -> Result<(), Str
     Ok(())
 }
 
-fn history_files(path: &Path) -> Vec<PathBuf> {
-    if path.is_file() {
-        return vec![path.to_path_buf()];
-    }
-    let mut files = Vec::new();
-    if let Ok(entries) = fs::read_dir(path) {
-        for entry in entries.flatten() {
-            if entry.file_type().is_ok_and(|kind| !kind.is_symlink()) {
-                files.extend(history_files(&entry.path()));
-            }
-        }
-    }
-    files
-}
 
 pub(super) fn move_to(
     app: Option<&tauri::AppHandle>,
@@ -170,28 +156,13 @@ pub(super) fn move_to(
     if new.starts_with(old) {
         return Err("不能移动到自身或子文件夹".into());
     }
-    let files = if app.is_some() {
-        history_files(old)
-    } else {
-        Vec::new()
-    };
-    super::file_relations::rename_with_relations(guard.root(), old, new)?;
+    let move_document = || super::file_relations::rename_with_relations(guard.root(), old, new);
     if let Some(app) = app {
-        for file in files {
-            let next = if file == old {
-                new.to_path_buf()
-            } else {
-                new.join(file.strip_prefix(old).map_err(|e| e.to_string())?)
-            };
-            if let (Ok(history), Ok(destination)) = (
-                super::history::history_dir(app, &file.to_string_lossy()),
-                super::history::history_dir(app, &next.to_string_lossy()),
-            ) {
-                if history.exists() {
-                    let _ = fs::rename(history, destination);
-                }
-            }
-        }
+        crate::services::file_move_history::with_history_move(
+            &super::history::history_cache_root(app)?, old, new, move_document,
+        )?;
+    } else {
+        move_document()?;
     }
     Ok(())
 }

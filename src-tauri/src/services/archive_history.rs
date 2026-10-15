@@ -33,10 +33,24 @@ pub(crate) struct ArchiveHistoryPlan {
     strategy: String,
 }
 
+impl ArchiveHistoryPlan {
+    pub(crate) fn snapshot_bytes(&self) -> u64 { self.snapshots.iter().map(|item| item.bytes).sum() }
+    pub(crate) fn snapshot_count(&self) -> usize { self.snapshots.len() }
+}
+
 pub(crate) fn inspect(
     cache: &Path,
     source: &Path,
     target: &Path,
+) -> Result<ArchiveHistoryPlan, String> {
+    inspect_with_budget(cache, source, target, MAX_BYTES)
+}
+
+pub(crate) fn inspect_with_budget(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    remaining_bytes: u64,
 ) -> Result<ArchiveHistoryPlan, String> {
     let old = history_path(cache, source);
     let new = history_path(cache, target);
@@ -98,7 +112,7 @@ pub(crate) fn inspect(
         if metadata.file_type().is_symlink() || !metadata.is_file() {
             return Err(format!("快照不是普通文件: {name}"));
         }
-        let remaining = MAX_BYTES.saturating_sub(total);
+        let remaining = remaining_bytes.min(MAX_BYTES).saturating_sub(total);
         if metadata.len() > remaining {
             return Err("历史快照超过 64 MiB 预检上限，未完成检查".into());
         }

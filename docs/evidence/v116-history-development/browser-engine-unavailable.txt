@@ -1,0 +1,12 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+browserType.launch: Chromium distribution 'msedge' is not found at C:\Users\Administrator\AppData\Local\Microsoft\Edge\Application\msedge.exe
+Run "npx playwright install msedge"
+    at E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-file-management-browser.mjs:7:30 {
+  log: [],
+  name: 'Error'
+}
+
+Node.js v22.12.0

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "status": "development-history-regression-passed-not-release-ready",
+  "baseCommit": "89aab95782e4db3afa52f793a717e0990004594f",
+  "runtimeVersion": "1.1.5",
+  "plannedVersion": "1.1.6",
+  "evidenceLevel": "native-filesystem-and-mocked-ipc-real-vue",
+  "sourceUserContentIncluded": false,
+  "checks": {
+    "beforeFixCanonical": {
+      "passed": 2,
+      "failed": 3
+    },
+    "historyRegression": {
+      "passed": 12,
+      "failed": 0
+    },
+    "rustFunctional": {
+      "passed": 739,
+      "failed": 0,
+      "ignored": 5,
+      "independentPerformanceFiltered": 1
+    },
+    "qualityGate": "passed",
+    "productionDependencyVulnerabilities": 0,
+    "browserFlows": 8,
+    "browserLayouts": 12,
+    "browserErrors": 0
+  },
+  "boundaries": {
+    "uiModified": false,
+    "normalMotionPreserved": true,
+    "crashRecoveryComplete": false,
+    "markdownLinkRewritesImplemented": false,
+    "installerBuilt": false,
+    "releaseReady": false,
+    "releasePublished": false
+  },
+  "files": [
+    {
+      "path": "before-fix.txt",
+      "sizeBytes": 2119,
+      "sha256": "04d4f26e77959a3abd48e6fa71a5c4a77e7322c37775d5d5aec006a8947610be"
+    },
+    {
+      "path": "browser/01-context-menu.png",
+      "sizeBytes": 86976,
+      "sha256": "b37f8764e54ee89b0c4934a0aa16576c0fb27452fcfdb12cfbbb95251cd56d2b"
+    },
+    {
+      "path": "browser/02-move-dialog.png",
+      "sizeBytes": 11883,
+      "sha256": "edfc450dd34fce89f3335a07af3516f544b79536e84bd42bd3f80aff3797a093"
+    },
+    {
+      "path": "browser/03-trash-dialog.png",
+      "sizeBytes": 11254,
+      "sha256": "f25a4484b7e9aa9bf621eb3d511823a21464a9a220e24180149a68223999f1f8"
+    },
+    {
+      "path": "browser/results.json",
+      "sizeBytes": 2245,
+      "sha256": "4f1cf710dd19481fcde60beb43b51092a61bc8df377a25c989928a24c37d87ce"
+    },
+    {
+      "path": "browser-engine-unavailable.txt",
+      "sizeBytes": 408,
+      "sha256": "7137cf11f5c3e3d9ee10333c2b1de020a0b9cb3a9b809decd2a74a92a8002265"
+    },
+    {
+      "path": "full-rust.txt",
+      "sizeBytes": 74657,
+      "sha256": "37342bfc8e57c959a067cf5cf7bccb85d7e2094a0135cac10d547edc1df4d29d"
+    },
+    {
+      "path": "history-regression.txt",
+      "sizeBytes": 2635,
+      "sha256": "ff53b65c9d022ef4a9f292e4edf9604cda4b2b929c36040c1988dc255e88de74"
+    },
+    {
+      "path": "initial-fixture-run.txt",
+      "sizeBytes": 2408,
+      "sha256": "0ae123dca9413e486c527fbd556954c363d89a6125977545e422dc8239c054a1"
+    },
+    {
+      "path": "quality-gate.txt",
+      "sizeBytes": 121171,
+      "sha256": "652ec83376c1988a10cbf2e8a25d4ffa6903d95660aa4b1192e079526982ee04"
+    }
+  ]
+}

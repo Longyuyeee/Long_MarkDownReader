@@ -6,12 +6,16 @@ use std::path::PathBuf;
 use tauri::Manager;
 use tauri::State;
 
-pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
-    let cache_dir = app_handle
+pub(crate) fn history_cache_root(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+    Ok(app_handle
         .path()
         .app_cache_dir()
         .map_err(|error| format!("cache dir error: {error}"))?
-        .join("history_v2");
+        .join("history_v2"))
+}
+
+pub(crate) fn history_dir(app_handle: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
+    let cache_dir = history_cache_root(app_handle)?;
     Ok(crate::services::archive_history::history_path(
         &cache_dir,
         std::path::Path::new(path),

@@ -100,3 +100,5 @@ docs/evidence/p1b5d-pdf-metadata/manifest.json binary
 docs/evidence/**/*.json binary
 docs/evidence/**/SHA256SUMS.txt binary
 scripts/fixtures/v126-search/Paper.pdf binary
+# Preserve original captured process output, including CRLF and intentional test whitespace.
+docs/evidence/v116-history-development/*.txt -text -diff

@@ -1,0 +1,35 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 31.17s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 5 tests
+
+thread 'services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history' (12056) panicked at src\services\file_move_history.rs:79:9:
+assertion failed: f.move_file(&source, &target).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots' (45620) panicked at src\services\file_move_history.rs:70:9:
+must not report a successful move when history cannot follow
+test services::file_move_history::tests::failed_document_move_keeps_history_with_source ... ok
+
+thread 'services::file_move_history::tests::successful_move_and_undo_keep_nested_history_bytes' (45328) panicked at src\services\file_move_history.rs:99:9:
+assertion failed: !old.exists()
+test services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history ... FAILED
+test services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots ... FAILED
+test services::file_move_history::tests::successful_move_and_undo_keep_nested_history_bytes ... FAILED
+
+thread 'services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place' (17168) panicked at src\services\file_move_history.rs:89:9:
+assertion failed: f.move_file(&source, &target).is_err()
+test services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place ... FAILED
+
+failures:
+
+failures:
+    services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place
+    services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history
+    services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots
+    services::file_move_history::tests::successful_move_and_undo_keep_nested_history_bytes
+
+test result: FAILED. 1 passed; 4 failed; 0 ignored; 0 measured; 733 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`

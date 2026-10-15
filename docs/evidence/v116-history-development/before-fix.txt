@@ -1,0 +1,31 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.81s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 5 tests
+
+thread 'services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history' (34260) panicked at src\services\file_move_history.rs:79:9:
+assertion failed: f.move_file(&source, &target).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::file_move_history::tests::failed_document_move_keeps_history_with_source ... ok
+
+thread 'services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots' (9528) panicked at src\services\file_move_history.rs:70:9:
+must not report a successful move when history cannot follow
+test services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history ... FAILED
+test services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots ... FAILED
+
+thread 'services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place' (52012) panicked at src\services\file_move_history.rs:89:9:
+assertion failed: f.move_file(&source, &target).is_err()
+test services::file_move_history::tests::successful_move_and_undo_keep_nested_history_bytes ... ok
+test services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place ... FAILED
+
+failures:
+
+failures:
+    services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place
+    services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history
+    services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots
+
+test result: FAILED. 2 passed; 3 failed; 0 ignored; 0 measured; 733 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`
