@@ -2,7 +2,9 @@
 
 ## 2026-10-16 当前结论：规范节点展开已修复，新固定包验证中
 
-**当前有效冻结为 `14ec324b6b1a6cf16568faa1edb9b667b7cf1325`**，已推送 main。[构建/安装 38815807067](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38815807067)、[main CI 38815805597](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38815805597) 使用同一份修复后代码。以下 c3732a61 和更早字节均已撤出候选，不可晋级。
+补充闭环：先打开外部刚添加、尚未列入文件树的文件，再刷新，旧实现会提前消费定位请求，新条目出现但不选中。实际页面新增第 12 项先失败（行存在但没有 selected 类），现保留请求直到真实节点出现或确认目标是不可渲染的库根；12 组/12 布局/0 页面错误通过。[修复前原图](evidence/v115-search-consistency-development/pending-canonical-selection-before-fix.png) 保留。14ec324b 的构建 38815807067 在质量门阶段取消，不能用于晋级；不继续为缺少此修复的源码打包，下一次冻结以本补充为准。
+
+上一冻结 `14ec324b6b1a6cf16568faa1edb9b667b7cf1325` 的构建 38815807067 已取消；包含待定位请求保留的补充再次通过完整本地质量门、npm 生产依赖 0 漏洞及实际页面 12 组/12 布局/0 错误，将在本提交后重新冻结构建。以下 c3732a61 和更早字节均已撤出候选，不可晋级。
 
 `c3732a61` 安装器确认有产品缺陷，退出候选。只读同包复核 `38814095841` 与正常动效组件复现一致：普通路径的嵌套父目录被直接写成展开键，真实扫描键却带扩展前缀；Tree data 包含新文件，aip=true 的显示缓存仍停在旧列表。原始安装报告及截图见 [规范节点失败证据](evidence/v115-canonical-tree-regression-38814095841/installed-v112-workflow.json)；组件失败状态见 [规范键刷新复现](evidence/v115-search-consistency-development/canonical-nested-before-fix.json)。修正定位器的转义后原可见文件断言仍真实失败，才修改产品。
 

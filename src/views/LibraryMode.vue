@@ -2586,7 +2586,9 @@ const applyPendingTreeReveal = async (duringRootLoad = false) => {
     const revealSelection = node && typeof node.key === 'string' && selectedKeys.value.length === 1
       && sameWorkspacePath(selectedKeys.value[0], request.path)
     if (revealSelection) selectedKeys.value = [node.key as string]
-    pendingTreeReveal = null
+    // An external file may exist before the current listing knows about it.
+    // Keep its reveal request until a subsequent real refresh finds the row.
+    if (node || sameWorkspacePath(root, request.path)) pendingTreeReveal = null
     await nextTick()
     if (generation === treeRevealGeneration && revealSelection) treeInstRef.value?.scrollTo({ key: node.key!, behavior: 'smooth' })
   } finally { if (generation === treeRevealGeneration) treeRevealInProgress.value = false }
