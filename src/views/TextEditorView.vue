@@ -269,7 +269,16 @@ const currentTab = computed(() => store.tabs.find(tab => tab.path === textPath.v
 const loading = ref(true)
 const showHistory = ref(false)
 const historyDraft = computed(() => store.tabs.find(tab => tab.path === textPath.value)?.content || '')
-const applyHistoryDraft = (content: string) => { if (!editor || readOnly.value) return; replaceDocument(content, false); dirty.value = true; syncCurrentTab(true) }
+const applyHistoryDraft = (content: string, partial = false) => {
+  if (!editor || readOnly.value) return
+  if (partial) {
+    const before = editor.state.doc.toString(); let prefix = 0, suffix = 0
+    while (prefix < before.length && prefix < content.length && before[prefix] === content[prefix]) prefix++
+    while (suffix < before.length - prefix && suffix < content.length - prefix && before[before.length - suffix - 1] === content[content.length - suffix - 1]) suffix++
+    editor.dispatch({ changes: { from: prefix, to: before.length - suffix, insert: content.slice(prefix, content.length - suffix) } })
+  } else replaceDocument(content, false)
+  dirty.value = true; syncCurrentTab(true)
+}
 const openHistoryCopy = (path: string) => { void openManagedFile(router, path) }
 let loadedViewPath = '', viewTimer: ReturnType<typeof setTimeout> | undefined
 const rememberTextPosition = () => { if (editor && loadedViewPath) rememberWorkspaceViewState(loadedViewPath, { scrollTop: editor.scrollDOM.scrollTop, scrollLeft: editor.scrollDOM.scrollLeft }) }

@@ -749,7 +749,7 @@
         <n-button quaternary @click="copyAIResult">复制结果</n-button>
       </template>
     </n-modal>
-    <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" />
+    <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
   </div>
@@ -789,6 +789,7 @@ import NoteRelationsPanel from '../components/NoteRelationsPanel.vue'
 import { onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
+import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
 import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
@@ -2246,7 +2247,7 @@ const restoreHistory = async (entry: HistoryEntry) => {
     historyComparison.value = { ...comparison, entry, draft }
   } catch (error) { if (generation === comparisonGeneration) message.error(`历史比较失败：${String(error)}`) }
 }
-const recoverHistory = async (mode: 'copy' | 'replace') => {
+const recoverHistory = async (mode: 'copy' | 'replace' | 'partial', changeId?: number) => {
   const comparison = historyComparison.value
   if (!comparison || historyActionBusy.value) return
   const { entry } = comparison
@@ -2272,21 +2273,27 @@ const recoverHistory = async (mode: 'copy' | 'replace') => {
     } else {
       const content = await invoke<string>('prepare_history_restore', { ...args, currentDraft: comparison.draft, maxCount: store.maxHistoryCount })
       if (!current()) { if (historyComparison.value === comparison) historyActionError.value = '草稿已保护，但当前内容已变化，未替换；请重新比较'; return }
-      applyHistoryContent(entry, content)
+      applyHistoryContent(entry, mode === 'partial' ? restoreHistoryChange(comparison.draft, content, changeId!) : content, mode === 'partial')
       closeHistoryComparison()
       void fetchHistory()
     }
   } catch (error) { if (historyComparison.value === comparison) historyActionError.value = `恢复失败：${String(error)}` }
   finally { historyActionBusy.value = false }
 }
-const applyHistoryContent = (entry: HistoryEntry, content: string) => {
+const applyHistoryContent = (entry: HistoryEntry, content: string, preserveView = false) => {
+  const scroller = preserveView ? editorScroller() : undefined
+  const position = scroller ? { top: scroller.scrollTop, left: scroller.scrollLeft } : undefined
+  // Match excerpt insertion: flush both states so an immediate Undo restores this operation.
+  if (preserveView) vditor.vditor.undo.addToUndoStack(vditor.vditor)
   vditor.setValue(content)
+  if (preserveView) vditor.vditor.undo.addToUndoStack(vditor.vditor)
+  if (position) void nextTick(() => { const current = editorScroller(); if (current) current.scrollTo({ top: position.top, left: position.left, behavior: 'auto' }) })
   // Programmatic Vditor updates do not reliably emit its input callback.
   store.updateTabContent(entry.path, content)
   const tab = tabs.value.find(item => item.path === entry.path)
   if (tab) tab.isDirty = true
   wordCount.value = content.length
-  message.success('历史内容已载入编辑区，尚未保存到文件')
+  message.success(preserveView ? '此处已恢复，其余草稿保留；仍需保存' : '历史内容已载入编辑区，尚未保存到文件')
 }
 const deleteHistory = async (entry: HistoryEntry) => {
   if (!ownsHistoryEntry(entry)) return

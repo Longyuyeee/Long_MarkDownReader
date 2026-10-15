@@ -4,7 +4,7 @@ mod services;
 
 use commands::ai::ai_chat_completion;
 use commands::file_relations::update_file_relation;
-use commands::note_templates::create_note_from_template;
+use commands::note_templates::{create_note_from_template, export_note_template_bundle, read_note_template_bundle};
 use commands::archive::preflight_archive;
 use commands::backup::{
     export_management_backup, preflight_management_backup_import, restore_management_backup,
@@ -387,6 +387,8 @@ pub fn run() {
             write_external_text_document,
             create_format_file,
             create_note_from_template,
+            export_note_template_bundle,
+            read_note_template_bundle,
             update_file_relation,
             commands::quick_note::save_quick_note,
             commands::quick_note::open_quick_note,

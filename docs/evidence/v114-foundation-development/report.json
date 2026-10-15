@@ -1,0 +1,84 @@
+{
+  "scope": "Actual Vue components with simulated native IPC; native JSON files tested separately",
+  "checks": [
+    "Export includes the current template draft without changing the saved template or library default",
+    "Import previews conflicts, can cancel or skip, retries failed persistence, preserves local content/default and pending editor draft",
+    "Markdown partial restore protects the draft, survives protection failure, keeps other edits and reading position, and can be undone without writing the file",
+    "TXT partial restore changes only the selected block, remains unsaved and can be undone in the editor"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "neon",
+      "width": 1280,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "soft",
+      "width": 760,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "neon",
+      "width": 760,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "glass",
+      "width": 760,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "airy",
+      "width": 760,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "minimal",
+      "width": 760,
+      "dialogFits": true,
+      "actionReachable": true
+    },
+    {
+      "style": "sharp",
+      "width": 760,
+      "dialogFits": true,
+      "actionReachable": true
+    }
+  ],
+  "errors": []
+}

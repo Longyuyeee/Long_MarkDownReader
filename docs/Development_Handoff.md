@@ -1,4 +1,14 @@
-# 2026-10-15：v1.1.3 已正式发布（当前接续入口）
+# 2026-10-15：v1.1.4 基础功能深化第一批（当前接续入口）
+
+用户要求继续深化现有基础功能，交互使用右键、菜单和按需弹窗。本批在 `codex/foundation-template-history` 完成模板导入/导出和 Markdown/TXT 历史局部恢复。公开及运行时基线保持 1.1.3，下一目标 1.1.4，尚未制作或发布新安装包；[详细范围与后续顺序](Foundation_Features_Upgrade_Plan_2026-10-14.md)。
+
+- `NoteTemplateManager.vue` 的“更多操作”提供原生文件导入/导出；`NoteTemplateImportDialog.vue` 勾选和预览，处理同名、容量和失败重试，保留原模板、默认值及未保存编辑。Rust `note_templates.rs` 新增两个已注册文件命令，真实读写独立 JSON 模板包，不修改管理备份策略。
+- `historyDiff.ts` 为完整差异标识连续变更块，局部恢复保留其他修改及混合换行。`HistoryDiffDialog.vue` 的“恢复此处”经由 Markdown/TXT 原有草稿保护命令，只更改当前编辑区；两者均可撤销，Markdown 保留滚动位置。长文档流程发现 Vditor 延迟记录撤销状态，现沿用参考摘录的前后快照方式，立即撤销复测通过。简化/截断预览不提供局部恢复。
+- `npm run test:template-transfer` 13 项通过；原生 `commands::note_templates` 7 项通过，含新增 3 项文件读写/格式/边界测试。`npm run test:foundation-v114-browser` 新增 4 组流程/12 组布局通过；原模板、基础流程分别 7/12 通过，证据存于 `docs/evidence/v114-foundation-development/`，保留历史发布证据。类型检查与生产构建、主题、字体、一致性和文件弹窗检查通过。
+
+下一批推进文件多选右键的批量重命名，使用名称预览弹窗，保留复合扩展名并清楚反馈重名、无效名称和执行结果。后续需要发布时再提升二进制版本与构建安装包，不重复当前已通过的组件流程，除非有新修改或失败。下方为历史记录。
+
+# 2026-10-15：v1.1.3 已正式发布
 
 自定义模板、多文档操作、标签/集合整理、手动关系维护和 TXT 历史已发布为 [v1.1.3](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3)。源码 `2854d7792caee2027e1138491a4754fa7a4871cc`，MSI/NSIS、相同安装包原生流程与公开附件回下载均通过，README 和 Release 同步；详见 [发布记录](V1_1_3_Unsigned_Community_Release_Audit_2026-10-15.md)。六种风格、主题、正常动效和现有功能保留。
 
