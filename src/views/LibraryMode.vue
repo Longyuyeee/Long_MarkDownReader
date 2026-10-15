@@ -130,7 +130,7 @@
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
-                  <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
+                  <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :reason="knowledgeSearchError" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
                   <p v-if="searchReturn.notice.value" role="status" class="knowledge-search-count">{{ searchReturn.notice.value }}</p>
                   <p v-if="!knowledgeSearchRunning && !knowledgeSearchFailed && groupedKnowledgeSearchResults.length" class="knowledge-search-count">当前展示 {{ groupedKnowledgeSearchResults.length }} 个文件的结果。结果限量展示，不代表全部匹配次数。</p>
                   <section v-for="group in groupedKnowledgeSearchResults" :key="group.path" class="knowledge-result-group" :aria-label="searchResultPath(group.path, store.libraryPath)">
@@ -751,6 +751,7 @@
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
+    <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
   </div>
 </template>
@@ -791,13 +792,15 @@ import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
+import ExternalImportDialog from '../components/ExternalImportDialog.vue'
+import { searchQueryNeedle, parseSearchQuery } from '../utils/searchQuery'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
 import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
 import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
 import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
 import { confirmAppAction } from '../services/appDialog'
-import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
+import { recordWindowDraftActivity, beginWindowSave, useWindowDraftSnapshot } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
 import { isActiveThemeDark } from '../config/themePresets'
@@ -1407,7 +1410,7 @@ const returnToEditorFromReference = async () => {
 }
 const showSearchPreview = (result: KnowledgeSearchResult) => {
   referenceVisible.value = true
-  searchPreviewQuery.value = searchQuery.value
+  searchPreviewQuery.value = searchQueryNeedle(searchQuery.value, result.context)
   searchPreviewResult.value = result
 }
 // Only an explicit reference action replaces this source; normal opens/searches do not.
@@ -1434,6 +1437,7 @@ const navigateSearchResults = (event: KeyboardEvent) => {
 }
 const knowledgeSearchRunning = ref(false)
 const knowledgeSearchFailed = ref(false)
+const knowledgeSearchError = ref('')
 let knowledgeSearchGeneration = 0
 let relationSummaryGeneration = 0
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
@@ -1464,6 +1468,7 @@ const searchReturn = useSearchReturn({
 const closeGraphCollection = () => {
   ++knowledgeSearchGeneration
   knowledgeSearchFailed.value = false
+  knowledgeSearchError.value = ''
   knowledgeSearchRunning.value = false
   activeCollectionId.value = ''
   knowledgeSearchResults.value = []
@@ -1778,6 +1783,23 @@ const updateWordCount = () => {
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, atRoot: false, options: [] as any[] })
 const fileOperations = ref<InstanceType<typeof LibraryFileOperations> | null>(null)
+const externalImport = ref<InstanceType<typeof ExternalImportDialog> | null>(null)
+let externalImportPlacement: { root: string; directory: string; position: string | null; reference: string | null } | null = null
+const applyExternalImport = async (result: FileOperationResult, directory: string) => {
+  const root = store.libraryPath
+  const order = await invoke<{ items?: string[]; pinned?: string[] }>('get_folder_order', { libraryRoot: root, path: directory })
+  const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot: root, path: directory })
+  if (root !== store.libraryPath) return
+  const names = result.items.map(item => item.newPath.split(/[\\/]/).pop() || '')
+  const available = new Set(entries.filter(entry => !isLibraryMetadata(entry.name)).map(entry => entry.name))
+  const current = [...new Set([...(order.items || []), ...available])].filter(name => available.has(name) && !names.includes(name))
+  const placement = externalImportPlacement?.root === root && externalImportPlacement.directory === directory ? externalImportPlacement : null
+  const index = placement?.reference ? current.indexOf(placement.reference) : -1
+  if (index >= 0 && placement?.position !== 'inside') current.splice(index + (placement?.position === 'after' ? 1 : 0), 0, ...names)
+  else current.push(...names)
+  await invoke('save_folder_order', { libraryRoot: root, path: directory, order: { items: current, pinned: order.pinned || [] } })
+  if (root === store.libraryPath) await refreshNode(directory)
+}
 const contextPaths = () => topLevelPaths(selectedKeys.value.includes(contextMenu.targetPath) ? selectedKeys.value : [contextMenu.targetPath])
 const clipboardAvailable = computed(() => Boolean(libraryFileClipboard.value?.paths.length && sameLibrary(libraryFileClipboard.value.root, store.libraryPath)))
 const undoMoveAvailable = computed(() => Boolean(lastLibraryMove.value?.items.length && sameLibrary(lastLibraryMove.value.root, store.libraryPath)))
@@ -2179,6 +2201,13 @@ const selectLibrary = async (path: string) => {
   catch (error) { message.error(`切换资料库失败：${String(error)}`) }
   finally { librarySwitchBusy.value = false }
 }
+useWindowDraftSnapshot(() => {
+  const tab = tabs.value.find(item => item.id === activeTabId.value)
+  if (tab && vditor && isVditorReady && activeIsMarkdown.value) {
+    const content = vditor.getValue()
+    if (tab.content !== content) { tab.content = content; tab.isDirty = true }
+  }
+})
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
 const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
@@ -2451,7 +2480,7 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
     return
   }
   if (['markdown', 'plain-text'].includes(result.objectType) && result.matchKind === 'body') {
-    void openManagedFile(router, result.path, { searchNeedle: searchQuery.value.trim(), searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
+    void openManagedFile(router, result.path, { searchNeedle: searchQueryNeedle(searchQuery.value, result.context), searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
     return
   }
   const target = routeForFile(result.path)
@@ -4180,8 +4209,6 @@ onMounted(async () => {
       
       if (event.payload.paths.length > 0 && targetPath) {
         try {
-          message.loading(`正在导入...`)
-          
           let finalTargetDir = targetPath
           let referenceItem = null
           if (position === 'before' || position === 'after') {
@@ -4190,42 +4217,9 @@ onMounted(async () => {
             referenceItem = targetPath.split(/[\\/]/).pop() || ''
           }
 
-          const importedPaths: string[] = []
-          for (const p of event.payload.paths) {
-            const newPath = await invoke<string>('import_to_library', { 
-              sourcePath: p, 
-              libraryRoot: store.libraryPath, 
-              targetDir: finalTargetDir 
-            })
-            importedPaths.push(newPath)
-          }
-
-          // 逻辑排序 JSON 更新
-          const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
-          let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
-            .filter(entry => !isLibraryMetadata(entry.name))
-            .map(e => e.name)
-          
-          const newNames = importedPaths.map(p => p.split(/[\\/]/).pop() || '')
-          currentItems = currentItems.filter(name => !newNames.includes(name))
-
-          if (position === 'inside' || !referenceItem) {
-            currentItems.push(...newNames)
-          } else {
-            let refIdx = currentItems.indexOf(referenceItem)
-            if (position === 'before') currentItems.splice(refIdx, 0, ...newNames)
-            else currentItems.splice(refIdx + 1, 0, ...newNames)
-          }
-
-          await invoke('save_folder_order', { 
-            libraryRoot: store.libraryPath,
-            path: finalTargetDir, 
-            order: { items: currentItems, pinned: order.pinned || [] } 
-          })
-
-          await refreshNode(finalTargetDir)
-          message.destroyAll(); message.success('导入完成')
-        } catch (err) { message.destroyAll(); message.error('导入失败') }
+          externalImportPlacement = { root: store.libraryPath, directory: finalTargetDir, position, reference: referenceItem }
+          await externalImport.value?.open(event.payload.paths, finalTargetDir)
+        } catch (err) { message.error(`导入未完成：${String(err)}`) }
       }
       virtualDrag.dropTarget = null; virtualDrag.dropPosition = null
       externalFileDrag = false
@@ -4536,6 +4530,7 @@ const retryKnowledgeSearch = () => scheduleKnowledgeSearch(searchQuery.value)
 const scheduleKnowledgeSearch = (q: string) => {
   if (searchTimer) clearTimeout(searchTimer)
   knowledgeSearchFailed.value = false
+  knowledgeSearchError.value = ''
   if (!q.trim()) {
     if (activeCollectionId.value) return
     ++knowledgeSearchGeneration
@@ -4557,13 +4552,18 @@ const scheduleKnowledgeSearch = (q: string) => {
   searchTimer = setTimeout(async () => {
     const isCurrent = () => generation === knowledgeSearchGeneration && libraryRoot === store.libraryPath
     if (!isCurrent()) return
+    try { parseSearchQuery(q) }
+    catch (cause) {
+      if (isCurrent()) { knowledgeSearchResults.value = []; knowledgeSearchFailed.value = true; knowledgeSearchError.value = String(cause).replace(/^Error:\s*/, ''); knowledgeSearchRunning.value = false }
+      return
+    }
     try {
-      if (q.startsWith('#')) {
-        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot, tag: q.slice(1) })
+      if (/^#[^\s"]+$/.test(q.trim())) {
+        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot, tag: q.trim().slice(1) })
         if (!isCurrent()) return
         knowledgeSearchResults.value = results.map(result => ({
           title: result.name, path: result.path, objectType: 'markdown', matchKind: 'tag',
-          context: `标签 #${q.slice(1)}`, score: 80, extractionFailed: false,
+          context: `标签 #${q.trim().slice(1)}`, score: 80, extractionFailed: false,
         }))
       } else {
         const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot, query: q })

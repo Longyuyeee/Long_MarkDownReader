@@ -3,6 +3,8 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import ts from 'typescript'
 import { test } from 'node:test'
+const queryModule = { exports: {} }
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/searchQuery.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, queryModule)
 import { createRenderer, effectScope, nextTick, onUnmounted, reactive, ref, watch } from 'vue'
 
 // Execute the actual production scheduler, not a second implementation.
@@ -28,7 +30,8 @@ const harness = (vueWatchers = false) => {
   const context = vm.createContext({
     libraryLoadError: box(''), treeData: box([]), libraryLoadGeneration: 0,
     tagsGeneration: 0, tagsRoot: '', allTags: box([]), tagsError: box(''), tagsLoading: box(false),
-    searchQuery: box(''), knowledgeSearchResults: box([]), knowledgeSearchRunning: box(false), knowledgeSearchFailed: box(false),
+    parseSearchQuery: queryModule.exports.parseSearchQuery,
+    searchQuery: box(''), knowledgeSearchResults: box([]), knowledgeSearchRunning: box(false), knowledgeSearchFailed: box(false), knowledgeSearchError: box(''),
     activeCollectionId: box(''), store: reactive({ libraryPath: 'synthetic-library' }), knowledgeSearchGeneration: 0,
     relationSummaries: box({}), searchObjectTypes: box(['markdown']),
     fetchLibStats: () => {}, fetchAllTags: () => {}, refreshGitStatus: () => {},
@@ -60,6 +63,7 @@ for (const query of ['项目', '#项目']) test(`failure and retry preserve quer
   const h = harness(); h.start(query); const first = h.flush()
   h.pending[0].reject(new Error('sensitive-path-must-not-be-displayed')); await first
   assert.equal(h.context.knowledgeSearchFailed.value, true)
+  assert.equal(h.context.knowledgeSearchError.value, '', 'native error details must not become the default search message')
   assert.equal(h.context.knowledgeSearchRunning.value, false)
   h.context.retry(); const second = h.flush()
   assert.deepEqual(h.pending[1].args, h.pending[0].args)

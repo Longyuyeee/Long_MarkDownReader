@@ -1128,7 +1128,10 @@ pub(crate) fn build_search_segments_for_source(
     segments
 }
 
-fn build_search_segments(workspace: &Path, sources: &[IndexedSource]) -> Vec<IndexedSearchSegment> {
+pub(crate) fn build_search_segments(
+    workspace: &Path,
+    sources: &[IndexedSource],
+) -> Vec<IndexedSearchSegment> {
     sources
         .iter()
         .flat_map(|source| build_search_segments_for_source(workspace, source))
@@ -1143,9 +1146,20 @@ pub fn snapshot_from_graph(workspace: &Path, graph: GraphData) -> KnowledgeIndex
 
 pub fn file_relations_digest(workspace: &Path) -> String {
     let path = workspace.join(".longedit/file-relations.json");
-    if !path.exists() { return String::new(); }
-    if path.metadata().map(|metadata| metadata.len() > 8 * 1024 * 1024).unwrap_or(true) { return "unavailable".into(); }
-    match fs::read(path) { Ok(bytes) => format!("{:x}", md5::compute(bytes)), Err(_) => "unavailable".into() }
+    if !path.exists() {
+        return String::new();
+    }
+    if path
+        .metadata()
+        .map(|metadata| metadata.len() > 8 * 1024 * 1024)
+        .unwrap_or(true)
+    {
+        return "unavailable".into();
+    }
+    match fs::read(path) {
+        Ok(bytes) => format!("{:x}", md5::compute(bytes)),
+        Err(_) => "unavailable".into(),
+    }
 }
 
 pub fn snapshot_from_graph_with_sources(

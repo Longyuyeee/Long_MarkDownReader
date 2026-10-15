@@ -1,12 +1,16 @@
 <template>
   <transition name="palette-pop">
-    <div v-if="show" class="command-palette-overlay" @click.self="close">
-      <div class="command-palette-container">
+    <div v-if="show" ref="overlayHost" class="command-palette-overlay" @click.self="close">
+      <div class="command-palette-container" role="dialog" aria-modal="true" aria-label="命令与资料">
         <div class="palette-glow-ring"></div>
+        <div class="palette-search-row">
         <n-input
           ref="inputInst"
           v-model:value="query"
           placeholder="搜索笔记或执行命令 (> 开头)"
+          :input-props="{ 'aria-label': '搜索资料或命令' }"
+          :maxlength="500"
+          :disabled="opening"
           @keydown.enter="handleEnter"
           @keydown.esc="close"
           @keydown.down.prevent="moveSelection(1)"
@@ -16,11 +20,18 @@
             <n-icon :component="SearchIcon" />
           </template>
         </n-input>
-        <div class="results-list" v-if="results.length > 0">
+        <n-select v-if="!query.startsWith('>')" v-model:value="scope" class="palette-scope" aria-label="搜索范围" :to="overlayHost || undefined" :disabled="opening" :options="scopeOptions" size="small" />
+        </div>
+        <div v-if="searching" class="palette-status" role="status">正在查找资料…</div>
+        <div v-if="error" class="palette-status palette-error" role="alert">{{ error }}<n-button v-if="!opening" size="tiny" @click="scheduleSearch">重试</n-button></div>
+        <div v-if="warnings.length" class="palette-status" role="status">{{ warnings.join('；') }}</div>
+        <div class="results-list" v-if="results.length > 0" :aria-busy="searching || opening" role="listbox" aria-label="资料与命令结果">
           <div
             v-for="(item, index) in results"
             :key="index"
             class="result-item"
+            role="option"
+            :aria-selected="selectedIndex === index"
             :class="{ active: selectedIndex === index }"
             @click="execute(item)"
             @mouseenter="selectedIndex = index"
@@ -28,17 +39,19 @@
             <n-icon :component="item.icon" class="item-icon" />
             <div class="item-info">
               <div class="item-title">
-                <span v-for="(seg, segIdx) in highlightMatch(item.title, query)" :key="segIdx" :class="{ 'highlight-match': seg.highlight }">{{ seg.text }}</span>
+                <SearchHighlight v-if="item.type === 'file' && query.trim()" :text="item.title" :query="query" />
+                <template v-else><span v-for="(seg, segIdx) in highlightMatch(item.title, query)" :key="segIdx" :class="{ 'highlight-match': seg.highlight }">{{ seg.text }}</span></template>
               </div>
-              <div class="item-desc">{{ item.description }}</div>
+              <div class="item-desc">{{ item.description }}</div><small v-if="item.context" class="item-context">{{ item.context }}</small>
             </div>
             <span class="item-badge" v-if="item.type === 'cmd'">命令</span>
             <span class="item-badge file-badge" v-else-if="item.type === 'file'">文件</span>
           </div>
         </div>
-        <div class="no-results" v-else-if="query.length > 0">
+        <div class="no-results" v-else-if="query.trim().length > 0 && !searching && !error">
           无匹配结果
         </div>
+        <div v-if="!query.startsWith('>')" class="palette-status palette-help">{{ limitReached ? '最多显示 200 条结果。' : '' }}空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。</div>
       </div>
     </div>
   </transition>
@@ -46,10 +59,16 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onUnmounted } from 'vue'
+import { NButton, NSelect } from 'naive-ui'
 import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon, Clock as ClockIcon } from 'lucide-vue-next'
 import { InputInst } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
 import { themePresets } from '../config/themePresets'
+import { useAppStore } from '../store/app'
+import { parseSearchQuery, searchQueryNeedle } from '../utils/searchQuery'
+import { belongsToLibrary } from '../utils/workSessions'
+import { snapshotWindowDrafts, windowDraftCount } from '../services/windowDrafts'
+import SearchHighlight from './SearchHighlight.vue'
 
 const props = defineProps<{ show: boolean }>()
 const emitEvent = defineEmits(['close', 'execute'])
@@ -58,16 +77,23 @@ const query = ref('')
 const selectedIndex = ref(0)
 const inputInst = ref<InputInst | null>(null)
 const results = ref<any[]>([])
+const overlayHost = ref<HTMLElement | null>(null)
+const store = useAppStore(), scope = ref<'current' | 'all'>('current')
+const scopeOptions = [{ label: '当前资料库', value: 'current' }, { label: '全部资料库', value: 'all' }]
+const searching = ref(false), opening = ref(false), error = ref(''), warnings = ref<string[]>([]), limitReached = ref(false)
+let generation = 0, disposed = false
 
-const close = () => { query.value = ''; emitEvent('close') }
+const close = () => { invalidateSearch(); emitEvent('close') }
 
 watch(() => props.show, (newVal) => {
-  if (newVal) { selectedIndex.value = 0; nextTick(() => inputInst.value?.focus()) }
+  if (newVal) { query.value = ''; selectedIndex.value = 0; scheduleSearch(); nextTick(() => inputInst.value?.focus()) }
+  else invalidateSearch()
 })
 
 const moveSelection = (dir: number) => {
   if (results.value.length === 0) return
   selectedIndex.value = (selectedIndex.value + dir + results.value.length) % results.value.length
+  nextTick(() => overlayHost.value?.querySelector('.result-item.active')?.scrollIntoView({ block: 'nearest' }))
 }
 
 const handleEnter = () => {
@@ -75,8 +101,21 @@ const handleEnter = () => {
 }
 
 const execute = async (item: any) => {
-  emitEvent('execute', item)
-  close()
+  if (searching.value || opening.value) return
+  opening.value = true; error.value = ''
+  try {
+    if (item.type === 'file') {
+      const library = belongsToLibrary(store.libraryPath, item.path) ? store.libraries.find(library => library.path === store.libraryPath) : [...store.libraries].sort((a, b) => b.path.length - a.path.length).find(library => belongsToLibrary(library.path, item.path))
+      if (!library) throw new Error('这份资料所属的资料库已移除，请先检查资料库设置')
+      if (library.path !== store.libraryPath) {
+        snapshotWindowDrafts()
+        if (store.tabs.some(tab => tab.isDirty) || store.isTempDirty || windowDraftCount.value > 0) throw new Error('有未保存的内容或文件操作正在执行，请先完成后再打开其他资料库的文件')
+        await store.updateConfig({ activeLibraryPath: library.path })
+      }
+    }
+    emitEvent('execute', item); close()
+  } catch (cause) { error.value = String(cause).replace(/^Error:\s*/, '') }
+  finally { opening.value = false }
 }
 
 // 模糊匹配：所有字符按顺序出现即可匹配
@@ -130,10 +169,12 @@ const ALL_COMMANDS = [
   { title: '今日笔记', description: '创建或打开今天日期的日记', keywords: 'daily today journal', icon: CommandIcon, type: 'cmd', action: 'daily-note' },
 ]
 
-let searchDebounce: any = null
+let searchDebounce: ReturnType<typeof setTimeout> | null = null
+const invalidateSearch = () => { ++generation; if (searchDebounce) clearTimeout(searchDebounce); searchDebounce = null; searching.value = false }
 
 const loadRecentFiles = (): any[] => {
   try {
+    if (store.recentFiles.length) return store.recentFiles.slice(0, 6).map(file => ({ title: file.title, description: file.path, icon: ClockIcon, type: 'file', path: file.path }))
     const raw = localStorage.getItem('longedit_tabs_state')
     if (!raw) return []
     const state = JSON.parse(raw)
@@ -147,7 +188,11 @@ const loadRecentFiles = (): any[] => {
   } catch { return [] }
 }
 
-watch(query, (val) => {
+function scheduleSearch() {
+  invalidateSearch()
+  if (!props.show) return
+  const val = query.value, token = generation, root = store.libraryPath, selectedScope = scope.value
+  error.value = ''; warnings.value = []; limitReached.value = false
   if (val.startsWith('>')) {
     // 命令模式：模糊匹配
     const cmd = val.slice(1).trim().toLowerCase()
@@ -159,36 +204,47 @@ watch(query, (val) => {
       )
     }
     selectedIndex.value = 0
-  } else if (val.length > 0) {
+  } else if (val.trim().length > 0) {
     // 文件搜索模式
     selectedIndex.value = 0
-    if (searchDebounce) clearTimeout(searchDebounce)
+    try { parseSearchQuery(val) } catch (cause) { results.value = []; error.value = String(cause).replace(/^Error:\s*/, ''); return }
+    searching.value = true
     searchDebounce = setTimeout(async () => {
+      const current = () => !disposed && props.show && token === generation && query.value === val && scope.value === selectedScope && store.libraryPath === root
       try {
-        const files = await invoke<any[]>('search_all_libraries', { query: val })
+        if (selectedScope === 'current' && !root) throw new Error('请先选择资料库，或切换到全部资料库')
+        const response = await invoke<{ results: any[]; warnings: string[]; limitReached: boolean }>('search_knowledge_libraries', { libraryRoot: selectedScope === 'current' ? root : null, query: val })
+        if (!current()) return
+        const seen = new Set<string>()
+        const files = response.results.filter(result => { if (seen.has(result.path)) return false; seen.add(result.path); return true })
         results.value = files.map(f => ({
-          title: f.name,
+          ...f,
+          title: f.title,
           description: f.path,
           icon: FileIcon,
           type: 'file',
-          path: f.path
+          path: f.path,
+          searchNeedle: f.matchKind === 'body' && ['markdown', 'plain-text'].includes(f.objectType) ? searchQueryNeedle(val, f.context || '') : ''
         }))
-      } catch (e) { results.value = [] }
-      selectedIndex.value = 0
+        warnings.value = response.warnings; limitReached.value = response.limitReached
+      } catch (cause) { if (current()) { results.value = []; error.value = String(cause).replace(/^Error:\s*/, '') } }
+      finally { if (current()) { searching.value = false; selectedIndex.value = 0 } }
     }, 200)
   } else {
     // 空查询：显示最近文件
     results.value = loadRecentFiles()
     selectedIndex.value = 0
   }
-})
+}
+watch([query, scope, () => store.libraryPath], scheduleSearch)
 
 onUnmounted(() => {
-  if (searchDebounce) clearTimeout(searchDebounce)
+  disposed = true; invalidateSearch()
 })
 </script>
 
 <style scoped>
+.palette-search-row{display:flex;align-items:center;gap:8px;padding-right:16px}.palette-search-row>.n-input{min-width:0;flex:1}.palette-scope{width:138px;flex-shrink:0}.palette-status{padding:8px 20px;color:var(--theme-text-secondary);font-size:var(--text-compact);overflow-wrap:anywhere}.palette-error{color:var(--status-danger);display:flex;align-items:center;gap:8px;justify-content:space-between}.palette-help{border-top:var(--theme-border)}.item-context{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--theme-text-secondary)}.results-list[aria-busy="true"]{opacity:.65;pointer-events:none}@media(max-width:520px){.palette-search-row{padding-right:10px;gap:2px}.palette-scope{width:120px}}
 .command-palette-overlay {
   position: fixed;
   inset: 0;
@@ -203,7 +259,11 @@ onUnmounted(() => {
   backdrop-filter: none;
 }
 
+.palette-search-row,.palette-status,.no-results { flex-shrink: 0; }
+
 .command-palette-container {
+  display: flex;
+  flex-direction: column;
   width: min(640px, calc(100vw - 40px));
   height: fit-content;
   max-height: min(620px, 76vh);
@@ -290,6 +350,8 @@ onUnmounted(() => {
 }
 
 .results-list {
+  min-height: 0;
+  flex: 1 1 auto;
   max-height: 410px;
   overflow-y: auto;
   padding: 8px;

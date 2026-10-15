@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.1.4",
+  "version": "1.1.5",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -11,6 +11,9 @@
     "test:note-templates-browser": "node scripts/test-note-templates-browser.mjs",
     "test:foundation-browser": "node scripts/test-foundation-v113-browser.mjs",
     "test:foundation-v114-browser": "node scripts/test-foundation-v114-browser.mjs",
+    "test:external-import-browser": "node scripts/test-external-import-browser.mjs",
+    "test:search-consistency-browser": "node scripts/test-search-consistency-browser.mjs",
+    "test:search-query": "node --experimental-strip-types --test scripts/test-search-query.mjs scripts/test-window-draft-snapshot.mjs",
     "test:template-transfer": "node --test scripts/test-note-template-transfer.mjs scripts/test-history-diff.mjs scripts/test-history-ownership.mjs",
     "test:rust": "npm run test:rust:functional && npm run test:rust:performance",
     "test:rust:functional": "cargo test --locked --manifest-path src-tauri/Cargo.toml -- --skip complex_workbook_performance_stays_within_release_budget",

@@ -669,7 +669,16 @@ fn read_worksheet_values(
     sheet: &str,
     signature: &str,
 ) -> Result<(Arc<Range<Data>>, bool), String> {
-    if let Some(cached) = worksheet_value_cache()
+    read_worksheet_values_with_cache(worksheet_value_cache(), path, sheet, signature)
+}
+
+fn read_worksheet_values_with_cache(
+    cache: &Mutex<Option<WorksheetValueCache>>,
+    path: &Path,
+    sheet: &str,
+    signature: &str,
+) -> Result<(Arc<Range<Data>>, bool), String> {
+    if let Some(cached) = cache
         .lock()
         .map_err(|_| "XLSX 分页缓存不可用")?
         .as_ref()
@@ -690,9 +699,7 @@ fn read_worksheet_values(
             .worksheet_range(sheet)
             .map_err(|error| format!("读取工作表失败: {error}"))?,
     );
-    *worksheet_value_cache()
-        .lock()
-        .map_err(|_| "XLSX 分页缓存不可用")? = Some(WorksheetValueCache {
+    *cache.lock().map_err(|_| "XLSX 分页缓存不可用")? = Some(WorksheetValueCache {
         path: path.to_path_buf(),
         sheet: sheet.into(),
         signature: signature.into(),
@@ -709,7 +716,17 @@ fn read_worksheet_layout(
     source: &[u8],
     _total_rows: usize,
 ) -> Result<(Arc<WorkbookSheetLayout>, bool), String> {
-    if let Some(layout) = worksheet_value_cache()
+    read_worksheet_layout_with_cache(worksheet_value_cache(), path, sheet, signature, source)
+}
+
+fn read_worksheet_layout_with_cache(
+    cache: &Mutex<Option<WorksheetValueCache>>,
+    path: &Path,
+    sheet: &str,
+    signature: &str,
+    source: &[u8],
+) -> Result<(Arc<WorkbookSheetLayout>, bool), String> {
+    if let Some(layout) = cache
         .lock()
         .map_err(|_| "XLSX 分页缓存不可用")?
         .as_ref()
@@ -728,9 +745,7 @@ fn read_worksheet_layout(
         MAX_WORKBOOK_LAYOUT_ROWS,
         MAX_PREVIEW_COLUMNS,
     )?);
-    let mut cache = worksheet_value_cache()
-        .lock()
-        .map_err(|_| "XLSX 分页缓存不可用")?;
+    let mut cache = cache.lock().map_err(|_| "XLSX 分页缓存不可用")?;
     if let Some(cached) = cache.as_mut().filter(|cached| {
         cached.path == path && cached.sheet == sheet && cached.signature == signature
     }) {
@@ -4751,20 +4766,25 @@ mod tests {
     #[test]
     fn worksheet_value_cache_hits_and_invalidates_after_real_file_change() {
         let (base, path) = compatibility_fixture_copy("value-cache");
-        *worksheet_value_cache().lock().unwrap() = None;
+        // Cache-hit assertions require exclusive ownership: other tests legitimately
+        // evict the single production slot while reading different workbooks.
+        let cache = Mutex::new(None);
         let source = fs::read(&path).unwrap();
         let signature = workbook_signature(&path.metadata().unwrap(), &source);
 
-        let (first, first_hit) = read_worksheet_values(&path, "Details", &signature).unwrap();
-        let (second, second_hit) = read_worksheet_values(&path, "Details", &signature).unwrap();
+        let (first, first_hit) =
+            read_worksheet_values_with_cache(&cache, &path, "Details", &signature).unwrap();
+        let (second, second_hit) =
+            read_worksheet_values_with_cache(&cache, &path, "Details", &signature).unwrap();
         assert!(!first_hit);
         assert!(second_hit);
         assert_eq!(first, second);
-        let (total_rows, _) = used_dimensions(&first);
         let (_, first_layout_hit) =
-            read_worksheet_layout(&path, "Details", &signature, &source, total_rows).unwrap();
+            read_worksheet_layout_with_cache(&cache, &path, "Details", &signature, &source)
+                .unwrap();
         let (_, repeated_layout_hit) =
-            read_worksheet_layout(&path, "Details", &signature, &source, total_rows).unwrap();
+            read_worksheet_layout_with_cache(&cache, &path, "Details", &signature, &source)
+                .unwrap();
         assert!(!first_layout_hit);
         assert!(repeated_layout_hit);
 
@@ -4789,23 +4809,35 @@ mod tests {
         assert_ne!(changed_signature, signature);
 
         let (reparsed, changed_hit) =
-            read_worksheet_values(&path, "Details", &changed_signature).unwrap();
+            read_worksheet_values_with_cache(&cache, &path, "Details", &changed_signature).unwrap();
         let (_, repeated_hit) =
-            read_worksheet_values(&path, "Details", &changed_signature).unwrap();
+            read_worksheet_values_with_cache(&cache, &path, "Details", &changed_signature).unwrap();
         assert!(!changed_hit);
         assert!(repeated_hit);
         assert_eq!(reparsed.get_value((1, 1)).unwrap().to_string(), "Closed");
-        let (changed_rows, _) = used_dimensions(&reparsed);
-        let (_, changed_layout_hit) = read_worksheet_layout(
+        let (_, changed_layout_hit) = read_worksheet_layout_with_cache(
+            &cache,
             &path,
             "Details",
             &changed_signature,
             &changed_source,
-            changed_rows,
         )
         .unwrap();
         assert!(!changed_layout_hit);
-        *worksheet_value_cache().lock().unwrap() = None;
+
+        // A second file may evict this entry, but must never supply its contents.
+        let second_path = base.join("second.xlsx");
+        fs::write(&second_path, &source).unwrap();
+        let second_signature = workbook_signature(&second_path.metadata().unwrap(), &source);
+        let (other, other_hit) =
+            read_worksheet_values_with_cache(&cache, &second_path, "Details", &second_signature)
+                .unwrap();
+        assert!(!other_hit);
+        assert_eq!(other, first);
+        let (returned, returned_hit) =
+            read_worksheet_values_with_cache(&cache, &path, "Details", &changed_signature).unwrap();
+        assert!(!returned_hit);
+        assert_eq!(returned.get_value((1, 1)).unwrap().to_string(), "Closed");
         fs::remove_dir_all(base).unwrap();
     }
 

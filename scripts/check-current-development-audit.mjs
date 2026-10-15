@@ -1,5 +1,7 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath, ['--test', 'scripts/test-v115-release-contract.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-search-query.mjs', 'scripts/test-window-draft-snapshot.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-note-template-transfer.mjs', 'scripts/test-history-diff.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v126-version-transition.mjs'], { stdio: 'inherit' })
 if (JSON.parse(fs.readFileSync('package.json', 'utf8')).version === '1.1.0') {
@@ -149,17 +151,17 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
   const patch = Number(version.split('.')[2])
   const next = '1.1.' + (patch + 1)
   const previous = patch === 0 ? '1.0.26' : '1.1.' + (patch - 1)
-  const slices = ['v1.1.0-ui-and-workflow', 'v1.1.1-library-experience', 'v1.1.2-file-management', 'v1.1.3-foundation-workflow', 'v1.1.4-foundation-workflow']
+  const slices = ['v1.1.0-ui-and-workflow', 'v1.1.1-library-experience', 'v1.1.2-file-management', 'v1.1.3-foundation-workflow', 'v1.1.4-foundation-workflow', 'v1.1.5-foundation-hardening']
   const stage = 'M8-' + (28 + patch * 2 + Number(published)) + '-v' + version + (published ? '-published' : '-version-candidate')
   required[5] = ['当前开发目标：' + '\x60' + development.developmentTargetVersion + '\x60', development.developmentTargetVersion === (published ? next : version)]
   required[7] = ['当前公开版本：' + '\x60' + development.publicVersion + '\x60', development.publicVersion === (published ? version : previous) && development.publicTag === 'v' + development.publicVersion]
-  const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简', '基础功能深化', '基础功能深化']
+  const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简', '基础功能深化', '基础功能深化', '安全导入与搜索一致性']
   required[9] = ['当前阶段：**v' + version + (published ? ' 已发布**' : ' ' + names[patch] + '候选**'), development.currentStage === stage && development.activeSlice?.id === slices[patch] && fs.existsSync(development.activeSlice.document)]
   if (version === '1.1.2' && development.activeSlice?.id === 'v1.1.3-custom-note-templates') {
     required[9] = ['当前阶段：**v1.1.3 自定义模板开发**', published && development.releaseCandidate === false

@@ -90,6 +90,7 @@ import { ArrowLeft as ArrowLeftIcon, BookPlus as BookPlusIcon, List as ListIcon,
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
+import { useWindowDraftSnapshot, snapshotWindowDrafts } from '../services/windowDrafts'
 import { isActiveThemeDark } from '../config/themePresets'
 import { resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { useOutline } from '../composables/useOutline'
@@ -107,6 +108,8 @@ const store = useAppStore()
 const filePath = ref(route.query.path as string || '')
 const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).pop() : '新文档.md')
 const isDirty = ref(false)
+let originalExternalContent = ''
+useWindowDraftSnapshot(() => { if (vditor && vditor.getValue() !== originalExternalContent) { isDirty.value = true; store.isTempDirty = true } })
 watch(isDirty, (v) => { store.isTempDirty = v })
 
 onBeforeRouteLeave(async (_to, _from, next) => {
@@ -154,6 +157,7 @@ const loadFileContent = async () => {
   if (!filePath.value) return
   try {
     const result = await invoke<{content: string}>('read_external_markdown_file', { path: filePath.value })
+    originalExternalContent = result.content
     if (vditor) {
       vditor.setValue(result.content)
       startAdaptiveMotion()
@@ -168,6 +172,8 @@ const loadFileContent = async () => {
 
 const importToLibrary = async () => {
   if (!store.libraryPath || !filePath.value) return
+  snapshotWindowDrafts()
+  if (isDirty.value) { message.info('请先保存当前笔记的修改，再存入资料库；不会自动代存。'); return }
   try {
     message.loading('正在存入知识库...')
     const newPath = await invoke<string>('import_to_library', {
@@ -191,7 +197,8 @@ const saveFile = async () => {
   try {
     const content = vditor.getValue()
     await invoke('write_external_markdown_file', { path: filePath.value, content })
-    isDirty.value = false
+    originalExternalContent = content
+    isDirty.value = vditor.getValue() !== content
     message.success('已保存')
   } catch (err: any) { message.error('保存失败: ' + err) }
 }

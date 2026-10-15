@@ -4,6 +4,9 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import * as Vue from 'vue'
 import { test } from 'node:test'
+const queryModule = { exports: {} }
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/searchQuery.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, queryModule)
+const { searchQueryNeedle } = queryModule.exports
 const source = fs.readFileSync('src/components/SearchDocumentPreview.vue', 'utf8')
 const script = source.split('<script setup lang="ts">')[1].split('</script>')[0]
 function setup() {
@@ -86,7 +89,7 @@ test('explicit side reference docks immediately, survives searches and clears on
     return exports
   }
   const reference = moduleAt('src/services/workspaceReference.ts', { '../utils/workSessions': moduleAt('src/utils/workSessions.ts') })
-  const context = { ref: Vue.ref, computed: Vue.computed, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
+  const context = { searchQueryNeedle, ref: Vue.ref, computed: Vue.computed, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
     activeSidebarTab: Vue.ref('files'), searchPreviewResult: Vue.ref(null), store: Vue.reactive({ libraryPath: '/a' }),
     findFileFormat: () => ({ id: 'markdown' }), ...reference }
   scope.run(() => vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.state = { referencePinned, searchPreviewQuery, showSearchPreview }', { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context))
@@ -117,7 +120,7 @@ test('normal result opens use main document navigation and never replace the ref
   const handler = library.slice(library.indexOf('const openKnowledgeSearchResult ='), library.indexOf('const handleLoadChildren ='))
   const calls = []
   const reference = { path: '/a/reference.md' }
-  const context = { searchReturn: { remember: key => calls.push(['remember', key]) }, searchMatchKey: r => r.path,
+  const context = { searchQueryNeedle, searchReturn: { remember: key => calls.push(['remember', key]) }, searchMatchKey: r => r.path,
     router: {}, searchQuery: { value: '预算' }, searchNavigationSequence: 0, searchPreviewResult: { value: reference },
     openManagedFile: (...args) => calls.push(['file', ...args]), openManagedObject: (...args) => calls.push(['object', ...args]),
     routeForFile: () => null, opensInLibraryShell: () => true, findFileFormat: () => 'markdown', handleNodeSelect: paths => calls.push(['select', paths]),

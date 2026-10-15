@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 export async function runInstalledV114Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.1.4') throw Error('Disposable 1.1.4 installation required')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.4', '1.1.5'].includes(appVersion)) throw Error('Disposable 1.1.4 installation required')
   const report = { appVersion, sourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
   const invoke = async (command, args = {}) => {
     const r = await evaluate(`(async()=>{try{return {ok:true,value:await window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})}}catch(e){return {ok:false,error:String(e)}}})()`)
