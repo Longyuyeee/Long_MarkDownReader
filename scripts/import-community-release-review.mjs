@@ -74,7 +74,13 @@ write(path.join(releaseRoot, 'artifact-manifest.json'), manifest)
 write(path.join(releaseRoot, 'import-manifest.json'), {
   schemaVersion: 1, status: 'hosted-installer-lifecycle-passed', githubRunId: reviewRun, artifactBuildRunId: buildRun,
   productSourceCommit: receipt.candidateSourceCommit, appVersion: version, sourceUserContentIncluded: false,
-  releaseCandidate: false, files: entries,
+  releaseCandidate: false,
+  checks: {
+    lifecyclePassed: 22, lifecycleFailed: 0, installedArtifactPassed: 18, installedArtifactFailed: 0,
+    installedRoutesPassed: 11, managementRollbackPassed: 7, workflowPassed: 8,
+    experiencePassed: 8, fileManagementPassed: 9, foundationPassed: 8, versionPassed: 4,
+  },
+  files: entries,
 })
 const community = json('shared/v1-community-release-policy.json')
 assert.equal(community.appVersion, version); assert.equal(community.patchValidation.previousPublicVersion, receipt.previousVersion)
