@@ -2,6 +2,8 @@
 
 ## 2026-10-16 当前结论：文件树阻断已修复，等待新安装器
 
+**最新安装结论仍为失败，尚未封板**：`38808805344` 的完整质量门、726 项原生功能及独立性能通过（216 / 4225 / 3398 ms，总计 7840 ms），双安装器构建和收据成功。正常 calm 动效的安装流程在继承的 v112 文件管理首次刷新等待失败（0/9），v115 新流程未执行。截图显示原有文件列表可见、刚写入并打开的新文件不出现，不应混同为此前整栏空白。已保留 [原始报告](evidence/v115-refresh-review-38808805344/installed-v112-workflow.json)、[原图](evidence/v115-refresh-review-38808805344/installed-v112-failure.jpg) 和安装器收据。下一轮仅补充失败时的真实目录回执、Tree 的 data/expandedKeys/aip/显示行只读观察，不改产品、安装器、原断言、等待预算或正常动效，再按证据判断路径/缓存/点击问题。
+
 新固定产品为 **`c3732a616e7c8b73cc50bef57b9f1aa596f438f5`**，已同步 main；[构建/安装 38808805344](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38808805344) 和 [main CI 38808786013](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38808786013) 正在验证。误用短 SHA 的首个调度 `38808785856` 已取消，不是通过证据。完整本地 `ci:patch-release`、生产依赖 0 漏洞通过。
 
 旧 `fb0c7900` 安装器退出候选。虽然原计划安装门已通过两轮，实际截图和补充复核确证切库后文件栏为空，不允许晋级该包。复核 `38806145723` 记录窗口可见且有焦点，Vue Tree 的真实 data 含目标文件但可见行为空；不是后台窗口或目录接口没返回。[原始报告、进度与截图摘要](evidence/v115-tree-animation-regression-38806145723/import-summary.json) 逐字节保留。

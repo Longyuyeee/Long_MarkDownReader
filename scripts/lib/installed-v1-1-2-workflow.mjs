@@ -92,6 +92,11 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     check('native-move-and-undo-commands-registered', movedAgain.errors.length === 0 && undone.errors.length === 0 && await fs.readFile(duplicate, 'utf8') === content)
     check('no-global-error-overlay-after-file-operations', !await evaluate(`!!document.querySelector('#crash-screen, #runtime-error-notice, .route-error-fallback')`))
     report.status = 'passed'
-  } catch (error) { report.status = 'failed'; report.error = String(error); await capture('installed-v112-failure.jpg').catch(() => {}); throw error }
+  } catch (error) {
+    report.status = 'failed'; report.error = String(error)
+    report.failureDirectory = await invoke('scan_directory', { libraryRoot: library, path: library }).catch(cause => ({ error: String(cause) }))
+    report.failureTree = await evaluate(`(()=>{const trees=[],seen=new Set();const visit=v=>{if(!v||typeof v!=='object'||seen.has(v)||seen.size>6000)return;seen.add(v);const c=v.component,n=c?.type?.__name||c?.type?.name;if(c&&n==='Tree'&&Array.isArray(c.props?.data))trees.push({dataKeys:c.props.data.map(x=>x.key),expandedKeys:c.props.expandedKeys,animationInProgress:c.setupState?.aip,displayedKeys:c.setupState?.fNodes?.map(x=>x.key)});if(c)visit(c.subTree);if(Array.isArray(v.children))v.children.forEach(visit);if(v.suspense)visit(v.suspense.activeBranch)};visit(document.querySelector('#app')?._vnode);return {motion:document.body.dataset.motion,visible:document.visibilityState,focused:document.hasFocus(),trees,visiblePaths:[...document.querySelectorAll('[data-drop-path]')].filter(e=>e.getClientRects().length).map(e=>e.dataset.dropPath)}})()`).catch(() => null)
+    await capture('installed-v112-failure.jpg').catch(() => {}); throw error
+  }
   finally { await fs.writeFile(path.join(output, 'installed-v112-workflow.json'), JSON.stringify(report, null, 2) + '\n') }
 }
