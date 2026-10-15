@@ -78,7 +78,9 @@ pub fn authorize_and_create_external_window(
 }
 
 #[tauri::command]
-pub fn open_external_file_window(
+// WebView2 window creation must not re-enter the Windows UI thread from a
+// synchronous IPC handler. Keep authorization identical, dispatch asynchronously.
+pub async fn open_external_file_window(
     app: AppHandle,
     access: State<'_, ExternalFileAccess>,
     path: String,

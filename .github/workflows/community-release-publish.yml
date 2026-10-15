@@ -79,7 +79,7 @@ jobs:
           }
           if ($env:RELEASE_VERSION -eq '1.1.5') {
             $hardening = Get-Content verified-review/installed-v115-workflow.json -Raw | ConvertFrom-Json
-            if ($hardening.status -ne 'passed' -or $hardening.checks.Count -ne 10 -or @($hardening.checks | Where-Object status -ne 'passed').Count -or $hardening.sourceCommit -ne $env:PRODUCT_COMMIT -or $hardening.appVersion -ne $env:RELEASE_VERSION -or $hardening.sourceUserContentIncluded -ne $false -or $hardening.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Safe import and scoped search did not pass in the exact installed product' }
+            if ($hardening.status -ne 'passed' -or $hardening.checks.Count -ne 11 -or @($hardening.checks | Where-Object status -ne 'passed').Count -or $hardening.sourceCommit -ne $env:PRODUCT_COMMIT -or $hardening.appVersion -ne $env:RELEASE_VERSION -or $hardening.sourceUserContentIncluded -ne $false -or $hardening.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Safe import and scoped search did not pass in the exact installed product' }
           }
           New-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null
           $expected = @()

@@ -1,0 +1,17 @@
+{
+  "evidenceLevel": "failed-real-installed-product-original-evidence",
+  "status": "failed-not-eligible-for-release",
+  "runId": 38773783478,
+  "artifactId": 11994064361,
+  "productSourceCommit": "618b8af091917da4bf40a6d030e07679a4de151a",
+  "nsisSha256": "793aeeeeac4384e08b2ec29987989ecad084c2fa446227373d6d7492294c9b59",
+  "lastPassedCheck": "unauthorized-import-is-rejected-without-changing-library",
+  "nextOperation": "production open_external_file_window IPC for an external Markdown file",
+  "observedFailure": "60-second installed CDP Runtime.evaluate timeout",
+  "files": [
+    { "name": "installed-v115-workflow.json", "sha256": "19ea754f243c0b8cb7712769d94c7f4a8c2a339c99317f1e3d945b2be7fa2995", "bytes": 496 },
+    { "name": "installed-v115-failure.jpg", "sha256": "f03d5f65a271e59131a46367f193173cf23f2e20d85d07fc85ad8d908a1b79eb", "bytes": 104031 }
+  ],
+  "preservation": "Original ZIP entry bytes copied unchanged; not a successful acceptance report.",
+  "sourceUserContentIncluded": false
+}

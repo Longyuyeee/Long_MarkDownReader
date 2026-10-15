@@ -86,6 +86,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
       await invoke('plugin:window|close', { label })
     }
     await invoke('plugin:window|set_focus', { label: await evaluate('window.__TAURI_INTERNALS__.metadata.currentWindow.label') })
+    check('external-window-commands-return-without-blocking-native-ipc', await invoke('plugin:app|version') === appVersion)
     const imported = await batch([source, bad, txt]), copy = imported.items.find(item => item.oldPath === source || normalize(item.oldPath) === normalize(source))
     assert.ok(copy)
     const content = await fs.readFile(copy.newPath, 'utf8'), image = content.match(/!\[图\]\(([^)]+)\)/)?.[1]

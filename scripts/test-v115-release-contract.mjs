@@ -33,14 +33,17 @@ test('current v115 metadata keeps new and unresolved predecessor update observat
   if (previous.managedUpdaterObservation === '1.1.3-to-1.1.4-pending') assert.ok(policy.releaseWarnings.includes('v1.1.3-to-v1.1.4-managed-update-observation-pending'))
 })
 
-test('v115 installer workflow retains ten explicit user-task checks and production authorization', () => {
-  assert.equal(ids.length, 10); assert.equal(new Set(ids).size, 10)
+test('v115 installer workflow retains eleven explicit user-task checks and production authorization', () => {
+  assert.equal(ids.length, 11); assert.equal(new Set(ids).size, 11)
   assert.match(workflow, /open_external_file_window/); assert.match(workflow, /Input\.insertText/)
   assert.doesNotMatch(workflow, /authorize_import|\.isDirty\s*=|prefers-reduced-motion/)
   assert.doesNotMatch(workflow, /localStorage\.(?:clear|removeItem)/)
   assert.match(workflow, /prior synthetic drafts must be saved, not discarded/)
   assert.match(workflow, /reloadPersistedConfig/)
   assert.match(workflow, /Only the disposable installer fixture library may be changed/)
+  const windows = fs.readFileSync('src-tauri/src/services/external_windows.rs', 'utf8')
+  assert.match(windows, /pub async fn open_external_file_window/)
+  assert.doesNotMatch(windows, /pub fn open_external_file_window/)
 })
 test('v115 rejects missing or altered new installed evidence', () => {
   const f = fixture()

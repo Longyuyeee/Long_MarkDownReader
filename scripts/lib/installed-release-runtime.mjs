@@ -28,6 +28,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.equal(hardening.evidenceLevel, 'installed-tauri-ipc-and-disk'); assert.equal(hardening.sourceUserContentIncluded, false)
     assert.deepEqual(hardening.checks.map(check => [check.id, check.status]), [
       'unauthorized-import-is-rejected-without-changing-library',
+      'external-window-commands-return-without-blocking-native-ipc',
       'same-name-document-and-local-images-never-overwrite-existing-content',
       'batch-import-reports-partial-failure-without-publishing-missing-image-note',
       'retrying-only-failed-source-retains-completed-file-identities',

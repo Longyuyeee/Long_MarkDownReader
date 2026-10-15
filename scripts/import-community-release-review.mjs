@@ -21,7 +21,7 @@ const reports = Object.fromEntries([
   ['workflow', 'installed-v110-workflow.json', 8], ['experience', 'installed-v111-workflow.json', 8],
   ['fileManagement', 'installed-v112-workflow.json', 9], ['foundation', 'installed-v113-workflow.json', 8],
 ...(['1.1.4', '1.1.5'].includes(version) ? [['foundationExtended', 'installed-v114-workflow.json', 8]] : []),
-...(version === '1.1.5' ? [['foundationHardening', 'installed-v115-workflow.json', 10]] : []),
+...(version === '1.1.5' ? [['foundationHardening', 'installed-v115-workflow.json', 11]] : []),
 ].map(([key, file, count]) => {
   const report = json(path.join(directory, file))
   assert.equal(report.status, 'passed', file); assert.equal(report.sourceUserContentIncluded, false, file)
@@ -65,7 +65,7 @@ const manifest = {
     evidenceManifest: releaseRoot + '/import-manifest.json', lifecycleChecksPassed: 22, installedWorkspaceChecksPassed: 18,
     installedRoutesPassed: 11, managementRollbackChecksPassed: 7, workflowChecksPassed: 8,
     experienceChecksPassed: 8, fileManagementChecksPassed: 9, foundationChecksPassed: 8, ...(['1.1.4', '1.1.5'].includes(version) ? { foundationExtendedChecksPassed: 8 } : {}),
-    ...(version === '1.1.5' ? { foundationHardeningChecksPassed: 10, harnessSourceCommit: reports.foundationHardening.report.harnessSourceCommit } : {}),
+    ...(version === '1.1.5' ? { foundationHardeningChecksPassed: 11, harnessSourceCommit: reports.foundationHardening.report.harnessSourceCommit } : {}),
     versionChecksPassed: 4, failedChecks: 0, sourceUserContentIncluded: false,
   },
   boundaries: { communityUnsigned: true, enterprisePromotionEligible: false, releaseAssetsPublished: false, managedUpdaterReleaseAssetsPresent: false, legacyTauriUpdaterArtifactsPresent: false },
@@ -82,7 +82,7 @@ write(path.join(releaseRoot, 'import-manifest.json'), {
     lifecyclePassed: 22, lifecycleFailed: 0, installedArtifactPassed: 18, installedArtifactFailed: 0,
     installedRoutesPassed: 11, managementRollbackPassed: 7, workflowPassed: 8,
     experiencePassed: 8, fileManagementPassed: 9, foundationPassed: 8, ...(['1.1.4', '1.1.5'].includes(version) ? { foundationExtendedPassed: 8 } : {}), versionPassed: 4,
-    ...(version === '1.1.5' ? { foundationHardeningPassed: 10 } : {}),
+    ...(version === '1.1.5' ? { foundationHardeningPassed: 11 } : {}),
   },
   files: entries,
 })

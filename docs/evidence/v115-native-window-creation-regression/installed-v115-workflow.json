@@ -1,0 +1,15 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "618b8af091917da4bf40a6d030e07679a4de151a",
+  "installerSha256": "793aeeeeac4384e08b2ec29987989ecad084c2fa446227373d6d7492294c9b59",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    }
+  ],
+  "error": "Error: Timed out after 60000 ms: installed CDP Runtime.evaluate"
+}
