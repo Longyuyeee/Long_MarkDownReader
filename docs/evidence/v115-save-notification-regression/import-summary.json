@@ -1,0 +1,13 @@
+{
+  "status": "failed-not-release-acceptance",
+  "runId": "38796840696",
+  "artifactId": "12002796190",
+  "productSourceCommit": "9753e9272222776f40cfec97f8869fcea940bc29",
+  "harnessSourceCommit": "53f80749b6c4cd536eb95ddc4a46a3842584902b",
+  "sourceUserContentIncluded": false,
+  "reason": "Both afterDiskWrite and afterExplicitSave show saved state and zero dirty models. With no subsequent user typing, failureUiState again shows the same Markdown tab dirty. Requiring visible save completion did not fix the failure, proving this is not merely a controller precondition race.",
+  "files": [
+    { "name": "installed-v115-workflow.json", "sha256": "0d63b19901733f00b9f70332332e224a3d78aed3e9a30d1fbe214c844e9cdaf8" },
+    { "name": "installed-v115-failure.jpg", "sha256": "59fad69f32ad4154195a416ba65e539be22e47790af42d2e1782ff3529aa66b4" }
+  ]
+}

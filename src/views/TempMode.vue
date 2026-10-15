@@ -331,8 +331,8 @@ onMounted(async () => {
       '|',
       { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
     ],
-    input: () => {
-      isDirty.value = true
+    input: (value) => {
+      isDirty.value = value !== originalExternalContent
     },
     after: () => {
       startAdaptiveMotion()

@@ -3962,7 +3962,8 @@ const initVditor = () => {
           return
         }
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
-        if (cur) {
+        // A delayed notification of the acknowledged content is not a new edit.
+        if (cur && cur.content !== val) {
           cur.isDirty = true
           store.updateTabContent(cur.path, val);
         }
