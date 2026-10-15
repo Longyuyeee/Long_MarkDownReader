@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "test-fixture-isolation-corrected-runtime-unchanged",
+  "productSourceCommit": "5ee1ddd7297e59813307058e89801e5521966abc",
+  "originalCi": {
+    "runId": 38816571226,
+    "status": "failed",
+    "functionalPassed": 725,
+    "functionalFailed": 1,
+    "ignored": 5,
+    "observedResults": 166,
+    "requiredResults": 200,
+    "fixturePathsLogged": false
+  },
+  "causality": {
+    "confirmed": "The old fixture constructor silently reuses a directory for the same PID and timestamp; deterministic regression failed before the isolation fix.",
+    "specificOriginalCiCause": "Timestamp collision is a plausible inference, not directly proven by the original log."
+  },
+  "correctionScope": "cfg(test) only: atomic sequence, exclusive create_dir, ownership/lifetime regression, unchanged 200/truncated assertions and additional 205-source-note inventory precondition",
+  "localAfter": {
+    "smartCollectionTestsPassed": 4,
+    "functionalPassed": 727,
+    "functionalFailed": 0,
+    "ignored": 5,
+    "independentPerformancePassed": 1,
+    "performanceMs": {
+      "inspect": 121,
+      "page": 2392,
+      "patch": 1791,
+      "total": 4306
+    }
+  },
+  "runtimeProof": {
+    "path": "src-tauri/src/services/smart_collection.rs",
+    "runtimeSourceUnchanged": true,
+    "comparison": "source prefix before cfg(test), CRLF normalized to LF",
+    "sha256": "a8b818ba0ce589f7cd9911c238dc9de3f0c42416a8f6bdfaad556d8f2e70a2ce"
+  },
+  "sourceUserContentIncluded": false
+}

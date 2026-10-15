@@ -1,0 +1,6 @@
+Selected original failed-step log lines from Quality Gate run 38816571226; not the complete log.
+Frontend, Rust and dependency checks	Run Rust functional regression tests	2026-10-15T22:34:27.5227946Z test services::smart_collection::tests::filters_apply_before_cap_and_reflect_live_changes ... FAILED
+Frontend, Rust and dependency checks	Run Rust functional regression tests	2026-10-15T22:34:27.5231707Z thread 'services::smart_collection::tests::filters_apply_before_cap_and_reflect_live_changes' (8156) panicked at src\services\smart_collection.rs:313:9:
+Frontend, Rust and dependency checks	Run Rust functional regression tests	2026-10-15T22:34:27.5232826Z   left: 166
+Frontend, Rust and dependency checks	Run Rust functional regression tests	2026-10-15T22:34:27.5233042Z  right: 200
+Frontend, Rust and dependency checks	Run Rust functional regression tests	2026-10-15T22:34:27.5235184Z test result: FAILED. 725 passed; 1 failed; 5 ignored; 0 measured; 1 filtered out; finished in 17.77s

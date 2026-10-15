@@ -249,17 +249,25 @@ mod tests {
         );
     }
     struct Fixture(std::path::PathBuf);
+    static FIXTURE_SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     impl Fixture {
         fn new() -> Self {
-            let path = std::env::temp_dir().join(format!(
-                "longedit-collection-{}-{}",
-                std::process::id(),
+            Self::with_timestamp(
                 SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
-                    .as_nanos()
+                    .as_nanos(),
+            )
+        }
+        fn with_timestamp(timestamp: u128) -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "longedit-collection-{}-{}-{}",
+                std::process::id(),
+                timestamp,
+                FIXTURE_SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
             ));
-            fs::create_dir_all(&path).unwrap();
+            // Exclusive ownership: never merge with another test's directory.
+            fs::create_dir(&path).unwrap();
             Self(path)
         }
         fn root(&self) -> &str {
@@ -270,6 +278,30 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
+    }
+    #[test]
+    fn same_timestamp_fixtures_have_independent_content_and_lifetimes() {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let first = Fixture::with_timestamp(timestamp);
+        fs::write(
+            first.0.join("first-only.md"),
+            "belongs to the first fixture",
+        )
+        .unwrap();
+        let second = Fixture::with_timestamp(timestamp);
+        assert_ne!(
+            first.0, second.0,
+            "parallel fixtures must not silently share a directory"
+        );
+        assert!(!second.0.join("first-only.md").exists());
+        drop(second);
+        assert!(
+            first.0.join("first-only.md").exists(),
+            "dropping one fixture must not delete another fixture's data"
+        );
     }
     #[test]
     fn filters_apply_before_cap_and_reflect_live_changes() {
@@ -309,6 +341,15 @@ mod tests {
                 .len(),
             1
         );
+        assert_eq!(
+            fs::read_dir(&fixture.0)
+                .unwrap()
+                .filter(|entry| entry.as_ref().unwrap().file_type().unwrap().is_file())
+                .count(),
+            205,
+            "all original root notes must still belong to this fixture"
+        );
+        assert!(fixture.0.join("project/new.md").is_file());
         let all = search(fixture.root(), "", &[], &CollectionFilters::default()).unwrap();
         assert_eq!(all.results.len(), 200);
         assert!(all.truncated);
