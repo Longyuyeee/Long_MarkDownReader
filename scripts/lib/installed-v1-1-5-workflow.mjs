@@ -113,9 +113,6 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     // Native save_config writes disk but does not mutate an already mounted Pinia
     // store. Reload normally to represent the next launch with two saved libraries.
     await reloadPersistedConfig()
-    // Read-only observation starts after reload; it forwards original promises,
-    // results and console errors, without injecting state or issuing refreshes.
-    await evaluate(`(()=>{const original=window.__TAURI_INTERNALS__.invoke,trace=[],errors=[],originalError=console.error;window.__longeditV115Errors=errors;console.error=function(...args){errors.push(args.map(x=>String(x?.stack||x)));return originalError.apply(this,args)};window.__longeditV115ScanTrace=trace;window.__TAURI_INTERNALS__.invoke=function(command,args,...rest){const result=original.call(this,command,args,...rest);if(command==='scan_directory'){const entry={args,startedAt:Date.now(),caller:new Error().stack?.split('\\n').slice(1,4)};trace.push(entry);Promise.resolve(result).then(value=>{entry.completedAt=Date.now();entry.paths=value?.map(x=>x.path)},cause=>{entry.error=String(cause)})}return result};window.__longeditV115RestoreScanObserver=()=>{window.__TAURI_INTERNALS__.invoke=original;console.error=originalError}})()`)
     for (const root of [library, second]) {
       const prepared = await waitForInstalledIndex(() => invoke('rebuild_knowledge_index', { libraryRoot: root }), { onBusy: () => { report.indexPreparationBusyResponses++ } })
       assert.equal(prepared.state, 'ready', 'real native index must be ready before indexed-search assertions')
@@ -161,7 +158,6 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   } catch (error) { report.status = 'failed'; report.error = String(error); report.failureUiState = await evaluate(visibleSaveState).catch(() => null); report.failureNavigation = await evaluate(navigationState).catch(() => null); await capture('installed-v115-failure.jpg').catch(() => {}); throw error }
   finally {
     let cleanupError
-    await evaluate('window.__longeditV115RestoreScanObserver?.()').catch(() => {})
     if (config) {
       try {
         await invoke('save_config', { config })

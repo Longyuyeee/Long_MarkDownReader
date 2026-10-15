@@ -282,7 +282,7 @@ $formalConfig = [ordered]@{
     isAutostart = $false
     exitStrategy = "ask"
     visualStyle = "minimal"
-    motionSpeed = "reduced"
+    motionSpeed = "calm"
     aiEnabled = $false
     aiProvider = "openai"
     aiEndpoint = "https://api.openai.com/v1"
@@ -402,7 +402,7 @@ try {
     $env:LONGEDIT_E2E_THEME = "white"
     $env:LONGEDIT_E2E_STYLE = "minimal"
     $env:LONGEDIT_E2E_CODE_THEME = "github"
-    $env:LONGEDIT_E2E_MOTION = "reduced"
+    $env:LONGEDIT_E2E_MOTION = "calm"
     $env:WEBVIEW2_USER_DATA_FOLDER = $webviewRoot
     $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9343 --remote-allow-origins=*"
     $env:LONGEDIT_CDP_ENDPOINT = "http://127.0.0.1:9343"

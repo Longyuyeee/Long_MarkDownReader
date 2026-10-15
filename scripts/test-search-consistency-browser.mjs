@@ -100,6 +100,23 @@ try {
   assert.equal(await page.locator('.reference-workspace .text-workspace').count(), 0)
   await page.screenshot({ path: output + '/windows-canonical-open.png' })
   checks.push('Windows canonical search paths with the native extended prefix open in the actual main TXT editor, without claiming the configured library was removed')
+  await page.goto((process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9015') + '/scripts/fixtures/search-consistency-browser.html')
+  await page.evaluate(() => { window.workflowAudit.slowDirectory = true })
+  await page.getByRole('link', { name: '资料库', exact: true }).click()
+  await page.locator('[data-drop-path="C:/workflow-fixture/会议记录.md"]').click()
+  await open(); await palette.locator('.palette-scope').click(); await page.locator('.n-base-select-option').filter({ hasText: '全部资料库' }).click()
+  await query('跨库文本'); await palette.getByText('跨库资料.txt', { exact: true }).click(); await palette.waitFor({ state: 'hidden' })
+  await page.waitForFunction(() => document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('另库资料'))
+  try { await page.locator('[data-drop-path="C:/study-fixture/跨库资料.txt"]').waitFor({ state: 'visible' }) }
+  catch (error) {
+    const state = await page.locator('.library-file-tree').evaluate(element => { const c = element.__vueParentComponent; return { motion: document.body.dataset.motion, dataKeys: c?.props.data?.map(x => x.key), animationInProgress: c?.setupState.aip, displayedKeys: c?.setupState.fNodes?.map(x => x.key), expandedKeys: c?.props.expandedKeys } })
+    await fs.writeFile(output + '/navigation-root-before-fix.json', JSON.stringify(state, null, 2) + '\n')
+    await page.screenshot({ path: output + '/navigation-root-before-fix.png' }); throw error
+  }
+  await open(); await query('项目预算确认'); await palette.getByText('项目预算.txt', { exact: true }).click(); await palette.waitFor({ state: 'hidden' })
+  await page.locator('[data-drop-path="C:/workflow-fixture/项目预算.txt"]').waitFor({ state: 'visible' })
+  await page.screenshot({ path: output + '/navigation-root-result.png' })
+  checks.push('Switching libraries with a delayed directory reply keeps the real file tree visible and permits returning to the first library, without manual refresh or disabling normal motion')
   assert.deepEqual(errors, [])
   await fs.writeFile(output + '/report.json', JSON.stringify({ scope: 'Actual App/CommandPalette/LibraryMode components and input; simulated native search. Grammar and real files tested separately.', motion: 'calm (normal animations enabled)', checks, layouts, errors }, null, 2) + '\n')
   console.log(JSON.stringify({ checks: checks.length, layouts: layouts.length, errors: errors.length }))

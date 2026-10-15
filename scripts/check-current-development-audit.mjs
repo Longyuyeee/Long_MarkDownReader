@@ -4,6 +4,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-v115-release-contract.mj
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-index-readiness.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-work-sessions.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-markdown-save-notifications.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-library-tree-ancestors.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-search-query.mjs', 'scripts/test-window-draft-snapshot.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-note-template-transfer.mjs', 'scripts/test-history-diff.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v126-version-transition.mjs'], { stdio: 'inherit' })

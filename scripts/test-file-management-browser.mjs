@@ -9,7 +9,7 @@ const errors=[],checks=[],layouts=[]
 let page
 try {
  page=await browser.newPage({viewport:{width:1280,height:950}});page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message))
- await page.goto('http://127.0.0.1:9000/scripts/fixtures/file-management-browser.html')
+ await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9000')+'/scripts/fixtures/file-management-browser.html')
  await page.getByRole('link',{name:'资料库',exact:true}).click()
  const project=page.locator('[data-drop-path="C:/workflow-fixture/项目方案.md"]')
  const viewport=page.locator('.tree-viewport')

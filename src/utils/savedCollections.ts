@@ -1,4 +1,4 @@
-const normalizedPath = (path: string) => path.replace(/^\\\\\?\\/, '').replace(/\\/g, '/').replace(/\/+$/, '')
+const normalizedPath = (path: string) => path.replace(/^\\\\\?\\UNC\\/i, '//').replace(/^\\\\\?\\/, '').replace(/\\/g, '/').replace(/\/+$/, '')
 
 export const sameWorkspacePath = (left: string, right: string) =>
   normalizedPath(left).toLowerCase() === normalizedPath(right).toLowerCase()

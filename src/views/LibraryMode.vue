@@ -156,6 +156,8 @@
                 </div>
                 <n-tree 
                   v-else
+                  :key="store.libraryPath"
+                  :animated="!libraryLoading"
                   ref="treeInstRef"
                   class="library-file-tree"
                   :theme-overrides="fileTreeThemeOverrides"
@@ -825,6 +827,7 @@ import { useImageFix } from '../composables/useImageFix'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
+import { libraryTreeAncestors } from '../utils/libraryTreeAncestors'
 import type { GraphData } from '../types/graph'
 import {
   CREATABLE_FILE_FORMATS,
@@ -2575,9 +2578,7 @@ const revealLibraryFile = async (event: Event) => {
   if (!path) return
   await refreshLibrary()
   selectedKeys.value = [path]
-  const separator = path.includes('\\') ? '\\' : '/'
-  const parent = path.slice(0, path.lastIndexOf(separator))
-  if (parent && !expandedKeys.value.includes(parent)) expandedKeys.value = [...expandedKeys.value, parent]
+  expandedKeys.value = [...new Set([...expandedKeys.value, ...libraryTreeAncestors(store.libraryPath, path)])]
   await nextTick()
   window.setTimeout(() => treeInstRef.value?.scrollTo({ key: path, behavior: 'smooth' }), 120)
 }
@@ -2591,7 +2592,7 @@ const refreshNode = async (path: string) => {
     const oldMap = new Map(oldNodes.map(n => [n.key, n]))
     return newNodes.map(newNode => { const matchedOld = oldMap.get(newNode.key as string); return matchedOld && matchedOld.children !== undefined ? { ...newNode, children: matchedOld.children } : newNode })
   }
-  if (path === store.libraryPath) {
+  if (sameWorkspacePath(path, store.libraryPath)) {
     treeData.value = syncNodes(treeData.value, newEntries)
     return
   }
@@ -3070,7 +3071,7 @@ const onMouseUp = async (event: MouseEvent) => {
         })
         for (const p of parentsToRefresh) await refreshNode(p)
 
-        if (!expandedKeys.value.includes(finalTargetDir)) expandedKeys.value = [...expandedKeys.value, finalTargetDir]
+        if (!sameWorkspacePath(finalTargetDir, store.libraryPath) && !expandedKeys.value.includes(finalTargetDir)) expandedKeys.value = [...expandedKeys.value, finalTargetDir]
         const separator = finalTargetDir.includes('\\') ? '\\' : '/'
         selectedKeys.value = sourcePaths.map(path => `${finalTargetDir}${separator}${fileNameWithExtension(path)}`)
         await nextTick()
@@ -3413,7 +3414,7 @@ const onMenuAction = async (key: string) => {
     try {
       const template = formatId === 'markdown' ? defaultNoteTemplate.value : undefined
       const created = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, path) : await createRegisteredFile(formatId, path, undefined, undefined, extension)
-      if (path !== store.libraryPath && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
+      if (!sameWorkspacePath(path, store.libraryPath) && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
       await refreshNode(path)
       handleNodeSelect([created])
     } catch (error: any) {
@@ -3422,7 +3423,7 @@ const onMenuAction = async (key: string) => {
   } else if (key === 'create-folder') {
     try {
       await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: path })
-      if (path !== store.libraryPath && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
+      if (!sameWorkspacePath(path, store.libraryPath) && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
       await refreshNode(path)
     } catch (error: any) {
       handleError(error, '创建文件夹失败', 'contextCreateFolder')
@@ -4592,18 +4593,11 @@ watch(activeTabId, (newId, oldId) => {
     // 侧边栏自动同步逻辑
     selectedKeys.value = [newId]
     
-    // 路径分隔符自适应处理 (修复 Windows 下无法折叠的问题)
-    const separator = newId.includes('\\') ? '\\' : '/'
-    const parts = newId.split(separator)
+    // Only in-library directories are real tree nodes. Expanding the invisible
+    // library/drive root can strand Naive UI's animation cache on an empty tree.
     const newExpanded = [...expandedKeys.value]
-    let currentPath = ''
-    
-    // 排除文件名，逐级还原父目录原始路径
-    for (let i = 0; i < parts.length - 1; i++) {
-      currentPath += (i === 0 ? '' : separator) + parts[i]
-      if (!newExpanded.includes(currentPath)) {
-        newExpanded.push(currentPath)
-      }
+    for (const parent of libraryTreeAncestors(store.libraryPath, newId)) {
+      if (!newExpanded.includes(parent)) newExpanded.push(parent)
     }
     expandedKeys.value = newExpanded
 
