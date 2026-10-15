@@ -1,6 +1,8 @@
 # v1.1.5 安全导入与搜索一致性候选审计
 
-## 2026-10-16 当前结论：规范节点展开已修复，准备重新冻结
+## 2026-10-16 当前结论：规范节点展开已修复，新固定包验证中
+
+**当前有效冻结为 `14ec324b6b1a6cf16568faa1edb9b667b7cf1325`**，已推送 main。[构建/安装 38815807067](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38815807067)、[main CI 38815805597](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38815805597) 使用同一份修复后代码。以下 c3732a61 和更早字节均已撤出候选，不可晋级。
 
 `c3732a61` 安装器确认有产品缺陷，退出候选。只读同包复核 `38814095841` 与正常动效组件复现一致：普通路径的嵌套父目录被直接写成展开键，真实扫描键却带扩展前缀；Tree data 包含新文件，aip=true 的显示缓存仍停在旧列表。原始安装报告及截图见 [规范节点失败证据](evidence/v115-canonical-tree-regression-38814095841/installed-v112-workflow.json)；组件失败状态见 [规范键刷新复现](evidence/v115-search-consistency-development/canonical-nested-before-fix.json)。修正定位器的转义后原可见文件断言仍真实失败，才修改产品。
 
