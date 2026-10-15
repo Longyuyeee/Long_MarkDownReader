@@ -276,6 +276,8 @@ fn basename(value: &str) -> String {
 }
 
 impl Inventory {
+    /// Read-only evidence access; this does not establish exhaustive syntax support.
+    pub(crate) fn evidence(&self) -> &[DependencyEvidence] { &self.evidence }
     #[cfg(test)]
     pub(crate) fn report_move(
         &self,
@@ -444,6 +446,14 @@ impl Inventory {
 }
 
 pub(crate) fn scan(root: &str) -> Result<Inventory, String> {
+    scan_impl(root, false)
+}
+
+pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    scan_impl(root, true)
+}
+
+fn scan_impl(root: &str, visible_only: bool) -> Result<Inventory, String> {
     let guard = WorkspaceGuard::new(root)?;
     let mut dirs: Vec<PathBuf> = vec![guard.root().to_path_buf()];
     let mut remaining = 32 * 1024 * 1024u64;
@@ -456,7 +466,9 @@ pub(crate) fn scan(root: &str) -> Result<Inventory, String> {
             if entries > 20_000 {
                 return Err("依赖扫描超过 20000 项上限，检查未完成".into());
             }
-            if entry.file_name() == ".git" {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if name == ".git" || (visible_only && (name.starts_with('.') || name.ends_with(".assets"))) {
                 continue;
             }
             let metadata = fs::symlink_metadata(entry.path()).map_err(|e| e.to_string())?;

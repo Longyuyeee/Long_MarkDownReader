@@ -26,9 +26,24 @@
 
 证据：[本批清单与摘要](evidence/v116-history-development/summary.json)、[修复前失败](evidence/v116-history-development/before-fix.txt)、[12 项原生回归](evidence/v116-history-development/history-regression.txt)、[完整功能回归](evidence/v116-history-development/full-rust.txt)、[完整质量门](evidence/v116-history-development/quality-gate.txt)、[实际页面结果](evidence/v116-history-development/browser/results.json)。
 
+## B：只读引用影响计划（2026-10-16）
+
+新增 `services/file_move_links.rs`，复用既有引用解析、源范围验证、SHA-256 和相对路径计算。旧归档预览的只读边界没有删除或放宽；新计划也始终 `can_execute=false`，没有注册写入 IPC、移动文件或写回正文。
+
+- 对单次文件/目录移动投射全部普通 Markdown 引用：移动文档的出站引用与其他文档的入站引用同时检查；目录内一起搬动的相对引用保持不变，外部共享资源只计算新引用，不移动资源。
+- 使用可见资料范围，排除 `.longedit`、隐藏记录和 `.assets` 目录里的 Markdown；不修改回收内容或历史。原 `archive_dependencies::scan` 行为保持，新增可见范围入口，不改写其“未穷尽语法”的原有事实。
+- 原样保留代码示例、远端/data/锚点引用；支持已验证的普通相对路径、中文/空格编码、查询和片段。缺失目标、歧义 Wikilink、没有安全编辑范围的引用定义/HTML 等明确列为需核对，不猜测替换。
+- 复用单份 2 MiB、总计 32 MiB Markdown、20000 项目录/候选预算；再次读取源文也有硬上限并校验摘要。未承诺任意语法、其他格式入站引用或跨库移动；计划明确携带范围限制，不把 blocker 为空当成写入许可或整批必然成功。
+
+新增 **11 项真实磁盘只读回归通过**，完整功能 **750 通过、0 失败、5 个既有 ignored、1 项独立性能未在该命令执行**；本批完整 `npm run ci:patch-release` 再次通过，生产依赖 0 漏洞。所有测试检查原文/资源仍在原位置。[本批证据清单](evidence/v116-link-plan-development/summary.json) 区分原生只读证据和 UI 提案。执行保护、持久中断恢复、真实安装器及新界面仍未完成。
+
+正式改 UI 前已提供 [HTML 示意](../design/v116-move-continuity-proposal.html) 与 [示意图](evidence/v116-link-plan-development/move-proposal.png)，明确标注不是运行软件截图：沿用移动/改名弹窗，仅补充有关引用说明；部分失败区分“已完成／未执行／需核对”，只有已确认未执行项可以直接重试。已请用户确认，正式产品 UI 尚未修改。用户确认不等于已具备安全写回权限。
+
+下一执行批次必须注意：现有 `archive_confirmation::WindowRegistry` 和 App 的窗口回复只观察版本/草稿，不冻结编辑；`document_coordination` 是进程内排斥，`reliable_write` 是文件写入原语，都不能独立当成完整移动事务。不得直接启用旧 `preflight_archive` 的 can_execute，也不得因几次只读回归通过就把无保护正文改写接到移动按钮。需围绕原操作建立有界且可取消的受影响文档保护、执行前身份重验、持久日志和可核对恢复状态，再连 UI。
+
 ## 后续顺序与发布阻断
 
-1. 只读引用影响计划：普通相对图片/链接的来源范围、预期新路径、源摘要和不支持项；共享资源不搬走，代码块不改，旧归档预览的限制不可直接清除。
+1. 只读引用影响计划 B 已完成上述有界范围；它不授予写回权限。先补充和审计执行所需的源身份、范围与持久状态合同。
 2. 受保护执行：全部受影响文档（不只是被移动文件）的草稿/保存、多窗口协调；持久中断证据和部分状态恢复；批次失败不错误投射为全部成功，不自动全量重试。
 3. 需要改变已有结果/提示时先出示意并取得用户确认，再实看页面。沿用现有移动/改名入口，不新增手动归档步骤；不能把失败后需核对的项当作可直接重试项。
 4. 最终用户流程、完整回归与性能、升版后固定包安装/升级和同包复核；通过后再发布 README/Release。当前完成 A 不等于完成本版，不得重建替换已经发布的 1.1.5 包。

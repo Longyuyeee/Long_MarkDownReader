@@ -1,0 +1,43 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.28s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 11 tests
+test services::file_move_links::tests::occupied_or_outside_target_and_directory_cycles_are_rejected_without_writes ... ok
+test services::file_move_links::tests::remote_data_and_anchor_references_are_not_downloaded_or_rewritten ... ok
+test services::file_move_links::tests::ambiguous_wikilink_incoming_is_a_blocker_not_a_guessed_replacement ... ok
+test services::file_move_links::tests::missing_and_unsupported_affected_links_block_without_guessing ... ok
+test services::file_move_links::tests::reference_definition_without_safe_edit_span_is_not_silently_changed ... ok
+test services::file_move_links::tests::encoded_filename_query_and_fragment_are_preserved_semantically ... ok
+test services::file_move_links::tests::file_projection_has_no_directory_separator_suffix_and_fenced_examples_are_untouched ... ok
+test services::file_move_links::tests::renaming_document_rewrites_only_resolved_incoming_target ... ok
+test services::file_move_links::tests::moving_note_rebases_shared_picture_and_document_link_without_moving_resources ... ok
+test services::file_move_links::tests::hidden_history_or_recycle_markdown_is_never_planned_for_editing ... ok
+test services::file_move_links::tests::directory_move_keeps_internal_relative_links_and_repairs_external_incoming_and_outgoing ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 745 filtered out; finished in 0.01s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-7f4e6d36c52fb98f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-949b31ea7eb097b4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-fbde6bf8d27eff61.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-a5b902d9372b0996.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

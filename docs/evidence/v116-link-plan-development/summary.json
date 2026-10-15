@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "readonly-link-plan-passed-protected-execution-pending",
+  "baseCommit": "ba86922e",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "sourceUserContentIncluded": false,
+  "checks": {
+    "nativeReadonlyLinkTests": 11,
+    "failed": 0,
+    "rustFunctionalPassed": 750,
+    "rustFunctionalFailed": 0,
+    "rustIgnored": 5,
+    "independentPerformanceFiltered": 1,
+    "fullQualityGate": "passed",
+    "productionDependencyVulnerabilities": 0
+  },
+  "boundaries": {
+    "planCanExecute": false,
+    "markdownWritten": false,
+    "resourcesMoved": false,
+    "uiImplemented": false,
+    "uiProposalReviewedByUser": false,
+    "crashRecoveryComplete": false,
+    "installerBuilt": false,
+    "releaseReady": false,
+    "releasePublished": false
+  },
+  "proposal": {
+    "source": "design/v116-move-continuity-proposal.html",
+    "sha256": "c41801534c99d1946b8741ddf6e376302011bc4c1e1d2f962979e097ff04f4c8",
+    "kind": "static-design-not-running-application-screenshot"
+  },
+  "files": [
+    {
+      "path": "full-rust.txt",
+      "sizeBytes": 75947,
+      "sha256": "a11f9af1490bff4a774a21b8cf6cf45c8c976a471d1556b37152b7bcf47d29f8"
+    },
+    {
+      "path": "link-plan-regression.txt",
+      "sizeBytes": 2615,
+      "sha256": "2f2464ed91d20a79d98f2e00646eba6adc68d5047a42e20cb6931d8e010420af"
+    },
+    {
+      "path": "move-proposal.png",
+      "sizeBytes": 82415,
+      "sha256": "749dadf1cb68667fe991f6a2a094a3b0d1a25e6b91ff33b8c377289ddc6f0197"
+    },
+    {
+      "path": "quality-gate.txt",
+      "sizeBytes": 121189,
+      "sha256": "b799ccfb3295fe1582d8bc84d01ce80c771271bcf512a7bbddcde7640c3e6579"
+    }
+  ]
+}
