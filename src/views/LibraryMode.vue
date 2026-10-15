@@ -378,7 +378,7 @@
     </div>
 
     <!-- 中间编辑区 -->
-    <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
+    <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }" @scroll.capture="rememberEditorScroll">
       <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
         <div class="document-identity">
           <button :key="activeTabId" type="button" class="document-breadcrumb" aria-label="重命名当前文档" @click="openRename(activeTabId, false)"><n-icon class="document-type-icon" :component="activeDocumentVisual.icon" :color="activeDocumentVisual.color" size="16" /><span>{{ activeTabId.split(/[\\/]/).pop() }}</span><n-icon :component="EditIcon" size="12" /></button>
@@ -764,6 +764,7 @@ import SearchHighlight from '../components/SearchHighlight.vue'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown, NPopover, type DropdownOption } from 'naive-ui'
 import { 
@@ -1284,7 +1285,7 @@ const smartCollectionSaved = (search: SavedSearchConfig) => { editingSmartCollec
 const collectionFilterLabel = (search: SavedSearchConfig) => search.graphRoot
   ? `关联资料 · ${search.graphDepth || 1} 层关联`
   : search.filters
-    ? [search.query ? `包含「${search.query}」` : '', search.filters.directory || '整个资料库', search.filters.tag ? `#${search.filters.tag}` : '', search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(type => type === 'markdown' ? '笔记' : resultFormatLabel(type))].filter(Boolean).join(' · ')
+    ? [search.query ? `包含「${search.query}」` : '', search.filters.directory || '整个资料库', ...[search.filters.tag, ...(search.filters.tags || [])].filter(Boolean).map(tag => '#' + tag), search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(type => type === 'markdown' ? '笔记' : resultFormatLabel(type))].filter(Boolean).join(' · ')
   : search.objectTypes.length
     ? search.objectTypes.map(resultFormatLabel).join(' · ')
     : '关键词搜索'
@@ -2575,7 +2576,19 @@ const refreshNode = async (path: string) => {
 
 const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
+let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
+const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
+const captureEditorPosition = () => {
+  const element = editorScroller()
+  if (lastLoadedPath && element) rememberWorkspaceViewState(lastLoadedPath, { scrollTop: element.scrollTop, scrollLeft: element.scrollLeft })
+}
+const rememberEditorScroll = (event: Event) => {
+  if (!(event.target instanceof HTMLElement) || !event.target.matches('.vditor-reset, .vditor-sv') || !lastLoadedPath) return
+  clearTimeout(readingPositionTimer); readingPositionTimer = setTimeout(captureEditorPosition, 120)
+}
+onBeforeUnmount(() => { clearTimeout(readingPositionTimer); captureEditorPosition() })
 const loadFileToEditor = async (path: string, forceRead = false) => {
+  clearTimeout(readingPositionTimer); captureEditorPosition()
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
   pendingEditorSaveLoad.value = false
@@ -2630,6 +2643,10 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
       setTimeout(() => { 
         if (!isCurrentRequest()) return
         lastLoadedPath = path;
+        if (!route.query.searchLocator && !route.query.taskLine && !route.query.relationId) {
+          const view = recallWorkspaceViewState(path), element = editorScroller()
+          if (element) { element.scrollTop = view?.scrollTop || 0; element.scrollLeft = view?.scrollLeft || 0 }
+        }
         refreshVisibleOutline();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性

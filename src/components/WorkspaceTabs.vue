@@ -19,7 +19,13 @@
         v-for="tab in store.tabs"
         :key="tab.id"
         class="workspace-tab"
-        :class="{ active: store.activeTabId === tab.id }"
+        :class="{ active: store.activeTabId === tab.id, pinned: tab.pinned, 'drop-target': dragTarget === tab.id }"
+        draggable="true"
+        @dragstart="startDrag($event, tab)"
+        @dragover.prevent="dragTarget = tab.id"
+        @drop.prevent="dropTab(tab)"
+        @dragend="dragId = ''; dragTarget = ''"
+        @contextmenu.prevent="openMenu($event, tab)"
         role="tab"
         :tabindex="store.activeTabId === tab.id ? 0 : -1"
         :aria-selected="store.activeTabId === tab.id"
@@ -30,7 +36,7 @@
         @keydown.left.prevent="focusAdjacentTab(tab, -1)"
         @keydown.right.prevent="focusAdjacentTab(tab, 1)"
       >
-        <FileTextIcon :size="13" />
+        <component :is="tab.pinned ? PinIcon : FileTextIcon" :size="13" />
         <span>{{ tab.title }}</span>
         <i :class="{ visible: tab.isDirty }" aria-hidden="true"></i>
         <button type="button" class="close-tab" :aria-label="`关闭标签：${tab.title}`" @click.stop="close(tab)" @keydown.stop>
@@ -53,13 +59,14 @@
       向右浏览标签
     </n-tooltip>
   </div>
+  <n-dropdown :show="menu.show" :x="menu.x" :y="menu.y" placement="bottom-start" trigger="manual" :options="menuOptions" @select="menuAction" @clickoutside="menu.show = false" />
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
-import { NTooltip, useDialog } from 'naive-ui'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type CSSProperties } from 'vue'
+import { NTooltip, NDropdown, useDialog, useMessage } from 'naive-ui'
 import { isNavigationFailure, useRouter } from 'vue-router'
-import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, FileText as FileTextIcon, X as XIcon } from 'lucide-vue-next'
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, FileText as FileTextIcon, X as XIcon, Pin as PinIcon } from 'lucide-vue-next'
 import { findFileFormat, opensInLibraryShell, routeForFile } from '../config/fileFormats'
 import { openManagedFile } from '../services/fileNavigation'
 import { confirmAppAction } from '../services/appDialog'
@@ -68,6 +75,52 @@ import { type TabInfo, useAppStore } from '../store/app'
 const router = useRouter()
 const store = useAppStore()
 const dialog = useDialog()
+const message = useMessage()
+const menu = reactive({ show: false, x: 0, y: 0, id: '' })
+const dragId = ref(''), dragTarget = ref('')
+const menuOptions = computed(() => [
+  { label: store.tabs.find(tab => tab.id === menu.id)?.pinned ? '取消固定标签' : '固定标签', key: 'pin' },
+  { label: '关闭当前标签', key: 'close' },
+  { label: '关闭其他未固定标签', key: 'others' },
+  { label: '关闭右侧未固定标签', key: 'right' },
+  { type: 'divider' as const, key: 'divider' },
+  { label: '重新打开关闭的标签 (Ctrl+Shift+T)', key: 'reopen', disabled: !store.closedTabs.length },
+])
+const openMenu = (event: MouseEvent, tab: TabInfo) => { Object.assign(menu, { show: true, x: event.clientX, y: event.clientY, id: tab.id }) }
+const startDrag = (event: DragEvent, tab: TabInfo) => {
+  dragId.value = tab.id
+  event.dataTransfer?.setData('application/x-longedit-tab', tab.id)
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+const dropTab = (tab: TabInfo) => { if (dragId.value) store.reorderTab(dragId.value, tab.id); dragId.value = ''; dragTarget.value = '' }
+const reopen = async () => {
+  const tab = store.closedTabs[0]
+  if (!tab) return
+  try {
+    const failure = await routeToTab(tab)
+    if (failure === false || isNavigationFailure(failure)) return
+    store.closedTabs.shift()
+  } catch (error) { message.error('未能重新打开，请检查文件是否仍存在：' + String(error)) }
+}
+const menuAction = async (key: string) => {
+  menu.show = false
+  const tab = store.tabs.find(item => item.id === menu.id)
+  if (key === 'reopen') { await reopen(); return }
+  if (!tab) return
+  if (key === 'pin') { store.toggleTabPin(tab.id); return }
+  if (key === 'close') { await close(tab); return }
+  const index = store.tabs.indexOf(tab)
+  const targets = store.tabs.filter((item, i) => !item.pinned && item.id !== tab.id && (key === 'others' || i > index))
+  if (targets.some(item => item.isDirty) && !await confirmAppAction(dialog, { title: '关闭包含未保存修改的标签？', content: '所选标签中有未保存内容，关闭后这些修改无法恢复。', positiveText: '放弃修改并关闭', danger: true })) return
+  const activeClosed = targets.some(item => item.id === store.activeTabId)
+  for (const target of targets) store.closeTab(target.id)
+  if (activeClosed) await activate(tab)
+}
+const reopenShortcut = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 't' && scrollRef.value?.getClientRects().length && !document.querySelector('[role="dialog"]')) {
+    event.preventDefault(); void reopen()
+  }
+}
 const scrollRef = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(false)
@@ -158,7 +211,7 @@ const close = async (tab: TabInfo) => {
     danger: true,
   })) return
   const wasActive = store.activeTabId === tab.id
-  store.removeTab(tab.id)
+  store.closeTab(tab.id)
   if (!wasActive) return
   const next = store.tabs.find(item => item.id === store.activeTabId)
   if (next) await routeToTab(next)
@@ -169,13 +222,14 @@ const close = async (tab: TabInfo) => {
 watch([() => store.activeTabId, () => store.tabs.length], revealActiveTab)
 
 onMounted(() => {
+  window.addEventListener('keydown', reopenShortcut)
   resizeObserver = new ResizeObserver(() => { updateScrollState(); void revealActiveTab() })
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)
   updateScrollState()
   void revealActiveTab()
 })
 
-onBeforeUnmount(() => resizeObserver?.disconnect())
+onBeforeUnmount(() => { resizeObserver?.disconnect(); window.removeEventListener('keydown', reopenShortcut) })
 </script>
 
 <style scoped>
@@ -224,6 +278,8 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
   font-size: 11px;
   cursor: pointer;
 }
+.workspace-tab.pinned { color: var(--theme-primary); }
+.workspace-tab.drop-target { box-shadow: inset 3px 0 var(--theme-primary); }
 
 .tab-scroll-button {
   position: absolute;

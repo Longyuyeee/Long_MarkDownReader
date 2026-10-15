@@ -4,6 +4,8 @@
 
 <h1 align="center">Long编辑</h1>
 
+正在准备 **v1.1.3 基础功能深化**：自定义模板、多文档固定与排序、标签/集合、关系维护和 TXT 历史。当前公开下载仍为 v1.1.2；新版安装包通过构建与安装检查后在 Release 发布。
+
 <p align="center">
   <strong>让文件成为知识，让工作自然继续。</strong><br>
   本地优先的 Windows 知识工作台<br>

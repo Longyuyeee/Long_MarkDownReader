@@ -22,6 +22,7 @@ export type SessionMode = 'TEMP' | 'LIBRARY'
 export const THEME_MAP = THEME_EDITOR_BACKGROUNDS
 
 export interface TabInfo {
+  pinned?: boolean
   id: string
   title: string
   path: string
@@ -58,6 +59,7 @@ export interface LibraryConfig {
 }
 
 export interface CollectionFilters {
+  tags?: string[]
   directory: string
   tag: string
   modifiedWithinDays: number | null
@@ -90,6 +92,7 @@ export const useAppStore = defineStore('app', {
   state: () => ({
     activeSession: 'LIBRARY' as SessionMode,
     tabs: [] as TabInfo[],
+    closedTabs: [] as TabInfo[],
     activeTabId: null as string | null,
     theme: 'system' as ThemeName,
     codeTheme: 'github' as string,
@@ -265,6 +268,7 @@ export const useAppStore = defineStore('app', {
         if (switchesLibrary) {
           this.saveTabsState()
           applied.tabs = []
+          applied.closedTabs = []
           applied.recentFiles = []
           applied.starredFiles = []
           applied.activeTabId = null
@@ -496,6 +500,25 @@ export const useAppStore = defineStore('app', {
       }
       this.saveTabsState()
     },
+    closeTab(tabId: string) {
+      const tab = this.tabs.find(item => item.id === tabId)
+      if (!tab) return
+      this.closedTabs = [{ id: tab.id, path: tab.path, title: tab.title, isDirty: false, external: tab.external }, ...this.closedTabs.filter(item => item.id !== tabId)].slice(0, 20)
+      this.removeTab(tabId)
+    },
+    toggleTabPin(id: string) {
+      const tab = this.tabs.find(item => item.id === id)
+      if (!tab) return
+      tab.pinned = !tab.pinned
+      this.tabs = [...this.tabs.filter(item => item.pinned), ...this.tabs.filter(item => !item.pinned)]
+      this.saveTabsState()
+    },
+    reorderTab(id: string, targetId: string) {
+      const from = this.tabs.findIndex(item => item.id === id), target = this.tabs.findIndex(item => item.id === targetId)
+      if (from < 0 || target < 0 || from === target || Boolean(this.tabs[from].pinned) !== Boolean(this.tabs[target].pinned)) return
+      const [tab] = this.tabs.splice(from, 1)
+      this.tabs.splice(target, 0, tab); this.saveTabsState()
+    },
     toggleZen() {
       this.isZen = !this.isZen
     },
@@ -518,6 +541,7 @@ export const useAppStore = defineStore('app', {
             title: tab.title,
             path: tab.path,
             isDirty: false,
+            ...(tab.pinned ? { pinned: true } : {}),
           }))
         const persistentActiveTabId = persistentTabs.some(tab => tab.id === this.activeTabId)
           ? this.activeTabId

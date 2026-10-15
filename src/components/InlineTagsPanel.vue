@@ -21,7 +21,7 @@
       <div v-if="tags.length" class="tag-filter"><Search /><input v-model="filter" aria-label="查找标签" placeholder="查找标签" /><button v-if="filter" class="icon-button" aria-label="清除标签查找" @click="filter = ''"><X /></button></div>
       <div v-if="error" class="tag-error" role="alert"><p>暂时没能读取资料库的标签。</p><button :disabled="loading" @click="$emit('refresh')"><RefreshCw />重试</button><details><summary>错误详情</summary><pre>{{ error }}</pre></details></div>
       <p v-if="loading" class="loading-state" role="status"><RefreshCw class="spinning" />正在整理已保存笔记的标签…</p>
-      <div v-if="filteredTags.length" class="all-tags"><button v-for="entry in filteredTags" :key="entry.tag" class="tag-item" @click="selectTag(entry.tag)"><span class="tag-symbol">#</span><strong>{{ entry.tag }}</strong><small>{{ entry.count }} 篇</small><ChevronRight /></button></div>
+      <div v-if="filteredTags.length" class="all-tags"><button v-for="entry in filteredTags" :key="entry.tag" class="tag-item" @click="selectTag(entry.tag)" @contextmenu.prevent="openTagMenu($event, entry.tag)"><span class="tag-symbol"><Pin v-if="preferences.pinnedTags.includes(entry.tag)" /><template v-else>#</template></span><strong>{{ entry.tag }}</strong><small>{{ entry.count }} 篇</small><ChevronRight /></button></div>
       <p v-else-if="!loading && !error" class="empty-label">{{ filter.trim() ? '没有找到这个标签' : '暂无已保存的标签' }}</p>
     </template>
 
@@ -38,13 +38,16 @@
       </template>
     </template>
 
+    <n-dropdown :show="tagMenu.show" :x="tagMenu.x" :y="tagMenu.y" trigger="manual" placement="bottom-start" :options="tagMenuOptions" @select="tagMenuAction" @clickoutside="tagMenu.show = false" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { NDropdown } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
-import { ArrowLeft, Check, ChevronRight, NotebookPen, Plus, RefreshCw, Save, Search, X } from 'lucide-vue-next'
+import { ArrowLeft, Check, ChevronRight, NotebookPen, Plus, RefreshCw, Save, Search, X, Pin } from 'lucide-vue-next'
+import { libraryNavigationPreferences, updateLibraryNavigation } from '../services/libraryNavigationPreferences'
 import { useAppStore } from '../store/app'
 import { inlineTags, normalizeInlineTag } from '../utils/inlineTags'
 import { searchResultPath } from '../utils/searchResultPath'
@@ -55,11 +58,25 @@ interface TagFile { path: string; name: string; is_dir: boolean }
 const props = defineProps<{ tags: { tag: string; count: number }[]; loading: boolean; error: string; currentNote: Note | null; otherFileOpen: boolean; addTag: (tag: string) => void | Promise<void> }>()
 const emit = defineEmits<{ refresh: []; open: [path: string]; search: [tag: string]; browse: []; save: [] }>()
 const store = useAppStore()
+const preferences = computed(() => libraryNavigationPreferences(store.libraryPath))
+const tagMenu = reactive({ show: false, x: 0, y: 0, tag: '' })
+const tagMenuOptions = computed(() => [
+  { label: preferences.value.pinnedTags.includes(tagMenu.tag) ? '取消固定标签' : '固定常用标签', key: 'pin' },
+  { label: '按名称排序', key: 'name' }, { label: '按笔记数量排序', key: 'count' },
+])
+const openTagMenu = (event: MouseEvent, tag: string) => Object.assign(tagMenu, { show: true, x: event.clientX, y: event.clientY, tag })
+const tagMenuAction = (key: string) => {
+  tagMenu.show = false
+  if (key === 'pin') {
+    const tags = preferences.value.pinnedTags
+    updateLibraryNavigation(store.libraryPath, { pinnedTags: tags.includes(tagMenu.tag) ? tags.filter(tag => tag !== tagMenu.tag) : [...tags, tagMenu.tag] })
+  } else if (key === 'name' || key === 'count') updateLibraryNavigation(store.libraryPath, { tagSort: key })
+}
 const filter = ref(''), selectedTag = ref(''), newTag = ref(''), addingOpen = ref(false), adding = ref(false)
 const addError = ref(''), notice = ref(''), resultError = ref(''), running = ref(false), results = ref<TagFile[]>([])
 const tagInput = ref<HTMLInputElement>()
 const noteTags = computed(() => inlineTags(props.currentNote?.content || ''))
-const filteredTags = computed(() => { const query = filter.value.trim().replace(/^#+/, '').toLowerCase(); return props.tags.filter(entry => entry.tag.toLowerCase().includes(query)) })
+const filteredTags = computed(() => { const query = filter.value.trim().replace(/^#+/, '').toLowerCase(); const preferencesValue = preferences.value; return props.tags.filter(entry => entry.tag.toLowerCase().includes(query)).sort((a, b) => Number(preferencesValue.pinnedTags.includes(b.tag)) - Number(preferencesValue.pinnedTags.includes(a.tag)) || (preferencesValue.tagSort === 'count' ? b.count - a.count : 0) || a.tag.localeCompare(b.tag, 'zh-CN', { numeric: true })) })
 const resultPath = (path: string) => searchResultPath(path, store.libraryPath)
 const noteIconColor = computed(() => store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : resolveFileTreeVisual('markdown').color)
 let generation = 0, disposed = false

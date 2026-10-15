@@ -13,6 +13,8 @@ pub struct CollectionFilters {
     pub directory: String,
     #[serde(default)]
     pub tag: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
     pub modified_within_days: Option<u32>,
 }
 
@@ -23,7 +25,8 @@ impl CollectionFilters {
             || directory.split('/').any(|part| part == ".." || part == ".") {
             return Err("目录必须是资料库内的相对目录，不能包含 ..".into());
         }
-        if self.tag.chars().count() > 80 || self.tag.chars().any(|c| c.is_whitespace() || c == '#') {
+        let tags: Vec<_> = std::iter::once(&self.tag).chain(&self.tags).filter(|tag| !tag.is_empty()).collect();
+        if tags.len() > 8 || tags.iter().any(|tag| tag.chars().count() > 80 || tag.chars().any(|c| c.is_whitespace() || c == '#')) {
             return Err("标签请填写单个标签名，不含 # 或空格".into());
         }
         if self.modified_within_days.is_some_and(|days| !(1..=3650).contains(&days)) {
@@ -67,10 +70,9 @@ pub fn search(root: &str, query: &str, object_types: &[String], filters: &Collec
     let guard = WorkspaceGuard::new(root)?;
     let directory = if filters.directory.is_empty() { guard.root().to_path_buf() }
         else { guard.resolve_directory(filters.directory.replace('\\', "/"), false)? };
-    let tag = if filters.tag.is_empty() { None } else {
-        Some(regex::Regex::new(&format!(r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#, regex::escape(&filters.tag)))
-            .map_err(|e| format!("标签条件无效：{e}"))?)
-    };
+    let tags = std::iter::once(&filters.tag).chain(&filters.tags).filter(|tag| !tag.is_empty()).map(|tag| {
+        regex::Regex::new(&format!(r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#, regex::escape(tag))).map_err(|e| format!("标签条件无效：{e}"))
+    }).collect::<Result<Vec<_>, _>>()?;
     let cutoff = filters.modified_within_days.map(|days| SystemTime::now().duration_since(UNIX_EPOCH)
         .unwrap_or_default().as_secs().saturating_sub(u64::from(days) * 86400));
     let mut paths = Vec::new();
@@ -86,11 +88,11 @@ pub fn search(root: &str, query: &str, object_types: &[String], filters: &Collec
         let modified = metadata.modified().map_err(|e| format!("无法读取修改时间：{e}"))?
             .duration_since(UNIX_EPOCH).unwrap_or_default();
         if cutoff.is_some_and(|cutoff| modified.as_secs() < cutoff) { continue; }
-        if let Some(tag) = &tag {
+        if !tags.is_empty() {
             if format.id != "markdown" { continue; }
             if metadata.len() > 20 * 1024 * 1024 { return Err("标签筛选遇到超过 20 MiB 的笔记，请缩小目录范围".into()); }
             let content = fs::read_to_string(&path).map_err(|e| format!("无法读取标签内容：{e}"))?;
-            if !tag.is_match(&content) { continue; }
+            if !tags.iter().all(|tag| tag.is_match(&content)) { continue; }
         }
         if query.is_empty() {
             results.push(KnowledgeSearchResult {
@@ -123,6 +125,18 @@ pub async fn search_smart_collection(library_root: String, query: String, object
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn multiple_tags_require_all_and_old_single_tag_still_works() {
+        let fixture = Fixture::new();
+        fs::write(fixture.0.join("both.md"), "#项目 #工作").unwrap();
+        fs::write(fixture.0.join("one.md"), "#项目 #生活").unwrap();
+        let mut filters = CollectionFilters { tag: "项目".into(), tags: vec!["工作".into()], ..Default::default() };
+        let result = search(fixture.root(), "", &[], &filters).unwrap();
+        assert_eq!(result.results.len(), 1);
+        assert!(result.results[0].path.ends_with("both.md"));
+        filters.tags.clear();
+        assert_eq!(search(fixture.root(), "", &[], &filters).unwrap().results.len(), 2);
+    }
     struct Fixture(std::path::PathBuf);
     impl Fixture {
         fn new() -> Self {

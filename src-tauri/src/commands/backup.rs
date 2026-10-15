@@ -860,6 +860,7 @@ mod tests {
             saved_searches: vec![SavedSearchConfig {
                 id: "collection-1".into(), name: "本周项目".into(), library_path: "C:\\Vault".into(),
                 filters: Some(crate::services::smart_collection::CollectionFilters {
+                    tags: vec![],
                     directory: "项目/设计".into(), tag: "项目".into(), modified_within_days: Some(7),
                 }), ..Default::default()
             }], ..Default::default()

@@ -752,6 +752,7 @@ mod tests {
         let mut smart = valid.clone();
         smart.query.clear();
         smart.filters = Some(crate::services::smart_collection::CollectionFilters {
+            tags: vec![],
             directory: "项目/设计".into(), tag: "方案".into(), modified_within_days: Some(7),
         });
         assert!(validate_saved_searches(std::slice::from_ref(&smart), &libraries).is_ok());

@@ -38,7 +38,7 @@ pub async fn save_history_version(
     max_count: u32,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     save_history(
         &app_handle,
         path.to_string_lossy().as_ref(),
@@ -159,10 +159,11 @@ fn read_comparison(path: &std::path::Path, history: &std::path::Path, timestamp:
         if bytes.len() > 20 * 1024 * 1024 { return Err("文件超过 20 MiB，暂不支持完整历史对比".into()); }
         String::from_utf8(bytes).map_err(|_| "历史对比暂仅支持 UTF-8 Markdown".into())
     }
-    let disk = bounded_read(path)?;
+    let snapshot = crate::formats::text::read_text_snapshot(path).map_err(|error| error.message)?;
+    let disk = snapshot.content;
     let content = bounded_read(&history.join(format!("{timestamp}.md")))?;
     Ok(HistoryComparison {
-        disk_signature: format!("{:x}", md5::compute(disk.as_bytes())),
+        disk_signature: snapshot.content_digest,
         history_signature: format!("{:x}", md5::compute(content.as_bytes())), disk, content,
     })
 }
@@ -178,7 +179,7 @@ fn checked_comparison(path: &std::path::Path, history: &std::path::Path, timesta
 #[tauri::command]
 pub async fn compare_history_version(app_handle: tauri::AppHandle, library_root: String, path: String, timestamp: u64) -> Result<HistoryComparison, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     read_comparison(&path, &history_dir(&app_handle, &path.to_string_lossy())?, timestamp)
 }
 
@@ -186,7 +187,8 @@ fn create_recovery_copy(path: &std::path::Path, content: &str, timestamp: u64) -
     let parent = path.parent().ok_or("文件没有父目录")?;
     let stem = path.file_stem().unwrap_or_default().to_string_lossy();
     for suffix in 1..=1000 {
-        let target = parent.join(format!("{stem}-恢复-{timestamp}-{suffix}.md"));
+        let extension = path.extension().and_then(|value| value.to_str()).unwrap_or("md");
+        let target = parent.join(format!("{stem}-恢复-{timestamp}-{suffix}.{extension}"));
         if target.exists() { continue; }
         match crate::services::reliable_write::write_new_bytes(&target, content.as_bytes()) {
             Ok(()) => return Ok(target),
@@ -199,7 +201,7 @@ fn create_recovery_copy(path: &std::path::Path, content: &str, timestamp: u64) -
 #[tauri::command]
 pub async fn restore_history_copy(app_handle: tauri::AppHandle, library_root: String, path: String, timestamp: u64, disk_signature: String, history_signature: String) -> Result<String, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     let comparison = checked_comparison(&path, &history_dir(&app_handle, &path.to_string_lossy())?, timestamp, &disk_signature, &history_signature)?;
     Ok(create_recovery_copy(&path, &comparison.content, timestamp)?.to_string_lossy().into_owned())
 }
@@ -208,7 +210,7 @@ pub async fn restore_history_copy(app_handle: tauri::AppHandle, library_root: St
 pub async fn prepare_history_restore(app_handle: tauri::AppHandle, library_root: String, path: String, timestamp: u64, disk_signature: String, history_signature: String, current_draft: String, max_count: u32) -> Result<String, String> {
     if current_draft.len() > 20 * 1024 * 1024 { return Err("当前草稿过大，未替换任何内容".into()); }
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     let history = history_dir(&app_handle, &path.to_string_lossy())?;
     let comparison = checked_comparison(&path, &history, timestamp, &disk_signature, &history_signature)?;
     // Protection must succeed before the frontend receives replacement content.
@@ -224,7 +226,7 @@ pub async fn list_history(
     library_root: String,
     path: String,
 ) -> Result<Vec<(u64, String)>, String> {
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
 }
 
@@ -260,7 +262,7 @@ pub async fn delete_history_version(
     timestamp: u64,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     let file_path =
         history_dir(&app_handle, path.to_string_lossy().as_ref())?.join(format!("{timestamp}.md"));
     if file_path.exists() {
@@ -291,7 +293,7 @@ pub async fn save_shadow_copy(
     path: String,
     content: String,
 ) -> Result<(), String> {
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
     let shadow_dir = app_handle
         .path()
         .app_cache_dir()
@@ -307,6 +309,24 @@ pub async fn save_shadow_copy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn text_history_decodes_utf16_and_recovery_keeps_txt_extension() {
+        let fixture = HistoryFixture::new();
+        let file = fixture.0.join("记录.txt");
+        let mut bytes = vec![0xff, 0xfe];
+        for word in "今天的记录".encode_utf16() { bytes.extend_from_slice(&word.to_le_bytes()); }
+        fs::write(&file, &bytes).unwrap();
+        let history = fixture.0.join("history");
+        fs::create_dir(&history).unwrap();
+        fs::write(history.join("10.md"), "历史文字").unwrap();
+        let comparison = read_comparison(&file, &history, 10).unwrap();
+        assert_eq!(comparison.disk, "今天的记录");
+        assert_eq!(comparison.disk_signature, format!("{:x}", md5::compute(&bytes)));
+        let copy = create_recovery_copy(&file, &comparison.content, 10).unwrap();
+        assert_eq!(copy.extension().unwrap(), "txt");
+        assert_eq!(fs::read_to_string(copy).unwrap(), "历史文字");
+        assert_eq!(fs::read(&file).unwrap(), bytes);
+    }
 
     #[test]
     fn history_deduplication_normalizes_line_endings() {

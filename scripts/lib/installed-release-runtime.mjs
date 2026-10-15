@@ -9,9 +9,9 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
   assert.equal(runtime.status, 'passed-installed-tauri-webview2')
   assert.equal(runtime.checksPassed, 18)
   assert.equal(runtime.routesPassed, 11)
-  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2'].includes(manifest.appVersion))
+  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3'].includes(manifest.appVersion))
   const versionCandidate = manifest.appVersion !== '1.0.22'
-  const evidenceRoot = manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
+  const evidenceRoot = manifest.appVersion === '1.1.3' ? 'docs/evidence/v1-1-3-candidate-lifecycle/' : manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
   const reports = Object.fromEntries(Object.entries(runtime.reports).map(([name, item]) => {
     assert.equal(item.path, evidenceRoot + path.posix.basename(item.path))
     const bytes = read(item.path)
@@ -19,7 +19,22 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     return [name, JSON.parse(bytes)]
   }))
   const { workspace, routes, search, version, stability } = reports
-  if (manifest.appVersion === '1.1.2') {
+  if (manifest.appVersion === '1.1.3') {
+    const foundation = reports.foundation
+    assert.equal(foundation.status, 'passed')
+    assert.equal(foundation.appVersion, manifest.appVersion)
+    assert.equal(foundation.sourceCommit, manifest.sourceCommit)
+    assert.equal(foundation.installerSha256, manifest.artifacts.find(item => item.target === 'nsis').sha256)
+    assert.equal(foundation.evidenceLevel, 'installed-tauri-ipc-and-disk')
+    assert.equal(foundation.sourceUserContentIncluded, false)
+    assert.deepEqual(foundation.checks.map(check => [check.id, check.status]), [
+      'template-dialog-persists-custom-content', 'library-default-template-survives-native-read',
+      'template-variables-and-unique-title-written-to-disk', 'tab-pin-context-menu-updates-installed-ui',
+      'multiple-tag-filter-reads-real-notes', 'manual-relation-edit-retains-files-and-refreshes-list',
+      'txt-history-dialog-creates-copy-without-overwrite', 'foundation-workflow-has-no-global-error-overlay',
+    ].map(id => [id, 'passed']))
+  }
+  if (['1.1.2', '1.1.3'].includes(manifest.appVersion)) {
     const files = reports.fileManagement
     assert.equal(files.status, 'passed')
     assert.equal(files.appVersion, manifest.appVersion)
@@ -39,7 +54,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'no-global-error-overlay-after-file-operations',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.1', '1.1.2'].includes(manifest.appVersion)) {
+  if (['1.1.1', '1.1.2', '1.1.3'].includes(manifest.appVersion)) {
     const experience = reports.experience
     assert.equal(experience.status, 'passed')
     assert.equal(experience.appVersion, manifest.appVersion)
@@ -54,7 +69,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'renaming-retains-file-relationship', 'removing-relation-retains-both-files',
     ].map(id=>[id,'passed']))
   }
-  if (['1.1.0', '1.1.1', '1.1.2'].includes(manifest.appVersion)) {
+  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3'].includes(manifest.appVersion)) {
     const workflow = reports.workflow
     assert.equal(workflow.status, 'passed')
     assert.equal(workflow.appVersion, manifest.appVersion)

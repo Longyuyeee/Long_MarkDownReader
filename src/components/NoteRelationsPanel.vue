@@ -1,6 +1,7 @@
 <template>
   <section class="note-relations" aria-label="笔记关系">
     <header class="relations-heading"><button @click="requestFileRelation(note?.path || store.activeTabId || undefined)"><Plus />添加资料关系</button><button v-if="note" class="icon-button" aria-label="刷新笔记关系" :disabled="outLoading || inLoading" @click="refresh"><RefreshCw :class="{ spinning: outLoading || inLoading }" /></button></header>
+    <ManualFileRelations v-if="store.activeTabId" :key="store.libraryPath + store.activeTabId" :path="store.activeTabId" :library-root="store.libraryPath" @open="path => $emit('open', path)" />
     <template v-if="note">
       <div class="current-note"><div class="note-name"><NotebookPen /><strong>{{ note.name }}</strong><small v-if="note.dirty">未保存</small></div></div>
       <nav class="relation-directions" aria-label="引用方向"><button :aria-pressed="direction === 'outgoing'" @click="direction = 'outgoing'"><ArrowUpRight /><span>我提到的</span><small>{{ outgoing.length }}</small></button><button :aria-pressed="direction === 'incoming'" @click="direction = 'incoming'"><ArrowDownLeft /><span>提到我的</span><small>{{ incoming.length }}</small></button></nav>
@@ -30,6 +31,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, ChevronRight, Network, NotebookPen, PanelRight, Plus, RefreshCw, Search, X } from 'lucide-vue-next'
 import { requestFileRelation } from '../services/fileRelations'
+import ManualFileRelations from './ManualFileRelations.vue'
 import { useAppStore } from '../store/app'
 import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
 import { noteLinkTargets, type LinkFile } from '../utils/noteLinkTargets'

@@ -69,6 +69,10 @@ jobs:
             if ($report.sourceCommit -and $report.sourceCommit -ne $env:PRODUCT_COMMIT) { throw 'Installed source identity mismatch' }
             if ($report.appVersion -and $report.appVersion -ne $env:RELEASE_VERSION) { throw 'Installed version mismatch' }
           }
+          if ($env:RELEASE_VERSION -eq '1.1.3') {
+            $foundation = Get-Content verified-review/installed-v113-workflow.json -Raw | ConvertFrom-Json
+            if ($foundation.status -ne 'passed' -or $foundation.checks.Count -ne 8 -or @($foundation.checks | Where-Object status -ne 'passed').Count -or $foundation.sourceCommit -ne $env:PRODUCT_COMMIT -or $foundation.appVersion -ne $env:RELEASE_VERSION -or $foundation.sourceUserContentIncluded -ne $false) { throw 'Foundation workflows did not pass in the exact installed product' }
+          }
           New-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null
           $expected = @()
           foreach ($artifact in $receipt.artifacts) {
