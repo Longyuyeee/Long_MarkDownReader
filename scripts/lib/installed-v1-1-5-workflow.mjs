@@ -147,6 +147,8 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     report.afterExplicitSave = await evaluate(visibleSaveState)
     await open(); await query(expression); await waitFor(`!!(${result('v115-另库预算')})`, 'other library ready after save'); await mouse(result('v115-另库预算'))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('另库资料')`, 'saved draft permits switch')
+    report.switchedDirectory = await invoke('scan_directory', { libraryRoot: second, path: second })
+    await waitFor(`[...document.querySelectorAll('[data-drop-path]')].some(e=>e.getClientRects().length&&e.getAttribute('data-drop-path').replaceAll('\\\\','/').endsWith('/'+${JSON.stringify(path.basename(remote))}))`, 'switched library file tree is visible without manual refresh')
     check('actual-typing-blocks-cross-library-open-until-explicit-save', protectedDraft && (await fs.readFile(draft, 'utf8')).includes('用户刚输入') && normalize((await invoke('get_config')).activeLibraryPath) === normalize(second))
     await snap('installed-v115-main.jpg')
     check('v115-workflows-have-no-global-error-overlay', !await evaluate(`!!document.querySelector('#crash-screen,#runtime-error-notice,.route-error-fallback')`))

@@ -1,0 +1,154 @@
+{
+  "status": "primary-installed-workflows-passed",
+  "runId": "38797796429",
+  "artifactId": "12005285955",
+  "productSourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "harnessSourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "installerSha256": "543cc83df368a17bf14ada05d972d339a2d18064d1ab10f231331f69a2a744db",
+  "sourceUserContentIncluded": false,
+  "independentReviewIncluded": false,
+  "checks": {
+    "lifecycle-result.json": 22,
+    "management-backup-index-evidence.json": 7,
+    "installed-artifact-smoke.json": 18,
+    "installed-version-identity.json": 4,
+    "installed-v110-workflow.json": 8,
+    "installed-v111-workflow.json": 8,
+    "installed-v112-workflow.json": 9,
+    "installed-v113-workflow.json": 8,
+    "installed-v114-workflow.json": 8,
+    "installed-v115-workflow.json": 11
+  },
+  "files": [
+    {
+      "name": "installed-artifact-smoke.json",
+      "sizeBytes": 9851,
+      "sha256": "cb3cf4707fb2e759627682c4199401cda852115015b2231a272c03d04490f826"
+    },
+    {
+      "name": "installed-default-app-lifecycle-evidence.json",
+      "sizeBytes": 981,
+      "sha256": "1d7a6334a2668d3f717f7dcb8da5d2e229a1b24fff28330c5f40e884fbacb1a3"
+    },
+    {
+      "name": "installed-docx-hyperlink-evidence.json",
+      "sizeBytes": 2855,
+      "sha256": "f52de9e6b96f646181fa85c3cec7eb0da5f4ec002ca4dd115a1c8b34dd121698"
+    },
+    {
+      "name": "installed-knowledge-guidance-comparison.json",
+      "sizeBytes": 1290,
+      "sha256": "5614a8d9f385d3d57c290fedb7ebe357648c44fd8f557a0275589c23b5420285"
+    },
+    {
+      "name": "installed-knowledge-guidance-outcome-evidence.json",
+      "sizeBytes": 1927,
+      "sha256": "5821b3b2384066d0ab79c6b9b9278b12d9d2fc04b1238e603d525dbfa2ce7992"
+    },
+    {
+      "name": "installed-knowledge-network-evidence.json",
+      "sizeBytes": 2041,
+      "sha256": "798a3db5c91b6c2018994470b4154f737967590e3f623010b11e96ed17cfdcf0"
+    },
+    {
+      "name": "installed-knowledge-observation-baseline.json",
+      "sizeBytes": 1420,
+      "sha256": "160fa3d28d9f0f627c224411d2c0760c82915729a9fd2ebd83f56fdc2ed3d1f5"
+    },
+    {
+      "name": "installed-knowledge-observation-entry-evidence.json",
+      "sizeBytes": 409,
+      "sha256": "ec090b28721c1babbf626e22a0fd643052dbed89a06d321f2295413a6adeda00"
+    },
+    {
+      "name": "installed-knowledge-receipt-review-evidence.json",
+      "sizeBytes": 1870,
+      "sha256": "b190cc717399e20f69f58d405646284749e72b1453eaf13974d0de95ca5757fa"
+    },
+    {
+      "name": "installed-knowledge-session-evidence.json",
+      "sizeBytes": 529,
+      "sha256": "2b4efdc70868c9136f97410fafca763e3e34d70d8720a0146850981373818d7e"
+    },
+    {
+      "name": "installed-route-mount-evidence.json",
+      "sizeBytes": 1708,
+      "sha256": "40320abf1eb0d370ae2fc3891ddbe03f2103bc8c41a469e53e1ac2824ffc44f5"
+    },
+    {
+      "name": "installed-route-performance-evidence.json",
+      "sizeBytes": 4618,
+      "sha256": "a7eb955550ba39b3c673ccc441baa517a49e323865c2dd7193c6801aee0402b1"
+    },
+    {
+      "name": "installed-v110-workflow.json",
+      "sizeBytes": 1358,
+      "sha256": "55605c5262d9d8f4c928bee618483dad35e0a0959bc240bb1df8bc22545c7b0f"
+    },
+    {
+      "name": "installed-v111-workflow.json",
+      "sizeBytes": 1041,
+      "sha256": "ec6947037735c73ef1bfbeb20bfb5e2ab502e3fda89c2862b71231b21576be2e"
+    },
+    {
+      "name": "installed-v112-workflow.json",
+      "sizeBytes": 1210,
+      "sha256": "76d1eda69b42dc1aaffc749ee33ddd0f5ab159ac0d7bef694c42d99052110354"
+    },
+    {
+      "name": "installed-v113-workflow.json",
+      "sizeBytes": 1101,
+      "sha256": "e17f72d708ff7dead15cd5c5331958f3e78a66db710f6c78ced96d8a857b8217"
+    },
+    {
+      "name": "installed-v114-workflow.json",
+      "sizeBytes": 1144,
+      "sha256": "5592d90989244143a98106f47292703d64b3510ef7cdf2016c0626e0028f646a"
+    },
+    {
+      "name": "installed-v115-main.jpg",
+      "sizeBytes": 79115,
+      "sha256": "89a54f0c289a22987da6619a7607b6c046fb29b29c46208e8a195519ecd6594f"
+    },
+    {
+      "name": "installed-v115-progress.json",
+      "sizeBytes": 5775,
+      "sha256": "d33703a77357cf49e7112195c7934ee0ffbce0ed2a33a052bd7d9c8a862aa3b5"
+    },
+    {
+      "name": "installed-v115-search.jpg",
+      "sizeBytes": 85250,
+      "sha256": "0d357557a95aaa3d7b08dbd91691c48e42baf978443aac51c175d97739cafddd"
+    },
+    {
+      "name": "installed-v115-workflow.json",
+      "sizeBytes": 5853,
+      "sha256": "a31742659a94a9cae00335d7c250a010b2df04d93a5626015a1a4278985cff41"
+    },
+    {
+      "name": "installed-version-identity.json",
+      "sizeBytes": 4970,
+      "sha256": "7b1d664ffb6003068fba620aab1571099966736c92416d7b35b5d8eae1b59226"
+    },
+    {
+      "name": "installed-version-settings.jpg",
+      "sizeBytes": 60951,
+      "sha256": "fd64209d3c7136bff0f10b5ce3edd494897f1f0876a319ab1afe6b9ca15bcb2b"
+    },
+    {
+      "name": "installer-build-receipt.json",
+      "sizeBytes": 1400,
+      "sha256": "479f28c4a972f8f308103cbdd3f164057cbffdaa72ddfbdb39061ebbc40b5d8b"
+    },
+    {
+      "name": "lifecycle-result.json",
+      "sizeBytes": 5796,
+      "sha256": "28dbbca2ef437747ed2554af6aea55eb37bab49f7a4152997f9bf224566e1928"
+    },
+    {
+      "name": "management-backup-index-evidence.json",
+      "sizeBytes": 2178,
+      "sha256": "92302bae2cac28fafd97cf09ff83bba2328552bd0cf48bc0f7af97ffdf65832b"
+    }
+  ]
+}

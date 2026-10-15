@@ -1,0 +1,205 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "harnessSourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "installerSha256": "543cc83df368a17bf14ada05d972d339a2d18064d1ab10f231331f69a2a744db",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    },
+    {
+      "id": "palette-scope-dropdown-is-clickable-and-shows-real-native-results",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-query-and-genuine-empty-state-are-distinct",
+      "status": "passed"
+    },
+    {
+      "id": "search-result-opens-in-main-editor-without-replacing-reference",
+      "status": "passed"
+    },
+    {
+      "id": "actual-typing-blocks-cross-library-open-until-explicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "v115-workflows-have-no-global-error-overlay",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T20:32:54.732Z",
+      "completedAt": "2026-10-15T20:32:54.738Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T20:32:54.739Z",
+      "completedAt": "2026-10-15T20:32:54.832Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T20:32:54.832Z",
+      "completedAt": "2026-10-15T20:32:54.946Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T20:32:54.946Z",
+      "completedAt": "2026-10-15T20:32:55.077Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T20:32:55.077Z",
+      "completedAt": "2026-10-15T20:32:55.200Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T20:32:55.200Z",
+      "completedAt": "2026-10-15T20:32:55.448Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T20:32:55.448Z",
+      "completedAt": "2026-10-15T20:32:55.563Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-15T20:32:55.585Z",
+      "completedAt": "2026-10-15T20:32:55.782Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-15T20:32:55.782Z",
+      "completedAt": "2026-10-15T20:32:56.211Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T20:32:56.211Z",
+      "completedAt": "2026-10-15T20:32:56.336Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T20:32:56.343Z",
+      "completedAt": "2026-10-15T20:32:56.380Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T20:32:56.385Z",
+      "completedAt": "2026-10-15T20:32:56.391Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T20:32:56.391Z",
+      "completedAt": "2026-10-15T20:32:56.408Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T20:32:56.821Z",
+      "completedAt": "2026-10-15T20:32:56.899Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T20:32:56.899Z",
+      "completedAt": "2026-10-15T20:32:56.953Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T20:32:56.953Z",
+      "completedAt": "2026-10-15T20:32:57.025Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T20:32:57.025Z",
+      "completedAt": "2026-10-15T20:32:57.035Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-15T20:32:57.035Z",
+      "completedAt": "2026-10-15T20:32:57.050Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T20:32:59.410Z",
+      "completedAt": "2026-10-15T20:32:59.415Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T20:33:00.192Z",
+      "completedAt": "2026-10-15T20:33:00.197Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T20:33:02.955Z",
+      "completedAt": "2026-10-15T20:33:02.972Z",
+      "status": "completed"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "markdownInputMode": "vditor-wysiwyg",
+  "afterDiskWrite": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "afterExplicitSave": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  }
+}
