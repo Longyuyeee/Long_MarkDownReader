@@ -16,7 +16,7 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
   const point = expression => `(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
   const mouse = async (expression, button = 'left') => {
     await evaluate(`(${expression})?.scrollIntoView({block:'nearest'})`)
-    await waitFor(point(expression), 'visible file operation control')
+    await waitFor(point(expression), 'visible file operation control: ' + expression)
     const coordinates = await evaluate(point(expression))
     for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, ...coordinates, button, clickCount: 1 })
   }
@@ -36,7 +36,8 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     await fs.writeFile(source, content, { flag: 'wx' })
     await navigate('#/library?path=' + encodeURIComponent(source), '.library-mode', 'installed file management')
     await mouse(`document.querySelector('#tab-files')`)
-    await mouse(`document.querySelector('button[title="刷新列表"]')`)
+    // The shared tooltip service promotes native titles to accessible labels.
+    await mouse(`document.querySelector('#panel-files button[aria-label="刷新列表"], #panel-files button[data-app-tooltip="刷新列表"], #panel-files button[title="刷新列表"]')`)
     await waitFor(`!!(${row(sourceName)})`, 'new file in native tree')
     await menu(sourceName, '创建副本')
     await waitFor(`!!(${row(duplicateName)})`, 'duplicate revealed in native tree')
