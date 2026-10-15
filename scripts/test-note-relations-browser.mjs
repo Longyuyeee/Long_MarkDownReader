@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v111-note-relations'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v112-sidebar-density/relations'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const checks = [], errors = [], layouts = []
@@ -43,7 +43,8 @@ try {
   await panel.locator('.relation-note').filter({ hasText: 'Inbox/参考资料/调研' }).waitFor()
   assert.equal(await panel.locator('.relation-note').count(), 4)
   assert.equal(await panel.locator('.graph-tools').evaluate(el => el.open), false)
-  assert.equal(await panel.locator('.relation-help').evaluate(el => el.open), false)
+  assert.equal(await panel.locator('.relation-help, .heading-icon, .direction-hint').count(), 0)
+  assert.equal(await panel.getByRole('button', { name: '添加资料关系', exact: true }).isVisible(), true)
   await panel.screenshot({ path: output + '/01-outgoing-dark.png' })
   await incoming.click()
   await panel.locator('.incoming-note').filter({ hasText: '会议记录' }).waitFor()
@@ -55,7 +56,7 @@ try {
   await panel.locator('.incoming-note').filter({ hasText: '会议记录' }).getByRole('button').click()
   await panel.locator('.note-name').getByText('会议记录.md', { exact: true }).waitFor()
   assert.equal(await page.locator('#tab-links').getAttribute('aria-selected'), 'true')
-  checks.push('A focused current-note page explains both citation directions, deduplicates repeated targets, keeps graph/help folded and opens citing notes with their original context')
+  checks.push('A focused current-note page explains both citation directions, deduplicates repeated targets, keeps graph folded and adding relations directly available and opens citing notes with their original context')
 
   const openProject = async () => {
     await page.evaluate(() => window.workflowAudit.router.replace({ name: 'LibraryMode', query: { path: 'C:/workflow-fixture/项目方案.md' } }))
@@ -68,7 +69,7 @@ try {
   await panel.locator('.note-name').getByText('调研.md', { exact: true }).waitFor()
   assert.equal(await page.evaluate(() => window.workflowAudit.store.activeTabId), 'C:/workflow-fixture/Inbox/参考资料/调研.md')
   await openProject()
-  await panel.locator('.relation-note').filter({ hasText: /^记录正文中的引用$/ }).click()
+  await panel.locator('.relation-note').filter({ hasText: /^记录$/ }).click()
   await panel.getByText('有多篇同名笔记，请选择', { exact: true }).waitFor()
   assert.equal(await panel.locator('.target-choices .relation-note').count(), 2)
   await panel.locator('.target-choices .relation-note').filter({ hasText: 'a/记录.md' }).click()

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v111-inbox-experience'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v112-sidebar-density/inbox'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const checks = [], errors = [], layouts = []
@@ -21,12 +21,12 @@ try {
   })
   await page.locator('.inbox-shortcut').click()
   const inbox = page.getByRole('region', { name: '收集箱文件' })
-  await inbox.getByText('收集箱还是空的', { exact: true }).waitFor()
+  await inbox.getByText('暂无文件，点击“新建笔记”开始记录。', { exact: true }).waitFor()
   assert.equal(await inbox.getByRole('alert').count(), 0)
   assert.equal(await page.evaluate(() => window.workflowAudit.calls.some(c => c.command === 'create_inbox_directory')), false)
   assert.equal(await inbox.locator('details[open]').count(), 0)
   await inbox.screenshot({ path: output + '/01-empty-green.png' })
-  await inbox.getByRole('button', { name: '新建第一条笔记', exact: true }).click()
+  await inbox.getByRole('button', { name: '新建笔记', exact: true }).click()
   await page.waitForFunction(() => window.workflowAudit.store.activeTabId.endsWith('/Inbox/未命名.md'))
   assert.equal(await page.evaluate(() => window.workflowAudit.disk.has('C:/workflow-fixture/Inbox/未命名.md')), true)
   assert.equal(await page.evaluate(() => window.workflowAudit.calls.filter(c => c.command === 'create_new_file').length), 1)
@@ -48,6 +48,10 @@ try {
   })
   await inbox.getByRole('button', { name: '刷新', exact: true }).click()
   await inbox.getByRole('button', { name: /周会灵感.md/ }).waitFor()
+  assert.equal(await inbox.locator('.inbox-identity, .inbox-help, .location, .list-summary').count(), 0)
+  const listOffset = await inbox.locator('ul').evaluate(el => el.getBoundingClientRect().top - el.closest('.inbox-browser').getBoundingClientRect().top)
+  assert.ok(listOffset < 120, `Files start near the toolbar (${listOffset}px), without an introductory screen`)
+  checks.push('The root file list starts within 120px of the panel top, without a repeated title, root breadcrumb, tutorial or file-count row')
   await inbox.getByLabel('筛选收集箱文件').fill('周会')
   assert.equal(await inbox.locator('li').count(), 1)
   await inbox.getByLabel('筛选收集箱文件').fill('不存在的搜索')

@@ -1,0 +1,76 @@
+{
+  "checks": [
+    "Creating a duplicate uses the right-click action, keeps the source/active editor and copies the custom display style",
+    "Moving via a directory modal updates the open tab and tree; right-click undo restores the original path and appearance",
+    "Copy to a typed new directory preserves the original; a local write failure retains the input and retries only unfinished items",
+    "Cut/paste from folder context opens the correct destination modal and clears completed move clipboard entries",
+    "Editor Delete never deletes selected files; recycle removes the selected file, closes its tab and restores it through the dialog without deleting display metadata",
+    "Multiple selected files share one right-click duplicate action and one native request, with both originals retained",
+    "Permanently deleting selected recycle entries uses a separate confirmation, clears their recoverable content and keeps the source note",
+    "The normal page adds no always-visible controls; right-click actions and directory modals fit all six styles at wide and narrow widths"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "overflow": false
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "overflow": false
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "overflow": false
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "overflow": false
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "overflow": false
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "overflow": false
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "scope": "Actual App/LibraryMode/file-operation dialogs with isolated mocked IPC; actual filesystem semantics covered by Rust tests."
+}

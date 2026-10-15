@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v111-inline-tags'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v112-sidebar-density/tags'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const checks = [], errors = [], layouts = []
@@ -46,7 +46,7 @@ try {
   await current.getByRole('button', { name: '查看 #项目 的笔记', exact: true }).waitFor()
   assert.equal(await panel.getByRole('textbox', { name: '标签名称', exact: true }).count(), 0)
   assert.equal(await panel.locator('.tag-item').filter({ hasText: '项目' }).textContent(), '#项目2 篇')
-  assert.equal(await panel.locator('.tag-help').evaluate(el => el.open), false)
+  assert.equal(await panel.locator('.tag-help, .tags-heading').count(), 0)
   await panel.screenshot({ path: output + '/01-tags-dark.png' })
   await panel.getByRole('textbox', { name: '查找标签', exact: true }).fill('#项目')
   assert.equal(await panel.locator('.tag-item').count(), 1)
@@ -65,7 +65,7 @@ try {
   await page.waitForFunction(() => document.querySelector('#tab-files').getAttribute('aria-selected') === 'true')
   assert.equal(await page.getByRole('textbox', { name: '搜索文件与正文', exact: true }).inputValue(), '#项目')
   await page.locator('#tab-tags').click()
-  checks.push('The default panel shows current-note tags and a searchable library list, with adding/help collapsed; selecting a tag stays in the panel, opens original notes and retains file-search navigation')
+  checks.push('The default panel shows current-note tags and a searchable library list, with adding collapsed and decorative introductions removed; selecting a tag stays in the panel, opens original notes and retains file-search navigation')
 
   await current.getByRole('button', { name: '添加标签', exact: true }).click()
   const input = panel.getByRole('textbox', { name: '标签名称', exact: true })
@@ -123,10 +123,10 @@ try {
   await page.evaluate(() => { const a = window.workflowAudit; a.store.tabs.find(t => t.id === a.store.activeTabId).textReadOnlyReason = '只读测试' })
   assert.equal(await current.getByRole('button', { name: '添加标签', exact: true }).isDisabled(), true)
   await page.evaluate(() => { const a = window.workflowAudit; a.store.tabs.find(t => t.id === a.store.activeTabId).textReadOnlyReason = undefined; a.store.activeTabId = null })
-  await panel.getByText('打开一篇笔记，就可以在这里添加标签。', { exact: true }).waitFor()
+  await panel.getByText('未打开笔记', { exact: true }).waitFor()
   assert.equal(await panel.getByRole('region', { name: '当前笔记标签', exact: true }).count(), 0)
   await page.evaluate(() => { const a = window.workflowAudit; a.store.tabs.push({ id: 'C:/workflow-fixture/data.json', path: 'C:/workflow-fixture/data.json', title: 'data.json', content: '{}', isDirty: false }); a.disk.set('C:/workflow-fixture/data.json', '{}'); a.store.activeTabId = 'C:/workflow-fixture/data.json' })
-  await panel.getByText('当前文件不使用文内标签，可继续浏览已标记的笔记。', { exact: true }).waitFor()
+  await panel.getByText('当前文件不支持文内标签', { exact: true }).waitFor()
   await panel.locator('.tag-item').filter({ hasText: '项目' }).click()
   await panel.getByText('2 篇', { exact: true }).waitFor()
   await panel.getByRole('button', { name: '全部标签', exact: true }).click()

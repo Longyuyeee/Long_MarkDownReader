@@ -1,10 +1,7 @@
 <template>
   <section class="inbox-browser" :class="{ standalone }" aria-label="收集箱文件" :aria-busy="loading">
-    <div class="inbox-heading">
-      <button v-if="!standalone" class="back-button" aria-label="返回全部文件" @click="$emit('close')"><ArrowLeft /><span>全部文件</span></button>
-      <div class="inbox-identity"><span class="inbox-emblem"><Inbox /></span><div><h2>收集箱</h2><p>先放在这里，稍后再整理</p></div></div>
-    </div>
     <div class="actions">
+      <button v-if="!standalone" class="icon-button back-button" aria-label="返回全部文件" @click="$emit('close')"><ArrowLeft /></button>
       <button class="primary-button" :disabled="loading || creating || choosing" @click="newNote"><SquarePen /><span>{{ creating ? '正在新建…' : '新建笔记' }}</span></button>
       <button class="icon-button" aria-label="刷新" :disabled="loading || creating" @click="reload"><RefreshCw :class="{ spinning: loading }" /></button>
       <button class="icon-button" aria-label="收集箱设置" :aria-expanded="menu" :disabled="choosing || creating" @click="menu = !menu"><Settings2 /></button>
@@ -16,10 +13,10 @@
     </section>
     <p v-if="settingStatus" class="setting-status" role="status">{{ settingStatus }}</p>
     <div v-if="actionError" class="action-error" role="alert"><span>这次操作没有完成，请重试或更换保存位置。</span><details><summary>错误详情</summary><pre>{{ actionError }}</pre></details></div>
-    <div class="location"><Folder /><span>{{ breadcrumb }}</span><button v-if="parents.length" :disabled="creating || loading" @click="up"><ArrowUp /><span>上一级</span></button></div>
-    <div v-if="loading" class="inbox-state" role="status"><RefreshCw class="state-symbol spinning" /><p>正在读取文件…</p></div>
+    <div v-if="parents.length" class="location"><Folder /><span>{{ breadcrumb }}</span><button :disabled="creating || loading" @click="up"><ArrowUp /><span>上一级</span></button></div>
+    <div v-if="loading" class="inbox-state" role="status"><p>正在读取文件…</p></div>
     <div v-else-if="error || (directoryMissing && (!defaultInbox || knownInbox))" class="inbox-state error-state" role="alert">
-      <FolderOpen class="state-symbol" /><h3>这个文件夹暂时打不开</h3>
+      <h3>这个文件夹暂时打不开</h3>
       <p>{{ directoryMissing ? '保存位置已找不到。请连接磁盘或更换文件夹。' : '请检查磁盘连接和文件夹访问权限，再试一次。' }}</p>
       <div class="state-actions"><button class="primary-button" @click="reload"><RefreshCw />重试读取</button><button :disabled="choosing" @click="chooseDirectory"><FolderOpen />更换文件夹</button></div>
       <button v-if="/知识库根|根路径/.test(error)" @click="$emit('manage')">资料库设置</button>
@@ -27,18 +24,13 @@
       <details v-if="error"><summary>错误详情</summary><pre>{{ error }}</pre></details>
     </div>
     <div v-else-if="!entries.length" class="inbox-state empty-state" role="status">
-      <Inbox class="state-symbol" /><h3>{{ parents.length ? '这个文件夹还是空的' : '收集箱还是空的' }}</h3>
-      <p>随手记下想法或临时资料，之后再归到合适的文件夹。</p>
-      <button class="primary-button" :disabled="creating" @click="newNote"><Plus />新建第一条笔记</button>
-      <small v-if="directoryMissing">新建笔记时会自动创建收集箱文件夹。</small>
+      <p>暂无文件，点击“新建笔记”开始记录。</p>
     </div>
     <template v-else>
       <label class="inbox-filter"><Search /><input v-model="filter" aria-label="筛选收集箱文件" placeholder="查找当前文件夹" /><button v-if="filter" aria-label="清除筛选" @click="filter = ''"><X /></button></label>
-      <div class="list-summary"><span>{{ entries.filter(item => !item.is_dir).length }} 个文件<span v-if="entries.some(item => item.is_dir)"> · {{ entries.filter(item => item.is_dir).length }} 个文件夹</span></span><small v-if="filter">找到 {{ visibleEntries.length }} 项</small></div>
-      <ul v-if="visibleEntries.length"><li v-for="item in visibleEntries" :key="item.path"><button :disabled="creating" @click="activate(item)"><span class="entry-symbol"><component :is="entryVisual(item).icon" :style="{ color: entryVisual(item).color }" aria-hidden="true" /></span><span class="entry-name">{{ item.name }}</span><ChevronRight v-if="item.is_dir" class="entry-arrow" /><small v-else>{{ entryLabel(item) }}</small></button></li></ul>
+      <ul v-if="visibleEntries.length"><li v-for="item in visibleEntries" :key="item.path"><button :disabled="creating" @click="activate(item)"><span class="entry-symbol"><component :is="entryVisual(item).icon" :style="{ color: entryVisual(item).color }" aria-hidden="true" /></span><span class="entry-name">{{ item.name }}</span><ChevronRight v-if="item.is_dir" class="entry-arrow" /></button></li></ul>
       <p v-else class="filter-empty" role="status">没有找到相关文件<button @click="filter = ''">清除筛选</button></p>
     </template>
-    <details class="inbox-help"><summary><CircleHelp />怎样使用收集箱？</summary><p>点击“新建笔记”开始记录，点击文件继续编辑。整理时回到“全部文件”，将资料拖到需要的文件夹。快速笔记中选择“保存到：收集箱”，也会显示在这里。</p></details>
   </section>
 </template>
 
@@ -50,7 +42,7 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { useAppStore } from '../store/app'
 import { inboxDirectory, inboxRelativeDirectory } from '../utils/inboxDirectory'
 import { fileStylePathKey } from '../utils/fileDisplayStyles'
-import { ArrowLeft, ArrowUp, ChevronRight, CircleHelp, Folder, FolderOpen, Inbox, Plus, RefreshCw, Search, Settings2, SquarePen, X } from 'lucide-vue-next'
+import { ArrowLeft, ArrowUp, ChevronRight, Folder, FolderOpen, RefreshCw, Search, Settings2, SquarePen, X } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
 import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
 interface Entry { name: string; path: string; is_dir: boolean }
@@ -59,7 +51,6 @@ const props = withDefaults(defineProps<{ libraryRoot: string; standalone?: boole
 const emit = defineEmits<{ close: []; open: [path: string]; changed: []; manage: [] }>()
 const store = useAppStore()
 const entryVisual = (item: Entry) => item.is_dir ? { icon: Folder, color: 'var(--theme-text-secondary)' } : resolveFileTreeVisual(findFileFormat(item.path)?.id)
-const entryLabel = (item: Entry) => { const format = findFileFormat(item.path); return format?.id === 'markdown' ? '笔记' : format?.label || '文件' }
 const menu = ref(false), choosing = ref(false), creating = ref(false), settingStatus = ref(''), actionError = ref(''), filter = ref('')
 const inbox = computed(() => inboxDirectory(props.libraryRoot, store.libraries))
 const relative = computed(() => inboxRelativeDirectory(props.libraryRoot, store.libraries))
@@ -147,14 +138,7 @@ onUnmounted(() => { disposed = true; ++generation; unlisten?.() })
 <style scoped>
 .inbox-browser { flex: 1; padding: 14px 12px; min-height: 0; min-width: 0; overflow: auto; color: var(--theme-text); font-size: var(--text-sm); }
 .inbox-browser.standalone { padding: var(--workflow-panel-padding); border: var(--theme-border); border-radius: var(--theme-radius); background: var(--theme-surface); box-shadow: var(--workflow-panel-shadow); }
-.inbox-heading { display: grid; gap: 14px; margin-bottom: 14px; }
-.back-button { justify-self: start; padding: 3px 0; color: var(--theme-text-secondary); font-size: var(--text-compact); }
-.inbox-identity { display: flex; align-items: center; gap: 10px; }
-.inbox-emblem { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: var(--theme-radius-sm); background: var(--chrome-icon-surface, rgba(var(--theme-primary-rgb), .1)); color: var(--theme-primary); }
-.inbox-emblem svg { width: 22px; height: 22px; }
-h2 { margin: 0; font-size: 16px; font-weight: 650; }
-.inbox-identity p { margin: 3px 0 0; font-size: var(--text-compact); }
-.actions { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.actions { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .actions .primary-button { margin-right: auto; }
 button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: inherit; background: var(--chrome-control, transparent); border: 1px solid var(--workspace-border-color, #8885); border-radius: var(--theme-radius-sm); min-height: 32px; padding: 5px 9px; cursor: pointer; font: inherit; text-align: left; transition: background var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard); }
 button:hover { background: rgba(var(--theme-primary-rgb), .1); border-color: rgba(var(--theme-primary-rgb), .4); }
@@ -162,44 +146,38 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 button:disabled { opacity: .5; cursor: default; }
 .primary-button { color: var(--theme-bg); background: var(--theme-primary); border-color: transparent; font-weight: 600; }
 .primary-button:hover { background: color-mix(in srgb, var(--theme-primary) 88%, var(--theme-text)); }
-.icon-button { width: 32px; padding: 0; }
-.back-button { border: 0; background: transparent; min-height: 24px; }
+.icon-button { width: 32px; padding: 0; flex-shrink: 0; }
+.back-button { border: 0; background: transparent; color: var(--theme-text-secondary); }
 .inbox-settings, .action-error { padding: 12px; margin-bottom: 12px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }
 .inbox-settings strong { font-size: var(--text-sm); }
 .inbox-settings small, .saved-location { display: block; margin: 6px 0 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); overflow-wrap: anywhere; }
 .inbox-settings small { margin-bottom: 0; }
 .setting-status { font-size: var(--text-compact); }
-.location { display: flex; align-items: center; gap: 7px; padding-bottom: 12px; font-size: var(--text-compact); color: var(--theme-text-secondary); border-bottom: var(--theme-border); }
+.location { display: flex; align-items: center; gap: 7px; padding-bottom: 8px; font-size: var(--text-compact); color: var(--theme-text-secondary); }
 .location > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .location button { font-size: var(--text-compact); min-height: 28px; padding: 3px 6px; flex-shrink: 0; }
 p, details { line-height: 1.6; color: var(--theme-text-secondary); overflow-wrap: anywhere; }
-.inbox-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 10px; margin: 14px 0; text-align: center; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--theme-surface); box-shadow: var(--workflow-panel-shadow, none); }
-.state-symbol { width: 36px; height: 36px; padding: 13px; box-sizing: content-box; color: var(--theme-primary); background: var(--chrome-icon-surface, rgba(var(--theme-primary-rgb), .08)); border-radius: var(--theme-radius); }
+.inbox-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; margin: 8px 0; text-align: center; }
+.error-state { border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }
 h3 { font-size: 14px; font-weight: 600; margin: 0; }
 .inbox-state p { margin: 0; font-size: var(--text-compact); max-width: 32em; }
-.inbox-state > small { font-size: 11px; line-height: 1.6; color: var(--theme-text-secondary); }
 .state-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .inbox-state .creation-hint { padding-top: 5px; }
 details { text-align: left; font-size: var(--text-compact); max-width: 100%; }
 summary { cursor: pointer; }
 pre { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: auto; }
-.inbox-filter { display: flex; align-items: center; gap: 7px; margin-top: 14px; padding: 5px 8px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); color: var(--theme-text-secondary); }
+.inbox-filter { display: flex; align-items: center; gap: 7px; margin: 8px 0; padding: 3px 8px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); color: var(--theme-text-secondary); }
 .inbox-filter input { min-width: 0; width: 100%; border: 0; color: var(--theme-text); background: transparent; font: inherit; font-size: var(--text-compact); line-height: 24px; }
 .inbox-filter input::placeholder { color: var(--theme-text-secondary); }
 .inbox-filter button { padding: 0; width: 24px; min-height: 24px; background: transparent; border: 0; }
-.list-summary { display: flex; justify-content: space-between; gap: 6px; margin: 12px 0 8px; color: var(--theme-text-secondary); font-size: 11px; }
 ul { list-style: none; padding: 0; margin: 0; }
 li button { justify-content: flex-start; width: 100%; min-width: 0; min-height: var(--file-row-height, 34px); border: var(--file-row-border, 1px solid transparent); padding: 5px 7px; margin-block: calc(var(--file-row-gap, 3px) / 2); background: var(--file-row-bg, transparent); box-shadow: var(--file-row-shadow, none); }
 li button:hover { background: color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface)); }
 .entry-symbol { flex-shrink: 0; display: grid; place-items: center; }
 .entry-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-li button > small { font-size: var(--text-compact); color: var(--theme-text-secondary); max-width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .entry-arrow { color: var(--theme-text-secondary); }
 .filter-empty { text-align: center; padding: 18px 0; font-size: var(--text-compact); }
 .filter-empty button { display: flex; margin: 8px auto; }
-.inbox-help { border-top: var(--theme-border); margin-top: 16px; padding-top: 12px; }
-.inbox-help summary { display: flex; align-items: center; gap: 6px; }
-.inbox-help p { font-size: var(--text-compact); margin-bottom: 0; }
 svg { width: 16px; height: 16px; flex-shrink: 0; }
 .spinning { animation: inbox-spin 1s linear infinite; }
 @keyframes inbox-spin { to { transform: rotate(360deg); } }

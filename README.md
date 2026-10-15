@@ -399,6 +399,12 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 技术栈为 Vue 3、TypeScript、Tauri 2 与 Rust。Markdown 使用 Vditor，专业源码编辑使用 CodeMirror。开发环境需要 Node.js 22、Rust stable、Windows WebView2 和 Tauri 2 所需的 Windows 构建工具。
 
+### 下一补丁进展（开发分支）
+
+`codex/foundation-file-management` 已完成文件右键的移动/复制到、创建副本、多选、应用内剪切/复制/粘贴、撤销上次移动及资料库回收站，并精简收集箱、集合、标签和关系面板。功能流程、六种风格布局、原生文件操作测试和生产构建通过；当前公开安装包仍为 **v1.1.1**，这些改进计划随 **v1.1.2** 发布。
+
+已完成内容、能力范围和发版待办见 [基础功能深化路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)、[侧栏调整记录](docs/V1_1_2_Compact_Sidebar_2026-10-14.md) 与 [开发交接](docs/Development_Handoff.md)。后续按自定义模板、多文档操作、标签/集合、关系维护、文本历史的顺序推进。
+
 ### 从源码启动
 
 ```powershell

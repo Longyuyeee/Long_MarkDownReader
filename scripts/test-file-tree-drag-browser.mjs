@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v110-file-tree-drag'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v110-file-tree-drag'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const checks = [], errors = []

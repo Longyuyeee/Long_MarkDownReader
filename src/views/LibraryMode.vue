@@ -171,7 +171,7 @@
                   :node-props="nodeProps"
                   :selected-keys="selectedKeys"
                   v-model:expanded-keys="expandedKeys"
-                  @update:selected-keys="handleNodeSelect"
+                  @update:selected-keys="handleTreeSelection"
                   @focus="handleTreeKeyboardFocus"
                   @blur="handleTreeKeyboardBlur"
                   @keydown="handleTreeKeyboardNavigation"
@@ -542,8 +542,10 @@
     <HoverPreview :show="preview.show" :title="preview.title" :path="preview.path" :x="preview.x" :y="preview.y" />
     
     <n-dropdown
+      v-if="contextMenu.show"
       placement="bottom-start" trigger="manual" :x="contextMenu.x" :y="contextMenu.y"
       :options="contextMenu.options" :show="contextMenu.show"
+      :menu-props="contextMenuProps"
       :on-clickoutside="() => contextMenu.show = false" @select="onMenuAction"
     />
 
@@ -747,6 +749,7 @@
       </template>
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" />
+    <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
   </div>
 </template>
 
@@ -783,6 +786,10 @@ import NoteRelationsPanel from '../components/NoteRelationsPanel.vue'
 import { onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
+import LibraryFileOperations from '../components/LibraryFileOperations.vue'
+import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
+import { announceFileRelationsChanged } from '../services/fileRelations'
+import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
 import { confirmAppAction } from '../services/appDialog'
 import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
@@ -1549,6 +1556,9 @@ const knowledgeIndexMenuOptions = computed(() => [
     : []),
 ])
 const selectedKeys = ref<string[]>([])
+const fileSelectionAnchor = ref('')
+const filePointerSelecting = ref(false)
+const filePointerSelection = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
 let vditor: any = null
 const documentShortcutHost = ref<HTMLElement | null>(null)
@@ -1761,6 +1771,78 @@ const updateWordCount = () => {
 
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, atRoot: false, options: [] as any[] })
+const fileOperations = ref<InstanceType<typeof LibraryFileOperations> | null>(null)
+const contextPaths = () => topLevelPaths(selectedKeys.value.includes(contextMenu.targetPath) ? selectedKeys.value : [contextMenu.targetPath])
+const clipboardAvailable = computed(() => Boolean(libraryFileClipboard.value?.paths.length && sameLibrary(libraryFileClipboard.value.root, store.libraryPath)))
+const undoMoveAvailable = computed(() => Boolean(lastLibraryMove.value?.items.length && sameLibrary(lastLibraryMove.value.root, store.libraryPath)))
+const fileMenuIcon = (icon: typeof CopyFileIcon) => () => h(NIcon, null, { default: () => h(icon) })
+const contextMenuProps = () => ({ style: 'max-height: min(480px, calc((100vh - 80px) / 2)); overflow-y: auto;' })
+const destinationMenuOptions = () => [
+  { label: '粘贴 (Ctrl+V)', key: 'file-paste', disabled: !clipboardAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(PasteFileIcon) },
+  { label: '撤销上次移动', key: 'file-undo-move', disabled: !undoMoveAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(UndoFileIcon) },
+  { label: '资料库回收站…', key: 'file-trash', disabled: fileOperationBusy.value, icon: fileMenuIcon(TrashIcon) },
+]
+const beforeFileOperation = async (paths: string[], operation: FileOperation) => {
+  if (fileDropBusy.value) { message.info('文件正在移动，请稍后再操作'); return false }
+  const targets = allTabs.value.filter(tab => paths.some(path => sameLibrary(tab.path, path) || fileStylePathKey(tab.path).startsWith(fileStylePathKey(path) + '/')))
+  if (targets.some(tab => hasPendingMainTextSave(tab.path))) { message.info('文件正在保存，请稍后再操作'); return false }
+  if (targets.some(tab => tab.isDirty) && (operation === 'trash' || operation === 'copy')) { message.info('请先保存所选文件的修改，再操作文件'); return false }
+  return true
+}
+const applyFileOperation = async (result: FileOperationResult, operation: FileOperation) => {
+  const library = store.libraryPath
+  try {
+    const parents = new Set<string>()
+    for (const item of result.items) {
+      if (operation === 'move' || operation === 'undo') {
+        await syncRenamedWorkspaceReferences(item.oldPath, item.newPath)
+        try { await store.moveFileDisplayStyles(item.oldPath, item.newPath) } catch { message.warning('位置已更新，样式已保留；设置保存可稍后重试') }
+      } else if (operation === 'copy') {
+        try { await store.copyFileDisplayStyles(item.oldPath, item.newPath) } catch { message.warning('副本已创建，样式已保留；设置保存可稍后重试') }
+      } else if (operation === 'trash') {
+        for (const tab of [...allTabs.value]) if (sameLibrary(tab.path, item.oldPath) || fileStylePathKey(tab.path).startsWith(fileStylePathKey(item.oldPath) + '/')) store.removeTab(tab.id)
+        const clipboard = libraryFileClipboard.value
+        if (clipboard) clipboard.paths = clipboard.paths.filter(path => !sameLibrary(path, item.oldPath) && !fileStylePathKey(path).startsWith(fileStylePathKey(item.oldPath) + '/'))
+      }
+      if (operation !== 'restore') parents.add(fileParent(item.oldPath))
+      if (operation !== 'trash') parents.add(fileParent(item.newPath))
+    }
+    for (const parent of parents) if (parent && sameLibrary(library, store.libraryPath)) await refreshNode(parent)
+    if (!sameLibrary(library, store.libraryPath)) return
+    if (operation !== 'trash') {
+      const next = result.items.map(item => item.newPath)
+      for (const path of next) {
+        const ancestors: string[] = []
+        let directory = fileParent(path)
+        while (directory && !sameLibrary(directory, store.libraryPath)) { ancestors.unshift(directory); directory = fileParent(directory) }
+        for (const ancestor of ancestors) {
+          const node = findTreeOptionByKey(treeData.value, ancestor)
+          if (node) {
+            if (node.children === undefined) {
+              await handleLoadChildren(node)
+              treeData.value = [...treeData.value]
+              await nextTick()
+            }
+            if (!expandedKeys.value.includes(node.key as string)) expandedKeys.value = [...expandedKeys.value, node.key as string]
+          }
+        }
+      }
+      selectedKeys.value = next
+      await nextTick()
+      treeInstRef.value?.scrollTo({ key: next[0], behavior: 'auto' })
+    } else {
+      selectedKeys.value = []
+      const queryPath = typeof route.query.path === 'string' ? route.query.path : ''
+      if (result.items.some(item => sameLibrary(queryPath, item.oldPath) || fileStylePathKey(queryPath).startsWith(fileStylePathKey(item.oldPath) + '/'))) {
+        if (activeTabId.value) await openManagedFile(router, activeTabId.value, {}, 'replace')
+        else await router.replace({ name: 'LibraryMode' })
+      }
+    }
+    announceFileRelationsChanged(store.libraryPath)
+    void fetchLibStats()
+    void fetchAllTags()
+  } catch (error) { message.warning(`文件操作已完成，但列表未能刷新，请手动刷新：${String(error)}`) }
+}
 const renameState = reactive({ show: false, oldPath: '', oldName: '', newName: '', isDir: false, confirmExtension: false })
 const fileStyleEditor = reactive({
   show: false,
@@ -1903,6 +1985,7 @@ const renameExtensionChange = computed(() => {
 })
 
 const openRename = (path: string, isDir: boolean) => {
+  if (fileOperationBusy.value || fileDropBusy.value) { message.info('文件正在操作，请稍后重命名'); return }
   contextMenu.show = false
   const name = path.split(/[\\/]/).pop() || ''
   renameState.oldPath = path
@@ -2299,6 +2382,9 @@ onBeforeUnmount(cancelSidebarResize)
 
 const handleNodeSelect = (keys: string[]) => {
   selectedKeys.value = keys
+  // Multi-selection is for file operations; opening its last item would make
+  // the active-document watcher replace the selection with a single file.
+  if (keys.length > 1) return
   if (keys.length === 0) return
   const lastKey = keys[keys.length - 1]
   if (findTreeOptionByKey(treeData.value, lastKey)?.isLeaf === false) return
@@ -2314,6 +2400,10 @@ const handleNodeSelect = (keys: string[]) => {
   } else if (format) {
     router.push({ name: format.routeName, query: { path: lastKey } })
   }
+}
+const handleTreeSelection = (keys: string[]) => {
+  selectedKeys.value = keys
+  if (!filePointerSelecting.value) handleNodeSelect(keys)
 }
 
 const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
@@ -2371,7 +2461,7 @@ const handleLoadChildren = async (option: TreeOption) => {
   }
 }
 
-const isLibraryMetadata = (name: string) => name.toLowerCase() === '.misty_order.json'
+const isLibraryMetadata = (name: string) => ['.misty_order.json', '.longedit'].includes(name.toLowerCase())
 const loadDirectory = async (path: string, libraryRoot = store.libraryPath): Promise<TreeOption[]> => {
   if (!path) return []
   const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot, path })
@@ -2730,7 +2820,7 @@ const resetFileDrag = () => {
 const cancelFileDrag = () => { if (virtualDrag.active || virtualDrag.timer) resetFileDrag() }
 const cancelFileDragByKey = (event: KeyboardEvent) => { if (event.key === 'Escape') cancelFileDrag() }
 const beginFileDrag = () => {
-  if (!fileDragOption || fileDropBusy.value) return
+  if (!fileDragOption || fileDropBusy.value || fileOperationBusy.value) return
   if (virtualDrag.timer) clearTimeout(virtualDrag.timer)
   virtualDrag.timer = null
   preview.focusPath = ''
@@ -2819,6 +2909,7 @@ const updateDropTarget = (x: number, y: number) => {
 }
 
 const onMouseUp = async (event: MouseEvent) => {
+  window.setTimeout(() => { filePointerSelecting.value = false }, 0)
   if (!virtualDrag.active) { resetFileDrag(); return }
   updateDropTarget(event.clientX, event.clientY)
   const blocked = Boolean(fileDropProblem.value)
@@ -2867,10 +2958,11 @@ const onMouseUp = async (event: MouseEvent) => {
           for (const oldPath of moveTasks) {
             const separator = finalTargetDir.includes('\\') ? '\\' : '/'
             const newPath = `${finalTargetDir}${separator}${fileNameWithExtension(oldPath)}`
-            syncRenamedWorkspaceReferences(oldPath, newPath)
+            await syncRenamedWorkspaceReferences(oldPath, newPath)
             try { await store.moveFileDisplayStyles(oldPath, newPath) }
             catch (error) { message.warning(`文件已移动，样式已保留，但设置暂未保存：${String(error)}`) }
           }
+          lastLibraryMove.value = { root: store.libraryPath, items: moveTasks.map(oldPath => ({ oldPath, newPath: `${finalTargetDir}${finalTargetDir.includes('\\') ? '\\' : '/'}${fileNameWithExtension(oldPath)}` })) }
         }
 
         // 2. 逻辑排序逻辑 (Misty Order)
@@ -3026,7 +3118,7 @@ const scheduleFilePreview = (option: TreeOption, x: number, y: number, delay: nu
 }
 const findTreeOptionByKey = (nodes: TreeOption[], key: string): TreeOption | null => {
   for (const node of nodes) {
-    if (node.key === key) return node
+    if (sameWorkspacePath(node.key as string, key)) return node
     const nested = node.children ? findTreeOptionByKey(node.children, key) : null
     if (nested) return nested
   }
@@ -3129,7 +3221,7 @@ const openRootContextMenu = (event: MouseEvent) => {
   contextMenu.targetPath = store.libraryPath
   contextMenu.isDir = true
   contextMenu.atRoot = true
-  contextMenu.options = buildCreateMenuOptions()
+  contextMenu.options = [...buildCreateMenuOptions(), { type: 'divider', key: 'file-root-divider' }, ...destinationMenuOptions()]
   contextMenu.show = true
 }
 const nodeProps = ({ option }: { option: TreeOption }) => {
@@ -3161,7 +3253,9 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
     '--file-marker-selected-accent': colors.selectedAccent,
   } : undefined,
   onMousedown: (e: MouseEvent) => { 
-    if (e.button !== 0 || fileDropBusy.value || (e.target as Element).closest('.n-tree-node-switcher')) return;
+    if (e.button !== 0 || fileDropBusy.value || fileOperationBusy.value || (e.target as Element).closest('.n-tree-node-switcher')) return;
+    filePointerSelecting.value = true
+    filePointerSelection.value = [...selectedKeys.value]
     resetFileDrag()
     preview.focusPath = ''; hideFilePreview()
     fileDragOption = option
@@ -3175,6 +3269,24 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
     window.addEventListener('blur', cancelFileDrag)
     window.addEventListener('keydown', cancelFileDragByKey, true)
   },
+  onClick: async (event: MouseEvent) => {
+    if ((event.target as Element).closest('.n-tree-node-switcher') || fileOperationBusy.value || fileDropBusy.value) return
+    const key = option.key as string
+    if (event.shiftKey && fileSelectionAnchor.value) {
+      const visible: string[] = []
+      const flatten = (nodes: TreeOption[]) => { for (const node of nodes) { visible.push(node.key as string); if (node.children && expandedKeys.value.includes(node.key as string)) flatten(node.children) } }
+      flatten(treeData.value)
+      const start = visible.indexOf(fileSelectionAnchor.value), end = visible.indexOf(key)
+      if (start >= 0 && end >= 0) { const range = visible.slice(Math.min(start, end), Math.max(start, end) + 1); selectedKeys.value = event.ctrlKey || event.metaKey ? [...new Set([...filePointerSelection.value, ...range])] : range; return }
+    }
+    if (event.ctrlKey || event.metaKey) {
+      selectedKeys.value = filePointerSelection.value.includes(key) ? filePointerSelection.value.filter(path => path !== key) : [...filePointerSelection.value, key]
+      fileSelectionAnchor.value = key
+      return
+    }
+    fileSelectionAnchor.value = key
+    handleNodeSelect([key])
+  },
   onMouseenter: (e: MouseEvent) => {
     if (!option.isLeaf || virtualDrag.active || virtualDrag.timer || fileDropBusy.value) return
     scheduleFilePreview(option, e.clientX, e.clientY, 600)
@@ -3187,21 +3299,33 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
     preview.focusPath = ''; hideFilePreview()
     setTimeout(() => {
       contextMenu.x = e.clientX; contextMenu.y = e.clientY; contextMenu.targetPath = option.key as string; contextMenu.isDir = !option.isLeaf; contextMenu.atRoot = false;
-      const isMulti = selectedKeys.value.length > 1
+      const targets = contextPaths()
+      const isMulti = targets.length > 1
+      if (!selectedKeys.value.includes(contextMenu.targetPath)) selectedKeys.value = targets
       const isStarred = !contextMenu.isDir && store.isStarred(contextMenu.targetPath)
       const items = [
         ...(!isMulti && contextMenu.isDir ? buildCreateMenuOptions() : []),
+        { label: '移动到…', key: 'file-move', disabled: fileOperationBusy.value, icon: fileMenuIcon(MoveFileIcon) },
+        { label: '复制到…', key: 'file-copy-to', disabled: fileOperationBusy.value, icon: fileMenuIcon(CopyFileIcon) },
+        { label: isMulti ? `创建 ${targets.length} 项的副本` : '创建副本', key: 'file-duplicate', disabled: fileOperationBusy.value, icon: fileMenuIcon(CopyFileIcon) },
+        { type: 'divider', key: 'file-clipboard-divider' },
+        { label: '剪切 (Ctrl+X)', key: 'file-cut', disabled: fileOperationBusy.value, icon: fileMenuIcon(CutFileIcon) },
+        { label: '复制 (Ctrl+C)', key: 'file-copy', disabled: fileOperationBusy.value, icon: fileMenuIcon(CopyFileIcon) },
+        destinationMenuOptions()[0],
+        { type: 'divider', key: 'file-existing-divider' },
         !isMulti ? { label: '打开所在文件夹', key: 'open-folder', icon: () => h(NIcon, null, { default: () => h(FolderOpenIcon) }) } : null,
-        !contextMenu.isDir && !isMulti ? {
-          label: '使用外部应用打开',
-          key: 'external-open-menu',
-          icon: () => h(NIcon, null, { default: () => h(ExternalOpenIcon) }),
-          children: buildExternalOpenOptions(contextMenu.targetPath),
-        } : null,
         !contextMenu.isDir && !isMulti ? { label: isStarred ? '取消收藏' : '收藏文件', key: 'star', icon: () => h(NIcon, { color: isStarred ? '#f5a623' : undefined }, { default: () => h(StarIcon) }) } : null,
-        !contextMenu.isDir && !isMulti ? { label: '编辑显示样式', key: 'edit-display-style', icon: () => h(NIcon, null, { default: () => h(PaletteIcon) }) } : null,
-        { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
-        { label: isMulti ? `物理删除所选 ${selectedKeys.value.length} 项` : '物理删除 (Del)', key: 'delete', icon: () => h(NIcon, { color: '#f5222d' }, { default: () => h(TrashIcon) }) }
+        { label: isMulti ? '批量重命名不可用' : '重命名 (F2)', key: 'rename', disabled: isMulti || fileOperationBusy.value, icon: () => h(NIcon, null, { default: () => h(EditIcon) }) },
+        { label: isMulti ? `移到回收站（${targets.length} 项）` : '移到回收站 (Del)', key: 'file-recycle', disabled: fileOperationBusy.value, icon: fileMenuIcon(TrashIcon) },
+        { label: '更多操作', key: 'file-more', children: [
+          ...destinationMenuOptions().slice(1),
+          ...(!contextMenu.isDir && !isMulti ? [
+            { label: '编辑显示样式', key: 'edit-display-style', icon: fileMenuIcon(PaletteIcon) },
+            { label: '使用外部应用打开', key: 'external-open-menu', icon: fileMenuIcon(ExternalOpenIcon), children: buildExternalOpenOptions(contextMenu.targetPath) },
+          ] : []),
+          { type: 'divider', key: 'file-permanent-divider' },
+          { label: isMulti ? `永久删除所选 ${targets.length} 项` : '永久删除…', key: 'delete', disabled: fileOperationBusy.value, icon: fileMenuIcon(TrashIcon) },
+        ] }
       ].filter(Boolean);
       contextMenu.options = items; contextMenu.show = true
     }, 50)
@@ -3211,6 +3335,18 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
 
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
+  const selection = contextPaths()
+  const directory = contextMenu.isDir ? path : fileParent(path)
+  if (key === 'file-move' || key === 'file-copy-to') { fileOperations.value?.openTransfer(selection, key === 'file-move' ? 'move' : 'copy', directory); return }
+  if (key === 'file-duplicate') { await fileOperations.value?.duplicate(selection); return }
+  if (key === 'file-cut' || key === 'file-copy') {
+    libraryFileClipboard.value = { root: store.libraryPath, paths: selection, operation: key === 'file-cut' ? 'move' : 'copy' }
+    message.info(`${selection.length} 项已${key === 'file-cut' ? '剪切' : '复制'}，到目标文件夹粘贴`); return
+  }
+  if (key === 'file-paste') { const clipboard = libraryFileClipboard.value; if (clipboard && clipboardAvailable.value) fileOperations.value?.openTransfer(clipboard.paths, clipboard.operation, directory); return }
+  if (key === 'file-undo-move') { await fileOperations.value?.undoMove(); return }
+  if (key === 'file-trash') { fileOperations.value?.openTrash(); return }
+  if (key === 'file-recycle') { await fileOperations.value?.recycle(selection); return }
   if (key.startsWith('create-format:')) {
     const [formatId, extension] = key.slice('create-format:'.length).split(':')
     try {
@@ -3341,14 +3477,16 @@ const createDailyNote = async () => {
 }
 
 const replaceRenamedPath = (value: string, oldPath: string, newPath: string) => {
-  const normalizedValue = value.replace(/\\/g, '/').toLowerCase()
-  const normalizedOld = oldPath.replace(/\\/g, '/').toLowerCase()
+  const normalizedValue = fileStylePathKey(value)
+  const normalizedOld = fileStylePathKey(oldPath)
   if (normalizedValue === normalizedOld) return newPath
-  if (normalizedValue.startsWith(`${normalizedOld}/`)) return `${newPath}${value.slice(oldPath.length)}`
+  const cleanValue = value.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '')
+  const cleanOld = oldPath.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
+  if (normalizedValue.startsWith(`${normalizedOld}/`)) return `${newPath}${cleanValue.slice(cleanOld.length)}`
   return value
 }
 
-const syncRenamedWorkspaceReferences = (oldPath: string, newPath: string) => {
+const syncRenamedWorkspaceReferences = async (oldPath: string, newPath: string) => {
   for (const tab of allTabs.value) {
     const nextPath = replaceRenamedPath(tab.path, oldPath, newPath)
     if (nextPath === tab.path) continue
@@ -3367,7 +3505,7 @@ const syncRenamedWorkspaceReferences = (oldPath: string, newPath: string) => {
   store.saveTabsState()
   const routePath = typeof route.query.path === 'string' ? route.query.path : ''
   const nextRoutePath = routePath ? replaceRenamedPath(routePath, oldPath, newPath) : ''
-  if (nextRoutePath && nextRoutePath !== routePath) void openManagedFile(router, nextRoutePath, {}, 'replace')
+  if (nextRoutePath && nextRoutePath !== routePath) await openManagedFile(router, nextRoutePath, {}, 'replace')
 }
 
 const executeRename = async () => {
@@ -3381,7 +3519,7 @@ const executeRename = async () => {
     })
     try { await store.moveFileDisplayStyles(oldPath, newPath) }
     catch (error) { message.warning(`文件已重命名，样式已保留，但设置暂未保存：${String(error)}`) }
-    syncRenamedWorkspaceReferences(oldPath, newPath)
+    await syncRenamedWorkspaceReferences(oldPath, newPath)
     await refreshNode(parentPath)
     renameState.show = false
     message.success(`已重命名为 ${renameState.newName}`)
@@ -3822,12 +3960,20 @@ const initVditor = () => {
 }
 
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'F2' && selectedKeys.value.length > 0) {
+  const target = e.target as HTMLElement | null
+  const inFileTree = Boolean(target?.closest('.library-file-tree, .tree-viewport')) && !target?.closest('input, textarea, [contenteditable="true"]')
+  if (inFileTree && (e.ctrlKey || e.metaKey) && ['c', 'x', 'v'].includes(e.key.toLowerCase())) {
+    e.preventDefault(); if (fileOperationBusy.value) return
+    if (e.key.toLowerCase() === 'v') { const clipboard = libraryFileClipboard.value; if (clipboard && clipboardAvailable.value) fileOperations.value?.openTransfer(clipboard.paths, clipboard.operation, selectedTargetDirectory()) }
+    else if (selectedKeys.value.length) libraryFileClipboard.value = { root: store.libraryPath, paths: topLevelPaths(selectedKeys.value), operation: e.key.toLowerCase() === 'x' ? 'move' : 'copy' }
+    return
+  }
+  if (inFileTree && !fileOperationBusy.value && e.key === 'F2' && selectedKeys.value.length > 0) {
     const path = selectedKeys.value[0]
     const option = findTreeOptionByKey(treeData.value, path)
     openRename(path, option ? !option.isLeaf : false)
   }
-  if (e.key === 'Delete' && selectedKeys.value.length > 0) deleteAction(selectedKeys.value)
+  if (inFileTree && !fileOperationBusy.value && e.key === 'Delete' && selectedKeys.value.length > 0) { e.preventDefault(); if (e.shiftKey) void deleteAction(selectedKeys.value); else void fileOperations.value?.recycle(selectedKeys.value) }
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentFile() }
   if (e.altKey && e.key === 'a') { e.preventDefault(); handleAIAssist() }
 }

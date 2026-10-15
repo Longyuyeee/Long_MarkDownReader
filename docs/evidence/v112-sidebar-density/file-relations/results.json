@@ -1,0 +1,95 @@
+{
+  "checks": [
+    "The common editor action sits next to Focus for an actual CSV editor; choosing PDF, relation type and note saves through the shared dialog, failure retains the inputs and repeated save keeps one record",
+    "The compact sidebar exposes adding relations for a CSV directly; Image/JSON relationships save from this entry, and the graph supports creation, immediate refresh and removal",
+    "The graph entry remains visible at narrow widths, arbitrary attachment types remain selectable and six styles fit the dialog without horizontal overflow"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "12px"
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "4px"
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "14px"
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "10px"
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "6px"
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "0px"
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "overflow": false,
+      "bodyOverflow": false,
+      "radius": "0px"
+    }
+  ],
+  "errors": [],
+  "scope": "Actual App/LibraryMode/TableView/GraphView and relation dialog; isolated catalog/persistence/graph replies. Native persistence and graph merge tested separately on real files."
+}

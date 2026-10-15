@@ -9,9 +9,9 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
   assert.equal(runtime.status, 'passed-installed-tauri-webview2')
   assert.equal(runtime.checksPassed, 18)
   assert.equal(runtime.routesPassed, 11)
-  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1'].includes(manifest.appVersion))
+  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2'].includes(manifest.appVersion))
   const versionCandidate = manifest.appVersion !== '1.0.22'
-  const evidenceRoot = manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
+  const evidenceRoot = manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
   const reports = Object.fromEntries(Object.entries(runtime.reports).map(([name, item]) => {
     assert.equal(item.path, evidenceRoot + path.posix.basename(item.path))
     const bytes = read(item.path)
@@ -19,7 +19,27 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     return [name, JSON.parse(bytes)]
   }))
   const { workspace, routes, search, version, stability } = reports
-  if (manifest.appVersion === '1.1.1') {
+  if (manifest.appVersion === '1.1.2') {
+    const files = reports.fileManagement
+    assert.equal(files.status, 'passed')
+    assert.equal(files.appVersion, manifest.appVersion)
+    assert.equal(files.sourceCommit, manifest.sourceCommit)
+    assert.equal(files.installerSha256, manifest.artifacts.find(a => a.target === 'nsis').sha256)
+    assert.equal(files.evidenceLevel, 'installed-tauri-ipc-and-disk')
+    assert.equal(files.sourceUserContentIncluded, false)
+    assert.deepEqual(files.checks.map(c => [c.id, c.status]), [
+      'context-duplicate-writes-real-copy-and-preserves-source',
+      'move-dialog-creates-directory-and-updates-active-path',
+      'context-undo-restores-original-file',
+      'recycle-keeps-recoverable-content-without-source-file',
+      'recycle-dialog-restores-real-file',
+      'native-copy-command-preserves-source-and-new-directory',
+      'native-purge-removes-only-selected-trash-content',
+      'native-move-and-undo-commands-registered',
+      'no-global-error-overlay-after-file-operations',
+    ].map(id => [id, 'passed']))
+  }
+  if (['1.1.1', '1.1.2'].includes(manifest.appVersion)) {
     const experience = reports.experience
     assert.equal(experience.status, 'passed')
     assert.equal(experience.appVersion, manifest.appVersion)
@@ -34,7 +54,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'renaming-retains-file-relationship', 'removing-relation-retains-both-files',
     ].map(id=>[id,'passed']))
   }
-  if (['1.1.0', '1.1.1'].includes(manifest.appVersion)) {
+  if (['1.1.0', '1.1.1', '1.1.2'].includes(manifest.appVersion)) {
     const workflow = reports.workflow
     assert.equal(workflow.status, 'passed')
     assert.equal(workflow.appVersion, manifest.appVersion)

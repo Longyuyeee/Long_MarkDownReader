@@ -6,9 +6,20 @@ import { test } from 'node:test'
 
 const context = vm.createContext({ exports: {} })
 vm.runInContext(ts.transpile(fs.readFileSync('src/utils/fileDisplayStyles.ts', 'utf8'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }), context)
-const { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries, fileMarkerColors } = context.exports
+const { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries, copyFileDisplayStyleEntries, fileMarkerColors } = context.exports
 const style = { backgroundColor: '#ffe0eb', textColor: '', icon: 'rocket', selectionStyle: 'outline', selectedTextColor: '#243e59', selectedAccentColor: '#4d8fde' }
 const plain = value => JSON.parse(JSON.stringify(value))
+
+test('File and folder copies keep source styles and create independent styles on the copied paths', () => {
+  const source = { 'C:/Vault/Folder/Plan.md': style, 'C:/Vault/Folder/Nested/Note.md': style, 'C:/Vault/Folder-other/Plan.md': style }
+  const copied = plain(copyFileDisplayStyleEntries(source, '\\\\?\\c:\\vault\\folder', 'C:/Vault/Copy'))
+  assert.deepEqual(copied['c:/vault/copy/plan.md'], style)
+  assert.deepEqual(copied['c:/vault/copy/nested/note.md'], style)
+  assert.deepEqual(copied['c:/vault/folder/plan.md'], style)
+  copied['c:/vault/copy/plan.md'].icon = 'heart'
+  assert.equal(copied['c:/vault/folder/plan.md'].icon, 'rocket')
+  assert.equal(copied['c:/vault/copy-other/plan.md'], undefined)
+})
 
 test('Windows paths keep one file identity across canonical prefixes, slash/case variations and UNC paths', () => {
   assert.equal(fileStylePathKey('\\\\?\\C:\\Vault\\Plan.md'), fileStylePathKey('c:/vault/plan.md'))
