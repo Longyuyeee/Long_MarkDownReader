@@ -11,7 +11,8 @@
     "Cross-library open blocks unsaved drafts; a clean open switches to the configured library and opens in the main workspace",
     "Escape closes the panel after scope selection or a rejected click without refocusing the input; pending library persistence is announced and cannot be canceled or double-submitted mid-write",
     "Windows canonical search paths with the native extended prefix open in the actual main TXT editor, without claiming the configured library was removed",
-    "Switching libraries with a delayed directory reply keeps the real file tree visible and permits returning to the first library, without manual refresh or disabling normal motion"
+    "Switching libraries with a delayed directory reply keeps the real file tree visible and permits returning to the first library, without manual refresh or disabling normal motion",
+    "Opening an ordinary Windows nested path does not strand a canonical-key file tree; an explicit refresh reveals newly added files with normal motion"
   ],
   "layouts": [
     {

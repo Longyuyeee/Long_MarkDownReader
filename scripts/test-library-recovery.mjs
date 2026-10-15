@@ -14,6 +14,7 @@ function loader() {
   const ctx = vm.createContext({
     store: { libraryPath: 'library-a' }, treeData: box(['old']), libraryLoadError: box(''),
     libraryLoading: box(false), libraryCreating: box(false), libraryLoadGeneration: 0,
+    pendingTreeReveal: null,
     loadDirectory: path => { const task = deferred(); requests.push({ path, ...task }); return task.promise },
     invoke: async () => {},
     fetchLibStats: async () => {}, fetchAllTags: async () => {}, refreshKnowledgeIndexStatus: async () => {},

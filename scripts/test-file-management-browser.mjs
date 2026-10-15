@@ -87,7 +87,12 @@ try {
  checks.push('Permanently deleting selected recycle entries uses a separate confirmation, clears their recoverable content and keeps the source note')
  for(const style of ['soft','neo','glass','airy','minimal','sharp'])for(const width of [1280,480]){
    await page.setViewportSize({width,height:950});await page.evaluate(style=>{window.workflowAudit.store.visualStyle=style;window.workflowAudit.store.theme=style==='glass'?'dark':'green'},style)
+   // Let ResizeObserver apply the new breakpoint, then approach the navigation
+   // control as a user would; never click a still-sliding, now-hidden file row.
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+   await page.waitForFunction(()=>!document.getAnimations().some(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity))
    if(await page.getByRole('button',{name:'导航',exact:true}).getAttribute('aria-expanded')==='false')await page.getByRole('button',{name:'导航',exact:true}).click()
+   await page.waitForFunction(()=>!document.getAnimations().some(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity))
    await right(project,'移动到…')
    const geometry=await transfer.evaluate(el=>({style:document.body.dataset.style,width:innerWidth,overflow:el.scrollWidth>el.clientWidth}))
    assert.equal(geometry.overflow,false);layouts.push(geometry);await transfer.getByRole('button',{name:'取消',exact:true}).click()

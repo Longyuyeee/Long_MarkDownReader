@@ -7,11 +7,17 @@ audit.disk.set(root + '/项目预算.txt', '项目预算确认'); audit.disk.set
 audit.disk.set('C:/study-fixture/跨库笔记.md', '# 跨库笔记\n\n保留原项目资料。')
 audit.disk.set('C:/study-fixture/跨库资料.txt', '项目预算另库资料')
 audit.slowDirectory = false
+audit.canonicalDirectory = false
 const hit = (title, path, objectType, context) => ({ title, path, objectType, context, matchKind: 'body', score: 60, extractionFailed: false })
 const hits = [hit('项目预算.txt', root + '/项目预算.txt', 'plain-text', '项目预算确认'), hit('预算配置.json', root + '/预算配置.json', 'json', '项目预算参数')]
 const nativePath = '\\\\?\\' + (root + '/项目预算.txt').replaceAll('/', '\\')
 const pathIdentity = path => path.replaceAll('\\', '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').toLowerCase()
 window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
+  if (command === 'scan_directory' && audit.canonicalDirectory) {
+    const plain = args.path.replace(/^\\\\\?\\/, '').replaceAll('\\', '/')
+    const entries = await original(command, { ...args, path: plain })
+    return entries.map(entry => ({ ...entry, path: '\\\\?\\' + entry.path.replaceAll('/', '\\') }))
+  }
   if (command === 'scan_directory' && audit.slowDirectory && args.path === 'C:/study-fixture') await new Promise(resolve => setTimeout(resolve, 250))
   // Model the same file returned by Windows canonicalize; do not strip the
   // result before the production component checks configured library membership.

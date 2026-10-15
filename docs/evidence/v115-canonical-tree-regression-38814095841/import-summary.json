@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "status": "failed-native-canonical-tree-key-alias",
+  "appVersion": "1.1.5",
+  "productSourceCommit": "c3732a616e7c8b73cc50bef57b9f1aa596f438f5",
+  "harnessSourceCommit": "f2905cf00e2deeced7c844115957606fff1e1702",
+  "buildRunId": 38808805344,
+  "reviewRunId": 38814095841,
+  "sourceUserContentIncluded": false,
+  "fileManagementChecksPassed": 0,
+  "fileManagementChecksRequired": 9,
+  "observation": "Actual scan and Tree data include the new file; expansion uses an ordinary nested Windows path while native node keys have the extended prefix. animationInProgress=true and displayedKeys remain stale. Window visible/focused, motion calm. Product installer withdrawn.",
+  "files": [
+    {
+      "path": "installed-v112-failure.jpg",
+      "sizeBytes": 95393,
+      "sha256": "65d36c97a313185ef77ab6afb8e9cbc7eda09bb8b0841c978175577a05ade8a7"
+    },
+    {
+      "path": "installed-v112-workflow.json",
+      "sizeBytes": 5272,
+      "sha256": "2b3f520e6e8286eedd3bbf335a779038895faef4f5a8ed08418d9136058c9f95"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1400,
+      "sha256": "ab23c23a7e2b32ad6e8f9600dfc26dbb661d5bbe0d3c118e521f57ca1bdea666"
+    }
+  ]
+}

@@ -157,7 +157,7 @@
                 <n-tree 
                   v-else
                   :key="store.libraryPath"
-                  :animated="!libraryLoading"
+                  :animated="!libraryLoading && !treeRevealInProgress"
                   ref="treeInstRef"
                   class="library-file-tree"
                   :theme-overrides="fileTreeThemeOverrides"
@@ -827,7 +827,7 @@ import { useImageFix } from '../composables/useImageFix'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
-import { libraryTreeAncestors } from '../utils/libraryTreeAncestors'
+import { resolveLibraryTreeAncestors } from '../utils/libraryTreeAncestors'
 import type { GraphData } from '../types/graph'
 import {
   CREATABLE_FILE_FORMATS,
@@ -1574,6 +1574,11 @@ const fileSelectionAnchor = ref('')
 const filePointerSelecting = ref(false)
 const filePointerSelection = ref<string[]>([])
 const expandedKeys = ref<string[]>([])
+const treeRevealInProgress = ref(false)
+let treeRevealGeneration = 0
+let pendingTreeReveal: { path: string; directory: boolean } | null = null
+let treeRevealDisposed = false
+onBeforeUnmount(() => { treeRevealDisposed = true; ++treeRevealGeneration })
 let vditor: any = null
 const documentShortcutHost = ref<HTMLElement | null>(null)
 const documentPreviewActive = ref(false)
@@ -2549,6 +2554,7 @@ const refreshLibrary = async () => {
     const recovered = Boolean(libraryLoadError.value)
     treeData.value = entries
     libraryLoadError.value = ''
+    await applyPendingTreeReveal(true)
     if (path && recovered) {
       void fetchLibStats()
       void fetchAllTags()
@@ -2561,6 +2567,35 @@ const refreshLibrary = async () => {
   } finally {
     if (isCurrent()) libraryLoading.value = false
   }
+}
+const applyPendingTreeReveal = async (duringRootLoad = false) => {
+  const request = pendingTreeReveal
+  if (!request || (libraryLoading.value && !duringRootLoad)) return
+  const generation = ++treeRevealGeneration, root = store.libraryPath, loadGeneration = libraryLoadGeneration
+  const isCurrent = () => !treeRevealDisposed && generation === treeRevealGeneration
+    && root === store.libraryPath && loadGeneration === libraryLoadGeneration && request === pendingTreeReveal
+  // Only programmatic reveal is atomic. User folder expand/collapse keeps the
+  // normal tree animation once the real entries and expansion keys are ready.
+  treeRevealInProgress.value = true
+  try {
+    await nextTick()
+    const keys = await resolveLibraryTreeAncestors(root, request.path, treeData.value, handleLoadChildren, { directory: request.directory, isCurrent })
+    if (!isCurrent()) return
+    expandedKeys.value = [...new Set([...expandedKeys.value, ...keys])]
+    const node = findTreeOptionByKey(treeData.value, request.path)
+    const revealSelection = node && typeof node.key === 'string' && selectedKeys.value.length === 1
+      && sameWorkspacePath(selectedKeys.value[0], request.path)
+    if (revealSelection) selectedKeys.value = [node.key as string]
+    pendingTreeReveal = null
+    await nextTick()
+    if (generation === treeRevealGeneration && revealSelection) treeInstRef.value?.scrollTo({ key: node.key!, behavior: 'smooth' })
+  } finally { if (generation === treeRevealGeneration) treeRevealInProgress.value = false }
+}
+const requestLibraryTreeReveal = (path: string | null, directory = false) => {
+  ++treeRevealGeneration
+  treeRevealInProgress.value = false
+  pendingTreeReveal = path ? { path, directory } : null
+  return applyPendingTreeReveal()
 }
 const createMissingLibraryDirectory = async () => {
   if (libraryCreating.value || !store.libraryPath) return
@@ -2578,9 +2613,7 @@ const revealLibraryFile = async (event: Event) => {
   if (!path) return
   await refreshLibrary()
   selectedKeys.value = [path]
-  expandedKeys.value = [...new Set([...expandedKeys.value, ...libraryTreeAncestors(store.libraryPath, path)])]
-  await nextTick()
-  window.setTimeout(() => treeInstRef.value?.scrollTo({ key: path, behavior: 'smooth' }), 120)
+  await requestLibraryTreeReveal(path)
 }
 const refreshCreatedLibraryFile = () => { void refreshLibrary() }
 const stopRelationChanges = onFileRelationsChanged(root => { if (sameWorkspacePath(root, store.libraryPath)) void refreshRelationSummaries() })
@@ -2598,7 +2631,7 @@ const refreshNode = async (path: string) => {
   }
   const patch = (nodes: TreeOption[]): boolean => {
     for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i].key === path) { nodes[i].children = syncNodes(nodes[i].children || [], newEntries); return true }
+      if (typeof nodes[i].key === 'string' && sameWorkspacePath(nodes[i].key as string, path)) { nodes[i].children = syncNodes(nodes[i].children || [], newEntries); return true }
       const childNodes = nodes[i].children; if (childNodes && patch(childNodes)) return true
     }
     return false
@@ -2608,10 +2641,7 @@ const refreshNode = async (path: string) => {
   } else {
     // 节点不在树中 (如首次创建 Daily 目录)，全量刷新
     treeData.value = await loadDirectory(store.libraryPath)
-    // 展开新创建的父目录
-    if (!expandedKeys.value.includes(path)) {
-      expandedKeys.value = [...expandedKeys.value, path]
-    }
+    await requestLibraryTreeReveal(path, true)
   }
 }
 
@@ -3071,7 +3101,7 @@ const onMouseUp = async (event: MouseEvent) => {
         })
         for (const p of parentsToRefresh) await refreshNode(p)
 
-        if (!sameWorkspacePath(finalTargetDir, store.libraryPath) && !expandedKeys.value.includes(finalTargetDir)) expandedKeys.value = [...expandedKeys.value, finalTargetDir]
+        await requestLibraryTreeReveal(finalTargetDir, true)
         const separator = finalTargetDir.includes('\\') ? '\\' : '/'
         selectedKeys.value = sourcePaths.map(path => `${finalTargetDir}${separator}${fileNameWithExtension(path)}`)
         await nextTick()
@@ -3180,7 +3210,7 @@ const scheduleFilePreview = (option: TreeOption, x: number, y: number, delay: nu
 }
 const findTreeOptionByKey = (nodes: TreeOption[], key: string): TreeOption | null => {
   for (const node of nodes) {
-    if (sameWorkspacePath(node.key as string, key)) return node
+    if (typeof node.key === 'string' && sameWorkspacePath(node.key, key)) return node
     const nested = node.children ? findTreeOptionByKey(node.children, key) : null
     if (nested) return nested
   }
@@ -3414,8 +3444,8 @@ const onMenuAction = async (key: string) => {
     try {
       const template = formatId === 'markdown' ? defaultNoteTemplate.value : undefined
       const created = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, path) : await createRegisteredFile(formatId, path, undefined, undefined, extension)
-      if (!sameWorkspacePath(path, store.libraryPath) && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
       await refreshNode(path)
+      await requestLibraryTreeReveal(path, true)
       handleNodeSelect([created])
     } catch (error: any) {
       handleError(error, '创建失败', 'contextCreateFormat')
@@ -3423,8 +3453,8 @@ const onMenuAction = async (key: string) => {
   } else if (key === 'create-folder') {
     try {
       await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: path })
-      if (!sameWorkspacePath(path, store.libraryPath) && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
       await refreshNode(path)
+      await requestLibraryTreeReveal(path, true)
     } catch (error: any) {
       handleError(error, '创建文件夹失败', 'contextCreateFolder')
     }
@@ -4586,6 +4616,7 @@ const scheduleKnowledgeSearch = (q: string) => {
 }
 watch(searchQuery, scheduleKnowledgeSearch)
 watch(activeTabId, (newId, oldId) => { 
+  void requestLibraryTreeReveal(newId)
   if (newId && newId !== oldId) { 
     const t = tabs.value.find(item => item.id === newId); 
     if (t && findFileFormat(t.path)?.routeName === 'LibraryMode' && !ensureVditorModeForFile(t.path)) loadFileToEditor(t.path)
@@ -4593,20 +4624,7 @@ watch(activeTabId, (newId, oldId) => {
     // 侧边栏自动同步逻辑
     selectedKeys.value = [newId]
     
-    // Only in-library directories are real tree nodes. Expanding the invisible
-    // library/drive root can strand Naive UI's animation cache on an empty tree.
-    const newExpanded = [...expandedKeys.value]
-    for (const parent of libraryTreeAncestors(store.libraryPath, newId)) {
-      if (!newExpanded.includes(parent)) newExpanded.push(parent)
-    }
-    expandedKeys.value = newExpanded
 
-    // 利用官方 API 实现精准平滑滚动 (彻底解决自动滚动失效)
-    nextTick(() => {
-      setTimeout(() => {
-        treeInstRef.value?.scrollTo({ key: newId, behavior: 'smooth' })
-      }, 300)
-    })
   } 
 })
 </script>

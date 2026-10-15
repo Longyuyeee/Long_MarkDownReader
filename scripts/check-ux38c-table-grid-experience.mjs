@@ -33,7 +33,10 @@ for (const token of [
   "window.addEventListener('longedit:reveal-library-file', revealLibraryFile)",
   "window.addEventListener('longedit:library-file-created', refreshCreatedLibraryFile)",
   'selectedKeys.value = [path]',
-  "treeInstRef.value?.scrollTo({ key: path, behavior: 'smooth' })",
+  'await requestLibraryTreeReveal(path)',
+  'const node = findTreeOptionByKey(treeData.value, request.path)',
+  'if (revealSelection) selectedKeys.value = [node.key as string]',
+  "treeInstRef.value?.scrollTo({ key: node.key!, behavior: 'smooth' })",
   "window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)",
 ]) if (!library.includes(token)) fail(`Library reveal contract token missing: ${token}`)
 

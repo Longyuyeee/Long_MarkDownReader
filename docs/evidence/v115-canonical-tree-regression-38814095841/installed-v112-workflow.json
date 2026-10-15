@@ -1,0 +1,131 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "c3732a616e7c8b73cc50bef57b9f1aa596f438f5",
+  "installerSha256": "e9e868ce1c1007ed48321966e89a3a0a702a8214ae70ca0a43baa5ece4931035",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [],
+  "error": "Error: Timed out waiting for new file in native tree",
+  "failureDirectory": [
+    {
+      "name": "release-v110-workflow",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\release-v110-workflow",
+      "is_dir": true
+    },
+    {
+      "name": "release-v111-workflow",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\release-v111-workflow",
+      "is_dir": true
+    },
+    {
+      "name": "g15c-linked-follow-up.md",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\g15c-linked-follow-up.md",
+      "is_dir": false
+    },
+    {
+      "name": "r5i-library-marker.txt",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\r5i-library-marker.txt",
+      "is_dir": false
+    },
+    {
+      "name": "r5j-config.json",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-config.json",
+      "is_dir": false
+    },
+    {
+      "name": "r5j-network.canvas",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+      "is_dir": false
+    },
+    {
+      "name": "r5j-north-star.md",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+      "is_dir": false
+    },
+    {
+      "name": "r5j-notes.txt",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-notes.txt",
+      "is_dir": false
+    },
+    {
+      "name": "r5j-plan.md",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+      "is_dir": false
+    },
+    {
+      "name": "release-v112-note.md",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-note.md",
+      "is_dir": false
+    },
+    {
+      "name": "UX33J LibreOffice Writer Hyperlinks-1792101722110-9064.docx",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\UX33J LibreOffice Writer Hyperlinks-1792101722110-9064.docx",
+      "is_dir": false
+    },
+    {
+      "name": "UX33J Microsoft Word Hyperlinks-1792101722110-9064.docx",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\UX33J Microsoft Word Hyperlinks-1792101722110-9064.docx",
+      "is_dir": false
+    },
+    {
+      "name": "UX33J WPS Writer Hyperlinks-1792101722110-9064.docx",
+      "path": "\\\\?\\C:\\LongEditR5ILibrary\\UX33J WPS Writer Hyperlinks-1792101722110-9064.docx",
+      "is_dir": false
+    }
+  ],
+  "failureTree": {
+    "motion": "calm",
+    "visible": "visible",
+    "focused": true,
+    "trees": [
+      {
+        "dataKeys": [
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v110-workflow",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v111-workflow",
+          "\\\\?\\C:\\LongEditR5ILibrary\\g15c-linked-follow-up.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5i-library-marker.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-config.json",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-notes.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-note.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J LibreOffice Writer Hyperlinks-1792101722110-9064.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J Microsoft Word Hyperlinks-1792101722110-9064.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J WPS Writer Hyperlinks-1792101722110-9064.docx"
+        ],
+        "expandedKeys": {
+          "0": "C:\\LongEditR5ILibrary\\release-v111-workflow"
+        },
+        "animationInProgress": true,
+        "displayedKeys": [
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v110-workflow",
+          "\\\\?\\C:\\LongEditR5ILibrary\\g15c-linked-follow-up.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5i-library-marker.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-config.json",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-notes.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J LibreOffice Writer Hyperlinks-1792101722110-9064.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J Microsoft Word Hyperlinks-1792101722110-9064.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J WPS Writer Hyperlinks-1792101722110-9064.docx"
+        ]
+      }
+    ],
+    "visiblePaths": [
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v110-workflow",
+      "\\\\?\\C:\\LongEditR5ILibrary\\g15c-linked-follow-up.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5i-library-marker.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-config.json",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-notes.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\UX33J LibreOffice Writer Hyperlinks-1792101722110-9064.docx",
+      "\\\\?\\C:\\LongEditR5ILibrary\\UX33J Microsoft Word Hyperlinks-1792101722110-9064.docx",
+      "\\\\?\\C:\\LongEditR5ILibrary\\UX33J WPS Writer Hyperlinks-1792101722110-9064.docx"
+    ]
+  }
+}

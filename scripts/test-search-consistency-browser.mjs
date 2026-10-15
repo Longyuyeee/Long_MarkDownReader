@@ -117,6 +117,28 @@ try {
   await page.locator('[data-drop-path="C:/workflow-fixture/项目预算.txt"]').waitFor({ state: 'visible' })
   await page.screenshot({ path: output + '/navigation-root-result.png' })
   checks.push('Switching libraries with a delayed directory reply keeps the real file tree visible and permits returning to the first library, without manual refresh or disabling normal motion')
+  await page.goto((process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9015') + '/scripts/fixtures/search-consistency-browser.html')
+  await page.evaluate(() => { const a = window.workflowAudit; a.canonicalDirectory = true; a.directories.push('C:/workflow-fixture/嵌套目录'); a.disk.set('C:/workflow-fixture/嵌套目录/原有笔记.md', '# 原有嵌套笔记') })
+  await page.getByRole('link', { name: '资料库', exact: true }).click()
+  await page.evaluate(() => window.workflowAudit.router.push('/library?path=' + encodeURIComponent('C:/workflow-fixture/嵌套目录/原有笔记.md')))
+  await page.waitForFunction(() => document.querySelector('#vditor-lib')?.textContent.includes('原有嵌套笔记'))
+  await page.evaluate(() => window.workflowAudit.disk.set('C:/workflow-fixture/刚刚添加.txt', '用户刚刚添加的资料'))
+  await page.locator('#panel-files button[aria-label="刷新列表"], #panel-files button[data-app-tooltip="刷新列表"], #panel-files button[title="刷新列表"]').click()
+  try { await page.waitForFunction(() => [...document.querySelectorAll('[data-drop-path]')].some(e => e.getClientRects().length && e.dataset.dropPath.replaceAll('\\', '/').endsWith('/刚刚添加.txt'))) }
+  catch (error) {
+    const state = await page.locator('.library-file-tree').evaluate(element => { const c = element.__vueParentComponent; return { motion: document.body.dataset.motion, dataKeys: c?.props.data?.map(x => x.key), animationInProgress: c?.setupState.aip, displayedKeys: c?.setupState.fNodes?.map(x => x.key), expandedKeys: c?.props.expandedKeys } })
+    await fs.writeFile(output + '/canonical-nested-before-fix.json', JSON.stringify(state, null, 2) + '\n')
+    await page.screenshot({ path: output + '/canonical-nested-before-fix.png' }); throw error
+  }
+  await page.waitForFunction(() => !document.getAnimations().some(a => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity))
+  assert.equal(await page.locator('.library-file-tree').evaluate(e => e.__vueParentComponent.props.animated), true)
+  assert.match(await page.locator('[data-drop-path]').filter({ hasText: '原有笔记.md' }).getAttribute('class'), /n-tree-node--selected/)
+  const nestedFolder = page.locator('[data-drop-path]').filter({ hasText: '嵌套目录' }).locator('.n-tree-node-switcher')
+  await nestedFolder.click(); await page.locator('[data-drop-path]').filter({ hasText: '原有笔记.md' }).waitFor({ state: 'hidden' })
+  await nestedFolder.click(); await page.locator('[data-drop-path]').filter({ hasText: '原有笔记.md' }).waitFor({ state: 'visible' })
+  await page.waitForFunction(() => !document.getAnimations().some(a => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity))
+  await page.screenshot({ path: output + '/canonical-nested-result.png' })
+  checks.push('Opening an ordinary Windows nested path does not strand a canonical-key file tree; an explicit refresh reveals newly added files with normal motion')
   assert.deepEqual(errors, [])
   await fs.writeFile(output + '/report.json', JSON.stringify({ scope: 'Actual App/CommandPalette/LibraryMode components and input; simulated native search. Grammar and real files tested separately.', motion: 'calm (normal animations enabled)', checks, layouts, errors }, null, 2) + '\n')
   console.log(JSON.stringify({ checks: checks.length, layouts: layouts.length, errors: errors.length }))

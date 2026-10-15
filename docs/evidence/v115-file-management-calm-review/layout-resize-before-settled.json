@@ -1,0 +1,156 @@
+{
+  "error": "TimeoutError: locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-drop-path=\"C:/workflow-fixture/项目方案.md\"]')\u001b[22m\n\u001b[2m    - locator resolved to <div draggable=\"false\" data-tree-depth=\"0\" data-drop-dir=\"false\" aria-describedby=\"file-tree-detail-preview\" data-drop-path=\"C:/workflow-fixture/项目方案.md\" class=\"n-tree-node n-tree-node--selected n-tree-node--selectable n-tree-node--clickable has-file-display-style selection-marker\">…</div>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not stable\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is not stable\u001b[22m\n\u001b[2m  2 × retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-v-0e5bd61f=\"\" class=\"library-workspace\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  6 × retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - element is outside of the viewport\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-v-0e5bd61f=\"\" class=\"library-workspace\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-v-0e5bd61f=\"\" class=\"library-workspace\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m      - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-v-0e5bd61f=\"\" class=\"library-workspace\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - element is outside of the viewport\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m    - element is visible, enabled and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div data-v-0e5bd61f=\"\" class=\"library-workspace\">…</div> intercepts pointer events\u001b[22m\n\u001b[2m  - retrying click action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n",
+  "errors": [],
+  "checks": [
+    "Creating a duplicate uses the right-click action, keeps the source/active editor and copies the custom display style",
+    "Moving via a directory modal updates the open tab and tree; right-click undo restores the original path and appearance",
+    "Copy to a typed new directory preserves the original; a local write failure retains the input and retries only unfinished items",
+    "Cut/paste from folder context opens the correct destination modal and clears completed move clipboard entries",
+    "Editor Delete never deletes selected files; recycle removes the selected file, closes its tab and restores it through the dialog without deleting display metadata",
+    "Multiple selected files share one right-click duplicate action and one native request, with both originals retained",
+    "Permanently deleting selected recycle entries uses a separate confirmation, clears their recoverable content and keeps the source note"
+  ],
+  "state": {
+    "active": "C:/workflow-fixture/项目方案.md",
+    "tabs": [
+      {
+        "id": "C:/workflow-fixture/会议记录.md",
+        "path": "C:/workflow-fixture/会议记录.md",
+        "title": "会议记录.md",
+        "content": "# 会议记录\n\n先确定保存的位置，再开始记录。\n",
+        "isDirty": false
+      },
+      {
+        "id": "C:/workflow-fixture/项目方案.md",
+        "title": "项目方案",
+        "path": "C:/workflow-fixture/项目方案.md",
+        "isDirty": false,
+        "content": "# 项目方案\n\n让阅读、记录和继续工作更顺手。\n\n## 下一步\n\n- [ ] 整理项目需求\n",
+        "textSignature": "# 项目方案\n\n让阅读、记录和继续工作更顺手。\n\n## 下一步\n\n- [ ] 整理项目需求\n",
+        "textContentDigest": "# 项目方案\n\n让阅读、记录和继续工作更顺手。\n\n## 下一步\n\n- [ ] 整理项目需求\n",
+        "textEncoding": "utf-8",
+        "textBom": "none",
+        "textLineEnding": "lf",
+        "textHasFinalNewline": true,
+        "textSize": 46,
+        "textModified": 1
+      }
+    ],
+    "mode": "wysiwyg",
+    "route": "/library?path=C:/workflow-fixture/%E9%A1%B9%E7%9B%AE%E6%96%B9%E6%A1%88.md",
+    "calls": [
+      {
+        "command": "scan_directory",
+        "args": {
+          "libraryRoot": "C:/workflow-fixture",
+          "path": "C:/workflow-fixture"
+        }
+      },
+      {
+        "command": "list_history",
+        "args": {
+          "libraryRoot": "C:/workflow-fixture",
+          "path": "C:/workflow-fixture/项目方案.md"
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 56,
+          "dirty": true
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 57,
+          "dirty": true
+        }
+      },
+      {
+        "command": "get_library_stats",
+        "args": {
+          "path": "C:/workflow-fixture"
+        }
+      },
+      {
+        "command": "get_all_tags",
+        "args": {
+          "libraryRoot": "C:/workflow-fixture"
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 58,
+          "dirty": false
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 59,
+          "dirty": false
+        }
+      },
+      {
+        "command": "list_library_trash",
+        "args": {
+          "libraryRoot": "C:/workflow-fixture"
+        }
+      },
+      {
+        "command": "purge_library_trash",
+        "args": {
+          "libraryRoot": "C:/workflow-fixture",
+          "ids": [
+            "1"
+          ]
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 60,
+          "dirty": true
+        }
+      },
+      {
+        "command": "list_library_trash",
+        "args": {
+          "libraryRoot": "C:/workflow-fixture"
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 61,
+          "dirty": true
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 62,
+          "dirty": false
+        }
+      },
+      {
+        "command": "report_window_draft_session",
+        "args": {
+          "session": "workflow-fixture",
+          "sequence": 63,
+          "dirty": false
+        }
+      }
+    ],
+    "text": "Long编辑\n资料库\n工作台\n图谱\n设置\n项目资料库\n▾\n会议记录.md\n项目方案\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n新建\n收集箱\n4对象·0关系\nInbox\n参考资料\n调研.md\n灵感.md\n新项目\n会议\n项目方案.md\n会议记录.md\n项目方案 - 副本.md\n项目方案.md\n项目方案 - 副本 2.md\n4 篇笔记\n100 词\n当前资料库\nv1.0.26\nDEV\n项目资料库\n项目方案.md\n预览\n专注\n添加关系\nAI 辅助\n参考\n保存\n文档操作\n更多格式\n所见 ▾\n中栏 ▾\n导出\n历史\n项目方案\n\n让阅读、记录和继续工作更顺手。\n\n下一步\n 整理项目需求\n已保存\nMarkdown · 完整编辑\nutf-8 · LF\n46 字 · 约 1 分钟 · 行 1:31"
+  }
+}
