@@ -13,6 +13,7 @@ pub mod file_relations;
 pub mod file_management;
 pub mod formats;
 pub mod quick_note;
+pub mod note_templates;
 pub mod git;
 pub mod graph;
 pub mod history;

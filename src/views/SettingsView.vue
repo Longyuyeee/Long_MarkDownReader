@@ -138,7 +138,7 @@
               <!-- R3 管理备份不包含文档正文或凭据，导入恢复要求路径重新映射。 -->
               <div class="info">
                 <div class="label">管理备份</div>
-                <div class="desc">导出脱敏配置、库清单摘要和能力合同，不包含文档正文或凭据</div>
+                <div class="desc">导出脱敏配置、库清单摘要和能力合同，不包含文档正文或凭据；自定义模板单独保留在本机</div>
               </div>
               <div class="backup-actions">
                 <n-button secondary :loading="backupExporting" @click="exportManagementBackup">
@@ -920,6 +920,7 @@ const importManagementBackup = async () => {
       `备份阶段：${preflight.stage} / schema ${preflight.schemaVersion}`,
       `将恢复：${preflight.redactedLibraryCount} 个知识库、${preflight.savedSearchCount} 个保存搜索。`,
       '不会恢复：文档正文、缓存正文、API Key、系统凭据、旧机器绝对路径；Git Remote 需恢复后手动重填。',
+      '自定义模板不在管理备份中，本机现有模板将保留。',
       preflight.warnings[0] ? `提示：${preflight.warnings[0]}` : '',
     ].filter(Boolean).join('\n')
     dialog.warning({

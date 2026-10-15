@@ -122,6 +122,8 @@ pub struct AppConfig {
     pub ai_model: String,
     pub saved_searches: Vec<SavedSearchConfig>,
     pub file_display_styles: HashMap<String, FileDisplayStyle>,
+    pub note_templates: Vec<super::note_templates::NoteTemplate>,
+    pub default_note_templates: HashMap<String, String>,
 }
 
 fn default_visual_style() -> String {
@@ -174,6 +176,8 @@ impl Default for AppConfig {
             ai_model: default_ai_model(),
             saved_searches: vec![],
             file_display_styles: HashMap::new(),
+            note_templates: vec![],
+            default_note_templates: HashMap::new(),
         }
     }
 }
@@ -518,6 +522,7 @@ pub fn save_config(app_handle: tauri::AppHandle, mut config: AppConfig) -> Resul
     }
     validate_saved_searches(&config.saved_searches, &config.libraries)?;
     validate_file_display_styles(&config.file_display_styles)?;
+    super::note_templates::validate_note_templates(&config.note_templates, &config.default_note_templates)?;
     normalize_editor_mode(&mut config);
     config.ai_api_key.clear();
     let content = serde_json::to_string_pretty(&config).map_err(|error| error.to_string())?;

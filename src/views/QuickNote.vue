@@ -6,7 +6,7 @@
       <label :title="target">保存到<select :value="target" :disabled="busy || !library" aria-label="保存到" @change="selectTarget"><option :value="inbox">收集箱</option><option :value="library">根目录</option><option v-if="target && target !== inbox && target !== library" :value="target">{{ target }}</option><option value="__choose">选择目录…</option></select></label>
     </div>
     <div class="capture-destination" :title="target">{{ target ? `当前保存位置：${target}` : '先选择资料库和保存位置' }}</div>
-    <main><div class="capture-composer"><div class="capture-composer-heading"><span>写下想法</span><label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-for="name in Object.keys(NOTE_TEMPLATES)" :key="name">{{ name }}</option></select></label></div><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></div></main>
+    <main><div class="capture-composer"><div class="capture-composer-heading"><span>写下想法</span><label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-if="!store.allNoteTemplates.some(item => item.id === template)" :value="template">当前内容（模板已移除）</option><option v-for="item in store.allNoteTemplates" :key="item.id" :value="item.id">{{ item.name }}</option></select></label></div><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></div></main>
     <p role="status">{{ status || '仅点击保存时写入本地文件' }}</p>
     <footer><n-button size="small" quaternary :disabled="busy" @click="close">丢弃</n-button><label class="after-save">保存后<select v-model="afterSave" :disabled="busy" aria-label="保存后操作"><option value="close">关闭窗口</option><option value="continue">继续记录</option><option value="open">主编辑区打开</option></select></label><n-button size="small" type="primary" :loading="saving" :disabled="(busy && !saving) || !ready" @click="save">保存笔记</n-button></footer>
   </div>
@@ -20,12 +20,12 @@ import { emit, emitTo, listen } from '@tauri-apps/api/event'
 import { confirm, open } from '@tauri-apps/plugin-dialog'
 import { useMessage } from 'naive-ui'
 import { useAppStore } from '../store/app'
-import { NOTE_TEMPLATES } from '../config/noteTemplates'
+import { BLANK_NOTE_TEMPLATE, renderNoteTemplate, type NoteTemplate } from '../config/noteTemplates'
 import { inboxDirectory, rememberedCaptureTarget } from '../utils/inboxDirectory'
 import { recordWindowDraftActivity } from '../services/windowDrafts'
 
 const store = useAppStore(), message = useMessage()
-const content = ref(''), library = ref(''), target = ref(''), template = ref('空白笔记')
+const content = ref(''), library = ref(''), target = ref(''), template = ref(BLANK_NOTE_TEMPLATE)
 const afterSave = ref('close'), status = ref('')
 const saving = ref(false), choosing = ref(false), ready = ref(false)
 const busy = computed(() => saving.value || choosing.value)
@@ -36,19 +36,21 @@ let operationTarget: { libraryRoot: string; targetDir: string } | null = null
 const inbox = computed(() => inboxDirectory(library.value, store.libraries))
 const pendingInbox = ref<string | null>(null)
 let stopInboxUpdates: (() => void) | undefined
+let stopTemplateUpdates: (() => void) | undefined
 let disposed = false
 const preferenceKey = (root: string) => 'longedit.quick-note.target:' + root
 watch(library, root => {
   pendingInbox.value = null
   try { target.value = rememberedCaptureTarget(root, inbox.value, localStorage.getItem(preferenceKey(root))) }
   catch { target.value = root }
+  if (!content.value) applyDefaultTemplate()
 })
 watch([content, busy], ([value, active]) => {
   store.isTempDirty = value.length > 0 || active
   store.isCaptureBusy = active
   recordWindowDraftActivity()
 }, { flush: 'sync' })
-onUnmounted(() => { disposed = true; store.isTempDirty = false; store.isCaptureBusy = false; stopInboxUpdates?.() })
+onUnmounted(() => { disposed = true; store.isTempDirty = false; store.isCaptureBusy = false; stopInboxUpdates?.(); stopTemplateUpdates?.() })
 const applyPendingInbox = () => {
   if (pendingInbox.value !== null && !busy.value && !operationTarget) {
     target.value = pendingInbox.value; pendingInbox.value = null
@@ -67,6 +69,11 @@ onMounted(async () => {
       store.libraries = store.libraries.map(item => item.path === event.payload.root ? { ...item, inboxDirectory: event.payload.relative } : item)
     })
     if (disposed) { stopInboxUpdates(); return }
+    stopTemplateUpdates = await listen<{ noteTemplates: NoteTemplate[]; defaultNoteTemplates: Record<string, string> }>('note-templates-changed', event => {
+      store.noteTemplates = event.payload.noteTemplates
+      store.defaultNoteTemplates = event.payload.defaultNoteTemplates
+    })
+    if (disposed) { stopInboxUpdates(); stopTemplateUpdates(); return }
     await store.loadConfig(); library.value = store.activeLibraryPath; ready.value = true; await nextTick(); editor.value?.focus()
   }
   catch (error) { status.value = '读取资料库失败：' + String(error) }
@@ -88,15 +95,22 @@ const selectTarget = async (event: Event) => {
   finally { choosing.value = false }
 }
 const selectTemplate = async (event: Event) => {
-  const select = event.target as HTMLSelectElement, name = select.value
+  const select = event.target as HTMLSelectElement, id = select.value
   select.value = template.value
   choosing.value = true
   try {
     if (content.value && !await confirm('应用模板会替换当前未保存内容，是否继续？', { title: '替换笔记内容', kind: 'warning' })) return
-    template.value = name; content.value = NOTE_TEMPLATES[name] || ''
+    const item = store.allNoteTemplates.find(item => item.id === id)
+    if (!item) throw new Error('模板已不存在，请重新选择')
+    applyTemplate(item)
   } catch (error) { message.error('应用模板失败：' + String(error)) }
   finally { choosing.value = false; await nextTick(); editor.value?.focus() }
 }
+const applyTemplate = (item: NoteTemplate) => {
+  template.value = item.id
+  content.value = renderNoteTemplate(item.content, item.name === '空白笔记' ? '快速笔记' : item.name)
+}
+const applyDefaultTemplate = () => applyTemplate(store.allNoteTemplates.find(item => item.id === store.defaultNoteTemplates[library.value]) || store.allNoteTemplates[0])
 const openInMain = async (path: string, root: string) => {
   const requestId = crypto.randomUUID()
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -132,7 +146,7 @@ const save = async () => {
   } catch (error) { status.value = '保存失败，输入已保留：' + String(error); saving.value = false; return }
   operationId = crypto.randomUUID().replace(/-/g, '')
   operationTarget = null
-  content.value = ''; template.value = '空白笔记'
+  content.value = ''; template.value = BLANK_NOTE_TEMPLATE
   status.value = '已保存：' + savedPath
   try { localStorage.setItem(preferenceKey(library.value), target.value === inbox.value || pendingInbox.value !== null ? '__inbox' : target.value) } catch { /* Preferences cannot invalidate a saved file. */ }
   try {
@@ -140,7 +154,7 @@ const save = async () => {
     if (afterSave.value === 'open') await openInMain(savedPath, library.value)
     if (afterSave.value !== 'continue') { saving.value = false; await close() }
   } catch (error) { status.value = '文件已保存，无需重存。后续操作失败：' + String(error) + '。文件：' + savedPath }
-  finally { saving.value = false; await nextTick(); editor.value?.focus() }
+  finally { saving.value = false; if (afterSave.value === 'continue') applyDefaultTemplate(); await nextTick(); editor.value?.focus() }
 }
 </script>
 
