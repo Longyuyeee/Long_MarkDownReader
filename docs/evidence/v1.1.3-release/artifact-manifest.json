@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.1.3",
+  "status": "published-remote-assets-verified-hosted-lifecycle-and-runtime-smoke-passed",
+  "appVersion": "1.1.3",
+  "sourceVersion": "1.1.3",
+  "sourceCommit": "2854d7792caee2027e1138491a4754fa7a4871cc",
+  "hostedRunId": 38685649568,
+  "artifactBuildRunId": 38681814716,
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.1.3_x64_zh-CN.msi",
+      "sizeBytes": 76087296,
+      "sha256": "91ddccc556645e6517972217104a97e9e68e9720e4b5fe0f5e6ea4fbd3fca995",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.3_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.1.3_x64-setup.exe",
+      "sizeBytes": 67268456,
+      "sha256": "dd9d12308a963f572b56020cf15ee7ceb4866bb7d34764ae134fb8f33fde518b",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.3_x64-setup.exe"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 190,
+    "sha256": "2ca7aefafc00b3632221829405b4082d3900c715f037647df121798fafa0369c"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 38681814716
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "workspace": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "b06b72aa3cbe6ff4c1af858481bc740a87335574849a6a742fe2d41f7f80ebc8"
+      },
+      "version": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "d0eeb15175a248f515e2c0fa9296b82224aa263503a47703802196749c0587cf"
+      },
+      "workflow": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-v110-workflow.json",
+        "sha256": "75bec20191fd21463be8d041621a43fd6174fcd49b6ad1488db83727b46ed2d4"
+      },
+      "experience": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-v111-workflow.json",
+        "sha256": "d69f6ceae7c07b20f45b13fa77e716f4e11cfd1be233f6a90e9877984fada2db"
+      },
+      "fileManagement": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-v112-workflow.json",
+        "sha256": "ea6d02da6957798a4d2a91fd792fbd74176cf4d3badecc3d44bb6a07096018db"
+      },
+      "foundation": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-v113-workflow.json",
+        "sha256": "7fab57c59f1196e5bdfcefe7a82e25df1627ce7b64336c2dec1b68f2d811620a"
+      },
+      "routes": {
+        "path": "docs/evidence/v1-1-3-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "df1b943329189449b4f7721ff44c8222280af77d53b3c8bfb2356e2cc015802a"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 38685649568,
+    "sourceCommit": "2854d7792caee2027e1138491a4754fa7a4871cc",
+    "evidenceRoot": "docs/evidence/v1-1-3-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.1.3-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "workflowChecksPassed": 8,
+    "experienceChecksPassed": 8,
+    "fileManagementChecksPassed": 9,
+    "foundationChecksPassed": 8,
+    "versionChecksPassed": 4,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": true,
+    "managedUpdaterReleaseAssetsPresent": true,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": true,
+  "releaseReceipt": "release-receipt.json",
+  "publication": {
+    "runId": 38686056344,
+    "publicDownloadVerification": {
+      "path": "docs/evidence/v1.1.3-release/public-download-verification.json",
+      "sha256": "d55ced41ce8ea1c0532bfd4e68cef34bf05d1af22d2ffbdcbac42b764b3e0d2c"
+    }
+  }
+}

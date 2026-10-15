@@ -1,3 +1,5 @@
+> 发布接续：本功能现已随 [v1.1.3](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3) 正式发布，实际安装和附件结果见 [发布记录](V1_1_3_Unsigned_Community_Release_Audit_2026-10-15.md)。下方保留开发过程及验证范围。
+
 # 自定义笔记模板
 
 2026-10-15；开发分支 `codex/custom-note-templates`。公开版本仍为 1.1.2，下一目标 1.1.3。本批深化已确认的模板基础能力，不制作或发布新的安装包。
