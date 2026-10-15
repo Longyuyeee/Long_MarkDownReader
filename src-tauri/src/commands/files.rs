@@ -674,47 +674,83 @@ pub async fn import_to_library(
     target_dir: String,
 ) -> Result<String, String> {
     let source = access.resolve_import(&source_path)?;
-    let guard = WorkspaceGuard::new(&library_root)?;
-    let destination = if target_dir.is_empty() {
-        guard.root().to_path_buf()
-    } else {
-        guard.resolve_directory(&target_dir, false)?
-    };
-    if !destination.exists() {
-        fs::create_dir_all(&destination).map_err(|error| error.to_string())?;
-    }
-    let item_name = source.file_name().ok_or("无效文件名")?;
-    let target_path = destination.join(item_name);
-    fs::copy(&source, &target_path).map_err(|error| error.to_string())?;
-    if let Ok(content) = fs::read_to_string(&source) {
-        let parent = source.parent().ok_or("无效路径")?;
-        for relative_path in referenced_assets(&content) {
-            if relative_path.starts_with("http") || relative_path.starts_with("data:") {
-                continue;
-            }
-            let clean_relative = relative_path
-                .split('?')
-                .next()
-                .unwrap_or(&relative_path)
-                .replace("%20", " ");
-            let Ok(source_asset) = validate_path_in_root(&parent.join(&clean_relative), parent)
-            else {
-                continue;
-            };
-            if source_asset.is_file() {
-                let Ok(target_asset) =
-                    validate_path_in_root(&destination.join(clean_relative), &destination)
-                else {
-                    continue;
-                };
-                if let Some(target_parent) = target_asset.parent() {
-                    let _ = fs::create_dir_all(target_parent);
-                }
-                let _ = fs::copy(source_asset, target_asset);
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = super::file_management::OPERATIONS.lock().unwrap_or_else(|e| e.into_inner());
+        let guard = WorkspaceGuard::new(&library_root)?;
+        let destination = if target_dir.is_empty() { guard.root().to_path_buf() } else { guard.resolve_directory(&target_dir, false)? };
+        import_selected_file(&source, &destination)
+    }).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn import_library_files(access: State<'_, ExternalFileAccess>, source_paths: Vec<String>, library_root: String, target_dir: String) -> Result<super::file_management::OperationResult, String> {
+    use super::file_management::{OperationResult, OperationError, PathChange};
+    if source_paths.is_empty() || source_paths.len() > 256 { return Err("每次请选择 1 至 256 份资料".into()); }
+    let sources: Vec<_> = source_paths.into_iter().map(|raw| { let resolved = access.resolve_import(&raw); (raw, resolved) }).collect();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lock = super::file_management::OPERATIONS.lock().unwrap_or_else(|e| e.into_inner());
+        let guard = WorkspaceGuard::new(&library_root)?;
+        let destination = if target_dir.is_empty() { guard.root().to_path_buf() } else { guard.resolve_directory(&target_dir, false)? };
+        let mut result = OperationResult::default();
+        let mut seen = HashSet::new();
+        for (raw, source) in sources {
+            if source.as_ref().is_ok_and(|path| !seen.insert(path.clone())) { continue; }
+            match source.and_then(|source| import_selected_file(&source, &destination)) {
+                Ok(path) => result.items.push(PathChange { old_path: raw, new_path: path }),
+                Err(message) => result.errors.push(OperationError { path: raw, message }),
             }
         }
+        Ok(result)
+    }).await.map_err(|e| e.to_string())?
+}
+
+fn import_selected_file(source: &Path, destination: &Path) -> Result<String, String> {
+    crate::services::external_import::import_file(source, destination).map(|path| path.to_string_lossy().into_owned())
+}
+
+#[cfg(test)]
+mod import_regression_tests {
+    use super::*;
+    fn fixture(name: &str) -> PathBuf {
+        let root = std::env::temp_dir().join(format!("longedit-import-{name}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        fs::create_dir_all(root.join("source")).unwrap();
+        fs::create_dir_all(root.join("library")).unwrap();
+        root
     }
-    Ok(target_path.to_string_lossy().into_owned())
+    #[test]
+    fn external_import_keeps_both_document_names() {
+        let root = fixture("same-name");
+        let source = root.join("source/note.md");
+        let existing = root.join("library/note.md");
+        fs::write(&source, "新资料").unwrap(); fs::write(&existing, "已有资料").unwrap();
+        let imported = import_selected_file(&source, &root.join("library")).unwrap();
+        assert_eq!(fs::read_to_string(&existing).unwrap(), "已有资料", "existing library content must never be overwritten");
+        assert_ne!(Path::new(&imported), existing);
+        assert_eq!(fs::read_to_string(imported).unwrap(), "新资料");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn external_import_never_overwrites_existing_images() {
+        let root = fixture("image-collision");
+        fs::create_dir(root.join("source/images")).unwrap(); fs::create_dir(root.join("library/images")).unwrap();
+        let source = root.join("source/note.md");
+        fs::write(&source, "![图](images/a.png)").unwrap();
+        fs::write(root.join("source/images/a.png"), b"new-image").unwrap();
+        fs::write(root.join("library/images/a.png"), b"existing-image").unwrap();
+        let imported = import_selected_file(&source, &root.join("library")).unwrap();
+        assert_eq!(fs::read(root.join("library/images/a.png")).unwrap(), b"existing-image", "existing image bytes must stay unchanged");
+        assert!(Path::new(&imported).is_file());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn missing_image_does_not_claim_success_or_leave_document() {
+        let root = fixture("missing-image");
+        let source = root.join("source/note.md");
+        fs::write(&source, "![图](images/missing.png)").unwrap();
+        assert!(import_selected_file(&source, &root.join("library")).is_err(), "missing images must not be silently ignored");
+        assert!(!root.join("library/note.md").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
 }
 
 #[tauri::command]

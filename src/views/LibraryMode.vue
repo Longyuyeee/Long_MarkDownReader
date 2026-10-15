@@ -751,6 +751,7 @@
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
+    <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
   </div>
 </template>
@@ -791,6 +792,7 @@ import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
+import ExternalImportDialog from '../components/ExternalImportDialog.vue'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
 import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
 import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
@@ -1778,6 +1780,23 @@ const updateWordCount = () => {
 const preview = reactive({ show: false, title: '', path: '', x: 0, y: 0, focusPath: '', timer: null as any })
 const contextMenu = reactive({ show: false, x: 0, y: 0, targetPath: '', isDir: false, atRoot: false, options: [] as any[] })
 const fileOperations = ref<InstanceType<typeof LibraryFileOperations> | null>(null)
+const externalImport = ref<InstanceType<typeof ExternalImportDialog> | null>(null)
+let externalImportPlacement: { root: string; directory: string; position: string | null; reference: string | null } | null = null
+const applyExternalImport = async (result: FileOperationResult, directory: string) => {
+  const root = store.libraryPath
+  const order = await invoke<{ items?: string[]; pinned?: string[] }>('get_folder_order', { libraryRoot: root, path: directory })
+  const entries = await invoke<FileEntry[]>('scan_directory', { libraryRoot: root, path: directory })
+  if (root !== store.libraryPath) return
+  const names = result.items.map(item => item.newPath.split(/[\\/]/).pop() || '')
+  const available = new Set(entries.filter(entry => !isLibraryMetadata(entry.name)).map(entry => entry.name))
+  const current = [...new Set([...(order.items || []), ...available])].filter(name => available.has(name) && !names.includes(name))
+  const placement = externalImportPlacement?.root === root && externalImportPlacement.directory === directory ? externalImportPlacement : null
+  const index = placement?.reference ? current.indexOf(placement.reference) : -1
+  if (index >= 0 && placement?.position !== 'inside') current.splice(index + (placement?.position === 'after' ? 1 : 0), 0, ...names)
+  else current.push(...names)
+  await invoke('save_folder_order', { libraryRoot: root, path: directory, order: { items: current, pinned: order.pinned || [] } })
+  if (root === store.libraryPath) await refreshNode(directory)
+}
 const contextPaths = () => topLevelPaths(selectedKeys.value.includes(contextMenu.targetPath) ? selectedKeys.value : [contextMenu.targetPath])
 const clipboardAvailable = computed(() => Boolean(libraryFileClipboard.value?.paths.length && sameLibrary(libraryFileClipboard.value.root, store.libraryPath)))
 const undoMoveAvailable = computed(() => Boolean(lastLibraryMove.value?.items.length && sameLibrary(lastLibraryMove.value.root, store.libraryPath)))
@@ -4180,8 +4199,6 @@ onMounted(async () => {
       
       if (event.payload.paths.length > 0 && targetPath) {
         try {
-          message.loading(`正在导入...`)
-          
           let finalTargetDir = targetPath
           let referenceItem = null
           if (position === 'before' || position === 'after') {
@@ -4190,42 +4207,9 @@ onMounted(async () => {
             referenceItem = targetPath.split(/[\\/]/).pop() || ''
           }
 
-          const importedPaths: string[] = []
-          for (const p of event.payload.paths) {
-            const newPath = await invoke<string>('import_to_library', { 
-              sourcePath: p, 
-              libraryRoot: store.libraryPath, 
-              targetDir: finalTargetDir 
-            })
-            importedPaths.push(newPath)
-          }
-
-          // 逻辑排序 JSON 更新
-          const order = await invoke<any>('get_folder_order', { libraryRoot: store.libraryPath, path: finalTargetDir })
-          let currentItems = (await invoke<FileEntry[]>('scan_directory', { libraryRoot: store.libraryPath, path: finalTargetDir }))
-            .filter(entry => !isLibraryMetadata(entry.name))
-            .map(e => e.name)
-          
-          const newNames = importedPaths.map(p => p.split(/[\\/]/).pop() || '')
-          currentItems = currentItems.filter(name => !newNames.includes(name))
-
-          if (position === 'inside' || !referenceItem) {
-            currentItems.push(...newNames)
-          } else {
-            let refIdx = currentItems.indexOf(referenceItem)
-            if (position === 'before') currentItems.splice(refIdx, 0, ...newNames)
-            else currentItems.splice(refIdx + 1, 0, ...newNames)
-          }
-
-          await invoke('save_folder_order', { 
-            libraryRoot: store.libraryPath,
-            path: finalTargetDir, 
-            order: { items: currentItems, pinned: order.pinned || [] } 
-          })
-
-          await refreshNode(finalTargetDir)
-          message.destroyAll(); message.success('导入完成')
-        } catch (err) { message.destroyAll(); message.error('导入失败') }
+          externalImportPlacement = { root: store.libraryPath, directory: finalTargetDir, position, reference: referenceItem }
+          await externalImport.value?.open(event.payload.paths, finalTargetDir)
+        } catch (err) { message.error(`导入未完成：${String(err)}`) }
       }
       virtualDrag.dropTarget = null; virtualDrag.dropPosition = null
       externalFileDrag = false

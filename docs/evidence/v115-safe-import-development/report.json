@@ -1,0 +1,72 @@
+{
+  "scope": "Actual LibraryMode drop callback and Vue dialog; native IPC simulated. Real filesystem tested separately.",
+  "motion": "calm (normal animations enabled)",
+  "checks": [
+    "External-drop callback opens the actual result dialog with individual success and missing-image failure, preserving existing fixture content",
+    "Retry submits only the failed source; successful import is not duplicated and existing document remains unchanged",
+    "A post-import list-refresh error is not reported as file failure and offers no dangerous import retry"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "dialogFits": true
+    }
+  ],
+  "errors": []
+}

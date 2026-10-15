@@ -10,6 +10,7 @@ pub(crate) mod archive_confirmation;
 pub(crate) mod archive_plan;
 pub mod data_migration;
 pub mod external_file_access;
+pub(crate) mod external_import;
 pub mod external_windows;
 pub mod knowledge_index;
 pub mod pdf_index;

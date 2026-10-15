@@ -41,7 +41,7 @@ use commands::batch_rename::{preview_library_renames, rename_library_items};
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
-    get_folder_order, get_image_base64, import_to_library, move_item, move_items,
+    get_folder_order, get_image_base64, import_to_library, import_library_files, move_item, move_items,
     pick_external_openable_file, read_external_markdown_file, read_markdown_file, rename_item,
     save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
 };
@@ -525,6 +525,7 @@ pub fn run() {
             get_folder_order,
             save_folder_order,
             import_to_library,
+            import_library_files,
             save_shadow_copy,
             get_url_title,
             search_library,

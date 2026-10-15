@@ -168,6 +168,7 @@ const loadFileContent = async () => {
 
 const importToLibrary = async () => {
   if (!store.libraryPath || !filePath.value) return
+  if (isDirty.value) { message.info('请先保存当前笔记的修改，再存入资料库；不会自动代存。'); return }
   try {
     message.loading('正在存入知识库...')
     const newPath = await invoke<string>('import_to_library', {
