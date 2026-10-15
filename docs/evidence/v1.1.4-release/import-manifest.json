@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 38749423630,
+  "artifactBuildRunId": 38742946044,
+  "productSourceCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
+  "appVersion": "1.1.4",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "checks": {
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "workflowPassed": 8,
+    "experiencePassed": 8,
+    "fileManagementPassed": 9,
+    "foundationPassed": 8,
+    "foundationExtendedPassed": 8,
+    "versionPassed": 4
+  },
+  "files": [
+    {
+      "path": "installed-artifact-smoke.json",
+      "sizeBytes": 9851,
+      "sha256": "c1638fbdfe67044d26dddf296c5106e22bf37a5815340672b42ec63c6556da6b"
+    },
+    {
+      "path": "installed-default-app-candidates.jpg",
+      "sizeBytes": 96881,
+      "sha256": "2a6b996a4fdf5a7e26844078f9c13550e25d66dc1e13427c73bfe75cd14762f5"
+    },
+    {
+      "path": "installed-default-app-lifecycle-evidence.json",
+      "sizeBytes": 981,
+      "sha256": "a82ffabbeae91be9e42b276bc0ad9aa0356901c8735f5e0260f82dd1469fd877"
+    },
+    {
+      "path": "installed-docx-hyperlink-evidence.json",
+      "sizeBytes": 2858,
+      "sha256": "af8c6af8982fe0126a0cce2c78d6b4bfd5e18d8dafde5d479d6bfc1af85a58b7"
+    },
+    {
+      "path": "installed-graph-outcome-entry.jpg",
+      "sizeBytes": 99430,
+      "sha256": "2d6e41f8bbe89ef9b3112766b7f7df26f3cf979cb25d5bfa2738d7fc61603df4"
+    },
+    {
+      "path": "installed-json-save-reopen.jpg",
+      "sizeBytes": 110790,
+      "sha256": "1f346bfda8bd17792ae19b0fe640fe5b5703c43fd030baf7aa5e8949a3ff8037"
+    },
+    {
+      "path": "installed-knowledge-guidance-comparison.json",
+      "sizeBytes": 1290,
+      "sha256": "36a045fd1254de8dbfb5396d0e642c8088c91ea13bc465862dbc1cf17bff54ab"
+    },
+    {
+      "path": "installed-knowledge-guidance-graph.jpg",
+      "sizeBytes": 116215,
+      "sha256": "ad86b9d267b57300cbb3fede36f3bb32fda3ab246815d63b5de23b3ef717e4da"
+    },
+    {
+      "path": "installed-knowledge-guidance-outcome-evidence.json",
+      "sizeBytes": 1927,
+      "sha256": "7eb6b5e399609a2ff23eac16fcc6432af53845e65de37bda7cfa65ef6a92ef8c"
+    },
+    {
+      "path": "installed-knowledge-network-evidence.json",
+      "sizeBytes": 2041,
+      "sha256": "822b4bc0f2c0bf7a282f87ae4c0b35072b474da934c7b55f6dd6f35d90271a3d"
+    },
+    {
+      "path": "installed-knowledge-network-pulse.jpg",
+      "sizeBytes": 118642,
+      "sha256": "a579a3c185a687d9791739c5177e3208dfb34fd325cd41e59916a88f15c3934a"
+    },
+    {
+      "path": "installed-knowledge-observation-baseline.json",
+      "sizeBytes": 1420,
+      "sha256": "1c3ff57303c5246fc379a606d6867d6d51e134d390463d5873332db17e6c2d7e"
+    },
+    {
+      "path": "installed-knowledge-observation-entry-evidence.json",
+      "sizeBytes": 409,
+      "sha256": "ec090b28721c1babbf626e22a0fd643052dbed89a06d321f2295413a6adeda00"
+    },
+    {
+      "path": "installed-knowledge-observation-settings.jpg",
+      "sizeBytes": 98703,
+      "sha256": "95bfcfec365e9580abbc2ec14b3864544d50ec41e443b76d5a6087f4a65fcedb"
+    },
+    {
+      "path": "installed-knowledge-receipt-review-entry.jpg",
+      "sizeBytes": 101682,
+      "sha256": "1997bce5ed9fdefd2fc5a6d0484ae11ef1e69eabe07b2e98857e846dc1b674a1"
+    },
+    {
+      "path": "installed-knowledge-receipt-review-evidence.json",
+      "sizeBytes": 1870,
+      "sha256": "4e7d86d65597ec08de1cb34a1afab8ca1cb2ae2f3c3453ae10a7e53b644346fc"
+    },
+    {
+      "path": "installed-knowledge-session-evidence.json",
+      "sizeBytes": 529,
+      "sha256": "2b4efdc70868c9136f97410fafca763e3e34d70d8720a0146850981373818d7e"
+    },
+    {
+      "path": "installed-knowledge-session-ready.jpg",
+      "sizeBytes": 101232,
+      "sha256": "13da1f289acf67e7a7c64d398f694a7f885c291e44386cd8cc319b1a6ac7fd98"
+    },
+    {
+      "path": "installed-knowledge-session-start.jpg",
+      "sizeBytes": 102073,
+      "sha256": "040e8a70bb9087daa6f7df78c45b484193240071098cb9737672fc3f34aede84"
+    },
+    {
+      "path": "installed-knowledge-topic-centered.jpg",
+      "sizeBytes": 122757,
+      "sha256": "17642ed33233bdfc47da748542b8d75ad358dee596b8fc1c768a0249955aaaa5"
+    },
+    {
+      "path": "installed-libreoffice-writer-docx-hyperlink.jpg",
+      "sizeBytes": 141135,
+      "sha256": "7071477edd2302c3f8741c3a65d7fc4d3b5186454b341e11a8a3de33ff000ac1"
+    },
+    {
+      "path": "installed-microsoft-word-docx-hyperlink.jpg",
+      "sizeBytes": 139593,
+      "sha256": "d85336bdc49f985491da6b5a2dbb1e1f29e90c056137ba72601c42164e551714"
+    },
+    {
+      "path": "installed-route-mount-evidence.json",
+      "sizeBytes": 1708,
+      "sha256": "60c55c1b45aa8e24a117e7a340c124316d75df349bf44fb15cd500133890feae"
+    },
+    {
+      "path": "installed-route-performance-evidence.json",
+      "sizeBytes": 4616,
+      "sha256": "1afb67b1ea0ff499de2623d72b1c8930f6db2ad4c048d21d967b0282da93604b"
+    },
+    {
+      "path": "installed-txt-save-reopen.jpg",
+      "sizeBytes": 80462,
+      "sha256": "43b76400425cdba9284f3ebcffcb2a9149c43ef45213d4204ed0c955a299cad0"
+    },
+    {
+      "path": "installed-v110-workflow.jpg",
+      "sizeBytes": 90611,
+      "sha256": "1f9ce5b17b03c27fb18b2421c5b02b72d48ea11df412c5d4573b214b387964c2"
+    },
+    {
+      "path": "installed-v110-workflow.json",
+      "sizeBytes": 1358,
+      "sha256": "145c232788e62af23d58fb9949709b5970d2563522db94b324474a366f22e6f8"
+    },
+    {
+      "path": "installed-v111-relation-dialog.jpg",
+      "sizeBytes": 106691,
+      "sha256": "4de4b100937c567616ce23ec6b173afea3e47a076a718e2f9e79647b8d840194"
+    },
+    {
+      "path": "installed-v111-workflow.json",
+      "sizeBytes": 1041,
+      "sha256": "59049fceaa0239ecb6fa4e6ec89887e66caef6f3f99d8229ce959a0dc6d66190"
+    },
+    {
+      "path": "installed-v112-context-result.jpg",
+      "sizeBytes": 101835,
+      "sha256": "e50e4921c097a0b79f37e7b55997d2d5f54733398b8ab53375b4fe2e7e5f7de5"
+    },
+    {
+      "path": "installed-v112-move-dialog.jpg",
+      "sizeBytes": 97455,
+      "sha256": "8be1c8a33b2ca48ff211be48a172b96fc6e99b8bacd23942b04293a6904bfbf1"
+    },
+    {
+      "path": "installed-v112-trash-dialog.jpg",
+      "sizeBytes": 94173,
+      "sha256": "8e36e2c72c646033330bd0c0ae34b7a1d6fed7cbc4bea85dda1c05da771bc871"
+    },
+    {
+      "path": "installed-v112-workflow.json",
+      "sizeBytes": 1210,
+      "sha256": "55d072ec450fda2659579fab2672669b1d794d967721e3facd62700dc379f49e"
+    },
+    {
+      "path": "installed-v113-main.jpg",
+      "sizeBytes": 103703,
+      "sha256": "6ae0b2cf639b551c6d224534d0f1352d1cb89f41a1583780c80af8dfc8a89fcd"
+    },
+    {
+      "path": "installed-v113-template-dialog.jpg",
+      "sizeBytes": 95034,
+      "sha256": "6d153522b643f1708c0d6607860dccf8ea0d242bfd762189a380ef346467b54d"
+    },
+    {
+      "path": "installed-v113-text-history-result.jpg",
+      "sizeBytes": 82647,
+      "sha256": "252db96a2612594059c952b58399776304a7f1393ac808124c790edb35653332"
+    },
+    {
+      "path": "installed-v113-workflow.json",
+      "sizeBytes": 1101,
+      "sha256": "cd06d85bb58dda0b1226bc503f6638f322faff9ed75c3ac490ba3b680eb9c10a"
+    },
+    {
+      "path": "installed-v114-batch-rename.jpg",
+      "sizeBytes": 104550,
+      "sha256": "862ff54d42bc0d11aaa6352727c8b5db4a30b037ac349161ce29fb887ad9a9bc"
+    },
+    {
+      "path": "installed-v114-result.jpg",
+      "sizeBytes": 104055,
+      "sha256": "a1dcdd76ca51a41e32034ebbb4cac11683ad7e2272965055c6dcb42281b0c733"
+    },
+    {
+      "path": "installed-v114-workflow.json",
+      "sizeBytes": 1144,
+      "sha256": "2bd0321d3e4c85d45dece20ab90e081fb4fb24eed7241238638b5381f30c2717"
+    },
+    {
+      "path": "installed-version-capabilities.jpg",
+      "sizeBytes": 93074,
+      "sha256": "8c20980645b8e3db45bb64ac9493b14f6fbe425578a68d88945eebd3aa3e183c"
+    },
+    {
+      "path": "installed-version-identity.json",
+      "sizeBytes": 5102,
+      "sha256": "888c1ce55968aac01422020fcb150620e27e71c8f4e6f6a373ef8ef408a447c3"
+    },
+    {
+      "path": "installed-version-library.jpg",
+      "sizeBytes": 104055,
+      "sha256": "a1dcdd76ca51a41e32034ebbb4cac11683ad7e2272965055c6dcb42281b0c733"
+    },
+    {
+      "path": "installed-version-settings.jpg",
+      "sizeBytes": 60905,
+      "sha256": "c1e9a3a9662a1fd77fec45ac4ba166e11f3b77fd4cdfc5ab86b09ba29851e06f"
+    },
+    {
+      "path": "installed-wps-writer-docx-hyperlink-readonly.jpg",
+      "sizeBytes": 140680,
+      "sha256": "998f9c1bc539e2c861011174a8c7f0a217108a8df94caf36e2f2c986783c4d6f"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1400,
+      "sha256": "11c90d3d0d313a525546842c91d5374164a81b0058e66444abf6149264b94966"
+    },
+    {
+      "path": "lifecycle-result.json",
+      "sizeBytes": 5796,
+      "sha256": "a57c7bb554f8bb0ea74c219659c3862365ebb3d5543294e351669422c3780af6"
+    },
+    {
+      "path": "management-backup-index-evidence.json",
+      "sizeBytes": 2178,
+      "sha256": "44e15e7b60b963b2f6117a93e219696b1d0d9ab312d0841419937a79d663d826"
+    }
+  ]
+}

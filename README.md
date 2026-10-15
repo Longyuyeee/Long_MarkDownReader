@@ -431,7 +431,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 基础功能深化路线
 
-文件整理、自定义模板、多文档操作、标签/集合、关系维护和 TXT 历史已交付。当前开发线已实现模板迁移、历史局部恢复和批量重命名，正在进行安装包验收；未发布的能力不纳入上方稳定版承诺。入口继续按使用频率放在右键、新建菜单和按需弹窗中。已完成内容与后续范围见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)。
+文件整理、自定义模板、多文档操作、标签/集合、关系维护和 TXT 历史已交付。当前开发线已实现模板迁移、历史局部恢复和批量重命名，固定包已通过安装验收、尚未公开；未发布的能力不纳入上方稳定版承诺。入口继续按使用频率放在右键、新建菜单和按需弹窗中。已完成内容与后续范围见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)。
 
 ### 从源码启动
 
@@ -496,7 +496,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
-| v1.1.4（候选，未发布） | 批量重命名、模板导入/导出、Markdown/TXT 历史局部恢复；正在补齐同包安装验收 | [接续记录](docs/V1_1_4_Unsigned_Community_Release_Audit_2026-10-15.md) |
+| v1.1.4（已验收，未公开） | 批量重命名、模板导入/导出、Markdown/TXT 历史局部恢复及文件无覆盖移动；双包与同包安装验收完成 | [发布就绪记录](docs/V1_1_4_Unsigned_Community_Release_Audit_2026-10-15.md) |
 | v1.1.3 | 自定义模板、多文档固定/排序/恢复、标签与集合整理、关系编辑、TXT 历史与恢复 | [发布说明](docs/RELEASE_NOTES_v1.1.3.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3) |
 | v1.1.2 | 文件右键整理、多选、复制与移动、撤销和回收恢复；侧栏精简 | [发布说明](docs/RELEASE_NOTES_v1.1.2.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.2) |
 | v1.1.1 | 收集箱、集合、标签与关系体验重排；跨格式添加关系；更平滑的标签切换 | [发布说明](docs/RELEASE_NOTES_v1.1.1.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.1) |

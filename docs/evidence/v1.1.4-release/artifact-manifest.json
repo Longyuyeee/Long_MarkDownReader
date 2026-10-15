@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.1.4",
+  "status": "hosted-lifecycle-and-installed-workflows-passed-ready-to-publish",
+  "appVersion": "1.1.4",
+  "sourceVersion": "1.1.4",
+  "sourceCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
+  "hostedRunId": 38749423630,
+  "artifactBuildRunId": 38742946044,
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.1.4_x64_zh-CN.msi",
+      "sizeBytes": 76144640,
+      "sha256": "5de35732716e899efe8221f620546ca445b24d1b1313b32ae03537c3967bcc1a",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.4_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.1.4_x64-setup.exe",
+      "sizeBytes": 67362318,
+      "sha256": "ad36cc821cebec1aab80f7e1b8b2eb0503fc649109fb15bb93196670b0a077cd",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.4_x64-setup.exe"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 190,
+    "sha256": "3e24fff57fd2f29e495e59e9ef92fd62299ac957c7eabee2fe255b7345e55d67"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 38742946044
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "workspace": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "c1638fbdfe67044d26dddf296c5106e22bf37a5815340672b42ec63c6556da6b"
+      },
+      "version": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "888c1ce55968aac01422020fcb150620e27e71c8f4e6f6a373ef8ef408a447c3"
+      },
+      "workflow": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-v110-workflow.json",
+        "sha256": "145c232788e62af23d58fb9949709b5970d2563522db94b324474a366f22e6f8"
+      },
+      "experience": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-v111-workflow.json",
+        "sha256": "59049fceaa0239ecb6fa4e6ec89887e66caef6f3f99d8229ce959a0dc6d66190"
+      },
+      "fileManagement": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-v112-workflow.json",
+        "sha256": "55d072ec450fda2659579fab2672669b1d794d967721e3facd62700dc379f49e"
+      },
+      "foundation": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-v113-workflow.json",
+        "sha256": "cd06d85bb58dda0b1226bc503f6638f322faff9ed75c3ac490ba3b680eb9c10a"
+      },
+      "foundationExtended": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-v114-workflow.json",
+        "sha256": "2bd0321d3e4c85d45dece20ab90e081fb4fb24eed7241238638b5381f30c2717"
+      },
+      "routes": {
+        "path": "docs/evidence/v1-1-4-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "60c55c1b45aa8e24a117e7a340c124316d75df349bf44fb15cd500133890feae"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "status": "passed",
+    "runId": 38749423630,
+    "sourceCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
+    "evidenceRoot": "docs/evidence/v1-1-4-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.1.4-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "workflowChecksPassed": 8,
+    "experienceChecksPassed": 8,
+    "fileManagementChecksPassed": 9,
+    "foundationChecksPassed": 8,
+    "foundationExtendedChecksPassed": 8,
+    "versionChecksPassed": 4,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false
+}

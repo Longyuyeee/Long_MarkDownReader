@@ -1,0 +1,42 @@
+{
+  "appVersion": "1.1.4",
+  "sourceCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
+  "installerSha256": "ad36cc821cebec1aab80f7e1b8b2eb0503fc649109fb15bb93196670b0a077cd",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "template-dialog-persists-custom-content",
+      "status": "passed"
+    },
+    {
+      "id": "library-default-template-survives-native-read",
+      "status": "passed"
+    },
+    {
+      "id": "template-variables-and-unique-title-written-to-disk",
+      "status": "passed"
+    },
+    {
+      "id": "tab-pin-context-menu-updates-installed-ui",
+      "status": "passed"
+    },
+    {
+      "id": "multiple-tag-filter-reads-real-notes",
+      "status": "passed"
+    },
+    {
+      "id": "manual-relation-edit-retains-files-and-refreshes-list",
+      "status": "passed"
+    },
+    {
+      "id": "txt-history-dialog-creates-copy-without-overwrite",
+      "status": "passed"
+    },
+    {
+      "id": "foundation-workflow-has-no-global-error-overlay",
+      "status": "passed"
+    }
+  ]
+}

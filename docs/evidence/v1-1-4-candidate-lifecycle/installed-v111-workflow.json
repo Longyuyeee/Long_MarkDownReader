@@ -1,0 +1,42 @@
+{
+  "appVersion": "1.1.4",
+  "sourceCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
+  "installerSha256": "ad36cc821cebec1aab80f7e1b8b2eb0503fc649109fb15bb93196670b0a077cd",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "missing-default-inbox-is-normal-empty",
+      "status": "passed"
+    },
+    {
+      "id": "first-inbox-note-is-created-in-place",
+      "status": "passed"
+    },
+    {
+      "id": "any-file-catalog-includes-attachments",
+      "status": "passed"
+    },
+    {
+      "id": "toolbar-dialog-saves-cross-format-relation",
+      "status": "passed"
+    },
+    {
+      "id": "relationship-persisted-without-editing-files",
+      "status": "passed"
+    },
+    {
+      "id": "manual-relationship-in-native-graph",
+      "status": "passed"
+    },
+    {
+      "id": "renaming-retains-file-relationship",
+      "status": "passed"
+    },
+    {
+      "id": "removing-relation-retains-both-files",
+      "status": "passed"
+    }
+  ]
+}
