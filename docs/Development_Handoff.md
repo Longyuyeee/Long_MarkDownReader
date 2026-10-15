@@ -1,6 +1,8 @@
-# 2026-10-16：v1.1.5 本版已封板，可发版，尚未公开
+# 2026-10-16：v1.1.5 已正式发布
 
-当前运行时/开发目标 **1.1.5**，正式公开下载仍为 **1.1.4**。安全导入与搜索一致性范围已闭环，保留原有功能、六种风格、正常用户动效及显式保存保护；不是声明整个项目所有愿望项完成。
+当前运行时与正式公开版均为 **1.1.5**，下一开发目标仅登记 **1.1.6**，本轮不继续扩展功能。安全导入与搜索一致性范围已闭环，保留原有功能、六种风格、正常用户动效及显式保存保护；不是声明整个项目所有愿望项完成。
+
+用户要求最终验证并发布后，先确认最终 [main CI 38821837082](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38821837082)（4aeb7f73）全绿，再于北京时间 **2026-10-16 07:26:48** 发布 [v1.1.5](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5)，Release `414368130`。[发布运行 38823551783](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38823551783) 整体成功，直接取以下固定构建的同一批安装器，无重建；EXE/MSI/SHA256SUMS 三个公开附件已完整回下载并核对大小、SHA-256 和 GitHub 摘要，`releases/latest` 已指向 v1.1.5。[发布收据](evidence/v1.1.5-release/release-receipt.json) 与 [原始回下载核验](evidence/v1.1.5-release/public-download-verification.json) 为永久证据。
 
 固定产品 **`5ee1ddd7297e59813307058e89801e5521966abc`**；[构建/首轮安装 38816570534](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38816570534) 与 [相同安装器独立复核 38820912641](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38820912641) 均整体成功。每轮生命周期 22、工作区 18/11 路由、管理 7、版本 4、v110/v111/v112/v113/v114/v115 流程 8/8/9/8/8/11 全通过。实际主区、搜索、设置原图已查看，切库文件在左栏可见并正确选中。
 
@@ -8,11 +10,11 @@
 
 已交付内容：导入同名保留两份、Markdown 本地图片独立迁移、逐项失败重试；统一搜索语法/范围、乱序/Esc/焦点及跨库草稿保护；Windows 外部窗口异步创建、规范路径归属、保存后重复通知不再误标脏；文件树按真实节点展开/选中/定位，刷新前打开新文件也保留定位请求。开发态正常动效搜索与文件树 12 组/12 布局、文件管理 8 组/12 布局、导入 3 组/12 布局通过，均不冒充安装态证据。
 
-[最终审计](V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md)、[固定包/发版状态清单](evidence/v1.1.5-release/artifact-manifest.json)、[原始复核文件摘要](evidence/v1.1.5-release/import-manifest.json)、[校验文件](evidence/v1.1.5-release/SHA256SUMS.txt)、[发布说明](RELEASE_NOTES_v1.1.5.md) 为下一台电脑/下一次会话的接续入口。README 原图标/介绍未挪动，更新说明只在末尾，下载仍指向 1.1.4。
+[最终审计](V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md)、[固定包/发版状态清单](evidence/v1.1.5-release/artifact-manifest.json)、[原始复核文件摘要](evidence/v1.1.5-release/import-manifest.json)、[校验文件](evidence/v1.1.5-release/SHA256SUMS.txt)、[发布说明](RELEASE_NOTES_v1.1.5.md) 为下一台电脑/下一次会话的接续入口。README 原图标/介绍未挪动，版本更新说明只在末尾；下载、稳定版标记和摘要已切换为公开 1.1.5，日常工作流补充搜索语法与安全导入的用法和边界。旧安装截图保留真实版本说明，不冒充 1.1.5 新图。
 
 NSIS 67,362,323 bytes，SHA-256 `cec4098246af0d547f7a1ef6d71ea72ca026447f290aa75b3cd66ebab6817f1a`；MSI 76,189,696 bytes，SHA-256 `ac8aec4fb8a1fe38629dcec4b5238ac8a9eb901d41feb9a1eb1f14b19761ac6b`。本机 `.release-secrets/v115-packages-38816570534/` 有同字节安装器、原构建收据和校验文件，已回下载核验，不入 Git；Actions 原构建 artifact 到期 2026-10-29 23:00:00 UTC。
 
-下一步：取得公开发布指令后，Tag v1.1.5 精确绑定上述产品，发布流程参数为 installer_run_id=38816570534、review_run_id=38820912641、source_commit=5ee1ddd7297e59813307058e89801e5521966abc、version=1.1.5；直接复用已验收安装器，不重新打包。公开后核验附件回下载，并单独完成 1.1.4→1.1.5 应用内更新观察。
+Tag v1.1.5 已精确绑定上述产品，Tag 对象 `e432489ebef8a6bbf9c6d8999b283e2d2700f402`；发布参数为 installer_run_id=38816570534、review_run_id=38820912641、source_commit=5ee1ddd7297e59813307058e89801e5521966abc、version=1.1.5。正式包已在公开 Release，不再依赖 14 天 Actions 制品。下一步仅保留独立的 1.1.4→1.1.5 应用内更新观察，不重复打包或替换已验收字节。
 
 边界仍明确：未签名社区版可能触发未知发布者/SmartScreen，企业 RC=false；MSI 仅构建/摘要，未宣称完整 MSI 生命周期；NSIS 覆盖升级不替代应用内更新，既有 1.1.3→1.1.4 pending 继续保留；5 个环境依赖 ignored 不算通过；图片导入不等于任意附件/文档链接或移动后的资源维护。下一版优先补强现有移动/改名时的资源与相对链接维护，用户仍只执行原操作，不新增手动归档步骤；尚未开发，不混入 1.1.5。
 

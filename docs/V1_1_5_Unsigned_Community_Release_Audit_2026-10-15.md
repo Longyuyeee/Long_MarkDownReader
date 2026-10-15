@@ -1,8 +1,16 @@
-# v1.1.5 安全导入与搜索一致性候选审计
+# v1.1.5 安全导入与搜索一致性发布审计
 
-## 2026-10-16 最终结论：v1.1.5 本版封板，可发版，尚未公开
+## 2026-10-16 最终结论：v1.1.5 已正式发布，公开附件回下载核验通过
 
-安全导入与搜索一致性的本版范围已经闭环，社区未签名候选达到发版条件；**当前正式公开版本仍为 v1.1.4，没有创建 v1.1.5 Tag/公开 Release**。README 开头图标和产品介绍保留，版本说明只更新末尾；下载入口未提前切换。
+安全导入与搜索一致性的本版范围已经闭环，用户要求最终验证并发布后，**[v1.1.5 已正式公开](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5)**。Release `414368130`，非草稿、非预发布，北京时间 **2026-10-16 07:26:48**；`releases/latest` 已指向 v1.1.5。README 开头图标和产品介绍保留，版本更新说明仍在末尾；公开后才更新下载入口、稳定版标记、摘要，以及搜索和导入的日常使用说明。
+
+最终验证先确认 [main CI 38821837082](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38821837082)（`4aeb7f7387cb5ed0f793104c40d23eb8f7c2d7e9`）整体成功：727 功能、0 失败、5 个既有 ignored，完整质量门与生产依赖 0 漏洞通过。再次逐字节核对两个本机固定安装器、校验文件与 52 份独立复核原始文件，全部匹配归档摘要。
+
+[发布运行 38823551783](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38823551783) 整体成功：只取固定构建与同包复核对应安装器，无重建；三个附件公开后均完整回下载，实际文件大小、SHA-256 和 GitHub digest 全部一致。Tag 对象 `e432489ebef8a6bbf9c6d8999b283e2d2700f402` 精确绑定下述产品 5ee1ddd7，而非含后续文档/测试夹具修正的 main。永久证据为 [发布收据](evidence/v1.1.5-release/release-receipt.json) 与 [原始回下载核验](evidence/v1.1.5-release/public-download-verification.json)。
+
+发布状态迁移时，下一目标依既有规则登记为 1.1.6（运行时仍 1.1.5）。四个历史 M6 检查器的开发目标白名单遗漏该后继版本，已仅补入 1.1.6；原运行时/公开版本白名单、证据摘要、功能断言和未签名边界均未放宽，不涉及产品代码或安装器字节。
+
+发布文档/元数据迁移后，本地完整 `npm run ci:patch-release` 再次通过：类型检查、生产构建、现有用户流程/证据合同、Rust locked check 及生产依赖审计 0 漏洞；公开 Release 正文与发布说明文本一致（仅规范换行比较），三个附件 ID/大小/摘要与原始回下载收据一致，README 的下载、原图标与末尾版本记录逐项核对。后续 main 提交的 CI 是文档/发布状态同步复核，不替代此前固定包的两轮验收。
 
 固定产品源码为 **`5ee1ddd7297e59813307058e89801e5521966abc`**。[构建与首轮安装 38816570534](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38816570534) 和 [同包独立复核 38820912641](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38820912641) 均整体成功，后者控制脚本来源 `688f1e4850c60c202f6025eeeba24db80d416893`。两轮使用相同 MSI/NSIS 字节，正常 calm 安装配置，没有为复核重新打包。
 
@@ -16,7 +24,7 @@
 
 本版原生流程实际验证授权、原文/图片防覆盖、缺图不发布、仅重试失败项、共享 TXT/JSON 与跨库搜索、范围选择、错误/空结果区分、主区打开、真实输入阻止换库、显式保存后换库，以及新库文件无需刷新即可在可见文件栏出现。两轮主区和搜索原图已实际查看，目标 TXT 正确显示并选中，未保存保护没有被清除或绕过。支持定位器和规范键的开发态补充为 **12 组真实组件流程、六风格宽窄 12 布局、0 页面错误**；正常文件管理为 8 组/12 布局，导入为 3 组/12 布局。组件 IPC 模拟与安装态证据明确分开。
 
-原始证据：[首轮 26 文件清单](evidence/v115-primary-install-38816570534/import-summary.json)、[独立复核原始文件与 SHA-256](evidence/v1.1.5-release/import-manifest.json)、[固定安装器清单](evidence/v1.1.5-release/artifact-manifest.json)、[校验文件](evidence/v1.1.5-release/SHA256SUMS.txt)。导入器严格校验缺项、源码/版本、安装器摘要及原始文件完整性，拒绝合同回归已通过；当前已标记 community ready-to-publish，企业 RC 和公开发布标志仍为 false。
+原始证据：[首轮 26 文件清单](evidence/v115-primary-install-38816570534/import-summary.json)、[独立复核原始文件与 SHA-256](evidence/v1.1.5-release/import-manifest.json)、[固定安装器清单](evidence/v1.1.5-release/artifact-manifest.json)、[校验文件](evidence/v1.1.5-release/SHA256SUMS.txt)。导入器严格校验缺项、源码/版本、安装器摘要及原始文件完整性，拒绝合同回归已通过；公开附件核验后已标记 community published，企业 RC 仍为 false。原始安装报告及其 SHA 不因发布状态迁移而改写。
 
 安装器：NSIS **67,362,323 bytes**，MSI **76,189,696 bytes**，均 NotSigned。
 
@@ -25,11 +33,11 @@ cec4098246af0d547f7a1ef6d71ea72ca026447f290aa75b3cd66ebab6817f1a  LongEdit_1.1.5
 ac8aec4fb8a1fe38629dcec4b5238ac8a9eb901d41feb9a1eb1f14b19761ac6b  LongEdit_1.1.5_x64_zh-CN.msi
 ```
 
-代码/测试主分支 [CI 38818996491](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38818996491) 已通过：**727 功能、0 失败、5 个既有 ignored**，完整质量门和 npm 生产依赖 0 漏洞通过。固定产品构建自身通过 **726 功能 + 1 独立性能**（220/4417/3327 ms，合计 7965 ms，首轮即达标）；多出的第 727 项仅为后续测试夹具隔离回归。原 CI 的 166/200 失败保留，不改写；测试模块外的生产源码与冻结相同，详见 [隔离修正和比较摘要](evidence/v115-test-fixture-isolation/summary.json)。本次证据/元数据提交后还会触发 main CI，正式发布前继续核对该提交。
+代码/测试主分支 [CI 38818996491](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38818996491) 及发布前最终 CI 38821837082 已通过：**727 功能、0 失败、5 个既有 ignored**，完整质量门和 npm 生产依赖 0 漏洞通过。固定产品构建自身通过 **726 功能 + 1 独立性能**（220/4417/3327 ms，合计 7965 ms，首轮即达标）；多出的第 727 项仅为后续测试夹具隔离回归。原 CI 的 166/200 失败保留，不改写；测试模块外的生产源码与冻结相同，详见 [隔离修正和比较摘要](evidence/v115-test-fixture-isolation/summary.json)。发布记录提交只同步文档/元数据和原始发布收据，不重建安装器。
 
 支持边界不改变：Markdown 本地图片迁移限 UTF-8、20 MiB、512 处普通授权目录内图像；不等于任意附件/文档链接迁移或后续移动资源自动重写。MSI 已构建并核验字节，未声称完成 MSI 全生命周期；NSIS 覆盖安装不代替官方 1.1.4→1.1.5 应用内更新观察。该观察须公开后执行，既有 1.1.3→1.1.4 pending 不删；5 个既有环境依赖 ignored 不算通过。未签名社区版可能有未知发布者/SmartScreen 提示，不满足企业签名条件。
 
-下一步是取得公开发布指令后，Tag 精确指向上述固定产品，直接发布这批已验收安装器和校验文件，再核对公开回下载及更新观察，**不重建替换字节**。Actions 原构建 artifact 保留至 2026-10-29 23:00:00 UTC；本机另有 `.release-secrets/v115-packages-38816570534/` 同 SHA 包及校验文件备份（不入 Git）。
+正式包与校验文件已经在 Release，回下载核验通过，不再依赖 Actions 原构建 artifact 的 2026-10-29 到期时间；本机 `.release-secrets/v115-packages-38816570534/` 同 SHA 备份不入 Git。下一步独立观察 1.1.4→1.1.5 应用内更新，不能改称已经通过。下一开发目标仅登记 1.1.6，优先研究既有移动/改名的资源与相对链接维护，不新增用户归档步骤，本轮未实施；**不重建替换本版字节**。
 
 ## 历史：规范节点、待定位请求及安装收尾过程（以下状态以记录当时为准）
 

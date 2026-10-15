@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.5",
+  "developmentTargetVersion": "1.1.6",
   "runtimeBaseVersion": "1.1.5",
-  "publicVersion": "1.1.4",
-  "publicTag": "v1.1.4",
-  "publicTagCommit": "970a9fe18a74b6ad1d78304ae15b18178bf47057",
+  "publicVersion": "1.1.5",
+  "publicTag": "v1.1.5",
+  "publicTagCommit": "5ee1ddd7297e59813307058e89801e5521966abc",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-38-v1.1.5-version-candidate",
-  "binaryVersionTransition": "v1.1.5-release-ready",
-  "displayLabel": "v1.1.5 安全导入与搜索一致性候选 · 当前公开 v1.1.4",
+  "currentStage": "M8-39-v1.1.5-published",
+  "binaryVersionTransition": "v1.1.5-public-release-published",
+  "displayLabel": "v1.1.5 已发布 · 下一开发目标 v1.1.6",
   "activeSlice": {
     "id": "v1.1.5-foundation-hardening",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-remote-assets-verified",
     "document": "docs/V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md"
   }
 }

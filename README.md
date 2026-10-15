@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4"><img src="https://img.shields.io/badge/Stable-v1.1.4-cca43b" alt="v1.1.4 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5"><img src="https://img.shields.io/badge/Stable-v1.1.5-cca43b" alt="v1.1.5 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.4**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.5**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.4_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.4/LongEdit_1.1.4_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.4_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.4/LongEdit_1.1.4_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.4](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.5_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.5/LongEdit_1.1.5_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.5_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.5/LongEdit_1.1.5_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.5](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.4/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.5/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.4_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.5_x64-setup.exe
 ```
 
 ```text
-5de35732716e899efe8221f620546ca445b24d1b1313b32ae03537c3967bcc1a  LongEdit_1.1.4_x64_zh-CN.msi
-ad36cc821cebec1aab80f7e1b8b2eb0503fc649109fb15bb93196670b0a077cd  LongEdit_1.1.4_x64-setup.exe
+ac8aec4fb8a1fe38629dcec4b5238ac8a9eb901d41feb9a1eb1f14b19761ac6b  LongEdit_1.1.5_x64_zh-CN.msi
+cec4098246af0d547f7a1ef6d71ea72ca026447f290aa75b3cd66ebab6817f1a  LongEdit_1.1.5_x64-setup.exe
 ```
 
 </details>
@@ -124,6 +124,8 @@ ad36cc821cebec1aab80f7e1b8b2eb0503fc649109fb15bb93196670b0a077cd  LongEdit_1.1.4
 打开自己的 Markdown 笔记并选定插入位置后，可将参考选文及来源直接插入。参考区在窄窗口自动改为上下布局，避免把正文挤得过窄。
 
 参考展示磁盘上的部分文字；PDF 参考为提取文字，完整版面可在主编辑区打开。支持手动刷新和失效来源重新关联；阅读位置、搜索条件和参考资料身份按资料库记住，重启后重新读取内容，不保存参考选文，不自动跟踪全库重命名。
+
+资料库搜索与 `Ctrl+P` 命令面板使用相同的关键词规则：`项目 预算 -旧版` 要求同时含前两个词，并排除“旧版”；`"交付范围"` 匹配连续短语。命令面板可选择当前资料库或全部已配置资料库，不扫描整台电脑。部分库暂时不可用会明确提示，不当作完整的空结果；最多显示 200 条，可继续加词缩小范围。跨库打开前请先保存当前草稿，软件不会代存或丢弃修改。
 
 ### ② 想到就记，保存时就选好位置
 
@@ -164,6 +166,10 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 多选文件后右键选择“批量重命名…”，可添加前后缀、查找替换或添加序号。先预览原名称、新名称和冲突，再执行；保留 `.table.json` 等复合扩展名，失败时只重试未完成项目。改名、移动和回收恢复在系统执行时仍拒绝覆盖其他程序刚创建的同名内容。
 
 普通删除进入资料库回收站，可从文件栏空白处右键或“更多操作”打开回收站恢复；“撤销上次移动”可撤销本次应用会话最近一次成功移动。剪切、复制和粘贴使用应用内当前资料库的文件剪贴板。回收内容保存在资料库的 `.longedit/trash`，整体搬迁资料库时请一并保留。
+
+外部文件拖入资料库时，同名正文和图片保留两份，不覆盖已有资料。Markdown 的普通本地图片复制到独立 `.assets` 目录，原文和原图不变；多文件导入逐项反馈，只重试未完成项。若文件已经导入、只是目录刷新失败，刷新列表即可，不需要重新导入整批文件。外部笔记有未保存修改时须先保存，再存入资料库。
+
+图片迁移限 UTF-8 Markdown、单份 20 MiB、512 处所选文档目录内的普通相对图像路径。缺失、越界或无法可靠识别的资源明确失败；不承诺搬迁任意附件、文档超链接，或后续单独移动文档时自动重写资源引用。完整边界见[安全导入说明](docs/RELEASE_NOTES_v1.1.5.md#支持边界)。
 
 ### ⑧ 让经常写的内容成为模板
 
@@ -500,7 +506,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
-| v1.1.5（已验收，待公开） | 资料与本地图片防覆盖导入、仅重试失败项；统一搜索及跨库草稿保护；修复 Windows 路径、保存误报和文件栏刷新/定位 | [完整说明](docs/RELEASE_NOTES_v1.1.5.md) · [封板与发版证据](docs/V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md) |
+| v1.1.5 | 资料与本地图片防覆盖导入、仅重试失败项；统一搜索及跨库草稿保护；修复 Windows 路径、保存误报和文件栏刷新/定位 | [发布说明](docs/RELEASE_NOTES_v1.1.5.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5) · [验收与发布审计](docs/V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md) |
 | v1.1.4 | 批量重命名、模板导入/导出、Markdown/TXT 历史局部恢复；修复文件操作的同名覆盖风险 | [发布说明](docs/RELEASE_NOTES_v1.1.4.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4) |
 | v1.1.3 | 自定义模板、多文档固定/排序/恢复、标签与集合整理、关系编辑、TXT 历史与恢复 | [发布说明](docs/RELEASE_NOTES_v1.1.3.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3) |
 | v1.1.2 | 文件右键整理、多选、复制与移动、撤销和回收恢复；侧栏精简 | [发布说明](docs/RELEASE_NOTES_v1.1.2.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.2) |
