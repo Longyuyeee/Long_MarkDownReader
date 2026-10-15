@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "status": "failed-real-navigation-render-regression",
+  "appVersion": "1.1.5",
+  "productSourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "harnessSourceCommit": "529212d37bd88210a834d22c53bfb763889bf8cb",
+  "buildRunId": 38797796429,
+  "reviewRunId": 38806145723,
+  "sourceUserContentIncluded": false,
+  "passedPlannedChecks": 9,
+  "requiredPlannedChecks": 11,
+  "observation": "Window visible and focused; actual Tree data includes target TXT, but rendered file rows remain empty. Browser reproduction independently identified animation cache stranded by expansion of nonexistent drive/library-root keys. Installer withdrawn; this is not passing evidence.",
+  "files": [
+    {
+      "sha256": "89a54f0c289a22987da6619a7607b6c046fb29b29c46208e8a195519ecd6594f",
+      "sizeBytes": 79115,
+      "path": "installed-v115-failure.jpg"
+    },
+    {
+      "sha256": "1f221155b1760ae6ce63225124a7c970ca973cd8bf2d9162fa03fed7cf4b4933",
+      "sizeBytes": 8522,
+      "path": "installed-v115-progress.json"
+    },
+    {
+      "sha256": "a9e3658624911e481333de1d2d206f0c28509fb7d0661729f98bfcfbf966ecfe",
+      "sizeBytes": 8665,
+      "path": "installed-v115-workflow.json"
+    }
+  ]
+}

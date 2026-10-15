@@ -2,7 +2,9 @@
 
 ## 2026-10-16 当前结论：文件树阻断已修复，等待新安装器
 
-旧 `fb0c7900` 安装器退出候选。虽然原计划安装门已通过两轮，实际截图和补充复核确证切库后文件栏为空，不允许晋级该包。复核 `38806145723` 记录窗口可见且有焦点，Vue Tree 的真实 data 含目标文件但可见行为空；不是后台窗口或目录接口没返回。
+新固定产品为 **`c3732a616e7c8b73cc50bef57b9f1aa596f438f5`**，已同步 main；[构建/安装 38808805344](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38808805344) 和 [main CI 38808786013](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38808786013) 正在验证。误用短 SHA 的首个调度 `38808785856` 已取消，不是通过证据。完整本地 `ci:patch-release`、生产依赖 0 漏洞通过。
+
+旧 `fb0c7900` 安装器退出候选。虽然原计划安装门已通过两轮，实际截图和补充复核确证切库后文件栏为空，不允许晋级该包。复核 `38806145723` 记录窗口可见且有焦点，Vue Tree 的真实 data 含目标文件但可见行为空；不是后台窗口或目录接口没返回。[原始报告、进度与截图摘要](evidence/v115-tree-animation-regression-38806145723/import-summary.json) 逐字节保留。
 
 已在正常 `calm` 动效、真实 App/LibraryMode/CommandPalette 下复现：先打开原库文件，再搜索打开另一库 TXT，将真实目录回复延迟 250 ms 模拟慢磁盘。修复前 [组件状态](evidence/v115-search-consistency-development/navigation-root-before-fix.json) 显示 data 两项、displayedKeys 空、animationInProgress=true，expandedKeys 错含 `C:` 和两个库根；[原图](evidence/v115-search-consistency-development/navigation-root-before-fix.png) 保留。依赖实际代码确认：展开不存在的根键会锁住 Naive UI 的动画扁平缓存，没有动画占位项就没有结束回调。
 
