@@ -8,7 +8,7 @@
           ref="inputInst"
           v-model:value="query"
           placeholder="搜索笔记或执行命令 (> 开头)"
-          aria-label="搜索资料或命令"
+          :input-props="{ 'aria-label': '搜索资料或命令' }"
           :maxlength="500"
           :disabled="opening"
           @keydown.enter="handleEnter"
@@ -51,7 +51,7 @@
         <div class="no-results" v-else-if="query.trim().length > 0 && !searching && !error">
           无匹配结果
         </div>
-        <div v-if="!query.startsWith('>')" class="palette-status palette-help">{{ limitReached ? '最多显示 200 条结果。' : '' }}空格分隔关键词，双引号匹配短语，- 排除词；Enter 在主编辑区打开。</div>
+        <div v-if="!query.startsWith('>')" class="palette-status palette-help">{{ limitReached ? '最多显示 200 条结果。' : '' }}空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。</div>
       </div>
     </div>
   </transition>

@@ -12,7 +12,10 @@ use std::{
 };
 
 static HTML_IMAGE: LazyLock<regex::Regex> = LazyLock::new(|| {
-    regex::Regex::new(r#"(?is)<img\b[^>]*?\s+src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))"#).unwrap()
+    regex::Regex::new(
+        r#"(?is)<img\b(?:"[^"]*"|'[^']*'|[^"'<>])*?\s+src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))"#,
+    )
+    .unwrap()
 });
 const MAX_MARKDOWN_BYTES: u64 = 20 * 1024 * 1024;
 const MAX_IMAGES: usize = 512;
@@ -473,6 +476,35 @@ mod tests {
             fs::read(root.join("library/data.table.json")).unwrap(),
             b"existing"
         );
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn html_image_attributes_do_not_hide_or_impersonate_the_real_source() {
+        let root = fixture();
+        let source = root.join("source/note.md");
+        let text =
+            "<img title=\"a > b\" data-hint=\" src='images/missing.png'\" src=\"images/a.png\">\n";
+        fs::write(&source, text).unwrap();
+        fs::write(root.join("source/images/a.png"), b"real-image").unwrap();
+        let imported = import_file(&source, &root.join("library")).unwrap();
+        let content = fs::read_to_string(imported).unwrap();
+        assert!(content.contains("note.assets/0001-a.png"), "the real src must be migrated even when other attributes contain angle brackets or src-like text");
+        assert!(content.contains("data-hint=\" src='images/missing.png'\""));
+        assert_eq!(
+            fs::read(root.join("library/note.assets/0001-a.png")).unwrap(),
+            b"real-image"
+        );
+        assert_eq!(fs::read_to_string(&source).unwrap(), text);
+        fs::write(
+            &source,
+            "<img alt=\" src='images/a.png'\" src=\"images/missing.png\">",
+        )
+        .unwrap();
+        assert!(
+            import_file(&source, &root.join("library")).is_err(),
+            "an attribute must not impersonate a missing real image source"
+        );
+        assert!(!root.join("library/note - 副本.md").exists());
         fs::remove_dir_all(root).unwrap();
     }
     #[test]

@@ -14,6 +14,7 @@ try {
   await page.goto((process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9015') + '/scripts/fixtures/search-consistency-browser.html')
   await page.getByRole('link', { name: '资料库', exact: true }).click()
   const librarySearch = page.getByPlaceholder('搜索文件与正文')
+  await open(); assert.equal(await palette.getByRole('textbox', { name: '搜索资料或命令' }).count(), 1); await input().press('Escape'); await palette.waitFor({ state: 'hidden' })
   await librarySearch.fill('"未结束'); await page.locator('.search-feedback-error').waitFor(); assert.match(await page.locator('.search-feedback-error').textContent(), /缺少结束双引号/)
   await librarySearch.fill('项目 预算 -旧版'); await page.waitForFunction(() => window.workflowAudit.searchCalls.some(call => call.command === 'search_knowledge' && call.args.query === '项目 预算 -旧版'))
   await librarySearch.fill('')

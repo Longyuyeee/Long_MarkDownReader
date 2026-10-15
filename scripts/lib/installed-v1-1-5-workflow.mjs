@@ -44,7 +44,8 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     const imageBytes = await fs.readFile(new URL('../../src-tauri/icons/32x32.png', import.meta.url))
     const existingImageBytes = await fs.readFile(new URL('../../src-tauri/icons/128x128.png', import.meta.url))
     const source = path.join(base, '资料.md'), bad = path.join(base, '缺图.md'), txt = path.join(base, '附带.txt')
-    await fs.writeFile(source, '# 外部资料\n![图](image.png)\n', { flag: 'wx' }); await fs.writeFile(path.join(base, 'image.png'), imageBytes, { flag: 'wx' })
+    const sourceText = '# 外部资料\n![图](image.png)\n\n<img title="a > b" data-hint=" src=\'not-an-image.png\'" src="image.png">\n'
+    await fs.writeFile(source, sourceText, { flag: 'wx' }); await fs.writeFile(path.join(base, 'image.png'), imageBytes, { flag: 'wx' })
     await fs.writeFile(bad, '# 缺图\n![图](missing.png)\n', { flag: 'wx' }); await fs.writeFile(txt, '附带正文', { flag: 'wx' })
     await fs.writeFile(path.join(library, '资料.md'), '已有正文不可覆盖', { flag: 'wx' }); await fs.mkdir(path.join(library, '资料.assets')); await fs.writeFile(path.join(library, '资料.assets', 'image.png'), existingImageBytes, { flag: 'wx' })
     const batch = paths => invoke('import_library_files', { sourcePaths: paths, libraryRoot: library, targetDir: library })
@@ -55,7 +56,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     const imported = await batch([source, bad, txt]), copy = imported.items.find(item => item.oldPath === source || normalize(item.oldPath) === normalize(source))
     assert.ok(copy)
     const content = await fs.readFile(copy.newPath, 'utf8'), image = content.match(/!\[图\]\(([^)]+)\)/)?.[1]
-    check('same-name-document-and-local-images-never-overwrite-existing-content', path.basename(copy.newPath) === '资料 - 副本.md' && await fs.readFile(path.join(library, '资料.md'), 'utf8') === '已有正文不可覆盖' && (await fs.readFile(path.join(library, '资料.assets', 'image.png'))).equals(existingImageBytes) && !!image && (await fs.readFile(path.resolve(path.dirname(copy.newPath), decodeURIComponent(image)))).equals(imageBytes) && await fs.readFile(source, 'utf8') === '# 外部资料\n![图](image.png)\n')
+    check('same-name-document-and-local-images-never-overwrite-existing-content', path.basename(copy.newPath) === '资料 - 副本.md' && await fs.readFile(path.join(library, '资料.md'), 'utf8') === '已有正文不可覆盖' && (await fs.readFile(path.join(library, '资料.assets', 'image.png'))).equals(existingImageBytes) && !!image && (await fs.readFile(path.resolve(path.dirname(copy.newPath), decodeURIComponent(image)))).equals(imageBytes) && content.includes('title="a > b"') && content.includes(`src="${image}"`) && await fs.readFile(source, 'utf8') === sourceText)
     check('batch-import-reports-partial-failure-without-publishing-missing-image-note', imported.items.length === 2 && imported.errors.length === 1 && normalize(imported.errors[0].path) === normalize(bad) && !(await fs.readdir(library)).includes('缺图.md'))
     const before = (await fs.readdir(library)).sort(); await fs.writeFile(path.join(base, 'missing.png'), imageBytes, { flag: 'wx' })
     const retried = await batch(imported.errors.map(error => error.path)), after = await fs.readdir(library)
