@@ -1,5 +1,15 @@
 # v1.1.5 安全导入与搜索一致性候选审计
 
+## 2026-10-16 当前收尾状态
+
+产品冻结为 `fa18bdb7e4657747c4b7708cedc9824f3d2561e8`，main CI `38781275848` 成功。构建 `38781276730` 的质量门、完整 Rust 回归、MSI/NSIS 构建和不可变收据均成功；安装阶段前 5 项通过，已实际验证 Windows 外部窗口不再卡死，但随后的重建索引调用遇到自动索引的明确忙碌拒绝，因此该运行整体失败，**不是安装验收通过**。原始报告、截图、安装器收据保存在 [索引准备失败证据](evidence/v115-index-preparation-failure/import-summary.json)。
+
+仅修正验收准备时序：30 秒原有预算内只等待“知识索引正在构建，请稍后再试”这一无副作用拒绝；随后仍须真正执行重建且返回 `ready`。其他原生错误、传输超时、非 ready 结果立即失败，四项独立回归覆盖这些边界。增加逐命令进度记录帮助定位，不修改产品、测试查询、验收条件或安装器。接下来对同一份安装器执行两个新环境的完整复核，不能把前 5 项或脚本回归算作全部通过。
+
+当前固定字节：NSIS 67,367,015 bytes，SHA-256 `a7f1d13c245bd4b4d2f723172cc2845d209c15b56a64659f8cb01437e9fcc54b`；MSI 76,185,600 bytes，SHA-256 `586ba4db95f05e2dcb19c0281788b2b5d64bf0633093ae4a8a945a4f37394428`。两者为未签名社区候选，不重新构建；公开下载仍为 v1.1.4。
+
+## 以下为按时间保留的开发过程（旧候选不可晋级）
+
 > 最新阻断与修复：`618b8af0` 的安装器构建成功，但安装态流程在生产 `open_external_file_window` 调用处超时，不能发版。原始失败 JSON 与实际截图已逐字节导入 [故障证据](evidence/v115-native-window-creation-regression/import-summary.json)，只有“未授权导入拒绝”1 项通过，绝不能写成安装验收通过。
 
 实际代码核对为同步 Tauri 命令内创建 WebView2 窗口；项目锁定的 Tauri 2.10.2 本地源码 `webview_window.rs` Known issues 明确说明 Windows 此调用上下文会死锁，应使用异步命令或独立线程，[官方 API 文档](https://docs.rs/tauri/latest/tauri/webview/struct.WebviewWindowBuilder.html) 给出相同限制。已仅将外部文件窗口 IPC 入口改为 `async`，授权、独立窗口、已有冷启动及单实例入口不删减，不延长超时、不绕开生产调用。快速笔记 IPC 已是异步，无需重复修改。

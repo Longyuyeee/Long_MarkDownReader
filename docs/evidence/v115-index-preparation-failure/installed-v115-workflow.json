@@ -1,0 +1,32 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "fa18bdb7e4657747c4b7708cedc9824f3d2561e8",
+  "harnessSourceCommit": "fa18bdb7e4657747c4b7708cedc9824f3d2561e8",
+  "installerSha256": "a7f1d13c245bd4b4d2f723172cc2845d209c15b56a64659f8cb01437e9fcc54b",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    }
+  ],
+  "error": "Error: 知识索引正在构建，请稍后再试"
+}

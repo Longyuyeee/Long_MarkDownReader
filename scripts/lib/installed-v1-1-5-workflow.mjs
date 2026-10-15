@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { waitForInstalledIndex } from './installed-index-readiness.mjs'
 
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
@@ -9,9 +10,13 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   const harnessSourceCommit = process.env.GITHUB_SHA || process.env.LONGEDIT_INSTALLED_HARNESS_COMMIT || ''
   assert.match(harnessSourceCommit, /^[a-f0-9]{40}$/, 'record the exact installer verification harness revision')
   const report = { appVersion, sourceCommit, harnessSourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
+  report.commandTrace = []; report.indexPreparationBusyResponses = 0
   const invoke = async (command, args = {}) => {
+    const step = { command, startedAt: new Date().toISOString() }; report.commandTrace.push(step)
+    await fs.writeFile(path.join(output, 'installed-v115-progress.json'), JSON.stringify(report, null, 2) + '\n')
     const r = await evaluate(`(async()=>{try{return {ok:true,value:await window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})}}catch(e){return {ok:false,error:String(e)}}})()`)
-    if (!r.ok) throw Error(r.error); return r.value
+    step.completedAt = new Date().toISOString(); step.status = r.ok ? 'completed' : 'rejected'
+    if (!r.ok) { step.reason = r.error; throw Error(r.error) }; return r.value
   }
   const check = (id, condition) => { assert.ok(condition, id); report.checks.push({ id, status: 'passed' }) }
   const button = label => `[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
@@ -104,8 +109,8 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     // store. Reload normally to represent the next launch with two saved libraries.
     await reloadPersistedConfig()
     for (const root of [library, second]) {
-      await waitFor(`(async()=>{const s=await window.__TAURI_INTERNALS__.invoke('get_knowledge_index_status',{libraryRoot:${JSON.stringify(root)}});return s.state!=='building'})()`, 'automatic index preparation settled', 240)
-      assert.equal((await invoke('rebuild_knowledge_index', { libraryRoot: root })).state, 'ready', 'real native index must be ready before indexed-search assertions')
+      const prepared = await waitForInstalledIndex(() => invoke('rebuild_knowledge_index', { libraryRoot: root }), { onBusy: () => { report.indexPreparationBusyResponses++ } })
+      assert.equal(prepared.state, 'ready', 'real native index must be ready before indexed-search assertions')
     }
     const expression = '项目 预算 -旧版', local = await invoke('search_knowledge_libraries', { libraryRoot: library, query: expression }), all = await invoke('search_knowledge_libraries', { libraryRoot: null, query: expression }), legacy = await invoke('search_knowledge', { libraryRoot: library, query: expression })
     check('shared-native-search-matches-txt-json-and-configured-library-scope', contains(local.results, main) && contains(local.results, data) && !contains(local.results, old) && !contains(local.results, remote) && contains(all.results, remote) && contains(legacy, main) && contains(legacy, data))

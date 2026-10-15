@@ -1,0 +1,14 @@
+{
+  "status": "failed-not-release-acceptance",
+  "runId": "38781276730",
+  "artifactId": "11997868426",
+  "sourceCommit": "fa18bdb7e4657747c4b7708cedc9824f3d2561e8",
+  "passedChecks": 5,
+  "reason": "Explicit already-building rejection while preparing the native search index; no native ready assertion was passed or skipped.",
+  "sourceUserContentIncluded": false,
+  "files": [
+    { "name": "installed-v115-failure.jpg", "sizeBytes": 74082, "sha256": "b4e1a61ce6fcb419cf106d3e6a6b84a7ad30f0b5aab3e6df95d40b8c7ec39bb3" },
+    { "name": "installed-v115-workflow.json", "sizeBytes": 1029, "sha256": "ab4e68b72681e78b732335515cceabfb98e5dd8cfed16b9027297ae41c411e3d" },
+    { "name": "installer-build-receipt.json", "sizeBytes": 1400, "sha256": "a4a61b2fad1715906caa75f3e741f1c8ffc3a1a38c060f14d7f76430b6261745" }
+  ]
+}
