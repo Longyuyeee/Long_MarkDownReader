@@ -48,6 +48,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
   const visibleSaveState = `(()=>{const s=document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app');return {state:document.querySelector('.document-save-state')?.textContent.trim(),tabs:[...document.querySelectorAll('.workspace-tab')].map(e=>e.getAttribute('aria-label')),error:document.querySelector('${palette} [role="alert"]')?.textContent,dirtyModels:s?.tabs.filter(t=>t.isDirty).map(t=>({path:t.path,content:t.content?.slice(0,300)})),tempDirty:s?.isTempDirty}})()`
   const contains = (results, file) => results.some(r => normalize(r.path) === normalize(file))
+  const navigationState = `(()=>{const app=document.querySelector('#app')?.__vue_app__,s=app?.config.globalProperties.$pinia?._s.get('app'),components=[],seen=new Set();const visit=v=>{if(!v||typeof v!=='object'||seen.has(v)||seen.size>6000)return;seen.add(v);const c=v.component,n=c?.type?.__name||c?.type?.name;if(c&&n==='LibraryMode'){const t=c.setupState?.treeData;components.push({name:n,uid:c.uid,unmounted:c.isUnmounted,treeKeys:Array.isArray(t)?t.map(x=>x.key):undefined,loading:c.setupState?.libraryLoading,error:c.setupState?.libraryLoadError})}if(c&&n==='Tree'&&Array.isArray(c.props?.data))components.push({name:n,uid:c.uid,dataKeys:c.props.data.map(x=>x.key)});if(c)visit(c.subTree);if(Array.isArray(v.children))v.children.forEach(visit);if(v.suspense)visit(v.suspense.activeBranch)};visit(document.querySelector('#app')?._vnode);return {hash:location.hash,visibility:document.visibilityState,focused:document.hasFocus(),root:s?.libraryPath,tabs:s?.tabs.map(t=>({id:t.id,path:t.path})),components,visibleTreePaths:[...document.querySelectorAll('[data-drop-path]')].filter(e=>e.getClientRects().length).map(e=>e.getAttribute('data-drop-path')),scanTrace:window.__longeditV115ScanTrace,consoleErrors:window.__longeditV115Errors}})()`
   const snap = async name => { await waitFor(`!document.querySelector('.n-message')&&!document.getAnimations().some(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity)`, 'v115 natural motion completed'); await capture(name) }
   const reloadPersistedConfig = async () => {
     const previousOrigin = await evaluate('performance.timeOrigin')
@@ -112,6 +113,9 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     // Native save_config writes disk but does not mutate an already mounted Pinia
     // store. Reload normally to represent the next launch with two saved libraries.
     await reloadPersistedConfig()
+    // Read-only observation starts after reload; it forwards original promises,
+    // results and console errors, without injecting state or issuing refreshes.
+    await evaluate(`(()=>{const original=window.__TAURI_INTERNALS__.invoke,trace=[],errors=[],originalError=console.error;window.__longeditV115Errors=errors;console.error=function(...args){errors.push(args.map(x=>String(x?.stack||x)));return originalError.apply(this,args)};window.__longeditV115ScanTrace=trace;window.__TAURI_INTERNALS__.invoke=function(command,args,...rest){const result=original.call(this,command,args,...rest);if(command==='scan_directory'){const entry={args,startedAt:Date.now(),caller:new Error().stack?.split('\\n').slice(1,4)};trace.push(entry);Promise.resolve(result).then(value=>{entry.completedAt=Date.now();entry.paths=value?.map(x=>x.path)},cause=>{entry.error=String(cause)})}return result};window.__longeditV115RestoreScanObserver=()=>{window.__TAURI_INTERNALS__.invoke=original;console.error=originalError}})()`)
     for (const root of [library, second]) {
       const prepared = await waitForInstalledIndex(() => invoke('rebuild_knowledge_index', { libraryRoot: root }), { onBusy: () => { report.indexPreparationBusyResponses++ } })
       assert.equal(prepared.state, 'ready', 'real native index must be ready before indexed-search assertions')
@@ -148,14 +152,16 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await open(); await query(expression); await waitFor(`!!(${result('v115-另库预算')})`, 'other library ready after save'); await mouse(result('v115-另库预算'))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('另库资料')`, 'saved draft permits switch')
     report.switchedDirectory = await invoke('scan_directory', { libraryRoot: second, path: second })
+    report.navigationBeforeTreeWait = await evaluate(navigationState)
     await waitFor(`[...document.querySelectorAll('[data-drop-path]')].some(e=>e.getClientRects().length&&e.getAttribute('data-drop-path').replaceAll('\\\\','/').endsWith('/'+${JSON.stringify(path.basename(remote))}))`, 'switched library file tree is visible without manual refresh')
     check('actual-typing-blocks-cross-library-open-until-explicit-save', protectedDraft && (await fs.readFile(draft, 'utf8')).includes('用户刚输入') && normalize((await invoke('get_config')).activeLibraryPath) === normalize(second))
     await snap('installed-v115-main.jpg')
     check('v115-workflows-have-no-global-error-overlay', !await evaluate(`!!document.querySelector('#crash-screen,#runtime-error-notice,.route-error-fallback')`))
     report.status = 'passed'
-  } catch (error) { report.status = 'failed'; report.error = String(error); report.failureUiState = await evaluate(visibleSaveState).catch(() => null); await capture('installed-v115-failure.jpg').catch(() => {}); throw error }
+  } catch (error) { report.status = 'failed'; report.error = String(error); report.failureUiState = await evaluate(visibleSaveState).catch(() => null); report.failureNavigation = await evaluate(navigationState).catch(() => null); await capture('installed-v115-failure.jpg').catch(() => {}); throw error }
   finally {
     let cleanupError
+    await evaluate('window.__longeditV115RestoreScanObserver?.()').catch(() => {})
     if (config) {
       try {
         await invoke('save_config', { config })

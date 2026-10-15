@@ -1,0 +1,12 @@
+{
+  "status": "failed-installed-navigation-observation",
+  "runId": "38804566952",
+  "productSourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "harnessSourceCommit": "10b1ddfc01c7c7cd8c8430b3f8f4cc91bfa5ec2a",
+  "sourceUserContentIncluded": false,
+  "reason": "The real scan_directory reply contains v115-另库预算.txt, but the visible file-tree node still does not appear within the unchanged 30-second budget. Main-editor content and saved-state guards passed. Further read-only render, request and visibility diagnostics are required before choosing a correction.",
+  "files": [
+    { "name": "installed-v115-workflow.json", "sha256": "33c77f02e93ed490858052f09ebd9accc88040433cab3f072465e6a370cb1856" },
+    { "name": "installed-v115-failure.jpg", "sha256": "89a54f0c289a22987da6619a7607b6c046fb29b29c46208e8a195519ecd6594f" }
+  ]
+}

@@ -1,0 +1,214 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9",
+  "harnessSourceCommit": "10b1ddfc01c7c7cd8c8430b3f8f4cc91bfa5ec2a",
+  "installerSha256": "543cc83df368a17bf14ada05d972d339a2d18064d1ab10f231331f69a2a744db",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    },
+    {
+      "id": "palette-scope-dropdown-is-clickable-and-shows-real-native-results",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-query-and-genuine-empty-state-are-distinct",
+      "status": "passed"
+    },
+    {
+      "id": "search-result-opens-in-main-editor-without-replacing-reference",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T20:47:48.665Z",
+      "completedAt": "2026-10-15T20:47:48.671Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T20:47:48.671Z",
+      "completedAt": "2026-10-15T20:47:48.750Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T20:47:48.750Z",
+      "completedAt": "2026-10-15T20:47:48.793Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T20:47:48.793Z",
+      "completedAt": "2026-10-15T20:47:48.805Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T20:47:48.805Z",
+      "completedAt": "2026-10-15T20:47:48.810Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T20:47:48.810Z",
+      "completedAt": "2026-10-15T20:47:48.818Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T20:47:48.818Z",
+      "completedAt": "2026-10-15T20:47:48.822Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-15T20:47:48.824Z",
+      "completedAt": "2026-10-15T20:47:48.844Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-15T20:47:48.844Z",
+      "completedAt": "2026-10-15T20:47:49.010Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T20:47:49.011Z",
+      "completedAt": "2026-10-15T20:47:49.278Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T20:47:49.293Z",
+      "completedAt": "2026-10-15T20:47:49.521Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T20:47:49.586Z",
+      "completedAt": "2026-10-15T20:47:49.702Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T20:47:49.702Z",
+      "completedAt": "2026-10-15T20:47:49.796Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T20:47:50.257Z",
+      "completedAt": "2026-10-15T20:47:50.417Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T20:47:50.417Z",
+      "completedAt": "2026-10-15T20:47:50.460Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T20:47:50.460Z",
+      "completedAt": "2026-10-15T20:47:50.510Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T20:47:50.510Z",
+      "completedAt": "2026-10-15T20:47:50.515Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-15T20:47:50.515Z",
+      "completedAt": "2026-10-15T20:47:50.597Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T20:47:52.702Z",
+      "completedAt": "2026-10-15T20:47:52.711Z",
+      "status": "completed"
+    },
+    {
+      "command": "scan_directory",
+      "startedAt": "2026-10-15T20:47:53.344Z",
+      "completedAt": "2026-10-15T20:47:53.350Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T20:48:25.285Z",
+      "completedAt": "2026-10-15T20:48:25.295Z",
+      "status": "completed"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "markdownInputMode": "vditor-wysiwyg",
+  "afterDiskWrite": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "afterExplicitSave": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "switchedDirectory": [
+    {
+      "name": "v115-另库预算.txt",
+      "path": "\\\\?\\C:\\release-v115-other-library\\v115-另库预算.txt",
+      "is_dir": false
+    }
+  ],
+  "error": "Error: Timed out waiting for switched library file tree is visible without manual refresh",
+  "failureUiState": {
+    "tabs": [
+      "v115-另库预算",
+      "v115-另库预算"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "cleanupUiReload": "not-attempted-after-failed-user-workflow"
+}
