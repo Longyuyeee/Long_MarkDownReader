@@ -43,7 +43,8 @@ Object.assign(community, {
   patchValidation: { ...community.patchValidation, previousPublicVersion: '1.1.4', previousEvidenceInheritedAsCurrent: false, fullInstalledLifecycleRerun: false, managedUpdaterUpgradePath: '1.1.4-to-1.1.5-pending', scope: 'safe-import-and-search-consistency' },
   targetRelease: { ...community.targetRelease, tag: 'v1.1.5', url: 'https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5' },
   candidate: null, release: null,
-  releaseWarnings: community.releaseWarnings.map(value => value.replace('v1.1.2-to-v1.1.4', 'v1.1.4-to-v1.1.5')),
+  // Keep unresolved predecessor observations; a new release never proves them passed.
+  releaseWarnings: [...new Set([...community.releaseWarnings, 'v1.1.4-to-v1.1.5-managed-update-observation-pending'])],
   nextAction: 'validate-and-build-v1.1.5-installers',
 })
 changes.set('shared/v1-community-release-policy.json', JSON.stringify(community, null, 2) + '\n')

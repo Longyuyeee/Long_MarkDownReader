@@ -25,6 +25,14 @@ const fixture = () => {
   set(); return { manifest, report, set, read: file => bytes.get(file) }
 }
 
+test('current v115 metadata keeps new and unresolved predecessor update observations explicit', () => {
+  const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
+  if (policy.appVersion !== '1.1.5' || policy.patchValidation.managedUpdaterUpgradePath !== '1.1.4-to-1.1.5-pending') return
+  assert.ok(policy.releaseWarnings.includes('v1.1.4-to-v1.1.5-managed-update-observation-pending'))
+  const previous = JSON.parse(fs.readFileSync('docs/evidence/v1.1.4-release/release-receipt.json', 'utf8'))
+  if (previous.managedUpdaterObservation === '1.1.3-to-1.1.4-pending') assert.ok(policy.releaseWarnings.includes('v1.1.3-to-v1.1.4-managed-update-observation-pending'))
+})
+
 test('v115 installer workflow retains ten explicit user-task checks and production authorization', () => {
   assert.equal(ids.length, 10); assert.equal(new Set(ids).size, 10)
   assert.match(workflow, /open_external_file_window/); assert.match(workflow, /Input\.insertText/)
