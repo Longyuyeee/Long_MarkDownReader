@@ -2,6 +2,12 @@
 
 ## 2026-10-16 当前结论：规范节点展开已修复，新固定包验证中
 
+**首轮安装验收已通过，独立复核待完成**：[构建/安装 38816570534](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38816570534) 整体成功；[26 份逐字节原始文件及分组清单](evidence/v115-primary-install-38816570534/import-summary.json) 包含生命周期 22、工作区 18/11 路由、管理 7、版本 4、v110 8/v111 8/v112 9/v113 8/v114 8/v115 11，全部通过。已查看实际主区、搜索和设置页，切库后的 TXT 在文件栏可见且正确选中。此为单轮证据，不提前标记为最终封板。
+
+最新 main 的测试隔离修正提交 `688f1e48`，[CI 38818996491](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38818996491) 已整体成功：727 功能、0 失败、5 个既有 ignored，质量门及 npm 生产依赖 0 漏洞通过。固定产品构建自身为 726 功能、1 独立性能，首轮 220 / 4417 / 3327 ms，合计 7965 ms；727 中多出的是夹具隔离回归，不混称为安装包新增功能。产品仍冻结 5ee1ddd7。
+
+固定 NSIS：67,362,323 bytes，SHA-256 `cec4098246af0d547f7a1ef6d71ea72ca026447f290aa75b3cd66ebab6817f1a`；MSI：76,189,696 bytes，SHA-256 `ac8aec4fb8a1fe38629dcec4b5238ac8a9eb901d41feb9a1eb1f14b19761ac6b`。两者未签名。[独立复核 38820912641](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38820912641) 仅取同一份安装器，不重新构建；原构建 artifact 到期 2026-10-29 23:00:00 UTC。
+
 **有效产品冻结：`5ee1ddd7297e59813307058e89801e5521966abc`**，已同步 main。[本次构建/安装 38816570534](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38816570534) 与 [main CI 38816571226](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38816571226) 使用此完整修复。须待完整安装和同包独立复核通过，当前不是可发版或公开发布状态。
 
 测试隔离补充：main CI 38816571226 的智能集合用例得到 166 而非 200（725 通过、1 失败），失败保留在 [原日志摘录](evidence/v115-test-fixture-isolation/original-ci-excerpt.txt)。生产空查询没有时间预算，逐文件计数后截断；不能把此现象直接说成查询超时。原日志没有记录各线程夹具目录，因此不能断言该次一定发生时间戳碰撞；但固定相同时间戳的新回归已确定性证实旧构造器会让两个夹具共用目录。
