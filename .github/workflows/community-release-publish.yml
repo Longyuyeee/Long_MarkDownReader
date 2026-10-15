@@ -89,9 +89,10 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $tag = "v$env:RELEASE_VERSION"
-          $release = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" | ConvertFrom-Json
+          # The by-tag REST endpoint only resolves published releases.
+          $prepared = gh release view $tag --repo $env:GITHUB_REPOSITORY --json databaseId,isDraft,isPrerelease,tagName | ConvertFrom-Json
           if ($LASTEXITCODE -ne 0) { throw 'Prepared release not found' }
-          if ($release.draft) {
+          if ($prepared.isDraft) {
             gh release upload $tag --repo $env:GITHUB_REPOSITORY "release-upload/LongEdit_$($env:RELEASE_VERSION)_x64-setup.exe" "release-upload/LongEdit_$($env:RELEASE_VERSION)_x64_zh-CN.msi" release-upload/SHA256SUMS.txt --clobber
             if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
             gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest --notes-file "docs/RELEASE_NOTES_v$($env:RELEASE_VERSION).md"
