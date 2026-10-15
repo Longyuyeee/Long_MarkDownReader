@@ -148,16 +148,18 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
-  const next = version === '1.1.0' ? '1.1.1' : '1.1.2'
-  const previous = version === '1.1.0' ? '1.0.26' : '1.1.0'
-  const slice = version === '1.1.0' ? 'v1.1.0-ui-and-workflow' : 'v1.1.1-library-experience'
-  const stage = version === '1.1.0' ? (published ? 'M8-29-v1.1.0-published' : 'M8-28-v1.1.0-version-candidate') : (published ? 'M8-31-v1.1.1-published' : 'M8-30-v1.1.1-version-candidate')
-  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? next : version)]
-  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? version : previous) && development.publicTag === `v${development.publicVersion}`]
-  required[9] = [published ? `当前阶段：**v${version} 已发布**` : version === '1.1.0' ? '当前阶段：**v1.1.0 界面与工作流升级候选**' : '当前阶段：**v1.1.1 资料库体验升级候选**', development.currentStage === stage && development.activeSlice?.id === slice && fs.existsSync(development.activeSlice.document)]
+  const patch = Number(version.split('.')[2])
+  const next = '1.1.' + (patch + 1)
+  const previous = patch === 0 ? '1.0.26' : '1.1.' + (patch - 1)
+  const slices = ['v1.1.0-ui-and-workflow', 'v1.1.1-library-experience', 'v1.1.2-file-management']
+  const stage = 'M8-' + (28 + patch * 2 + Number(published)) + '-v' + version + (published ? '-published' : '-version-candidate')
+  required[5] = ['当前开发目标：' + '\x60' + development.developmentTargetVersion + '\x60', development.developmentTargetVersion === (published ? next : version)]
+  required[7] = ['当前公开版本：' + '\x60' + development.publicVersion + '\x60', development.publicVersion === (published ? version : previous) && development.publicTag === 'v' + development.publicVersion]
+  const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简']
+  required[9] = ['当前阶段：**v' + version + (published ? ' 已发布**' : ' ' + names[patch] + '候选**'), development.currentStage === stage && development.activeSlice?.id === slices[patch] && fs.existsSync(development.activeSlice.document)]
 }
 
 for (const [token, condition] of required) {

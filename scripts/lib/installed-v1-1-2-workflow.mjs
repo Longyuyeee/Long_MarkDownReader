@@ -1,0 +1,88 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+
+// Packaged UI, native IPC and a synthetic library on the disposable runner.
+export async function runInstalledV112Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.1.2') throw Error('Disposable 1.1.2 installation required')
+  const report = { appVersion, sourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
+  const invoke = async (command, args = {}) => {
+    const result = await evaluate(`(async()=>{try{return {ok:true,value:await window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})}}catch(error){return {ok:false,error:String(error)}}})()`)
+    if (!result.ok) throw Error(result.error)
+    return result.value
+  }
+  const check = (id, condition) => { assert.ok(condition, id); report.checks.push({ id, status: 'passed' }) }
+  const exists = file => fs.stat(file).then(() => true, () => false)
+  const point = expression => `(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
+  const mouse = async (expression, button = 'left') => {
+    await evaluate(`(${expression})?.scrollIntoView({block:'nearest'})`)
+    await waitFor(point(expression), 'visible file operation control')
+    const coordinates = await evaluate(point(expression))
+    for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, ...coordinates, button, clickCount: 1 })
+  }
+  const item = label => `[...document.querySelectorAll('.n-dropdown-option-body')].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
+  const button = (label, root = 'document') => `[...(${root}?.querySelectorAll('button') || [])].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
+  const row = name => `[...document.querySelectorAll('[data-drop-path]')].find(e=>e.dataset.dropPath.replaceAll('\\\\','/').endsWith(${JSON.stringify(name.replaceAll('\\', '/'))}))`
+  const menu = async (name, label) => { await mouse(row(name), 'right'); await mouse(item(label)) }
+  const more = async (name, label) => {
+    await mouse(row(name), 'right'); await waitFor(point(item('更多操作')), 'more file operations')
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...await evaluate(point(item('更多操作'))) })
+    await mouse(item(label))
+  }
+  const sourceName = 'release-v112-note.md', duplicateName = 'release-v112-note - 副本.md'
+  const source = path.join(library, sourceName), duplicate = path.join(library, duplicateName)
+  const content = '# Installed file management\n\nOriginal source remains readable.\n'
+  try {
+    await fs.writeFile(source, content, { flag: 'wx' })
+    await navigate('#/library?path=' + encodeURIComponent(source), '.library-mode', 'installed file management')
+    await mouse(`document.querySelector('#tab-files')`)
+    await mouse(`document.querySelector('button[title="刷新列表"]')`)
+    await waitFor(`!!(${row(sourceName)})`, 'new file in native tree')
+    await menu(sourceName, '创建副本')
+    await waitFor(`!!(${row(duplicateName)})`, 'duplicate revealed in native tree')
+    check('context-duplicate-writes-real-copy-and-preserves-source', await fs.readFile(duplicate, 'utf8') === content && await fs.readFile(source, 'utf8') === content)
+    await capture('installed-v112-context-result.jpg')
+
+    await menu(sourceName, '移动到…')
+    const input = `document.querySelector('.file-operation-dialog input[aria-label="目标文件夹"]')`
+    await mouse(input)
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
+    await send('Input.insertText', { text: 'release-v112-target/nested' })
+    await capture('installed-v112-move-dialog.jpg')
+    await mouse(button('移动', `document.querySelector('.file-operation-dialog')`))
+    const moved = path.join(library, 'release-v112-target', 'nested', sourceName)
+    await waitFor(`!document.querySelector('.file-operation-dialog') && !!(${row('nested\\' + sourceName)})`, 'nested native move completed')
+    check('move-dialog-creates-directory-and-updates-active-path', await fs.readFile(moved, 'utf8') === content && !await exists(source) && (await evaluate('decodeURIComponent(location.hash)')).replaceAll('\\', '/').includes('nested/' + sourceName))
+    await more(sourceName, '撤销上次移动')
+    await waitFor(`!!(${row(sourceName)}) && !(${row('nested\\' + sourceName)})`, 'native undo revealed original path')
+    check('context-undo-restores-original-file', await fs.readFile(source, 'utf8') === content && !await exists(moved))
+
+    await menu(sourceName, '移到回收站 (Del)')
+    await mouse(button('移到回收站', `document.querySelector('.n-dialog')`))
+    await waitFor(`!(${row(sourceName)})`, 'native recycle removes tree item')
+    const trash = await invoke('list_library_trash', { libraryRoot: library })
+    check('recycle-keeps-recoverable-content-without-source-file', !await exists(source) && trash.some(e => e.name === sourceName))
+    await more(duplicateName, '资料库回收站…')
+    await mouse(`document.querySelector('.trash-entry input[aria-label="选择 ${sourceName}"]')`)
+    await capture('installed-v112-trash-dialog.jpg')
+    await mouse(button('恢复所选', `document.querySelector('.file-operation-dialog')`))
+    await waitFor(`!!(${row(sourceName)}) && document.querySelector('.file-operation-dialog')?.textContent.includes('回收站为空')`, 'native restore returns original path')
+    check('recycle-dialog-restores-real-file', await fs.readFile(source, 'utf8') === content && !(await invoke('list_library_trash', { libraryRoot: library })).length)
+    await mouse(button('关闭', `document.querySelector('.file-operation-dialog')`))
+
+    const copied = await invoke('transfer_library_items', { libraryRoot: library, paths: [source], targetDir: 'release-v112-target/copies', operation: 'copy' })
+    check('native-copy-command-preserves-source-and-new-directory', copied.errors.length === 0 && copied.items.length === 1 && await fs.readFile(copied.items[0].newPath, 'utf8') === content && await fs.readFile(source, 'utf8') === content)
+    const recycled = await invoke('trash_library_items', { libraryRoot: library, paths: [copied.items[0].newPath] })
+    assert.equal(recycled.errors.length, 0)
+    const [purgeEntry] = await invoke('list_library_trash', { libraryRoot: library })
+    await invoke('purge_library_trash', { libraryRoot: library, ids: [purgeEntry.id] })
+    check('native-purge-removes-only-selected-trash-content', !(await invoke('list_library_trash', { libraryRoot: library })).length && await fs.readFile(source, 'utf8') === content && await fs.readFile(duplicate, 'utf8') === content)
+    const movedAgain = await invoke('transfer_library_items', { libraryRoot: library, paths: [duplicate], targetDir: 'release-v112-target', operation: 'move' })
+    const undone = await invoke('undo_library_moves', { libraryRoot: library, items: movedAgain.items })
+    check('native-move-and-undo-commands-registered', movedAgain.errors.length === 0 && undone.errors.length === 0 && await fs.readFile(duplicate, 'utf8') === content)
+    check('no-global-error-overlay-after-file-operations', !await evaluate(`!!document.querySelector('#crash-screen, #runtime-error-notice, .route-error-fallback')`))
+    report.status = 'passed'
+  } catch (error) { report.status = 'failed'; report.error = String(error); await capture('installed-v112-failure.jpg').catch(() => {}); throw error }
+  finally { await fs.writeFile(path.join(output, 'installed-v112-workflow.json'), JSON.stringify(report, null, 2) + '\n') }
+}
