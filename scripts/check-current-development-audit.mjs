@@ -5,7 +5,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-v126-version-transition.
 if (JSON.parse(fs.readFileSync('package.json', 'utf8')).version === '1.1.0') {
   execFileSync(process.execPath, ['--test', 'scripts/test-v1-1-0-version-identity.mjs'], { stdio: 'inherit' })
 }
-execFileSync(process.execPath, ['--test', 'scripts/test-inline-tags.mjs', 'scripts/test-note-link-targets.mjs', 'scripts/test-capture-destination.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-inline-tags.mjs', 'scripts/test-note-link-targets.mjs', 'scripts/test-capture-destination.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-deadline.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-markdown-idle-performance.mjs', 'scripts/test-opener-acl.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-source-path.mjs'], { stdio: 'inherit' })
