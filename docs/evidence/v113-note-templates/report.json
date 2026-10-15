@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "scope": "Actual Vue components with simulated native IPC; native filesystem and config serialization tested separately",
+  "checks": [
+    "Save as template captures the active unsaved editor rather than stale disk content",
+    "Variable preview expands title/date/time; a persistence failure keeps input and retries without a duplicate template",
+    "New note uses the library default; explicit template uses unique names, while explicit blank always stays blank",
+    "Rename preserves the default by ID; template dialogs fit six styles at two widths with normal animations",
+    "Quick note shares custom/default templates, confirms before replacing drafts, saves expanded content and prepares the next note",
+    "Cross-window catalog changes refresh available templates without replacing a draft, including a deleted active template",
+    "Deleting a custom template clears its library defaults without stale nested-map entries and keeps existing notes"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "style": "soft",
+      "width": 760,
+      "passed": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "style": "neo",
+      "width": 760,
+      "passed": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "style": "glass",
+      "width": 760,
+      "passed": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "style": "airy",
+      "width": 760,
+      "passed": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "style": "minimal",
+      "width": 760,
+      "passed": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "style": "sharp",
+      "width": 760,
+      "passed": true
+    }
+  ],
+  "errors": []
+}

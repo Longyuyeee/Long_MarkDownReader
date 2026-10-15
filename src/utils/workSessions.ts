@@ -1,4 +1,4 @@
-export interface SessionTab { id: string; path: string; title: string; isDirty: false }
+export interface SessionTab { id: string; path: string; title: string; isDirty: false; pinned?: boolean }
 export interface WorkSession {
   version: 1
   id: string
@@ -25,7 +25,7 @@ export function sessionTabs(root: string, tabs: unknown): SessionTab[] {
   return tabs.filter(tab => {
     if (!tab || tab.external || !belongsToLibrary(root, tab.path) || seen.has(identity(tab.path))) return false
     seen.add(identity(tab.path)); return true
-  }).map(tab => ({ id: tab.path, path: tab.path, title: typeof tab.title === 'string' ? tab.title : tab.path.split(/[\\/]/).pop()!, isDirty: false }))
+  }).map(tab => ({ id: tab.path, path: tab.path, title: typeof tab.title === 'string' ? tab.title : tab.path.split(/[\\/]/).pop()!, isDirty: false, ...(tab.pinned === true ? { pinned: true } : {}) }))
 }
 export function captureWorkSession(root: string, tabs: unknown, active: string | null, name: string): WorkSession {
   if (!root || !name.trim()) throw new Error('请填写现场名称并选择资料库')

@@ -23,7 +23,6 @@ for (const token of [
   '@keydown.right.prevent="focusAdjacentTab(tab, 1)"',
   'new ResizeObserver(() => { updateScrollState(); void revealActiveTab() })',
   'resizeObserver?.disconnect()',
-  "import { NTooltip, useDialog } from 'naive-ui'",
   'const tooltipDelay = 420',
   ':content-style="compactTooltipStyle"',
   'v-for="tab in store.tabs"',
@@ -36,6 +35,11 @@ for (const token of [
   'scrollbar-width: none',
   '.workspace-tabs-scroll::-webkit-scrollbar',
 ]) if (!source.includes(token)) fail(`contract token missing: ${token}`)
+
+const naiveImports = source.match(/import\s*\{([^}]+)\}\s*from\s*['"]naive-ui['"]/)?.[1].split(',').map(name => name.trim()) ?? []
+for (const name of ['NTooltip', 'useDialog']) {
+  if (!naiveImports.includes(name)) fail(`required UI import missing: ${name}`)
+}
 
 if (/scrollbar-width:\s*(thin|auto)/.test(source)) fail('native scrollbar styling returned')
 if (/min-width:\s*92px/.test(source)) fail('compressed 92px tab width returned')

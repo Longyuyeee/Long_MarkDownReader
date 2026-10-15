@@ -14,12 +14,15 @@ import type { FileDisplayStyle } from '../config/fileTreeAppearance'
 import { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries, copyFileDisplayStyleEntries } from '../utils/fileDisplayStyles'
 import { normalizeDisplayPreferences } from '../config/displayPreferences'
 import { belongsToLibrary, libraryTabsKey, sessionTabs } from '../utils/workSessions'
+import { emit } from '@tauri-apps/api/event'
+import { BLANK_NOTE_TEMPLATE, BUILTIN_NOTE_TEMPLATES, MAX_NOTE_TEMPLATES, validateNoteTemplate, type NoteTemplate } from '../config/noteTemplates'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
 export const THEME_MAP = THEME_EDITOR_BACKGROUNDS
 
 export interface TabInfo {
+  pinned?: boolean
   id: string
   title: string
   path: string
@@ -56,6 +59,7 @@ export interface LibraryConfig {
 }
 
 export interface CollectionFilters {
+  tags?: string[]
   directory: string
   tag: string
   modifiedWithinDays: number | null
@@ -88,6 +92,7 @@ export const useAppStore = defineStore('app', {
   state: () => ({
     activeSession: 'LIBRARY' as SessionMode,
     tabs: [] as TabInfo[],
+    closedTabs: [] as TabInfo[],
     activeTabId: null as string | null,
     theme: 'system' as ThemeName,
     codeTheme: 'github' as string,
@@ -116,11 +121,14 @@ export const useAppStore = defineStore('app', {
     recentFiles: [] as { title: string; path: string }[],
     starredFiles: [] as string[],
     savedSearches: [] as SavedSearchConfig[],
+    noteTemplates: [] as NoteTemplate[],
+    defaultNoteTemplates: {} as Record<string, string>,
     fileDisplayStyles: {} as Record<string, FileDisplayStyle>,
     relationObjectFocus: null as RelationObjectFocus | null,
     configReady: false,
   }),
   getters: {
+    allNoteTemplates: state => [...BUILTIN_NOTE_TEMPLATES, ...state.noteTemplates],
     fileDisplayStylesByPath: state => normalizeFileDisplayStyles(state.fileDisplayStyles),
     fileDisplayStyleForPath(): (path: string) => FileDisplayStyle | undefined {
       return path => this.fileDisplayStylesByPath[fileStylePathKey(path)]
@@ -172,6 +180,8 @@ export const useAppStore = defineStore('app', {
           catch { this.aiCredentialStored = false }
           this.aiModel = config.aiModel || 'gpt-4o-mini'
           this.savedSearches = Array.isArray(config.savedSearches) ? config.savedSearches : []
+          this.noteTemplates = Array.isArray(config.noteTemplates) ? config.noteTemplates : []
+          this.defaultNoteTemplates = config.defaultNoteTemplates || {}
           this.fileDisplayStyles = normalizeFileDisplayStyles(config.fileDisplayStyles && typeof config.fileDisplayStyles === 'object' ? config.fileDisplayStyles : {})
 
           // 同步系统真实的自启状态，以系统为准
@@ -241,6 +251,8 @@ export const useAppStore = defineStore('app', {
               aiModel: next.aiModel,
               savedSearches: next.savedSearches,
               fileDisplayStyles: next.fileDisplayStyles,
+              noteTemplates: next.noteTemplates,
+              defaultNoteTemplates: next.defaultNoteTemplates,
             } })
           }
         } catch (error) {
@@ -256,6 +268,7 @@ export const useAppStore = defineStore('app', {
         if (switchesLibrary) {
           this.saveTabsState()
           applied.tabs = []
+          applied.closedTabs = []
           applied.recentFiles = []
           applied.starredFiles = []
           applied.activeTabId = null
@@ -264,11 +277,34 @@ export const useAppStore = defineStore('app', {
         this.$patch(applied)
         // Pinia object patches merge nested maps; deleted file markers must not survive.
         if (snapshot.fileDisplayStyles !== undefined) this.fileDisplayStyles = snapshot.fileDisplayStyles
+        if (snapshot.defaultNoteTemplates !== undefined) this.defaultNoteTemplates = snapshot.defaultNoteTemplates
         if (switchesLibrary) this.restoreTabsState()
         if (!isTauriRuntime()) this.saveTabsState()
+        if (isTauriRuntime() && (snapshot.noteTemplates !== undefined || snapshot.defaultNoteTemplates !== undefined)) {
+          try { await emit('note-templates-changed', { noteTemplates: this.noteTemplates, defaultNoteTemplates: this.defaultNoteTemplates }) }
+          catch (error) { console.warn('Templates saved; other windows will refresh when reopened', error) }
+        }
       })
       configWritePromise = task.catch(() => {})
       return task
+    },
+    async saveNoteTemplate(template: NoteTemplate) {
+      const entry = validateNoteTemplate(template, this.allNoteTemplates)
+      const exists = this.noteTemplates.some(item => item.id === entry.id)
+      if (!exists && this.noteTemplates.length >= MAX_NOTE_TEMPLATES) throw new Error('自定义模板不能超过 64 个')
+      await this.updateConfig({ noteTemplates: exists ? this.noteTemplates.map(item => item.id === entry.id ? entry : item) : [...this.noteTemplates, entry] })
+    },
+    async deleteNoteTemplate(id: string) {
+      const defaults = Object.fromEntries(Object.entries(this.defaultNoteTemplates).filter(([, value]) => value !== id))
+      await this.updateConfig({ noteTemplates: this.noteTemplates.filter(item => item.id !== id), defaultNoteTemplates: defaults })
+    },
+    async setDefaultNoteTemplate(root: string, id: string) {
+      if (!this.libraries.some(item => item.path === root)) throw new Error('资料库已移除')
+      if (!this.allNoteTemplates.some(item => item.id === id)) throw new Error('模板已不存在')
+      const defaults = { ...this.defaultNoteTemplates }
+      if (id === BLANK_NOTE_TEMPLATE) delete defaults[root]
+      else defaults[root] = id
+      await this.updateConfig({ defaultNoteTemplates: defaults })
     },
     async applyThemePreset(presetId: string) {
       const selected = getThemePreset(presetId)
@@ -464,6 +500,25 @@ export const useAppStore = defineStore('app', {
       }
       this.saveTabsState()
     },
+    closeTab(tabId: string) {
+      const tab = this.tabs.find(item => item.id === tabId)
+      if (!tab) return
+      this.closedTabs = [{ id: tab.id, path: tab.path, title: tab.title, isDirty: false, external: tab.external }, ...this.closedTabs.filter(item => item.id !== tabId)].slice(0, 20)
+      this.removeTab(tabId)
+    },
+    toggleTabPin(id: string) {
+      const tab = this.tabs.find(item => item.id === id)
+      if (!tab) return
+      tab.pinned = !tab.pinned
+      this.tabs = [...this.tabs.filter(item => item.pinned), ...this.tabs.filter(item => !item.pinned)]
+      this.saveTabsState()
+    },
+    reorderTab(id: string, targetId: string) {
+      const from = this.tabs.findIndex(item => item.id === id), target = this.tabs.findIndex(item => item.id === targetId)
+      if (from < 0 || target < 0 || from === target || Boolean(this.tabs[from].pinned) !== Boolean(this.tabs[target].pinned)) return
+      const [tab] = this.tabs.splice(from, 1)
+      this.tabs.splice(target, 0, tab); this.saveTabsState()
+    },
     toggleZen() {
       this.isZen = !this.isZen
     },
@@ -486,6 +541,7 @@ export const useAppStore = defineStore('app', {
             title: tab.title,
             path: tab.path,
             isDirty: false,
+            ...(tab.pinned ? { pinned: true } : {}),
           }))
         const persistentActiveTabId = persistentTabs.some(tab => tab.id === this.activeTabId)
           ? this.activeTabId

@@ -1,5 +1,5 @@
 <template>
-  <section class="smart-collection" aria-label="智能集合条件">
+  <section ref="panel" class="smart-collection" aria-label="智能集合条件">
     <template v-if="mode === 'home'">
       <button class="primary" @click="beginNew"><Plus />新建集合</button>
       <div v-if="currentQuery" class="current-search"><span>当前搜索：{{ currentQuery }}</span><button @click="$emit('save-search')"><BookmarkPlus />保存这个搜索</button></div>
@@ -7,7 +7,7 @@
       <div class="section-label"><strong>我的集合</strong><small>{{ collections.length }}</small></div>
       <p v-if="!collections.length" class="empty-label">暂无集合</p>
       <div v-else class="collection-list">
-        <div v-for="entry in collections" :key="entry.id" class="collection-card">
+        <div v-for="entry in orderedCollections" :key="entry.id" class="collection-card" draggable="true" @dragstart="dragCollection = entry.id" @dragover.prevent @drop.prevent="moveCollection(dragCollection, entry.id)" @dragend="dragCollection = ''">
           <button class="collection-open" @click="$emit('select', entry)"><component :is="entry.graphRoot ? Network : entry.filters ? FolderSearch : Search" /><span><strong>{{ entry.name }}</strong><small>{{ summaryFor(entry) }}</small></span><ChevronRight /></button>
           <n-dropdown trigger="click" :options="entryOptions(entry)" @select="action => collectionAction(String(action), entry)"><button class="icon-button" :aria-label="`集合操作 ${entry.name}`"><Ellipsis /></button></n-dropdown>
         </div>
@@ -30,7 +30,7 @@
           <fieldset :disabled="saving">
             <label>文件夹<div class="directory-field"><input v-model="directory" aria-label="文件夹" maxlength="4096" placeholder="整个资料库" /><button type="button" :disabled="choosing" aria-label="选择文件夹" @click="chooseDirectory"><FolderOpen /></button></div></label>
             <label>文件类型<n-select v-model:value="objectTypes" multiple clearable :max-tag-count="1" :disabled="saving" :options="formatOptions" placeholder="不限类型" size="small" /></label>
-            <label>笔记标签<div class="tag-field"><span>#</span><input ref="tagInput" v-model="tag" aria-label="笔记标签" maxlength="80" placeholder="例如：工作" /></div></label>
+            <label>笔记标签<div class="tag-field"><span>#</span><input ref="tagInput" v-model="tag" aria-label="笔记标签" maxlength="640" placeholder="多个标签用空格分隔，同时满足" /></div></label>
             <label>修改时间<select v-model="days" aria-label="修改时间"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option></select></label>
           </fieldset>
         </details>
@@ -46,10 +46,10 @@
       <div v-if="mode === 'results'" class="results">
         <p v-if="running" class="result-waiting" role="status"><RefreshCw class="spinning" />正在查找匹配的资料…</p>
         <template v-else-if="searched && !error">
-          <div class="section-label"><strong>匹配资料</strong><small>{{ results.length }} 项</small></div>
+          <div class="section-label"><strong>匹配资料</strong><small>{{ results.length }} 项</small><select v-model="resultSort" aria-label="集合结果排序" @change="rememberView"><option value="name">名称排序</option><option value="path">路径排序</option></select></div>
           <p v-if="truncated" class="result-limit">显示前 200 项，可调整条件缩小范围。</p>
           <div v-if="!results.length" class="empty-collections"><Search /><strong>还没有匹配的资料</strong><p>换个关键词，或放宽筛选条件试试。</p><button @click="mode = 'editor'">调整条件</button></div>
-          <article v-for="(result, i) in results" :key="`${result.path}-${i}`" class="collection-result">
+          <article v-for="(result, i) in sortedResults" :key="`${result.path}-${i}`" class="collection-result">
             <button class="result-open" @click="$emit('open', result)"><component :is="resultVisual(result).icon" :style="{ color: resultVisual(result).color }" /><span><strong>{{ result.title }}</strong><small>{{ formatLabel(result.objectType) }}<template v-if="result.locationLabel"> · {{ result.locationLabel }}</template><template v-else-if="result.page"> · 第 {{ result.page }} 页</template></small><span v-if="result.context && result.context !== '符合集合条件'" class="result-excerpt">{{ result.context }}</span></span><ChevronRight /></button>
             <details class="result-details"><summary>{{ relativeResultPath(result) }}</summary><p v-if="result.context">{{ result.context }}</p><small>{{ result.path }}</small><small v-if="result.extractionFailed">正文暂未解析</small></details>
           </article>
@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, nextTick, ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import { NDropdown, NSelect } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -69,6 +69,7 @@ import { useAppStore, type SavedSearchConfig } from '../store/app'
 import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
 import { sameWorkspacePath, toCollectionRelativePath } from '../utils/savedCollections'
 import { searchResultPath } from '../utils/searchResultPath'
+import { libraryNavigationPreferences, updateLibraryNavigation, splitFilterTags } from '../services/libraryNavigationPreferences'
 interface Result {
   title: string; path: string; objectType: string; matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
   context: string; page?: number; annotationId?: string; locatorKind?: string; locatorObjectId?: string; locationLabel?: string; score: number; extractionFailed: boolean
@@ -76,23 +77,47 @@ interface Result {
 const props = withDefaults(defineProps<{ selected: SavedSearchConfig | null; editing?: boolean; formats: { label: string; value: string }[]; collections: SavedSearchConfig[]; currentQuery?: string; summaryFor: (entry: SavedSearchConfig) => string }>(), { editing: false, currentQuery: '' })
 const emit = defineEmits<{ open: [result: Result]; select: [entry: SavedSearchConfig]; edit: [entry: SavedSearchConfig]; remove: [entry: SavedSearchConfig]; saved: [entry: SavedSearchConfig]; reset: []; 'save-search': [] }>()
 const store = useAppStore()
+const panel = ref<HTMLElement>(), resultSort = ref<'name' | 'path'>('name'), dragCollection = ref('')
+const preferences = computed(() => libraryNavigationPreferences(store.libraryPath))
+const orderedCollections = computed(() => [...props.collections].sort((a, b) => {
+  const order = preferences.value.collectionOrder
+  const rank = (id: string) => order.includes(id) ? order.indexOf(id) : order.length
+  return rank(a.id) - rank(b.id)
+}))
+const sortedResults = computed(() => [...results.value].sort((a, b) => (resultSort.value === 'name' ? a.title.localeCompare(b.title, 'zh-CN', { numeric: true }) : a.path.localeCompare(b.path, 'zh-CN', { numeric: true }))))
+const moveCollection = (id: string, target?: string) => {
+  if (!target) return
+  const order = orderedCollections.value.map(entry => entry.id), from = order.indexOf(id), to = order.indexOf(target)
+  if (from < 0 || to < 0 || from === to) return
+  order.splice(from, 1); order.splice(to, 0, id)
+  updateLibraryNavigation(store.libraryPath, { collectionOrder: order })
+}
+const scrollParent = () => panel.value?.parentElement
+const rememberView = () => {
+  if (previousRoot && previousRoot !== store.libraryPath) return
+  if (!editingId.value || mode.value !== 'results' || running.value) return
+  updateLibraryNavigation(store.libraryPath, { resultViews: { ...preferences.value.resultViews, [editingId.value]: { sort: resultSort.value, scroll: scrollParent()?.scrollTop || 0 } } })
+}
+let viewTimer: ReturnType<typeof setTimeout> | undefined
+const rememberScroll = () => { clearTimeout(viewTimer); viewTimer = setTimeout(rememberView, 150) }
+onMounted(() => scrollParent()?.addEventListener('scroll', rememberScroll, { passive: true }))
 const mode = ref<'home' | 'editor' | 'results'>('home'), advanced = ref(false)
 const name = ref(''), query = ref(''), directory = ref(''), tag = ref(''), editingId = ref('')
 const objectTypes = ref<string[]>([]), days = ref<number | null>(null)
 const results = ref<Result[]>([]), running = ref(false), saving = ref(false), choosing = ref(false), searched = ref(false), truncated = ref(false)
 const error = ref(''), errorDetails = ref(''), errorKind = ref(''), notice = ref('')
 const nameInput = ref<HTMLInputElement>(), tagInput = ref<HTMLInputElement>()
-const filters = () => ({ directory: directory.value.trim(), tag: tag.value.trim().replace(/^#+/, ''), modifiedWithinDays: days.value })
+const filters = () => { const tags = splitFilterTags(tag.value); return { directory: directory.value.trim(), tag: tags[0] || '', ...(tags.length > 1 ? { tags: tags.slice(1) } : {}), modifiedWithinDays: days.value } }
 const fingerprint = () => JSON.stringify({ name: name.value.trim(), query: query.value.trim(), objectTypes: [...objectTypes.value].sort(), filters: filters() })
 const baseline = ref(fingerprint())
 const hasDraft = computed(() => fingerprint() !== baseline.value)
-const conditionSummary = computed(() => [directory.value.trim() || '整个资料库', objectTypes.value.length ? `${objectTypes.value.length} 种类型` : '', filters().tag ? `#${filters().tag}` : '', days.value ? `最近 ${days.value} 天` : ''].filter(Boolean).join(' · '))
+const conditionSummary = computed(() => [directory.value.trim() || '整个资料库', objectTypes.value.length ? `${objectTypes.value.length} 种类型` : '', ...splitFilterTags(tag.value).map(value => '#' + value), days.value ? `最近 ${days.value} 天` : ''].filter(Boolean).join(' · '))
 const formatLabel = (type: string) => type === 'markdown' ? '笔记' : props.formats.find(format => format.value === type)?.label || type
 const formatOptions = computed(() => props.formats.map(format => ({ ...format, disabled: objectTypes.value.length >= 8 && !objectTypes.value.includes(format.value) })))
 const relativeResultPath = (result: Result) => searchResultPath(result.path, store.libraryPath)
 const resultVisual = (result: Result) => { const visual = resolveFileTreeVisual(result.objectType); return { ...visual, color: store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : visual.color } }
-const entryOptions = (entry: SavedSearchConfig) => [{ label: '打开集合', key: 'open' }, ...(!entry.graphRoot ? [{ label: '修改条件', key: 'edit' }] : []), { label: '删除集合', key: 'remove' }]
-const collectionAction = (action: string, entry: SavedSearchConfig) => { if (action === 'open') emit('select', entry); else if (action === 'edit') emit('edit', entry); else if (action === 'remove') emit('remove', entry) }
+const entryOptions = (entry: SavedSearchConfig) => [{ label: '打开集合', key: 'open' }, ...(!entry.graphRoot ? [{ label: '修改条件', key: 'edit' }] : []), { label: '移到最前', key: 'first' }, { label: '删除集合', key: 'remove' }]
+const collectionAction = (action: string, entry: SavedSearchConfig) => { if (action === 'open') emit('select', entry); else if (action === 'edit') emit('edit', entry); else if (action === 'remove') emit('remove', entry); else if (action === 'first') moveCollection(entry.id, orderedCollections.value[0]?.id) }
 let generation = 0, previousRoot = '', disposed = false
 const invalidate = () => { generation++; results.value = []; searched.value = false; running.value = false; error.value = ''; errorDetails.value = ''; notice.value = '' }
 watch([query, directory, tag, days, objectTypes], invalidate, { deep: true, flush: 'sync' })
@@ -116,6 +141,10 @@ async function run() {
     const response = await invoke<{ results: Result[]; truncated: boolean }>('search_smart_collection', { libraryRoot: root, query: query.value, objectTypes: [...objectTypes.value], filters: filters() })
     if (disposed || generation !== token || store.libraryPath !== root) return
     results.value = response.results; truncated.value = response.truncated; searched.value = true
+    const view = preferences.value.resultViews[editingId.value]
+    resultSort.value = view?.sort === 'path' ? 'path' : 'name'
+    await nextTick()
+    if (generation === token && scrollParent()) scrollParent()!.scrollTop = Number.isFinite(view?.scroll) ? Math.max(0, view.scroll) : 0
   } catch (cause) { if (generation === token && !disposed) fail('暂时没能找到资料，请重试或调整条件。', cause, 'run') }
   finally { if (generation === token) running.value = false }
 }
@@ -127,7 +156,7 @@ async function save() {
   try {
     const entry = await store.saveSmartCollection({ id: editingId.value || undefined, name: name.value, query: query.value, objectTypes: [...objectTypes.value], filters: filters() })
     if (disposed || store.libraryPath !== root || generation !== token) return
-    editingId.value = entry.id; name.value = entry.name; query.value = entry.query; directory.value = entry.filters?.directory || ''; tag.value = entry.filters?.tag || ''
+    editingId.value = entry.id; name.value = entry.name; query.value = entry.query; directory.value = entry.filters?.directory || ''; tag.value = [entry.filters?.tag, ...(entry.filters?.tags || [])].filter(Boolean).join(' ')
     baseline.value = fingerprint(); mode.value = 'results'; saving.value = false
     emit('saved', entry)
     const lookup = run(), shownGeneration = generation
@@ -147,17 +176,18 @@ const chooseDirectory = async () => {
   finally { choosing.value = false }
 }
 watch(() => [props.selected, props.editing, store.libraryPath] as const, ([selected]) => {
+  rememberView()
   if (store.libraryPath !== previousRoot) { previousRoot = store.libraryPath; resetFields(); mode.value = 'home' }
   if (!selected || selected.libraryPath !== store.libraryPath || selected.graphRoot) return
   if (selected.id === editingId.value && mode.value === 'results' && !props.editing && selected.name === name.value && selected.query === query.value && JSON.stringify(selected.filters || { directory: '', tag: '', modifiedWithinDays: null }) === JSON.stringify(filters()) && JSON.stringify([...selected.objectTypes].sort()) === JSON.stringify([...objectTypes.value].sort())) return
   resetFields(); editingId.value = selected.id; name.value = selected.name; query.value = selected.query; objectTypes.value = [...selected.objectTypes]
-  directory.value = selected.filters?.directory || ''; tag.value = selected.filters?.tag || ''; days.value = selected.filters?.modifiedWithinDays ?? null
+  directory.value = selected.filters?.directory || ''; tag.value = [selected.filters?.tag, ...(selected.filters?.tags || [])].filter(Boolean).join(' '); days.value = selected.filters?.modifiedWithinDays ?? null
   baseline.value = fingerprint(); advanced.value = Boolean(directory.value || tag.value || days.value || objectTypes.value.length)
   mode.value = props.editing ? 'editor' : 'results'
   if (!props.editing) void run()
 }, { immediate: true })
 watch(() => props.collections, entries => { if (editingId.value && !entries.some(entry => entry.id === editingId.value)) { resetFields(); mode.value = 'home'; emit('reset') } })
-onBeforeUnmount(() => { disposed = true; invalidate() })
+onBeforeUnmount(() => { clearTimeout(viewTimer); rememberView(); scrollParent()?.removeEventListener('scroll', rememberScroll); disposed = true; invalidate() })
 </script>
 
 <style scoped>
@@ -180,6 +210,7 @@ button:focus-visible, input:focus, select:focus, summary:focus-visible { outline
 svg { width: 16px; height: 16px; flex-shrink: 0; }
 .section-label { display: flex; align-items: center; gap: 7px; margin: 12px 0 7px; color: var(--theme-text-secondary); font-size: var(--text-compact); }
 .section-label small { color: var(--theme-primary); padding: 1px 5px; background: rgba(var(--theme-primary-rgb), .08); border-radius: var(--theme-radius-sm); }
+.section-label select { margin-left: auto; width: auto; min-height: 26px; font-size: var(--text-compact); padding: 2px 5px; }
 .empty-label { margin: 8px 0; }.empty-collections { padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: var(--theme-surface); border: var(--theme-border); border-radius: var(--theme-radius); }
 
 .empty-collections strong { font-size: var(--text-sm); }.empty-collections p { margin: 0; }

@@ -378,7 +378,7 @@
     </div>
 
     <!-- 中间编辑区 -->
-    <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }">
+    <div class="editor-main" data-ui-region="editor" :class="{ 'zen-mode': store.isZen }" @scroll.capture="rememberEditorScroll">
       <div v-if="!store.isZen && activeTabId" class="document-toolbar" aria-label="当前文档操作">
         <div class="document-identity">
           <button :key="activeTabId" type="button" class="document-breadcrumb" aria-label="重命名当前文档" @click="openRename(activeTabId, false)"><n-icon class="document-type-icon" :component="activeDocumentVisual.icon" :color="activeDocumentVisual.color" size="16" /><span>{{ activeTabId.split(/[\\/]/).pop() }}</span><n-icon :component="EditIcon" size="12" /></button>
@@ -394,6 +394,7 @@
           <n-popover trigger="click" placement="bottom-end" class="document-actions-popover">
             <template #trigger><n-button data-testid="library-document-menu" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
             <div class="document-menu-content" aria-label="文档操作菜单">
+        <n-button v-if="activeIsMarkdown" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="saveCurrentAsTemplate"><template #icon><n-icon :component="FileIcon" /></template>保存为模板…</n-button>
         <n-dropdown
           v-if="activeTabId"
           trigger="click"
@@ -750,6 +751,7 @@
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
+    <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
   </div>
 </template>
 
@@ -762,6 +764,7 @@ import SearchHighlight from '../components/SearchHighlight.vue'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown, NPopover, type DropdownOption } from 'naive-ui'
 import { 
@@ -787,6 +790,8 @@ import { onFileRelationsChanged, requestFileRelation } from '../services/fileRel
 import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
+import NoteTemplateManager from '../components/NoteTemplateManager.vue'
+import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
 import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
 import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
@@ -1280,7 +1285,7 @@ const smartCollectionSaved = (search: SavedSearchConfig) => { editingSmartCollec
 const collectionFilterLabel = (search: SavedSearchConfig) => search.graphRoot
   ? `关联资料 · ${search.graphDepth || 1} 层关联`
   : search.filters
-    ? [search.query ? `包含「${search.query}」` : '', search.filters.directory || '整个资料库', search.filters.tag ? `#${search.filters.tag}` : '', search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(type => type === 'markdown' ? '笔记' : resultFormatLabel(type))].filter(Boolean).join(' · ')
+    ? [search.query ? `包含「${search.query}」` : '', search.filters.directory || '整个资料库', ...[search.filters.tag, ...(search.filters.tags || [])].filter(Boolean).map(tag => '#' + tag), search.filters.modifiedWithinDays ? `近 ${search.filters.modifiedWithinDays} 天` : '', ...search.objectTypes.map(type => type === 'markdown' ? '笔记' : resultFormatLabel(type))].filter(Boolean).join(' · ')
   : search.objectTypes.length
     ? search.objectTypes.map(resultFormatLabel).join(' · ')
     : '关键词搜索'
@@ -2571,7 +2576,19 @@ const refreshNode = async (path: string) => {
 
 const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
+let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
+const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
+const captureEditorPosition = () => {
+  const element = editorScroller()
+  if (lastLoadedPath && element) rememberWorkspaceViewState(lastLoadedPath, { scrollTop: element.scrollTop, scrollLeft: element.scrollLeft })
+}
+const rememberEditorScroll = (event: Event) => {
+  if (!(event.target instanceof HTMLElement) || !event.target.matches('.vditor-reset, .vditor-sv') || !lastLoadedPath) return
+  clearTimeout(readingPositionTimer); readingPositionTimer = setTimeout(captureEditorPosition, 120)
+}
+onBeforeUnmount(() => { clearTimeout(readingPositionTimer); captureEditorPosition() })
 const loadFileToEditor = async (path: string, forceRead = false) => {
+  clearTimeout(readingPositionTimer); captureEditorPosition()
   if (!vditor || !path) return; lastLoadedPath = '' 
   const generation = ++editorLoadGeneration
   pendingEditorSaveLoad.value = false
@@ -2626,6 +2643,10 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
       setTimeout(() => { 
         if (!isCurrentRequest()) return
         lastLoadedPath = path;
+        if (!route.query.searchLocator && !route.query.taskLine && !route.query.relationId) {
+          const view = recallWorkspaceViewState(path), element = editorScroller()
+          if (element) { element.scrollTop = view?.scrollTop || 0; element.scrollLeft = view?.scrollLeft || 0 }
+        }
         refreshVisibleOutline();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
@@ -3350,7 +3371,8 @@ const onMenuAction = async (key: string) => {
   if (key.startsWith('create-format:')) {
     const [formatId, extension] = key.slice('create-format:'.length).split(':')
     try {
-      const created = await createRegisteredFile(formatId, path, undefined, undefined, extension)
+      const template = formatId === 'markdown' ? defaultNoteTemplate.value : undefined
+      const created = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, path) : await createRegisteredFile(formatId, path, undefined, undefined, extension)
       if (path !== store.libraryPath && !expandedKeys.value.includes(path)) expandedKeys.value.push(path)
       await refreshNode(path)
       handleNodeSelect([created])
@@ -3383,8 +3405,17 @@ const onMenuAction = async (key: string) => {
   }
 }
 
-// Keep library and quick capture templates identical.
-import { NOTE_TEMPLATES as TEMPLATES } from '../config/noteTemplates'
+const templateManager = ref<{ initialNote?: { name: string; content: string } } | null>(null)
+const saveCurrentAsTemplate = () => {
+  if (!activeIsMarkdown.value || !activeTabId.value || !vditor || !isVditorReady || lastLoadedPath !== activeTabId.value) {
+    message.info('请等笔记加载完成后再保存模板'); return
+  }
+  const sourceName = activeTabId.value.split(/[\\/]/).pop()?.replace(/\.md$/i, '') || '新模板'
+  let name = sourceName, index = 1
+  while (store.allNoteTemplates.some(item => item.name === name)) name = sourceName + ' ' + index++
+  templateManager.value = { initialNote: { name, content: vditor.getValue() } }
+}
+const defaultNoteTemplate = computed(() => store.allNoteTemplates.find(item => item.id === store.defaultNoteTemplates[store.libraryPath]))
 
 const creationTargetLabel = computed(() => {
   const target = selectedTargetDirectory()
@@ -3402,12 +3433,16 @@ const templateOptions = computed<DropdownOption[]>(() => {
   return [
     { type: 'group', label: `在「${creationTargetLabel.value}」中新建`, key: 'creation-location', children: [
       ...suggested,
-      { label: 'Markdown 笔记', key: '空白笔记', icon: () => h(NIcon, null, { default: () => h(FileIcon) }) },
+      { label: defaultNoteTemplate.value ? 'Markdown 笔记 · ' + defaultNoteTemplate.value.name : 'Markdown 笔记', key: '__default-note', icon: () => h(NIcon, null, { default: () => h(FileIcon) }) },
       { label: '文件夹', key: '__folder', icon: () => h(NIcon, null, { default: () => h(FolderPlusIcon) }) },
       { label: selected ? '今日笔记' : '今日笔记（Daily）', key: '__daily', icon: () => h(NIcon, null, { default: () => h(CalendarIcon) }) },
     ] },
     { type: 'divider', key: 'template-divider' },
-    { label: '笔记模板', key: 'note-templates', children: Object.keys(TEMPLATES).filter(key => key !== '空白笔记').map(key => ({ label: key, key })) },
+    { label: '笔记模板', key: 'note-templates', children: [
+      ...store.allNoteTemplates.map(item => ({ label: item.name, key: '__template:' + item.id })),
+      { type: 'divider', key: 'manage-template-divider' },
+      { label: '管理模板…', key: '__manage-templates' },
+    ] },
     { label: '其他格式', key: 'other-formats', children: CREATABLE_FILE_FORMATS.filter(item => item.id !== 'markdown' && (!suggested.length || item.id !== format?.id)).map(item => ({ label: `新建${item.label}`, key: `__format:${item.id}` })) },
   ]
 })
@@ -3443,14 +3478,18 @@ const createRegisteredFile = async (formatId: string, target: string, prefix?: s
 
 const handleTemplateCreate = async (key: string) => {
   if (!store.libraryPath) { openSettings(); return }
+  if (key === '__manage-templates') { templateManager.value = {}; return }
   if (key === '__folder') { await handleToolbarAction('folder'); return }
   if (key === '__daily') { await createDailyNote(); return }
-  const tmpl = TEMPLATES[key] || ''
   try {
     const formatId = key.startsWith('__format:') ? key.slice('__format:'.length) : 'markdown'
-    const prefix = key === '空白笔记' || key.startsWith('__format:') ? undefined : key
     const target = selectedTargetDirectory()
-    const p = await createRegisteredFile(formatId, target, prefix, formatId === 'markdown' ? tmpl : undefined)
+    const template = key === '__default-note' ? defaultNoteTemplate.value
+      : store.allNoteTemplates.find(item => key === '__template:' + item.id || key === item.name)
+    if (key.startsWith('__template:') && !template) throw new Error('模板已不存在，请重新选择')
+    const p = template && template.id !== BLANK_NOTE_TEMPLATE
+      ? await createNoteFromTemplate(template, target)
+      : await createRegisteredFile(formatId, target)
     await refreshNode(target)
     handleNodeSelect([p])
   } catch (e: any) {
@@ -3458,10 +3497,14 @@ const handleTemplateCreate = async (key: string) => {
   }
 }
 
+const createNoteFromTemplate = (template: NoteTemplate, target: string) => invoke<string>('create_note_from_template', {
+  libraryRoot: store.libraryPath, targetDir: target, name: template.name, content: template.content,
+})
+
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
   const target = selectedTargetDirectory()
-  try { if (type === 'file') { const p = await createRegisteredFile('markdown', target); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
+  try { if (type === 'file') { const template = defaultNoteTemplate.value; const p = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, target) : await createRegisteredFile('markdown', target); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
 }
 
 const createDailyNote = async () => {

@@ -601,6 +601,8 @@ fn restored_config_from_redacted(
         saved_searches,
         // Display markers use device-local absolute paths and are intentionally not restored.
         file_display_styles: std::collections::HashMap::new(),
+        note_templates: vec![],
+        default_note_templates: std::collections::HashMap::new(),
     };
     Ok((config, warnings))
 }
@@ -690,6 +692,12 @@ pub fn restore_management_backup(
     }
     let (mut config, mut warnings) =
         restored_config_from_redacted(&parsed.redacted_config, library_mappings)?;
+    // Management backups omit authored content. Restoring settings must keep local templates.
+    if let Ok(local) = read_config_from_disk(&app) {
+        config.note_templates = local.note_templates;
+        config.default_note_templates = local.default_note_templates.into_iter()
+            .filter(|(root, _)| config.libraries.iter().any(|library| &library.path == root)).collect();
+    }
     config.ai_api_key.clear();
     let config_dir = app
         .path()
@@ -852,6 +860,7 @@ mod tests {
             saved_searches: vec![SavedSearchConfig {
                 id: "collection-1".into(), name: "本周项目".into(), library_path: "C:\\Vault".into(),
                 filters: Some(crate::services::smart_collection::CollectionFilters {
+                    tags: vec![],
                     directory: "项目/设计".into(), tag: "项目".into(), modified_within_days: Some(7),
                 }), ..Default::default()
             }], ..Default::default()

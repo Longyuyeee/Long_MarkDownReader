@@ -61,6 +61,7 @@
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : '保存' }}
         </n-button>
+        <n-button v-if="format?.id === 'plain-text' && !isExternal" size="small" quaternary :disabled="loading || saving || readOnly || rangeMode" @click="showHistory = true">历史与差异</n-button>
       </div>
     </header>
 
@@ -135,6 +136,7 @@
       />
     </main>
 
+    <TextHistoryDialog v-if="showHistory" :key="textPath" :library-root="store.libraryPath" :path="textPath" :draft="historyDraft" :max-count="store.maxHistoryCount" @close="showHistory = false" @replace="applyHistoryDraft" @copy="openHistoryCopy" />
     <footer class="status-bar">
       <div v-if="viewMode === 'source'">
         <span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span>
@@ -196,6 +198,9 @@ import {
 import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import TextHistoryDialog from '../components/TextHistoryDialog.vue'
+import { openManagedFile } from '../services/fileNavigation'
+import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { type TabInfo, useAppStore } from '../store/app'
 import {
   MAX_DIAGNOSTIC_SCAN_CHARS,
@@ -262,6 +267,13 @@ const isSensitiveEnv = computed(() => format.value?.id === 'env')
 const isHtmlDocument = computed(() => /\.html?$/i.test(textPath.value))
 const currentTab = computed(() => store.tabs.find(tab => tab.path === textPath.value))
 const loading = ref(true)
+const showHistory = ref(false)
+const historyDraft = computed(() => store.tabs.find(tab => tab.path === textPath.value)?.content || '')
+const applyHistoryDraft = (content: string) => { if (!editor || readOnly.value) return; replaceDocument(content, false); dirty.value = true; syncCurrentTab(true) }
+const openHistoryCopy = (path: string) => { void openManagedFile(router, path) }
+let loadedViewPath = '', viewTimer: ReturnType<typeof setTimeout> | undefined
+const rememberTextPosition = () => { if (editor && loadedViewPath) rememberWorkspaceViewState(loadedViewPath, { scrollTop: editor.scrollDOM.scrollTop, scrollLeft: editor.scrollDOM.scrollLeft }) }
+const queueTextPosition = () => { clearTimeout(viewTimer); viewTimer = setTimeout(rememberTextPosition, 150) }
 const saving = ref(false)
 const loadingRange = ref(false)
 const loadError = ref('')
@@ -406,6 +418,7 @@ const editorExtensions = (isReadOnly: boolean) => [
   ), { delay: 500 }),
   lintGutter(),
   EditorView.updateListener.of(update => {
+    if (update.viewportChanged && !loading.value) queueTextPosition()
     if (update.docChanged) {
       searchMatchCount.value = null
       diagnosticSource.value = update.state.sliceDoc(0, Math.min(update.state.doc.length, MAX_DIAGNOSTIC_SCAN_CHARS))
@@ -532,6 +545,7 @@ const readRange = (offset: number, encoding?: string) => invoke<TextDocumentRang
 )
 
 const load = async (encoding?: string, discardDraft = false) => {
+  clearTimeout(viewTimer); rememberTextPosition(); loadedViewPath = ''; showHistory.value = false
   const generation = ++loadGeneration
   const requestedPath = textPath.value
   loading.value = true
@@ -575,7 +589,14 @@ const load = async (encoding?: string, discardDraft = false) => {
       loadError.value = errorMessage(cause)
     }
   } finally {
-    if (generation === loadGeneration) loading.value = false
+    if (generation === loadGeneration) {
+      loading.value = false
+      loadedViewPath = requestedPath
+      if (!route.query.searchLocator) {
+        const view = recallWorkspaceViewState(requestedPath)
+        await nextTick(); requestAnimationFrame(() => { if (editor && textPath.value === requestedPath) editor.scrollDOM.scrollTop = view?.scrollTop || 0 })
+      }
+    }
   }
 }
 
@@ -625,6 +646,7 @@ const save = async () => {
   saving.value = true
   const savedEditor = editor
   const savedPath = textPath.value
+  const historyRoot = store.libraryPath, historyEnabled = !isExternal.value && format.value.id === 'plain-text', historyEncoding = sourceEncoding.value, historyMaxCount = store.maxHistoryCount
   const savedGeneration = loadGeneration
   const savedTab = store.tabs.find(item => item.path === savedPath)
   const isCurrent = () => editor === savedEditor && textPath.value === savedPath && loadGeneration === savedGeneration
@@ -638,7 +660,16 @@ const save = async () => {
   const finishWindowSave = beginWindowSave()
   return runTextSave(savedPath, async () => {
   try {
+    const keepHistory = historyEnabled
+    if (keepHistory) {
+      const previous = await invoke<TextDocumentSnapshot>('read_text_document', { libraryRoot: historyRoot, path: savedPath, formatId: 'plain-text', readOptions: { encoding: historyEncoding } })
+      await invoke('save_history_version', { libraryRoot: historyRoot, path: savedPath, content: previous.content, maxCount: historyMaxCount })
+    }
     const snapshot = await invoke<TextDocumentSnapshot>(command, args)
+    if (keepHistory) {
+      try { await invoke('save_history_version', { libraryRoot: historyRoot, path: savedPath, content: snapshot.content, maxCount: historyMaxCount }) }
+      catch { message.warning('文件已保存，本次历史快照未能创建') }
+    }
     if (!isCurrent()) {
       // Only reconcile the original tab, never the newly selected document.
       if (savedTab && store.tabs.includes(savedTab)) {
@@ -768,6 +799,7 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   ++loadGeneration
+  clearTimeout(viewTimer); rememberTextPosition()
   editor?.destroy()
   editor = null
   window.removeEventListener('keydown', handleKeydown)
