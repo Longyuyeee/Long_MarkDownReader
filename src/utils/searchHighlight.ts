@@ -27,3 +27,19 @@ export function searchHighlight(text: string, query: string) {
   if (cursor < chars.length || !result.length) result.push({ text: chars.slice(cursor).join(''), match: false })
   return result
 }
+
+/** Highlight positive query terms only; excluded words and operators are not matches. */
+export function searchTermsHighlight(text: string, terms: string[]) {
+  const marked = new Uint8Array(text.length)
+  for (const term of terms) {
+    let offset = 0
+    for (const part of searchHighlight(text, term)) { if (part.match) marked.fill(1, offset, offset + part.text.length); offset += part.text.length }
+  }
+  const parts: Array<{ text: string; match: boolean }> = []; let offset = 0
+  for (const char of text) {
+    const match = Boolean(marked[offset]); const last = parts[parts.length - 1]
+    if (last?.match === match) last.text += char; else parts.push({ text: char, match })
+    offset += char.length
+  }
+  return parts.length ? parts : [{ text, match: false }]
+}

@@ -2,6 +2,12 @@ import { computed, onScopeDispose, reactive, ref, watch } from 'vue'
 
 const drafts = reactive(new Map<symbol, boolean>())
 const pendingSaves = ref(0)
+const snapshots = new Set<() => void>()
+export const useWindowDraftSnapshot = (capture: () => void) => {
+  snapshots.add(capture)
+  onScopeDispose(() => snapshots.delete(capture))
+}
+export const snapshotWindowDrafts = () => { for (const capture of snapshots) capture() }
 export const windowDraftCount = computed(() => [...drafts.values()].filter(Boolean).length + pendingSaves.value)
 export const windowDraftActivity = ref(0)
 export const recordWindowDraftActivity = () => {

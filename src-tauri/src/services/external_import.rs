@@ -12,7 +12,7 @@ use std::{
 };
 
 static HTML_IMAGE: LazyLock<regex::Regex> = LazyLock::new(|| {
-    regex::Regex::new(r#"(?is)<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))"#).unwrap()
+    regex::Regex::new(r#"(?is)<img\b[^>]*?\s+src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))"#).unwrap()
 });
 const MAX_MARKDOWN_BYTES: u64 = 20 * 1024 * 1024;
 const MAX_IMAGES: usize = 512;
@@ -21,6 +21,7 @@ const MAX_IMAGES: usize = 512;
 struct Image {
     range: Range<usize>,
     target: String,
+    html: bool,
 }
 
 // Called only inside parser-established image syntax/definitions, never code text.
@@ -108,12 +109,17 @@ fn images(text: &str) -> Result<Vec<Image>, String> {
                         unescaped.push(character);
                     }
                 }
-                if unescaped.replace("&amp;", "&") != dest_url.as_ref() {
+                if unescaped != dest_url.as_ref()
+                    && quick_xml::escape::unescape(&unescaped)
+                        .map(|value| value.as_ref() != dest_url.as_ref())
+                        .unwrap_or(true)
+                {
                     return Err("图片语法暂不能可靠迁移，请改为普通图片链接；未导入任何文件".into());
                 }
                 result.push(Image {
                     range: destination,
                     target: dest_url.to_string(),
+                    html: false,
                 });
             }
             Event::Html(_) | Event::InlineHtml(_) => {
@@ -129,7 +135,16 @@ fn images(text: &str) -> Result<Vec<Image>, String> {
                         .unwrap();
                     result.push(Image {
                         range: range.start + value.start()..range.start + value.end(),
-                        target: value.as_str().to_string(),
+                        target: match quick_xml::escape::unescape(value.as_str()) {
+                            Ok(decoded) => decoded.into_owned(),
+                            Err(_) if !value.as_str().contains(';') => value.as_str().to_string(),
+                            Err(_) => {
+                                return Err(
+                                    "HTML 图片路径包含不支持的实体，请使用普通图片路径".into()
+                                )
+                            }
+                        },
+                        html: true,
                     });
                 }
             }
@@ -159,7 +174,7 @@ fn local_image(target: &str) -> Result<Option<(&str, &str)>, String> {
     if suffix.contains(['\'', '"', '<', '>', '\r', '\n']) {
         return Err("图片查询参数含不支持的字符，请先简化图片链接".into());
     }
-    if path.is_empty() || path.starts_with('/') || path.contains([':', '\\', '\0', '&']) {
+    if path.is_empty() || path.starts_with('/') || path.contains([':', '\\', '\0']) {
         return Err(format!(
             "无法安全迁移图片路径：{target}。请使用资料文件夹内的普通相对路径"
         ));
@@ -302,7 +317,15 @@ pub(crate) fn import_file(source: &Path, destination: &Path) -> Result<PathBuf, 
             if !path.is_file() {
                 return Err(format!("本地图片不是文件：{raw}"));
             }
-            resources.push((image.range.clone(), path, suffix.to_owned()));
+            if !matches!(
+                file_format_for_path(&path)?.id.as_str(),
+                "raster-image" | "svg"
+            ) {
+                return Err(format!(
+                    "图片引用不是支持的图像文件：{raw}，请单独处理其他附件"
+                ));
+            }
+            resources.push((image.range.clone(), path, suffix.to_owned(), image.html));
         }
     }
     let mut assets = Assets::default();
@@ -330,7 +353,7 @@ pub(crate) fn import_file(source: &Path, destination: &Path) -> Result<PathBuf, 
     }
     let mut copied: HashMap<PathBuf, String> = HashMap::new();
     let mut edits = Vec::new();
-    for (range, path, suffix) in resources {
+    for (range, path, suffix, html) in resources {
         let relative = if let Some(relative) = copied.get(&path) {
             relative.clone()
         } else {
@@ -361,7 +384,15 @@ pub(crate) fn import_file(source: &Path, destination: &Path) -> Result<PathBuf, 
             copied.insert(path.clone(), relative.clone());
             relative
         };
-        edits.push((range, format!("{relative}{suffix}")));
+        let replacement = format!("{relative}{suffix}");
+        edits.push((
+            range,
+            if html {
+                replacement.replace('&', "&amp;")
+            } else {
+                replacement
+            },
+        ));
     }
     let mut content = original;
     for (range, replacement) in edits.into_iter().rev() {
@@ -391,7 +422,7 @@ mod tests {
     #[test]
     fn inline_reference_html_images_keep_titles_and_copy_exact_bytes() {
         let root = fixture();
-        let text = "# 标题\r\n![图](<images/a b.png?size=2#x> \"说明\")\r\n![第二张][pic]\r\n\r\n[pic]: images/a%20b.png \"标题\"\r\n\r\n<img src='images/a%20b.png' alt='图片'>\r\n`![示例](images/missing.png)`\r\n```md\r\n![代码](images/missing.png)\r\n```\r\n";
+        let text = "# 标题\r\n![图](<images/a b.png?size=2#x> \"说明\")\r\n![第二张][pic]\r\n\r\n[pic]: images/a%20b.png \"标题\"\r\n\r\n<img data-src='images/not-an-image.png' src='images/a%20b.png' alt='图片'>\r\n`![示例](images/missing.png)`\r\n```md\r\n![代码](images/missing.png)\r\n```\r\n";
         assert_eq!(
             images(text).unwrap().len(),
             3,
@@ -441,6 +472,39 @@ mod tests {
         assert_eq!(
             fs::read(root.join("library/data.table.json")).unwrap(),
             b"existing"
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn image_ampersands_and_html_entities_preserve_resource_identity() {
+        let root = fixture();
+        let source = root.join("source/note.md");
+        fs::write(
+            &source,
+            "![图](images/R&D.png)\n\n<img src=\"images/R&amp;D.png?x=1&amp;y=2\">",
+        )
+        .unwrap();
+        fs::write(root.join("source/images/R&D.png"), b"same-image").unwrap();
+        let imported = import_file(&source, &root.join("library")).unwrap();
+        let content = fs::read_to_string(imported).unwrap();
+        assert!(content.contains("?x=1&amp;y=2"));
+        assert_eq!(images(&content).unwrap().len(), 2);
+        for image in images(&content).unwrap() {
+            let (path, _) = local_image(&image.target).unwrap().unwrap();
+            assert_eq!(
+                fs::read(
+                    root.join("library")
+                        .join(urlencoding::decode(path).unwrap().as_ref())
+                )
+                .unwrap(),
+                b"same-image"
+            );
+        }
+        assert_eq!(
+            fs::read_dir(root.join("library/note.assets"))
+                .unwrap()
+                .count(),
+            1
         );
         fs::remove_dir_all(root).unwrap();
     }

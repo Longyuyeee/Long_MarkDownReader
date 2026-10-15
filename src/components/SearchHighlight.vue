@@ -4,9 +4,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { searchHighlight } from '../utils/searchHighlight'
+import { searchTermsHighlight } from '../utils/searchHighlight'
+import { parseSearchQuery } from '../utils/searchQuery'
 const props = defineProps<{ text: string; query: string }>()
-const parts = computed(() => searchHighlight(props.text, props.query))
+const parts = computed(() => { try { return searchTermsHighlight(props.text, parseSearchQuery(props.query).positive) } catch { return [{ text: props.text, match: false }] } })
 </script>
 
 <style scoped>

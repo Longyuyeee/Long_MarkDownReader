@@ -98,7 +98,7 @@ import { useAppStore } from './store/app'
 import { findFileFormat, opensInLibraryShell, routeForFile } from './config/fileFormats'
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { normalizeDisplayPreferences, documentTypographyStyle, VISUAL_STYLE_RADII } from './config/displayPreferences'
-import { openManagedFile } from './services/fileNavigation'
+import { openManagedFile, openManagedObject } from './services/fileNavigation'
 import { windowDraftCount, windowDraftActivity } from './services/windowDrafts'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
 import { isTauriRuntime } from './services/tauriRuntime'
@@ -389,9 +389,13 @@ const handleCommand = async (item: any) => {
     else if (item.action === 'daily-note') emit('command-daily-note')
     else if (item.action.startsWith('theme-preset:')) await store.applyThemePreset(item.action.slice('theme-preset:'.length))
   } else if (item.type === 'file') {
+      if (item.locatorKind || item.annotationId || ['pdf', 'workbook', 'docx', 'odt', 'ods', 'odp', 'pptx'].includes(item.objectType)) {
+        await openManagedObject(router, { path: item.path, objectType: item.objectType, locator: { kind: item.locatorKind, objectId: item.locatorObjectId, page: item.page }, page: item.page, annotationId: item.annotationId, locationLabel: item.locationLabel, matchKind: item.matchKind })
+        return
+      }
     const target = routeForFile(item.path)
     if (opensInLibraryShell(findFileFormat(item.path))) {
-      openManagedFile(router, item.path)
+        openManagedFile(router, item.path, item.searchNeedle ? { searchNeedle: item.searchNeedle, searchLocator: String(Date.now()) } : {})
     } else if (target) router.push(target)
   }
 }

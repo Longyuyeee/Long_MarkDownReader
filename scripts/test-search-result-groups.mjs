@@ -13,6 +13,7 @@ const load = path => {
   return box.exports
 }
 const { groupSearchResults, searchMatchKey } = load('src/utils/searchResultGroups.ts')
+const { searchQueryNeedle } = load('src/utils/searchQuery.ts')
 const plain = value => JSON.parse(JSON.stringify(value))
 const result = (path, page, extra = {}) => ({ path, title: '同名.pdf', objectType: 'pdf', matchKind: 'body', page, context: '预算', ...extra })
 
@@ -76,7 +77,7 @@ test('body results carry a fresh location intent on repeated opens', () => {
   const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = source.slice(source.indexOf('let searchNavigationSequence ='), source.indexOf('const handleLoadChildren ='))
   const routes = []
-  const box = { searchReturn: { remember: () => {} }, searchMatchKey, searchQuery: { value: '预算' },
+  const box = { searchQueryNeedle, searchReturn: { remember: () => {} }, searchMatchKey, searchQuery: { value: '预算' },
     openManagedFile: (_router, path, query) => routes.push({ path, query }), router: {} }
   vm.runInNewContext(compile(handler + '\nglobalThis.openResult = openKnowledgeSearchResult'), box)
   for (const objectType of ['markdown', 'plain-text', 'plain-text']) box.openResult({ path: '/draft.txt', objectType, matchKind: 'body' })

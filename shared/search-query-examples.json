@@ -1,0 +1,13 @@
+[
+  { "query": "预算", "positive": ["预算"], "negative": [] },
+  { "query": " 项目  预算 -旧版 ", "positive": ["项目", "预算"], "negative": ["旧版"] },
+  { "query": "\"项目 预算\" -\"旧版 文件\"", "positive": ["项目 预算"], "negative": ["旧版 文件"] },
+  { "query": "Alpha alpha JSON", "positive": ["alpha", "json"], "negative": [] },
+  { "query": "项目\u0085预算　-旧版", "positive": ["项目", "预算"], "negative": ["旧版"] },
+  { "query": "-旧版", "positive": [], "negative": ["旧版"] },
+  { "query": "foo-bar -", "positive": ["foo-bar", "-"], "negative": [] },
+  { "query": "\"a\\\"b\"", "positive": ["a\"b"], "negative": [] },
+  { "query": "", "positive": [], "negative": [] },
+  { "query": "\"未完成", "error": true },
+  { "query": "\"\"", "error": true }
+]

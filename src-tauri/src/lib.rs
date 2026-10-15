@@ -3,19 +3,19 @@ mod formats;
 mod services;
 
 use commands::ai::ai_chat_completion;
-use commands::file_relations::update_file_relation;
-use commands::note_templates::{create_note_from_template, export_note_template_bundle, read_note_template_bundle};
 use commands::archive::preflight_archive;
 use commands::backup::{
     export_management_backup, preflight_management_backup_import, restore_management_backup,
 };
+use commands::batch_rename::{preview_library_renames, rename_library_items};
 use commands::canvas::{
     create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown,
     create_project_note_from_graph, read_canvas_file, read_external_canvas_file, write_canvas_file,
     write_external_canvas_file,
 };
 use commands::config::{
-    clear_ai_credential, get_ai_credential_status, get_config, prepare_library_path, save_config, set_ai_credential, validate_inbox_location,
+    clear_ai_credential, get_ai_credential_status, get_config, prepare_library_path, save_config,
+    set_ai_credential, validate_inbox_location,
 };
 use commands::diagnostics::export_privacy_diagnostic_bundle;
 use commands::diagram::{
@@ -35,15 +35,21 @@ use commands::drawio::{
     write_external_drawio_source_document,
 };
 use commands::external_apps::{discover_external_applications, open_workspace_file_externally};
-use commands::file_relations::{list_relation_files, list_file_relations, save_file_relation, remove_file_relation};
-use commands::file_management::{transfer_library_items, undo_library_moves, trash_library_items, list_library_trash, restore_library_trash, purge_library_trash};
-use commands::batch_rename::{preview_library_renames, rename_library_items};
+use commands::file_management::{
+    list_library_trash, purge_library_trash, restore_library_trash, transfer_library_items,
+    trash_library_items, undo_library_moves,
+};
+use commands::file_relations::update_file_relation;
+use commands::file_relations::{
+    list_file_relations, list_relation_files, remove_file_relation, save_file_relation,
+};
 use commands::files::{
     create_new_file, create_new_folder, delete_item, delete_items, export_external_to_html,
     export_markdown_file, export_to_html, get_external_image_base64, get_file_stats,
-    get_folder_order, get_image_base64, import_to_library, import_library_files, move_item, move_items,
-    pick_external_openable_file, read_external_markdown_file, read_markdown_file, rename_item,
-    save_folder_order, scan_directory, write_external_markdown_file, write_markdown_file,
+    get_folder_order, get_image_base64, import_library_files, import_to_library, move_item,
+    move_items, pick_external_openable_file, read_external_markdown_file, read_markdown_file,
+    rename_item, save_folder_order, scan_directory, write_external_markdown_file,
+    write_markdown_file,
 };
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::formats::{
@@ -53,7 +59,6 @@ use commands::formats::{
     write_log_document, write_text_document,
 };
 use commands::git::{git_commit, git_init, git_pull, git_push, git_status};
-use commands::inbox::{create_inbox_directory, read_inbox_directory};
 pub(crate) use commands::graph::GraphData;
 use commands::graph::{
     analyze_graph_health, build_link_graph, build_local_graph, export_knowledge_graph_observation,
@@ -69,9 +74,11 @@ use commands::history::{
     clear_all_history, delete_history_version, list_history, save_external_history_version,
     save_history_version, save_shadow_copy,
 };
+use commands::inbox::{create_inbox_directory, read_inbox_directory};
 use commands::index::{
     cancel_knowledge_index, delete_knowledge_index, get_knowledge_index_status,
-    rebuild_knowledge_index, recover_knowledge_index_cache, search_knowledge, preview_search_document,
+    preview_search_document, rebuild_knowledge_index, recover_knowledge_index_cache,
+    search_knowledge, search_knowledge_libraries,
 };
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
@@ -91,6 +98,9 @@ use commands::mindmap::{
     create_canvas_from_opml, read_external_opml_file, read_opml_file, write_external_opml_file,
     write_opml_file,
 };
+use commands::note_templates::{
+    create_note_from_template, export_note_template_bundle, read_note_template_bundle,
+};
 use commands::odf_content::{
     read_external_odf_content_document, read_odf_content_document, save_odp_slide_text_copy,
     save_ods_cell_style_copy, save_ods_cell_value_copy,
@@ -109,12 +119,11 @@ use commands::pdf::{
 };
 use commands::pptx::{
     audit_pptx_edit_baseline, preview_pptx_alt_text_patch_isolated_copy,
-    preview_pptx_image_patch_isolated_copy, preview_pptx_shape_add_isolated_copy,
-    preview_pptx_shape_delete_isolated_copy, preview_pptx_slide_lifecycle_isolated_copy,
-    preview_pptx_patch_transaction, preview_pptx_style_patch_isolated_copy,
-    preview_pptx_text_patch_isolated_copy,
-    read_external_pptx_presentation, read_pptx_presentation, save_pptx_patch_copy,
-    save_pptx_patch_source, save_pptx_patch_source_transaction,
+    preview_pptx_image_patch_isolated_copy, preview_pptx_patch_transaction,
+    preview_pptx_shape_add_isolated_copy, preview_pptx_shape_delete_isolated_copy,
+    preview_pptx_slide_lifecycle_isolated_copy, preview_pptx_style_patch_isolated_copy,
+    preview_pptx_text_patch_isolated_copy, read_external_pptx_presentation, read_pptx_presentation,
+    save_pptx_patch_copy, save_pptx_patch_source, save_pptx_patch_source_transaction,
 };
 use commands::search::{get_all_tags, search_all_libraries, search_by_tag, search_library};
 use commands::svg::{
@@ -530,6 +539,7 @@ pub fn run() {
             get_url_title,
             search_library,
             search_knowledge,
+            search_knowledge_libraries,
             commands::history::compare_history_version,
             commands::history::restore_history_copy,
             commands::history::prepare_history_restore,

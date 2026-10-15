@@ -2,14 +2,14 @@
   <div v-if="running" class="search-feedback" role="status">正在搜索工作区已索引内容…</div>
   <div v-else-if="failed" class="search-feedback search-feedback-error" role="alert">
     <strong>搜索未完成</strong>
-    <span>暂时无法读取搜索结果。请重试，或检查资料库是否可访问。</span>
+    <span>{{ reason || '暂时无法读取搜索结果。请重试，或检查资料库是否可访问。' }}</span>
     <button type="button" @click="$emit('retry')">重新搜索</button>
   </div>
   <div v-else-if="empty" class="search-feedback" role="status">没有找到匹配内容</div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ running: boolean; failed: boolean; empty: boolean }>()
+defineProps<{ running: boolean; failed: boolean; empty: boolean; reason?: string }>()
 defineEmits<{ retry: [] }>()
 </script>
 

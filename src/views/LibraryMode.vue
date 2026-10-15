@@ -130,7 +130,7 @@
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
-                  <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
+                  <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :reason="knowledgeSearchError" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
                   <p v-if="searchReturn.notice.value" role="status" class="knowledge-search-count">{{ searchReturn.notice.value }}</p>
                   <p v-if="!knowledgeSearchRunning && !knowledgeSearchFailed && groupedKnowledgeSearchResults.length" class="knowledge-search-count">当前展示 {{ groupedKnowledgeSearchResults.length }} 个文件的结果。结果限量展示，不代表全部匹配次数。</p>
                   <section v-for="group in groupedKnowledgeSearchResults" :key="group.path" class="knowledge-result-group" :aria-label="searchResultPath(group.path, store.libraryPath)">
@@ -793,13 +793,14 @@ import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import ExternalImportDialog from '../components/ExternalImportDialog.vue'
+import { searchQueryNeedle, parseSearchQuery } from '../utils/searchQuery'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
 import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
 import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
 import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
 import { confirmAppAction } from '../services/appDialog'
-import { recordWindowDraftActivity, beginWindowSave } from '../services/windowDrafts'
+import { recordWindowDraftActivity, beginWindowSave, useWindowDraftSnapshot } from '../services/windowDrafts'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
 import { isActiveThemeDark } from '../config/themePresets'
@@ -1409,7 +1410,7 @@ const returnToEditorFromReference = async () => {
 }
 const showSearchPreview = (result: KnowledgeSearchResult) => {
   referenceVisible.value = true
-  searchPreviewQuery.value = searchQuery.value
+  searchPreviewQuery.value = searchQueryNeedle(searchQuery.value, result.context)
   searchPreviewResult.value = result
 }
 // Only an explicit reference action replaces this source; normal opens/searches do not.
@@ -1436,6 +1437,7 @@ const navigateSearchResults = (event: KeyboardEvent) => {
 }
 const knowledgeSearchRunning = ref(false)
 const knowledgeSearchFailed = ref(false)
+const knowledgeSearchError = ref('')
 let knowledgeSearchGeneration = 0
 let relationSummaryGeneration = 0
 const relationSummaries = ref<Record<string, GraphRelationSummary>>({})
@@ -1466,6 +1468,7 @@ const searchReturn = useSearchReturn({
 const closeGraphCollection = () => {
   ++knowledgeSearchGeneration
   knowledgeSearchFailed.value = false
+  knowledgeSearchError.value = ''
   knowledgeSearchRunning.value = false
   activeCollectionId.value = ''
   knowledgeSearchResults.value = []
@@ -2198,6 +2201,13 @@ const selectLibrary = async (path: string) => {
   catch (error) { message.error(`切换资料库失败：${String(error)}`) }
   finally { librarySwitchBusy.value = false }
 }
+useWindowDraftSnapshot(() => {
+  const tab = tabs.value.find(item => item.id === activeTabId.value)
+  if (tab && vditor && isVditorReady && activeIsMarkdown.value) {
+    const content = vditor.getValue()
+    if (tab.content !== content) { tab.content = content; tab.isDirty = true }
+  }
+})
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
 const openWorkspace = () => router.push('/workspace')
 const openGraph = () => router.push('/graph')
@@ -2470,7 +2480,7 @@ const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
     return
   }
   if (['markdown', 'plain-text'].includes(result.objectType) && result.matchKind === 'body') {
-    void openManagedFile(router, result.path, { searchNeedle: searchQuery.value.trim(), searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
+    void openManagedFile(router, result.path, { searchNeedle: searchQueryNeedle(searchQuery.value, result.context), searchLocator: `${Date.now()}-${++searchNavigationSequence}` }, 'replace')
     return
   }
   const target = routeForFile(result.path)
@@ -4520,6 +4530,7 @@ const retryKnowledgeSearch = () => scheduleKnowledgeSearch(searchQuery.value)
 const scheduleKnowledgeSearch = (q: string) => {
   if (searchTimer) clearTimeout(searchTimer)
   knowledgeSearchFailed.value = false
+  knowledgeSearchError.value = ''
   if (!q.trim()) {
     if (activeCollectionId.value) return
     ++knowledgeSearchGeneration
@@ -4541,13 +4552,18 @@ const scheduleKnowledgeSearch = (q: string) => {
   searchTimer = setTimeout(async () => {
     const isCurrent = () => generation === knowledgeSearchGeneration && libraryRoot === store.libraryPath
     if (!isCurrent()) return
+    try { parseSearchQuery(q) }
+    catch (cause) {
+      if (isCurrent()) { knowledgeSearchResults.value = []; knowledgeSearchFailed.value = true; knowledgeSearchError.value = String(cause).replace(/^Error:\s*/, ''); knowledgeSearchRunning.value = false }
+      return
+    }
     try {
-      if (q.startsWith('#')) {
-        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot, tag: q.slice(1) })
+      if (/^#[^\s"]+$/.test(q.trim())) {
+        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot, tag: q.trim().slice(1) })
         if (!isCurrent()) return
         knowledgeSearchResults.value = results.map(result => ({
           title: result.name, path: result.path, objectType: 'markdown', matchKind: 'tag',
-          context: `标签 #${q.slice(1)}`, score: 80, extractionFailed: false,
+          context: `标签 #${q.trim().slice(1)}`, score: 80, extractionFailed: false,
         }))
       } else {
         const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot, query: q })
