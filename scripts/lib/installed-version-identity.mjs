@@ -52,6 +52,7 @@ export async function runInstalledVersionScenario({ send, evaluate, waitFor, nav
     await waitFor(`document.querySelector('[data-testid="main-app-version"]')?.textContent.trim() === 'v${appVersion}'`, 'native version on sidebar')
     observations.badge = await evaluate(`document.querySelector('[data-testid="main-app-version"]').textContent`)
     observations.badgeLabel = await evaluate(`document.querySelector('[data-testid="main-app-version"]').getAttribute('aria-label')`)
+    await waitFor(`!document.querySelector('.n-message')`, 'transient feedback completion before version screenshot')
     await capture('installed-version-library.jpg')
     await click(`document.querySelector('[data-testid="main-app-version"]')`)
     await waitFor(`document.querySelector('[data-testid="app-update-settings"]') !== null`, 'version badge opens update settings')

@@ -12,6 +12,10 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     return result.value
   }
   const check = (id, condition) => { assert.ok(condition, id); report.checks.push({ id, status: 'passed' }) }
+  const captureSettled = async name => {
+    await waitFor(`!document.querySelector('.n-message') && !document.getAnimations().some(a => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity)`, 'natural dialog animation and transient feedback completion')
+    await capture(name)
+  }
   const exists = file => fs.stat(file).then(() => true, () => false)
   const point = expression => `(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
   const mouse = async (expression, button = 'left') => {
@@ -46,7 +50,7 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     await menu(sourceName, '创建副本')
     await waitFor(`!!(${row(duplicateName)})`, 'duplicate revealed in native tree')
     check('context-duplicate-writes-real-copy-and-preserves-source', await fs.readFile(duplicate, 'utf8') === content && await fs.readFile(source, 'utf8') === content)
-    await capture('installed-v112-context-result.jpg')
+    await captureSettled('installed-v112-context-result.jpg')
 
     await menu(sourceName, '移动到…')
     const input = `document.querySelector('.file-operation-dialog input[aria-label="目标文件夹"]')`
@@ -54,7 +58,7 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
     await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
     await send('Input.insertText', { text: 'release-v112-target/nested' })
-    await capture('installed-v112-move-dialog.jpg')
+    await captureSettled('installed-v112-move-dialog.jpg')
     await mouse(button('移动', `document.querySelector('.file-operation-dialog')`))
     const moved = path.join(library, 'release-v112-target', 'nested', sourceName)
     await waitFor(`!document.querySelector('.file-operation-dialog') && !!(${row('nested\\' + sourceName)})`, 'nested native move completed')
@@ -70,7 +74,7 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     check('recycle-keeps-recoverable-content-without-source-file', !await exists(source) && trash.some(e => e.name === sourceName))
     await more(duplicateName, '资料库回收站…')
     await mouse(`document.querySelector('.trash-entry input[aria-label="选择 ${sourceName}"]')`)
-    await capture('installed-v112-trash-dialog.jpg')
+    await captureSettled('installed-v112-trash-dialog.jpg')
     await mouse(button('恢复所选', `document.querySelector('.file-operation-dialog')`))
     await waitFor(`!!(${row(sourceName)}) && document.querySelector('.file-operation-dialog')?.textContent.includes('回收站为空')`, 'native restore returns original path')
     check('recycle-dialog-restores-real-file', await fs.readFile(source, 'utf8') === content && !(await invoke('list_library_trash', { libraryRoot: library })).length)
