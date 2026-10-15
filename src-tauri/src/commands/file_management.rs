@@ -6,7 +6,7 @@ use std::{
     sync::Mutex,
 };
 
-static OPERATIONS: Mutex<()> = Mutex::new(());
+pub(super) static OPERATIONS: Mutex<()> = Mutex::new(());
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -36,7 +36,7 @@ pub struct TrashEntry {
     pub is_dir: bool,
 }
 
-fn visible_item(guard: &WorkspaceGuard, input: &str, existing: bool) -> Result<PathBuf, String> {
+pub(super) fn visible_item(guard: &WorkspaceGuard, input: &str, existing: bool) -> Result<PathBuf, String> {
     let path = if existing {
         guard.resolve_existing(input)?
     } else {
@@ -158,7 +158,7 @@ fn history_files(path: &Path) -> Vec<PathBuf> {
     files
 }
 
-fn move_to(
+pub(super) fn move_to(
     app: Option<&tauri::AppHandle>,
     guard: &WorkspaceGuard,
     old: &Path,

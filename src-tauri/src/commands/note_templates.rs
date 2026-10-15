@@ -14,6 +14,71 @@ pub struct NoteTemplate {
     pub content: String,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PortableNoteTemplate {
+    pub name: String,
+    pub content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoteTemplateBundle {
+    pub kind: String,
+    pub schema_version: u32,
+    pub templates: Vec<PortableNoteTemplate>,
+}
+
+const MAX_BUNDLE_BYTES: u64 = 17 * 1024 * 1024;
+
+fn validate_bundle(bundle: &mut NoteTemplateBundle) -> Result<(), String> {
+    if bundle.kind != "longedit-note-templates" || bundle.schema_version != 1 {
+        return Err("这不是支持的 Long编辑笔记模板文件".into());
+    }
+    if bundle.templates.is_empty() || bundle.templates.len() > 64 {
+        return Err("模板文件需要包含 1–64 个模板".into());
+    }
+    for template in &mut bundle.templates {
+        template.name = template.name.trim().to_string();
+        if template.name.is_empty() || template.name.chars().count() > 80 || template.content.len() > 256 * 1024 {
+            return Err("模板名称过长、为空或正文超过 256 KiB".into());
+        }
+    }
+    Ok(())
+}
+
+fn json_path(path: &str) -> Result<&std::path::Path, String> {
+    let path = std::path::Path::new(path);
+    if !path.extension().and_then(|extension| extension.to_str()).is_some_and(|extension| extension.eq_ignore_ascii_case("json")) {
+        return Err("请选择 .json 笔记模板文件".into());
+    }
+    Ok(path)
+}
+
+#[tauri::command]
+pub fn export_note_template_bundle(target_path: String, templates: Vec<PortableNoteTemplate>) -> Result<(), String> {
+    let target = json_path(&target_path)?;
+    let mut bundle = NoteTemplateBundle { kind: "longedit-note-templates".into(), schema_version: 1, templates };
+    validate_bundle(&mut bundle)?;
+    let content = serde_json::to_string_pretty(&bundle).map_err(|error| error.to_string())?;
+    if content.len() as u64 > MAX_BUNDLE_BYTES { return Err("模板文件过大，请分批导出".into()); }
+    // The Save dialog confirms replacement; use the same atomic writer as explicit saves.
+    super::super::services::reliable_write::write_utf8(target, &content)
+}
+
+#[tauri::command]
+pub fn read_note_template_bundle(source_path: String) -> Result<NoteTemplateBundle, String> {
+    use std::io::Read;
+    let target = json_path(&source_path)?;
+    let file = fs::File::open(target).map_err(|error| format!("无法读取模板文件：{error}"))?;
+    let mut bytes = Vec::new();
+    file.take(MAX_BUNDLE_BYTES + 1).read_to_end(&mut bytes).map_err(|error| error.to_string())?;
+    if bytes.len() as u64 > MAX_BUNDLE_BYTES { return Err("模板文件超过 17 MiB，请分批导入".into()); }
+    let content = std::str::from_utf8(&bytes).map_err(|_| "模板文件需要使用 UTF-8 编码".to_string())?;
+    let mut bundle: NoteTemplateBundle = serde_json::from_str(content.trim_start_matches('\u{feff}')).map_err(|_| "无法识别模板内容，请选择导出的笔记模板 JSON 文件".to_string())?;
+    validate_bundle(&mut bundle)?;
+    Ok(bundle)
+}
+
 pub fn validate_note_templates(
     templates: &[NoteTemplate],
     defaults: &HashMap<String, String>,
@@ -115,6 +180,51 @@ pub async fn create_note_from_template(
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn bundle_fixture() -> std::path::PathBuf {
+        let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::env::temp_dir().join(format!("longedit-template-bundle-{}-{nonce}", std::process::id()));
+        fs::create_dir(&root).unwrap(); root
+    }
+    #[test]
+    fn portable_bundle_round_trips_authored_content_and_explicit_overwrite() {
+        let root = bundle_fixture(); let target = root.join("模板.json").to_string_lossy().to_string();
+        let entries = || vec![PortableNoteTemplate { name: " 沟通🙂 ".into(), content: "# {{title}}\r\n{{date}}".into() }];
+        export_note_template_bundle(target.clone(), entries()).unwrap();
+        let bundle = read_note_template_bundle(target.clone()).unwrap();
+        assert_eq!(bundle.templates[0].name, "沟通🙂");
+        assert_eq!(bundle.templates[0].content, entries()[0].content);
+        let raw = fs::read_to_string(&target).unwrap();
+        assert!(!raw.contains("defaultNoteTemplates") && !raw.contains("\"id\""));
+        export_note_template_bundle(target.clone(), vec![PortableNoteTemplate { name: "更新".into(), content: "".into() }]).unwrap();
+        assert_eq!(read_note_template_bundle(target.clone()).unwrap().templates[0].name, "更新");
+        let saved = fs::read(&target).unwrap();
+        assert!(export_note_template_bundle(target.clone(), vec![]).is_err());
+        assert_eq!(fs::read(&target).unwrap(), saved);
+        let note = root.join("原文.md"); fs::write(&note, "保留").unwrap();
+        assert!(export_note_template_bundle(note.to_string_lossy().into(), entries()).is_err());
+        assert_eq!(fs::read_to_string(note).unwrap(), "保留");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn portable_bundle_accepts_utf8_bom_and_reports_unrecognized_files() {
+        let root = bundle_fixture(); let target = root.join("模板.json").to_string_lossy().to_string();
+        fs::write(&target, "\u{feff}{\"kind\":\"longedit-note-templates\",\"schemaVersion\":1,\"templates\":[{\"name\":\"周报\",\"content\":\"内容\"}]}").unwrap();
+        assert_eq!(read_note_template_bundle(target.clone()).unwrap().templates[0].name, "周报");
+        for invalid in ["{}", "not json", "{\"kind\":\"longedit-note-templates\",\"schemaVersion\":2,\"templates\":[]}"] {
+            fs::write(&target, invalid).unwrap(); assert!(read_note_template_bundle(target.clone()).is_err());
+        }
+        fs::write(&target, [0xff, 0xfe]).unwrap(); assert!(read_note_template_bundle(target.clone()).unwrap_err().contains("UTF-8"));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn portable_bundle_bounds_large_files_and_template_content() {
+        let root = bundle_fixture(); let target = root.join("模板.json").to_string_lossy().to_string();
+        fs::File::create(&target).unwrap().set_len(MAX_BUNDLE_BYTES + 1).unwrap();
+        assert!(read_note_template_bundle(target.clone()).unwrap_err().contains("17 MiB"));
+        assert!(export_note_template_bundle(target.clone(), vec![PortableNoteTemplate { name: "过大".into(), content: "中".repeat(90000) }]).is_err());
+        assert!(export_note_template_bundle(target, vec![PortableNoteTemplate { name: " ".into(), content: "".into() }]).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn placeholders_are_local_and_single_pass() {
         assert_eq!(

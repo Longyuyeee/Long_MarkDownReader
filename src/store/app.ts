@@ -16,6 +16,7 @@ import { normalizeDisplayPreferences } from '../config/displayPreferences'
 import { belongsToLibrary, libraryTabsKey, sessionTabs } from '../utils/workSessions'
 import { emit } from '@tauri-apps/api/event'
 import { BLANK_NOTE_TEMPLATE, BUILTIN_NOTE_TEMPLATES, MAX_NOTE_TEMPLATES, validateNoteTemplate, type NoteTemplate } from '../config/noteTemplates'
+import { planTemplateImport, validateTemplateBundle, type PortableNoteTemplate, type TemplateConflictMode } from '../utils/noteTemplateTransfer'
 
 export type SessionMode = 'TEMP' | 'LIBRARY'
 
@@ -293,6 +294,15 @@ export const useAppStore = defineStore('app', {
       const exists = this.noteTemplates.some(item => item.id === entry.id)
       if (!exists && this.noteTemplates.length >= MAX_NOTE_TEMPLATES) throw new Error('自定义模板不能超过 64 个')
       await this.updateConfig({ noteTemplates: exists ? this.noteTemplates.map(item => item.id === entry.id ? entry : item) : [...this.noteTemplates, entry] })
+    },
+    async importNoteTemplates(entries: PortableNoteTemplate[], selected: number[], mode: TemplateConflictMode) {
+      const checked = validateTemplateBundle({ kind: 'longedit-note-templates', schemaVersion: 1, templates: entries })
+      const plan = planTemplateImport(checked.templates, selected, this.noteTemplates, mode)
+      const added = plan.filter(item => !item.skipped).map(item => ({ id: crypto.randomUUID(), name: item.name, content: item.content }))
+      if (!added.length) throw new Error('没有可导入的模板，请勾选模板或调整同名处理方式')
+      if (this.noteTemplates.length + added.length > MAX_NOTE_TEMPLATES) throw new Error(`本机还可添加 ${MAX_NOTE_TEMPLATES - this.noteTemplates.length} 个模板，请减少勾选`)
+      await this.updateConfig({ noteTemplates: [...this.noteTemplates, ...added] })
+      return { added, skipped: plan.length - added.length }
     },
     async deleteNoteTemplate(id: string) {
       const defaults = Object.fromEntries(Object.entries(this.defaultNoteTemplates).filter(([, value]) => value !== id))

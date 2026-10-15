@@ -1,0 +1,75 @@
+{
+  "scope": "Actual components with simulated IPC; native feature tests run separately",
+  "checks": [
+    "Markdown reading position returns after switching documents, without animating or recreating the whole workspace",
+    "Tab context menu pins, bulk close preserves pinned tabs, Ctrl+Shift+T reopens and drag order/pins persist",
+    "Tag right-click pins frequently used tags and changes library-scoped ordering",
+    "Collections reorder through their menu, save multiple required tags and remember result sorting after returning",
+    "Relations appear directly beside any file; edit type/description in a modal, retaining input on failure and updating the list after retry",
+    "TXT history compares, protects drafts before replacement, keeps replacement unsaved and creates a .txt recovery copy without changing the source",
+    "At 760px, open the responsive navigation before using its create menu; all six styles keep this interaction usable"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "createMenuUsable": true
+    },
+    {
+      "style": "soft",
+      "width": 760,
+      "createMenuUsable": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "createMenuUsable": true
+    },
+    {
+      "style": "neo",
+      "width": 760,
+      "createMenuUsable": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "createMenuUsable": true
+    },
+    {
+      "style": "glass",
+      "width": 760,
+      "createMenuUsable": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "createMenuUsable": true
+    },
+    {
+      "style": "airy",
+      "width": 760,
+      "createMenuUsable": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "createMenuUsable": true
+    },
+    {
+      "style": "minimal",
+      "width": 760,
+      "createMenuUsable": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "createMenuUsable": true
+    },
+    {
+      "style": "sharp",
+      "width": 760,
+      "createMenuUsable": true
+    }
+  ],
+  "errors": []
+}

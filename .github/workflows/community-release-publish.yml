@@ -69,9 +69,13 @@ jobs:
             if ($report.sourceCommit -and $report.sourceCommit -ne $env:PRODUCT_COMMIT) { throw 'Installed source identity mismatch' }
             if ($report.appVersion -and $report.appVersion -ne $env:RELEASE_VERSION) { throw 'Installed version mismatch' }
           }
-          if ($env:RELEASE_VERSION -eq '1.1.3') {
+          if ($env:RELEASE_VERSION -in @('1.1.3','1.1.4')) {
             $foundation = Get-Content verified-review/installed-v113-workflow.json -Raw | ConvertFrom-Json
             if ($foundation.status -ne 'passed' -or $foundation.checks.Count -ne 8 -or @($foundation.checks | Where-Object status -ne 'passed').Count -or $foundation.sourceCommit -ne $env:PRODUCT_COMMIT -or $foundation.appVersion -ne $env:RELEASE_VERSION -or $foundation.sourceUserContentIncluded -ne $false) { throw 'Foundation workflows did not pass in the exact installed product' }
+          }
+          if ($env:RELEASE_VERSION -eq '1.1.4') {
+            $extended = Get-Content verified-review/installed-v114-workflow.json -Raw | ConvertFrom-Json
+            if ($extended.status -ne 'passed' -or $extended.checks.Count -ne 8 -or @($extended.checks | Where-Object status -ne 'passed').Count -or $extended.sourceCommit -ne $env:PRODUCT_COMMIT -or $extended.appVersion -ne $env:RELEASE_VERSION -or $extended.sourceUserContentIncluded -ne $false) { throw 'Template transfer, partial recovery and batch rename did not pass in the exact installed product' }
           }
           New-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null
           $expected = @()

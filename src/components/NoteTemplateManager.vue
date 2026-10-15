@@ -1,6 +1,6 @@
 <template>
-  <n-modal :show="true" preset="card" title="笔记模板" class="note-template-dialog" :style="{ width: 'min(840px, 94vw)' }" :mask-closable="false" :closable="!busy" :close-on-esc="!busy" @esc="close" @close="close">
-    <div class="template-default"><label for="default-note-template">此资料库新建笔记时使用</label><select id="default-note-template" :value="store.defaultNoteTemplates[libraryRoot] || BLANK_NOTE_TEMPLATE" :disabled="busy" @change="changeDefault"><option v-for="item in store.allNoteTemplates" :key="item.id" :value="item.id">{{ item.name }}</option></select></div>
+  <n-modal :show="!importEntries" preset="card" title="笔记模板" class="note-template-dialog" :style="{ width: 'min(840px, 94vw)' }" :mask-closable="false" :closable="!busy" :close-on-esc="!busy" @esc="close" @close="close">
+    <div class="template-default"><label for="default-note-template">此资料库新建笔记时使用</label><select id="default-note-template" :value="store.defaultNoteTemplates[libraryRoot] || BLANK_NOTE_TEMPLATE" :disabled="busy" @change="changeDefault"><option v-for="item in store.allNoteTemplates" :key="item.id" :value="item.id">{{ item.name }}</option></select><n-dropdown trigger="click" :options="transferOptions" @select="transfer"><n-button size="small" :disabled="busy">更多操作<template #icon><MoreHorizontal :size="16" /></template></n-button></n-dropdown></div>
     <div class="template-workspace">
       <nav aria-label="模板列表"><n-button block secondary :disabled="busy" @click="chooseNew"><template #icon><Plus :size="16" /></template>新建模板</n-button><div class="template-list"><button v-for="item in store.allNoteTemplates" :key="item.id" type="button" :class="{ selected: selectedId === item.id }" :aria-pressed="selectedId === item.id" :disabled="busy" @click="choose(item)"><FileText :size="16" /><span>{{ item.name }}</span><small v-if="item.id.startsWith('builtin:')">内置</small></button></div></nav>
       <section class="template-editor" aria-label="编辑模板">
@@ -14,12 +14,17 @@
     <p v-if="error" class="template-error" role="alert">{{ error }}</p>
     <template #footer><div class="template-actions"><n-button v-if="!builtin && selectedId !== 'new'" quaternary type="error" :disabled="busy" @click="remove">删除模板</n-button><span /><n-button :disabled="busy" @click="close">关闭</n-button><n-button v-if="builtin" type="primary" :disabled="busy" @click="copyBuiltin">另存为自定义模板</n-button><n-button v-else type="primary" :loading="busy" :disabled="busy || !dirty" @click="save">保存模板</n-button></div></template>
   </n-modal>
+  <NoteTemplateImportDialog v-if="importEntries" :entries="importEntries" @close="importEntries = null" @imported="imported" />
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { NModal, NButton, useDialog, useMessage } from 'naive-ui'
-import { FileText, Plus } from 'lucide-vue-next'
+import { NModal, NButton, NDropdown, useDialog, useMessage } from 'naive-ui'
+import { FileText, Plus, MoreHorizontal } from 'lucide-vue-next'
+import { open, save as saveFile } from '@tauri-apps/plugin-dialog'
+import { invoke } from '../services/tauriRuntime'
+import NoteTemplateImportDialog from './NoteTemplateImportDialog.vue'
+import { validateTemplateBundle, type PortableNoteTemplate } from '../utils/noteTemplateTransfer'
 import { useAppStore } from '../store/app'
 import { BLANK_NOTE_TEMPLATE, renderNoteTemplate, type NoteTemplate } from '../config/noteTemplates'
 import { confirmAppAction } from '../services/appDialog'
@@ -32,8 +37,41 @@ const selectedId = ref(props.initialNote ? 'new' : BLANK_NOTE_TEMPLATE)
 const name = ref(props.initialNote?.name || ''), content = ref(props.initialNote?.content || '')
 const original = ref(props.initialNote ? '' : JSON.stringify({ name: '', content: '' }))
 const busy = ref(false), error = ref(''), preview = ref(false), bodyInput = ref<HTMLTextAreaElement>()
+const importEntries = ref<PortableNoteTemplate[] | null>(null)
 const builtin = computed(() => selectedId.value.startsWith('builtin:'))
 const dirty = computed(() => !builtin.value && JSON.stringify({ name: name.value, content: content.value }) !== original.value)
+const transferOptions = computed(() => [
+  { label: '导入模板…', key: 'import' },
+  { label: '导出当前模板…', key: 'current', disabled: builtin.value || !name.value.trim() },
+  { label: '导出全部已保存模板…', key: 'all', disabled: !store.noteTemplates.length },
+])
+async function transfer(key: string) {
+  if (busy.value) return
+  busy.value = true; error.value = ''
+  try {
+    if (key === 'import') {
+      const source = await open({ title: '选择笔记模板文件', multiple: false, directory: false, filters: [{ name: '笔记模板', extensions: ['json'] }] })
+      if (typeof source !== 'string') return
+      importEntries.value = validateTemplateBundle(await invoke('read_note_template_bundle', { sourcePath: source })).templates
+    } else {
+      const templates = key === 'all' ? store.noteTemplates : [{ name: name.value, content: content.value }]
+      const checked = validateTemplateBundle({ kind: 'longedit-note-templates', schemaVersion: 1, templates })
+      const stem = key === 'all' ? '笔记模板' : checked.templates[0].name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+      const target = await saveFile({ title: '导出笔记模板', defaultPath: 'Long编辑-' + stem + '.json', filters: [{ name: '笔记模板', extensions: ['json'] }] })
+      if (!target) return
+      const finish = beginWindowSave()
+      try { await invoke('export_note_template_bundle', { targetPath: target, templates: checked.templates }) }
+      finally { finish() }
+      message.success(`${checked.templates.length} 个模板已导出`)
+    }
+  } catch (cause) { error.value = '模板文件操作未完成：' + String(cause) }
+  finally { busy.value = false }
+}
+function imported(added: NoteTemplate[], skipped: number) {
+  importEntries.value = null
+  if (!dirty.value && added[0]) load(added[0])
+  message.success(`${added.length} 个模板已导入${skipped ? `，跳过 ${skipped} 个同名模板` : ''}`)
+}
 useWindowDraft(() => dirty.value)
 watch([name, content], recordWindowDraftActivity, { flush: 'sync' })
 const rendered = computed(() => renderNoteTemplate(content.value, name.value.trim() || '新笔记'))

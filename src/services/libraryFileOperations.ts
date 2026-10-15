@@ -3,7 +3,7 @@ import { fileStylePathKey } from '../utils/fileDisplayStyles'
 export interface PathChange { oldPath: string; newPath: string }
 export interface FileOperationResult { items: PathChange[]; errors: { path: string; message: string }[] }
 export interface TrashEntry { id: string; originalPath: string; name: string; deletedAt: number; isDir: boolean }
-export type FileOperation = 'move' | 'copy' | 'trash' | 'restore' | 'undo'
+export type FileOperation = 'move' | 'copy' | 'trash' | 'restore' | 'undo' | 'rename'
 export const fileOperationBusy = ref(false)
 export const libraryFileClipboard = ref<{ root: string; paths: string[]; operation: 'move' | 'copy' } | null>(null)
 export const lastLibraryMove = ref<{ root: string; items: PathChange[] } | null>(null)
