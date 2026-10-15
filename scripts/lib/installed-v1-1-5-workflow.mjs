@@ -46,6 +46,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   const scopeAll = async () => { await mouse(`document.querySelector('${palette} .palette-scope')`); await mouse(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.textContent.trim()==='全部资料库')`) }
   const result = name => `[...document.querySelectorAll('${palette} .result-item')].find(e=>e.querySelector('.item-title')?.textContent.includes(${JSON.stringify(name)}))`
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
+  const visibleSaveState = `(()=>{const s=document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app');return {state:document.querySelector('.document-save-state')?.textContent.trim(),tabs:[...document.querySelectorAll('.workspace-tab')].map(e=>e.getAttribute('aria-label')),error:document.querySelector('${palette} [role="alert"]')?.textContent,dirtyModels:s?.tabs.filter(t=>t.isDirty).map(t=>({path:t.path,content:t.content?.slice(0,300)})),tempDirty:s?.isTempDirty}})()`
   const contains = (results, file) => results.some(r => normalize(r.path) === normalize(file))
   const snap = async name => { await waitFor(`!document.querySelector('.n-message')&&!document.getAnimations().some(a=>a.playState==='running'&&a.effect?.getTiming().iterations!==Infinity)`, 'v115 natural motion completed'); await capture(name) }
   const reloadPersistedConfig = async () => {
@@ -139,17 +140,28 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     const protectedDraft = await fs.readFile(draft, 'utf8') === '# 安装态草稿\n\n尚未修改\n' && normalize((await invoke('get_config')).activeLibraryPath) === normalize(library)
     await key('Escape', 'Escape', 27); await waitFor(`!document.querySelector('${palette}')`, 'palette closed'); await mouse(button('保存'))
     await waitFor(`(async()=>{const r=await window.__TAURI_INTERNALS__.invoke('read_text_document',{libraryRoot:${JSON.stringify(library)},path:${JSON.stringify(draft)},formatId:'markdown'});return r.content.includes('用户刚输入')})()`, 'user explicitly saved draft')
+    report.afterDiskWrite = await evaluate(visibleSaveState)
+    // Disk publication can precede completion of the UI save receipt. Require
+    // the user's visible saved state too; never clear a dirty flag to proceed.
+    await waitFor(`document.querySelector('.document-save-state')?.textContent.trim()==='已保存'&&!document.querySelector('.workspace-tab.active[aria-label*="有未保存的修改"]')`, 'explicit save completed in the user interface')
+    report.afterExplicitSave = await evaluate(visibleSaveState)
     await open(); await query(expression); await waitFor(`!!(${result('v115-另库预算')})`, 'other library ready after save'); await mouse(result('v115-另库预算'))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('另库资料')`, 'saved draft permits switch')
     check('actual-typing-blocks-cross-library-open-until-explicit-save', protectedDraft && (await fs.readFile(draft, 'utf8')).includes('用户刚输入') && normalize((await invoke('get_config')).activeLibraryPath) === normalize(second))
     await snap('installed-v115-main.jpg')
     check('v115-workflows-have-no-global-error-overlay', !await evaluate(`!!document.querySelector('#crash-screen,#runtime-error-notice,.route-error-fallback')`))
     report.status = 'passed'
-  } catch (error) { report.status = 'failed'; report.error = String(error); await capture('installed-v115-failure.jpg').catch(() => {}); throw error }
+  } catch (error) { report.status = 'failed'; report.error = String(error); report.failureUiState = await evaluate(visibleSaveState).catch(() => null); await capture('installed-v115-failure.jpg').catch(() => {}); throw error }
   finally {
     let cleanupError
     if (config) {
-      try { await invoke('save_config', { config }); await evaluate("location.hash='#/library'"); await reloadPersistedConfig() }
+      try {
+        await invoke('save_config', { config })
+        // A failed user task may intentionally retain a draft. Do not reload
+        // through its native unsaved-changes dialog or discard it for cleanup.
+        if (report.status === 'passed') { await evaluate("location.hash='#/library'"); await reloadPersistedConfig() }
+        else report.cleanupUiReload = 'not-attempted-after-failed-user-workflow'
+      }
       catch (cause) { cleanupError = cause; report.cleanupError = String(cause) }
     }
     const passedBeforeCleanup = report.status === 'passed'

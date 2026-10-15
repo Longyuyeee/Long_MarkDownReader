@@ -1,0 +1,15 @@
+{
+  "status": "failed-not-release-acceptance",
+  "runId": "38789717201",
+  "artifactId": "12002461668",
+  "productSourceCommit": "9753e9272222776f40cfec97f8869fcea940bc29",
+  "passedChecks": 9,
+  "reason": "The explicit-save scenario saw written disk content, but the following cross-library click was still blocked by the unsaved-work guard. UI save completion must be checked before inferring whether this is controller timing or a product defect. Cleanup then hit the real unsaved-changes reload guard.",
+  "sourceUserContentIncluded": false,
+  "files": [
+    { "name": "installed-v115-failure.jpg", "sizeBytes": 91042, "sha256": "4abd596bd6e25bb614109fc2b62837939355f5be378a537c812b8cef7f993684" },
+    { "name": "installed-v115-search.jpg", "sizeBytes": 85233, "sha256": "7705d24b451299b2d58ae3ae183320c1216c844ab48fdd55eb553cf2b8cd0c5c" },
+    { "name": "installed-v115-workflow.json", "sizeBytes": 5231, "sha256": "02477e123a68f13de469b6f364dc722d764562e5e5a5171e91528f747a7959b3" },
+    { "name": "installer-build-receipt.json", "sizeBytes": 1400, "sha256": "5098753b6bae59d85f3970e35020c863cc75416278b250dd6a7e7445c63bebf1" }
+  ]
+}

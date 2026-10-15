@@ -41,6 +41,7 @@ test('v115 installer workflow retains eleven explicit user-task checks and produ
   assert.match(workflow, /prior synthetic drafts must be saved, not discarded/)
   assert.match(workflow, /reloadPersistedConfig/)
   assert.match(workflow, /Only the disposable installer fixture library may be changed/)
+  assert.match(workflow, /explicit save completed in the user interface/)
   const windows = fs.readFileSync('src-tauri/src/services/external_windows.rs', 'utf8')
   assert.match(windows, /pub async fn open_external_file_window/)
   assert.doesNotMatch(windows, /pub fn open_external_file_window/)

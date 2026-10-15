@@ -1,0 +1,173 @@
+{
+  "appVersion": "1.1.5",
+  "sourceCommit": "9753e9272222776f40cfec97f8869fcea940bc29",
+  "harnessSourceCommit": "9753e9272222776f40cfec97f8869fcea940bc29",
+  "installerSha256": "98e7897979de2e54e5382ee476e6837ccc1c6d30dcb38566c111a0812f8ae00b",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    },
+    {
+      "id": "palette-scope-dropdown-is-clickable-and-shows-real-native-results",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-query-and-genuine-empty-state-are-distinct",
+      "status": "passed"
+    },
+    {
+      "id": "search-result-opens-in-main-editor-without-replacing-reference",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T19:41:51.236Z",
+      "completedAt": "2026-10-15T19:41:51.241Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T19:41:51.242Z",
+      "completedAt": "2026-10-15T19:41:51.318Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T19:41:51.318Z",
+      "completedAt": "2026-10-15T19:41:51.363Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T19:41:51.363Z",
+      "completedAt": "2026-10-15T19:41:51.374Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T19:41:51.374Z",
+      "completedAt": "2026-10-15T19:41:51.383Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-15T19:41:51.383Z",
+      "completedAt": "2026-10-15T19:41:51.391Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-15T19:41:51.391Z",
+      "completedAt": "2026-10-15T19:41:51.395Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-15T19:41:51.401Z",
+      "completedAt": "2026-10-15T19:41:51.413Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-15T19:41:51.413Z",
+      "completedAt": "2026-10-15T19:41:51.577Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T19:41:51.577Z",
+      "completedAt": "2026-10-15T19:41:51.739Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-15T19:41:51.807Z",
+      "completedAt": "2026-10-15T19:41:52.014Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T19:41:52.027Z",
+      "completedAt": "2026-10-15T19:41:52.140Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T19:41:52.140Z",
+      "completedAt": "2026-10-15T19:41:52.249Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T19:41:52.789Z",
+      "completedAt": "2026-10-15T19:41:52.937Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-15T19:41:52.937Z",
+      "completedAt": "2026-10-15T19:41:52.980Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T19:41:52.980Z",
+      "completedAt": "2026-10-15T19:41:53.041Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-15T19:41:53.041Z",
+      "completedAt": "2026-10-15T19:41:53.046Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-15T19:41:53.046Z",
+      "completedAt": "2026-10-15T19:41:53.117Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-15T19:41:55.419Z",
+      "completedAt": "2026-10-15T19:41:55.426Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-15T19:42:27.683Z",
+      "completedAt": "2026-10-15T19:42:27.714Z",
+      "status": "completed"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "markdownInputMode": "vditor-wysiwyg",
+  "error": "Error: Timed out waiting for saved draft permits switch",
+  "cleanupError": "Error: Timed out after 60000 ms: installed CDP Runtime.evaluate"
+}
