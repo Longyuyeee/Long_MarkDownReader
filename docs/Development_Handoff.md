@@ -1,5 +1,7 @@
 # 2026-10-15：v1.1.5 安全导入与搜索一致性（当前开发入口）
 
+当前有效产品冻结为 **`fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9`**（main 已同步，包含保存误报修复）。[构建与安装 38797796429](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38797796429)、[main CI 38797795639](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38797795639) 已启动；本地完整质量门、生产依赖 0 漏洞、搜索 9 组/12 布局与导入 3 组/12 布局通过。等待新包真实验收，不晋级 `9753e927` 或更早安装器。以下旧冻结进度仅保留为过程记录。
+
 最新阻断已修复待重建：严格安装复核 `38796840696` 证实保存回执已经完成、没有新输入，Markdown 却再次被重复输入通知标成未保存；不是简单等待问题。主编辑器现在只对真实内容变化置脏，外部 Markdown 对比已确认保存基线，4 项直接执行生产回调的回归先失败再通过，原有新增输入和保存失败保护保留。旧 `9753e927` 安装器不能发布，必须以本修复重新冻结构建；证据见 [当前审计最上方](V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md)。下方旧构建与阻断状态为过程记录。
 
 当前有效冻结 `9753e9272222776f40cfec97f8869fcea940bc29`，main 已同步。[新构建/安装 38789717201](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38789717201) 与 [main CI 38789715047](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38789715047) 的完整质量门通过，原生回归仍在运行。旧 `fa18bdb7` 及更早安装器不能发布，当前不是封板或公开发布状态。待新包真实安装流程及同包独立复核全部通过后，再导入原始证据并提升为发布就绪。

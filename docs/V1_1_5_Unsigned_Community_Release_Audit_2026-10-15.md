@@ -2,6 +2,8 @@
 
 ## 2026-10-16 当前收尾状态
 
+**当前有效产品冻结：`fb0c7900da2cd311d3584f07f4ddef9b7b54cfa9`**（已推送 main，包含保存误报修复）。[构建/安装 38797796429](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38797796429) 和 [main CI 38797795639](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38797795639) 验证这份代码。本地搜索 9 组/12 布局、导入 3 组/12 布局均 0 页面错误，完整质量门和生产依赖 0 漏洞通过；新包实际安装结论仍待执行，尚未封板或公开。
+
 **已证实并修复新的产品阻断，旧 `9753e927` 安装器退出候选**：严格复核 `38796840696` 在磁盘写入后、用户可见保存回执完成后都记录为“已保存”、脏模型 0；没有新输入，随后的跨库检查却再次变为同一 Markdown 草稿未保存。加入保存完成等待仍真实失败，不能归因为控制器时序。[原始前后状态与截图](evidence/v115-save-notification-regression/import-summary.json) 已保留。
 
 实际输入回调会无条件置脏，保存后的相同内容通知也被当成新编辑。新增直接执行生产回调的回归先失败，再将主编辑器限定为内容确实变化才置脏；外部 Markdown 同类回调也先失败再改为对比已确认保存基线。重复通知不重置已保存状态，真正的新输入与保存期间继续输入仍保持未保存，主编辑器不会自动清除已有草稿。4 项新回归、原保存生命周期及窗口快照合计 15 项通过；必须重新冻结产品和构建，不能靠改验收脚本晋级旧包。
@@ -10,7 +12,7 @@
 
 当前已构建字节：NSIS 67,375,896 bytes，SHA-256 `98e7897979de2e54e5382ee476e6837ccc1c6d30dcb38566c111a0812f8ae00b`；MSI 76,189,696 bytes，SHA-256 `ebd7a949ab4d218fda06e9ecff849cb3cfcbee38f1dc828a88671ef8abb882f9`。两者都未签名；先用此原包做严格诊断复核，未判定新的产品缺陷前不重复构建，不把当前 9 项写成全部通过。
 
-**当前有效产品冻结：`9753e9272222776f40cfec97f8869fcea940bc29`**（已推送 main）。[重建与安装验收 38789717201](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38789717201) 和 [main CI 38789715047](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38789715047) 正在验证这份含 Windows 路径修复的代码；两者完整质量门已经成功，原生回归仍在执行，尚无安装验收通过结论。下面 `fa18bdb7` 与两轮同包失败仅为历史记录，不是当前候选。
+上一产品冻结 `9753e9272222776f40cfec97f8869fcea940bc29` 已撤出候选。[main CI 38789715047](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38789715047) 成功，但 [安装验收 38789717201](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38789717201) 及严格复核暴露上述保存误报。它和下面 `fa18bdb7` 的失败都仅为历史记录，不是当前候选。
 
 **新发现产品阻断已修复，必须重新构建**：同包复核 `38788347346` 前 8 项通过，实际点击搜索结果却提示资料库已移除。原生索引返回 Windows `\\?\C:\...` 规范路径，而前端 `belongsToLibrary` 仅替换斜杠，错误拒绝同一个库。新增盘符/UNC/双向规范路径回归和实际 TXT 打开组件流程，修复前分别真实失败。现在仅在库归属检查中消除等价扩展前缀，仍拒绝邻接根、`.`/`..` 与设备路径，既有会话存储键不迁移。7 项会话回归及搜索 **9 组流程 / 12 布局 / 0 页面错误**通过；实际查看了 [规范路径在主区打开](evidence/v115-search-consistency-development/windows-canonical-open.png)。`fa18bdb7` 产品安装器不可晋级。
 
