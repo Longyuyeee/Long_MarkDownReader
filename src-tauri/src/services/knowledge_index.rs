@@ -1437,6 +1437,9 @@ pub fn read_snapshot(
     Ok(Some(snapshot))
 }
 
+// Reference helper for native cache-parity regressions. Interactive commands
+// now validate freshness through the bounded query metadata scanner instead.
+#[cfg(test)]
 pub fn read_ready_snapshot(
     cache_root: &Path,
     workspace: &Path,
