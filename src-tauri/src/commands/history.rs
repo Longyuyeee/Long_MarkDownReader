@@ -390,7 +390,8 @@ pub async fn list_history(
     library_root: String,
     path: String,
 ) -> Result<Vec<(u64, String)>, String> {
-    let _lease = history_lease(&app_handle)?;
+    // Snapshot bodies are immutable. Let the list and metadata load together;
+    // restore actions take the lease and verify both signatures before applying.
     let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
 }

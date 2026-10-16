@@ -30,3 +30,5 @@
 证据：[本版组件流程](evidence/v117-save-history-development/report.json)、[原生功能日志](evidence/v117-save-history-development/native-functional.log)、[编辑测试](evidence/v117-save-history-development/editor-tests.log)。组件测试明确使用模拟 IPC，不能代替安装态；早期选择器与文档状态检查失败已经纠正，保留的 failure.png 是夹具开发过程，非当前运行截图。安装包验证正在准备，不以这些开发证据声明可发版。
 
 最终本地完整功能复核为 **885 通过 / 0 失败 / 5 既有 ignored**（独立性能不计入），普通保存新增 4 项原生测试及保存回执警告保留新增输入的测试通过。此前失败的既有内部归档项在完整复核中通过；原始差异见 [失败原始日志](evidence/v117-save-history-development/native-preclosure-failure.log)，没有改预期、跳过或推断系统原因。最终固定安装器尚待新构建结果。
+
+独立性能回归通过，固定工作簿本机记录为 8299ms，不作为界面性能提升的声明。最后移除本轮曾加在不可变历史正文列表上的独占锁，避免列表与备注两个并行只读请求互报“忙”；备注与所有写入/恢复仍保留原协调和签名核对。38878957748 在安装器构建前取消，后续源码固定后只根据安装结果修正实际问题，不继续扩展范围。
