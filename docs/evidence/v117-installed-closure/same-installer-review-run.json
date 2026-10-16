@@ -1,0 +1,123 @@
+{
+  "conclusion": "success",
+  "databaseId": 38950309873,
+  "jobs": [
+    {
+      "completedAt": "2026-10-16T18:52:48Z",
+      "conclusion": "success",
+      "databaseId": 117139740620,
+      "name": "review",
+      "startedAt": "2026-10-16T18:49:46Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-16T18:49:48Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-16T18:49:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:50:05Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v6",
+          "number": 2,
+          "startedAt": "2026-10-16T18:49:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:50:08Z",
+          "conclusion": "success",
+          "name": "Validate immutable review inputs",
+          "number": 3,
+          "startedAt": "2026-10-16T18:50:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:50:14Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v6",
+          "number": 4,
+          "startedAt": "2026-10-16T18:50:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:50:17Z",
+          "conclusion": "success",
+          "name": "Run actions/download-artifact@v4",
+          "number": 5,
+          "startedAt": "2026-10-16T18:50:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:50:24Z",
+          "conclusion": "success",
+          "name": "Verify same installers and successful original build gates",
+          "number": 6,
+          "startedAt": "2026-10-16T18:50:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:50:25Z",
+          "conclusion": "success",
+          "name": "Test directory identity without changing the filesystem",
+          "number": 7,
+          "startedAt": "2026-10-16T18:50:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:52:43Z",
+          "conclusion": "success",
+          "name": "Run complete same-installer lifecycle and installed workflow",
+          "number": 8,
+          "startedAt": "2026-10-16T18:50:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:52:43Z",
+          "conclusion": "success",
+          "name": "Retain original build receipt with review reports",
+          "number": 9,
+          "startedAt": "2026-10-16T18:52:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:52:44Z",
+          "conclusion": "success",
+          "name": "Run actions/upload-artifact@v4",
+          "number": 10,
+          "startedAt": "2026-10-16T18:52:43Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:52:45Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v6",
+          "number": 19,
+          "startedAt": "2026-10-16T18:52:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:52:47Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v6",
+          "number": 20,
+          "startedAt": "2026-10-16T18:52:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T18:52:47Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-10-16T18:52:47Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38950309873/job/117139740620"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38950309873"
+}

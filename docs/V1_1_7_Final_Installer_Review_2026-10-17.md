@@ -1,5 +1,15 @@
 # v1.1.7 最终安装器接续
 
+## 最终同包复核已通过
+
+**38950309873 success**，产品、原安装器和驱动身份均与下方登记一致。完整安装态结果已导入 [1.1.7 产物清单](evidence/v1.1.7-release/artifact-manifest.json)，本版 12 项及全部继承流程通过；已实际查看冲突、历史、TXT 恢复和移动图片原图。原构建的导航超时仍保留，不能把不同驱动身份混成不同产品。
+
+此时已达到社区版发布条件，下一步准备标签和 Draft Release，再由发布流程上传**已验收的原字节**、公开回下载核对并更新 README。公开附件核验前，不将“ready”写成“published”。下方“尚在运行”为启动时快照。
+
+## 当前复核运行
+
+[同包复核 38950309873](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38950309873) 已从驱动提交 `23de2567a49ccbe857a9d8a1c76d8d1d05ea472f` 启动，使用构建 **38945853964** 的原安装器、固定产品 **84cc1ad6d4697bb98c17e3396b9d8d65da41847a**，由公开 1.1.6 验证升级。登记时尚在运行，不提前导入为 passed、创建公开 Release 或切换 README 下载。
+
 ## 最新：同包复核前修正驱动导航合同
 
 产品仍固定 **84cc1ad6**，main CI 38945852747 已整体 **success**。构建 38945853964 的质量门、完整原生/性能、MSI/NSIS、安装器摘要和此前继承流程通过，但整体 **failure**：首次进入本版流程时，驱动向真实三参数 `navigate(hash, selector, description)` 仅传了路径，等待 `document.querySelector(undefined)` 超时。诊断正文已显示 `方案.md` 和 `original markdown`；不能把它解释为文档未打开或修改产品来迁就脚本。
