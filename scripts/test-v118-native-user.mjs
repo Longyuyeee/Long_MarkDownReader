@@ -24,13 +24,18 @@ test('literal browser expressions compile independently, including quoted attrib
 })
 test('CDP input waits for an unobscured target and never calls a DOM handler',async()=>{
   const calls=[],expressions=[]
-  const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async expression=>{expressions.push(expression);return {x:10,y:20}}},{timeoutMs:5,pollMs:1})
+  const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async expression=>{expressions.push(expression);return {x:10,y:20}}},{timeoutMs:5,pollMs:1,stableMs:0})
   await ui.click('button[aria-label="加载更多文件"]')
   assert.deepEqual(calls.map(call=>call.args.type),['mousePressed','mouseReleased'])
   assert.ok(calls.every(call=>call.method==='Input.dispatchMouseEvent'))
   assert.ok(expressions.every(expression=>expression.includes('elementFromPoint')&&!expression.includes('.click(')))
   const blocked=nativeUserInput({send:async()=>assert.fail('blocked target cannot receive input'),evaluate:async()=>null},{timeoutMs:1,pollMs:1})
   await assert.rejects(()=>blocked.click('#blocked'),/did not become ready/)
+  let observations=0
+  const moving=[]
+  const settled=nativeUserInput({send:async(method,args)=>moving.push(args),evaluate:async()=>({x:Math.min(++observations,4)*10,y:20})},{timeoutMs:100,pollMs:1,stableMs:3})
+  await settled.click('#moving')
+  assert.ok(observations>=5);assert.equal(moving.length,2);assert.ok(moving.every(args=>args.x===40))
 })
 test('typing and Enter use real WebView input phases without setting DOM values',async()=>{
   const calls=[]

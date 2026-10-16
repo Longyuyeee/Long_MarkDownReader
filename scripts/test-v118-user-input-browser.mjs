@@ -3,7 +3,10 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import {createRequire} from 'node:module'
-import {nativeUserInput} from './lib/v118-native-user-input.mjs'
+import {execFileSync} from 'node:child_process'
+const baseline=process.env.LONGEDIT_INPUT_HELPER_BASELINE
+if(baseline)assert.equal(baseline,'b2ce89d33a26fac917d46107494bc23e4e79016f')
+const {nativeUserInput}=await import(baseline?'data:text/javascript;base64,'+execFileSync('git',['show',baseline+':scripts/lib/v118-native-user-input.mjs']).toString('base64'):'./lib/v118-native-user-input.mjs')
 const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
 const output=process.env.LONGEDIT_SEARCH_UI_OUTPUT;assert.ok(output)
 await fs.mkdir(output,{recursive:false})
@@ -12,6 +15,12 @@ const session=await page.context().newCDPSession(page),errors=[],checks=[]
 page.on('pageerror',error=>errors.push(error.message))
 const ui=nativeUserInput({send:(method,args)=>session.send(method,args),evaluate:expression=>page.evaluate(expression)},{timeoutMs:15000})
 try{
+  await page.setContent(`<button id="start" onclick="document.querySelector('#moving').classList.add('moving')">展开布局</button><button id="moving" onclick="this.dataset.clickedAt=performance.now()" style="position:absolute;top:80px;left:20px;transition:transform .35s linear">目标</button><style>#moving.moving{transform:translateX(400px)}</style>`)
+  await page.locator('#start').click()
+  const movingStarted=await page.evaluate(()=>performance.now())
+  await ui.click('#moving')
+  assert.ok(await page.locator('#moving').evaluate((e,start)=>Number(e.dataset.clickedAt)-start>=300,movingStarted),'native helper must not click while target geometry is still moving')
+  checks.push('CDP input waits for settled geometry after an actual animated layout change, without disabling motion or retrying a click')
   await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9018')+'/scripts/fixtures/v118-search-pages-browser.html')
   await ui.clickText('.app-navigation a','资料库')
   await ui.fill('.search-area input','预算')

@@ -1,0 +1,42 @@
+﻿{
+    "runtimeVersions":  "154.0.4258.62",
+    "sessionId":  2,
+    "debugPortListening":  true,
+    "windowHandle":  197140,
+    "phase":  "user",
+    "hasExited":  false,
+    "pid":  1300,
+    "workingSet64":  56938496,
+    "webviewProcesses":  [
+                             {
+                                 "ProcessId":  6872,
+                                 "ParentProcessId":  1300,
+                                 "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --embedded-browser-webview=1 --webview-exe-name=tauri-app.exe --webview-exe-version=1.1.7 --user-data-dir=\"D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView\" --noerrdialogs --embedded-browser-webview-dpi-awareness=2 --autoplay-policy=no-user-gesture-required --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --remote-allow-origins=http://127.0.0.1:9458 --remote-debugging-port=9458 --lang=en-US --mojo-named-platform-channel-pipe=1300.2380.5110678621543232270 /pfhostedapp:61a9cfbc5abef2d7e41a40bdbda1cf2025bb3e37"
+                             },
+                             {
+                                 "ProcessId":  6616,
+                                 "ParentProcessId":  6872,
+                                 "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --type=crashpad-handler --user-data-dir=D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView /prefetch:4 /pfhostedapp:61a9cfbc5abef2d7e41a40bdbda1cf2025bb3e37 --monitor-self-annotation=ptype=crashpad-handler --database=D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView\\Crashpad --annotation=IsOfficialBuild=1 --annotation=channel= --annotation=chromium-version=154.0.8037.98 \"--annotation=exe=C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --annotation=plat=Win64 \"--annotation=prod=Edge WebView2\" --annotation=ver=154.0.4258.62 --initial-client-data=0x178,0x17c,0x180,0x154,0x1b8,0x7ffddb2483e0,0x7ffddb2483f0,0x7ffddb248400"
+                             },
+                             {
+                                 "ProcessId":  8264,
+                                 "ParentProcessId":  6872,
+                                 "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --noerrdialogs --user-data-dir=\"D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView\" --webview-exe-name=tauri-app.exe --webview-exe-version=1.1.7 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=1844,i,14250336450765401640,4336485967833939743,524288 --field-trial-handle=1992,i,15339697815917230157,4086708216423215263,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1996,i,92990505694252179,9784700223280770103,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2180 /prefetch:11 /pfhostedapp:61a9cfbc5abef2d7e41a40bdbda1cf2025bb3e37"
+                             },
+                             {
+                                 "ProcessId":  7828,
+                                 "ParentProcessId":  6872,
+                                 "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --type=gpu-process --gpu-recent-crash-count=0 --noerrdialogs --user-data-dir=\"D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView\" --webview-exe-name=tauri-app.exe --webview-exe-version=1.1.7 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --gpu-preferences=WAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAQAAAAAAAAAADAAAAAAAAADgAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAoAAAAAAAAAAgAAAAAAAAAEAAAAAIAAAABAAAAAAAAAAgAAAAAAAAACAAAAAAAAAA= --startup-read-main-dll --metrics-shmem-handle=1584,i,1006192791163571075,3418895437006704939,262144 --field-trial-handle=1992,i,15339697815917230157,4086708216423215263,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1996,i,92990505694252179,9784700223280770103,4 --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1988 /prefetch:2 /pfhostedapp:61a9cfbc5abef2d7e41a40bdbda1cf2025bb3e37"
+                             },
+                             {
+                                 "ProcessId":  6892,
+                                 "ParentProcessId":  6872,
+                                 "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --noerrdialogs --user-data-dir=\"D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView\" --webview-exe-name=tauri-app.exe --webview-exe-version=1.1.7 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --startup-read-main-dll --metrics-shmem-handle=2492,i,10251736258572502808,1536140953354360881,524288 --field-trial-handle=1992,i,15339697815917230157,4086708216423215263,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1996,i,92990505694252179,9784700223280770103,4 --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=2504 /prefetch:13 /pfhostedapp:61a9cfbc5abef2d7e41a40bdbda1cf2025bb3e37"
+                             },
+                             {
+                                 "ProcessId":  1184,
+                                 "ParentProcessId":  6872,
+                                 "CommandLine":  "\"C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe\" --type=renderer --noerrdialogs --user-data-dir=\"D:\\a\\_temp\\longedit-v118-native-562b6b24918146d88e29f2239b16dd8a\\webview\\EBWebView\" --webview-exe-name=tauri-app.exe --webview-exe-version=1.1.7 --embedded-browser-webview=1 --embedded-browser-webview-dpi-awareness=2 --autoplay-policy=no-user-gesture-required --remote-debugging-port=9458 --video-capture-use-gpu-memory-buffer --lang=en-US --js-flags --device-scale-factor=1 --num-raster-threads=2 --enable-main-frame-before-activation --renderer-client-id=5 --ssd-no-pressure-read-main-dll --launch-time-ticks=698798710 --metrics-shmem-handle=3700,i,3027576316928697344,8674714087938364790,1048576 --field-trial-handle=1992,i,15339697815917230157,4086708216423215263,262144 --disable-features=msPdfOOUI,msSmartScreenProtection,msWebOOUI --variations-seed-version --pseudonymization-salt-handle=1996,i,92990505694252179,9784700223280770103,4 --trace-process-track-uuid=3190708990997080739 --mojo-platform-channel-handle=3708 /pfhostedapp:61a9cfbc5abef2d7e41a40bdbda1cf2025bb3e37 /prefetch:1"
+                             }
+                         ]
+}

@@ -30,11 +30,10 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       LONGEDIT_SEARCH_UNREGISTERED_ENTRIES: '21050'
-      # The footer product changed; old E2c program bytes cannot cover it.
-      # Keep the provenance-checked reuse path for a future driver-only repair.
-      NATIVE_PROGRAM_RUN_ID: ''
-      NATIVE_PROGRAM_SHA256: ''
-      NATIVE_PROGRAM_HARNESS_COMMIT: ''
+      # Driver-only input stability repair: keep the newly built footer program.
+      NATIVE_PROGRAM_RUN_ID: '38979598860'
+      NATIVE_PROGRAM_SHA256: '14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99'
+      NATIVE_PROGRAM_HARNESS_COMMIT: 'b2ce89d33a26fac917d46107494bc23e4e79016f'
     steps:
       - name: Check out audit harness
         uses: actions/checkout@v6

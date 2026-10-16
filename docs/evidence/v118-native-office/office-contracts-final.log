@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+ok 1 - Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+  ---
+  duration_ms: 12.0317
+  ...
+# Subtest: Office target selectors parse the actual public search key and never substitute a document open
+ok 2 - Office target selectors parse the actual public search key and never substitute a document open
+  ---
+  duration_ms: 2.6769
+  ...
+# Subtest: all literal and interpolated native user/browser expressions are syntactically valid
+ok 3 - all literal and interpolated native user/browser expressions are syntactically valid
+  ---
+  duration_ms: 23.254
+  ...
+# Subtest: Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+ok 4 - Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+  ---
+  duration_ms: 1.2158
+  ...
+# Subtest: Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+ok 5 - Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+  ---
+  duration_ms: 0.7554
+  ...
+# Subtest: Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+ok 6 - Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+  ---
+  duration_ms: 7.4072
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 321.6396

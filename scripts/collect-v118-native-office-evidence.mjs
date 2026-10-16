@@ -15,6 +15,12 @@ assert.match(fs.readFileSync(root+'/harness-final-paths.log','utf8'),/# pass 49\
 assert.match(fs.readFileSync(root+'/quality-gate-first.log','utf8'),/found 0 vulnerabilities/)
 let native={status:'pending',plannedChecks:22,reason:'new frozen footer product and Office real input need a completed successful run'}
 if(receiptPath){
+  assert.match(fs.readFileSync(root+'/harness-stability-repair.log','utf8'),/# pass 49\r?\n# fail 0/)
+  assert.match(fs.readFileSync(root+'/quality-gate-stability-repair.log','utf8'),/found 0 vulnerabilities/)
+  const helper=parse(root+'/helper-stability-final/report.json');assert.equal(helper.checks.length,3);assert.deepEqual(helper.errors,[])
+  assert.match(fs.readFileSync(root+'/quality-gate-final.log','utf8'),/found 0 vulnerabilities/)
+  const productCi=parse(root+'/footer-product-ci-completed.json')
+  assert.equal(productCi.headSha,nativeSearchProduct);assert.equal(productCi.status,'completed');assert.equal(productCi.conclusion,'success')
   for(const file of [receiptPath,directory])assert.ok(path.resolve(file).startsWith(path.resolve(root)+path.sep))
   const run=parse(receiptPath)
   native={status:run.status==='completed'?'failed':'pending',runId:run.databaseId,url:run.url,conclusion:run.conclusion}
@@ -37,6 +43,7 @@ const sources=['.gitattributes','.github/workflows/v118-search-native.yml','scri
   'scripts/lib/v118-native-search-evidence.mjs','scripts/lib/v118-native-user-input.mjs','scripts/lib/v118-native-user-evidence.mjs',
   'scripts/lib/v118-native-office-fixture.mjs','scripts/lib/v118-native-office-input.mjs','scripts/lib/v118-native-office-evidence.mjs',
   'scripts/test-v118-native-office.mjs','scripts/test-v118-native-user.mjs','scripts/test-v118-native-search-audit.mjs','scripts/test-v118-native-search-evidence.mjs',
+  'scripts/test-v118-user-input-browser.mjs',
   'scripts/check-current-development-audit.mjs','scripts/collect-v118-native-office-evidence.mjs',
   'src/components/SearchPageStatus.vue','src/views/LibraryMode.vue','src/components/CommandPalette.vue','src/services/fileNavigation.ts',
   'src/views/DocxReaderView.vue','src/views/PptxReaderView.vue','src/views/WorkbookView.vue',

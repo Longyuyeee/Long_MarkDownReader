@@ -66,7 +66,7 @@ test('workflow pins the product separately from its harness and cannot publish o
   const reuse=workflow.jobs['native-search'].env
   if(reuse.NATIVE_PROGRAM_RUN_ID){
     assert.match(reuse.NATIVE_PROGRAM_RUN_ID,/^\d+$/);assert.match(reuse.NATIVE_PROGRAM_SHA256,/^[a-f0-9]{64}$/);assert.match(reuse.NATIVE_PROGRAM_HARNESS_COMMIT,/^[a-f0-9]{40}$/)
-    const evidence='docs/evidence/v118-native-user/'
+    const evidence=await fs.access(`docs/evidence/v118-native-office/native-run-${reuse.NATIVE_PROGRAM_RUN_ID}.json`).then(()=>'docs/evidence/v118-native-office/').catch(()=>'docs/evidence/v118-native-user/')
     const parse=text=>JSON.parse(text.replace(/^\uFEFF/,''))
     const program=parse(await fs.readFile(evidence+`run-${reuse.NATIVE_PROGRAM_RUN_ID}/program-build-receipt.json`,'utf8'))
     const run=parse(await fs.readFile(evidence+`native-run-${reuse.NATIVE_PROGRAM_RUN_ID}.json`,'utf8'))
