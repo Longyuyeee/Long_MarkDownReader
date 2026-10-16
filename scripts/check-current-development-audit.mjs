@@ -6,6 +6,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-local-markdown-links.mjs
 execFileSync(process.execPath, ['--test', 'scripts/test-document-tooltip-content.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v115-release-contract.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v116-release-contract.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-v117-release-contract.mjs', 'scripts/test-history-read-coordination.mjs', 'scripts/test-v117-published-handoff.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-index-readiness.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-work-sessions.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-markdown-save-notifications.mjs'], { stdio: 'inherit' })

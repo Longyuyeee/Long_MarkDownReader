@@ -1,4 +1,16 @@
-# v1.1.7 保存与历史：发布准备
+# v1.1.7 保存与历史：正式发布审计
+
+## 已发布且公开字节核验完成
+
+[Release v1.1.7](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.7) **415282808** 于 **2026-10-16T18:55:39Z** 公开（北京时间 2026-10-17）。标签固定产品 **84cc1ad6d4697bb98c17e3396b9d8d65da41847a**；发布运行 [38950993084](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38950993084) **success**，没有重新构建。公开 EXE/MSI/SHA256SUMS 完整回下载，与同包复核产物及 GitHub 摘要一致；README 下载与末尾摘要已更新。
+
+公开事实见[发布收据](evidence/v1.1.7-release/release-receipt.json)，原始 API、预期附件和回下载报告保留于[发布原始证据](evidence/v1.1.7-release/publication/)。后续目标为 1.1.8 搜索深化，原生 899 项、安装态本版 12 项的结论不提前覆盖下一版本。以下 ready/pending/failure 保留为各阶段当时事实；仍保持未签名、应用内更新观察 pending 和 MSI 仅构建/摘要等原边界。
+
+### 发布事实与后续目标的最终检查
+
+发布、版本身份及 UI 发布事实合同通过；`npm run check:current-development-audit` 最终完整通过。首次发布后检查暴露四个历史 M6 检查把开发目标列表写死在 1.1.7，无法接受“公开 1.1.7、下一目标 1.1.8”。新增四个回归先全部失败，再复用已有 `expectedDevelopmentTarget` 要求**恰好下一补丁**（保留既有 1.1.0 特批），不再用宽松的历史目标枚举；跳到 1.1.9、退回 1.1.7、企业 RC 标记仍被拒绝。全部历史源码/证据、阶段、运行时及隐私断言保持。
+
+同时将发布阶段的 `activeSlice` 保持为已完成的 1.1.7，1.1.8 只登记为下一开发目标，未把预备审计误标成正在实施。原失败、四项红/绿回归和最终完整日志见[收尾原始记录](evidence/v117-installed-closure/)，原始公开发布材料的摘要见[发布导入清单](evidence/v1.1.7-release/publication-import-manifest.json)。这些仅是检查、文档和发布事实修正，不修改标签固定的产品，不重建已发布安装器。
 
 ## 2026-10-17 最终结论：已具备社区版发布条件，公开发布待执行
 

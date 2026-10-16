@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "status": "published-and-remote-assets-verified",
+  "githubRunId": 38950993084,
+  "productSourceCommit": "84cc1ad6d4697bb98c17e3396b9d8d65da41847a",
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "publication/SHA256SUMS.txt",
+      "sizeBytes": 190,
+      "sha256": "934cda79fba38af04e1ced5f17f5ac1d8f4cbcc6010e128b7427e9415ca4b877"
+    },
+    {
+      "path": "publication/expected-assets.json",
+      "sizeBytes": 484,
+      "sha256": "fd59fb7c26b6aaec78f013457038311e485c349e0da17a5ece576602a093f709"
+    },
+    {
+      "path": "publication/installer-build-receipt.json",
+      "sizeBytes": 1400,
+      "sha256": "fe3fbbbaf78f5c447541e423889eb06a91f432bfe9a7f59e6d16879537244a79"
+    },
+    {
+      "path": "publication/public-download-verification.json",
+      "sizeBytes": 881,
+      "sha256": "cf6fcb5c735ed26a7922869a79a43281c4feb096f9386c668ea8d2f6466397ef"
+    },
+    {
+      "path": "publication/published-api.json",
+      "sizeBytes": 10474,
+      "sha256": "59817b10a65a26bf94d9b8fd092685abede1ea471247c972425569523301c0ef"
+    },
+    {
+      "path": "publication/workflow-run.json",
+      "sizeBytes": 2877,
+      "sha256": "5df3116d97665db8c45ebd9a594150d4297840c6ccacba02f8aee79471eb79f5"
+    }
+  ]
+}

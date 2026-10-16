@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "status": "v1.1.7-published-raw-closure-records",
+  "productSourceCommit": "84cc1ad6d4697bb98c17e3396b9d8d65da41847a",
+  "installerBuildRunId": 38945853964,
+  "sameInstallerReviewRunId": 38950309873,
+  "publicationRunId": 38950993084,
+  "sourceUserContentIncluded": false,
+  "observations": {
+    "originalBuildOverall": "failure-navigation-driver-contract",
+    "mainProductCi": "success",
+    "sameInstallerReview": "success",
+    "publication": "success",
+    "firstPostPublicationContractAudit": "failed-stale-target-whitelist",
+    "newHandoffRegressionBefore": {
+      "passed": 0,
+      "failed": 4
+    },
+    "newHandoffRegressionAfter": {
+      "passed": 4,
+      "failed": 0
+    },
+    "finalPostPublicationContractAudit": "passed"
+  },
+  "files": [
+    {
+      "path": "first-install-failure.log",
+      "sizeBytes": 1039741,
+      "sha256": "b29cf4b95f211c57ba904a573da92acf07306b70a426e89411a2868e4eaf1b3e"
+    },
+    {
+      "path": "first-install-run-receipt.json",
+      "sizeBytes": 6423,
+      "sha256": "fc347056954d7e5932b3a1633e52f747ed657668a011c570e85dcb1e007c867b"
+    },
+    {
+      "path": "main-ci-receipt.json",
+      "sizeBytes": 2898,
+      "sha256": "8123760c629a4700ab6fa705e6f10e95e6d419a4d50a131de0fd11932edf9049"
+    },
+    {
+      "path": "publication-contracts-after.log",
+      "sizeBytes": 108447,
+      "sha256": "6ee81c45658547ececafeda3bdf27e077e2d83dfa8439a4fafe1eb112f995392"
+    },
+    {
+      "path": "publication-contracts.log",
+      "sizeBytes": 6931,
+      "sha256": "46de930cb6314e07e89e7eef82448a4539316569d5524fa5d66703302977b1b3"
+    },
+    {
+      "path": "published-handoff-after.log",
+      "sizeBytes": 1242,
+      "sha256": "d76253a639ee71b03814e64e8ef8010bd3e4245dce0c1620ab9486a91d3e23a0"
+    },
+    {
+      "path": "published-handoff-before.log",
+      "sizeBytes": 8012,
+      "sha256": "5025345bba4b36c84c746a933b12b8fe7f4822eeb6a31bfe9b41da13fd866c68"
+    },
+    {
+      "path": "published-handoff-frozen-fixture.log",
+      "sizeBytes": 1243,
+      "sha256": "226da56fead859a0d5a867ac48764eb398e186739cf78eb76732fe776c2fee87"
+    },
+    {
+      "path": "same-installer-review-run.json",
+      "sizeBytes": 3963,
+      "sha256": "d4cc32e00398fa8040f564723f9228ba1f629dd14e038e91dbdb65df179c3f93"
+    }
+  ]
+}

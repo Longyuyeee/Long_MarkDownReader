@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: check-post-v117-m6-0-v1018-scope-selection.mjs retains historical facts and accepts only the real next target
+ok 1 - check-post-v117-m6-0-v1018-scope-selection.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 543.4949
+  ...
+# Subtest: check-post-v117-m6-1-graph-fullscreen.mjs retains historical facts and accepts only the real next target
+ok 2 - check-post-v117-m6-1-graph-fullscreen.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 15.1984
+  ...
+# Subtest: check-post-v117-m6-2-v1018-next-slice-selection.mjs retains historical facts and accepts only the real next target
+ok 3 - check-post-v117-m6-2-v1018-next-slice-selection.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 9.7244
+  ...
+# Subtest: check-post-v117-m6-3-v1018-release-readiness.mjs retains historical facts and accepts only the real next target
+ok 4 - check-post-v117-m6-3-v1018-release-readiness.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 7.9048
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 648.7704
