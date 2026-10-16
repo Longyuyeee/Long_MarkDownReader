@@ -652,16 +652,21 @@ mod tests {
 
     impl Fixture {
         fn new() -> Self {
-            let path = std::env::temp_dir().join(format!(
-                "archive-resolve-{}-{}",
-                std::process::id(),
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            ));
-            fs::create_dir_all(path.join("notes")).unwrap();
-            Self(path.canonicalize().unwrap())
+            Self::with_timestamp(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos())
+        }
+        fn with_timestamp(timestamp: u128) -> Self {
+            static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+            loop {
+                let path = std::env::temp_dir().join(format!("archive-resolve-{}-{}-{}", std::process::id(), timestamp, NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+                match fs::create_dir(&path) {
+                    Ok(()) => {
+                        fs::create_dir(path.join("notes")).unwrap();
+                        return Self(path.canonicalize().unwrap());
+                    },
+                    Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                    Err(e) => panic!("cannot create isolated fixture: {e}"),
+                }
+            }
         }
         fn resolve(&self, target: &str) -> DependencyResolution {
             resolve_relative(
@@ -682,6 +687,18 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
+    }
+    #[test]
+    fn archive_same_timestamp_fixtures_never_share_content_or_cleanup() {
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let first = Fixture::with_timestamp(timestamp);
+        fs::create_dir(first.0.join("project")).unwrap();
+        fs::write(first.0.join("project/own.md"), "first fixture").unwrap();
+        let second = Fixture::with_timestamp(timestamp);
+        assert_ne!(first.0, second.0, "parallel fixtures must not share a timestamp-only directory");
+        assert!(!second.0.join("project").exists());
+        drop(second);
+        assert_eq!(fs::read_to_string(first.0.join("project/own.md")).unwrap(), "first fixture");
     }
     #[test]
     fn archive_relative_resolution_respects_document_directory_and_encoded_hash() {

@@ -2,11 +2,12 @@
   <BatchRenameDialog ref="renameDialog" :library-root="libraryRoot" :before-operate="beforeOperate" :after-operate="afterOperate" />
   <n-modal :show="showTransfer" preset="card" :title="operation === 'move' ? '移动到' : '复制到'" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTransfer = show }">
     <form class="file-operation-form" @submit.prevent="executeTransfer">
-      <p class="file-operation-selection">{{ paths.length === 1 ? filename(paths[0]) : `已选择 ${paths.length} 项` }}</p>
+      <p class="file-operation-selection">{{ errors.length ? `待重试 ${paths.length} 项` : paths.length === 1 ? filename(paths[0]) : `已选择 ${paths.length} 项` }}</p>
       <label>目标文件夹<div class="directory-field"><n-input v-model:value="target" :disabled="busy" :input-props="{ 'aria-label': '目标文件夹' }" placeholder="资料库内的路径，例如：项目/会议" /><n-button :disabled="busy" @click="chooseDirectory"><FolderOpen :size="16" />选择</n-button></div></label>
       <small>不存在的目录会自动创建；重名时保留两份。</small>
-      <div v-if="errors.length" class="operation-errors" role="alert"><p v-for="error in errors" :key="error.path">{{ filename(error.path) }}：{{ error.message }}</p></div>
-      <div class="dialog-actions"><n-button :disabled="busy" @click="showTransfer = false">取消</n-button><n-button type="primary" attr-type="submit" :loading="busy">{{ operation === 'move' ? '移动' : '复制' }}{{ errors.length ? '未完成的项目' : '' }}</n-button></div>
+      <p v-if="inputError" class="operation-errors" role="alert">{{ inputError }}</p>
+      <FileOperationOutcome v-if="errors.length" :completed="completedItems" :errors="errors" :operation="operation" />
+      <div class="dialog-actions"><n-button :disabled="busy" @click="showTransfer = false">{{ errors.length ? '关闭' : '取消' }}</n-button><n-button v-if="!errors.length || paths.length" type="primary" attr-type="submit" :loading="busy">{{ errors.length && operation === 'move' ? `重试未执行的 ${paths.length} 项` : `${operation === 'move' ? '移动' : '复制'}${errors.length ? '未完成的项目' : ''}` }}</n-button></div>
     </form>
   </n-modal>
   <n-modal :show="showTrash" preset="card" title="资料库回收站" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTrash = show }">
@@ -17,20 +18,21 @@
     <div class="dialog-actions"><n-button :disabled="busy || !selectedTrash.length" @click="purgeSelected">永久删除</n-button><span></span><n-button :disabled="busy" @click="showTrash = false">关闭</n-button><n-button type="primary" :disabled="!selectedTrash.length" :loading="busy" @click="restoreSelected">恢复所选</n-button></div>
   </n-modal>
   <n-modal :show="showFeedback" preset="card" title="部分项目未完成" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" @update:show="show => { if (!busy) showFeedback = show }">
-    <div class="operation-errors" role="alert"><p v-for="error in errors" :key="error.path">{{ filename(error.path) }}：{{ error.message }}</p></div>
-    <div class="dialog-actions"><n-button :disabled="busy" @click="showFeedback = false">关闭</n-button><n-button v-if="retryUndo" type="primary" :loading="busy" @click="undoMove">重新撤销</n-button></div>
+    <FileOperationOutcome :completed="completedItems" :errors="errors" :operation="retryUndo ? 'undo' : 'copy'" />
+    <div class="dialog-actions"><n-button :disabled="busy" @click="showFeedback = false">关闭</n-button><n-button v-if="retryUndo && lastLibraryMove?.items.length" type="primary" :loading="busy" @click="undoMove">重试未执行的 {{ lastLibraryMove.items.length }} 项</n-button></div>
   </n-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import BatchRenameDialog from './BatchRenameDialog.vue'
+import FileOperationOutcome from './FileOperationOutcome.vue'
 import { NModal, NInput, NButton, useDialog, useMessage } from 'naive-ui'
 import { FolderOpen, Folder, FileText, RefreshCw } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '../services/tauriRuntime'
 import { confirmAppAction } from '../services/appDialog'
-import { fileOperationBusy as busy, libraryFileClipboard, lastLibraryMove, sameLibrary, topLevelPaths, type FileOperation, type FileOperationResult, type TrashEntry } from '../services/libraryFileOperations'
+import { fileOperationBusy as busy, libraryFileClipboard, lastLibraryMove, sameLibrary, topLevelPaths, canRetryFileError, mergeFileErrors, type FileOperation, type FileOperationResult, type TrashEntry, type PathChange } from '../services/libraryFileOperations'
 import { searchResultPath } from '../utils/searchResultPath'
 import { beginWindowSave } from '../services/windowDrafts'
 const props = defineProps<{ libraryRoot: string; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void> }>()
@@ -41,6 +43,8 @@ const modalStyle = { width: 'min(560px, calc(100vw - 28px))' }
 const showTransfer = ref(false), showTrash = ref(false), loadingTrash = ref(false), operation = ref<'move' | 'copy'>('move')
 const showFeedback = ref(false), retryUndo = ref(false)
 const root = ref(''), paths = ref<string[]>([]), target = ref(''), errors = ref<FileOperationResult['errors']>([]), trash = ref<TrashEntry[]>([]), selectedTrash = ref<string[]>([])
+const completedItems = ref<PathChange[]>([])
+const inputError = ref('')
 const filename = (path = '') => path.split(/[\\/]/).pop() || path
 const isCurrent = (library: string) => sameLibrary(library, props.libraryRoot)
 const refreshClipboard = (items: FileOperationResult['items']) => {
@@ -51,42 +55,55 @@ const refreshClipboard = (items: FileOperationResult['items']) => {
   }
 }
 const publish = async (result: FileOperationResult, kind: FileOperation) => {
-  if (kind === 'move' && result.items.length) { lastLibraryMove.value = { root: root.value, items: result.items }; refreshClipboard(result.items) }
-  if (isCurrent(root.value) && result.items.length) await props.afterOperate(result, kind)
+  if (kind === 'move' && result.items.length) { lastLibraryMove.value = { root: root.value, items: [...completedItems.value, ...result.items] }; refreshClipboard(result.items) }
   errors.value = result.errors
+  if (isCurrent(root.value) && result.items.length) {
+    try { await props.afterOperate(result, kind) }
+    catch { message.warning('文件操作结果已保留，但界面刷新未完成；请刷新资料库核对显示，不要重复操作已完成项。') }
+  }
 }
 const openTransfer = (selection: string[], kind: 'move' | 'copy', directory: string) => {
   if (busy.value) return
-  root.value = props.libraryRoot; paths.value = topLevelPaths(selection); operation.value = kind; errors.value = []
+  root.value = props.libraryRoot; paths.value = topLevelPaths(selection); operation.value = kind; errors.value = []; completedItems.value = []; inputError.value = ''
   target.value = searchResultPath(directory, root.value) === directory && sameLibrary(directory, root.value) ? '.' : searchResultPath(directory, root.value)
   showTransfer.value = true
 }
 const chooseDirectory = async () => {
   const library = root.value
+  inputError.value = ''
   try {
     const selected = await open({ directory: true, multiple: false, defaultPath: library, title: '选择资料库内的文件夹' })
     if (typeof selected === 'string' && isCurrent(library) && sameLibrary(library, root.value)) target.value = sameLibrary(selected, library) ? '.' : searchResultPath(selected, library)
-  } catch (cause) { errors.value = [{ path: '', message: String(cause) }] }
+  } catch (cause) { inputError.value = `选择文件夹失败，尚未执行文件操作：${String(cause)}` }
 }
 const executeTransfer = async () => {
-  if (busy.value || !isCurrent(root.value) || !await props.beforeOperate(paths.value, operation.value)) return
-  busy.value = true; errors.value = []
+  if (busy.value || !paths.value.length || !isCurrent(root.value) || !await props.beforeOperate(paths.value, operation.value)) return
+  if (busy.value || !showTransfer.value || !isCurrent(root.value)) return
+  const retained = errors.value.filter(error => !canRetryFileError(error, operation.value))
+  const attempted = [...paths.value]
+  busy.value = true
   const finish = beginWindowSave()
   try {
     const result = await invoke<FileOperationResult>('transfer_library_items', { libraryRoot: root.value, paths: paths.value, targetDir: target.value.trim() || '.', operation: operation.value })
     await publish(result, operation.value)
-    if (!result.errors.length) { showTransfer.value = false; message.success(result.items.length ? `已${operation.value === 'move' ? '移动' : '复制'} ${result.items.length} 项` : '项目已在目标目录') }
-    else paths.value = result.errors.map(error => error.path)
-  } catch (cause) { errors.value = [{ path: '', message: String(cause) }] }
+    completedItems.value.push(...result.items)
+    errors.value = mergeFileErrors(retained, result.errors)
+    paths.value = result.errors.filter(error => canRetryFileError(error, operation.value)).map(error => error.path)
+    if (!errors.value.length) { showTransfer.value = false; message.success(result.items.length ? `已${operation.value === 'move' ? '移动' : '复制'} ${result.items.length} 项` : '项目已在目标目录') }
+  } catch (cause) {
+    errors.value = mergeFileErrors(retained, attempted.map(path => ({ path, message: `未收到完整操作结果：${String(cause)}`, disposition: 'needsReview' as const })))
+    if (operation.value === 'move') paths.value = []
+  }
   finally { busy.value = false; finish() }
 }
 const duplicate = async (selection: string[]) => {
   if (busy.value || !await props.beforeOperate(selection, 'copy')) return
-  root.value = props.libraryRoot; busy.value = true
+  root.value = props.libraryRoot; busy.value = true; completedItems.value = []
   const finish = beginWindowSave()
   try {
     const result = await invoke<FileOperationResult>('transfer_library_items', { libraryRoot: root.value, paths: topLevelPaths(selection), targetDir: null, operation: 'copy' })
     await publish(result, 'copy')
+    completedItems.value = result.items
     if (result.errors.length) { retryUndo.value = false; showFeedback.value = true }
     else message.success(`已创建 ${result.items.length} 个副本`)
   } catch (cause) { message.error(String(cause)) }
@@ -134,14 +151,23 @@ const purgeSelected = async () => {
 const undoMove = async () => {
   const last = lastLibraryMove.value
   if (!last || busy.value || !sameLibrary(last.root, props.libraryRoot) || !await props.beforeOperate(last.items.map(item => item.newPath), 'undo')) return
+  if (busy.value || last !== lastLibraryMove.value || !sameLibrary(last.root, props.libraryRoot)) return
+  const retained = showFeedback.value && retryUndo.value ? errors.value.filter(error => !canRetryFileError(error, 'undo')) : []
+  if (!showFeedback.value || !retryUndo.value) completedItems.value = []
+  const attempted = [...last.items]
   root.value = last.root; busy.value = true
   const finish = beginWindowSave()
   try {
     const result = await invoke<FileOperationResult>('undo_library_moves', { libraryRoot: root.value, items: last.items })
-    await publish(result, 'undo'); last.items = last.items.filter(item => !result.items.some(change => sameLibrary(change.oldPath, item.newPath)))
+    await publish(result, 'undo'); completedItems.value.push(...result.items)
+    errors.value = mergeFileErrors(retained, result.errors)
+    last.items = last.items.filter(item => result.errors.some(error => sameLibrary(error.path, item.newPath) && canRetryFileError(error, 'undo')))
     if (!last.items.length) lastLibraryMove.value = null
-    if (result.errors.length) { retryUndo.value = true; showFeedback.value = true } else { showFeedback.value = false; message.success('已撤销上次移动') }
-  } catch (cause) { message.error(String(cause)) }
+    if (errors.value.length) { retryUndo.value = true; showFeedback.value = true } else { showFeedback.value = false; message.success('已撤销上次移动') }
+  } catch (cause) {
+    errors.value = mergeFileErrors(retained, attempted.map(item => ({ path: item.newPath, message: `未收到完整操作结果：${String(cause)}`, disposition: 'needsReview' as const })))
+    lastLibraryMove.value = null; retryUndo.value = true; showFeedback.value = true
+  }
   finally { busy.value = false; finish() }
 }
 watch(() => props.libraryRoot, () => { showTransfer.value = false; showTrash.value = false; showFeedback.value = false })

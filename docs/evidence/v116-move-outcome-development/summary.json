@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-16",
+  "baseCommit": "dd3977eb573fa5a9def363b4a67241734125f9a1",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "scope": "D1: existing move, undo and batch-rename dialogs preserve completed/notExecuted/needsReview outcomes and only retry known notExecuted items; C2 protected Markdown writeback and usable recovery remain incomplete",
+  "actualVuePages": {
+    "newOutcomeFlows": 8,
+    "fileManagementRegressionFlows": 8,
+    "batchRenameRegressionFlows": 2,
+    "layoutsPerSuite": 12,
+    "styles": 6,
+    "widths": [
+      1280,
+      480
+    ],
+    "pageErrors": 0,
+    "motion": "normal calm motion",
+    "desktopTakeover": false,
+    "nativeIPC": "isolated response fixtures, not filesystem or installer evidence",
+    "screenshotsDirectlyViewed": [
+      "final/mixed-move.png",
+      "final/mixed-move-glass-narrow.png",
+      "final/mixed-rename.png",
+      "final/mixed-undo.png"
+    ]
+  },
+  "qualityGate": {
+    "command": "npm run ci:patch-release",
+    "result": "passed",
+    "productionDependencyVulnerabilities": 0
+  },
+  "fullRustFunctional": {
+    "passed": 764,
+    "failed": 0,
+    "existingIgnored": 5,
+    "independentPerformanceFiltered": 1
+  },
+  "mainCI": {
+    "run": 38828023868,
+    "commit": "dd3977eb573fa5a9def363b4a67241734125f9a1",
+    "result": "failure",
+    "functionalPassed": 761,
+    "functionalFailed": 1,
+    "reason": "archive_dependencies timestamp-only fixture shared a directory; deterministic same-timestamp reproduction failed before test-only isolation fix",
+    "replacementRun": "pending next push; local pass is not a remote pass"
+  },
+  "testFixtureCorrection": {
+    "deterministicBeforeFix": {
+      "passed": 0,
+      "failed": 1
+    },
+    "sameTimestampRegression": {
+      "passed": 3,
+      "failed": 0
+    },
+    "assertionsRelaxed": false,
+    "productionPrefixesUnchanged": {
+      "src-tauri/src/services/archive_dependencies.rs": "d64de4f1f46092fc969dcc6d6dca2ab87c419b6c9037de395bbc71bb268cdebf",
+      "src-tauri/src/services/file_move_journal.rs": "201c97495251a621b35325935317e9b8863da68b59b1ec9e00f9d6280913c0b7"
+    }
+  },
+  "initialBrowserFailure": "Request-recorder fixture overwrote a concurrent call array tail. Original assertion and image retained; entry-point request recording fixed without weakening path assertions.",
+  "markdownWritebackEnabled": false,
+  "crossWindowDraftFreezeImplemented": false,
+  "usableNativeRecoveryUIImplemented": false,
+  "installerValidated": false,
+  "releaseReady": false,
+  "files": [
+    {
+      "path": "archive-fixture-before-fix.txt",
+      "bytes": 1248,
+      "sha256": "bcbdb69239a20128b4f43dba5b235d109b3202a73149265ac6d2b5f3eebf1f3a"
+    },
+    {
+      "path": "batch-rename-regression.txt",
+      "bytes": 38,
+      "sha256": "832e0867cb56b941b92edf68b462311895915c33a1c0ae993ac3dc56c7994305"
+    },
+    {
+      "path": "file-management-regression.txt",
+      "bytes": 1147,
+      "sha256": "284114fc80b5bc179526314254aa4f9d7662ab263fe629daf515946a41e69093"
+    },
+    {
+      "path": "fixture-production-prefix.txt",
+      "bytes": 259,
+      "sha256": "42fc3eccb5456727f60738e11f74972fd928b3a0f48f9e99e5a0c66456fcfa9d"
+    },
+    {
+      "path": "fixture-regression.txt",
+      "bytes": 1661,
+      "sha256": "c8a14eef6c522b08223a97fe654b2b4b3c0ece0e16ef888a54b87150efe15719"
+    },
+    {
+      "path": "full-rust.txt",
+      "bytes": 77528,
+      "sha256": "0c88a87ec7c134bd4c8d31836b81a714b4c156809cdad7ecb67be043641fabfc"
+    },
+    {
+      "path": "main-ci-38828023868-failed.txt",
+      "bytes": 227355,
+      "sha256": "6680dff6e8dc4c99729bc3a3480aed425a4f554efb564790876e52f914ac23b5"
+    },
+    {
+      "path": "outcome-regression.txt",
+      "bytes": 1162,
+      "sha256": "336950a18f406a8380a54b74668f21b0d2912dc06811fb1bfc4d0b4e56ca9c58"
+    },
+    {
+      "path": "quality-gate.txt",
+      "bytes": 121087,
+      "sha256": "9ab71c04a1e50653ea67ebc8db143eebbe3679c6147f3da019d5e10473a4e309"
+    },
+    {
+      "path": "batch-rename-final/preview.png",
+      "bytes": 77174,
+      "sha256": "10e607b91a67450db378574d37d393347d686461576ea14086816bc640b87686"
+    },
+    {
+      "path": "batch-rename-final/report.json",
+      "bytes": 1391,
+      "sha256": "db418f58ebd32764a560fb3547370daf933f631320c018ec39e50a9350533793"
+    },
+    {
+      "path": "file-management/01-context-menu.png",
+      "bytes": 86976,
+      "sha256": "b37f8764e54ee89b0c4934a0aa16576c0fb27452fcfdb12cfbbb95251cd56d2b"
+    },
+    {
+      "path": "file-management/02-move-dialog.png",
+      "bytes": 11883,
+      "sha256": "edfc450dd34fce89f3335a07af3516f544b79536e84bd42bd3f80aff3797a093"
+    },
+    {
+      "path": "file-management/03-trash-dialog.png",
+      "bytes": 11254,
+      "sha256": "f25a4484b7e9aa9bf621eb3d511823a21464a9a220e24180149a68223999f1f8"
+    },
+    {
+      "path": "file-management/results.json",
+      "bytes": 2245,
+      "sha256": "4f1cf710dd19481fcde60beb43b51092a61bc8df377a25c989928a24c37d87ce"
+    },
+    {
+      "path": "final/mixed-move-glass-narrow.png",
+      "bytes": 33678,
+      "sha256": "55ec7ac371c687676775ec1f45b95e7f05941edffa3bfb20bbd37d3e579c025e"
+    },
+    {
+      "path": "final/mixed-move.png",
+      "bytes": 33416,
+      "sha256": "788a8b49559fc44bf1296dc0f3b5b828c09835cdf11ce0b5bae1708285fc76fd"
+    },
+    {
+      "path": "final/mixed-rename.png",
+      "bytes": 33699,
+      "sha256": "d5efb9dc647af9bbb4c1b382bfd3a50074d65e05adfd73cc057adddafcb11d93"
+    },
+    {
+      "path": "final/mixed-undo.png",
+      "bytes": 24671,
+      "sha256": "e7af91030ab00246158f31b863fb63f0b09aec3bac2f9c46dc050c9f48683bf3"
+    },
+    {
+      "path": "final/results.json",
+      "bytes": 2210,
+      "sha256": "99470b171a02edec07c3697e254d1968c8477b8f1939a483e03d8707a9c1aa10"
+    },
+    {
+      "path": "initial-failure/failure.json",
+      "bytes": 3966,
+      "sha256": "6e46f346beb0b641a40bfaf01eaed892e19e9f69587e35ebcac79fa59d6608db"
+    },
+    {
+      "path": "initial-failure/failure.png",
+      "bytes": 88764,
+      "sha256": "2642f4f274f8149e26dad3ab2763d9756fdba3d4373524238b45a53a13002828"
+    },
+    {
+      "path": "initial-failure/request-recorder.txt",
+      "bytes": 717,
+      "sha256": "d738fb29ffeafbc8accf8d5bfd2485ffbe7456ef7202750c440cb8664e0a3b9a"
+    }
+  ]
+}

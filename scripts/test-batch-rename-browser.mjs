@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v114-batch-rename'
+const output = process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v114-batch-rename'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined, headless: true })
 const errors = [], checks = [], layouts = []
 const page = await browser.newPage({ viewport: { width: 1280, height: 950 } }); page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message))
 try {
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/batch-rename-browser.html'); await page.getByRole('link', { name: '资料库', exact: true }).click()
+  await page.goto((process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000') + '/scripts/fixtures/batch-rename-browser.html'); await page.getByRole('link', { name: '资料库', exact: true }).click()
   const project = page.locator('[data-drop-path="C:/workflow-fixture/项目方案.md"]'), meeting = page.locator('[data-drop-path="C:/workflow-fixture/会议记录.md"]')
   await project.click(); await meeting.click({ modifiers: ['Control'] }); await project.click({ button: 'right' }); await page.getByText('批量重命名…', { exact: true }).click()
   const modal = page.locator('.batch-rename-dialog')
@@ -33,7 +33,7 @@ try {
   assert.equal(await modal.locator('.rename-row.completed').count(), 1)
   assert.match(await modal.textContent(), /文件暂时被占用/)
   await page.evaluate(() => window.workflowAudit.renameFailure = false)
-  await modal.getByRole('button', { name: '重试剩余 1 项', exact: true }).click()
+  await modal.getByRole('button', { name: '重试未执行的 1 项', exact: true }).click()
   await page.waitForFunction(() => document.querySelectorAll('.rename-row.completed').length === 2)
   const calls = await page.evaluate(() => window.workflowAudit.calls.filter(c => c.command === 'rename_library_items'))
   assert.equal(calls[1].args.items.length, 1); assert.ok(calls[1].args.items[0].path.endsWith('/会议记录.md'))

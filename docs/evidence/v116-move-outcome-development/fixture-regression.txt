@@ -1,0 +1,35 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.46s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 3 tests
+test services::smart_collection::tests::same_timestamp_fixtures_have_independent_content_and_lifetimes ... ok
+test services::archive_dependencies::tests::archive_same_timestamp_fixtures_never_share_content_or_cleanup ... ok
+test services::file_move_journal::tests::journal_same_timestamp_fixtures_never_share_records_or_cleanup ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 767 filtered out; finished in 0.01s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-7f4e6d36c52fb98f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-949b31ea7eb097b4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-fbde6bf8d27eff61.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-a5b902d9372b0996.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

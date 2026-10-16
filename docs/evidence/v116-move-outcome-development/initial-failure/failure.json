@@ -1,0 +1,121 @@
+{
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'C:/workflow-fixture/项目方案.md',\n    'C:/workflow-fixture/会议记录.md',\n+   'C:/workflow-fixture/Inbox'\n  ]\n",
+  "errors": [],
+  "checks": [],
+  "text": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\n项目资料库\n▾\n项目方案\n会议记录\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n新建\n收集箱\n4对象·0关系\nInbox\n参考资料\n灵感.md\n交付\n项目方案.md\n会议记录.md\n4 篇笔记\n100 词\n当前资料库\nv1.0.26\nDEV\n项目资料库\n项目方案.md\n预览\n专注\n添加关系\nAI 辅助\n参考\n保存\n文档操作\n更多格式\n所见 ▾\n中栏 ▾\n导出\n历史\n项目方案\n\n让阅读、记录和继续工作更顺手。\n\n下一步\n 整理项目需求\n已保存\nMarkdown · 完整编辑\n46 字 · 约 1 分钟 · 行 1:1\n移动到\n\n待重试 0 项\n\n目标文件夹\n选择\n不存在的目录会自动创建；重名时保留两份。\n已完成 · 2 项\n\n项目方案.md\n→ C:/workflow-fixture/交付/项目方案.md\n\n会议记录.md\n→ C:/workflow-fixture/交付/会议记录.md\n\n需核对 · 1 项\n\n状态尚未确认，这些项目不会直接重试。请保留原文件和核对记录。\n\nInbox\n文件位置与历史状态需要核对；已保留记录。\n原路径：C:/workflow-fixture/Inbox\n核对记录：.move-stage-isolated-review\n\n关闭",
+  "calls": [
+    {
+      "command": "get_library_stats",
+      "args": {
+        "path": "C:/workflow-fixture"
+      }
+    },
+    {
+      "command": "get_all_tags",
+      "args": {
+        "libraryRoot": "C:/workflow-fixture"
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 6,
+        "dirty": false
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 7,
+        "dirty": false
+      }
+    },
+    {
+      "command": "transfer_library_items",
+      "args": {
+        "libraryRoot": "C:/workflow-fixture",
+        "paths": [
+          "C:/workflow-fixture/会议记录.md"
+        ],
+        "targetDir": "交付",
+        "operation": "move"
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 8,
+        "dirty": true
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 9,
+        "dirty": true
+      }
+    },
+    {
+      "command": "scan_directory",
+      "args": {
+        "libraryRoot": "C:/workflow-fixture",
+        "path": "C:/workflow-fixture"
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 10,
+        "dirty": true
+      }
+    },
+    {
+      "command": "scan_directory",
+      "args": {
+        "libraryRoot": "C:/workflow-fixture",
+        "path": "C:/workflow-fixture/交付"
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 11,
+        "dirty": true
+      }
+    },
+    {
+      "command": "get_library_stats",
+      "args": {
+        "path": "C:/workflow-fixture"
+      }
+    },
+    {
+      "command": "get_all_tags",
+      "args": {
+        "libraryRoot": "C:/workflow-fixture"
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 12,
+        "dirty": false
+      }
+    },
+    {
+      "command": "report_window_draft_session",
+      "args": {
+        "session": "workflow-fixture",
+        "sequence": 13,
+        "dirty": false
+      }
+    }
+  ]
+}

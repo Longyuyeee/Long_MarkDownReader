@@ -13,7 +13,7 @@ window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
   if (command === 'rename_library_items') {
     a.calls.push({ command, args }); const result = { items: [], errors: [] }
     for (const item of args.items) {
-      if (a.renameFailure && item.path.endsWith('/会议记录.md')) { result.errors.push({ path: item.path, message: '文件暂时被占用' }); continue }
+      if (a.renameFailure && item.path.endsWith('/会议记录.md')) { result.errors.push({ path: item.path, message: '文件暂时被占用', disposition: 'notExecuted' }); continue }
       const next = item.path.slice(0, item.path.lastIndexOf('/') + 1) + item.newName
       a.disk.set(next, a.disk.get(item.path)); a.disk.delete(item.path); result.items.push({ oldPath: item.path, newPath: next })
     }

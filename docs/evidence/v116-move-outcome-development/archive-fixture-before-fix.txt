@@ -1,0 +1,21 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.72s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 1 test
+
+thread 'services::archive_dependencies::tests::archive_same_timestamp_fixtures_never_share_content_or_cleanup' (51736) panicked at src\services\archive_dependencies.rs:693:9:
+assertion `left != right` failed: parallel fixtures must not share a timestamp-only directory
+  left: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\archive-resolve-49104-1792110175183764300"
+ right: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\archive-resolve-49104-1792110175183764300"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::archive_dependencies::tests::archive_same_timestamp_fixtures_never_share_content_or_cleanup ... FAILED
+
+failures:
+
+failures:
+    services::archive_dependencies::tests::archive_same_timestamp_fixtures_never_share_content_or_cleanup
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 768 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

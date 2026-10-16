@@ -16,7 +16,7 @@ window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
   if (command === 'transfer_library_items') {
     const result = {items:[],errors:[]}
     for(const old of args.paths) {
-      if(a.fileFailure) {result.errors.push({path:old,message:'模拟目录暂时不可写'});continue}
+      if(a.fileFailure) {result.errors.push({path:old,message:'模拟目录暂时不可写',...(args.operation==='move'?{disposition:'notExecuted'}:{})});continue}
       const directory = args.targetDir ? (/^[a-z]:/i.test(args.targetDir) ? args.targetDir : args.targetDir === '.' ? root : root+'/'+args.targetDir) : old.slice(0,old.lastIndexOf('/'))
       ensureDirectory(directory)
       const name = old.split('/').pop()
@@ -29,7 +29,7 @@ window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
   }
   if(command==='undo_library_moves') {
     const result={items:[],errors:[]}
-    for(const item of args.items) {if(a.disk.has(item.oldPath)||a.directories.includes(item.oldPath)) {result.errors.push({path:item.newPath,message:'原位置已有同名项，请先移开后再恢复或撤销'});continue}movePath(item.newPath,item.oldPath,false);result.items.push({oldPath:item.newPath,newPath:item.oldPath})}
+    for(const item of args.items) {if(a.disk.has(item.oldPath)||a.directories.includes(item.oldPath)) {result.errors.push({path:item.newPath,message:'原位置已有同名项，请先移开后再恢复或撤销',disposition:'notExecuted'});continue}movePath(item.newPath,item.oldPath,false);result.items.push({oldPath:item.newPath,newPath:item.oldPath})}
     return result
   }
   if(command==='trash_library_items') {

@@ -1,0 +1,26 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'C:/workflow-fixture/项目方案.md',
+    'C:/workflow-fixture/会议记录.md',
++   'C:/workflow-fixture/Inbox'
+  ]
+
+    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-move-outcome-browser.mjs:58:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'C:/workflow-fixture/项目方案.md',
+    'C:/workflow-fixture/会议记录.md',
+    'C:/workflow-fixture/Inbox'
+  ],
+  expected: [ 'C:/workflow-fixture/会议记录.md' ],
+  operator: 'deepStrictEqual'
+}
+
+Node.js v22.12.0

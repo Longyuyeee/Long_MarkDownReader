@@ -334,16 +334,23 @@ mod tests {
     struct Fixture(PathBuf);
     impl Fixture {
         fn new() -> Self {
-            let path = std::env::temp_dir().join(format!(
-                "longedit-move-record-{}-{}",
-                std::process::id(),
+            Self::with_timestamp(
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
-                    .as_nanos()
-            ));
-            fs::create_dir(&path).unwrap();
-            Self(path.canonicalize().unwrap())
+                    .as_nanos(),
+            )
+        }
+        fn with_timestamp(timestamp: u128) -> Self {
+            static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+            loop {
+                let path = std::env::temp_dir().join(format!("longedit-move-record-{}-{}-{}", std::process::id(), timestamp, NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+                match fs::create_dir(&path) {
+                    Ok(()) => return Self(path.canonicalize().unwrap()),
+                    Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                    Err(e) => panic!("cannot create isolated fixture: {e}"),
+                }
+            }
         }
         fn intent(&self) -> Intent {
             Intent {
@@ -361,6 +368,18 @@ mod tests {
         fn drop(&mut self) {
             fs::remove_dir_all(&self.0).unwrap();
         }
+    }
+
+    #[test]
+    fn journal_same_timestamp_fixtures_never_share_records_or_cleanup() {
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let first = Fixture::with_timestamp(timestamp);
+        Journal::begin(&first.cache(), &first.intent()).unwrap();
+        let second = Fixture::with_timestamp(timestamp);
+        assert_ne!(first.0, second.0);
+        assert!(pending(&second.cache()).unwrap().is_empty());
+        drop(second);
+        assert_eq!(pending(&first.cache()).unwrap().len(), 1);
     }
 
     #[test]
