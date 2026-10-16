@@ -623,6 +623,7 @@ pub async fn create_format_file(
         Some(path) => guard.resolve_for_write(path)?,
         None => guard.root().to_path_buf(),
     };
+    let _directory = crate::services::document_coordination::acquire(&[&directory])?;
     if !directory.exists() {
         fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     }

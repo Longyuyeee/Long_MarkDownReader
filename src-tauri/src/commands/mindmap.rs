@@ -4,7 +4,7 @@ use crate::formats::opml::{
 };
 use crate::formats::text::TextDocumentError;
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
 use std::fs;
@@ -24,6 +24,12 @@ fn signature(content: &str) -> String {
 }
 
 fn read_validated(path: &Path) -> Result<(String, OpmlDocument), String> {
+    let _document = crate::services::document_coordination::acquire_existing_file(path)?;
+    read_validated_under_lease(path)
+}
+
+fn read_validated_under_lease(path: &Path) -> Result<(String, OpmlDocument), String> {
+    crate::services::document_coordination::ensure_existing_file(path)?;
     recover_interrupted_write(path)?;
     let metadata = path
         .metadata()
@@ -61,8 +67,14 @@ fn resolve_external_opml(
 }
 
 fn external_opml_file(file: &Path) -> Result<OpmlFile, TextDocumentError> {
+    let _document = crate::services::document_coordination::acquire_existing_file(file)
+        .map_err(|error| external_error("document-unavailable", error))?;
+    external_opml_file_under_lease(file)
+}
+
+fn external_opml_file_under_lease(file: &Path) -> Result<OpmlFile, TextDocumentError> {
     let (content, document) =
-        read_validated(file).map_err(|error| external_error("external-opml-read-failed", error))?;
+        read_validated_under_lease(file).map_err(|error| external_error("external-opml-read-failed", error))?;
     Ok(OpmlFile {
         path: file.to_string_lossy().into_owned(),
         signature: signature(&content),
@@ -87,7 +99,9 @@ fn write_external_opml_file_with_access(
     let content = serialize_opml(&document)
         .map_err(|error| external_error("invalid-opml-document", error))?;
     let file = resolve_external_opml(path, access)?;
-    let (current, _) = read_validated(&file)
+    let _document = crate::services::document_coordination::acquire_existing_file(&file)
+        .map_err(|error| external_error("document-unavailable", error))?;
+    let (current, _) = read_validated_under_lease(&file)
         .map_err(|error| external_error("external-opml-read-failed", error))?;
     if signature(&current) != expected_signature {
         return Err(TextDocumentError::recoverable(
@@ -98,7 +112,7 @@ fn write_external_opml_file_with_access(
     }
     write_utf8(&file, &content)
         .map_err(|error| external_error("external-opml-write-failed", error))?;
-    external_opml_file(&file)
+    external_opml_file_under_lease(&file)
 }
 
 #[tauri::command]
@@ -135,7 +149,8 @@ pub async fn write_opml_file(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["opml"])?;
     tauri::async_runtime::spawn_blocking(move || {
-        let (current, _) = read_validated(&file)?;
+        let _document = crate::services::document_coordination::acquire_existing_file(&file)?;
+        let (current, _) = read_validated_under_lease(&file)?;
         if signature(&current) != expected_signature {
             return Err("OPML 已被其他程序修改，请重新加载后再保存".into());
         }
@@ -177,6 +192,7 @@ pub async fn create_canvas_from_opml(library_root: String, path: String) -> Resu
         + "\n";
     validate_canvas_json(&content)?;
     let parent = file.parent().ok_or("OPML 文件缺少父目录")?;
+    let _directory = crate::services::document_coordination::acquire(&[parent])?;
     let stem = file
         .file_stem()
         .and_then(|value| value.to_str())
@@ -194,7 +210,7 @@ pub async fn create_canvas_from_opml(library_root: String, path: String) -> Resu
         }
         index += 1;
     };
-    write_utf8(&target, &content)?;
+    write_new_bytes(&target, content.as_bytes())?;
     Ok(target.to_string_lossy().into_owned())
 }
 
@@ -204,6 +220,27 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     const FIXTURE: &str = include_str!("../../tests/fixtures/formats/mindmap.opml");
+
+    #[test]
+    fn specialized_external_opml_shares_move_protection_and_releases_after_failure() {
+        let root = std::env::temp_dir().join(format!("longedit-opml-move-{}-{}",
+            std::process::id(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()));
+        fs::create_dir(&root).unwrap();
+        let path = root.join("external.opml");
+        fs::write(&path, FIXTURE).unwrap();
+        let access = ExternalFileAccess::default();
+        access.authorize_editable(&path).unwrap();
+        let input = path.to_string_lossy().into_owned();
+        let opened = read_external_opml_file_with_access(input.clone(), &access).unwrap();
+        let moving = crate::services::document_coordination::acquire(&[&root]).unwrap();
+        assert!(read_external_opml_file_with_access(input.clone(), &access).is_err());
+        assert!(write_external_opml_file_with_access(input.clone(), opened.signature.clone(), opened.document.clone(), &access).is_err());
+        assert_eq!(fs::read_to_string(&path).unwrap(), FIXTURE);
+        drop(moving);
+        let saved = write_external_opml_file_with_access(input, opened.signature, opened.document, &access).unwrap();
+        assert_eq!(saved.document.title, "产品知识图谱");
+        fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn opml_round_trip_preserves_tree_metadata_and_projects_to_canvas() {

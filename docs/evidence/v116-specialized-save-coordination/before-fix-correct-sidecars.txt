@@ -1,0 +1,75 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.28s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 12 tests
+
+thread 'services::document_coordination::specialized_tests::specialized_new_folder_respects_directory_move' (44216) panicked at src\services\document_coordination_specialized_tests.rs:59:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803573100-7\\notes\\新建文件夹")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'services::document_coordination::specialized_tests::specialized_canvas_read_does_not_recover_during_move' (44720) panicked at src\services\document_coordination_specialized_tests.rs:97:5:
+assertion failed: tauri::async_runtime::block_on(canvas::read_canvas_file(fixture.root(),
+            path.to_string_lossy().into_owned())).is_err()
+test services::document_coordination::specialized_tests::specialized_canvas_read_does_not_recover_during_move ... FAILED
+test services::document_coordination::specialized_tests::specialized_new_folder_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_new_markdown_respects_directory_move' (43760) panicked at src\services\document_coordination_specialized_tests.rs:57:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803607200-8\\notes\\未命名.md")
+test services::document_coordination::specialized_tests::specialized_new_markdown_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_quick_note_respects_directory_move' (9752) panicked at src\services\document_coordination_specialized_tests.rs:69:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803653600-10\\notes\\快速笔记_0123456789abcdef0123456789abcdef.md")
+test services::document_coordination::specialized_tests::specialized_quick_note_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_canvas_creation_respects_directory_move' (45920) panicked at src\services\document_coordination_specialized_tests.rs:63:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803364900-1\\notes\\未命名画布.canvas")
+test services::document_coordination::specialized_tests::specialized_canvas_creation_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_canvas_save_respects_directory_move' (39020) panicked at src\services\document_coordination_specialized_tests.rs:81:5:
+Canvas saved during directory move
+test services::document_coordination::specialized_tests::specialized_canvas_save_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_mermaid_creation_respects_directory_move' (50596) panicked at src\services\document_coordination_specialized_tests.rs:65:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803469800-4\\notes\\未命名图表.mmd")
+test services::document_coordination::specialized_tests::specialized_mermaid_creation_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_format_creation_respects_directory_move' (50184) panicked at src\services\document_coordination_specialized_tests.rs:61:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803367900-2\\notes\\未命名数据.json")
+test services::document_coordination::specialized_tests::specialized_format_creation_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_template_creation_respects_directory_move' (50196) panicked at src\services\document_coordination_specialized_tests.rs:67:1:
+creation bypassed moving directory: Ok("\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-specialized-coordination-43136-1792111743803691400-11\\notes\\meeting.md")
+test services::document_coordination::specialized_tests::specialized_template_creation_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_canvas_late_read_and_save_do_not_resurrect_old_path' (45832) panicked at src\services\document_coordination_specialized_tests.rs:117:5:
+late Canvas I/O must not turn recovery or save into creation
+test services::document_coordination::specialized_tests::specialized_canvas_late_read_and_save_do_not_resurrect_old_path ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_mermaid_read_and_save_respect_directory_move' (50656) panicked at src\services\document_coordination_specialized_tests.rs:135:5:
+Mermaid bypassed directory protection
+test services::document_coordination::specialized_tests::specialized_mermaid_read_and_save_respect_directory_move ... FAILED
+
+thread 'services::document_coordination::specialized_tests::specialized_opml_read_and_save_respect_directory_move' (51568) panicked at src\services\document_coordination_specialized_tests.rs:152:5:
+OPML bypassed directory protection
+test services::document_coordination::specialized_tests::specialized_opml_read_and_save_respect_directory_move ... FAILED
+
+failures:
+
+failures:
+    services::document_coordination::specialized_tests::specialized_canvas_creation_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_canvas_late_read_and_save_do_not_resurrect_old_path
+    services::document_coordination::specialized_tests::specialized_canvas_read_does_not_recover_during_move
+    services::document_coordination::specialized_tests::specialized_canvas_save_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_format_creation_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_mermaid_creation_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_mermaid_read_and_save_respect_directory_move
+    services::document_coordination::specialized_tests::specialized_new_folder_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_new_markdown_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_opml_read_and_save_respect_directory_move
+    services::document_coordination::specialized_tests::specialized_quick_note_respects_directory_move
+    services::document_coordination::specialized_tests::specialized_template_creation_respects_directory_move
+
+test result: FAILED. 0 passed; 12 failed; 0 ignored; 0 measured; 782 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `--lib`

@@ -1,7 +1,7 @@
 use crate::commands::history::history_dir;
 use crate::formats::file_registry::{file_format_for_path, file_format_registry};
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
 use chardetng::EncodingDetector;
@@ -129,12 +129,13 @@ pub async fn create_new_file(
     target_dir: Option<String>,
     prefix: Option<String>,
 ) -> Result<String, String> {
-    let library_path = PathBuf::from(&library_root);
+    let guard = WorkspaceGuard::new(&library_root)?;
     let root = if let Some(directory) = target_dir {
-        validate_path_in_root(Path::new(&directory), &library_path)?
+        guard.resolve_directory(directory, true)?
     } else {
-        library_path.clone()
+        guard.root().to_path_buf()
     };
+    let _directory = crate::services::document_coordination::acquire(&[&root])?;
     if !root.exists() {
         fs::create_dir_all(&root).map_err(|error| error.to_string())?;
     }
@@ -155,7 +156,7 @@ pub async fn create_new_file(
         }
         index += 1;
     };
-    write_utf8(&file_path, "")?;
+    write_new_bytes(&file_path, b"")?;
     Ok(file_path.to_string_lossy().into_owned())
 }
 
@@ -166,6 +167,7 @@ pub async fn create_new_folder(
 ) -> Result<String, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let parent = guard.resolve_directory(parent_path, false)?;
+    let _directory = crate::services::document_coordination::acquire(&[&parent])?;
     let mut index = 0;
     let folder_path = loop {
         let name = if index == 0 {

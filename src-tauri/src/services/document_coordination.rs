@@ -67,6 +67,23 @@ pub(crate) fn acquire(paths: &[&Path]) -> Result<DocumentLease, String> {
     Ok(DocumentLease(keys))
 }
 
+/// A save/read is not a create command. Check *after* reservation and before
+/// recovery, which could otherwise promote an old-path backup after a move.
+pub(crate) fn acquire_existing_file(path: &Path) -> Result<DocumentLease, String> {
+    let lease = acquire(&[path])?;
+    ensure_existing_file(path)?;
+    Ok(lease)
+}
+
+pub(crate) fn ensure_existing_file(path: &Path) -> Result<(), String> {
+    let metadata = std::fs::symlink_metadata(path)
+        .map_err(|error| format!("文件已移动、删除或不可访问，请保留修改并重新核对位置：{error}"))?;
+    if !metadata.file_type().is_file() {
+        return Err("目标必须是现有普通文件，请保留修改并核对位置".into());
+    }
+    Ok(())
+}
+
 fn conflicts(active: &BTreeSet<String>, key: &str) -> bool {
     if active.contains(key) {
         return true;
@@ -84,6 +101,10 @@ fn conflicts(active: &BTreeSet<String>, key: &str) -> bool {
     key.match_indices('/')
         .any(|(index, _)| active.contains(&key[..index]))
 }
+
+#[cfg(test)]
+#[path = "document_coordination_specialized_tests.rs"]
+mod specialized_tests;
 
 #[cfg(test)]
 mod tests {

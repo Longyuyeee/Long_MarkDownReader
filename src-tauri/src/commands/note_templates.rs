@@ -156,6 +156,7 @@ pub async fn create_note_from_template(
     super::files::validate_item_name(&format!("{base}.md"))?;
     let guard = WorkspaceGuard::new(library_root)?;
     let directory = guard.resolve_for_write(target_dir)?;
+    let _directory = crate::services::document_coordination::acquire(&[&directory])?;
     fs::create_dir_all(&directory).map_err(|error| format!("无法创建笔记目录：{error}"))?;
     let now = chrono::Local::now();
     let date = now.format("%Y-%m-%d").to_string();

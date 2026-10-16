@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-16",
+  "stage": "v1.1.6 C2a-2 specialized text and creation coordination",
+  "sourceBase": "9b08caf5996927ac231d485d4fb636cce7422b3b",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "released": false,
+  "releaseReady": false,
+  "scope": {
+    "native": "Real command entry points and temporary disk: Canvas/Mermaid/OPML library/external reads and saves, seven creation paths, missing-file handling and no-overwrite creation",
+    "browser": "Actual Vue components and user input with isolated native responses; not native filesystem, multi-window protection or installed evidence",
+    "uiLayoutChanged": false,
+    "motion": "calm",
+    "desktopTakenOver": false
+  },
+  "results": {
+    "validBeforeFix": {
+      "passed": 0,
+      "failed": 12,
+      "log": "before-fix-correct-sidecars.txt"
+    },
+    "newNativeRegressions": 17,
+    "targeted": {
+      "passed": 18,
+      "failed": 0,
+      "existingTestsIncluded": 1,
+      "log": "specialized-final.txt"
+    },
+    "fullNative": {
+      "passed": 793,
+      "failed": 0,
+      "existingIgnored": 5,
+      "independentPerformanceNotRun": 1,
+      "log": "full-rust-final.txt"
+    },
+    "qualityGate": {
+      "passed": true,
+      "productionVulnerabilities": 0,
+      "log": "quality-gate.txt"
+    },
+    "specializedBrowser": {
+      "checks": 6,
+      "layouts": 36,
+      "errors": 0,
+      "report": "browser/results.json"
+    },
+    "existingManagementBrowser": {
+      "checks": 8,
+      "layouts": 12,
+      "errors": 0,
+      "report": "file-management/results.json"
+    },
+    "previousMainCi": {
+      "runId": 38831000774,
+      "head": "9b08caf5996927ac231d485d4fb636cce7422b3b",
+      "conclusion": "success",
+      "receipt": "previous-main-ci.json",
+      "doesNotValidateCurrentBatch": true
+    }
+  },
+  "retainedFailures": [
+    {
+      "log": "before-fix.txt",
+      "reason": "New backup fixtures initially omitted the sidecar leading dot; not valid recovery evidence. Corrected only the fixture, then reproduced all twelve failures in the valid baseline."
+    },
+    {
+      "log": "browser-first.txt",
+      "image": "browser-first/failure.png",
+      "reason": "Fixture recorder tried structuredClone on Vue's OPML Proxy. Corrected to native JSON serialization; unchanged production views, user input, assertions and motion."
+    }
+  ],
+  "inspectedScreenshots": [
+    "browser/canvas-wide.png",
+    "browser/diagram-narrow.png",
+    "browser/mindmap-wide.png",
+    "browser-first/failure.png"
+  ],
+  "remaining": [
+    "Audit and coordinate independent binary/table writers, workspace/graph Markdown mutation, sidecars, imports and copy/output paths",
+    "Fresh path-scoped multi-window draft checks and brief editing protection; existing cached flags or read-only confirmation are not execution permission",
+    "Late creation requests and cross-window old/new path continuity",
+    "User-operable interruption review/recovery and protected Markdown reference writeback",
+    "Final fixed-source build, same-byte installer verification, installation/update/user flows and public release attachment re-download"
+  ],
+  "assertionsNotWeakened": true,
+  "files": [
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/after-fix.txt",
+      "bytes": 2735,
+      "sha256": "ddba5437dd6a9f3c6e3bdd70e872bf82fc540d301ec35a98d95f2654b78a8d48"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/before-fix-correct-sidecars.txt",
+      "bytes": 7347,
+      "sha256": "a7ae439d42bd5a249b34cccace7c802cc3fecff63b011890ed51d61025122855"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/before-fix.txt",
+      "bytes": 7436,
+      "sha256": "7e97eccb1fdb36230280c84776457b64c3a23cf3cef5341df6fa0f81ed68a30c"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-final.txt",
+      "bytes": 73,
+      "sha256": "6cc95cf2dfd7e37e04b32ab213d4aa2e1b7a473be11b0783470f586cedd15fd7"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-first.txt",
+      "bytes": 530,
+      "sha256": "197cdd603c2cacfecee9a253c57ae72ff9ce3bb6b181e43a2f1d3b6848930cc1"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-first/canvas-narrow.png",
+      "bytes": 36994,
+      "sha256": "33832aaf721282c7b3685c791b71aa8b5af6b32442af7c8ff3c5f27cb8edff58"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-first/canvas-wide.png",
+      "bytes": 66651,
+      "sha256": "101b46a183d3eff5b92ee909bfd980e14e81bc7d1a893aea5dce91e52cc534b2"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-first/diagram-narrow.png",
+      "bytes": 25104,
+      "sha256": "8da190e42fb9e853999db5825d0af3604f5459966de575dfbe3e8219c5779c0f"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-first/diagram-wide.png",
+      "bytes": 33175,
+      "sha256": "c9370ce0feba109a64bf039d7f9bbb3f4bd61f94a16f562dbc215d6b7914691d"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser-first/failure.png",
+      "bytes": 66529,
+      "sha256": "8af18775a0957fc8ac7350ff0159c31e6bffd82010a97f2fdb452168cc612fa4"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/canvas-narrow.png",
+      "bytes": 36994,
+      "sha256": "33832aaf721282c7b3685c791b71aa8b5af6b32442af7c8ff3c5f27cb8edff58"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/canvas-wide.png",
+      "bytes": 66651,
+      "sha256": "101b46a183d3eff5b92ee909bfd980e14e81bc7d1a893aea5dce91e52cc534b2"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/diagram-narrow.png",
+      "bytes": 25104,
+      "sha256": "8da190e42fb9e853999db5825d0af3604f5459966de575dfbe3e8219c5779c0f"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/diagram-wide.png",
+      "bytes": 33175,
+      "sha256": "c9370ce0feba109a64bf039d7f9bbb3f4bd61f94a16f562dbc215d6b7914691d"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/mindmap-narrow.png",
+      "bytes": 40199,
+      "sha256": "13153fa1bcfd3b153983d5bb2fcce8e735f2bd931db91527f2d17ec2ab946231"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/mindmap-wide.png",
+      "bytes": 70399,
+      "sha256": "accb3921abf1f91ad015d0bc1eb4ef58a8d414366aa55c28fbfcb97da01d0f50"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/browser/results.json",
+      "bytes": 6788,
+      "sha256": "14f203744f69cf23e47c67681c7b9d9742e97c39616703e93956cc2efb7a20b8"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/file-management.txt",
+      "bytes": 1147,
+      "sha256": "284114fc80b5bc179526314254aa4f9d7662ab263fe629daf515946a41e69093"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/file-management/01-context-menu.png",
+      "bytes": 86980,
+      "sha256": "e43410b51487194f1800b6013b88909372aa744fd259e68190468926f0fea7f5"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/file-management/02-move-dialog.png",
+      "bytes": 11883,
+      "sha256": "edfc450dd34fce89f3335a07af3516f544b79536e84bd42bd3f80aff3797a093"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/file-management/03-trash-dialog.png",
+      "bytes": 10972,
+      "sha256": "3fcbae97ae1ecc847f8183d80d4e9d4ecb223e74a3fc94243628259da339774b"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/file-management/results.json",
+      "bytes": 2245,
+      "sha256": "4f1cf710dd19481fcde60beb43b51092a61bc8df377a25c989928a24c37d87ce"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/full-rust-final.txt",
+      "bytes": 80896,
+      "sha256": "3896019ea2985a4c3db91c24be90e7c967b83027c52fedec47b52bda2e28b0e8"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/full-rust.txt",
+      "bytes": 80895,
+      "sha256": "3e97a782b9a500ecef6e4823f8ff9b3c8696a7b0302f2a04f7984adfdb9e92d7"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/previous-main-ci.json",
+      "bytes": 2869,
+      "sha256": "e20a9f0151c0c73ea2758ea766d2b907e6d4b9ced37c64c1d9309e838f79187f"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/quality-gate.txt",
+      "bytes": 121173,
+      "sha256": "1346baeffeb73c472be19dca6b75b78ddaaf7b8e5854176878adb6ac6bbe633c"
+    },
+    {
+      "path": "docs/evidence/v116-specialized-save-coordination/specialized-final.txt",
+      "bytes": 3434,
+      "sha256": "4eca352769b13e9aca96189530322ec0bc332db7256f1fe162e62aed18d3660e"
+    }
+  ]
+}

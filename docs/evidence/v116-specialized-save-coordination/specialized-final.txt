@@ -1,0 +1,50 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 19.50s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 18 tests
+test commands::formats::tests::general_external_writer_rejects_specialized_sources ... ok
+test services::document_coordination::specialized_tests::specialized_canvas_read_does_not_recover_during_move ... ok
+test services::document_coordination::specialized_tests::specialized_new_folder_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_canvas_late_read_and_save_do_not_resurrect_old_path ... ok
+test services::document_coordination::specialized_tests::specialized_mermaid_read_and_save_respect_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_opml_read_and_save_respect_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_new_markdown_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_canvas_creation_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_quick_note_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_canvas_save_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_mermaid_creation_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_format_creation_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_template_creation_respects_directory_move ... ok
+test services::document_coordination::specialized_tests::specialized_future_directory_is_not_created_while_reserved ... ok
+test services::document_coordination::specialized_tests::specialized_creation_keeps_existing_documents_and_allocates_new_names ... ok
+test commands::canvas::tests::specialized_external_canvas_shares_move_protection_and_releases_after_failure ... ok
+test commands::diagram::tests::specialized_external_mermaid_shares_move_protection_and_releases_after_failure ... ok
+test commands::mindmap::tests::specialized_external_opml_shares_move_protection_and_releases_after_failure ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 781 filtered out; finished in 0.05s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-7f4e6d36c52fb98f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-949b31ea7eb097b4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-fbde6bf8d27eff61.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-a5b902d9372b0996.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

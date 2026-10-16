@@ -5,7 +5,7 @@ use crate::formats::text::{
     read_text_snapshot, verify_current_signature, TextDocumentError, TextDocumentSnapshot,
 };
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use crate::{build_local_graph, read_markdown_file, sanitize_filename, FileContent, GraphData};
 use std::fs;
@@ -26,6 +26,7 @@ pub async fn create_canvas_file(
     } else {
         guard.root().to_path_buf()
     };
+    let _directory = crate::services::document_coordination::acquire(&[&root])?;
     if !root.exists() {
         fs::create_dir_all(&root).map_err(|error| error.to_string())?;
     }
@@ -47,7 +48,7 @@ pub async fn create_canvas_file(
         }
         index += 1;
     };
-    write_utf8(&file_path, "{\n  \"nodes\": [],\n  \"edges\": []\n}\n")?;
+    write_new_bytes(&file_path, b"{\n  \"nodes\": [],\n  \"edges\": []\n}\n")?;
     Ok(file_path.to_string_lossy().into_owned())
 }
 
@@ -55,6 +56,7 @@ pub async fn create_canvas_file(
 pub async fn read_canvas_file(library_root: String, path: String) -> Result<FileContent, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let file_path = guard.resolve_file_for_write(path, &["canvas"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&file_path)?;
     recover_interrupted_write(&file_path)?;
     if !file_path.is_file() {
         return Err("Canvas 文件不存在".into());
@@ -78,6 +80,7 @@ pub async fn write_canvas_file(
     let guard = WorkspaceGuard::new(&library_root)?;
     let file_path = guard.resolve_file_for_write(path, &["canvas"])?;
     validate_canvas_json(&content)?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&file_path)?;
     write_utf8(file_path, &content)
 }
 
@@ -98,7 +101,17 @@ fn ensure_canvas_path(path: &Path) -> Result<(), TextDocumentError> {
 }
 
 fn read_canvas_snapshot(path: &Path) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let _document = crate::services::document_coordination::acquire_existing_file(path)
+        .map_err(|error| canvas_boundary_error("document-unavailable", error))?;
+    read_canvas_snapshot_under_lease(path)
+}
+
+// Only called while the caller owns the document reservation. A write keeps
+// one reservation across signature validation, promotion and receipt reread.
+fn read_canvas_snapshot_under_lease(path: &Path) -> Result<TextDocumentSnapshot, TextDocumentError> {
     ensure_canvas_path(path)?;
+    crate::services::document_coordination::ensure_existing_file(path)
+        .map_err(|error| canvas_boundary_error("document-unavailable", error))?;
     recover_interrupted_write(path)
         .map_err(|error| canvas_boundary_error("canvas-recovery-failed", error))?;
     let snapshot = read_text_snapshot(path)?;
@@ -136,10 +149,12 @@ async fn write_external_canvas_file_with_access(
     ensure_canvas_path(&file_path)?;
     validate_canvas_json(&content)
         .map_err(|error| canvas_boundary_error("canvas-invalid", error))?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&file_path)
+        .map_err(|error| canvas_boundary_error("document-unavailable", error))?;
     verify_current_signature(&file_path, Some(&expected_signature))?;
     write_utf8(&file_path, &content)
         .map_err(|error| canvas_boundary_error("canvas-write-failed", error))?;
-    read_canvas_snapshot(&file_path)
+    read_canvas_snapshot_under_lease(&file_path)
 }
 
 #[tauri::command]
@@ -366,6 +381,7 @@ pub async fn create_project_note_from_graph(
         return Err("项目笔记文件名不能为空".into());
     }
     let target_dir = center.parent().unwrap_or(guard.root());
+    let _directory = crate::services::document_coordination::acquire(&[target_dir])?;
     let mut index = 0usize;
     let target = loop {
         let name = if index == 0 {
@@ -379,7 +395,7 @@ pub async fn create_project_note_from_graph(
         }
         index += 1;
     };
-    write_utf8(&target, &content)?;
+    write_new_bytes(&target, content.as_bytes())?;
     Ok(target.to_string_lossy().into_owned())
 }
 
@@ -511,9 +527,35 @@ mod tests {
     }
 
     #[test]
+    fn specialized_external_canvas_shares_move_protection_and_releases_after_failure() {
+        let workspace = TestWorkspace::new("move-protection");
+        let path = workspace.root.join("external.canvas");
+        fs::write(&path, VALID_CANVAS).unwrap();
+        let access = ExternalFileAccess::default();
+        access.authorize_editable(&path).unwrap();
+        let input = path.to_string_lossy().into_owned();
+        let opened = tauri::async_runtime::block_on(read_external_canvas_file_with_access(input.clone(), &access)).unwrap();
+        let moving = crate::services::document_coordination::acquire(&[&workspace.root]).unwrap();
+        assert!(tauri::async_runtime::block_on(read_external_canvas_file_with_access(input.clone(), &access)).is_err());
+        assert!(tauri::async_runtime::block_on(write_external_canvas_file_with_access(
+            input.clone(), VALID_CANVAS.into(), opened.signature.clone(), &access,
+        )).is_err());
+        assert_eq!(fs::read_to_string(&path).unwrap(), VALID_CANVAS);
+        drop(moving);
+        let saved = tauri::async_runtime::block_on(write_external_canvas_file_with_access(
+            input, VALID_CANVAS.into(), opened.signature, &access,
+        )).unwrap();
+        assert_eq!(saved.content, VALID_CANVAS);
+    }
+
+    #[test]
     fn canvas_commands_round_trip_valid_fixture() {
         let workspace = TestWorkspace::new("round-trip");
-        let path = workspace.root.join("round-trip.canvas");
+        // Creation remains supported through its explicit creation command;
+        // saving a moved/deleted file must not silently recreate its old name.
+        let path = PathBuf::from(tauri::async_runtime::block_on(create_canvas_file(
+            workspace.root_string(), None, Some("round-trip".into()),
+        )).unwrap());
         tauri::async_runtime::block_on(write_canvas_file(
             workspace.root_string(),
             path.to_string_lossy().into_owned(),

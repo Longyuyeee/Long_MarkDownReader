@@ -54,6 +54,7 @@ fn capture(
     let _lock = CAPTURE_LOCK.lock().map_err(|_| "快速笔记保存锁不可用")?;
     let guard = WorkspaceGuard::new(root)?;
     let directory = guard.resolve_for_write(directory)?;
+    let _directory = crate::services::document_coordination::acquire(&[&directory])?;
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     let path = guard.resolve_for_write(directory.join(format!("快速笔记_{operation_id}.md")))?;
     if matching_file(&path, content)? {

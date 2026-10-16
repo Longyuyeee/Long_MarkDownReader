@@ -1,0 +1,302 @@
+{
+  "scope": "Actual Vue CanvasView/DiagramStudio/MindMapView and user input; isolated native responses, not native filesystem, multi-window freeze or installed evidence",
+  "checks": [
+    "canvas: actual user edit does not autosave; rejected save preserves input and draft guard",
+    "canvas: explicit retry submits the unchanged draft once and clears dirty only after success",
+    "diagram: actual user edit does not autosave; rejected save preserves input and draft guard",
+    "diagram: explicit retry submits the unchanged draft once and clears dirty only after success",
+    "mindmap: actual user edit does not autosave; rejected save preserves input and draft guard",
+    "mindmap: explicit retry submits the unchanged draft once and clears dirty only after success"
+  ],
+  "layouts": [
+    {
+      "editor": "canvas",
+      "width": 1280,
+      "style": "soft",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 1280,
+      "style": "neo",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 1280,
+      "style": "glass",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 1280,
+      "style": "airy",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 1280,
+      "style": "minimal",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 1280,
+      "style": "sharp",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 480,
+      "style": "soft",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 480,
+      "style": "neo",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 480,
+      "style": "glass",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 480,
+      "style": "airy",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 480,
+      "style": "minimal",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "canvas",
+      "width": 480,
+      "style": "sharp",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 1280,
+      "style": "soft",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 1280,
+      "style": "neo",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 1280,
+      "style": "glass",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 1280,
+      "style": "airy",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 1280,
+      "style": "minimal",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 1280,
+      "style": "sharp",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 480,
+      "style": "soft",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 480,
+      "style": "neo",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 480,
+      "style": "glass",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 480,
+      "style": "airy",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 480,
+      "style": "minimal",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "diagram",
+      "width": 480,
+      "style": "sharp",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 1280,
+      "style": "soft",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 1280,
+      "style": "neo",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 1280,
+      "style": "glass",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 1280,
+      "style": "airy",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 1280,
+      "style": "minimal",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 1280,
+      "style": "sharp",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 480,
+      "style": "soft",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 480,
+      "style": "neo",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 480,
+      "style": "glass",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 480,
+      "style": "airy",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 480,
+      "style": "minimal",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "editor": "mindmap",
+      "width": 480,
+      "style": "sharp",
+      "draftRetained": true,
+      "retryReachable": true,
+      "motion": "calm"
+    }
+  ],
+  "errors": []
+}

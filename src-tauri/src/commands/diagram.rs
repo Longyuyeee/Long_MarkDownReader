@@ -5,7 +5,7 @@ use crate::formats::diagram::{
 use crate::formats::text::TextDocumentError;
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_utf8};
+use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::Serialize;
 use std::collections::hash_map::DefaultHasher;
@@ -56,6 +56,12 @@ fn signature(path: &Path, bytes: &[u8]) -> Result<String, String> {
 }
 
 fn read_document(path: &Path) -> Result<DiagramDocument, String> {
+    let _document = crate::services::document_coordination::acquire_existing_file(path)?;
+    read_document_under_lease(path)
+}
+
+fn read_document_under_lease(path: &Path) -> Result<DiagramDocument, String> {
+    crate::services::document_coordination::ensure_existing_file(path)?;
     recover_interrupted_write(path)?;
     let bytes = fs::read(path).map_err(|error| format!("读取 Mermaid 文件失败: {}", error))?;
     if bytes.len() > MAX_DIAGRAM_BYTES {
@@ -120,7 +126,9 @@ async fn write_external_diagram_file_with_access(
             "外部 Mermaid 文件不存在",
         ));
     }
-    let current = read_document(&path)
+    let _document = crate::services::document_coordination::acquire_existing_file(&path)
+        .map_err(|error| external_error("document-unavailable", error))?;
+    let current = read_document_under_lease(&path)
         .map_err(|error| external_error("external-diagram-read-failed", error))?;
     if current.signature != expected_signature {
         return Err(TextDocumentError::recoverable(
@@ -131,7 +139,7 @@ async fn write_external_diagram_file_with_access(
     }
     write_utf8(&path, &content)
         .map_err(|error| external_error("external-diagram-write-failed", error))?;
-    read_document(&path).map_err(|error| external_error("external-diagram-read-failed", error))
+    read_document_under_lease(&path).map_err(|error| external_error("external-diagram-read-failed", error))
 }
 
 #[tauri::command]
@@ -145,6 +153,7 @@ pub async fn create_diagram_file(
         .map(|value| guard.resolve_directory(value, true))
         .transpose()?
         .unwrap_or_else(|| guard.root().to_path_buf());
+    let _directory = crate::services::document_coordination::acquire(&[&directory])?;
     fs::create_dir_all(&directory).map_err(|error| format!("创建目录失败: {}", error))?;
     let base = sanitize_filename(&prefix.unwrap_or_else(|| "未命名图表".into()));
     if base.is_empty() {
@@ -163,7 +172,7 @@ pub async fn create_diagram_file(
         }
         suffix += 1;
     };
-    write_utf8(&target, DEFAULT_SOURCE)?;
+    write_new_bytes(&target, DEFAULT_SOURCE.as_bytes())?;
     Ok(target.to_string_lossy().into_owned())
 }
 
@@ -201,12 +210,13 @@ pub async fn write_diagram_file(
     if !path.is_file() {
         return Err("Mermaid 文件不存在".into());
     }
-    let current = read_document(&path)?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&path)?;
+    let current = read_document_under_lease(&path)?;
     if current.signature != expected_signature {
         return Err("Mermaid 文件已被其他程序修改，请重新加载后再保存".into());
     }
     write_utf8(&path, &content)?;
-    read_document(&path)
+    read_document_under_lease(&path)
 }
 
 #[tauri::command]
@@ -278,6 +288,29 @@ mod tests {
         ))
         .is_err());
         fs::remove_file(outside).unwrap();
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn specialized_external_mermaid_shares_move_protection_and_releases_after_failure() {
+        let root = workspace();
+        let path = root.join("external.mmd");
+        fs::write(&path, DEFAULT_SOURCE).unwrap();
+        let access = ExternalFileAccess::default();
+        access.authorize_editable(&path).unwrap();
+        let input = path.to_string_lossy().into_owned();
+        let opened = read_external_diagram_file_with_access(input.clone(), &access).unwrap();
+        let moving = crate::services::document_coordination::acquire(&[&root]).unwrap();
+        assert!(read_external_diagram_file_with_access(input.clone(), &access).is_err());
+        assert!(tauri::async_runtime::block_on(write_external_diagram_file_with_access(
+            input.clone(), DEFAULT_SOURCE.into(), opened.signature.clone(), &access,
+        )).is_err());
+        assert_eq!(fs::read_to_string(&path).unwrap(), DEFAULT_SOURCE);
+        drop(moving);
+        let saved = tauri::async_runtime::block_on(write_external_diagram_file_with_access(
+            input, DEFAULT_SOURCE.into(), opened.signature, &access,
+        )).unwrap();
+        assert_eq!(saved.content, DEFAULT_SOURCE);
         fs::remove_dir_all(root).unwrap();
     }
 
