@@ -1,5 +1,13 @@
 # v1.1.7 最终安装器接续
 
+## 最新：同包复核前修正驱动导航合同
+
+产品仍固定 **84cc1ad6**，main CI 38945852747 已整体 **success**。构建 38945853964 的质量门、完整原生/性能、MSI/NSIS、安装器摘要和此前继承流程通过，但整体 **failure**：首次进入本版流程时，驱动向真实三参数 `navigate(hash, selector, description)` 仅传了路径，等待 `document.querySelector(undefined)` 超时。诊断正文已显示 `方案.md` 和 `original markdown`；不能把它解释为文档未打开或修改产品来迁就脚本。
+
+已补一个统一导航适配器，提供实际 hash、`.library-mode` 就绪目标及描述，四处导航全部复用；TXT 进一步等待原文实际显示再输入。新增驱动回归先失败，修正后与发布/协调检查共 8 项通过。旧的恢复、正文、草稿和 12 项结果断言都保留，没有降低等待标准、跳过场景或替换空结果。
+
+失败原始日志位于 [first-install-failure.log](evidence/v117-installed-closure/first-install-failure.log)，原始/修正回归位于 [导航驱动审计](evidence/v117-final-harness-review/)。这是仅驱动修改，`src/`、`src-tauri/`、`shared/` 和包配置与固定产品无差异，故**不重建安装器**；下一步从最新开发分支执行同一安装器的完整独立复核。下面的“正在运行”为此前时间快照。
+
 ## 固定身份与当前状态
 
 - 固定产品：**`84cc1ad6d4697bb98c17e3396b9d8d65da41847a`**，已推送 main 与开发分支。运行时 1.1.7，当前公开版仍为 1.1.6。

@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 1 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 3.4329
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 2 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 3.754
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 3 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 0.8646
+  ...
+# Subtest: v117 final safety checks are mandatory and publishing requires the current check count
+ok 4 - v117 final safety checks are mandatory and publishing requires the current check count
+  ---
+  duration_ms: 1.6986
+  ...
+# Subtest: installed final check detects the current runtime and route error notices
+ok 5 - installed final check detects the current runtime and route error notices
+  ---
+  duration_ms: 1.8824
+  ...
+# Subtest: installed v117 navigation supplies the real three-argument driver contract
+not ok 6 - installed v117 navigation supplies the real three-argument driver contract
+  ---
+  duration_ms: 12.5706
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v117-release-contract.mjs:53:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    all navigation should use one checked adapter
+    
+    4 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 4
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v117-release-contract.mjs:57:21)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 293.2092

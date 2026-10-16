@@ -49,3 +49,15 @@ test('installed final check detects the current runtime and route error notices'
   assert.equal(run('none'),true)
   for(const selector of ['#runtime-error-notice','.route-error-notice','#crash-screen','.global-error-overlay','.startup-fatal-screen'])assert.equal(run(selector),false,selector)
 })
+
+test('installed v117 navigation supplies the real three-argument driver contract',async()=>{
+  const source=fs.readFileSync('scripts/lib/installed-v1-1-7-workflow.mjs','utf8')
+  const ast=ts.createSourceFile('workflow.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS), calls=[]
+  const visit=node=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==='navigate')calls.push(node);ts.forEachChild(node,visit)}
+  visit(ast);assert.equal(calls.length,1,'all navigation should use one checked adapter');assert.equal(calls[0].arguments.length,3)
+  const adapter=source.match(/const goLibrary = (.+)/)?.[1];assert.ok(adapter)
+  const observed=[], go=vm.runInNewContext(adapter,{navigate:async(...args)=>observed.push(args),path:{basename:value=>value.split(/[\\/]/).at(-1)}})
+  const file='C:\\fixture\\中文 方案.md';await go(file)
+  assert.equal(observed[0][0],'#/library?path='+encodeURIComponent(file))
+  assert.equal(observed[0][1],'.library-mode');assert.match(observed[0][2],/中文 方案/)
+})
