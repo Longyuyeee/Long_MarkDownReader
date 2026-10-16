@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-E1",
+  "productCommit": "c70735c7064d9e8f30f1bfae98acee634ba040d8",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "sourceUserContentIncluded": false,
+  "sourceHashBasis": "git-index-bytes",
+  "checks": {
+    "localHarnessContracts": 54,
+    "actualVueSimulatedIpcFlows": 3,
+    "actualVuePageErrors": 0,
+    "localQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "native": {
+      "status": "failed",
+      "runId": 38964350628,
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38964350628",
+      "conclusion": "failure"
+    }
+  },
+  "limitations": [
+    "Debug real IPC is not installer or real-user-input acceptance.",
+    "No local desktop takeover or installation.",
+    "Native timings are a fixed generated fixture sample, not a comparative speed claim.",
+    "This batch does not rerun unchanged Rust product tests; previous product CI is recorded separately."
+  ],
+  "sourceFiles": [
+    {
+      "path": ".gitattributes",
+      "bytes": 9001,
+      "sha256": "e18e2f5e3f3fb6f36eb27576fc7c7d2fb3d38fb00e6587ed3ffd0a1f17e12be2"
+    },
+    {
+      "path": ".github/workflows/v118-search-native.yml",
+      "bytes": 2878,
+      "sha256": "de89550fe9a8bce91a20e4657d8f158fc3ce393c76037d385b3a7a8b6bc1804a"
+    },
+    {
+      "path": "shared/development-version-policy.json",
+      "bytes": 703,
+      "sha256": "4d2e932a040530d891335b0a29b4d2cd94cdf055ff835d95b4cdc416a958e265"
+    },
+    {
+      "path": "scripts/capture-v118-native-search.mjs",
+      "bytes": 12874,
+      "sha256": "48290ed8cd874124c9d92c97d6e27139460125f9e57034e2a7e037ea69bff448"
+    },
+    {
+      "path": "scripts/run-v118-native-search.ps1",
+      "bytes": 4782,
+      "sha256": "aeec66ce971fbb75fc260a9011c41c3d71556ff22e061c9533f5338f238e8c11"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-fixture.mjs",
+      "bytes": 3884,
+      "sha256": "52d6aa61167ae694f6882ca01e5cc6ad9b059afc9d9fb8e1b3044abd4ef1a5bc"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-evidence.mjs",
+      "bytes": 3154,
+      "sha256": "2c0d090eb095fafc527793983f1b92f53421a4305c6f586d1bdf7c6ccd69752b"
+    },
+    {
+      "path": "scripts/test-v118-native-search-audit.mjs",
+      "bytes": 4975,
+      "sha256": "57332d4a1b98add5458ae38d8718a235aaeb4a16d919ccef3635fa4c3c01bbdb"
+    },
+    {
+      "path": "scripts/test-v118-native-search-evidence.mjs",
+      "bytes": 3342,
+      "sha256": "542060b80494dd06fe40d611efbec97310318104c5c8c48b97f6934b23d4e068"
+    },
+    {
+      "path": "scripts/lib/search-feedback-contract.mjs",
+      "bytes": 638,
+      "sha256": "e9da1377ffc792ddde341c3990220ac555934618dfe9189a682740e6b73d6d19"
+    },
+    {
+      "path": "scripts/test-search-feedback-contract.mjs",
+      "bytes": 2289,
+      "sha256": "804def036a3d0946763cf3e2e6c7cff4ef37f04aaaeb3704a40bdb7b63499708"
+    },
+    {
+      "path": "scripts/test-search-feedback-browser.mjs",
+      "bytes": 3874,
+      "sha256": "ba9660c2be0bf5c4337581c39ab6e8eaaf88e1fcadc10c838d94fefab3b0066c"
+    },
+    {
+      "path": "scripts/lib/installed-search-user-scenario.mjs",
+      "bytes": 9662,
+      "sha256": "e346d7f0ef30210059eb001783dfcdb01b70bcad848892294ef6da00e7c3bc72"
+    },
+    {
+      "path": "scripts/lib/installed-v1-1-5-workflow.mjs",
+      "bytes": 20881,
+      "sha256": "e4e748c8c5b9b5e3bbb2329302fe172361281a8591efc4f84e180c33586bf0f8"
+    },
+    {
+      "path": "scripts/check-current-development-audit.mjs",
+      "bytes": 21414,
+      "sha256": "f699e1ade580635fc47b9485ca32722c2b3f6a88d68ef2af6877bb4f933c1532"
+    },
+    {
+      "path": "scripts/collect-v118-native-ipc-evidence.mjs",
+      "bytes": 4142,
+      "sha256": "87786ab4998af501b6b4163c0713c300df7693b4a86e6ee58c036a403999b980"
+    },
+    {
+      "path": "docs/V1_1_8_Native_IPC_Audit_2026-10-17.md",
+      "bytes": 5812,
+      "sha256": "9729a3d727436728237eeb319549262f55b1a88aba7dde6a98d2b8409846e2ff"
+    },
+    {
+      "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
+      "bytes": 17980,
+      "sha256": "d3d93ba2b6894238651ae39cd6dc10037fcc8e6eceff204a3712b2d66c038a1c"
+    },
+    {
+      "path": "docs/Development_Handoff.md",
+      "bytes": 432717,
+      "sha256": "db70d779901bc6735e79dcb1b6610c19b0a4277e3c1cf3e485f3ad8d8a3c222c"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/evidence/v118-native-ipc/feedback-browser-initial.log",
+      "bytes": 406,
+      "sha256": "90a974602b3ed68ac66f2206b15150b917c98265bb942157bc956e6d3e30101e"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/feedback-browser-second.log",
+      "bytes": 25,
+      "sha256": "f1d06869e099c57dad298203acd7d3f939e0e7bdb990717ca75027f603779a78"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/feedback-browser-second/recovered.png",
+      "bytes": 293254,
+      "sha256": "41f1da2af059858d059a40adb3ea3caea2cc5d2591d9948800b8f56d05fa48b5"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/feedback-browser-second/report.json",
+      "bytes": 443,
+      "sha256": "c5a91fe2ae38651292b40dd835513182b70ec8e269da7fb4f033bb3d25d16c5e"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/feedback-browser/failure.json",
+      "bytes": 135,
+      "sha256": "5e69d37724f490636b387460382992c7d9f07d4b6493ed82ee802d238cba0746"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/feedback-browser/failure.png",
+      "bytes": 284602,
+      "sha256": "bdc318b15d873561bb8d6886fa71b04205197e1c16ae3ca961764fc9f6613adc"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-after-diagnostic.log",
+      "bytes": 9345,
+      "sha256": "bdba410d0fa6ee7c7f3b1666c7dca50249687517f0dc40a3036683b44459bb00"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-complete.log",
+      "bytes": 9343,
+      "sha256": "f94cd19b321295fd8dd2f9d4737bcb97c60809f21e38905f90591ba3d7d7b2a2"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-final.log",
+      "bytes": 8255,
+      "sha256": "e09a363e5b1689618e028a112bbfccdc080f0c70e0dbe6d3dee246bdad6c5015"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-initial.log",
+      "bytes": 8257,
+      "sha256": "3db570959fc6c003ab8a5e78c5529403d77d602d1c8c32cd79582f3635561c94"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-first-failure.log",
+      "bytes": 5547,
+      "sha256": "8abdeb0bc9715b07f5963d70b104960f614700cf0a7939028c0890ac04e6a009"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-first.json",
+      "bytes": 2982,
+      "sha256": "f1c423eaf475c544e9887c091b1ea4a276d739288680b75607fe2ec7e4640405"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/product-ci-final.json",
+      "bytes": 238,
+      "sha256": "3f25b4f4f6f182c9bde5a7ffa5df5deadc320c9af54b350276b3a0d545bd7f21"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/product-ci-success.json",
+      "bytes": 243,
+      "sha256": "5adf9465e9b34c6735a56aff7419ad1ceb4022aba69644f3ec9db5c6ad783d03"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/product-ci.json",
+      "bytes": 238,
+      "sha256": "3f25b4f4f6f182c9bde5a7ffa5df5deadc320c9af54b350276b3a0d545bd7f21"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/quality-gate.log",
+      "bytes": 140365,
+      "sha256": "d9a61ad3b677c20f2a573fb499601de09103d502fa6f9ff97e1605b7221105a4"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38964350628/baseline.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38964350628/baseline.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38964350628/native-baseline.json",
+      "bytes": 977,
+      "sha256": "ef28f2da97b23f374c81db8c9341f3fd045fedd39d75c9c9044973970c05286a"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38964350628/vite.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38964350628/vite.stdout.log",
+      "bytes": 225,
+      "sha256": "e8a4adcb866c05cfc79c67d99ee3e79db3c5f2c7cb69e061330b43453785ab4a"
+    }
+  ]
+}

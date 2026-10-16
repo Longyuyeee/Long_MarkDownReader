@@ -18,14 +18,15 @@ const endpoint='http://127.0.0.1:9458',connections=[],calls=[],checks=[]
 const report={schemaVersion:1,status:'running',phase:mode,evidenceLevel:'debug-tauri-wry-real-ipc-and-generated-disk-not-installed',productCommit:nativeSearchProduct,harnessCommit:process.env.GITHUB_SHA,executableSha256,runtimeBaseVersion:'1.1.7',sourceUserContentIncluded:false,desktopInputUsed:false,checks,calls,samples:[]}
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms))
 async function connect(predicate){
-  let target
+  let target,lastTargets=[],lastConnectionError=''
   for(let n=0;n<160;n++){
-    const targets=await fetch(endpoint+'/json/list').then(r=>r.json()).catch(()=>[])
+    const targets=await fetch(endpoint+'/json/list').then(r=>r.json()).catch(error=>{lastConnectionError=String(error);return []})
+    lastTargets=targets.map(({id,type,url,title})=>({id,type,url,title}))
     target=targets.find(item=>item.type==='page'&&item.webSocketDebuggerUrl&&predicate(item))
     if(target)break
     await delay(250)
   }
-  assert.ok(target,'the intended real Wry target was not advertised')
+  if(!target){report.connectionDiagnostics={lastTargets,lastConnectionError};throw Error('the intended real Wry target was not advertised; see connectionDiagnostics')}
   const socket=new WebSocket(target.webSocketDebuggerUrl),pending=new Map();let sequence=0
   connections.push(socket)
   await withDeadline(()=>new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})}),10000,'connect actual WebView2')

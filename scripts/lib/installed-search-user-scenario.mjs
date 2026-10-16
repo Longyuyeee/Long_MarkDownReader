@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { searchFeedbackContract } from './search-feedback-contract.mjs'
 
 export function filePathFromRouteHash(hash) {
   const queryStart = hash.indexOf('?')
@@ -68,7 +69,7 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
       window.__installedSearchInputTrace = [];
       for(const type of ['keydown','keypress','keyup','click']) document.addEventListener(type, event => {
         const e=event.target;
-        if(!e?.matches?.('.search-feedback-error button, .knowledge-result-open'))return;
+        if(!e?.matches?.('.search-feedback-error button, .search-page-error button, .knowledge-result-open'))return;
         window.__installedSearchInputTrace.push({type:event.type,key:event.key||'',trusted:event.isTrusted,prevented:event.defaultPrevented,target:e.getAttribute('aria-label')||e.textContent});
       });
     })()`)
@@ -82,19 +83,20 @@ export async function runInstalledSearchScenario({ send, evaluate, waitFor, navi
     await waitFor(`document.body.innerText.includes('搜索与关联：可用')`, 'rebuild completed')
     for (const [label, value] of [['keyword', '客户会议纪要'], ['tag', '#客户跟进']]) {
       await query(value)
-      await waitFor(`document.querySelectorAll('.knowledge-result-open').length >= 2`, `${label} baseline results`)
+      await waitFor(`(document.querySelectorAll('.search-file-card').length || document.querySelectorAll('.knowledge-result-open').length) >= 2`, `${label} baseline results`)
+      const feedback=searchFeedbackContract(await evaluate(`!!document.querySelector('.search-page-status')`))
       await capture(`search-${label}-baseline.jpg`)
       await query('')
       await fs.rename(library, offline); moved = true
       await query(value)
-      await waitFor(`document.querySelector('.search-feedback-error')?.innerText.includes('搜索未完成')`, `${label} honest failure feedback`)
+      await waitFor(`document.querySelector(${JSON.stringify(feedback.error)})?.innerText.includes(${JSON.stringify(feedback.incompleteText)})`, `${label} honest failure feedback`)
       await capture(`search-${label}-offline.jpg`)
       await fs.rename(offline, library); moved = false
-      await tabTo('.search-feedback-error button')
+      await tabTo(feedback.error+' button')
       const beforeClicks = await evaluate(`window.__installedSearchInputTrace.filter(e=>e.type==='click').length`)
       await key('Enter', 'Enter', 13)
       await waitFor(`window.__installedSearchInputTrace.filter(e=>e.type==='click' && e.trusted).length > ${beforeClicks}`, `${label} trusted keyboard activation`)
-      await waitFor(`!document.querySelector('.search-feedback-error') && document.querySelectorAll('.knowledge-result-open').length >= 2`, `${label} retry recovery`)
+      await waitFor(`!document.querySelector(${JSON.stringify(feedback.error)}) && (document.querySelectorAll('.search-file-card').length || document.querySelectorAll('.knowledge-result-open').length) >= 2`, `${label} retry recovery`)
       if (!await evaluate(`document.querySelector(${JSON.stringify(input)}).value === ${JSON.stringify(value)}`)) throw new Error('Retry changed user query')
       await capture(`search-${label}-retry.jpg`)
       checks.push({ id: `${label}-offline-keyboard-retry-query-preserved`, status: 'passed' })

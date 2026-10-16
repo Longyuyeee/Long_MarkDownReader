@@ -34,9 +34,17 @@ try {
   for($n=0;$n -lt 150;$n++){try{$response=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:14200/' -TimeoutSec 2;if($response.StatusCode -eq 200){$ready=$true;break}}catch{};Start-Sleep -Milliseconds 200}
   if(-not $ready){throw 'Product dev server did not become ready'}
   foreach($phase in @('baseline','disk')){
-    # --minimized is an existing product startup option: no focus or desktop input.
+    # --minimized prevents the product setup from requesting focus. The hosted
+    # E2E config can show its own test window so WebView2 initializes normally.
     $app=Start-Process -FilePath $env:LONGEDIT_NATIVE_EXECUTABLE -ArgumentList '--minimized' -WorkingDirectory (Join-Path $product 'src-tauri') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $output "$phase.stdout.log") -RedirectStandardError (Join-Path $output "$phase.stderr.log") -PassThru
     try { & node $driver $phase $auditRoot $product $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
+    catch {
+      $app.Refresh()
+      $diagnostic=@{phase=$phase;pid=$app.Id;hasExited=$app.HasExited;sessionId=$app.SessionId;debugPortListening=[bool](Get-NetTCPConnection -LocalPort 9458 -State Listen -ErrorAction SilentlyContinue)}
+      if($app.HasExited){$diagnostic.exitCode=$app.ExitCode}else{$diagnostic.windowHandle=$app.MainWindowHandle.ToInt64();$diagnostic.workingSet64=$app.WorkingSet64}
+      $diagnostic | ConvertTo-Json -Depth 4 | Out-File -Encoding utf8 -LiteralPath (Join-Path $output "$phase-process-diagnostic.json")
+      throw
+    }
     finally { if($app -and -not $app.HasExited){Stop-Process -Id $app.Id -Force};$app=$null }
     for($n=0;$n -lt 150;$n++){if(-not(Get-NetTCPConnection -LocalPort 9458 -State Listen -ErrorAction SilentlyContinue)){break};Start-Sleep -Milliseconds 100}
     if(Get-NetTCPConnection -LocalPort 9458 -State Listen -ErrorAction SilentlyContinue){throw 'Owned WebView process did not close before restart'}
