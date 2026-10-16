@@ -30,6 +30,7 @@ export function verifyNativeOfficeEvidence(office,user,run){
   assert.equal(workbook.length,2);assert.match(workbook[0].path,/[/\\]工作表定位\.xlsx$/);assert.equal(workbook[0].path,workbook[1].path)
   for(const [index,sheet] of ['Inventory','Details'].entries()){assert.equal(workbook[index].sheet,sheet);assert.equal(workbook[index].activeSheet,sheet);assert.ok(workbook[index].locatorToken)}
   assert.notEqual(workbook[0].locatorToken,workbook[1].locatorToken)
+  assert.equal(workbook[0].matchingFiles,1);assert.equal(workbook[1].matchingFiles,11);assert.equal(workbook[1].otherTitleMatches,10)
   assert.ok(user.draftChecks.length>=10,'Office opens must retain the original dirty draft')
   return {nativeOfficeChecks:4,sourceHashes:3,trustedEvents:office.inputTrace.filter(event=>event.trusted).length,footerVisibleWithoutRecoveryScroll:true}
 }

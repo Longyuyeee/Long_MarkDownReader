@@ -1,0 +1,31 @@
+native-search	Real native page IPC, generated files, isolation and same-binary restart	﻿2026-10-16T23:25:30.6764832Z ##[group]Run $env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6765910Z ^[[36;1m$env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6767081Z ^[[36;1m& orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6767954Z ^[[36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6837867Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6838295Z env:
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6838469Z   CARGO_TERM_COLOR: always
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6838713Z   LONGEDIT_SEARCH_UNREGISTERED_ENTRIES: 21050
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6839002Z   NATIVE_PROGRAM_RUN_ID: 38979598860
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6839411Z   NATIVE_PROGRAM_SHA256: 14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6839973Z   NATIVE_PROGRAM_HARNESS_COMMIT: b2ce89d33a26fac917d46107494bc23e4e79016f
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:25:30.6840316Z ##[endgroup]
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1636291Z node:internal/modules/run_main:123
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1636962Z     triggerUncaughtException(
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1639907Z     ^
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1640126Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1640609Z Error: Actual native UI did not become ready: one real Office result "A-001"
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1641904Z     at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1643570Z     at async openSearch (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:32:5)
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1645419Z     at async runNativeOfficeInput (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:63:7)
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1647121Z     at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:137:3
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1647892Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.1648035Z Node.js v22.23.3
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9905688Z Real IPC user failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9906820Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration\scripts\run-v118-native-search.ps1:47 char:91
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9907643Z + ... ct $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9908132Z +                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9908922Z     + CategoryInfo          : OperationStopped: (Real IPC user failed:String) [], RuntimeException
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9909772Z     + FullyQualifiedErrorId : Real IPC user failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:25.9910202Z  
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:27:26.0187691Z ##[error]Process completed with exit code 1.

@@ -42,6 +42,9 @@ test('Office target selectors parse the actual public search key and never subst
     const actual=vm.runInNewContext(officeMatchTarget(kind),{document:{querySelectorAll:()=>[row]}})
     assert.equal(actual,row)
     assert.equal(vm.runInNewContext(officeMatchTarget('unmatched'),{document:{querySelectorAll:()=>[row]}}),undefined)
+    const wrong={closest:selector=>selector==='[data-search-key]'?{dataset:{searchKey:key}}:{querySelector:()=>({getAttribute:()=>'打开 错误文件.xlsx'})}}
+    const correct={closest:selector=>selector==='[data-search-key]'?{dataset:{searchKey:key}}:{querySelector:()=>({getAttribute:()=>'打开 工作表定位.xlsx'})}}
+    assert.equal(vm.runInNewContext(officeMatchTarget(kind,'工作表定位.xlsx'),{document:{querySelectorAll:()=>[wrong,correct]}}),correct)
   }
 })
 
@@ -83,7 +86,7 @@ function example(){
     docx:{path:'C:/own/原文定位.docx',locator:'docx-p-1',targetText:'After explicit page break.',visible:true},
     pptxObject:{path:'C:/own/演示定位.pptx',locatorKind:'pptx-object',locator:'obj-1',objectId:'obj-1',slide:'1',text:'Search and notes evidence',locatorToken:'1'},
     pptxNotes:{path:'C:/own/演示定位.pptx',slide:'2',activeSlide:2,matchKind:'notes',notes:'LibreOffice image relationship evidence.',locatorToken:'2'},
-    workbook:[{path:'C:/own/工作表定位.xlsx',sheet:'Inventory',activeSheet:'Inventory',locatorToken:'3'},{path:'C:/own/工作表定位.xlsx',sheet:'Details',activeSheet:'Details',locatorToken:'4'}],
+    workbook:[{path:'C:/own/工作表定位.xlsx',sheet:'Inventory',activeSheet:'Inventory',locatorToken:'3',matchingFiles:1},{path:'C:/own/工作表定位.xlsx',sheet:'Details',activeSheet:'Details',locatorToken:'4',matchingFiles:11,otherTitleMatches:10}],
   }}
   return {run,user,office}
 }
@@ -91,7 +94,7 @@ test('Office evidence keeps the new product, four actual input tasks, three immu
   const e=example();assert.equal(verifyNativeOfficeEvidence(e.office,e.user,e.run).nativeOfficeChecks,4)
 })
 test('Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations',()=>{
-  for(const mutate of [e=>e.run.conclusion='failure',e=>e.run.status='in_progress',e=>e.office.productCommit='c'.repeat(40),e=>e.office.executableSha256='d'.repeat(64),e=>e.office.checks.pop(),e=>e.office.nativeBridgeMocked=true,e=>e.office.inputTrace[2].trusted=false,e=>e.office.sourceFiles[0].after='a'.repeat(64),e=>e.office.sourceFiles.pop(),e=>e.office.observations.docx.visible=false,e=>e.office.observations.pptxObject.objectId='wrong',e=>e.office.observations.pptxNotes.activeSlide=1,e=>e.office.observations.workbook[1].activeSheet='Inventory',e=>e.office.observations.workbook[1].locatorToken='3',e=>e.user.footerRecovery.visibleWithoutRecoveryScroll=false,e=>e.user.draftChecks.pop(),e=>e.office.runtimeErrors.push('error'),e=>e.office.uiObservation.errorOverlay=true]){
+  for(const mutate of [e=>e.run.conclusion='failure',e=>e.run.status='in_progress',e=>e.office.productCommit='c'.repeat(40),e=>e.office.executableSha256='d'.repeat(64),e=>e.office.checks.pop(),e=>e.office.nativeBridgeMocked=true,e=>e.office.inputTrace[2].trusted=false,e=>e.office.sourceFiles[0].after='a'.repeat(64),e=>e.office.sourceFiles.pop(),e=>e.office.observations.docx.visible=false,e=>e.office.observations.pptxObject.objectId='wrong',e=>e.office.observations.pptxNotes.activeSlide=1,e=>e.office.observations.workbook[1].activeSheet='Inventory',e=>e.office.observations.workbook[1].locatorToken='3',e=>e.office.observations.workbook[1].matchingFiles=1,e=>e.office.observations.workbook[1].otherTitleMatches=0,e=>e.user.footerRecovery.visibleWithoutRecoveryScroll=false,e=>e.user.draftChecks.pop(),e=>e.office.runtimeErrors.push('error'),e=>e.office.uiObservation.errorOverlay=true]){
     const e=example();mutate(e);assert.throws(()=>verifyNativeOfficeEvidence(e.office,e.user,e.run))
   }
 })
