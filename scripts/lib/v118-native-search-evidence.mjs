@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { nativeSearchProduct } from './v118-native-search-fixture.mjs'
 export const nativeBaselineChecks=[
   'actual-product-identity-and-generated-config',
+  'production-entry-budget-resumes-generated-21050-unregistered-files',
   'real-cold-work-and-seven-file-pages-pass-200-with-locators-and-private-exclusion',
   'same-cursor-is-idempotent-and-sort-binding-rejects-mixed-pages',
   'camel-case-request-validation-and-unconfigured-scope-are-enforced-by-real-ipc',
@@ -20,6 +21,7 @@ export function verifyNativeSearchEvidence(baseline,disk,run){
     assert.equal(report.evidenceLevel,'debug-tauri-wry-real-ipc-and-generated-disk-not-installed')
     assert.equal(report.productCommit,nativeSearchProduct);assert.equal(report.harnessCommit,run.headSha)
     assert.equal(report.runtimeBaseVersion,'1.1.7');assert.equal(report.sourceUserContentIncluded,false);assert.equal(report.desktopInputUsed,false)
+    assert.equal(report.generatedFixture.unregisteredEntries,21050)
     assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.deepEqual(report.checks,checks)
     assert.equal(report.uiObservation.errorOverlay,false)
     assert.ok(report.calls.length>0&&report.calls.every(call=>Number.isFinite(call.elapsedMs)&&call.elapsedMs>=0))
@@ -30,9 +32,10 @@ export function verifyNativeSearchEvidence(baseline,disk,run){
   const pdf=baseline.expectedGroups.find(group=>group.path.endsWith('/多批注.pdf'))
   assert.equal(pdf.matches.filter(match=>match.matchKind==='annotation'&&match.page===1&&match.annotationId).length,5)
   assert.ok(baseline.samples[0].workCalls>1&&!baseline.samples[0].indexed,'cold proof must actually resume source work')
+  assert.equal(baseline.samples[0].initialExaminedSources,0,'large proof must cross the production enumeration budget, not only matching pages')
   assert.equal(baseline.samples.at(-1).indexed,true,'memory cache phase missing')
   assert.equal(disk.samples[0].indexed,true,'fresh-process disk cache phase missing')
   assert.ok(baseline.calls.some(call=>call.window==='quick-note'&&call.command==='search_knowledge_page'&&call.ok))
   assert.ok(baseline.calls.some(call=>call.window==='quick-note'&&call.command==='search_knowledge_page'&&call.code==='expired'))
-  return {nativeChecks:baseline.checks.length+disk.checks.length,files:244,federatedHealthyFiles:487,productCommit:nativeSearchProduct,harnessCommit:run.headSha,executableSha256:baseline.executableSha256,evidenceLevel:baseline.evidenceLevel}
+  return {nativeChecks:baseline.checks.length+disk.checks.length,files:244,federatedHealthyFiles:487,unregisteredEntries:21050,productCommit:nativeSearchProduct,harnessCommit:run.headSha,executableSha256:baseline.executableSha256,evidenceLevel:baseline.evidenceLevel}
 }

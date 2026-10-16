@@ -3,7 +3,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import assert from 'node:assert/strict'
 
-export const nativeSearchProduct = 'b32e8d7930a1e94364c9b1951a86b9325624fa50'
+export const nativeSearchProduct = '96e9fc464f6935f0c3daf18f1708b6d6d80c2994'
 export function assertHostedSearchAudit(env=process.env) {
   assert.equal(env.GITHUB_ACTIONS,'true','native runtime audit is restricted to GitHub-hosted disposable runners')
   assert.equal(env.RUNNER_ENVIRONMENT,'github-hosted','never run against a self-hosted/user desktop')
@@ -13,7 +13,8 @@ export function fixturePaths(root) {
   assert.match(path.basename(root),/^longedit-v118-native-[a-z0-9-]+$/i)
   return {root,library:path.join(root,'项目 & 资料'),second:path.join(root,'第二资料库'),missing:path.join(root,'未连接资料库'),config:path.join(root,'config'),webview:path.join(root,'webview')}
 }
-export async function createNativeSearchFixture(root, repo) {
+export async function createNativeSearchFixture(root, repo, {unregisteredEntries=0}={}) {
+  assert.ok(Number.isInteger(unregisteredEntries)&&unregisteredEntries>=0&&unregisteredEntries<=25000)
   const fixture=fixturePaths(root)
   // Exclusive root creation establishes ownership; no cleanup of pre-existing data.
   await fs.mkdir(root,{recursive:false})
@@ -27,6 +28,11 @@ export async function createNativeSearchFixture(root, repo) {
   // Non-matching files force real cooperative work continuations, not just pages.
   await fs.mkdir(path.join(fixture.library,'普通资料'))
   for(let n=0;n<1400;n++)await fs.writeFile(path.join(fixture.library,'普通资料',`${n}.txt`),'ordinary unrelated generated text',{flag:'wx'})
+  if(unregisteredEntries){
+    const pressure=path.join(fixture.library,'a-枚举压力');await fs.mkdir(pressure)
+    for(let n=0;n<unregisteredEntries;n++)await fs.writeFile(path.join(pressure,`${n}.unknown-longedit-audit`),'',{flag:'wx'})
+  }
+  fixture.load={unregisteredEntries}
   await fs.writeFile(path.join(fixture.library,'仅文件名#Budget.md'),'没有这个标签',{flag:'wx'})
   await fs.writeFile(path.join(fixture.library,'前缀.md'),'#BudgetExtra #budget',{flag:'wx'})
   await fs.writeFile(path.join(fixture.library,'非笔记.txt'),'#Budget',{flag:'wx'})

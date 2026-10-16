@@ -38,9 +38,26 @@ test('generated real files include late strong hit, same names, exact tags and o
     await fs.rm(parent,{recursive:true})
   }
 })
+test('owned enumeration pressure is explicit, bounded and cannot silently replace the requested count',async()=>{
+  const parent=await fs.mkdtemp(path.join(os.tmpdir(),'longedit-v118-fixture-test-')),root=path.join(parent,'longedit-v118-native-pressure')
+  try{
+    for(const unregisteredEntries of [-1,NaN,25001])await assert.rejects(()=>createNativeSearchFixture(root,process.cwd(),{unregisteredEntries}))
+    await assert.rejects(()=>fs.access(root),{code:'ENOENT'})
+    const fixture=await createNativeSearchFixture(root,process.cwd(),{unregisteredEntries:17})
+    const entries=await fs.readdir(path.join(fixture.library,'a-枚举压力'))
+    assert.equal(entries.length,17);assert.ok(entries.every(name=>name.endsWith('.unknown-longedit-audit')))
+    assert.equal(JSON.parse(await fs.readFile(path.join(root,'fixture.json'),'utf8')).load.unregisteredEntries,17)
+    assert.ok(driver.includes('production entry budget must pause enumeration before matching any source'))
+  }finally{
+    assert.ok(path.resolve(parent).startsWith(path.resolve(os.tmpdir())+path.sep)&&path.basename(parent).startsWith('longedit-v118-fixture-test-'))
+    await fs.rm(parent,{recursive:true})
+  }
+})
+
 test('workflow pins the product separately from its harness and cannot publish or install',()=>{
   assert.deepEqual(workflow.permissions,{contents:'read',actions:'read'})
   assert.equal(workflow.jobs['native-search']['runs-on'],'windows-latest')
+  assert.equal(workflow.jobs['native-search'].env.LONGEDIT_SEARCH_UNREGISTERED_ENTRIES,'21050')
   assert.ok(workflowSource.includes(`ref: ${nativeSearchProduct}`)&&runner.includes(nativeSearchProduct))
   assert.ok(!workflowSource.includes('community-release-publish')&&!workflowSource.includes('tauri -- build'))
   assert.ok(workflowSource.includes('if: always()')&&workflowSource.includes('retention-days: 14'))

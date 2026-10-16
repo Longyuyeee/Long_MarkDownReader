@@ -9,13 +9,16 @@ import { withDeadline } from './lib/with-deadline.mjs'
 import { assertHostedSearchAudit,createNativeSearchFixture,fixturePaths,groupIdentity,nativeSearchProduct } from './lib/v118-native-search-fixture.mjs'
 assertHostedSearchAudit()
 const [mode,root,repo,output]=process.argv.slice(2),fixture=fixturePaths(root)
-if(mode==='fixture'){await createNativeSearchFixture(root,repo);process.exit(0)}
+if(mode==='fixture'){await createNativeSearchFixture(root,repo,{unregisteredEntries:Number(process.env.LONGEDIT_SEARCH_UNREGISTERED_ENTRIES||0)});process.exit(0)}
 assert.ok(['baseline','disk'].includes(mode));assert.equal(process.env.LONGEDIT_NATIVE_PRODUCT_COMMIT,nativeSearchProduct)
 await fs.access(path.join(root,'.v118-native-owner'))
 const executable=path.resolve(process.env.LONGEDIT_NATIVE_EXECUTABLE||'')
 const executableSha256=crypto.createHash('sha256').update(await fs.readFile(executable)).digest('hex')
 const endpoint='http://127.0.0.1:9458',connections=[],calls=[],checks=[]
 const report={schemaVersion:1,status:'running',phase:mode,evidenceLevel:'debug-tauri-wry-real-ipc-and-generated-disk-not-installed',productCommit:nativeSearchProduct,harnessCommit:process.env.GITHUB_SHA,executableSha256,runtimeBaseVersion:'1.1.7',sourceUserContentIncluded:false,desktopInputUsed:false,checks,calls,samples:[]}
+const pressureEntries=await fs.readdir(path.join(fixture.library,'a-枚举压力'))
+assert.equal(pressureEntries.length,21050);assert.ok(pressureEntries.every(name=>name.endsWith('.unknown-longedit-audit')))
+report.generatedFixture={unregisteredEntries:pressureEntries.length}
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms))
 async function connect(predicate){
   let target,lastTargets=[],lastConnectionError=''
@@ -45,7 +48,7 @@ const request=(extra={})=>({libraryRoot:fixture.library,query:'预算',sort:'rel
 const page=(req,connection=main)=>connection.invoke('search_knowledge_page',{request:req})
 const close=(frame,channel='library',connection=main)=>connection.invoke('close_knowledge_search',{sessionId:frame.sessionId,channel})
 const rejectCode=async(work,codes)=>{await assert.rejects(work,error=>codes.includes(error?.code),`expected structured ${codes.join('/')}`)}
-async function readySingle(req){let frame;const start=performance.now();for(let n=0;n<200;n++){frame=await page(req);if(frame.scanState!=='preparing'){report.samples.push({kind:'single-ready',query:req.query,elapsedMs:performance.now()-start,workCalls:n+1,indexed:frame.indexed});return frame}assert.equal(frame.totalFiles,null);assert.equal(frame.scanComplete,false);assert.equal(frame.files.length,0);assert.ok(frame.nextCursor);req={...req,cursor:frame.nextCursor}}throw Error('single search did not make bounded progress')}
+async function readySingle(req){let frame,initialExaminedSources;const start=performance.now();for(let n=0;n<200;n++){frame=await page(req);if(n===0)initialExaminedSources=frame.examinedSources;if(frame.scanState!=='preparing'){report.samples.push({kind:'single-ready',query:req.query,elapsedMs:performance.now()-start,workCalls:n+1,indexed:frame.indexed,initialExaminedSources});return frame}assert.equal(frame.totalFiles,null);assert.equal(frame.scanComplete,false);assert.equal(frame.files.length,0);assert.ok(frame.nextCursor);req={...req,cursor:frame.nextCursor}}throw Error('single search did not make bounded progress')}
 async function allSingle(req){let frame=await readySingle(req);const first=frame,files=[...frame.files];let pages=1;while(frame.nextCursor){frame=await page({...req,cursor:frame.nextCursor});assert.equal(frame.snapshotId,first.snapshotId);assert.equal(frame.pageOffset,files.length);files.push(...frame.files);pages++;assert.ok(pages<=250)}assert.equal(new Set(files.map(file=>file.path)).size,files.length);return {first,files,pages}}
 const multiRequest=(extra={})=>({libraryRoot:null,query:'预算',sort:'relevance',pageSize:40,channel:'palette',cursor:null,...extra})
 async function allLibraries(req){let frame;for(let n=0;n<200;n++){frame=await main.invoke('search_knowledge_libraries_page',{request:req});if(!frame.continueCursor)break;req={...req,cursor:frame.continueCursor};await delay(20)}assert.equal(frame.continueCursor,null);const first=frame,files=[...frame.files];for(let n=0;frame.nextCursor&&n<250;n++){frame=await main.invoke('search_knowledge_libraries_page',{request:{...req,cursor:frame.nextCursor}});assert.equal(frame.snapshotId,first.snapshotId);assert.equal(frame.pageOffset,files.length);files.push(...frame.files)}assert.equal(new Set(files.map(file=>file.path)).size,files.length);return {first,files}}
@@ -69,6 +72,8 @@ try{
     checks.push('same-executable-restart-disk-index-has-identical-244-groups-and-locators')
   }else{
     const cold=await allSingle(request());assert.equal(cold.files.length,244);assert.equal(cold.first.totalFiles,244);assert.equal(cold.first.indexed,false);assert.ok(cold.pages>5)
+    assert.equal(report.samples[0].initialExaminedSources,0,'production entry budget must pause enumeration before matching any source')
+    checks.push('production-entry-budget-resumes-generated-21050-unregistered-files')
     assert.match(cold.files[0].title,/项目预算/)
     const pdf=cold.files.find(file=>file.title==='多批注.pdf');assert.equal(pdf.matches.filter(match=>match.matchKind==='annotation').length,5);assert.ok(pdf.matches.every(match=>match.page===1&&match.annotationId));assert.equal(pdf.mayHaveMoreMatches,true)
     assert.equal(cold.files.filter(file=>file.title==='同名.md').length,2)
