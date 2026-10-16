@@ -13,6 +13,7 @@ export const moveContinuityChecks = [
   'plain-unsaved-markdown-follows-rename-without-implicit-save',
   'pdf-annotations-and-ocr-follow-the-document',
   'another-real-markdown-window-retains-its-draft-and-refreshes-links-after-save',
+  'same-folder-rename-does-not-require-repairing-unrelated-old-broken-links',
   'move-continuity-keeps-interface-operable-without-global-error-overlay',
 ]
 export async function runInstalledV116Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
@@ -107,7 +108,11 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
       check(moveContinuityChecks[9],(await read(secondPath)).includes('第二窗口草稿')&&(await read(secondPath)).includes('reference-final.txt')&&!await second.evaluate(`!!document.querySelector('.dirty-dot')`))
     } finally { second.close() }
     await invoke('plugin:window|close',{label})
-    check(moveContinuityChecks[10], await evaluate(`!document.body.inert&&!document.querySelector('#crash-screen')&&!document.querySelector('.route-error')`))
+    const brokenBody='# 原有内容\n\n[旧链接](already-missing-v116.txt)\n'
+    await fs.writeFile(p('old-broken.md'),brokenBody)
+    const brokenRenamed=await invoke('rename_item',{libraryRoot:library,oldPath:p('old-broken.md'),newName:'old-broken-renamed.md'})
+    check(moveContinuityChecks[10],await read(brokenRenamed)===brokenBody)
+    check(moveContinuityChecks[11], await evaluate(`!document.body.inert&&!document.querySelector('#crash-screen')&&!document.querySelector('.route-error')`))
     await capture('installed-v116-move-continuity.jpg'); report.status = 'passed'
   } catch (error) { report.status = 'failed'; report.error = String(error); await capture('installed-v116-failure.jpg').catch(() => {}); throw error }
   finally { await fs.writeFile(path.join(output, 'installed-v116-workflow.json'), JSON.stringify(report, null, 2) + '\n') }

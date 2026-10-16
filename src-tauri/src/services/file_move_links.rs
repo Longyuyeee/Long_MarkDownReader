@@ -117,7 +117,7 @@ pub(crate) fn draft_requires_rewrite_with_names(root: &Path, source: &Path, targ
             .map(Path::new)
             .and_then(|path| path.canonicalize().ok());
         let intended = resolved.as_deref().map(|path| mapped(path, source, target));
-        let affected = key(&document) != key(&next_document)
+        let affected = document.parent().map(key) != next_document.parent().map(key)
             || resolved
                 .as_ref()
                 .zip(intended.as_ref())
@@ -180,7 +180,10 @@ pub(crate) fn plan(root: &str, source: &Path, target: &Path) -> Result<MoveLinkP
     for evidence in inventory.evidence() {
         let document = Path::new(&evidence.document);
         let next_document = mapped(document, &source, &target);
-        let document_moved = key(document) != key(&next_document);
+        // Renaming a filename in the same folder does not change the base of
+        // its outgoing relative links. Existing unrelated broken links must not
+        // force the user to repair a document just to rename it.
+        let document_moved = document.parent().map(key) != next_document.parent().map(key);
         let before = evidence.resolution.as_ref().ok_or("缺少引用解析证据")?;
         let resolved = before
             .path
@@ -544,5 +547,16 @@ mod tests {
         let f=Fixture::new();let note=f.write("note.md","saved");
         assert!(draft_requires_rewrite(&f.0,&note,&f.0.join("note.txt"),&note,"unsaved text").unwrap_err().contains("先保存"));
         assert_eq!(fs::read_to_string(note).unwrap(),"saved");
+    }
+    #[test]
+    fn same_folder_rename_preserves_unrelated_existing_broken_links() {
+        let f=Fixture::new();f.write("note.md","[old broken](missing.txt)\n[[other]]\n");
+        let plan=f.plan("note.md","new.md");assert!(plan.blockers.is_empty());assert!(plan.documents.is_empty());
+    }
+    #[test]
+    fn same_folder_rename_keeps_a_draft_without_requiring_unrelated_link_repairs() {
+        let f=Fixture::new();let note=f.write("note.md","saved");
+        assert!(!draft_requires_rewrite(&f.0,&note,&f.0.join("new.md"),&note,"[old broken](missing.txt)\n[[other]]").unwrap());
+        assert!(draft_requires_rewrite(&f.0,&note,&f.0.join("sub/new.md"),&note,"[old broken](missing.txt)").unwrap());
     }
 }
