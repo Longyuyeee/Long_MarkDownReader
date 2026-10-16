@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: file card has one full-width column; relation badge follows its title and locations
+ok 1 - file card has one full-width column; relation badge follows its title and locations
+  ---
+  duration_ms: 0.5796
+  ...
+# Subtest: title and metadata stack; long titles wrap and snippets remain bounded
+ok 2 - title and metadata stack; long titles wrap and snippets remain bounded
+  ---
+  duration_ms: 0.0809
+  ...
+# Subtest: full title and separate file/graph actions remain available
+ok 3 - full title and separate file/graph actions remain available
+  ---
+  duration_ms: 0.1003
+  ...
+# Subtest: actual file card stacks narrow actions and retains all lazy internal positions
+ok 4 - actual file card stacks narrow actions and retains all lazy internal positions
+  ---
+  duration_ms: 0.0761
+  ...
+# Subtest: actual status identifies old cards immediately, without presenting an old total as fresh results
+ok 5 - actual status identifies old cards immediately, without presenting an old total as fresh results
+  ---
+  duration_ms: 4.6272
+  ...
+# Subtest: actual status retains a paused or failed replacement label and returns to normal after acceptance
+ok 6 - actual status retains a paused or failed replacement label and returns to normal after acceptance
+  ---
+  duration_ms: 0.8517
+  ...
+# Subtest: a loaded page failure exposes recovery in the actual footer instead of a disabled dead end
+ok 7 - a loaded page failure exposes recovery in the actual footer instead of a disabled dead end
+  ---
+  duration_ms: 0.5495
+  ...
+# Subtest: footer keeps precise restart/refresh semantics and normal paging returns after recovery
+ok 8 - footer keeps precise restart/refresh semantics and normal paging returns after recovery
+  ---
+  duration_ms: 1.1753
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 456.7842

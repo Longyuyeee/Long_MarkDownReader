@@ -1,0 +1,12 @@
+{
+  "scope": "Actual Vue App/LibraryMode/CommandPalette/editor; simulated isolated native IPC and disk, not Tauri or installer acceptance",
+  "checks": [
+    "library: expired/changed page retains ordered cards through preparation; explicit replacement restores loaded depth",
+    "library: actual editor input and fixture disk remain unchanged by refresh",
+    "palette: expired/changed page retains ordered cards through preparation; explicit replacement restores loaded depth",
+    "palette: actual editor input and fixture disk remain unchanged by refresh",
+    "failed replacement retains clearly marked old results and actionable retry; confirmed complete empty replaces them",
+    "main document, restored library result depth and explicit readonly reference remain usable after palette recovery"
+  ],
+  "errors": []
+}

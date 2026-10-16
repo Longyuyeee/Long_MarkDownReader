@@ -134,7 +134,7 @@
                   <SearchFeedback v-else :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :reason="knowledgeSearchError" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
                   <p v-if="searchReturn.notice.value" role="status" class="knowledge-search-count">{{ searchReturn.notice.value }}</p>
                   <SearchFileCard v-for="file in visibleSearchFiles" :key="file.path" :file="file" :query="searchQuery" :library-root="store.libraryPath" :selected-key="searchReturn.selectedKey.value" reference-allowed @open="openKnowledgeSearchResult" @reference="showSearchPreview"><RelationSummaryBadge v-if="relationSummary(file.path)" :summary="relationSummary(file.path)!" compact @open="openRelationGraph(file.path)" /></SearchFileCard>
-                  <SearchPageStatus v-if="!activeGraphCollection" part="footer" :page="knowledgePages" :sort="knowledgeSort" @more="knowledgePages.loadMore" @continue="knowledgePages.continueSearch" @apply="applyKnowledgeView"/>
+                  <SearchPageStatus v-if="!activeGraphCollection" part="footer" :page="knowledgePages" :sort="knowledgeSort" @more="knowledgePages.loadMore" @continue="knowledgePages.continueSearch" @apply="applyKnowledgeView" @retry="retryKnowledgeSearch"/>
                 </div>
                 <n-tree 
                   v-else

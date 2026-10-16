@@ -54,7 +54,7 @@
         <div class="no-results" v-else-if="!pagedSearch && query.trim().length > 0 && !searching && !error">
           无匹配结果
         </div>
-        <SearchPageStatus v-if="pagedSearch" part="footer" :page="searchPages" :sort="sort" :disabled="opening" @more="searchPages.loadMore" @continue="searchPages.continueSearch" @apply="searchPages.applyPending"/>
+        <SearchPageStatus v-if="pagedSearch" part="footer" :page="searchPages" :sort="sort" :disabled="opening" @more="searchPages.loadMore" @continue="searchPages.continueSearch" @apply="searchPages.applyPending" @retry="retryPages"/>
         </div>
         <div v-if="!query.startsWith('>')" class="palette-status palette-help">空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。结果按文件续载，组内位置并非全部出现次数。</div>
       </div>

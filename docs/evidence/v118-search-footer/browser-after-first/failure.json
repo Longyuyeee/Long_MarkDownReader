@@ -1,0 +1,67 @@
+{
+  "error": "TimeoutError: page.waitForFunction: Timeout 15000ms exceeded.",
+  "checks": [],
+  "layouts": [
+    {
+      "channel": "library",
+      "style": "soft",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "soft",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "neo",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "neo",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "glass",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "glass",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "airy",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "airy",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "minimal",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "minimal",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "sharp",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "sharp",
+      "width": 1280
+    }
+  ],
+  "errors": []
+}

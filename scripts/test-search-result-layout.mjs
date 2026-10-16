@@ -54,3 +54,21 @@ test('actual status retains a paused or failed replacement label and returns to 
   const ready=await renderToString(Vue.h(statusModule.exports.default,statusProps(false,false)))
   assert.match(ready,/共 244/);assert.doesNotMatch(ready,/保留上次结果|保留旧视图/)
 })
+test('a loaded page failure exposes recovery in the actual footer instead of a disabled dead end',async()=>{
+  assert.match(source, /<SearchPageStatus[^>]*part="footer"[^>]*@retry="retryKnowledgeSearch"/)
+  assert.match(fs.readFileSync('src/components/CommandPalette.vue','utf8'), /<SearchPageStatus[^>]*part="footer"[^>]*@retry="retryPages"/)
+  const props=statusProps(false,false);props.part='footer';props.page.error.value='续载暂时失败';props.page.errorCode.value='busy';props.page.nextPage.value='issued:40'
+  const html=await renderToString(Vue.h(statusModule.exports.default,props))
+  assert.match(html,/search-page-retry/);assert.match(html,/续载未完成/);assert.match(html,/>重试<\/button>/)
+  assert.doesNotMatch(html,/>加载更多文件<\/button>/)
+})
+test('footer keeps precise restart/refresh semantics and normal paging returns after recovery',async()=>{
+  for(const [code,label] of [['expired','重新搜索'],['invalidCursor','重新搜索'],['requestMismatch','重新搜索'],['snapshotChanged','刷新可用结果'],['unavailable','重试']]){
+    const props=statusProps(true,true);props.part='footer';props.page.error.value='保留旧结果';props.page.errorCode.value=code
+    const html=await renderToString(Vue.h(statusModule.exports.default,props))
+    assert.match(html,/class="search-page-retry"/);assert.ok(html.includes(label));assert.match(html,/disabled/)
+  }
+  const props=statusProps(false,false);props.part='footer';props.page.nextPage.value='issued:40'
+  const html=await renderToString(Vue.h(statusModule.exports.default,props))
+  assert.match(html,/>加载更多文件<\/button>/);assert.doesNotMatch(html,/search-page-retry/)
+})

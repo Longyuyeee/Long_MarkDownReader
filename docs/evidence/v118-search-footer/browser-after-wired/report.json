@@ -1,0 +1,132 @@
+{
+  "scope": "actual Vue footer recovery with simulated IPC, not Wry/installer acceptance",
+  "checks": [
+    "library: original footer position has an actionable retry, keeps 40 cards, then appends the same cursor to 80",
+    "library: footer expiration action starts an explicit fresh search and restores 80-file depth",
+    "palette: original footer position has an actionable retry, keeps 40 cards, then appends the same cursor to 80",
+    "palette: footer expiration action starts an explicit fresh search and restores 80-file depth"
+  ],
+  "layouts": [
+    {
+      "channel": "library",
+      "style": "soft",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "soft",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "neo",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "neo",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "glass",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "glass",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "airy",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "airy",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "minimal",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "minimal",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "sharp",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "sharp",
+      "width": 1280
+    },
+    {
+      "channel": "palette",
+      "style": "soft",
+      "width": 480
+    },
+    {
+      "channel": "palette",
+      "style": "soft",
+      "width": 1000
+    },
+    {
+      "channel": "palette",
+      "style": "neo",
+      "width": 480
+    },
+    {
+      "channel": "palette",
+      "style": "neo",
+      "width": 1000
+    },
+    {
+      "channel": "palette",
+      "style": "glass",
+      "width": 480
+    },
+    {
+      "channel": "palette",
+      "style": "glass",
+      "width": 1000
+    },
+    {
+      "channel": "palette",
+      "style": "airy",
+      "width": 480
+    },
+    {
+      "channel": "palette",
+      "style": "airy",
+      "width": 1000
+    },
+    {
+      "channel": "palette",
+      "style": "minimal",
+      "width": 480
+    },
+    {
+      "channel": "palette",
+      "style": "minimal",
+      "width": 1000
+    },
+    {
+      "channel": "palette",
+      "style": "sharp",
+      "width": 480
+    },
+    {
+      "channel": "palette",
+      "style": "sharp",
+      "width": 1000
+    }
+  ],
+  "errors": []
+}
