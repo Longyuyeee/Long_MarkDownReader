@@ -248,10 +248,15 @@ pub fn run() {
                 let _ = window.emit_to(window.label(), "request-window-close", ());
             }
             tauri::WindowEvent::Destroyed => {
-                if let Ok(mut registry) = window.state::<services::archive_confirmation::WindowConfirmationState>().0.lock() {
+                if let Ok(mut registry) = window
+                    .state::<services::archive_confirmation::WindowConfirmationState>()
+                    .0
+                    .lock()
+                {
                     registry.destroyed(window.label());
                 }
-                if let Ok(mut drafts) = window.state::<commands::lifecycle::WindowDrafts>().0.lock() {
+                if let Ok(mut drafts) = window.state::<commands::lifecycle::WindowDrafts>().0.lock()
+                {
                     drafts.remove(window.label());
                 }
             }
@@ -592,6 +597,13 @@ pub fn run() {
             exit_app,
             commands::lifecycle::set_window_dirty,
             commands::lifecycle::register_window_draft_session,
+            services::move_windows::reply_file_move_protection,
+            services::move_windows::file_move_protection_status,
+            services::move_windows::acknowledge_file_move_release,
+            services::file_move_transaction::review_library_move,
+            services::file_move_transaction::resolve_library_move,
+            services::file_move_transaction::list_library_move_recoveries,
+            services::file_move_transaction::export_library_move_originals,
             commands::lifecycle::begin_archive_window_confirmation,
             commands::lifecycle::reply_archive_window_confirmation,
             commands::lifecycle::archive_window_confirmation_status,

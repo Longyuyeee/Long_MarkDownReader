@@ -192,26 +192,30 @@ pub async fn rename_item(
     old_path: String,
     new_name: String,
 ) -> Result<String, String> {
-    let _history_lease = crate::commands::history::history_lease(&app_handle)?;
-    validate_item_name(&new_name)?;
-    let guard = WorkspaceGuard::new(&library_root)?;
-    let old = guard.resolve_existing(&old_path)?;
-    reject_workspace_root(&old, &guard)?;
-    let parent = old.parent().ok_or("无效路径")?;
-    let new_path = parent.join(&new_name);
-    if new_path.parent() != Some(parent) {
-        return Err("文件名包含非法字符".into());
-    }
-    let new_path = guard.resolve_for_write(&new_path)?;
-    if new_path == old {
-        return Ok(old.to_string_lossy().into_owned());
-    }
-    if new_path.exists() {
-        return Err("目标目录已存在同名项目，请使用其他名称".into());
-    }
-    super::file_management::move_to(Some(&app_handle), &guard, &old, &new_path)
-        .map_err(|error| format!("重命名失败: {error}"))?;
-    Ok(new_path.to_string_lossy().into_owned())
+    tauri::async_runtime::spawn_blocking(move || {
+        let _history_lease = crate::commands::history::history_lease(&app_handle)?;
+        validate_item_name(&new_name)?;
+        let guard = WorkspaceGuard::new(&library_root)?;
+        let old = guard.resolve_existing(&old_path)?;
+        reject_workspace_root(&old, &guard)?;
+        let parent = old.parent().ok_or("无效路径")?;
+        let new_path = parent.join(&new_name);
+        if new_path.parent() != Some(parent) {
+            return Err("文件名包含非法字符".into());
+        }
+        let new_path = guard.resolve_for_write(&new_path)?;
+        if new_path == old {
+            return Ok(old.to_string_lossy().into_owned());
+        }
+        if new_path.exists() {
+            return Err("目标目录已存在同名项目，请使用其他名称".into());
+        }
+        super::file_management::move_to(Some(&app_handle), &guard, &old, &new_path)
+            .map_err(|error| format!("重命名失败: {error}"))?;
+        Ok(new_path.to_string_lossy().into_owned())
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -221,19 +225,23 @@ pub async fn move_item(
     source_path: String,
     target_dir: String,
 ) -> Result<String, String> {
-    let _history_lease = crate::commands::history::history_lease(&app_handle)?;
-    let guard = WorkspaceGuard::new(&library_root)?;
-    let source = guard.resolve_existing(&source_path)?;
-    reject_workspace_root(&source, &guard)?;
-    let target = guard.resolve_directory(&target_dir, false)?;
-    let file_name = source.file_name().ok_or("无效文件名")?;
-    let new_path = target.join(file_name);
-    if new_path.exists() {
-        return Err("目标目录已存在同名项".into());
-    }
-    let new_path = guard.resolve_for_write(&new_path)?;
-    super::file_management::move_to(Some(&app_handle), &guard, &source, &new_path)?;
-    Ok(new_path.to_string_lossy().into_owned())
+    tauri::async_runtime::spawn_blocking(move || {
+        let _history_lease = crate::commands::history::history_lease(&app_handle)?;
+        let guard = WorkspaceGuard::new(&library_root)?;
+        let source = guard.resolve_existing(&source_path)?;
+        reject_workspace_root(&source, &guard)?;
+        let target = guard.resolve_directory(&target_dir, false)?;
+        let file_name = source.file_name().ok_or("无效文件名")?;
+        let new_path = target.join(file_name);
+        if new_path.exists() {
+            return Err("目标目录已存在同名项".into());
+        }
+        let new_path = guard.resolve_for_write(&new_path)?;
+        super::file_management::move_to(Some(&app_handle), &guard, &source, &new_path)?;
+        Ok(new_path.to_string_lossy().into_owned())
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -242,17 +250,15 @@ pub async fn move_items(
     library_root: String,
     source_paths: Vec<String>,
     target_dir: String,
-) -> Result<(), String> {
-    for source_path in source_paths {
-        move_item(
-            app_handle.clone(),
-            library_root.clone(),
-            source_path,
-            target_dir.clone(),
-        )
-        .await?;
-    }
-    Ok(())
+) -> Result<super::file_management::OperationResult, String> {
+    super::file_management::transfer_library_items(
+        app_handle,
+        library_root,
+        source_paths,
+        Some(target_dir),
+        "move".into(),
+    )
+    .await
 }
 
 #[tauri::command]
@@ -345,7 +351,9 @@ pub async fn write_markdown_file(
 
 fn write_existing_markdown(path: &Path, content: &str) -> Result<(), String> {
     let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
-    let metadata = fs::symlink_metadata(path).map_err(|e| format!("保存目标不存在或不可访问，未在旧位置新建文件；请保留草稿并核对文件位置：{e}"))?;
+    let metadata = fs::symlink_metadata(path).map_err(|e| {
+        format!("保存目标不存在或不可访问，未在旧位置新建文件；请保留草稿并核对文件位置：{e}")
+    })?;
     if !metadata.is_file() || metadata.file_type().is_symlink() {
         return Err("保存目标不是普通文件，未写入；请保留草稿并核对文件位置".into());
     }
@@ -357,21 +365,42 @@ mod moved_markdown_save_tests {
     use super::*;
     #[test]
     fn stale_legacy_save_never_recreates_a_moved_note() {
-        let root = std::env::temp_dir().join(format!("longedit-stale-save-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let root = std::env::temp_dir().join(format!(
+            "longedit-stale-save-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
         fs::create_dir(&root).unwrap();
         let old = root.join("note.md");
         let new = root.join("renamed.md");
         fs::write(&old, "real document").unwrap();
         fs::rename(&old, &new).unwrap();
-        let result = tauri::async_runtime::block_on(write_markdown_file(root.to_string_lossy().into_owned(), old.to_string_lossy().into_owned(), "stale window body".into()));
-        assert!(result.is_err(), "a save to a disappeared path must not silently create another note");
+        let result = tauri::async_runtime::block_on(write_markdown_file(
+            root.to_string_lossy().into_owned(),
+            old.to_string_lossy().into_owned(),
+            "stale window body".into(),
+        ));
+        assert!(
+            result.is_err(),
+            "a save to a disappeared path must not silently create another note"
+        );
         assert!(!old.exists());
         assert_eq!(fs::read_to_string(new).unwrap(), "real document");
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn late_legacy_read_and_save_preserve_backup_without_resurrecting_old_path() {
-        let root = std::env::temp_dir().join(format!("longedit-stale-recovery-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let root = std::env::temp_dir().join(format!(
+            "longedit-stale-recovery-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
         fs::create_dir(&root).unwrap();
         let old = root.join("note.md");
         let new = root.join("renamed.md");
@@ -486,7 +515,8 @@ fn read_markdown(path: PathBuf) -> Result<FileContent, String> {
     // Recovery may rename a backup; even a read must not resurrect an old path
     // while an application-managed path mutation owns its subtree.
     let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
-    let metadata = fs::symlink_metadata(&path).map_err(|e| format!("读取目标不存在或不可访问，未在旧位置恢复文件：{e}"))?;
+    let metadata = fs::symlink_metadata(&path)
+        .map_err(|e| format!("读取目标不存在或不可访问，未在旧位置恢复文件：{e}"))?;
     if !metadata.is_file() || metadata.file_type().is_symlink() {
         return Err("读取目标不是普通文件，未恢复或改写文件".into());
     }
@@ -525,6 +555,8 @@ pub fn save_folder_order(
     path: String,
     order: FolderOrder,
 ) -> Result<(), String> {
+    let _activity =
+        crate::services::file_activity::read_write(&[std::path::Path::new(&library_root)])?;
     let guard = WorkspaceGuard::new(library_root)?;
     let directory = guard.resolve_directory(path, false)?;
     let order_path = directory.join(".misty_order.json");
@@ -719,44 +751,86 @@ pub async fn import_to_library(
 ) -> Result<String, String> {
     let source = access.resolve_import(&source_path)?;
     tauri::async_runtime::spawn_blocking(move || {
-        let _lock = super::file_management::OPERATIONS.lock().unwrap_or_else(|e| e.into_inner());
+        let _lock = super::file_management::OPERATIONS
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let guard = WorkspaceGuard::new(&library_root)?;
-        let destination = if target_dir.is_empty() { guard.root().to_path_buf() } else { guard.resolve_directory(&target_dir, false)? };
+        let destination = if target_dir.is_empty() {
+            guard.root().to_path_buf()
+        } else {
+            guard.resolve_directory(&target_dir, false)?
+        };
         import_selected_file(&source, &destination)
-    }).await.map_err(|e| e.to_string())?
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
-pub async fn import_library_files(access: State<'_, ExternalFileAccess>, source_paths: Vec<String>, library_root: String, target_dir: String) -> Result<super::file_management::OperationResult, String> {
-    use super::file_management::{OperationResult, OperationError, PathChange};
-    if source_paths.is_empty() || source_paths.len() > 256 { return Err("每次请选择 1 至 256 份资料".into()); }
-    let sources: Vec<_> = source_paths.into_iter().map(|raw| { let resolved = access.resolve_import(&raw); (raw, resolved) }).collect();
+pub async fn import_library_files(
+    access: State<'_, ExternalFileAccess>,
+    source_paths: Vec<String>,
+    library_root: String,
+    target_dir: String,
+) -> Result<super::file_management::OperationResult, String> {
+    use super::file_management::{OperationError, OperationResult, PathChange};
+    if source_paths.is_empty() || source_paths.len() > 256 {
+        return Err("每次请选择 1 至 256 份资料".into());
+    }
+    let sources: Vec<_> = source_paths
+        .into_iter()
+        .map(|raw| {
+            let resolved = access.resolve_import(&raw);
+            (raw, resolved)
+        })
+        .collect();
     tauri::async_runtime::spawn_blocking(move || {
-        let _lock = super::file_management::OPERATIONS.lock().unwrap_or_else(|e| e.into_inner());
+        let _lock = super::file_management::OPERATIONS
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let guard = WorkspaceGuard::new(&library_root)?;
-        let destination = if target_dir.is_empty() { guard.root().to_path_buf() } else { guard.resolve_directory(&target_dir, false)? };
+        let destination = if target_dir.is_empty() {
+            guard.root().to_path_buf()
+        } else {
+            guard.resolve_directory(&target_dir, false)?
+        };
         let mut result = OperationResult::default();
         let mut seen = HashSet::new();
         for (raw, source) in sources {
-            if source.as_ref().is_ok_and(|path| !seen.insert(path.clone())) { continue; }
+            if source.as_ref().is_ok_and(|path| !seen.insert(path.clone())) {
+                continue;
+            }
             match source.and_then(|source| import_selected_file(&source, &destination)) {
-                Ok(path) => result.items.push(PathChange { old_path: raw, new_path: path }),
+                Ok(path) => result.items.push(PathChange {
+                    old_path: raw,
+                    new_path: path,
+                }),
                 Err(message) => result.errors.push(OperationError::ordinary(raw, message)),
             }
         }
         Ok(result)
-    }).await.map_err(|e| e.to_string())?
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 fn import_selected_file(source: &Path, destination: &Path) -> Result<String, String> {
-    crate::services::external_import::import_file(source, destination).map(|path| path.to_string_lossy().into_owned())
+    crate::services::external_import::import_file(source, destination)
+        .map(|path| path.to_string_lossy().into_owned())
 }
 
 #[cfg(test)]
 mod import_regression_tests {
     use super::*;
     fn fixture(name: &str) -> PathBuf {
-        let root = std::env::temp_dir().join(format!("longedit-import-{name}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let root = std::env::temp_dir().join(format!(
+            "longedit-import-{name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
         fs::create_dir_all(root.join("source")).unwrap();
         fs::create_dir_all(root.join("library")).unwrap();
         root
@@ -766,9 +840,14 @@ mod import_regression_tests {
         let root = fixture("same-name");
         let source = root.join("source/note.md");
         let existing = root.join("library/note.md");
-        fs::write(&source, "新资料").unwrap(); fs::write(&existing, "已有资料").unwrap();
+        fs::write(&source, "新资料").unwrap();
+        fs::write(&existing, "已有资料").unwrap();
         let imported = import_selected_file(&source, &root.join("library")).unwrap();
-        assert_eq!(fs::read_to_string(&existing).unwrap(), "已有资料", "existing library content must never be overwritten");
+        assert_eq!(
+            fs::read_to_string(&existing).unwrap(),
+            "已有资料",
+            "existing library content must never be overwritten"
+        );
         assert_ne!(Path::new(&imported), existing);
         assert_eq!(fs::read_to_string(imported).unwrap(), "新资料");
         fs::remove_dir_all(root).unwrap();
@@ -776,13 +855,18 @@ mod import_regression_tests {
     #[test]
     fn external_import_never_overwrites_existing_images() {
         let root = fixture("image-collision");
-        fs::create_dir(root.join("source/images")).unwrap(); fs::create_dir(root.join("library/images")).unwrap();
+        fs::create_dir(root.join("source/images")).unwrap();
+        fs::create_dir(root.join("library/images")).unwrap();
         let source = root.join("source/note.md");
         fs::write(&source, "![图](images/a.png)").unwrap();
         fs::write(root.join("source/images/a.png"), b"new-image").unwrap();
         fs::write(root.join("library/images/a.png"), b"existing-image").unwrap();
         let imported = import_selected_file(&source, &root.join("library")).unwrap();
-        assert_eq!(fs::read(root.join("library/images/a.png")).unwrap(), b"existing-image", "existing image bytes must stay unchanged");
+        assert_eq!(
+            fs::read(root.join("library/images/a.png")).unwrap(),
+            b"existing-image",
+            "existing image bytes must stay unchanged"
+        );
         assert!(Path::new(&imported).is_file());
         fs::remove_dir_all(root).unwrap();
     }
@@ -791,7 +875,10 @@ mod import_regression_tests {
         let root = fixture("missing-image");
         let source = root.join("source/note.md");
         fs::write(&source, "![图](images/missing.png)").unwrap();
-        assert!(import_selected_file(&source, &root.join("library")).is_err(), "missing images must not be silently ignored");
+        assert!(
+            import_selected_file(&source, &root.join("library")).is_err(),
+            "missing images must not be silently ignored"
+        );
         assert!(!root.join("library/note.md").exists());
         fs::remove_dir_all(root).unwrap();
     }

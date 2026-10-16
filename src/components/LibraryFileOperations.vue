@@ -1,4 +1,5 @@
 <template>
+  <FileMoveRecoveryDialog :library-root="libraryRoot" :recovery-id="recoveryId" @close="recoveryId = ''" @resolved="finishReview" />
   <BatchRenameDialog ref="renameDialog" :library-root="libraryRoot" :before-operate="beforeOperate" :after-operate="afterOperate" />
   <n-modal :show="showTransfer" preset="card" :title="operation === 'move' ? '移动到' : '复制到'" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTransfer = show }">
     <form class="file-operation-form" @submit.prevent="executeTransfer">
@@ -6,7 +7,7 @@
       <label>目标文件夹<div class="directory-field"><n-input v-model:value="target" :disabled="busy" :input-props="{ 'aria-label': '目标文件夹' }" placeholder="资料库内的路径，例如：项目/会议" /><n-button :disabled="busy" @click="chooseDirectory"><FolderOpen :size="16" />选择</n-button></div></label>
       <small>不存在的目录会自动创建；重名时保留两份。</small>
       <p v-if="inputError" class="operation-errors" role="alert">{{ inputError }}</p>
-      <FileOperationOutcome v-if="errors.length" :completed="completedItems" :errors="errors" :operation="operation" />
+      <FileOperationOutcome v-if="errors.length" :completed="completedItems" :errors="errors" :operation="operation" @review="id => recoveryId = id" />
       <div class="dialog-actions"><n-button :disabled="busy" @click="showTransfer = false">{{ errors.length ? '关闭' : '取消' }}</n-button><n-button v-if="!errors.length || paths.length" type="primary" attr-type="submit" :loading="busy">{{ errors.length && operation === 'move' ? `重试未执行的 ${paths.length} 项` : `${operation === 'move' ? '移动' : '复制'}${errors.length ? '未完成的项目' : ''}` }}</n-button></div>
     </form>
   </n-modal>
@@ -18,7 +19,7 @@
     <div class="dialog-actions"><n-button :disabled="busy || !selectedTrash.length" @click="purgeSelected">永久删除</n-button><span></span><n-button :disabled="busy" @click="showTrash = false">关闭</n-button><n-button type="primary" :disabled="!selectedTrash.length" :loading="busy" @click="restoreSelected">恢复所选</n-button></div>
   </n-modal>
   <n-modal :show="showFeedback" preset="card" title="部分项目未完成" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" @update:show="show => { if (!busy) showFeedback = show }">
-    <FileOperationOutcome :completed="completedItems" :errors="errors" :operation="retryUndo ? 'undo' : 'copy'" />
+    <FileOperationOutcome :completed="completedItems" :errors="errors" :operation="feedbackOperation" @review="id => recoveryId = id" />
     <div class="dialog-actions"><n-button :disabled="busy" @click="showFeedback = false">关闭</n-button><n-button v-if="retryUndo && lastLibraryMove?.items.length" type="primary" :loading="busy" @click="undoMove">重试未执行的 {{ lastLibraryMove.items.length }} 项</n-button></div>
   </n-modal>
 </template>
@@ -27,6 +28,7 @@
 import { ref, watch } from 'vue'
 import BatchRenameDialog from './BatchRenameDialog.vue'
 import FileOperationOutcome from './FileOperationOutcome.vue'
+import FileMoveRecoveryDialog from './FileMoveRecoveryDialog.vue'
 import { NModal, NInput, NButton, useDialog, useMessage } from 'naive-ui'
 import { FolderOpen, Folder, FileText, RefreshCw } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -38,6 +40,11 @@ import { beginWindowSave } from '../services/windowDrafts'
 const props = defineProps<{ libraryRoot: string; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void> }>()
 const dialog = useDialog(), message = useMessage()
 const renameDialog = ref<InstanceType<typeof BatchRenameDialog> | null>(null)
+const recoveryId = ref('')
+const feedbackOperation = ref<FileOperation>('copy')
+const showMoveOutcome = (result: FileOperationResult) => { root.value = props.libraryRoot; completedItems.value = [...result.items]; errors.value = result.errors; feedbackOperation.value = 'move'; retryUndo.value = false; showFeedback.value = true }
+const openRecovery = () => { if (!busy.value) recoveryId.value = 'pending' }
+const finishReview = (id: string) => { errors.value = errors.value.filter(error => error.recoveryId !== id); recoveryId.value = ''; message.success('已完成文件位置核对') }
 const openRename = (paths: string[]) => renameDialog.value?.open(paths)
 const modalStyle = { width: 'min(560px, calc(100vw - 28px))' }
 const showTransfer = ref(false), showTrash = ref(false), loadingTrash = ref(false), operation = ref<'move' | 'copy'>('move')
@@ -82,7 +89,7 @@ const executeTransfer = async () => {
   const retained = errors.value.filter(error => !canRetryFileError(error, operation.value))
   const attempted = [...paths.value]
   busy.value = true
-  const finish = beginWindowSave()
+  const finish = beginWindowSave(operation.value === 'move' ? 'relocation' : 'save')
   try {
     const result = await invoke<FileOperationResult>('transfer_library_items', { libraryRoot: root.value, paths: paths.value, targetDir: target.value.trim() || '.', operation: operation.value })
     await publish(result, operation.value)
@@ -97,6 +104,7 @@ const executeTransfer = async () => {
   finally { busy.value = false; finish() }
 }
 const duplicate = async (selection: string[]) => {
+  feedbackOperation.value = 'copy'
   if (busy.value || !await props.beforeOperate(selection, 'copy')) return
   root.value = props.libraryRoot; busy.value = true; completedItems.value = []
   const finish = beginWindowSave()
@@ -149,6 +157,7 @@ const purgeSelected = async () => {
   finally { busy.value = false; finish() }
 }
 const undoMove = async () => {
+  feedbackOperation.value = 'undo'
   const last = lastLibraryMove.value
   if (!last || busy.value || !sameLibrary(last.root, props.libraryRoot) || !await props.beforeOperate(last.items.map(item => item.newPath), 'undo')) return
   if (busy.value || last !== lastLibraryMove.value || !sameLibrary(last.root, props.libraryRoot)) return
@@ -156,7 +165,7 @@ const undoMove = async () => {
   if (!showFeedback.value || !retryUndo.value) completedItems.value = []
   const attempted = [...last.items]
   root.value = last.root; busy.value = true
-  const finish = beginWindowSave()
+  const finish = beginWindowSave('relocation')
   try {
     const result = await invoke<FileOperationResult>('undo_library_moves', { libraryRoot: root.value, items: last.items })
     await publish(result, 'undo'); completedItems.value.push(...result.items)
@@ -171,7 +180,7 @@ const undoMove = async () => {
   finally { busy.value = false; finish() }
 }
 watch(() => props.libraryRoot, () => { showTransfer.value = false; showTrash.value = false; showFeedback.value = false })
-defineExpose({ openTransfer, openTrash, duplicate, recycle, undoMove, openRename })
+defineExpose({ openTransfer, openTrash, duplicate, recycle, undoMove, openRename, openRecovery, showMoveOutcome })
 </script>
 
 <style scoped>

@@ -169,6 +169,49 @@ fn local(value: &str) -> bool {
 }
 
 pub(super) fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
+    mentions_impl(document, text, false)
+}
+pub(super) fn move_mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
+    mentions_impl(document, text, true)
+}
+fn literal_destination(
+    text: &str,
+    offset: usize,
+    end: usize,
+    target: &str,
+) -> Option<DestinationSpan> {
+    let raw = text.get(offset..end)?;
+    let trimmed = raw.trim_start();
+    let mut start = offset + raw.len() - trimmed.len();
+    let angle = trimmed.starts_with('<');
+    if angle {
+        start += 1;
+    }
+    let end = start.checked_add(target.len())?;
+    if target.is_empty() || text.get(start..end) != Some(target) {
+        return None;
+    }
+    let following = text.get(end..)?.chars().next();
+    if angle && following != Some('>')
+        || !angle && following.is_some_and(|c| !c.is_whitespace() && c != ')')
+    {
+        return None;
+    }
+    Some(DestinationSpan {
+        start,
+        end,
+        original: target.into(),
+    })
+}
+fn definition_destination(
+    text: &str,
+    range: std::ops::Range<usize>,
+    target: &str,
+) -> Option<DestinationSpan> {
+    let offset = text.get(range.clone())?.find("]:")? + range.start + 2;
+    literal_destination(text, offset, range.end, target)
+}
+fn mentions_impl(document: &str, text: &str, for_move: bool) -> Vec<DependencyEvidence> {
     use pulldown_cmark::{Event, LinkType, Parser, Tag};
     let snapshot_sha256 = format!("{:x}", Sha256::digest(text.as_bytes()));
     let mut found = vec![];
@@ -186,6 +229,11 @@ pub(super) fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
         }
     };
     let parser = Parser::new(text);
+    let definitions: Vec<_> = parser
+        .reference_definitions()
+        .iter()
+        .map(|(id, definition)| (id.to_string().to_lowercase(), definition.span.clone()))
+        .collect();
     let mut definition_offsets = std::collections::HashSet::new();
     let mut code_ranges = Vec::new();
     // Keep unused definitions as conservative evidence as well as resolved uses.
@@ -195,7 +243,11 @@ pub(super) fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
             &definition.dest,
             definition.span.start,
             "reference_definition",
-            None,
+            if for_move {
+                definition_destination(text, definition.span.clone(), &definition.dest)
+            } else {
+                None
+            },
         );
     }
     for (event, range) in parser.into_offset_iter() {
@@ -205,28 +257,57 @@ pub(super) fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
                 Tag::Link {
                     dest_url,
                     link_type,
+                    id,
                     ..
                 }
                 | Tag::Image {
                     dest_url,
                     link_type,
+                    id,
                     ..
                 },
             ) => {
                 let span = if link_type == LinkType::Inline {
-                    inline_destination_span(text, range.clone(), &dest_url)
+                    inline_destination_span(text, range.clone(), &dest_url).or_else(|| {
+                        if for_move {
+                            let raw = text.get(range.clone())?;
+                            let offset = raw.rfind("](")? + range.start + 2;
+                            literal_destination(text, offset, range.end, &dest_url)
+                        } else {
+                            None
+                        }
+                    })
+                } else if for_move {
+                    definitions
+                        .iter()
+                        .find(|(key, _)| key == &id.to_lowercase())
+                        .and_then(|(_, definition)| {
+                            definition_destination(text, definition.clone(), &dest_url)
+                        })
                 } else {
                     None
                 };
                 add(&dest_url, range.start, "markdown", span);
             }
             Event::Html(_) | Event::InlineHtml(_) => {
+                if for_move && text[range.clone()].trim_start().starts_with("<!--") {
+                    continue;
+                }
                 for capture in HTML.captures_iter(&text[range.clone()]) {
                     add(
                         &capture[1],
                         range.start + capture.get(0).unwrap().start(),
                         "html_attribute",
-                        None,
+                        if for_move {
+                            let value = capture.get(1).unwrap();
+                            Some(DestinationSpan {
+                                start: range.start + value.start(),
+                                end: range.start + value.end(),
+                                original: value.as_str().into(),
+                            })
+                        } else {
+                            None
+                        },
                     );
                 }
             }
@@ -277,7 +358,9 @@ fn basename(value: &str) -> String {
 
 impl Inventory {
     /// Read-only evidence access; this does not establish exhaustive syntax support.
-    pub(crate) fn evidence(&self) -> &[DependencyEvidence] { &self.evidence }
+    pub(crate) fn evidence(&self) -> &[DependencyEvidence] {
+        &self.evidence
+    }
     #[cfg(test)]
     pub(crate) fn report_move(
         &self,
@@ -446,14 +529,17 @@ impl Inventory {
 }
 
 pub(crate) fn scan(root: &str) -> Result<Inventory, String> {
-    scan_impl(root, false)
+    scan_impl(root, false, false)
 }
 
 pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
-    scan_impl(root, true)
+    scan_impl(root, true, false)
+}
+pub(crate) fn scan_for_move(root: &str) -> Result<Inventory, String> {
+    scan_impl(root, true, true)
 }
 
-fn scan_impl(root: &str, visible_only: bool) -> Result<Inventory, String> {
+fn scan_impl(root: &str, visible_only: bool, for_move: bool) -> Result<Inventory, String> {
     let guard = WorkspaceGuard::new(root)?;
     let mut dirs: Vec<PathBuf> = vec![guard.root().to_path_buf()];
     let mut remaining = 32 * 1024 * 1024u64;
@@ -468,7 +554,9 @@ fn scan_impl(root: &str, visible_only: bool) -> Result<Inventory, String> {
             }
             let name = entry.file_name();
             let name = name.to_string_lossy();
-            if name == ".git" || (visible_only && (name.starts_with('.') || name.ends_with(".assets"))) {
+            if name == ".git"
+                || (visible_only && (name.starts_with('.') || name.ends_with(".assets")))
+            {
                 continue;
             }
             let metadata = fs::symlink_metadata(entry.path()).map_err(|e| e.to_string())?;
@@ -502,7 +590,11 @@ fn scan_impl(root: &str, visible_only: bool) -> Result<Inventory, String> {
             remaining -= bytes.len() as u64;
             let text = std::str::from_utf8(&bytes)
                 .map_err(|_| format!("非 UTF-8 Markdown，依赖检查未完成: {}", path.display()))?;
-            evidence.extend(mentions(&path.to_string_lossy(), text));
+            evidence.extend(if for_move {
+                move_mentions(&path.to_string_lossy(), text)
+            } else {
+                mentions(&path.to_string_lossy(), text)
+            });
             if evidence.len() > 20_000 {
                 return Err("依赖候选超过上限，检查未完成".into());
             }
@@ -652,17 +744,27 @@ mod tests {
 
     impl Fixture {
         fn new() -> Self {
-            Self::with_timestamp(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos())
+            Self::with_timestamp(
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos(),
+            )
         }
         fn with_timestamp(timestamp: u128) -> Self {
             static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
             loop {
-                let path = std::env::temp_dir().join(format!("archive-resolve-{}-{}-{}", std::process::id(), timestamp, NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+                let path = std::env::temp_dir().join(format!(
+                    "archive-resolve-{}-{}-{}",
+                    std::process::id(),
+                    timestamp,
+                    NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                ));
                 match fs::create_dir(&path) {
                     Ok(()) => {
                         fs::create_dir(path.join("notes")).unwrap();
                         return Self(path.canonicalize().unwrap());
-                    },
+                    }
                     Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
                     Err(e) => panic!("cannot create isolated fixture: {e}"),
                 }
@@ -690,15 +792,24 @@ mod tests {
     }
     #[test]
     fn archive_same_timestamp_fixtures_never_share_content_or_cleanup() {
-        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let first = Fixture::with_timestamp(timestamp);
         fs::create_dir(first.0.join("project")).unwrap();
         fs::write(first.0.join("project/own.md"), "first fixture").unwrap();
         let second = Fixture::with_timestamp(timestamp);
-        assert_ne!(first.0, second.0, "parallel fixtures must not share a timestamp-only directory");
+        assert_ne!(
+            first.0, second.0,
+            "parallel fixtures must not share a timestamp-only directory"
+        );
         assert!(!second.0.join("project").exists());
         drop(second);
-        assert_eq!(fs::read_to_string(first.0.join("project/own.md")).unwrap(), "first fixture");
+        assert_eq!(
+            fs::read_to_string(first.0.join("project/own.md")).unwrap(),
+            "first fixture"
+        );
     }
     #[test]
     fn archive_relative_resolution_respects_document_directory_and_encoded_hash() {

@@ -1414,7 +1414,7 @@ const mayLeave = () => {
   })
 }
 const leaveDocx = () => { if (isExternal.value) void router.push({ name: 'LibraryMode' }); else router.back() }
-useWindowDraft(() => draftCount.value > 0)
+useWindowDraft(() => draftCount.value > 0, () => String(route.query.path || store.activeTabId || ''))
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (draftCount.value) {
     event.preventDefault()

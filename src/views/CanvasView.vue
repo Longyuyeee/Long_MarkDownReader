@@ -1501,7 +1501,7 @@ const mayLeave = async () => !['dirty', 'error'].includes(saveState.value)
     positiveText: '放弃修改并离开',
     danger: true,
   })
-useWindowDraft(() => ['dirty', 'saving', 'error'].includes(saveState.value))
+useWindowDraft(() => ['dirty', 'saving', 'error'].includes(saveState.value), () => String(route.query.path || store.activeTabId || ''))
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (!['dirty', 'error'].includes(saveState.value)) return
   event.preventDefault()

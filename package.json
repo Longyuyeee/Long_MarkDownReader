@@ -1,13 +1,15 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.1.5",
+  "version": "1.1.6",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "test:file-management-browser": "node scripts/test-file-management-browser.mjs",
+    "test:file-move-protection": "node --test scripts/test-file-move-protection.mjs",
+    "test:file-move-browser": "node scripts/test-file-move-continuity-browser.mjs",
     "test:move-outcome-browser": "node scripts/test-move-outcome-browser.mjs",
     "test:specialized-save-browser": "node scripts/test-specialized-save-browser.mjs",
     "test:secondary-write-browser": "node scripts/test-secondary-write-browser.mjs",

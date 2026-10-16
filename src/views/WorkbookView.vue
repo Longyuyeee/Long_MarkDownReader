@@ -4937,7 +4937,7 @@ const handleShortcut = (event: KeyboardEvent) => {
   else if (!isExternal.value && !formulaFocused && key === 'z') { event.preventDefault(); undo() }
   else if (!isExternal.value && !formulaFocused && key === 'y') { event.preventDefault(); redo() }
 }
-useWindowDraft(() => dirtyCount.value > 0)
+useWindowDraft(() => dirtyCount.value > 0, () => String(route.query.path || store.activeTabId || ''))
 const warnBeforeUnload = (event: BeforeUnloadEvent) => { if (dirtyCount.value) event.preventDefault() }
 const handleWindowPointerDown = (event: PointerEvent) => {
   if (!(event.target as HTMLElement | null)?.closest('.validation-picker, .validation-menu')) closeValidationMenu()

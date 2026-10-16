@@ -185,6 +185,8 @@ pub async fn save_file_relation(
     relation_type: String,
     note: String,
 ) -> Result<FileRelation, String> {
+    let _activity =
+        crate::services::file_activity::read_write(&[std::path::Path::new(&library_root)])?;
     tauri::async_runtime::spawn_blocking(move || {
         save(
             &library_root,
@@ -199,6 +201,8 @@ pub async fn save_file_relation(
 }
 #[tauri::command]
 pub async fn remove_file_relation(library_root: String, relation_id: String) -> Result<(), String> {
+    let _activity =
+        crate::services::file_activity::read_write(&[std::path::Path::new(&library_root)])?;
     tauri::async_runtime::spawn_blocking(move || {
         let _lock = RELATION_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let guard = WorkspaceGuard::new(&library_root)?;
@@ -214,15 +218,29 @@ pub async fn remove_file_relation(library_root: String, relation_id: String) -> 
     .map_err(|e| e.to_string())?
 }
 fn update(root: &str, id: &str, kind: &str, note: &str) -> Result<FileRelation, String> {
-    if !TYPES.contains(&kind) || note.chars().count() > 2000 { return Err("关系类型无效或说明超过 2000 字".into()); }
-    let _lock = RELATION_LOCK.lock().unwrap_or_else(|error| error.into_inner());
+    if !TYPES.contains(&kind) || note.chars().count() > 2000 {
+        return Err("关系类型无效或说明超过 2000 字".into());
+    }
+    let _lock = RELATION_LOCK
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
     let guard = WorkspaceGuard::new(root)?;
     let mut file = read(guard.root())?;
-    let index = file.relations.iter().position(|entry| entry.id == id).ok_or("关系已移除，请刷新后重试")?;
+    let index = file
+        .relations
+        .iter()
+        .position(|entry| entry.id == id)
+        .ok_or("关系已移除，请刷新后重试")?;
     let current = &file.relations[index];
-    if file.relations.iter().any(|entry| entry.id != id && entry.relation_type == kind &&
-        ((entry.source_path == current.source_path && entry.target_path == current.target_path)
-        || (kind == "related" && entry.source_path == current.target_path && entry.target_path == current.source_path))) {
+    if file.relations.iter().any(|entry| {
+        entry.id != id
+            && entry.relation_type == kind
+            && ((entry.source_path == current.source_path
+                && entry.target_path == current.target_path)
+                || (kind == "related"
+                    && entry.source_path == current.target_path
+                    && entry.target_path == current.source_path))
+    }) {
         return Err("这两份文件之间已有同类型关系，请编辑已有关系".into());
     }
     file.relations[index].id = key(&current.source_path, &current.target_path, kind);
@@ -235,15 +253,38 @@ fn update(root: &str, id: &str, kind: &str, note: &str) -> Result<FileRelation, 
 #[cfg(test)]
 #[test]
 fn editing_relation_type_preserves_files_and_future_deduplication() {
-    let root = std::env::temp_dir().join(format!("longedit-relation-edit-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+    let root = std::env::temp_dir().join(format!(
+        "longedit-relation-edit-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
     fs::create_dir(&root).unwrap();
-    let a = root.join("a.md"); let b = root.join("b.txt");
-    fs::write(&a, "note").unwrap(); fs::write(&b, "source").unwrap();
-    let original = save(root.to_str().unwrap(), a.to_str().unwrap(), b.to_str().unwrap(), "related", "原说明").unwrap();
+    let a = root.join("a.md");
+    let b = root.join("b.txt");
+    fs::write(&a, "note").unwrap();
+    fs::write(&b, "source").unwrap();
+    let original = save(
+        root.to_str().unwrap(),
+        a.to_str().unwrap(),
+        b.to_str().unwrap(),
+        "related",
+        "原说明",
+    )
+    .unwrap();
     let edited = update(root.to_str().unwrap(), &original.id, "cites", "新说明").unwrap();
     assert_ne!(original.id, edited.id);
     assert_eq!(read(&root).unwrap().relations[0].note, "新说明");
-    save(root.to_str().unwrap(), a.to_str().unwrap(), b.to_str().unwrap(), "related", "另一个关系").unwrap();
+    save(
+        root.to_str().unwrap(),
+        a.to_str().unwrap(),
+        b.to_str().unwrap(),
+        "related",
+        "另一个关系",
+    )
+    .unwrap();
     assert_eq!(read(&root).unwrap().relations.len(), 2);
     assert!(update(root.to_str().unwrap(), &edited.id, "related", "不应覆盖").is_err());
     assert_eq!(fs::read_to_string(a).unwrap(), "note");
@@ -251,8 +292,19 @@ fn editing_relation_type_preserves_files_and_future_deduplication() {
     fs::remove_dir_all(root).unwrap();
 }
 #[tauri::command]
-pub async fn update_file_relation(library_root: String, relation_id: String, relation_type: String, note: String) -> Result<FileRelation, String> {
-    tauri::async_runtime::spawn_blocking(move || update(&library_root, &relation_id, &relation_type, &note)).await.map_err(|error| error.to_string())?
+pub async fn update_file_relation(
+    library_root: String,
+    relation_id: String,
+    relation_type: String,
+    note: String,
+) -> Result<FileRelation, String> {
+    let _activity =
+        crate::services::file_activity::read_write(&[std::path::Path::new(&library_root)])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        update(&library_root, &relation_id, &relation_type, &note)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 #[tauri::command]
 pub async fn list_file_relations(
@@ -532,7 +584,10 @@ mod tests {
         let occupied = fs::read_to_string(&target).unwrap();
         let after = fs::read(root.join(DIRECTORY).join(FILE)).unwrap();
         fs::remove_dir_all(&root).unwrap();
-        assert!(outcome.is_err(), "a late destination must reject the rename");
+        assert!(
+            outcome.is_err(),
+            "a late destination must reject the rename"
+        );
         assert_eq!(original.unwrap(), "用户正在整理的原记录");
         assert_eq!(occupied, "其他程序刚刚保存的内容");
         assert_eq!(after, relations);

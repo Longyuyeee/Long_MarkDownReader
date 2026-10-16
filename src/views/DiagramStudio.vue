@@ -456,7 +456,7 @@ const mayLeave = async () => !dirty.value || await confirmAppAction(dialog, {
   positiveText: '放弃修改并离开',
   danger: true,
 })
-useWindowDraft(() => dirty.value)
+useWindowDraft(() => dirty.value, () => String(route.query.path || store.activeTabId || ''))
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 
 watch([diagramPath, isExternal], loadDiagram)

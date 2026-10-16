@@ -2656,7 +2656,7 @@ const mayDiscardPagePlan = async () => !pdfWorkspaceDirty.value || await confirm
   positiveText: '放弃草稿并离开',
   danger: true,
 })
-useWindowDraft(() => pdfWorkspaceDirty.value)
+useWindowDraft(() => pdfWorkspaceDirty.value, () => String(route.query.path || store.activeTabId || ''))
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   if (!pdfWorkspaceDirty.value) return
   event.preventDefault()

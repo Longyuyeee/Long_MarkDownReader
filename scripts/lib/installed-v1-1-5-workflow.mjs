@@ -5,7 +5,7 @@ import { waitForInstalledIndex } from './installed-index-readiness.mjs'
 
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || appVersion !== '1.1.5') throw Error('Disposable 1.1.5 installation required')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
   if (path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') throw Error('Only the disposable installer fixture library may be changed')
   const harnessSourceCommit = process.env.GITHUB_SHA || process.env.LONGEDIT_INSTALLED_HARNESS_COMMIT || ''
   assert.match(harnessSourceCommit, /^[a-f0-9]{40}$/, 'record the exact installer verification harness revision')

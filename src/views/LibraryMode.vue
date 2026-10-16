@@ -803,6 +803,7 @@ import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
 import { confirmAppAction } from '../services/appDialog'
 import { recordWindowDraftActivity, beginWindowSave, useWindowDraftSnapshot } from '../services/windowDrafts'
+import { type FileMoveNotice } from '../services/fileMoveProtection'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
 import { isActiveThemeDark } from '../config/themePresets'
@@ -1817,6 +1818,7 @@ const destinationMenuOptions = () => [
   { label: '粘贴 (Ctrl+V)', key: 'file-paste', disabled: !clipboardAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(PasteFileIcon) },
   { label: '撤销上次移动', key: 'file-undo-move', disabled: !undoMoveAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(UndoFileIcon) },
   { label: '资料库回收站…', key: 'file-trash', disabled: fileOperationBusy.value, icon: fileMenuIcon(TrashIcon) },
+  { label: '核对未完成的移动…', key: 'file-move-review', disabled: fileOperationBusy.value, icon: fileMenuIcon(RefreshIcon) },
 ]
 const beforeFileOperation = async (paths: string[], operation: FileOperation) => {
   if (fileDropBusy.value) { message.info('文件正在移动，请稍后再操作'); return false }
@@ -3026,6 +3028,7 @@ const onMouseUp = async (event: MouseEvent) => {
       }
 
       let moveMessage: ReturnType<typeof message.loading> | undefined
+      const finishRelocation = beginWindowSave('relocation')
       try {
         fileDropBusy.value = true
         moveMessage = message.loading(`正在移动...`, { duration: 0 })
@@ -3047,16 +3050,12 @@ const onMouseUp = async (event: MouseEvent) => {
           return parent !== finalTargetDir
         })
 
+        let moved: FileOperationResult['items'] = []
         if (moveTasks.length > 0) {
-          await invoke('move_items', { libraryRoot: store.libraryPath, sourcePaths: moveTasks, targetDir: finalTargetDir })
-          for (const oldPath of moveTasks) {
-            const separator = finalTargetDir.includes('\\') ? '\\' : '/'
-            const newPath = `${finalTargetDir}${separator}${fileNameWithExtension(oldPath)}`
-            await syncRenamedWorkspaceReferences(oldPath, newPath)
-            try { await store.moveFileDisplayStyles(oldPath, newPath) }
-            catch (error) { message.warning(`文件已移动，样式已保留，但设置暂未保存：${String(error)}`) }
-          }
-          lastLibraryMove.value = { root: store.libraryPath, items: moveTasks.map(oldPath => ({ oldPath, newPath: `${finalTargetDir}${finalTargetDir.includes('\\') ? '\\' : '/'}${fileNameWithExtension(oldPath)}` })) }
+          const result = await invoke<FileOperationResult>('move_items', { libraryRoot: store.libraryPath, sourcePaths: moveTasks, targetDir: finalTargetDir })
+          moved = result.items
+          if (result.items.length) { await applyFileOperation(result, 'move'); lastLibraryMove.value = { root: store.libraryPath, items: result.items } }
+          if (result.errors.length) { fileOperations.value?.showMoveOutcome(result); return }
         }
 
         // 2. 逻辑排序逻辑 (Misty Order)
@@ -3067,7 +3066,7 @@ const onMouseUp = async (event: MouseEvent) => {
           .map(e => e.name)
         
         // 移除正在移动的项
-        const movingNames = sourcePaths.map(p => p.split(/[\\/]/).pop() || '')
+        const movingNames = sourcePaths.map(path => fileNameWithExtension(moved.find(item => sameLibrary(item.oldPath, path))?.newPath || path))
         currentItems = currentItems.filter(name => !movingNames.includes(name))
 
         // 插入到新位置
@@ -3105,7 +3104,7 @@ const onMouseUp = async (event: MouseEvent) => {
 
         await requestLibraryTreeReveal(finalTargetDir, true)
         const separator = finalTargetDir.includes('\\') ? '\\' : '/'
-        selectedKeys.value = sourcePaths.map(path => `${finalTargetDir}${separator}${fileNameWithExtension(path)}`)
+        selectedKeys.value = sourcePaths.map(path => moved.find(item => sameLibrary(item.oldPath, path))?.newPath || `${finalTargetDir}${separator}${fileNameWithExtension(path)}`)
         await nextTick()
         treeInstRef.value?.scrollTo({ key: selectedKeys.value[0], behavior: 'auto' })
         const targetLabel = finalTargetDir === store.libraryPath ? '资料库根目录' : fileNameWithExtension(finalTargetDir)
@@ -3115,6 +3114,7 @@ const onMouseUp = async (event: MouseEvent) => {
       } finally {
         moveMessage?.destroy()
         fileDropBusy.value = false
+        finishRelocation()
       }
     }
   }
@@ -3440,6 +3440,7 @@ const onMenuAction = async (key: string) => {
   if (key === 'file-paste') { const clipboard = libraryFileClipboard.value; if (clipboard && clipboardAvailable.value) fileOperations.value?.openTransfer(clipboard.paths, clipboard.operation, directory); return }
   if (key === 'file-undo-move') { await fileOperations.value?.undoMove(); return }
   if (key === 'file-trash') { fileOperations.value?.openTrash(); return }
+  if (key === 'file-move-review') { fileOperations.value?.openRecovery(); return }
   if (key === 'file-recycle') { await fileOperations.value?.recycle(selection); return }
   if (key.startsWith('create-format:')) {
     const [formatId, extension] = key.slice('create-format:'.length).split(':')
@@ -3622,6 +3623,24 @@ const syncRenamedWorkspaceReferences = async (oldPath: string, newPath: string) 
   const routePath = typeof route.query.path === 'string' ? route.query.path : ''
   const nextRoutePath = routePath ? replaceRenamedPath(routePath, oldPath, newPath) : ''
   if (nextRoutePath && nextRoutePath !== routePath) await openManagedFile(router, nextRoutePath, {}, 'replace')
+}
+
+const refreshAfterFileMove = (event: Event) => {
+  const { notice, pending } = (event as CustomEvent<{ notice: FileMoveNotice; pending: Promise<unknown>[] }>).detail
+  if (!sameLibrary(notice.root, store.libraryPath)) return
+  pending.push((async () => {
+    selectedKeys.value = selectedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+    expandedKeys.value = expandedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+    const tab = tabs.value.find(item => item.id === activeTabId.value)
+    if (tab && !tab.isDirty && activeIsMarkdown.value && notice.documents.some(path => sameLibrary(path, tab.path))) {
+      const scroller = document.querySelector('.editor-main .vditor-wysiwyg > .vditor-reset') as HTMLElement | null
+      const top = scroller?.scrollTop
+      await loadFileToEditor(tab.path, true)
+      if (scroller && top !== undefined) scroller.scrollTop = top
+    }
+    await refreshLibrary()
+    announceFileRelationsChanged(store.libraryPath)
+  })())
 }
 
 const executeRename = async () => {
@@ -4200,6 +4219,7 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
   document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
   document.addEventListener('pointerup', rememberReferenceInsertionPoint)
   document.addEventListener('keyup', rememberReferenceInsertionPoint)
@@ -4267,6 +4287,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('longedit:file-move-completed', refreshAfterFileMove)
   resetFileDrag()
   closeHistoryComparison()
   invalidateHistory()

@@ -74,6 +74,7 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
+| v1.1.6 候选 | 移动、改名后接续本地图片与文档链接；多窗口草稿保护、PDF 伴随记录和中断恢复。正在进行固定安装包验证，当前公开下载仍为 v1.1.5 | [候选说明](docs/RELEASE_NOTES_v1.1.6.md) · [当前进度](docs/V1_1_6_Unsigned_Community_Release_Audit_2026-10-16.md) |
 | NSIS 安装程序 | [LongEdit_1.1.5_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.5/LongEdit_1.1.5_x64-setup.exe) | 推荐，大多数用户 |
 | MSI 安装程序 | [LongEdit_1.1.5_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.5/LongEdit_1.1.5_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
 | 校验与说明 | [Release v1.1.5](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5) | Release Notes 与 SHA-256 |

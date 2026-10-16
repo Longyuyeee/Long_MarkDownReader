@@ -2884,6 +2884,7 @@ pub async fn read_pdf_ocr(
 ) -> Result<PdfOcrDocument, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let pdf = guard.resolve_existing_file(pdf_path, &["pdf"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&pdf)?;
     let path = ocr_path(&pdf)?;
     recover_interrupted_write(&path)?;
     if !path.exists() {
@@ -2911,6 +2912,7 @@ pub async fn write_pdf_ocr(
 ) -> Result<(), String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let pdf = guard.resolve_existing_file(pdf_path, &["pdf"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&pdf)?;
     let fingerprint = document.source.fingerprint.take();
     document.source = ocr_source(&pdf, fingerprint)?;
     document.pages.sort_by_key(|page| page.page);
@@ -2954,6 +2956,7 @@ pub async fn read_pdf_annotations(
 ) -> Result<PdfAnnotationDocument, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let pdf = guard.resolve_existing_file(pdf_path, &["pdf"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&pdf)?;
     let path = annotation_path(&pdf)?;
     recover_interrupted_write(&path)?;
     if !path.exists() {
@@ -2982,6 +2985,7 @@ pub async fn write_pdf_annotations(
 ) -> Result<(), String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let pdf = guard.resolve_existing_file(pdf_path, &["pdf"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&pdf)?;
     let fingerprint = document.source.fingerprint.take();
     document.source = annotation_source(&pdf, fingerprint)?;
     validate_pdf_annotations(&document)?;
