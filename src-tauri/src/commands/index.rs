@@ -17,7 +17,7 @@ use crate::services::pdf_index::load_pdf_index;
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
@@ -25,6 +25,10 @@ use tauri::{AppHandle, Manager, State};
 const MAX_SEARCH_RESULTS: usize = 200;
 const MAX_LOCATED_MATCHES_PER_KIND: usize = 5;
 const MAX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
+
+#[cfg(test)]
+#[path = "index_search_ranking_tests.rs"]
+mod search_ranking_tests;
 
 fn knowledge_index_cache_root(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
@@ -423,15 +427,84 @@ pub async fn preview_search_document(
     .map_err(|error| format!("读取预览失败：{error}"))?
 }
 
+// Best first, with exact identity tie-breakers rather than filesystem/index order.
+// Keep case-sensitive paths distinct, as the existing frontend grouping does.
+fn compare_search_results(
+    left: &KnowledgeSearchResult,
+    right: &KnowledgeSearchResult,
+) -> std::cmp::Ordering {
+    right
+        .score
+        .cmp(&left.score)
+        .then_with(|| left.title.cmp(&right.title))
+        .then_with(|| left.path.cmp(&right.path))
+        .then_with(|| left.page.cmp(&right.page))
+        .then_with(|| left.object_type.cmp(&right.object_type))
+        .then_with(|| left.match_kind.cmp(&right.match_kind))
+        .then_with(|| left.annotation_id.cmp(&right.annotation_id))
+        .then_with(|| left.locator_kind.cmp(&right.locator_kind))
+        .then_with(|| left.locator_object_id.cmp(&right.locator_object_id))
+        .then_with(|| left.location_label.cmp(&right.location_label))
+        .then_with(|| left.context.cmp(&right.context))
+        .then_with(|| left.extraction_failed.cmp(&right.extraction_failed))
+}
+
 fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
-    results.sort_by(|left, right| {
-        right
-            .score
-            .cmp(&left.score)
-            .then_with(|| left.title.cmp(&right.title))
-            .then_with(|| left.page.cmp(&right.page))
-    });
+    results.sort_by(compare_search_results);
     results.truncate(MAX_SEARCH_RESULTS);
+}
+
+struct RankedSearchResult(KnowledgeSearchResult);
+
+impl PartialEq for RankedSearchResult {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other).is_eq()
+    }
+}
+impl Eq for RankedSearchResult {}
+impl PartialOrd for RankedSearchResult {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for RankedSearchResult {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        compare_search_results(&self.0, &other.0)
+    }
+}
+
+// The heap root is the worst retained match. Inspect later candidates without
+// collecting every matching payload or stopping before a better file is seen.
+struct SearchResultCollector {
+    heap: BinaryHeap<RankedSearchResult>,
+}
+
+impl SearchResultCollector {
+    fn new() -> Self {
+        Self {
+            heap: BinaryHeap::with_capacity(MAX_SEARCH_RESULTS),
+        }
+    }
+
+    fn push(&mut self, result: KnowledgeSearchResult) {
+        if self.heap.len() < MAX_SEARCH_RESULTS {
+            self.heap.push(RankedSearchResult(result));
+        } else if compare_search_results(&result, &self.heap.peek().unwrap().0).is_lt() {
+            self.heap.peek_mut().unwrap().0 = result;
+        }
+    }
+
+    fn extend(&mut self, results: impl IntoIterator<Item = KnowledgeSearchResult>) {
+        for result in results {
+            self.push(result);
+        }
+    }
+
+    fn into_results(self) -> Vec<KnowledgeSearchResult> {
+        let mut results = self.heap.into_iter().map(|entry| entry.0).collect::<Vec<_>>();
+        results.sort_by(compare_search_results);
+        results
+    }
 }
 
 pub(crate) fn search_segments(
@@ -451,14 +524,11 @@ fn search_literal_segments(
     segments: &[IndexedSearchSegment],
     query: &str,
 ) -> Vec<KnowledgeSearchResult> {
-    let mut results = Vec::new();
+    let mut results = SearchResultCollector::new();
     let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
     for segment in segments {
-        if results.len() >= MAX_SEARCH_RESULTS {
-            break;
-        }
         if segment.title.to_lowercase().contains(query) && title_paths.insert(segment.path.as_str())
         {
             results.push(KnowledgeSearchResult {
@@ -537,8 +607,7 @@ fn search_literal_segments(
             extraction_failed: segment.extraction_failed,
         });
     }
-    sort_search_results(&mut results);
-    results
+    results.into_results()
 }
 
 fn search_complex_segments(
@@ -574,7 +643,7 @@ fn search_complex_segments(
         entry.2 = entry.2.max(hits);
         segment_hits.push(hits);
     }
-    let mut results = Vec::new();
+    let mut results = SearchResultCollector::new();
     let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
@@ -584,9 +653,6 @@ fn search_complex_segments(
         };
         if *excluded || found.iter().any(|found| !found) {
             continue;
-        }
-        if results.len() >= MAX_SEARCH_RESULTS {
-            break;
         }
         if parsed
             .positive
@@ -677,20 +743,15 @@ fn search_complex_segments(
             extraction_failed: segment.extraction_failed,
         });
     }
-    sort_search_results(&mut results);
-    results
+    results.into_results()
 }
 
-fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchResult>) {
-    if results.len() >= MAX_SEARCH_RESULTS {
-        return;
-    }
+fn search_recursive(dir: &Path, query: &str, results: &mut SearchResultCollector) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
     for entry in entries.flatten() {
-        if results.len() >= MAX_SEARCH_RESULTS
-            || entry
+        if entry
                 .file_type()
                 .map(|kind| kind.is_symlink())
                 .unwrap_or(true)
@@ -1039,10 +1100,9 @@ fn search_workspace(
             query,
         );
     }
-    let mut results = Vec::new();
+    let mut results = SearchResultCollector::new();
     search_recursive(root, query, &mut results);
-    sort_search_results(&mut results);
-    results
+    results.into_results()
 }
 
 #[tauri::command]

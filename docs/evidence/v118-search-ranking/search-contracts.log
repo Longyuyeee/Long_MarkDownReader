@@ -1,0 +1,217 @@
+TAP version 13
+# Subtest: editor offsets: 🙂İ预算预算/预算
+ok 1 - editor offsets: 🙂İ预算预算/预算
+  ---
+  duration_ms: 1.0805
+  ...
+# Subtest: editor offsets: İstanbul/i
+ok 2 - editor offsets: İstanbul/i
+  ---
+  duration_ms: 0.1544
+  ...
+# Subtest: editor offsets: a.b axb/a.b
+ok 3 - editor offsets: a.b axb/a.b
+  ---
+  duration_ms: 0.0604
+  ...
+# Subtest: editor offsets: A needle/ NEEDLE 
+ok 4 - editor offsets: A needle/ NEEDLE 
+  ---
+  duration_ms: 0.0485
+  ...
+# Subtest: editor offsets: 预算/
+ok 5 - editor offsets: 预算/
+  ---
+  duration_ms: 0.0441
+  ...
+# Subtest: editor offsets: 已修改/预算
+ok 6 - editor offsets: 已修改/预算
+  ---
+  duration_ms: 0.0417
+  ...
+# Subtest: text editor locates in current draft without replacing it; repeated intent only runs once
+ok 7 - text editor locates in current draft without replacing it; repeated intent only runs once
+  ---
+  duration_ms: 7.8163
+  ...
+# Subtest: Markdown waits for the requested document and selects without changing editor mode or content
+ok 8 - Markdown waits for the requested document and selects without changing editor mode or content
+  ---
+  duration_ms: 8.1278
+  ...
+# Subtest: navigation keeps adjacent matches separate and uses literal Unicode offsets
+ok 9 - navigation keeps adjacent matches separate and uses literal Unicode offsets
+  ---
+  duration_ms: 0.9058
+  ...
+# Subtest: DOM matching spans inline formatting but never joins separate paragraphs
+ok 10 - DOM matching spans inline formatting but never joins separate paragraphs
+  ---
+  duration_ms: 1.3541
+  ...
+# Subtest: long paragraph scroll uses match geometry rather than paragraph geometry
+ok 11 - long paragraph scroll uses match geometry rather than paragraph geometry
+  ---
+  duration_ms: 0.3799
+  ...
+# node:internal/modules/esm/get_format:218
+#   throw new ERR_UNKNOWN_FILE_EXTENSION(ext, filepath);
+#         ^
+# TypeError [ERR_UNKNOWN_FILE_EXTENSION]: Unknown file extension ".ts" for E:\\ProjectSave\\GeminiProject\\MarkDownReader\\src\\utils\\searchQuery.ts
+#     at Object.getFileProtocolModuleFormat [as file:] (node:internal/modules/esm/get_format:218:9)
+#     at defaultGetFormat (node:internal/modules/esm/get_format:244:36)
+#     at defaultLoad (node:internal/modules/esm/load:122:22)
+#     at async ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:483:32) {
+#   code: 'ERR_UNKNOWN_FILE_EXTENSION'
+# }
+# Node.js v22.12.0
+# Subtest: scripts\\test-search-query.mjs
+not ok 2 - scripts\\test-search-query.mjs
+  ---
+  duration_ms: 43.7647
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-search-query.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: failure and retry preserve query: 项目
+ok 13 - failure and retry preserve query: 项目
+  ---
+  duration_ms: 3.1812
+  ...
+# Subtest: failure and retry preserve query: \#项目
+ok 14 - failure and retry preserve query: \#项目
+  ---
+  duration_ms: 0.8767
+  ...
+# Subtest: successful empty response is not failure
+ok 15 - successful empty response is not failure
+  ---
+  duration_ms: 0.7418
+  ...
+# Subtest: stale resolve cannot overwrite newer results
+ok 16 - stale resolve cannot overwrite newer results
+  ---
+  duration_ms: 0.7435
+  ...
+# Subtest: stale reject cannot overwrite newer results
+ok 17 - stale reject cannot overwrite newer results
+  ---
+  duration_ms: 0.6835
+  ...
+# Subtest: clear invalidates pending response and clears busy state
+ok 18 - clear invalidates pending response and clears busy state
+  ---
+  duration_ms: 0.8245
+  ...
+# Subtest: library change rejects old response
+ok 19 - library change rejects old response
+  ---
+  duration_ms: 0.8846
+  ...
+# Subtest: new query immediately removes old result; missing library does not spin
+ok 20 - new query immediately removes old result; missing library does not spin
+  ---
+  duration_ms: 0.6852
+  ...
+# Subtest: component keeps errors distinct and offers accessible retry
+ok 21 - component keeps errors distinct and offers accessible retry
+  ---
+  duration_ms: 0.6872
+  ...
+# Subtest: real Vue watchers debounce changes and retry retains format filter
+ok 22 - real Vue watchers debounce changes and retry retains format filter
+  ---
+  duration_ms: 2.4787
+  ...
+# Subtest: real library watcher clears query, collection and busy state before late response
+ok 23 - real library watcher clears query, collection and busy state before late response
+  ---
+  duration_ms: 0.8627
+  ...
+# Subtest: real Vue clear cancels debounce without invoking backend
+ok 24 - real Vue clear cancels debounce without invoking backend
+  ---
+  duration_ms: 0.5235
+  ...
+# Subtest: real Vue unmount cancels scheduled search
+ok 25 - real Vue unmount cancels scheduled search
+  ---
+  duration_ms: 3.2743
+  ...
+# Subtest: real Vue unmount invalidates a late response
+ok 26 - real Vue unmount invalidates a late response
+  ---
+  duration_ms: 0.8796
+  ...
+# Subtest: same file pages group together without merging same-named files or losing ranking
+ok 27 - same file pages group together without merging same-named files or losing ranking
+  ---
+  duration_ms: 1.3297
+  ...
+# Subtest: separate annotations and match kinds on one page remain independently accessible
+ok 28 - separate annotations and match kinds on one page remain independently accessible
+  ---
+  duration_ms: 0.2071
+  ...
+# Subtest: unlocated contexts and case-sensitive paths are preserved
+ok 29 - unlocated contexts and case-sensitive paths are preserved
+  ---
+  duration_ms: 0.1993
+  ...
+# Subtest: actual result click forwards each PDF page and annotation to the existing router
+ok 30 - actual result click forwards each PDF page and annotation to the existing router
+  ---
+  duration_ms: 20.6471
+  ...
+# Subtest: actual grouped results template exposes separate page actions and bounded-count wording
+ok 31 - actual grouped results template exposes separate page actions and bounded-count wording
+  ---
+  duration_ms: 42.2375
+  ...
+# Subtest: body results carry a fresh location intent on repeated opens
+ok 32 - body results carry a fresh location intent on repeated opens
+  ---
+  duration_ms: 4.7701
+  ...
+# Subtest: leaving and reopening restores query, filters, selected result and scroll after fresh results
+ok 33 - leaving and reopening restores query, filters, selected result and scroll after fresh results
+  ---
+  duration_ms: 3.9753
+  ...
+# Subtest: missing result is explained; a failed refresh does not discard the saved selection
+ok 34 - missing result is explained; a failed refresh does not discard the saved selection
+  ---
+  duration_ms: 4.0693
+  ...
+# Subtest: changing query or library clears selection and libraries never inherit one another
+ok 35 - changing query or library clears selection and libraries never inherit one another
+  ---
+  duration_ms: 0.3989
+  ...
+# Subtest: same titles retain distinct directory identity
+ok 36 - same titles retain distinct directory identity
+  ---
+  duration_ms: 1.3441
+  ...
+# Subtest: native Windows extended and UNC paths remain readable
+ok 37 - native Windows extended and UNC paths remain readable
+  ---
+  duration_ms: 0.6275
+  ...
+# Subtest: sibling roots and case-sensitive Unix paths are not shortened incorrectly
+ok 38 - sibling roots and case-sensitive Unix paths are not shortened incorrectly
+  ---
+  duration_ms: 0.3097
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 37
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 565.9868

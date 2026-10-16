@@ -177,6 +177,10 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7'].inc
     required[9] = ['当前阶段：**v1.1.3 自定义模板开发**', published && development.releaseCandidate === false
       && development.currentStage === 'M8-34-v1.1.3-note-templates' && fs.existsSync(development.activeSlice.document)]
   }
+  if (version === '1.1.7' && development.activeSlice?.id === 'v1.1.8-search-completeness') {
+    required[9] = ['当前阶段：**v1.1.8 搜索完整性开发**', published && development.releaseCandidate === false
+      && development.currentStage === 'M8-44-v1.1.8-search-completeness' && fs.existsSync(development.activeSlice.document)]
+  }
 }
 
 for (const [token, condition] of required) {

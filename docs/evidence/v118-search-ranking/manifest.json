@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-A-B1",
+  "status": "ranking-validated-budget-required-before-merge",
+  "baselineCommit": "f17c37145fd6d7f58a8fae91f78ac2819349c3ad",
+  "branch": "codex/v118-search-completeness",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "evidenceLevel": "rust-native-functions-and-real-disposable-files",
+  "sourceUserContentIncluded": false,
+  "checks": {
+    "redFunctional": {
+      "passed": 0,
+      "failed": 6,
+      "baselineSamplePassed": 1,
+      "exitCode": 101
+    },
+    "newNativeChecks": 10,
+    "relatedNativeChecks": 27,
+    "completeNativeFunctional": {
+      "passed": 909,
+      "failed": 0,
+      "existingIgnored": 5,
+      "performanceExcluded": true
+    },
+    "separatePerformance": {
+      "passed": 1,
+      "workbookTotalMs": 4374
+    },
+    "searchContracts": {
+      "passed": 50,
+      "failed": 0
+    },
+    "initialNodeInvocation": {
+      "passed": 37,
+      "failed": 1,
+      "reason": "missing-existing-experimental-strip-types-flag"
+    },
+    "developmentAudit": "passed",
+    "patchQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "previousMainCi": {
+      "runId": 38951817380,
+      "conclusion": "success",
+      "coversBaselineOnly": true
+    }
+  },
+  "boundaries": {
+    "retainedMatchPayloads": 200,
+    "heapCapacityTestCandidates": 20000,
+    "legacyUnit": "raw-match",
+    "perKindLocatedLimit": 5,
+    "globalScanBudgetEnforced": false,
+    "paginationImplemented": false,
+    "uiChanged": false,
+    "installedArtifactEvidence": false,
+    "mergeBlockedUntilBudgetAndContinuation": true
+  },
+  "timings": [
+    {
+      "file": "native-before.log",
+      "observations": [
+        {
+          "maxMicros": 16711,
+          "medianMicros": 16026,
+          "minMicros": 14369,
+          "mode": "cold",
+          "strongestFound": false
+        },
+        {
+          "maxMicros": 983,
+          "medianMicros": 645,
+          "minMicros": 631,
+          "mode": "memory-index",
+          "strongestFound": false
+        },
+        {
+          "maxMicros": 16018,
+          "medianMicros": 13418,
+          "minMicros": 12567,
+          "mode": "disk-index",
+          "strongestFound": false
+        }
+      ],
+      "resultLimit": 200,
+      "samplesPerMode": 5,
+      "sourceFiles": 243
+    },
+    {
+      "file": "native-after-initial.log",
+      "observations": [
+        {
+          "maxMicros": 22999,
+          "medianMicros": 22187,
+          "minMicros": 20886,
+          "mode": "cold",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 2204,
+          "medianMicros": 1837,
+          "minMicros": 1835,
+          "mode": "memory-index",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 17191,
+          "medianMicros": 16541,
+          "minMicros": 13192,
+          "mode": "disk-index",
+          "strongestFound": true
+        }
+      ],
+      "resultLimit": 200,
+      "samplesPerMode": 5,
+      "sourceFiles": 243
+    },
+    {
+      "file": "native-search-final.log",
+      "observations": [
+        {
+          "maxMicros": 35807,
+          "medianMicros": 28736,
+          "minMicros": 22076,
+          "mode": "cold",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 2869,
+          "medianMicros": 1319,
+          "minMicros": 1214,
+          "mode": "memory-index",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 21265,
+          "medianMicros": 16662,
+          "minMicros": 15978,
+          "mode": "disk-index",
+          "strongestFound": true
+        }
+      ],
+      "resultLimit": 200,
+      "samplesPerMode": 5,
+      "sourceFiles": 243
+    },
+    {
+      "file": "ranking-timing-final.log",
+      "observations": [
+        {
+          "maxMicros": 21588,
+          "medianMicros": 18718,
+          "minMicros": 17824,
+          "mode": "cold",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 1277,
+          "medianMicros": 1128,
+          "minMicros": 1123,
+          "mode": "memory-index",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 15605,
+          "medianMicros": 13440,
+          "minMicros": 12746,
+          "mode": "disk-index",
+          "strongestFound": true
+        }
+      ],
+      "resultLimit": 200,
+      "samplesPerMode": 5,
+      "sourceFiles": 243
+    }
+  ],
+  "sourceHashBasis": "git-index-bytes",
+  "sourceFiles": [
+    {
+      "path": "src-tauri/src/commands/index.rs",
+      "sizeBytes": 78725,
+      "sha256": "3e12c5b5846e6605fa21805b5ded8b36171fa1a16142cfc5f461840c0754088b"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_ranking_tests.rs",
+      "sizeBytes": 11711,
+      "sha256": "71137714fb7ef107c725bd43b29f0c7fd5dbd3f43e71a683277f3fbdbfa7c61c"
+    },
+    {
+      "path": "scripts/check-current-development-audit.mjs",
+      "sizeBytes": 21150,
+      "sha256": "d4eaf7b962547374651f0e5c830d59d3520718e4a30090256627358cdb8c253f"
+    },
+    {
+      "path": "shared/development-version-policy.json",
+      "sizeBytes": 696,
+      "sha256": "71aee9cedb28e4636bec6dcdc8a97de52d715aa1e1125804afb06e73b443afad"
+    }
+  ],
+  "files": [
+    {
+      "path": "development-audit.log",
+      "sizeBytes": 108512,
+      "sha256": "575e30cb5eedf918cff8804cc2bccd345e64e0e979e8b294ea4ccecf2b6521e4"
+    },
+    {
+      "path": "native-after-initial.log",
+      "sizeBytes": 3145,
+      "sha256": "29a28f14df250573426337927f3aaaeb67df23e878bf29a238c0bf15e49f603c"
+    },
+    {
+      "path": "native-before.log",
+      "sizeBytes": 16087,
+      "sha256": "8f63fc3c9871cd6913ea7a4104b8306d5cdf11ac0448c9b3c37759786abb6b82"
+    },
+    {
+      "path": "native-functional.log",
+      "sizeBytes": 93822,
+      "sha256": "fbb2e5b363f230bd143a1432c343d5e9a41fd9fb8ff2832f2cbe5b7f4b0392f8"
+    },
+    {
+      "path": "native-performance.log",
+      "sizeBytes": 2545,
+      "sha256": "4c982acbf7d1d79bffbfaaf0b5d4f4e86712369da29a51220a8b609030d26931"
+    },
+    {
+      "path": "native-search-final.log",
+      "sizeBytes": 5381,
+      "sha256": "a8d78999a73f7a97dc71f788401ec07aafaeead0132496f64d47bea80ec64e47"
+    },
+    {
+      "path": "previous-main-ci.json",
+      "sizeBytes": 2898,
+      "sha256": "c4163415bd48dc0c4041fb639b0a272ac98c22a24219a17c82b9c61ac1e34d73"
+    },
+    {
+      "path": "quality-gate.log",
+      "sizeBytes": 133366,
+      "sha256": "a80a4e7d33b067641febc960e6e82cfbebd4ebe68676bb0b29f1118137879988"
+    },
+    {
+      "path": "ranking-timing-final.log",
+      "sizeBytes": 1372,
+      "sha256": "ffea928d9304e82ae230d23d360b9ede4be3dcc286f6dbf94445862b4cc42fa4"
+    },
+    {
+      "path": "search-contracts-after.log",
+      "sizeBytes": 9753,
+      "sha256": "8427c56df581a8cbf91509723b536b7a1556866901481ad88a48a33d033828bb"
+    },
+    {
+      "path": "search-contracts.log",
+      "sizeBytes": 7688,
+      "sha256": "11ad69a3da148c2cfda88c146c6cfca3205ea6edb65fa6bd1dbf1d70074b291e"
+    }
+  ]
+}
