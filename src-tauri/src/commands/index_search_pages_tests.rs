@@ -44,6 +44,7 @@ impl Fixture {
             library_root: self.root.to_string_lossy().into_owned(),
             query: "预算".into(),
             sort: SearchSort::Relevance,
+            match_mode: SearchMatchMode::Content,
             page_size: 40,
             channel: SearchChannel::Library,
             cursor: None,
@@ -651,6 +652,7 @@ fn v118_pages_empty_complete_and_missing_library_failure_are_distinct() {
         library_root: root.to_string_lossy().into_owned(),
         query: "预算".into(),
         sort: SearchSort::Relevance,
+        match_mode: SearchMatchMode::Content,
         page_size: 50,
         channel: SearchChannel::Library,
         cursor: None,
@@ -670,6 +672,88 @@ fn v118_pages_empty_complete_and_missing_library_failure_are_distinct() {
             .code,
         "unavailable"
     );
+}
+
+#[test]
+fn v118_pages_tag_mode_pages_exact_markdown_tags_in_cold_memory_and_disk() {
+    let fixture = Fixture::new(240);
+    for source in collect_search_sources(&fixture.root, &mut SearchBudget::new(limits())).unwrap() {
+        fs::write(
+            fixture.root.join(source.path),
+            "保留标签 #Budget，继续工作。",
+        )
+        .unwrap();
+    }
+    fs::write(fixture.root.join("仅文件名#Budget.md"), "没有这个标签").unwrap();
+    fs::write(fixture.root.join("前缀.md"), "#BudgetExtra #budget").unwrap();
+    fs::write(fixture.root.join("非笔记.txt"), "#Budget").unwrap();
+    let snapshot = Arc::new(fixture.snapshot());
+    write_snapshot(&fixture.cache, &fixture.root, &snapshot).unwrap();
+    let mut expected = None;
+    for mode in ["cold", "memory", "disk"] {
+        let mut request = fixture.request();
+        request.query = " #Budget ".into();
+        request.match_mode = SearchMatchMode::Tag;
+        request.normalize_validate().unwrap();
+        assert_eq!(
+            request.query, "#Budget",
+            "preserve legacy case-sensitive tag identity"
+        );
+        let mut session = QuerySession::new(
+            &fixture.root,
+            &request,
+            0,
+            (mode == "memory").then(|| snapshot.clone()),
+            (mode == "disk").then(|| fixture.cache.clone()),
+        )
+        .unwrap();
+        let pages = drain(&mut session, request, limits());
+        let groups = pages
+            .iter()
+            .flat_map(|page| &page.files)
+            .collect::<Vec<_>>();
+        assert_eq!(
+            groups.len(),
+            243,
+            "{mode}: no 200 cutoff, no prefix/title/TXT false tag match"
+        );
+        assert!(groups.iter().all(|group| group.matches.len() == 1
+            && group.matches[0].match_kind == "tag"
+            && !group.may_have_more_matches));
+        assert_eq!(
+            session.body_builds,
+            if mode == "cold" { 245 } else { 0 },
+            "only Markdown bodies, no TXT read for tag search"
+        );
+        let encoded = serde_json::to_value(groups).unwrap();
+        if let Some(expected) = &expected {
+            assert_eq!(&encoded, expected);
+        } else {
+            expected = Some(encoded);
+        }
+    }
+}
+
+#[test]
+fn v118_pages_tag_mode_binding_and_validation_reject_mixed_continuations() {
+    let fixture = Fixture::new(1);
+    let mut request = fixture.request();
+    request.query = "#预算".into();
+    request.match_mode = SearchMatchMode::Tag;
+    let mut session = fixture.session(&request);
+    let first = session.request(&request, 0, limits()).unwrap();
+    request.cursor = Some(session.page_cursor(0));
+    request.match_mode = SearchMatchMode::Content;
+    assert_eq!(
+        session.request(&request, 0, limits()).unwrap_err().code,
+        "requestMismatch"
+    );
+    assert!(first.scan_complete && first.total_files == Some(0));
+    for query in ["预算", "#", "#两个 标签", "#\"标签\""] {
+        request.query = query.into();
+        request.match_mode = SearchMatchMode::Tag;
+        assert!(request.normalize_validate().is_err(), "{query}");
+    }
 }
 
 #[test]

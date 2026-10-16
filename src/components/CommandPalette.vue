@@ -22,23 +22,25 @@
         </n-input>
         <n-select v-if="!query.startsWith('>')" v-model:value="scope" class="palette-scope" aria-label="搜索范围" :to="overlayHost || undefined" :disabled="opening" :options="scopeOptions" size="small" />
         </div>
-        <div v-if="searching" class="palette-status" role="status">正在查找资料…</div>
+        <div v-if="searching && !searchPages.files.value.length" class="palette-status" role="status">正在查找资料…</div>
         <div v-if="opening" class="palette-status" role="status">正在打开资料，请稍候…</div>
         <div v-if="error" class="palette-status palette-error" role="alert">{{ error }}<n-button v-if="!opening" size="tiny" @click="scheduleSearch">重试</n-button></div>
-        <div v-if="warnings.length" class="palette-status" role="status">{{ warnings.join('；') }}</div>
-        <div class="results-list" v-if="results.length > 0" :aria-busy="searching || opening" role="listbox" aria-label="资料与命令结果">
+        <div class="palette-scroll-content">
+        <SearchPageStatus v-if="pagedSearch && (!error || searchPages.status.value)" part="header" :page="searchPages" :sort="sort" :disabled="opening" :loading="searching" @sort="sort = $event" @apply="searchPages.applyPending" @retry="retryPages"/>
+        <div class="results-list" v-if="results.length > 0" :aria-busy="opening || (searching && !searchPages.files.value.length)" :role="pagedSearch ? 'list' : 'listbox'" aria-label="资料与命令结果">
           <div
             v-for="(item, index) in results"
-            :key="index"
+            :key="item.path || item.action || index"
             class="result-item"
-            role="option"
-            :aria-selected="selectedIndex === index"
+            :role="pagedSearch ? 'listitem' : 'option'"
+            :aria-selected="pagedSearch ? undefined : selectedIndex === index"
             :class="{ active: selectedIndex === index }"
-            @click="execute(item)"
+            @click="!item.searchGroup && execute(item)"
             @mouseenter="selectedIndex = index"
           >
-            <n-icon :component="item.icon" class="item-icon" />
-            <div class="item-info">
+            <SearchFileCard v-if="item.searchGroup" :file="item.searchGroup" :query="query" :reference-allowed="canReference(item)" @open="executeMatch(item, $event)" @reference="executeMatch(item, $event, true)"/>
+            <n-icon v-if="!item.searchGroup" :component="item.icon" class="item-icon" />
+            <div v-if="!item.searchGroup" class="item-info">
               <div class="item-title">
                 <SearchHighlight v-if="item.type === 'file' && query.trim()" :text="item.title" :query="query" />
                 <template v-else><span v-for="(seg, segIdx) in highlightMatch(item.title, query)" :key="segIdx" :class="{ 'highlight-match': seg.highlight }">{{ seg.text }}</span></template>
@@ -46,20 +48,23 @@
               <div class="item-desc">{{ item.description }}</div><small v-if="item.context" class="item-context">{{ item.context }}</small>
             </div>
             <span class="item-badge" v-if="item.type === 'cmd'">命令</span>
-            <span class="item-badge file-badge" v-else-if="item.type === 'file'">文件</span>
+            <span class="item-badge file-badge" v-else-if="item.type === 'file' && !item.searchGroup">文件</span>
           </div>
         </div>
-        <div class="no-results" v-else-if="query.trim().length > 0 && !searching && !error">
+        <div class="no-results" v-else-if="!pagedSearch && query.trim().length > 0 && !searching && !error">
           无匹配结果
         </div>
-        <div v-if="!query.startsWith('>')" class="palette-status palette-help">{{ limitReached ? '最多显示 200 条结果。' : '' }}空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。</div>
+        <SearchPageStatus v-if="pagedSearch" part="footer" :page="searchPages" :sort="sort" :disabled="opening" @more="searchPages.loadMore" @continue="searchPages.continueSearch" @apply="searchPages.applyPending"/>
+        </div>
+        <div v-if="!query.startsWith('>')" class="palette-status palette-help">空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。结果按文件续载，组内位置并非全部出现次数。</div>
       </div>
     </div>
   </transition>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { NButton, NSelect } from 'naive-ui'
 import { Search as SearchIcon, FileText as FileIcon, Command as CommandIcon, Clock as ClockIcon } from 'lucide-vue-next'
 import { InputInst } from 'naive-ui'
@@ -70,6 +75,9 @@ import { parseSearchQuery, searchQueryNeedle } from '../utils/searchQuery'
 import { belongsToLibrary } from '../utils/workSessions'
 import { snapshotWindowDrafts, windowDraftCount } from '../services/windowDrafts'
 import SearchHighlight from './SearchHighlight.vue'
+import SearchFileCard from './SearchFileCard.vue'
+import SearchPageStatus from './SearchPageStatus.vue'
+import { createSearchPages, type SearchMatch, type SearchSort } from '../services/searchPages'
 
 const props = defineProps<{ show: boolean }>()
 const emitEvent = defineEmits(['close', 'execute'])
@@ -81,7 +89,24 @@ const results = ref<any[]>([])
 const overlayHost = ref<HTMLElement | null>(null)
 const store = useAppStore(), scope = ref<'current' | 'all'>('current')
 const scopeOptions = [{ label: '当前资料库', value: 'current' }, { label: '全部资料库', value: 'all' }]
-const searching = ref(false), opening = ref(false), error = ref(''), warnings = ref<string[]>([]), limitReached = ref(false)
+const searching = ref(false), opening = ref(false), error = ref('')
+const searchPages = createSearchPages(invoke), sort = ref<SearchSort>('relevance'), route = useRoute()
+const pagedSearch = computed(() => !!query.value.trim() && !query.value.startsWith('>'))
+watch(searchPages.files, files => {
+  if (!pagedSearch.value) return
+  const selected = results.value[selectedIndex.value]?.path
+  results.value = files.map(file => ({ ...file.matches[0], title:file.title, path:file.path, type:'file', icon:FileIcon, searchGroup:file }))
+  const index = results.value.findIndex(item => item.path === selected)
+  selectedIndex.value = index >= 0 ? index : Math.min(selectedIndex.value, Math.max(0, results.value.length - 1))
+})
+const canReference = (item: { path: string }) => route.name === 'LibraryMode' && !store.isZen && belongsToLibrary(store.libraryPath, item.path)
+const executeMatch = (item: any, match: SearchMatch, reference = false) => execute({ ...item, ...match, reference,
+  searchNeedle: match.matchKind === 'body' && ['markdown','plain-text'].includes(match.objectType) ? searchQueryNeedle(query.value, match.context) : '' })
+const retryPages = async () => {
+  if (searchPages.errorCode.value === 'snapshotChanged') await searchPages.refreshAvailable()
+  else if (searchPages.status.value?.scanState === 'failed') await searchPages.restart()
+  else await searchPages.retry()
+}
 let generation = 0, disposed = false
 let previousFocus: HTMLElement | null = null
 let restoreFocusOnClose = true
@@ -116,10 +141,16 @@ const handleEnter = () => {
 }
 
 const execute = async (item: any) => {
-  if (!props.show || disposed || searching.value || opening.value) return
+  if (!props.show || disposed || (searching.value && !searchPages.files.value.length) || opening.value) return
   opening.value = true; error.value = ''
   try {
     if (item.type === 'file') {
+      if (item.reference) {
+        if (!canReference(item)) throw new Error('请在当前资料库页面使用侧边参考；没有切换资料库或替换草稿。')
+        window.dispatchEvent(new CustomEvent('longedit:search-reference', { detail:{ match:item, query:query.value } }))
+        restoreFocusOnClose = false; opening.value = false; close(); return
+      }
+      if (item.searchGroup && !item.searchNeedle && item.matchKind === 'body' && ['markdown','plain-text'].includes(item.objectType)) item = { ...item, searchNeedle:searchQueryNeedle(query.value, item.context || '') }
       const library = belongsToLibrary(store.libraryPath, item.path) ? store.libraries.find(library => library.path === store.libraryPath) : [...store.libraries].sort((a, b) => b.path.length - a.path.length).find(library => belongsToLibrary(library.path, item.path))
       if (!library) throw new Error('这份资料所属的资料库已移除，请先检查资料库设置')
       if (library.path !== store.libraryPath) {
@@ -186,7 +217,7 @@ const ALL_COMMANDS = [
 ]
 
 let searchDebounce: ReturnType<typeof setTimeout> | null = null
-const invalidateSearch = () => { ++generation; if (searchDebounce) clearTimeout(searchDebounce); searchDebounce = null; searching.value = false }
+const invalidateSearch = () => { ++generation; searchPages.reset(); if (searchDebounce) clearTimeout(searchDebounce); searchDebounce = null; searching.value = false }
 
 const loadRecentFiles = (): any[] => {
   try {
@@ -208,7 +239,7 @@ function scheduleSearch() {
   invalidateSearch()
   if (!props.show) return
   const val = query.value, token = generation, root = store.libraryPath, selectedScope = scope.value
-  error.value = ''; warnings.value = []; limitReached.value = false
+  error.value = ''; results.value = []
   if (val.startsWith('>')) {
     // 命令模式：模糊匹配
     const cmd = val.slice(1).trim().toLowerCase()
@@ -229,22 +260,9 @@ function scheduleSearch() {
       const current = () => !disposed && props.show && token === generation && query.value === val && scope.value === selectedScope && store.libraryPath === root
       try {
         if (selectedScope === 'current' && !root) throw new Error('请先选择资料库，或切换到全部资料库')
-        const response = await invoke<{ results: any[]; warnings: string[]; limitReached: boolean }>('search_knowledge_libraries', { libraryRoot: selectedScope === 'current' ? root : null, query: val })
-        if (!current()) return
-        const seen = new Set<string>()
-        const files = response.results.filter(result => { if (seen.has(result.path)) return false; seen.add(result.path); return true })
-        results.value = files.map(f => ({
-          ...f,
-          title: f.title,
-          description: f.path,
-          icon: FileIcon,
-          type: 'file',
-          path: f.path,
-          searchNeedle: f.matchKind === 'body' && ['markdown', 'plain-text'].includes(f.objectType) ? searchQueryNeedle(val, f.context || '') : ''
-        }))
-        warnings.value = response.warnings; limitReached.value = response.limitReached
+        await searchPages.start({ libraryRoot:selectedScope === 'current' ? root : null, query:val, sort:sort.value, channel:'palette', kind:'libraries' })
       } catch (cause) { if (current()) { results.value = []; error.value = String(cause).replace(/^Error:\s*/, '') } }
-      finally { if (current()) { searching.value = false; selectedIndex.value = 0 } }
+      finally { if (current()) searching.value = false }
     }, 200)
   } else {
     // 空查询：显示最近文件
@@ -252,15 +270,17 @@ function scheduleSearch() {
     selectedIndex.value = 0
   }
 }
-watch([query, scope, () => store.libraryPath], scheduleSearch)
+watch([query, scope, sort, () => store.libraryPath], scheduleSearch)
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleEscape, true)
   disposed = true; invalidateSearch()
+  searchPages.dispose()
 })
 </script>
 
 <style scoped>
+.palette-scroll-content{min-height:0;flex:1 1 auto;overflow-y:auto}.palette-scroll-content>.results-list{max-height:none;overflow:visible}.result-item:has(.search-file-card){padding:3px;display:block;transform:none;cursor:default}.result-item>.search-file-card{width:100%;box-sizing:border-box}.palette-search-row{flex-shrink:0}
 .palette-search-row{display:flex;align-items:center;gap:8px;padding-right:16px}.palette-search-row>.n-input{min-width:0;flex:1}.palette-scope{width:138px;flex-shrink:0}.palette-status{padding:8px 20px;color:var(--theme-text-secondary);font-size:var(--text-compact);overflow-wrap:anywhere}.palette-error{color:var(--status-danger);display:flex;align-items:center;gap:8px;justify-content:space-between}.palette-help{border-top:var(--theme-border)}.item-context{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--theme-text-secondary)}.results-list[aria-busy="true"]{opacity:.65;pointer-events:none}@media(max-width:520px){.palette-search-row{padding-right:10px;gap:2px}.palette-scope{width:120px}}
 .command-palette-overlay {
   position: fixed;
@@ -285,7 +305,9 @@ onUnmounted(() => {
   height: fit-content;
   max-height: min(620px, 76vh);
   overflow: hidden;
-  background: var(--style-card-gradient);
+  /* Keep each style's gradient/glow, but never let document text show through
+     the search reading surface (especially glass and soft styles). */
+  background: var(--style-card-gradient), var(--theme-surface);
   border: var(--theme-border-strong);
   border-radius: var(--theme-radius-lg);
   box-shadow: var(--theme-shadow);

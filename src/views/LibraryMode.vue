@@ -130,29 +130,11 @@
                     <span><strong>{{ activeGraphCollection.name }}</strong><small>{{ activeGraphCollection.graphDepth }} 层动态子图</small></span>
                     <button type="button" title="关闭集合" @click="closeGraphCollection">×</button>
                   </div>
-                  <SearchFeedback :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :reason="knowledgeSearchError" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
+                  <SearchPageStatus v-if="!activeGraphCollection" part="header" :page="knowledgePages" :sort="knowledgeSort" :tag="tagSearch" :visible-count="groupedKnowledgeSearchResults.length" :loading="knowledgeSearchRunning" @sort="knowledgeSort = $event" @apply="applyKnowledgeView" @retry="retryKnowledgeSearch" />
+                  <SearchFeedback v-else :running="knowledgeSearchRunning" :failed="knowledgeSearchFailed" :reason="knowledgeSearchError" :empty="!visibleKnowledgeSearchResults.length" @retry="retryKnowledgeSearch" />
                   <p v-if="searchReturn.notice.value" role="status" class="knowledge-search-count">{{ searchReturn.notice.value }}</p>
-                  <p v-if="!knowledgeSearchRunning && !knowledgeSearchFailed && groupedKnowledgeSearchResults.length" class="knowledge-search-count">当前展示 {{ groupedKnowledgeSearchResults.length }} 个文件的结果。结果限量展示，不代表全部匹配次数。</p>
-                  <section v-for="group in groupedKnowledgeSearchResults" :key="group.path" class="knowledge-result-group" :aria-label="searchResultPath(group.path, store.libraryPath)">
-                  <p v-if="group.results.length > 1" class="knowledge-result-group-label">同一文件 · {{ group.results.length }} 条结果，可分别打开</p>
-                  <div v-for="result in group.results" :key="searchMatchKey(result)" class="knowledge-search-result" :class="{ 'is-search-selected': searchReturn.selectedKey.value === searchMatchKey(result) }" :data-search-key="searchMatchKey(result)">
-                    <button class="knowledge-result-open" type="button" :title="result.title" :aria-label="`打开 ${result.title}`" @click="openKnowledgeSearchResult(result)">
-                      <span class="knowledge-result-head"><strong><SearchHighlight :text="result.title.replace(/(?:\.table\.json|\.(?:md|canvas|pdf|csv|tsv|xlsx))$/i, '')" :query="searchQuery" /></strong><i>{{ resultFormatLabel(result.objectType) }} · {{ searchKindLabel(result.matchKind) }}</i></span>
-                      <span class="knowledge-result-context"><SearchHighlight :text="result.context" :query="searchQuery" /></span>
-                      <small class="knowledge-result-path" :title="result.path">{{ searchResultPath(result.path, store.libraryPath) }}</small>
-                      <small v-if="result.objectType === 'pptx' && result.locationLabel">{{ result.locationLabel }}</small>
-                      <small v-else-if="result.page">第 {{ result.page }} 页<template v-if="result.annotationId"> · 批注</template></small>
-                      <small v-else-if="result.locationLabel">{{ result.locationLabel }}</small>
-                    </button>
-                    <button v-if="['markdown', 'plain-text', 'pdf'].includes(result.objectType)" type="button" class="knowledge-preview-button" :aria-label="`在侧边参考 ${result.title}${result.page ? ` 第 ${result.page} 页` : ''}`" @click="showSearchPreview(result)">在侧边参考</button>
-                    <details v-else-if="result.context && !['related', 'tag'].includes(result.matchKind)" :key="`${searchQuery}-${result.context}`" class="knowledge-result-summary">
-                      <summary :aria-label="`查看 ${result.title} 的命中摘要`">查看命中摘要</summary>
-                      <p><SearchHighlight :text="result.context" :query="searchQuery" /></p>
-                      <small>搜索摘要，非全文；打开文件查看完整内容。</small>
-                    </details>
-                    <RelationSummaryBadge v-if="relationSummary(result.path)" :summary="relationSummary(result.path)!" compact @open="openRelationGraph(result.path)" />
-                  </div>
-                  </section>
+                  <SearchFileCard v-for="file in visibleSearchFiles" :key="file.path" :file="file" :query="searchQuery" :library-root="store.libraryPath" :selected-key="searchReturn.selectedKey.value" reference-allowed @open="openKnowledgeSearchResult" @reference="showSearchPreview"><RelationSummaryBadge v-if="relationSummary(file.path)" :summary="relationSummary(file.path)!" compact @open="openRelationGraph(file.path)" /></SearchFileCard>
+                  <SearchPageStatus v-if="!activeGraphCollection" part="footer" :page="knowledgePages" :sort="knowledgeSort" @more="knowledgePages.loadMore" @continue="knowledgePages.continueSearch" @apply="applyKnowledgeView"/>
                 </div>
                 <n-tree 
                   v-else
@@ -707,11 +689,13 @@
 </template>
 
 <script setup lang="ts">
-import { searchResultPath } from '../utils/searchResultPath'
 import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
-import SearchHighlight from '../components/SearchHighlight.vue'
+import SearchPageStatus from '../components/SearchPageStatus.vue'
+import SearchFileCard from '../components/SearchFileCard.vue'
+import { createSearchPages, type SearchSort, type SearchMatch as KnowledgeSearchResult } from '../services/searchPages'
+import { belongsToLibrary } from '../utils/workSessions'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
@@ -745,7 +729,7 @@ import TextConflictDialog, { type ConflictSnapshot } from '../components/TextCon
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import ExternalImportDialog from '../components/ExternalImportDialog.vue'
-import { searchQueryNeedle, parseSearchQuery } from '../utils/searchQuery'
+import { searchQueryNeedle } from '../utils/searchQuery'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
 import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
 import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
@@ -836,20 +820,6 @@ interface ExternalOpenReceipt {
   sourcePreservedAtHandoff: boolean
 }
 
-interface KnowledgeSearchResult {
-  title: string
-  path: string
-  objectType: string
-  matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
-  context: string
-  page?: number
-  annotationId?: string
-  locatorKind?: string
-  locatorObjectId?: string
-  locationLabel?: string
-  score: number
-  extractionFailed: boolean
-}
 
 interface KnowledgeIndexStatus {
   state: 'missing' | 'building' | 'ready' | 'stale' | 'corrupt' | 'error' | 'cancelled'
@@ -1339,6 +1309,10 @@ watch(searchQuery, () => { showInbox.value = false })
 const searchObjectTypes = ref<string[]>([])
 const activeCollectionId = ref('')
 const knowledgeSearchResults = ref<KnowledgeSearchResult[]>([])
+const knowledgePages = createSearchPages(invoke)
+const knowledgeSort = ref<SearchSort>('relevance')
+const tagSearch = computed(() => /^#[^\s"]+$/.test(searchQuery.value.trim()))
+let restoreSearchFiles = 0
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
 const referencePinned = computed(() => searchPreviewResult.value !== null)
 const referenceVisible = ref(false)
@@ -1364,10 +1338,16 @@ const returnToEditorFromReference = async () => {
   if (input) input.focus({ preventScroll: true })
   else { editor.tabIndex = -1; editor.focus({ preventScroll: true }) }
 }
-const showSearchPreview = (result: KnowledgeSearchResult) => {
+const showSearchPreview = (result: KnowledgeSearchResult, rawQuery = searchQuery.value) => {
   referenceVisible.value = true
-  searchPreviewQuery.value = searchQueryNeedle(searchQuery.value, result.context)
+  searchPreviewQuery.value = searchQueryNeedle(rawQuery, result.context)
   searchPreviewResult.value = result
+}
+const onPaletteSearchReference = (event: Event) => {
+  const detail = (event as CustomEvent<{match:KnowledgeSearchResult;query:string}>).detail
+  if (!detail?.match?.path || !belongsToLibrary(store.libraryPath, detail.match.path) || !['markdown','plain-text','pdf'].includes(detail.match.objectType)) return
+  showSearchPreview(detail.match, String(detail.query || ''))
+  void nextTick(() => document.querySelector<HTMLButtonElement>('#library-reference .reference-close')?.focus({ preventScroll:true }))
 }
 // Only an explicit reference action replaces this source; normal opens/searches do not.
 watch(() => store.libraryPath, (root, previous) => { rememberReference(previous); restoreReference(root) })
@@ -1384,8 +1364,8 @@ const navigateSearchResults = (event: KeyboardEvent) => {
   const container = event.currentTarget as HTMLElement
   const target = event.target as HTMLElement
   if (!target.matches('button.knowledge-result-open, button.knowledge-preview-button')) return
-  const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.knowledge-result-open'))
-  const current = target.closest('.knowledge-search-result')?.querySelector('.knowledge-result-open')
+  const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.knowledge-result-open')).filter(button => button.getClientRects().length)
+  const current = target.closest('.knowledge-search-result, .search-file-card')?.querySelector('.knowledge-result-open')
   const index = buttons.findIndex(button => button === current)
   if (index < 0) return
   event.preventDefault()
@@ -1414,14 +1394,28 @@ const visibleKnowledgeSearchResults = computed(() => searchObjectTypes.value.len
   ? knowledgeSearchResults.value.filter(result => searchObjectTypes.value.includes(result.objectType))
   : knowledgeSearchResults.value)
 const groupedKnowledgeSearchResults = computed(() => groupSearchResults(visibleKnowledgeSearchResults.value))
+const pagedFilesByPath = computed(() => new Map(knowledgePages.files.value.map(file => [file.path, file])))
+const visibleSearchFiles = computed(() => groupedKnowledgeSearchResults.value.map(group => ({
+  ...(pagedFilesByPath.value.get(group.path) || { title:group.results[0].title, mayHaveMoreMatches:false, locationLimitPerKind:5, unlocatedLimitPerKind:1 }),
+  path:group.path, matches:group.results,
+})))
+watch(knowledgePages.files, files => {
+  if (searchQuery.value.trim() && !activeCollectionId.value) { knowledgeSearchResults.value = files.flatMap(file => file.matches); void refreshRelationSummaries() }
+})
+watch([knowledgePages.error, knowledgePages.status], () => {
+  if (searchQuery.value.trim()) knowledgeSearchFailed.value = !!knowledgePages.error.value || knowledgePages.status.value?.scanState === 'failed'
+})
 const searchViewport = ref<HTMLElement | null>(null)
 const searchReturn = useSearchReturn({
   root: () => store.libraryPath, query: searchQuery, types: searchObjectTypes,
-  running: knowledgeSearchRunning, failed: knowledgeSearchFailed,
+  running: computed(() => knowledgeSearchRunning.value || knowledgePages.busy.value), failed: knowledgeSearchFailed,
+  loadedFiles: () => knowledgePages.files.value.length, restoreLoadedFiles: count => { restoreSearchFiles = count }, sort:knowledgeSort,
+  hasMore: () => knowledgePages.hasMore.value,
   resultKeys: () => visibleKnowledgeSearchResults.value.map(searchMatchKey), viewport: searchViewport,
   showResults: () => { activeSidebarTab.value = 'files'; isSidebarCollapsed.value = false },
 })
 const closeGraphCollection = () => {
+  knowledgePages.reset()
   ++knowledgeSearchGeneration
   knowledgeSearchFailed.value = false
   knowledgeSearchError.value = ''
@@ -1432,6 +1426,7 @@ const closeGraphCollection = () => {
 }
 const activateGraphCollection = async (search: SavedSearchConfig) => {
   if (!search.graphRoot || !store.libraryPath) return
+  knowledgePages.reset()
   const centerPath = resolveCollectionPath(store.libraryPath, search.graphRoot)
   const generation = ++knowledgeSearchGeneration
   if (searchTimer) clearTimeout(searchTimer)
@@ -2431,10 +2426,6 @@ const handleTreeSelection = (keys: string[]) => {
   if (!filePointerSelecting.value) handleNodeSelect(keys)
 }
 
-const searchKindLabel = (kind: KnowledgeSearchResult['matchKind']) => ({
-  title: '标题', 'slide-title': '幻灯片标题', body: '正文', object: '对象', notes: '备注',
-  ocr: 'OCR', annotation: '批注', related: '附属内容', tag: '标签',
-}[kind])
 
 let searchNavigationSequence = 0
 const openKnowledgeSearchResult = (result: KnowledgeSearchResult) => {
@@ -4159,6 +4150,7 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  window.addEventListener('longedit:search-reference', onPaletteSearchReference)
   window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
   document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
   document.addEventListener('pointerup', rememberReferenceInsertionPoint)
@@ -4227,6 +4219,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('longedit:search-reference', onPaletteSearchReference)
+  knowledgePages.dispose()
   window.removeEventListener('longedit:file-move-completed', refreshAfterFileMove)
   resetFileDrag()
   closeHistoryComparison()
@@ -4490,6 +4484,7 @@ const handleKnowledgeIndexAction = (key: string) => {
 }
 
 watch(() => store.libraryPath, (newPath) => {
+  knowledgePages.reset()
   ++tagsGeneration
   tagsRoot = newPath
   allTags.value = []
@@ -4522,13 +4517,22 @@ watch(() => store.libraries, () => { nextTick(() => refreshGitStatus()) }, { dee
 
 // 搜索防抖
 let searchTimer: ReturnType<typeof setTimeout> | null = null
-const retryKnowledgeSearch = () => scheduleKnowledgeSearch(searchQuery.value)
+const retryKnowledgeSearch = async () => {
+  if (activeGraphCollection.value) { await activateGraphCollection(activeGraphCollection.value); return }
+  if (knowledgePages.errorCode.value === 'snapshotChanged') await knowledgePages.refreshAvailable()
+  else if (knowledgePages.status.value?.scanState === 'failed') await knowledgePages.restart()
+  else await knowledgePages.retry()
+  knowledgeSearchFailed.value = !!knowledgePages.error.value || knowledgePages.status.value?.scanState === 'failed'
+  searchReturn.reconcile()
+}
+const applyKnowledgeView = async () => { await knowledgePages.applyPending(); searchReturn.reconcile() }
 const scheduleKnowledgeSearch = (q: string) => {
   if (searchTimer) clearTimeout(searchTimer)
   knowledgeSearchFailed.value = false
   knowledgeSearchError.value = ''
   if (!q.trim()) {
     if (activeCollectionId.value) return
+    knowledgePages.reset()
     ++knowledgeSearchGeneration
     knowledgeSearchResults.value = []
     knowledgeSearchRunning.value = false
@@ -4537,10 +4541,12 @@ const scheduleKnowledgeSearch = (q: string) => {
     return
   }
   activeCollectionId.value = ''
+  knowledgePages.reset()
   const generation = ++knowledgeSearchGeneration
   const libraryRoot = store.libraryPath
   knowledgeSearchResults.value = []
   if (!libraryRoot) {
+    void knowledgePages.start({ libraryRoot:'', query:q, sort:knowledgeSort.value, channel:'library', kind:'single' })
     knowledgeSearchRunning.value = false
     return
   }
@@ -4548,25 +4554,13 @@ const scheduleKnowledgeSearch = (q: string) => {
   searchTimer = setTimeout(async () => {
     const isCurrent = () => generation === knowledgeSearchGeneration && libraryRoot === store.libraryPath
     if (!isCurrent()) return
-    try { parseSearchQuery(q) }
-    catch (cause) {
-      if (isCurrent()) { knowledgeSearchResults.value = []; knowledgeSearchFailed.value = true; knowledgeSearchError.value = String(cause).replace(/^Error:\s*/, ''); knowledgeSearchRunning.value = false }
-      return
-    }
     try {
-      if (/^#[^\s"]+$/.test(q.trim())) {
-        const results = await invoke<FileEntry[]>('search_by_tag', { libraryRoot, tag: q.trim().slice(1) })
-        if (!isCurrent()) return
-        knowledgeSearchResults.value = results.map(result => ({
-          title: result.name, path: result.path, objectType: 'markdown', matchKind: 'tag',
-          context: `标签 #${q.trim().slice(1)}`, score: 80, extractionFailed: false,
-        }))
-      } else {
-        const results = await invoke<KnowledgeSearchResult[]>('search_knowledge', { libraryRoot, query: q })
-        if (!isCurrent()) return
-        knowledgeSearchResults.value = results
-        void refreshKnowledgeIndexStatus()
-      }
+      const loadUntil = restoreSearchFiles; restoreSearchFiles = 0
+      await knowledgePages.start({ libraryRoot, query:q, sort:knowledgeSort.value, channel:'library', kind:'single', matchMode:tagSearch.value ? 'tag' : 'content' }, { loadUntil })
+      if (!isCurrent()) return
+      knowledgeSearchResults.value = knowledgePages.files.value.flatMap(file => file.matches)
+      knowledgeSearchFailed.value = !!knowledgePages.error.value
+      void refreshKnowledgeIndexStatus()
       await refreshRelationSummaries()
     } catch (e) {
       if (isCurrent()) {
@@ -4579,6 +4573,7 @@ const scheduleKnowledgeSearch = (q: string) => {
   }, 300)
 }
 watch(searchQuery, scheduleKnowledgeSearch)
+watch(knowledgeSort, () => { if (searchQuery.value.trim()) scheduleKnowledgeSearch(searchQuery.value) })
 watch(activeTabId, (newId, oldId) => { 
   void requestLibraryTreeReveal(newId)
   if (newId && newId !== oldId) { 

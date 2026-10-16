@@ -39,6 +39,14 @@ pub enum SearchSort {
     Modified,
 }
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SearchMatchMode {
+    #[default]
+    Content,
+    Tag,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SearchPageRequest {
@@ -46,6 +54,8 @@ pub struct SearchPageRequest {
     pub query: String,
     #[serde(default)]
     pub sort: SearchSort,
+    #[serde(default)]
+    pub match_mode: SearchMatchMode,
     pub page_size: usize,
     pub channel: SearchChannel,
     pub cursor: Option<String>,
@@ -53,9 +63,15 @@ pub struct SearchPageRequest {
 
 impl SearchPageRequest {
     fn normalize_validate(&mut self) -> Result<(), SearchPageError> {
-        self.query = self.query.trim().to_lowercase();
+        self.query = self.query.trim().to_owned();
+        if self.match_mode == SearchMatchMode::Content {
+            self.query = self.query.to_lowercase();
+        }
         crate::services::search_query::SearchQuery::parse(&self.query)
             .map_err(|message| SearchPageError::new("invalidRequest", message))?;
+        if self.match_mode == SearchMatchMode::Tag {
+            tag_pattern(&self.query)?;
+        }
         if self.query.is_empty()
             || !(1..=100).contains(&self.page_size)
             || self
@@ -475,6 +491,8 @@ struct QuerySession {
     guard: WorkspaceGuard,
     query: String,
     sort: SearchSort,
+    match_mode: SearchMatchMode,
+    tag_pattern: Option<regex::Regex>,
     page_size: usize,
     revision: u64,
     created: Instant,
@@ -520,6 +538,12 @@ impl QuerySession {
             guard: WorkspaceGuard::new(root).map_err(|_| SearchPageError::unavailable())?,
             query: request.query.clone(),
             sort: request.sort,
+            match_mode: request.match_mode,
+            tag_pattern: if request.match_mode == SearchMatchMode::Tag {
+                Some(tag_pattern(&request.query)?)
+            } else {
+                None
+            },
             page_size: request.page_size,
             revision,
             created: Instant::now(),
@@ -577,6 +601,7 @@ impl QuerySession {
     fn validate_binding(&self, request: &SearchPageRequest) -> Result<(), SearchPageError> {
         if self.query != request.query
             || self.sort != request.sort
+            || self.match_mode != request.match_mode
             || self.page_size != request.page_size
             || WorkspaceGuard::new(&request.library_root)
                 .map_or(true, |guard| guard.root() != self.guard.root())
@@ -885,6 +910,12 @@ impl QuerySession {
                 .guard
                 .root()
                 .join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+            if self.match_mode == SearchMatchMode::Tag
+                && !file_format_for_path(&path).is_ok_and(|format| format.id == "markdown")
+            {
+                self.source_position += 1;
+                continue;
+            }
             let cached_file = self.indexed && !self.positions[self.source_position].is_empty();
             if !cached_file && self.pending_segments.is_none() {
                 let format =
@@ -970,6 +1001,25 @@ impl QuerySession {
                 .is_ok_and(|parsed| !parsed.negative.is_empty());
             let results = if unread && has_exclusions {
                 Ok(Vec::new())
+            } else if let Some(pattern) = &self.tag_pattern {
+                if cached_file {
+                    let snapshot = self.snapshot.as_ref().unwrap();
+                    search_tag_segments(
+                        self.positions[self.source_position]
+                            .iter()
+                            .map(|position| &snapshot.search_segments[*position]),
+                        pattern,
+                        &self.query,
+                        budget,
+                    )
+                } else {
+                    search_tag_segments(
+                        self.pending_segments.as_ref().unwrap().iter(),
+                        pattern,
+                        &self.query,
+                        budget,
+                    )
+                }
             } else if cached_file {
                 let snapshot = self.snapshot.as_ref().unwrap();
                 search_segment_iter(
@@ -1015,7 +1065,7 @@ impl QuerySession {
                     modified_nanos: source.modified_nanos,
                     may_have_more_matches: results.len() >= MAX_SEARCH_RESULTS
                         || results.iter().any(|result| {
-                            if result.match_kind == "title" {
+                            if matches!(result.match_kind.as_str(), "title" | "tag") {
                                 return false;
                             }
                             let located = result.page.is_some()
@@ -1062,6 +1112,51 @@ impl QuerySession {
         }
         Ok(())
     }
+}
+
+fn tag_pattern(query: &str) -> Result<regex::Regex, SearchPageError> {
+    let tag = query
+        .strip_prefix('#')
+        .filter(|tag| !tag.is_empty() && !tag.chars().any(|c| c.is_whitespace() || c == '"'))
+        .ok_or_else(|| {
+            SearchPageError::new("invalidRequest", "标签筛选格式为 #标签，不含空格或引号。")
+        })?;
+    regex::Regex::new(&format!(
+        r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#,
+        regex::escape(tag)
+    ))
+    .map_err(|_| SearchPageError::new("invalidRequest", "标签筛选条件无效。"))
+}
+
+fn search_tag_segments<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment>,
+    pattern: &regex::Regex,
+    query: &str,
+    budget: &mut SearchBudget,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    for segment in segments {
+        budget.segment(segment.text.len())?;
+        if segment.object_type == "markdown"
+            && segment.match_kind == "body"
+            && pattern.is_match(&segment.text)
+        {
+            return Ok(vec![KnowledgeSearchResult {
+                title: segment.title.clone(),
+                path: segment.path.clone(),
+                object_type: "markdown".into(),
+                match_kind: "tag".into(),
+                context: format!("标签 {query}"),
+                page: None,
+                annotation_id: None,
+                locator_kind: None,
+                locator_object_id: None,
+                location_label: None,
+                score: 80,
+                extraction_failed: segment.extraction_failed,
+            }]);
+        }
+    }
+    Ok(Vec::new())
 }
 
 #[cfg(test)]

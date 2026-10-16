@@ -42,7 +42,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-version-identity.mjs'], 
 execFileSync(process.execPath, ['--test', 'scripts/test-version-audit-fixture.mjs'], { stdio: 'inherit' })
 import './check-v123-fault-observation.mjs'
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-installer-receipt.mjs'], { stdio: 'inherit' })
-execFileSync(process.execPath, ['--test', 'scripts/test-search-recovery.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-search-recovery.mjs', 'scripts/test-search-pages.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
 import './check-community-updater-contract.mjs'
 import './check-v122-managed-updater-lifecycle.mjs'

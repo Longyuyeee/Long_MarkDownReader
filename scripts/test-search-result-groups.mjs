@@ -4,6 +4,7 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import { test } from 'node:test'
 import { compile as compileTemplate } from '@vue/compiler-dom'
+import { parse, compileScript } from '@vue/compiler-sfc'
 import * as Vue from 'vue'
 import { renderToString } from '@vue/server-renderer'
 const compile = source => ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
@@ -16,6 +17,14 @@ const { groupSearchResults, searchMatchKey } = load('src/utils/searchResultGroup
 const { searchQueryNeedle } = load('src/utils/searchQuery.ts')
 const plain = value => JSON.parse(JSON.stringify(value))
 const result = (path, page, extra = {}) => ({ path, title: '同名.pdf', objectType: 'pdf', matchKind: 'body', page, context: '预算', ...extra })
+function actualFileCard(){
+  const descriptor=parse(fs.readFileSync('src/components/SearchFileCard.vue','utf8')).descriptor
+  const component=compileScript(descriptor,{id:'actual-search-file-card',inlineTemplate:true})
+  const highlight={props:['text'],render(){return Vue.h('span',this.text)}}
+  const module={exports:{},require:name=>name==='vue'?Vue:name.includes('searchResultGroups')?{searchMatchKey}:name.includes('searchResultPath')?{searchResultPath:path=>path}:name==='lucide-vue-next'?{FileText:{render:()=>null}}:{default:highlight}}
+  vm.runInNewContext(compile(component.content),module)
+  return module.exports.default
+}
 
 test('same file pages group together without merging same-named files or losing ranking', () => {
   const a = result('/A/同名.pdf', 2), b = result('/B/同名.pdf', 1), c = result('/A/同名.pdf', 5)
@@ -49,27 +58,34 @@ test('actual result click forwards each PDF page and annotation to the existing 
 
 test('actual grouped results template exposes separate page actions and bounded-count wording', async () => {
   const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
-  const start = source.indexOf('<p v-if="!knowledgeSearchRunning')
-  const end = source.indexOf('</section>', start) + '</section>'.length
+  const start = source.indexOf('<SearchFileCard v-for=')
+  const end = source.indexOf('</SearchFileCard>', start) + '</SearchFileCard>'.length
   assert.ok(start > 0 && end > start)
   const render = new Function('Vue', compile(compileTemplate(source.slice(start, end), { mode: 'function', prefixIdentifiers: true, expressionPlugins: ['typescript'] }).code))(Vue)
   const items = [result('/a/report.pdf', 2), result('/b/report.pdf', 1), result('/a/report.pdf', 5)]
   const app = Vue.createSSRApp({ render, setup: () => ({
     knowledgeSearchRunning: false, knowledgeSearchFailed: false,
-    groupedKnowledgeSearchResults: groupSearchResults(items), searchMatchKey,
+    visibleSearchFiles: groupSearchResults(items).map(g=>({path:g.path,title:g.results[0].title,matches:g.results,mayHaveMoreMatches:true})), searchMatchKey,
     searchReturn: { selectedKey: { value: '' } },
     store: { libraryPath: '/' }, searchResultPath: path => path,
     searchQuery: '预算', resultFormatLabel: () => 'PDF', searchKindLabel: () => '正文',
     relationSummary: () => null, openKnowledgeSearchResult: () => {}, openRelationGraph: () => {},
   }) })
-  app.component('SearchHighlight', { props: ['text'], render() { return Vue.h('span', this.text) } })
+  app.component('SearchFileCard',actualFileCard())
   app.component('RelationSummaryBadge', { render: () => null })
   const html = await renderToString(app)
-  assert.equal((html.match(/class="knowledge-result-group"/g) || []).length, 2)
-  assert.equal((html.match(/class="knowledge-result-open"/g) || []).length, 3)
+  assert.equal((html.match(/<article /g) || []).length, 2)
+  assert.equal((html.match(/class="knowledge-result-open /g) || []).length, 5)
   assert.ok(html.includes('第 2 页') && html.includes('第 5 页'))
-  assert.ok(html.includes('不代表全部匹配次数'))
-  assert.ok(html.includes('同一文件 · 2 条结果'))
+  assert.ok(html.includes('不代表文件内全部出现次数'))
+  assert.ok(html.includes('/a/report.pdf') && html.includes('/b/report.pdf'))
+})
+test('restored fifth annotation expands the actual lazy position disclosure',async()=>{
+  const matches=Array.from({length:6},(_,n)=>result('/a.pdf',n+1,{matchKind:'annotation',annotationId:`a-${n}`}))
+  const html=await renderToString(Vue.createSSRApp(actualFileCard(),{file:{path:'/a.pdf',title:'a.pdf',matches,mayHaveMoreMatches:true},query:'预算',selectedKey:searchMatchKey(matches[4])}))
+  assert.match(html,/<details open class="search-more-matches"/)
+  assert.ok(html.includes('第 5 页 · 批注')&&html.includes('第 6 页 · 批注'))
+  assert.equal((html.match(/data-search-key=/g)||[]).length,6)
 })
 
 

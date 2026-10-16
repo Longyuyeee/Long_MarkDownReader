@@ -7,7 +7,7 @@ export interface WorkSession {
   tabs: SessionTab[]
   activeTabId: string | null
   savedAt: number
-  search?: { query: string; types: string[]; selected: string; scroll: number }
+  search?: { query: string; types: string[]; selected: string; scroll: number; loadedFiles?: number; sort?: 'relevance' | 'modified' }
   views?: Record<string, { scrollTop: number; scrollLeft: number; section?: string; zoom?: number }>
   reference?: { path: string; title: string; query: string; page?: number; annotationId?: string }
 }

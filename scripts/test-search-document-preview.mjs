@@ -139,8 +139,10 @@ test('normal result opens use main document navigation and never replace the ref
 
 test('main open and side reference remain distinct accessible actions', () => {
   const library = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
-  assert.match(library, /@click="openKnowledgeSearchResult\(result\)"/)
-  assert.match(library, /@click="showSearchPreview\(result\)">在侧边参考/)
+  const card = fs.readFileSync('src/components/SearchFileCard.vue','utf8')
+  assert.match(library, /@open="openKnowledgeSearchResult" @reference="showSearchPreview"/)
+  assert.match(card, /:aria-label="`打开 \$\{file.title\}`" @click="\$emit\('open', first\)"/)
+  assert.match(card, /:aria-label="`在侧边参考 \$\{file.title\}`" @click="\$emit\('reference', first\)">在侧边参考/)
   assert.doesNotMatch(source, /固定为参考|取消固定|\$emit\('pin'\)/)
   assert.match(source, /在主编辑区打开/)
   assert.match(source, /返回编辑/)
@@ -154,7 +156,7 @@ test('arrow keys move between main-open actions without opening files or swallow
   const context = {}
   vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.navigate = navigateSearchResults', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, context)
   let focused = -1, prevented = 0
-  const buttons = [0, 1, 2].map(index => ({ focus: () => { focused = index } }))
+  const buttons = [0, 1, 2].map(index => ({ getClientRects:()=>[{}], focus: () => { focused = index } }))
   const event = (key, index, matches = true) => ({ key, currentTarget: { querySelectorAll: () => buttons }, target: {
     matches: () => matches, closest: () => ({ querySelector: () => buttons[index] }),
   }, preventDefault: () => { prevented++ } })

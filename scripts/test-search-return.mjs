@@ -7,14 +7,15 @@ import { test } from 'node:test'
 let cleanupTarget
 const box = { exports: {}, require: () => ({ ...Vue, onBeforeUnmount: fn => cleanupTarget.push(fn) }) }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/composables/useSearchReturn.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, box)
-function harness(root) {
+function harness(root, paging=false) {
   const cleanups = []; cleanupTarget = cleanups
-  const scope = Vue.effectScope(), query = Vue.ref(''), types = Vue.ref([]), running = Vue.ref(false), failed = Vue.ref(false), keys = Vue.ref([]), library = Vue.ref(root)
+  const scope = Vue.effectScope(), query = Vue.ref(''), types = Vue.ref([]), running = Vue.ref(false), failed = Vue.ref(false), keys = Vue.ref([]), library = Vue.ref(root), loaded=Vue.ref(0),sort=Vue.ref('relevance'),more=Vue.ref(false)
+  let restored=0
   let focus = 0, shown = 0
   const node = { scrollTop: 0, querySelectorAll: () => keys.value.map(key => ({ dataset: { searchKey: key }, scrollIntoView: () => {}, querySelector: () => ({ focus: () => { focus++ } }) })) }
   const viewport = Vue.shallowRef(node)
-  const state = scope.run(() => box.exports.useSearchReturn({ root: () => library.value, query, types, running, failed, resultKeys: () => keys.value, viewport, showResults: () => { shown++ } }))
-  return { state, query, types, running, failed, keys, library, viewport, node, focus: () => focus, shown: () => shown, stop: () => { cleanups.forEach(fn => fn()); scope.stop() } }
+  const state = scope.run(() => box.exports.useSearchReturn({ root: () => library.value, query, types, running, failed, resultKeys: () => keys.value, viewport, showResults: () => { shown++ },...(paging?{sort,loadedFiles:()=>loaded.value,restoreLoadedFiles:n=>restored=n,hasMore:()=>more.value}:{}) }))
+  return { state, query, types, running, failed, keys, library, viewport, node, loaded,sort,more,restored:()=>restored, focus: () => focus, shown: () => shown, stop: () => { cleanups.forEach(fn => fn()); scope.stop() } }
 }
 const settle = async () => { await Vue.nextTick(); await Vue.nextTick(); await Promise.resolve() }
 test('leaving and reopening restores query, filters, selected result and scroll after fresh results', async () => {
@@ -26,6 +27,18 @@ test('leaving and reopening restores query, filters, selected result and scroll 
   assert.equal(back.node.scrollTop, 420); assert.equal(back.state.selectedKey.value, 'page-5'); assert.equal(back.focus(), 0)
   back.state.returnToResults(); await settle(); assert.equal(back.focus(), 1)
   back.stop()
+})
+
+test('paged return restores sort and depth, retaining a not-yet-loaded selection',async()=>{
+  const first=harness('/paged-return',true);first.query.value='预算';first.sort.value='modified';first.loaded.value=80;first.state.remember('file-75');first.stop()
+  const back=harness('/paged-return',true);back.running.value=true;back.state.restore();assert.equal(back.restored(),80);assert.equal(back.sort.value,'modified')
+  back.keys.value=['file-1'];back.more.value=true;back.running.value=false;await settle();assert.equal(back.state.selectedKey.value,'file-75');assert.match(back.state.notice.value,/尚未加载/)
+  back.keys.value=['file-1','file-75'];await settle();back.state.returnToResults();await settle();assert.equal(back.focus(),1);back.stop()
+})
+test('named work-session restore retains bounded sort and page depth without old selection',async()=>{
+  box.exports.restoreSearchSession('/named-paged-return',{query:'预算',types:['pdf'],selected:'old',scroll:500,loadedFiles:80,sort:'modified'})
+  const back=harness('/named-paged-return',true);back.running.value=true;back.state.restore()
+  assert.equal(back.restored(),80);assert.equal(back.sort.value,'modified');assert.equal(back.state.selectedKey.value,'');assert.deepEqual([...back.types.value],['pdf']);back.stop()
 })
 test('missing result is explained; a failed refresh does not discard the saved selection', async () => {
   const first = harness('/return-b'); first.query.value = '项目'; first.state.remember('gone'); first.stop()

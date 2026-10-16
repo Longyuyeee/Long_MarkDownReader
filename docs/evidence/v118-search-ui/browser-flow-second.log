@@ -1,0 +1,12 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+page.evaluate: Cannot serialize result: object reference chain is too long.
+    at fixture (E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-v118-search-pages-browser.mjs:16:31)
+    at E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-v118-search-pages-browser.mjs:63:9 {
+  log: [],
+  name: 'Error'
+}
+
+Node.js v22.12.0

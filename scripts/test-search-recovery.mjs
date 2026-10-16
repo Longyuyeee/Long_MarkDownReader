@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import ts from 'typescript'
 import { test } from 'node:test'
+import { createSearchPages } from '../src/services/searchPages.ts'
 const queryModule = { exports: {} }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/searchQuery.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, queryModule)
 import { createRenderer, effectScope, nextTick, onUnmounted, reactive, ref, watch } from 'vue'
@@ -33,6 +34,8 @@ const harness = (vueWatchers = false) => {
     parseSearchQuery: queryModule.exports.parseSearchQuery,
     searchQuery: box(''), knowledgeSearchResults: box([]), knowledgeSearchRunning: box(false), knowledgeSearchFailed: box(false), knowledgeSearchError: box(''),
     activeCollectionId: box(''), store: reactive({ libraryPath: 'synthetic-library' }), knowledgeSearchGeneration: 0,
+    knowledgeSort: box('relevance'), restoreSearchFiles:0, searchReturn:{reconcile:()=>{}},
+    activeGraphCollection:box(null),
     relationSummaries: box({}), searchObjectTypes: box(['markdown']),
     fetchLibStats: () => {}, fetchAllTags: () => {}, refreshGitStatus: () => {},
     refreshRelationSummaries: async () => {}, refreshKnowledgeIndexStatus: async () => {}, refreshLibrary: () => {},
@@ -44,12 +47,28 @@ const harness = (vueWatchers = false) => {
     // The production unmount now also retires file dragging. This scheduler
     // harness supplies that separate dependency; search assertions stay intact.
     resetFileDrag: noop,
+    onPaletteSearchReference:noop,
     revealLibraryFile: noop, refreshCreatedLibraryFile: noop, handleKeyDown: noop,
     shadowSaveTimer: null, gitStatusTimer: null, cleanupEditorListeners: noop, destroyOutlineObserver: noop,
     unlistenRefresh: null, unlistenExport: null, unlistenRefreshCmd: null, unlistenSaveCmd: null,
     unlistenDailyNote: null, unlistenFocus: null, unlistenDrop: null, vditor: null,
   })
-  const run = () => vm.runInContext(`${javascript}\n${vueWatchers ? libraryJavascript : ''}\n${vueWatchers === 'component' ? unmountJavascript : ''}\nglobalThis.schedule = scheduleKnowledgeSearch; globalThis.retry = retryKnowledgeSearch`, context)
+  const protocolInvoke = (command, nativeArgs) => {
+    if(command==='close_knowledge_search')return Promise.resolve(true)
+    assert.equal(command,'search_knowledge_page','the actual scheduler must use the new page API, including tags')
+    const request=deferred(),args=nativeArgs.request
+    pending.push({command,args,nativeArgs,reject:request.reject,resolve:results=>request.resolve({sessionId:'native-'+pending.length,snapshotId:'snapshot',files:results.map(result=>{
+      const match={path:'synthetic-library/'+result.title,objectType:'markdown',matchKind:'body',context:'project',score:60,extractionFailed:false,...result}
+      return {path:match.path,title:match.title,matches:[match],mayHaveMoreMatches:false,locationLimitPerKind:5,unlocatedLimitPerKind:1}
+    }),pageOffset:0,nextCursor:null,scanState:'ready',scanComplete:true,totalFiles:results.length})})
+    return request.promise
+  }
+  context.knowledgePages=createSearchPages(protocolInvoke,{autoMs:0})
+  context.tagSearch={get value(){return /^#[^\s"]+$/.test(context.searchQuery.value.trim())}}
+  const fileWatchStart=source.indexOf('watch(knowledgePages.files,'),fileWatchEnd=source.indexOf('const searchViewport',fileWatchStart)
+  assert.ok(fileWatchStart>=0 && fileWatchEnd>fileWatchStart)
+  const fileWatchJavascript=ts.transpileModule(source.slice(fileWatchStart,fileWatchEnd),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText
+  const run = () => vm.runInContext(`${vueWatchers ? fileWatchJavascript : ''}\n${javascript}\n${vueWatchers ? libraryJavascript : ''}\n${vueWatchers === 'component' ? unmountJavascript : ''}\nglobalThis.schedule = scheduleKnowledgeSearch; globalThis.retry = retryKnowledgeSearch`, context)
   let app
   if (vueWatchers === 'component') {
     const renderer = createRenderer({ createComment: () => ({}), createText: () => ({}), createElement: () => ({}),
@@ -65,7 +84,7 @@ for (const query of ['项目', '#项目']) test(`failure and retry preserve quer
   assert.equal(h.context.knowledgeSearchFailed.value, true)
   assert.equal(h.context.knowledgeSearchError.value, '', 'native error details must not become the default search message')
   assert.equal(h.context.knowledgeSearchRunning.value, false)
-  h.context.retry(); const second = h.flush()
+  const second = h.context.retry()
   assert.deepEqual(h.pending[1].args, h.pending[0].args)
   h.pending[1].resolve([]); await second
   assert.equal(h.context.knowledgeSearchFailed.value, false)
@@ -117,7 +136,7 @@ test('real Vue watchers debounce changes and retry retains format filter', async
     const done = h.flush(); assert.equal(h.pending.length, 1)
     assert.equal(h.pending[0].args.query, '项目')
     h.pending[0].reject(new Error('synthetic')); await done
-    h.context.retry(); const retry = h.flush()
+    const retry = h.context.retry()
     h.pending[1].resolve([{ title: 'found' }]); await retry
     assert.equal(h.context.knowledgeSearchResults.value[0].title, 'found')
     assert.equal(h.context.searchObjectTypes.value[0], 'markdown')

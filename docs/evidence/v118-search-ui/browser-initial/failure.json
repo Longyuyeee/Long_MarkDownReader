@@ -1,0 +1,10 @@
+{
+  "message": "TimeoutError: locator.click: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.knowledge-search-results .search-file-card').first().getByRole('button', { name: '在侧边参考 项目预算.md', exact: true })\u001b[22m\n",
+  "errors": [],
+  "checks": [
+    "actual LibraryMode loads file pages, identifies duplicate titles, opens the main editor, and restores the 80-file search depth and selected late file after leaving the view",
+    "all 244 file cards are reachable beyond 200 without duplicate append; five PDF annotation positions occupy one file card",
+    "tag shortcut uses the bounded native page request with exact-case tag mode; changing sort starts a new request instead of sorting only the visible page"
+  ],
+  "layouts": []
+}
