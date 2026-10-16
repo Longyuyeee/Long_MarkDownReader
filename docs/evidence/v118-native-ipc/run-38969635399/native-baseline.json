@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "phase": "baseline",
+  "evidenceLevel": "debug-tauri-wry-real-ipc-and-generated-disk-not-installed",
+  "productCommit": "c70735c7064d9e8f30f1bfae98acee634ba040d8",
+  "harnessCommit": "55928338912d49aa2c54f9a78b8fc6d374a60e9f",
+  "executableSha256": "18e66fc547ad7cf719fbd4c033a7608489529f1fee173e73d888e42b1dd093f4",
+  "runtimeBaseVersion": "1.1.7",
+  "sourceUserContentIncluded": false,
+  "desktopInputUsed": false,
+  "checks": [
+    "actual-product-identity-and-generated-config"
+  ],
+  "calls": [
+    {
+      "window": "main",
+      "command": "plugin:app|version",
+      "elapsedMs": 69.156,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "get_config",
+      "elapsedMs": 7.306,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 257.483,
+      "ok": false,
+      "code": "expired"
+    }
+  ],
+  "samples": [],
+  "error": {
+    "message": "资料或查询现场已变化，请重新搜索；不会替换或保存当前草稿。",
+    "code": "expired"
+  }
+}

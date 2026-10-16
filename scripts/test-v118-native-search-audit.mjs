@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
+import vm from 'node:vm'
 import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { parse } from 'yaml'
@@ -45,8 +46,8 @@ test('workflow pins the product separately from its harness and cannot publish o
   assert.ok(workflowSource.includes('if: always()')&&workflowSource.includes('retention-days: 14'))
   assert.ok(workflowSource.indexOf('Retain immutable Debug program')<workflowSource.indexOf('- name: Real native page IPC'))
   assert.ok(workflowSource.includes('isInstaller=$false')&&workflowSource.includes('releaseCandidate=$false'))
-  assert.ok(workflowSource.includes("NATIVE_PROGRAM_RUN_ID: '38967444304'"))
-  assert.ok(workflowSource.includes("NATIVE_PROGRAM_SHA256: '18e66fc547ad7cf719fbd4c033a7608489529f1fee173e73d888e42b1dd093f4'"))
+  for(const key of ['NATIVE_PROGRAM_RUN_ID','NATIVE_PROGRAM_SHA256','NATIVE_PROGRAM_HARNESS_COMMIT'])assert.equal(workflow.jobs['native-search'].env[key],'','changed product requires a fresh build, not the previous program')
+  assert.ok(workflowSource.includes('Original program reuse requires exact digest and harness identity'))
   assert.ok(workflowSource.includes('Verify original build provenance and program bytes before reuse'))
   assert.ok(workflowSource.includes('$receipt.sizeBytes -ne $program.Length'))
   assert.ok(runner.includes("'--minimized'")&&runner.includes('-WindowStyle Hidden'))
@@ -62,6 +63,15 @@ test('native driver never substitutes IPC or simulates a desktop click',()=>{
   assert.ok(driver.includes('fresh process must use the persisted index'))
   assert.ok(driver.includes('restart must use the same executable bytes'))
   assert.ok(driver.includes('native-window-label-and-channel-isolation'))
+})
+test('native driver waits for the actual page and rejects current runtime and route failure surfaces',()=>{
+  assert.ok(driver.indexOf('assert.equal(await main.evaluate(surfaceReady),true')<driver.indexOf("const cold=await allSingle(request())"))
+  assert.ok(driver.includes("document.querySelector('.settings-view')")&&driver.includes('store?.configReady===true'))
+  const expression=driver.match(/report\.uiObservation=await main\.evaluate\('([^']+)'\)/)?.[1]
+  assert.ok(expression)
+  const observe=present=>vm.runInNewContext(expression,{document:{title:'test',querySelector:selectors=>selectors.split(',').includes(present)?{}:null},location:{hash:'#/settings'}})
+  assert.equal(observe('none').errorOverlay,false)
+  for(const selector of ['#crash-screen','#runtime-error-notice','.route-error-notice','.global-error-overlay','.startup-fatal-screen'])assert.equal(observe(selector).errorOverlay,true,selector)
 })
 test('debugger policy is app-scoped, refuses user machines and restores only its own unchanged values',()=>{
   assert.doesNotMatch(policy,/HKCU:|['"]\*['"]|DeveloperToolsAvailability|SmartScreenEnabled/)

@@ -25,9 +25,11 @@ jobs:
     timeout-minutes: 45
     env:
       CARGO_TERM_COLOR: always
-      # Harness-only repair: reuse these exact development bytes, not an installer.
-      NATIVE_PROGRAM_RUN_ID: '38967444304'
-      NATIVE_PROGRAM_SHA256: '18e66fc547ad7cf719fbd4c033a7608489529f1fee173e73d888e42b1dd093f4'
+      # Product changed: build new bytes. Any later harness-only reuse must pin
+      # all three original build identities and still match the frozen product.
+      NATIVE_PROGRAM_RUN_ID: ''
+      NATIVE_PROGRAM_SHA256: ''
+      NATIVE_PROGRAM_HARNESS_COMMIT: ''
     steps:
       - name: Check out audit harness
         uses: actions/checkout@v6
@@ -36,7 +38,7 @@ jobs:
       - name: Check out immutable development product (not an installer candidate)
         uses: actions/checkout@v6
         with:
-          ref: c70735c7064d9e8f30f1bfae98acee634ba040d8
+          ref: b32e8d7930a1e94364c9b1951a86b9325624fa50
           path: product
       - uses: actions/setup-node@v6
         with:
@@ -72,7 +74,7 @@ jobs:
           New-Item -ItemType Directory -Path $folder | Out-Null
           $program=Get-Item -LiteralPath 'product/src-tauri/target/debug/tauri-app.exe'
           Copy-Item -LiteralPath $program.FullName -Destination (Join-Path $folder 'tauri-app.exe')
-          @{schemaVersion=1;productCommit='c70735c7064d9e8f30f1bfae98acee634ba040d8';harnessCommit=$env:GITHUB_SHA;buildRunId=$env:GITHUB_RUN_ID;runtimeBaseVersion='1.1.7';releaseCandidate=$false;isInstaller=$false;sourceUserContentIncluded=$false;sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $program.FullName).Hash.ToLowerInvariant();sizeBytes=$program.Length} | ConvertTo-Json | Out-File -Encoding utf8 -LiteralPath (Join-Path $folder 'program-build-receipt.json')
+          @{schemaVersion=1;productCommit='b32e8d7930a1e94364c9b1951a86b9325624fa50';harnessCommit=$env:GITHUB_SHA;buildRunId=$env:GITHUB_RUN_ID;runtimeBaseVersion='1.1.7';releaseCandidate=$false;isInstaller=$false;sourceUserContentIncluded=$false;sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $program.FullName).Hash.ToLowerInvariant();sizeBytes=$program.Length} | ConvertTo-Json | Out-File -Encoding utf8 -LiteralPath (Join-Path $folder 'program-build-receipt.json')
       - uses: actions/upload-artifact@v4
         if: env.NATIVE_PROGRAM_RUN_ID == ''
         with:
@@ -95,8 +97,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference='Stop'
+          if($env:NATIVE_PROGRAM_SHA256 -notmatch '^[a-f0-9]{64}$' -or $env:NATIVE_PROGRAM_HARNESS_COMMIT -notmatch '^[a-f0-9]{40}$'){throw 'Original program reuse requires exact digest and harness identity'}
           $run=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:NATIVE_PROGRAM_RUN_ID" | ConvertFrom-Json
-          if($LASTEXITCODE -ne 0 -or $run.status -ne 'completed' -or $run.head_sha -ne '34f9af29e8e1083678b5738119803755a1c253e9' -or $run.path -ne '.github/workflows/v118-search-native.yml'){throw 'Original program run provenance differs'}
+          if($LASTEXITCODE -ne 0 -or $run.status -ne 'completed' -or $run.head_sha -ne $env:NATIVE_PROGRAM_HARNESS_COMMIT -or $run.path -ne '.github/workflows/v118-search-native.yml'){throw 'Original program run provenance differs'}
           $jobs=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:NATIVE_PROGRAM_RUN_ID/jobs" | ConvertFrom-Json
           if($LASTEXITCODE -ne 0){throw 'Original build job receipt unavailable'}
           foreach($name in @('Build actual Debug Tauri application with isolated E2E identity','Retain immutable Debug program separately from test outcome')){
@@ -106,7 +109,7 @@ jobs:
           $receipt=Get-Content -LiteralPath native-debug-program/program-build-receipt.json -Raw -Encoding UTF8 | ConvertFrom-Json
           $program=Get-Item -LiteralPath native-debug-program/tauri-app.exe
           $hash=(Get-FileHash -LiteralPath $program.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          if($hash -ne $env:NATIVE_PROGRAM_SHA256 -or $receipt.sha256 -ne $hash -or $receipt.sizeBytes -ne $program.Length -or $receipt.productCommit -ne 'c70735c7064d9e8f30f1bfae98acee634ba040d8' -or $receipt.harnessCommit -ne $run.head_sha -or $receipt.buildRunId -ne $env:NATIVE_PROGRAM_RUN_ID -or $receipt.runtimeBaseVersion -ne '1.1.7' -or $receipt.isInstaller -ne $false -or $receipt.releaseCandidate -ne $false -or $receipt.sourceUserContentIncluded -ne $false){throw 'Fixed Debug program byte/source identity drifted'}
+          if($hash -ne $env:NATIVE_PROGRAM_SHA256 -or $receipt.sha256 -ne $hash -or $receipt.sizeBytes -ne $program.Length -or $receipt.productCommit -ne 'b32e8d7930a1e94364c9b1951a86b9325624fa50' -or $receipt.harnessCommit -ne $run.head_sha -or $receipt.buildRunId -ne $env:NATIVE_PROGRAM_RUN_ID -or $receipt.runtimeBaseVersion -ne '1.1.7' -or $receipt.isInstaller -ne $false -or $receipt.releaseCandidate -ne $false -or $receipt.sourceUserContentIncluded -ne $false){throw 'Fixed Debug program byte/source identity drifted'}
           $target=Join-Path $env:GITHUB_WORKSPACE 'product/src-tauri/target/debug'
           New-Item -ItemType Directory -Path $target -Force | Out-Null
           if(Test-Path -LiteralPath (Join-Path $target 'tauri-app.exe')){throw 'Refuse to overwrite another program'}

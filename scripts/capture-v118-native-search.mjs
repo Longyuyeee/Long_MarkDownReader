@@ -52,6 +52,12 @@ async function allLibraries(req){let frame;for(let n=0;n<200;n++){frame=await ma
 try{
   main=await connect(target=>target.url.startsWith('http://127.0.0.1:14200/')&&!target.url.includes('quick-note'))
   for(let n=0;n<120&&!await main.evaluate('!!window.__TAURI_INTERNALS__?.invoke');n++)await delay(100)
+  // The native bridge precedes Vue bootstrap in a development WebView. Wait
+  // for the actual user-facing route and loaded store, not an arbitrary sleep
+  // or a search retry that could conceal an expired first request.
+  const surfaceReady=`(() => { const app=document.querySelector('#app').__vue_app__; const store=app?.config.globalProperties.$pinia?._s.get('app'); return !!document.querySelector('.settings-view') && !document.querySelector('#app-startup-screen') && store?.configReady===true && store.activeLibraryPath===${JSON.stringify(fixture.library)}; })()`
+  for(let n=0;n<600&&!await main.evaluate(surfaceReady);n++)await delay(100)
+  assert.equal(await main.evaluate(surfaceReady),true,'actual settings page and fixture store must finish bootstrap before a user search')
   assert.equal(await main.invoke('plugin:app|version'),'1.1.7')
   const config=await main.invoke('get_config');assert.equal(config.activeLibraryPath,fixture.library);assert.equal(config.libraries.length,3)
   checks.push('actual-product-identity-and-generated-config')
@@ -105,7 +111,7 @@ try{
     report.expectedGroups=groupIdentity(warm.files)
     checks.push('real-rebuild-memory-cache-matches-cold-groups-and-persists-for-restart')
   }
-  report.uiObservation=await main.evaluate('({title:document.title,hash:location.hash,errorOverlay:!!document.querySelector("#crash-screen,#runtime-error-notice,.route-error-fallback")})')
+  report.uiObservation=await main.evaluate('({title:document.title,hash:location.hash,errorOverlay:!!document.querySelector("#crash-screen,#runtime-error-notice,.route-error-notice,.global-error-overlay,.startup-fatal-screen")})')
   assert.equal(report.uiObservation.errorOverlay,false)
   report.status='passed'
 }catch(error){report.status='failed';report.error=error&&typeof error==='object'?{message:error.message,code:error.code,stack:error.stack}:String(error);throw error}

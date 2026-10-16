@@ -3,7 +3,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import assert from 'node:assert/strict'
 
-export const nativeSearchProduct = 'c70735c7064d9e8f30f1bfae98acee634ba040d8'
+export const nativeSearchProduct = 'b32e8d7930a1e94364c9b1951a86b9325624fa50'
 export function assertHostedSearchAudit(env=process.env) {
   assert.equal(env.GITHUB_ACTIONS,'true','native runtime audit is restricted to GitHub-hosted disposable runners')
   assert.equal(env.RUNNER_ENVIRONMENT,'github-hosted','never run against a self-hosted/user desktop')
