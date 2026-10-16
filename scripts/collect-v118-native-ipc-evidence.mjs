@@ -21,7 +21,7 @@ function walk(directory){return fs.readdirSync(directory,{withFileTypes:true}).f
   return [digest(name,fs.readFileSync(name))]
 }).sort((a,b)=>a.path.localeCompare(b.path))}
 const read=name=>fs.readFileSync(root+'/'+name,'utf8')
-assert.match(read('harness-contracts-reuse.log'),/# pass 56\r?\n# fail 0/)
+assert.match(read('harness-contracts-elevated.log'),/# pass 56\r?\n# fail 0/)
 assert.match(read('quality-gate-final.log'),/found 0 vulnerabilities/)
 const page=JSON.parse(read('feedback-browser-second/report.json'));assert.equal(page.checks.length,3);assert.deepEqual(page.errors,[])
 const nativeReceiptPath=process.argv[2],nativeDirectory=process.argv[3]

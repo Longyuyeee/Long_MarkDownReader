@@ -1,12 +1,14 @@
 # Official app-scoped WebView2 debugger alternative to environment variables:
 # https://learn.microsoft.com/en-us/microsoft-edge/webview2/how-to/debug-visual-studio-code
-# Only used on a disposable hosted runner. No wildcard, machine-wide or security
-# policy changes; pre-existing values are never overwritten.
+# Elevated hosted runners ignore HKCU/env overrides on recent WebView2:
+# https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/security
+# Only exact application values under HKLM on a disposable hosted runner. No
+# wildcard, security switch or overwritten value; never run on user machines.
 $script:nativePolicyEntries=New-Object System.Collections.Generic.List[object]
 function Get-V118WebViewPolicyPlan([string]$UserDataRoot) {
   foreach($hostId in @('com.longedit.app.e2e','tauri-app.exe','tauri-app')) {
-    [pscustomobject]@{key='HKCU:\Software\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments';name=$hostId;value='--remote-debugging-port=9458 --remote-allow-origins=http://127.0.0.1:9458'}
-    [pscustomobject]@{key='HKCU:\Software\Policies\Microsoft\Edge\WebView2\UserDataFolder';name=$hostId;value=$UserDataRoot}
+    [pscustomobject]@{key='HKLM:\Software\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments';name=$hostId;value='--remote-debugging-port=9458 --remote-allow-origins=http://127.0.0.1:9458'}
+    [pscustomobject]@{key='HKLM:\Software\Policies\Microsoft\Edge\WebView2\UserDataFolder';name=$hostId;value=$UserDataRoot}
   }
 }
 function Enable-V118WebViewTestPolicy([string]$UserDataRoot) {

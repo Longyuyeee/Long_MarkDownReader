@@ -31,6 +31,9 @@ $node=(Get-Command node.exe).Source
 $vite=$null; $app=$null
 try {
   Enable-V118WebViewTestPolicy $fixture.webview
+  $policyPlan=@(Get-V118WebViewPolicyPlan $fixture.webview)
+  foreach($entry in $policyPlan){if((Get-Item -LiteralPath $entry.key).GetValue($entry.name) -cne $entry.value){throw 'Dedicated debugger configuration was not retained'}}
+  @{schemaVersion=1;elevated=([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator);entries=$policyPlan;scope='exact-test-host-values-on-disposable-hosted-runner';sourceUserContentIncluded=$false} | ConvertTo-Json -Depth 4 | Out-File -Encoding utf8 -LiteralPath (Join-Path $output 'debugger-configuration.json')
   # Direct Node invocation avoids npm/PowerShell argument forwarding differences.
   $vite=Start-Process -FilePath $node -ArgumentList 'node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','14200','--strictPort' -WorkingDirectory $product -WindowStyle Hidden -RedirectStandardOutput (Join-Path $output 'vite.stdout.log') -RedirectStandardError (Join-Path $output 'vite.stderr.log') -PassThru
   $ready=$false

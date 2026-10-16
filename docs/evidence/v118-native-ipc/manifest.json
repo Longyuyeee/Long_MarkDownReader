@@ -16,8 +16,8 @@
     "productionVulnerabilities": 0,
     "native": {
       "status": "failed",
-      "runId": 38967444304,
-      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38967444304",
+      "runId": 38968991003,
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38968991003",
       "conclusion": "failure"
     }
   },
@@ -55,8 +55,8 @@
     },
     {
       "path": "scripts/run-v118-native-search.ps1",
-      "bytes": 5647,
-      "sha256": "114df0945f5c3f8d478c4bf1ced6abd86e3d5831c540edd8deceeccc89a8923b"
+      "bytes": 6291,
+      "sha256": "d84ef9562a33b6d41983681baa45f9b6407fee2defef622ac5d977ea812220dc"
     },
     {
       "path": "scripts/lib/v118-native-search-fixture.mjs",
@@ -65,8 +65,8 @@
     },
     {
       "path": "scripts/lib/v118-webview-test-policy.ps1",
-      "bytes": 2432,
-      "sha256": "d3bf35601600de4e1afedc870d9afd79cf3eaf0af0e1e0817cd686b75416f47f"
+      "bytes": 2595,
+      "sha256": "cb0c937e3a390f78cb998d905e963598f758e90e170a6d9fcbed2bf4de0f367b"
     },
     {
       "path": "scripts/lib/v118-native-search-evidence.mjs",
@@ -75,8 +75,8 @@
     },
     {
       "path": "scripts/test-v118-native-search-audit.mjs",
-      "bytes": 9731,
-      "sha256": "88d88511e315c7e598ca8f100e43f0b37b913cba4602c06e231100472958f2f4"
+      "bytes": 10201,
+      "sha256": "32761a7eef915b313c9dc37304080589918cada923bb487cec00bd070fa7de47"
     },
     {
       "path": "scripts/test-v118-native-search-evidence.mjs",
@@ -115,23 +115,23 @@
     },
     {
       "path": "scripts/collect-v118-native-ipc-evidence.mjs",
-      "bytes": 4225,
-      "sha256": "2fdc9ed9cfd11371ae2e41e5dab41031ddde4f7dfe50a54d2aee2addb3c6af28"
+      "bytes": 4228,
+      "sha256": "0100c886c7977e7c2575f7c3b827d4e8e604ae26afd72f4d65f0d7cf4bb7c8a2"
     },
     {
       "path": "docs/V1_1_8_Native_IPC_Audit_2026-10-17.md",
-      "bytes": 9444,
-      "sha256": "251d2dcf6f32ce5f7bf0bf56a5f99fb4b8ea04f25a8b893e07ce39462cba157c"
+      "bytes": 11034,
+      "sha256": "2722cd477de2f076855ead6091b4d4cc16b61aa784871b8c5c1e7805511be3bb"
     },
     {
       "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
-      "bytes": 18052,
-      "sha256": "6ae30f4f7b14aad8ec742aced5f5381a7a035f352ecaa48bd02dd972e5a5a740"
+      "bytes": 18037,
+      "sha256": "559eaa8dd9e521dfe96d9a293e8f82213ac5c3046ce7c19ee68ae763e9b7a9e2"
     },
     {
       "path": "docs/Development_Handoff.md",
-      "bytes": 433381,
-      "sha256": "8d98e188c1186cbfffa6265e0a8b06cfc073b3782c7becf368eb552afbb91d99"
+      "bytes": 433390,
+      "sha256": "ed60c7fa15a37e5d7c1ddb1b31add221ee4f4a594836d5a4fdd8052a734b61bf"
     }
   ],
   "evidenceFiles": [
@@ -191,6 +191,11 @@
       "sha256": "f94cd19b321295fd8dd2f9d4737bcb97c60809f21e38905f90591ba3d7d7b2a2"
     },
     {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-elevated.log",
+      "bytes": 9824,
+      "sha256": "a6d79e15fe708e545101220f568464f3a261a2ae4c56f54f6bda2e69092905a8"
+    },
+    {
       "path": "docs/evidence/v118-native-ipc/harness-contracts-final.log",
       "bytes": 8255,
       "sha256": "e09a363e5b1689618e028a112bbfccdc080f0c70e0dbe6d3dee246bdad6c5015"
@@ -229,6 +234,16 @@
       "path": "docs/evidence/v118-native-ipc/native-run-first.json",
       "bytes": 2982,
       "sha256": "f1c423eaf475c544e9887c091b1ea4a276d739288680b75607fe2ec7e4640405"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-fourth-failure.log",
+      "bytes": 4857,
+      "sha256": "c0f8e7e193d7cc8012c101ee45eafd209b7998e83a1433ecf15933e77049f16c"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-fourth.json",
+      "bytes": 278,
+      "sha256": "835709f561219df7b03e3894fc0fb1e0a984f7da0267efbcb037ce95f443bc91"
     },
     {
       "path": "docs/evidence/v118-native-ipc/native-run-second-failure.log",
@@ -279,6 +294,11 @@
       "path": "docs/evidence/v118-native-ipc/product-ci.json",
       "bytes": 238,
       "sha256": "3f25b4f4f6f182c9bde5a7ffa5df5deadc320c9af54b350276b3a0d545bd7f21"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/program-build-receipt-38967444304.json",
+      "bytes": 457,
+      "sha256": "c0901bfd24ebf7035ec57f4394d90a7ae32b30c8efcef5cd6b417b0bb94a3511"
     },
     {
       "path": "docs/evidence/v118-native-ipc/quality-gate-final.log",
@@ -374,6 +394,41 @@
       "path": "docs/evidence/v118-native-ipc/run-38967444304/vite.stdout.log",
       "bytes": 225,
       "sha256": "3f0a93f877700116c6b3fccadd516a551006f031a9d630485694b31e9a50d00a"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/baseline-process-diagnostic.json",
+      "bytes": 7249,
+      "sha256": "923c052b79292c7b532832bfb52e4d7213d0b563b45beb85245fedd53977764f"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/baseline.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/baseline.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/native-baseline.json",
+      "bytes": 1087,
+      "sha256": "90005dfcf9bfdd93b6f7298bb7a25611f4900306dea949954dc134343357d4bd"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/program-build-receipt.json",
+      "bytes": 457,
+      "sha256": "c0901bfd24ebf7035ec57f4394d90a7ae32b30c8efcef5cd6b417b0bb94a3511"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/vite.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38968991003/vite.stdout.log",
+      "bytes": 225,
+      "sha256": "bebd2c0feb6fed52f28a6ba2af6617e0f1e5c28a2a773047b2d56439247d36a2"
     }
   ]
 }

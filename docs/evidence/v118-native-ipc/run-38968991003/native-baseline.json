@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "phase": "baseline",
+  "evidenceLevel": "debug-tauri-wry-real-ipc-and-generated-disk-not-installed",
+  "productCommit": "c70735c7064d9e8f30f1bfae98acee634ba040d8",
+  "harnessCommit": "696f4231c5cae0a2ee074f9a17a8a4baf8427087",
+  "executableSha256": "18e66fc547ad7cf719fbd4c033a7608489529f1fee173e73d888e42b1dd093f4",
+  "runtimeBaseVersion": "1.1.7",
+  "sourceUserContentIncluded": false,
+  "desktopInputUsed": false,
+  "checks": [],
+  "calls": [],
+  "samples": [],
+  "connectionDiagnostics": {
+    "lastTargets": [],
+    "lastConnectionError": "TypeError: fetch failed"
+  },
+  "error": {
+    "message": "the intended real Wry target was not advertised; see connectionDiagnostics",
+    "stack": "Error: the intended real Wry target was not advertised; see connectionDiagnostics\n    at connect (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-search.mjs:29:84)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-search.mjs:53:8"
+  }
+}

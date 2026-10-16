@@ -64,7 +64,11 @@ test('native driver never substitutes IPC or simulates a desktop click',()=>{
   assert.ok(driver.includes('native-window-label-and-channel-isolation'))
 })
 test('debugger policy is app-scoped, refuses user machines and restores only its own unchanged values',()=>{
-  assert.doesNotMatch(policy,/HKLM:|['"]\*['"]|DeveloperToolsAvailability|SmartScreenEnabled/)
+  assert.doesNotMatch(policy,/HKCU:|['"]\*['"]|DeveloperToolsAvailability|SmartScreenEnabled/)
+  const keys=[...policy.matchAll(/key='([^']+)'/g)].map(match=>match[1])
+  assert.deepEqual(keys,['HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\AdditionalBrowserArguments','HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\UserDataFolder'])
+  assert.ok(policy.includes("@('com.longedit.app.e2e','tauri-app.exe','tauri-app')"))
+  assert.ok(runner.includes('Dedicated debugger configuration was not retained')&&runner.includes('debugger-configuration.json'))
   assert.match(policy,/RUNNER_ENVIRONMENT -ne 'github-hosted'/)
   assert.ok(policy.indexOf('foreach($entry in $plan){if(')<policy.indexOf('New-ItemProperty'))
   assert.match(policy,/GetValue\(\$entry.name\) -ceq \$entry.value/)
