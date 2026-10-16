@@ -11,6 +11,7 @@ export const saveHistoryChecks = [
   'history-search-finds-body-and-note',
   'context-menu-pin-and-note-persist',
   'retention-and-move-keep-important-version-metadata',
+  'explicit-markdown-save-keeps-before-and-after-versions',
   'save-history-workflows-have-no-global-error-overlay',
 ]
 
@@ -86,7 +87,15 @@ export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,c
     const moved=await invoke('transfer_library_items',{libraryRoot:library,paths:[md],targetDir:target,operation:'move'})
     assert.deepEqual(moved.errors,[]);assert.equal(moved.items.length,1)
     const next=moved.items[0].newPath;assert.deepEqual((await invoke('get_history_metadata',historyArgs(next)))[important],metadata[important]);check(saveHistoryChecks[7])
-    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[8])
+    await navigate('/library?path='+encodeURIComponent(next));await waitFor(`(${editor})?.textContent.includes('external markdown')`,'v117 ordinary save reader ready')
+    await evaluate(`(async()=>{await (${store}).updateConfig({maxHistoryCount:20})})()`)
+    await click(editor);await press('End','End',35,2);await send('Input.insertText',{text:'\nnormal save checkpoint 117'})
+    await click(`document.querySelector('[data-testid="library-explicit-save"]')`)
+    await waitFor(`(${store}).tabs.some(t=>!t.isDirty&&t.content?.includes('normal save checkpoint 117'))`,'v117 ordinary save receipt')
+    const automatic=await invoke('list_history',historyArgs(next))
+    assert.ok(automatic[0][1].includes('normal save checkpoint 117'));assert.ok(automatic[1][1].includes('external markdown')&&!automatic[1][1].includes('normal save checkpoint 117'))
+    assert.match(await fs.readFile(next,'utf8'),/normal save checkpoint 117/);check(saveHistoryChecks[8])
+    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[9])
     report.status='passed'
   } catch(error) {report.status='failed';report.error=String(error);await capture('installed-v117-failure.jpg').catch(()=>{});throw error}
   finally {await fs.writeFile(path.join(output,'installed-v117-workflow.json'),JSON.stringify(report,null,2)+'\n')}

@@ -23,7 +23,7 @@ const reports = Object.fromEntries([
 ...(['1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(version) ? [['foundationExtended', 'installed-v114-workflow.json', 8]] : []),
 ...(['1.1.5', '1.1.6', '1.1.7'].includes(version) ? [['foundationHardening', 'installed-v115-workflow.json', 11]] : []),
 ...(['1.1.6', '1.1.7'].includes(version) ? [['moveContinuity', 'installed-v116-workflow.json', 13]] : []),
-...(version === '1.1.7' ? [['saveHistory','installed-v117-workflow.json',9]] : []),
+...(version === '1.1.7' ? [['saveHistory','installed-v117-workflow.json',10]] : []),
 ].map(([key, file, count]) => {
   const report = json(path.join(directory, file))
   assert.equal(report.status, 'passed', file); assert.equal(report.sourceUserContentIncluded, false, file)
@@ -69,7 +69,7 @@ const manifest = {
     experienceChecksPassed: 8, fileManagementChecksPassed: 9, foundationChecksPassed: 8, ...(['1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(version) ? { foundationExtendedChecksPassed: 8 } : {}),
     ...(['1.1.5', '1.1.6', '1.1.7'].includes(version) ? { foundationHardeningChecksPassed: 11, harnessSourceCommit: reports.foundationHardening.report.harnessSourceCommit } : {}),
     ...(['1.1.6', '1.1.7'].includes(version) ? { moveContinuityChecksPassed: 13 } : {}),
-    ...(version === '1.1.7' ? {saveHistoryChecksPassed:9} : {}),
+    ...(version === '1.1.7' ? {saveHistoryChecksPassed:10} : {}),
     versionChecksPassed: 4, failedChecks: 0, sourceUserContentIncluded: false,
   },
   boundaries: { communityUnsigned: true, enterprisePromotionEligible: false, releaseAssetsPublished: false, managedUpdaterReleaseAssetsPresent: false, legacyTauriUpdaterArtifactsPresent: false },

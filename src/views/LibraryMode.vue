@@ -875,6 +875,7 @@ interface KnowledgeIndexRecoveryReport {
 }
 
 interface TextDocumentSnapshot {
+  historyWarning?: string
   content: string
   encoding: string
   encodingConfidence: string
@@ -2149,6 +2150,9 @@ watch([activeTabId, () => store.libraryPath], closeHistoryComparison, { flush: '
 let historyGeneration = 0
 const invalidateHistory = () => { ++historyGeneration; historyList.value = []; historyLoading.value = false; historyError.value = '' }
 watch([activeTabId, () => store.libraryPath], invalidateHistory, { flush: 'sync' })
+watch(() => activeTextTab.value?.textSignature, () => {
+  if (activeSidebarTab.value === 'history') void fetchHistory()
+})
 
 const openSettings = () => router.push('/settings')
 const librarySwitchBusy = ref(false)
@@ -2329,12 +2333,15 @@ const startShadowSaveTimer = () => {
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)
   const interval = store.autoSaveInterval * 60 * 1000
   shadowSaveTimer = setInterval(async () => {
-    if (activeTabId.value && activeTabId.value === lastLoadedPath && vditor && isVditorReady) {
-      const content = vditor.getValue()
-      if (content && content.trim().length > 0) {
-        await invoke('save_history_version', { libraryRoot: store.libraryPath, path: activeTabId.value, content, maxCount: store.maxHistoryCount })
-        if (activeSidebarTab.value === 'history') fetchHistory()
-      }
+    const path = activeTabId.value, root = store.libraryPath
+    const tab = tabs.value.find(item => item.path === path)
+    if (!path || path !== lastLoadedPath || !vditor || !isVditorReady || !activeIsMarkdown.value || tab?.textReadOnlyReason || hasPendingMainTextSave(path)) return
+    const content = vditor.getValue()
+    try {
+      await invoke('save_history_version', { libraryRoot: root, path, content, maxCount: store.maxHistoryCount })
+      if (path === activeTabId.value && root === store.libraryPath && activeSidebarTab.value === 'history') void fetchHistory()
+    } catch (error) {
+      if (path === activeTabId.value && root === store.libraryPath) message.warning('本次历史暂未记录，当前编辑内容仍保留：' + String(error))
     }
   }, interval)
 }
@@ -3751,6 +3758,7 @@ const saveCurrentFile = async (options: unknown = {}) => {
       const savePolicy = saveOptions.savePolicy || (t.textReadEncoding ? { encoding: t.textReadEncoding } : undefined)
       const saved = await invoke<TextDocumentSnapshot>('write_text_document', {
         libraryRoot: savingLibraryRoot,
+        maxHistoryCount: format.id === 'markdown' ? store.maxHistoryCount : undefined,
         path: t.path,
         formatId: format.id,
         content,
@@ -3770,7 +3778,8 @@ const saveCurrentFile = async (options: unknown = {}) => {
         setTimeout(() => { suppressEditorInput = false }, 0)
       }
       lastPromptedExternalSignature = ''
-      message.success(receipt.isDirty ? '已保存提交的内容，新增编辑尚未保存' : (saveOptions.successMessage || '已安全保存'));
+      if (saved.historyWarning) message.warning(saved.historyWarning + (receipt.isDirty ? '；新增编辑尚未保存' : ''))
+      else message.success(receipt.isDirty ? '已保存提交的内容，新增编辑尚未保存' : (saveOptions.successMessage || '已安全保存'));
       if (format.id === 'markdown' && savingLibraryRoot === store.libraryPath) void fetchAllTags()
       // Git 自动 commit（本地）
       if (savingGitEnabled) {

@@ -313,7 +313,7 @@ mod tests {
         fs::write(&path, "{}\n").unwrap();
         let snapshot = read_text_snapshot(&path).unwrap();
 
-        let error = tauri::async_runtime::block_on(crate::commands::formats::write_text_document(
+        let error = tauri::async_runtime::block_on(crate::commands::formats::write_text_document_base(
             workspace.root.to_string_lossy().into_owned(),
             path.to_string_lossy().into_owned(),
             "json".into(),
