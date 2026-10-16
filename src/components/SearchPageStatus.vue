@@ -14,7 +14,7 @@
     <p v-if="!loading && !page.error.value && !page.busy.value && !page.files.value.length" class="search-page-empty" role="status">{{ frame?.scanComplete ? '没有找到匹配内容' : '尚未获得可用文件，不代表没有匹配。可继续搜索或核对资料库状态。' }}</p>
     <p v-if="visibleCount === 0 && page.files.value.length" class="search-page-empty" role="status">当前已加载文件中没有所选格式。{{ page.hasMore.value ? '可继续加载或调整格式筛选。' : '可以调整格式筛选。' }}</p>
     </template>
-    <div v-if="part !== 'header' && (page.nextPage.value || page.canContinue.value || page.files.value.length)" class="search-page-actions"><small>已加载 {{ page.files.value.length }}<template v-if="frame?.totalFiles !== null && frame?.totalFiles !== undefined && !page.pendingView.value"> / {{ frame.totalFiles }}</template> 个文件<template v-if="page.pendingView.value"> · 保留旧视图</template></small><span><button v-if="page.pendingView.value" type="button" :disabled="disabled || page.busy.value" @click="$emit('apply')">刷新后继续查看</button><button v-if="page.canContinue.value" type="button" :disabled="disabled || page.busy.value" @click="$emit('continue')">{{ page.busy.value ? '正在搜索…' : '继续搜索' }}</button><button v-if="page.nextPage.value" type="button" :disabled="disabled || page.busy.value || !!page.pendingView.value || !!page.error.value" @click="$emit('more')">加载更多文件</button></span></div>
+    <div v-if="part !== 'header' && (page.nextPage.value || page.canContinue.value || page.files.value.length)" class="search-page-actions"><small>已加载 {{ page.files.value.length }}<template v-if="frame?.totalFiles !== null && frame?.totalFiles !== undefined && !page.pendingView.value && !page.retainingView.value"> / {{ frame.totalFiles }}</template> 个文件<template v-if="page.pendingView.value || page.retainingView.value"> · 保留旧视图</template></small><span><button v-if="page.pendingView.value" type="button" :disabled="disabled || page.busy.value" @click="$emit('apply')">刷新后继续查看</button><button v-if="page.canContinue.value" type="button" :disabled="disabled || page.busy.value" @click="$emit('continue')">{{ page.busy.value ? '正在搜索…' : '继续搜索' }}</button><button v-if="page.nextPage.value" type="button" :disabled="disabled || page.busy.value || !!page.pendingView.value || !!page.error.value" @click="$emit('more')">加载更多文件</button></span></div>
   </div>
 </template>
 <script setup lang="ts">
@@ -26,6 +26,9 @@ const frame = computed(() => props.page.status.value)
 const libraryLabels = { queued: '等待搜索', searching: '搜索中', preparing: '准备中', ready: '已完成', limited: '未查全', unavailable: '无法访问', changed: '资料已变化' }
 const summary = computed(() => {
   const current = frame.value
+  if (props.page.retainingView.value) return props.page.busy.value
+    ? '正在重新搜索 · 暂时保留上次结果'
+    : '暂时保留上次结果 · 本次搜索尚未完成'
   if (!current) return props.loading || props.page.busy.value ? '正在准备搜索…' : '搜索尚未完成'
   if (current.libraries) {
     const finished = current.libraries.filter(library => library.state === 'ready').length

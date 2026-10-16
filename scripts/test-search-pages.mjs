@@ -33,6 +33,85 @@ test('expired re-search preserves old files while waiting and preserves conditio
   assert.equal(h.calls[2].args.request.cursor,null);assert.equal(h.calls[2].args.request.query,'项目 预算 -旧版')
   pending.resolve(frame());await retry;assert.equal(h.page.error.value,'');h.page.dispose()
 })
+test('expired restart retains all loaded cards across preparation and resumes the saved depth',async()=>{
+  let restarting=false, workReady=false
+  const requests=[]
+  const h=harness(request=>{
+    requests.push(request.cursor)
+    if(!restarting)return request.cursor?frame(40):frame()
+    if(!workReady)return frame(0,0,{sessionId:'replacement',snapshotId:null,pageOffset:null,nextCursor:'new:w:1',scanState:'preparing',scanComplete:false,totalFiles:null})
+    return request.cursor==='new:w:1'
+      ?frame(0,40,{sessionId:'replacement',snapshotId:'new-snapshot',nextCursor:'new:p:40'})
+      :frame(40,40,{sessionId:'replacement',snapshotId:'new-snapshot',nextCursor:'new:p:80'})
+  },{autoMs:1000,pollMs:1})
+  await h.page.start(definition());await h.page.loadMore();restarting=true
+  await h.page.restart()
+  assert.equal(h.page.files.value.length,80,'preparing must not erase the previous 80 file cards')
+  assert.equal(h.page.status.value.scanComplete,false);assert.equal(h.page.status.value.totalFiles,null)
+  assert.equal(h.page.nextPage.value,null,'old file-page cursors must be retired')
+  assert.equal(h.page.canContinue.value,true)
+  // A later Continue action receives a fresh time budget; it must remember
+  // the prior depth rather than silently falling back to one page.
+  workReady=true;await h.page.continueSearch()
+  assert.equal(h.page.files.value.length,80,'saved depth must survive a bounded preparation pause')
+  assert.deepEqual(requests.slice(0,3),[null,'p:40',null])
+  assert.ok(requests.slice(3,-1).every(cursor=>cursor==='new:w:1'))
+  assert.equal(requests.at(-1),'new:p:40');h.page.dispose()
+})
+test('a failed replacement keeps the old cards and offers a fresh search, not stale paging',async()=>{
+  let replacing=false, recovered=false
+  const h=harness(request=>!replacing?frame():recovered?frame(0,1,{sessionId:'recovered',snapshotId:'recovered',nextCursor:null,totalFiles:1}):frame(0,0,{sessionId:'failed-replacement',snapshotId:null,nextCursor:null,continueCursor:null,scanState:'failed',scanComplete:false,totalFiles:null,libraries:[]}))
+  await h.page.start(definition({kind:'libraries',channel:'palette'}));replacing=true
+  await h.page.restart();assert.equal(h.page.files.value.length,40)
+  assert.ok(h.page.error.value,'failed refresh must have an actionable retry, not just stale cards')
+  assert.equal(h.page.nextPage.value,null)
+  recovered=true;await h.page.retry();assert.equal(h.calls.at(-1).args.request.cursor,null)
+  assert.equal(h.page.files.value.length,1);assert.equal(h.page.error.value,'')
+  assert.ok(h.closes.some(call=>call.sessionId==='failed-replacement'));h.page.dispose()
+})
+test('explicit cross-library refresh marks retained cards before IPC returns and retires old paging',async()=>{
+  const pending=deferred()
+  const h=harness(request=>request.cursor==='refresh'?pending.promise:frame(0,40,{refreshCursor:'refresh'}))
+  await h.page.start(definition({kind:'libraries',channel:'palette'}))
+  const refresh=h.page.refreshAvailable()
+  assert.equal(h.page.files.value.length,40);assert.equal(h.page.retainingView.value,true)
+  assert.equal(h.page.nextPage.value,null)
+  pending.resolve(frame(0,0,{files:[],pageOffset:0,continueCursor:'next-work',nextCursor:null,refreshCursor:'next-work',scanState:'preparing',scanComplete:false,totalFiles:null}))
+  await refresh;assert.equal(h.page.files.value.length,40);assert.equal(h.page.retainingView.value,true)
+  assert.equal(h.page.canContinue.value,true);h.page.dispose()
+})
+test('partial replacement with no usable files is not a successful empty search',async()=>{
+  let replacing=false
+  const h=harness(()=>replacing?frame(0,0,{sessionId:'partial',snapshotId:'partial',scanState:'limited',scanComplete:false,totalFiles:null,nextCursor:null,continueCursor:null}):frame())
+  await h.page.start(definition({kind:'libraries',channel:'palette'}));replacing=true;await h.page.restart()
+  assert.equal(h.page.files.value.length,40);assert.equal(h.page.retainingView.value,true)
+  assert.equal(h.page.errorCode.value,'refreshUnavailable');assert.equal(h.page.status.value.scanComplete,false);h.page.dispose()
+})
+test('only a confirmed complete empty replacement removes the retained cards',async()=>{
+  let empty=false
+  const h=harness(()=>empty?frame(0,0,{sessionId:'empty',snapshotId:'empty',nextCursor:null,totalFiles:0}):frame())
+  await h.page.start(definition());empty=true;await h.page.restart()
+  assert.equal(h.page.files.value.length,0);assert.equal(h.page.status.value.scanComplete,true)
+  assert.equal(h.page.status.value.totalFiles,0);assert.equal(h.page.error.value,'');h.page.dispose()
+})
+test('an inconsistent completion flag cannot turn a failed or partial replacement into empty success',async()=>{
+  for(const scanState of ['failed','limited','preparing']){
+    let replacing=false
+    const h=harness(()=>replacing?frame(0,0,{sessionId:'inconsistent',snapshotId:null,nextCursor:null,continueCursor:null,scanState,scanComplete:true,totalFiles:0}):frame())
+    await h.page.start(definition());replacing=true;await h.page.restart()
+    assert.equal(h.page.files.value.length,40);assert.equal(h.page.retainingView.value,true)
+    assert.equal(h.page.errorCode.value,'refreshUnavailable');h.page.dispose()
+  }
+})
+test('changing the query retires a pending replacement and cannot resurrect the old cards',async()=>{
+  const pending=deferred();let replacing=false
+  const h=harness(request=>request.query==='新的资料'?frame(0,1,{sessionId:'latest',snapshotId:'latest',files:[file('new')],nextCursor:null,totalFiles:1}):replacing?pending.promise:frame())
+  await h.page.start(definition());replacing=true;const refresh=h.page.restart()
+  await h.page.start(definition({query:'新的资料'}))
+  pending.resolve(frame(0,0,{sessionId:'retired',snapshotId:null,nextCursor:'retired:w:1',pageOffset:null,scanState:'preparing',scanComplete:false,totalFiles:null}));await refresh
+  assert.equal(h.page.files.value[0].title,'new.md');assert.equal(h.page.nextPage.value,null)
+  assert.ok(h.closes.some(call=>call.sessionId==='retired'));h.page.dispose()
+})
 test('a newly ranked view waits for explicit refresh and never appends into the old list',async()=>{
   const h=harness(request=>request.cursor==='w:1'?frame(0,40,{snapshotId:'new',files:Array.from({length:40},(_,n)=>file(n+50)),continueCursor:null,refreshCursor:'w:2'}):frame(0,40,{continueCursor:'w:1',refreshCursor:'w:1'}))
   await h.page.start(definition({kind:'libraries',channel:'palette'}));await h.page.continueSearch()

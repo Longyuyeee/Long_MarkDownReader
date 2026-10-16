@@ -1,0 +1,2852 @@
+Verified 5 native fault/recovery observations and original hashes; external responses were simulated, no installer acceptance claimed.
+Community updater contract passed: fixed GitHub source, SHA-256 verification, hidden install and automatic relaunch are aligned.
+Official v1.0.21 to v1.0.22 update accepted: 12 checks and nine immutable reviewed evidence files.
+Official v1.0.22 to v1.0.23 update accepted: 12 checks and nine immutable reviewed evidence files.
+Command strip layout passed: 11 workspaces keep controls readable, scrollable and reachable.
+V1.0.6 managed updater lifecycle contract passed: hosted 1.0.5 -> 1.0.6 evidence accepted.
+V1.0.7 managed updater lifecycle passed: hosted 1.0.6 -> 1.0.7 evidence accepted.
+V1.0.8 managed updater lifecycle contract passed: automatic relaunch failure is recorded for v1.0.9 recovery.
+V1.0.9 managed updater lifecycle contract passed: hosted 1.0.8 -> 1.0.9 evidence accepted.
+V1.0.10 managed updater lifecycle contract passed: hosted 1.0.9 -> 1.0.10 evidence accepted.
+V1.0.11 managed updater lifecycle contract passed: hosted 1.0.10 -> 1.0.11 evidence accepted.
+V1.0.12 managed updater lifecycle contract passed: hosted 1.0.11 -> 1.0.12 evidence accepted.
+V1.0.13 managed updater lifecycle contract passed: hosted 1.0.12 -> 1.0.13 evidence accepted.
+V1.0.14 managed updater lifecycle contract passed: hosted 1.0.13 -> 1.0.14 evidence accepted.
+V1.0.16 managed updater lifecycle contract passed: hosted 1.0.15 -> 1.0.16 evidence accepted.
+M5-0 accepted: v1.0.17 selects only M5-1 ODP slide-body producer fidelity and object selection; ODP remains preview-only.
+M5-1 accepted: only direct text-frame paragraphs on simple ODP slides advance to M5-2; notes and complex-object slides remain blocked.
+M5-2 accepted: bounded simple-slide ODP reliable copies pass real LibreOffice/PowerPoint reopen; UI and version promotion remain M5-3+ work.
+M5-3 accepted: real LibreOffice/PowerPoint ODP workspace copies, draft protection, responsive UI and whole-slide blockers are verified; M5-4 owns release readiness.
+M5-4 accepted: 548 Rust tests pass with zero failures, the complete patch release gate passes, and M5-5 owns atomic v1.0.17 packaging.
+M5-5 accepted: v1.0.17 candidate identity and historical local package receipts remain valid after publication.
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+M5-7 accepted: hosted lifecycle artifacts, SHA256SUMS and release boundaries remain valid after M5-8 publication.
+M5-8 accepted: v1.0.17 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+V1.0.17 managed updater lifecycle contract passed: hosted 1.0.16 -> 1.0.17 evidence accepted.
+V1.0.18 managed updater lifecycle contract passed: hosted 1.0.17 -> 1.0.18 evidence accepted.
+V1.0.19 managed updater lifecycle contract passed: hosted 1.0.18 -> 1.0.19 evidence accepted.
+V1.0.21 managed updater lifecycle contract passed: hosted 1.0.20 -> 1.0.21 evidence accepted.
+M8-5 graph visual/performance polish passed: settled auto-fit, dense priority-only arrows, restrained status rings, non-duplicated tooltip and bounded reduced-motion-safe selection feedback are present.
+M8-5 real desktop evidence accepted: all 180 nodes auto-fit, dense middle arrows are priority-only, 12 status rings remain, bounded selection settles idle, Canvas draw peaks at 5.1 ms and runtime errors are zero.
+M6-0 accepted: v1.0.18 selects only M6-1 graph-scoped bounded fullscreen lifecycle; cluster proxies, governance rings, structured schemas and ODP note editing remain deferred.
+M6-1 accepted: 6/6 real Tauri fullscreen cycles preserve graph state, Escape and route cleanup exit safely, runtime errors remain zero and source files remain unchanged.
+M6-2 accepted: stop feature expansion and run M6-3 complete Rust plus patch-release readiness gates before any v1.0.18 version transition.
+M6-3 accepted: 548 Rust tests, the corrected complete patch-release gate, 6,275 frontend modules and zero production vulnerabilities permit M6-4 candidate packaging.
+M6-4 accepted: v1.0.18 candidate identity, real local package receipts, and WebView2 evidence are valid while public v1.0.17 remains frozen.
+M6-5 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.18 candidate and v1.0.17 upgrade baseline remain frozen.
+M6-6 accepted: hosted lifecycle artifacts, public names, SHA256SUMS and unsigned community release boundaries are ready for M6-7 publication.
+M6-7 accepted: v1.0.18 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+M7-0 accepted: v1.0.19 selects only local JSON/JSONC Schema sidecar provider and mapping feasibility; remote providers, YAML/TOML projection, XSD, graph proxies, governance rings and ODP notes remain deferred.
+M7-1 accepted: bounded offline JSON/JSONC Schema sidecar validation and source mapping are feasible; product UI and real Tauri acceptance remain M7-2 work.
+M7-2 accepted: bounded local JSON/JSONC Schema validation is integrated and passed real Tauri wide/narrow read-only acceptance; M7-3 quality readiness is next.
+M7-3 accepted: 559 Rust tests, complete patch-release CI, 6,275 frontend modules and zero production vulnerabilities permit M7-4 candidate packaging.
+M7-4 accepted: v1.0.19 runtime identity is atomic while public v1.0.18 remains frozen.
+CF-1 code creation passed: 10 format families and 32 registered extensions use guarded atomic templates.
+CF-1 desktop creation audit passed: 10 format families, explicit save, close/reopen and no-overwrite evidence are accepted.
+UX-51 lifecycle passed: updater relaunch and independent external windows are implementation- and desktop-verified.
+v1.0.15 interaction-polish audit passed: modern tab tooltip, contextual right-click policy, and accepted clean desktop evidence are aligned.
+v1.0.15 global-tooltip policy passed: static and dynamic native titles use one theme-aware, keyboard-accessible and viewport-bounded application surface.
+v1.0.15 overlay-bounds contract passed: the long create menu is scrollable, uniquely measurable and viewport bounded.
+M1C-C ODS formula/style evidence contract passed.
+M1C-D ODS existing named style contract passed.
+M1D selection accepted: 10 MiB JSON timeout and 50 MiB boundary select progressive large-JSON reading before media frame tools.
+M1D-A large JSON accepted: progressive read, segment navigation, streaming search and small-file editing are real-desktop verified.
+M1D-B video tools accepted: real 1080p/4K frame stepping, PNG capture, position restore and source safety are verified.
+M1D-C selection accepted: real sidecars and semantic-invalid structured files select bounded external subtitle playback as M1D-C1.
+M1D-C1 accepted: real VTT/SRT active cues, selection, off state, reopen, malformed rejection and source safety are verified.
+M1 total exit criteria accepted: M1A-M1D real evidence, producer matrix, source safety, boundaries and user documentation are aligned.
+{
+  "expected": {
+    "developmentTargetVersion": "1.1.8",
+    "runtimeBaseVersion": "1.1.7",
+    "publicTag": "v1.1.7",
+    "headAheadOfPublicTag": true,
+    "binaryVersionTransition": "v1.1.7-public-release-published"
+  },
+  "actual": {
+    "headCommit": "0086a9064659d3f1cc0f59458c2f9134958281ec",
+    "tagCommit": "84cc1ad6d4697bb98c17e3396b9d8d65da41847a",
+    "commitsAhead": 20,
+    "tagIsAncestor": true,
+    "checks": {
+      "policySchema": true,
+      "nextPatchTarget": true,
+      "runtimeFactsFrozen": true,
+      "candidateMetadataFacts": true,
+      "publicFactsFrozen": true,
+      "publicTagImmutable": true,
+      "developmentAhead": true,
+      "enterpriseNotReleaseCandidate": true,
+      "binaryTransitionComplete": true,
+      "currentStageAligned": true,
+      "configConsumesPolicy": true,
+      "mainUiIdentifiesDevelopment": true,
+      "capabilityUiIdentifiesDevelopment": true,
+      "auditDocumentsIdentity": true
+    }
+  }
+}
+M3C-1 dirty-frame loop accepted: 100=680/2305ms, idle 0/s, resume 0; 1000=3236/17317ms, idle 0/s, resume 0; 5000=23562/186338ms, idle 0/s, resume 0; original 5000-node layout/interaction limits remain independently visible.
+M3C-2 phase profile accepted: 100=1285/3393ms; 1000=3558/29861ms; 5000=39105/140049ms bounded; 5000-node dominant=layout-simulation 133038ms; layout=133038ms, draw-exclusive=0ms, semantic=1269ms.
+M3C-3 worker layout accepted: 100=2511/4777ms, main-layout-max=7.2ms, worker-max=13.4ms; 1000=2466/3542ms, main-layout-max=6.9ms, worker-max=5.9ms; 5000=7229/10964ms, main-layout-max=26.7ms, worker-max=17.6ms.
+M3C-4 performance exit accepted: 100=2376ms stable, idle-longtasks=0, remaining-max=29.6ms; 1000=4037ms stable, idle-longtasks=0, remaining-max=59.2ms; 5000=10631ms stable, idle-longtasks=0, remaining-max=421.8ms.
+M4F-4 accepted: two real unsigned installers, public-name mapping, SHA256SUMS, passed Tauri smoke, hosted lifecycle and cross-platform evidence are preserved after publication.
+M4F-5 accepted: v1.0.16 is published, the tag binds the real candidate, and all three remotely downloaded assets match the frozen manifest.
+M3B-6 navigation selection accepted: fit-all and community filtering remain reliable, and the selected fit-selection/bounded-focus successor is implemented with historical real Tauri three-viewport evidence.
+M3B-10 remaining professional visual selection accepted: restrained recency and relation-strength rings selected from real Tauri three-viewport, filesystem timestamp and health/pulse evidence; governance rings, cluster collapse/expand, fullscreen and M3C remain deferred.
+M3B-8 remaining navigation selection accepted: bounded semantic minimap selected from real 100/1000/5000-node evidence and real Tauri three-viewport evidence; cluster collapse/expand, fullscreen and M3C remain deferred.
+M3C-0 large-graph baseline accepted: 100=1407/3724ms, 132 settled draws/s, longest 537ms; 1000=2189/15050ms, 132 settled draws/s, longest 616ms; 5000=24722/185195ms, 132 settled draws/s, longest 17237ms; 5000-node interaction and long-task budget failures remain explicit, and M3C-1 closes settled dirty-frame and lifecycle-loop control.
+M3B professional visual system exit accepted: M3B-1 through M3B-11 remain safe and the combined semantic hierarchy, path, camera, minimap, status and responsive flow passes in 4 real Tauri sessions; cluster collapse, fullscreen and M3C remain outside M3B.
+TAP version 13
+# Subtest: new completed zero is distinct from preparation, failure and a local format-filter zero
+ok 1 - new completed zero is distinct from preparation, failure and a local format-filter zero
+  ---
+  duration_ms: 3.1608
+  ...
+# Subtest: legacy installed packages retain their original empty/error contract
+ok 2 - legacy installed packages retain their original empty/error contract
+  ---
+  duration_ms: 0.8104
+  ...
+# Subtest: installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+ok 3 - installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+  ---
+  duration_ms: 0.5547
+  ...
+# Subtest: real runtime audit refuses local and self-hosted machines before any fixture IO
+ok 4 - real runtime audit refuses local and self-hosted machines before any fixture IO
+  ---
+  duration_ms: 1.1366
+  ...
+# Subtest: fixture paths reject broad or arbitrary user roots
+ok 5 - fixture paths reject broad or arbitrary user roots
+  ---
+  duration_ms: 0.366
+  ...
+# Subtest: generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+ok 6 - generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+  ---
+  duration_ms: 1101.6292
+  ...
+# Subtest: owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+ok 7 - owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+  ---
+  duration_ms: 908.2218
+  ...
+# Subtest: workflow pins the product separately from its harness and cannot publish or install
+ok 8 - workflow pins the product separately from its harness and cannot publish or install
+  ---
+  duration_ms: 2.1142
+  ...
+# Subtest: native driver never substitutes IPC or simulates a desktop click
+ok 9 - native driver never substitutes IPC or simulates a desktop click
+  ---
+  duration_ms: 0.2021
+  ...
+# Subtest: native driver waits for the actual page and rejects current runtime and route failure surfaces
+ok 10 - native driver waits for the actual page and rejects current runtime and route failure surfaces
+  ---
+  duration_ms: 2.1867
+  ...
+# Subtest: debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+ok 11 - debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+  ---
+  duration_ms: 0.3591
+  ...
+# Subtest: in-memory registry provider preserves all six debugger entries and unrelated values
+ok 12 - in-memory registry provider preserves all six debugger entries and unrelated values
+  ---
+  duration_ms: 354.4819
+  ...
+# Subtest: new runner and workflow PowerShell parse without launching anything
+ok 13 - new runner and workflow PowerShell parse without launching anything
+  ---
+  duration_ms: 1345.5644
+  ...
+# Subtest: validator accepts the complete separated native evidence schema, not an installed assertion
+ok 14 - validator accepts the complete separated native evidence schema, not an installed assertion
+  ---
+  duration_ms: 1.2606
+  ...
+# Subtest: unfinished or failed remote runs cannot be closed as passing evidence
+ok 15 - unfinished or failed remote runs cannot be closed as passing evidence
+  ---
+  duration_ms: 1.5464
+  ...
+# Subtest: source, harness, executable and evidence-level substitutions are rejected
+ok 16 - source, harness, executable and evidence-level substitutions are rejected
+  ---
+  duration_ms: 0.6541
+  ...
+# Subtest: missing tasks, duplicate groups and lost PDF annotation identity are rejected
+ok 17 - missing tasks, duplicate groups and lost PDF annotation identity are rejected
+  ---
+  duration_ms: 1.1618
+  ...
+# Subtest: fake cold completion, missing cache use and missing native window proof are rejected
+ok 18 - fake cold completion, missing cache use and missing native window proof are rejected
+  ---
+  duration_ms: 5.238
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3816.7682
+TAP version 13
+# Subtest: fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases
+ok 1 - fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases
+  ---
+  duration_ms: 51.776
+  ...
+# Subtest: specialized drafts participate by current path and dispose without keeping a stale block
+ok 2 - specialized drafts participate by current path and dispose without keeping a stale block
+  ---
+  duration_ms: 30.3968
+  ...
+# Subtest: a save in flight refuses execution while the originating move still counts for close protection
+ok 3 - a save in flight refuses execution while the originating move still counts for close protection
+  ---
+  duration_ms: 23.8879
+  ...
+# Subtest: composition and keyboard actions cannot add an unobserved edit after the acknowledgement
+ok 4 - composition and keyboard actions cannot add an unobserved edit after the acknowledgement
+  ---
+  duration_ms: 27.6591
+  ...
+# Subtest: refresh finishes before native release acknowledgement and the next batch item
+ok 5 - refresh finishes before native release acknowledgement and the next batch item
+  ---
+  duration_ms: 15.9538
+  ...
+# Subtest: lost release events use the native receipt to refresh once and restore interaction
+ok 6 - lost release events use the native receipt to refresh once and restore interaction
+  ---
+  duration_ms: 22.9283
+  ...
+# Subtest: path continuation retains filename case and excludes similarly named siblings
+ok 7 - path continuation retains filename case and excludes similarly named siblings
+  ---
+  duration_ms: 13.7594
+  ...
+# Subtest: a cached Markdown draft follows a move when the native operation never rewrites its body
+ok 8 - a cached Markdown draft follows a move when the native operation never rewrites its body
+  ---
+  duration_ms: 14.7251
+  ...
+# Subtest: a dirty cached target from a deleted file is never mistaken for the moving draft
+ok 9 - a dirty cached target from a deleted file is never mistaken for the moving draft
+  ---
+  duration_ms: 14.2819
+  ...
+# Subtest: fresh reference drafts include unsaved-only incoming links and exclude another library
+ok 10 - fresh reference drafts include unsaved-only incoming links and exclude another library
+  ---
+  duration_ms: 13.5128
+  ...
+# Subtest: cached text drafts follow a move in the same editor while editor-type changes still require saving
+ok 11 - cached text drafts follow a move in the same editor while editor-type changes still require saving
+  ---
+  duration_ms: 9.4696
+  ...
+# Subtest: fresh protection passes the source and target to the cached text-draft retention decision
+ok 12 - fresh protection passes the source and target to the cached text-draft retention decision
+  ---
+  duration_ms: 11.1454
+  ...
+# Subtest: selecting a Windows spelling of an open dirty document reuses its tab and route
+ok 13 - selecting a Windows spelling of an open dirty document reuses its tab and route
+  ---
+  duration_ms: 4.5103
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 669.9952
+TAP version 13
+# Subtest: moved local images resolve parent segments, encoded names, suffixes and Windows device paths
+ok 1 - moved local images resolve parent segments, encoded names, suffixes and Windows device paths
+  ---
+  duration_ms: 0.9399
+  ...
+# Subtest: local image display leaves the Markdown destination intact and releases rendered resources
+ok 2 - local image display leaves the Markdown destination intact and releases rendered resources
+  ---
+  duration_ms: 21.6122
+  ...
+# Subtest: a late native image response never paints a different document
+ok 3 - a late native image response never paints a different document
+  ---
+  duration_ms: 13.5571
+  ...
+# Subtest: a failed replacement removes the old picture without changing the new source text
+ok 4 - a failed replacement removes the old picture without changing the new source text
+  ---
+  duration_ms: 14.0099
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 417.3106
+TAP version 13
+# Subtest: relative document links resolve against their moved note and keep the decoded heading
+ok 1 - relative document links resolve against their moved note and keep the decoded heading
+  ---
+  duration_ms: 1.2167
+  ...
+# Subtest: heading navigation handles generated IDs, Chinese, punctuation, duplicate headings and source mode
+ok 2 - heading navigation handles generated IDs, Chinese, punctuation, duplicate headings and source mode
+  ---
+  duration_ms: 2.559
+  ...
+# Subtest: a real local-link click snapshots current unsaved content and reuses a target draft
+ok 3 - a real local-link click snapshots current unsaved content and reuses a target draft
+  ---
+  duration_ms: 12.719
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 375.5269
+TAP version 13
+# Subtest: link and image titles in document content remain serializable without UI decoration
+ok 1 - link and image titles in document content remain serializable without UI decoration
+  ---
+  duration_ms: 0.7425
+  ...
+# Subtest: normal application controls retain themed tooltips and accessible labels
+ok 2 - normal application controls retain themed tooltips and accessible labels
+  ---
+  duration_ms: 0.123
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 345.3273
+TAP version 13
+# Subtest: current v115 metadata keeps new and unresolved predecessor update observations explicit
+ok 1 - current v115 metadata keeps new and unresolved predecessor update observations explicit
+  ---
+  duration_ms: 0.5136
+  ...
+# Subtest: v115 installer workflow retains eleven explicit user-task checks and production authorization
+ok 2 - v115 installer workflow retains eleven explicit user-task checks and production authorization
+  ---
+  duration_ms: 0.3476
+  ...
+# Subtest: v115 rejects missing or altered new installed evidence
+ok 3 - v115 rejects missing or altered new installed evidence
+  ---
+  duration_ms: 4.0394
+  ...
+# Subtest: v115 accepts complete correctly bound evidence without inheriting predecessor version
+ok 4 - v115 accepts complete correctly bound evidence without inheriting predecessor version
+  ---
+  duration_ms: 1.0889
+  ...
+# Subtest: v115 retains predecessor workflow evidence requirements
+ok 5 - v115 retains predecessor workflow evidence requirements
+  ---
+  duration_ms: 1.068
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 68.4488
+TAP version 13
+# Subtest: v116 requires its own complete installed move evidence in addition to retained workflows
+ok 1 - v116 requires its own complete installed move evidence in addition to retained workflows
+  ---
+  duration_ms: 3.3156
+  ...
+# Subtest: v116 rejects a missing task, wrong installer or different product source
+ok 2 - v116 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 3.2681
+  ...
+# Subtest: v116 still requires actual predecessor workflow reports
+ok 3 - v116 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 0.7879
+  ...
+# Subtest: installed draft observation handles Windows device paths and emits valid page JavaScript
+ok 4 - installed draft observation handles Windows device paths and emits valid page JavaScript
+  ---
+  duration_ms: 18.9357
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 312.9368
+TAP version 13
+# Subtest: both UI history reads use shared coordination before resolving the document
+ok 1 - both UI history reads use shared coordination before resolving the document
+  ---
+  duration_ms: 0.5701
+  ...
+# Subtest: history mutations and signature-checked recovery retain exclusive coordination
+ok 2 - history mutations and signature-checked recovery retain exclusive coordination
+  ---
+  duration_ms: 0.1733
+  ...
+# Subtest: check-post-v117-m6-0-v1018-scope-selection.mjs retains historical facts and accepts only the real next target
+ok 3 - check-post-v117-m6-0-v1018-scope-selection.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 606.8083
+  ...
+# Subtest: check-post-v117-m6-1-graph-fullscreen.mjs retains historical facts and accepts only the real next target
+ok 4 - check-post-v117-m6-1-graph-fullscreen.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 15.0799
+  ...
+# Subtest: check-post-v117-m6-2-v1018-next-slice-selection.mjs retains historical facts and accepts only the real next target
+ok 5 - check-post-v117-m6-2-v1018-next-slice-selection.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 10.0649
+  ...
+# Subtest: check-post-v117-m6-3-v1018-release-readiness.mjs retains historical facts and accepts only the real next target
+ok 6 - check-post-v117-m6-3-v1018-release-readiness.mjs retains historical facts and accepts only the real next target
+  ---
+  duration_ms: 8.2026
+  ...
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 7 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 4.1638
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 8 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 4.5627
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 9 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 0.9212
+  ...
+# Subtest: v117 final safety checks are mandatory and publishing requires the current check count
+ok 10 - v117 final safety checks are mandatory and publishing requires the current check count
+  ---
+  duration_ms: 2.3063
+  ...
+# Subtest: installed final check detects the current runtime and route error notices
+ok 11 - installed final check detects the current runtime and route error notices
+  ---
+  duration_ms: 1.9336
+  ...
+# Subtest: installed v117 navigation supplies the real three-argument driver contract
+ok 12 - installed v117 navigation supplies the real three-argument driver contract
+  ---
+  duration_ms: 16.2309
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 706.9568
+TAP version 13
+# Subtest: only an explicit busy precondition is awaited before a real ready rebuild
+ok 1 - only an explicit busy precondition is awaited before a real ready rebuild
+  ---
+  duration_ms: 0.7744
+  ...
+# Subtest: a genuine native rebuild error is never retried
+ok 2 - a genuine native rebuild error is never retried
+  ---
+  duration_ms: 0.3024
+  ...
+# Subtest: a non-ready native result is a failure, not an invitation to retry
+ok 3 - a non-ready native result is a failure, not an invitation to retry
+  ---
+  duration_ms: 0.096
+  ...
+# Subtest: the existing wait budget is bounded and transport errors are not retried
+ok 4 - the existing wait budget is bounded and transport errors are not retried
+  ---
+  duration_ms: 0.7049
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 57.4269
+TAP version 13
+# Subtest: native Windows canonical search paths belong to their configured drive or UNC library
+ok 1 - native Windows canonical search paths belong to their configured drive or UNC library
+  ---
+  duration_ms: 0.5929
+  ...
+# Subtest: canonical Windows membership still rejects adjacent roots, traversal and device paths
+ok 2 - canonical Windows membership still rejects adjacent roots, traversal and device paths
+  ---
+  duration_ms: 0.1086
+  ...
+# Subtest: session capture excludes text, external files, traversal, duplicate and adjacent libraries
+ok 3 - session capture excludes text, external files, traversal, duplicate and adjacent libraries
+  ---
+  duration_ms: 0.352
+  ...
+# Subtest: dirty tabs survive switching including a matching file with different casing
+ok 4 - dirty tabs survive switching including a matching file with different casing
+  ---
+  duration_ms: 0.1155
+  ...
+# Subtest: roundtrip isolates roots, preserves invalid records, and reports failed saves
+ok 5 - roundtrip isolates roots, preserves invalid records, and reports failed saves
+  ---
+  duration_ms: 0.4528
+  ...
+# Subtest: actual store restores scoped tabs and safely filters legacy mixed-library state
+ok 6 - actual store restores scoped tabs and safely filters legacy mixed-library state
+  ---
+  duration_ms: 6.6548
+  ...
+# Subtest: rename/delete preserve files and reject stale management dialogs
+ok 7 - rename/delete preserve files and reject stale management dialogs
+  ---
+  duration_ms: 0.5188
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 342.3734
+TAP version 13
+# Subtest: an identical delayed Markdown notification cannot dirty a completed save
+ok 1 - an identical delayed Markdown notification cannot dirty a completed save
+  ---
+  duration_ms: 0.9682
+  ...
+# Subtest: real subsequent edits stay dirty and duplicate notifications never clear drafts
+ok 2 - real subsequent edits stay dirty and duplicate notifications never clear drafts
+  ---
+  duration_ms: 0.8825
+  ...
+# Subtest: the display newline produced by setValue does not become a new unsaved edit
+ok 3 - the display newline produced by setValue does not become a new unsaved edit
+  ---
+  duration_ms: 0.5573
+  ...
+# Subtest: external Markdown repeated saved-content notifications do not block storing the saved file
+ok 4 - external Markdown repeated saved-content notifications do not block storing the saved file
+  ---
+  duration_ms: 1.0827
+  ...
+# Subtest: external Markdown genuine edits during a save remain dirty against its acknowledged baseline
+ok 5 - external Markdown genuine edits during a save remain dirty against its acknowledged baseline
+  ---
+  duration_ms: 0.6195
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.7585
+TAP version 13
+# Subtest: library roots and drive prefixes are never expanded as if they were folders
+ok 1 - library roots and drive prefixes are never expanded as if they were folders
+  ---
+  duration_ms: 0.9032
+  ...
+# Subtest: only real in-library parent paths are retained, outermost first
+ok 2 - only real in-library parent paths are retained, outermost first
+  ---
+  duration_ms: 0.1532
+  ...
+# Subtest: UNC native spellings stop at the same configured root
+ok 3 - UNC native spellings stop at the same configured root
+  ---
+  duration_ms: 0.1092
+  ...
+# Subtest: outside, adjacent, traversal and unset-library paths add no expansion state
+ok 4 - outside, adjacent, traversal and unset-library paths add no expansion state
+  ---
+  duration_ms: 0.0668
+  ...
+# Subtest: shared root comparison treats extended UNC paths as equivalent, not another library
+ok 5 - shared root comparison treats extended UNC paths as equivalent, not another library
+  ---
+  duration_ms: 4.3626
+  ...
+# Subtest: ordinary nested routes expand real canonical keys and load each actual ancestor
+ok 6 - ordinary nested routes expand real canonical keys and load each actual ancestor
+  ---
+  duration_ms: 0.3039
+  ...
+# Subtest: missing directories and leaf rows never create synthetic expansion keys
+ok 7 - missing directories and leaf rows never create synthetic expansion keys
+  ---
+  duration_ms: 0.1078
+  ...
+# Subtest: stale or failed ancestor reads cannot publish expansion state
+ok 8 - stale or failed ancestor reads cannot publish expansion state
+  ---
+  duration_ms: 0.137
+  ...
+# Subtest: explicit directory reveal includes only real descendants, never the root
+ok 9 - explicit directory reveal includes only real descendants, never the root
+  ---
+  duration_ms: 0.4721
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 347.879
+(node:36532) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:15160) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: query grammar: "预算"
+ok 1 - query grammar: "预算"
+  ---
+  duration_ms: 1.6477
+  ...
+# Subtest: query grammar: " 项目  预算 -旧版 "
+ok 2 - query grammar: " 项目  预算 -旧版 "
+  ---
+  duration_ms: 0.1615
+  ...
+# Subtest: query grammar: "\\"项目 预算\\" -\\"旧版 文件\\""
+ok 3 - query grammar: "\\"项目 预算\\" -\\"旧版 文件\\""
+  ---
+  duration_ms: 0.1157
+  ...
+# Subtest: query grammar: "Alpha alpha JSON"
+ok 4 - query grammar: "Alpha alpha JSON"
+  ---
+  duration_ms: 0.1242
+  ...
+# Subtest: query grammar: "项目预算　-旧版"
+ok 5 - query grammar: "项目预算　-旧版"
+  ---
+  duration_ms: 0.0659
+  ...
+# Subtest: query grammar: "-旧版"
+ok 6 - query grammar: "-旧版"
+  ---
+  duration_ms: 0.0441
+  ...
+# Subtest: query grammar: "foo-bar -"
+ok 7 - query grammar: "foo-bar -"
+  ---
+  duration_ms: 0.0758
+  ...
+# Subtest: query grammar: "\\"a\\\\\\"b\\""
+ok 8 - query grammar: "\\"a\\\\\\"b\\""
+  ---
+  duration_ms: 0.0389
+  ...
+# Subtest: query grammar: ""
+ok 9 - query grammar: ""
+  ---
+  duration_ms: 0.1714
+  ...
+# Subtest: query grammar: "\\"未完成"
+ok 10 - query grammar: "\\"未完成"
+  ---
+  duration_ms: 1.1259
+  ...
+# Subtest: query grammar: "\\"\\""
+ok 11 - query grammar: "\\"\\""
+  ---
+  duration_ms: 0.103
+  ...
+# Subtest: highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps
+ok 12 - highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps
+  ---
+  duration_ms: 0.3956
+  ...
+# Subtest: query limits and editor needles do not include operators or excluded words
+ok 13 - query limits and editor needles do not include operators or excluded words
+  ---
+  duration_ms: 0.1276
+  ...
+# (node:46144) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: cross-library preflight captures pending input without writing and disposes snapshot hooks
+ok 14 - cross-library preflight captures pending input without writing and disposes snapshot hooks
+  ---
+  duration_ms: 40.2655
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 386.5586
+TAP version 13
+# Subtest: diff preserves changed Unicode lines without treating text as HTML
+ok 1 - diff preserves changed Unicode lines without treating text as HTML
+  ---
+  duration_ms: 0.6328
+  ...
+# Subtest: large diff is bounded and reports shortened preview honestly
+ok 2 - large diff is bounded and reports shortened preview honestly
+  ---
+  duration_ms: 8.9213
+  ...
+# Subtest: restore one paragraph keeps other edits, Unicode and mixed separators byte-exact
+ok 3 - restore one paragraph keeps other edits, Unicode and mixed separators byte-exact
+  ---
+  duration_ms: 0.7861
+  ...
+# Subtest: partial insertion and deletion preserve EOF and final-newline behavior
+ok 4 - partial insertion and deletion preserve EOF and final-newline behavior
+  ---
+  duration_ms: 0.324
+  ...
+# Subtest: repeated lines do not make a local restore replace other changes
+ok 5 - repeated lines do not make a local restore replace other changes
+  ---
+  duration_ms: 0.4427
+  ...
+# Subtest: bundle retains authored Unicode, variables and empty templates without machine identities
+ok 6 - bundle retains authored Unicode, variables and empty templates without machine identities
+  ---
+  duration_ms: 1.1424
+  ...
+# Subtest: imports reserve builtins and local names, rename file duplicates, and honor selection/skip
+ok 7 - imports reserve builtins and local names, rename file duplicates, and honor selection/skip
+  ---
+  duration_ms: 0.8728
+  ...
+# Subtest: long names remain valid after collision suffix; malformed/unsupported/oversized data is rejected
+ok 8 - long names remain valid after collision suffix; malformed/unsupported/oversized data is rejected
+  ---
+  duration_ms: 0.775
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 381.1136
+TAP version 13
+# Subtest: dry run validates without writes
+ok 1 - dry run validates without writes
+  ---
+  duration_ms: 1.9371
+  ...
+# Subtest: apply changes all 44 identities while preserving public and historical fields
+ok 2 - apply changes all 44 identities while preserving public and historical fields
+  ---
+  duration_ms: 0.8047
+  ...
+# Subtest: late-contract-drift fails before any write
+ok 3 - late-contract-drift fails before any write
+  ---
+  duration_ms: 0.8809
+  ...
+# Subtest: unclosed-predecessor fails before any write
+ok 4 - unclosed-predecessor fails before any write
+  ---
+  duration_ms: 0.7581
+  ...
+# Subtest: wrong-baseline fails before any write
+ok 5 - wrong-baseline fails before any write
+  ---
+  duration_ms: 1.3826
+  ...
+# Subtest: unknown-argument fails before any write
+ok 6 - unknown-argument fails before any write
+  ---
+  duration_ms: 0.6466
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 64.662
+(node:45996) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:42476) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: save directly to library by default, preserve chosen destinations and explicit inbox preference
+ok 1 - save directly to library by default, preserve chosen destinations and explicit inbox preference
+  ---
+  duration_ms: 0.4608
+  ...
+# Subtest: the collection folder uses the same Windows library identity as file styles
+ok 2 - the collection folder uses the same Windows library identity as file styles
+  ---
+  duration_ms: 0.2107
+  ...
+# (node:36860) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Draft tags preserve native boundaries, unique labels and case
+ok 3 - Draft tags preserve native boundaries, unique labels and case
+  ---
+  duration_ms: 0.8953
+  ...
+# Subtest: Typing a leading hash is accepted without introducing a second hash
+ok 4 - Typing a leading hash is accepted without introducing a second hash
+  ---
+  duration_ms: 0.2622
+  ...
+# Subtest: Adding appends a separate line and keeps the existing note intact
+ok 5 - Adding appends a separate line and keeps the existing note intact
+  ---
+  duration_ms: 0.2122
+  ...
+# (node:15320) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Links find nested notes without depending on expanded tree nodes
+ok 6 - Links find nested notes without depending on expanded tree nodes
+  ---
+  duration_ms: 1.3621
+  ...
+# Subtest: Same-folder names win; ambiguous names remain selectable
+ok 7 - Same-folder names win; ambiguous names remain selectable
+  ---
+  duration_ms: 0.1421
+  ...
+# Subtest: Windows prefixes, separators and extension case share an identity
+ok 8 - Windows prefixes, separators and extension case share an identity
+  ---
+  duration_ms: 0.1765
+  ...
+# Subtest: Only current-library Markdown files are offered, with POSIX case preserved
+ok 9 - Only current-library Markdown files are offered, with POSIX case preserved
+  ---
+  duration_ms: 0.0895
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 304.091
+TAP version 13
+# Subtest: a WebView promise that never returns fails with its phase instead of hanging CI
+ok 1 - a WebView promise that never returns fails with its phase instead of hanging CI
+  ---
+  duration_ms: 24.5055
+  ...
+# Subtest: completed work preserves its result
+ok 2 - completed work preserves its result
+  ---
+  duration_ms: 0.253
+  ...
+# Subtest: underlying failures are retained
+ok 3 - underlying failures are retained
+  ---
+  duration_ms: 0.1027
+  ...
+# Subtest: retained infinite decoration does not make an unobscured Markdown heading unclickable
+ok 4 - retained infinite decoration does not make an unobscured Markdown heading unclickable
+  ---
+  duration_ms: 0.6764
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 80.9632
+TAP version 13
+# Subtest: outline reads text without layout and preserves unchanged tree identity
+ok 1 - outline reads text without layout and preserves unchanged tree identity
+  ---
+  duration_ms: 44.341
+  ...
+# Subtest: rapid mutations coalesce and destroy cancels stale refresh work
+ok 2 - rapid mutations coalesce and destroy cancels stale refresh work
+  ---
+  duration_ms: 6.902
+  ...
+# Subtest: replacing an outline observer disconnects the previous document
+ok 3 - replacing an outline observer disconnects the previous document
+  ---
+  duration_ms: 5.9188
+  ...
+# Subtest: LibraryMode stops observation while the outline is hidden
+ok 4 - LibraryMode stops observation while the outline is hidden
+  ---
+  duration_ms: 1.7105
+  ...
+# Subtest: TempMode stops observation while the outline is hidden
+ok 5 - TempMode stops observation while the outline is hidden
+  ---
+  duration_ms: 0.5304
+  ...
+# Subtest: compiled shared Markdown styles preserve effects unless adaptive reduction is active
+ok 6 - compiled shared Markdown styles preserve effects unless adaptive reduction is active
+  ---
+  duration_ms: 113.1297
+  ...
+# Subtest: smooth frames keep normal effects even for a long-running document
+ok 7 - smooth frames keep normal effects even for a long-running document
+  ---
+  duration_ms: 8.3203
+  ...
+# Subtest: startup and isolated stalls do not reduce effects
+ok 8 - startup and isolated stalls do not reduce effects
+  ---
+  duration_ms: 4.6016
+  ...
+# Subtest: persistent slow frames reduce once, including severe one-FPS stalls
+ok 9 - persistent slow frames reduce once, including severe one-FPS stalls
+  ---
+  duration_ms: 7.0913
+  ...
+# Subtest: foreground resume discards background time and rewarms
+ok 10 - foreground resume discards background time and rewarms
+  ---
+  duration_ms: 4.2782
+  ...
+# Subtest: adaptive lifecycle preserves normal motion, degrades, resets per document and cleans up
+ok 11 - adaptive lifecycle preserves normal motion, degrades, resets per document and cleans up
+  ---
+  duration_ms: 19.1226
+  ...
+# (node:43700) ExperimentalWarning: glob is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: default media opener covers supported extensions, mixed case and external windows
+ok 12 - default media opener covers supported extensions, mixed case and external windows
+  ---
+  duration_ms: 11.014
+  ...
+# Subtest: file manager action uses the existing reveal permission and handles failures
+ok 13 - file manager action uses the existing reveal permission and handles failures
+  ---
+  duration_ms: 0.3881
+  ...
+# Subtest: a failed system open remains a recoverable media notice
+ok 14 - a failed system open remains a recoverable media notice
+  ---
+  duration_ms: 0.962
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 680.5389
+TAP version 13
+# Subtest: same titles retain distinct directory identity
+ok 1 - same titles retain distinct directory identity
+  ---
+  duration_ms: 0.6063
+  ...
+# Subtest: native Windows extended and UNC paths remain readable
+ok 2 - native Windows extended and UNC paths remain readable
+  ---
+  duration_ms: 0.0949
+  ...
+# Subtest: sibling roots and case-sensitive Unix paths are not shortened incorrectly
+ok 3 - sibling roots and case-sensitive Unix paths are not shortened incorrectly
+  ---
+  duration_ms: 0.0716
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 302.3837
+TAP version 13
+# [Vue warn]: Property undefined was accessed during render but is not defined on instance. 
+#   at <App>
+# Subtest: literal highlight preserves content: 预算确认与预算修订 / 预算
+ok 1 - literal highlight preserves content: 预算确认与预算修订 / 预算
+  ---
+  duration_ms: 1.4556
+  ...
+# Subtest: literal highlight preserves content: Needle needle NEEDLE /  needle 
+ok 2 - literal highlight preserves content: Needle needle NEEDLE /  needle 
+  ---
+  duration_ms: 0.2361
+  ...
+# Subtest: literal highlight preserves content: a.b axb [x] / a.b
+ok 3 - literal highlight preserves content: a.b axb [x] / a.b
+  ---
+  duration_ms: 0.0733
+  ...
+# Subtest: literal highlight preserves content: İ🙂预算 / 预算
+ok 4 - literal highlight preserves content: İ🙂预算 / 预算
+  ---
+  duration_ms: 0.0676
+  ...
+# Subtest: literal highlight preserves content: İstanbul / i
+ok 5 - literal highlight preserves content: İstanbul / i
+  ---
+  duration_ms: 0.108
+  ...
+# Subtest: literal highlight preserves content: 🙂🙂 / 🙂
+ok 6 - literal highlight preserves content: 🙂🙂 / 🙂
+  ---
+  duration_ms: 0.0592
+  ...
+# Subtest: literal highlight preserves content: 正常文字 / 
+ok 7 - literal highlight preserves content: 正常文字 / 
+  ---
+  duration_ms: 0.0841
+  ...
+# Subtest: literal highlight preserves content: 没有结果 / 预算
+ok 8 - literal highlight preserves content: 没有结果 / 预算
+  ---
+  duration_ms: 0.0446
+  ...
+# Subtest: actual highlight template escapes file content instead of rendering HTML
+ok 9 - actual highlight template escapes file content instead of rendering HTML
+  ---
+  duration_ms: 9.8982
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 386.5191
+TAP version 13
+# [Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+#   at <App>
+# [Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+#   at <App>
+# Subtest: same file pages group together without merging same-named files or losing ranking
+ok 1 - same file pages group together without merging same-named files or losing ranking
+  ---
+  duration_ms: 1.2964
+  ...
+# Subtest: separate annotations and match kinds on one page remain independently accessible
+ok 2 - separate annotations and match kinds on one page remain independently accessible
+  ---
+  duration_ms: 0.148
+  ...
+# Subtest: unlocated contexts and case-sensitive paths are preserved
+ok 3 - unlocated contexts and case-sensitive paths are preserved
+  ---
+  duration_ms: 0.1431
+  ...
+# Subtest: actual result click forwards each PDF page and annotation to the existing router
+ok 4 - actual result click forwards each PDF page and annotation to the existing router
+  ---
+  duration_ms: 16.5468
+  ...
+# Subtest: actual grouped results template exposes separate page actions and bounded-count wording
+ok 5 - actual grouped results template exposes separate page actions and bounded-count wording
+  ---
+  duration_ms: 83.907
+  ...
+# Subtest: restored fifth annotation expands the actual lazy position disclosure
+ok 6 - restored fifth annotation expands the actual lazy position disclosure
+  ---
+  duration_ms: 41.4518
+  ...
+# Subtest: body results carry a fresh location intent on repeated opens
+ok 7 - body results carry a fresh location intent on repeated opens
+  ---
+  duration_ms: 5.577
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 564.6794
+TAP version 13
+# Subtest: switching results never displays late content from the previous file
+ok 1 - switching results never displays late content from the previous file
+  ---
+  duration_ms: 19.7943
+  ...
+# Subtest: failed preview can retry; closing discards pending responses
+ok 2 - failed preview can retry; closing discards pending responses
+  ---
+  duration_ms: 12.4645
+  ...
+# Subtest: excerpt uses selected text and resets on a different source
+ok 3 - excerpt uses selected text and resets on a different source
+  ---
+  duration_ms: 10.4324
+  ...
+# Subtest: clipboard failure keeps the selection for retry
+ok 4 - clipboard failure keeps the selection for retry
+  ---
+  duration_ms: 8.9398
+  ...
+# Subtest: explicit side reference docks immediately, survives searches and clears on library change
+ok 5 - explicit side reference docks immediately, survives searches and clears on library change
+  ---
+  duration_ms: 34.8131
+  ...
+# Subtest: normal result opens use main document navigation and never replace the reference
+ok 6 - normal result opens use main document navigation and never replace the reference
+  ---
+  duration_ms: 10.8643
+  ...
+# Subtest: main open and side reference remain distinct accessible actions
+ok 7 - main open and side reference remain distinct accessible actions
+  ---
+  duration_ms: 1.2676
+  ...
+# Subtest: arrow keys move between main-open actions without opening files or swallowing Enter
+ok 8 - arrow keys move between main-open actions without opening files or swallowing Enter
+  ---
+  duration_ms: 4.1544
+  ...
+# Subtest: explicit return hides the reference, retains its source and focuses a visible writable editor after rendering
+ok 9 - explicit return hides the reference, retains its source and focuses a visible writable editor after rendering
+  ---
+  duration_ms: 4.2091
+  ...
+# Subtest: direct excerpt insertion requires a live bookmark in the current writable Markdown note
+ok 10 - direct excerpt insertion requires a live bookmark in the current writable Markdown note
+  ---
+  duration_ms: 5.1118
+  ...
+# Subtest: manual reference refresh clears selection and ignores an older read
+ok 11 - manual reference refresh clears selection and ignores an older read
+  ---
+  duration_ms: 7.1192
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 494.4729
+TAP version 13
+# Subtest: leaving and reopening restores query, filters, selected result and scroll after fresh results
+ok 1 - leaving and reopening restores query, filters, selected result and scroll after fresh results
+  ---
+  duration_ms: 5.9968
+  ...
+# Subtest: paged return restores sort and depth, retaining a not-yet-loaded selection
+ok 2 - paged return restores sort and depth, retaining a not-yet-loaded selection
+  ---
+  duration_ms: 0.6033
+  ...
+# Subtest: named work-session restore retains bounded sort and page depth without old selection
+ok 3 - named work-session restore retains bounded sort and page depth without old selection
+  ---
+  duration_ms: 0.2042
+  ...
+# Subtest: missing result is explained; a failed refresh does not discard the saved selection
+ok 4 - missing result is explained; a failed refresh does not discard the saved selection
+  ---
+  duration_ms: 0.2704
+  ...
+# Subtest: changing query or library clears selection and libraries never inherit one another
+ok 5 - changing query or library clears selection and libraries never inherit one another
+  ---
+  duration_ms: 0.3042
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 370.6714
+TAP version 13
+# Subtest: editor offsets: 🙂İ预算预算/预算
+ok 1 - editor offsets: 🙂İ预算预算/预算
+  ---
+  duration_ms: 0.9737
+  ...
+# Subtest: editor offsets: İstanbul/i
+ok 2 - editor offsets: İstanbul/i
+  ---
+  duration_ms: 0.1605
+  ...
+# Subtest: editor offsets: a.b axb/a.b
+ok 3 - editor offsets: a.b axb/a.b
+  ---
+  duration_ms: 0.1081
+  ...
+# Subtest: editor offsets: A needle/ NEEDLE 
+ok 4 - editor offsets: A needle/ NEEDLE 
+  ---
+  duration_ms: 0.0837
+  ...
+# Subtest: editor offsets: 预算/
+ok 5 - editor offsets: 预算/
+  ---
+  duration_ms: 0.0445
+  ...
+# Subtest: editor offsets: 已修改/预算
+ok 6 - editor offsets: 已修改/预算
+  ---
+  duration_ms: 0.0404
+  ...
+# Subtest: text editor locates in current draft without replacing it; repeated intent only runs once
+ok 7 - text editor locates in current draft without replacing it; repeated intent only runs once
+  ---
+  duration_ms: 4.7829
+  ...
+# Subtest: Markdown waits for the requested document and selects without changing editor mode or content
+ok 8 - Markdown waits for the requested document and selects without changing editor mode or content
+  ---
+  duration_ms: 4.8989
+  ...
+# Subtest: navigation keeps adjacent matches separate and uses literal Unicode offsets
+ok 9 - navigation keeps adjacent matches separate and uses literal Unicode offsets
+  ---
+  duration_ms: 0.3031
+  ...
+# Subtest: DOM matching spans inline formatting but never joins separate paragraphs
+ok 10 - DOM matching spans inline formatting but never joins separate paragraphs
+  ---
+  duration_ms: 0.5757
+  ...
+# Subtest: long paragraph scroll uses match geometry rather than paragraph geometry
+ok 11 - long paragraph scroll uses match geometry rather than paragraph geometry
+  ---
+  duration_ms: 0.2357
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 342.3447
+TAP version 13
+# Subtest: excerpt quotes every line and source round-trips special paths and PDF position
+ok 1 - excerpt quotes every line and source round-trips special paths and PDF position
+  ---
+  duration_ms: 1.252
+  ...
+# Subtest: Windows reference keeps native path identity and library-bound source
+ok 2 - Windows reference keeps native path identity and library-bound source
+  ---
+  duration_ms: 0.3734
+  ...
+# Subtest: actual Markdown source click opens the library file with PDF position
+ok 3 - actual Markdown source click opens the library file with PDF position
+  ---
+  duration_ms: 20.8423
+  ...
+# Subtest: text excerpts carry a bounded anchor, old links remain readable
+ok 4 - text excerpts carry a bounded anchor, old links remain readable
+  ---
+  duration_ms: 0.331
+  ...
+# Subtest: native canonical Windows and UNC source paths resolve within the library
+ok 5 - native canonical Windows and UNC source paths resolve within the library
+  ---
+  duration_ms: 0.2746
+  ...
+# Subtest: source repair validates replacement, records undo and changes draft only
+ok 6 - source repair validates replacement, records undo and changes draft only
+  ---
+  duration_ms: 9.8419
+  ...
+# Subtest: cancel, invalid path, readonly note and changed target never rewrite a source
+ok 7 - cancel, invalid path, readonly note and changed target never rewrite a source
+  ---
+  duration_ms: 39.2193
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 424.2781
+TAP version 13
+# Subtest: minimize preserves temporary draft and never asks to discard
+ok 1 - minimize preserves temporary draft and never asks to discard
+  ---
+  duration_ms: 33.0648
+  ...
+# Subtest: ask choice precedes discard; cancellation preserves the editor
+ok 2 - ask choice precedes discard; cancellation preserves the editor
+  ---
+  duration_ms: 6.2598
+  ...
+# Subtest: repeated system close requests yield one confirmation and one exit
+ok 3 - repeated system close requests yield one confirmation and one exit
+  ---
+  duration_ms: 10.2307
+  ...
+# Subtest: secondary windows close after confirmation without re-entering native CloseRequested
+ok 4 - secondary windows close after confirmation without re-entering native CloseRequested
+  ---
+  duration_ms: 5.2646
+  ...
+# Subtest: failure to exit remains recoverable and permits retry
+ok 5 - failure to exit remains recoverable and permits retry
+  ---
+  duration_ms: 5.6912
+  ...
+# Subtest: local editor drafts join the close guard and disappear on unmount
+ok 6 - local editor drafts join the close guard and disappear on unmount
+  ---
+  duration_ms: 21.7499
+  ...
+# Subtest: an Office or canvas draft prevents exit even when text tabs are clean
+ok 7 - an Office or canvas draft prevents exit even when text tabs are clean
+  ---
+  duration_ms: 6.5693
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 411.3545
+TAP version 13
+# Subtest: unavailable root is handled locally; retry restores the file tree
+ok 1 - unavailable root is handled locally; retry restores the file tree
+  ---
+  duration_ms: 34.9657
+  ...
+# Subtest: a late failure from the old library cannot replace the new library
+ok 2 - a late failure from the old library cannot replace the new library
+  ---
+  duration_ms: 6.5359
+  ...
+# Subtest: explicit creation failure stays recoverable and does not escape to global errors
+ok 3 - explicit creation failure stays recoverable and does not escape to global errors
+  ---
+  duration_ms: 6.4172
+  ...
+# Subtest: unavailable child folder is not cached as empty and expanding after recovery retries
+ok 4 - unavailable child folder is not cached as empty and expanding after recovery retries
+  ---
+  duration_ms: 5.6745
+  ...
+# Subtest: late child directory results do not mutate the tree after switching or refreshing a library
+ok 5 - late child directory results do not mutate the tree after switching or refreshing a library
+  ---
+  duration_ms: 5.5966
+  ...
+# Subtest: directory preparation completes before a library is registered or persisted
+ok 6 - directory preparation completes before a library is registered or persisted
+  ---
+  duration_ms: 5.3833
+  ...
+# Subtest: creation or persistence failures preserve the input and do not register a phantom library
+ok 7 - creation or persistence failures preserve the input and do not register a phantom library
+  ---
+  duration_ms: 13.1537
+  ...
+# Subtest: repeated clicks cannot create two copies while preparation is pending
+ok 8 - repeated clicks cannot create two copies while preparation is pending
+  ---
+  duration_ms: 5.094
+  ...
+# Subtest: global error notice leaves the workspace intact, renders errors as text, and can be dismissed
+ok 9 - global error notice leaves the workspace intact, renders errors as text, and can be dismissed
+  ---
+  duration_ms: 7.6548
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 376.1673
+TAP version 13
+# Subtest: original frozen candidate reproduces null-state save error after navigation
+ok 1 - original frozen candidate reproduces null-state save error after navigation
+  ---
+  duration_ms: 60.8726
+  ...
+# Subtest: save then immediately leave: original tab becomes saved without touching destroyed view
+ok 2 - save then immediately leave: original tab becomes saved without touching destroyed view
+  ---
+  duration_ms: 13.3782
+  ...
+# Subtest: immediately reopening waits for native save and reconciled tab
+ok 3 - immediately reopening waits for native save and reconciled tab
+  ---
+  duration_ms: 9.8935
+  ...
+# Subtest: switching to a different file cannot apply the old reply there
+ok 4 - switching to a different file cannot apply the old reply there
+  ---
+  duration_ms: 10.5102
+  ...
+# Subtest: new edits after save remain dirty and retain the new disk signature
+ok 5 - new edits after save remain dirty and retain the new disk signature
+  ---
+  duration_ms: 8.0158
+  ...
+# Subtest: changed save policy must remain dirty even if text is unchanged
+ok 6 - changed save policy must remain dirty even if text is unchanged
+  ---
+  duration_ms: 10.76
+  ...
+# Subtest: real save failure is still reported and dirty draft survives
+ok 7 - real save failure is still reported and dirty draft survives
+  ---
+  duration_ms: 6.4594
+  ...
+# Subtest: load waits before draft restoration and unmount invalidates pending loads
+ok 8 - load waits before draft restoration and unmount invalidates pending loads
+  ---
+  duration_ms: 0.2702
+  ...
+# Subtest: window save guard spans queued write and survives destroyed editor until receipt
+ok 9 - window save guard spans queued write and survives destroyed editor until receipt
+  ---
+  duration_ms: 7.2381
+  ...
+# Subtest: failed native write releases window save guard without discarding dirty draft
+ok 10 - failed native write releases window save guard without discarding dirty draft
+  ---
+  duration_ms: 8.7032
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 422.0161
+TAP version 13
+# Subtest: dry run validates without writes
+ok 1 - dry run validates without writes
+  ---
+  duration_ms: 2.9775
+  ...
+# Subtest: apply changes all 44 identities while preserving public and historical fields
+ok 2 - apply changes all 44 identities while preserving public and historical fields
+  ---
+  duration_ms: 1.16
+  ...
+# Subtest: late-contract-drift fails before any write
+ok 3 - late-contract-drift fails before any write
+  ---
+  duration_ms: 1.0164
+  ...
+# Subtest: unclosed-predecessor fails before any write
+ok 4 - unclosed-predecessor fails before any write
+  ---
+  duration_ms: 0.7439
+  ...
+# Subtest: wrong-baseline fails before any write
+ok 5 - wrong-baseline fails before any write
+  ---
+  duration_ms: 1.4216
+  ...
+# Subtest: unknown-argument fails before any write
+ok 6 - unknown-argument fails before any write
+  ---
+  duration_ms: 0.501
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63.4722
+TAP version 13
+# Subtest: verified bytes do not promote lifecycle or version identity gates
+ok 1 - verified bytes do not promote lifecycle or version identity gates
+  ---
+  duration_ms: 0.9932
+  ...
+# Subtest: reject wrong-candidate
+ok 2 - reject wrong-candidate
+  ---
+  duration_ms: 0.1943
+  ...
+# Subtest: reject rebuilt-previous
+ok 3 - reject rebuilt-previous
+  ---
+  duration_ms: 0.0721
+  ...
+# Subtest: reject wrong-previous-hash
+ok 4 - reject wrong-previous-hash
+  ---
+  duration_ms: 0.0751
+  ...
+# Subtest: reject duplicate-target
+ok 5 - reject duplicate-target
+  ---
+  duration_ms: 0.0969
+  ...
+# Subtest: reject path-traversal
+ok 6 - reject path-traversal
+  ---
+  duration_ms: 0.0915
+  ...
+# Subtest: reject wrong-version
+ok 7 - reject wrong-version
+  ---
+  duration_ms: 0.0935
+  ...
+# Subtest: reject missing-privacy
+ok 8 - reject missing-privacy
+  ---
+  duration_ms: 0.052
+  ...
+# Subtest: reject changed-bytes
+ok 9 - reject changed-bytes
+  ---
+  duration_ms: 0.2169
+  ...
+# Subtest: reject wrong-size
+ok 10 - reject wrong-size
+  ---
+  duration_ms: 0.2538
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.9357
+TAP version 13
+# Subtest: dry run validates without writes
+ok 1 - dry run validates without writes
+  ---
+  duration_ms: 2.0118
+  ...
+# Subtest: apply changes all 44 identities while preserving public and historical fields
+ok 2 - apply changes all 44 identities while preserving public and historical fields
+  ---
+  duration_ms: 0.8052
+  ...
+# Subtest: late-contract-drift fails before any write
+ok 3 - late-contract-drift fails before any write
+  ---
+  duration_ms: 0.7183
+  ...
+# Subtest: unclosed-predecessor fails before any write
+ok 4 - unclosed-predecessor fails before any write
+  ---
+  duration_ms: 0.7179
+  ...
+# Subtest: wrong-baseline fails before any write
+ok 5 - wrong-baseline fails before any write
+  ---
+  duration_ms: 1.1303
+  ...
+# Subtest: unknown-argument fails before any write
+ok 6 - unknown-argument fails before any write
+  ---
+  duration_ms: 0.4501
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63.4673
+TAP version 13
+# Subtest: dry run validates without writes
+ok 1 - dry run validates without writes
+  ---
+  duration_ms: 1.9374
+  ...
+# Subtest: apply changes all 44 identities while preserving public and historical fields
+ok 2 - apply changes all 44 identities while preserving public and historical fields
+  ---
+  duration_ms: 0.7995
+  ...
+# Subtest: late-contract-drift fails before any write
+ok 3 - late-contract-drift fails before any write
+  ---
+  duration_ms: 0.7359
+  ...
+# Subtest: unclosed-predecessor fails before any write
+ok 4 - unclosed-predecessor fails before any write
+  ---
+  duration_ms: 0.5355
+  ...
+# Subtest: wrong-baseline fails before any write
+ok 5 - wrong-baseline fails before any write
+  ---
+  duration_ms: 1.1018
+  ...
+# Subtest: unknown-argument fails before any write
+ok 6 - unknown-argument fails before any write
+  ---
+  duration_ms: 0.7393
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 62.6368
+TAP version 13
+# Subtest: visible settings gate rejects transparent ancestors, motion, clipping and occlusion
+ok 1 - visible settings gate rejects transparent ancestors, motion, clipping and occlusion
+  ---
+  duration_ms: 1.7567
+  ...
+# Subtest: visual follow-up reuses exact candidate and preserves failures without rebuilding
+ok 2 - visual follow-up reuses exact candidate and preserves failures without rebuilding
+  ---
+  duration_ms: 2.0135
+  ...
+# Subtest: fixed product, official predecessor and disposable install boundaries
+ok 3 - fixed product, official predecessor and disposable install boundaries
+  ---
+  duration_ms: 35.2288
+  ...
+# Subtest: installed observations validate the actual three version surfaces
+ok 4 - installed observations validate the actual three version surfaces
+  ---
+  duration_ms: 1.3088
+  ...
+# Subtest: reject wrong installed observation: nativeVersion
+ok 5 - reject wrong installed observation: nativeVersion
+  ---
+  duration_ms: 0.8559
+  ...
+# Subtest: reject wrong installed observation: badge
+ok 6 - reject wrong installed observation: badge
+  ---
+  duration_ms: 0.262
+  ...
+# Subtest: reject wrong installed observation: badgeLabel
+ok 7 - reject wrong installed observation: badgeLabel
+  ---
+  duration_ms: 4.1836
+  ...
+# Subtest: reject wrong installed observation: settingsRoute
+ok 8 - reject wrong installed observation: settingsRoute
+  ---
+  duration_ms: 0.1935
+  ...
+# Subtest: reject wrong installed observation: settings
+ok 9 - reject wrong installed observation: settings
+  ---
+  duration_ms: 0.5685
+  ...
+# Subtest: reject wrong installed observation: checkedSettings
+ok 10 - reject wrong installed observation: checkedSettings
+  ---
+  duration_ms: 0.7723
+  ...
+# Subtest: reject wrong installed observation: capabilities
+ok 11 - reject wrong installed observation: capabilities
+  ---
+  duration_ms: 0.2138
+  ...
+# Subtest: PowerShell steps parse without installing locally
+ok 12 - PowerShell steps parse without installing locally
+  ---
+  duration_ms: 1170.4073
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1317.1138
+TAP version 13
+# Subtest: verified bytes do not promote lifecycle or version identity gates
+ok 1 - verified bytes do not promote lifecycle or version identity gates
+  ---
+  duration_ms: 2.3258
+  ...
+# Subtest: reject wrong-candidate
+ok 2 - reject wrong-candidate
+  ---
+  duration_ms: 0.2208
+  ...
+# Subtest: reject rebuilt-previous
+ok 3 - reject rebuilt-previous
+  ---
+  duration_ms: 0.0711
+  ...
+# Subtest: reject wrong-previous-hash
+ok 4 - reject wrong-previous-hash
+  ---
+  duration_ms: 0.0554
+  ...
+# Subtest: reject duplicate-target
+ok 5 - reject duplicate-target
+  ---
+  duration_ms: 0.0997
+  ...
+# Subtest: reject path-traversal
+ok 6 - reject path-traversal
+  ---
+  duration_ms: 0.0959
+  ...
+# Subtest: reject wrong-version
+ok 7 - reject wrong-version
+  ---
+  duration_ms: 0.0923
+  ...
+# Subtest: reject missing-privacy
+ok 8 - reject missing-privacy
+  ---
+  duration_ms: 0.0531
+  ...
+# Subtest: reject changed-bytes
+ok 9 - reject changed-bytes
+  ---
+  duration_ms: 0.2188
+  ...
+# Subtest: reject wrong-size
+ok 10 - reject wrong-size
+  ---
+  duration_ms: 0.2434
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 62.1777
+TAP version 13
+# Subtest: workflow uses fixed candidate identity, disposable Windows and no publication rights
+ok 1 - workflow uses fixed candidate identity, disposable Windows and no publication rights
+  ---
+  duration_ms: 29.779
+  ...
+# Subtest: upgrade baseline is the hash-checked official previous installer, never a rebuild
+ok 2 - upgrade baseline is the hash-checked official previous installer, never a rebuild
+  ---
+  duration_ms: 0.3237
+  ...
+# Subtest: quality gate precedes build; installed search has exact independent evidence and publication stays closed
+ok 3 - quality gate precedes build; installed search has exact independent evidence and publication stays closed
+  ---
+  duration_ms: 0.8464
+  ...
+# Subtest: all embedded PowerShell steps parse without executing installers
+ok 4 - all embedded PowerShell steps parse without executing installers
+  ---
+  duration_ms: 1192.2391
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1322.5949
+TAP version 13
+# Subtest: v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture
+ok 1 - v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture
+  ---
+  duration_ms: 3.0222
+  ...
+# Subtest: release uses real immutable installed reports, not invented debug counts
+ok 2 - release uses real immutable installed reports, not invented debug counts
+  ---
+  duration_ms: 0.5081
+  ...
+# Subtest: installed release rejects bytes
+ok 3 - installed release rejects bytes
+  ---
+  duration_ms: 0.4216
+  ...
+# Subtest: installed release rejects version
+ok 4 - installed release rejects version
+  ---
+  duration_ms: 3.8861
+  ...
+# Subtest: installed release rejects installer
+ok 5 - installed release rejects installer
+  ---
+  duration_ms: 0.5804
+  ...
+# Subtest: installed release rejects source
+ok 6 - installed release rejects source
+  ---
+  duration_ms: 0.6543
+  ...
+# Subtest: installed release rejects failed-check
+ok 7 - installed release rejects failed-check
+  ---
+  duration_ms: 1.3083
+  ...
+# Subtest: installed release rejects missing-save
+ok 8 - installed release rejects missing-save
+  ---
+  duration_ms: 0.5218
+  ...
+# Subtest: installed release rejects crashed-route
+ok 9 - installed release rejects crashed-route
+  ---
+  duration_ms: 1.1685
+  ...
+# Subtest: v1.0.23 synthetic validator requires installed reports, not debug evidence
+ok 10 - v1.0.23 synthetic validator requires installed reports, not debug evidence
+  ---
+  duration_ms: 1.2726
+  ...
+# Subtest: v1.0.23 rejects old-native-version
+ok 11 - v1.0.23 rejects old-native-version
+  ---
+  duration_ms: 0.9669
+  ...
+# Subtest: v1.0.23 rejects dev-marker
+ok 12 - v1.0.23 rejects dev-marker
+  ---
+  duration_ms: 0.6559
+  ...
+# Subtest: v1.0.23 rejects wrong-source
+ok 13 - v1.0.23 rejects wrong-source
+  ---
+  duration_ms: 0.4327
+  ...
+# Subtest: v1.0.23 rejects wrong-installer
+ok 14 - v1.0.23 rejects wrong-installer
+  ---
+  duration_ms: 0.6819
+  ...
+# Subtest: v1.0.23 rejects failed-check
+ok 15 - v1.0.23 rejects failed-check
+  ---
+  duration_ms: 1.027
+  ...
+# Subtest: v1.0.23 rejects missing-version-report
+ok 16 - v1.0.23 rejects missing-version-report
+  ---
+  duration_ms: 0.5809
+  ...
+# Subtest: v1.0.23 rejects changed-bytes
+ok 17 - v1.0.23 rejects changed-bytes
+  ---
+  duration_ms: 1.1408
+  ...
+# Subtest: v1.0.23 rejects debug-status
+ok 18 - v1.0.23 rejects debug-status
+  ---
+  duration_ms: 0.4449
+  ...
+# Subtest: v1.0.24 requires its own stability observations
+ok 19 - v1.0.24 requires its own stability observations
+  ---
+  duration_ms: 0.6392
+  ...
+# Subtest: v1.0.24 accepts retained animations when the adaptive observer reports normal motion
+ok 20 - v1.0.24 accepts retained animations when the adaptive observer reports normal motion
+  ---
+  duration_ms: 0.4411
+  ...
+# Subtest: v1.0.24 rejects unconditional motion removal disguised as adaptive reduction
+ok 21 - v1.0.24 rejects unconditional motion removal disguised as adaptive reduction
+  ---
+  duration_ms: 0.7036
+  ...
+# Subtest: v1.0.24 rejects missing-stability
+ok 22 - v1.0.24 rejects missing-stability
+  ---
+  duration_ms: 0.6275
+  ...
+# Subtest: v1.0.24 rejects wrong-source
+ok 23 - v1.0.24 rejects wrong-source
+  ---
+  duration_ms: 0.4384
+  ...
+# Subtest: v1.0.24 rejects legend-overlap
+ok 24 - v1.0.24 rejects legend-overlap
+  ---
+  duration_ms: 0.8442
+  ...
+# Subtest: v1.0.24 rejects tutorial-overflow
+ok 25 - v1.0.24 rejects tutorial-overflow
+  ---
+  duration_ms: 0.7176
+  ...
+# Subtest: v1.0.24 rejects tutorial-obscured
+ok 26 - v1.0.24 rejects tutorial-obscured
+  ---
+  duration_ms: 0.451
+  ...
+# Subtest: v1.0.24 rejects missing-viewport
+ok 27 - v1.0.24 rejects missing-viewport
+  ---
+  duration_ms: 0.8488
+  ...
+# Subtest: v1.0.24 rejects missing-close
+ok 28 - v1.0.24 rejects missing-close
+  ---
+  duration_ms: 0.4611
+  ...
+# Subtest: v1.0.24 rejects animated-markdown
+ok 29 - v1.0.24 rejects animated-markdown
+  ---
+  duration_ms: 0.5773
+  ...
+# Subtest: v1.0.24 rejects missing-markdown-input
+ok 30 - v1.0.24 rejects missing-markdown-input
+  ---
+  duration_ms: 0.4587
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 95.7044
+TAP version 13
+# Subtest: opening release notes preserves current, failed and available update observations
+ok 1 - opening release notes preserves current, failed and available update observations
+  ---
+  duration_ms: 73.8207
+  ...
+# Subtest: slow release-page opening cannot overwrite a completed concurrent update check
+ok 2 - slow release-page opening cannot overwrite a completed concurrent update check
+  ---
+  duration_ms: 8.551
+  ...
+# Subtest: release-page opening is blocked during installation and reports opener failure
+ok 3 - release-page opening is blocked during installation and reports opener failure
+  ---
+  duration_ms: 8.9811
+  ...
+# Subtest: late browser failure cannot dismiss an available update or interrupt installation state
+ok 4 - late browser failure cannot dismiss an available update or interrupt installation state
+  ---
+  duration_ms: 32.3787
+  ...
+# Subtest: retrying browser opening clears only browser error and both user surfaces expose it
+ok 5 - retrying browser opening clears only browser error and both user surfaces expose it
+  ---
+  duration_ms: 7.1263
+  ...
+# Subtest: installed version never becomes the future development target
+ok 6 - installed version never becomes the future development target
+  ---
+  duration_ms: 0.3608
+  ...
+# Subtest: development mode identifies the actual runtime separately from the planned version
+ok 7 - development mode identifies the actual runtime separately from the planned version
+  ---
+  duration_ms: 0.1246
+  ...
+# Subtest: runtime wins over build fallback, including a genuine 1.0.0 runtime
+ok 8 - runtime wins over build fallback, including a genuine 1.0.0 runtime
+  ---
+  duration_ms: 0.1105
+  ...
+# Subtest: available update is not represented as already installed
+ok 9 - available update is not represented as already installed
+  ---
+  duration_ms: 0.2578
+  ...
+# Subtest: failed or pending checks do not advertise stale latest data
+ok 10 - failed or pending checks do not advertise stale latest data
+  ---
+  duration_ms: 0.2649
+  ...
+# Subtest: only successful update observation presents a verified remote version
+ok 11 - only successful update observation presents a verified remote version
+  ---
+  duration_ms: 0.0983
+  ...
+# Subtest: all identity surfaces consume the common reactive runtime source
+ok 12 - all identity surfaces consume the common reactive runtime source
+  ---
+  duration_ms: 1.6253
+  ...
+# Subtest: actual shared computed identity updates when initialization and network results arrive
+ok 13 - actual shared computed identity updates when initialization and network results arrive
+  ---
+  duration_ms: 3.2314
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 504.2378
+TAP version 13
+# Subtest: fixture refuses production mode and the real user application
+ok 1 - fixture refuses production mode and the real user application
+  ---
+  duration_ms: 48.9584
+  ...
+# Subtest: fixture cannot install under any scenario, including invalid config
+ok 2 - fixture cannot install under any scenario, including invalid config
+  ---
+  duration_ms: 19.9314
+  ...
+# Subtest: only external results are injected; available update retains actual runtime version
+ok 3 - only external results are injected; available update retains actual runtime version
+  ---
+  duration_ms: 4.9375
+  ...
+# Subtest: offline and opener failures remain errors rather than empty successes
+ok 4 - offline and opener failures remain errors rather than empty successes
+  ---
+  duration_ms: 4.1144
+  ...
+# Subtest: invalid or missing scenario fails closed
+ok 5 - invalid or missing scenario fails closed
+  ---
+  duration_ms: 12.6428
+  ...
+# Subtest: current and opener retry success are explicitly controllable
+ok 6 - current and opener retry success are explicitly controllable
+  ---
+  duration_ms: 3.9691
+  ...
+# Subtest: unrelated native calls retain their arguments and use the actual backend
+ok 7 - unrelated native calls retain their arguments and use the actual backend
+  ---
+  duration_ms: 5.6807
+  ...
+# Subtest: normal product configuration never imports the opt-in fixture
+ok 8 - normal product configuration never imports the opt-in fixture
+  ---
+  duration_ms: 0.503
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 389.2053
+TAP version 13
+# Subtest: verified bytes do not promote lifecycle or search gates
+ok 1 - verified bytes do not promote lifecycle or search gates
+  ---
+  duration_ms: 1.2154
+  ...
+# Subtest: reject wrong-candidate
+ok 2 - reject wrong-candidate
+  ---
+  duration_ms: 0.2125
+  ...
+# Subtest: reject rebuilt-previous
+ok 3 - reject rebuilt-previous
+  ---
+  duration_ms: 0.0711
+  ...
+# Subtest: reject wrong-previous-hash
+ok 4 - reject wrong-previous-hash
+  ---
+  duration_ms: 0.0572
+  ...
+# Subtest: reject duplicate-target
+ok 5 - reject duplicate-target
+  ---
+  duration_ms: 0.1022
+  ...
+# Subtest: reject path-traversal
+ok 6 - reject path-traversal
+  ---
+  duration_ms: 0.0951
+  ...
+# Subtest: reject wrong-version
+ok 7 - reject wrong-version
+  ---
+  duration_ms: 0.0887
+  ...
+# Subtest: reject missing-privacy
+ok 8 - reject missing-privacy
+  ---
+  duration_ms: 0.0512
+  ...
+# Subtest: reject changed-bytes
+ok 9 - reject changed-bytes
+  ---
+  duration_ms: 0.2106
+  ...
+# Subtest: reject wrong-size
+ok 10 - reject wrong-size
+  ---
+  duration_ms: 0.2415
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60.3089
+(node:31096) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:45260) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: file pages append only the issued same-snapshot end and preserve locator payloads
+ok 1 - file pages append only the issued same-snapshot end and preserve locator payloads
+  ---
+  duration_ms: 2.0759
+  ...
+# Subtest: a failed next page retains loaded files and retries exactly the same cursor
+ok 2 - a failed next page retains loaded files and retries exactly the same cursor
+  ---
+  duration_ms: 0.4144
+  ...
+# Subtest: expired re-search preserves old files while waiting and preserves conditions
+ok 3 - expired re-search preserves old files while waiting and preserves conditions
+  ---
+  duration_ms: 0.3242
+  ...
+# Subtest: expired restart retains all loaded cards across preparation and resumes the saved depth
+ok 4 - expired restart retains all loaded cards across preparation and resumes the saved depth
+  ---
+  duration_ms: 707.7819
+  ...
+# Subtest: a failed replacement keeps the old cards and offers a fresh search, not stale paging
+ok 5 - a failed replacement keeps the old cards and offers a fresh search, not stale paging
+  ---
+  duration_ms: 0.4917
+  ...
+# Subtest: explicit cross-library refresh marks retained cards before IPC returns and retires old paging
+ok 6 - explicit cross-library refresh marks retained cards before IPC returns and retires old paging
+  ---
+  duration_ms: 0.2563
+  ...
+# Subtest: partial replacement with no usable files is not a successful empty search
+ok 7 - partial replacement with no usable files is not a successful empty search
+  ---
+  duration_ms: 0.2155
+  ...
+# Subtest: only a confirmed complete empty replacement removes the retained cards
+ok 8 - only a confirmed complete empty replacement removes the retained cards
+  ---
+  duration_ms: 0.1443
+  ...
+# Subtest: an inconsistent completion flag cannot turn a failed or partial replacement into empty success
+ok 9 - an inconsistent completion flag cannot turn a failed or partial replacement into empty success
+  ---
+  duration_ms: 0.4501
+  ...
+# Subtest: changing the query retires a pending replacement and cannot resurrect the old cards
+ok 10 - changing the query retires a pending replacement and cannot resurrect the old cards
+  ---
+  duration_ms: 0.4138
+  ...
+# Subtest: a newly ranked view waits for explicit refresh and never appends into the old list
+ok 11 - a newly ranked view waits for explicit refresh and never appends into the old list
+  ---
+  duration_ms: 0.231
+  ...
+# Subtest: same-view progress cannot rewind the already-loaded page cursor
+ok 12 - same-view progress cannot rewind the already-loaded page cursor
+  ---
+  duration_ms: 0.2734
+  ...
+# Subtest: late query reply cannot replace new results or close the newer native session
+ok 13 - late query reply cannot replace new results or close the newer native session
+  ---
+  duration_ms: 0.1604
+  ...
+# Subtest: clear retires a late initial session
+ok 14 - clear retires a late initial session
+  ---
+  duration_ms: 0.1049
+  ...
+# Subtest: unmount retires a late initial session
+ok 15 - unmount retires a late initial session
+  ---
+  duration_ms: 0.0652
+  ...
+# Subtest: preparation is bounded and resumable, never reported as a completed empty result
+ok 16 - preparation is bounded and resumable, never reported as a completed empty result
+  ---
+  duration_ms: 0.087
+  ...
+# Subtest: automatic preparation stops when a usable first page is ready
+ok 17 - automatic preparation stops when a usable first page is ready
+  ---
+  duration_ms: 1.7524
+  ...
+# Subtest: restoring previously loaded depth reads only the necessary pages
+ok 18 - restoring previously loaded depth reads only the necessary pages
+  ---
+  duration_ms: 0.2128
+  ...
+# Subtest: invalid phrase never invokes IPC, unknown native error never exposes raw paths
+ok 19 - invalid phrase never invokes IPC, unknown native error never exposes raw paths
+  ---
+  duration_ms: 0.396
+  ...
+# Subtest: explicit tag mode uses the page protocol and keeps exact tag case
+ok 20 - explicit tag mode uses the page protocol and keeps exact tag case
+  ---
+  duration_ms: 0.1175
+  ...
+# Subtest: duplicate or cross-snapshot next pages fail without touching the old list
+ok 21 - duplicate or cross-snapshot next pages fail without touching the old list
+  ---
+  duration_ms: 0.2209
+  ...
+# Subtest: a malformed protocol response cannot become successful no-results
+ok 22 - a malformed protocol response cannot become successful no-results
+  ---
+  duration_ms: 0.0836
+  ...
+# Subtest: a malformed reply retires its allocated native session and invalid input retry stays local
+ok 23 - a malformed reply retires its allocated native session and invalid input retry stays local
+  ---
+  duration_ms: 0.1468
+  ...
+# Subtest: all failures, partial success with zero files and complete zero remain distinct
+ok 24 - all failures, partial success with zero files and complete zero remain distinct
+  ---
+  duration_ms: 0.1477
+  ...
+# (node:40936) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: failure and retry preserve query: 项目
+ok 25 - failure and retry preserve query: 项目
+  ---
+  duration_ms: 4.9607
+  ...
+# Subtest: failure and retry preserve query: \#项目
+ok 26 - failure and retry preserve query: \#项目
+  ---
+  duration_ms: 2.3651
+  ...
+# Subtest: successful empty response is not failure
+ok 27 - successful empty response is not failure
+  ---
+  duration_ms: 2.6929
+  ...
+# Subtest: stale resolve cannot overwrite newer results
+ok 28 - stale resolve cannot overwrite newer results
+  ---
+  duration_ms: 2.3404
+  ...
+# Subtest: stale reject cannot overwrite newer results
+ok 29 - stale reject cannot overwrite newer results
+  ---
+  duration_ms: 5.2958
+  ...
+# Subtest: clear invalidates pending response and clears busy state
+ok 30 - clear invalidates pending response and clears busy state
+  ---
+  duration_ms: 2.2312
+  ...
+# Subtest: library change rejects old response
+ok 31 - library change rejects old response
+  ---
+  duration_ms: 3.4834
+  ...
+# Subtest: new query immediately removes old result; missing library does not spin
+ok 32 - new query immediately removes old result; missing library does not spin
+  ---
+  duration_ms: 1.9852
+  ...
+# Subtest: component keeps errors distinct and offers accessible retry
+ok 33 - component keeps errors distinct and offers accessible retry
+  ---
+  duration_ms: 0.6129
+  ...
+# Subtest: real Vue watchers debounce changes and retry retains format filter
+ok 34 - real Vue watchers debounce changes and retry retains format filter
+  ---
+  duration_ms: 4.5071
+  ...
+# Subtest: real library watcher clears query, collection and busy state before late response
+ok 35 - real library watcher clears query, collection and busy state before late response
+  ---
+  duration_ms: 2.6292
+  ...
+# Subtest: real Vue clear cancels debounce without invoking backend
+ok 36 - real Vue clear cancels debounce without invoking backend
+  ---
+  duration_ms: 2.1644
+  ...
+# Subtest: real Vue unmount cancels scheduled search
+ok 37 - real Vue unmount cancels scheduled search
+  ---
+  duration_ms: 5.732
+  ...
+# Subtest: real Vue unmount invalidates a late response
+ok 38 - real Vue unmount invalidates a late response
+  ---
+  duration_ms: 2.011
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 867.7612
+TAP version 13
+# Subtest: file card has one full-width column; relation badge follows its title and locations
+ok 1 - file card has one full-width column; relation badge follows its title and locations
+  ---
+  duration_ms: 0.6275
+  ...
+# Subtest: title and metadata stack; long titles wrap and snippets remain bounded
+ok 2 - title and metadata stack; long titles wrap and snippets remain bounded
+  ---
+  duration_ms: 0.1026
+  ...
+# Subtest: full title and separate file/graph actions remain available
+ok 3 - full title and separate file/graph actions remain available
+  ---
+  duration_ms: 0.1486
+  ...
+# Subtest: actual file card stacks narrow actions and retains all lazy internal positions
+ok 4 - actual file card stacks narrow actions and retains all lazy internal positions
+  ---
+  duration_ms: 0.0781
+  ...
+# Subtest: actual status identifies old cards immediately, without presenting an old total as fresh results
+ok 5 - actual status identifies old cards immediately, without presenting an old total as fresh results
+  ---
+  duration_ms: 5.0366
+  ...
+# Subtest: actual status retains a paused or failed replacement label and returns to normal after acceptance
+ok 6 - actual status retains a paused or failed replacement label and returns to normal after acceptance
+  ---
+  duration_ms: 1.2354
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 452.8791
+TAP version 13
+# Subtest: route query preserves the question mark in Windows extended-length paths
+ok 1 - route query preserves the question mark in Windows extended-length paths
+  ---
+  duration_ms: 0.5132
+  ...
+# Subtest: scenario targets accessible names retained by the actual tooltip adoption policy
+ok 2 - scenario targets accessible names retained by the actual tooltip adoption policy
+  ---
+  duration_ms: 28.3092
+  ...
+# Subtest: installed search reuses verified artifact and cannot publish
+ok 3 - installed search reuses verified artifact and cannot publish
+  ---
+  duration_ms: 0.4533
+  ...
+# Subtest: search scenario refuses arbitrary user library before performing any IO
+ok 4 - search scenario refuses arbitrary user library before performing any IO
+  ---
+  duration_ms: 0.5269
+  ...
+# Subtest: Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor
+ok 5 - Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor
+  ---
+  duration_ms: 0.9026
+  ...
+# Subtest: workflow PowerShell parses without installing
+ok 6 - workflow PowerShell parses without installing
+  ---
+  duration_ms: 437.7694
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 774.0557
+TAP version 13
+# Subtest: installed runner rejects the original visible save error even when disk content exists
+ok 1 - installed runner rejects the original visible save error even when disk content exists
+  ---
+  duration_ms: 1.4288
+  ...
+# Subtest: installed runner rejects dirty, missing and contradictory save identities
+ok 2 - installed runner rejects dirty, missing and contradictory save identities
+  ---
+  duration_ms: 1.3398
+  ...
+# Subtest: installed runner accepts synchronized identity only without visible save failure
+ok 3 - installed runner accepts synchronized identity only without visible save failure
+  ---
+  duration_ms: 0.4246
+  ...
+# Subtest: installed runner preserves the screenshot before feedback rejection and records pass afterward
+ok 4 - installed runner preserves the screenshot before feedback rejection and records pass afterward
+  ---
+  duration_ms: 0.0802
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.2094
+TAP version 13
+# Subtest: published v1.0.24 requires its exact tag and keeps the new updater pending
+ok 1 - published v1.0.24 requires its exact tag and keeps the new updater pending
+  ---
+  duration_ms: 0.9475
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=pending
+ok 2 - hosted-execution-pending: community=pending, receipt=pending
+  ---
+  duration_ms: 0.1315
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=passed
+ok 3 - hosted-execution-pending: community=pending, receipt=passed
+  ---
+  duration_ms: 0.1442
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=pending
+ok 4 - hosted-execution-pending: community=passed, receipt=pending
+  ---
+  duration_ms: 0.0546
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=passed
+ok 5 - hosted-execution-pending: community=passed, receipt=passed
+  ---
+  duration_ms: 0.087
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=pending
+ok 6 - hosted-managed-update-passed: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0491
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=passed
+ok 7 - hosted-managed-update-passed: community=pending, receipt=passed
+  ---
+  duration_ms: 0.0733
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=pending
+ok 8 - hosted-managed-update-passed: community=passed, receipt=pending
+  ---
+  duration_ms: 0.0403
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=passed
+ok 9 - hosted-managed-update-passed: community=passed, receipt=passed
+  ---
+  duration_ms: 0.1381
+  ...
+# Subtest: unknown status fails closed
+ok 10 - unknown status fails closed
+  ---
+  duration_ms: 0.2699
+  ...
+# Subtest: v1.0.23 candidate does not inherit historical updater acceptance
+ok 11 - v1.0.23 candidate does not inherit historical updater acceptance
+  ---
+  duration_ms: 0.1905
+  ...
+# Subtest: published successor boundary requires its own real release identity
+ok 12 - published successor boundary requires its own real release identity
+  ---
+  duration_ms: 0.2419
+  ...
+# Subtest: successor keeps the historical receipt and a separate pending update path
+ok 13 - successor keeps the historical receipt and a separate pending update path
+  ---
+  duration_ms: 0.0817
+  ...
+# Subtest: successor rejects pending-predecessor
+ok 14 - successor rejects pending-predecessor
+  ---
+  duration_ms: 0.0708
+  ...
+# Subtest: successor rejects stale-successor-path
+ok 15 - successor rejects stale-successor-path
+  ---
+  duration_ms: 0.0314
+  ...
+# Subtest: successor rejects wrong-previous
+ok 16 - successor rejects wrong-previous
+  ---
+  duration_ms: 0.0258
+  ...
+# Subtest: successor rejects wrong-tag
+ok 17 - successor rejects wrong-tag
+  ---
+  duration_ms: 0.0267
+  ...
+# Subtest: successor rejects unknown-version
+ok 18 - successor rejects unknown-version
+  ---
+  duration_ms: 0.0492
+  ...
+# Subtest: successor rejects changed-receipt
+ok 19 - successor rejects changed-receipt
+  ---
+  duration_ms: 0.0247
+  ...
+# Subtest: version boundary admits only current and planned successor runtime
+ok 20 - version boundary admits only current and planned successor runtime
+  ---
+  duration_ms: 0.1407
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 64.4677
+TAP version 13
+# Subtest: installed candidate remains pending without an official observation
+ok 1 - installed candidate remains pending without an official observation
+  ---
+  duration_ms: 1.1164
+  ...
+# Subtest: publication alone can remain pending
+ok 2 - publication alone can remain pending
+  ---
+  duration_ms: 0.0841
+  ...
+# Subtest: only a separately successful published update can pass
+ok 3 - only a separately successful published update can pass
+  ---
+  duration_ms: 0.0753
+  ...
+# Subtest: reject false update success: unpublished
+ok 4 - reject false update success: unpublished
+  ---
+  duration_ms: 0.1516
+  ...
+# Subtest: reject false update success: missing-evidence
+ok 5 - reject false update success: missing-evidence
+  ---
+  duration_ms: 0.0972
+  ...
+# Subtest: reject false update success: wrong-version
+ok 6 - reject false update success: wrong-version
+  ---
+  duration_ms: 0.0559
+  ...
+# Subtest: reject false update success: wrong-previous
+ok 7 - reject false update success: wrong-previous
+  ---
+  duration_ms: 0.2471
+  ...
+# Subtest: reject false update success: failed-run
+ok 8 - reject false update success: failed-run
+  ---
+  duration_ms: 0.1066
+  ...
+# Subtest: reject false update success: missing-run
+ok 9 - reject false update success: missing-run
+  ---
+  duration_ms: 0.2718
+  ...
+# Subtest: reject false update success: pending-evidence
+ok 10 - reject false update success: pending-evidence
+  ---
+  duration_ms: 0.5532
+  ...
+# Subtest: reject false update success: stale-path
+ok 11 - reject false update success: stale-path
+  ---
+  duration_ms: 0.162
+  ...
+# Subtest: production checker uses independent observation and pending candidate state
+ok 12 - production checker uses independent observation and pending candidate state
+  ---
+  duration_ms: 0.3508
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63.1694
+TAP version 13
+# Subtest: import: accepted
+ok 1 - import: accepted
+  ---
+  duration_ms: 104.1121
+  ...
+# Subtest: import: missing-review
+ok 2 - import: missing-review
+  ---
+  duration_ms: 47.2227
+  ...
+# Subtest: import: wrong-hash
+ok 3 - import: wrong-hash
+  ---
+  duration_ms: 51.9951
+  ...
+# Subtest: import: failed-lifecycle
+ok 4 - import: failed-lifecycle
+  ---
+  duration_ms: 50.8947
+  ...
+# Subtest: import: wrong-version
+ok 5 - import: wrong-version
+  ---
+  duration_ms: 52.8961
+  ...
+# Subtest: import: missing-privacy
+ok 6 - import: missing-privacy
+  ---
+  duration_ms: 52.9715
+  ...
+# Subtest: import: malformed-json
+ok 7 - import: malformed-json
+  ---
+  duration_ms: 48.7903
+  ...
+# Subtest: import: unexpected-file
+ok 8 - import: unexpected-file
+  ---
+  duration_ms: 52.7225
+  ...
+# Subtest: import: invalid-run
+ok 9 - import: invalid-run
+  ---
+  duration_ms: 49.5659
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 569.8434
+(node:44768) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Post-v1.0.20 graph interaction polish passed: ordinary zoom floors are 0.580/0.645, large overview remains bounded, details are card-sized, and themed popup controls replace native selects.
+(node:34168) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+M3B-4 curved relation routes accepted: deterministic parallel/reciprocal separation, tangent arrows, selected-path labels and shared SVG routing, with three-theme real Tauri evidence.
+(node:25212) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+M3B-5 path motion accepted: selected traversal flow, independent fact arrows, static labels, reduced-motion shutdown and inactive lifecycle cleanup, with three-theme calm/reduced real Tauri evidence.
+(node:38872) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+M3B-7 camera navigation accepted: fit-selection, bounded cancellable focus, reduced-motion immediacy and narrow command reachability with real calm/reduced Tauri evidence.
+(node:41136) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+M3B-9 semantic minimap accepted: bounded sampling, label-free semantic overview, viewport frame, click/drag/keyboard navigation and responsive overlay safety with four real Tauri sessions.
+(node:43256) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+M3B-11 restrained node status rings accepted: fixed recency boundaries, visible-graph strength normalization, uniform-graph safety, priority suppression and no governance scan with 4 real Tauri sessions.
+Current development audit passed: v1.1.7 is public and v1.1.8 is the next bounded development target.
+EA-4D2 external Mermaid workspace passed: strict preview, bounded source, guarded explicit save, export isolation and unchanged Windows associations are aligned.
+EA-4D3 external OPML workspace passed: bounded XML semantics, professional canvas editing, guarded explicit save and unchanged Windows associations are aligned.
+EA-5A default-app candidate workflow passed: 37 format profiles are user-triggered, Windows-confirmed, independently windowed, and installer-safe.
+EA-5B1 uninstall recovery passed: 37 candidate formats and 85 extensions clean only LongEdit-owned HKCU registrations.
+EA-5B2A installed lifecycle harness passed: user-triggered candidates, independent Unicode launch windows, Windows ownership, uninstall recovery, and disposable evidence export are locked.
+EA-5C closure passed: 43 formats, 29 edit, 8 preview, 6 import, 37 user-selected default-app profiles, 41 completed UX requirements, and verified installed evidence.
+P1-A3B image editor controls passed: precise crop, JPEG quality and mandatory privacy cleanup stay inside the library-only right workspace.
+P1-A3B desktop audit passed: crop-aware sizing, JPEG quality, privacy cleanup, reliable reopen and responsive right-workspace layout are accepted.
+P1-B1 PDF safety audit passed: copy/sidecar capabilities are reconciled while mandatory blockers and the B2A-B5 sequence remain frozen.
+P1-B2A1 PDF form inspector passed: canonical fields and page widgets are read-only inspected with bounded ambiguity and active-content diagnostics.
+P1-B2A2 PDF form panel passed: historical read-only evidence remains accepted while the original workspace has progressed to bounded reliable copies.
+P1-B2B0 PDF registry reconciliation passed: library-only copy boundaries remain intact and the public form state is advanced-but-bounded.
+P1-B2B1 PDF text form copy passed: digest-locked isolated preview, new-target save, canonical value and non-empty widget appearance verification are present.
+P1-B2B2 PDF form workspace passed: original right workspace, preview-before-save, reliable new copy and wide/narrow desktop evidence are accepted.
+P1-B2B3 PDF Unicode form copy passed: licensed subset font, UTF-16 field value, live desktop workflow, reopen and rendered glyph evidence are accepted.
+P1-B2B4 PDF checkbox copy passed: bounded export state, canonical field value, widget appearance state, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B2B5 PDF radio copy passed: unique widget exports, mutually exclusive appearance states, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B2B6 PDF Choice copy passed: bounded export/display options, canonical value/index, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B3A PDF permanent redaction safety audit passed: overlay and heuristic removal are rejected, fresh full-document raster reconstruction is frozen, and no writer is prematurely exposed.
+P1-B3B PDF permanent redaction backend passed: bounded opaque PNG input, burned-pixel verification, fresh image-only PDF construction, no-overwrite save, reopen checks and no premature UI are aligned.
+P1-B3C PDF permanent redaction workspace passed: original right workspace selection, full-page opaque PDF.js rasterization, bounded Base64 IPC, digest-locked reliable save and explicit image-only tradeoff are aligned.
+P1-B3D PDF permanent redaction evidence passed: real Tauri workflow, source preservation, saved reopen, empty text structure and independent opaque Poppler render are accepted.
+P1-B4A PDF watermark safety audit passed: visible-attribution semantics, isolated vector overlay, embedded Unicode subset font, resource/page geometry preservation and no premature writer are frozen.
+P1-B4B PDF watermark backend passed: bounded embedded Unicode vector overlays, private resources, digest-locked new-copy save, preservation inventory and reopen verification are aligned without premature UI.
+P1-B4C PDF watermark workspace passed: original PdfView integration, bounded controls, digest-invalidating preview, explicit tradeoff, reliable save/open and draft protection are aligned.
+P1-B4D PDF watermark evidence passed: real Tauri workflow, source preservation, saved reopen, Unicode extraction, structure preservation and unclipped Poppler renders are accepted.
+P1-B5A PDF metadata safety audit passed: four descriptive fields, Info/XMP consistency blockers, full-rewrite copy semantics and explicit non-anonymization boundaries are frozen without a premature writer.
+P1-B5B PDF metadata backend passed: Unicode allowlisted Info edits, true deletion, preserved keys, reachable-object equivalence, digest-locked new-copy save and fail-closed blockers are implemented without premature UI.
+P1-B5C PDF metadata workspace passed: the original right workspace exposes four bounded fields, explicit non-anonymization scope, draft protection, preview-locked reliable save and aligned responsive styling; desktop evidence remains pending.
+P1-B5D PDF metadata evidence passed: original-workspace editing, draft protection, reliable copy, source preservation, metadata semantics and pixel-identical renders are accepted.
+P1 final capability closure passed: 43 formats/91 extensions are tiered truthfully; bounded daily management and basic editing remain ready for the v1.1.7 unsigned patch release flow.
+P2-A PDF capability alignment passed: implemented copy workflows and bounded limitations are public and source overwrite remains forbidden.
+P2-B image color adjustment contract passed: UI preview, bounded backend pixels, saved report and reset path are connected.
+P2-B real evidence passed: desktop wide/narrow UI, source preservation, target reopen and independent grayscale pixels match expectations.
+P2-C image navigation contract passed: cursor-anchored wheel zoom, pointer-captured pan, double-click toggle and keyboard fallback are connected.
+P2-C real evidence passed: cursor anchor, wheel scale, two-axis drag pan, double-click toggle and responsive layout match expectations.
+TAP version 13
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 1 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 4.3496
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 2 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 3.4905
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 3 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 0.932
+  ...
+# Subtest: v117 final safety checks are mandatory and publishing requires the current check count
+ok 4 - v117 final safety checks are mandatory and publishing requires the current check count
+  ---
+  duration_ms: 2.5521
+  ...
+# Subtest: installed final check detects the current runtime and route error notices
+ok 5 - installed final check detects the current runtime and route error notices
+  ---
+  duration_ms: 2.0425
+  ...
+# Subtest: installed v117 navigation supplies the real three-argument driver contract
+ok 6 - installed v117 navigation supplies the real three-argument driver contract
+  ---
+  duration_ms: 17.1981
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 304.0297
+TAP version 13
+# Subtest: both UI history reads use shared coordination before resolving the document
+ok 1 - both UI history reads use shared coordination before resolving the document
+  ---
+  duration_ms: 0.5733
+  ...
+# Subtest: history mutations and signature-checked recovery retain exclusive coordination
+ok 2 - history mutations and signature-checked recovery retain exclusive coordination
+  ---
+  duration_ms: 0.172
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56.9358

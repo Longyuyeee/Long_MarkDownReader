@@ -40,6 +40,7 @@ const publicErrors: Record<string, string> = {
   scopeTooLarge: '一次最多搜索 32 个资料库，请切换到当前资料库或缩小范围。',
   requestMismatch: '搜索条件或资料库范围已改变，请重新搜索；没有混入另一查询。',
   invalidCursor: '续载位置已失效，请重新搜索；已加载结果仍保留。',
+  refreshUnavailable: '本次重新搜索未能获得可用结果，暂时保留上次结果；请核对资料库后重试。',
 }
 
 // The two UI entrypoints share cursor ownership and retry rules. No file writes,
@@ -47,9 +48,11 @@ const publicErrors: Record<string, string> = {
 export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: number; autoMs?: number; pollMs?: number } = {}) {
   const files = shallowRef<SearchFile[]>([]), status = shallowRef<SearchFrame | null>(null)
   const pendingView = shallowRef<SearchFrame | null>(null), busy = ref(false)
+  const retainingView = ref(false)
   const error = ref(''), errorCode = ref(''), nextPage = ref<string | null>(null)
   let definition: SearchDefinition | null = null, generation = 0, sessionId = '', viewId: string | null = null
   let lastAction: Action = { kind: 'first', cursor: null }, disposed = false
+  let restoreDepth = 0
   let wake: (() => void) | undefined
   const initialLoading = computed(() => busy.value && !files.value.length)
   const canContinue = computed(() => !!status.value?.workCursor && !pendingView.value)
@@ -65,6 +68,7 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
   const reset = () => {
     retire(); definition = null; files.value = []; status.value = null; pendingView.value = null
     error.value = ''; errorCode.value = ''; viewId = null; nextPage.value = null
+    retainingView.value = false; restoreDepth = 0
   }
   const pause = () => new Promise<void>(resolve => {
     const timer = setTimeout(() => { wake = undefined; resolve() }, options.pollMs ?? 180)
@@ -73,6 +77,7 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
   const accept = (frame: SearchFrame) => {
     files.value = frame.files; viewId = frame.snapshotId; nextPage.value = frame.pageCursor
     pendingView.value = null
+    retainingView.value = false
   }
   const normalize = (raw: NativePage, def: SearchDefinition): SearchFrame => {
     if (!raw || !raw.sessionId || !Array.isArray(raw.files) || raw.files.some(file => !file.path || !file.matches?.length)
@@ -104,7 +109,13 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
       if (!status.value || status.value.snapshotId === frame.snapshotId) status.value = frame
     } else {
       status.value = frame
-      if (forceView || !files.value.length) accept(frame)
+      if (retainingView.value) {
+        // Retiring the old session also retires its cursors, not its visible
+        // cards. Empty preparation/failure is not a replacement result.
+        const completeEmpty = frame.scanState === 'ready' && frame.scanComplete && frame.totalFiles === 0
+        if (frame.files.length || completeEmpty) accept(frame)
+        else if (!frame.workCursor) fail({ code: 'refreshUnavailable' })
+      } else if (forceView || !files.value.length) accept(frame)
       else if (frame.snapshotId !== viewId) pendingView.value = frame
       // Same view work response always starts at zero: keep the loaded page end.
     }
@@ -115,7 +126,7 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
     errorCode.value = code
     error.value = publicErrors[code] || '暂时无法读取搜索结果，请重试或检查资料库是否可访问；不是没有匹配。'
   }
-  const perform = async (action: Action, forceView = false, loadUntil = 0) => {
+  const perform = async (action: Action, forceView = false) => {
     if (!definition || busy.value || disposed) return
     const token = generation, deadline = Date.now() + (options.autoMs ?? 8000)
     busy.value = true; error.value = ''; errorCode.value = ''
@@ -127,7 +138,7 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
         await pause(); if (token !== generation || disposed) return
         if (!await request({ kind: 'work', cursor: status.value.workCursor }, token)) return
       }
-      for (let pages = 0; pages < 250 && token === generation && !pendingView.value && nextPage.value && files.value.length < loadUntil && Date.now() < deadline; pages++) {
+      for (let pages = 0; pages < 250 && token === generation && !pendingView.value && nextPage.value && files.value.length < restoreDepth && Date.now() < deadline; pages++) {
         if (!await request({ kind: 'page', cursor: nextPage.value }, token)) return
       }
     } catch (cause) { if (token === generation && !disposed) fail(cause) }
@@ -138,25 +149,32 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
     definition = { ...def }; pendingView.value = null; nextPage.value = null; status.value = null
     error.value = ''; errorCode.value = ''; viewId = null
     if (!settings.preserve) files.value = []
+    retainingView.value = !!settings.preserve && files.value.length > 0
+    restoreDepth = Math.min(10000, Math.max(0, settings.loadUntil || 0))
     try { parseSearchQuery(def.query) } catch (cause) {
       error.value = String(cause).replace(/^Error:\s*/, ''); errorCode.value = 'invalidRequest'; return
     }
     if (!def.query.trim()) return
     if (def.kind === 'single' && !def.libraryRoot) { errorCode.value = 'scopeUnavailable'; error.value = publicErrors.scopeUnavailable; return }
-    await perform({ kind: 'first', cursor: null }, true, Math.min(10000, Math.max(0, settings.loadUntil || 0)))
+    await perform({ kind: 'first', cursor: null }, true)
   }
   const applyPending = async () => {
     if (!pendingView.value || busy.value) return
     accept(pendingView.value)
+    restoreDepth = 0
   }
   const restart = () => definition ? start(definition, { preserve: true, loadUntil: files.value.length }) : Promise.resolve()
-  const retry = () => ['expired', 'invalidCursor', 'requestMismatch', 'invalidRequest'].includes(errorCode.value) ? restart() : perform(lastAction)
+  const retry = () => ['expired', 'invalidCursor', 'requestMismatch', 'invalidRequest', 'refreshUnavailable'].includes(errorCode.value) ? restart() : perform(lastAction)
   const refreshAvailable = async () => {
+    if (busy.value || disposed) return
     const cursor = status.value?.refreshCursor
     if (!cursor) { await restart(); return }
+    retainingView.value = files.value.length > 0
+    restoreDepth = Math.min(10000, files.value.length)
+    nextPage.value = null
     await perform({ kind: 'work', cursor }); await applyPending()
   }
-  return { files, status, pendingView, busy, error, errorCode, nextPage, initialLoading, canContinue, hasMore,
+  return { files, status, pendingView, retainingView, busy, error, errorCode, nextPage, initialLoading, canContinue, hasMore,
     start, reset, restart, retry, applyPending, refreshAvailable,
     loadMore: () => nextPage.value && !pendingView.value ? perform({ kind: 'page', cursor: nextPage.value }) : Promise.resolve(),
     continueSearch: () => status.value?.workCursor ? perform({ kind: 'work', cursor: status.value.workCursor }) : Promise.resolve(),

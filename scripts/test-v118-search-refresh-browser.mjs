@@ -1,0 +1,85 @@
+// Real Vue pages and user-facing actions; isolated simulated IPC only.
+// The existing native E2a proof is separate and does not cover this frontend.
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import {createRequire} from 'node:module'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
+const output=process.env.LONGEDIT_SEARCH_UI_OUTPUT
+assert.ok(output,'explicit owned output directory required')
+await fs.mkdir(output,{recursive:false})
+const browser=await chromium.launch({headless:true}),page=await browser.newPage({viewport:{width:1280,height:900}})
+const errors=[],checks=[];page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000)
+const palette=page.getByRole('dialog',{name:'命令与资料'})
+const cards=scope=>scope.locator('.search-file-card')
+const library=page.locator('.knowledge-search-results')
+const configure=updates=>page.evaluate(updates=>{Object.assign(window.workflowAudit,updates)},updates)
+const release=async()=>page.evaluate(()=>{const a=window.workflowAudit;a.holdPreparation=false;a.workReady=true;a.pendingPages.splice(0).forEach(resolve=>resolve())})
+const openPalette=async()=>{await page.keyboard.press('Control+p');await palette.waitFor()}
+try{
+  await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9018')+'/scripts/fixtures/v118-search-pages-browser.html')
+  await page.getByRole('link',{name:'资料库',exact:true}).click()
+  await page.getByPlaceholder('搜索文件与正文').fill('预算')
+  await page.waitForFunction(()=>document.querySelectorAll('.knowledge-search-results .search-file-card').length===40)
+  await library.getByRole('button',{name:'加载更多文件',exact:true}).click()
+  await page.waitForFunction(()=>document.querySelectorAll('.knowledge-search-results .search-file-card').length===80)
+  await library.getByRole('button',{name:'打开 预算记录-072.md',exact:true}).click()
+  await page.waitForFunction(()=>window.workflowAudit.store.activeTabId.endsWith('预算记录-072.md'))
+  await page.waitForFunction(()=>document.querySelector('.vditor-wysiwyg')?.textContent.includes('项目预算记录 72'))
+  await page.locator('.vditor-wysiwyg [contenteditable="true"]').first().fill('我正在修改正式预算，请不要替我保存或丢掉草稿。')
+  await page.waitForFunction(()=>{const a=window.workflowAudit,tab=a.store.tabs.find(tab=>tab.id===a.store.activeTabId);return tab?.isDirty&&tab.content.includes('请不要替我保存')})
+  const draft=await page.evaluate(()=>{const a=window.workflowAudit,tab=a.store.tabs.find(tab=>tab.id===a.store.activeTabId);return {path:a.store.activeTabId,body:tab.content,dirty:tab.isDirty,disk:a.disk.get(a.store.activeTabId)}})
+  await page.getByRole('button',{name:'返回刚才的搜索结果'}).click()
+  for(const [label,scope,count] of [['library',library,80],['palette',palette,40]]){
+    if(label==='palette'){
+      await openPalette();await palette.getByRole('textbox',{name:'搜索资料或命令'}).fill('预算')
+      await page.waitForFunction(()=>document.querySelectorAll('.command-palette-container .search-file-card').length===40)
+    }
+    const titles=await cards(scope).locator('.search-file-title').allTextContents()
+    await configure({pageFault:label==='library'?'expired':'snapshotChanged'})
+    await scope.getByRole('button',{name:'加载更多文件',exact:true}).click()
+    await scope.locator('.search-page-error').waitFor();assert.equal(await cards(scope).count(),count)
+    await configure({pageScenario:'preparing',workReady:false,holdPreparation:true})
+    await scope.locator('.search-page-error button').click()
+    await page.waitForFunction(()=>window.workflowAudit.pendingPages.length>0)
+    await page.screenshot({path:output+`/${label}-preparing.png`})
+    assert.equal(await cards(scope).count(),count,'preparation must preserve every loaded file card')
+    assert.deepEqual(await cards(scope).locator('.search-file-title').allTextContents(),titles)
+    assert.match(await scope.textContent(),/保留旧视图/)
+    assert.match(await scope.locator('.search-page-line').textContent(),/正在重新搜索 · 暂时保留上次结果/)
+    await page.screenshot({path:output+`/${label}-retained.png`})
+    await release()
+    await page.waitForFunction(([selector,count])=>document.querySelectorAll(selector+' .search-file-card').length===count&&!document.querySelector(selector+' [aria-busy="true"]'),[label==='library'?'.knowledge-search-results':'.command-palette-container',count])
+    assert.equal(await scope.locator('.search-page-error').count(),0)
+    assert.equal(await scope.getByText(/保留旧视图/).count(),0)
+    checks.push(label+': expired/changed page retains ordered cards through preparation; explicit replacement restores loaded depth')
+    const current=await page.evaluate(path=>{const a=window.workflowAudit,tab=a.store.tabs.find(tab=>tab.id===path);return {path:a.store.activeTabId,body:tab.content,dirty:tab.isDirty,disk:a.disk.get(path)}},draft.path)
+    assert.deepEqual(current,draft,'refresh cannot switch the main document or mutate its draft/disk')
+    checks.push(label+': actual editor input and fixture disk remain unchanged by refresh')
+    if(label==='palette')await page.keyboard.press('Escape')
+    await configure({pageScenario:'large'})
+  }
+  // A terminal failure is not an empty result, and a confirmed complete zero
+  // can replace old cards only after the explicit re-search.
+  await openPalette();await palette.getByRole('textbox',{name:'搜索资料或命令'}).fill('预算')
+  await cards(palette).first().waitFor();await configure({pageFault:'expired'})
+  await palette.getByRole('button',{name:'加载更多文件',exact:true}).click();await palette.locator('.search-page-error').waitFor()
+  await configure({pageScenario:'allFailed'});await palette.locator('.search-page-error button').click()
+  await palette.getByText(/所有资料库都未能完成搜索/).waitFor()
+  assert.equal(await cards(palette).count(),40);assert.equal(await palette.getByText('没有找到匹配内容',{exact:true}).count(),0)
+  await palette.locator('.search-page-error button').waitFor();await page.screenshot({path:output+'/failed-refresh.png'})
+  await configure({pageScenario:'empty'});await palette.locator('.search-page-error button').click()
+  await palette.getByText('没有找到匹配内容',{exact:true}).waitFor();assert.equal(await cards(palette).count(),0)
+  checks.push('failed replacement retains clearly marked old results and actionable retry; confirmed complete empty replaces them')
+  await page.screenshot({path:output+'/confirmed-empty.png'})
+  await page.keyboard.press('Escape');await page.getByRole('button',{name:'返回刚才的搜索结果'}).click()
+  assert.equal(await cards(library).count(),80)
+  await library.getByRole('button',{name:'在侧边参考 项目预算.md',exact:true}).first().click()
+  await page.getByRole('region',{name:'参考资料（只读）'}).waitFor()
+  assert.equal(await page.evaluate(()=>window.workflowAudit.store.activeTabId),draft.path)
+  assert.equal(await page.evaluate(path=>window.workflowAudit.disk.get(path),draft.path),draft.disk)
+  checks.push('main document, restored library result depth and explicit readonly reference remain usable after palette recovery')
+  assert.deepEqual(errors,[])
+  await fs.writeFile(output+'/report.json',JSON.stringify({scope:'Actual Vue App/LibraryMode/CommandPalette/editor; simulated isolated native IPC and disk, not Tauri or installer acceptance',checks,errors},null,2)+'\n')
+  console.log(JSON.stringify({checks:checks.length,errors:errors.length}))
+}catch(error){await page.screenshot({path:output+'/failure.png'}).catch(()=>{});await fs.writeFile(output+'/failure.json',JSON.stringify({error:String(error),checks,errors},null,2)+'\n');throw error}
+finally{await browser.close()}

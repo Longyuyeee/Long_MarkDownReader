@@ -1,6 +1,6 @@
 import './search-consistency-browser.mjs'
 const a=window.workflowAudit, original=window.__TAURI_INTERNALS__.invoke, root=a.store.libraryPath
-a.pageCalls=[];a.pageCloses=[];a.pageScenario='large';a.pageFault='';a.pendingPages=[];a.pageHold=false;a.pageRevision=0;a.workReady=false
+a.pageCalls=[];a.pageCloses=[];a.pageScenario='large';a.pageFault='';a.pendingPages=[];a.pageHold=false;a.pageRevision=0;a.workReady=false;a.holdPreparation=false
 const sessions=new Map();let sequence=0
 const match=(path,extra={})=>({title:path.split('/').pop(),path,objectType:'markdown',matchKind:'body',context:'项目预算安排，保留原文。',score:60,extractionFailed:false,...extra})
 const group=(path,extra={})=>({title:path.split('/').pop(),path,matches:[match(path)],modifiedAtMs:1,mayHaveMoreMatches:false,locationLimitPerKind:5,unlocatedLimitPerKind:1,...extra})
@@ -42,7 +42,8 @@ window.__TAURI_INTERNALS__.invoke=async(command,args={})=>{
     if(!request.cursor){session={id:'fixture-'+(++sequence),multi:command==='search_knowledge_libraries_page',step:0,version:0};sessions.set(session.id,session)}
     if(!session||session.closed)throw {code:'expired'}
     session.step++
-    if(a.pageScenario==='preparing'&&session.step>2)a.workReady=true
+    if(a.pageScenario==='preparing'&&session.step>2&&!a.holdPreparation)a.workReady=true
+    if(a.pageScenario==='preparing'&&session.step>1&&a.holdPreparation)await new Promise(resolve=>a.pendingPages.push(resolve))
     if(a.pageHold)await new Promise(resolve=>a.pendingPages.push(resolve))
     return response(session,request)
   }

@@ -1,0 +1,151 @@
+(node:42108) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:34620) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: file pages append only the issued same-snapshot end and preserve locator payloads
+ok 1 - file pages append only the issued same-snapshot end and preserve locator payloads
+  ---
+  duration_ms: 2.1475
+  ...
+# Subtest: a failed next page retains loaded files and retries exactly the same cursor
+ok 2 - a failed next page retains loaded files and retries exactly the same cursor
+  ---
+  duration_ms: 0.4617
+  ...
+# Subtest: expired re-search preserves old files while waiting and preserves conditions
+ok 3 - expired re-search preserves old files while waiting and preserves conditions
+  ---
+  duration_ms: 0.3536
+  ...
+# Subtest: expired restart retains all loaded cards across preparation and resumes the saved depth
+not ok 4 - expired restart retains all loaded cards across preparation and resumes the saved depth
+  ---
+  duration_ms: 725.5058
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-search-pages.mjs:36:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    preparing must not erase the previous 80 file cards
+    
+    0 !== 80
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 80
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-search-pages.mjs:49:10)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+# Subtest: a failed replacement keeps the old cards and offers a fresh search, not stale paging
+not ok 5 - a failed replacement keeps the old cards and offers a fresh search, not stale paging
+  ---
+  duration_ms: 0.9825
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-search-pages.mjs:61:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 40
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 40
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-search-pages.mjs:65:33)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+# Subtest: only a confirmed complete empty replacement removes the retained cards
+ok 6 - only a confirmed complete empty replacement removes the retained cards
+  ---
+  duration_ms: 0.2523
+  ...
+# Subtest: changing the query retires a pending replacement and cannot resurrect the old cards
+ok 7 - changing the query retires a pending replacement and cannot resurrect the old cards
+  ---
+  duration_ms: 0.2488
+  ...
+# Subtest: a newly ranked view waits for explicit refresh and never appends into the old list
+ok 8 - a newly ranked view waits for explicit refresh and never appends into the old list
+  ---
+  duration_ms: 0.2138
+  ...
+# Subtest: same-view progress cannot rewind the already-loaded page cursor
+ok 9 - same-view progress cannot rewind the already-loaded page cursor
+  ---
+  duration_ms: 0.3447
+  ...
+# Subtest: late query reply cannot replace new results or close the newer native session
+ok 10 - late query reply cannot replace new results or close the newer native session
+  ---
+  duration_ms: 0.3399
+  ...
+# Subtest: clear retires a late initial session
+ok 11 - clear retires a late initial session
+  ---
+  duration_ms: 0.1688
+  ...
+# Subtest: unmount retires a late initial session
+ok 12 - unmount retires a late initial session
+  ---
+  duration_ms: 0.0868
+  ...
+# Subtest: preparation is bounded and resumable, never reported as a completed empty result
+ok 13 - preparation is bounded and resumable, never reported as a completed empty result
+  ---
+  duration_ms: 0.241
+  ...
+# Subtest: automatic preparation stops when a usable first page is ready
+ok 14 - automatic preparation stops when a usable first page is ready
+  ---
+  duration_ms: 2.0603
+  ...
+# Subtest: restoring previously loaded depth reads only the necessary pages
+ok 15 - restoring previously loaded depth reads only the necessary pages
+  ---
+  duration_ms: 0.3422
+  ...
+# Subtest: invalid phrase never invokes IPC, unknown native error never exposes raw paths
+ok 16 - invalid phrase never invokes IPC, unknown native error never exposes raw paths
+  ---
+  duration_ms: 0.4236
+  ...
+# Subtest: explicit tag mode uses the page protocol and keeps exact tag case
+ok 17 - explicit tag mode uses the page protocol and keeps exact tag case
+  ---
+  duration_ms: 0.1844
+  ...
+# Subtest: duplicate or cross-snapshot next pages fail without touching the old list
+ok 18 - duplicate or cross-snapshot next pages fail without touching the old list
+  ---
+  duration_ms: 0.3703
+  ...
+# Subtest: a malformed protocol response cannot become successful no-results
+ok 19 - a malformed protocol response cannot become successful no-results
+  ---
+  duration_ms: 0.1116
+  ...
+# Subtest: a malformed reply retires its allocated native session and invalid input retry stays local
+ok 20 - a malformed reply retires its allocated native session and invalid input retry stays local
+  ---
+  duration_ms: 0.1537
+  ...
+# Subtest: all failures, partial success with zero files and complete zero remain distinct
+ok 21 - all failures, partial success with zero files and complete zero remain distinct
+  ---
+  duration_ms: 0.1605
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 19
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 891.5787
