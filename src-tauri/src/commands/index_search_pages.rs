@@ -313,20 +313,19 @@ pub async fn run_page(
         index
             .ensure_watcher(&root)
             .map_err(|_| SearchPageError::unavailable())?;
-        let revision = index.search_revision(&root);
+        let revision = index.search_revision_pair(&root);
         let allow_index = !index.blocks_index_reads(&root) && !index.search_sources_changed(&root);
         let snapshot = allow_index.then(|| index.cached_snapshot(&root)).flatten();
         let cache = knowledge_index_cache_root(&app).map_err(|_| SearchPageError::unavailable())?;
-        runtime.insert(
-            owner.clone(),
-            QuerySession::new(
-                &root,
-                &request,
-                revision,
-                snapshot,
-                allow_index.then_some(cache),
-            )?,
-        )?
+        let mut session = QuerySession::new(
+            &root,
+            &request,
+            revision.0,
+            snapshot,
+            allow_index.then_some(cache),
+        )?;
+        session.index_epoch = revision.1;
+        runtime.insert(owner.clone(), session)?
     };
     tauri::async_runtime::spawn_blocking(move || {
         let _permit = permit;
@@ -342,17 +341,8 @@ pub async fn run_page(
             ));
         };
         session.validate_binding(&request)?;
-        let before = index.search_revision(&root);
-        let result = if index.search_watch_healthy(&root) {
-            session.request(&request, before, SearchLimits::default())
-        } else {
-            Err(SearchPageError::expired())
-        };
-        let after = index.search_revision(&root);
-        let result = if after != before
-            || !index.search_watch_healthy(&root)
-            || entry.cancelled.load(Ordering::Acquire)
-        {
+        let result = session.request_live(&request, &index, SearchLimits::default());
+        let result = if entry.cancelled.load(Ordering::Acquire) {
             Err(SearchPageError::expired())
         } else {
             result
@@ -495,6 +485,7 @@ struct QuerySession {
     tag_pattern: Option<regex::Regex>,
     page_size: usize,
     revision: u64,
+    index_epoch: u64,
     created: Instant,
     touched: Instant,
     cancelled: Arc<AtomicBool>,
@@ -546,6 +537,7 @@ impl QuerySession {
             },
             page_size: request.page_size,
             revision,
+            index_epoch: 0,
             created: Instant::now(),
             touched: Instant::now(),
             cancelled: Arc::new(AtomicBool::new(false)),
@@ -584,6 +576,7 @@ impl QuerySession {
         format!("{}:p:{offset}", self.id)
     }
 
+    #[cfg(test)]
     fn request(
         &mut self,
         request: &SearchPageRequest,
@@ -595,7 +588,47 @@ impl QuerySession {
         if self.expired() || self.cancelled.load(Ordering::Acquire) || self.revision != revision {
             return Err(SearchPageError::expired());
         }
-        self.request_bound(cursor, limits)
+        self.request_bound(
+            cursor,
+            &mut SearchBudget::new(limits).with_cancellation(self.cancelled.clone()),
+        )
+    }
+
+    fn request_live(
+        &mut self,
+        request: &SearchPageRequest,
+        index: &KnowledgeIndexRuntime,
+        limits: SearchLimits,
+    ) -> Result<SearchPageResponse, SearchPageError> {
+        self.validate_binding(request)?;
+        if self.expired()
+            || self.cancelled.load(Ordering::Acquire)
+            || !index.search_watch_healthy(self.guard.root())
+        {
+            return Err(SearchPageError::expired());
+        }
+        let mut budget = SearchBudget::new(limits).with_cancellation(self.cancelled.clone());
+        let epoch = (self.revision, self.index_epoch);
+        if index.search_revision_pair(self.guard.root()) != epoch
+            && !verify_directory_notification(self, index, epoch, &mut budget)
+        {
+            return Err(SearchPageError::expired());
+        }
+        let cursor = request.cursor.clone().unwrap_or_else(|| self.work_cursor());
+        let response = self.request_bound(cursor, &mut budget)?;
+        let epoch = (self.revision, self.index_epoch);
+        if index.search_revision_pair(self.guard.root()) != epoch
+            && !verify_directory_notification(self, index, epoch, &mut budget)
+        {
+            return Err(SearchPageError::expired());
+        }
+        if self.cancelled.load(Ordering::Acquire)
+            || !index.search_watch_healthy(self.guard.root())
+            || index.search_revision_pair(self.guard.root()) != (self.revision, self.index_epoch)
+        {
+            return Err(SearchPageError::expired());
+        }
+        Ok(response)
     }
 
     fn validate_binding(&self, request: &SearchPageRequest) -> Result<(), SearchPageError> {
@@ -627,7 +660,7 @@ impl QuerySession {
     fn request_bound(
         &mut self,
         cursor: String,
-        limits: SearchLimits,
+        budget: &mut SearchBudget,
     ) -> Result<SearchPageResponse, SearchPageError> {
         if let Some((previous, response)) = &self.last_work {
             if previous == &cursor {
@@ -659,8 +692,7 @@ impl QuerySession {
                     "续载步骤已更新，请使用最新的继续查看位置。",
                 ));
             }
-            let mut budget = SearchBudget::new(limits).with_cancellation(self.cancelled.clone());
-            self.advance(&mut budget)?;
+            self.advance(budget)?;
             self.work_step += 1;
             let response = if self.state == ScanState::Preparing {
                 self.response(Vec::new(), None, Some(self.work_cursor()))
@@ -1112,6 +1144,57 @@ impl QuerySession {
         }
         Ok(())
     }
+}
+
+// Windows can report directory metadata notifications while a read-only scan
+// opens child directories. Never ignore those notifications: prove equality of
+// the entire source inventory and relation digest within this request's budget.
+// A preparing session qualifies only after its source walk has fully ended;
+// a truncated/limited inventory cannot establish that proof.
+fn verify_directory_notification(
+    session: &mut QuerySession,
+    index: &KnowledgeIndexRuntime,
+    before: (u64, u64),
+    budget: &mut SearchBudget,
+) -> bool {
+    let after = index.search_revision_pair(session.guard.root());
+    let complete_inventory = session.state == ScanState::Ready
+        || (session.state == ScanState::Preparing && session.scan.is_none());
+    if after.1 != before.1 || !complete_inventory || budget.check_time().is_err() {
+        return false;
+    }
+    let Some(paths) = index.bounded_search_change_paths(session.guard.root(), 64) else {
+        return false;
+    };
+    if paths.is_empty()
+        || paths.iter().any(|path| {
+            !fs::symlink_metadata(path)
+                .is_ok_and(|metadata| metadata.is_dir() && !metadata.file_type().is_symlink())
+        })
+    {
+        return false;
+    }
+    let Ok(sources) = collect_search_sources(session.guard.root(), budget) else {
+        return false;
+    };
+    let relations = session.guard.root().join(".longedit/file-relations.json");
+    match fs::metadata(&relations) {
+        Ok(metadata) if budget.read(metadata.len()).is_ok() => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        _ => return false,
+    }
+    let relation_digest = file_relations_digest(session.guard.root());
+    if source_digest(&sources) != source_digest(&session.sources)
+        || relation_digest == "unavailable"
+        || relation_digest != session.relations_digest
+        || index.search_revision_pair(session.guard.root()) != after
+        || !index.search_watch_healthy(session.guard.root())
+        || budget.check_time().is_err()
+    {
+        return false;
+    }
+    session.revision = after.0;
+    true
 }
 
 fn tag_pattern(query: &str) -> Result<regex::Regex, SearchPageError> {

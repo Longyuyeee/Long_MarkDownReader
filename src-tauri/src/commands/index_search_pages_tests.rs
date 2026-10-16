@@ -838,6 +838,153 @@ fn v118_pages_new_pdf_sidecar_expires_retry_even_before_watcher_delivery() {
 }
 
 #[test]
+fn v118_pages_cold_read_only_search_with_real_watcher_verifies_directory_hints() {
+    let fixture = Fixture::new(240);
+    fixture.pdf_annotations();
+    let ordinary = fixture.root.join("普通资料");
+    fs::create_dir(&ordinary).unwrap();
+    for index in 0..1400 {
+        fs::write(
+            ordinary.join(format!("{index}.txt")),
+            "ordinary unrelated text",
+        )
+        .unwrap();
+    }
+    let index = KnowledgeIndexRuntime::default();
+    let root = WorkspaceGuard::new(&fixture.root).unwrap();
+    index.ensure_watcher(root.root()).unwrap();
+    let revision = index.search_revision(root.root());
+    let mut request = fixture.request();
+    let mut session = QuerySession::new(root.root(), &request, revision, None, None).unwrap();
+    let mut files = 0;
+    for _ in 0..100 {
+        let response = session
+            .request_live(&request, &index, limits())
+            .unwrap_or_else(|error| {
+                panic!(
+                    "read-only search failed: {error:?}; revision {revision} -> {}; paths: {:?}",
+                    index.search_revision(root.root()),
+                    index.changed_paths(root.root())
+                )
+            });
+        files += response.files.len();
+        request.cursor = response.next_cursor;
+        if request.cursor.is_none() {
+            break;
+        }
+    }
+    std::thread::sleep(Duration::from_millis(150));
+    assert_eq!(files, 244);
+    assert!(index.search_watch_healthy(root.root()));
+    assert_eq!(
+        session.revision,
+        index.search_revision(root.root()),
+        "all observed hints must be verified, not suppressed or silently left stale"
+    );
+}
+
+#[test]
+fn v118_pages_live_directory_proof_preserves_pages_without_reparsing_or_unbounded_budget() {
+    let fixture = Fixture::new(80);
+    let root = WorkspaceGuard::new(&fixture.root).unwrap();
+    let index = KnowledgeIndexRuntime::default();
+    index.ensure_watcher(root.root()).unwrap();
+    let mut request = fixture.request();
+    let mut session = QuerySession::new(root.root(), &request, 0, None, None).unwrap();
+    let first = session.request_live(&request, &index, limits()).unwrap();
+    let builds = session.body_builds;
+    request.cursor = first.next_cursor.clone();
+    let revision = index.search_revision(root.root());
+    fs::create_dir(fixture.root.join("新建空目录")).unwrap();
+    let started = Instant::now();
+    while index.search_revision(root.root()) == revision
+        && started.elapsed() < Duration::from_secs(5)
+    {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(
+        index.search_revision(root.root()) > revision,
+        "a real directory event must arrive"
+    );
+    let old_revision = session.revision;
+    assert_eq!(
+        session
+            .request_live(
+                &request,
+                &index,
+                SearchLimits {
+                    entries: 0,
+                    ..limits()
+                }
+            )
+            .unwrap_err()
+            .code,
+        "expired"
+    );
+    assert_eq!(
+        session.revision, old_revision,
+        "an unfinished proof cannot absorb the hint"
+    );
+    let second = session.request_live(&request, &index, limits()).unwrap();
+    assert_eq!(second.page_offset, Some(40));
+    assert_eq!(second.snapshot_id, first.snapshot_id);
+    assert_eq!(
+        session.body_builds, builds,
+        "directory verification reads signatures, not bodies"
+    );
+    assert_eq!(session.revision, index.search_revision(root.root()));
+}
+
+#[test]
+fn v118_pages_live_proof_never_absorbs_source_changes_index_replacement_or_partial_inventory() {
+    for change in ["file", "new-source", "explicit-index", "incomplete-scan"] {
+        let fixture = Fixture::new(80);
+        let root = WorkspaceGuard::new(&fixture.root).unwrap();
+        let index = KnowledgeIndexRuntime::default();
+        index.ensure_watcher(root.root()).unwrap();
+        let mut request = fixture.request();
+        let mut session = QuerySession::new(root.root(), &request, 0, None, None).unwrap();
+        if change != "incomplete-scan" {
+            request.cursor = session
+                .request_live(&request, &index, limits())
+                .unwrap()
+                .next_cursor;
+        }
+        let before = index.search_revision(root.root());
+        match change {
+            "file" => fs::write(fixture.root.join("zz-项目预算.md"), "真实新正文不得改回").unwrap(),
+            "new-source" => fs::write(fixture.root.join("预算新文件.md"), "真实新增来源").unwrap(),
+            "explicit-index" => index.note_search_change(root.root()),
+            _ => fs::create_dir(fixture.root.join("尚未核对的目录")).unwrap(),
+        }
+        let started = Instant::now();
+        while index.search_revision(root.root()) == before
+            && started.elapsed() < Duration::from_secs(5)
+        {
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert!(
+            index.search_revision(root.root()) > before,
+            "{change}: change notification must arrive"
+        );
+        assert_eq!(
+            session
+                .request_live(&request, &index, limits())
+                .unwrap_err()
+                .code,
+            "expired",
+            "{change}"
+        );
+        if change == "file" {
+            assert_eq!(
+                fs::read_to_string(fixture.root.join("zz-项目预算.md")).unwrap(),
+                "真实新正文不得改回"
+            );
+        }
+    }
+}
+
+#[test]
 fn v118_pages_real_filesystem_watcher_revision_does_not_reset_when_changes_are_cleared() {
     let fixture = Fixture::new(0);
     let index = KnowledgeIndexRuntime::default();

@@ -653,16 +653,17 @@ fn run_library_step(
         index
             .ensure_watcher(guard.root())
             .map_err(|_| SearchPageError::unavailable())?;
-        let revision = index.search_revision(guard.root());
+        let revision = index.search_revision_pair(guard.root());
         let allow =
             !index.blocks_index_reads(guard.root()) && !index.search_sources_changed(guard.root());
         let mut session = QuerySession::new(
             guard.root(),
             &job.request,
-            revision,
+            revision.0,
             allow.then(|| index.cached_snapshot(guard.root())).flatten(),
             if allow { cache } else { None },
         )?;
+        session.index_epoch = revision.1;
         session.cancelled = job.cancelled;
         session.retention.pool = job.pool;
         session
@@ -690,53 +691,6 @@ fn run_library_step(
     }
     session.touched = Instant::now();
     Ok(session)
-}
-
-fn verify_directory_notification(
-    session: &mut QuerySession,
-    index: &KnowledgeIndexRuntime,
-    before: (u64, u64),
-    budget: &mut SearchBudget,
-) -> bool {
-    let after = index.search_revision_pair(session.guard.root());
-    // Never absorb an explicit index replacement/build-state transition. Only
-    // complete scans can establish equality of the whole source signature set.
-    if after.1 != before.1 || session.state != ScanState::Ready || budget.check_time().is_err() {
-        return false;
-    }
-    let Some(paths) = index.bounded_search_change_paths(session.guard.root(), 64) else {
-        return false;
-    };
-    if paths.is_empty()
-        || paths.len() > 64
-        || paths.iter().any(|path| {
-            !fs::symlink_metadata(path)
-                .is_ok_and(|metadata| metadata.is_dir() && !metadata.file_type().is_symlink())
-        })
-    {
-        return false;
-    }
-    let Ok(sources) = collect_search_sources(session.guard.root(), budget) else {
-        return false;
-    };
-    let relations = session.guard.root().join(".longedit/file-relations.json");
-    match fs::metadata(&relations) {
-        Ok(metadata) if budget.read(metadata.len()).is_ok() => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        _ => return false,
-    }
-    let relation_digest = file_relations_digest(session.guard.root());
-    if source_digest(&sources) != source_digest(&session.sources)
-        || relation_digest == "unavailable"
-        || relation_digest != session.relations_digest
-        || index.search_revision_pair(session.guard.root()) != after
-        || !index.search_watch_healthy(session.guard.root())
-        || budget.check_time().is_err()
-    {
-        return false;
-    }
-    session.revision = after.0;
-    true
 }
 
 pub async fn run(
