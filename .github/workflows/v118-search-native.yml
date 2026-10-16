@@ -8,6 +8,7 @@ name: v1.1.8 Real Search IPC Audit
       - scripts/capture-v118-native-search.mjs
       - scripts/run-v118-native-search.ps1
       - scripts/lib/v118-native-search-fixture.mjs
+      - scripts/lib/v118-webview-test-policy.ps1
   workflow_dispatch:
 
 permissions:
@@ -57,6 +58,20 @@ jobs:
           $env:TAURI_CONFIG=$config | ConvertTo-Json -Depth 10 -Compress
           cargo build --locked --manifest-path src-tauri/Cargo.toml --bin tauri-app
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain immutable Debug program separately from test outcome
+        shell: powershell
+        run: |
+          $folder=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program'
+          New-Item -ItemType Directory -Path $folder | Out-Null
+          $program=Get-Item -LiteralPath 'product/src-tauri/target/debug/tauri-app.exe'
+          Copy-Item -LiteralPath $program.FullName -Destination (Join-Path $folder 'tauri-app.exe')
+          @{schemaVersion=1;productCommit='c70735c7064d9e8f30f1bfae98acee634ba040d8';harnessCommit=$env:GITHUB_SHA;buildRunId=$env:GITHUB_RUN_ID;runtimeBaseVersion='1.1.7';releaseCandidate=$false;isInstaller=$false;sourceUserContentIncluded=$false;sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $program.FullName).Hash.ToLowerInvariant();sizeBytes=$program.Length} | ConvertTo-Json | Out-File -Encoding utf8 -LiteralPath (Join-Path $folder 'program-build-receipt.json')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v118-native-program-${{ github.run_id }}
+          path: native-debug-program
+          retention-days: 14
+          if-no-files-found: error
       - name: Real native page IPC, generated files, isolation and same-binary restart
         shell: powershell
         run: |

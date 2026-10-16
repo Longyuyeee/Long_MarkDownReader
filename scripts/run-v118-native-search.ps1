@@ -26,8 +26,10 @@ $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port=9458 --remot
 $env:LONGEDIT_NATIVE_PRODUCT_COMMIT=$expectedCommit
 $env:LONGEDIT_NATIVE_EXECUTABLE=Join-Path $product 'src-tauri\target\debug\tauri-app.exe'
 $node=(Get-Command node.exe).Source
+. (Join-Path $PSScriptRoot 'lib\v118-webview-test-policy.ps1')
 $vite=$null; $app=$null
 try {
+  Enable-V118WebViewTestPolicy $fixture.webview
   # Direct Node invocation avoids npm/PowerShell argument forwarding differences.
   $vite=Start-Process -FilePath $node -ArgumentList 'node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','14200','--strictPort' -WorkingDirectory $product -WindowStyle Hidden -RedirectStandardOutput (Join-Path $output 'vite.stdout.log') -RedirectStandardError (Join-Path $output 'vite.stderr.log') -PassThru
   $ready=$false
@@ -41,6 +43,8 @@ try {
     catch {
       $app.Refresh()
       $diagnostic=@{phase=$phase;pid=$app.Id;hasExited=$app.HasExited;sessionId=$app.SessionId;debugPortListening=[bool](Get-NetTCPConnection -LocalPort 9458 -State Listen -ErrorAction SilentlyContinue)}
+      $diagnostic.webviewProcesses=@(Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Select-Object ProcessId,ParentProcessId,CommandLine)
+      $diagnostic.runtimeVersions=@('HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}','HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}','HKCU:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}') | ForEach-Object {Get-ItemPropertyValue -LiteralPath $_ -Name pv -ErrorAction SilentlyContinue}
       if($app.HasExited){$diagnostic.exitCode=$app.ExitCode}else{$diagnostic.windowHandle=$app.MainWindowHandle.ToInt64();$diagnostic.workingSet64=$app.WorkingSet64}
       $diagnostic | ConvertTo-Json -Depth 4 | Out-File -Encoding utf8 -LiteralPath (Join-Path $output "$phase-process-diagnostic.json")
       throw
@@ -52,6 +56,7 @@ try {
 } finally {
   if($app -and -not $app.HasExited){Stop-Process -Id $app.Id -Force}
   if($vite -and -not $vite.HasExited){Stop-Process -Id $vite.Id -Force}
+  Disable-V118WebViewTestPolicy
   # Leave only self-generated fixture data to the disposable runner cleanup.
   # Never enumerate or kill arbitrary port owners, or delete a user directory.
 }

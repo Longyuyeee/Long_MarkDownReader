@@ -9,15 +9,15 @@
   "sourceUserContentIncluded": false,
   "sourceHashBasis": "git-index-bytes",
   "checks": {
-    "localHarnessContracts": 54,
+    "localHarnessContracts": 55,
     "actualVueSimulatedIpcFlows": 3,
     "actualVuePageErrors": 0,
     "localQualityGate": "passed",
     "productionVulnerabilities": 0,
     "native": {
       "status": "failed",
-      "runId": 38964350628,
-      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38964350628",
+      "runId": 38965822093,
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38965822093",
       "conclusion": "failure"
     }
   },
@@ -35,8 +35,8 @@
     },
     {
       "path": ".github/workflows/v118-search-native.yml",
-      "bytes": 2878,
-      "sha256": "de89550fe9a8bce91a20e4657d8f158fc3ce393c76037d385b3a7a8b6bc1804a"
+      "bytes": 4055,
+      "sha256": "5ed05198a476d6547c8455d49e0ae7adb2cfaf31dee7db08b6c82169dd315655"
     },
     {
       "path": "shared/development-version-policy.json",
@@ -50,13 +50,18 @@
     },
     {
       "path": "scripts/run-v118-native-search.ps1",
-      "bytes": 4782,
-      "sha256": "aeec66ce971fbb75fc260a9011c41c3d71556ff22e061c9533f5338f238e8c11"
+      "bytes": 5483,
+      "sha256": "e853ccb9c6e7f9453a377e5606691435a7f9b636f3a281c7b80608d5127ccb5d"
     },
     {
       "path": "scripts/lib/v118-native-search-fixture.mjs",
       "bytes": 3884,
       "sha256": "52d6aa61167ae694f6882ca01e5cc6ad9b059afc9d9fb8e1b3044abd4ef1a5bc"
+    },
+    {
+      "path": "scripts/lib/v118-webview-test-policy.ps1",
+      "bytes": 2063,
+      "sha256": "ba8be80190fa16060798813d50661a24eddcbbb4f5d06953b798b9f2637ee25b"
     },
     {
       "path": "scripts/lib/v118-native-search-evidence.mjs",
@@ -65,8 +70,8 @@
     },
     {
       "path": "scripts/test-v118-native-search-audit.mjs",
-      "bytes": 4975,
-      "sha256": "57332d4a1b98add5458ae38d8718a235aaeb4a16d919ccef3635fa4c3c01bbdb"
+      "bytes": 5887,
+      "sha256": "37ec544576f81f56169277fe2cf13e8e212b5231035f36e01f961e548aa1b386"
     },
     {
       "path": "scripts/test-v118-native-search-evidence.mjs",
@@ -105,13 +110,13 @@
     },
     {
       "path": "scripts/collect-v118-native-ipc-evidence.mjs",
-      "bytes": 4142,
-      "sha256": "87786ab4998af501b6b4163c0713c300df7693b4a86e6ee58c036a403999b980"
+      "bytes": 4183,
+      "sha256": "da9efb16f0a775ec29d81e8765bb6412c72206fef8e7acd2af1b570ca384cc11"
     },
     {
       "path": "docs/V1_1_8_Native_IPC_Audit_2026-10-17.md",
-      "bytes": 5812,
-      "sha256": "9729a3d727436728237eeb319549262f55b1a88aba7dde6a98d2b8409846e2ff"
+      "bytes": 7464,
+      "sha256": "37403bd91f0fd6b109df12df313393c1d085a78c002296b3b045eef2032afb4d"
     },
     {
       "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
@@ -120,8 +125,8 @@
     },
     {
       "path": "docs/Development_Handoff.md",
-      "bytes": 432717,
-      "sha256": "db70d779901bc6735e79dcb1b6610c19b0a4277e3c1cf3e485f3ad8d8a3c222c"
+      "bytes": 433303,
+      "sha256": "ff9da12026e8b5f1e6ddeb0141c006143290a2fdf8657049d4529856539ed9b3"
     }
   ],
   "evidenceFiles": [
@@ -156,6 +161,11 @@
       "sha256": "bdc318b15d873561bb8d6886fa71b04205197e1c16ae3ca961764fc9f6613adc"
     },
     {
+      "path": "docs/evidence/v118-native-ipc/harness-ci-580e-snapshot.json",
+      "bytes": 203,
+      "sha256": "4df4bb2cfe4d69feb19d0df5ebc1dab8f0a0c1a99f02439d6f0847c4b8e0e654"
+    },
+    {
       "path": "docs/evidence/v118-native-ipc/harness-contracts-after-diagnostic.log",
       "bytes": 9345,
       "sha256": "bdba410d0fa6ee7c7f3b1666c7dca50249687517f0dc40a3036683b44459bb00"
@@ -176,6 +186,16 @@
       "sha256": "3db570959fc6c003ab8a5e78c5529403d77d602d1c8c32cd79582f3635561c94"
     },
     {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-policy-final.log",
+      "bytes": 9597,
+      "sha256": "db49b07672af03639e2e679456981735562476b373c55518a85631414af2e0be"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/harness-contracts-policy.log",
+      "bytes": 9596,
+      "sha256": "a75acfb568c995680e8c5184f30108632aba5a8b5dc379a0aeba43fcca86df0f"
+    },
+    {
       "path": "docs/evidence/v118-native-ipc/native-run-first-failure.log",
       "bytes": 5547,
       "sha256": "8abdeb0bc9715b07f5963d70b104960f614700cf0a7939028c0890ac04e6a009"
@@ -184,6 +204,21 @@
       "path": "docs/evidence/v118-native-ipc/native-run-first.json",
       "bytes": 2982,
       "sha256": "f1c423eaf475c544e9887c091b1ea4a276d739288680b75607fe2ec7e4640405"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-second-failure.log",
+      "bytes": 4599,
+      "sha256": "bd72c032e5a9fca34596df63bc9aa8c1a47f916b710a79a330e71ed465df21e1"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-second-final.json",
+      "bytes": 2982,
+      "sha256": "00a055f501d803e343c1cb76aefb7506cf1813486e03fb81b22a4890f1749472"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/native-run-second.json",
+      "bytes": 2982,
+      "sha256": "00a055f501d803e343c1cb76aefb7506cf1813486e03fb81b22a4890f1749472"
     },
     {
       "path": "docs/evidence/v118-native-ipc/product-ci-final.json",
@@ -229,6 +264,36 @@
       "path": "docs/evidence/v118-native-ipc/run-38964350628/vite.stdout.log",
       "bytes": 225,
       "sha256": "e8a4adcb866c05cfc79c67d99ee3e79db3c5f2c7cb69e061330b43453785ab4a"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38965822093/baseline-process-diagnostic.json",
+      "bytes": 199,
+      "sha256": "a494d42050f5099612af02404df7639c9649c49cee91d3c158321b503cc8a22f"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38965822093/baseline.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38965822093/baseline.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38965822093/native-baseline.json",
+      "bytes": 1087,
+      "sha256": "3ad61a34ec1140c52797b3597808bec7e43dffbc50a5f4022bf983a301e9819c"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38965822093/vite.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-native-ipc/run-38965822093/vite.stdout.log",
+      "bytes": 226,
+      "sha256": "662e979da0b4ade406f77e97f1d2704ceed4bde5d8a07a82ef49769f50363bcf"
     }
   ]
 }

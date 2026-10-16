@@ -8,6 +8,7 @@ import { parse } from 'yaml'
 import { assertHostedSearchAudit,createNativeSearchFixture,fixturePaths,nativeSearchProduct } from './lib/v118-native-search-fixture.mjs'
 const workflowSource=await fs.readFile('.github/workflows/v118-search-native.yml','utf8'),workflow=parse(workflowSource)
 const runner=await fs.readFile('scripts/run-v118-native-search.ps1','utf8'),driver=await fs.readFile('scripts/capture-v118-native-search.mjs','utf8')
+const policy=await fs.readFile('scripts/lib/v118-webview-test-policy.ps1','utf8')
 test('real runtime audit refuses local and self-hosted machines before any fixture IO',()=>{
   for(const env of [{},{GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'self-hosted',RUNNER_OS:'Windows'},{GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Linux'}])assert.throws(()=>assertHostedSearchAudit(env))
   assert.doesNotThrow(()=>assertHostedSearchAudit({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows'}))
@@ -41,6 +42,8 @@ test('workflow pins the product separately from its harness and cannot publish o
   assert.ok(workflowSource.includes(`ref: ${nativeSearchProduct}`)&&runner.includes(nativeSearchProduct))
   assert.ok(!workflowSource.includes('community-release-publish')&&!workflowSource.includes('tauri -- build'))
   assert.ok(workflowSource.includes('if: always()')&&workflowSource.includes('retention-days: 14'))
+  assert.ok(workflowSource.indexOf('Retain immutable Debug program')<workflowSource.indexOf('- name: Real native page IPC'))
+  assert.ok(workflowSource.includes('isInstaller=$false')&&workflowSource.includes('releaseCandidate=$false'))
   assert.ok(runner.includes("'--minimized'")&&runner.includes('-WindowStyle Hidden'))
   assert.ok(!runner.includes('Remove-Item')&&!runner.includes('OwningProcess'))
 })
@@ -52,8 +55,16 @@ test('native driver never substitutes IPC or simulates a desktop click',()=>{
   assert.ok(driver.includes('restart must use the same executable bytes'))
   assert.ok(driver.includes('native-window-label-and-channel-isolation'))
 })
+test('debugger policy is app-scoped, refuses user machines and restores only its own unchanged values',()=>{
+  assert.doesNotMatch(policy,/HKLM:|['"]\*['"]|DeveloperToolsAvailability|SmartScreenEnabled/)
+  assert.match(policy,/RUNNER_ENVIRONMENT -ne 'github-hosted'/)
+  assert.ok(policy.indexOf('foreach($entry in $plan){if(')<policy.indexOf('New-ItemProperty'))
+  assert.match(policy,/GetValue\(\$entry.name\) -ceq \$entry.value/)
+  assert.doesNotMatch(policy,/Remove-Item\s|Remove-ItemProperty[^\n]+-Recurse/)
+  assert.match(runner,/finally \{[\s\S]+Disable-V118WebViewTestPolicy/)
+})
 test('new runner and workflow PowerShell parse without launching anything',{skip:process.platform!=='win32'},()=>{
-  for(const text of [runner,...workflow.jobs['native-search'].steps.filter(step=>step.shell==='powershell').map(step=>step.run)]){
+  for(const text of [runner,policy,...workflow.jobs['native-search'].steps.filter(step=>step.shell==='powershell').map(step=>step.run)]){
     const result=spawnSync('powershell.exe',['-NoProfile','-Command','$t=$null;$e=$null;[System.Management.Automation.Language.Parser]::ParseInput([Console]::In.ReadToEnd(),[ref]$t,[ref]$e)>$null;if($e.Count){$e|Out-String|Write-Error;exit 1}'],{input:text,encoding:'utf8'})
     assert.equal(result.status,0,result.stderr)
   }
