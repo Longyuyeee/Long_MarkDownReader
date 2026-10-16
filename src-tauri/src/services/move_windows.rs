@@ -252,16 +252,18 @@ fn inspect_drafts(context: Option<&DraftContext>, drafts: &[DraftSnapshot]) -> R
     {
         return Err("未保存正文较多，请先保存后再整理文件".into());
     }
+    let names = if !drafts.is_empty() && context.source.exists() { Some(super::file_move_links::moved_names(&context.source)?) } else { None };
     for draft in drafts {
         let path = std::path::Path::new(&draft.path);
         let needs_save = match &draft.content {
-            Some(content) if context.source.exists() => {
-                super::file_move_links::draft_requires_rewrite(
+            Some(content) if names.is_some() => {
+                super::file_move_links::draft_requires_rewrite_with_names(
                     &context.root,
                     &context.source,
                     &context.target,
                     path,
                     content,
+                    names.as_ref().unwrap(),
                 )?
             }
             _ => true,

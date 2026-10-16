@@ -44,7 +44,7 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
     assert.deepEqual(result.errors, []); assert.equal(result.items.length, 1); return result.items[0].newPath
   }
   const normalize = value => value.replaceAll('\\', '/').replace(/^\/\/\?\//, '').toLowerCase()
-  const currentDraft = async file => evaluate(`(${store}).tabs.find(tab=>tab.path.replaceAll('\\\\','/').replace(/^\/\/\\?\//,'').toLowerCase()===${JSON.stringify(normalize(file))})?.content`)
+  const currentDraft = async file => evaluate(`(${store}).tabs.find(tab=>{const value=tab.path.replaceAll('\\\\','/').toLowerCase();return (value.startsWith('//?/')?value.slice(4):value)===${JSON.stringify(normalize(file))}})?.content`)
   try {
     await navigate('#/library', '.library-mode', 'v116 library')
     assert.equal(await evaluate(`(${store}).tabs.filter(tab=>tab.isDirty).length`), 0, 'predecessor workflows must explicitly save their drafts')
@@ -97,7 +97,7 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
       for (const type of ['mousePressed','mouseReleased']) await second.send('Input.dispatchMouseEvent',{type,...point,button:'left',clickCount:1})
       for (const type of ['keyDown','keyUp']) await second.send('Input.dispatchKeyEvent',{type,key:'End',code:'End',windowsVirtualKeyCode:35,modifiers:2})
       await second.send('Input.insertText',{text:' 第二窗口草稿'})
-      await assert.rejects(invoke('rename_item',{libraryRoot:library,oldPath:p('reference-new.txt'),newName:'reference-final.txt'}),/保存/)
+      await assert.rejects(invoke('rename_item',{libraryRoot:library,oldPath:p('reference-new.txt'),newName:'reference-final.txt'}),/second-window\.md/)
       await second.until(`!document.body.inert&&!!document.querySelector('.dirty-dot')`)
       const savePoint = await second.evaluate(`(()=>{const e=[...document.querySelectorAll('.temp-mode button')].find(e=>e.textContent.trim()==='保存'),r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`)
       for (const type of ['mousePressed','mouseReleased']) await second.send('Input.dispatchMouseEvent',{type,...savePoint,button:'left',clickCount:1})

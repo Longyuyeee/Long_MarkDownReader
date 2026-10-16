@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
+import vm from 'node:vm'
+import ts from 'typescript'
 import { assertInstalledReleaseRuntime } from './lib/installed-release-runtime.mjs'
 import { moveContinuityChecks } from './lib/installed-v1-1-6-workflow.mjs'
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
@@ -26,4 +28,10 @@ test('v116 rejects a missing task, wrong installer or different product source',
 })
 test('v116 still requires actual predecessor workflow reports',()=>{
   const f=fixture();delete f.manifest.runtimeSmoke.reports.foundationHardening;assert.throws(()=>assertInstalledReleaseRuntime(f.manifest,f.read))
+})
+test('installed draft observation handles Windows device paths and emits valid page JavaScript', async()=>{
+  const source=fs.readFileSync('scripts/lib/installed-v1-1-6-workflow.mjs','utf8'),ast=ts.createSourceFile('workflow.mjs',source,ts.ScriptTarget.Latest,true);let initializer
+  const visit=node=>{if(ts.isVariableDeclaration(node)&&node.name.getText(ast)==='currentDraft')initializer=node.initializer.getText(ast);ts.forEachChild(node,visit)};visit(ast)
+  const value=vm.runInNewContext(initializer,{store:'testStore',normalize:value=>value.replaceAll('\\','/').toLowerCase(),evaluate:expression=>vm.runInNewContext(expression,{testStore:{tabs:[{path:'\\\\?\\C:\\资料\\note.md',content:'retained draft'}]}})})
+  assert.equal(await value('C:\\资料\\note.md'),'retained draft')
 })

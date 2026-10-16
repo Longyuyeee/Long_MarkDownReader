@@ -47,7 +47,7 @@ fn mapped(path: &Path, source: &Path, target: &Path) -> PathBuf {
         })
         .unwrap_or_else(|_| path.to_path_buf())
 }
-fn moved_names(source: &Path) -> Result<HashSet<String>, String> {
+pub(crate) fn moved_names(source: &Path) -> Result<HashSet<String>, String> {
     let mut pending = vec![source.to_path_buf()];
     let mut names = HashSet::new();
     let mut count = 0;
@@ -97,13 +97,18 @@ pub(crate) fn draft_requires_rewrite(
     document: &Path,
     content: &str,
 ) -> Result<bool, String> {
+    draft_requires_rewrite_with_names(root, source, target, document, content, &moved_names(source)?)
+}
+pub(crate) fn draft_requires_rewrite_with_names(root: &Path, source: &Path, target: &Path, document: &Path, content: &str, names: &HashSet<String>) -> Result<bool, String> {
     if content.len() > 2 * 1024 * 1024 {
         return Err("未保存正文过大，请先保存后再整理文件".into());
     }
     let guard = WorkspaceGuard::new(root)?;
     let document = guard.resolve_for_write(document)?;
     let next_document = mapped(&document, source, target);
-    let names = moved_names(source)?;
+    if key(&document) != key(&next_document) && !next_document.extension().is_some_and(|extension|extension.eq_ignore_ascii_case("md")||extension.eq_ignore_ascii_case("markdown")) {
+        return Err("文件类型即将变化，请先保存正文后再改名；未保存的修改仍然保留".into());
+    }
     for evidence in archive_dependencies::move_mentions(&document.to_string_lossy(), content) {
         let before = archive_dependencies::resolve_relative(root, &evidence);
         let resolved = before
@@ -533,5 +538,11 @@ mod tests {
     fn ambiguous_unsaved_incoming_link_is_preserved_for_user_to_save() {
         let f=Fixture::new();let note=f.write("note.md","saved");let image=f.write("pic.png","image");
         assert!(draft_requires_rewrite(&f.0,&image,&f.0.join("new.png"),&note,"[[pic.png]]").unwrap());
+    }
+    #[test]
+    fn renaming_a_dirty_markdown_to_another_editor_type_requires_saving_first() {
+        let f=Fixture::new();let note=f.write("note.md","saved");
+        assert!(draft_requires_rewrite(&f.0,&note,&f.0.join("note.txt"),&note,"unsaved text").unwrap_err().contains("先保存"));
+        assert_eq!(fs::read_to_string(note).unwrap(),"saved");
     }
 }
