@@ -1,0 +1,62 @@
+{
+  "status": "local-functional-and-browser-passed-installation-pending",
+  "productSourceCommit": "b063433b98b3948c6dfa0406fe43f73abf4406e4",
+  "appVersion": "1.1.6",
+  "functional": {
+    "passed": 871,
+    "failed": 0,
+    "ignored": 5,
+    "independentPerformanceExcluded": true
+  },
+  "performance": {
+    "passed": 1,
+    "sourceBeforeFinalTypeGuard": true,
+    "operationMs": 12586
+  },
+  "browser": {
+    "flows": 3,
+    "layouts": 12,
+    "errors": 0,
+    "nativeIpcSimulated": true
+  },
+  "draftProtectionAndSnapshotPassed": 11,
+  "installedWorkflows": "pending",
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "final-functional.txt",
+      "sha256": "031ac6f8eaa69489c21bc4602a3d22e25fd95a177020b7128622a43073545118",
+      "sizeBytes": 89051
+    },
+    {
+      "path": "independent-performance.txt",
+      "sha256": "29734a997222b9f586a15308450033258d0e34b7972ab006c54e4db617bc44d6",
+      "sizeBytes": 1838
+    },
+    {
+      "path": "fresh-protection.txt",
+      "sha256": "b6525219f449aec38d0cd57a93b2be64f8663b8470f26eeb4e2420ebcbdce454",
+      "sizeBytes": 1262
+    },
+    {
+      "path": "browser/results.json",
+      "sha256": "901eac9ab6b00e0529a9b11f28a45e35fbf3f77bc46b95dc767a5aefdb6bde6e",
+      "sizeBytes": 1674
+    },
+    {
+      "path": "drag-regression.txt",
+      "sha256": "e862128e92ed60ec9336e87025d7da62cd15bde1f7dc4c1aafa0bd7eca995ead",
+      "sizeBytes": 731
+    },
+    {
+      "path": "management/results.json",
+      "sha256": "4f1cf710dd19481fcde60beb43b51092a61bc8df377a25c989928a24c37d87ce",
+      "sizeBytes": 2245
+    },
+    {
+      "path": "outcomes/results.json",
+      "sha256": "99470b171a02edec07c3697e254d1968c8477b8f1939a483e03d8707a9c1aa10",
+      "sizeBytes": 2210
+    }
+  ]
+}
