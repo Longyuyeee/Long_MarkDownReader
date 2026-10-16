@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows') { throw 'Only a disposable GitHub-hosted Windows runner may launch this real IPC audit' }
 $product=(Resolve-Path -LiteralPath $ProductDirectory).Path
 $orchestration=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$expectedCommit='13e77754efc4fe3d7b4cef73e96e8165cdb45cae'
+$expectedCommit='ac90610dffcd27feeb69e79ca8d075701873ab0d'
 if ((& git -C $product rev-parse HEAD).Trim() -ne $expectedCommit) { throw 'Frozen product source differs' }
 if ((& git -C $product status --porcelain --untracked-files=no)) { throw 'Frozen product source is dirty' }
 $output=[IO.Path]::GetFullPath($OutputDirectory)

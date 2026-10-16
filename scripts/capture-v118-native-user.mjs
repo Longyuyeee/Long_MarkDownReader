@@ -7,8 +7,9 @@ import assert from 'node:assert/strict'
 import {withDeadline} from './lib/with-deadline.mjs'
 import {assertHostedSearchAudit,fixturePaths,nativeSearchProduct} from './lib/v118-native-search-fixture.mjs'
 import {nativeUserInput} from './lib/v118-native-user-input.mjs'
+import {runNativeOfficeInput} from './lib/v118-native-office-input.mjs'
 assertHostedSearchAudit()
-const [phase,root,_repo,output]=process.argv.slice(2),fixture=fixturePaths(root)
+const [phase,root,repo,output]=process.argv.slice(2),fixture=fixturePaths(root)
 assert.equal(phase,'user');assert.equal(process.env.LONGEDIT_NATIVE_PRODUCT_COMMIT,nativeSearchProduct)
 const owner=JSON.parse(await fs.readFile(path.join(root,'.v118-native-owner'),'utf8'))
 assert.equal(owner.kind,'generated-search-fixture');assert.match(owner.nonce,/^[a-f0-9-]{36}$/)
@@ -95,7 +96,11 @@ try{
   assert.equal(await evaluate(count(library)),80)
   report.expiryText=await evaluate(`document.querySelector('${library} .search-page-error').textContent`)
   assert.match(report.expiryText,/搜索现场已变化或过期/);await capture('expired-page')
-  await ui.click(library+' .search-page-error button')
+  // Observe before clickTarget's convenience scroll: a real user must see
+  // recovery at the position where loading failed, not discover it at the top.
+  report.footerRecovery=await evaluate(`(()=>{const e=document.querySelector('${library} .search-page-retry');if(!e)return null;const r=e.getBoundingClientRect();return {label:e.textContent,visibleWithoutRecoveryScroll:r.width>0&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)),retainedFiles:document.querySelectorAll('${library} .search-file-card').length}})()`)
+  assert.deepEqual(report.footerRecovery,{label:'重新搜索',visibleWithoutRecoveryScroll:true,retainedFiles:80})
+  await ui.click(library+' .search-page-retry')
   await ui.waitFor(`document.querySelector('${library} .search-page-line')?.textContent.includes('暂时保留上次结果')`,'new frontend retains old view during real native preparation')
   assert.equal(await evaluate(count(library)),80);await capture('refresh-retained')
   await ui.waitFor(`${count(library)}===80&&!document.querySelector('${library} [aria-busy="true"]')&&!document.querySelector('${library} .search-page-error')`,'real refresh restores 80 files')
@@ -129,6 +134,8 @@ try{
   assert.equal(pathKey(routeQuery.get('path')),pathKey(pdfPath));await assertDraft(false)
   report.pdf={annotationId:'批注-3',page:1,comment:pdfState.comment};await capture('pdf-annotation')
   report.checks.push('trusted-pdf-annotation-identity-and-draft-preservation')
+  await runNativeOfficeInput({root,repo,output,ui,evaluate,capture,assertDraft,store,
+    identity:{productCommit:report.productCommit,harnessCommit:report.harnessCommit,executableSha256:report.executableSha256,runtimeBaseVersion:report.runtimeBaseVersion,runtimeErrors:report.runtimeErrors}})
   report.uiObservation=await evaluate('({hash:location.hash,errorOverlay:!!document.querySelector("#crash-screen,#runtime-error-notice,.route-error-notice,.global-error-overlay,.startup-fatal-screen")})')
   assert.equal(report.uiObservation.errorOverlay,false)
   assert.deepEqual(report.runtimeErrors,[])

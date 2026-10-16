@@ -11,6 +11,8 @@ name: v1.1.8 Real Search IPC Audit
       - scripts/lib/v118-webview-test-policy.ps1
       - scripts/capture-v118-native-user.mjs
       - scripts/lib/v118-native-user-input.mjs
+      - scripts/lib/v118-native-office-fixture.mjs
+      - scripts/lib/v118-native-office-input.mjs
   workflow_dispatch:
 
 permissions:
@@ -28,11 +30,11 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       LONGEDIT_SEARCH_UNREGISTERED_ENTRIES: '21050'
-      # Driver-only expression repair: reuse the independently retained program
-      # after verifying its build steps, source, original harness and exact bytes.
-      NATIVE_PROGRAM_RUN_ID: '38976173091'
-      NATIVE_PROGRAM_SHA256: '2155a32a9e580de42092899feb756ae2a1adcd663bcdfb9741ec76052fe256bf'
-      NATIVE_PROGRAM_HARNESS_COMMIT: '6df00e82135a2d6dcf3cf56e5dcbb9e9e865ef74'
+      # The footer product changed; old E2c program bytes cannot cover it.
+      # Keep the provenance-checked reuse path for a future driver-only repair.
+      NATIVE_PROGRAM_RUN_ID: ''
+      NATIVE_PROGRAM_SHA256: ''
+      NATIVE_PROGRAM_HARNESS_COMMIT: ''
     steps:
       - name: Check out audit harness
         uses: actions/checkout@v6
@@ -41,7 +43,7 @@ jobs:
       - name: Check out immutable development product (not an installer candidate)
         uses: actions/checkout@v6
         with:
-          ref: 13e77754efc4fe3d7b4cef73e96e8165cdb45cae
+          ref: ac90610dffcd27feeb69e79ca8d075701873ab0d
           path: product
       - uses: actions/setup-node@v6
         with:
@@ -77,7 +79,7 @@ jobs:
           New-Item -ItemType Directory -Path $folder | Out-Null
           $program=Get-Item -LiteralPath 'product/src-tauri/target/debug/tauri-app.exe'
           Copy-Item -LiteralPath $program.FullName -Destination (Join-Path $folder 'tauri-app.exe')
-          @{schemaVersion=1;productCommit='13e77754efc4fe3d7b4cef73e96e8165cdb45cae';harnessCommit=$env:GITHUB_SHA;buildRunId=$env:GITHUB_RUN_ID;runtimeBaseVersion='1.1.7';releaseCandidate=$false;isInstaller=$false;sourceUserContentIncluded=$false;sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $program.FullName).Hash.ToLowerInvariant();sizeBytes=$program.Length} | ConvertTo-Json | Out-File -Encoding utf8 -LiteralPath (Join-Path $folder 'program-build-receipt.json')
+          @{schemaVersion=1;productCommit='ac90610dffcd27feeb69e79ca8d075701873ab0d';harnessCommit=$env:GITHUB_SHA;buildRunId=$env:GITHUB_RUN_ID;runtimeBaseVersion='1.1.7';releaseCandidate=$false;isInstaller=$false;sourceUserContentIncluded=$false;sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $program.FullName).Hash.ToLowerInvariant();sizeBytes=$program.Length} | ConvertTo-Json | Out-File -Encoding utf8 -LiteralPath (Join-Path $folder 'program-build-receipt.json')
       - uses: actions/upload-artifact@v4
         if: env.NATIVE_PROGRAM_RUN_ID == ''
         with:
@@ -112,7 +114,7 @@ jobs:
           $receipt=Get-Content -LiteralPath native-debug-program/program-build-receipt.json -Raw -Encoding UTF8 | ConvertFrom-Json
           $program=Get-Item -LiteralPath native-debug-program/tauri-app.exe
           $hash=(Get-FileHash -LiteralPath $program.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          if($hash -ne $env:NATIVE_PROGRAM_SHA256 -or $receipt.sha256 -ne $hash -or $receipt.sizeBytes -ne $program.Length -or $receipt.productCommit -ne '13e77754efc4fe3d7b4cef73e96e8165cdb45cae' -or $receipt.harnessCommit -ne $run.head_sha -or $receipt.buildRunId -ne $env:NATIVE_PROGRAM_RUN_ID -or $receipt.runtimeBaseVersion -ne '1.1.7' -or $receipt.isInstaller -ne $false -or $receipt.releaseCandidate -ne $false -or $receipt.sourceUserContentIncluded -ne $false){throw 'Fixed Debug program byte/source identity drifted'}
+          if($hash -ne $env:NATIVE_PROGRAM_SHA256 -or $receipt.sha256 -ne $hash -or $receipt.sizeBytes -ne $program.Length -or $receipt.productCommit -ne 'ac90610dffcd27feeb69e79ca8d075701873ab0d' -or $receipt.harnessCommit -ne $run.head_sha -or $receipt.buildRunId -ne $env:NATIVE_PROGRAM_RUN_ID -or $receipt.runtimeBaseVersion -ne '1.1.7' -or $receipt.isInstaller -ne $false -or $receipt.releaseCandidate -ne $false -or $receipt.sourceUserContentIncluded -ne $false){throw 'Fixed Debug program byte/source identity drifted'}
           $target=Join-Path $env:GITHUB_WORKSPACE 'product/src-tauri/target/debug'
           New-Item -ItemType Directory -Path $target -Force | Out-Null
           if(Test-Path -LiteralPath (Join-Path $target 'tauri-app.exe')){throw 'Refuse to overwrite another program'}

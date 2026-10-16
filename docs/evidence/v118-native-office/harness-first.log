@@ -1,0 +1,321 @@
+TAP version 13
+# Subtest: Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+ok 1 - Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+  ---
+  duration_ms: 15.8816
+  ...
+# Subtest: Office target selectors parse the actual public search key and never substitute a document open
+ok 2 - Office target selectors parse the actual public search key and never substitute a document open
+  ---
+  duration_ms: 2.8349
+  ...
+# Subtest: all literal and interpolated native user/browser expressions are syntactically valid
+ok 3 - all literal and interpolated native user/browser expressions are syntactically valid
+  ---
+  duration_ms: 29.8921
+  ...
+# Subtest: Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+not ok 4 - Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+  ---
+  duration_ms: 2.3135
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v118-native-office.mjs:62:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /__TAURI_INTERNALS__|\.dispatchEvent\(|\.click\(|\.focus\(|\.(?:isDirty|content|value)\s*=(?!=)/. Input:
+    
+    '// Actual search-result controls and native-parsed Office pages. No mock IPC,\n' +
+      '// app-state assignment, DOM event dispatch or direct component calls.\n' +
+      "import fs from 'node:fs/promises'\n" +
+      "import path from 'node:path'\n" +
+      "import assert from 'node:assert/strict'\n" +
+      "import {assertHostedSearchAudit} from './v118-native-search-fixture.mjs'\n" +
+      "import {createNativeOfficeFixture,officeHash} from './v118-native-office-fixture.mjs'\n" +
+      'export const nativeOfficeChecks=[\n' +
+      "  'trusted-search-docx-block-visible-and-draft-preserved',\n" +
+      "  'trusted-search-pptx-object-highlight-and-draft-preserved',\n" +
+      "  'trusted-search-same-pptx-notes-page-and-details',\n" +
+      "  'trusted-search-same-workbook-sheet-repeat-intent',\n" +
+      ']\n' +
+      "export const officeMatchTarget=kind=>`[...document.querySelectorAll('.command-palette-container .search-match-open')].find(e=>{const key=e.closest('[data-search-key]')?.dataset.searchKey;return key&&JSON.parse(key)[5]===${JSON.stringify(kind)}})`\n" +
+      'export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture,assertDraft,identity,store}){\n' +
+      '  assertHostedSearchAudit()\n' +
+      "  const report={...identity,schemaVersion:1,phase:'office',status:'running',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',\n" +
+      '    nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],sourceFiles:[],observations:{}}\n' +
+      '  let files=[],failure\n' +
+      "  const palette='.command-palette-container',q=JSON.stringify\n" +
+      "  const startTrace=await evaluate('window.__v118UserInputTrace.length')\n" +
+      `  const route=()=>evaluate('Object.fromEntries(new URLSearchParams(location.hash.split("?")[1]||""))')\n` +
+      '  const openSearch=async query=>{\n' +
+      "    await ui.key('p','KeyP',80,2);await ui.waitFor(`!!document.querySelector('${palette}')`,'Office search palette')\n" +
+      "    await ui.click(palette+' .palette-scope');await ui.clickText('.n-base-select-option','当前资料库')\n" +
+      `    await ui.fill(palette+' input[aria-label="搜索资料或命令"]',query)\n` +
+      '    await ui.waitFor(`document.querySelectorAll(\'${palette} .search-file-card\').length===1&&!document.querySelector(\'${palette} [aria-busy="true"]\')`,\'one real Office result \'+query)\n' +
+      '  }\n' +
+      "  const assertPath=async expected=>assert.equal((await route()).path?.replaceAll('\\\\','/').toLowerCase(),expected.replaceAll('\\\\','/').toLowerCase())\n" +
+      '  try{\n' +
+      '    files=await createNativeOfficeFixture(root,repo)\n' +
+      `    await openSearch('"After explicit page break."')\n` +
+      "    await ui.clickTarget(officeMatchTarget('docx-block'))\n" +
+      "    await ui.waitFor(`(()=>{const p=new URLSearchParams(location.hash.split('?')[1]),e=document.getElementById(p.get('locator')),v=document.querySelector('.docx-stage');if(!e||!v||!e.textContent.includes('After explicit page break.'))return false;const r=e.getBoundingClientRect(),b=v.getBoundingClientRect();return r.height>0&&r.top>=b.top&&r.bottom<=b.bottom})()`,'actual DOCX matching block visible inside its stage')\n" +
+      '    await assertPath(files[0].path);await assertDraft(false)\n' +
+      "    report.observations.docx={...await route(),targetText:await evaluate(`document.getElementById(new URLSearchParams(location.hash.split('?')[1]).get('locator')).textContent`),visible:true}\n" +
+      "    await capture('office-docx-block');report.checks.push(nativeOfficeChecks[0])\n" +
+      '\n' +
+      `    await openSearch('"Search and notes evidence"')\n` +
+      "    await ui.clickTarget(officeMatchTarget('pptx-object'))\n" +
+      "    await ui.waitFor(`document.querySelector('.slide-canvas .route-target-object')?.textContent.includes('Search and notes evidence')&&document.querySelector('.slide-strip button.active')?.dataset.slideIndex==='0'`,'actual PPTX object on first slide is highlighted')\n" +
+      '    await assertPath(files[1].path);await assertDraft(false)\n' +
+      "    report.observations.pptxObject={...await route(),objectId:await evaluate(`document.querySelector('.slide-canvas .route-target-object').dataset.objectId`),text:await evaluate(`document.querySelector('.slide-canvas .route-target-object').textContent`)}\n" +
+      "    assert.equal(report.observations.pptxObject.locatorKind,'pptx-object');assert.equal(report.observations.pptxObject.locator,report.observations.pptxObject.objectId)\n" +
+      "    await capture('office-pptx-object');report.checks.push(nativeOfficeChecks[1])\n" +
+      '\n' +
+      `    await openSearch('"LibreOffice image relationship evidence."')\n` +
+      "    await ui.clickTarget(officeMatchTarget('pptx-slide'))\n" +
+      "    await ui.waitFor(`document.querySelector('.slide-strip button.active')?.dataset.slideIndex==='1'&&document.querySelector('.pptx-details .notes')?.textContent.includes('LibreOffice image relationship evidence.')`,'same PPTX switches to second slide and opens the matching notes')\n" +
+      '    await assertPath(files[1].path);await assertDraft(false)\n' +
+      "    report.observations.pptxNotes={...await route(),activeSlide:2,notes:await evaluate(`document.querySelector('.pptx-details .notes').textContent`)}\n" +
+      "    assert.equal(report.observations.pptxNotes.matchKind,'notes');assert.equal(report.observations.pptxNotes.slide,'2')\n" +
+      '    assert.notEqual(report.observations.pptxNotes.locatorToken,report.observations.pptxObject.locatorToken)\n' +
+      "    await capture('office-pptx-notes');report.checks.push(nativeOfficeChecks[2])\n" +
+      '\n' +
+      '    const workbook=[]\n' +
+      `    for(const [query,sheet,body] of [['"Keyboard"','Inventory','Keyboard'],['"A-001"','Details','A-001']]){\n` +
+      "      await openSearch(query);await ui.clickTarget(officeMatchTarget('workbook-sheet'))\n" +
+      "      await ui.waitFor(`document.querySelector('.sheet-tabs button.active')?.textContent.trim()===${q(sheet)}&&document.querySelector('.workbook-view .sheet-row')&&document.querySelector('.workbook-view')?.textContent.includes(${q(body)})`,'actual workbook matching sheet '+sheet)\n" +
+      '      await assertPath(files[2].path);await assertDraft(false)\n' +
+      '      workbook.push({...await route(),activeSheet:sheet,visibleCellText:body})\n' +
+      '    }\n' +
+      '    assert.notEqual(workbook[0].locatorToken,workbook[1].locatorToken)\n' +
+      '    assert.equal(await evaluate(`${store}.tabs.filter(t=>t.path===${q(files[2].path)}).length`),1)\n' +
+      '    report.observations.workbook=workbook\n' +
+      "    await capture('office-workbook-repeat-sheet');report.checks.push(nativeOfficeChecks[3])\n" +
+      '  }catch(error){failure=error;report.error={message:error.message,stack:error.stack}}\n' +
+      '  finally{\n' +
+      '    try{for(const file of files){const after=officeHash(await fs.readFile(file.path));assert.equal(after,file.sha256);report.sourceFiles.push({name:file.name,source:file.source,before:file.sha256,after})}}\n' +
+      '    catch(error){failure ||= error;report.sourceError=String(error)}\n' +
+      '    report.inputTrace=await evaluate(`window.__v118UserInputTrace.slice(${startTrace})`).catch(()=>[])\n' +
+      `    report.uiObservation=await evaluate('({errorOverlay:!!document.querySelector("#crash-screen,#runtime-error-notice,.route-error-notice,.global-error-overlay,.startup-fatal-screen")})').catch(()=>({errorOverlay:true}))\n` +
+      "    if(report.uiObservation.errorOverlay||report.runtimeErrors.length)failure ||= Error('Office runtime error surface or exception')\n" +
+      "    report.status=failure?'failed':'passed'\n" +
+      "    if(failure)await capture('office-failure').catch(()=>{})\n" +
+      "    await fs.writeFile(path.join(output,'native-office.json'),JSON.stringify(report,null,2)+'\\n',{flag:'wx'})\n" +
+      '  }\n' +
+      '  if(failure)throw failure\n' +
+      '  return report\n' +
+      '}\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    // Actual search-result controls and native-parsed Office pages. No mock IPC,
+    // app-state assignment, DOM event dispatch or direct component calls.
+    import fs from 'node:fs/promises'
+    import path from 'node:path'
+    import assert from 'node:assert/strict'
+    import {assertHostedSearchAudit} from './v118-native-search-fixture.mjs'
+    import {createNativeOfficeFixture,officeHash} from './v118-native-office-fixture.mjs'
+    export const nativeOfficeChecks=[
+      'trusted-search-docx-block-visible-and-draft-preserved',
+      'trusted-search-pptx-object-highlight-and-draft-preserved',
+      'trusted-search-same-pptx-notes-page-and-details',
+      'trusted-search-same-workbook-sheet-repeat-intent',
+    ]
+    export const officeMatchTarget=kind=>`[...document.querySelectorAll('.command-palette-container .search-match-open')].find(e=>{const key=e.closest('[data-search-key]')?.dataset.searchKey;return key&&JSON.parse(key)[5]===${JSON.stringify(kind)}})`
+    export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture,assertDraft,identity,store}){
+      assertHostedSearchAudit()
+      const report={...identity,schemaVersion:1,phase:'office',status:'running',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',
+        nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],sourceFiles:[],observations:{}}
+      let files=[],failure
+      const palette='.command-palette-container',q=JSON.stringify
+      const startTrace=await evaluate('window.__v118UserInputTrace.length')
+      const route=()=>evaluate('Object.fromEntries(new URLSearchParams(location.hash.split("?")[1]||""))')
+      const openSearch=async query=>{
+        await ui.key('p','KeyP',80,2);await ui.waitFor(`!!document.querySelector('${palette}')`,'Office search palette')
+        await ui.click(palette+' .palette-scope');await ui.clickText('.n-base-select-option','当前资料库')
+        await ui.fill(palette+' input[aria-label="搜索资料或命令"]',query)
+        await ui.waitFor(`document.querySelectorAll('${palette} .search-file-card').length===1&&!document.querySelector('${palette} [aria-busy="true"]')`,'one real Office result '+query)
+      }
+      const assertPath=async expected=>assert.equal((await route()).path?.replaceAll('\\','/').toLowerCase(),expected.replaceAll('\\','/').toLowerCase())
+      try{
+        files=await createNativeOfficeFixture(root,repo)
+        await openSearch('"After explicit page break."')
+        await ui.clickTarget(officeMatchTarget('docx-block'))
+        await ui.waitFor(`(()=>{const p=new URLSearchParams(location.hash.split('?')[1]),e=document.getElementById(p.get('locator')),v=document.querySelector('.docx-stage');if(!e||!v||!e.textContent.includes('After explicit page break.'))return false;const r=e.getBoundingClientRect(),b=v.getBoundingClientRect();return r.height>0&&r.top>=b.top&&r.bottom<=b.bottom})()`,'actual DOCX matching block visible inside its stage')
+        await assertPath(files[0].path);await assertDraft(false)
+        report.observations.docx={...await route(),targetText:await evaluate(`document.getElementById(new URLSearchParams(location.hash.split('?')[1]).get('locator')).textContent`),visible:true}
+        await capture('office-docx-block');report.checks.push(nativeOfficeChecks[0])
+    
+        await openSearch('"Search and notes evidence"')
+        await ui.clickTarget(officeMatchTarget('pptx-object'))
+        await ui.waitFor(`document.querySelector('.slide-canvas .route-target-object')?.textContent.includes('Search and notes evidence')&&document.querySelector('.slide-strip button.active')?.dataset.slideIndex==='0'`,'actual PPTX object on first slide is highlighted')
+        await assertPath(files[1].path);await assertDraft(false)
+        report.observations.pptxObject={...await route(),objectId:await evaluate(`document.querySelector('.slide-canvas .route-target-object').dataset.objectId`),text:await evaluate(`document.querySelector('.slide-canvas .route-target-object').textContent`)}
+        assert.equal(report.observations.pptxObject.locatorKind,'pptx-object');assert.equal(report.observations.pptxObject.locator,report.observations.pptxObject.objectId)
+        await capture('office-pptx-object');report.checks.push(nativeOfficeChecks[1])
+    
+        await openSearch('"LibreOffice image relationship evidence."')
+        await ui.clickTarget(officeMatchTarget('pptx-slide'))
+        await ui.waitFor(`document.querySelector('.slide-strip button.active')?.dataset.slideIndex==='1'&&document.querySelector('.pptx-details .notes')?.textContent.includes('LibreOffice image relationship evidence.')`,'same PPTX switches to second slide and opens the matching notes')
+        await assertPath(files[1].path);await assertDraft(false)
+        report.observations.pptxNotes={...await route(),activeSlide:2,notes:await evaluate(`document.querySelector('.pptx-details .notes').textContent`)}
+        assert.equal(report.observations.pptxNotes.matchKind,'notes');assert.equal(report.observations.pptxNotes.slide,'2')
+        assert.notEqual(report.observations.pptxNotes.locatorToken,report.observations.pptxObject.locatorToken)
+        await capture('office-pptx-notes');report.checks.push(nativeOfficeChecks[2])
+    
+        const workbook=[]
+        for(const [query,sheet,body] of [['"Keyboard"','Inventory','Keyboard'],['"A-001"','Details','A-001']]){
+          await openSearch(query);await ui.clickTarget(officeMatchTarget('workbook-sheet'))
+          await ui.waitFor(`document.querySelector('.sheet-tabs button.active')?.textContent.trim()===${q(sheet)}&&document.querySelector('.workbook-view .sheet-row')&&document.querySelector('.workbook-view')?.textContent.includes(${q(body)})`,'actual workbook matching sheet '+sheet)
+          await assertPath(files[2].path);await assertDraft(false)
+          workbook.push({...await route(),activeSheet:sheet,visibleCellText:body})
+        }
+        assert.notEqual(workbook[0].locatorToken,workbook[1].locatorToken)
+        assert.equal(await evaluate(`${store}.tabs.filter(t=>t.path===${q(files[2].path)}).length`),1)
+        report.observations.workbook=workbook
+        await capture('office-workbook-repeat-sheet');report.checks.push(nativeOfficeChecks[3])
+      }catch(error){failure=error;report.error={message:error.message,stack:error.stack}}
+      finally{
+        try{for(const file of files){const after=officeHash(await fs.readFile(file.path));assert.equal(after,file.sha256);report.sourceFiles.push({name:file.name,source:file.source,before:file.sha256,after})}}
+        catch(error){failure ||= error;report.sourceError=String(error)}
+        report.inputTrace=await evaluate(`window.__v118UserInputTrace.slice(${startTrace})`).catch(()=>[])
+        report.uiObservation=await evaluate('({errorOverlay:!!document.querySelector("#crash-screen,#runtime-error-notice,.route-error-notice,.global-error-overlay,.startup-fatal-screen")})').catch(()=>({errorOverlay:true}))
+        if(report.uiObservation.errorOverlay||report.runtimeErrors.length)failure ||= Error('Office runtime error surface or exception')
+        report.status=failure?'failed':'passed'
+        if(failure)await capture('office-failure').catch(()=>{})
+        await fs.writeFile(path.join(output,'native-office.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx'})
+      }
+      if(failure)throw failure
+      return report
+    }
+    
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-native-office.mjs:65:10)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+# Subtest: Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+ok 5 - Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+  ---
+  duration_ms: 1.669
+  ...
+# Subtest: Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+ok 6 - Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+  ---
+  duration_ms: 8.9565
+  ...
+# Subtest: real runtime audit refuses local and self-hosted machines before any fixture IO
+ok 7 - real runtime audit refuses local and self-hosted machines before any fixture IO
+  ---
+  duration_ms: 1.3094
+  ...
+# Subtest: fixture paths reject broad or arbitrary user roots
+ok 8 - fixture paths reject broad or arbitrary user roots
+  ---
+  duration_ms: 0.4095
+  ...
+# Subtest: generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+ok 9 - generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+  ---
+  duration_ms: 959.95
+  ...
+# Subtest: owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+ok 10 - owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+  ---
+  duration_ms: 958.4147
+  ...
+# Subtest: workflow pins the product separately from its harness and cannot publish or install
+ok 11 - workflow pins the product separately from its harness and cannot publish or install
+  ---
+  duration_ms: 2.0594
+  ...
+# Subtest: native driver never substitutes IPC or simulates a desktop click
+ok 12 - native driver never substitutes IPC or simulates a desktop click
+  ---
+  duration_ms: 0.2148
+  ...
+# Subtest: native driver waits for the actual page and rejects current runtime and route failure surfaces
+ok 13 - native driver waits for the actual page and rejects current runtime and route failure surfaces
+  ---
+  duration_ms: 1.7397
+  ...
+# Subtest: debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+ok 14 - debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+  ---
+  duration_ms: 0.196
+  ...
+# Subtest: in-memory registry provider preserves all six debugger entries and unrelated values
+ok 15 - in-memory registry provider preserves all six debugger entries and unrelated values
+  ---
+  duration_ms: 428.7053
+  ...
+# Subtest: new runner and workflow PowerShell parse without launching anything
+ok 16 - new runner and workflow PowerShell parse without launching anything
+  ---
+  duration_ms: 1537.2686
+  ...
+# Subtest: validator accepts the complete separated native evidence schema, not an installed assertion
+ok 17 - validator accepts the complete separated native evidence schema, not an installed assertion
+  ---
+  duration_ms: 2.9476
+  ...
+# Subtest: unfinished or failed remote runs cannot be closed as passing evidence
+ok 18 - unfinished or failed remote runs cannot be closed as passing evidence
+  ---
+  duration_ms: 1.6798
+  ...
+# Subtest: source, harness, executable and evidence-level substitutions are rejected
+ok 19 - source, harness, executable and evidence-level substitutions are rejected
+  ---
+  duration_ms: 0.6894
+  ...
+# Subtest: missing tasks, duplicate groups and lost PDF annotation identity are rejected
+ok 20 - missing tasks, duplicate groups and lost PDF annotation identity are rejected
+  ---
+  duration_ms: 1.1676
+  ...
+# Subtest: fake cold completion, missing cache use and missing native window proof are rejected
+ok 21 - fake cold completion, missing cache use and missing native window proof are rejected
+  ---
+  duration_ms: 5.4365
+  ...
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+ok 22 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 23.1021
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 23 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 3.9896
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 24 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 0.542
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 25 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.7774
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 26 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.6367
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 27 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 5.6857
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 26
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4009.6382
