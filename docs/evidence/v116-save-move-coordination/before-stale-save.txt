@@ -1,0 +1,18 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 1 test
+
+thread 'commands::files::moved_markdown_save_tests::stale_legacy_save_never_recreates_a_moved_note' (45652) panicked at src\commands\files.rs:356:9:
+a save to a disappeared path must not silently create another note
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::files::moved_markdown_save_tests::stale_legacy_save_never_recreates_a_moved_note ... FAILED
+
+failures:
+
+failures:
+    commands::files::moved_markdown_save_tests::stale_legacy_save_never_recreates_a_moved_note
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 774 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`

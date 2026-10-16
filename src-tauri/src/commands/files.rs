@@ -266,6 +266,7 @@ pub async fn delete_item(
     if !target.exists() {
         return Ok(());
     }
+    let _document_lease = crate::services::document_coordination::acquire(&[&target])?;
     if target.is_file() && path.ends_with(".md") {
         delete_local_markdown_assets(&target)?;
     }
@@ -337,8 +338,52 @@ pub async fn write_markdown_file(
     content: String,
 ) -> Result<(), String> {
     let path = WorkspaceGuard::new(library_root)?.resolve_file_for_write(path, &["md"])?;
+    write_existing_markdown(&path, &content)
+}
+
+fn write_existing_markdown(path: &Path, content: &str) -> Result<(), String> {
     let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
-    write_utf8(path, &content)
+    let metadata = fs::symlink_metadata(path).map_err(|e| format!("保存目标不存在或不可访问，未在旧位置新建文件；请保留草稿并核对文件位置：{e}"))?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() {
+        return Err("保存目标不是普通文件，未写入；请保留草稿并核对文件位置".into());
+    }
+    write_utf8(path, content)
+}
+
+#[cfg(test)]
+mod moved_markdown_save_tests {
+    use super::*;
+    #[test]
+    fn stale_legacy_save_never_recreates_a_moved_note() {
+        let root = std::env::temp_dir().join(format!("longedit-stale-save-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        fs::create_dir(&root).unwrap();
+        let old = root.join("note.md");
+        let new = root.join("renamed.md");
+        fs::write(&old, "real document").unwrap();
+        fs::rename(&old, &new).unwrap();
+        let result = tauri::async_runtime::block_on(write_markdown_file(root.to_string_lossy().into_owned(), old.to_string_lossy().into_owned(), "stale window body".into()));
+        assert!(result.is_err(), "a save to a disappeared path must not silently create another note");
+        assert!(!old.exists());
+        assert_eq!(fs::read_to_string(new).unwrap(), "real document");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn late_legacy_read_and_save_preserve_backup_without_resurrecting_old_path() {
+        let root = std::env::temp_dir().join(format!("longedit-stale-recovery-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        fs::create_dir(&root).unwrap();
+        let old = root.join("note.md");
+        let new = root.join("renamed.md");
+        let backup = root.join(".note.md.longedit-bak");
+        fs::write(&old, "original").unwrap();
+        fs::rename(&old, &new).unwrap();
+        fs::write(&backup, "keep recovery bytes").unwrap();
+        assert!(read_markdown(old.clone()).is_err());
+        assert!(write_existing_markdown(&old, "stale body").is_err());
+        assert!(!old.exists());
+        assert_eq!(fs::read_to_string(backup).unwrap(), "keep recovery bytes");
+        assert_eq!(fs::read_to_string(new).unwrap(), "original");
+        fs::remove_dir_all(root).unwrap();
+    }
 }
 
 #[tauri::command]
@@ -363,8 +408,7 @@ pub async fn write_external_markdown_file(
     if file_format_for_path(&path)?.id != "markdown" {
         return Err("外部 Markdown 命令只接受 .md 文件".into());
     }
-    let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
-    write_utf8(path, &content)
+    write_existing_markdown(&path, &content)
 }
 
 #[tauri::command]
@@ -437,6 +481,13 @@ pub async fn export_markdown_file(
 }
 
 fn read_markdown(path: PathBuf) -> Result<FileContent, String> {
+    // Recovery may rename a backup; even a read must not resurrect an old path
+    // while an application-managed path mutation owns its subtree.
+    let _document_lease = crate::services::document_coordination::acquire(&[&path])?;
+    let metadata = fs::symlink_metadata(&path).map_err(|e| format!("读取目标不存在或不可访问，未在旧位置恢复文件：{e}"))?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() {
+        return Err("读取目标不是普通文件，未恢复或改写文件".into());
+    }
     recover_interrupted_write(&path)?;
     let bytes = fs::read(&path).map_err(|error| format!("读取文件失败: {error}"))?;
     let mut detector = EncodingDetector::new();

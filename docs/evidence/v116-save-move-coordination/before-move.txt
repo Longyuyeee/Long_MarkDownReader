@@ -1,0 +1,24 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 28.14s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 2 tests
+
+thread 'commands::file_management::tests::text_save_lease_blocks_file_move_before_any_path_mutation' (51656) panicked at src\commands\file_management.rs:525:9:
+moving must not race an in-flight save
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::file_management::tests::text_save_lease_blocks_file_move_before_any_path_mutation ... FAILED
+
+thread 'commands::file_management::tests::child_text_save_lease_blocks_directory_move_and_releases_for_retry' (22628) panicked at src\commands\file_management.rs:543:9:
+assertion failed: move_to_checked(None, &guard, &old, &new).is_err()
+test commands::file_management::tests::child_text_save_lease_blocks_directory_move_and_releases_for_retry ... FAILED
+
+failures:
+
+failures:
+    commands::file_management::tests::child_text_save_lease_blocks_directory_move_and_releases_for_retry
+    commands::file_management::tests::text_save_lease_blocks_file_move_before_any_path_mutation
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 773 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

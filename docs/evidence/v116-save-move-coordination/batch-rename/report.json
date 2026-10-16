@@ -1,0 +1,70 @@
+{
+  "scope": "Actual Vue components and input gestures, simulated native IPC; native rules and filesystem tested separately",
+  "checks": [
+    "Multiselection right click opens preview; unchanged and invalid names cannot be submitted",
+    "Partial success updates open tabs and display style; retry submits only the failed item with the original previewed name"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "dialogFits": true
+    }
+  ],
+  "errors": []
+}

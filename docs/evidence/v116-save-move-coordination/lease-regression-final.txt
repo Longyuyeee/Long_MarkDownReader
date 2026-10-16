@@ -1,0 +1,37 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.28s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 5 tests
+test services::document_coordination::tests::future_descendant_lease_uses_existing_ancestor_without_creating_directories ... ok
+test services::document_coordination::tests::windows_case_aliases_share_subtree_ownership ... ok
+test services::document_coordination::tests::subtree_conflict_is_atomic_and_rejects_raw_traversal ... ok
+test services::document_coordination::tests::archive_document_lease_reserves_all_paths_atomically_and_releases ... ok
+test services::document_coordination::tests::directory_lease_excludes_descendant_saves_without_blocking_siblings ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 772 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-7f4e6d36c52fb98f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-949b31ea7eb097b4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-fbde6bf8d27eff61.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-a5b902d9372b0996.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

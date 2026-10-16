@@ -183,6 +183,9 @@ pub(super) fn move_to_checked(
     if new.starts_with(old) {
         return Err("不能移动到自身或子文件夹".into());
     }
+    // Reserve both subtrees before inspecting/migrating any history. A text
+    // save already in flight must stop the move before its first mutation.
+    let _documents = crate::services::document_coordination::acquire(&[old, new])?;
     let move_document = || super::file_relations::rename_with_relations(guard.root(), old, new);
     if let Some(app) = app {
         crate::services::file_move_history::with_history_move(
@@ -244,6 +247,7 @@ fn transfer(
                 destination = available_copy_name(directory, &source)?;
             }
             if operation == "copy" {
+                let _documents = crate::services::document_coordination::acquire(&[&source, &destination])?;
                 let mut created = false;
                 if let Err(error) = copy_tree(&source, &destination, &mut created) {
                     // Remove only the newly created candidate, never an existing user item.
@@ -347,6 +351,7 @@ fn trash_items(library_root: &str, paths: &[String]) -> Result<OperationResult, 
     let mut result = OperationResult::default();
     for (index, source) in sources.iter().enumerate() {
         let attempt = (|| {
+            let _document = crate::services::document_coordination::acquire(&[source])?;
             let now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_err(|e| e.to_string())?;
@@ -449,6 +454,7 @@ fn restore_items(library_root: &str, ids: &[String]) -> Result<OperationResult, 
             fs::create_dir_all(original.parent().ok_or("原目录不可用")?)
                 .map_err(|e| e.to_string())?;
             let payload = guard.resolve_existing(slot.join("content"))?;
+            let _documents = crate::services::document_coordination::acquire(&[&payload, &original])?;
             crate::services::archive_move::rename_no_replace(&payload, &original)
                 .map_err(|e| format!("无法恢复，未覆盖原位置的同名项：{e}"))?;
             let _ = fs::remove_file(slot.join("entry.json"));
@@ -512,6 +518,86 @@ mod tests {
         ));
         fs::create_dir_all(&root).unwrap();
         root
+    }
+    #[test]
+    fn text_save_lease_blocks_file_move_before_any_path_mutation() {
+        let root = fixture();
+        let guard = WorkspaceGuard::new(&root).unwrap();
+        let old = guard.root().join("a.md");
+        let new = guard.root().join("b.md");
+        fs::write(&old, "original").unwrap();
+        let saving = crate::services::document_coordination::acquire(&[&old]).unwrap();
+        let blocked = move_to_checked(None, &guard, &old, &new);
+        assert!(blocked.is_err(), "moving must not race an in-flight save");
+        assert_eq!(blocked.unwrap_err().disposition, FailureDisposition::NotExecuted);
+        assert_eq!(fs::read_to_string(&old).unwrap(), "original");
+        assert!(!new.exists());
+        drop(saving);
+        move_to_checked(None, &guard, &old, &new).unwrap();
+        assert_eq!(fs::read_to_string(&new).unwrap(), "original");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn child_text_save_lease_blocks_directory_move_and_releases_for_retry() {
+        let root = fixture();
+        let guard = WorkspaceGuard::new(&root).unwrap();
+        let old = guard.root().join("folder");
+        let new = guard.root().join("renamed");
+        fs::create_dir(&old).unwrap();
+        let child = old.join("note.md");
+        fs::write(&child, "draft on disk").unwrap();
+        let saving = crate::services::document_coordination::acquire(&[&child]).unwrap();
+        assert!(move_to_checked(None, &guard, &old, &new).is_err());
+        assert_eq!(fs::read_to_string(&child).unwrap(), "draft on disk");
+        assert!(!new.exists());
+        drop(saving);
+        move_to_checked(None, &guard, &old, &new).unwrap();
+        assert_eq!(fs::read_to_string(new.join("note.md")).unwrap(), "draft on disk");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn destination_descendant_reservation_blocks_directory_move_without_creating_it() {
+        let root = fixture();
+        let guard = WorkspaceGuard::new(&root).unwrap();
+        let old = guard.root().join("folder");
+        let new = guard.root().join("target");
+        fs::create_dir(&old).unwrap();
+        fs::write(old.join("note.md"), "original").unwrap();
+        let future = new.join("nested").join("note.md");
+        let saving = crate::services::document_coordination::acquire(&[&future]).unwrap();
+        assert!(move_to_checked(None, &guard, &old, &new).is_err());
+        assert!(!new.exists());
+        assert_eq!(fs::read_to_string(old.join("note.md")).unwrap(), "original");
+        drop(saving);
+        move_to_checked(None, &guard, &old, &new).unwrap();
+        assert_eq!(fs::read_to_string(new.join("note.md")).unwrap(), "original");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn copy_recycle_and_restore_respect_text_save_ownership() {
+        let root = fixture();
+        let guard = WorkspaceGuard::new(&root).unwrap();
+        let path = guard.root().join("note.md");
+        fs::write(&path, "original").unwrap();
+        let saving = crate::services::document_coordination::acquire(&[&path]).unwrap();
+        let copy = transfer(None, root.to_str().unwrap(), &["note.md".into()], None, "copy").unwrap();
+        assert!(copy.items.is_empty() && copy.errors.len() == 1);
+        assert!(!root.join("note - 副本.md").exists());
+        let trash = trash_items(root.to_str().unwrap(), &["note.md".into()]).unwrap();
+        assert!(trash.items.is_empty() && trash.errors.len() == 1);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "original");
+        drop(saving);
+        let trash = trash_items(root.to_str().unwrap(), &["note.md".into()]).unwrap();
+        let id = &trash.items[0].new_path;
+        let saving = crate::services::document_coordination::acquire(&[&path]).unwrap();
+        let blocked = restore_items(root.to_str().unwrap(), &[id.clone()]).unwrap();
+        assert!(blocked.items.is_empty() && blocked.errors.len() == 1);
+        assert!(!path.exists());
+        drop(saving);
+        let restored = restore_items(root.to_str().unwrap(), &[id.clone()]).unwrap();
+        assert_eq!(restored.items.len(), 1);
+        assert_eq!(fs::read_to_string(path).unwrap(), "original");
+        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn copies_keep_source_compound_extensions_and_existing_destinations() {

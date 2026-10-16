@@ -1,0 +1,76 @@
+{
+  "scope": "Actual Vue page and normal user clicks, calm motion, isolated native response scenarios; not native filesystem or installed evidence",
+  "checks": [
+    "Mixed move keeps three explicit outcomes; retries only notExecuted, preserves completed results and review ID, and keeps both successful requests in undo",
+    "Undo retry excludes completed and needsReview paths; final unresolved result stays visible without a repeat button",
+    "Batch rename preserves completed/review rows across safe retry and rule refresh; only the explicitly not-executed file is submitted again",
+    "A lost move reply after a simulated commit is unknown, not notExecuted: result stays visible and no automatic/direct retry is offered",
+    "A move error without an explicit disposition is conservatively needsReview; matching error text or source existence is not treated as retry permission",
+    "A lost batch-rename reply leaves all attempted rows for review, disables preview replay and offers no retry",
+    "A lost undo reply removes attempted items from the direct-undo queue and keeps all three review outcomes visible",
+    "A folder-picker failure is only a form error, not an unknown file mutation; typing a destination can still complete normally"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "fits": true
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "fits": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "fits": true
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "fits": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "fits": true
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "fits": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "fits": true
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "fits": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "fits": true
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "fits": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "fits": true
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "fits": true
+    }
+  ],
+  "errors": []
+}

@@ -119,11 +119,25 @@ fn ensure_general_external_writer(format_id: &str) -> Result<(), TextDocumentErr
     Ok(())
 }
 
+fn ensure_existing_text_target(path: &Path) -> Result<(), TextDocumentError> {
+    let metadata = fs::symlink_metadata(path).map_err(|error| text_boundary_error(
+        "target-unavailable",
+        format!("文件位置已变化或不可访问，未在旧位置新建或恢复文件；请保留草稿并核对：{error}"),
+    ))?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() {
+        return Err(text_boundary_error("target-not-file", "文件位置或类型已变化，未写入或恢复；请保留草稿并核对"));
+    }
+    Ok(())
+}
+
 fn read_resolved_text_document(
     path: &Path,
     format: &crate::formats::file_registry::FileFormatDefinition,
     read_options: Option<TextReadOptions>,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let _document_lease = crate::services::document_coordination::acquire(&[path])
+        .map_err(|error| text_boundary_error("document-busy", error))?;
+    ensure_existing_text_target(path)?;
     recover_interrupted_write(path)
         .map_err(|error| text_boundary_error("recovery-failed", error))?;
     let metadata = path
@@ -145,6 +159,9 @@ fn read_resolved_text_document_range(
     length: Option<u64>,
     read_options: Option<TextReadOptions>,
 ) -> Result<TextDocumentRangeSnapshot, TextDocumentError> {
+    let _document_lease = crate::services::document_coordination::acquire(&[path])
+        .map_err(|error| text_boundary_error("document-busy", error))?;
+    ensure_existing_text_target(path)?;
     recover_interrupted_write(path)
         .map_err(|error| text_boundary_error("recovery-failed", error))?;
     read_text_range_with_options(
@@ -164,6 +181,7 @@ fn write_resolved_text_document(
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
     let _document_lease = crate::services::document_coordination::acquire(&[path])
         .map_err(|error| text_boundary_error("document-busy", error))?;
+    ensure_existing_text_target(path)?;
     if content.len() as u64 > format.max_bytes {
         return Err(TextDocumentError::recoverable(
             "write-too-large",
@@ -657,6 +675,56 @@ pub async fn create_format_file(
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn move_save_fixture() -> std::path::PathBuf {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        loop {
+            let root = std::env::temp_dir().join(format!("longedit-text-move-save-{}-{}-{}", std::process::id(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+            match fs::create_dir(&root) {
+                Ok(()) => return root.canonicalize().unwrap(),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(e) => panic!("{e}"),
+            }
+        }
+    }
+    #[test]
+    fn moving_directory_blocks_text_read_write_and_recovery_without_touching_backups() {
+        let root = move_save_fixture();
+        let directory = root.join("notes");
+        fs::create_dir(&directory).unwrap();
+        let path = directory.join("note.md");
+        let backup = directory.join(".note.md.longedit-bak");
+        fs::write(&path, "original").unwrap();
+        fs::write(&backup, "recovery evidence").unwrap();
+        let format = file_format_by_id("markdown").unwrap();
+        let moving = crate::services::document_coordination::acquire(&[&directory, &root.join("moved")]).unwrap();
+        assert_eq!(read_resolved_text_document(&path, format, None).unwrap_err().code, "document-busy");
+        assert_eq!(read_resolved_text_document_range(&path, 0, None, None).unwrap_err().code, "document-busy");
+        assert_eq!(write_resolved_text_document(&path, format, "changed".into(), None, None).unwrap_err().code, "document-busy");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "original");
+        assert_eq!(fs::read_to_string(&backup).unwrap(), "recovery evidence");
+        drop(moving);
+        assert_eq!(write_resolved_text_document(&path, format, "changed".into(), None, None).unwrap().content, "changed");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn moved_text_with_backup_is_not_recreated_by_a_late_read_or_save() {
+        let root = move_save_fixture();
+        let path = root.join("note.md");
+        let new = root.join("renamed.md");
+        let backup = root.join(".note.md.longedit-bak");
+        fs::write(&path, "original").unwrap();
+        fs::rename(&path, &new).unwrap();
+        fs::write(&backup, "backup only, not a new note").unwrap();
+        let format = file_format_by_id("markdown").unwrap();
+        assert_eq!(read_resolved_text_document(&path, format, None).unwrap_err().code, "target-unavailable");
+        assert_eq!(read_resolved_text_document_range(&path, 0, None, None).unwrap_err().code, "target-unavailable");
+        assert_eq!(write_resolved_text_document(&path, format, "stale draft".into(), None, None).unwrap_err().code, "target-unavailable");
+        assert!(!path.exists());
+        assert_eq!(fs::read_to_string(new).unwrap(), "original");
+        assert_eq!(fs::read_to_string(backup).unwrap(), "backup only, not a new note");
+        fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn archive_document_lease_blocks_text_save_without_changing_content() {

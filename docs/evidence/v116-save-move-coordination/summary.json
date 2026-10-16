@@ -1,0 +1,187 @@
+{
+  "date": "2026-10-16",
+  "baseCommit": "32f260f240afba8747169421f9d6ed1d729b8cef",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "scope": "C2a: participating native text read/write/recovery and path/subtree mutation exclusion; not cross-window draft freezing or a Markdown link-writeback transaction",
+  "beforeFix": {
+    "realFilesystem": true,
+    "moveWhileSaving": {
+      "passed": 0,
+      "failed": 2
+    },
+    "subtreeAndFuturePathLease": {
+      "passed": 1,
+      "failed": 2
+    },
+    "staleLegacySave": {
+      "passed": 0,
+      "failed": 1
+    },
+    "assertionsRemovedOrWeakened": false
+  },
+  "implementation": [
+    "Ordered path/subtree leases reserve both move endpoints before history mutation and fail atomically on conflict",
+    "Future descendants use canonical existing ancestors without creating directories; path boundaries and Windows case aliases are checked",
+    "Existing copy/recycle/restore/legacy-delete paths participate in the same native protocol",
+    "Native text full/range reads and writes plus legacy Markdown reads check lease ownership and an existing ordinary target before write recovery",
+    "A late request does not recreate a moved file from a stale body or .longedit-bak; recovery evidence and new document bytes remain intact"
+  ],
+  "nativeRegression": {
+    "newTests": 12,
+    "fullFunctionalPassed": 776,
+    "failed": 0,
+    "existingIgnored": 5,
+    "independentPerformanceFiltered": 1
+  },
+  "fullPatchReleaseGate": "passed",
+  "productionDependencyVulnerabilities": 0,
+  "actualVueRegression": {
+    "fileManagementFlows": 8,
+    "outcomeFlows": 8,
+    "batchRenameFlows": 2,
+    "layoutsPerSuite": 12,
+    "styles": 6,
+    "widths": [
+      1280,
+      480
+    ],
+    "pageErrors": 0,
+    "motion": "normal calm motion",
+    "uiLayoutChanged": false,
+    "desktopTakeover": false,
+    "scope": "Actual Vue App/LibraryMode/dialogs with isolated IPC; native concurrency semantics tested independently on disk, not an installed-product claim",
+    "screenshotsViewed": [
+      "file-management/02-move-dialog.png",
+      "outcomes/mixed-move.png"
+    ]
+  },
+  "previousMainCI": {
+    "run": 38829414493,
+    "headSha": "32f260f240afba8747169421f9d6ed1d729b8cef",
+    "status": "completed",
+    "conclusion": "success",
+    "scope": "Verifies preceding D1/fixture-isolation source; does not cover new C2a production changes"
+  },
+  "remaining": [
+    "Fresh path-scoped draft/saving confirmation and short-lived editing protection across native windows",
+    "Audit dedicated writers, creation and quick-note entry points before claiming all writes participate",
+    "Usable recovery and reconciliation after interrupted moves or lost replies",
+    "Protected bounded Markdown link writeback sharing a verified lease rather than recursively reacquiring it",
+    "Final version bump, fixed installer lifecycle and same-byte review before release"
+  ],
+  "crossWindowDraftFreezeImplemented": false,
+  "allFormatWritersClaimedProtected": false,
+  "crossProcessLock": false,
+  "markdownWritebackEnabled": false,
+  "automaticRecovery": false,
+  "installerValidated": false,
+  "releaseReady": false,
+  "files": [
+    {
+      "path": "batch-rename-browser.txt",
+      "bytes": 38,
+      "sha256": "832e0867cb56b941b92edf68b462311895915c33a1c0ae993ac3dc56c7994305"
+    },
+    {
+      "path": "before-lease.txt",
+      "bytes": 1596,
+      "sha256": "1b2fa2ea44ac6f0c4ad311f5873a8cc07c6ff845affa89112e2d57cef69597dc"
+    },
+    {
+      "path": "before-move.txt",
+      "bytes": 1409,
+      "sha256": "bb737fa976d3014109367cbf95c86b7ac74d6c12b4aaf650a36c704e5bb586ae"
+    },
+    {
+      "path": "before-stale-save.txt",
+      "bytes": 869,
+      "sha256": "1372a8d9af048a749a16376299d0676ebdba950706cb0ce7058441462a69399d"
+    },
+    {
+      "path": "file-management-browser.txt",
+      "bytes": 1147,
+      "sha256": "284114fc80b5bc179526314254aa4f9d7662ab263fe629daf515946a41e69093"
+    },
+    {
+      "path": "full-rust.txt",
+      "bytes": 78878,
+      "sha256": "97d975c03cae21891b0f1996db0b1684de7c4c798fec222d7880ca338517cf6c"
+    },
+    {
+      "path": "lease-regression-final.txt",
+      "bytes": 1896,
+      "sha256": "a828086f7a6e3686eb3ca69681b6b3fe8e957bd76cbd58c1a23a273b88622a98"
+    },
+    {
+      "path": "outcomes-browser.txt",
+      "bytes": 1162,
+      "sha256": "336950a18f406a8380a54b74668f21b0d2912dc06811fb1bfc4d0b4e56ca9c58"
+    },
+    {
+      "path": "previous-main-ci.json",
+      "bytes": 2015,
+      "sha256": "b9bd104b8527a708c7881e8b74bde85458eebb5f10c54a9593133425e2af178f"
+    },
+    {
+      "path": "quality-gate.txt",
+      "bytes": 121192,
+      "sha256": "24248da2ec8a73dd4f81f271d57b2808a72a3c630694ab6e22cc3994c8018743"
+    },
+    {
+      "path": "batch-rename/preview.png",
+      "bytes": 77198,
+      "sha256": "daca7839d8ac484fb9c23c0b57469ea77566a6846626bba8d68942c1ec495ea6"
+    },
+    {
+      "path": "batch-rename/report.json",
+      "bytes": 1391,
+      "sha256": "db418f58ebd32764a560fb3547370daf933f631320c018ec39e50a9350533793"
+    },
+    {
+      "path": "file-management/01-context-menu.png",
+      "bytes": 86980,
+      "sha256": "0ba54d2765f8df0261845613a141884047a1ed33a31d73ae1aec2ee8b7a79615"
+    },
+    {
+      "path": "file-management/02-move-dialog.png",
+      "bytes": 11883,
+      "sha256": "edfc450dd34fce89f3335a07af3516f544b79536e84bd42bd3f80aff3797a093"
+    },
+    {
+      "path": "file-management/03-trash-dialog.png",
+      "bytes": 11028,
+      "sha256": "e4670260de6ef8492cb3a399ace05aa84c35385f233f49bc6918d757ace3e350"
+    },
+    {
+      "path": "file-management/results.json",
+      "bytes": 2245,
+      "sha256": "4f1cf710dd19481fcde60beb43b51092a61bc8df377a25c989928a24c37d87ce"
+    },
+    {
+      "path": "outcomes/mixed-move-glass-narrow.png",
+      "bytes": 33678,
+      "sha256": "55ec7ac371c687676775ec1f45b95e7f05941edffa3bfb20bbd37d3e579c025e"
+    },
+    {
+      "path": "outcomes/mixed-move.png",
+      "bytes": 33390,
+      "sha256": "14669d1a2092d00436bf9c26e141021b967e0d769790c16ebc8870ef32baf075"
+    },
+    {
+      "path": "outcomes/mixed-rename.png",
+      "bytes": 33705,
+      "sha256": "0565afb960d037885a4409d3f75de9a7ca9482366bf019fd66f75bea66a3a0da"
+    },
+    {
+      "path": "outcomes/mixed-undo.png",
+      "bytes": 24686,
+      "sha256": "8c621cc58466c97e92332fac6a1e492cb9bdc4efd504e69ad780fcdacb7bdbb4"
+    },
+    {
+      "path": "outcomes/results.json",
+      "bytes": 2210,
+      "sha256": "99470b171a02edec07c3697e254d1968c8477b8f1939a483e03d8707a9c1aa10"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.46s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 3 tests
+
+thread 'services::document_coordination::tests::future_descendant_lease_uses_existing_ancestor_without_creating_directories' (51504) panicked at src\services\document_coordination.rs:105:40:
+future paths must share the same canonical ancestor identity: "系统找不到指定的路径。 (os error 3)"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'services::document_coordination::tests::directory_lease_excludes_descendant_saves_without_blocking_siblings' (37836) panicked at src\services\document_coordination.rs:90:9:
+a directory move must exclude a child text save
+test services::document_coordination::tests::directory_lease_excludes_descendant_saves_without_blocking_siblings ... FAILED
+test services::document_coordination::tests::future_descendant_lease_uses_existing_ancestor_without_creating_directories ... FAILED
+test services::document_coordination::tests::archive_document_lease_reserves_all_paths_atomically_and_releases ... ok
+
+failures:
+
+failures:
+    services::document_coordination::tests::directory_lease_excludes_descendant_saves_without_blocking_siblings
+    services::document_coordination::tests::future_descendant_lease_uses_existing_ancestor_without_creating_directories
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 772 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`
