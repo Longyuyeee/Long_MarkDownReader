@@ -226,3 +226,4 @@ await import('./check-p2c-image-navigation.mjs')
 await import('./check-p2c-image-navigation-evidence.mjs')
 
 execFileSync(process.execPath, ['--test', 'scripts/test-v117-release-contract.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-history-read-coordination.mjs'], { stdio: 'inherit' })

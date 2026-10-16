@@ -183,7 +183,7 @@ pub async fn get_history_metadata(
     library_root: String,
     path: String,
 ) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
-    let _lease = history_lease(&app_handle)?;
+    let _read = crate::services::history_coordination::acquire_read(&history_cache_root(&app_handle)?)?;
     let path = WorkspaceGuard::new(library_root)?
         .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     read_metadata(&history_dir(&app_handle, &path.to_string_lossy())?)
@@ -390,8 +390,9 @@ pub async fn list_history(
     library_root: String,
     path: String,
 ) -> Result<Vec<(u64, String)>, String> {
-    // Snapshot bodies are immutable. Let the list and metadata load together;
-    // restore actions take the lease and verify both signatures before applying.
+    // List and metadata may read together, but neither may race pruning or moves.
+    // Restore actions retain exclusive coordination and signature checks.
+    let _read = crate::services::history_coordination::acquire_read(&history_cache_root(&app_handle)?)?;
     let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
 }
@@ -400,9 +401,12 @@ fn list_history_for_path(
     app_handle: &tauri::AppHandle,
     path: &str,
 ) -> Result<Vec<(u64, String)>, String> {
+    list_history_in_dir(&history_dir(app_handle, path)?)
+}
+
+fn list_history_in_dir(directory: &std::path::Path) -> Result<Vec<(u64, String)>, String> {
     let mut versions = Vec::new();
-    let directory = history_dir(app_handle, path)?;
-    match fs::read_dir(&directory) {
+    match fs::read_dir(directory) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(versions),
         Err(e) => return Err(format!("历史目录暂时无法读取：{e}")),
         Ok(entries) => {
@@ -530,6 +534,31 @@ pub async fn save_shadow_copy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn history_list_returns_complete_snapshots_newest_first_and_ignores_sidecars() {
+        let f = HistoryFixture::new();
+        save_history_in_dir(&f.0, "初稿\n完整中文", 20, 100).unwrap();
+        save_history_in_dir(&f.0, "修改后\n完整中文", 20, 101).unwrap();
+        fs::write(f.0.join("metadata.json"), r#"{"100":{"pinned":true,"note":"初稿"}}"#).unwrap();
+        fs::write(f.0.join(".102.md.longedit-new"), "未发布的半份快照").unwrap();
+        assert_eq!(list_history_in_dir(&f.0).unwrap(), vec![
+            (101, "修改后\n完整中文".into()),
+            (100, "初稿\n完整中文".into()),
+        ]);
+    }
+
+    #[test]
+    fn history_list_distinguishes_no_history_from_unreadable_or_damaged_history() {
+        let f = HistoryFixture::new();
+        assert!(list_history_in_dir(&f.0.join("missing")).unwrap().is_empty());
+        let not_a_directory = f.0.join("blocked");
+        fs::write(&not_a_directory, "不能当历史目录").unwrap();
+        assert!(list_history_in_dir(&not_a_directory).is_err());
+        fs::write(f.0.join("100.md"), [0xff, 0xfe, 0xff]).unwrap();
+        assert!(list_history_in_dir(&f.0).unwrap_err().contains("100"));
+        assert_eq!(fs::read(f.0.join("100.md")).unwrap(), [0xff, 0xfe, 0xff]);
+    }
+
     #[test]
     fn returning_to_an_older_state_is_recorded_but_adjacent_duplicates_are_not() {
         let f = HistoryFixture::new();

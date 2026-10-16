@@ -12,6 +12,7 @@ export const saveHistoryChecks = [
   'context-menu-pin-and-note-persist',
   'retention-and-move-keep-important-version-metadata',
   'explicit-markdown-save-keeps-before-and-after-versions',
+  'history-list-and-metadata-load-in-parallel-without-busy-errors',
   'save-history-workflows-have-no-global-error-overlay',
 ]
 
@@ -95,7 +96,18 @@ export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,c
     const automatic=await invoke('list_history',historyArgs(next))
     assert.ok(automatic[0][1].includes('normal save checkpoint 117'));assert.ok(automatic[1][1].includes('external markdown')&&!automatic[1][1].includes('normal save checkpoint 117'))
     assert.match(await fs.readFile(next,'utf8'),/normal save checkpoint 117/);check(saveHistoryChecks[8])
-    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[9])
+    // Exercise the real IPC pair used when opening history, without replacing native handlers.
+    const parallel = await evaluate(`(async()=>{
+      const args=${JSON.stringify(historyArgs(next))};
+      return await Promise.all(Array.from({length:6},async()=>await Promise.all([
+        window.__TAURI_INTERNALS__.invoke('list_history',args),
+        window.__TAURI_INTERNALS__.invoke('get_history_metadata',args)
+      ])))
+    })()`)
+    assert.equal(parallel.length,6)
+    for(const [entries,notes] of parallel){assert.ok(entries.some(([,body])=>body.includes('normal save checkpoint 117')));assert.deepEqual(notes[important],metadata[important])}
+    check(saveHistoryChecks[9])
+    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[10])
     report.status='passed'
   } catch(error) {report.status='failed';report.error=String(error);await capture('installed-v117-failure.jpg').catch(()=>{});throw error}
   finally {await fs.writeFile(path.join(output,'installed-v117-workflow.json'),JSON.stringify(report,null,2)+'\n')}

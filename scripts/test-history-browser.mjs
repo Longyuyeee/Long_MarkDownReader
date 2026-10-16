@@ -11,7 +11,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
   page.setDefaultTimeout(10000)
   const errors = []; page.on('pageerror', e => errors.push(e.message))
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/history-browser.html')
+  await page.goto(new URL('/scripts/fixtures/history-browser.html', process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000').href)
   await page.waitForFunction(() => window.historyAudit?.pending.length > 0)
   await page.locator('#tab-history').click()
   await page.evaluate(() => { window.historyAudit.store.activateTab('C:/audit/B.md') })

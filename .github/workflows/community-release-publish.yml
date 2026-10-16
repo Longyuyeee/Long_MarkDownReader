@@ -87,7 +87,7 @@ jobs:
           }
           if ($env:RELEASE_VERSION -eq '1.1.7') {
             $history = Get-Content verified-review/installed-v117-workflow.json -Raw | ConvertFrom-Json
-            if ($history.status -ne 'passed' -or $history.checks.Count -ne 10 -or @($history.checks | Where-Object status -ne 'passed').Count -or $history.sourceCommit -ne $env:PRODUCT_COMMIT -or $history.appVersion -ne $env:RELEASE_VERSION -or $history.sourceUserContentIncluded -ne $false -or $history.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Save/history workflows did not pass in the exact installed product' }
+            if ($history.status -ne 'passed' -or $history.checks.Count -ne 11 -or @($history.checks | Where-Object status -ne 'passed').Count -or $history.sourceCommit -ne $env:PRODUCT_COMMIT -or $history.appVersion -ne $env:RELEASE_VERSION -or $history.sourceUserContentIncluded -ne $false -or $history.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Save/history workflows did not pass in the exact installed product' }
           }
           New-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null
           $expected = @()

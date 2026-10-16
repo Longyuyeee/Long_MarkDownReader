@@ -2,12 +2,13 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const {chromium} = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output='docs/evidence/v117-save-history-development'
+const output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v117-save-history-development'
+const baseUrl=process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000'
 await fs.mkdir(output,{recursive:true})
 const browser=await chromium.launch({headless:true}), checks=[], layouts=[], errors=[]
 try {
   const page=await browser.newPage({viewport:{width:1280,height:900}}); page.setDefaultTimeout(15000); page.on('pageerror',e=>errors.push(e.message))
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/save-history-v117-browser.html')
+  await page.goto(new URL('/scripts/fixtures/save-history-v117-browser.html',baseUrl).href)
   await page.getByRole('link',{name:'资料库',exact:true}).click()
   await page.locator('[data-drop-path="C:/workflow-fixture/项目方案.md"]').click()
   await page.locator('.vditor-wysiwyg pre').waitFor()

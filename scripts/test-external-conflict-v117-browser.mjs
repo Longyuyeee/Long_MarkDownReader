@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import fs from 'node:fs/promises'
-const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright'), output='docs/evidence/v117-save-history-development/external'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
+const output=(process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v117-save-history-development')+'/external'
+const baseUrl=process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000'
 await fs.mkdir(output,{recursive:true})
 const browser=await chromium.launch({headless:true}), checks=[],errors=[]
 try{
   for(const text of [false,true]){
     const page=await browser.newPage({viewport:{width:1100,height:800}});page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message))
-    await page.goto('http://127.0.0.1:9000/scripts/fixtures/external-conflict-v117-browser.html'+(text?'?text=1':''))
+    await page.goto(new URL('/scripts/fixtures/external-conflict-v117-browser.html'+(text?'?text=1':''),baseUrl).href)
     const editor=page.locator(text?'.cm-content':'.vditor-wysiwyg pre').first();await editor.waitFor();await page.waitForFunction(()=>document.body.textContent.includes('original external'))
     await editor.click();await page.keyboard.press('Control+End');await page.keyboard.type('\nunsaved external draft')
     await page.evaluate(()=>{window.externalAudit.disk='external latest disk\n'})

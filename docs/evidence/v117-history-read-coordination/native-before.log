@@ -1,0 +1,69 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `HistoryReadLease` is never constructed
+  --> src\services\history_coordination.rs:14:19
+   |
+14 | pub(crate) struct HistoryReadLease(HistoryLease);
+   |                   ^^^^^^^^^^^^^^^^
+
+warning: function `acquire_read` is never used
+  --> src\services\history_coordination.rs:16:15
+   |
+16 | pub(crate) fn acquire_read(cache: &Path) -> Result<HistoryReadLease, String> {
+   |               ^^^^^^^^^^^^
+
+warning: field `0` is never read
+  --> src\services\history_coordination.rs:14:36
+   |
+14 | pub(crate) struct HistoryReadLease(HistoryLease);
+   |                   ---------------- ^^^^^^^^^^^^
+   |                   |
+   |                   field in this struct
+   |
+   = help: consider removing this field
+
+warning: error finalizing incremental compilation session directory `\\?\E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri\target\debug\incremental\tauri_app_lib-2t5ono0dpctl5\s-hn9s4jne89-1uymc68-working`: 拒绝访问。 (os error 5)
+
+warning: `tauri-app` (lib test) generated 3 warnings (1 duplicate)
+warning: `tauri-app` (lib) generated 3 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 02s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 6 tests
+
+thread 'services::history_coordination::tests::parallel_history_readers_share_cache_but_exclude_mutation' (41128) panicked at src\services\history_coordination.rs:91:42:
+列表与备注同时读取不能互报忙: "历史记录正在保存或归档，请稍后重试"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'services::history_coordination::tests::history_readers_share_normalized_cache_identity_and_leave_other_caches_free' (40728) panicked at src\services\history_coordination.rs:134:54:
+called `Result::unwrap()` on an `Err` value: "历史记录正在保存或归档，请稍后重试"
+
+thread '<unnamed>' (37436) panicked at src\services\history_coordination.rs:120:51:
+另一窗口应能同时读取历史: "历史记录正在保存或归档，请稍后重试"
+test services::history_coordination::tests::history_coordination_excludes_same_cache_and_releases_on_drop ... ok
+test services::history_coordination::tests::history_writer_excludes_reads_and_read_error_releases_guard ... ok
+
+thread 'services::history_coordination::tests::history_readers_in_different_threads_hold_protection_until_both_finish' (42628) panicked at src\services\history_coordination.rs:122:23:
+called `Result::unwrap()` on an `Err` value: Any { .. }
+test services::history_coordination::tests::history_coordination_preserves_incomplete_staging_on_clear ... ok
+test services::history_coordination::tests::history_readers_in_different_threads_hold_protection_until_both_finish ... FAILED
+test services::history_coordination::tests::history_readers_share_normalized_cache_identity_and_leave_other_caches_free ... FAILED
+test services::history_coordination::tests::parallel_history_readers_share_cache_but_exclude_mutation ... FAILED
+
+failures:
+
+failures:
+    services::history_coordination::tests::history_readers_in_different_threads_hold_protection_until_both_finish
+    services::history_coordination::tests::history_readers_share_normalized_cache_identity_and_leave_other_caches_free
+    services::history_coordination::tests::parallel_history_readers_share_cache_but_exclude_mutation
+
+test result: FAILED. 3 passed; 3 failed; 0 ignored; 0 measured; 889 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

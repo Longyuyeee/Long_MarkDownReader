@@ -1,0 +1,89 @@
+
+> tauri-app@1.1.7 test:template-transfer
+> node --test scripts/test-note-template-transfer.mjs scripts/test-history-diff.mjs scripts/test-history-ownership.mjs scripts/test-history-read-coordination.mjs
+
+TAP version 13
+# Subtest: diff preserves changed Unicode lines without treating text as HTML
+ok 1 - diff preserves changed Unicode lines without treating text as HTML
+  ---
+  duration_ms: 0.9713
+  ...
+# Subtest: large diff is bounded and reports shortened preview honestly
+ok 2 - large diff is bounded and reports shortened preview honestly
+  ---
+  duration_ms: 8.2642
+  ...
+# Subtest: restore one paragraph keeps other edits, Unicode and mixed separators byte-exact
+ok 3 - restore one paragraph keeps other edits, Unicode and mixed separators byte-exact
+  ---
+  duration_ms: 0.4096
+  ...
+# Subtest: partial insertion and deletion preserve EOF and final-newline behavior
+ok 4 - partial insertion and deletion preserve EOF and final-newline behavior
+  ---
+  duration_ms: 0.3173
+  ...
+# Subtest: repeated lines do not make a local restore replace other changes
+ok 5 - repeated lines do not make a local restore replace other changes
+  ---
+  duration_ms: 0.4933
+  ...
+# Subtest: late history of A cannot populate B, even when timestamps collide
+ok 6 - late history of A cannot populate B, even when timestamps collide
+  ---
+  duration_ms: 61.0759
+  ...
+# Subtest: closed file and late failures cannot change the new context
+ok 7 - closed file and late failures cannot change the new context
+  ---
+  duration_ms: 12.8588
+  ...
+# Subtest: restore rejects stale entries, loading editors, read-only and pending writes
+ok 8 - restore rejects stale entries, loading editors, read-only and pending writes
+  ---
+  duration_ms: 14.1396
+  ...
+# Subtest: delete is bound to its source and cannot refresh a different document
+ok 9 - delete is bound to its source and cannot refresh a different document
+  ---
+  duration_ms: 5.4762
+  ...
+# Subtest: draft changes during protection and protection errors never replace the editor
+ok 10 - draft changes during protection and protection errors never replace the editor
+  ---
+  duration_ms: 8.5252
+  ...
+# Subtest: both UI history reads use shared coordination before resolving the document
+ok 11 - both UI history reads use shared coordination before resolving the document
+  ---
+  duration_ms: 0.704
+  ...
+# Subtest: history mutations and signature-checked recovery retain exclusive coordination
+ok 12 - history mutations and signature-checked recovery retain exclusive coordination
+  ---
+  duration_ms: 0.1995
+  ...
+# Subtest: bundle retains authored Unicode, variables and empty templates without machine identities
+ok 13 - bundle retains authored Unicode, variables and empty templates without machine identities
+  ---
+  duration_ms: 0.8468
+  ...
+# Subtest: imports reserve builtins and local names, rename file duplicates, and honor selection/skip
+ok 14 - imports reserve builtins and local names, rename file duplicates, and honor selection/skip
+  ---
+  duration_ms: 0.7076
+  ...
+# Subtest: long names remain valid after collision suffix; malformed/unsupported/oversized data is rejected
+ok 15 - long names remain valid after collision suffix; malformed/unsupported/oversized data is rejected
+  ---
+  duration_ms: 0.7729
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 486.5799

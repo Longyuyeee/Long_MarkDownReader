@@ -1,0 +1,95 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+warning: error finalizing incremental compilation session directory `\\?\E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri\target\debug\incremental\tauri_app_lib-2t5ono0dpctl5\s-hn9s66myg6-1e9sn4n-working`: 拒绝访问。 (os error 5)
+
+warning: `tauri-app` (lib test) generated 2 warnings (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 12s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 47 tests
+test commands::history::tests::history_deduplication_normalizes_line_endings ... ok
+test commands::history::tests::history_list_distinguishes_no_history_from_unreadable_or_damaged_history ... ok
+test commands::formats::tests::explicit_save_rejects_stale_disk_and_failed_history_protection_without_writing ... ok
+test services::archive_history::tests::coordinated_no_history_creates_journal_not_fake_history ... ok
+test commands::archive::tests::history_failure_is_per_item_and_does_not_hide_other_results ... ok
+test services::archive_history::tests::coordinated_move_preserves_document_history_and_holds_one_lease ... ok
+test commands::formats::tests::a_single_history_slot_keeps_the_pre_save_version ... ok
+test commands::history::tests::text_history_decodes_utf16_and_recovery_keeps_txt_extension ... ok
+test commands::archive::tests::history_inventory_uses_the_same_canonical_identity_as_saving ... ok
+test commands::history::tests::history_list_returns_complete_snapshots_newest_first_and_ignores_sidecars ... ok
+test commands::formats::tests::post_save_history_failure_is_a_warning_on_a_successful_receipt ... ok
+test services::archive_history::tests::absent_history_creates_nothing_and_new_target_conflict_blocks ... ok
+test services::archive_history::tests::concurrent_history_change_retains_copy_and_original_without_publication ... ok
+test commands::history::tests::history_timestamp_overflow_preserves_existing_snapshot ... ok
+test services::archive_history::tests::history_publication_preserves_source_and_keeps_journal_out_of_target ... ok
+test commands::history::tests::history_same_second_preserves_distinct_versions_and_clock_rollback ... ok
+test commands::history::tests::history_dedup_and_retention_still_work_with_collisions ... ok
+test services::archive_history::tests::history_writer_lease_blocks_preparation_before_any_staging_write ... ok
+test services::file_move_history::tests::bounded_inventory_rejects_history_larger_than_remaining_budget ... ok
+test services::file_move_history::tests::changed_moved_history_is_not_blindly_rolled_back_or_marked_retryable ... ok
+test services::file_move_history::tests::ambiguous_document_failure_retains_history_instead_of_claiming_rollback ... ok
+test services::archive_history::tests::coordinated_target_change_stops_history_publication_without_rollback ... ok
+test services::archive_history::tests::coordinated_no_history_detects_late_history_without_deleting_it ... ok
+test services::archive_history::tests::missing_history_is_not_created ... ok
+test services::archive_history::tests::target_history_blocks_even_without_source_history ... ok
+test services::file_move_history::tests::failed_document_move_keeps_history_with_source ... ok
+test services::archive_history::tests::unified_recovery_covers_both_history_policies_and_rejects_conflicting_policy ... ok
+test services::archive_history::tests::unified_recovery_reports_pending_history_and_preserves_ambiguous_files ... ok
+test services::file_move_history::tests::history_cache_as_a_file_cannot_be_silently_ignored ... ok
+
+thread 'services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry' (39316) panicked at src\services\file_move_history.rs:597:25:
+simulated process interruption
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry ... ok
+test services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots ... ok
+test services::history_coordination::tests::history_coordination_preserves_incomplete_staging_on_clear ... ok
+test services::history_coordination::tests::history_coordination_excludes_same_cache_and_releases_on_drop ... ok
+test services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place ... ok
+test services::file_move_history::tests::target_history_appearing_during_migration_rolls_back_prior_items ... ok
+test services::file_move_history::tests::rollback_does_not_replace_history_created_by_another_writer ... ok
+test services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history ... ok
+test services::file_move_links::tests::hidden_history_or_recycle_markdown_is_never_planned_for_editing ... ok
+test services::history_coordination::tests::history_readers_share_normalized_cache_identity_and_leave_other_caches_free ... ok
+test services::file_move_journal::tests::restart_inspection_is_read_only_and_history_clear_preserves_pending_records ... ok
+test services::history_coordination::tests::history_readers_in_different_threads_hold_protection_until_both_finish ... ok
+test services::history_coordination::tests::history_writer_excludes_reads_and_read_error_releases_guard ... ok
+test services::file_move_history::tests::successful_move_and_undo_keep_nested_history_bytes ... ok
+test services::file_move_transaction::tests::history_collision_rolls_back_reference_edits_and_keeps_original_history ... ok
+test services::history_coordination::tests::parallel_history_readers_share_cache_but_exclude_mutation ... ok
+test services::file_move_transaction::recovery_tests::explicit_restore_returns_position_references_and_history_without_overwriting ... ok
+test services::file_move_transaction::recovery_tests::partial_history_migration_is_verified_and_restored_before_marking_recovery_finished ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 850 filtered out; finished in 0.83s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-5e1e44f29de8d3a6.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-8a629ac519662dcc.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-2ab68047cab2bc27.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-0f23f9731da96c6a.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
