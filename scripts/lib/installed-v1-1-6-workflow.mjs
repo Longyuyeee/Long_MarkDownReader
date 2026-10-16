@@ -55,9 +55,18 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
     await fs.writeFile(p('note.md'), '# Continuity\n\n![图](assets/pic.png)\n[参考](reference.txt)\n')
     const moved = await move(p('note.md'), p('notes'))
     const movedContent = await read(moved)
+    await navigate('#/library?path=' + encodeURIComponent(moved), '.library-mode', 'v116 moved image note')
+    await waitFor(`(${editor})?.textContent.includes('Continuity')`, 'moved note opened')
+    if (await evaluate(`(${store}).editorMode!=='wysiwyg'`)) {
+      await click(`document.querySelector('.inline-mode')`)
+      await click(`[...document.querySelectorAll('.n-dropdown-option')].find(e=>e.textContent.includes('所见即所得'))`)
+    }
+    await waitFor(`!![...document.querySelectorAll('#vditor-lib .vditor-reset img')].find(image=>image.naturalWidth>0)`, 'moved local image rendered')
     check(moveContinuityChecks[0], movedContent.includes('../assets/pic.png') && movedContent.includes('../reference.txt') && (await fs.readFile(p('assets/pic.png'))).equals(image))
     await fs.writeFile(p('incoming.md'), '[图](assets/pic.png)\n[笔记](notes/note.md#heading "标题")\n')
     await invoke('rename_item', { libraryRoot: library, oldPath: p('assets/pic.png'), newName: '新图.png' })
+    await waitFor(`!![...document.querySelectorAll('#vditor-lib .vditor-reset img')].find(image=>image.naturalWidth>0&&decodeURIComponent(image.src).includes('新图.png'))`, 'renamed image refreshed in the open editor')
+    await capture('installed-v116-images.jpg')
     check(moveContinuityChecks[1], (await read(moved)).includes('../assets/%E6%96%B0%E5%9B%BE.png') && (await read(p('incoming.md'))).includes('assets/%E6%96%B0%E5%9B%BE.png'))
     const renamed = await invoke('rename_item', { libraryRoot: library, oldPath: moved, newName: 'renamed.md' })
     check(moveContinuityChecks[2], (await read(p('incoming.md'))).includes('notes/renamed.md#heading "标题"'))
