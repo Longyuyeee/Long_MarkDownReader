@@ -41,6 +41,7 @@ pub(crate) enum SearchStop {
     Elapsed,
     Depth,
     Io,
+    Cancelled,
 }
 
 impl std::fmt::Display for SearchStop {
@@ -54,6 +55,7 @@ impl std::fmt::Display for SearchStop {
             Self::Elapsed => "本次搜索用时较长",
             Self::Depth => "文件夹层级过深",
             Self::Io => "部分文件或文件夹已变化或无法读取",
+            Self::Cancelled => "本次查询已关闭或替换",
         };
         write!(f, "搜索尚未完成：{reason}。请缩小资料库范围，或在资料库中准备/更新搜索索引后重试；这不表示没有匹配资料。")
     }
@@ -67,6 +69,7 @@ pub(crate) struct SearchBudget {
     pub read_bytes: u64,
     pub segments: usize,
     pub text_bytes: usize,
+    cancellation: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
 }
 
 impl Default for SearchBudget {
@@ -85,15 +88,31 @@ impl SearchBudget {
             read_bytes: 0,
             segments: 0,
             text_bytes: 0,
+            cancellation: None,
         }
     }
 
     pub fn check_time(&self) -> Result<(), SearchStop> {
+        if self
+            .cancellation
+            .as_ref()
+            .is_some_and(|token| token.load(std::sync::atomic::Ordering::Relaxed))
+        {
+            return Err(SearchStop::Cancelled);
+        }
         if self.started.elapsed() >= self.limits.elapsed {
             Err(SearchStop::Elapsed)
         } else {
             Ok(())
         }
+    }
+
+    pub fn with_cancellation(
+        mut self,
+        token: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    ) -> Self {
+        self.cancellation = Some(token);
+        self
     }
 
     fn entry(&mut self) -> Result<(), SearchStop> {

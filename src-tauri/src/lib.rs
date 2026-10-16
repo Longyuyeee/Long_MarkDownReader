@@ -78,7 +78,7 @@ use commands::inbox::{create_inbox_directory, read_inbox_directory};
 use commands::index::{
     cancel_knowledge_index, delete_knowledge_index, get_knowledge_index_status,
     preview_search_document, rebuild_knowledge_index, recover_knowledge_index_cache,
-    search_knowledge, search_knowledge_libraries,
+    search_knowledge, search_knowledge_libraries, search_knowledge_page, close_knowledge_search,
 };
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
@@ -230,6 +230,7 @@ pub fn run() {
         .manage(commands::lifecycle::WindowDrafts::default())
         .manage(services::archive_confirmation::WindowConfirmationState::default())
         .manage(KnowledgeIndexRuntime::default())
+        .manage(commands::index::search_pages::SearchPageRuntime::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
@@ -248,6 +249,7 @@ pub fn run() {
                 let _ = window.emit_to(window.label(), "request-window-close", ());
             }
             tauri::WindowEvent::Destroyed => {
+                window.state::<commands::index::search_pages::SearchPageRuntime>().close_window(window.label());
                 if let Ok(mut registry) = window
                     .state::<services::archive_confirmation::WindowConfirmationState>()
                     .0
@@ -545,6 +547,8 @@ pub fn run() {
             search_library,
             search_knowledge,
             search_knowledge_libraries,
+            search_knowledge_page,
+            close_knowledge_search,
             commands::history::compare_history_version,
             commands::history::get_history_metadata,
             commands::history::set_history_metadata,

@@ -35,6 +35,9 @@ mod search_ranking_tests;
 #[path = "index_search_budget_tests.rs"]
 mod search_budget_tests;
 
+#[path = "index_search_pages.rs"]
+pub mod search_pages;
+
 fn knowledge_index_cache_root(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_cache_dir()
@@ -542,6 +545,14 @@ fn search_segments_checked(
     query: &str,
     budget: &mut Option<&mut SearchBudget>,
 ) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    search_segment_iter(segments.iter(), query, budget)
+}
+
+fn search_segment_iter<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment> + Clone,
+    query: &str,
+    budget: &mut Option<&mut SearchBudget>,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
     let Ok(parsed) = crate::services::search_query::SearchQuery::parse(query) else {
         return Ok(Vec::new());
     };
@@ -551,8 +562,8 @@ fn search_segments_checked(
     search_complex_segments(segments, query, budget)
 }
 
-fn search_literal_segments(
-    segments: &[IndexedSearchSegment],
+fn search_literal_segments<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment>,
     query: &str,
     budget: &mut Option<&mut SearchBudget>,
 ) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
@@ -572,7 +583,11 @@ fn search_literal_segments(
                 object_type: segment.object_type.clone(),
                 match_kind: "title".into(),
                 context: if segment.extraction_failed {
-                    "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    if segment.object_type == "pdf" {
+                        "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    } else {
+                        "正文未能读取或提取，仅匹配文件名".into()
+                    }
                 } else {
                     "文件名匹配".into()
                 },
@@ -648,8 +663,8 @@ fn search_literal_segments(
     Ok(results.into_results())
 }
 
-fn search_complex_segments(
-    segments: &[IndexedSearchSegment],
+fn search_complex_segments<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment> + Clone,
     query: &str,
     budget: &mut Option<&mut SearchBudget>,
 ) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
@@ -661,8 +676,8 @@ fn search_complex_segments(
         return Ok(Vec::new());
     }
     let mut candidates: HashMap<&str, (Vec<bool>, bool, usize)> = HashMap::new();
-    let mut segment_hits = Vec::with_capacity(segments.len());
-    for segment in segments {
+    let mut segment_hits = Vec::with_capacity(segments.size_hint().0);
+    for segment in segments.clone() {
         if let Some(budget) = budget.as_deref_mut() {
             budget.segment(segment.text.len())?;
         }
@@ -689,7 +704,7 @@ fn search_complex_segments(
     let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
-    for (index, segment) in segments.iter().enumerate() {
+    for (index, segment) in segments.enumerate() {
         if let Some(budget) = budget.as_deref_mut() {
             budget.check_time()?;
         }
@@ -711,7 +726,11 @@ fn search_complex_segments(
                 object_type: segment.object_type.clone(),
                 match_kind: "title".into(),
                 context: if segment.extraction_failed {
-                    "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    if segment.object_type == "pdf" {
+                        "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    } else {
+                        "正文未能读取或提取，仅匹配文件名".into()
+                    }
                 } else {
                     "文件名匹配".into()
                 },
@@ -1282,6 +1301,25 @@ fn search_workspace_checked(
     let mut results = SearchResultCollector::new();
     search_sources(root, &sources, query, &mut results, budget)?;
     Ok(results.into_results())
+}
+
+#[tauri::command]
+pub async fn search_knowledge_page(
+    app: AppHandle,
+    window: tauri::Window,
+    request: search_pages::SearchPageRequest,
+) -> Result<search_pages::SearchPageResponse, search_pages::SearchPageError> {
+    search_pages::run_page(app, window.label().to_owned(), request).await
+}
+
+#[tauri::command]
+pub fn close_knowledge_search(
+    window: tauri::Window,
+    runtime: State<'_, search_pages::SearchPageRuntime>,
+    channel: search_pages::SearchChannel,
+    session_id: String,
+) -> bool {
+    runtime.close(window.label(), channel, &session_id)
 }
 
 #[tauri::command]

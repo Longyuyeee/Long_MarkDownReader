@@ -1,0 +1,65 @@
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.61s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 47 tests
+test commands::index::search_budget_tests::v118_query_budget_applies_to_disk_freshness_before_unbounded_traversal ... ok
+test commands::index::search_budget_tests::v118_query_budget_cached_overlay_and_deleted_file_fallback_use_checked_paths ... ok
+test commands::index::search_budget_tests::v118_query_budget_charges_pdf_sidecars_before_loading_any_of_them ... ok
+test commands::index::search_budget_tests::v118_query_budget_checks_cached_segment_count_text_and_elapsed_for_both_grammars ... ok
+test commands::index::search_budget_tests::v118_query_budget_is_cumulative_for_literal_and_complex_cold_reads ... ok
+test commands::index::search_budget_tests::v118_query_budget_keeps_whole_file_exclusions_when_terms_span_segments ... ok
+test commands::index::search_budget_tests::v118_query_budget_reports_incomplete_instead_of_partial_or_empty_success ... ok
+test commands::index::search_budget_tests::v118_query_budget_still_finds_late_filename_match_beyond_200_files ... ok
+test commands::index::search_pages::tests::v118_pages_cache_and_active_task_limits_are_fail_fast_and_released ... ok
+test commands::index::search_pages::tests::v118_pages_empty_complete_and_missing_library_failure_are_distinct ... ok
+V118_FILE_PAGES_BASELINE {"includesConfiguredScopeOrWatcherSetup":false,"includesNativeIpc":false,"nextPageRebuildsCompletedBodies":false,"observations":[{"firstPageMicros":[123618,130909,132004,135227,144064],"mode":"cold","nextPageMicros":[2664,3038,3616,3754,4070]},{"firstPageMicros":[29538,32975,33196,35948,38509],"mode":"memory","nextPageMicros":[2431,2873,3116,3345,3655]}],"pageSize":40,"samplesPerMode":5,"sources":243}
+test commands::index::search_pages::tests::v118_pages_fixed_fixture_timing_reports_first_page_and_continuation_separately ... ok
+test commands::index::search_pages::tests::v118_pages_index_revision_and_ttl_invalidate_even_when_build_timestamp_is_unchanged ... ok
+test commands::index::search_pages::tests::v118_pages_interleaved_index_segments_and_complex_exclusions_are_grouped_per_file ... ok
+test commands::index::search_pages::tests::v118_pages_mixed_case_assets_directory_uses_the_same_rule_as_source_scanning ... ok
+test commands::index::search_pages::tests::v118_pages_modified_sort_uses_nanosecond_metadata_and_serializes_safe_milliseconds ... ok
+test commands::index::search_pages::tests::v118_pages_new_pdf_sidecar_expires_retry_even_before_watcher_delivery ... ok
+test commands::index::search_pages::tests::v118_pages_owner_channel_replacement_and_late_close_are_isolated ... ok
+test commands::index::search_pages::tests::v118_pages_payload_limit_preserves_partial_pages_and_does_not_invent_total_count ... ok
+test commands::index::search_pages::tests::v118_pages_query_sort_scope_size_and_forged_offsets_cannot_mix_queries ... ok
+test commands::index::search_pages::tests::v118_pages_real_cold_memory_and_disk_keep_244_file_groups_and_annotation_positions ... ok
+test commands::index::search_pages::tests::v118_pages_real_filesystem_watcher_revision_does_not_reset_when_changes_are_cleared ... ok
+test commands::index::search_pages::tests::v118_pages_real_hidden_order_event_keeps_cursor_revision_stable ... ok
+test commands::index::search_pages::tests::v118_pages_request_bounds_and_unknown_fields_are_rejected ... ok
+test commands::index::search_pages::tests::v118_pages_retry_is_idempotent_and_page_fetch_does_not_rebuild_bodies ... ok
+test commands::index::search_pages::tests::v118_pages_scope_selection_does_not_probe_other_libraries_and_keeps_platform_identity ... ok
+test commands::index::search_pages::tests::v118_pages_small_scan_and_matching_budgets_resume_without_reopening_completed_bodies ... ok
+test commands::index::search_pages::tests::v118_pages_source_change_rename_and_delete_expire_before_returning_stale_pages ... ok
+test commands::index::search_pages::tests::v118_pages_stale_disk_index_falls_back_and_missing_index_segments_do_not_hide_filenames ... ok
+test commands::index::search_pages::tests::v118_pages_ui_order_history_and_assets_do_not_invalidate_search_but_relations_do ... ok
+test commands::index::search_pages::tests::v118_pages_unreadable_content_is_not_treated_as_exclusion_success_or_clean_empty ... ok
+test commands::index::search_pages::tests::v118_pages_work_retry_does_not_consume_the_next_scan_step ... ok
+test commands::index::search_ranking_tests::v118_ranking_cold_real_files_include_the_late_filename_hit ... ok
+test commands::index::search_ranking_tests::v118_ranking_collector_retains_only_200_payloads_and_matches_full_sort ... ok
+test commands::index::search_ranking_tests::v118_ranking_complex_does_not_drop_a_late_strong_match_or_ignore_exclusions ... ok
+test commands::index::search_ranking_tests::v118_ranking_equal_titles_use_file_identity_at_the_limit ... ok
+test commands::index::search_ranking_tests::v118_ranking_exact_identity_preserves_case_locations_and_context ... ok
+V118_RANKING_BASELINE {"observations":[{"maxMicros":49295,"medianMicros":39882,"minMicros":37911,"mode":"cold","strongestFound":true},{"maxMicros":1712,"medianMicros":1221,"minMicros":1179,"mode":"memory-index","strongestFound":true},{"maxMicros":8552,"medianMicros":6510,"minMicros":5907,"mode":"disk-index","strongestFound":true}],"resultLimit":200,"samplesPerMode":5,"sourceFiles":243}
+test commands::index::search_ranking_tests::v118_ranking_fixed_fixture_timing ... ok
+test commands::index::search_ranking_tests::v118_ranking_incremental_overlay_keeps_a_changed_strong_file ... ok
+test commands::index::search_ranking_tests::v118_ranking_literal_does_not_drop_a_late_strong_match ... ok
+test commands::index::search_ranking_tests::v118_ranking_local_top_k_and_cross_library_merge_share_one_order ... ok
+test commands::index::search_ranking_tests::v118_ranking_ready_disk_index_includes_the_late_filename_hit ... ok
+test services::knowledge_index::v118_pages_monitor_failure_state_blocks_fresh_session_until_recovery ... ok
+test services::search_scan::tests::v118_scan_budget_counts_unsupported_entries_and_preserves_privacy_filters ... ok
+test services::search_scan::tests::v118_scan_budget_distinguishes_empty_missing_and_depth_failure ... ok
+test services::search_scan::tests::v118_scan_budget_keeps_a_pending_source_when_source_budget_is_zero ... ok
+test services::search_scan::tests::v118_scan_budget_limits_bytes_segments_and_time_without_counter_overflow ... ok
+test services::search_scan::tests::v118_scan_budget_resumes_without_repeating_or_skipping_sources ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 905 filtered out; finished in 3.53s
+
