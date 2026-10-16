@@ -967,14 +967,36 @@ fn v118_pages_live_proof_never_absorbs_source_changes_index_replacement_or_parti
             index.search_revision(root.root()) > before,
             "{change}: change notification must arrive"
         );
-        assert_eq!(
-            session
-                .request_live(&request, &index, limits())
-                .unwrap_err()
-                .code,
-            "expired",
-            "{change}"
-        );
+        if change == "incomplete-scan" {
+            let pending = session
+                .request_live(
+                    &request,
+                    &index,
+                    SearchLimits {
+                        entries: 1,
+                        sources: 1,
+                        ..limits()
+                    },
+                )
+                .unwrap();
+            assert_eq!(pending.scan_state, ScanState::Preparing);
+            assert!(
+                pending.files.is_empty() && pending.total_files.is_none() && !pending.scan_complete
+            );
+            assert_eq!(
+                session.revision, before,
+                "partial enumeration cannot accept the notification"
+            );
+        } else {
+            assert_eq!(
+                session
+                    .request_live(&request, &index, limits())
+                    .unwrap_err()
+                    .code,
+                "expired",
+                "{change}"
+            );
+        }
         if change == "file" {
             assert_eq!(
                 fs::read_to_string(fixture.root.join("zz-项目预算.md")).unwrap(),
@@ -982,6 +1004,220 @@ fn v118_pages_live_proof_never_absorbs_source_changes_index_replacement_or_parti
             );
         }
     }
+}
+
+#[test]
+fn v118_large_single_directory_hint_across_source_budgets_keeps_work_and_no_premature_files() {
+    let fixture = Fixture::new(240);
+    fixture.pdf_annotations();
+    let root = WorkspaceGuard::new(&fixture.root).unwrap();
+    let index = KnowledgeIndexRuntime::default();
+    index.ensure_watcher(root.root()).unwrap();
+    let mut request = fixture.request();
+    let mut session = QuerySession::new(root.root(), &request, 0, None, None).unwrap();
+    let small = SearchLimits {
+        entries: 13,
+        sources: 7,
+        ..limits()
+    };
+    let first = session.request_live(&request, &index, small).unwrap();
+    assert_eq!(first.scan_state, ScanState::Preparing);
+    assert!(first.files.is_empty() && first.total_files.is_none() && session.scan.is_some());
+    let before = index.search_revision(root.root());
+    for directory in 0..80 {
+        fs::create_dir(fixture.root.join(format!("用户新建空目录-{directory}"))).unwrap();
+    }
+    let started = Instant::now();
+    while index.search_revision(root.root()) == before && started.elapsed() < Duration::from_secs(5)
+    {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(index.search_revision(root.root()) > before);
+    request.cursor = first.next_cursor;
+    let mut files = Vec::new();
+    let mut steps = 0;
+    for _ in 0..500 {
+        let response = session.request_live(&request, &index, small).unwrap();
+        let cursor_after = session.work_step;
+        let retry = session.request_live(&request, &index, small).unwrap();
+        assert_eq!(
+            serde_json::to_value(&response).unwrap(),
+            serde_json::to_value(&retry).unwrap()
+        );
+        assert_eq!(
+            session.work_step, cursor_after,
+            "same work cursor must not consume more work"
+        );
+        if response.scan_state == ScanState::Preparing {
+            assert!(
+                response.files.is_empty()
+                    && response.total_files.is_none()
+                    && !response.scan_complete
+            );
+        }
+        files.extend(response.files);
+        request.cursor = response.next_cursor;
+        steps += 1;
+        if request.cursor.is_none() {
+            break;
+        }
+    }
+    assert!(
+        request.cursor.is_none(),
+        "bounded work must eventually finish"
+    );
+    assert!(steps > 30, "the fixture must cross actual work budgets");
+    assert_eq!(files.len(), 244);
+    assert_eq!(
+        files
+            .iter()
+            .map(|file| &file.path)
+            .collect::<HashSet<_>>()
+            .len(),
+        244
+    );
+    assert_eq!(
+        session.body_builds, 244,
+        "proof must not reopen parsed bodies or restart matching"
+    );
+}
+
+#[test]
+fn v118_large_pending_verification_rejects_a_real_change_even_in_its_already_checked_prefix() {
+    let fixture = Fixture::new(80);
+    let root = WorkspaceGuard::new(&fixture.root).unwrap();
+    let mut session = fixture.session(&fixture.request());
+    session.advance(&mut SearchBudget::new(limits())).unwrap();
+    let index = KnowledgeIndexRuntime::default();
+    index.ensure_watcher(root.root()).unwrap();
+    fs::create_dir(fixture.root.join("待核对目录")).unwrap();
+    let started = Instant::now();
+    while index.search_revision(root.root()) == 0 && started.elapsed() < Duration::from_secs(5) {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(index.search_revision(root.root()) > 0);
+    let mut tiny = SearchBudget::new(SearchLimits {
+        entries: 4,
+        sources: 2,
+        ..limits()
+    });
+    assert!(!session.verify_sources_step(&index, &mut tiny).unwrap());
+    let checked = session
+        .verification
+        .as_ref()
+        .unwrap()
+        .seen
+        .iter()
+        .position(|seen| *seen)
+        .unwrap();
+    let changed = fixture.root.join(&session.sources[checked].path);
+    let before = index.search_revision_stamp(root.root()).2;
+    fs::write(&changed, "用户真实新正文，不得代存或改回").unwrap();
+    let started = Instant::now();
+    while index.search_revision_stamp(root.root()).2 == before
+        && started.elapsed() < Duration::from_secs(5)
+    {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(index.search_revision_stamp(root.root()).2 > before);
+    assert_eq!(
+        session
+            .request_live(&fixture.request(), &index, limits())
+            .unwrap_err()
+            .code,
+        "expired"
+    );
+    assert_eq!(
+        fs::read_to_string(changed).unwrap(),
+        "用户真实新正文，不得代存或改回"
+    );
+}
+
+#[test]
+fn v118_large_cancelled_verification_releases_retained_sources_and_never_publishes_results() {
+    let fixture = Fixture::new(80);
+    let root = WorkspaceGuard::new(&fixture.root).unwrap();
+    let mut session = fixture.session(&fixture.request());
+    session.advance(&mut SearchBudget::new(limits())).unwrap();
+    let index = KnowledgeIndexRuntime::default();
+    index.ensure_watcher(root.root()).unwrap();
+    fs::create_dir(fixture.root.join("取消前的核对目录")).unwrap();
+    let started = Instant::now();
+    while index.search_revision(root.root()) == 0 && started.elapsed() < Duration::from_secs(5) {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(index.search_revision(root.root()) > 0);
+    assert!(!session
+        .verify_sources_step(
+            &index,
+            &mut SearchBudget::new(SearchLimits {
+                entries: 4,
+                sources: 2,
+                ..limits()
+            })
+        )
+        .unwrap());
+    assert!(session.verification.is_some());
+    let pool = session.retention.pool.clone();
+    assert!(pool.0.lock().unwrap().sources > 0);
+    session.cancelled.store(true, Ordering::Release);
+    assert_eq!(
+        session
+            .request_live(&fixture.request(), &index, limits())
+            .unwrap_err()
+            .code,
+        "expired"
+    );
+    drop(session);
+    let retained = pool.0.lock().unwrap();
+    assert_eq!(
+        (retained.sources, retained.files, retained.bytes),
+        (0, 0, 0)
+    );
+}
+
+#[test]
+fn v118_large_default_budget_scans_more_than_twenty_thousand_entries_without_restarting_bodies() {
+    let fixture = Fixture::new(240);
+    fixture.pdf_annotations();
+    let pressure = fixture.root.join("a-枚举压力");
+    fs::create_dir(&pressure).unwrap();
+    for entry in 0..21_050 {
+        fs::write(pressure.join(format!("{entry}.unknown-longedit-audit")), []).unwrap();
+    }
+    let root = WorkspaceGuard::new(&fixture.root).unwrap();
+    let index = KnowledgeIndexRuntime::default();
+    index.ensure_watcher(root.root()).unwrap();
+    let mut session = fixture.session(&fixture.request());
+    let mut first = SearchBudget::default();
+    session.advance_live(&index, &mut first).unwrap();
+    assert!(
+        session.scan.is_some(),
+        "the real production enumeration budget must be crossed"
+    );
+    assert!(first.entries <= first.limits.entries && first.sources <= first.limits.sources);
+    let before = index.search_revision(root.root());
+    fs::create_dir(fixture.root.join("跨预算后新建空目录")).unwrap();
+    let started = Instant::now();
+    while index.search_revision(root.root()) == before && started.elapsed() < Duration::from_secs(5)
+    {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(index.search_revision(root.root()) > before);
+    let mut steps = 1;
+    for _ in 0..100 {
+        let mut budget = SearchBudget::default();
+        session.advance_live(&index, &mut budget).unwrap();
+        assert!(budget.entries <= budget.limits.entries && budget.sources <= budget.limits.sources);
+        steps += 1;
+        if session.public_scan_state() != ScanState::Preparing {
+            break;
+        }
+    }
+    assert_eq!(session.public_scan_state(), ScanState::Ready);
+    assert_eq!(session.groups.len(), 244);
+    assert_eq!(session.body_builds, 244);
+    println!("V118_LARGE_DEFAULT_BUDGET={{\"unregisteredEntries\":21050,\"files\":244,\"workSteps\":{steps},\"bodyBuilds\":244}}");
 }
 
 #[test]

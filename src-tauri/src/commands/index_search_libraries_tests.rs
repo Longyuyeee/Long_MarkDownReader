@@ -368,6 +368,62 @@ fn v118_libraries_one_blocked_worker_does_not_hold_coordinator_or_healthy_result
 }
 
 #[test]
+fn v118_large_federated_directory_hint_between_worker_steps_keeps_healthy_libraries() {
+    let fixture = Fixture::new(&[243, 243]);
+    let runtime = SearchPageRuntime::default();
+    let index = KnowledgeIndexRuntime::default();
+    let mut request = fixture.request();
+    let mut session = LibrarySession::new(fixture.scopes.clone(), &request);
+    let small = SearchLimits {
+        entries: 13,
+        sources: 7,
+        ..limits()
+    };
+    let first = tick(
+        &mut session,
+        &request,
+        &fixture.scopes,
+        &runtime,
+        &index,
+        small,
+    );
+    assert_eq!(first.scan_state, AggregateState::Preparing);
+    let before = index.search_revision(fixture.root(0));
+    fs::create_dir(fixture.root(0).join("用户新建空目录")).unwrap();
+    let started = Instant::now();
+    while index.search_revision(fixture.root(0)) == before
+        && started.elapsed() < Duration::from_secs(5)
+    {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(index.search_revision(fixture.root(0)) > before);
+    request.cursor = first.continue_cursor;
+    let ready = finish(
+        &mut session,
+        request.clone(),
+        &fixture.scopes,
+        &runtime,
+        &index,
+        small,
+    );
+    assert_eq!(
+        ready.scan_state,
+        AggregateState::Ready,
+        "a harmless directory hint must not drop one library"
+    );
+    assert_eq!(ready.total_files, Some(486));
+    let files = all_files(
+        &mut session,
+        ready,
+        request,
+        &fixture.scopes,
+        &runtime,
+        &index,
+    );
+    assert_eq!(files.len(), 486);
+}
+
+#[test]
 fn v118_libraries_tiny_budgets_resume_all_files_without_reopening_completed_bodies() {
     let fixture = Fixture::new(&[121, 121, 1]);
     let runtime = SearchPageRuntime::default();

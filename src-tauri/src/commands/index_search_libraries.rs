@@ -276,12 +276,13 @@ impl LibrarySession {
         while let Ok(outcome) = self.receiver.try_recv() {
             changed = true;
             match outcome.result {
-                Ok(session)
-                    if index.search_revision(session.guard.root()) == session.revision
-                        && index.search_watch_healthy(session.guard.root()) =>
-                {
+                Ok(mut session) => {
+                    if let Err(error) = session.observe_notifications(index) {
+                        self.fail(outcome.position, error);
+                        continue;
+                    }
                     let slot = &mut self.slots[outcome.position];
-                    slot.phase = match session.state {
+                    slot.phase = match session.public_scan_state() {
                         ScanState::Preparing => LibraryPhase::Preparing,
                         ScanState::Ready => LibraryPhase::Ready,
                         ScanState::Limited => LibraryPhase::Limited,
@@ -291,21 +292,18 @@ impl LibrarySession {
                     slot.warnings = session.warnings.clone();
                     slot.session = Some(session);
                 }
-                Ok(_) => self.fail(outcome.position, SearchPageError::expired()),
                 Err(error) => self.fail(outcome.position, error),
             }
         }
         for position in 0..self.slots.len() {
-            let stale = self.slots[position]
-                .session
-                .as_ref()
-                .is_some_and(|session| {
-                    index.search_revision(session.guard.root()) != session.revision
-                        || !index.search_watch_healthy(session.guard.root())
-                });
-            if stale {
-                self.fail(position, SearchPageError::expired());
-                changed = true;
+            let published = self.slots[position].phase.usable();
+            if let Some(session) = self.slots[position].session.as_mut() {
+                if session.observe_notifications(index).is_err()
+                    || (published && session.needs_verification)
+                {
+                    self.fail(position, SearchPageError::expired());
+                    changed = true;
+                }
             }
         }
         changed
@@ -653,7 +651,7 @@ fn run_library_step(
         index
             .ensure_watcher(guard.root())
             .map_err(|_| SearchPageError::unavailable())?;
-        let revision = index.search_revision_pair(guard.root());
+        let revision = index.search_revision_stamp(guard.root());
         let allow =
             !index.blocks_index_reads(guard.root()) && !index.search_sources_changed(guard.root());
         let mut session = QuerySession::new(
@@ -664,31 +662,14 @@ fn run_library_step(
             if allow { cache } else { None },
         )?;
         session.index_epoch = revision.1;
+        session.source_epoch = revision.2;
         session.cancelled = job.cancelled;
         session.retention.pool = job.pool;
         session
     };
     session.validate_binding(&job.request)?;
-    let before = index.search_revision_pair(session.guard.root());
-    if session.expired()
-        || session.cancelled.load(Ordering::Acquire)
-        || before.0 != session.revision
-        || !index.search_watch_healthy(session.guard.root())
-    {
-        return Err(SearchPageError::expired());
-    }
     let mut budget = SearchBudget::new(limits).with_cancellation(session.cancelled.clone());
-    session.advance(&mut budget)?;
-    if index.search_revision(session.guard.root()) != session.revision {
-        if !verify_directory_notification(&mut session, index, before, &mut budget) {
-            return Err(SearchPageError::expired());
-        }
-    }
-    if session.cancelled.load(Ordering::Acquire)
-        || !index.search_watch_healthy(session.guard.root())
-    {
-        return Err(SearchPageError::expired());
-    }
+    session.advance_live(index, &mut budget)?;
     session.touched = Instant::now();
     Ok(session)
 }

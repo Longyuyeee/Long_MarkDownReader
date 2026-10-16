@@ -313,7 +313,7 @@ pub async fn run_page(
         index
             .ensure_watcher(&root)
             .map_err(|_| SearchPageError::unavailable())?;
-        let revision = index.search_revision_pair(&root);
+        let revision = index.search_revision_stamp(&root);
         let allow_index = !index.blocks_index_reads(&root) && !index.search_sources_changed(&root);
         let snapshot = allow_index.then(|| index.cached_snapshot(&root)).flatten();
         let cache = knowledge_index_cache_root(&app).map_err(|_| SearchPageError::unavailable())?;
@@ -325,6 +325,7 @@ pub async fn run_page(
             allow_index.then_some(cache),
         )?;
         session.index_epoch = revision.1;
+        session.source_epoch = revision.2;
         runtime.insert(owner.clone(), session)?
     };
     tauri::async_runtime::spawn_blocking(move || {
@@ -476,6 +477,13 @@ impl Drop for Retention {
     }
 }
 
+struct SourceVerification {
+    revision: u64,
+    scan: SourceScan,
+    seen: Vec<bool>,
+    count: usize,
+}
+
 struct QuerySession {
     id: String,
     guard: WorkspaceGuard,
@@ -486,6 +494,9 @@ struct QuerySession {
     page_size: usize,
     revision: u64,
     index_epoch: u64,
+    source_epoch: u64,
+    needs_verification: bool,
+    verification: Option<SourceVerification>,
     created: Instant,
     touched: Instant,
     cancelled: Arc<AtomicBool>,
@@ -538,6 +549,9 @@ impl QuerySession {
             page_size: request.page_size,
             revision,
             index_epoch: 0,
+            source_epoch: 0,
+            needs_verification: false,
+            verification: None,
             created: Instant::now(),
             touched: Instant::now(),
             cancelled: Arc::new(AtomicBool::new(false)),
@@ -601,34 +615,198 @@ impl QuerySession {
         limits: SearchLimits,
     ) -> Result<SearchPageResponse, SearchPageError> {
         self.validate_binding(request)?;
+        self.observe_notifications(index)?;
+        let mut budget = SearchBudget::new(limits).with_cancellation(self.cancelled.clone());
+        let cursor = request.cursor.clone().unwrap_or_else(|| self.work_cursor());
+        if let Some((previous, response)) = &self.last_work {
+            if previous == &cursor && response.scan_state == ScanState::Preparing {
+                // A retry does not advance or skip the issued next work cursor.
+                self.touched = Instant::now();
+                return Ok(response.clone());
+            }
+        }
+        let work_issued = self.state == ScanState::Preparing
+            || self
+                .last_work
+                .as_ref()
+                .is_some_and(|(_, frame)| frame.scan_state == ScanState::Preparing);
+        if cursor == self.work_cursor() && work_issued {
+            self.advance_live(index, &mut budget)?;
+            self.work_step += 1;
+            let response = if self.public_scan_state() == ScanState::Preparing {
+                self.response(Vec::new(), None, Some(self.work_cursor()))
+            } else {
+                self.page(0)?
+            };
+            self.last_work = Some((cursor, response.clone()));
+            self.touched = Instant::now();
+            return Ok(response);
+        }
+        // Already issued file pages retain the stricter synchronous proof.
+        // Work preparation can span budgets; published pages never become an
+        // unverified replacement or silently append a different snapshot.
+        if self.needs_verification
+            && !verify_directory_notification(
+                self,
+                index,
+                (self.revision, self.index_epoch),
+                &mut budget,
+            )
+        {
+            return Err(SearchPageError::expired());
+        }
+        self.needs_verification = false;
+        self.verification = None;
+        let response = self.request_bound(cursor, &mut budget)?;
+        self.observe_notifications(index)?;
+        if self.needs_verification
+            && !verify_directory_notification(
+                self,
+                index,
+                (self.revision, self.index_epoch),
+                &mut budget,
+            )
+        {
+            return Err(SearchPageError::expired());
+        }
+        self.needs_verification = false;
+        Ok(response)
+    }
+
+    fn public_scan_state(&self) -> ScanState {
+        if self.needs_verification {
+            ScanState::Preparing
+        } else {
+            self.state
+        }
+    }
+
+    fn observe_notifications(
+        &mut self,
+        index: &KnowledgeIndexRuntime,
+    ) -> Result<(), SearchPageError> {
+        let stamp = index.search_revision_stamp(self.guard.root());
         if self.expired()
             || self.cancelled.load(Ordering::Acquire)
             || !index.search_watch_healthy(self.guard.root())
+            || stamp.1 != self.index_epoch
+            || stamp.2 != self.source_epoch
         {
             return Err(SearchPageError::expired());
         }
-        let mut budget = SearchBudget::new(limits).with_cancellation(self.cancelled.clone());
-        let epoch = (self.revision, self.index_epoch);
-        if index.search_revision_pair(self.guard.root()) != epoch
-            && !verify_directory_notification(self, index, epoch, &mut budget)
-        {
+        if stamp.0 != self.revision {
+            self.needs_verification = true;
+            if self
+                .verification
+                .as_ref()
+                .is_some_and(|proof| proof.revision != stamp.0)
+            {
+                self.verification = None;
+            }
+        }
+        Ok(())
+    }
+
+    fn advance_live(
+        &mut self,
+        index: &KnowledgeIndexRuntime,
+        budget: &mut SearchBudget,
+    ) -> Result<(), SearchPageError> {
+        self.observe_notifications(index)?;
+        // Preserve the original source walk until it is complete. A directory
+        // hint cannot publish results, but it need not restart a large scan.
+        if self.needs_verification && self.scan.is_none() {
+            if !self.verify_sources_step(index, budget)? {
+                self.observe_notifications(index)?;
+                return Ok(());
+            }
+        }
+        if self.state == ScanState::Preparing {
+            self.advance(budget)?;
+        }
+        self.observe_notifications(index)?;
+        if self.needs_verification && self.scan.is_none() {
+            self.verify_sources_step(index, budget)?;
+        }
+        self.observe_notifications(index)?;
+        Ok(())
+    }
+
+    fn verify_sources_step(
+        &mut self,
+        index: &KnowledgeIndexRuntime,
+        budget: &mut SearchBudget,
+    ) -> Result<bool, SearchPageError> {
+        if self.state == ScanState::Limited {
             return Err(SearchPageError::expired());
         }
-        let cursor = request.cursor.clone().unwrap_or_else(|| self.work_cursor());
-        let response = self.request_bound(cursor, &mut budget)?;
-        let epoch = (self.revision, self.index_epoch);
-        if index.search_revision_pair(self.guard.root()) != epoch
-            && !verify_directory_notification(self, index, epoch, &mut budget)
-        {
+        self.observe_notifications(index)?;
+        if !self.needs_verification {
+            return Ok(true);
+        }
+        if self.verification.is_none() {
+            self.verification = Some(SourceVerification {
+                revision: index.search_revision(self.guard.root()),
+                scan: SourceScan::new(self.guard.root())
+                    .map_err(|_| SearchPageError::unavailable())?,
+                seen: vec![false; self.sources.len()],
+                count: 0,
+            });
+        }
+        let proof = self.verification.as_mut().unwrap();
+        loop {
+            match proof.scan.next(budget) {
+                Ok(Some(source)) => {
+                    let position = self
+                        .sources
+                        .binary_search_by(|expected| expected.path.cmp(&source.path))
+                        .map_err(|_| SearchPageError::expired())?;
+                    if proof.seen[position] || self.sources[position] != source {
+                        return Err(SearchPageError::expired());
+                    }
+                    proof.seen[position] = true;
+                    proof.count += 1;
+                }
+                Ok(None) => break,
+                Err(SearchStop::Entries | SearchStop::Sources | SearchStop::Elapsed) => {
+                    return Ok(false)
+                }
+                Err(SearchStop::Cancelled) => return Err(SearchPageError::expired()),
+                Err(_) => return Err(SearchPageError::unavailable()),
+            }
+        }
+        if proof.count != self.sources.len() {
             return Err(SearchPageError::expired());
         }
-        if self.cancelled.load(Ordering::Acquire)
-            || !index.search_watch_healthy(self.guard.root())
-            || index.search_revision_pair(self.guard.root()) != (self.revision, self.index_epoch)
-        {
+        let target = proof.revision;
+        let relation = self.guard.root().join(".longedit/file-relations.json");
+        match fs::metadata(&relation) {
+            Ok(metadata) => match budget.read(metadata.len()) {
+                Ok(()) => {}
+                Err(SearchStop::ReadBytes | SearchStop::Elapsed) => return Ok(false),
+                Err(_) => return Err(SearchPageError::expired()),
+            },
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(_) => return Err(SearchPageError::expired()),
+        }
+        let digest = file_relations_digest(self.guard.root());
+        if digest == "unavailable" || digest != self.relations_digest {
             return Err(SearchPageError::expired());
         }
-        Ok(response)
+        self.observe_notifications(index)?;
+        if self.verification.as_ref().map(|proof| proof.revision) != Some(target)
+            || index.search_revision_stamp(self.guard.root())
+                != (target, self.index_epoch, self.source_epoch)
+        {
+            return Ok(false);
+        }
+        if budget.check_time().is_err() {
+            return Ok(false);
+        }
+        self.revision = target;
+        self.needs_verification = false;
+        self.verification = None;
+        Ok(true)
     }
 
     fn validate_binding(&self, request: &SearchPageRequest) -> Result<(), SearchPageError> {
@@ -718,10 +896,11 @@ impl QuerySession {
             files,
             page_offset,
             next_cursor,
-            scan_state: self.state,
-            scan_complete: self.state == ScanState::Ready,
+            scan_state: self.public_scan_state(),
+            scan_complete: self.public_scan_state() == ScanState::Ready,
             coverage: "registered-extractable-content",
-            total_files: (self.state == ScanState::Ready).then_some(self.groups.len()),
+            total_files: (self.public_scan_state() == ScanState::Ready)
+                .then_some(self.groups.len()),
             examined_sources: self.source_position,
             indexed: self.indexed,
             unread_sources: self.unread_sources,

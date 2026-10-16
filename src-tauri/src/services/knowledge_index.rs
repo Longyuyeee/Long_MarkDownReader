@@ -204,8 +204,9 @@ pub struct KnowledgeIndexRuntime {
     cancellations: Mutex<HashMap<String, Arc<AtomicBool>>>,
     changed_paths: Arc<Mutex<HashMap<String, HashSet<PathBuf>>>>,
     watchers: Mutex<HashMap<String, RecommendedWatcher>>,
-    // (all changes, explicit cache/build-state changes), captured atomically.
-    search_revisions: Arc<Mutex<HashMap<String, (u64, u64)>>>,
+    // (all changes, explicit cache/build-state changes, non-directory changes).
+    // One atomic stamp avoids treating an old file event as a new directory hint.
+    search_revisions: Arc<Mutex<HashMap<String, (u64, u64, u64)>>>,
     search_watch_failures: Arc<Mutex<HashSet<String>>>,
 }
 
@@ -324,6 +325,11 @@ impl KnowledgeIndexRuntime {
                 drop(failures);
                 let relevant = event.as_ref().map_or(true, |event| event.paths.is_empty()
                     || event.paths.iter().any(|path| relevant_search_path(Path::new(&callback_key), path)));
+                let directory_only = event.as_ref().is_ok_and(|event| !event.paths.is_empty()
+                    && event.paths.iter().filter(|path| relevant_search_path(Path::new(&callback_key), path))
+                        .all(|path| path.strip_prefix(Path::new(&callback_key)).is_ok()
+                            && fs::symlink_metadata(path).is_ok_and(|metadata|
+                                metadata.is_dir() && !metadata.file_type().is_symlink())));
                 if let Ok(event) = event {
                     let mut changes = changed_paths.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
                     changes.entry(callback_key.clone()).or_default().extend(event.paths);
@@ -332,6 +338,7 @@ impl KnowledgeIndexRuntime {
                     let mut revisions = search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
                     let revision = revisions.entry(callback_key.clone()).or_default();
                     revision.0 = revision.0.saturating_add(1);
+                    if !directory_only { revision.2 = revision.2.saturating_add(1); }
                 }
             })
             .map_err(|error| format!("启动资料库变化监视失败: {error}"))?;
@@ -363,8 +370,13 @@ impl KnowledgeIndexRuntime {
     }
 
     pub(crate) fn search_revision_pair(&self, workspace: &Path) -> (u64, u64) {
+        let stamp = self.search_revision_stamp(workspace);
+        (stamp.0, stamp.1)
+    }
+
+    pub(crate) fn search_revision_stamp(&self, workspace: &Path) -> (u64, u64, u64) {
         *self.search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-            .get(workspace.to_string_lossy().as_ref()).unwrap_or(&(0, 0))
+            .get(workspace.to_string_lossy().as_ref()).unwrap_or(&(0, 0, 0))
     }
 
     pub(crate) fn search_watch_healthy(&self, workspace: &Path) -> bool {
