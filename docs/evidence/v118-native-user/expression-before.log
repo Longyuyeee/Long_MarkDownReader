@@ -1,0 +1,56 @@
+TAP version 13
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+not ok 1 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 20.0733
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v118-native-user.mjs:10:1'
+  failureType: 'testCodeFailure'
+  error: 'missing ) after argument list'
+  code: 'ERR_TEST_FAILURE'
+  name: 'SyntaxError'
+  stack: |-
+    new Script (node:vm:117:7)
+    inspect (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-native-user.mjs:18:9)
+    visitNode2 (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\typescript\lib\typescript.js:31783:18)
+    forEachChildInAwaitExpression (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\typescript\lib\typescript.js:31975:12)
+    Object.forEachChild (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\typescript\lib\typescript.js:32304:35)
+    inspect (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-native-user.mjs:21:8)
+    visitNodes (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\typescript\lib\typescript.js:31791:22)
+    forEachChildInCallOrNewExpression (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\typescript\lib\typescript.js:32258:99)
+    Object.forEachChild (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\typescript\lib\typescript.js:32304:35)
+    inspect (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-native-user.mjs:21:8)
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 2 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 2.8191
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 3 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 0.645
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 4 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.6878
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 5 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.579
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 6 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 2.8457
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 304.8637

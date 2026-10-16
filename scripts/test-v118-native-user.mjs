@@ -2,9 +2,26 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {test} from 'node:test'
+import vm from 'node:vm'
+import ts from 'typescript'
 import {nativeUserInput} from './lib/v118-native-user-input.mjs'
 import {nativeUserChecks,verifyNativeUserEvidence} from './lib/v118-native-user-evidence.mjs'
 import {nativeSearchProduct} from './lib/v118-native-search-fixture.mjs'
+test('literal browser expressions compile independently, including quoted attribute selectors',()=>{
+  const source=fs.readFileSync('scripts/capture-v118-native-user.mjs','utf8')
+  const tree=ts.createSourceFile('driver.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
+  let checked=0
+  function inspect(node){
+    if(ts.isCallExpression(node)&&['evaluate','ui.waitFor'].includes(node.expression.getText(tree))){
+      const expression=node.arguments[0]
+      if(expression&&(ts.isStringLiteral(expression)||ts.isNoSubstitutionTemplateLiteral(expression))){
+        new vm.Script(expression.text);checked++
+      }
+    }
+    ts.forEachChild(node,inspect)
+  }
+  inspect(tree);assert.ok(checked>=7)
+})
 test('CDP input waits for an unobscured target and never calls a DOM handler',async()=>{
   const calls=[],expressions=[]
   const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async expression=>{expressions.push(expression);return {x:10,y:20}}},{timeoutMs:5,pollMs:1})
@@ -37,7 +54,7 @@ test('native user driver is hosted-only, real-bridge and actionability based',()
 })
 function evidence(){
   const run={status:'completed',conclusion:'success',headSha:'a'.repeat(40)},baseline={productCommit:nativeSearchProduct,harnessCommit:run.headSha,executableSha256:'b'.repeat(64)}
-  const user={...baseline,status:'passed',phase:'user',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',runtimeBaseVersion:'1.1.7',sourceUserContentIncluded:false,nativeBridgeMocked:false,desktopInputUsed:false,checks:[...nativeUserChecks],runtimeErrors:[],uiObservation:{errorOverlay:false},inputTrace:['click','keydown','input'].map(type=>({type,trusted:true})),initialFiles:80,refreshFiles:80,pdf:{annotationId:'批注-3',page:1,comment:'预算位置3'},sourceFiles:['zz-项目预算.md','a-0001-记录.md','多批注.pdf','多批注.pdf.annotations.json'].map(name=>({name,before:'c'.repeat(64),after:'c'.repeat(64)})),draftContentSha256:'d'.repeat(64),draftChecks:Array.from({length:5},()=>({name:'zz-项目预算.md',dirty:true,contentSha256:'d'.repeat(64)}))}
+  const user={...baseline,status:'passed',phase:'user',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',runtimeBaseVersion:'1.1.7',sourceUserContentIncluded:false,nativeBridgeMocked:false,desktopInputUsed:false,checks:[...nativeUserChecks],runtimeErrors:[],uiObservation:{errorOverlay:false},inputTrace:['click','keydown','input'].map(type=>({type,trusted:true})),initialFiles:80,refreshFiles:80,expiryText:'搜索现场已变化或过期',pdf:{annotationId:'批注-3',page:1,comment:'预算位置3'},sourceFiles:['zz-项目预算.md','a-0001-记录.md','a-0000-记录.md','多批注.pdf','多批注.pdf.annotations.json'].map(name=>({name,before:'c'.repeat(64),after:'c'.repeat(64)})),draftContentSha256:'d'.repeat(64),draftChecks:Array.from({length:5},()=>({name:'zz-项目预算.md',dirty:true,contentSha256:'d'.repeat(64)}))}
   return {run,baseline,user}
 }
 test('user validator keeps new program identity and input evidence separate from IPC-only proof',()=>{

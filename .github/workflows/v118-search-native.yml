@@ -28,11 +28,11 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       LONGEDIT_SEARCH_UNREGISTERED_ENTRIES: '21050'
-      # Product changed: build new bytes. Any later harness-only reuse must pin
-      # all three original build identities and still match the frozen product.
-      NATIVE_PROGRAM_RUN_ID: ''
-      NATIVE_PROGRAM_SHA256: ''
-      NATIVE_PROGRAM_HARNESS_COMMIT: ''
+      # Driver-only expression repair: reuse the independently retained program
+      # after verifying its build steps, source, original harness and exact bytes.
+      NATIVE_PROGRAM_RUN_ID: '38976173091'
+      NATIVE_PROGRAM_SHA256: '2155a32a9e580de42092899feb756ae2a1adcd663bcdfb9741ec76052fe256bf'
+      NATIVE_PROGRAM_HARNESS_COMMIT: '6df00e82135a2d6dcf3cf56e5dcbb9e9e865ef74'
     steps:
       - name: Check out audit harness
         uses: actions/checkout@v6

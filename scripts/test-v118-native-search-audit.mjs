@@ -54,7 +54,7 @@ test('owned enumeration pressure is explicit, bounded and cannot silently replac
   }
 })
 
-test('workflow pins the product separately from its harness and cannot publish or install',()=>{
+test('workflow pins the product separately from its harness and cannot publish or install',async()=>{
   assert.deepEqual(workflow.permissions,{contents:'read',actions:'read'})
   assert.equal(workflow.jobs['native-search']['runs-on'],'windows-latest')
   assert.equal(workflow.jobs['native-search'].env.LONGEDIT_SEARCH_UNREGISTERED_ENTRIES,'21050')
@@ -63,7 +63,20 @@ test('workflow pins the product separately from its harness and cannot publish o
   assert.ok(workflowSource.includes('if: always()')&&workflowSource.includes('retention-days: 14'))
   assert.ok(workflowSource.indexOf('Retain immutable Debug program')<workflowSource.indexOf('- name: Real native page IPC'))
   assert.ok(workflowSource.includes('isInstaller=$false')&&workflowSource.includes('releaseCandidate=$false'))
-  for(const key of ['NATIVE_PROGRAM_RUN_ID','NATIVE_PROGRAM_SHA256','NATIVE_PROGRAM_HARNESS_COMMIT'])assert.equal(workflow.jobs['native-search'].env[key],'','changed product requires a fresh build, not the previous program')
+  const reuse=workflow.jobs['native-search'].env
+  if(reuse.NATIVE_PROGRAM_RUN_ID){
+    assert.match(reuse.NATIVE_PROGRAM_RUN_ID,/^\d+$/);assert.match(reuse.NATIVE_PROGRAM_SHA256,/^[a-f0-9]{64}$/);assert.match(reuse.NATIVE_PROGRAM_HARNESS_COMMIT,/^[a-f0-9]{40}$/)
+    const evidence='docs/evidence/v118-native-user/'
+    const parse=text=>JSON.parse(text.replace(/^\uFEFF/,''))
+    const program=parse(await fs.readFile(evidence+`run-${reuse.NATIVE_PROGRAM_RUN_ID}/program-build-receipt.json`,'utf8'))
+    const run=parse(await fs.readFile(evidence+`native-run-${reuse.NATIVE_PROGRAM_RUN_ID}.json`,'utf8'))
+    assert.equal(program.productCommit,nativeSearchProduct);assert.equal(program.sha256,reuse.NATIVE_PROGRAM_SHA256)
+    assert.equal(program.buildRunId,reuse.NATIVE_PROGRAM_RUN_ID);assert.equal(program.harnessCommit,reuse.NATIVE_PROGRAM_HARNESS_COMMIT)
+    assert.equal(run.status,'completed');assert.equal(run.headSha,program.harnessCommit)
+    for(const name of ['Build actual Debug Tauri application with isolated E2E identity','Retain immutable Debug program separately from test outcome'])assert.equal(run.jobs.flatMap(job=>job.steps).find(step=>step.name===name)?.conclusion,'success')
+  }else{
+    for(const key of ['NATIVE_PROGRAM_RUN_ID','NATIVE_PROGRAM_SHA256','NATIVE_PROGRAM_HARNESS_COMMIT'])assert.equal(reuse[key],'','new product requires a fresh build')
+  }
   assert.ok(workflowSource.includes('Original program reuse requires exact digest and harness identity'))
   assert.ok(workflowSource.includes('Verify original build provenance and program bytes before reuse'))
   assert.ok(workflowSource.includes('$receipt.sizeBytes -ne $program.Length'))
