@@ -40,3 +40,12 @@ test('v117 final safety checks are mandatory and publishing requires the current
   const importer=fs.readFileSync('scripts/import-community-release-review.mjs','utf8')
   assert.ok(importer.includes("'installed-v117-workflow.json',saveHistoryChecks.length"))
 })
+
+test('installed final check detects the current runtime and route error notices',()=>{
+  const source=fs.readFileSync('scripts/lib/installed-v1-1-7-workflow.mjs','utf8')
+  const expression=source.match(/assert\.ok\(await evaluate\(`([^`]*global-error-overlay[^`]*)`\)\)/)?.[1]
+  assert.ok(expression)
+  const run=present=>vm.runInNewContext(expression,{document:{querySelector:selector=>selector.split(',').includes(present)?{}:null,body:{innerText:'正常工作区'}}})
+  assert.equal(run('none'),true)
+  for(const selector of ['#runtime-error-notice','.route-error-notice','#crash-screen','.global-error-overlay','.startup-fatal-screen'])assert.equal(run(selector),false,selector)
+})

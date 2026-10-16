@@ -131,7 +131,7 @@ export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,c
     assert.match(await fs.readFile(next,'utf8'),/normal save checkpoint 117/)
     await assert.rejects(fs.access(backup));await assert.rejects(fs.access(temporary))
     check(saveHistoryChecks[10])
-    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[11])
+    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen,#runtime-error-notice,.route-error-notice,#crash-screen,.route-error-fallback')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[11])
     report.status='passed'
   } catch(error) {report.status='failed';report.error=String(error);await capture('installed-v117-failure.jpg').catch(()=>{});throw error}
   finally {await fs.writeFile(path.join(output,'installed-v117-workflow.json'),JSON.stringify(report,null,2)+'\n')}
