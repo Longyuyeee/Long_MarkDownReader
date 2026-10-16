@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 const require = createRequire(import.meta.url)
 const { chromium } = require(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const out = path.resolve('docs/evidence/v110-history-ownership')
+const out = path.resolve(process.env.LONGEDIT_HISTORY_EVIDENCE_DIR || 'docs/evidence/v110-history-ownership')
 await fs.mkdir(out, { recursive: true })
 const browser = await chromium.launch({ headless: true })
 try {

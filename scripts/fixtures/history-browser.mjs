@@ -19,6 +19,7 @@ window.__TAURI_INTERNALS__ = {
     if (command === 'get_folder_order') return { items: [], pinned: [] }
     if (command === 'get_library_stats') return { file_count: 2, total_words: 100 }
     if (command === 'get_knowledge_index_status') return { state: 'ready', schemaVersion: 1, sourceCount: 2, objectCount: 2, relationCount: 0, progress: 100, cacheBytes: 0, recoveryAvailable: false }
+    if (command === 'get_history_metadata') return {}
     if (command === 'delete_history_version') return
     if (command === 'compare_history_version') return { content: 'B 的历史版本', disk: 'B 磁盘正文', diskSignature: 'disk', historySignature: 'history' }
     if (command === 'prepare_history_restore') {

@@ -34,8 +34,12 @@ pub(crate) struct ArchiveHistoryPlan {
 }
 
 impl ArchiveHistoryPlan {
-    pub(crate) fn snapshot_bytes(&self) -> u64 { self.snapshots.iter().map(|item| item.bytes).sum() }
-    pub(crate) fn snapshot_count(&self) -> usize { self.snapshots.len() }
+    pub(crate) fn snapshot_bytes(&self) -> u64 {
+        self.snapshots.iter().map(|item| item.bytes).sum()
+    }
+    pub(crate) fn snapshot_count(&self) -> usize {
+        self.snapshots.len()
+    }
     /// Compare bytes/strategy independently of the old and new path keys.
     pub(crate) fn same_snapshots(&self, other: &Self) -> bool {
         self.strategy == other.strategy && self.snapshots == other.snapshots
@@ -102,12 +106,13 @@ pub(crate) fn inspect_with_budget(
             .file_name()
             .into_string()
             .map_err(|_| "历史快照名称无法识别")?;
-        if path.extension().and_then(|e| e.to_str()) != Some("md")
-            || path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .and_then(|s| s.parse::<u64>().ok())
-                .is_none()
+        if name != "metadata.json"
+            && (path.extension().and_then(|e| e.to_str()) != Some("md")
+                || path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .is_none())
         {
             return Err(format!("历史目录包含非快照文件: {name}"));
         }
@@ -897,10 +902,11 @@ pub(crate) fn inspect_staging(cache: &Path, stage: &Path) -> Result<StagingState
     let mut names = std::collections::HashSet::new();
     let mut total = 0u64;
     for snapshot in &intent.plan.snapshots {
-        let stem = snapshot.name.strip_suffix(".md").ok_or("非法快照名称")?;
-        if stem.is_empty()
-            || !stem.bytes().all(|b| b.is_ascii_digit())
-            || stem.parse::<u64>().is_err()
+        let stem = snapshot.name.strip_suffix(".md").unwrap_or("");
+        if (snapshot.name != "metadata.json"
+            && (stem.is_empty()
+                || !stem.bytes().all(|b| b.is_ascii_digit())
+                || stem.parse::<u64>().is_err()))
             || !names.insert(snapshot.name.as_str())
         {
             return Err("非法或重复快照名称".into());

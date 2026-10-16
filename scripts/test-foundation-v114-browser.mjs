@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import fs from 'node:fs/promises'
 const { chromium } = createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = 'docs/evidence/v114-foundation-development'
+const output = process.env.LONGEDIT_FOUNDATION_EVIDENCE_DIR || 'docs/evidence/v114-foundation-development'
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true, channel: process.env.LONGEDIT_BROWSER_CHANNEL || undefined })
 const checks = [], layouts = [], errors = []

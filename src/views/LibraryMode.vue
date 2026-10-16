@@ -248,39 +248,14 @@
                 <div class="history-header">
                   <div class="history-title-row">
                     <n-icon :component="ClockIcon" class="title-icon" />
-                    <span>影子副本 ({{ historyList.length }})</span>
+                    <span>历史版本 ({{ historyList.length }})</span>
                   </div>
-                  <n-button quaternary circle size="tiny" @click="clearAllHistory" title="清空全部缓存" class="clear-all-btn">
+                  <n-button quaternary circle size="tiny" @click="clearAllHistory" title="清理未保留的历史" class="clear-all-btn">
                     <template #icon><n-icon :component="TrashIcon" /></template>
                   </n-button>
                 </div>
                 
-                <div v-if="!activeTabId" class="empty-state-hint">
-                  <n-empty description="未打开文件" size="small" />
-                </div>
-                <div v-else-if="historyList.length === 0" class="empty-state-hint">
-                  <n-empty description="暂无历史快照" size="small" />
-                </div>
-                
-                <div v-else class="history-bubbles-wrapper">
-                  <div v-for="h in historyList" :key="h.timestamp" class="history-bubble" role="button" tabindex="0" title="比较此历史版本" @click="restoreHistory(h)" @keydown.enter.self.prevent="restoreHistory(h)" @keydown.space.self.prevent="restoreHistory(h)">
-                    <div class="bubble-accent-line"></div>
-                    <div class="bubble-content">
-                      <div class="bubble-top">
-                        <div class="time-box">
-                          <span class="bubble-time">{{ formatTime(h.timestamp) }}</span>
-                        </div>
-                        <div class="bubble-meta">{{ h.content.length }} 字</div>
-                      </div>
-                      <div class="bubble-preview">{{ h.content.slice(0, 45).replace(/[\n#*`]/g, ' ') }}...</div>
-                    </div>
-                    <div class="bubble-actions">
-                      <n-button quaternary circle size="tiny" class="delete-trigger" @click.stop="deleteHistory(h)">
-                        <template #icon><n-icon :component="CloseIcon" /></template>
-                      </n-button>
-                    </div>
-                  </div>
-                </div>
+                <HistoryVersionList :entries="historyList" :path="activeTabId || ''" :library-root="store.libraryPath" :loading="historyLoading" :error="historyError" @compare="timestamp => { const entry = historyList.find(h => h.timestamp === timestamp); if (entry) restoreHistory(entry) }" @refresh="fetchHistory" />
               </div>
             </div>
           </transition>
@@ -685,34 +660,7 @@
       </template>
     </n-modal>
 
-    <n-modal
-      v-model:show="externalChange.show"
-      preset="card"
-      title="检测到磁盘内容变化"
-      :mask-closable="false"
-      :closable="false"
-      class="external-change-modal"
-    >
-      <div class="external-change-summary">
-        <strong>{{ externalChange.fileName }}</strong>
-        <span>检测时间：{{ externalChange.detectedAt }}</span>
-        <p>磁盘中的文件内容与当前编辑基线不同。请选择比较、保留当前编辑内容，或重新加载磁盘版本。</p>
-      </div>
-      <div v-if="externalChange.compareLoading" class="external-compare-state"><n-spin size="small" /> 正在读取磁盘版本</div>
-      <div v-else-if="externalChange.compareError" class="external-compare-state error">{{ externalChange.compareError }}</div>
-      <div v-else-if="externalChange.diskContent !== null" class="external-compare-grid">
-        <section><header>当前编辑区</header><pre>{{ externalCurrentPreview }}</pre></section>
-        <section><header>磁盘版本</header><pre>{{ externalDiskPreview }}</pre></section>
-      </div>
-      <template #footer>
-        <div class="external-change-actions">
-          <n-button secondary :loading="externalChange.compareLoading" @click="compareExternalChange">比较</n-button>
-          <span></span>
-          <n-button @click="keepExternalChange">保留当前</n-button>
-          <n-button type="primary" @click="reloadExternalChange">重新加载</n-button>
-        </div>
-      </template>
-    </n-modal>
+    <TextConflictDialog v-if="externalChange.show && externalConflictOwner" :key="externalChange.path" :path="externalChange.path" :library-root="externalConflictOwner.root" :draft="externalConflictOwner.draft" :format-id="findFileFormat(externalChange.path)?.id || 'markdown'" :read-encoding="externalConflictOwner.tab.textReadEncoding" :is-current="isExternalConflictCurrent" @close="keepExternalChange" @reload="applyConflictSnapshot" @copy="finishConflictCopy" />
 
     <!-- AI 操作选择弹窗 -->
     <n-modal v-model:show="aiState.showActionModal" preset="dialog" title="AI 辅助" positive-text="" negative-text="取消" @negative-click="aiState.showActionModal = false">
@@ -760,7 +708,7 @@
 
 <script setup lang="ts">
 import { searchResultPath } from '../utils/searchResultPath'
-import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
 import SearchHighlight from '../components/SearchHighlight.vue'
@@ -771,7 +719,7 @@ import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../service
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
 import { useMessage, useDialog, TreeOption, NIcon, NDropdown, NPopover, type DropdownOption } from 'naive-ui'
 import { 
-  Search as SearchIcon, Settings as SettingsIcon, X as CloseIcon, 
+  Search as SearchIcon, Settings as SettingsIcon,
   RefreshCw as RefreshIcon, FileText as FileIcon, Folder as FolderIcon,
   Plus as PlusIcon, FolderPlus as FolderPlusIcon, FolderOpen as FolderOpenIcon, Trash as TrashIcon,
   Edit as EditIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon,
@@ -792,6 +740,8 @@ import NoteRelationsPanel from '../components/NoteRelationsPanel.vue'
 import { onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { appendInlineTag } from '../utils/inlineTags'
 import HistoryDiffDialog from '../components/HistoryDiffDialog.vue'
+import HistoryVersionList from '../components/HistoryVersionList.vue'
+import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import ExternalImportDialog from '../components/ExternalImportDialog.vue'
@@ -1634,27 +1584,37 @@ const insertReferenceExcerpt = (text: string) => {
   message.success('摘录和来源已插入当前笔记，可撤销；尚未保存。')
 }
 
-const externalChange = reactive({
-  show: false,
-  path: '',
-  fileName: '',
-  detectedAt: '',
-  signature: '',
-  contentDigest: '',
-  diskContent: null as string | null,
-  compareLoading: false,
-  compareError: '',
-})
+const externalChange = reactive({ show: false, path: '' })
 
-const externalCurrentPreview = computed(() => {
-  const tab = tabs.value.find(item => item.path === externalChange.path)
-  const content = externalChange.path === activeTabId.value && vditor ? vditor.getValue() : (tab?.content || '')
-  return content.length > 12000 ? `${content.slice(0, 12000)}\n\n…… 当前内容过长，仅显示前 12000 字符` : content
-})
-const externalDiskPreview = computed(() => {
-  const content = externalChange.diskContent || ''
-  return content.length > 12000 ? `${content.slice(0, 12000)}\n\n…… 磁盘内容过长，仅显示前 12000 字符` : content
-})
+const externalConflictOwner = shallowRef<{ root: string; tab: (typeof tabs.value)[number]; editor: any; draft: string } | null>(null)
+const openTextConflict = (path: string) => {
+  const tab = tabs.value.find(item => item.path === path)
+  if (!tab || !vditor || path !== activeTabId.value) return
+  const draft = vditor.getValue()
+  tab.content = draft
+  externalConflictOwner.value = { root: store.libraryPath, tab, editor: vditor, draft }
+  externalChange.path = path; externalChange.show = true
+}
+const isExternalConflictCurrent = () => {
+  const owner = externalConflictOwner.value
+  return !!owner && store.libraryPath === owner.root && activeTabId.value === owner.tab.path && tabs.value.includes(owner.tab) && vditor === owner.editor && vditor.getValue() === owner.draft && !hasPendingMainTextSave(owner.tab.path)
+}
+const applyConflictSnapshot = (snapshot: ConflictSnapshot) => {
+  if (!isExternalConflictCurrent() || !externalConflictOwner.value) return
+  const { tab } = externalConflictOwner.value
+  suppressEditorInput = true
+  vditor.setValue(snapshot.content)
+  editorDisplayBaseline = vditor.getValue()
+  updateTabFromTextSnapshot(tab, snapshot as TextDocumentSnapshot, tab.textReadEncoding)
+  tab.content = snapshot.content; tab.isDirty = false
+  setTimeout(() => { suppressEditorInput = false }, 0)
+  keepExternalChange(); lastPromptedExternalSignature = ''; void fetchHistory()
+  message.success('已使用磁盘版本，原草稿已保留在历史中')
+}
+const finishConflictCopy = (path: string) => {
+  keepExternalChange(); void refreshLibrary(); message.success('当前副本已保存：' + path.split(/[\\/]/).pop())
+}
+watch([activeTabId, () => store.libraryPath], () => { externalChange.show = false; externalConflictOwner.value = null }, { flush: 'sync' })
 const contentDigestFromSignature = (signature: string) => signature.match(/:([a-f0-9]{32})$/i)?.[1].toLowerCase() || ''
 
 // 常量定义
@@ -2179,6 +2139,7 @@ const handleExport = async (key: string) => {
 }
 interface HistoryEntry { timestamp: number; content: string; path: string; libraryRoot: string }
 const historyList = ref<HistoryEntry[]>([])
+const historyLoading = ref(false), historyError = ref('')
 interface HistoryComparison { entry: HistoryEntry; draft: string; content: string; disk: string; diskSignature: string; historySignature: string }
 const historyComparison = ref<HistoryComparison | null>(null)
 const historyActionBusy = ref(false), historyActionError = ref('')
@@ -2186,7 +2147,7 @@ let comparisonGeneration = 0
 const closeHistoryComparison = () => { ++comparisonGeneration; historyComparison.value = null; historyActionError.value = '' }
 watch([activeTabId, () => store.libraryPath], closeHistoryComparison, { flush: 'sync' })
 let historyGeneration = 0
-const invalidateHistory = () => { ++historyGeneration; historyList.value = [] }
+const invalidateHistory = () => { ++historyGeneration; historyList.value = []; historyLoading.value = false; historyError.value = '' }
 watch([activeTabId, () => store.libraryPath], invalidateHistory, { flush: 'sync' })
 
 const openSettings = () => router.push('/settings')
@@ -2273,15 +2234,17 @@ const fetchHistory = async () => {
   const generation = ++historyGeneration
   const path = activeTabId.value
   const libraryRoot = store.libraryPath
-  historyList.value = []
+  historyList.value = []; historyError.value = ''
   if (!path || !libraryRoot) return
+  historyLoading.value = true
   const isCurrent = () => generation === historyGeneration && path === activeTabId.value && libraryRoot === store.libraryPath
   try {
     const res = await invoke<[number, string][]>('list_history', { libraryRoot, path })
     if (isCurrent()) historyList.value = res.map(([timestamp, content]) => ({ timestamp, content, path, libraryRoot }))
   } catch (e) {
-    if (isCurrent()) message.error(`历史快照读取失败：${String(e)}`)
+    if (isCurrent()) historyError.value = `历史暂时无法读取：${String(e)}`
   }
+  finally { if (isCurrent()) historyLoading.value = false }
 }
 
 const ownsHistoryEntry = (entry: HistoryEntry) => historyList.value.includes(entry)
@@ -2348,31 +2311,17 @@ const applyHistoryContent = (entry: HistoryEntry, content: string, preserveView 
   wordCount.value = content.length
   message.success(preserveView ? '此处已恢复，其余草稿保留；仍需保存' : '历史内容已载入编辑区，尚未保存到文件')
 }
-const deleteHistory = async (entry: HistoryEntry) => {
-  if (!ownsHistoryEntry(entry)) return
-  const { libraryRoot, path, timestamp } = entry
-  try {
-    await invoke('delete_history_version', { libraryRoot, path, timestamp })
-    if (ownsHistoryEntry(entry)) { await fetchHistory(); message.success('已移除该备份') }
-  }
-  catch (e) { message.error('删除失败') }
-}
 const clearAllHistory = async () => {
   dialog.warning({
-    title: '清空历史备份',
-    content: '确定要清除所有文件的历史备份吗？此操作不可撤销。',
+    title: '清理普通历史？',
+    content: '清理各文件未标记保留的历史版本。重要版本、原文件和当前草稿会保留。',
     positiveText: '确认清空',
     negativeText: '取消',
     onPositiveClick: async () => {
-      try { await invoke('clear_all_history'); invalidateHistory(); message.success('历史缓存已全部清空') }
+      try { await invoke('clear_all_history'); await fetchHistory(); message.success('普通历史已清理，重要版本仍保留') }
       catch (e) { message.error('清空失败') }
     }
   })
-}
-
-const formatTime = (ts: number) => {
-  const date = new Date(ts * 1000)
-  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`
 }
 
 let shadowSaveTimer: any = null
@@ -3720,45 +3669,7 @@ const refreshCurrentFile = async () => {
   } else await run()
 }
 
-const compareExternalChange = async () => {
-  const tab = tabs.value.find(item => item.path === externalChange.path)
-  const format = tab ? findFileFormat(tab.path) : undefined
-  if (!tab || !format || format.routeName !== 'LibraryMode') return
-  externalChange.compareLoading = true
-  externalChange.compareError = ''
-  try {
-    const snapshot = await invoke<TextDocumentSnapshot>('read_text_document', {
-      libraryRoot: store.libraryPath,
-      path: tab.path,
-      formatId: format.id,
-      readOptions: tab.textReadEncoding ? { encoding: tab.textReadEncoding } : undefined,
-    })
-    externalChange.diskContent = snapshot.content
-    externalChange.signature = snapshot.signature
-    externalChange.contentDigest = snapshot.contentDigest
-    lastPromptedExternalSignature = snapshot.signature
-  } catch (error) {
-    externalChange.compareError = `无法读取磁盘版本：${String(error).replace(/^Error:\s*/, '')}`
-  } finally {
-    externalChange.compareLoading = false
-  }
-}
-
-const keepExternalChange = () => {
-  externalChange.show = false
-  externalChange.diskContent = null
-  externalChange.compareError = ''
-}
-
-const reloadExternalChange = async () => {
-  const path = externalChange.path
-  externalChange.show = false
-  externalChange.diskContent = null
-  externalChange.compareError = ''
-  if (path !== activeTabId.value) return
-  await refreshCurrentFile()
-  lastPromptedExternalSignature = ''
-}
+const keepExternalChange = () => { externalChange.show = false; externalConflictOwner.value = null }
 
 const checkActiveTextIdentity = async () => {
   if (externalCheckInFlight || externalChange.show || !activeTabId.value) return
@@ -3785,14 +3696,7 @@ const checkActiveTextIdentity = async () => {
     }
     if (identity.signature === lastPromptedExternalSignature) return
     lastPromptedExternalSignature = identity.signature
-    externalChange.path = path
-    externalChange.fileName = tab.title
-    externalChange.detectedAt = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date())
-    externalChange.signature = identity.signature
-    externalChange.contentDigest = identity.contentDigest
-    externalChange.diskContent = null
-    externalChange.compareError = ''
-    externalChange.show = true
+    openTextConflict(path)
   } catch (error: any) {
     if (error?.code !== 'identity-too-large') console.warn('External text identity check failed:', error)
   } finally {
@@ -3873,7 +3777,8 @@ const saveCurrentFile = async (options: unknown = {}) => {
         invoke('git_commit', { libraryPath: savingLibraryRoot, message: `更新: ${t.title}` }).catch(() => {})
       }
     } catch (e: any) {
-      handleError(e, '保存失败', 'saveCurrentFile')
+      if (e?.code === 'external-modified' && activeTabId.value === t.path && store.libraryPath === savingLibraryRoot) openTextConflict(t.path)
+      else handleError(e, '保存失败', 'saveCurrentFile')
     } finally {
       releaseSaveOwnership()
       finishWindowSave?.()

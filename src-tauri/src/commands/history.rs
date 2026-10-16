@@ -1,6 +1,7 @@
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::write_utf8;
 use crate::services::workspace_guard::WorkspaceGuard;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
@@ -42,7 +43,7 @@ pub async fn save_history_version(
     max_count: u32,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     save_history(
         &app_handle,
         path.to_string_lossy().as_ref(),
@@ -99,7 +100,7 @@ pub(crate) fn save_reference_snapshot(
 
 // Caller holds history lease, including path resolution. Timestamp remains seconds
 // for compatibility; collisions advance monotonically rather than overwrite.
-fn save_history_in_dir(
+pub(crate) fn save_history_in_dir(
     file_history_dir: &std::path::Path,
     content: &str,
     max_count: u32,
@@ -113,18 +114,9 @@ fn save_history_in_dir(
         .map_err(|error| error.to_string())?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|error| format!("历史目录读取不完整: {error}"))?;
-    let normalized_content = normalize_line_endings(&content);
-    for entry in &entries {
-        if fs::read_to_string(entry.path())
-            .map(|existing| normalize_line_endings(&existing) == normalized_content)
-            .unwrap_or(false)
-        {
-            return Ok(());
-        }
-    }
-
     let mut timestamps: Vec<u64> = entries
         .iter()
+        .filter(|entry| entry.path().extension().and_then(|e| e.to_str()) == Some("md"))
         .filter_map(|entry| {
             entry
                 .path()
@@ -133,6 +125,16 @@ fn save_history_in_dir(
                 .and_then(|stem| stem.parse().ok())
         })
         .collect();
+
+    // Only consecutive identical states are redundant: A -> B -> A is a real edit.
+    if let Some(latest) = timestamps.iter().max() {
+        let previous = fs::read_to_string(file_history_dir.join(format!("{latest}.md")))
+            .map_err(|error| format!("无法核对最近历史，原记录未覆盖：{error}"))?;
+        if normalize_line_endings(&previous) == normalize_line_endings(content) {
+            return Ok(());
+        }
+    }
+    let metadata = read_metadata(file_history_dir)?;
 
     let timestamp = match timestamps.iter().max() {
         Some(latest) if *latest >= timestamp => latest
@@ -145,14 +147,79 @@ fn save_history_in_dir(
         content.as_bytes(),
     )?;
     timestamps.push(timestamp);
-    if timestamps.len() > max_count as usize {
+    timestamps.retain(|time| !metadata.get(time).is_some_and(|item| item.pinned));
+    if timestamps.len() > max_count.max(1) as usize {
         timestamps.sort_unstable();
-        let remove_count = timestamps.len() - max_count as usize;
+        let remove_count = timestamps.len() - max_count.max(1) as usize;
         for old_timestamp in timestamps.iter().take(remove_count) {
-            let _ = fs::remove_file(file_history_dir.join(format!("{old_timestamp}.md")));
+            fs::remove_file(file_history_dir.join(format!("{old_timestamp}.md")))
+                .map_err(|e| format!("新历史已保留，但旧记录清理未完成：{e}"))?;
         }
     }
     Ok(())
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct HistoryMetadata {
+    #[serde(default)]
+    pub pinned: bool,
+    #[serde(default)]
+    pub note: String,
+}
+
+fn read_metadata(directory: &std::path::Path) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
+    match fs::read(directory.join("metadata.json")) {
+        Ok(bytes) => {
+            serde_json::from_slice(&bytes).map_err(|e| format!("版本备注读取失败，未修改记录：{e}"))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(BTreeMap::new()),
+        Err(e) => Err(format!("版本备注读取失败：{e}")),
+    }
+}
+
+#[tauri::command]
+pub async fn get_history_metadata(
+    app_handle: tauri::AppHandle,
+    library_root: String,
+    path: String,
+) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
+    let _lease = history_lease(&app_handle)?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    read_metadata(&history_dir(&app_handle, &path.to_string_lossy())?)
+}
+
+#[tauri::command]
+pub async fn set_history_metadata(
+    app_handle: tauri::AppHandle,
+    library_root: String,
+    path: String,
+    timestamp: u64,
+    pinned: bool,
+    note: String,
+) -> Result<(), String> {
+    let _lease = history_lease(&app_handle)?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let directory = history_dir(&app_handle, &path.to_string_lossy())?;
+    if !directory.join(format!("{timestamp}.md")).is_file() {
+        return Err("此历史版本已不存在，请刷新列表".into());
+    }
+    if note.chars().count() > 120 {
+        return Err("版本备注最多 120 字".into());
+    }
+    let mut metadata = read_metadata(&directory)?;
+    metadata.insert(
+        timestamp,
+        HistoryMetadata {
+            pinned,
+            note: note.trim().into(),
+        },
+    );
+    write_utf8(
+        directory.join("metadata.json"),
+        &serde_json::to_string(&metadata).map_err(|e| e.to_string())?,
+    )
 }
 
 fn normalize_line_endings(content: &str) -> String {
@@ -220,7 +287,7 @@ pub async fn compare_history_version(
     timestamp: u64,
 ) -> Result<HistoryComparison, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     read_comparison(
         &path,
         &history_dir(&app_handle, &path.to_string_lossy())?,
@@ -266,7 +333,7 @@ pub async fn restore_history_copy(
     history_signature: String,
 ) -> Result<String, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let comparison = checked_comparison(
         &path,
         &history_dir(&app_handle, &path.to_string_lossy())?,
@@ -294,7 +361,7 @@ pub async fn prepare_history_restore(
         return Err("当前草稿过大，未替换任何内容".into());
     }
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let history = history_dir(&app_handle, &path.to_string_lossy())?;
     let comparison = checked_comparison(
         &path,
@@ -323,7 +390,8 @@ pub async fn list_history(
     library_root: String,
     path: String,
 ) -> Result<Vec<(u64, String)>, String> {
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let _lease = history_lease(&app_handle)?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
 }
 
@@ -332,17 +400,26 @@ fn list_history_for_path(
     path: &str,
 ) -> Result<Vec<(u64, String)>, String> {
     let mut versions = Vec::new();
-    if let Ok(entries) = fs::read_dir(history_dir(app_handle, path)?) {
-        for entry in entries.flatten() {
-            let file_path = entry.path();
-            let Some(timestamp) = file_path
-                .file_stem()
-                .and_then(|stem| stem.to_str())
-                .and_then(|stem| stem.parse::<u64>().ok())
-            else {
-                continue;
-            };
-            if let Ok(content) = fs::read_to_string(file_path) {
+    let directory = history_dir(app_handle, path)?;
+    match fs::read_dir(&directory) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(versions),
+        Err(e) => return Err(format!("历史目录暂时无法读取：{e}")),
+        Ok(entries) => {
+            for entry in entries {
+                let entry = entry.map_err(|e| format!("历史列表读取不完整：{e}"))?;
+                let file_path = entry.path();
+                if file_path.extension().and_then(|e| e.to_str()) != Some("md") {
+                    continue;
+                }
+                let Some(timestamp) = file_path
+                    .file_stem()
+                    .and_then(|stem| stem.to_str())
+                    .and_then(|stem| stem.parse::<u64>().ok())
+                else {
+                    continue;
+                };
+                let content = fs::read_to_string(file_path)
+                    .map_err(|e| format!("历史版本 {timestamp} 无法读取：{e}"))?;
                 versions.push((timestamp, content));
             }
         }
@@ -359,9 +436,15 @@ pub async fn delete_history_version(
     timestamp: u64,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let file_path =
         history_dir(&app_handle, path.to_string_lossy().as_ref())?.join(format!("{timestamp}.md"));
+    if read_metadata(file_path.parent().ok_or("历史目录不可用")?)?
+        .get(&timestamp)
+        .is_some_and(|m| m.pinned)
+    {
+        return Err("此版本已保留，请先取消保留再删除".into());
+    }
     if file_path.exists() {
         fs::remove_file(file_path).map_err(|error| error.to_string())?;
     }
@@ -377,8 +460,48 @@ pub async fn clear_all_history(app_handle: tauri::AppHandle) -> Result<(), Strin
         .map_err(|error| error.to_string())?
         .join("history_v2");
     crate::services::history_coordination::ensure_clearable(&cache_dir)?;
-    if cache_dir.exists() {
-        fs::remove_dir_all(cache_dir).map_err(|error| error.to_string())?;
+    clear_unpinned_history(&cache_dir)?;
+    Ok(())
+}
+
+fn clear_unpinned_history(cache: &std::path::Path) -> Result<(), String> {
+    if !cache.exists() {
+        return Ok(());
+    }
+    for entry in fs::read_dir(cache).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name.len() != 32
+            || !name.chars().all(|c| c.is_ascii_hexdigit())
+            || !entry.file_type().map_err(|e| e.to_string())?.is_dir()
+        {
+            continue;
+        }
+        let mut metadata = read_metadata(&entry.path())?;
+        for snapshot in fs::read_dir(entry.path()).map_err(|e| e.to_string())? {
+            let snapshot = snapshot.map_err(|e| e.to_string())?;
+            let path = snapshot.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("md") {
+                continue;
+            }
+            if let Some(time) = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .and_then(|s| s.parse::<u64>().ok())
+            {
+                if !metadata.get(&time).is_some_and(|m| m.pinned) {
+                    fs::remove_file(path).map_err(|e| e.to_string())?;
+                }
+            }
+        }
+        metadata
+            .retain(|time, item| item.pinned && entry.path().join(format!("{time}.md")).is_file());
+        if entry.path().join("metadata.json").exists() {
+            write_utf8(
+                entry.path().join("metadata.json"),
+                &serde_json::to_string(&metadata).map_err(|e| e.to_string())?,
+            )?;
+        }
     }
     Ok(())
 }
@@ -390,7 +513,7 @@ pub async fn save_shadow_copy(
     path: String,
     content: String,
 ) -> Result<(), String> {
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let shadow_dir = app_handle
         .path()
         .app_cache_dir()
@@ -406,6 +529,49 @@ pub async fn save_shadow_copy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn returning_to_an_older_state_is_recorded_but_adjacent_duplicates_are_not() {
+        let f = HistoryFixture::new();
+        for (time, content) in [(100, "A"), (101, "B"), (102, "A"), (103, "A")] {
+            save_history_in_dir(&f.0, content, 20, time).unwrap();
+        }
+        assert_eq!(fs::read_dir(&f.0).unwrap().count(), 3);
+        assert_eq!(fs::read_to_string(f.0.join("102.md")).unwrap(), "A");
+    }
+    #[test]
+    fn retention_and_global_cleanup_preserve_pinned_versions_and_notes() {
+        let cache = HistoryFixture::new();
+        let directory = cache.0.join("a".repeat(32));
+        save_history_in_dir(&directory, "important", 2, 100).unwrap();
+        fs::write(
+            directory.join("metadata.json"),
+            r#"{"100":{"pinned":true,"note":"提交前"}}"#,
+        )
+        .unwrap();
+        for time in 101..106 {
+            save_history_in_dir(&directory, &time.to_string(), 2, time).unwrap();
+        }
+        assert!(directory.join("100.md").exists());
+        assert!(!directory.join("101.md").exists());
+        assert!(directory.join("104.md").exists());
+        assert!(directory.join("105.md").exists());
+        clear_unpinned_history(&cache.0).unwrap();
+        assert_eq!(
+            fs::read_to_string(directory.join("100.md")).unwrap(),
+            "important"
+        );
+        assert!(!directory.join("105.md").exists());
+        assert_eq!(read_metadata(&directory).unwrap()[&100].note, "提交前");
+    }
+    #[test]
+    fn damaged_metadata_does_not_prune_history() {
+        let f = HistoryFixture::new();
+        save_history_in_dir(&f.0, "original", 1, 100).unwrap();
+        fs::write(f.0.join("metadata.json"), "broken").unwrap();
+        assert!(save_history_in_dir(&f.0, "new", 1, 101).is_err());
+        assert_eq!(fs::read_to_string(f.0.join("100.md")).unwrap(), "original");
+        assert!(!f.0.join("101.md").exists());
+    }
     #[test]
     fn text_history_decodes_utf16_and_recovery_keeps_txt_extension() {
         let fixture = HistoryFixture::new();

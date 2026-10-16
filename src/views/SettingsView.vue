@@ -89,7 +89,7 @@
                 <n-input-number v-model:value="config.maxHistoryCount" :min="1" :max="50" />
               </n-form-item>
               <div class="danger-zone">
-                <n-button type="error" ghost @click="clearHistory">清空所有历史版本缓存</n-button>
+                <n-button type="error" ghost @click="clearHistory">清理未保留的历史版本</n-button>
                 <div class="desc">此操作将删除所有文件的影子副本记录，无法撤销。</div>
               </div>
             </div>
@@ -1239,14 +1239,14 @@ const getStyleLabel = (style: string): string => {
 
 const clearHistory = async () => {
   dialog.warning({
-    title: '清空历史版本',
-    content: '确认要永久清空所有历史版本吗？此操作不可撤销。',
+    title: '清理普通历史？',
+    content: '清理未标记保留的历史版本。重要版本、原文件和当前草稿会保留。',
     positiveText: '确认清空',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
         await invoke('clear_all_history')
-        message.success('历史缓存已清空')
+        message.success('普通历史已清理，重要版本仍保留')
       } catch (e) {
         message.error('操作失败')
       }

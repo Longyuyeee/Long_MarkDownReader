@@ -17,6 +17,7 @@ pub mod note_templates;
 pub mod git;
 pub mod graph;
 pub mod history;
+pub mod text_conflicts;
 pub mod index;
 pub mod json;
 pub mod legacy_binary_office;

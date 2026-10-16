@@ -18,7 +18,7 @@ export const moveContinuityChecks = [
   'cached-text-draft-keeps-encoding-and-saves-only-at-the-renamed-path',
 ]
 export async function runInstalledV116Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  assert.equal(appVersion, '1.1.6')
+  assert.ok(['1.1.6', '1.1.7'].includes(appVersion))
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') throw Error('Use only the disposable installer fixture library')
   const report = { appVersion, sourceCommit, installerSha256, evidenceLevel: 'installed-tauri-ipc-and-disk', sourceUserContentIncluded: false, status: 'running', checks: [] }
   const invoke = async (command, args = {}) => {

@@ -31,10 +31,11 @@ requireTokens(library, 'External-change UX', [
   'identity.contentDigest === baselineDigest',
   'externalCheckInFlight || externalChange.show',
   'identity.signature === lastPromptedExternalSignature',
-  '检测时间：{{ externalChange.detectedAt }}',
-  '@click="compareExternalChange"',
-  '@click="keepExternalChange"',
-  '@click="reloadExternalChange"',
+  '<TextConflictDialog',
+  ':is-current="isExternalConflictCurrent"',
+  '@close="keepExternalChange"',
+  '@reload="applyConflictSnapshot"',
+  '@copy="finishConflictCopy"',
   'updateTabFromTextSnapshot(t, saved',
 ])
 if (library.includes('stats.modified > lastKnownModified')) fail('Legacy mtime-only focus detection is still active.')

@@ -20,7 +20,7 @@
             <template #icon><n-icon :component="BookPlusIcon" /></template>
             存入知识库
           </n-button>
-          <n-button secondary type="success" @click="saveFile">保存</n-button>
+          <n-button secondary type="success" :loading="externalSaving" :disabled="externalSaving" @click="saveFile">保存</n-button>
         </n-button-group>
       </div>
     </div>
@@ -55,6 +55,7 @@
       </div>
     </div>
 
+    <TextConflictDialog v-if="conflict" :path="conflict.path" :draft="conflict.draft" format-id="markdown" :is-current="conflict.current" @close="conflict = null" @reload="useConflictDisk" @copy="path => { conflict = null; message.success('副本已保存：' + path.split(/[\\/]/).pop()) }" />
     <!-- AI 操作选择弹窗 -->
     <n-modal v-model:show="aiState.showActionModal" preset="dialog" title="AI 辅助" positive-text="" negative-text="取消" @negative-click="aiState.showActionModal = false">
       <div class="ai-action-grid">
@@ -98,6 +99,8 @@ import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { useVditorTheme } from '../composables/useVditorTheme'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
+import { beginWindowSave } from '../services/windowDrafts'
+import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import { confirmAppAction } from '../services/appDialog'
 
 const route = useRoute()
@@ -109,6 +112,17 @@ const store = useAppStore()
 const filePath = ref(route.query.path as string || '')
 const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).pop() : '新文档.md')
 const isDirty = ref(false)
+let externalSignature = ''
+let loadedExternalPath = ''
+let externalLoadGeneration = 0
+const externalSaving = ref(false)
+const conflict = ref<{path:string;draft:string;current:()=>boolean} | null>(null)
+const useConflictDisk = (snapshot:ConflictSnapshot, protectedCopy?:string) => {
+  if (!conflict.value?.current() || !vditor) return
+  vditor.setValue(snapshot.content); externalSignature = snapshot.signature; originalExternalContent = vditor.getValue()
+  isDirty.value = false; conflict.value = null; refreshVisibleOutline(); void fixEditorImages()
+  message.success('已使用磁盘版本，原草稿保存在同目录：' + (protectedCopy?.split(/[\\/]/).pop() || '当前副本'))
+}
 let originalExternalContent = ''
 useWindowDraftSnapshot(() => { if (vditor && vditor.getValue() !== originalExternalContent) { isDirty.value = true; store.isTempDirty = true } })
 useWindowReferenceDraft(() => isDirty.value ? { path: String(route.query.path || ''), content: vditor?.getValue() } : null)
@@ -157,8 +171,11 @@ watch(() => route.query.path, async (newPath) => {
 
 const loadFileContent = async () => {
   if (!filePath.value) return
+  const path = filePath.value, editor = vditor, baseline = editor?.getValue(), token = ++externalLoadGeneration
   try {
-    const result = await invoke<{content: string}>('read_external_markdown_file', { path: filePath.value })
+    const result = await invoke<ConflictSnapshot>('read_external_text_document', { path, formatId: 'markdown' })
+    if (token !== externalLoadGeneration || path !== filePath.value || editor !== vditor || editor?.getValue() !== baseline) return
+    externalSignature = result.signature; loadedExternalPath = path
     originalExternalContent = result.content
     if (vditor) {
       vditor.setValue(result.content)
@@ -200,14 +217,23 @@ const importToLibrary = async () => {
 }
 
 const saveFile = async () => {
-  if (!vditor || !filePath.value) return
+  if (!vditor || !filePath.value || externalSaving.value) return
+  if (!externalSignature || loadedExternalPath !== filePath.value) { message.error('文件尚未完成读取，当前内容未写回。请重新打开后再保存。'); return }
+  externalSaving.value = true
+  const path = filePath.value, editor = vditor, content = editor.getValue()
+  const finish = beginWindowSave()
   try {
-    const content = vditor.getValue()
-    await invoke('write_external_markdown_file', { path: filePath.value, content })
-    originalExternalContent = content
-    isDirty.value = vditor.getValue() !== content
-    message.success('已保存')
-  } catch (err: any) { message.error('保存失败: ' + err) }
+    const saved = await invoke<ConflictSnapshot>('write_external_text_document', {path, formatId:'markdown', content, expectedSignature:externalSignature || undefined})
+    if (filePath.value !== path || editor !== vditor) return
+    externalSignature = saved.signature; originalExternalContent = content
+    isDirty.value = editor.getValue() !== content
+    message.success(isDirty.value ? '提交内容已保存，新增编辑尚未保存' : '已保存')
+  } catch (error:any) {
+    if (error?.code === 'external-modified' && filePath.value === path && editor === vditor) {
+      const draft = editor.getValue()
+      conflict.value = {path,draft,current:()=>filePath.value === path && editor === vditor && editor.getValue() === draft}
+    } else message.error('保存失败：' + (error?.message || String(error)))
+  } finally { externalSaving.value = false; finish() }
 }
 
 // --- AI Assistant ---
@@ -301,7 +327,9 @@ onMounted(async () => {
   let initialContent = ''
   if (filePath.value) {
     try {
-      const result = await invoke<{content: string}>('read_external_markdown_file', { path: filePath.value })
+      const result = await invoke<ConflictSnapshot>('read_external_text_document', { path: filePath.value, formatId: 'markdown' })
+      externalSignature = result.signature
+      loadedExternalPath = filePath.value
       initialContent = result.content
     } catch (err: any) { message.error('读取失败') }
   }

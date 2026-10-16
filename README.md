@@ -515,3 +515,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | v1.1.0 | 全界面改版；工作会话、智能集合、Markdown 历史差异恢复；文件树、浮窗、专注模式和编辑器交互修复 | [发布说明](docs/RELEASE_NOTES_v1.1.0.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.0) |
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
+
+### v1.1.7 开发候选：保存与历史
+
+当前正式下载仍为 v1.1.6。下一版补齐 Markdown/TXT 保存冲突比较与草稿保护、历史内容/备注查找、差异跳转和右键保留重要版本；安装包验证正在进行，尚未发布。[本版说明](docs/RELEASE_NOTES_v1.1.7.md) · [开发进度](docs/V1_1_7_Save_History_Development_2026-10-16.md)。
