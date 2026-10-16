@@ -578,7 +578,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test:batch-rename-browser": "node scripts/test-batch-rename-browser.mjs",
-    "test:save-history-browser": "node scripts/test-save-history-v117-browser.mjs"
+    "test:save-history-browser": "node scripts/test-save-history-v117-browser.mjs && node scripts/test-external-conflict-v117-browser.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.3",

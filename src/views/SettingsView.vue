@@ -85,12 +85,12 @@
                   <template #suffix>分钟</template>
                 </n-input-number>
               </n-form-item>
-              <n-form-item label="最大保留历史版本数">
+              <n-form-item label="每份文件的普通历史版本上限">
                 <n-input-number v-model:value="config.maxHistoryCount" :min="1" :max="50" />
               </n-form-item>
               <div class="danger-zone">
                 <n-button type="error" ghost @click="clearHistory">清理未保留的历史版本</n-button>
-                <div class="desc">此操作将删除所有文件的影子副本记录，无法撤销。</div>
+                <div class="desc">清理普通历史，已保留的重要版本不受影响。</div>
               </div>
             </div>
           </n-grid-item>

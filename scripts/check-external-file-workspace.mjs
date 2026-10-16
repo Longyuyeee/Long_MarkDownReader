@@ -102,7 +102,10 @@ for (const token of [
   'const showOutline = ref(false)',
   'PanelLeftOpenIcon',
   'leaveExternalEditor',
-  "await invoke('write_external_markdown_file'",
+  "invoke<ConflictSnapshot>('write_external_text_document'",
+  "expectedSignature:externalSignature",
+  "loadedExternalPath !== filePath.value",
+  "<TextConflictDialog",
   'max-width: none !important',
   'height: 100% !important',
 ]) requireText(markdown, token, `external Markdown workspace is missing ${token}`)

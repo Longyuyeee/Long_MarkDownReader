@@ -19,6 +19,8 @@
 
 产品功能已实现，运行时 1.1.7 候选、公开版 1.1.6。实际组件与模拟 IPC：本版 8 组流程/19 套预设共 38 组宽窄布局通过，旧历史与局部恢复流程通过；原生真实磁盘功能 881 通过、0 失败、5 既有 ignored，独立性能不计入此数；相关编辑测试 43 通过。
 
+外部 Markdown/TXT 另外 2 组实际编辑器流程通过，包含签名冲突、保护失败、同目录草稿副本和磁盘原件保留，见 [外部编辑器报告](evidence/v117-save-history-development/external/report.json)。`npm run test:save-history-browser` 一并执行本版两个浏览器流程。首次安装构建 38876595814 在完成构建前主动取消：旧检查仍要求外部 Markdown 使用不带签名的旧写入命令，已改为核对实际新命令、签名与文档归属；产品使用更完整的保存保护，未保留旧行为来迁就检查。后续以新的固定源码及安装结果为准。
+
 冲突中的库内草稿先进入历史，外部文件切换磁盘版本前另存同目录副本，避免只能在缓存里找回。设置和侧栏的历史清理都明确保留重要版本。备注元数据随历史目录一并迁移，移动/撤销真实磁盘测试已增加断言。
 
 证据：[本版组件流程](evidence/v117-save-history-development/report.json)、[原生功能日志](evidence/v117-save-history-development/native-functional.log)、[编辑测试](evidence/v117-save-history-development/editor-tests.log)。组件测试明确使用模拟 IPC，不能代替安装态；早期选择器与文档状态检查失败已经纠正，保留的 failure.png 是夹具开发过程，非当前运行截图。安装包验证正在准备，不以这些开发证据声明可发版。
