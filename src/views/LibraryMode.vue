@@ -802,7 +802,7 @@ import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, 
 import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
 import { confirmAppAction } from '../services/appDialog'
-import { recordWindowDraftActivity, beginWindowSave, useWindowDraftSnapshot } from '../services/windowDrafts'
+import { recordWindowDraftActivity, beginWindowSave, snapshotWindowDrafts, useWindowDraftSnapshot } from '../services/windowDrafts'
 import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
@@ -825,6 +825,7 @@ import {
 import { useOutline } from '../composables/useOutline'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { useImageFix } from '../composables/useImageFix'
+import { localMarkdownLink, markdownAnchorTarget } from '../utils/localMarkdownLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
@@ -1671,6 +1672,12 @@ const refreshVisibleOutline = () => {
 watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleOutline)
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
 const activeHeadingKey = ref<string | null>(null)
+const revealLinkedHeading = () => {
+  const fragment = typeof route.query.markdownAnchor === 'string' ? route.query.markdownAnchor : ''
+  if (!fragment || !isVditorReady || lastLoadedPath !== activeTabId.value) return
+  const root = vditor?.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
+  if (root) markdownAnchorTarget(root, fragment)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
 const searchMatchIndex = ref(0)
 const searchMatchCount = ref<number | null>(null)
@@ -2733,6 +2740,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
         refreshVisibleOutline();
         updateWordCount();
         fixEditorImages(); // 后台增强：通过 Base64 进一步提升图片清晰度/稳定性
+        revealLinkedHeading();
         revealSearchMatch();
         scheduleWorkspaceTaskReveal();
         scheduleRelationEvidenceReveal();
@@ -4151,6 +4159,21 @@ const cleanupEditorListeners = () => {
 const openSourceReference = async (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
+  const local = activeTabId.value && localMarkdownLink(activeTabId.value, href)
+  if (local) {
+    event.preventDefault(); event.stopPropagation()
+    const libraryRoot = store.libraryPath, documentPath = activeTabId.value
+    if (!local.path) { message.warning('链接地址无法识别，请检查文件路径'); return }
+    try {
+      await invoke('get_file_stats', { libraryRoot, path: local.path })
+      if (store.libraryPath !== libraryRoot || activeTabId.value !== documentPath) return
+      snapshotWindowDrafts()
+      const existing = allTabs.value.find(tab => tab.isDirty && sameLibrary(tab.path, local.path!)) || allTabs.value.find(tab => sameLibrary(tab.path, local.path!))
+      await openManagedFile(router, existing?.path || local.path, local.fragment ? { markdownAnchor: local.fragment } : {})
+      void nextTick(revealLinkedHeading)
+    } catch (error) { message.warning(`无法打开链接文件：${String(error)}`) }
+    return
+  }
   if (href.toLowerCase().startsWith('longedit://source')) {
     event.preventDefault()
     event.stopPropagation()
@@ -4345,6 +4368,7 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
+watch(() => route.query.markdownAnchor, () => { void nextTick(revealLinkedHeading) })
 watch(() => route.query.path, (path) => {
   if (typeof path !== 'string' || !path) return
   const format = findFileFormat(path)

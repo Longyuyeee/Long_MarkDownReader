@@ -24,7 +24,7 @@ test('scenario targets accessible names retained by the actual tooltip adoption 
   vm.runInContext(ts.transpileModule(policy + '\nglobalThis.adopt = adoptNativeTitle', { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, ctx)
   for (const title of ['刷新列表', '搜索与关联选项']) {
     const attributes = new Map([['title', title]])
-    const element = { matches: selector => selector.startsWith('button,'), getAttribute: name => attributes.get(name) ?? null, hasAttribute: name => attributes.has(name), removeAttribute: name => attributes.delete(name), setAttribute: (name, value) => attributes.set(name, value) }
+    const element = { closest: () => null, matches: selector => selector.startsWith('button,'), getAttribute: name => attributes.get(name) ?? null, hasAttribute: name => attributes.has(name), removeAttribute: name => attributes.delete(name), setAttribute: (name, value) => attributes.set(name, value) }
     ctx.adopt(element)
     assert.equal(attributes.has('title'), false)
     assert.equal(attributes.get('aria-label'), title)

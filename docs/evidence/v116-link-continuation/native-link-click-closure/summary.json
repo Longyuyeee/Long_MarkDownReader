@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "evidenceLevel": "real-debug-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "baseCommit": "155ae0e614f592903f2b369260013c33f367a6b0",
+  "sourceWorkspaceState": "base-with-local-link-opening-heading-and-document-title-preservation-fixes",
+  "checks": 13,
+  "legacyChecks": 8,
+  "actualClicks": [
+    "moved-relative-TXT-opens-in-main-editor",
+    "renamed-Markdown-opens-and-scrolls-to-heading"
+  ],
+  "editorTests": {
+    "passed": 53,
+    "failed": 0
+  },
+  "nativeSourceUnchangedSince875FunctionalPass": true,
+  "installerEvidence": false,
+  "files": [
+    {
+      "name": "before-fix-relative-link-click.json",
+      "sha256": "3309d6a40902f20f6af8d4efd4235fdac6f027a0c806551cd60aff9247bad031"
+    },
+    {
+      "name": "debug-v114-workflow.json",
+      "sha256": "83b85c8b05f7a3bcd220f3ebb8e6fbb0a785eef0961863a6173c6a12acab6ab1"
+    },
+    {
+      "name": "debug-v116-images.jpg",
+      "sha256": "4c4346fbc9340a06ed047d09da97896ddad719486fe60a43f4b4d492432984d8"
+    },
+    {
+      "name": "debug-v116-move-continuity.jpg",
+      "sha256": "9108f7a079fc156a896b00adb843644133ea6ecdbf678bdbcd82d8c7cb707328"
+    },
+    {
+      "name": "debug-v116-workflow.json",
+      "sha256": "80251fc78d81ac6d19be3dfff27abe8034e4acd6c03a9dc4e1a2bddb227c6068"
+    },
+    {
+      "name": "editor-continuity.txt",
+      "sha256": "4b6fb071978d8d55f7acb24960ded8eacfcad1c287b455100e3032db4720595d"
+    }
+  ]
+}

@@ -18,7 +18,7 @@ function harness(viewSource = source) {
     document: { querySelectorAll: () => [] }, onBeforeUnmount() {}, clearTimeout() {}, route: { query: {} }, recallWorkspaceViewState() {},
     vditor: { vditor: {}, setValue: value => writes.push(value), getValue: () => writes.at(-1), disabled: () => { enabled = false }, enable: () => { enabled = true } },
     setTimeout: (callback, delay) => timers.push({ callback, delay }), nextTick: callback => callback(),
-    startAdaptiveMotion() {}, fetchHistory() {}, refreshVisibleOutline() {}, updateWordCount() {}, fixEditorImages() {},
+    startAdaptiveMotion() {}, fetchHistory() {}, refreshVisibleOutline() {}, updateWordCount() {}, fixEditorImages() {}, revealLinkedHeading() {},
     revealSearchMatch() {}, scheduleWorkspaceTaskReveal() {}, scheduleRelationEvidenceReveal() {},
   })
   const start = viewSource.indexOf('let editorLoadGeneration = 0')

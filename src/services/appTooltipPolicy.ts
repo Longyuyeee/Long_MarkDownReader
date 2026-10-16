@@ -7,6 +7,8 @@ const popupSelector = '.n-dropdown-menu, .n-base-select-menu, .n-popover:not(.n-
 const tooltipText = (element: Element) => element.getAttribute('data-app-tooltip')?.trim() || ''
 
 const adoptNativeTitle = (element: Element) => {
+  // Document titles belong to Markdown/HTML serialization, not application UI.
+  if (element.closest('[contenteditable="true"], .vditor-reset, .vditor-preview')) return
   if (element.matches(nativeTooltipOptOutSelector)) return
   const title = element.getAttribute('title')?.trim()
   if (!title) return
