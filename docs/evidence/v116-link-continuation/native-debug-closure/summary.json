@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "evidenceLevel": "real-debug-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "baseCommit": "94b4268b2e7d584a803d8f6854842c6d4734541e",
+  "sourceWorkspaceState": "base-with-uncommitted-final-image-path-and-draft-fixes",
+  "nativeMoveChecks": 13,
+  "retainedLegacyChecks": 8,
+  "rustFunctional": {
+    "passed": 875,
+    "failed": 0,
+    "ignored": 5,
+    "performanceExcluded": 1
+  },
+  "editorTests": {
+    "passed": 41,
+    "failed": 0
+  },
+  "releaseContractTests": {
+    "passed": 4,
+    "failed": 0
+  },
+  "installerEvidence": false,
+  "files": [
+    {
+      "name": "debug-v114-workflow.json",
+      "sha256": "dec549a75d90adce9706af7171506522fbdac05ff62d1bd2c0314f9af410554c"
+    },
+    {
+      "name": "debug-v116-images.jpg",
+      "sha256": "f160413fac1d5b8a68976e6e2ca7aa99b71fb7d7f33c54e6f15fcb81bb4d4112"
+    },
+    {
+      "name": "debug-v116-move-continuity.jpg",
+      "sha256": "ec9e8caf29c3a46fa99d3424ddd9a77d0ec297cf25cde74a2d024a9cfcf6668a"
+    },
+    {
+      "name": "debug-v116-workflow.json",
+      "sha256": "1501157f31c9e2f5e8398b0a2cf98d8c9778575a04236a15c976a36dac157f82"
+    },
+    {
+      "name": "editor-continuity.txt",
+      "sha256": "f6a0ec98f3661c0a94d6ded3ff09a3cc64fae8d5c52ce1aadd055e08443d614e"
+    },
+    {
+      "name": "functional.txt",
+      "sha256": "7507882ab1aa64d0d4288272c0693ba66954f5070d708a89c216e6d0c3ff4c23"
+    },
+    {
+      "name": "release-contract.txt",
+      "sha256": "70258db759f31d9d3b3a19e5cac4591e6a2ad1c2cabccdd981f9651298c3d461"
+    }
+  ]
+}

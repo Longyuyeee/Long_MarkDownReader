@@ -803,7 +803,7 @@ import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
 import { confirmAppAction } from '../services/appDialog'
 import { recordWindowDraftActivity, beginWindowSave, useWindowDraftSnapshot } from '../services/windowDrafts'
-import { type FileMoveNotice } from '../services/fileMoveProtection'
+import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
 import { reconcileTextSaveReceipt } from '../utils/textSaveReceipt'
 import { tryAcquireMainTextSave, hasPendingMainTextSave, waitForMainTextSave } from '../utils/mainTextSaveOwnership'
 import { isActiveThemeDark } from '../config/themePresets'
@@ -1601,6 +1601,9 @@ let lastLoadedPath = ''
 let externalCheckInFlight = false
 let lastPromptedExternalSignature = ''
 let suppressEditorInput = false
+// Vditor can add a display newline to setValue(). This baseline is distinct
+// from the exact disk snapshot; only subsequent user changes make it dirty.
+let editorDisplayBaseline: string | null = null
 let referenceBookmark: { path: string; root: HTMLElement; range: Range } | null = null
 watch(activeTabId, () => { referenceBookmark = null })
 const rememberReferenceInsertionPoint = () => {
@@ -2200,7 +2203,7 @@ const selectLibrary = async (path: string) => {
   const tab = tabs.value.find(item => item.id === activeTabId.value)
   if (tab && vditor && isVditorReady && activeIsMarkdown.value) {
     const content = vditor.getValue()
-    if (tab.content !== content) { tab.content = content; tab.isDirty = true }
+    if (tab.content !== content && (tab.isDirty || content !== editorDisplayBaseline)) { tab.content = content; tab.isDirty = true }
   }
   if (store.tabs.some(item => item.isDirty)) {
     message.warning('有未保存的文档，请先保存后再切换资料库。')
@@ -2213,9 +2216,9 @@ const selectLibrary = async (path: string) => {
 }
 useWindowDraftSnapshot(() => {
   const tab = tabs.value.find(item => item.id === activeTabId.value)
-  if (tab && vditor && isVditorReady && activeIsMarkdown.value) {
+  if (tab && vditor && isVditorReady && activeIsMarkdown.value && !suppressEditorInput && !tab.textReadOnlyReason) {
     const content = vditor.getValue()
-    if (tab.content !== content) { tab.content = content; tab.isDirty = true }
+    if (tab.content !== content && (tab.isDirty || content !== editorDisplayBaseline)) { tab.content = content; tab.isDirty = true }
   }
 })
 const openUpdateSettings = () => router.push({ name: 'Settings', query: { category: 'system', focus: 'software-update' } })
@@ -2441,8 +2444,12 @@ const handleNodeSelect = (keys: string[]) => {
   // the active-document watcher replace the selection with a single file.
   if (keys.length > 1) return
   if (keys.length === 0) return
-  const lastKey = keys[keys.length - 1]
-  if (findTreeOptionByKey(treeData.value, lastKey)?.isLeaf === false) return
+  const selectedPath = keys[keys.length - 1]
+  if (findTreeOptionByKey(treeData.value, selectedPath)?.isLeaf === false) return
+  // Windows file-tree paths may include the device prefix while an open draft
+  // uses the ordinary spelling. Reuse its path before navigating or adding a tab.
+  const existing = allTabs.value.find(tab => tab.isDirty && sameLibrary(tab.path, selectedPath)) || allTabs.value.find(tab => sameLibrary(tab.path, selectedPath))
+  const lastKey = existing?.path || selectedPath
   const format = lastKey ? findFileFormat(lastKey) : undefined
   if (format && opensInLibraryShell(format)) {
     if (route.name !== 'LibraryMode' || route.query.path !== lastKey) {
@@ -2706,6 +2713,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
     if (popover) popover.style.display = 'none'
     suppressEditorInput = true
     vditor.setValue(content)
+    editorDisplayBaseline = vditor.getValue()
     startAdaptiveMotion()
     setTimeout(() => {
       if (!isCurrentRequest()) return
@@ -3594,13 +3602,7 @@ const createDailyNote = async () => {
 }
 
 const replaceRenamedPath = (value: string, oldPath: string, newPath: string) => {
-  const normalizedValue = fileStylePathKey(value)
-  const normalizedOld = fileStylePathKey(oldPath)
-  if (normalizedValue === normalizedOld) return newPath
-  const cleanValue = value.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '')
-  const cleanOld = oldPath.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
-  if (normalizedValue.startsWith(`${normalizedOld}/`)) return `${newPath}${cleanValue.slice(cleanOld.length)}`
-  return value
+  return movedPath(value, { root: store.libraryPath, oldPath, newPath, documents: [] })
 }
 
 const syncRenamedWorkspaceReferences = async (oldPath: string, newPath: string) => {
@@ -3852,6 +3854,7 @@ const saveCurrentFile = async (options: unknown = {}) => {
       if (ownsEditor && !receipt.isDirty && savingEditor.getValue() !== saved.content) {
         suppressEditorInput = true
         savingEditor.setValue(saved.content)
+        editorDisplayBaseline = savingEditor.getValue()
         setTimeout(() => { suppressEditorInput = false }, 0)
       }
       lastPromptedExternalSignature = ''
@@ -3891,7 +3894,7 @@ const switchEditorMode = async (mode: string) => {
   if (vditor !== requestedEditor || activeTabId.value !== requestedPath || editorLoadGeneration !== requestedGeneration) return
   const content = vditor.getValue()
   const tab = tabs.value.find(item => item.id === activeTabId.value)
-  if (tab && tab.content !== content) {
+  if (tab && tab.content !== content && (tab.isDirty || content !== editorDisplayBaseline)) {
     tab.content = content
     tab.isDirty = true
   }
@@ -4015,7 +4018,7 @@ const initVditor = () => {
         }
         const cur = tabs.value.find(t => t.id === activeTabId.value); 
         // A delayed notification of the acknowledged content is not a new edit.
-        if (cur && cur.content !== val) {
+        if (cur && cur.content !== val && (cur.isDirty || val !== editorDisplayBaseline)) {
           cur.isDirty = true
           store.updateTabContent(cur.path, val);
         }

@@ -22,7 +22,7 @@ function harness(viewSource = source) {
     vditor: editor, activeTabId: { value: tab.id }, tabs: { value: [tab] },
     store: { libraryPath: 'library-a' }, currentLibGitEnabled: { value: false },
     currentFileReloadBusy: { value: false },
-    savingTextTabs: new Set(), suppressEditorInput: false, lastPromptedExternalSignature: '',
+    savingTextTabs: new Set(), suppressEditorInput: false, editorDisplayBaseline: null, lastPromptedExternalSignature: '',
     tryAcquireMainTextSave: ownershipContext.acquire,
     beginWindowSave: () => { guards++; return () => { guards-- } },
     normalizeTextSaveOptions: value => value && typeof value === 'object' ? value : {},
@@ -30,6 +30,7 @@ function harness(viewSource = source) {
     invoke: (command, args) => new Promise((resolve, reject) => requests.push({ command, args, resolve, reject })),
     updateTabFromTextSnapshot: (t, snapshot) => { t.content = snapshot.content; t.isDirty = false; t.textSignature = snapshot.signature },
     message: { success: value => messages.push(value), warning: value => messages.push(value) },
+    fetchAllTags: async () => {},
     handleError: error => errors.push(error), setTimeout: callback => callback(),
   })
   const start = viewSource.indexOf('const saveCurrentFile = async')

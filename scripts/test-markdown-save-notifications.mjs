@@ -13,7 +13,7 @@ function harness(content, dirty = false) {
   const tab = { id: 'C:/notes/draft.md', path: 'C:/notes/draft.md', content, isDirty: dirty }
   const context = vm.createContext({
     tabs: { value: [tab] }, activeTabId: { value: tab.id },
-    searchMatchCount: { value: 1 }, suppressEditorInput: false, wordCount: { value: 0 },
+    searchMatchCount: { value: 1 }, suppressEditorInput: false, editorDisplayBaseline: content + '\n', wordCount: { value: 0 },
     store: { updateTabContent(path, value) { assert.equal(path, tab.path); tab.content = value } },
   })
   vm.runInContext('globalThis.notify = ' + callback, context)
@@ -33,6 +33,12 @@ test('real subsequent edits stay dirty and duplicate notifications never clear d
   assert.equal(h.tab.isDirty, true); assert.equal(h.tab.content, '# 保存期间新增输入\n')
   h.notify('# 保存期间新增输入\n')
   assert.equal(h.tab.isDirty, true)
+})
+
+test('the display newline produced by setValue does not become a new unsaved edit', () => {
+  const content='# 已保存\n', h=harness(content)
+  h.notify(content+'\n');assert.equal(h.tab.isDirty,false);assert.equal(h.tab.content,content)
+  h.notify(content+'\n\n');assert.equal(h.tab.isDirty,true,'a further user newline is still an edit')
 })
 
 function externalHarness() {

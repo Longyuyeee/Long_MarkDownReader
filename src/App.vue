@@ -100,7 +100,7 @@ import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePrese
 import { normalizeDisplayPreferences, documentTypographyStyle, VISUAL_STYLE_RADII } from './config/displayPreferences'
 import { openManagedFile, openManagedObject } from './services/fileNavigation'
 import { windowDraftCount, windowDraftActivity, windowReferenceDrafts } from './services/windowDrafts'
-import { createFileMoveProtection, movedPath, pathsOverlap, type FileMoveNotice } from './services/fileMoveProtection'
+import { createFileMoveProtection, canRetainMovedDraft, movedPath, pathsOverlap, type FileMoveNotice } from './services/fileMoveProtection'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
 import { isTauriRuntime } from './services/tauriRuntime'
 
@@ -478,7 +478,7 @@ const hasUnsavedChanges = computed(() => store.tabs.some(tab => tab.isDirty) || 
 const moveProtection = createFileMoveProtection({
   ready: () => lifecycleReady && !lifecycleDisposed,
   activePath: () => String(router.currentRoute.value.query.path || store.activeTabId || ''),
-  retainedDraftPaths: () => store.tabs.filter(tab => tab.isDirty && tab.content !== undefined && findFileFormat(tab.path)?.id === 'markdown' && !(store.isTempDirty && pathsOverlap(tab.path, String(router.currentRoute.value.query.path || '')))).map(tab => tab.path),
+  retainedDraftPaths: request => store.tabs.filter(tab => tab.isDirty && tab.content !== undefined && canRetainMovedDraft(tab.path, request, findFileFormat) && (findFileFormat(tab.path)?.routeName !== 'TextEditor' || Boolean(tab.textSignature)) && !(store.isTempDirty && pathsOverlap(tab.path, String(router.currentRoute.value.query.path || '')))).map(tab => tab.path),
   referenceDrafts: () => [...store.tabs.filter(tab => tab.isDirty && findFileFormat(tab.path)?.id === 'markdown').map(tab => ({ path: tab.path, content: tab.content })), ...windowReferenceDrafts()],
   dirtyPaths: () => [...store.tabs.filter(tab => tab.isDirty).map(tab => tab.path), ...(store.isTempDirty ? [String(router.currentRoute.value.query.path || '')] : [])],
   completed: async notice => {

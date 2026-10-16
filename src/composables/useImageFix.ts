@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { resolveLocalImagePath } from '../utils/localImagePath'
 
 interface ImageAccessContext {
   libraryRoot?: () => string
@@ -8,13 +9,18 @@ interface ImageAccessContext {
 export function useImageFix(getVditor: () => any, getFilePath: () => string, access: ImageAccessContext = {}) {
   let observer: MutationObserver | null = null
   let refreshTimer: ReturnType<typeof setTimeout> | null = null
+  const rendered = new Map<HTMLImageElement, string>()
+  const releaseImage = (img: HTMLImageElement) => {
+    const url = rendered.get(img)
+    if (url) { URL.revokeObjectURL(url); rendered.delete(img); img.removeAttribute('srcset') }
+    delete img.dataset.fixedSource
+  }
 
   const fixEditorImages = async () => {
     const vditor = getVditor()
     const filePath = getFilePath()
     if (!vditor || !filePath) return
 
-    const parentDir = filePath.substring(0, Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')) + 1).replace(/\\/g, '/')
     const editor = vditor.vditor
     const contentElements = [editor?.wysiwyg?.element, editor?.ir?.element, editor?.sv?.element, editor?.preview?.element]
       .filter((element): element is HTMLElement => Boolean(element))
@@ -31,36 +37,41 @@ export function useImageFix(getVditor: () => any, getFilePath: () => string, acc
     }
 
     const imgs = new Set(contentElements.flatMap(element => Array.from(element.querySelectorAll('img'))))
+    for (const img of rendered.keys()) if (!imgs.has(img) || !img.isConnected) releaseImage(img)
     const tasks = Array.from(imgs).map(async (img: any) => {
-      if (img.dataset.fixed === 'true') return
-
       const rawSrc = img.getAttribute('src')
       if (!rawSrc || rawSrc.startsWith('http') || rawSrc.startsWith('data:')) {
+        releaseImage(img)
         img.dataset.fixed = 'true'
         return
       }
-
-      let absolutePath = ''
-      if (rawSrc.startsWith('misty-img:')) {
-        const encodedPath = rawSrc.replace(/^misty-img:\/\/localhost/i, '').replace(/^misty-img:/i, '')
-        absolutePath = decodeURIComponent(encodedPath)
-        if (/^\/[a-zA-Z]:/.test(absolutePath)) absolutePath = absolutePath.substring(1)
-      }
-      else if (rawSrc.startsWith('./')) absolutePath = parentDir + rawSrc.substring(2)
-      else if (!rawSrc.includes(':') && !rawSrc.startsWith('/')) absolutePath = parentDir + rawSrc
-      else absolutePath = rawSrc
+      const sourceKey = `${filePath}\n${rawSrc}`
+      if (img.dataset.fixedSource === sourceKey) return
+      const normalizedPath = resolveLocalImagePath(filePath, rawSrc)
+      if (!normalizedPath) { releaseImage(img); return }
 
       try {
-        const normalizedPath = absolutePath.replace(/\\/g, '/')
         const command = access.external ? 'get_external_image_base64' : 'get_image_base64'
         const b64 = await invoke<string>(command, {
           documentPath: filePath,
           path: normalizedPath,
           ...(!access.external ? { libraryRoot: access.libraryRoot?.() || '' } : {}),
         })
-        if (img.src !== b64) img.src = b64
+        if (getFilePath() !== filePath || img.getAttribute('src') !== rawSrc || !img.isConnected) return
+        // src remains the Markdown destination. srcset changes only the rendered
+        // resource, so displaying a local image never embeds it into the draft.
+        const separator = b64.indexOf(','), mime = b64.slice(0, separator).match(/^data:([^;]+);base64$/)?.[1]
+        if (!mime) throw new Error('图片数据格式无效')
+        const bytes = Uint8Array.from(atob(b64.slice(separator + 1)), character => character.charCodeAt(0))
+        const url = URL.createObjectURL(new Blob([bytes], { type: mime }))
+        const previous = rendered.get(img)
+        img.srcset = url
+        rendered.set(img, url)
+        if (previous) URL.revokeObjectURL(previous)
         img.dataset.fixed = 'true'
+        img.dataset.fixedSource = sourceKey
       } catch (e) {
+        if (getFilePath() === filePath && img.getAttribute('src') === rawSrc) releaseImage(img)
         console.warn('Image authorization failed:', e)
       }
     })
@@ -68,6 +79,7 @@ export function useImageFix(getVditor: () => any, getFilePath: () => string, acc
   }
 
   const destroyImageFix = () => {
+    for (const img of rendered.keys()) releaseImage(img)
     observer?.disconnect()
     observer = null
     if (refreshTimer) clearTimeout(refreshTimer)

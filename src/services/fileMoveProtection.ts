@@ -2,6 +2,7 @@ import { fileStylePathKey } from '../utils/fileDisplayStyles'
 import { snapshotWindowDrafts, dirtyDocumentPaths, pendingDocumentSaves } from './windowDrafts'
 import { invoke } from './tauriRuntime'
 export interface FileMoveNotice { root: string; oldPath: string; newPath: string; documents: string[] }
+export interface FileMoveRequest { requestId: string; libraryRoot?: string; paths: string[]; rewritePaths?: string[]; sourcePaths?: string[] }
 export const pathsOverlap = (a: string, b: string) => {
   const left = fileStylePathKey(a), right = fileStylePathKey(b)
   return Boolean(left && right && (left === right || left.startsWith(right + '/') || right.startsWith(left + '/')))
@@ -9,9 +10,18 @@ export const pathsOverlap = (a: string, b: string) => {
 export const movedPath = (path: string, notice: FileMoveNotice) => {
   const key = fileStylePathKey(path), old = fileStylePathKey(notice.oldPath)
   const clean = (value: string) => value.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
-  return key === old || key.startsWith(old + '/') ? notice.newPath.replace(/[\\/]$/, '') + clean(path).slice(clean(notice.oldPath).length) : path
+  const target = notice.newPath.replace(/[\\/]$/, '')
+  const suffix = clean(path).slice(clean(notice.oldPath).length)
+  return key === old || key.startsWith(old + '/') ? target + (target.includes('\\') ? suffix.replace(/\//g, '\\') : suffix) : path
 }
-export function createFileMoveProtection(options: { ready: () => boolean; dirtyPaths: () => string[]; retainedDraftPaths?: () => string[]; referenceDrafts?: () => { path: string; content?: string }[]; activePath?: () => string; completed: (notice: FileMoveNotice) => Promise<void> }) {
+export const canRetainMovedDraft = (path: string, request: FileMoveRequest, formatAt: (path: string) => { id: string; routeName: string } | undefined) => {
+  const source = request.sourcePaths?.[0], target = request.paths[1]
+  if (!source || !target) return false
+  const nextPath = movedPath(path, { root: request.libraryRoot || '', oldPath: source, newPath: target, documents: [] })
+  const before = formatAt(path), after = formatAt(nextPath)
+  return Boolean(before && after && ((before.id === 'markdown' && after.id === 'markdown') || (before.routeName === 'TextEditor' && after.routeName === 'TextEditor')))
+}
+export function createFileMoveProtection(options: { ready: () => boolean; dirtyPaths: () => string[]; retainedDraftPaths?: (request: FileMoveRequest) => string[]; referenceDrafts?: () => { path: string; content?: string }[]; activePath?: () => string; completed: (notice: FileMoveNotice) => Promise<void> }) {
   const requests = new Map<string, ReturnType<typeof setInterval>>()
   const completing = new Set<string>()
   let oldInert = false, oldCursor = '', focus: HTMLElement | null = null
@@ -34,7 +44,7 @@ export function createFileMoveProtection(options: { ready: () => boolean; dirtyP
       await invoke('acknowledge_file_move_release', { requestId }).catch(() => {})
     }
   }
-  const protect = async (request: { requestId: string; libraryRoot?: string; paths: string[]; rewritePaths?: string[]; sourcePaths?: string[] }) => {
+  const protect = async (request: FileMoveRequest) => {
     if (requests.has(request.requestId)) return
     if (!requests.size) {
       focus = document.activeElement as HTMLElement | null; const app = document.body; oldInert = Boolean(app?.inert); if (app) app.inert = true
@@ -45,7 +55,7 @@ export function createFileMoveProtection(options: { ready: () => boolean; dirtyP
         .then(result => { if (!result.active) return release(request.requestId, result.notice) }).catch(() => {})
     }, 750))
     snapshotWindowDrafts()
-    const rewrites = request.rewritePaths || request.paths, retained = options.retainedDraftPaths?.() || []
+    const rewrites = request.rewritePaths || request.paths, retained = options.retainedDraftPaths?.(request) || []
     const cached = options.dirtyPaths().filter(path => {
       const key = fileStylePathKey(path)
       const canRetain = retained.some(retained => key === fileStylePathKey(retained)) && (request.sourcePaths || []).some(source => key === fileStylePathKey(source) || key.startsWith(fileStylePathKey(source) + '/'))

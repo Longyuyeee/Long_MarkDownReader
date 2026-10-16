@@ -62,7 +62,8 @@ test('lost release events use the native receipt to refresh once and restore int
 })
 test('path continuation retains filename case and excludes similarly named siblings', () => {
   const f = fixture(), notice = { oldPath: '\\\\?\\C:\\Lib\\Folder', newPath: '\\\\?\\C:\\Lib\\Archive\\Folder' }
-  assert.equal(f.api.movedPath('C:/LIB/Folder/Sub/Note.MD', notice), '\\\\?\\C:\\Lib\\Archive\\Folder/Sub/Note.MD')
+  assert.equal(f.api.movedPath('C:/LIB/Folder/Sub/Note.MD', notice), '\\\\?\\C:\\Lib\\Archive\\Folder\\Sub\\Note.MD')
+  assert.equal(f.api.movedPath('\\\\server\\share\\Folder\\Sub\\Note.MD', {oldPath:'\\\\?\\UNC\\server\\share\\Folder',newPath:'\\\\?\\UNC\\server\\share\\Archive\\Folder'}), '\\\\?\\UNC\\server\\share\\Archive\\Folder\\Sub\\Note.MD')
   assert.equal(f.api.movedPath('C:/Lib/Folder-extra/Note.MD', notice), 'C:/Lib/Folder-extra/Note.MD')
 })
 test('a cached Markdown draft follows a move when the native operation never rewrites its body', async () => {
@@ -85,4 +86,24 @@ test('fresh reference drafts include unsaved-only incoming links and exclude ano
   assert.equal(f.calls[0].args.dirtyPaths.length, 0)
   assert.equal(f.calls[0].args.drafts.length, 1); assert.equal(f.calls[0].args.drafts[0].content, '![new](pic.png)')
   await bridge.release({ requestId: 'one' }); bridge.dispose(); scope.stop()
+})
+test('cached text drafts follow a move in the same editor while editor-type changes still require saving', () => {
+  const f=fixture(), formatAt=path=>path.endsWith('.md')?{id:'markdown',routeName:'LibraryMode'}:path.endsWith('.txt')?{id:'plain-text',routeName:'TextEditor'}:path.endsWith('.js')?{id:'javascript',routeName:'TextEditor'}:{id:'pdf',routeName:'Pdf'}
+  const request=target=>({requestId:'one',sourcePaths:['C:/Lib/a.txt'],paths:['C:/Lib/a.txt',target]})
+  assert.equal(f.api.canRetainMovedDraft('C:/Lib/a.txt',request('C:/Lib/new.txt'),formatAt),true)
+  assert.equal(f.api.canRetainMovedDraft('C:/Lib/a.txt',request('C:/Lib/new.js'),formatAt),true)
+  assert.equal(f.api.canRetainMovedDraft('C:/Lib/a.txt',request('C:/Lib/new.pdf'),formatAt),false)
+  assert.equal(f.api.canRetainMovedDraft('C:/Lib/a.txt',request('C:/Lib/new.md'),formatAt),false)
+})
+test('fresh protection passes the source and target to the cached text-draft retention decision', async () => {
+  const f=fixture(),bridge=f.api.createFileMoveProtection({ready:()=>true,dirtyPaths:()=>['C:/Lib/a.txt'],retainedDraftPaths:request=>request.paths[1].endsWith('.txt')?['C:/Lib/a.txt']:[],completed:async()=>{}})
+  await bridge.protect({requestId:'one',sourcePaths:['C:/Lib/a.txt'],paths:['C:/Lib/a.txt','C:/Lib/new.txt'],rewritePaths:[]});assert.equal(f.calls[0].args.dirtyPaths.length,0);await bridge.release({requestId:'one'})
+  await bridge.protect({requestId:'two',sourcePaths:['C:/Lib/a.txt'],paths:['C:/Lib/a.txt','C:/Lib/new.pdf'],rewritePaths:[]});assert.equal(f.calls.at(-1).args.dirtyPaths[0],'a.txt');await bridge.release({requestId:'two'});bridge.dispose()
+})
+test('selecting a Windows spelling of an open dirty document reuses its tab and route', () => {
+  const source=fs.readFileSync('src/views/LibraryMode.vue','utf8'),start=source.indexOf('const handleNodeSelect ='),end=source.indexOf('const handleTreeSelection =',start)
+  const script=ts.transpileModule(source.slice(start,end)+'\nglobalThis.select=handleNodeSelect',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText
+  const path='C:/Lib/note.md',calls=[],context={selectedKeys:{value:[]},allTabs:{value:[{path,isDirty:true},{path:'\\\\?\\C:\\Lib\\note.md',isDirty:false}]},treeData:{value:[]},findTreeOptionByKey:()=>({isLeaf:true}),sameLibrary:(a,b)=>paths.fileStylePathKey(a)===paths.fileStylePathKey(b),findFileFormat:()=>({label:'Markdown'}),opensInLibraryShell:()=>true,route:{name:'LibraryMode',query:{path}},router:{},openManagedFile:(_router,path)=>calls.push(['navigate',path]),fileDisplayName:()=> 'note',store:{addTab:tab=>calls.push(['tab',tab.path])},refreshRelationSummaries:async()=>{}}
+  vm.runInNewContext(script,context);context.select(['\\\\?\\C:\\LIB\\note.md']);assert.deepEqual(calls,[['tab',path]])
+  calls.length=0;context.route.query.path='C:/Lib/other.md';context.select(['\\\\?\\C:\\Lib\\note.md']);assert.deepEqual(calls,[['navigate',path]])
 })

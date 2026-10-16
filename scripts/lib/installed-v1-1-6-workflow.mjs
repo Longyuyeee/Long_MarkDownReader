@@ -15,6 +15,7 @@ export const moveContinuityChecks = [
   'another-real-markdown-window-retains-its-draft-and-refreshes-links-after-save',
   'same-folder-rename-does-not-require-repairing-unrelated-old-broken-links',
   'move-continuity-keeps-interface-operable-without-global-error-overlay',
+  'cached-text-draft-keeps-encoding-and-saves-only-at-the-renamed-path',
 ]
 export async function runInstalledV116Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
   assert.equal(appVersion, '1.1.6')
@@ -122,6 +123,17 @@ export async function runInstalledV116Workflow({ send, evaluate, navigate, waitF
     const brokenRenamed=await invoke('rename_item',{libraryRoot:library,oldPath:p('old-broken.md'),newName:'old-broken-renamed.md'})
     check(moveContinuityChecks[10],await read(brokenRenamed)===brokenBody)
     check(moveContinuityChecks[11], await evaluate(`!document.body.inert&&!document.querySelector('#crash-screen')&&!document.querySelector('.route-error')`))
+    const textOld=p('保留草稿.txt'),textOriginal='original\r\n';await fs.writeFile(textOld,textOriginal)
+    await navigate('#/library?path='+encodeURIComponent(textOld),'.library-mode','v116 cached text draft')
+    await waitFor(`document.querySelector('.text-workspace .cm-content')?.textContent.includes('original')`,'text editor ready')
+    await click(`document.querySelector('.text-workspace .cm-content')`);await press('End','End',35,2);await send('Input.insertText',{text:'新的未保存内容'})
+    const textNew=await invoke('rename_item',{libraryRoot:library,oldPath:textOld,newName:'接续草稿.txt'})
+    await waitFor(`document.querySelector('.text-workspace .cm-content')?.textContent.includes('新的未保存内容')&&!document.body.inert`,'text draft follows renamed path')
+    const retainedText=await currentDraft(textNew);assert.equal(await read(textNew),textOriginal)
+    await click(`[...document.querySelectorAll('.text-workspace button')].find(button=>button.textContent.trim()==='保存')`)
+    await waitFor(`!(${store}).tabs.some(tab=>tab.isDirty)`,'text draft explicitly saved at new path')
+    const savedText=await read(textNew)
+    check(moveContinuityChecks[12],retainedText.includes('新的未保存内容')&&savedText.includes('新的未保存内容')&&savedText.includes('\r\n')&&!await fs.stat(textOld).then(()=>true,()=>false))
     await capture('installed-v116-move-continuity.jpg'); report.status = 'passed'
   } catch (error) { report.status = 'failed'; report.error = String(error); await capture('installed-v116-failure.jpg').catch(() => {}); throw error }
   finally { await fs.writeFile(path.join(output, 'installed-v116-workflow.json'), JSON.stringify(report, null, 2) + '\n') }

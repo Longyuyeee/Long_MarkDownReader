@@ -13,9 +13,10 @@ function harness(viewSource = source) {
   let enabled = true
   const ctx = vm.createContext({
     tabs: { value: [tab] }, activeTabId: { value: tab.path }, lastLoadedPath: '',
-    suppressEditorInput: false, referenceBookmark: null,
+    suppressEditorInput: false, editorDisplayBaseline: null, referenceBookmark: null,
     pendingEditorSaveLoad: { value: false },
-    vditor: { vditor: {}, setValue: value => writes.push(value), disabled: () => { enabled = false }, enable: () => { enabled = true } },
+    document: { querySelectorAll: () => [] }, onBeforeUnmount() {}, clearTimeout() {}, route: { query: {} }, recallWorkspaceViewState() {},
+    vditor: { vditor: {}, setValue: value => writes.push(value), getValue: () => writes.at(-1), disabled: () => { enabled = false }, enable: () => { enabled = true } },
     setTimeout: (callback, delay) => timers.push({ callback, delay }), nextTick: callback => callback(),
     startAdaptiveMotion() {}, fetchHistory() {}, refreshVisibleOutline() {}, updateWordCount() {}, fixEditorImages() {},
     revealSearchMatch() {}, scheduleWorkspaceTaskReveal() {}, scheduleRelationEvidenceReveal() {},

@@ -83,7 +83,7 @@ jobs:
           }
           if ($env:RELEASE_VERSION -eq '1.1.6') {
             $continuity = Get-Content verified-review/installed-v116-workflow.json -Raw | ConvertFrom-Json
-            if ($continuity.status -ne 'passed' -or $continuity.checks.Count -ne 12 -or @($continuity.checks | Where-Object status -ne 'passed').Count -or $continuity.sourceCommit -ne $env:PRODUCT_COMMIT -or $continuity.appVersion -ne $env:RELEASE_VERSION -or $continuity.sourceUserContentIncluded -ne $false -or $continuity.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Move, link and multi-window draft workflows did not pass in the exact installed product' }
+            if ($continuity.status -ne 'passed' -or $continuity.checks.Count -ne 13 -or @($continuity.checks | Where-Object status -ne 'passed').Count -or $continuity.sourceCommit -ne $env:PRODUCT_COMMIT -or $continuity.appVersion -ne $env:RELEASE_VERSION -or $continuity.sourceUserContentIncluded -ne $false -or $continuity.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Move, link and multi-window draft workflows did not pass in the exact installed product' }
           }
           New-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null
           $expected = @()

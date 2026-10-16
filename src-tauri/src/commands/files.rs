@@ -644,7 +644,7 @@ pub async fn get_image_base64(
     path: String,
 ) -> Result<String, String> {
     let guard = WorkspaceGuard::new(library_root)?;
-    let document = guard.resolve_existing_file(document_path, &["md"])?;
+    let document = guard.resolve_existing_file(document_path, &["md", "markdown"])?;
     let image = guard.resolve_existing_file(path, IMAGE_EXTENSIONS)?;
     ensure_markdown_references_image(&document, &image)?;
     encode_image(&image)
@@ -694,14 +694,20 @@ fn ensure_markdown_references_image(document: &Path, image: &Path) -> Result<(),
         .map_err(|error| format!("图片路径无效: {error}"))?;
     let content = fs::read_to_string(document).map_err(|error| error.to_string())?;
     let parent = document.parent().ok_or("Markdown 文件没有父目录")?;
-    let referenced = referenced_assets(&content).into_iter().any(|reference| {
+    let mut references = referenced_assets(&content);
+    for event in pulldown_cmark::Parser::new(&content) {
+        if let pulldown_cmark::Event::Start(pulldown_cmark::Tag::Image { dest_url, .. }) = event {
+            references.insert(dest_url.into_string());
+        }
+    }
+    let referenced = references.into_iter().any(|reference| {
         if reference.starts_with("http")
             || reference.starts_with("data:")
             || reference.starts_with("misty-img:")
         {
             return false;
         }
-        let clean = reference.split('?').next().unwrap_or(&reference);
+        let clean = reference.split(['?', '#']).next().unwrap_or(&reference);
         let decoded = urlencoding::decode(clean).unwrap_or_else(|_| clean.into());
         let candidate = Path::new(decoded.as_ref());
         let candidate = if candidate.is_absolute() {
@@ -1028,6 +1034,20 @@ mod tests {
         assert!(ensure_image_file(&svg).is_err());
 
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn image_references_accept_definitions_titles_and_url_suffixes() {
+        let f=crate::services::test_workspace::TestWorkspace::new();let image=f.0.join("图 image.png");let document=f.0.join("note.md");
+        fs::write(&image,b"image").unwrap();
+        for content in ["![图][image]\n\n[image]: %E5%9B%BE%20image.png#preview\n", "![图](<图 image.png> \"标题\")", "![图](%E5%9B%BE%20image.png?size=2#preview)"] {
+            fs::write(&document,content).unwrap();assert!(ensure_markdown_references_image(&document,&image).is_ok(),"{content}");
+        }
+    }
+    #[test]
+    fn registered_markdown_extension_can_read_its_referenced_image() {
+        let f=crate::services::test_workspace::TestWorkspace::new();let image=f.0.join("image.png");let document=f.0.join("note.markdown");fs::write(image,b"image").unwrap();fs::write(&document,"![image](image.png)").unwrap();
+        let data=tauri::async_runtime::block_on(get_image_base64(f.0.to_string_lossy().into_owned(),document.to_string_lossy().into_owned(),f.0.join("image.png").to_string_lossy().into_owned())).unwrap();assert!(data.starts_with("data:image/png;base64,"));
     }
 
     #[test]

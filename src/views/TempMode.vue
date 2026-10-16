@@ -162,6 +162,7 @@ const loadFileContent = async () => {
     originalExternalContent = result.content
     if (vditor) {
       vditor.setValue(result.content)
+      originalExternalContent = vditor.getValue()
       startAdaptiveMotion()
       isDirty.value = false
       refreshVisibleOutline()
