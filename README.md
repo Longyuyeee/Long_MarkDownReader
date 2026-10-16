@@ -441,7 +441,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 基础功能深化路线
 
-现有基础能力持续围绕实际使用任务深化，入口按使用频率放在右键、新建菜单和按需弹窗中，不为新功能挤占主编辑区。后续优先依据真实反馈改进文件整理、模板、历史、关系和查找体验；跨库剪贴板、持久化文件操作历史及其他格式的历史恢复尚未交付。已完成内容与后续范围见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)。
+现有基础能力持续围绕实际使用任务深化，入口按使用频率放在右键、新建菜单和按需弹窗中，不为新功能挤占主编辑区。后续优先依据真实反馈改进文件整理、模板、历史、关系和查找体验；跨库剪贴板、持久化文件操作历史及其他格式的历史恢复尚未交付。已完成内容见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)，后续按 [v1.1.8—v1.1.20 深化规划](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md) 逐版审计与推进，计划不代表已交付。
 
 ### 从源码启动
 
@@ -516,6 +516,6 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-### v1.1.7 开发已暂停：保存与历史
+### v1.1.7 收尾中：保存与历史
 
-当前正式下载仍为 v1.1.6。v1.1.7 已实现 Markdown/TXT 保存冲突比较与草稿保护、历史内容/备注查找、差异跳转和右键保留重要版本；2026-10-16 按用户要求暂停全部开发和构建，最后修改及安装包验证尚未完成，尚未发布。[完成项与后续待办](docs/V1_1_7_Development_Pause_Handoff_2026-10-16.md) · [本版说明草案](docs/RELEASE_NOTES_v1.1.7.md) · [开发记录](docs/V1_1_7_Save_History_Development_2026-10-16.md)。
+当前正式下载仍为 v1.1.6。2026-10-17 已按用户要求恢复开发。v1.1.7 已实现 Markdown/TXT 保存冲突比较与草稿保护、历史内容/备注查找、差异跳转和右键保留重要版本，并补齐历史并发读取保护；正在验证固定安装包，尚未发布。[本轮审计与待办](docs/V1_1_7_History_Read_Coordination_Audit_2026-10-17.md) · [本版说明草案](docs/RELEASE_NOTES_v1.1.7.md) · [开发记录](docs/V1_1_7_Save_History_Development_2026-10-16.md)。
