@@ -14,6 +14,7 @@ pub fn write_bytes(path: impl AsRef<Path>, content: &[u8]) -> Result<(), String>
 }
 
 pub fn write_new_bytes(path: impl AsRef<Path>, content: &[u8]) -> Result<(), String> {
+    let _activity = super::file_activity::read_write(&[path.as_ref()])?;
     let _guard = WRITE_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -57,6 +58,7 @@ pub fn write_new_bytes(path: impl AsRef<Path>, content: &[u8]) -> Result<(), Str
 }
 
 pub fn recover_interrupted_write(path: impl AsRef<Path>) -> Result<(), String> {
+    let _activity = super::file_activity::read_write(&[path.as_ref()])?;
     let _guard = WRITE_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -64,6 +66,7 @@ pub fn recover_interrupted_write(path: impl AsRef<Path>) -> Result<(), String> {
 }
 
 fn write_bytes_impl(path: &Path, content: &[u8], fail_after_backup: bool) -> Result<(), String> {
+    let _activity = super::file_activity::read_write(&[path])?;
     let _guard = WRITE_LOCK
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());

@@ -294,6 +294,7 @@ impl Drop for Assets {
 }
 
 pub(crate) fn import_file(source: &Path, destination: &Path) -> Result<PathBuf, String> {
+    let _activity = super::file_activity::read_write(&[source, destination])?;
     if file_format_for_path(source)?.id != "markdown" {
         return publish(source, destination, None);
     }

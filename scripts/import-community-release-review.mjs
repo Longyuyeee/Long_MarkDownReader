@@ -20,8 +20,9 @@ const reports = Object.fromEntries([
   ['workspace', 'installed-artifact-smoke.json', 18], ['version', 'installed-version-identity.json', 4],
   ['workflow', 'installed-v110-workflow.json', 8], ['experience', 'installed-v111-workflow.json', 8],
   ['fileManagement', 'installed-v112-workflow.json', 9], ['foundation', 'installed-v113-workflow.json', 8],
-...(['1.1.4', '1.1.5'].includes(version) ? [['foundationExtended', 'installed-v114-workflow.json', 8]] : []),
-...(version === '1.1.5' ? [['foundationHardening', 'installed-v115-workflow.json', 11]] : []),
+...(['1.1.4', '1.1.5', '1.1.6'].includes(version) ? [['foundationExtended', 'installed-v114-workflow.json', 8]] : []),
+...(['1.1.5', '1.1.6'].includes(version) ? [['foundationHardening', 'installed-v115-workflow.json', 11]] : []),
+...(version === '1.1.6' ? [['moveContinuity', 'installed-v116-workflow.json', 11]] : []),
 ].map(([key, file, count]) => {
   const report = json(path.join(directory, file))
   assert.equal(report.status, 'passed', file); assert.equal(report.sourceUserContentIncluded, false, file)
@@ -48,7 +49,7 @@ const files = fs.readdirSync(directory).filter(file => /\.(?:json|jpg|png)$/i.te
 for (const file of files) fs.copyFileSync(path.join(directory, file), path.join(evidenceRoot, file))
 const entries = files.map(file => { const bytes = fs.readFileSync(path.join(evidenceRoot, file)); return { path: file, sizeBytes: bytes.length, sha256: digest(bytes) } })
 const runtimeReports = Object.fromEntries([
-  ...['workspace', 'version', 'workflow', 'experience', 'fileManagement', 'foundation', ...(['1.1.4', '1.1.5'].includes(version) ? ['foundationExtended'] : []), ...(version === '1.1.5' ? ['foundationHardening'] : [])].map(key => [key, reports[key].file]),
+  ...['workspace', 'version', 'workflow', 'experience', 'fileManagement', 'foundation', ...(['1.1.4', '1.1.5', '1.1.6'].includes(version) ? ['foundationExtended'] : []), ...(['1.1.5', '1.1.6'].includes(version) ? ['foundationHardening'] : []), ...(version === '1.1.6' ? ['moveContinuity'] : [])].map(key => [key, reports[key].file]),
   ['routes', 'installed-route-mount-evidence.json'],
 ].map(([key, file]) => [key, { path: evidenceRoot + '/' + file, sha256: digest(fs.readFileSync(path.join(evidenceRoot, file))) }]))
 const checksums = artifacts.map(artifact => artifact.sha256 + '  ' + artifact.fileName).join('\n') + '\n'
@@ -64,8 +65,9 @@ const manifest = {
     status: 'passed', runId: reviewRun, sourceCommit: receipt.candidateSourceCommit, evidenceRoot,
     evidenceManifest: releaseRoot + '/import-manifest.json', lifecycleChecksPassed: 22, installedWorkspaceChecksPassed: 18,
     installedRoutesPassed: 11, managementRollbackChecksPassed: 7, workflowChecksPassed: 8,
-    experienceChecksPassed: 8, fileManagementChecksPassed: 9, foundationChecksPassed: 8, ...(['1.1.4', '1.1.5'].includes(version) ? { foundationExtendedChecksPassed: 8 } : {}),
-    ...(version === '1.1.5' ? { foundationHardeningChecksPassed: 11, harnessSourceCommit: reports.foundationHardening.report.harnessSourceCommit } : {}),
+    experienceChecksPassed: 8, fileManagementChecksPassed: 9, foundationChecksPassed: 8, ...(['1.1.4', '1.1.5', '1.1.6'].includes(version) ? { foundationExtendedChecksPassed: 8 } : {}),
+    ...(['1.1.5', '1.1.6'].includes(version) ? { foundationHardeningChecksPassed: 11, harnessSourceCommit: reports.foundationHardening.report.harnessSourceCommit } : {}),
+    ...(version === '1.1.6' ? { moveContinuityChecksPassed: 11 } : {}),
     versionChecksPassed: 4, failedChecks: 0, sourceUserContentIncluded: false,
   },
   boundaries: { communityUnsigned: true, enterprisePromotionEligible: false, releaseAssetsPublished: false, managedUpdaterReleaseAssetsPresent: false, legacyTauriUpdaterArtifactsPresent: false },
@@ -81,8 +83,8 @@ write(path.join(releaseRoot, 'import-manifest.json'), {
   checks: {
     lifecyclePassed: 22, lifecycleFailed: 0, installedArtifactPassed: 18, installedArtifactFailed: 0,
     installedRoutesPassed: 11, managementRollbackPassed: 7, workflowPassed: 8,
-    experiencePassed: 8, fileManagementPassed: 9, foundationPassed: 8, ...(['1.1.4', '1.1.5'].includes(version) ? { foundationExtendedPassed: 8 } : {}), versionPassed: 4,
-    ...(version === '1.1.5' ? { foundationHardeningPassed: 11 } : {}),
+    experiencePassed: 8, fileManagementPassed: 9, foundationPassed: 8, ...(['1.1.4', '1.1.5', '1.1.6'].includes(version) ? { foundationExtendedPassed: 8 } : {}), versionPassed: 4,
+    ...(['1.1.5', '1.1.6'].includes(version) ? { foundationHardeningPassed: 11 } : {}),
   },
   files: entries,
 })

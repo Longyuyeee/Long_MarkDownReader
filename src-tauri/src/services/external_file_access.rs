@@ -11,6 +11,28 @@ pub struct ExternalFileAccess {
 }
 
 impl ExternalFileAccess {
+    pub(crate) fn relocate_authorizations(&self, old: &Path, new: &Path) -> Result<(), String> {
+        for registry in [
+            &self.authorized_editable,
+            &self.authorized_previews,
+            &self.authorized_imports,
+        ] {
+            let mut paths = registry.lock().map_err(|_| "无法接续外部文件入口")?;
+            let moving: Vec<_> = paths
+                .iter()
+                .filter_map(|path| {
+                    path.strip_prefix(old)
+                        .ok()
+                        .map(|suffix| (path.clone(), new.join(suffix)))
+                })
+                .collect();
+            for (before, after) in moving {
+                paths.remove(&before);
+                paths.insert(after);
+            }
+        }
+        Ok(())
+    }
     pub fn authorize_editable(&self, path: impl AsRef<Path>) -> Result<PathBuf, String> {
         let resolved = resolve_editable(path.as_ref())?;
         self.authorized_editable
@@ -320,5 +342,4 @@ mod tests {
 
         fs::remove_dir_all(directory).unwrap();
     }
-
 }

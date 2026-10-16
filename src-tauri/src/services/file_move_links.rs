@@ -47,7 +47,7 @@ fn mapped(path: &Path, source: &Path, target: &Path) -> PathBuf {
         })
         .unwrap_or_else(|_| path.to_path_buf())
 }
-fn moved_names(source: &Path) -> Result<HashSet<String>, String> {
+pub(crate) fn moved_names(source: &Path) -> Result<HashSet<String>, String> {
     let mut pending = vec![source.to_path_buf()];
     let mut names = HashSet::new();
     let mut count = 0;
@@ -89,6 +89,64 @@ fn candidate_name(target: &str) -> String {
         .to_lowercase()
 }
 
+/// Inspect a fresh editor snapshot without saving or changing the buffer.
+pub(crate) fn draft_requires_rewrite(
+    root: &Path,
+    source: &Path,
+    target: &Path,
+    document: &Path,
+    content: &str,
+) -> Result<bool, String> {
+    draft_requires_rewrite_with_names(root, source, target, document, content, &moved_names(source)?)
+}
+pub(crate) fn draft_requires_rewrite_with_names(root: &Path, source: &Path, target: &Path, document: &Path, content: &str, names: &HashSet<String>) -> Result<bool, String> {
+    if content.len() > 2 * 1024 * 1024 {
+        return Err("未保存正文过大，请先保存后再整理文件".into());
+    }
+    let guard = WorkspaceGuard::new(root)?;
+    let document = guard.resolve_for_write(document)?;
+    let next_document = mapped(&document, source, target);
+    if key(&document) != key(&next_document) && !next_document.extension().is_some_and(|extension|extension.eq_ignore_ascii_case("md")||extension.eq_ignore_ascii_case("markdown")) {
+        return Err("文件类型即将变化，请先保存正文后再改名；未保存的修改仍然保留".into());
+    }
+    for evidence in archive_dependencies::move_mentions(&document.to_string_lossy(), content) {
+        let before = archive_dependencies::resolve_relative(root, &evidence);
+        let resolved = before
+            .path
+            .as_deref()
+            .map(Path::new)
+            .and_then(|path| path.canonicalize().ok());
+        let intended = resolved.as_deref().map(|path| mapped(path, source, target));
+        let affected = key(&document) != key(&next_document)
+            || resolved
+                .as_ref()
+                .zip(intended.as_ref())
+                .is_some_and(|(a, b)| key(a) != key(b));
+        if !affected {
+            if before.status != "resolved_file" && names.contains(&candidate_name(&evidence.target))
+            {
+                return Ok(true);
+            }
+            continue;
+        }
+        let Some(intended) = intended.filter(|_| before.status == "resolved_file") else {
+            return Ok(true);
+        };
+        let mut after = evidence;
+        after.document = next_document.to_string_lossy().into_owned();
+        let after = archive_dependencies::resolve_relative(root, &after);
+        if !after
+            .path
+            .as_deref()
+            .is_some_and(|path| key(Path::new(path)) == key(&intended))
+            || !["resolved_file", "missing"].contains(&after.status)
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 pub(crate) fn plan(root: &str, source: &Path, target: &Path) -> Result<MoveLinkPlan, String> {
     let guard = WorkspaceGuard::new(root)?;
     let source = guard.resolve_existing(source)?;
@@ -116,7 +174,7 @@ pub(crate) fn plan(root: &str, source: &Path, target: &Path) -> Result<MoveLinkP
         }
     }
     let names = moved_names(&source)?;
-    let inventory = archive_dependencies::scan_visible(root)?;
+    let inventory = archive_dependencies::scan_for_move(root)?;
     let mut proposals: BTreeMap<String, Vec<(DependencyEvidence, String)>> = BTreeMap::new();
     let mut blockers = Vec::new();
     for evidence in inventory.evidence() {
@@ -193,7 +251,7 @@ pub(crate) fn plan(root: &str, source: &Path, target: &Path) -> Result<MoveLinkP
         if original.len() > 2 * 1024 * 1024 {
             return Err("引用来源在规划期间超过 2 MiB 上限，未写入文件".into());
         }
-        let replacement = archive_edits::preview(&document, &original, &changes)?;
+        let replacement = archive_edits::preview_move(&document, &original, &changes)?;
         documents.push(DocumentEdit {
             source: PathBuf::from(&document),
             target: mapped(Path::new(&document), &source, &target),
@@ -420,14 +478,15 @@ mod tests {
         );
     }
     #[test]
-    fn reference_definition_without_safe_edit_span_is_not_silently_changed() {
+    fn reference_definition_gets_verified_preview_without_writing() {
         let f = Fixture::new();
         f.write("note.md", "body");
         f.write("index.md", "[笔记][n]\n\n[n]: note.md\n");
         let p = f.plan("note.md", "new.md");
         assert!(!p.can_execute);
-        assert!(p.documents.is_empty());
-        assert!(!p.blockers.is_empty());
+        assert_eq!(p.documents.len(), 1);
+        assert!(p.documents[0].replacement.contains("[n]: new.md"));
+        assert!(p.blockers.is_empty());
         assert_eq!(
             fs::read_to_string(f.0.join("index.md")).unwrap(),
             "[笔记][n]\n\n[n]: note.md\n"
@@ -448,5 +507,42 @@ mod tests {
         assert_eq!(d.changed_references, 1);
         assert!(d.replacement.contains("[资料](../target.txt)"));
         assert!(d.replacement.contains("```md\n[例子](target.txt)\n```"));
+    }
+    #[test]
+    fn fresh_unsaved_incoming_links_are_checked_even_when_absent_from_disk() {
+        let f=Fixture::new(); let image=f.write("pic.png","image");let note=f.write("note.md","plain saved text");
+        assert!(draft_requires_rewrite(&f.0,&image,&f.0.join("new.png"),&note,"new draft ![图](pic.png)").unwrap());
+        assert_eq!(fs::read_to_string(note).unwrap(),"plain saved text");
+    }
+    #[test]
+    fn moving_a_plain_draft_or_remote_and_example_links_does_not_require_saving() {
+        let f=Fixture::new();let note=f.write("note.md","saved");
+        assert!(!draft_requires_rewrite(&f.0,&note,&f.0.join("sub/note.md"),&note,"draft [site](https://example.com) `![例子](pic.png)`").unwrap());
+    }
+    #[test]
+    fn a_new_outgoing_relative_link_in_a_moving_draft_requires_saving() {
+        let f=Fixture::new();let note=f.write("note.md","saved");f.write("pic.png","image");
+        assert!(draft_requires_rewrite(&f.0,&note,&f.0.join("sub/note.md"),&note,"![图](pic.png)").unwrap());
+    }
+    #[test]
+    fn moving_folder_keeps_draft_links_between_its_children_without_saving() {
+        let f=Fixture::new();let note=f.write("folder/note.md","saved");f.write("folder/pic.png","image");
+        assert!(!draft_requires_rewrite(&f.0,&f.0.join("folder"),&f.0.join("newfolder"),&note,"![图](pic.png)").unwrap());
+    }
+    #[test]
+    fn unrelated_draft_reference_does_not_block_a_move() {
+        let f=Fixture::new();let note=f.write("note.md","saved");let image=f.write("pic.png","image");f.write("other.txt","other");
+        assert!(!draft_requires_rewrite(&f.0,&image,&f.0.join("new.png"),&note,"[other](other.txt)").unwrap());
+    }
+    #[test]
+    fn ambiguous_unsaved_incoming_link_is_preserved_for_user_to_save() {
+        let f=Fixture::new();let note=f.write("note.md","saved");let image=f.write("pic.png","image");
+        assert!(draft_requires_rewrite(&f.0,&image,&f.0.join("new.png"),&note,"[[pic.png]]").unwrap());
+    }
+    #[test]
+    fn renaming_a_dirty_markdown_to_another_editor_type_requires_saving_first() {
+        let f=Fixture::new();let note=f.write("note.md","saved");
+        assert!(draft_requires_rewrite(&f.0,&note,&f.0.join("note.txt"),&note,"unsaved text").unwrap_err().contains("先保存"));
+        assert_eq!(fs::read_to_string(note).unwrap(),"saved");
     }
 }

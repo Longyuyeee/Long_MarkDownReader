@@ -453,7 +453,7 @@ const mayLeave = async () => !dirty.value || await confirmAppAction(dialog, {
   content: '当前标签仍有未保存修改。磁盘文件不会改变，草稿会继续保留在标签中。',
   positiveText: '离开编辑器',
 })
-useWindowDraft(() => dirty.value)
+useWindowDraft(() => dirty.value, () => String(route.query.path || store.activeTabId || ''))
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())

@@ -49,7 +49,10 @@ impl WorkspaceGuard {
         allow_create: bool,
     ) -> Result<PathBuf, String> {
         let resolved = if allow_create {
-            self.resolve_for_write(input)?
+            let candidate = self.resolve_for_write(input)?;
+            let current = super::file_activity::current_directory(&candidate)?;
+            self.ensure_contained(&current)?;
+            current
         } else {
             self.resolve_existing(input)?
         };

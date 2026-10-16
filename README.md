@@ -506,6 +506,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.6 候选 | 移动、改名后接续本地图片与文档链接；多窗口草稿保护、PDF 伴随记录和中断恢复。正在进行固定安装包验证，当前公开下载仍为 v1.1.5 | [候选说明](docs/RELEASE_NOTES_v1.1.6.md) · [当前进度](docs/V1_1_6_Unsigned_Community_Release_Audit_2026-10-16.md) |
 | v1.1.5 | 资料与本地图片防覆盖导入、仅重试失败项；统一搜索及跨库草稿保护；修复 Windows 路径、保存误报和文件栏刷新/定位 | [发布说明](docs/RELEASE_NOTES_v1.1.5.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5) · [验收与发布审计](docs/V1_1_5_Unsigned_Community_Release_Audit_2026-10-15.md) |
 | v1.1.4 | 批量重命名、模板导入/导出、Markdown/TXT 历史局部恢复；修复文件操作的同名覆盖风险 | [发布说明](docs/RELEASE_NOTES_v1.1.4.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.4) |
 | v1.1.3 | 自定义模板、多文档固定/排序/恢复、标签与集合整理、关系编辑、TXT 历史与恢复 | [发布说明](docs/RELEASE_NOTES_v1.1.3.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.3) |

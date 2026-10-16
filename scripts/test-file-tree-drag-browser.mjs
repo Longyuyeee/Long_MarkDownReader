@@ -30,7 +30,7 @@ try {
             a.disk.delete(path); a.disk.set(next, content)
           }
         }
-        return
+        return { items: args.sourcePaths.map(oldPath => ({ oldPath, newPath: args.targetDir + '/' + oldPath.split('/').pop() })), errors: [] }
       }
       if (command === 'get_folder_order') { a.calls.push({ command, args }); return a.orders.get(args.path) || { items: [], pinned: [] } }
       if (command === 'save_folder_order') {

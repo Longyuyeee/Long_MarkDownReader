@@ -1001,7 +1001,7 @@ const mayLeave = () => {
   })
 }
 const leaveTable = () => { void router.push('/library') }
-useWindowDraft(() => dirty.value)
+useWindowDraft(() => dirty.value, () => String(route.query.path || store.activeTabId || ''))
 const beforeUnload = (event: BeforeUnloadEvent) => {
   if (dirty.value) {
     event.preventDefault()

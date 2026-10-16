@@ -715,7 +715,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (viewMode.value === 'map' && event.key === 'ArrowDown') { event.preventDefault(); moveSelected(0, distance) }
 }
 const handleKeyup = (event: KeyboardEvent) => { if (event.code === 'Space') spacePressed = false }
-useWindowDraft(() => dirty.value)
+useWindowDraft(() => dirty.value, () => String(route.query.path || store.activeTabId || ''))
 const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
 const mayLeave = () => {
   if (!dirty.value) return Promise.resolve(true)

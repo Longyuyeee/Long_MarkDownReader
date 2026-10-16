@@ -1,4 +1,5 @@
 <template>
+  <FileMoveRecoveryDialog :library-root="libraryRoot" :recovery-id="recoveryId" @close="recoveryId = ''" @resolved="finishReview" />
   <n-modal :show="show" preset="card" title="批量重命名" class="batch-rename-dialog" :style="{ width: 'min(780px, calc(100vw - 28px))' }" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="value => { if (!busy) show = value }">
     <form @submit.prevent="execute">
       <div class="rename-rule">
@@ -13,7 +14,7 @@
       <div class="rename-preview" :aria-busy="previewing">
         <div class="rename-head"><span>原名称</span><span>新名称</span></div>
         <div v-for="row in rows" :key="row.path" class="rename-row" :class="{ 'has-error': row.status === 'error' || row.status === 'review', 'needs-review': row.status === 'review', completed: row.status === 'done' }">
-          <span class="rename-old">{{ filename(row.path) }}<small v-if="multipleParents">{{ relativeParent(row.path) }}</small></span><span><strong>{{ row.newName }}</strong><small v-if="row.message">{{ row.message }}</small><small v-else-if="row.status === 'done'">已完成</small></span>
+          <span class="rename-old">{{ filename(row.path) }}<small v-if="multipleParents">{{ relativeParent(row.path) }}</small></span><span><strong>{{ row.newName }}</strong><small v-if="row.message">{{ row.message }}</small><n-button v-if="row.recoveryId" size="small" @click="recoveryId = row.recoveryId">核对状态…</n-button><small v-else-if="row.status === 'done'">已完成</small></span>
         </div>
       </div>
       <div class="rename-actions"><n-button :disabled="busy || previewing || !pending.length" @click="refresh">刷新预览</n-button><span></span><n-button :disabled="busy" @click="show = false">{{ reviewCount ? '关闭' : completed ? '完成' : '取消' }}</n-button><n-button v-if="!attemptedOnce || ready.length" type="primary" attr-type="submit" :disabled="previewing || !ready.length" :loading="busy">{{ attemptedOnce ? `重试未执行的 ${ready.length} 项` : `重命名 ${ready.length} 项` }}</n-button></div>
@@ -23,13 +24,16 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { NModal, NButton, NInput, NSelect, NInputNumber } from 'naive-ui'
+import FileMoveRecoveryDialog from './FileMoveRecoveryDialog.vue'
 import { invoke } from '../services/tauriRuntime'
 import { fileOperationBusy as busy, sameLibrary, topLevelPaths, fileParent, canRetryFileError, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
 import { beginWindowSave } from '../services/windowDrafts'
 const props = defineProps<{ libraryRoot: string; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void> }>()
-type Row = { path: string; newName: string; status: 'ready' | 'unchanged' | 'error' | 'done' | 'review'; message: string }
+type Row = { path: string; newName: string; status: 'ready' | 'unchanged' | 'error' | 'done' | 'review'; message: string; recoveryId?: string }
 const show = ref(false), root = ref(''), pending = ref<string[]>([]), rows = ref<Row[]>([]), previewing = ref(false), error = ref('')
 const attemptedOnce = ref(false)
+const recoveryId = ref('')
+const finishReview = (id: string) => { for (const row of rows.value) if (row.recoveryId === id) { row.message = '已核对，按当前位置保留'; row.recoveryId = undefined } recoveryId.value = '' }
 const rule = reactive({ mode: 'text', prefix: '', suffix: '', find: '', replacement: '', start: 1 as number | null, digits: 2 as number | null, position: 'prefix' })
 const modes = [{ label: '添加文字', value: 'text' }, { label: '查找替换', value: 'replace' }, { label: '添加序号', value: 'number' }]
 const positions = [{ label: '名称前', value: 'prefix' }, { label: '名称后', value: 'suffix' }]
@@ -64,7 +68,7 @@ const execute = async () => {
   const selected = ready.value.map(row => ({ path: row.path, newName: row.newName }))
   if (!await props.beforeOperate(selected.map(row => row.path), 'rename') || !show.value || !sameLibrary(root.value, props.libraryRoot) || busy.value) return
   busy.value = true; error.value = ''; attemptedOnce.value = true
-  const finish = beginWindowSave()
+  const finish = beginWindowSave('relocation')
   try {
     const result = await invoke<FileOperationResult>('rename_library_items', { libraryRoot: root.value, items: selected })
     for (const row of rows.value) {
@@ -73,6 +77,7 @@ const execute = async () => {
       else if (failed) {
         const retryable = canRetryFileError(failed, 'rename')
         row.status = retryable ? 'ready' : 'review'
+        row.recoveryId = failed.recoveryId
         row.message = `${retryable ? '未执行' : '需核对'} · ${failed.message}${failed.recoveryId ? `（核对记录：${failed.recoveryId}）` : ''}`
         if (!retryable) pending.value = pending.value.filter(path => !sameLibrary(path, row.path))
       } else if (selected.some(item => sameLibrary(item.path, row.path))) {

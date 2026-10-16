@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.5",
-  "releaseCandidate": true,
+  "appVersion": "1.1.6",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-10-15",
-  "currentStatus": "v1.1.5-community-release-published",
+  "generatedAt": "2026-10-16",
+  "currentStatus": "v1.1.6-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,73 +24,42 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.4",
+    "previousPublicVersion": "1.1.5",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.4-to-1.1.5-pending",
-    "scope": "safe-import-and-search-consistency"
+    "managedUpdaterUpgradePath": "1.1.5-to-1.1.6-pending",
+    "scope": "file-move-link-continuity"
   },
   "targetRelease": {
-    "tag": "v1.1.5",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5",
+    "tag": "v1.1.6",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.6",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "5ee1ddd7297e59813307058e89801e5521966abc",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 38816570534,
-    "hostedInstalledLifecycleRunId": 38820912641,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.5_x64_zh-CN.msi",
-        "sizeBytes": 76189696,
-        "sha256": "ac8aec4fb8a1fe38629dcec4b5238ac8a9eb901d41feb9a1eb1f14b19761ac6b",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.5_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.5_x64-setup.exe",
-        "sizeBytes": 67362323,
-        "sha256": "cec4098246af0d547f7a1ef6d71ea72ca026447f290aa75b3cd66ebab6817f1a",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.5_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.5",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.5",
-    "databaseId": 414368130,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "5ee1ddd7297e59813307058e89801e5521966abc",
-    "tagObject": "e432489ebef8a6bbf9c6d8999b283e2d2700f402",
-    "publishedAt": "2026-10-15T23:26:48Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
     "download-only-from-official-github-release",
     "verify-published-sha256-before-install",
     "v1.1.3-to-v1.1.4-managed-update-observation-pending",
-    "v1.1.4-to-v1.1.5-managed-update-observation-pending"
+    "v1.1.4-to-v1.1.5-managed-update-observation-pending",
+    "v1.1.5-to-v1.1.6-managed-update-observation-pending"
   ],
-  "nextAction": "observe-official-1.1.4-to-1.1.5-managed-update"
+  "nextAction": "validate-and-build-v1.1.6-installers"
 }

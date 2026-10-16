@@ -211,11 +211,31 @@ pub(crate) fn preview(
     current: &str,
     proposals: &[(DependencyEvidence, String)],
 ) -> Result<String, String> {
+    preview_parsed(document, current, proposals, mentions)
+}
+pub(crate) fn preview_move(
+    document: &str,
+    current: &str,
+    proposals: &[(DependencyEvidence, String)],
+) -> Result<String, String> {
+    preview_parsed(
+        document,
+        current,
+        proposals,
+        super::archive_dependencies::move_mentions,
+    )
+}
+fn preview_parsed(
+    document: &str,
+    current: &str,
+    proposals: &[(DependencyEvidence, String)],
+    parse: fn(&str, &str) -> Vec<DependencyEvidence>,
+) -> Result<String, String> {
     if current.len() > 2 * 1024 * 1024 || proposals.len() > 20_000 {
         return Err("引用编辑预览超过检查上限".into());
     }
     let hash = format!("{:x}", Sha256::digest(current.as_bytes()));
-    let actual = mentions(document, current);
+    let actual = parse(document, current);
     let mut edits = Vec::new();
     for (evidence, replacement) in proposals {
         if evidence.document != document || evidence.snapshot_sha256 != hash {
@@ -274,7 +294,7 @@ pub(crate) fn preview(
     if result.len() > 2 * 1024 * 1024 {
         return Err("引用编辑结果超过检查上限".into());
     }
-    let parsed = mentions(document, &result);
+    let parsed = parse(document, &result);
     if expected.iter().any(|(start, end, replacement)| {
         !parsed.iter().any(|e| {
             e.target == *replacement

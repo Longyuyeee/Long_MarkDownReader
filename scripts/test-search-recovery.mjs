@@ -38,7 +38,7 @@ const harness = (vueWatchers = false) => {
     refreshRelationSummaries: async () => {}, refreshKnowledgeIndexStatus: async () => {}, refreshLibrary: () => {},
     watch: vueWatchers ? watch : () => {}, setTimeout: fn => { timers.set(++timerId, fn); return timerId }, clearTimeout: id => timers.delete(id),
     invoke: (command, args) => { const request = deferred(); pending.push({ command, args, ...request }); return request.promise },
-    onUnmounted, editorLoadGeneration: 0, destroyImageFix: noop, window: { removeEventListener: noop },
+    onUnmounted, editorLoadGeneration: 0, destroyImageFix: noop, refreshAfterFileMove: noop, window: { removeEventListener: noop },
     document: { removeEventListener: noop }, rememberReferenceInsertionPoint: noop,
     closeHistoryComparison: noop, invalidateHistory: noop,
     // The production unmount now also retires file dragging. This scheduler

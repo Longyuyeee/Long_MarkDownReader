@@ -90,7 +90,8 @@ import { ArrowLeft as ArrowLeftIcon, BookPlus as BookPlusIcon, List as ListIcon,
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
-import { useWindowDraftSnapshot, snapshotWindowDrafts } from '../services/windowDrafts'
+import { useWindowDraftSnapshot, snapshotWindowDrafts, useWindowReferenceDraft } from '../services/windowDrafts'
+import { pathsOverlap, type FileMoveNotice } from '../services/fileMoveProtection'
 import { isActiveThemeDark } from '../config/themePresets'
 import { resolveMarkdownEditorAppearance } from '../config/markdownCodeTheme'
 import { useOutline } from '../composables/useOutline'
@@ -110,6 +111,7 @@ const fileName = computed(() => filePath.value ? filePath.value.split(/[\\/]/).p
 const isDirty = ref(false)
 let originalExternalContent = ''
 useWindowDraftSnapshot(() => { if (vditor && vditor.getValue() !== originalExternalContent) { isDirty.value = true; store.isTempDirty = true } })
+useWindowReferenceDraft(() => isDirty.value ? { path: String(route.query.path || ''), content: vditor?.getValue() } : null)
 watch(isDirty, (v) => { store.isTempDirty = v })
 
 onBeforeRouteLeave(async (_to, _from, next) => {
@@ -168,6 +170,10 @@ const loadFileContent = async () => {
   } catch (err: any) {
     message.error('读取文件失败: ' + filePath.value)
   }
+}
+const refreshAfterFileMove = (event: Event) => {
+  const detail = (event as CustomEvent<{ notice: FileMoveNotice; pending: Promise<unknown>[] }>).detail
+  if (!isDirty.value && detail.notice.documents.some(path => pathsOverlap(path, filePath.value))) detail.pending.push(loadFileContent())
 }
 
 const importToLibrary = async () => {
@@ -290,6 +296,7 @@ const startShadowSaveTimer = () => {
 }
 
 onMounted(async () => {
+  window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
   let initialContent = ''
   if (filePath.value) {
     try {
@@ -352,6 +359,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('longedit:file-move-completed', refreshAfterFileMove)
   destroyImageFix()
   destroyOutlineObserver()
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)

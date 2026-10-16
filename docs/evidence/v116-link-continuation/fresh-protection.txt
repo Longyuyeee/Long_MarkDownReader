@@ -1,0 +1,19 @@
+✔ fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases (78.1576ms)
+✔ specialized drafts participate by current path and dispose without keeping a stale block (62.5488ms)
+✔ a save in flight refuses execution while the originating move still counts for close protection (50.1787ms)
+✔ composition and keyboard actions cannot add an unobserved edit after the acknowledgement (38.4162ms)
+✔ refresh finishes before native release acknowledgement and the next batch item (45.5621ms)
+✔ lost release events use the native receipt to refresh once and restore interaction (47.7187ms)
+✔ path continuation retains filename case and excludes similarly named siblings (35.486ms)
+✔ a cached Markdown draft follows a move when the native operation never rewrites its body (30.9162ms)
+✔ a dirty cached target from a deleted file is never mistaken for the moving draft (34.0324ms)
+✔ fresh reference drafts include unsaved-only incoming links and exclude another library (25.2438ms)
+✔ cross-library preflight captures pending input without writing and disposes snapshot hooks (101.7607ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1091.5277

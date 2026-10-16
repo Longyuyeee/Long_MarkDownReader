@@ -11,14 +11,16 @@
     <section v-if="review.length" class="outcome-group needs-review" aria-label="需要核对的项目" role="alert">
       <h4>需核对 · {{ review.length }} 项</h4>
       <p class="review-hint">状态尚未确认，这些项目不会直接重试。请保留原文件和核对记录。</p>
-      <p v-for="error in review" :key="error.path"><strong>{{ filename(error.path) || '本次操作' }}</strong><small>{{ error.message }}</small><small v-if="error.path">原路径：{{ error.path }}</small><small v-if="error.recoveryId">核对记录：<code>{{ error.recoveryId }}</code></small></p>
+      <p v-for="error in review" :key="error.path"><strong>{{ filename(error.path) || '本次操作' }}</strong><small>{{ error.message }}</small><small v-if="error.path">原路径：{{ error.path }}</small><small v-if="error.recoveryId">核对记录：<code>{{ error.recoveryId }}</code></small><n-button v-if="error.recoveryId" size="small" @click="emit('review', error.recoveryId)">核对状态…</n-button></p>
     </section>
   </div>
 </template>
 <script setup lang="ts">
 import { computed } from 'vue'
+import { NButton } from 'naive-ui'
 import { canRetryFileError, isPathMutation, type FileOperation, type FileOperationError, type PathChange } from '../services/libraryFileOperations'
 const props = defineProps<{ completed: PathChange[]; errors: FileOperationError[]; operation: FileOperation }>()
+const emit = defineEmits<{ review: [id: string] }>()
 const retryable = computed(() => props.errors.filter(error => canRetryFileError(error, props.operation)))
 const review = computed(() => props.errors.filter(error => !canRetryFileError(error, props.operation)))
 const filename = (path: string) => path.split(/[\\/]/).pop() || path

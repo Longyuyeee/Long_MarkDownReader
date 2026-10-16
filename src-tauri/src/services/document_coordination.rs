@@ -13,17 +13,29 @@ fn active() -> &'static Mutex<BTreeSet<String>> {
     static ACTIVE: OnceLock<Mutex<BTreeSet<String>>> = OnceLock::new();
     ACTIVE.get_or_init(|| Mutex::new(BTreeSet::new()))
 }
-pub(crate) struct DocumentLease(Vec<String>);
+pub(crate) struct DocumentLease {
+    paths: Vec<String>,
+    _activity: super::file_activity::Activity,
+}
 impl Drop for DocumentLease {
     fn drop(&mut self) {
         if let Ok(mut active) = active().lock() {
-            for key in &self.0 {
+            for key in &self.paths {
                 active.remove(key);
             }
         }
     }
 }
 pub(crate) fn acquire(paths: &[&Path]) -> Result<DocumentLease, String> {
+    let activity = super::file_activity::read_write(paths)?;
+    for path in paths {
+        let parent = path.parent().ok_or("缺少文档目录")?;
+        if super::file_activity::current_directory(parent)?
+            != super::file_activity::current_directory_for_comparison(parent)?
+        {
+            return Err("文件夹位置已改变，请刷新后重试；未重新创建旧目录".into());
+        }
+    }
     if paths.is_empty() || paths.len() > MAX_PATHS {
         return Err("文档协调路径数量须为 1 至 20000 项".into());
     }
@@ -64,7 +76,10 @@ pub(crate) fn acquire(paths: &[&Path]) -> Result<DocumentLease, String> {
         return Err("文档正在保存或整理，请保留修改并稍后重试".into());
     }
     active.extend(keys.iter().cloned());
-    Ok(DocumentLease(keys))
+    Ok(DocumentLease {
+        paths: keys,
+        _activity: activity,
+    })
 }
 
 /// A save/read is not a create command. Check *after* reservation and before
@@ -76,8 +91,9 @@ pub(crate) fn acquire_existing_file(path: &Path) -> Result<DocumentLease, String
 }
 
 pub(crate) fn ensure_existing_file(path: &Path) -> Result<(), String> {
-    let metadata = std::fs::symlink_metadata(path)
-        .map_err(|error| format!("文件已移动、删除或不可访问，请保留修改并重新核对位置：{error}"))?;
+    let metadata = std::fs::symlink_metadata(path).map_err(|error| {
+        format!("文件已移动、删除或不可访问，请保留修改并重新核对位置：{error}")
+    })?;
     if !metadata.file_type().is_file() {
         return Err("目标必须是现有普通文件，请保留修改并核对位置".into());
     }

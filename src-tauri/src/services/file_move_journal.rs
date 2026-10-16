@@ -162,6 +162,84 @@ impl Journal {
 fn hash(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
+
+/// Explicit user recovery only. Verify every snapshot before moving any history.
+pub(crate) fn reconcile_histories(
+    cache: &Path,
+    source: &Path,
+    target: &Path,
+    at_target: bool,
+    finish: bool,
+) -> Result<usize, String> {
+    let records = pending(cache)?;
+    let mut selected = Vec::new();
+    let mut moves = Vec::new();
+    for (id, intent) in records {
+        let direction = if intent.source == source && intent.target == target {
+            at_target
+        } else if intent.source == target && intent.target == source {
+            !at_target
+        } else {
+            continue;
+        };
+        for item in &intent.histories {
+            let old = super::archive_history::history_path(cache, &item.source);
+            let new = super::archive_history::history_path(cache, &item.target);
+            if !item.had_history {
+                if old.try_exists().map_err(|e| e.to_string())?
+                    || new.try_exists().map_err(|e| e.to_string())?
+                {
+                    return Err("历史在中断后有新内容，未覆盖，请保留核对".into());
+                }
+                continue;
+            }
+            let (from, to, observed) = match (
+                old.try_exists().map_err(|e| e.to_string())?,
+                new.try_exists().map_err(|e| e.to_string())?,
+            ) {
+                (true, false) => (
+                    &old,
+                    &new,
+                    super::archive_history::inspect(cache, &item.source, &item.target)?,
+                ),
+                (false, true) => (
+                    &new,
+                    &old,
+                    super::archive_history::inspect(cache, &item.target, &item.source)?,
+                ),
+                _ => return Err("历史位置不唯一或已缺失，未覆盖任何内容".into()),
+            };
+            if !item.expected.same_snapshots(&observed) {
+                return Err("历史在中断后已变化，未覆盖任何快照".into());
+            }
+            let expected = if direction { &new } else { &old };
+            if from != expected {
+                moves.push((from.clone(), to.clone()));
+            }
+        }
+        selected.push((id, direction));
+    }
+    for (from, to) in moves {
+        rename_no_replace(&from, &to).map_err(|e| format!("历史核对尚未完成：{e}"))?;
+    }
+    if finish {
+        for (id, direction) in &selected {
+            let stage = cache.join(DIRECTORY).join(id);
+            let bytes = read_record(&stage.join("intent.json"))?;
+            Journal {
+                stage,
+                digest: hash(&bytes),
+            }
+            .finish(if *direction {
+                Outcome::Completed
+            } else {
+                Outcome::RolledBack
+            })
+            .map_err(|e| e.message)?;
+        }
+    }
+    Ok(selected.len())
+}
 fn ordinary_directory(path: &Path) -> Result<(), String> {
     let meta = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
     if !meta.is_dir() || meta.file_type().is_symlink() {
@@ -344,7 +422,12 @@ mod tests {
         fn with_timestamp(timestamp: u128) -> Self {
             static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
             loop {
-                let path = std::env::temp_dir().join(format!("longedit-move-record-{}-{}-{}", std::process::id(), timestamp, NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+                let path = std::env::temp_dir().join(format!(
+                    "longedit-move-record-{}-{}-{}",
+                    std::process::id(),
+                    timestamp,
+                    NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                ));
                 match fs::create_dir(&path) {
                     Ok(()) => return Self(path.canonicalize().unwrap()),
                     Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
@@ -372,7 +455,10 @@ mod tests {
 
     #[test]
     fn journal_same_timestamp_fixtures_never_share_records_or_cleanup() {
-        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         let first = Fixture::with_timestamp(timestamp);
         Journal::begin(&first.cache(), &first.intent()).unwrap();
         let second = Fixture::with_timestamp(timestamp);

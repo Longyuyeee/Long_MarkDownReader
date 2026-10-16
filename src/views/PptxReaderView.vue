@@ -2304,7 +2304,7 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'ArrowLeft') previousSlide()
   if (event.key === 'ArrowRight' || event.key === ' ') nextSlide()
 }
-useWindowDraft(() => draftOperations.value.length > 0)
+useWindowDraft(() => draftOperations.value.length > 0, () => String(route.query.path || store.activeTabId || ''))
 const warnBeforeUnload = (event: BeforeUnloadEvent) => {
   if (draftOperations.value.length) event.preventDefault()
 }

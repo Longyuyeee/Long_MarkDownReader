@@ -1,6 +1,6 @@
+use crate::services::file_move_journal::{FailureDisposition, MoveFailure};
 use crate::services::{reliable_write::write_utf8, workspace_guard::WorkspaceGuard};
 use serde::{Deserialize, Serialize};
-use crate::services::file_move_journal::{FailureDisposition, MoveFailure};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -27,10 +27,20 @@ pub struct OperationError {
 }
 impl OperationError {
     pub(super) fn ordinary(path: String, message: String) -> Self {
-        Self { path, message, disposition: None, recovery_id: None }
+        Self {
+            path,
+            message,
+            disposition: None,
+            recovery_id: None,
+        }
     }
     pub(super) fn from_move(path: String, failure: MoveFailure) -> Self {
-        Self { path, message: failure.message, disposition: Some(failure.disposition), recovery_id: failure.recovery_id }
+        Self {
+            path,
+            message: failure.message,
+            disposition: Some(failure.disposition),
+            recovery_id: failure.recovery_id,
+        }
     }
 }
 #[derive(Default, Debug, Serialize)]
@@ -49,7 +59,11 @@ pub struct TrashEntry {
     pub is_dir: bool,
 }
 
-pub(super) fn visible_item(guard: &WorkspaceGuard, input: &str, existing: bool) -> Result<PathBuf, String> {
+pub(super) fn visible_item(
+    guard: &WorkspaceGuard,
+    input: &str,
+    existing: bool,
+) -> Result<PathBuf, String> {
     let path = if existing {
         guard.resolve_existing(input)?
     } else {
@@ -156,7 +170,6 @@ fn copy_tree(source: &Path, target: &Path, created: &mut bool) -> Result<(), Str
     Ok(())
 }
 
-
 pub(super) fn move_to(
     app: Option<&tauri::AppHandle>,
     guard: &WorkspaceGuard,
@@ -172,29 +185,13 @@ pub(super) fn move_to_checked(
     old: &Path,
     new: &Path,
 ) -> Result<(), MoveFailure> {
-    if let Some(app) = app {
-        crate::services::file_move_journal::ensure_no_pending(
-            &super::history::history_cache_root(app)?, old, new,
-        )?;
-    }
     if new.exists() {
         return Err("目标位置已有同名项，请先移开后再恢复或撤销".into());
     }
     if new.starts_with(old) {
         return Err("不能移动到自身或子文件夹".into());
     }
-    // Reserve both subtrees before inspecting/migrating any history. A text
-    // save already in flight must stop the move before its first mutation.
-    let _documents = crate::services::document_coordination::acquire(&[old, new])?;
-    let move_document = || super::file_relations::rename_with_relations(guard.root(), old, new);
-    if let Some(app) = app {
-        crate::services::file_move_history::with_history_move(
-            &super::history::history_cache_root(app)?, old, new, move_document,
-        )?;
-    } else {
-        move_document()?;
-    }
-    Ok(())
+    crate::services::file_move_transaction::execute(app, guard, old, new)
 }
 
 fn transfer(
@@ -208,6 +205,7 @@ fn transfer(
         return Err("未知文件操作".into());
     }
     let guard = WorkspaceGuard::new(library_root)?;
+    let _activity = crate::services::file_activity::read_write(&[guard.root()])?;
     let sources = selected_sources(&guard, paths)?;
     let target = target_dir
         .map(|path| guard.resolve_directory(path, true))
@@ -247,7 +245,8 @@ fn transfer(
                 destination = available_copy_name(directory, &source)?;
             }
             if operation == "copy" {
-                let _documents = crate::services::document_coordination::acquire(&[&source, &destination])?;
+                let _documents =
+                    crate::services::document_coordination::acquire(&[&source, &destination])?;
                 let mut created = false;
                 if let Err(error) = copy_tree(&source, &destination, &mut created) {
                     // Remove only the newly created candidate, never an existing user item.
@@ -273,7 +272,9 @@ fn transfer(
             Ok(None) => {}
             Err(failure) => result.errors.push(if operation == "move" {
                 OperationError::from_move(source.to_string_lossy().into_owned(), failure)
-            } else { OperationError::ordinary(source.to_string_lossy().into_owned(), failure.message) }),
+            } else {
+                OperationError::ordinary(source.to_string_lossy().into_owned(), failure.message)
+            }),
         }
     }
     Ok(result)
@@ -312,6 +313,7 @@ pub async fn undo_library_moves(
         let _lock = OPERATIONS.lock().unwrap_or_else(|e| e.into_inner());
         let _history = super::history::history_lease(&app_handle)?;
         let guard = WorkspaceGuard::new(&library_root)?;
+        let _activity = crate::services::file_activity::read_write(&[guard.root()])?;
         let mut result = OperationResult::default();
         for item in items.into_iter().rev() {
             let attempt = (|| {
@@ -327,7 +329,9 @@ pub async fn undo_library_moves(
             })();
             match attempt {
                 Ok(change) => result.items.push(change),
-                Err(failure) => result.errors.push(OperationError::from_move(item.new_path, failure)),
+                Err(failure) => result
+                    .errors
+                    .push(OperationError::from_move(item.new_path, failure)),
             }
         }
         Ok(result)
@@ -347,6 +351,7 @@ fn trash_slot(guard: &WorkspaceGuard, id: &str) -> Result<PathBuf, String> {
 }
 fn trash_items(library_root: &str, paths: &[String]) -> Result<OperationResult, String> {
     let guard = WorkspaceGuard::new(library_root)?;
+    let _activity = crate::services::file_activity::read_write(&[guard.root()])?;
     let sources = selected_sources(&guard, paths)?;
     let mut result = OperationResult::default();
     for (index, source) in sources.iter().enumerate() {
@@ -384,7 +389,10 @@ fn trash_items(library_root: &str, paths: &[String]) -> Result<OperationResult, 
         })();
         match attempt {
             Ok(item) => result.items.push(item),
-            Err(message) => result.errors.push(OperationError::ordinary(source.to_string_lossy().into_owned(), message)),
+            Err(message) => result.errors.push(OperationError::ordinary(
+                source.to_string_lossy().into_owned(),
+                message,
+            )),
         }
     }
     Ok(result)
@@ -439,6 +447,7 @@ pub async fn list_library_trash(library_root: String) -> Result<Vec<TrashEntry>,
 
 fn restore_items(library_root: &str, ids: &[String]) -> Result<OperationResult, String> {
     let guard = WorkspaceGuard::new(library_root)?;
+    let _activity = crate::services::file_activity::read_write(&[guard.root()])?;
     let mut result = OperationResult::default();
     for id in ids {
         let attempt = (|| {
@@ -454,7 +463,8 @@ fn restore_items(library_root: &str, ids: &[String]) -> Result<OperationResult, 
             fs::create_dir_all(original.parent().ok_or("原目录不可用")?)
                 .map_err(|e| e.to_string())?;
             let payload = guard.resolve_existing(slot.join("content"))?;
-            let _documents = crate::services::document_coordination::acquire(&[&payload, &original])?;
+            let _documents =
+                crate::services::document_coordination::acquire(&[&payload, &original])?;
             crate::services::archive_move::rename_no_replace(&payload, &original)
                 .map_err(|e| format!("无法恢复，未覆盖原位置的同名项：{e}"))?;
             let _ = fs::remove_file(slot.join("entry.json"));
@@ -466,7 +476,9 @@ fn restore_items(library_root: &str, ids: &[String]) -> Result<OperationResult, 
         })();
         match attempt {
             Ok(item) => result.items.push(item),
-            Err(message) => result.errors.push(OperationError::ordinary(id.clone(), message)),
+            Err(message) => result
+                .errors
+                .push(OperationError::ordinary(id.clone(), message)),
         }
     }
     Ok(result)
@@ -529,7 +541,10 @@ mod tests {
         let saving = crate::services::document_coordination::acquire(&[&old]).unwrap();
         let blocked = move_to_checked(None, &guard, &old, &new);
         assert!(blocked.is_err(), "moving must not race an in-flight save");
-        assert_eq!(blocked.unwrap_err().disposition, FailureDisposition::NotExecuted);
+        assert_eq!(
+            blocked.unwrap_err().disposition,
+            FailureDisposition::NotExecuted
+        );
         assert_eq!(fs::read_to_string(&old).unwrap(), "original");
         assert!(!new.exists());
         drop(saving);
@@ -552,7 +567,10 @@ mod tests {
         assert!(!new.exists());
         drop(saving);
         move_to_checked(None, &guard, &old, &new).unwrap();
-        assert_eq!(fs::read_to_string(new.join("note.md")).unwrap(), "draft on disk");
+        assert_eq!(
+            fs::read_to_string(new.join("note.md")).unwrap(),
+            "draft on disk"
+        );
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
@@ -580,7 +598,14 @@ mod tests {
         let path = guard.root().join("note.md");
         fs::write(&path, "original").unwrap();
         let saving = crate::services::document_coordination::acquire(&[&path]).unwrap();
-        let copy = transfer(None, root.to_str().unwrap(), &["note.md".into()], None, "copy").unwrap();
+        let copy = transfer(
+            None,
+            root.to_str().unwrap(),
+            &["note.md".into()],
+            None,
+            "copy",
+        )
+        .unwrap();
         assert!(copy.items.is_empty() && copy.errors.len() == 1);
         assert!(!root.join("note - 副本.md").exists());
         let trash = trash_items(root.to_str().unwrap(), &["note.md".into()]).unwrap();

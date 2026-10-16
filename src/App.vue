@@ -99,7 +99,8 @@ import { findFileFormat, opensInLibraryShell, routeForFile } from './config/file
 import { getThemeTone, isDarkTheme, resolveThemeName } from './config/themePresets'
 import { normalizeDisplayPreferences, documentTypographyStyle, VISUAL_STYLE_RADII } from './config/displayPreferences'
 import { openManagedFile, openManagedObject } from './services/fileNavigation'
-import { windowDraftCount, windowDraftActivity } from './services/windowDrafts'
+import { windowDraftCount, windowDraftActivity, windowReferenceDrafts } from './services/windowDrafts'
+import { createFileMoveProtection, movedPath, pathsOverlap, type FileMoveNotice } from './services/fileMoveProtection'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
 import { isTauriRuntime } from './services/tauriRuntime'
 
@@ -474,6 +475,33 @@ const handleExit = async () => {
   }
 }
 const hasUnsavedChanges = computed(() => store.tabs.some(tab => tab.isDirty) || store.isTempDirty || windowDraftCount.value > 0)
+const moveProtection = createFileMoveProtection({
+  ready: () => lifecycleReady && !lifecycleDisposed,
+  activePath: () => String(router.currentRoute.value.query.path || store.activeTabId || ''),
+  retainedDraftPaths: () => store.tabs.filter(tab => tab.isDirty && tab.content !== undefined && findFileFormat(tab.path)?.id === 'markdown' && !(store.isTempDirty && pathsOverlap(tab.path, String(router.currentRoute.value.query.path || '')))).map(tab => tab.path),
+  referenceDrafts: () => [...store.tabs.filter(tab => tab.isDirty && findFileFormat(tab.path)?.id === 'markdown').map(tab => ({ path: tab.path, content: tab.content })), ...windowReferenceDrafts()],
+  dirtyPaths: () => [...store.tabs.filter(tab => tab.isDirty).map(tab => tab.path), ...(store.isTempDirty ? [String(router.currentRoute.value.query.path || '')] : [])],
+  completed: async notice => {
+    for (const tab of store.tabs) {
+      const path = movedPath(tab.path, notice)
+      if (path !== tab.path) { tab.path = path; tab.id = path; tab.title = path.split(/[\\/]/).pop() || tab.title }
+      if (!tab.isDirty && notice.documents.some(document => pathsOverlap(document, tab.path))) {
+        tab.content = undefined; tab.textSignature = undefined; tab.textContentDigest = undefined
+      }
+    }
+    if (store.activeTabId) store.activeTabId = movedPath(store.activeTabId, notice)
+    store.starredFiles = store.starredFiles.map(path => movedPath(path, notice))
+    store.recentFiles = store.recentFiles.map(item => ({ ...item, path: movedPath(item.path, notice) }))
+    try { await store.moveFileDisplayStyles(notice.oldPath, notice.newPath) } catch (error) { console.warn('文件位置已更新，显示设置稍后重试', error) }
+    store.saveTabsState()
+    const route = router.currentRoute.value, path = typeof route.query.path === 'string' ? route.query.path : ''
+    const nextPath = path ? movedPath(path, notice) : ''
+    if (nextPath && nextPath !== path) await router.replace({ query: { ...route.query, path: nextPath } })
+    const pending: Promise<unknown>[] = []
+    window.dispatchEvent(new CustomEvent('longedit:file-move-completed', { detail: { notice, pending } }))
+    await Promise.all(pending)
+  },
+})
 let draftSession: string | null = null
 let draftSequence = 0
 const sendDraftReport = createSerialDraftReporter(report => invoke<void>('report_window_draft_session', { ...report }))
@@ -501,6 +529,14 @@ onMounted(async () => {
   try {
     if (appWindow) {
       draftSession = await invoke<string>('register_window_draft_session')
+      const stopMoveProtect = await appWindow.listen<{ requestId: string; paths: string[]; rewritePaths?: string[]; sourcePaths?: string[] }>('file-move-protect', event => {
+        void moveProtection.protect(event.payload).catch(error => console.warn('文件整理窗口确认未接受', error))
+      })
+      const stopMoveRelease = await appWindow.listen<{ requestId: string; notice?: FileMoveNotice | null }>('file-move-release', event => {
+        void moveProtection.release(event.payload).catch(error => console.warn('文件已移动，列表可稍后刷新', error))
+      })
+      if (lifecycleDisposed) { stopMoveProtect(); stopMoveRelease() }
+      else lifecycleUnlisteners.push(stopMoveProtect, stopMoveRelease)
       const stopArchiveConfirmation = await appWindow.listen<string>('archive-confirm-window-state', event => {
         if (!draftSession || lifecycleDisposed) return
         // Read current state at request time. No save, discard, navigation or focus.
@@ -553,6 +589,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  moveProtection.dispose()
   lifecycleDisposed = true
   lifecycleReady = false
   lifecycleUnlisteners.splice(0).forEach(unlisten => unlisten())
