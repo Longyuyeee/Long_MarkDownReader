@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-E2c-native-user",
+  "productCommit": "13e77754efc4fe3d7b4cef73e96e8165cdb45cae",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "sourceUserContentIncluded": false,
+  "sourceHashBasis": "git-index-bytes",
+  "checks": {
+    "harnessContracts": 63,
+    "localQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "native": {
+      "status": "pending",
+      "reason": "newly fixed frontend needs its own completed real input run, not old EXE evidence"
+    }
+  },
+  "limitations": [
+    "Debug Wry input is not installed acceptance or OS desktop takeover.",
+    "Office location, inherited installation scenarios and candidate lifecycle remain required.",
+    "No arbitrary-scale or search-speedup claim."
+  ],
+  "sourceFiles": [
+    {
+      "path": ".gitattributes",
+      "bytes": 9162,
+      "sha256": "1d822ad8e95335198c55a904dd98798478ef6f628a2f64f0c3ed282c71283eed"
+    },
+    {
+      "path": ".github/workflows/v118-search-native.yml",
+      "bytes": 7731,
+      "sha256": "ff4d88f41519008c90b868a727532091f8ec5b879accf675bc35abd160362e3e"
+    },
+    {
+      "path": "scripts/run-v118-native-search.ps1",
+      "bytes": 6420,
+      "sha256": "6f3d85c2fb956890ce372c554c2f1ae2998f5d4f8e30f0cf6cb9cdb9404fbdfb"
+    },
+    {
+      "path": "scripts/capture-v118-native-search.mjs",
+      "bytes": 14387,
+      "sha256": "57a3e57f9a84afdcb25a1ddeffc179647021fd1206e34c7b55c9498fc9981bd5"
+    },
+    {
+      "path": "scripts/capture-v118-native-user.mjs",
+      "bytes": 12811,
+      "sha256": "83d0ccdb3905a8d43de1cf2c3ff162881eee44e52713a2055e182d07e6c996ee"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-fixture.mjs",
+      "bytes": 4298,
+      "sha256": "b5674bc8d239baa7bac3ec363a9f1de0663b4ef03d77cd89f3ddbd4643d0f920"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-evidence.mjs",
+      "bytes": 3465,
+      "sha256": "a5c701f8b206b10c707dd0e71ae768b16f655c34c9f261d8ad06d3e7cdc9051a"
+    },
+    {
+      "path": "scripts/lib/v118-native-user-input.mjs",
+      "bytes": 2514,
+      "sha256": "d23ddaf2668951ab9c41adefb37ffea73440c30fabd028b644b62d1bcf50cf88"
+    },
+    {
+      "path": "scripts/lib/v118-native-user-evidence.mjs",
+      "bytes": 2668,
+      "sha256": "035dfc6e0dc9481035c93445e0504d18119963c01fcc816e93d0a00d26206595"
+    },
+    {
+      "path": "scripts/test-v118-native-user.mjs",
+      "bytes": 5048,
+      "sha256": "a0ce582f7291b5433f392f64c420733894961b3293ac2717a7a8a3c74c843975"
+    },
+    {
+      "path": "scripts/test-v118-native-search-audit.mjs",
+      "bytes": 12550,
+      "sha256": "db8ce8f7de16e6a533e3f60ddd2b872991d6920e5b0958f8d80387ebf73376f8"
+    },
+    {
+      "path": "scripts/test-v118-native-search-evidence.mjs",
+      "bytes": 3520,
+      "sha256": "e29c73faa3ac363e63a766f4f03899bef2c897f6e347dd0a71e1d21eee02050c"
+    },
+    {
+      "path": "scripts/check-current-development-audit.mjs",
+      "bytes": 21516,
+      "sha256": "f49689bfae0fb040a5082a601aae1304e4c20095c2dd84930ca5872e3ce8360e"
+    },
+    {
+      "path": "scripts/collect-v118-native-user-evidence.mjs",
+      "bytes": 4854,
+      "sha256": "59d31836c23538f2cba21b8182f7d05c5c481dba9fe9cca89bb4ba737d80e6c6"
+    },
+    {
+      "path": "src/services/searchPages.ts",
+      "bytes": 11530,
+      "sha256": "6366d9a990b9b5ae212bf34bc5d89e97635956aed11e95ced31310c64828a890"
+    },
+    {
+      "path": "src/components/SearchPageStatus.vue",
+      "bytes": 7118,
+      "sha256": "1d0936431961d60736db687f23776d099c8201dbc276ace433974a24843c4f00"
+    },
+    {
+      "path": "src/components/SearchFileCard.vue",
+      "bytes": 7316,
+      "sha256": "6c3f62e7bbe9a264cfeef514c5ba58d7f2444e61442cb9bead1d03030c571cbc"
+    },
+    {
+      "path": "src/views/LibraryMode.vue",
+      "bytes": 311765,
+      "sha256": "32256e096189b0ac1df8034bf221fa76bae58d6d873665a0fe765ec1e237c106"
+    },
+    {
+      "path": "src/components/CommandPalette.vue",
+      "bytes": 24520,
+      "sha256": "93c86c3d2c7ae8bdcb212253b14a61695382b41034271d41556a327e4dc1204a"
+    },
+    {
+      "path": "src/views/PdfView.vue",
+      "bytes": 157209,
+      "sha256": "3304d09d373b718b90ee6f281bfff9e223f997efe731b54642b94dffa65ba80f"
+    },
+    {
+      "path": "shared/development-version-policy.json",
+      "bytes": 697,
+      "sha256": "e4f56aba962646e2947b5f7e5ff59379374912bef1c3dde496553211c634dabf"
+    },
+    {
+      "path": "docs/V1_1_8_Native_User_Audit_2026-10-17.md",
+      "bytes": 4463,
+      "sha256": "6b1e452c9df2f7e0d1a6d1ac445d6e310d59b25e25ef26a8edb5b119867017c6"
+    },
+    {
+      "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
+      "bytes": 20398,
+      "sha256": "97456910bdcb81f2865f1d2693f026ee8c1e734d4af005c52860c169ab6564a1"
+    },
+    {
+      "path": "docs/Development_Handoff.md",
+      "bytes": 438941,
+      "sha256": "d6889ed933cbbc073c6f1724d5e16d4832ef52ef498e263fcd006d1f05d67553"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/evidence/v118-native-user/development-audit.log",
+      "bytes": 108605,
+      "sha256": "e98aedbb45e22e578dd2c41ae266d0b8988d64b1a378813ab7f60a8116d9ad26"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/harness-contracts-audited.log",
+      "bytes": 11409,
+      "sha256": "9ac92f9f9f0a02e8eb8ba209fb249b62af4cdc085d29f80734e142b018df161b"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/harness-contracts-final.log",
+      "bytes": 11403,
+      "sha256": "583d313039b50db4541e723ac4b7365d7e32c15d9c32b61e92157753f289e1c3"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/harness-first.log",
+      "bytes": 33067,
+      "sha256": "739bd550e9de6c0bfcc5b79bbd1c81053668fdcdf1728c843b9912a2f7b96143"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/harness-second.log",
+      "bytes": 4537,
+      "sha256": "f00709314abe598c8dd4cdc3c9548781b1b32c8279124259e2cd3ee902ba86a3"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/previous-head-ci-final.json",
+      "bytes": 2440,
+      "sha256": "8a0f743672affe183c55793c343ec03b861284df166cb5bbfb11eb803cefad8f"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/previous-head-ci.json",
+      "bytes": 2246,
+      "sha256": "71a5d93d847a47253431264e08265ef9be56b07cf1b40018b9112a26172774e8"
+    },
+    {
+      "path": "docs/evidence/v118-native-user/quality-gate-first.log",
+      "bytes": 145709,
+      "sha256": "4b0d309d0999b6a30ddcea609e3791c2b8799fccd982481eb97291a9ecfae0e5"
+    }
+  ]
+}

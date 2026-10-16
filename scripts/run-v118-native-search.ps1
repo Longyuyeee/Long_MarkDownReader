@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows') { throw 'Only a disposable GitHub-hosted Windows runner may launch this real IPC audit' }
 $product=(Resolve-Path -LiteralPath $ProductDirectory).Path
 $orchestration=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$expectedCommit='96e9fc464f6935f0c3daf18f1708b6d6d80c2994'
+$expectedCommit='13e77754efc4fe3d7b4cef73e96e8165cdb45cae'
 if ((& git -C $product rev-parse HEAD).Trim() -ne $expectedCommit) { throw 'Frozen product source differs' }
 if ((& git -C $product status --porcelain --untracked-files=no)) { throw 'Frozen product source is dirty' }
 $output=[IO.Path]::GetFullPath($OutputDirectory)
@@ -39,11 +39,12 @@ try {
   $ready=$false
   for($n=0;$n -lt 150;$n++){try{$response=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:14200/' -TimeoutSec 2;if($response.StatusCode -eq 200){$ready=$true;break}}catch{};Start-Sleep -Milliseconds 200}
   if(-not $ready){throw 'Product dev server did not become ready'}
-  foreach($phase in @('baseline','disk')){
+  foreach($phase in @('baseline','disk','user')){
     # --minimized prevents the product setup from requesting focus. The hosted
     # E2E config can show its own test window so WebView2 initializes normally.
     $app=Start-Process -FilePath $env:LONGEDIT_NATIVE_EXECUTABLE -ArgumentList '--minimized' -WorkingDirectory (Join-Path $product 'src-tauri') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $output "$phase.stdout.log") -RedirectStandardError (Join-Path $output "$phase.stderr.log") -PassThru
-    try { & node $driver $phase $auditRoot $product $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
+    $phaseDriver=if($phase -eq 'user'){Join-Path $orchestration 'scripts\capture-v118-native-user.mjs'}else{$driver}
+    try { & node $phaseDriver $phase $auditRoot $product $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
     catch {
       $app.Refresh()
       $diagnostic=@{phase=$phase;pid=$app.Id;hasExited=$app.HasExited;sessionId=$app.SessionId;debugPortListening=[bool](Get-NetTCPConnection -LocalPort 9458 -State Listen -ErrorAction SilentlyContinue)}
