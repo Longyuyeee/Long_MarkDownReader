@@ -1,3 +1,11 @@
+# v1.1.6 已正式发布
+
+[v1.1.6](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.6) 已正式发布，发布时间 2026-10-16T07:57:23Z。固定产品源码 `2711260d0ad56ab6bdf14e4b94facbfc52cfed83`；构建 38864448383、同包复核 38869797431、发布 38870418346。当前运行时及公开版均为 1.1.6，下一开发目标 1.1.7（保存与历史深化），本轮不继续扩展功能。
+
+原有工作区/安装/旧版流程及本版 13 项实际安装接续流程均通过，包含真实第二 Markdown 窗口的草稿保护及保存后刷新。EXE/MSI/SHA256SUMS 三个公开附件已回下载验证，永久收据见 [发布回执](evidence/v1.1.6-release/release-receipt.json) 与 [固定包清单](evidence/v1.1.6-release/artifact-manifest.json)。MSI 只构建与摘要，未声称完整安装生命周期；应用内更新仍单独 pending。
+
+以下是候选阶段当时记录，保留原验证边界。
+
 > **1.1.6 已达到发布条件，正式附件正在准备。** 固定产品源码 `2711260d0ad56ab6bdf14e4b94facbfc52cfed83`；[安装包构建](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38864448383)的质量检查、完整原生功能及独立性能、MSI/NSIS 均通过，[同包安装复核](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38869797431)全部通过。安装/升级 22 项、工作区 18 项、路由 11 个、管理恢复 7 项以及历版和本版 13 项真实用户流程都已保留。实际查看了图片显示及 TXT 草稿接续截图；恢复文档完成后再开始整理，并检查没有读取错误。
 >
 > 原构建流程在保存回执完成前读取文件而中止；首次同包复核通过后，实看截图又发现前序页面重载与新整理之间的读取提示，因此补上恢复阅读就绪和无读取错误断言，再用**同一份安装器**完整复核。只改测试驱动，产品未重建；原失败和原截图均保留。永久结果见 [安装包清单](evidence/v1.1.6-release/artifact-manifest.json)。公开下载在附件发布前仍为 1.1.5，应用内更新观察继续单独 pending；不把 MSI 构建当完整 MSI 安装生命周期。以下是开发阶段历史。
