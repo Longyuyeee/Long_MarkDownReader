@@ -1,0 +1,45 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 21.24s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 13 tests
+test commands::index::search_pages::libraries::tests::v118_libraries_budget_exhaustion_is_limited_and_preserves_healthy_file_pages ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_config_scope_is_bounded_before_io_and_respects_platform_identity ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_direct_delete_is_detected_without_waiting_for_notify ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_empty_success_partial_offline_and_all_failure_are_distinct ... ok
+
+thread 'commands::index::search_pages::libraries::tests::v118_libraries_modified_order_is_global_and_overlapping_roots_do_not_duplicate_files' (5592) panicked at src\commands\index_search_libraries_tests.rs:605:5:
+assertion `left == right` failed: LibrariesPageResponse { session_id: "0092dbd612b41bcb6f33676d4807fc98", snapshot_id: "0092dbd612b41bcb6f33676d4807fc98:v:2", view_version: 2, files: [LibraryFileGroup { library_name: "子库", library_root: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 0 & 资料\\子目录", file: SearchFileGroup { path: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 0 & 资料\\子目录\\预算.md", title: "预算.md", modified_at_ms: Some(1792180588896), matches: [KnowledgeSearchResult { title: "预算.md", path: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 0 & 资料\\子目录\\预算.md", object_type: "markdown", match_kind: "title", context: "文件名匹配", page: None, annotation_id: None, locator_kind: None, locator_object_id: None, location_label: None, score: 100, extraction_failed: false }], may_have_more_matches: false, location_limit_per_kind: 5, unlocated_limit_per_kind: 1, modified_nanos: 1792180588896168100 } }, LibraryFileGroup { library_name: "资料库 1", library_root: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 1 & 资料", file: SearchFileGroup { path: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 1 & 资料\\记录-0000.md", title: "记录-0000.md", modified_at_ms: Some(1792180588896), matches: [KnowledgeSearchResult { title: "记录-0000.md", path: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 1 & 资料\\记录-0000.md", object_type: "markdown", match_kind: "body", context: "项目预算确认", page: None, annotation_id: None, locator_kind: None, locator_object_id: None, location_label: None, score: 60, extraction_failed: false }], may_have_more_matches: true, location_limit_per_kind: 5, unlocated_limit_per_kind: 1, modified_nanos: 1792180588896168100 } }], page_offset: 0, next_cursor: None, continue_cursor: None, refresh_cursor: "0092dbd612b41bcb6f33676d4807fc98:w:3", scan_state: Limited, scan_complete: false, total_files: None, available_files: 2, coverage: "registered-extractable-content", libraries: [LibraryProgress { library_name: "资料库 0", library_root: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 0 & 资料", state: Changed, available_files: 0, total_files: None, examined_sources: 0, indexed: false, warnings: ["资料或查询现场已变化，请重新搜索；不会替换或保存当前草稿。"] }, LibraryProgress { library_name: "资料库 1", library_root: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 1 & 资料", state: Ready, available_files: 1, total_files: Some(1), examined_sources: 1, indexed: false, warnings: [] }, LibraryProgress { library_name: "子库", library_root: "\\\\?\\C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-command-regression-46540-1792180588895820300-4\\库 0 & 资料\\子目录", state: Ready, available_files: 1, total_files: Some(1), examined_sources: 1, indexed: false, warnings: [] }] }
+  left: None
+ right: Some(3)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::index::search_pages::libraries::tests::v118_libraries_modified_order_is_global_and_overlapping_roots_do_not_duplicate_files ... FAILED
+test commands::index::search_pages::libraries::tests::v118_libraries_one_blocked_worker_does_not_hold_coordinator_or_healthy_results ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_real_486_files_survive_global_group_paging_cold_memory_and_disk ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_runtime_modes_share_owner_limits_cancellation_and_task_pool ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_shared_retention_limits_and_drop_release_are_aggregate_not_per_library ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_source_change_removes_only_affected_library_and_does_not_retry_it ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_tiny_budgets_resume_all_files_without_reopening_completed_bodies ... ok
+
+thread '<unnamed>' (42508) panicked at src\commands\index_search_libraries_tests.rs:845:9:
+intentional poisoned-session cleanup regression
+test commands::index::search_pages::libraries::tests::v118_libraries_ttl_and_poisoned_session_cleanup_release_registry_capacity ... ok
+test commands::index::search_pages::libraries::tests::v118_libraries_work_retry_is_identical_and_forged_or_changed_requests_do_not_advance ... ok
+
+failures:
+
+failures:
+    commands::index::search_pages::libraries::tests::v118_libraries_modified_order_is_global_and_overlapping_roots_do_not_duplicate_files
+
+test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 952 filtered out; finished in 1.53s
+
+error: test failed, to rerun pass `--lib`

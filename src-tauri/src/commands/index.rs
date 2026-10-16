@@ -1304,6 +1304,15 @@ fn search_workspace_checked(
 }
 
 #[tauri::command]
+pub async fn search_knowledge_libraries_page(
+    app: AppHandle,
+    window: tauri::Window,
+    request: search_pages::libraries::LibrariesPageRequest,
+) -> Result<search_pages::libraries::LibrariesPageResponse, search_pages::SearchPageError> {
+    search_pages::libraries::run(app, window.label().to_owned(), request).await
+}
+
+#[tauri::command]
 pub async fn search_knowledge_page(
     app: AppHandle,
     window: tauri::Window,

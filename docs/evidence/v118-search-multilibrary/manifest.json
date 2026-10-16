@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-C",
+  "status": "bounded-multilibrary-backend-validated-ui-proposal-awaiting-approval",
+  "baselineCommit": "34059ada13fa9aaa6bff2270a6a9b770bc67a65e",
+  "branch": "codex/v118-search-completeness",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "sourceHashBasis": "git-index-bytes",
+  "sourceUserContentIncluded": false,
+  "evidenceLevel": "rust-native-real-owned-fixtures-real-watcher-plus-separate-design-proposal",
+  "checks": {
+    "newNativeTests": 20,
+    "includesOneTimingSampleTest": true,
+    "initialSubset": {
+      "passed": 11,
+      "failed": 2
+    },
+    "afterRetryContractCorrection": {
+      "passed": 12,
+      "failed": 1
+    },
+    "overlapDiagnosticFailuresPreserved": 2,
+    "afterDirectoryVerification": {
+      "passed": 13,
+      "failed": 0
+    },
+    "intermediateRelated": {
+      "passed": 65,
+      "failed": 0
+    },
+    "finalRelated": {
+      "passed": 67,
+      "failed": 0
+    },
+    "completeNativeFunctional": {
+      "initialPassed": 965,
+      "finalPassed": 966,
+      "failed": 0,
+      "existingIgnored": 5,
+      "performanceExcluded": true
+    },
+    "searchContracts": {
+      "passed": 74,
+      "failed": 0
+    },
+    "separatePerformance": {
+      "passed": 1,
+      "workbookTotalMs": 4859
+    },
+    "patchQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "previousBatchCi": {
+      "runId": 38957558554,
+      "headSha": "34059ada13fa9aaa6bff2270a6a9b770bc67a65e",
+      "conclusion": "success",
+      "coversCurrentBatch": false
+    }
+  },
+  "api": {
+    "newCommand": "search_knowledge_libraries_page",
+    "registered": true,
+    "nativeIpcExecuted": false,
+    "legacyUserEntrypointsConnected": false,
+    "owner": "injected-window-label-and-entry-channel",
+    "scope": "explicit-configured-current-or-all-up-to-32-no-silent-truncation",
+    "libraryStates": [
+      "queued",
+      "searching",
+      "preparing",
+      "ready",
+      "limited",
+      "unavailable",
+      "changed"
+    ],
+    "aggregateStates": [
+      "preparing",
+      "ready",
+      "limited",
+      "failed"
+    ],
+    "coverage": "registered-extractable-content",
+    "healthyResultsAvailableWhileOtherWorkerBlocked": true,
+    "hardNetworkTimeoutTested": false,
+    "workCursorSeparateFromFrozenViewPageCursor": true,
+    "lastWorkCursorRetryIdempotent": true,
+    "newQueryNullCursorIdempotent": false,
+    "newReadyCoverageRequiresNewView": true,
+    "preparingOnlyProgressPreservesHealthyPageVersion": true,
+    "unknownTotalUnlessAllReady": true,
+    "emptySuccessDistinctFromPartialEmptyAndAllFailure": true,
+    "explicitIndexStateChangesCannotBeAbsorbedByDirectoryVerification": true,
+    "directoryHintVerification": "only-ready-all-directory-records-full-bounded-source-and-relation-comparison-no-body-reparse",
+    "failedLibraryAutomaticallyRetried": false,
+    "overlappingCanonicalFilePathsDeduplicated": true,
+    "overlappingLibraryWorkCoalesced": false
+  },
+  "limits": {
+    "newApiSessions": 4,
+    "newApiActiveTasks": 4,
+    "coordinatorUsesTaskPermit": true,
+    "libraryLanesPerAggregate": 2,
+    "maxLibraries": 32,
+    "maxRetainedSourcesAcrossLibraries": 100000,
+    "maxRetainedFileGroupsAcrossLibraries": 10000,
+    "serializedBaseFileGroupPayloadBytesAcrossLibraries": 8388608,
+    "payloadLimitIsProcessRssLimit": false,
+    "pendingSingleFileSegments": 100000,
+    "pendingSingleFileTextBytes": 67108864,
+    "idleTtlSeconds": 300,
+    "maxAgeSeconds": 1200,
+    "expirationCleanup": "lazy-on-request-plus-window-destroy",
+    "directoryHintMaximumRawRecords": 64,
+    "cachedFreshnessMaximumExaminedChangePaths": 20000,
+    "filesystemAtomicSnapshot": false,
+    "hardPreemptibleIo": false,
+    "allApplicationBackgroundTasksGoverned": false
+  },
+  "fixtures": {
+    "twoLibrariesMatchingFiles": 486,
+    "modes": [
+      "cold",
+      "memory",
+      "disk"
+    ],
+    "pageSize": 40,
+    "sameTitlesDifferentPaths": true,
+    "sourceBodiesUnchanged": true,
+    "nextPageDoesNotRebuildCompletedBodies": true,
+    "blockedWorker": "deterministic channel gate with concurrent native worker, not simulated claim of actual offline network timeout",
+    "offline": "real missing configured-root fixture path",
+    "quotaBoundary": "deterministic shared reservation counters, not 100k real-file performance"
+  },
+  "timing": {
+    "unit": "microseconds",
+    "files": 486,
+    "samplesPerMode": 5,
+    "includesNativeIpc": false,
+    "includesProductionScheduler": false,
+    "includesFrontend": false,
+    "includesInstaller": false,
+    "launcher": "serial invocation of real worker helper; aggregation plus page costs measured separately",
+    "cold": {
+      "fullAggregation": [
+        205551,
+        193801,
+        201854,
+        196510,
+        230070
+      ],
+      "nextPage": [
+        4942,
+        4399,
+        4501,
+        5313,
+        6701
+      ],
+      "fullMedian": 201854,
+      "nextMedian": 4942
+    },
+    "memory": {
+      "fullAggregation": [
+        68123,
+        56456,
+        66216,
+        65827,
+        64077
+      ],
+      "nextPage": [
+        4211,
+        4835,
+        4126,
+        4905,
+        5200
+      ],
+      "fullMedian": 65827,
+      "nextMedian": 4835
+    },
+    "notComparableAsSpeedupToPrevious243FileOrRawTop200Tests": true
+  },
+  "proposal": {
+    "source": "docs/design/v118-search-continuation.html",
+    "document": "docs/V1_1_8_Search_UI_Proposal_2026-10-17.md",
+    "userApproval": false,
+    "formalProductUiChanged": false,
+    "actualApplicationUiVerified": false,
+    "installedAcceptance": false,
+    "headlessPreviewPassed": true,
+    "widths": [
+      736,
+      360,
+      320
+    ],
+    "darkRenderedAndInspected": true,
+    "initialHarnessImportFailurePreserved": true,
+    "prototypeStateReflectionFailurePreservedAndCorrected": true,
+    "presentedScreenshots": [
+      "ui-proposal-presented-compact.png",
+      "ui-proposal-presented-expanded.png",
+      "ui-proposal-presented-narrow.png",
+      "ui-proposal-presented-dark.png"
+    ],
+    "notSixStyleProductAcceptance": true
+  },
+  "knownWarnings": [
+    "existing scan_visible dead-code",
+    "Windows incremental compilation finalization AccessDenied; logs retained; no cache deletion"
+  ],
+  "releaseBlockers": [
+    "approve UI proposal",
+    "connect both existing search entrypoints including tag shortcut completeness semantics",
+    "actual Vue responsive/six-style/keyboard/open-reference-return-draft checks",
+    "real native IPC",
+    "fixed v1.1.8 installers and same-package lifecycle review",
+    "current-commit remote quality gate"
+  ],
+  "sources": [
+    {
+      "path": "src-tauri/src/commands/index.rs",
+      "sha256": "ed9bbb4b3a6c088b9c41e08b4717fed8bec6d073c3e726a5d361854cd2c4cbcf"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_pages.rs",
+      "sha256": "6cd06b0e53d451892eae82c42c9de40065e03cd1802227362596c8cf39b49c63"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_libraries.rs",
+      "sha256": "4c474adbd62150554dcd81dba8d489e90839f2ea4afc65f3f1f4815cf9a33b9c"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_libraries_tests.rs",
+      "sha256": "d3ec10929ee30f9aab6a918dfa650ea3a91adbebf14ddbe82786dff19c429d52"
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "sha256": "ac1241290859e5e2d6595dad41811ecf82ff97ebb544ce9eb4bb473a896bf240"
+    },
+    {
+      "path": "src-tauri/src/services/knowledge_index.rs",
+      "sha256": "ce6f3246e8b9868cf14889251f8c98a2daf9024ac913a29e677af41ebf224f36"
+    },
+    {
+      "path": "shared/development-version-policy.json",
+      "sha256": "f5088cc05f4ff55ac307219e3f22ea54f2bb75c44921ee88ddd31faaccc70556"
+    },
+    {
+      "path": "docs/design/v118-search-continuation.html",
+      "sha256": "528c3ed356c7824283dc87fc0039644d3482a98a8d25d80fd78f8d5b76792282"
+    }
+  ],
+  "files": [
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-directory-verification.log",
+      "bytes": 3409,
+      "sha256": "b2f8c09400bc671dcd2772181d8c8553bedd5284abcf0003acd38c6d1a70ac67"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-functional-final.log",
+      "bytes": 100905,
+      "sha256": "de7fae112da6b3076914518fd7c5962607e8ec238ef64447248c2bec5184ba0c"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-functional.log",
+      "bytes": 100792,
+      "sha256": "49981e2a5b30f191650445520e44d5ca1dc40670fcc2198d479b3cb8bd9b3eec"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-initial.log",
+      "bytes": 47485,
+      "sha256": "20857d8e906800f09feaa7ae2e5b3dd89886149a413dd17dd4cd92e8b1285d05"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-overlap-diagnostic.log",
+      "bytes": 5525,
+      "sha256": "1a31ea26855242214407ee51650062055203711f3f80f44c2a9189818feef856"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-overlap-event.log",
+      "bytes": 5565,
+      "sha256": "e29958947b46b676833038c7f5ac86b2272bca37dd080eca6de88cc008070983"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-performance.log",
+      "bytes": 2301,
+      "sha256": "10d46f0dd3df99cc186dd78166c88e031312bf418c0b1e17ca5e999e7c252058"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-related-final.log",
+      "bytes": 10887,
+      "sha256": "9184ae91266436c1f3f37e01d35b3d7b638a674f8fede5a7ed9ed32e1dc6e8ad"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-related.log",
+      "bytes": 10481,
+      "sha256": "747b1fcb9dca3edf8418e044be2622c390eef54035c32f02bab4362cb82f0acb"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/native-second.log",
+      "bytes": 6665,
+      "sha256": "f15b9ff45572d1075276dbdb22dee1431a89f1d9192988dafd7a890d2f428f81"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/previous-batch-ci.json",
+      "bytes": 291,
+      "sha256": "827c96eb3a46240c25e18918ac1a409a6d78115430283ff9c73fdafc27edb084"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/quality-gate.log",
+      "bytes": 133313,
+      "sha256": "4ebf9d8d000af1ec052512671cab9340c93164725b4f4b30ecb08d89884758d8"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/search-contracts.log",
+      "bytes": 15293,
+      "sha256": "a551b688354b2f10adcd0d53ae320fd34cf49fdb6f21e8534e207ecf3c1ce10f"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-compact-closure.png",
+      "bytes": 52074,
+      "sha256": "b972d32e457e05fe7623041c10b7a1ba9be4c7ac554bb71b3a2ed46c487b9954"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-compact-final.png",
+      "bytes": 51929,
+      "sha256": "a42ab561a213f811cde87c43e7fe037d7ef606b31340dee3b11f2dfc82c22347"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-compact.png",
+      "bytes": 51929,
+      "sha256": "a42ab561a213f811cde87c43e7fe037d7ef606b31340dee3b11f2dfc82c22347"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-dark-closure.png",
+      "bytes": 58290,
+      "sha256": "08d1be47824361712b3c7a2a1b6dfe28babf8826b2a6f80b4fa2cd4ed5905f90"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-expanded-closure.png",
+      "bytes": 57860,
+      "sha256": "2c3f4e217fbaa6146876da8f4d1147d91d1a72af04ad2c23935b82307049f033"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-narrow-closure.png",
+      "bytes": 53331,
+      "sha256": "337605d7fa291ed7da799ad2918adcadd7e6c8f41dcd817beb2c763366b8a7bb"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-presented-compact.png",
+      "bytes": 51563,
+      "sha256": "12e4b658f4868e2d52ebc75f79e586be8702d7fbe7673e16b29316f8c4b95914"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-presented-dark.png",
+      "bytes": 57775,
+      "sha256": "8d53e888b1f7d892f5aa464685fc89c0fe2a0bc3f9bcf63879b00095dd70b387"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-presented-expanded.png",
+      "bytes": 57316,
+      "sha256": "f60897aa9e71e843e3e5e3b8a3777e9bce60b2d411a1e5d1c912689c7903b496"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-presented-narrow.png",
+      "bytes": 53461,
+      "sha256": "5773d3ddddd9a1e40f46cc82eb286fb5bb689d716d9d34decb388dbe72fd8504"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-presented.log",
+      "bytes": 225,
+      "sha256": "2f0ac873de3e1c85d490ed48e8c62974a6feb916af09517ce7f368b17750bae4"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-preview-closure.log",
+      "bytes": 192,
+      "sha256": "ebda80f314e9d4d8db3ffec708e9e2bdae27dbdebdf345ccff407874ba24861e"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-preview-final.log",
+      "bytes": 3769,
+      "sha256": "ab9552b10e92a92f404791efbd851a2190bcda146592ec0f0adb261fb9446429"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-preview-second.log",
+      "bytes": 79,
+      "sha256": "0a14c3e5bc8c0c21b1d7d3231f64272d1fe88c16f73a0c1765af7b4e91addec8"
+    },
+    {
+      "path": "docs/evidence/v118-search-multilibrary/ui-proposal-preview.log",
+      "bytes": 901,
+      "sha256": "d88bb6d1b51fef07a9a5696370c7237a7608c387d99f9e4c046f8c329ea8ac7f"
+    }
+  ]
+}

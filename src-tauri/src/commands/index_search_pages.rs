@@ -12,6 +12,9 @@ use std::sync::{
 };
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+#[path = "index_search_libraries.rs"]
+pub mod libraries;
+
 const MAX_SESSIONS: usize = 4;
 const MAX_ACTIVE_TASKS: usize = 4;
 const MAX_SESSION_SOURCES: usize = 100_000;
@@ -143,7 +146,20 @@ type Owner = (String, SearchChannel);
 struct SessionHandle {
     id: String,
     cancelled: Arc<AtomicBool>,
-    state: Mutex<QuerySession>,
+    state: Mutex<SessionState>,
+}
+
+enum SessionState {
+    Single(Box<QuerySession>),
+    Libraries(Box<libraries::LibrarySession>),
+}
+impl SessionState {
+    fn expired(&self) -> bool {
+        match self {
+            Self::Single(session) => session.expired(),
+            Self::Libraries(session) => session.expired(),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -171,7 +187,11 @@ impl SearchPageRuntime {
 
     fn prune(sessions: &mut HashMap<Owner, Arc<SessionHandle>>) {
         sessions.retain(|_, entry| {
-            let expired = entry.state.try_lock().is_ok_and(|state| state.expired());
+            let expired = match entry.state.try_lock() {
+                Ok(state) => state.expired(),
+                Err(std::sync::TryLockError::Poisoned(_)) => true,
+                Err(std::sync::TryLockError::WouldBlock) => false,
+            };
             if expired {
                 entry.cancelled.store(true, Ordering::Release);
             }
@@ -184,15 +204,30 @@ impl SearchPageRuntime {
         owner: Owner,
         session: QuerySession,
     ) -> Result<Arc<SessionHandle>, SearchPageError> {
+        self.insert_state(
+            owner,
+            session.id.clone(),
+            session.cancelled.clone(),
+            SessionState::Single(Box::new(session)),
+        )
+    }
+
+    fn insert_state(
+        &self,
+        owner: Owner,
+        id: String,
+        cancelled: Arc<AtomicBool>,
+        state: SessionState,
+    ) -> Result<Arc<SessionHandle>, SearchPageError> {
         let mut sessions = self.sessions.lock().map_err(|_| SearchPageError::busy())?;
         Self::prune(&mut sessions);
         if !sessions.contains_key(&owner) && sessions.len() >= MAX_SESSIONS {
             return Err(SearchPageError::busy());
         }
         let handle = Arc::new(SessionHandle {
-            id: session.id.clone(),
-            cancelled: session.cancelled.clone(),
-            state: Mutex::new(session),
+            id,
+            cancelled,
+            state: Mutex::new(state),
         });
         if let Some(old) = sessions.insert(owner, handle.clone()) {
             old.cancelled.store(true, Ordering::Release);
@@ -280,10 +315,16 @@ pub async fn run_page(
     tauri::async_runtime::spawn_blocking(move || {
         let _permit = permit;
         let index = app.state::<KnowledgeIndexRuntime>();
-        let mut session = entry
+        let mut state = entry
             .state
             .try_lock()
             .map_err(|_| SearchPageError::busy())?;
+        let SessionState::Single(session) = &mut *state else {
+            return Err(SearchPageError::new(
+                "requestMismatch",
+                "这是跨库查询的续载位置，请使用原搜索入口。",
+            ));
+        };
         session.validate_binding(&request)?;
         let before = index.search_revision(&root);
         let result = if index.search_watch_healthy(&root) {
@@ -300,7 +341,7 @@ pub async fn run_page(
         } else {
             result
         };
-        drop(session);
+        drop(state);
         if result
             .as_ref()
             .is_err_and(|error| matches!(error.code, "expired" | "unavailable"))
@@ -323,26 +364,12 @@ fn configured_page_scope<'a>(
     libraries: &'a [crate::commands::config::LibraryConfig],
     requested: &str,
 ) -> Result<&'a str, SearchPageError> {
-    fn identity(path: &str) -> String {
-        let path = path.replace('\\', "/");
-        let path = if cfg!(windows) {
-            let lower = path.to_lowercase();
-            if let Some(unc) = lower.strip_prefix("//?/unc/") {
-                format!("//{unc}")
-            } else {
-                lower.strip_prefix("//?/").unwrap_or(&lower).to_owned()
-            }
-        } else {
-            path
-        };
-        path.trim_end_matches('/').to_owned()
-    }
-    let requested = identity(requested);
+    let requested = scope_identity(requested);
     // Select in config before any filesystem access. In particular, don't
     // canonicalize every unrelated/offline library on every continuation.
     libraries
         .iter()
-        .find(|library| identity(&library.path) == requested)
+        .find(|library| scope_identity(&library.path) == requested)
         .map(|library| library.path.as_str())
         .ok_or_else(|| {
             SearchPageError::new(
@@ -350,6 +377,97 @@ fn configured_page_scope<'a>(
                 "请选择已配置的资料库；本次搜索没有读取其他范围。",
             )
         })
+}
+
+fn scope_identity(path: &str) -> String {
+    let path = path.replace('\\', "/");
+    let path = if cfg!(windows) {
+        let lower = path.to_lowercase();
+        if let Some(unc) = lower.strip_prefix("//?/unc/") {
+            format!("//{unc}")
+        } else {
+            lower.strip_prefix("//?/").unwrap_or(&lower).to_owned()
+        }
+    } else {
+        path
+    };
+    path.trim_end_matches('/').to_owned()
+}
+
+fn session_identity() -> String {
+    static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+    format!(
+        "{:x}",
+        md5::compute(format!(
+            "{}:{}:{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos(),
+            SEQUENCE.fetch_add(1, Ordering::Relaxed)
+        ))
+    )
+}
+
+// One pool per user query, shared by every library. These are retained
+// signatures/result payloads, not allocator/RSS or physical I/O accounting.
+#[derive(Default)]
+struct RetainedCounts {
+    sources: usize,
+    files: usize,
+    bytes: usize,
+}
+#[derive(Default)]
+struct RetentionPool(Mutex<RetainedCounts>);
+struct Retention {
+    pool: Arc<RetentionPool>,
+    owned: RetainedCounts,
+}
+impl Default for Retention {
+    fn default() -> Self {
+        Self {
+            pool: Arc::new(RetentionPool::default()),
+            owned: RetainedCounts::default(),
+        }
+    }
+}
+impl Retention {
+    fn source(&mut self) -> bool {
+        let Ok(mut counts) = self.pool.0.lock() else {
+            return false;
+        };
+        if counts.sources >= MAX_SESSION_SOURCES {
+            return false;
+        }
+        counts.sources += 1;
+        self.owned.sources += 1;
+        true
+    }
+    fn group(&mut self, bytes: usize) -> bool {
+        let Ok(mut counts) = self.pool.0.lock() else {
+            return false;
+        };
+        if counts.files >= MAX_SESSION_FILES
+            || bytes > MAX_RESULT_BYTES.saturating_sub(counts.bytes)
+        {
+            return false;
+        }
+        counts.files += 1;
+        counts.bytes += bytes;
+        self.owned.files += 1;
+        self.owned.bytes += bytes;
+        true
+    }
+}
+impl Drop for Retention {
+    fn drop(&mut self) {
+        if let Ok(mut counts) = self.pool.0.lock() {
+            counts.sources = counts.sources.saturating_sub(self.owned.sources);
+            counts.files = counts.files.saturating_sub(self.owned.files);
+            counts.bytes = counts.bytes.saturating_sub(self.owned.bytes);
+        }
+    }
 }
 
 struct QuerySession {
@@ -368,6 +486,7 @@ struct QuerySession {
     snapshot: Option<Arc<KnowledgeIndexSnapshot>>,
     disk_cache: Option<PathBuf>,
     snapshot_id: Option<String>,
+    relations_digest: String,
     indexed: bool,
     map_position: usize,
     positions: Vec<Vec<usize>>,
@@ -382,6 +501,7 @@ struct QuerySession {
     furthest_page: usize,
     body_builds: usize,
     unread_sources: usize,
+    retention: Retention,
 }
 
 impl QuerySession {
@@ -392,21 +512,9 @@ impl QuerySession {
         snapshot: Option<Arc<KnowledgeIndexSnapshot>>,
         disk_cache: Option<PathBuf>,
     ) -> Result<Self, SearchPageError> {
-        static SEQUENCE: AtomicU64 = AtomicU64::new(0);
         // An opaque process-local identity, not an authentication secret. Access
         // is bound to the caller's injected native window and fixed channel.
-        let id = format!(
-            "{:x}",
-            md5::compute(format!(
-                "{}:{}:{}",
-                std::process::id(),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_nanos(),
-                SEQUENCE.fetch_add(1, Ordering::Relaxed)
-            ))
-        );
+        let id = session_identity();
         Ok(Self {
             id,
             guard: WorkspaceGuard::new(root).map_err(|_| SearchPageError::unavailable())?,
@@ -423,6 +531,7 @@ impl QuerySession {
             snapshot,
             disk_cache,
             snapshot_id: None,
+            relations_digest: String::new(),
             indexed: false,
             map_position: 0,
             positions: Vec::new(),
@@ -437,6 +546,7 @@ impl QuerySession {
             furthest_page: 0,
             body_builds: 0,
             unread_sources: 0,
+            retention: Retention::default(),
         })
     }
 
@@ -602,29 +712,34 @@ impl QuerySession {
 
     fn validate_response(&self, response: &SearchPageResponse) -> Result<(), SearchPageError> {
         for group in &response.files {
-            let source = self
-                .sources
-                .get(
-                    *self
-                        .source_paths
-                        .get(&group.path)
-                        .ok_or_else(SearchPageError::expired)?,
-                )
-                .ok_or_else(SearchPageError::expired)?;
-            self.validate_source(source)?;
-            if group
-                .matches
-                .iter()
-                .any(|result| result.object_type == "pdf")
-            {
-                for suffix in [".annotations.json", ".ocr.json"] {
-                    let companion = format!("{}{suffix}", group.path);
-                    if let Some(position) = self.source_paths.get(&companion) {
-                        self.validate_source(&self.sources[*position])?;
-                    } else if !matches!(fs::symlink_metadata(&companion), Err(error) if error.kind() == std::io::ErrorKind::NotFound)
-                    {
-                        return Err(SearchPageError::expired());
-                    }
+            self.validate_group(group)?;
+        }
+        Ok(())
+    }
+
+    fn validate_group(&self, group: &SearchFileGroup) -> Result<(), SearchPageError> {
+        let source = self
+            .sources
+            .get(
+                *self
+                    .source_paths
+                    .get(&group.path)
+                    .ok_or_else(SearchPageError::expired)?,
+            )
+            .ok_or_else(SearchPageError::expired)?;
+        self.validate_source(source)?;
+        if group
+            .matches
+            .iter()
+            .any(|result| result.object_type == "pdf")
+        {
+            for suffix in [".annotations.json", ".ocr.json"] {
+                let companion = format!("{}{suffix}", group.path);
+                if let Some(position) = self.source_paths.get(&companion) {
+                    self.validate_source(&self.sources[*position])?;
+                } else if !matches!(fs::symlink_metadata(&companion), Err(error) if error.kind() == std::io::ErrorKind::NotFound)
+                {
+                    return Err(SearchPageError::expired());
                 }
             }
         }
@@ -663,6 +778,7 @@ impl QuerySession {
             .sort_by(|left, right| left.path.cmp(&right.path));
         let digest = source_digest(&self.sources);
         let relations = file_relations_digest(self.guard.root());
+        self.relations_digest = relations.clone();
         if self.snapshot.is_none() {
             if let Some(cache) = self.disk_cache.take() {
                 self.snapshot = read_snapshot(&cache, self.guard.root())
@@ -710,7 +826,7 @@ impl QuerySession {
         while self.scan.is_some() {
             match self.scan.as_mut().unwrap().next(budget) {
                 Ok(Some(source)) => {
-                    if self.sources.len() >= MAX_SESSION_SOURCES {
+                    if !self.retention.source() {
                         self.prepare_sources();
                         self.finish(Some(
                             "来源数量达到本次会话上限，尚未查全，请缩小范围后重试。".into(),
@@ -923,6 +1039,7 @@ impl QuerySession {
                     .len();
                 if self.groups.len() >= MAX_SESSION_FILES
                     || bytes > MAX_RESULT_BYTES.saturating_sub(self.retained_bytes)
+                    || !self.retention.group(bytes)
                 {
                     self.finish(Some(
                         "结果载荷达到本次会话上限，仅能继续查看已找到的文件，尚未查全。".into(),

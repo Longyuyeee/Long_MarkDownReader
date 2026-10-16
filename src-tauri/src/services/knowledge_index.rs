@@ -204,7 +204,8 @@ pub struct KnowledgeIndexRuntime {
     cancellations: Mutex<HashMap<String, Arc<AtomicBool>>>,
     changed_paths: Arc<Mutex<HashMap<String, HashSet<PathBuf>>>>,
     watchers: Mutex<HashMap<String, RecommendedWatcher>>,
-    search_revisions: Arc<Mutex<HashMap<String, u64>>>,
+    // (all changes, explicit cache/build-state changes), captured atomically.
+    search_revisions: Arc<Mutex<HashMap<String, (u64, u64)>>>,
     search_watch_failures: Arc<Mutex<HashSet<String>>>,
 }
 
@@ -330,7 +331,7 @@ impl KnowledgeIndexRuntime {
                 if relevant {
                     let mut revisions = search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
                     let revision = revisions.entry(callback_key.clone()).or_default();
-                    *revision = revision.saturating_add(1);
+                    revision.0 = revision.0.saturating_add(1);
                 }
             })
             .map_err(|error| format!("启动资料库变化监视失败: {error}"))?;
@@ -358,8 +359,12 @@ impl KnowledgeIndexRuntime {
     }
 
     pub(crate) fn search_revision(&self, workspace: &Path) -> u64 {
+        self.search_revision_pair(workspace).0
+    }
+
+    pub(crate) fn search_revision_pair(&self, workspace: &Path) -> (u64, u64) {
         *self.search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
-            .get(workspace.to_string_lossy().as_ref()).unwrap_or(&0)
+            .get(workspace.to_string_lossy().as_ref()).unwrap_or(&(0, 0))
     }
 
     pub(crate) fn search_watch_healthy(&self, workspace: &Path) -> bool {
@@ -368,19 +373,44 @@ impl KnowledgeIndexRuntime {
     }
 
     pub(crate) fn search_sources_changed(&self, workspace: &Path) -> bool {
-        self.changed_paths(workspace).iter().any(|path| relevant_search_path(workspace, path))
+        let changes = self.changed_paths.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        changes.get(workspace.to_string_lossy().as_ref()).is_some_and(|paths|
+            paths.len() > 20_000 || paths.iter().any(|path| relevant_search_path(workspace, path)))
+    }
+
+    pub(crate) fn bounded_search_change_paths(&self, workspace: &Path, maximum: usize) -> Option<Vec<PathBuf>> {
+        let changes = self.changed_paths.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let paths = changes.get(workspace.to_string_lossy().as_ref())?;
+        if paths.len() > maximum { return None; }
+        Some(paths.iter().filter(|path| relevant_search_path(workspace, path)).cloned().collect())
     }
 
     pub(crate) fn note_search_change(&self, workspace: &Path) {
         let mut revisions = self.search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         let revision = revisions.entry(workspace.to_string_lossy().into_owned()).or_default();
-        *revision = revision.saturating_add(1);
+        revision.0 = revision.0.saturating_add(1);
+        revision.1 = revision.1.saturating_add(1);
     }
 }
 
 pub fn index_workspace_directory(cache_root: &Path, workspace: &Path) -> PathBuf {
     let fingerprint = workspace_fingerprint(workspace);
     cache_root.join(INDEX_DIRECTORY).join(fingerprint)
+}
+
+#[cfg(test)]
+#[test]
+fn v118_libraries_change_inspection_does_not_clone_an_unbounded_monitor_set() {
+    let workspace = crate::services::test_workspace::TestWorkspace::new();
+    let runtime = KnowledgeIndexRuntime::default();
+    let key = workspace.root();
+    let large = (0..20_001).map(|index| workspace.0.join(format!(".hidden-{index}"))).collect();
+    runtime.changed_paths.lock().unwrap().insert(key.clone(), large);
+    assert!(runtime.search_sources_changed(&workspace.0), "large sets conservatively disable old cache reads");
+    assert!(runtime.bounded_search_change_paths(&workspace.0, 64).is_none());
+    let visible = workspace.0.join("预算.md");
+    runtime.changed_paths.lock().unwrap().insert(key, [visible.clone(), workspace.0.join(".misty_order.json")].into_iter().collect());
+    assert_eq!(runtime.bounded_search_change_paths(&workspace.0, 64).unwrap(), vec![visible]);
 }
 
 #[cfg(test)]
