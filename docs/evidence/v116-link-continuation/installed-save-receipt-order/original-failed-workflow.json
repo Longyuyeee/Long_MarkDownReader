@@ -1,0 +1,287 @@
+{
+  "appVersion": "1.1.6",
+  "sourceCommit": "2711260d0ad56ab6bdf14e4b94facbfc52cfed83",
+  "harnessSourceCommit": "2711260d0ad56ab6bdf14e4b94facbfc52cfed83",
+  "installerSha256": "34eb428842bcbb8376bb3b8106e78866319926e1bb22c6f350f85fb80500cff7",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    },
+    {
+      "id": "palette-scope-dropdown-is-clickable-and-shows-real-native-results",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-query-and-genuine-empty-state-are-distinct",
+      "status": "passed"
+    },
+    {
+      "id": "search-result-opens-in-main-editor-without-replacing-reference",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-16T07:36:21.986Z",
+      "completedAt": "2026-10-16T07:36:21.992Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-16T07:36:21.993Z",
+      "completedAt": "2026-10-16T07:36:22.089Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-16T07:36:22.089Z",
+      "completedAt": "2026-10-16T07:36:22.152Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-16T07:36:22.152Z",
+      "completedAt": "2026-10-16T07:36:22.163Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-16T07:36:22.163Z",
+      "completedAt": "2026-10-16T07:36:22.168Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-16T07:36:22.168Z",
+      "completedAt": "2026-10-16T07:36:22.190Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-16T07:36:22.190Z",
+      "completedAt": "2026-10-16T07:36:22.351Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-16T07:36:22.374Z",
+      "completedAt": "2026-10-16T07:36:22.441Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-16T07:36:22.441Z",
+      "completedAt": "2026-10-16T07:36:22.673Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-16T07:36:22.673Z",
+      "completedAt": "2026-10-16T07:36:22.880Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-16T07:36:22.929Z",
+      "completedAt": "2026-10-16T07:36:23.482Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-16T07:36:23.488Z",
+      "completedAt": "2026-10-16T07:36:23.493Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-16T07:36:23.493Z",
+      "completedAt": "2026-10-16T07:36:23.520Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-16T07:36:23.888Z",
+      "completedAt": "2026-10-16T07:36:24.053Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-16T07:36:24.053Z",
+      "completedAt": "2026-10-16T07:36:24.119Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-16T07:36:24.119Z",
+      "completedAt": "2026-10-16T07:36:24.130Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-16T07:36:24.130Z",
+      "completedAt": "2026-10-16T07:36:24.224Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-16T07:36:24.224Z",
+      "completedAt": "2026-10-16T07:36:24.232Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-16T07:36:26.969Z",
+      "completedAt": "2026-10-16T07:36:26.991Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-16T07:36:27.486Z",
+      "completedAt": "2026-10-16T07:36:27.498Z",
+      "status": "completed"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "markdownInputMode": "vditor-wysiwyg",
+  "error": "Error: Uncaught (in promise)",
+  "failureUiState": {
+    "state": "● 未保存 · Ctrl+S",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿，有未保存的修改",
+      "v115-预算资料"
+    ],
+    "dirtyModels": [
+      {
+        "path": "C:\\LongEditR5ILibrary\\v115-草稿.md",
+        "content": "# 用户刚输入的未保存预算草稿\n"
+      }
+    ],
+    "tempDirty": false
+  },
+  "failureNavigation": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5Cv115-%E8%8D%89%E7%A8%BF.md",
+    "visibility": "visible",
+    "focused": true,
+    "root": "C:\\LongEditR5ILibrary",
+    "tabs": [
+      {
+        "id": "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-A.md",
+        "path": "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-A.md"
+      },
+      {
+        "id": "C:\\LongEditR5ILibrary\\v115-草稿.md",
+        "path": "C:\\LongEditR5ILibrary\\v115-草稿.md"
+      },
+      {
+        "id": "\\\\?\\C:\\LongEditR5ILibrary\\v115-预算资料.txt",
+        "path": "\\\\?\\C:\\LongEditR5ILibrary\\v115-预算资料.txt"
+      }
+    ],
+    "components": [
+      {
+        "name": "LibraryMode",
+        "uid": 33,
+        "unmounted": false
+      },
+      {
+        "name": "Tree",
+        "uid": 205,
+        "dataKeys": [
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v110-workflow",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v111-workflow",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-target",
+          "\\\\?\\C:\\LongEditR5ILibrary\\g15c-linked-follow-up.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5i-library-marker.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-config.json",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-notes.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-note - 副本.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-note.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-history-恢复-1792136174-1.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-history.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-source.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-template 1.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-template.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v114-data.table.json",
+          "\\\\?\\C:\\LongEditR5ILibrary\\release-v114-templates.json",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J LibreOffice Writer Hyperlinks-1792136146355-7396.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J Microsoft Word Hyperlinks-1792136146355-7396.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\UX33J WPS Writer Hyperlinks-1792136146355-7396.docx",
+          "\\\\?\\C:\\LongEditR5ILibrary\\v115-旧版预算.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\v115-草稿.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\v115-预算资料.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\v115-预算配置.json",
+          "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-A.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-B.txt",
+          "\\\\?\\C:\\LongEditR5ILibrary\\缺图.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\资料 - 副本.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\资料.md",
+          "\\\\?\\C:\\LongEditR5ILibrary\\附带.txt"
+        ]
+      }
+    ],
+    "visibleTreePaths": [
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v110-workflow",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v111-workflow",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-target",
+      "\\\\?\\C:\\LongEditR5ILibrary\\g15c-linked-follow-up.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5i-library-marker.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-config.json",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-network.canvas",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-north-star.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-notes.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\r5j-plan.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-note - 副本.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v112-note.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-history-恢复-1792136174-1.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-history.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-source.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-template 1.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v113-template.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v114-data.table.json",
+      "\\\\?\\C:\\LongEditR5ILibrary\\release-v114-templates.json",
+      "\\\\?\\C:\\LongEditR5ILibrary\\UX33J LibreOffice Writer Hyperlinks-1792136146355-7396.docx",
+      "\\\\?\\C:\\LongEditR5ILibrary\\UX33J Microsoft Word Hyperlinks-1792136146355-7396.docx",
+      "\\\\?\\C:\\LongEditR5ILibrary\\UX33J WPS Writer Hyperlinks-1792136146355-7396.docx",
+      "\\\\?\\C:\\LongEditR5ILibrary\\v115-旧版预算.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\v115-草稿.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\v115-预算资料.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\v115-预算配置.json",
+      "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-A.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-B.txt",
+      "\\\\?\\C:\\LongEditR5ILibrary\\缺图.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\资料 - 副本.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\资料.md",
+      "\\\\?\\C:\\LongEditR5ILibrary\\附带.txt"
+    ]
+  },
+  "cleanupUiReload": "not-attempted-after-failed-user-workflow"
+}

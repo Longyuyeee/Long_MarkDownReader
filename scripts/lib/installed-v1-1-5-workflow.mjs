@@ -140,12 +140,13 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await waitFor(`document.querySelector('${palette} [role="alert"]')?.textContent.includes('未保存')`, 'unsaved draft blocks library switch')
     const protectedDraft = await fs.readFile(draft, 'utf8') === '# 安装态草稿\n\n尚未修改\n' && normalize((await invoke('get_config')).activeLibraryPath) === normalize(library)
     await key('Escape', 'Escape', 27); await waitFor(`!document.querySelector('${palette}')`, 'palette closed'); await mouse(button('保存'))
-    await waitFor(`(async()=>{const r=await window.__TAURI_INTERNALS__.invoke('read_text_document',{libraryRoot:${JSON.stringify(library)},path:${JSON.stringify(draft)},formatId:'markdown'});return r.content.includes('用户刚输入')})()`, 'user explicitly saved draft')
-    report.afterDiskWrite = await evaluate(visibleSaveState)
-    // Disk publication can precede completion of the UI save receipt. Require
-    // the user's visible saved state too; never clear a dirty flag to proceed.
+    // Wait for the user-visible receipt before issuing another native read:
+    // the in-flight write intentionally owns the document until it completes.
     await waitFor(`document.querySelector('.document-save-state')?.textContent.trim()==='已保存'&&!document.querySelector('.workspace-tab.active[aria-label*="有未保存的修改"]')`, 'explicit save completed in the user interface')
     report.afterExplicitSave = await evaluate(visibleSaveState)
+    const savedDraft = await invoke('read_text_document', { libraryRoot: library, path: draft, formatId: 'markdown' })
+    assert.ok(savedDraft.content.includes('用户刚输入'), 'explicitly saved draft exists on disk after its receipt')
+    report.afterDiskWrite = await evaluate(visibleSaveState)
     await open(); await query(expression); await waitFor(`!!(${result('v115-另库预算')})`, 'other library ready after save'); await mouse(result('v115-另库预算'))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('另库资料')`, 'saved draft permits switch')
     report.switchedDirectory = await invoke('scan_directory', { libraryRoot: second, path: second })
