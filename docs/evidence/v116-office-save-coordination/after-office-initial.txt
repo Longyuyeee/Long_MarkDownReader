@@ -1,0 +1,50 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 25.64s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 32 tests
+test commands::pptx::move_tests::office_move_pptx_read_and_preview_are_protected ... ok
+test commands::workbook::move_tests::office_move_xlsx_conversion_protects_output_directory ... ok
+test commands::workbook::move_tests::office_move_xlsx_cells ... ok
+test commands::docx::move_tests::office_move_docx_read_and_preview_are_protected ... ok
+test commands::workbook::move_tests::office_move_xlsx_conditional ... ok
+test commands::workbook::move_tests::office_move_xlsx_draft ... ok
+test commands::workbook::move_tests::office_move_xlsx_defined_name ... ok
+test commands::workbook::move_tests::office_move_xlsx_late_inspection_does_not_promote_old_backup ... ok
+test commands::workbook::move_tests::office_move_xlsx_freeze ... ok
+test commands::workbook::move_tests::office_move_xlsx_filter ... ok
+test commands::workbook::move_tests::office_move_xlsx_drawing ... ok
+test commands::workbook::move_tests::office_move_xlsx_header_footer ... ok
+test commands::workbook::move_tests::office_move_xlsx_page_layout ... ok
+test commands::workbook::move_tests::office_move_xlsx_outline ... ok
+test commands::workbook::move_tests::office_move_xlsx_reads_are_protected ... ok
+test commands::workbook::move_tests::office_move_xlsx_print_options ... ok
+test commands::docx::move_tests::office_move_docx_source_save ... ok
+test commands::docx::move_tests::office_move_docx_copy_destination ... ok
+test commands::workbook::move_tests::office_move_xlsx_structure ... ok
+
+thread 'commands::workbook::move_tests::office_move_xlsx_table' (1768) panicked at src\commands\workbook_move_tests.rs:60:1:
+called `Result::unwrap()` on an `Err` value: "The Table column count must match the selected range width."
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::workbook::move_tests::office_move_xlsx_table ... FAILED
+test commands::docx::move_tests::office_move_docx_copy_source ... ok
+test commands::workbook::move_tests::office_move_xlsx_pivot_copy_destination ... ok
+test commands::workbook::move_tests::office_move_xlsx_validation ... ok
+test commands::workbook::move_tests::office_move_xlsx_pivot_copy_source ... ok
+test commands::pptx::move_tests::office_move_pptx_copy_destination ... ok
+test commands::pptx::move_tests::office_move_pptx_source_save ... ok
+test commands::pptx::move_tests::office_move_pptx_copy_source ... ok
+test commands::pptx::move_tests::office_move_pptx_late_source_save_does_not_promote_old_backup ... ok
+test commands::docx::move_tests::office_move_docx_batch_source_save ... ok
+test commands::docx::move_tests::office_move_docx_batch_copy_destination ... ok
+test commands::docx::move_tests::office_move_docx_batch_copy_source ... ok
+test commands::pptx::move_tests::office_move_pptx_transaction_source_save ... ok
+
+failures:
+
+failures:
+    commands::workbook::move_tests::office_move_xlsx_table
+
+test result: FAILED. 31 passed; 1 failed; 0 ignored; 0 measured; 814 filtered out; finished in 0.84s
+
+error: test failed, to rerun pass `--lib`

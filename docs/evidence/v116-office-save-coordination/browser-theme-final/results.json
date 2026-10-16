@@ -1,0 +1,662 @@
+{
+  "scope": "Real Office Vue pages, actual clicks/input, isolated IPC. Not native filesystem, multi-window freeze or installed acceptance.",
+  "checks": [
+    "docx: actual input and verification do not save; reservation failure retains draft and retry, no false success",
+    "docx: explicit retry sends exactly the preserved request and only a verified receipt clears the draft",
+    "pptx: actual input and verification do not save; reservation failure retains draft and retry, no false success",
+    "pptx: explicit retry sends exactly the preserved request and only a verified receipt clears the draft",
+    "workbook: actual input and verification do not save; reservation failure retains draft and retry, no false success",
+    "workbook: explicit retry sends exactly the preserved request and only a verified receipt clears the draft"
+  ],
+  "layouts": [
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "white",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "docx",
+      "theme": "dark",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "white",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "pptx",
+      "theme": "dark",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "white",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workbook",
+      "theme": "dark",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "draftRetained": true,
+      "motion": "calm"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,100 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+40 | / protected_save!(office_move_xlsx_cells, write_workbook_cells,
+41 | |     json!({"edits":[{"sheet":"Data","row":1,"column":1,"input":"42","kind":"number"}]}));
+   | |________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+42 | / protected_save!(office_move_xlsx_draft, write_workbook_draft,
+43 | |     json!({"edits":[{"sheet":"Data","row":1,"column":0,"input":"用户修改","kind":"text"}]}));
+   | |____________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+44 | / protected_save!(office_move_xlsx_structure, update_workbook_structure,
+45 | |     json!({"change":{"sheet":"Data","axis":"row","action":"insert","index":1,"count":1}}));
+   | |__________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+46 | / protected_save!(office_move_xlsx_defined_name, update_workbook_defined_name,
+47 | |     json!({"change":{"action":"create","name":"UserRange","targetSheet":"Data","range":{"top":0,"bottom":1,"left":0,"right":1}}}));
+   | |__________________________________________________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+48 | / protected_save!(office_move_xlsx_page_layout, update_workbook_page_layout,
+49 | |     json!({"change":{"sheet":"Data","orientation":"landscape","paperSize":9,"margins":{"left":0.5,"right":0.5,"top":0.5,"bottom":0.5,"header":0.2,"footer":0.2},"scale":100}}));
+   | |_______________________________________________________________________________________________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+50 | / protected_save!(office_move_xlsx_header_footer, update_workbook_header_footer,
+51 | |     json!({"change":{"sheet":"Data","oddHeader":"用户页眉","oddFooter":"&P","evenHeader":"","evenFooter":"","firstHeader":"","firstFooter":"","differentOddEven":false,"differentFirstPage":false,"scaleWithDocument":true,"alignWithMargins":true}}));
+   | |______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+52 | / protected_save!(office_move_xlsx_print_options, update_workbook_print_options,
+53 | |     json!({"change":{"sheet":"Data","gridLines":true,"headings":true,"horizontalCentered":false,"verticalCentered":false,"blackAndWhite":false,"draft":false}}));
+   | |________________________________________________________________________________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0282]: type annotations needed
+  --> src\commands\workbook_move_tests.rs:29:122
+   |
+29 |               let save = || tauri::async_runtime::block_on($command(workspace.root(), path.to_string_lossy().into_owned(), payload.clone()));
+   |                                                                                                                            ^^^^^^^ cannot infer type
+...
+54 | / protected_save!(office_move_xlsx_outline, update_workbook_outline,
+55 | |     json!({"rowEdits":[{"sheet":"Data","row":1,"hidden":true,"outlineLevel":1,"collapsed":false}]}));
+   | |____________________________________________________________________________________________________- in this macro invocation
+   |
+   = note: this error originates in the macro `protected_save` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0282`.
+error: could not compile `tauri-app` (lib test) due to 8 previous errors
+warning: build failed, waiting for other jobs to finish...

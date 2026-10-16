@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Default reading space, notes/details, text search and slideshow keyboard navigation/exit",
+    "Editing preparation opens its panel and exposes failure without enabling source save",
+    "900px/480px details open/close and named toolbar buttons remain reachable",
+    "External presentation does not expose editing preparation or source save"
+  ],
+  "errors": [],
+  "scope": "Production PPTX Vue component with mocked native parse report; editing preparation deliberately fails; not native output acceptance",
+  "releaseCandidate": false
+}

@@ -1,0 +1,26 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+error[E0609]: no field `output_digest` on type `BuiltPptxTransaction`
+  --> src\commands\pptx_move_tests.rs:19:90
+   |
+19 |     let digest = if transaction { build_pptx_transaction(ORIGINAL, &operations).unwrap().output_digest }
+   |                                                                                          ^^^^^^^^^^^^^ unknown field
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+19 |     let digest = if transaction { build_pptx_transaction(ORIGINAL, &operations).unwrap().report.output_digest }
+   |                                                                                          +++++++
+
+error[E0609]: no field `output_digest` on type `BuiltPptxTransaction`
+  --> src\commands\pptx_move_tests.rs:65:94
+   |
+65 |         let digest = if transaction { build_pptx_transaction(ORIGINAL, &operations).unwrap().output_digest }
+   |                                                                                              ^^^^^^^^^^^^^ unknown field
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+65 |         let digest = if transaction { build_pptx_transaction(ORIGINAL, &operations).unwrap().report.output_digest }
+   |                                                                                              +++++++
+
+For more information about this error, try `rustc --explain E0609`.
+error: could not compile `tauri-app` (lib test) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

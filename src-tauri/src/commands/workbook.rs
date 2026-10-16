@@ -44,6 +44,7 @@ use crate::formats::workbook_ooxml::{
 use crate::formats::workbook_pivot::preview_pivot;
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
+use crate::services::document_coordination::{acquire, acquire_existing_file, ensure_existing_file};
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use calamine::{open_workbook, CellType, Data, Range, Reader, Xlsx};
@@ -57,6 +58,10 @@ const MAX_WORKBOOK_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_WORKBOOK_LAYOUT_ROWS: usize = 1_048_576;
 const MAX_PAGE_ROWS: usize = 5_000;
 const MAX_PREVIEW_COLUMNS: usize = 256;
+
+#[cfg(test)]
+#[path = "workbook_move_tests.rs"]
+mod move_tests;
 
 #[derive(Clone, Copy, Debug, Default)]
 struct CalamineWorkbookEngine;
@@ -191,12 +196,23 @@ fn save_workbook_pivot_copy_to_path(
     target_path: &Path,
     payload: &WorkbookPivotSaveCopyPayload,
 ) -> Result<WorkbookPivotSavedCopyResult, String> {
+    let _document_lease = acquire(&[source_path, target_path])?;
+    save_workbook_pivot_copy_under_lease(source_path, target_path, payload)
+}
+
+// Only called while the source and destination are reserved by the entry point.
+fn save_workbook_pivot_copy_under_lease(
+    source_path: &Path,
+    target_path: &Path,
+    payload: &WorkbookPivotSaveCopyPayload,
+) -> Result<WorkbookPivotSavedCopyResult, String> {
     if target_path == source_path {
         return Err("Pivot 可靠另存禁止覆盖源 XLSX".into());
     }
     if target_path.exists() {
         return Err("目标文件已存在；Pivot 可靠另存不会覆盖现有文件".into());
     }
+    ensure_existing_file(source_path)?;
     recover_interrupted_write(source_path)?;
     ensure_workbook(source_path)?;
     let metadata = source_path
@@ -391,6 +407,16 @@ pub fn generate_workbook_pivot_audit_copy(
     generate_workbook_pivot_layout_audit_copy(source_path, target_path, "standard")
 }
 
+// Command-line audit tools already accept relative paths. Resolve their parent
+// before leasing, without weakening the workspace IPC traversal checks or
+// canonicalizing a missing output leaf (which would prevent create-only copies).
+fn resolve_workbook_audit_path(path: &Path) -> Result<PathBuf, String> {
+    let name = path.file_name().ok_or("XLSX audit path needs a file name")?;
+    let parent = path.parent().filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    Ok(parent.canonicalize().map_err(|error| error.to_string())?.join(name))
+}
+
 pub fn generate_workbook_pivot_layout_audit_copy(
     source_path: &Path,
     target_path: &Path,
@@ -411,6 +437,11 @@ pub fn generate_workbook_pivot_multi_axis_audit_copy(
     source_path: &Path,
     target_path: &Path,
 ) -> Result<String, String> {
+    let source = resolve_workbook_audit_path(source_path)?;
+    let target = resolve_workbook_audit_path(target_path)?;
+    let (source_path, target_path) = (source.as_path(), target.as_path());
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
     let source_parent = source_path
         .parent()
         .ok_or("Multi-axis Pivot audit source has no parent directory")?
@@ -552,6 +583,9 @@ pub fn generate_workbook_pivot_multi_axis_audit_copy(
 }
 
 pub fn generate_workbook_array_audit_report(source_path: &Path) -> Result<String, String> {
+    let source = resolve_workbook_audit_path(source_path)?;
+    let source_path = source.as_path();
+    let _document_lease = acquire_existing_file(source_path)?;
     ensure_workbook(source_path)?;
     let source = fs::read(source_path)
         .map_err(|error| format!("Failed to read XLSX array audit source: {error}"))?;
@@ -590,6 +624,11 @@ fn generate_workbook_pivot_variant_audit_copy(
     layout: Option<&str>,
     aggregation: Option<&str>,
 ) -> Result<String, String> {
+    let source = resolve_workbook_audit_path(source_path)?;
+    let target = resolve_workbook_audit_path(target_path)?;
+    let (source_path, target_path) = (source.as_path(), target.as_path());
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
     let (layout, aggregation, _, _, _) = pivot_copy_spec(layout, aggregation)?;
     let source_parent = source_path
         .parent()
@@ -645,7 +684,7 @@ fn generate_workbook_pivot_variant_audit_copy(
             .1
             .isolated_package_digest
     };
-    let saved = save_workbook_pivot_copy_to_path(
+    let saved = save_workbook_pivot_copy_under_lease(
         source_path,
         target_path,
         &WorkbookPivotSaveCopyPayload {
@@ -861,6 +900,8 @@ impl WorkbookEngine for CalamineWorkbookEngine {
     }
 
     fn inspect(&self, path: &Path) -> Result<WorkbookDocument, String> {
+        // Private engine: the entry point holds the lease, including save rereads.
+        ensure_existing_file(path)?;
         recover_interrupted_write(path)?;
         let metadata = path
             .metadata()
@@ -961,6 +1002,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
 }
 
 fn inspect_external_workbook_path(path: &Path) -> Result<WorkbookDocument, String> {
+    let _document_lease = acquire_existing_file(path)?;
     ensure_workbook_format(path)?;
     let metadata = path
         .metadata()
@@ -990,6 +1032,7 @@ fn read_external_workbook_sheet_path(
     row_offset: usize,
     row_limit: usize,
 ) -> Result<WorkbookSheetPage, String> {
+    let _document_lease = acquire_existing_file(path)?;
     ensure_workbook_format(path)?;
     let before = fs::read(path).map_err(|error| format!("读取外部 XLSX 失败: {error}"))?;
     let page = CalamineWorkbookEngine.read_sheet(path, sheet, row_offset, row_limit)?;
@@ -1059,6 +1102,7 @@ pub async fn recalculate_workbook_formulas(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1088,6 +1132,7 @@ pub async fn preview_workbook_dynamic_array(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1113,6 +1158,7 @@ pub async fn preview_workbook_pivot(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1144,6 +1190,7 @@ pub async fn preview_workbook_pivot_rebuild(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1175,6 +1222,7 @@ pub async fn rebuild_workbook_pivot_cache_isolated_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1207,6 +1255,7 @@ pub async fn audit_workbook_pivot_multi_axis_isolated_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1241,6 +1290,7 @@ pub async fn rebuild_workbook_pivot_isolated_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1273,6 +1323,7 @@ pub async fn rebuild_workbook_pivot_expanded_isolated_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1324,6 +1375,7 @@ pub async fn verify_workbook_pivot_variants_isolated_copy(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1353,7 +1405,10 @@ pub async fn read_workbook_file(
 ) -> Result<WorkbookDocument, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
-    tauri::async_runtime::spawn_blocking(move || CalamineWorkbookEngine.inspect(&file))
+    tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
+        CalamineWorkbookEngine.inspect(&file)
+    })
         .await
         .map_err(|error| format!("XLSX 读取任务失败: {}", error))?
 }
@@ -1380,6 +1435,7 @@ pub async fn read_workbook_sheet(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         CalamineWorkbookEngine.read_sheet(&file, &sheet, row_offset, row_limit)
     })
     .await
@@ -1411,6 +1467,7 @@ pub async fn write_workbook_cells(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1447,6 +1504,7 @@ pub async fn write_workbook_draft(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1499,6 +1557,7 @@ pub async fn update_workbook_structure(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1529,6 +1588,7 @@ pub async fn update_workbook_defined_name(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1559,6 +1619,7 @@ pub async fn update_workbook_data_validation(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1591,6 +1652,7 @@ pub async fn update_workbook_conditional_format(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1623,6 +1685,7 @@ pub async fn update_workbook_drawing(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1655,6 +1718,7 @@ pub async fn update_workbook_filter(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1685,6 +1749,7 @@ pub async fn update_workbook_table(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("Failed to read XLSX: {error}"))?;
@@ -1718,6 +1783,7 @@ pub async fn update_workbook_freeze_pane(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1745,6 +1811,7 @@ pub async fn update_workbook_page_layout(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1775,6 +1842,7 @@ pub async fn update_workbook_header_footer(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1805,6 +1873,7 @@ pub async fn update_workbook_print_options(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1835,6 +1904,7 @@ pub async fn update_workbook_outline(
     let guard = WorkspaceGuard::new(library_root)?;
     let file = guard.resolve_existing_file(path, &["xlsx"])?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&file)?;
         recover_interrupted_write(&file)?;
         ensure_workbook(&file)?;
         let source = fs::read(&file).map_err(|error| format!("读取 XLSX 失败: {error}"))?;
@@ -1854,6 +1924,11 @@ pub async fn update_workbook_outline(
 }
 
 fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
+    // Source and newly allocated output share a directory. Hold one lease from
+    // source read through name allocation and create-only write, without nesting.
+    let directory = source.parent().ok_or("XLSX 文件没有父目录")?;
+    let _document_lease = acquire(&[directory])?;
+    ensure_existing_file(source)?;
     let mut workbook = open_xlsx(source)?;
     if !workbook.sheet_names().iter().any(|name| name == sheet) {
         return Err("指定的工作表不存在".into());
@@ -1900,7 +1975,6 @@ fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
     let stem = source.file_stem().unwrap_or_default().to_string_lossy();
     let safe_sheet = sanitize_filename(sheet);
     let target_stem = sanitize_filename(&format!("{} - {}", stem, safe_sheet));
-    let directory = source.parent().ok_or("XLSX 文件没有父目录")?;
     let target = available_output_path(directory, &target_stem, ".table.json");
     let document = TableDocument {
         path: target.to_string_lossy().into_owned(),
@@ -1929,7 +2003,7 @@ fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
     if output.len() > MAX_INTERNAL_TABLE_BYTES {
         return Err("转换后的 Table 超过 64 MB 上限".into());
     }
-    write_bytes(&target, &output)?;
+    write_new_bytes(&target, &output)?;
     Ok(target)
 }
 

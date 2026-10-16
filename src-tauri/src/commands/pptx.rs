@@ -9,6 +9,7 @@ use crate::formats::pptx_edit::{
     PptxIsolatedTextPatchReport, PptxSlideLifecycleReport,
 };
 use crate::services::external_file_access::ExternalFileAccess;
+use crate::services::document_coordination::{acquire, acquire_existing_file, ensure_existing_file};
 use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -28,6 +29,10 @@ const MAX_PPTX_MEDIA_PREVIEWS: usize = 48;
 const MAX_PPTX_MEDIA_BYTES: u64 = 6 * 1024 * 1024;
 const MAX_PPTX_MEDIA_TOTAL_BYTES: u64 = 24 * 1024 * 1024;
 const MAX_PPTX_REPLACEMENT_BASE64_CHARS: usize = 11_184_812;
+
+#[cfg(test)]
+#[path = "pptx_move_tests.rs"]
+mod move_tests;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -450,6 +455,7 @@ fn audit_pptx_edit_baseline_path(
     path: &Path,
     expected_signature: &str,
 ) -> Result<PptxEditBaselineReport, String> {
+    let _document_lease = acquire_existing_file(path)?;
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
@@ -497,6 +503,7 @@ fn preview_pptx_text_patch_path(
     expected_part_digest: &str,
     replacement_text: &str,
 ) -> Result<PptxIsolatedTextPatchReport, String> {
+    let _document_lease = acquire_existing_file(path)?;
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
@@ -544,6 +551,7 @@ fn preview_pptx_metadata_patch_path(
     stage: &str,
     build: impl FnOnce(&[u8]) -> Result<(PptxIsolatedMetadataPatchReport, Vec<u8>), String>,
 ) -> Result<PptxIsolatedMetadataPatchReport, String> {
+    let _document_lease = acquire_existing_file(path)?;
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
@@ -584,6 +592,7 @@ fn preview_pptx_slide_lifecycle_path(
     expected_signature: &str,
     operation: &PptxPatchOperation,
 ) -> Result<PptxSlideLifecycleReport, String> {
+    let _document_lease = acquire_existing_file(path)?;
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
@@ -1003,6 +1012,8 @@ fn save_pptx_patch_copy_to_path(
     if target_path.exists() {
         return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
     }
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
     let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
     if expected_output_digest.len() != 64
         || !expected_output_digest
@@ -1117,6 +1128,7 @@ fn save_pptx_patch_source_to_path(
     expected_output_digest: &str,
     operation: &PptxPatchOperation,
 ) -> Result<PptxSavedSourceReport, String> {
+    let _document_lease = acquire_existing_file(source_path)?;
     recover_interrupted_write(source_path)?;
     let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
     if expected_output_digest.len() != 64
@@ -1227,6 +1239,7 @@ fn preview_pptx_transaction_path(
     expected_signature: &str,
     operations: &[PptxPatchOperation],
 ) -> Result<PptxTransactionReport, String> {
+    let _document_lease = acquire_existing_file(source_path)?;
     let metadata = source_path
         .metadata()
         .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
@@ -1257,6 +1270,7 @@ fn save_pptx_transaction_source_to_path(
     expected_output_digest: &str,
     operations: &[PptxPatchOperation],
 ) -> Result<PptxSavedSourceReport, String> {
+    let _document_lease = acquire_existing_file(source_path)?;
     recover_interrupted_write(source_path)?;
     let metadata = source_path
         .metadata()
@@ -1351,7 +1365,10 @@ pub async fn read_pptx_presentation(
 ) -> Result<PptxReadReport, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let presentation = guard.resolve_existing_file(path, &["pptx"])?;
-    tauri::async_runtime::spawn_blocking(move || read_pptx_path(&presentation))
+    tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&presentation)?;
+        read_pptx_path(&presentation)
+    })
         .await
         .map_err(|error| format!("PPTX 读取任务失败: {error}"))?
 }
@@ -1363,7 +1380,10 @@ pub async fn read_external_pptx_presentation(
 ) -> Result<PptxReadReport, String> {
     let presentation = access.resolve_preview(path)?;
     ensure_pptx_format(&presentation)?;
-    tauri::async_runtime::spawn_blocking(move || read_pptx_path(&presentation))
+    tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&presentation)?;
+        read_pptx_path(&presentation)
+    })
         .await
         .map_err(|error| format!("外部 PPTX 读取任务失败: {error}"))?
 }

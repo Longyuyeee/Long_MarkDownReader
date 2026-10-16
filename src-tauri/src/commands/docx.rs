@@ -10,6 +10,7 @@ use crate::formats::docx_patch::{
 };
 use crate::formats::file_registry::file_format_for_path;
 use crate::services::external_file_access::ExternalFileAccess;
+use crate::services::document_coordination::{acquire, acquire_existing_file, ensure_existing_file};
 use crate::services::reliable_write::{write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use base64::{engine::general_purpose, Engine as _};
@@ -26,6 +27,10 @@ use zip::ZipArchive;
 const MAX_DOCX_MEDIA_PREVIEWS: usize = 32;
 const MAX_DOCX_MEDIA_BYTES: u64 = 4 * 1024 * 1024;
 const MAX_DOCX_MEDIA_TOTAL_BYTES: u64 = 12 * 1024 * 1024;
+
+#[cfg(test)]
+#[path = "docx_move_tests.rs"]
+mod move_tests;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -403,6 +408,7 @@ fn preview_docx_isolated_path<F>(
 where
     F: FnOnce(&[u8]) -> Result<(DocxIsolatedPatchReport, Vec<u8>), String>,
 {
+    let _document_lease = acquire_existing_file(path)?;
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
@@ -526,6 +532,7 @@ fn preview_docx_batch_patch_path(
     expected_signature: &str,
     operations: &[DocxPatchOperation],
 ) -> Result<DocxBatchPatchReport, String> {
+    let _document_lease = acquire_existing_file(path)?;
     let metadata = path
         .metadata()
         .map_err(|error| format!("读取 DOCX 元数据失败: {error}"))?;
@@ -962,6 +969,8 @@ fn save_docx_patch_copy_to_path(
     if target_path.exists() {
         return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
     }
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
     let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
     if !missing_producer_evidence.is_empty() {
         return Err(format!(
@@ -1072,6 +1081,8 @@ fn save_docx_batch_copy_to_path(
     if target_path.exists() {
         return Err("目标文件已存在；批量可靠另存不会覆盖现有文件".into());
     }
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
     let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
     if !missing_producer_evidence.is_empty() {
         return Err(format!(
@@ -1175,6 +1186,7 @@ fn save_docx_patch_source_to_path(
     expected_output_digest: &str,
     operation: &DocxPatchOperation,
 ) -> Result<DocxSavedSourceReport, String> {
+    let _document_lease = acquire_existing_file(source_path)?;
     let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
     if !missing_producer_evidence.is_empty() {
         return Err(format!(
@@ -1274,6 +1286,7 @@ fn save_docx_batch_source_to_path(
     expected_output_digest: &str,
     operations: &[DocxPatchOperation],
 ) -> Result<DocxSavedSourceReport, String> {
+    let _document_lease = acquire_existing_file(source_path)?;
     let (producer_evidence, missing_producer_evidence) = docx_producer_evidence()?;
     if !missing_producer_evidence.is_empty() {
         return Err(format!(
@@ -1373,6 +1386,8 @@ fn audit_docx_save_readiness_path(
     expected_signature: &str,
     expected_output_digest: &str,
 ) -> Result<DocxSaveReadinessReport, String> {
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
     let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
     if expected_output_digest.len() != 64
         || !expected_output_digest
@@ -1454,7 +1469,10 @@ pub async fn read_docx_document(
 ) -> Result<DocxReadReport, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let document = guard.resolve_existing_file(path, &["docx"])?;
-    tauri::async_runtime::spawn_blocking(move || read_docx_path(&document))
+    tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&document)?;
+        read_docx_path(&document)
+    })
         .await
         .map_err(|error| format!("DOCX 读取任务失败: {error}"))?
 }
@@ -1467,6 +1485,7 @@ pub async fn read_external_docx_document(
     let document = access.resolve_preview(path)?;
     ensure_docx_format(&document)?;
     tauri::async_runtime::spawn_blocking(move || {
+        let _document_lease = acquire_existing_file(&document)?;
         let mut report = read_docx_path(&document)?;
         report.editable_text_targets.clear();
         report.editable_style_targets.clear();

@@ -1,0 +1,462 @@
+{
+  "recordedAt": "2026-10-16T01:43:00Z",
+  "batch": "v1.1.6 C2a-4 Office lifecycle exclusion and canonical theme-token repair",
+  "parentCommit": "9b407f371310b9baa277f30f5aad625df19a3412",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "releaseCandidate": false,
+  "native": {
+    "newTests": 33,
+    "functionalPassed": 841,
+    "failed": 0,
+    "existingIgnored": 5,
+    "independentPerformanceNotRun": 1,
+    "before": {
+      "failedRequests": 32,
+      "validProductProtectionReproductions": 31,
+      "invalidTableFixture": 1
+    },
+    "retainedEarlierFixtureProblems": [
+      "BuiltPptxTransaction.report.output_digest field",
+      "XLSX macro type inference",
+      "XLSX string kind and existing AutoFilter",
+      "Table columns matching selection width"
+    ],
+    "scope": "Real native commands and OOXML fixtures on exclusively owned temporary disks. Process-local leases; not cross-process locks or fresh multi-window draft/freeze."
+  },
+  "browser": {
+    "checks": 6,
+    "layouts": 108,
+    "errors": 0,
+    "palettes": [
+      "white",
+      "dark",
+      "contrast"
+    ],
+    "styles": [
+      "soft",
+      "neo",
+      "glass",
+      "airy",
+      "minimal",
+      "sharp"
+    ],
+    "widths": [
+      1280,
+      480
+    ],
+    "motion": "calm",
+    "finalResults": "browser-closure/results.json",
+    "contrastAssertion": "DOCX Save foreground/background >= 4.5",
+    "actualScreenshotsViewed": true,
+    "prototype": "theme-proposal/proposal.png was shown before production styles changed; proposal-only injected aliases were NOT used for final acceptance.",
+    "scope": "Real Office Vue pages and normal input/confirmation/retry, isolated native responses; not native disk, multi-window freeze or installed evidence.",
+    "retainedFailures": [
+      "Wrong c4b test id in browser-initial.txt",
+      "Intermediate light captures without settling dark-to-light transitions are not final visual proof"
+    ]
+  },
+  "originalBrowserRegressions": {
+    "docxChecks": 3,
+    "pptxChecks": 4,
+    "workbookSaveShortcutsClipboardRetrySheetsAndFormatting": "passed"
+  },
+  "qualityGate": {
+    "command": "npm run ci:patch-release",
+    "conclusion": "passed",
+    "finalLog": "quality-gate-closure.txt",
+    "productionVulnerabilities": 0,
+    "retainedFailedRun": "quality-gate-final.txt returned npm registry 400 Invalid package tree at audit; full gate rerun with unchanged dependencies/lock passed, no audit bypass."
+  },
+  "previousMainCI": {
+    "id": 38834314716,
+    "headSha": "9b407f371310b9baa277f30f5aad625df19a3412",
+    "conclusion": "success",
+    "receipt": "previous-main-ci.json",
+    "doesNotVerifyThisBatch": true
+  },
+  "next": [
+    "Remaining PDF/other sidecar writers and import/export/save-as/path metadata participants",
+    "Fresh all-affected-document drafts and brief multi-window protection",
+    "User-verifiable recovery and protected relative-reference transaction",
+    "Final functional/performance and fixed-package installed/review gates before release"
+  ],
+  "releaseBoundary": "No 1.1.6 bump/tag/package or Release. Existing public 1.1.5 README download and assets unchanged. file_move_links.can_execute remains false.",
+  "files": [
+    {
+      "path": "docs/evidence/v116-office-save-coordination/after-office-initial.txt",
+      "bytes": 3316,
+      "sha256": "b7be754bde2bc4c45ef7973e1e9b36e9a8c0d0ad16b36226063d8f355a663241"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/before-office-final-fixtures.txt",
+      "bytes": 11423,
+      "sha256": "dd737484bb31aa759371f9aaaf6fb827bcb13d0c068f4e593291e374508b2b15"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/before-office-fix.txt",
+      "bytes": 1622,
+      "sha256": "7cc6bf72e89ef8370928b1618a4e988fa4fd973cd2e915120c2a73746b7ef3fd"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/before-office-regressions.txt",
+      "bytes": 9055,
+      "sha256": "ca455d021ebf94fb929dcfb8ef5675d39eec67e45eac4e6c5bf77aa94a4c0198"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/before-office-valid-fixture.txt",
+      "bytes": 7752,
+      "sha256": "c1b89a6c2de1394d7582418bc8c4e03db79318b7a824472447ba436cb90be1da"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/before-office-valid-inputs.txt",
+      "bytes": 10689,
+      "sha256": "761efa7dd972103c948650732a68027fe82e92001336c1404ee983ee28f3b332"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure.txt",
+      "bytes": 69,
+      "sha256": "cdf1ff65ac4b24271a3221384499c1423e17526df10391d340ab610aa835abf6"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/docx-contrast-narrow.png",
+      "bytes": 58206,
+      "sha256": "a17e4a1cd06719868ba9216d1f774a46dd15500715c6a8b2ed4585b34cb19496"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/docx-dark.png",
+      "bytes": 89678,
+      "sha256": "ab2ec0fcd299cd8185a65a9f91e032ef02db00b31db972c8848935d0fcd9fa1f"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/docx-white.png",
+      "bytes": 90683,
+      "sha256": "822d46905b5f6c1547f6c3cf76000022dac9df430cb797312e028aff96c8228f"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/pptx-contrast-narrow.png",
+      "bytes": 48595,
+      "sha256": "fc6f6b0a6be5f4a247ceadbae0ef07aa636de35141b1f6f8e429943fb56e6be8"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/pptx-dark.png",
+      "bytes": 67241,
+      "sha256": "2714402799a7e5fb42d11fc4d0f35ffc86ac98f6ac9e80124cea483256ee6d3b"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/pptx-white.png",
+      "bytes": 69993,
+      "sha256": "9301336b4c9505660f6cf2c2806debf54d877d99e287e40b4a75caacf7b3c0fc"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/results.json",
+      "bytes": 21423,
+      "sha256": "a92b5e02ef3ead9cb3e4cec3c65f28d706ebd0c53172b0c6085aadba8c0d7250"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/workbook-contrast-narrow.png",
+      "bytes": 26051,
+      "sha256": "57f1511b6953f70160257cd8562617a357a3204a2a3f485c680125b11554bf73"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/workbook-dark.png",
+      "bytes": 32740,
+      "sha256": "5b15fa2efd7a737acb447be18a45b4ef0d9272b85129ad8dcd685da45268e03d"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-closure/workbook-white.png",
+      "bytes": 32232,
+      "sha256": "6a041f2127976c031c6ff501c2a6bbe6e61b279c2afb31e1ef690daa8e45f70b"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final.txt",
+      "bytes": 68,
+      "sha256": "bac40656364f9e80c0ff71a23727d2ee616081e5ee0c293b2af890e084a25ea5"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/docx-narrow.png",
+      "bytes": 62444,
+      "sha256": "7c60330679da6da178794aa4217f2075ffb15214164b13f077459f8ae1764721"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/docx-wide.png",
+      "bytes": 84811,
+      "sha256": "7b5392d6ee1ac064eeda782464f9508c2a038535ba307ebaffa15945a8040c8f"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/pptx-narrow.png",
+      "bytes": 57932,
+      "sha256": "91990d10b5d3594511c2fca1fd8a97838d853f45edd2bf8ae3937f174b3857ea"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/pptx-wide.png",
+      "bytes": 68599,
+      "sha256": "fe84a8b05e05bf8689be0f09b20d5734d61af7ca437f457cf23ecfa8225781eb"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/results.json",
+      "bytes": 6843,
+      "sha256": "2bc704bdfa4c7f2b5f70b05b1cc460d742b72f0a156bbd29a5a49889e853d676"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/workbook-narrow.png",
+      "bytes": 27233,
+      "sha256": "926ea0985e81855ce30b87a1e98891b74c529cdbd3d41554f6c9faaf755a2b25"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-final/workbook-wide.png",
+      "bytes": 32232,
+      "sha256": "6a041f2127976c031c6ff501c2a6bbe6e61b279c2afb31e1ef690daa8e45f70b"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-initial.txt",
+      "bytes": 394,
+      "sha256": "5239b4fb2de852e43738181fa1b122a7e5a8c3eb68f19b3b7cd61fd6af6e2106"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final.txt",
+      "bytes": 68,
+      "sha256": "6ca61883784bb6c7d4dc9fcf67ae366003f63cc2f24610779cc1e7c5e726da45"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/docx-light.png",
+      "bytes": 88855,
+      "sha256": "1721562bd285baf273c387178eb26150b6b734b988450aa18fa104a9d5a2ba7a"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/docx-narrow.png",
+      "bytes": 65227,
+      "sha256": "1e88bd8ea51b4d4969ebdcfb57939a322f99428a4d7a46294c9087a119b2f030"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/docx-wide.png",
+      "bytes": 89625,
+      "sha256": "8b4e3644eac6af194592f0e9cb4d987a76d9418fc8a063b4e70a1aeafc14ba30"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/pptx-light.png",
+      "bytes": 69896,
+      "sha256": "f5a508dcfbe5d320720f1b04e0c3b9918072d6a57f5fb1db0be54de76e18352d"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/pptx-narrow.png",
+      "bytes": 56452,
+      "sha256": "de0b2014d9b66a288926dd4488868efe5fd86b7c31568944692a310cacbd262d"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/pptx-wide.png",
+      "bytes": 67217,
+      "sha256": "ddfc3feae70babc76f256c4f789bbf02a06955fd0e6ec8feec978f71cdeb2b29"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/results.json",
+      "bytes": 14493,
+      "sha256": "1fc68bde05b90d1ddc4ed91b752619ce2f4e52d86aa2643401715a1c229f78ba"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/workbook-light.png",
+      "bytes": 32231,
+      "sha256": "da5babdeba1c021e47d5d0d24f6b5f6e260a8074d557db6352f63e7656edaab4"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/workbook-narrow.png",
+      "bytes": 28075,
+      "sha256": "81617c1be70f4c1d5b8cce35f679f9f6415abb21d26d6d486e4c491db5aa29d8"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser-theme-final/workbook-wide.png",
+      "bytes": 32740,
+      "sha256": "5b15fa2efd7a737acb447be18a45b4ef0d9272b85129ad8dcd685da45268e03d"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser/docx-narrow.png",
+      "bytes": 62444,
+      "sha256": "7c60330679da6da178794aa4217f2075ffb15214164b13f077459f8ae1764721"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser/docx-wide.png",
+      "bytes": 84811,
+      "sha256": "7b5392d6ee1ac064eeda782464f9508c2a038535ba307ebaffa15945a8040c8f"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/browser/failure.png",
+      "bytes": 69742,
+      "sha256": "bd7dd8e8d41ec512ef446eed26fdee1a0508d5154167c29f6b1ba2f93db0a1ba"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/full-rust-closure.txt",
+      "bytes": 85153,
+      "sha256": "9dcca406dd7115fc567812f2c1039d7481c512ba3c6fafca403f85d0bda8a2a6"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/full-rust-final.txt",
+      "bytes": 85059,
+      "sha256": "0d8b139bba4927fef34587a58e62aae6c90837dfddefe49e77f5ca1b68e59c64"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/full-rust-initial.txt",
+      "bytes": 84502,
+      "sha256": "26555b90c6828589a2f1cfbe2530371f311e21f8b85e5040c84c7b14a52ce072"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/full-rust-owned-fixture.txt",
+      "bytes": 85153,
+      "sha256": "4539d81b1f2be81147c6f8ffdd31a165675d37678e98672f3035ac37b8a2e2b2"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/office-final.txt",
+      "bytes": 3805,
+      "sha256": "cf4e53d09d12e7e8057138457998a2b669160cc448c3d83a2a4eff3f68471e1d"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx.txt",
+      "bytes": 284,
+      "sha256": "3de55b9d8569c412afd9b6a79af27f3f0c441a27ddb6d51ae7ae5225264866e7"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx/01-reading.png",
+      "bytes": 57907,
+      "sha256": "ead2186741fc4fead4c6534b48dc3a24ac5f01bce19dcebc84ff49fe43cc6b42"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx/02-editing.png",
+      "bytes": 80271,
+      "sha256": "d0b0bcb145b36df79561deee3412681ffd913a5581ca260e35d7c66e9c03d1cc"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx/03-outline-480.png",
+      "bytes": 45000,
+      "sha256": "8523fea5cdcb3c2cca8c307dc2ba2bbadab92b655754226eb0e21b18ae00ab02"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx/03-outline-900.png",
+      "bytes": 70456,
+      "sha256": "a87114e8fa91278a1a0a968d77388d4dd4e830e8efb2bd14b6a931d5c0cfd70b"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx/04-dark.png",
+      "bytes": 38531,
+      "sha256": "cbc4a16faa0903c5adc3c855c22da2467d7db9651dcf47e25999b0fb3d42646b"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-docx/results.json",
+      "bytes": 477,
+      "sha256": "ba967d5843c40de6cdfb72e34e4288ab4b96a3509cb4282c2b7260b24467cefa"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-pptx.txt",
+      "bytes": 325,
+      "sha256": "9b29f28de84faeb4caa7a9946f26edee23ad0825bfb4a10fc406cc19b7e90ad9"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-pptx/01-reading.png",
+      "bytes": 27603,
+      "sha256": "83851b7c32e5b7f554916a4d745061506c754f27e8a772d845c5793ed4f883ab"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-pptx/02-edit-error.png",
+      "bytes": 46156,
+      "sha256": "ff16b821e996fe90e64fb3fb5f30ec72d77fb86897671fb3f77c205a752d1577"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-pptx/03-details-480.png",
+      "bytes": 39908,
+      "sha256": "04d204037861b206028726ffc4466316ec11c324f06bd17e74e0d16a3818e743"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-pptx/03-details-900.png",
+      "bytes": 45873,
+      "sha256": "45ceef85df6c1a9f0b466800c4df8db9948f438f09a43f02ed50be39f96004ff"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-pptx/results.json",
+      "bytes": 561,
+      "sha256": "5e3008d2a592fd76c446b646891b034c4d3382121c365b0d7d917150b4c7e7f6"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook.txt",
+      "bytes": 135,
+      "sha256": "febbf35bcf5e61b4186624e5c11641a4d0454bb3eadd4aaf12f5a62845098252"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/01-draft.png",
+      "bytes": 29401,
+      "sha256": "e049a24ebf198013c4b99b6c97c4ee523fef4060af0dcdef7cbdd9768d747f05"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/02-failed.png",
+      "bytes": 35931,
+      "sha256": "ce777f556c1ec60297de5acfa7c99f657b773cd70661db6ac51511c6ded4afe5"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/03-saved.png",
+      "bytes": 28199,
+      "sha256": "2aadaaf86240bd43ec75cf4da2be764bb0af3e1e1d0ef3f8370cc2d634d3d134"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/04-sheet2-during-save.png",
+      "bytes": 28483,
+      "sha256": "804e0c1b42bd34646bc8a82126c3a437e05e47a5556845582cbc7c8e1d0d2221"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/05-sheet2-after-save.png",
+      "bytes": 28378,
+      "sha256": "6b62e671d614365552b779577303519d5d64fb4905f2943e7eb9371a85db92ca"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/06-sheet1-after-pending-read.png",
+      "bytes": 28341,
+      "sha256": "3b4d93fab8c62b92cfb541b35122b01d52a5d3886734982a45175041d82bf63b"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/07-stale-clipboard-blocked.png",
+      "bytes": 44939,
+      "sha256": "c2349e1f02847106af43bcb3fe4d0920fd395d9a7a3862eb0e09a7cc6129f855"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/08-custom-format-dialog.png",
+      "bytes": 47010,
+      "sha256": "462d74c1a49ff3a8cadae41c7428d216c7a68f56c325e8efeb7e4935aea95378"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/original-workbook/09-format-drafts.png",
+      "bytes": 47682,
+      "sha256": "356cfd05af8ea67d5552358b8bd6e784371f871e816bc69ba452ac4212ea3117"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/previous-main-ci.json",
+      "bytes": 2947,
+      "sha256": "b6a93c155c95814d8f4423e3a4f425be4205c40a2c722f972b48387b3ff27070"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/quality-gate-closure.txt",
+      "bytes": 121094,
+      "sha256": "6950d9ab9bd66599ba9710eed64cf0f3c35451d97caa223dd45a6b2bcce1a70e"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/quality-gate-final.txt",
+      "bytes": 121766,
+      "sha256": "eec4c724f333cd33bbab55be98a47e29132174ec34467f6026d2f977cb438472"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/quality-gate.txt",
+      "bytes": 121183,
+      "sha256": "bdc931ecdb73955667b405a34ef70008a4aeeea70ab15d42463537e6c3f83ceb"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/theme-proposal.txt",
+      "bytes": 80,
+      "sha256": "dd5c1bdf6f1e868c37a2b3dd69383499d87cbda2dd4ae54b370575e1383e9b50"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/theme-proposal/before.png",
+      "bytes": 84551,
+      "sha256": "67b867bc0e205cccb348bcedad643f723f01891a84985caca42e1cac8e13ce89"
+    },
+    {
+      "path": "docs/evidence/v116-office-save-coordination/theme-proposal/proposal.png",
+      "bytes": 90578,
+      "sha256": "5cc02160a7021f6bd0a0b6967b92e4a7ddcd895bc9b9e739567f03a4eb817e2b"
+    }
+  ]
+}

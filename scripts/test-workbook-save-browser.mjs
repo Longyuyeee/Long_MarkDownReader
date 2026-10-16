@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 const require = createRequire(import.meta.url)
 const { chromium } = require(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const output = path.resolve('docs/evidence/v110-workbook-save-browser')
+const output = path.resolve(process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY || 'docs/evidence/v110-workbook-save-browser')
 await fs.mkdir(output, { recursive: true })
 const browser = await chromium.launch({ headless: true })
 try {
@@ -18,7 +18,7 @@ try {
     } })
   })
   const errors = []; page.on('pageerror', error => { errors.push(error.message); console.error(error.message) })
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/workbook-save-browser.html')
+  await page.goto(`${process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000'}/scripts/fixtures/workbook-save-browser.html`)
   const cell = page.locator('.workbook-cell').first()
   await cell.waitFor(); await cell.dblclick()
   const formula = page.locator('input[placeholder="当前单元格不可编辑"]')

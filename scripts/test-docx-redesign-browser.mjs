@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import fs from 'node:fs/promises'
 const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
-const output='docs/evidence/v110-docx-redesign'
+const output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY||'docs/evidence/v110-docx-redesign'
 await fs.mkdir(output,{recursive:true})
 const browser=await chromium.launch(),errors=[],checks=[]
 try {
  const page=await browser.newPage({viewport:{width:1280,height:900}})
  page.setDefaultTimeout(12000);page.on('pageerror',error=>errors.push(error.message))
- await page.goto('http://127.0.0.1:9000/scripts/fixtures/docx-redesign-browser.html')
+ await page.goto(`${process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9000'}/scripts/fixtures/docx-redesign-browser.html`)
  await page.locator('.docx-page').waitFor()
  await page.getByRole('button',{name:'目录与详情',exact:true}).click()
  assert.equal(await page.locator('.docx-outline').isVisible(),false)

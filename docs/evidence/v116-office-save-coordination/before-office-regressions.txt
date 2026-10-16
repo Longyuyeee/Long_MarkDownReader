@@ -1,0 +1,140 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.59s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 25 tests
+
+thread 'commands::workbook::move_tests::office_move_xlsx_conversion_protects_output_directory' (44868) panicked at src\commands\workbook_move_tests.rs:91:5:
+assertion failed: sheet_to_table(&path, "Data").is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::workbook::move_tests::office_move_xlsx_conversion_protects_output_directory ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_cells' (36512) panicked at src\commands\workbook_move_tests.rs:39:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_cells ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_defined_name' (47648) panicked at src\commands\workbook_move_tests.rs:45:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_defined_name ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_draft' (50484) panicked at src\commands\workbook_move_tests.rs:41:1:
+called `Result::unwrap()` on an `Err` value: "不支持的单元格编辑类型"
+test commands::workbook::move_tests::office_move_xlsx_draft ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_late_inspection_does_not_promote_old_backup' (39628) panicked at src\commands\workbook_move_tests.rs:111:5:
+assertion failed: CalamineWorkbookEngine.inspect(&old).is_err()
+test commands::workbook::move_tests::office_move_xlsx_late_inspection_does_not_promote_old_backup ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_freeze' (19032) panicked at src\commands\workbook_move_tests.rs:64:5:
+assertion failed: save().is_err()
+test commands::workbook::move_tests::office_move_xlsx_freeze ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_header_footer' (51368) panicked at src\commands\workbook_move_tests.rs:49:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_header_footer ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_outline' (15188) panicked at src\commands\workbook_move_tests.rs:53:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_outline ... FAILED
+
+thread 'commands::docx::move_tests::office_move_docx_read_and_preview_are_protected' (27972) panicked at src\commands\docx_move_tests.rs:56:5:
+assertion failed: read.is_err() && preview.is_err()
+test commands::docx::move_tests::office_move_docx_read_and_preview_are_protected ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_print_options' (5412) panicked at src\commands\workbook_move_tests.rs:51:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_print_options ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_reads_are_protected' (50044) panicked at src\commands\workbook_move_tests.rs:76:5:
+assertion failed: tauri::async_runtime::block_on(read_workbook_file(workspace.root(),
+            path.to_string_lossy().into_owned())).is_err()
+
+thread 'commands::workbook::move_tests::office_move_xlsx_page_layout' (45524) panicked at src\commands\workbook_move_tests.rs:47:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_reads_are_protected ... FAILED
+test commands::workbook::move_tests::office_move_xlsx_page_layout ... FAILED
+
+thread 'commands::workbook::move_tests::office_move_xlsx_structure' (48348) panicked at src\commands\workbook_move_tests.rs:43:1:
+XLSX writer bypassed subtree protection
+test commands::workbook::move_tests::office_move_xlsx_structure ... FAILED
+
+thread 'commands::docx::move_tests::office_move_docx_copy_destination' (42376) panicked at src\commands\docx_move_tests.rs:30:5:
+DOCX save bypassed a protected destination
+test commands::docx::move_tests::office_move_docx_copy_destination ... FAILED
+
+thread 'commands::docx::move_tests::office_move_docx_copy_source' (41732) panicked at src\commands\docx_move_tests.rs:30:5:
+DOCX save bypassed a protected source
+
+thread 'commands::docx::move_tests::office_move_docx_source_save' (36036) panicked at src\commands\docx_move_tests.rs:30:5:
+DOCX save bypassed a protected source
+test commands::docx::move_tests::office_move_docx_source_save ... FAILED
+test commands::docx::move_tests::office_move_docx_copy_source ... FAILED
+
+thread 'commands::pptx::move_tests::office_move_pptx_read_and_preview_are_protected' (46860) panicked at src\commands\pptx_move_tests.rs:50:5:
+assertion failed: read.is_err() && preview.is_err()
+test commands::pptx::move_tests::office_move_pptx_read_and_preview_are_protected ... FAILED
+
+thread 'commands::pptx::move_tests::office_move_pptx_late_source_save_does_not_promote_old_backup' (39368) panicked at src\commands\pptx_move_tests.rs:73:9:
+late save promoted the old-path backup
+test commands::pptx::move_tests::office_move_pptx_late_source_save_does_not_promote_old_backup ... FAILED
+
+thread 'commands::pptx::move_tests::office_move_pptx_copy_destination' (51992) panicked at src\commands\pptx_move_tests.rs:27:5:
+PPTX save bypassed source/destination protection
+test commands::pptx::move_tests::office_move_pptx_copy_destination ... FAILED
+
+thread 'commands::pptx::move_tests::office_move_pptx_copy_source' (46396) panicked at src\commands\pptx_move_tests.rs:27:5:
+PPTX save bypassed source/destination protection
+test commands::pptx::move_tests::office_move_pptx_copy_source ... FAILED
+
+thread 'commands::pptx::move_tests::office_move_pptx_source_save' (9888) panicked at src\commands\pptx_move_tests.rs:27:5:
+PPTX save bypassed source/destination protection
+test commands::pptx::move_tests::office_move_pptx_source_save ... FAILED
+
+thread 'commands::docx::move_tests::office_move_docx_batch_source_save' (51900) panicked at src\commands\docx_move_tests.rs:30:5:
+DOCX save bypassed a protected source
+
+thread 'commands::docx::move_tests::office_move_docx_batch_copy_destination' (49572) panicked at src\commands\docx_move_tests.rs:30:5:
+DOCX save bypassed a protected destination
+test commands::docx::move_tests::office_move_docx_batch_source_save ... FAILED
+test commands::docx::move_tests::office_move_docx_batch_copy_destination ... FAILED
+
+thread 'commands::docx::move_tests::office_move_docx_batch_copy_source' (50356) panicked at src\commands\docx_move_tests.rs:30:5:
+DOCX save bypassed a protected source
+test commands::docx::move_tests::office_move_docx_batch_copy_source ... FAILED
+
+thread 'commands::pptx::move_tests::office_move_pptx_transaction_source_save' (46400) panicked at src\commands\pptx_move_tests.rs:27:5:
+PPTX save bypassed source/destination protection
+test commands::pptx::move_tests::office_move_pptx_transaction_source_save ... FAILED
+
+failures:
+
+failures:
+    commands::docx::move_tests::office_move_docx_batch_copy_destination
+    commands::docx::move_tests::office_move_docx_batch_copy_source
+    commands::docx::move_tests::office_move_docx_batch_source_save
+    commands::docx::move_tests::office_move_docx_copy_destination
+    commands::docx::move_tests::office_move_docx_copy_source
+    commands::docx::move_tests::office_move_docx_read_and_preview_are_protected
+    commands::docx::move_tests::office_move_docx_source_save
+    commands::pptx::move_tests::office_move_pptx_copy_destination
+    commands::pptx::move_tests::office_move_pptx_copy_source
+    commands::pptx::move_tests::office_move_pptx_late_source_save_does_not_promote_old_backup
+    commands::pptx::move_tests::office_move_pptx_read_and_preview_are_protected
+    commands::pptx::move_tests::office_move_pptx_source_save
+    commands::pptx::move_tests::office_move_pptx_transaction_source_save
+    commands::workbook::move_tests::office_move_xlsx_cells
+    commands::workbook::move_tests::office_move_xlsx_conversion_protects_output_directory
+    commands::workbook::move_tests::office_move_xlsx_defined_name
+    commands::workbook::move_tests::office_move_xlsx_draft
+    commands::workbook::move_tests::office_move_xlsx_freeze
+    commands::workbook::move_tests::office_move_xlsx_header_footer
+    commands::workbook::move_tests::office_move_xlsx_late_inspection_does_not_promote_old_backup
+    commands::workbook::move_tests::office_move_xlsx_outline
+    commands::workbook::move_tests::office_move_xlsx_page_layout
+    commands::workbook::move_tests::office_move_xlsx_print_options
+    commands::workbook::move_tests::office_move_xlsx_reads_are_protected
+    commands::workbook::move_tests::office_move_xlsx_structure
+
+test result: FAILED. 0 passed; 25 failed; 0 ignored; 0 measured; 814 filtered out; finished in 0.58s
+
+error: test failed, to rerun pass `--lib`

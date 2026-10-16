@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import fs from 'node:fs/promises'
 const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
-const output='docs/evidence/v110-pptx-redesign'
+const output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY||'docs/evidence/v110-pptx-redesign'
 await fs.mkdir(output,{recursive:true})
 const browser=await chromium.launch(),errors=[],checks=[]
 try{
  const page=await browser.newPage({viewport:{width:1280,height:900}})
  page.setDefaultTimeout(12000);page.on('pageerror',error=>errors.push(error.message))
- await page.goto('http://127.0.0.1:9000/scripts/fixtures/pptx-redesign-browser.html')
+ await page.goto(`${process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9000'}/scripts/fixtures/pptx-redesign-browser.html`)
  await page.locator('.pptx-stage').waitFor()
  assert.equal(await page.locator('.pptx-details').count(),0)
  await page.screenshot({path:output+'/01-reading.png'})
