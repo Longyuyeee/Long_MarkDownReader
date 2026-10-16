@@ -30,10 +30,11 @@ test('v117 still requires actual predecessor workflow reports',()=>{
   const f=fixture();delete f.manifest.runtimeSmoke.reports.foundationHardening;assert.throws(()=>assertInstalledReleaseRuntime(f.manifest,f.read))
 })
 
-test('v117 parallel-read regression is mandatory and publishing requires the current check count',()=>{
-  const f=fixture()
-  f.report.checks=f.report.checks.filter(check=>check.id!=='history-list-and-metadata-load-in-parallel-without-busy-errors')
-  f.update();assert.throws(()=>assertInstalledReleaseRuntime(f.manifest,f.read))
+test('v117 final safety checks are mandatory and publishing requires the current check count',()=>{
+  for(const id of ['history-list-and-metadata-load-in-parallel-without-busy-errors','interrupted-version-metadata-recovers-without-losing-important-history']){
+    const f=fixture();f.report.checks=f.report.checks.filter(check=>check.id!==id)
+    f.update();assert.throws(()=>assertInstalledReleaseRuntime(f.manifest,f.read))
+  }
   const publish=fs.readFileSync('.github/workflows/community-release-publish.yml','utf8')
   assert.ok(publish.includes(`$history.checks.Count -ne ${moveContinuityChecks.length}`))
   const importer=fs.readFileSync('scripts/import-community-release-review.mjs','utf8')

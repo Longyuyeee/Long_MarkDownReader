@@ -1,0 +1,196 @@
+{
+  "conclusion": "failure",
+  "databaseId": 38940031808,
+  "headSha": "86dbccd1edac84a3f51f0c87fda232d7aa9aa73c",
+  "jobs": [
+    {
+      "completedAt": "2026-10-16T17:53:44Z",
+      "conclusion": "failure",
+      "databaseId": 117105051361,
+      "name": "Build MSI/NSIS and exercise official upgrade",
+      "startedAt": "2026-10-16T17:29:13Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-16T17:29:15Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-16T17:29:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:29:28Z",
+          "conclusion": "success",
+          "name": "Check out orchestration contracts",
+          "number": 2,
+          "startedAt": "2026-10-16T17:29:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:29:30Z",
+          "conclusion": "success",
+          "name": "Reject mutable candidate references",
+          "number": 3,
+          "startedAt": "2026-10-16T17:29:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:29:41Z",
+          "conclusion": "success",
+          "name": "Check out frozen candidate",
+          "number": 4,
+          "startedAt": "2026-10-16T17:29:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:29:54Z",
+          "conclusion": "success",
+          "name": "Check out previous public release",
+          "number": 5,
+          "startedAt": "2026-10-16T17:29:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:29:55Z",
+          "conclusion": "success",
+          "name": "Resolve and verify source identities",
+          "number": 6,
+          "startedAt": "2026-10-16T17:29:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:30:00Z",
+          "conclusion": "success",
+          "name": "Set up Node.js",
+          "number": 7,
+          "startedAt": "2026-10-16T17:29:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:30:18Z",
+          "conclusion": "success",
+          "name": "Cache Rust build dependencies",
+          "number": 8,
+          "startedAt": "2026-10-16T17:30:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:30:35Z",
+          "conclusion": "success",
+          "name": "Install frozen candidate dependencies",
+          "number": 9,
+          "startedAt": "2026-10-16T17:30:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:34:01Z",
+          "conclusion": "success",
+          "name": "Run frozen candidate release quality gate",
+          "number": 10,
+          "startedAt": "2026-10-16T17:30:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:39:56Z",
+          "conclusion": "success",
+          "name": "Run complete Rust regression suite",
+          "number": 11,
+          "startedAt": "2026-10-16T17:34:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:51:42Z",
+          "conclusion": "success",
+          "name": "Build frozen candidate MSI and NSIS",
+          "number": 12,
+          "startedAt": "2026-10-16T17:39:56Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:51:58Z",
+          "conclusion": "success",
+          "name": "Download and verify previous official NSIS",
+          "number": 13,
+          "startedAt": "2026-10-16T17:51:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:51:59Z",
+          "conclusion": "success",
+          "name": "Capture immutable installer receipt",
+          "number": 14,
+          "startedAt": "2026-10-16T17:51:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:27Z",
+          "conclusion": "failure",
+          "name": "Execute disposable install and installed-workspace lifecycle",
+          "number": 15,
+          "startedAt": "2026-10-16T17:51:59Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:35Z",
+          "conclusion": "success",
+          "name": "Upload community release lifecycle evidence and unsigned installers",
+          "number": 16,
+          "startedAt": "2026-10-16T17:53:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:35Z",
+          "conclusion": "success",
+          "name": "Post Cache Rust build dependencies",
+          "number": 28,
+          "startedAt": "2026-10-16T17:53:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:35Z",
+          "conclusion": "skipped",
+          "name": "Post Set up Node.js",
+          "number": 29,
+          "startedAt": "2026-10-16T17:53:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:37Z",
+          "conclusion": "success",
+          "name": "Post Check out previous public release",
+          "number": 30,
+          "startedAt": "2026-10-16T17:53:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:39Z",
+          "conclusion": "success",
+          "name": "Post Check out frozen candidate",
+          "number": 31,
+          "startedAt": "2026-10-16T17:53:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:41Z",
+          "conclusion": "success",
+          "name": "Post Check out orchestration contracts",
+          "number": 32,
+          "startedAt": "2026-10-16T17:53:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-16T17:53:41Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 33,
+          "startedAt": "2026-10-16T17:53:41Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38940031808/job/117105051361"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38940031808"
+}

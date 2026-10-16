@@ -65,6 +65,43 @@ pub fn recover_interrupted_write(path: impl AsRef<Path>) -> Result<(), String> {
     recover_locked(path.as_ref())
 }
 
+pub(crate) fn has_interrupted_write(path: impl AsRef<Path>) -> Result<bool, String> {
+    for suffix in ["longedit-tmp", "longedit-bak"] {
+        if sidecar_path(path.as_ref(), suffix)?
+            .try_exists()
+            .map_err(|e| e.to_string())?
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// Validate the last committed state before removing recovery material. History
+/// metadata must not discard its only valid backup when the current file is bad.
+pub(crate) fn recover_interrupted_write_checked(
+    path: impl AsRef<Path>,
+    validate: impl FnOnce(&[u8]) -> Result<(), String>,
+) -> Result<(), String> {
+    let path = path.as_ref();
+    let _activity = super::file_activity::read_write(&[path])?;
+    let _guard = WRITE_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let backup = sidecar_path(path, "longedit-bak")?;
+    let committed = if path.try_exists().map_err(|e| e.to_string())? {
+        Some(path)
+    } else if backup.try_exists().map_err(|e| e.to_string())? {
+        Some(backup.as_path())
+    } else {
+        None // First write did not commit: no previous acknowledged metadata.
+    };
+    if let Some(committed) = committed {
+        validate(&fs::read(committed).map_err(|e| e.to_string())?)?;
+    }
+    recover_locked(path)
+}
+
 fn write_bytes_impl(path: &Path, content: &[u8], fail_after_backup: bool) -> Result<(), String> {
     let _activity = super::file_activity::read_write(&[path])?;
     let _guard = WRITE_LOCK

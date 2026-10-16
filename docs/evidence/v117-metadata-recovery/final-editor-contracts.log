@@ -1,0 +1,230 @@
+TAP version 13
+# Subtest: diff preserves changed Unicode lines without treating text as HTML
+ok 1 - diff preserves changed Unicode lines without treating text as HTML
+  ---
+  duration_ms: 0.9317
+  ...
+# Subtest: large diff is bounded and reports shortened preview honestly
+ok 2 - large diff is bounded and reports shortened preview honestly
+  ---
+  duration_ms: 11.9084
+  ...
+# Subtest: restore one paragraph keeps other edits, Unicode and mixed separators byte-exact
+ok 3 - restore one paragraph keeps other edits, Unicode and mixed separators byte-exact
+  ---
+  duration_ms: 0.5905
+  ...
+# Subtest: partial insertion and deletion preserve EOF and final-newline behavior
+ok 4 - partial insertion and deletion preserve EOF and final-newline behavior
+  ---
+  duration_ms: 0.5441
+  ...
+# Subtest: repeated lines do not make a local restore replace other changes
+ok 5 - repeated lines do not make a local restore replace other changes
+  ---
+  duration_ms: 0.7507
+  ...
+# Subtest: late history of A cannot populate B, even when timestamps collide
+ok 6 - late history of A cannot populate B, even when timestamps collide
+  ---
+  duration_ms: 61.7583
+  ...
+# Subtest: closed file and late failures cannot change the new context
+ok 7 - closed file and late failures cannot change the new context
+  ---
+  duration_ms: 15.388
+  ...
+# Subtest: restore rejects stale entries, loading editors, read-only and pending writes
+ok 8 - restore rejects stale entries, loading editors, read-only and pending writes
+  ---
+  duration_ms: 19.0312
+  ...
+# Subtest: delete is bound to its source and cannot refresh a different document
+ok 9 - delete is bound to its source and cannot refresh a different document
+  ---
+  duration_ms: 7.0308
+  ...
+# Subtest: draft changes during protection and protection errors never replace the editor
+ok 10 - draft changes during protection and protection errors never replace the editor
+  ---
+  duration_ms: 15.5853
+  ...
+# Subtest: both UI history reads use shared coordination before resolving the document
+ok 11 - both UI history reads use shared coordination before resolving the document
+  ---
+  duration_ms: 0.9241
+  ...
+# Subtest: history mutations and signature-checked recovery retain exclusive coordination
+ok 12 - history mutations and signature-checked recovery retain exclusive coordination
+  ---
+  duration_ms: 0.2675
+  ...
+# Subtest: a successful save with a history warning advances identity and retains subsequent input
+ok 13 - a successful save with a history warning advances identity and retains subsequent input
+  ---
+  duration_ms: 21.1493
+  ...
+# Subtest: pre-fix code reproduces lost subsequent typing and cross-tab overwrite
+ok 14 - pre-fix code reproduces lost subsequent typing and cross-tab overwrite
+  ---
+  duration_ms: 55.2785
+  ...
+# Subtest: saving during a disk reload is blocked until the read completes
+ok 15 - saving during a disk reload is blocked until the read completes
+  ---
+  duration_ms: 8.0843
+  ...
+# Subtest: slow save retains subsequent typing and advances signature for the next save
+ok 16 - slow save retains subsequent typing and advances signature for the next save
+  ---
+  duration_ms: 10.0516
+  ...
+# Subtest: deleting all text during a pending save retains the empty dirty draft
+ok 17 - deleting all text during a pending save retains the empty dirty draft
+  ---
+  duration_ms: 10.4146
+  ...
+# Subtest: switching tabs never writes an old receipt into the newly active editor
+ok 18 - switching tabs never writes an old receipt into the newly active editor
+  ---
+  duration_ms: 9.1507
+  ...
+# Subtest: destroying or replacing the editor while saving does not access the old view
+ok 19 - destroying or replacing the editor while saving does not access the old view
+  ---
+  duration_ms: 16.8543
+  ...
+# Subtest: failed native save preserves draft and signature and permits an explicit retry
+ok 20 - failed native save preserves draft and signature and permits an explicit retry
+  ---
+  duration_ms: 8.0028
+  ...
+# Subtest: repeated save while pending does not submit a second stale request
+ok 21 - repeated save while pending does not submit a second stale request
+  ---
+  duration_ms: 7.4287
+  ...
+# Subtest: switching libraries does not retarget the follow-up Git commit
+ok 22 - switching libraries does not retarget the follow-up Git commit
+  ---
+  duration_ms: 10.6018
+  ...
+# Subtest: a recreated component cannot resubmit the same path until the old receipt settles
+ok 23 - a recreated component cannot resubmit the same path until the old receipt settles
+  ---
+  duration_ms: 10.63
+  ...
+# Subtest: failure releases cross-instance ownership; different documents do not block one another
+ok 24 - failure releases cross-instance ownership; different documents do not block one another
+  ---
+  duration_ms: 19.6943
+  ...
+# Subtest: releasing an old owner twice cannot release a newer owner
+ok 25 - releasing an old owner twice cannot release a newer owner
+  ---
+  duration_ms: 0.1402
+  ...
+# Subtest: an identical delayed Markdown notification cannot dirty a completed save
+ok 26 - an identical delayed Markdown notification cannot dirty a completed save
+  ---
+  duration_ms: 1.3503
+  ...
+# Subtest: real subsequent edits stay dirty and duplicate notifications never clear drafts
+ok 27 - real subsequent edits stay dirty and duplicate notifications never clear drafts
+  ---
+  duration_ms: 1.3738
+  ...
+# Subtest: the display newline produced by setValue does not become a new unsaved edit
+ok 28 - the display newline produced by setValue does not become a new unsaved edit
+  ---
+  duration_ms: 0.6703
+  ...
+# Subtest: external Markdown repeated saved-content notifications do not block storing the saved file
+ok 29 - external Markdown repeated saved-content notifications do not block storing the saved file
+  ---
+  duration_ms: 0.9036
+  ...
+# Subtest: external Markdown genuine edits during a save remain dirty against its acknowledged baseline
+ok 30 - external Markdown genuine edits during a save remain dirty against its acknowledged baseline
+  ---
+  duration_ms: 0.7283
+  ...
+# Subtest: original frozen candidate reproduces null-state save error after navigation
+ok 31 - original frozen candidate reproduces null-state save error after navigation
+  ---
+  duration_ms: 90.7745
+  ...
+# Subtest: save then immediately leave: original tab becomes saved without touching destroyed view
+ok 32 - save then immediately leave: original tab becomes saved without touching destroyed view
+  ---
+  duration_ms: 16.4204
+  ...
+# Subtest: immediately reopening waits for native save and reconciled tab
+ok 33 - immediately reopening waits for native save and reconciled tab
+  ---
+  duration_ms: 14.0922
+  ...
+# Subtest: switching to a different file cannot apply the old reply there
+ok 34 - switching to a different file cannot apply the old reply there
+  ---
+  duration_ms: 13.6569
+  ...
+# Subtest: new edits after save remain dirty and retain the new disk signature
+ok 35 - new edits after save remain dirty and retain the new disk signature
+  ---
+  duration_ms: 12.0822
+  ...
+# Subtest: changed save policy must remain dirty even if text is unchanged
+ok 36 - changed save policy must remain dirty even if text is unchanged
+  ---
+  duration_ms: 13.6857
+  ...
+# Subtest: real save failure is still reported and dirty draft survives
+ok 37 - real save failure is still reported and dirty draft survives
+  ---
+  duration_ms: 10.2954
+  ...
+# Subtest: load waits before draft restoration and unmount invalidates pending loads
+ok 38 - load waits before draft restoration and unmount invalidates pending loads
+  ---
+  duration_ms: 0.4222
+  ...
+# Subtest: window save guard spans queued write and survives destroyed editor until receipt
+ok 39 - window save guard spans queued write and survives destroyed editor until receipt
+  ---
+  duration_ms: 8.2451
+  ...
+# Subtest: failed native write releases window save guard without discarding dirty draft
+ok 40 - failed native write releases window save guard without discarding dirty draft
+  ---
+  duration_ms: 10.5014
+  ...
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 41 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 6.3146
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 42 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 5.0682
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 43 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 2.0466
+  ...
+# Subtest: v117 final safety checks are mandatory and publishing requires the current check count
+ok 44 - v117 final safety checks are mandatory and publishing requires the current check count
+  ---
+  duration_ms: 2.6512
+  ...
+1..44
+# tests 44
+# suites 0
+# pass 44
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 634.5459

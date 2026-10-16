@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import crypto from 'node:crypto'
 
 export const saveHistoryChecks = [
   'markdown-conflict-copy-keeps-disk-and-unsaved-editor',
@@ -13,6 +14,7 @@ export const saveHistoryChecks = [
   'retention-and-move-keep-important-version-metadata',
   'explicit-markdown-save-keeps-before-and-after-versions',
   'history-list-and-metadata-load-in-parallel-without-busy-errors',
+  'interrupted-version-metadata-recovers-without-losing-important-history',
   'save-history-workflows-have-no-global-error-overlay',
 ]
 
@@ -107,7 +109,29 @@ export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,c
     assert.equal(parallel.length,6)
     for(const [entries,notes] of parallel){assert.ok(entries.some(([,body])=>body.includes('normal save checkpoint 117')));assert.deepEqual(notes[important],metadata[important])}
     check(saveHistoryChecks[9])
-    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[10])
+    await click(`document.querySelector('#tab-files')`)
+    const snapshot=await invoke('read_text_document',{...historyArgs(next),formatId:'markdown'})
+    const cache=await invoke('plugin:path|resolve_directory',{directory:16}) // AppCache, from the bundled Tauri path API.
+    const historyDirectory=path.join(cache,'history_v2',crypto.createHash('md5').update(snapshot.path).digest('hex'))
+    const metadataFile=path.join(historyDirectory,'metadata.json'), backup=path.join(historyDirectory,'.metadata.json.longedit-bak'), temporary=path.join(historyDirectory,'.metadata.json.longedit-tmp')
+    assert.deepEqual(JSON.parse(await fs.readFile(metadataFile,'utf8'))[important],metadata[important])
+    const interrupt=async()=>{
+      await assert.rejects(fs.access(backup));await assert.rejects(fs.access(temporary))
+      await fs.writeFile(temporary,'{"incomplete":')
+      await fs.rename(metadataFile,backup)
+    }
+    // Real disk state at the reliable-write interruption boundary, not mocked IPC.
+    await interrupt()
+    assert.deepEqual((await invoke('get_history_metadata',historyArgs(next)))[important],metadata[important])
+    await assert.rejects(fs.access(backup));await assert.rejects(fs.access(temporary))
+    await interrupt()
+    await invoke('save_history_version',{...historyArgs(next),content:'after interrupted metadata recovery 117',maxCount:2})
+    assert.ok((await invoke('list_history',historyArgs(next))).some(([time])=>time===important))
+    assert.deepEqual((await invoke('get_history_metadata',historyArgs(next)))[important],metadata[important])
+    assert.match(await fs.readFile(next,'utf8'),/normal save checkpoint 117/)
+    await assert.rejects(fs.access(backup));await assert.rejects(fs.access(temporary))
+    check(saveHistoryChecks[10])
+    assert.ok(await evaluate(`!document.querySelector('.global-error-overlay,.startup-fatal-screen')&&!document.body.innerText.includes('应用加载失败')`));check(saveHistoryChecks[11])
     report.status='passed'
   } catch(error) {report.status='failed';report.error=String(error);await capture('installed-v117-failure.jpg').catch(()=>{});throw error}
   finally {await fs.writeFile(path.join(output,'installed-v117-workflow.json'),JSON.stringify(report,null,2)+'\n')}

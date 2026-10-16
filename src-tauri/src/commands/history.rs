@@ -43,7 +43,8 @@ pub async fn save_history_version(
     max_count: u32,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     save_history(
         &app_handle,
         path.to_string_lossy().as_ref(),
@@ -134,7 +135,7 @@ pub(crate) fn save_history_in_dir(
             return Ok(());
         }
     }
-    let metadata = read_metadata(file_history_dir)?;
+    let metadata = read_metadata_for_update(file_history_dir)?;
 
     let timestamp = match timestamps.iter().max() {
         Some(latest) if *latest >= timestamp => latest
@@ -168,6 +169,9 @@ pub struct HistoryMetadata {
 }
 
 fn read_metadata(directory: &std::path::Path) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
+    if crate::services::reliable_write::has_interrupted_write(directory.join("metadata.json"))? {
+        return Err("版本备注存在未完成写入，已停止处理；请重新读取以安全恢复".into());
+    }
     match fs::read(directory.join("metadata.json")) {
         Ok(bytes) => {
             serde_json::from_slice(&bytes).map_err(|e| format!("版本备注读取失败，未修改记录：{e}"))
@@ -177,16 +181,51 @@ fn read_metadata(directory: &std::path::Path) -> Result<BTreeMap<u64, HistoryMet
     }
 }
 
+// Caller holds the exclusive history lease. Never recover files under a shared read.
+fn read_metadata_for_update(
+    directory: &std::path::Path,
+) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
+    let path = directory.join("metadata.json");
+    if crate::services::reliable_write::has_interrupted_write(&path)? {
+        crate::services::reliable_write::recover_interrupted_write_checked(&path, |bytes| {
+            serde_json::from_slice::<BTreeMap<u64, HistoryMetadata>>(bytes)
+                .map(|_| ())
+                .map_err(|e| format!("版本备注损坏，此文件的恢复材料和历史均已保留：{e}"))
+        })?;
+    }
+    read_metadata(directory)
+}
+
+fn read_coordinated_metadata(
+    cache: &std::path::Path,
+    mut resolve_directory: impl FnMut() -> Result<PathBuf, String>,
+) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
+    {
+        let _read = crate::services::history_coordination::acquire_read(cache)?;
+        let directory = resolve_directory()?;
+        if !crate::services::reliable_write::has_interrupted_write(directory.join("metadata.json"))?
+        {
+            return read_metadata(&directory);
+        }
+    }
+    // Release our shared lease before trying recovery. Other readers cause a
+    // retryable error; never mutate while they still depend on the directory.
+    let _recovery = crate::services::history_coordination::acquire(cache)?;
+    let directory = resolve_directory()?; // Revalidate after the lease transition.
+    read_metadata_for_update(&directory)
+}
+
 #[tauri::command]
 pub async fn get_history_metadata(
     app_handle: tauri::AppHandle,
     library_root: String,
     path: String,
 ) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
-    let _read = crate::services::history_coordination::acquire_read(&history_cache_root(&app_handle)?)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
-    read_metadata(&history_dir(&app_handle, &path.to_string_lossy())?)
+    read_coordinated_metadata(&history_cache_root(&app_handle)?, || {
+        let path = WorkspaceGuard::new(&library_root)?
+            .resolve_existing_file(&path, &["md", "markdown", "txt"])?;
+        history_dir(&app_handle, &path.to_string_lossy())
+    })
 }
 
 #[tauri::command]
@@ -208,7 +247,7 @@ pub async fn set_history_metadata(
     if note.chars().count() > 120 {
         return Err("版本备注最多 120 字".into());
     }
-    let mut metadata = read_metadata(&directory)?;
+    let mut metadata = read_metadata_for_update(&directory)?;
     metadata.insert(
         timestamp,
         HistoryMetadata {
@@ -287,7 +326,8 @@ pub async fn compare_history_version(
     timestamp: u64,
 ) -> Result<HistoryComparison, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     read_comparison(
         &path,
         &history_dir(&app_handle, &path.to_string_lossy())?,
@@ -333,7 +373,8 @@ pub async fn restore_history_copy(
     history_signature: String,
 ) -> Result<String, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let comparison = checked_comparison(
         &path,
         &history_dir(&app_handle, &path.to_string_lossy())?,
@@ -361,7 +402,8 @@ pub async fn prepare_history_restore(
         return Err("当前草稿过大，未替换任何内容".into());
     }
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let history = history_dir(&app_handle, &path.to_string_lossy())?;
     let comparison = checked_comparison(
         &path,
@@ -392,8 +434,10 @@ pub async fn list_history(
 ) -> Result<Vec<(u64, String)>, String> {
     // List and metadata may read together, but neither may race pruning or moves.
     // Restore actions retain exclusive coordination and signature checks.
-    let _read = crate::services::history_coordination::acquire_read(&history_cache_root(&app_handle)?)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let _read =
+        crate::services::history_coordination::acquire_read(&history_cache_root(&app_handle)?)?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
 }
 
@@ -441,10 +485,11 @@ pub async fn delete_history_version(
     timestamp: u64,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let file_path =
         history_dir(&app_handle, path.to_string_lossy().as_ref())?.join(format!("{timestamp}.md"));
-    if read_metadata(file_path.parent().ok_or("历史目录不可用")?)?
+    if read_metadata_for_update(file_path.parent().ok_or("历史目录不可用")?)?
         .get(&timestamp)
         .is_some_and(|m| m.pinned)
     {
@@ -482,7 +527,7 @@ fn clear_unpinned_history(cache: &std::path::Path) -> Result<(), String> {
         {
             continue;
         }
-        let mut metadata = read_metadata(&entry.path())?;
+        let mut metadata = read_metadata_for_update(&entry.path())?;
         for snapshot in fs::read_dir(entry.path()).map_err(|e| e.to_string())? {
             let snapshot = snapshot.map_err(|e| e.to_string())?;
             let path = snapshot.path();
@@ -518,7 +563,8 @@ pub async fn save_shadow_copy(
     path: String,
     content: String,
 ) -> Result<(), String> {
-    let path = WorkspaceGuard::new(library_root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path = WorkspaceGuard::new(library_root)?
+        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
     let shadow_dir = app_handle
         .path()
         .app_cache_dir()
@@ -534,23 +580,173 @@ pub async fn save_shadow_copy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn interrupt_metadata_write(directory: &std::path::Path) {
+        fs::create_dir_all(directory).unwrap();
+        fs::write(directory.join("100.md"), "已确认保留的重要版本").unwrap();
+        write_utf8(
+            directory.join("metadata.json"),
+            r#"{"100":{"pinned":true,"note":"提交前"}}"#,
+        )
+        .unwrap();
+        // Same on-disk boundary as reliable_write after backup, before promotion.
+        fs::write(directory.join(".metadata.json.longedit-tmp"), "{未完成").unwrap();
+        fs::rename(
+            directory.join("metadata.json"),
+            directory.join(".metadata.json.longedit-bak"),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn interrupted_metadata_read_is_not_an_empty_unpinned_success() {
+        let f = HistoryFixture::new();
+        interrupt_metadata_write(&f.0);
+        assert!(
+            read_metadata(&f.0).is_err(),
+            "未恢复的备注备份不能被当成无备注"
+        );
+        assert!(f.0.join(".metadata.json.longedit-bak").is_file());
+        assert_eq!(
+            fs::read_to_string(f.0.join("100.md")).unwrap(),
+            "已确认保留的重要版本"
+        );
+    }
+
+    #[test]
+    fn history_save_recovers_interrupted_metadata_before_retention() {
+        let f = HistoryFixture::new();
+        interrupt_metadata_write(&f.0);
+        save_history_in_dir(&f.0, "新的普通版本", 1, 101).unwrap();
+        assert!(f.0.join("100.md").is_file(), "额度清理不能删除已保留版本");
+        let metadata = read_metadata(&f.0).unwrap();
+        assert!(metadata[&100].pinned);
+        assert_eq!(metadata[&100].note, "提交前");
+        assert_eq!(
+            fs::read_to_string(f.0.join("101.md")).unwrap(),
+            "新的普通版本"
+        );
+    }
+
+    #[test]
+    fn global_clear_recovers_interrupted_metadata_before_deleting_versions() {
+        let f = HistoryFixture::new();
+        let directory = f.0.join("a".repeat(32));
+        interrupt_metadata_write(&directory);
+        fs::write(directory.join("101.md"), "普通版本").unwrap();
+        clear_unpinned_history(&f.0).unwrap();
+        assert!(
+            directory.join("100.md").is_file(),
+            "全局清理不能删除已保留版本"
+        );
+        assert!(!directory.join("101.md").exists());
+        assert_eq!(read_metadata(&directory).unwrap()[&100].note, "提交前");
+    }
+
+    #[test]
+    fn coordinated_metadata_read_recovers_with_exclusive_lease_and_revalidates_path() {
+        let f = HistoryFixture::new();
+        interrupt_metadata_write(&f.0);
+        let mut resolutions = 0;
+        let metadata = read_coordinated_metadata(&f.0, || {
+            resolutions += 1;
+            Ok(f.0.clone())
+        })
+        .unwrap();
+        assert_eq!(resolutions, 2);
+        assert_eq!(metadata[&100].note, "提交前");
+        assert!(metadata[&100].pinned);
+        assert!(!f.0.join(".metadata.json.longedit-bak").exists());
+        assert!(!f.0.join(".metadata.json.longedit-tmp").exists());
+        assert!(crate::services::history_coordination::acquire(&f.0).is_ok());
+    }
+
+    #[test]
+    fn metadata_recovery_never_upgrades_while_another_reader_is_active() {
+        let f = HistoryFixture::new();
+        interrupt_metadata_write(&f.0);
+        let other = crate::services::history_coordination::acquire_read(&f.0).unwrap();
+        assert!(read_coordinated_metadata(&f.0, || Ok(f.0.clone())).is_err());
+        assert!(!f.0.join("metadata.json").exists());
+        assert!(f.0.join(".metadata.json.longedit-bak").exists());
+        drop(other);
+        assert!(read_coordinated_metadata(&f.0, || Ok(f.0.clone())).unwrap()[&100].pinned);
+    }
+
+    #[test]
+    fn metadata_recovery_rejects_changed_path_without_touching_backup() {
+        let f = HistoryFixture::new();
+        interrupt_metadata_write(&f.0);
+        let mut resolutions = 0;
+        let result = read_coordinated_metadata(&f.0, || {
+            resolutions += 1;
+            if resolutions > 1 {
+                Err("文件已移动，请重新读取".into())
+            } else {
+                Ok(f.0.clone())
+            }
+        });
+        assert!(result.is_err());
+        assert!(f.0.join(".metadata.json.longedit-bak").exists());
+        assert!(!f.0.join("metadata.json").exists());
+        assert!(crate::services::history_coordination::acquire(&f.0).is_ok());
+    }
+
+    #[test]
+    fn damaged_current_metadata_preserves_valid_backup_and_all_snapshots() {
+        let f = HistoryFixture::new();
+        interrupt_metadata_write(&f.0);
+        fs::write(f.0.join("metadata.json"), "损坏的已提升文件").unwrap();
+        let backup = fs::read(f.0.join(".metadata.json.longedit-bak")).unwrap();
+        assert!(save_history_in_dir(&f.0, "new", 1, 101).is_err());
+        assert!(f.0.join("100.md").exists());
+        assert_eq!(
+            fs::read(f.0.join(".metadata.json.longedit-bak")).unwrap(),
+            backup
+        );
+        assert!(!f.0.join("101.md").exists());
+    }
+
+    #[test]
+    fn damaged_metadata_backup_never_becomes_empty_success_or_prunes_versions() {
+        let f = HistoryFixture::new();
+        let directory = f.0.join("a".repeat(32));
+        interrupt_metadata_write(&directory);
+        fs::write(directory.join(".metadata.json.longedit-bak"), "损坏备份").unwrap();
+        assert!(read_coordinated_metadata(&f.0, || Ok(directory.clone())).is_err());
+        assert!(clear_unpinned_history(&f.0).is_err());
+        assert!(directory.join("100.md").exists());
+        assert_eq!(
+            fs::read_to_string(directory.join(".metadata.json.longedit-bak")).unwrap(),
+            "损坏备份"
+        );
+    }
+
     #[test]
     fn history_list_returns_complete_snapshots_newest_first_and_ignores_sidecars() {
         let f = HistoryFixture::new();
         save_history_in_dir(&f.0, "初稿\n完整中文", 20, 100).unwrap();
         save_history_in_dir(&f.0, "修改后\n完整中文", 20, 101).unwrap();
-        fs::write(f.0.join("metadata.json"), r#"{"100":{"pinned":true,"note":"初稿"}}"#).unwrap();
+        fs::write(
+            f.0.join("metadata.json"),
+            r#"{"100":{"pinned":true,"note":"初稿"}}"#,
+        )
+        .unwrap();
         fs::write(f.0.join(".102.md.longedit-new"), "未发布的半份快照").unwrap();
-        assert_eq!(list_history_in_dir(&f.0).unwrap(), vec![
-            (101, "修改后\n完整中文".into()),
-            (100, "初稿\n完整中文".into()),
-        ]);
+        assert_eq!(
+            list_history_in_dir(&f.0).unwrap(),
+            vec![
+                (101, "修改后\n完整中文".into()),
+                (100, "初稿\n完整中文".into()),
+            ]
+        );
     }
 
     #[test]
     fn history_list_distinguishes_no_history_from_unreadable_or_damaged_history() {
         let f = HistoryFixture::new();
-        assert!(list_history_in_dir(&f.0.join("missing")).unwrap().is_empty());
+        assert!(list_history_in_dir(&f.0.join("missing"))
+            .unwrap()
+            .is_empty());
         let not_a_directory = f.0.join("blocked");
         fs::write(&not_a_directory, "不能当历史目录").unwrap();
         assert!(list_history_in_dir(&not_a_directory).is_err());

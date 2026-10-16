@@ -518,4 +518,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 ### v1.1.7 收尾中：保存与历史
 
-当前正式下载仍为 v1.1.6。2026-10-17 已按用户要求恢复开发。v1.1.7 已实现 Markdown/TXT 保存冲突比较与草稿保护、历史内容/备注查找、差异跳转和右键保留重要版本，并补齐历史并发读取保护；正在验证固定安装包，尚未发布。[本轮审计与待办](docs/V1_1_7_History_Read_Coordination_Audit_2026-10-17.md) · [本版说明草案](docs/RELEASE_NOTES_v1.1.7.md) · [开发记录](docs/V1_1_7_Save_History_Development_2026-10-16.md)。
+当前正式下载仍为 v1.1.6。2026-10-17 已按用户要求恢复开发。v1.1.7 已实现 Markdown/TXT 保存冲突比较与草稿保护、历史内容/备注查找、差异跳转和右键保留重要版本，并补齐历史并发读取及备注中断恢复保护；最终安装包仍待验证，尚未发布。[最新审计与待办](docs/V1_1_7_Metadata_Recovery_Audit_2026-10-17.md) · [本版说明草案](docs/RELEASE_NOTES_v1.1.7.md) · [开发记录](docs/V1_1_7_Save_History_Development_2026-10-16.md)。

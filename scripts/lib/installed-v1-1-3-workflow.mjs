@@ -73,8 +73,11 @@ export async function runInstalledV113Workflow({ send, evaluate, navigate, waitF
     await invoke('save_history_version', { libraryRoot: library, path: text, content: updated, maxCount: 10 })
     await navigate('#/library?path=' + encodeURIComponent(text), '.text-workspace', 'TXT history workspace')
     await mouse(button('历史与差异', `document.querySelector('.text-toolbar')`))
-    await waitFor(`document.querySelectorAll('.text-history-entries button').length===2`, 'native text history listed')
-    await mouse(`[...document.querySelectorAll('.text-history-entries button')].at(-1)`)
+    // Keep the exact two-version assertion, excluding the new per-row menu controls.
+    // Direct children retain compatibility with the earlier history dialog.
+    const historyButtons = '.text-history-entries > button, .text-history-entries .history-version-button'
+    await waitFor(`document.querySelectorAll(${JSON.stringify(historyButtons)}).length===2`, 'native text history listed')
+    await mouse(`[...document.querySelectorAll(${JSON.stringify(historyButtons)})].at(-1)`)
     await mouse(button('恢复为副本'))
     await waitFor(`decodeURIComponent(location.hash).includes('恢复-')`, 'TXT recovery copy opened')
     const files = await fs.readdir(library)

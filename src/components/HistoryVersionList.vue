@@ -3,7 +3,7 @@
     <div class="history-search"><n-input v-model:value="query" clearable placeholder="查找内容或备注" :input-props="{ 'aria-label': '查找历史内容或备注' }" /><n-select v-model:value="filter" :options="filters" aria-label="历史筛选" /></div>
     <p v-if="loading" role="status">正在读取历史…</p>
     <div v-if="error || metadataError" role="alert">{{ error || metadataError }}<n-button text @click="$emit('refresh'); loadMetadata()">重试</n-button></div>
-    <p v-if="!loading && !error && !visible.length" class="history-empty">{{ entries.length ? '没有符合条件的版本' : '暂无历史版本' }}</p>
+    <p v-if="!loading && !error && !metadataError && !visible.length" class="history-empty">{{ entries.length ? '没有符合条件的版本' : '暂无历史版本' }}</p>
     <div class="history-version-rows text-history-entries">
       <template v-for="(entry, index) in visible" :key="entry.timestamp">
         <div v-if="index === 0 || day(entry.timestamp) !== day(visible[index - 1].timestamp)" class="history-day">{{ day(entry.timestamp) }}</div>
@@ -34,11 +34,14 @@ const dialog = useDialog(), message = useMessage()
 let generation = 0, disposed = false
 const loadMetadata = async () => {
   const token = ++generation, path = props.path, libraryRoot = props.libraryRoot; metadataError.value = ''
-  if (!path || !libraryRoot) return
+  if (!path || !libraryRoot || props.loading) return
   try { const result = await invoke<Record<string, Metadata>>('get_history_metadata', {libraryRoot,path}); if (!disposed && token === generation) metadata.value = result || {} }
   catch (cause) { if (!disposed && token === generation) metadataError.value = `版本备注暂时无法读取：${String(cause)}` }
 }
 watch([() => props.path, () => props.libraryRoot], () => { metadata.value = {}; query.value = ''; limit.value = 60; note.show = false; menu.show = false; void loadMetadata() }, {immediate:true})
+// A pending metadata recovery needs exclusive native access. Finish the body
+// list first, so retrying both requests cannot repeatedly block that recovery.
+watch(() => props.loading, loading => { ++generation; if (!loading) void loadMetadata() })
 watch([query,filter], () => { limit.value = 60 })
 onBeforeUnmount(() => { disposed = true; ++generation })
 const filters = [{label:'全部',value:'all'},{label:'已保留',value:'pinned'}]
