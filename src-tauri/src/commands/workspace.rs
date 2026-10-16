@@ -446,6 +446,7 @@ fn mutate_workspace_table_task(
     {
         return Err("工作台只允许更新内部 .table.json 任务".into());
     }
+    let _document = crate::services::document_coordination::acquire_existing_file(&path)?;
     recover_interrupted_write(&path)?;
     let metadata = path
         .metadata()
@@ -527,6 +528,7 @@ fn mutate_workspace_task(
     }
     let guard = WorkspaceGuard::new(root)?;
     let path = guard.resolve_existing_file(&mutation.path, &["md", "markdown"])?;
+    let _document = crate::services::document_coordination::acquire_existing_file(&path)?;
     recover_interrupted_write(&path)?;
     let snapshot = read_text_snapshot(&path).map_err(|error| error.message)?;
     if snapshot.read_only_reason.is_some() {

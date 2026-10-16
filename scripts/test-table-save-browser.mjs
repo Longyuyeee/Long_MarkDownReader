@@ -10,7 +10,7 @@ const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ viewport: { width: 1100, height: 720 } })
   const errors = []; page.on('pageerror', error => errors.push(error.message))
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/table-save-browser.html')
+  await page.goto((process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000') + '/scripts/fixtures/table-save-browser.html')
   const cells = page.locator('.data-cell input')
   await cells.first().waitFor()
   await page.screenshot({ path: path.join(output, '01-before.png') })

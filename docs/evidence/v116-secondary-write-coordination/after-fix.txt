@@ -1,0 +1,43 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 33.57s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 11 tests
+test services::document_coordination::secondary_tests::secondary_table_creation_respects_directory_move ... ok
+test services::document_coordination::secondary_tests::secondary_workspace_markdown_task_respects_directory_move ... ok
+test services::document_coordination::secondary_tests::secondary_graph_repair_reserves_target ... ok
+test services::document_coordination::secondary_tests::secondary_graph_repair_reserves_source ... ok
+test services::document_coordination::secondary_tests::secondary_workspace_table_task_respects_directory_move ... ok
+test services::document_coordination::secondary_tests::secondary_table_import_respects_directory_move ... ok
+test services::document_coordination::secondary_tests::secondary_csv_read_and_save_respect_directory_move ... ok
+test services::document_coordination::secondary_tests::secondary_internal_table_read_and_save_respect_directory_move ... ok
+test services::document_coordination::secondary_tests::secondary_graph_relation_reserves_target ... ok
+test services::document_coordination::secondary_tests::secondary_graph_relation_reserves_source ... ok
+test services::document_coordination::secondary_tests::secondary_table_export_respects_directory_move ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 799 filtered out; finished in 0.03s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-7f4e6d36c52fb98f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-949b31ea7eb097b4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-fbde6bf8d27eff61.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-a5b902d9372b0996.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

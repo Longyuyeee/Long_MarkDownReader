@@ -10,6 +10,7 @@
     "test:file-management-browser": "node scripts/test-file-management-browser.mjs",
     "test:move-outcome-browser": "node scripts/test-move-outcome-browser.mjs",
     "test:specialized-save-browser": "node scripts/test-specialized-save-browser.mjs",
+    "test:secondary-write-browser": "node scripts/test-secondary-write-browser.mjs",
     "test:note-templates-browser": "node scripts/test-note-templates-browser.mjs",
     "test:foundation-browser": "node scripts/test-foundation-v113-browser.mjs",
     "test:foundation-v114-browser": "node scripts/test-foundation-v114-browser.mjs",

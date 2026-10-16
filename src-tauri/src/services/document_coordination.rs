@@ -107,6 +107,10 @@ fn conflicts(active: &BTreeSet<String>, key: &str) -> bool {
 mod specialized_tests;
 
 #[cfg(test)]
+#[path = "document_coordination_secondary_tests.rs"]
+mod secondary_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     #[test]

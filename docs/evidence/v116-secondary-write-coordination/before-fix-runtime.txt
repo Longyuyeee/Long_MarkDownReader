@@ -1,0 +1,74 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.33s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 11 tests
+
+thread 'services::document_coordination::secondary_tests::secondary_graph_repair_reserves_source' (47228) panicked at src\services\document_coordination_secondary_tests.rs:64:5:
+repair ignored protected source
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::document_coordination::secondary_tests::secondary_graph_repair_reserves_source ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_graph_repair_reserves_target' (47620) panicked at src\services\document_coordination_secondary_tests.rs:64:5:
+repair ignored protected target
+test services::document_coordination::secondary_tests::secondary_graph_repair_reserves_target ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_table_creation_respects_directory_move' (4684) panicked at src\services\document_coordination_secondary_tests.rs:127:5:
+assertion failed: tauri::async_runtime::block_on(table::create_table_file(fixture.root(),
+            Some(directory.to_string_lossy().into_owned()), None)).is_err()
+test services::document_coordination::secondary_tests::secondary_table_creation_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_workspace_markdown_task_respects_directory_move' (41464) panicked at src\services\document_coordination_secondary_tests.rs:28:5:
+workspace task wrote during folder move
+test services::document_coordination::secondary_tests::secondary_workspace_markdown_task_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_table_import_respects_directory_move' (9888) panicked at src\services\document_coordination_secondary_tests.rs:142:5:
+assertion failed: tauri::async_runtime::block_on(table::import_table_file(fixture.root(),
+            source.to_string_lossy().into_owned())).is_err()
+test services::document_coordination::secondary_tests::secondary_table_import_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_table_export_respects_directory_move' (50192) panicked at src\services\document_coordination_secondary_tests.rs:159:9:
+export bypassed protection: csv
+test services::document_coordination::secondary_tests::secondary_table_export_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_workspace_table_task_respects_directory_move' (52092) panicked at src\services\document_coordination_secondary_tests.rs:46:5:
+assertion failed: tauri::async_runtime::block_on(workspace::set_workspace_table_task_state(fixture.root(),
+            mutation.clone())).is_err()
+test services::document_coordination::secondary_tests::secondary_workspace_table_task_respects_directory_move ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_graph_relation_reserves_target' (42908) panicked at src\services\document_coordination_secondary_tests.rs:89:5:
+assertion failed: tauri::async_runtime::block_on(graph::update_graph_relation(fixture.root(),
+            mutation())).is_err()
+test services::document_coordination::secondary_tests::secondary_graph_relation_reserves_target ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_graph_relation_reserves_source' (36160) panicked at src\services\document_coordination_secondary_tests.rs:89:5:
+assertion failed: tauri::async_runtime::block_on(graph::update_graph_relation(fixture.root(),
+            mutation())).is_err()
+test services::document_coordination::secondary_tests::secondary_graph_relation_reserves_source ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_csv_read_and_save_respect_directory_move' (51208) panicked at src\services\document_coordination_secondary_tests.rs:112:5:
+Table I/O bypassed directory protection
+test services::document_coordination::secondary_tests::secondary_csv_read_and_save_respect_directory_move ... FAILED
+
+thread 'services::document_coordination::secondary_tests::secondary_internal_table_read_and_save_respect_directory_move' (44704) panicked at src\services\document_coordination_secondary_tests.rs:112:5:
+Table I/O bypassed directory protection
+test services::document_coordination::secondary_tests::secondary_internal_table_read_and_save_respect_directory_move ... FAILED
+
+failures:
+
+failures:
+    services::document_coordination::secondary_tests::secondary_csv_read_and_save_respect_directory_move
+    services::document_coordination::secondary_tests::secondary_graph_relation_reserves_source
+    services::document_coordination::secondary_tests::secondary_graph_relation_reserves_target
+    services::document_coordination::secondary_tests::secondary_graph_repair_reserves_source
+    services::document_coordination::secondary_tests::secondary_graph_repair_reserves_target
+    services::document_coordination::secondary_tests::secondary_internal_table_read_and_save_respect_directory_move
+    services::document_coordination::secondary_tests::secondary_table_creation_respects_directory_move
+    services::document_coordination::secondary_tests::secondary_table_export_respects_directory_move
+    services::document_coordination::secondary_tests::secondary_table_import_respects_directory_move
+    services::document_coordination::secondary_tests::secondary_workspace_markdown_task_respects_directory_move
+    services::document_coordination::secondary_tests::secondary_workspace_table_task_respects_directory_move
+
+test result: FAILED. 0 passed; 11 failed; 0 ignored; 0 measured; 799 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `--lib`

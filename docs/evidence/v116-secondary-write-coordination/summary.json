@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-16",
+  "stage": "v1.1.6 C2a-3 secondary document mutation and Table lifecycle coordination",
+  "sourceBase": "e1ee97379981ca3dc771a291c029a255167e9320",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "releaseReady": false,
+  "released": false,
+  "scope": {
+    "native": "Real command entry points and disk: workspace Markdown/Table task mutation; graph link repair/relation source and target reservation; library/external Table/CSV/TSV reads/saves, creation/import/export and old-path backups",
+    "browser": "Actual App/WorkspaceHome, TableView and GraphHealthPanel user input and clicks, isolated native responses; not native disk, multi-window protection or installation",
+    "productionUiLayoutChanged": false,
+    "desktopTakenOver": false,
+    "motion": "calm"
+  },
+  "results": {
+    "beforeFix": {
+      "passed": 0,
+      "failed": 11,
+      "log": "before-fix-runtime.txt"
+    },
+    "newNativeRegressions": 15,
+    "targeted": {
+      "passed": 15,
+      "failed": 0,
+      "log": "secondary-final.txt"
+    },
+    "fullNative": {
+      "passed": 808,
+      "failed": 0,
+      "existingIgnored": 5,
+      "independentPerformanceNotRun": 1,
+      "log": "full-rust.txt"
+    },
+    "qualityGate": {
+      "passed": true,
+      "productionVulnerabilities": 0,
+      "log": "quality-gate-final.txt"
+    },
+    "actualBrowser": {
+      "checks": 6,
+      "layouts": 36,
+      "errors": 0,
+      "report": "browser-final/results.json",
+      "realPaletteAndViewportAssertions": true
+    },
+    "existingTableSaveBrowser": {
+      "passed": true,
+      "log": "table-save-final.txt",
+      "scenarios": [
+        "new input while waiting for acknowledgement",
+        "failed save preserves draft",
+        "explicit retry",
+        "route recreation waits for same save",
+        "explicitly leaving wait page does not trigger hidden reread"
+      ]
+    },
+    "previousMainCi": {
+      "runId": 38832811538,
+      "head": "e1ee97379981ca3dc771a291c029a255167e9320",
+      "conclusion": "success",
+      "receipt": "previous-main-ci.json",
+      "doesNotValidateCurrentBatch": true
+    }
+  },
+  "retainedDevelopmentIssues": [
+    {
+      "log": "before-fix.txt",
+      "kind": "test compilation error",
+      "reason": "The new test partially moved opened.path before constructing its request; cloned the test path before recording the valid eleven-failure baseline. Not a product failure."
+    },
+    {
+      "log": "browser-first.txt",
+      "kind": "passing interaction run with incomplete Table palette fixture",
+      "reason": "Visual inspection found that the reused Table fixture set the theme on html, not body as App.vue does; the white Save label lacked its real background. First Table screenshots are not final theme proof. Corrected only fixture palette/motion and strengthened theme/viewport assertions; retained all original interactions and assertions, reran the complete browser suite."
+    }
+  ],
+  "inspectedScreenshots": [
+    "browser-first/workspace-wide.png",
+    "browser-first/table-narrow.png",
+    "browser-first/graph-health-wide.png",
+    "browser-final/table-narrow.png",
+    "table-save-final/04-failed-draft-retained.png"
+  ],
+  "remaining": [
+    "XLSX independent saves and structural changes; DOCX/PPTX source/copy save and rollback lifecycles",
+    "PDF OCR/annotation sidecars, remaining import/export/save-as and path metadata mutation",
+    "Fresh path-scoped multi-window draft checks, brief editing protection and late-request path continuity",
+    "User-operable interrupted move review/recovery and protected Markdown reference writeback",
+    "Graph upfront whole-request reservation is not atomic multi-file commit or per-item recovery after mid-write I/O failure",
+    "Final fixed-source build, same-byte installer verification, installation/update/user flows, release and public attachment re-download"
+  ],
+  "assertionsNotWeakened": true,
+  "files": [
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/after-fix.txt",
+      "bytes": 2547,
+      "sha256": "f15959924d899ecee070be38d01b80b8dc3ec39d3af8c44c7390fdedf005f8b5"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/before-fix-runtime.txt",
+      "bytes": 5982,
+      "sha256": "f1d36993498b34117910630bf87f5a60cb29c6fed23a0f35409e5d10639397ec"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/before-fix.txt",
+      "bytes": 1040,
+      "sha256": "40c2cfaef854836e5c67f5e6b3f18360e3ef31ec07f39c6be830f5fe729af5f1"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final.txt",
+      "bytes": 72,
+      "sha256": "802f6efe522476b68fca40bc3359a776b0ca90ce052b0a0d68115cbce71b2882"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/graph-health-narrow.png",
+      "bytes": 33068,
+      "sha256": "269eba9c58e7d49cfed100d8f4876bf0ef75cbc28efb7a58b4886786b53e9632"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/graph-health-wide.png",
+      "bytes": 36966,
+      "sha256": "aaa743ca86351d4a1db4a8639a370487fedab87c45bd819ecd61beaf196cd92e"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/results.json",
+      "bytes": 5870,
+      "sha256": "ee3d3d7f0b7595bfd41fb920e5015ce7c8128af8543079be143644e328cb7a46"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/table-narrow.png",
+      "bytes": 18717,
+      "sha256": "951f9dba61e9a61f4bed21478b240d8188fa36d7843513d2e9f1cc4d8d4d0106"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/table-wide.png",
+      "bytes": 21586,
+      "sha256": "8b9ff838a36e4f0ae5e9ece85a164c16b466d9e024b7462b6f6b5d0b38d076f2"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/workspace-narrow.png",
+      "bytes": 42311,
+      "sha256": "c003cc3c0a518b4582a793f426c932c271569e5daf8dbcf7fe9451816be7fcc1"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-final/workspace-wide.png",
+      "bytes": 67877,
+      "sha256": "7e9a00e3439fcadb77770607a8aee0ce717e7fee2179f7439b974db5159ab871"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first.txt",
+      "bytes": 72,
+      "sha256": "802f6efe522476b68fca40bc3359a776b0ca90ce052b0a0d68115cbce71b2882"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/graph-health-narrow.png",
+      "bytes": 33068,
+      "sha256": "269eba9c58e7d49cfed100d8f4876bf0ef75cbc28efb7a58b4886786b53e9632"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/graph-health-wide.png",
+      "bytes": 36966,
+      "sha256": "aaa743ca86351d4a1db4a8639a370487fedab87c45bd819ecd61beaf196cd92e"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/results.json",
+      "bytes": 5870,
+      "sha256": "ee3d3d7f0b7595bfd41fb920e5015ce7c8128af8543079be143644e328cb7a46"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/table-narrow.png",
+      "bytes": 16059,
+      "sha256": "e0e55919d3e1dda373363acbb6486af4ad6ae886726c9c7ec6c6c5ad4038a7ef"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/table-wide.png",
+      "bytes": 18458,
+      "sha256": "d747fc53d867bf7db8e68a05254b72d5b9fbe55d7eb868f7a057f575175f6d6f"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/workspace-narrow.png",
+      "bytes": 42311,
+      "sha256": "c003cc3c0a518b4582a793f426c932c271569e5daf8dbcf7fe9451816be7fcc1"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/browser-first/workspace-wide.png",
+      "bytes": 67878,
+      "sha256": "fb5a48d1a573b9f1e15dd3eb4c49d8878223a606510e1b4dedd6c91e58655451"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/full-rust.txt",
+      "bytes": 82578,
+      "sha256": "a334730c65d981d95ebb9a4be1325f4f6a6ee9dc303ff72d6942831e98b5396a"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/previous-main-ci.json",
+      "bytes": 2869,
+      "sha256": "890cfd2754b3028e896d392a21dc7325b54d0ab6249c449b34ace588bb5f8ff0"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/quality-gate-final.txt",
+      "bytes": 121181,
+      "sha256": "3306f0aa3c6bfc210c86fe6368b14645cbeef6e2e4557449f9f7c628a85a511c"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/quality-gate.txt",
+      "bytes": 121189,
+      "sha256": "35aed98d78baaaea8366c6853cfa94ecc751f162e8935c4f80f0f230d504fc89"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/secondary-final.txt",
+      "bytes": 3008,
+      "sha256": "66192a5e7543afb885a3e8a7cef8d42f12f81d408d48ed632d5906d28d0edd0c"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final.txt",
+      "bytes": 252,
+      "sha256": "03c2f6f7ed074315d63c0897dd84ba158c6fd6240b56310a8cf1b807f988e5ac"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/01-before.png",
+      "bytes": 18574,
+      "sha256": "db21a659f1a22c06169be4920024b003a95cfe40be5041afaa0a3b7b5f01ceb8"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/02-new-draft-retained.png",
+      "bytes": 21143,
+      "sha256": "ecf0eaefe6e1442fae4efeee17d05cd01a8b78a9ca4cdec217352cb4f48bb681"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/03-saved.png",
+      "bytes": 21579,
+      "sha256": "2d2f78c65e772abc856d1fbf253945d05316068adc33a08a8129e0a8eb488730"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/04-failed-draft-retained.png",
+      "bytes": 25063,
+      "sha256": "d33fa86be20d12580687448214517b9b3157a6828f8a3652b71532fd175f9259"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/05-waiting-save.png",
+      "bytes": 9002,
+      "sha256": "6233fd2ef8981ba317f3f259a6e46db96c0463fba153acf81a22b2e46133f15e"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/06-waiting-failed-save.png",
+      "bytes": 8564,
+      "sha256": "69fcd77427cc2a658131378f34aa933eddefd6f470bf752640093501b75ee9e2"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save-final/07-reopened.png",
+      "bytes": 19341,
+      "sha256": "a48c6d6eea13028ffcfb97eccb248ea98ae1fbda483e507fa7666e3ed06dfdcb"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save.txt",
+      "bytes": 246,
+      "sha256": "d0d404bf8b41d5a0b9a530fc87d8dd4130d1c5a8bbe78af69465dc8435bb771a"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/01-before.png",
+      "bytes": 16535,
+      "sha256": "61a00b01c62fa90bbb34e53aa15a8f599c707c03b4bfe5cf8d8e26858ca781d8"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/02-new-draft-retained.png",
+      "bytes": 18075,
+      "sha256": "023808b93e8d56c44917917dd3459517f9d2bd3c830648fbadfb07bfc38678c9"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/03-saved.png",
+      "bytes": 19811,
+      "sha256": "96884b6a362c4301057284600d2690d43d9d009149cd70647f1254affe100acc"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/04-failed-draft-retained.png",
+      "bytes": 22515,
+      "sha256": "4efad399ee80335defda5963ecd125ea4a077cf2abb70afe427dd729ee25757b"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/05-waiting-save.png",
+      "bytes": 7143,
+      "sha256": "e4c3f604804847e40e02a110cf2b77733c198924fac2c99a7111595c98066bb7"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/06-waiting-failed-save.png",
+      "bytes": 7143,
+      "sha256": "e4c3f604804847e40e02a110cf2b77733c198924fac2c99a7111595c98066bb7"
+    },
+    {
+      "path": "docs/evidence/v116-secondary-write-coordination/table-save/07-reopened.png",
+      "bytes": 17095,
+      "sha256": "1ac2f427ca52b72851b329a9342952f0aa9e8000432176ae1fc4c0aa881523af"
+    }
+  ]
+}

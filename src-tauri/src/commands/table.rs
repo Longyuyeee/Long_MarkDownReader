@@ -5,7 +5,7 @@ use crate::formats::table::{
 };
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
-use crate::services::reliable_write::{recover_interrupted_write, write_bytes};
+use crate::services::reliable_write::{recover_interrupted_write, write_bytes, write_new_bytes};
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use csv::{ReaderBuilder, Terminator, WriterBuilder};
@@ -401,6 +401,12 @@ fn internal_view_config(
 }
 
 fn parse_table(path: &Path) -> Result<TableDocument, String> {
+    let _document = crate::services::document_coordination::acquire_existing_file(path)?;
+    parse_table_under_lease(path)
+}
+
+fn parse_table_under_lease(path: &Path) -> Result<TableDocument, String> {
+    crate::services::document_coordination::ensure_existing_file(path)?;
     recover_interrupted_write(path)?;
     let metadata = path
         .metadata()
@@ -487,6 +493,12 @@ fn parse_table(path: &Path) -> Result<TableDocument, String> {
 }
 
 fn parse_internal(path: &Path) -> Result<TableDocument, String> {
+    let _document = crate::services::document_coordination::acquire_existing_file(path)?;
+    parse_internal_under_lease(path)
+}
+
+fn parse_internal_under_lease(path: &Path) -> Result<TableDocument, String> {
+    crate::services::document_coordination::ensure_existing_file(path)?;
     recover_interrupted_write(path)?;
     let metadata = path
         .metadata()
@@ -672,6 +684,7 @@ fn write_internal_table(
     file: &Path,
     payload: TableWritePayload,
 ) -> Result<TableWriteResult, String> {
+    let _document = crate::services::document_coordination::acquire_existing_file(file)?;
     let metadata = file
         .metadata()
         .map_err(|error| format!("读取 Table 元数据失败: {}", error))?;
@@ -829,6 +842,7 @@ pub async fn create_table_file(
     } else {
         guard.root().to_path_buf()
     };
+    let _directory = crate::services::document_coordination::acquire(&[&root])?;
     fs::create_dir_all(&root).map_err(|error| error.to_string())?;
     let stem = sanitize_filename(&prefix.unwrap_or_else(|| "未命名数据表".into()));
     if stem.is_empty() {
@@ -854,7 +868,7 @@ pub async fn create_table_file(
     };
     let internal = internal_from_document(&blank);
     let bytes = serde_json::to_vec_pretty(&internal).map_err(|error| error.to_string())?;
-    write_bytes(&path, &bytes)?;
+    write_new_bytes(&path, &bytes)?;
     Ok(path.to_string_lossy().into_owned())
 }
 
@@ -869,7 +883,10 @@ pub async fn import_table_file(library_root: String, path: String) -> Result<Str
         .to_string_lossy()
         .into_owned();
     tauri::async_runtime::spawn_blocking(move || {
-        let document = parse_table(&source)?;
+        // Reserve source and output through their common directory, including
+        // name allocation. Do not recursively acquire the source reservation.
+        let _directory = crate::services::document_coordination::acquire(&[&directory])?;
+        let document = parse_table_under_lease(&source)?;
         let internal = internal_from_document(&document);
         validate_internal_table(&internal)?;
         let output = serde_json::to_vec_pretty(&internal).map_err(|error| error.to_string())?;
@@ -877,7 +894,7 @@ pub async fn import_table_file(library_root: String, path: String) -> Result<Str
             return Err("转换后的 Table 超过 64 MB 上限".into());
         }
         let target = available_output_path(&directory, &stem, ".table.json");
-        write_bytes(&target, &output)?;
+        write_new_bytes(&target, &output)?;
         Ok(target.to_string_lossy().into_owned())
     })
     .await
@@ -977,7 +994,12 @@ pub async fn export_table_file(
         })
         .to_string();
     tauri::async_runtime::spawn_blocking(move || {
-        let document = parse_any_table(&source)?;
+        let _directory = crate::services::document_coordination::acquire(&[&directory])?;
+        let document = if is_internal_table(&source) {
+            parse_internal_under_lease(&source)?
+        } else {
+            parse_table_under_lease(&source)?
+        };
         let (suffix, output) = match format.as_str() {
             "csv" => (".csv", export_delimited(&document, b',')?),
             "tsv" => (".tsv", export_delimited(&document, b'\t')?),
@@ -985,7 +1007,7 @@ pub async fn export_table_file(
             _ => return Err("仅支持导出 CSV、TSV 或 XLSX".into()),
         };
         let target = available_output_path(&directory, &stem, suffix);
-        write_bytes(&target, &output)?;
+        write_new_bytes(&target, &output)?;
         Ok(target.to_string_lossy().into_owned())
     })
     .await
@@ -993,6 +1015,7 @@ pub async fn export_table_file(
 }
 
 fn write_table(file: &Path, payload: TableWritePayload) -> Result<TableWriteResult, String> {
+    let _document = crate::services::document_coordination::acquire_existing_file(file)?;
     let metadata = file
         .metadata()
         .map_err(|error| format!("读取表格元数据失败: {}", error))?;
@@ -1090,6 +1113,54 @@ mod tests {
             view: document.view.clone(),
             views: document.views.clone(),
             active_view: document.active_view.clone(),
+        }
+    }
+
+    #[test]
+    fn secondary_external_tables_share_directory_protection_and_retry() {
+        let cases: [(&str, &[u8]); 2] = [
+            ("csv", b"Task,Status\r\nShip,Pending\r\n"),
+            ("table.json", include_bytes!("../../../fixtures/post-v115-m4b0/workspace/M4B0 Tasks.table.json")),
+        ];
+        for (extension, original) in cases {
+            let path = temp_table(extension, original);
+            let access = ExternalFileAccess::default();
+            access.authorize_editable(&path).unwrap();
+            let input = path.to_string_lossy().into_owned();
+            let opened = tauri::async_runtime::block_on(read_external_table_file_with_access(input.clone(), &access)).unwrap();
+            let backup = path.parent().unwrap().join(format!(".{}.longedit-bak", path.file_name().unwrap().to_str().unwrap()));
+            fs::write(&backup, "keep backup evidence").unwrap();
+            let moving = crate::services::document_coordination::acquire(&[path.parent().unwrap()]).unwrap();
+            assert!(tauri::async_runtime::block_on(read_external_table_file_with_access(input.clone(), &access)).is_err());
+            assert!(tauri::async_runtime::block_on(write_external_table_file_with_access(input.clone(), payload(&opened), &access)).is_err());
+            assert_eq!(fs::read(&path).unwrap(), original);
+            assert_eq!(fs::read_to_string(backup).unwrap(), "keep backup evidence");
+            drop(moving);
+            tauri::async_runtime::block_on(write_external_table_file_with_access(input, payload(&opened), &access)).unwrap();
+            fs::remove_dir_all(path.parent().unwrap()).unwrap();
+        }
+    }
+
+    #[test]
+    fn secondary_table_late_reads_and_saves_preserve_old_path_recovery_evidence() {
+        let cases: [(&str, &[u8]); 2] = [
+            ("csv", b"Task,Status\nShip,Pending\n"),
+            ("table.json", include_bytes!("../../../fixtures/post-v115-m4b0/workspace/M4B0 Tasks.table.json")),
+        ];
+        for (extension, original) in cases {
+            let path = temp_table(extension, original);
+            let opened = parse_any_table(&path).unwrap();
+            let moved = path.parent().unwrap().join(format!("moved.{extension}"));
+            fs::rename(&path, &moved).unwrap();
+            let backup = path.parent().unwrap().join(format!(".{}.longedit-bak", path.file_name().unwrap().to_str().unwrap()));
+            fs::write(&backup, original).unwrap();
+            assert!(parse_any_table(&path).is_err(), "a late read must not promote the old path's backup");
+            let saved = if is_internal_table(&path) { write_internal_table(&path, payload(&opened)) } else { write_table(&path, payload(&opened)) };
+            assert!(saved.is_err());
+            assert!(!path.exists());
+            assert_eq!(fs::read(&backup).unwrap(), original);
+            assert_eq!(fs::read(&moved).unwrap(), original);
+            fs::remove_dir_all(path.parent().unwrap()).unwrap();
         }
     }
 

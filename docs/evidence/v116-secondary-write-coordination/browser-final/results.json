@@ -1,0 +1,266 @@
+{
+  "scope": "Actual WorkspaceHome/App, TableView and GraphHealthPanel, real user input/clicks, isolated native responses; not native disk, multi-window freeze or installed proof",
+  "checks": [
+    "workspace: native reservation rejection keeps the original task/issue or real user draft; no optimistic success",
+    "workspace: explicit retry succeeds with the preserved request and normal task undo remains available",
+    "table: native reservation rejection keeps the original task/issue or real user draft; no optimistic success",
+    "table: explicit retry succeeds with the preserved request",
+    "graph-health: native reservation rejection keeps the original task/issue or real user draft; no optimistic success",
+    "graph-health: explicit retry succeeds with the preserved request"
+  ],
+  "layouts": [
+    {
+      "surface": "workspace",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "workspace",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "table",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 1280,
+      "style": "soft",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 1280,
+      "style": "neo",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 1280,
+      "style": "glass",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 1280,
+      "style": "airy",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 1280,
+      "style": "minimal",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 1280,
+      "style": "sharp",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 480,
+      "style": "soft",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 480,
+      "style": "neo",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 480,
+      "style": "glass",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 480,
+      "style": "airy",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 480,
+      "style": "minimal",
+      "retryReachable": true,
+      "motion": "calm"
+    },
+    {
+      "surface": "graph-health",
+      "width": 480,
+      "style": "sharp",
+      "retryReachable": true,
+      "motion": "calm"
+    }
+  ],
+  "errors": []
+}

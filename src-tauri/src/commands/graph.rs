@@ -3162,6 +3162,15 @@ pub async fn repair_graph_links(
     library_root: String,
     repairs: Vec<GraphLinkRepair>,
 ) -> Result<GraphRepairResult, String> {
+    tauri::async_runtime::spawn_blocking(move || repair_graph_links_blocking(&library_root, repairs))
+        .await
+        .map_err(|error| format!("图谱链接修复任务失败: {error}"))?
+}
+
+fn repair_graph_links_blocking(
+    library_root: &str,
+    repairs: Vec<GraphLinkRepair>,
+) -> Result<GraphRepairResult, String> {
     if repairs.is_empty() {
         return Ok(GraphRepairResult {
             repaired_links: 0,
@@ -3171,15 +3180,30 @@ pub async fn repair_graph_links(
     if repairs.len() > 100 {
         return Err("单次最多修复 100 条链接".into());
     }
-    let guard = WorkspaceGuard::new(&library_root)?;
-    let mut changes: HashMap<PathBuf, (String, usize)> = HashMap::new();
-
+    let guard = WorkspaceGuard::new(library_root)?;
+    // Resolve the entire bounded request, then reserve all sources AND targets
+    // atomically before reading or changing any document. A target can move
+    // even though this command only writes its referring source.
+    let mut resolved = Vec::with_capacity(repairs.len());
     for repair in repairs {
         if repair.line == 0 || repair.expected_syntax.len() > 500 {
             return Err("修复请求的行号或链接语法无效".into());
         }
         let source = guard.resolve_existing_file(&repair.source_path, &["md"])?;
         let target = guard.resolve_existing_file(&repair.target_path, &["md"])?;
+        resolved.push((repair, source, target));
+    }
+    let paths: Vec<&Path> = resolved
+        .iter()
+        .flat_map(|(_, source, target)| [source.as_path(), target.as_path()])
+        .collect();
+    let _documents = crate::services::document_coordination::acquire(&paths)?;
+    for path in &paths {
+        crate::services::document_coordination::ensure_existing_file(path)?;
+    }
+    let mut changes: HashMap<PathBuf, (String, usize)> = HashMap::new();
+
+    for (repair, source, target) in resolved {
         let replacement_target = target
             .strip_prefix(guard.root())
             .map_err(|_| "修复目标超出知识库范围")?
@@ -3275,6 +3299,9 @@ pub async fn update_graph_relation(
     }
 
     tauri::async_runtime::spawn_blocking(move || {
+        let _documents = crate::services::document_coordination::acquire(&[&source, &target])?;
+        crate::services::document_coordination::ensure_existing_file(&source)?;
+        crate::services::document_coordination::ensure_existing_file(&target)?;
         let bytes = fs::read(&source).map_err(|error| format!("读取关系源笔记失败: {error}"))?;
         let current_signature = format!("{:x}", md5::compute(&bytes));
         if !current_signature.eq_ignore_ascii_case(&mutation.expected_signature) {

@@ -1,0 +1,14 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+error[E0382]: borrow of partially moved value: `opened`
+   --> src\services\document_coordination_secondary_tests.rs:115:103
+    |
+115 |     tauri::async_runtime::block_on(table::write_table_file(fixture.root(), opened.path, table_payload(&opened))).unwrap();
+    |                                                                            -----------                ^^^^^^^ value borrowed here after partial move
+    |                                                                            |
+    |                                                                            value partially moved here
+    |
+    = note: partial move occurs because `opened.path` has type `std::string::String`, which does not implement the `Copy` trait
+
+For more information about this error, try `rustc --explain E0382`.
+error: could not compile `tauri-app` (lib test) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

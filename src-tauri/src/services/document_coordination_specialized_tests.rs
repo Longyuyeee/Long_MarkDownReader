@@ -11,9 +11,9 @@ const CANVAS: &str = "{\"nodes\":[],\"edges\":[]}\n";
 const MERMAID: &str = "flowchart LR\n  A --> B\n";
 const OPML: &str = include_str!("../../tests/fixtures/formats/mindmap.opml");
 
-struct Fixture(PathBuf);
+pub(super) struct Fixture(pub(super) PathBuf);
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         static SEQUENCE: AtomicU64 = AtomicU64::new(0);
         for _ in 0..100 {
             let path = std::env::temp_dir().join(format!(
@@ -33,10 +33,10 @@ impl Fixture {
         }
         panic!("could not exclusively create test workspace");
     }
-    fn root(&self) -> String {
+    pub(super) fn root(&self) -> String {
         self.0.to_string_lossy().into_owned()
     }
-    fn directory(&self) -> PathBuf {
+    pub(super) fn directory(&self) -> PathBuf {
         let path = self.0.join("notes");
         fs::create_dir(&path).unwrap();
         path

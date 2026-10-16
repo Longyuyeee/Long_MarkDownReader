@@ -35,6 +35,11 @@ await router.push('/table?path=tasks.csv')
 const app = createApp({ render: () => h(NConfigProvider, {}, { default: () => h(NDialogProvider, {}, { default: () => h(NMessageProvider, {}, { default: () => h(RouterView) }) }) }) })
 app.use(pinia).use(router).mount('#app')
 document.documentElement.dataset.theme = 'white'
+// Match App.vue's palette boundary; setting only <html> leaves body theme
+// variables undefined and makes a white Save label appear on white.
+document.body.dataset.theme = 'white'
+store.motionSpeed = 'calm'
+document.body.dataset.motion = 'calm'
 document.body.style.margin = '0'
 document.getElementById('app').style.height = '100vh'
 document.querySelector('.n-config-provider').style.height = '100%'
