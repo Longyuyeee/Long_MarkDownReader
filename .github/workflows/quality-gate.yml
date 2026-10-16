@@ -38,6 +38,12 @@ jobs:
       - name: Install locked frontend dependencies
         run: npm ci
 
+      - name: Cache Rust build dependencies without skipping checks
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          cache-on-failure: true
+
       - name: Run the v1 patch release quality gate
         run: npm run ci:patch-release
 

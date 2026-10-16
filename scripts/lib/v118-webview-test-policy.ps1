@@ -15,7 +15,14 @@ function Enable-V118WebViewTestPolicy([string]$UserDataRoot) {
   # Preflight every entry before creating any value.
   foreach($entry in $plan){if((Test-Path -LiteralPath $entry.key) -and ((Get-Item -LiteralPath $entry.key).GetValueNames() -contains $entry.name)){throw "Existing WebView2 test value preserved: $($entry.name)"}}
   foreach($entry in $plan){
-    New-Item -Path $entry.key -Force | Out-Null
+    # Registry New-Item -Force erases an existing key's values. Create only
+    # missing ancestors, without Force, and never reset the shared leaf key.
+    $segments=$entry.key -split '\\'
+    $cursor=$segments[0]+'\'
+    foreach($segment in ($segments | Select-Object -Skip 1)){
+      $cursor=$cursor.TrimEnd('\')+'\'+$segment
+      if(-not(Test-Path -LiteralPath $cursor)){New-Item -Path $cursor | Out-Null}
+    }
     New-ItemProperty -LiteralPath $entry.key -Name $entry.name -PropertyType String -Value $entry.value | Out-Null
     $script:nativePolicyEntries.Add($entry)
   }

@@ -11,6 +11,7 @@ $expectedOutput=Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence'
 if ($output -ne [IO.Path]::GetFullPath($expectedOutput) -or (Test-Path -LiteralPath $output)) { throw 'Evidence must be a fresh fixed output directory' }
 if (Get-NetTCPConnection -LocalPort 14200,9458 -State Listen -ErrorAction SilentlyContinue) { throw 'Audit ports must be free' }
 New-Item -ItemType Directory -Path $output | Out-Null
+if($env:LONGEDIT_NATIVE_PROGRAM_RECEIPT){Copy-Item -LiteralPath $env:LONGEDIT_NATIVE_PROGRAM_RECEIPT -Destination (Join-Path $output 'program-build-receipt.json')}
 $auditRoot=Join-Path $env:RUNNER_TEMP ('longedit-v118-native-'+[Guid]::NewGuid().ToString('N'))
 $driver=Join-Path $orchestration 'scripts\capture-v118-native-search.mjs'
 & node $driver fixture $auditRoot $product $output

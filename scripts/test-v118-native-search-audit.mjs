@@ -9,6 +9,7 @@ import { assertHostedSearchAudit,createNativeSearchFixture,fixturePaths,nativeSe
 const workflowSource=await fs.readFile('.github/workflows/v118-search-native.yml','utf8'),workflow=parse(workflowSource)
 const runner=await fs.readFile('scripts/run-v118-native-search.ps1','utf8'),driver=await fs.readFile('scripts/capture-v118-native-search.mjs','utf8')
 const policy=await fs.readFile('scripts/lib/v118-webview-test-policy.ps1','utf8')
+const qualitySource=await fs.readFile('.github/workflows/quality-gate.yml','utf8')
 test('real runtime audit refuses local and self-hosted machines before any fixture IO',()=>{
   for(const env of [{},{GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'self-hosted',RUNNER_OS:'Windows'},{GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Linux'}])assert.throws(()=>assertHostedSearchAudit(env))
   assert.doesNotThrow(()=>assertHostedSearchAudit({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows'}))
@@ -37,15 +38,22 @@ test('generated real files include late strong hit, same names, exact tags and o
   }
 })
 test('workflow pins the product separately from its harness and cannot publish or install',()=>{
-  assert.deepEqual(workflow.permissions,{contents:'read'})
+  assert.deepEqual(workflow.permissions,{contents:'read',actions:'read'})
   assert.equal(workflow.jobs['native-search']['runs-on'],'windows-latest')
   assert.ok(workflowSource.includes(`ref: ${nativeSearchProduct}`)&&runner.includes(nativeSearchProduct))
   assert.ok(!workflowSource.includes('community-release-publish')&&!workflowSource.includes('tauri -- build'))
   assert.ok(workflowSource.includes('if: always()')&&workflowSource.includes('retention-days: 14'))
   assert.ok(workflowSource.indexOf('Retain immutable Debug program')<workflowSource.indexOf('- name: Real native page IPC'))
   assert.ok(workflowSource.includes('isInstaller=$false')&&workflowSource.includes('releaseCandidate=$false'))
+  assert.ok(workflowSource.includes("NATIVE_PROGRAM_RUN_ID: '38967444304'"))
+  assert.ok(workflowSource.includes("NATIVE_PROGRAM_SHA256: '18e66fc547ad7cf719fbd4c033a7608489529f1fee173e73d888e42b1dd093f4'"))
+  assert.ok(workflowSource.includes('Verify original build provenance and program bytes before reuse'))
+  assert.ok(workflowSource.includes('$receipt.sizeBytes -ne $program.Length'))
   assert.ok(runner.includes("'--minimized'")&&runner.includes('-WindowStyle Hidden'))
   assert.ok(!runner.includes('Remove-Item')&&!runner.includes('OwningProcess'))
+  const quality=parse(qualitySource)
+  assert.ok(quality.jobs.check.steps.some(step=>step.uses==='Swatinem/rust-cache@v2'&&step.with.workspaces==='src-tauri -> target'))
+  for(const command of ['npm ci','npm run ci:patch-release','npm run test:rust:functional'])assert.ok(quality.jobs.check.steps.some(step=>step.run===command&&!step.if),'cache must not skip '+command)
 })
 test('native driver never substitutes IPC or simulates a desktop click',()=>{
   assert.ok(driver.includes('window.__TAURI_INTERNALS__.invoke('))
@@ -62,6 +70,52 @@ test('debugger policy is app-scoped, refuses user machines and restores only its
   assert.match(policy,/GetValue\(\$entry.name\) -ceq \$entry.value/)
   assert.doesNotMatch(policy,/Remove-Item\s|Remove-ItemProperty[^\n]+-Recurse/)
   assert.match(runner,/finally \{[\s\S]+Disable-V118WebViewTestPolicy/)
+})
+test('in-memory registry provider preserves all six debugger entries and unrelated values',{skip:process.platform!=='win32'},()=>{
+  // Real Registry drives are unmounted only in this child runspace. Every
+  // provider command below is an in-memory stub: no local registry writes.
+  const script=String.raw`
+$ErrorActionPreference='Stop'
+Remove-PSDrive -Name HKCU,HKLM -Force -ErrorAction SilentlyContinue
+$env:GITHUB_ACTIONS='true';$env:RUNNER_ENVIRONMENT='github-hosted';$env:RUNNER_OS='Windows'
+. ./scripts/lib/v118-webview-test-policy.ps1
+$plan=@(Get-V118WebViewPolicyPlan 'C:\generated-only\webview')
+$global:regMap=@{}
+$global:regMap[$plan[0].key]=@{foreign='preserve'}
+$global:regMap[$plan[1].key]=@{foreign='preserve'}
+function Test-Path {param($LiteralPath) return $global:regMap.ContainsKey($LiteralPath)}
+function Get-Item {param($LiteralPath)
+  $node=[pscustomobject]@{store=$global:regMap[$LiteralPath]}
+  $node|Add-Member ScriptMethod GetValueNames {return @($this.store.Keys)}
+  $node|Add-Member ScriptMethod GetValue {param($name) return $this.store[$name]}
+  return $node
+}
+function New-Item {param($Path,[switch]$Force)
+  # Microsoft documents that -Force replaces an existing registry key, unlike
+  # a filesystem directory; model that behavior explicitly.
+  if($global:regMap.ContainsKey($Path)-and -not $Force){throw 'existing key'}
+  $global:regMap[$Path]=@{}
+}
+function New-ItemProperty {param($LiteralPath,$Name,$PropertyType,$Value)
+  if($global:regMap[$LiteralPath].ContainsKey($Name)){throw 'existing value'}
+  $global:regMap[$LiteralPath][$Name]=$Value
+}
+function Remove-ItemProperty {param($LiteralPath,$Name) $global:regMap[$LiteralPath].Remove($Name)}
+Enable-V118WebViewTestPolicy 'C:\generated-only\webview'
+foreach($entry in $plan){if($global:regMap[$entry.key][$entry.name] -cne $entry.value){throw 'debugger entry was erased by later key creation'}}
+foreach($entry in $plan){if($global:regMap[$entry.key]['foreign'] -cne 'preserve'){throw 'foreign value erased'}}
+Disable-V118WebViewTestPolicy
+foreach($entry in $plan){if($global:regMap[$entry.key].ContainsKey($entry.name)){throw 'owned value not restored'}}
+foreach($entry in $plan){if($global:regMap[$entry.key]['foreign'] -cne 'preserve'){throw 'cleanup erased foreign value'}}
+$global:regMap[$plan[0].key][$plan[0].name]='preexisting'
+$blocked=$false
+try{Enable-V118WebViewTestPolicy 'C:\generated-only\webview'}catch{$blocked=$true}
+if(-not $blocked -or $global:regMap[$plan[0].key][$plan[0].name] -cne 'preexisting'){throw 'preexisting debugger configuration was not preserved'}
+Write-Output 'six entries and unrelated/preexisting values preserved; no real registry IO'
+`
+  // Process-only policy for our unsigned test function file, never Set-ExecutionPolicy.
+  const result=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-Command','& ([ScriptBlock]::Create([Console]::In.ReadToEnd()))'],{input:script,encoding:'utf8'})
+  assert.equal(result.status,0,result.stderr)
 })
 test('new runner and workflow PowerShell parse without launching anything',{skip:process.platform!=='win32'},()=>{
   for(const text of [runner,policy,...workflow.jobs['native-search'].steps.filter(step=>step.shell==='powershell').map(step=>step.run)]){
