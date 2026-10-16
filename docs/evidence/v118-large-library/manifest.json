@@ -20,8 +20,19 @@
     "localQualityGate": "passed",
     "productionVulnerabilities": 0,
     "native": {
-      "status": "pending",
-      "reason": "New fixed product requires its own completed real Wry run; E1 evidence is not substituted."
+      "status": "passed",
+      "nativeChecks": 12,
+      "files": 244,
+      "federatedHealthyFiles": 487,
+      "unregisteredEntries": 21050,
+      "productCommit": "96e9fc464f6935f0c3daf18f1708b6d6d80c2994",
+      "harnessCommit": "821b0f98671ae9163c1eb87506dfa6f06b7181a7",
+      "executableSha256": "1a18f1ae37d1d165558a1f41d9be295316f1760c883cf7b43658f62d0292a283",
+      "evidenceLevel": "debug-tauri-wry-real-ipc-and-generated-disk-not-installed",
+      "runId": 38973227180,
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38973227180",
+      "programBuildRun": "38973227180",
+      "sizeBytes": 103791104
     }
   },
   "limitations": [
@@ -31,6 +42,11 @@
     "A fixed 21050-entry fixture is not an arbitrary-scale or speedup claim."
   ],
   "sourceFiles": [
+    {
+      "path": ".gitattributes",
+      "bytes": 9055,
+      "sha256": "45470022569c1763cc33713651f6618fa34e506a0045f95195f09da664be0b8b"
+    },
     {
       "path": "src-tauri/src/commands/index_search_pages.rs",
       "bytes": 52001,
@@ -103,31 +119,36 @@
     },
     {
       "path": "scripts/collect-v118-large-library-evidence.mjs",
-      "bytes": 5084,
-      "sha256": "d0af70049df90263928d86f795df7a062e1d09d83d9fd41b7c02550b18528ecd"
+      "bytes": 5101,
+      "sha256": "7b09e8134a4728ea3244e407dada61bc94e76aaadb672590c3d2ffaeb67c11b7"
     },
     {
       "path": "shared/development-version-policy.json",
-      "bytes": 713,
-      "sha256": "487d0204c624e0ede8fe36311ddcb993abffbfe76c2e902245c2180b71d338cf"
+      "bytes": 702,
+      "sha256": "cab371cd8787322183b1fe8b8d7e6c27d10714a9bcdb555e166cbb5bc709515d"
     },
     {
       "path": "docs/V1_1_8_Large_Library_Audit_2026-10-17.md",
-      "bytes": 5177,
-      "sha256": "179dd5aa52545085bb65aaddf51da49ee40f66e19f5dbc606e48995168cb9e46"
+      "bytes": 8236,
+      "sha256": "eee2db73decefd12330d58140ddaebaa3cd97702fddd851091726730e373436c"
     },
     {
       "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
-      "bytes": 18919,
-      "sha256": "97c495ebd2785db49f51f24f4c33356a1b1276cc1012a1371f010bf648edacba"
+      "bytes": 19208,
+      "sha256": "54b88492ff69b4317a1dafccadffcca97e224896c924a3bd164eb7eac4ff7ec7"
     },
     {
       "path": "docs/Development_Handoff.md",
-      "bytes": 435563,
-      "sha256": "06a5ce9c0c5a673210455f6e4c062b92bc37582ca087e2cd750575ca5f222a13"
+      "bytes": 436295,
+      "sha256": "8e22e38cb1212b66142d339f6524d196e1d0ad04e90384256242c713a4ed6758"
     }
   ],
   "evidenceFiles": [
+    {
+      "path": "docs/evidence/v118-large-library/current-head-ci.json",
+      "bytes": 2440,
+      "sha256": "e963fab17c258bc5e8cb307937436d6329ca6f6a97d10a37b3a0bd3bea4b347c"
+    },
     {
       "path": "docs/evidence/v118-large-library/harness-contracts-final.log",
       "bytes": 10324,
@@ -174,6 +195,11 @@
       "sha256": "d76985fb8962a2a089d573875c147f6ecdc333b4ad35c5c982c0e905f799f77e"
     },
     {
+      "path": "docs/evidence/v118-large-library/native-run-38973227180.json",
+      "bytes": 3805,
+      "sha256": "c24f127e2853b19b7ef361b27e4b8e2ad3f5fed5c4be74fd5019d6f18bd00c18"
+    },
+    {
       "path": "docs/evidence/v118-large-library/native-search-final-first.log",
       "bytes": 12045,
       "sha256": "fe962c7b02bc979a8649ef26e0fc4e7249d1cd0b3f63285d38d8e1e4a91ba8dd"
@@ -187,6 +213,66 @@
       "path": "docs/evidence/v118-large-library/quality-gate-final.log",
       "bytes": 142574,
       "sha256": "139db24a67eb6ef7f3f07208affce8adec9366048b50baf599820e159e487678"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/baseline.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/baseline.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/debugger-configuration.json",
+      "bytes": 2142,
+      "sha256": "a4794997b05b13beda1880fab4d7d612328e9b567fc37d8dcfc671055351bded"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/disk.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/disk.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-baseline.json",
+      "bytes": 191812,
+      "sha256": "6257ef0d66d9360f9d2cacffb2732714388577fcea9b1eba6328eb35cb6ced64"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-baseline.png",
+      "bytes": 81462,
+      "sha256": "2fe546a6e4103f474941a1e1e6dbe95946a6692f4678a32357cdf1c0e67aa2f5"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-disk.json",
+      "bytes": 3066,
+      "sha256": "5224ccf73a5fcc8ee4e463483b6dfb4c87ec937ba63e5ffcc6d3b3fa1b745f9d"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-disk.png",
+      "bytes": 82057,
+      "sha256": "e0d47d93433b8d15b02a8fa87f36acc194f5723efd4a72f26b37852c2e092f0a"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/program-build-receipt.json",
+      "bytes": 457,
+      "sha256": "aa48fba9625c09771cbd8669c2e24d195dc3b1cafb8abe2fef180ad42e108b0c"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/vite.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/vite.stdout.log",
+      "bytes": 226,
+      "sha256": "a59f7016fe71cfbffa238ee1d97d11b715a6d6471b41614e8a489d6816d19d45"
     }
   ]
 }

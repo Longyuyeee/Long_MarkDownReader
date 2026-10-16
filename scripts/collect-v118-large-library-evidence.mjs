@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process'
 import {nativeSearchProduct} from './lib/v118-native-search-fixture.mjs'
 import {verifyNativeSearchEvidence} from './lib/v118-native-search-evidence.mjs'
 const root='docs/evidence/v118-large-library',target=root+'/manifest.json'
-const sources=['src-tauri/src/commands/index_search_pages.rs','src-tauri/src/commands/index_search_pages_tests.rs',
+const sources=['.gitattributes','src-tauri/src/commands/index_search_pages.rs','src-tauri/src/commands/index_search_pages_tests.rs',
   'src-tauri/src/commands/index_search_libraries.rs','src-tauri/src/commands/index_search_libraries_tests.rs','src-tauri/src/services/knowledge_index.rs',
   '.github/workflows/v118-search-native.yml','scripts/run-v118-native-search.ps1','scripts/lib/v118-webview-test-policy.ps1',
   'scripts/capture-v118-native-search.mjs','scripts/lib/v118-native-search-fixture.mjs','scripts/lib/v118-native-search-evidence.mjs',
