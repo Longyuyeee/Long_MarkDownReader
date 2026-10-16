@@ -8,7 +8,7 @@ import vm from 'node:vm'
 import {test} from 'node:test'
 import ts from 'typescript'
 import {createNativeOfficeFixture,officeFixtureSpecs,officeHash,officePathKey} from './lib/v118-native-office-fixture.mjs'
-import {nativeOfficeChecks,officeMatchTarget} from './lib/v118-native-office-input.mjs'
+import {nativeOfficeChecks,officeMatchTarget,officeRouteQuery} from './lib/v118-native-office-input.mjs'
 import {verifyNativeOfficeEvidence} from './lib/v118-native-office-evidence.mjs'
 import {nativeSearchProduct} from './lib/v118-native-search-fixture.mjs'
 
@@ -32,6 +32,10 @@ test('Office uses three immutable real-format files and exclusive owned copies, 
 test('Office target selectors parse the actual public search key and never substitute a document open',()=>{
   assert.equal(officePathKey(String.raw`\\?\D:\Owned\定位资料\File.docx`),officePathKey('D:/Owned/定位资料/File.docx'))
   assert.notEqual(officePathKey('D:/Owned/File.docx'),officePathKey('D:/Other/File.docx'))
+  const windowsPath=String.raw`\\?\D:\Owned\项目 & 资料\原文定位.docx`
+  const route=officeRouteQuery('#/library?locator=docx-block&path='+windowsPath.replaceAll(' ','%20').replaceAll('&','%26')+'&locatorToken=1')
+  assert.equal(route.path,windowsPath);assert.equal(route.locator,'docx-block');assert.equal(route.locatorToken,'1')
+  assert.deepEqual(officeRouteQuery('#/library'),{})
   for(const kind of ['docx-block','pptx-object','pptx-slide','workbook-sheet']){
     const key=JSON.stringify(['C:/own/file','docx','body',null,null,kind,'target','text'])
     const row={closest:()=>({dataset:{searchKey:key}})}

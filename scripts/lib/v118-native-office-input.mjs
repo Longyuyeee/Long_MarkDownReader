@@ -12,6 +12,10 @@ export const nativeOfficeChecks=[
   'trusted-search-same-workbook-sheet-repeat-intent',
 ]
 export const officeMatchTarget=kind=>`[...document.querySelectorAll('.command-palette-container .search-match-open')].find(e=>{const key=e.closest('[data-search-key]')?.dataset.searchKey;return key&&JSON.parse(key)[5]===${JSON.stringify(kind)}})`
+export const officeRouteQuery=hash=>{
+  const delimiter=hash.indexOf('?')
+  return delimiter<0?{}:Object.fromEntries(new URLSearchParams(hash.slice(delimiter+1)))
+}
 export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture,assertDraft,identity,store}){
   assertHostedSearchAudit()
   const report={...identity,schemaVersion:1,phase:'office',status:'running',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',
@@ -19,7 +23,8 @@ export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture
   let files=[],failure
   const palette='.command-palette-container',q=JSON.stringify
   const startTrace=await evaluate('window.__v118UserInputTrace.length')
-  const route=()=>evaluate('Object.fromEntries(new URLSearchParams(location.hash.split("?")[1]||""))')
+  const routeExpression=`(${officeRouteQuery.toString()})(location.hash)`
+  const route=()=>evaluate(routeExpression)
   const openSearch=async query=>{
     await ui.key('p','KeyP',80,2);await ui.waitFor(`!!document.querySelector('${palette}')`,'Office search palette')
     await ui.click(palette+' .palette-scope');await ui.clickText('.n-base-select-option','当前资料库')
@@ -31,9 +36,9 @@ export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture
     files=await createNativeOfficeFixture(root,repo)
     await openSearch('"After explicit page break."')
     await ui.clickTarget(officeMatchTarget('docx-block'))
-    await ui.waitFor(`(()=>{const p=new URLSearchParams(location.hash.split('?')[1]),e=document.getElementById(p.get('locator')),v=document.querySelector('.docx-stage');if(!e||!v||!e.textContent.includes('After explicit page break.'))return false;const r=e.getBoundingClientRect(),b=v.getBoundingClientRect();return r.height>0&&r.top>=b.top&&r.bottom<=b.bottom})()`,'actual DOCX matching block visible inside its stage')
+    await ui.waitFor(`(()=>{const p=${routeExpression},e=document.getElementById(p.locator),v=document.querySelector('.docx-stage');if(!e||!v||!e.textContent.includes('After explicit page break.'))return false;const r=e.getBoundingClientRect(),b=v.getBoundingClientRect();return r.height>0&&r.top>=b.top&&r.bottom<=b.bottom&&r.top>=0&&r.bottom<=innerHeight})()`,'actual DOCX matching block visible inside its stage')
     await assertPath(files[0].path);await assertDraft(false)
-    report.observations.docx={...await route(),targetText:await evaluate(`document.getElementById(new URLSearchParams(location.hash.split('?')[1]).get('locator')).textContent`),visible:true}
+    report.observations.docx={...await route(),targetText:await evaluate(`document.getElementById((${routeExpression}).locator).textContent`),visible:true}
     await capture('office-docx-block');report.checks.push(nativeOfficeChecks[0])
 
     await openSearch('"Search and notes evidence"')

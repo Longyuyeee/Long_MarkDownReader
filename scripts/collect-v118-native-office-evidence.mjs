@@ -15,6 +15,7 @@ assert.match(fs.readFileSync(root+'/harness-final-paths.log','utf8'),/# pass 49\
 assert.match(fs.readFileSync(root+'/quality-gate-first.log','utf8'),/found 0 vulnerabilities/)
 let native={status:'pending',plannedChecks:22,reason:'new frozen footer product and Office real input need a completed successful run'}
 if(receiptPath){
+  assert.match(fs.readFileSync(root+'/harness-route-repair.log','utf8'),/# pass 49\r?\n# fail 0/)
   assert.match(fs.readFileSync(root+'/harness-stability-repair.log','utf8'),/# pass 49\r?\n# fail 0/)
   assert.match(fs.readFileSync(root+'/quality-gate-stability-repair.log','utf8'),/found 0 vulnerabilities/)
   const helper=parse(root+'/helper-stability-final/report.json');assert.equal(helper.checks.length,3);assert.deepEqual(helper.errors,[])
