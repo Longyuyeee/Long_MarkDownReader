@@ -1,0 +1,24 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 19.88s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 1 test
+
+thread 'services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry' (45712) panicked at src\services\file_move_history.rs:512:39:
+simulated process interruption
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry' (45712) panicked at src\services\file_move_history.rs:519:9:
+assertion `left == right` failed: an interrupted move needs a durable record, not just an in-memory vector
+  left: 0
+ right: 1
+test services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry ... FAILED
+
+failures:
+
+failures:
+    services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 756 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

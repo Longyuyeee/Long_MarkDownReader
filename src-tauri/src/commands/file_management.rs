@@ -1,5 +1,6 @@
 use crate::services::{reliable_write::write_utf8, workspace_guard::WorkspaceGuard};
 use serde::{Deserialize, Serialize};
+use crate::services::file_move_journal::{FailureDisposition, MoveFailure};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -19,6 +20,18 @@ pub struct PathChange {
 pub struct OperationError {
     pub path: String,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disposition: Option<FailureDisposition>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_id: Option<String>,
+}
+impl OperationError {
+    pub(super) fn ordinary(path: String, message: String) -> Self {
+        Self { path, message, disposition: None, recovery_id: None }
+    }
+    pub(super) fn from_move(path: String, failure: MoveFailure) -> Self {
+        Self { path, message: failure.message, disposition: Some(failure.disposition), recovery_id: failure.recovery_id }
+    }
 }
 #[derive(Default, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -150,6 +163,20 @@ pub(super) fn move_to(
     old: &Path,
     new: &Path,
 ) -> Result<(), String> {
+    move_to_checked(app, guard, old, new).map_err(|failure| failure.message)
+}
+
+pub(super) fn move_to_checked(
+    app: Option<&tauri::AppHandle>,
+    guard: &WorkspaceGuard,
+    old: &Path,
+    new: &Path,
+) -> Result<(), MoveFailure> {
+    if let Some(app) = app {
+        crate::services::file_move_journal::ensure_no_pending(
+            &super::history::history_cache_root(app)?, old, new,
+        )?;
+    }
     if new.exists() {
         return Err("目标位置已有同名项，请先移开后再恢复或撤销".into());
     }
@@ -227,10 +254,10 @@ fn transfer(
                             let _ = fs::remove_file(&destination);
                         }
                     }
-                    return Err(error);
+                    return Err(error.into());
                 }
             } else {
-                move_to(app, &guard, &source, &destination)?;
+                move_to_checked(app, &guard, &source, &destination)?;
             }
             Ok(Some(PathChange {
                 old_path: source.to_string_lossy().into_owned(),
@@ -240,10 +267,9 @@ fn transfer(
         match attempt {
             Ok(Some(item)) => result.items.push(item),
             Ok(None) => {}
-            Err(message) => result.errors.push(OperationError {
-                path: source.to_string_lossy().into_owned(),
-                message,
-            }),
+            Err(failure) => result.errors.push(if operation == "move" {
+                OperationError::from_move(source.to_string_lossy().into_owned(), failure)
+            } else { OperationError::ordinary(source.to_string_lossy().into_owned(), failure.message) }),
         }
     }
     Ok(result)
@@ -289,7 +315,7 @@ pub async fn undo_library_moves(
                 let original = visible_item(&guard, &item.old_path, false)?;
                 fs::create_dir_all(original.parent().ok_or("原目录不可用")?)
                     .map_err(|e| e.to_string())?;
-                move_to(Some(&app_handle), &guard, &current, &original)?;
+                move_to_checked(Some(&app_handle), &guard, &current, &original)?;
                 Ok(PathChange {
                     old_path: item.new_path.clone(),
                     new_path: item.old_path.clone(),
@@ -297,10 +323,7 @@ pub async fn undo_library_moves(
             })();
             match attempt {
                 Ok(change) => result.items.push(change),
-                Err(message) => result.errors.push(OperationError {
-                    path: item.new_path,
-                    message,
-                }),
+                Err(failure) => result.errors.push(OperationError::from_move(item.new_path, failure)),
             }
         }
         Ok(result)
@@ -356,10 +379,7 @@ fn trash_items(library_root: &str, paths: &[String]) -> Result<OperationResult, 
         })();
         match attempt {
             Ok(item) => result.items.push(item),
-            Err(message) => result.errors.push(OperationError {
-                path: source.to_string_lossy().into_owned(),
-                message,
-            }),
+            Err(message) => result.errors.push(OperationError::ordinary(source.to_string_lossy().into_owned(), message)),
         }
     }
     Ok(result)
@@ -440,10 +460,7 @@ fn restore_items(library_root: &str, ids: &[String]) -> Result<OperationResult, 
         })();
         match attempt {
             Ok(item) => result.items.push(item),
-            Err(message) => result.errors.push(OperationError {
-                path: id.clone(),
-                message,
-            }),
+            Err(message) => result.errors.push(OperationError::ordinary(id.clone(), message)),
         }
     }
     Ok(result)

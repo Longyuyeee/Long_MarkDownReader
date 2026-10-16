@@ -16,7 +16,7 @@ pub(crate) fn history_path(cache: &Path, document: &Path) -> PathBuf {
     ))
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistorySnapshot {
     name: String,
@@ -24,7 +24,7 @@ pub(crate) struct HistorySnapshot {
     sha256: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ArchiveHistoryPlan {
     source_directory: String,
@@ -36,6 +36,10 @@ pub(crate) struct ArchiveHistoryPlan {
 impl ArchiveHistoryPlan {
     pub(crate) fn snapshot_bytes(&self) -> u64 { self.snapshots.iter().map(|item| item.bytes).sum() }
     pub(crate) fn snapshot_count(&self) -> usize { self.snapshots.len() }
+    /// Compare bytes/strategy independently of the old and new path keys.
+    pub(crate) fn same_snapshots(&self, other: &Self) -> bool {
+        self.strategy == other.strategy && self.snapshots == other.snapshots
+    }
 }
 
 pub(crate) fn inspect(

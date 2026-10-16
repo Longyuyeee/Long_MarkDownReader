@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-16",
+  "baseCommit": "e51d82e58641e760de16201d228d2e45f120828c",
+  "runtimeVersion": "1.1.5",
+  "targetVersion": "1.1.6",
+  "scope": "C1: native history/path-move intent, verified in-process rollback, pending-record protection and typed failure outcomes; not a complete Markdown move transaction",
+  "beforeFix": {"passed": 0, "failed": 1, "reason": "No durable intent after the first history directory was moved and a simulated process interruption occurred"},
+  "intermediateFailures": ["A Debug derive was required for a new test's unwrap_err; compilation log retained", "34 passed / 1 failed: verbatim Windows PathBuf::join had normalized parent traversal before validation; raw persisted input now tests the same traversal rejection without removing or weakening assertions"],
+  "nativeMoveTests": {"passed": 35, "failed": 0, "history": 16, "journal": 8, "readOnlyLinks": 11},
+  "fullRustFunctional": {"passed": 762, "failed": 0, "existingIgnored": 5, "independentPerformanceFiltered": 1},
+  "fullPatchReleaseGate": "passed",
+  "productionDependencyVulnerabilities": 0,
+  "uiChanged": false,
+  "markdownWritebackEnabled": false,
+  "automaticRecoveryOrReplay": false,
+  "crossWindowDraftFreezeImplemented": false,
+  "completePowerLossAtomicityClaimed": false,
+  "installerValidated": false,
+  "releaseReady": false,
+  "sha256": {
+    "before-fix.txt": "c866713cc85612d6eb415fdf72a2ebe73365f12df5eb27ecd5f90ea87f15365c",
+    "compile-error.txt": "4bd2016f00b3eff453e24da9467f8538997ca256fe74953c21bda6bfebd3ac1d",
+    "intermediate-fixture.txt": "eff34d973946fbf09f9f8b8c231927e8280b0c6775f7f9fb106aa4f3c73ac8fc",
+    "move-regression.txt": "77de7bf7facb1284cce15ad79366411b1da602eed0fe9e87aaab818b42e51aa9",
+    "full-rust.txt": "138e60a087298abf061ac00e8e051ba5ac916961805def9bd7d50fcd4ec4a6c7",
+    "quality-gate.txt": "131dc55ef15ba59298ea997b807d80d2f3733aa797cba61a6b5b67d14e5746ee"
+  }
+}

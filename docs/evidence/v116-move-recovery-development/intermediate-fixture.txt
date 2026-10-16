@@ -1,0 +1,56 @@
+   Compiling tauri-app v1.1.5 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 32.27s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-03aa72c787c789ec.exe)
+
+running 35 tests
+test services::file_move_history::tests::history_cache_as_a_file_cannot_be_silently_ignored ... ok
+test services::file_move_history::tests::bounded_inventory_rejects_history_larger_than_remaining_budget ... ok
+test services::file_move_history::tests::no_source_history_must_not_adopt_a_previous_documents_history ... ok
+test services::file_move_history::tests::changed_snapshot_after_plan_is_rejected_before_any_move ... ok
+test services::file_move_history::tests::occupied_history_stops_move_without_adopting_unrelated_snapshots ... ok
+
+thread 'services::file_move_journal::tests::invalid_record_paths_are_rejected_before_creating_cache' (49032) panicked at src\services\file_move_journal.rs:473:9:
+assertion failed: Journal::begin(&f.cache(), &intent).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry' (51584) panicked at src\services\file_move_history.rs:593:25:
+simulated process interruption
+test services::file_move_history::tests::absent_cache_does_not_block_a_document_without_history ... ok
+test services::file_move_history::tests::nested_folder_history_conflict_leaves_all_documents_and_histories_in_place ... ok
+test services::file_move_history::tests::uncertain_body_error_and_failed_terminal_record_are_never_retryable ... ok
+test services::file_move_journal::tests::damaged_record_blocks_moves_without_deleting_evidence_or_user_files ... ok
+test services::file_move_journal::tests::invalid_record_paths_are_rejected_before_creating_cache ... FAILED
+test services::file_move_history::tests::changed_moved_history_is_not_blindly_rolled_back_or_marked_retryable ... ok
+test services::file_move_history::tests::ambiguous_document_failure_retains_history_instead_of_claiming_rollback ... ok
+test services::file_move_history::tests::rollback_does_not_replace_history_created_by_another_writer ... ok
+test services::file_move_journal::tests::pending_record_blocks_both_paths_children_parents_but_not_unrelated_files ... ok
+test services::file_move_history::tests::failed_document_move_keeps_history_with_source ... ok
+test services::file_move_history::tests::interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry ... ok
+test services::file_move_journal::tests::restart_inspection_is_read_only_and_history_clear_preserves_pending_records ... ok
+test services::file_move_journal::tests::completion_cleanup_never_recursively_deletes_unexpected_content ... ok
+test services::file_move_journal::tests::windows_pending_paths_are_case_insensitive ... ok
+test services::file_move_links::tests::ambiguous_wikilink_incoming_is_a_blocker_not_a_guessed_replacement ... ok
+test services::file_move_links::tests::file_projection_has_no_directory_separator_suffix_and_fenced_examples_are_untouched ... ok
+test services::file_move_links::tests::reference_definition_without_safe_edit_span_is_not_silently_changed ... ok
+test services::file_move_journal::tests::terminal_marker_must_match_exact_intent_bytes ... ok
+test services::file_move_links::tests::encoded_filename_query_and_fragment_are_preserved_semantically ... ok
+test services::file_move_links::tests::moving_note_rebases_shared_picture_and_document_link_without_moving_resources ... ok
+test services::file_move_links::tests::remote_data_and_anchor_references_are_not_downloaded_or_rewritten ... ok
+test services::file_move_links::tests::directory_move_keeps_internal_relative_links_and_repairs_external_incoming_and_outgoing ... ok
+test services::file_move_history::tests::target_history_appearing_during_migration_rolls_back_prior_items ... ok
+test services::file_move_links::tests::hidden_history_or_recycle_markdown_is_never_planned_for_editing ... ok
+test services::file_move_links::tests::missing_and_unsupported_affected_links_block_without_guessing ... ok
+test services::file_move_links::tests::occupied_or_outside_target_and_directory_cycles_are_rejected_without_writes ... ok
+test services::file_move_links::tests::renaming_document_rewrites_only_resolved_incoming_target ... ok
+test services::file_move_history::tests::fully_rolled_back_failure_is_explicitly_not_executed_and_can_be_retried ... ok
+test services::file_move_journal::tests::completed_and_rolled_back_records_do_not_block_future_moves ... ok
+test services::file_move_history::tests::successful_move_and_undo_keep_nested_history_bytes ... ok
+
+failures:
+
+failures:
+    services::file_move_journal::tests::invalid_record_paths_are_rejected_before_creating_cache
+
+test result: FAILED. 34 passed; 1 failed; 0 ignored; 0 measured; 733 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `--lib`

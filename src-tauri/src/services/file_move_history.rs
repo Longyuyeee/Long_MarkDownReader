@@ -1,9 +1,10 @@
 //! History coordination for existing move/rename operations, not an archive UI.
-//! Callers hold the application history lease. This is process-local rollback,
-//! not a crash-recovery transaction or permission to rewrite Markdown content.
+//! Callers hold the application history lease. Persist intent before mutation;
+//! retain uncertain states for review. No automatic replay or Markdown rewrite.
 use super::{
     archive_history::{history_path, inspect, inspect_with_budget, ArchiveHistoryPlan},
     archive_move::rename_no_replace,
+    file_move_journal::{self, HistoryIntent, Intent, Journal, MoveFailure, Outcome},
 };
 use std::{
     fs,
@@ -27,7 +28,8 @@ struct Migration {
 }
 
 impl Migration {
-    fn inspect(cache: &Path, source: &Path, target: &Path) -> Result<Self, String> {
+    fn inspect(cache: &Path, source: &Path, target: &Path) -> Result<Self, MoveFailure> {
+        file_move_journal::ensure_no_pending(cache, source, target)?;
         let mut entries = Vec::new();
         let mut pending = vec![source.to_path_buf()];
         let mut count = 0usize;
@@ -94,32 +96,57 @@ impl Migration {
             entries,
         })
     }
-    fn execute(self, move_document: impl FnOnce() -> Result<(), String>) -> Result<(), String> {
+    fn execute(
+        self,
+        move_document: impl FnOnce() -> Result<(), String>,
+    ) -> Result<(), MoveFailure> {
         self.execute_with_hook(move_document, |_| {})
     }
     fn execute_with_hook(
         self,
         move_document: impl FnOnce() -> Result<(), String>,
         mut before_history: impl FnMut(usize),
-    ) -> Result<(), String> {
+    ) -> Result<(), MoveFailure> {
         // Verify every source snapshot and target before the first mutation.
         for entry in &self.entries {
             if inspect(&self.cache, &entry.source, &entry.target)? != entry.expected {
                 return Err("历史清单在检查后变化，尚未移动任何文件，请重试".into());
             }
         }
-        let mut moved = Vec::<(PathBuf, PathBuf)>::new();
+        let journal = Journal::begin(
+            &self.cache,
+            &Intent {
+                version: 1,
+                source: self.source.clone(),
+                target: self.target.clone(),
+                histories: self
+                    .entries
+                    .iter()
+                    .map(|entry| HistoryIntent {
+                        source: entry.source.clone(),
+                        target: entry.target.clone(),
+                        expected: entry.expected.clone(),
+                        had_history: entry.has_history,
+                    })
+                    .collect(),
+            },
+        )?;
+        let mut moved = Vec::<&Entry>::new();
         for (index, entry) in self.entries.iter().enumerate() {
             match inspect(&self.cache, &entry.source, &entry.target) {
                 Ok(current) if current == entry.expected => {}
                 Ok(_) => {
                     return Err(rollback(
+                        &self.cache,
+                        &journal,
                         &moved,
                         "历史清单在执行期间变化，正文尚未移动".into(),
                     ))
                 }
                 Err(e) => {
                     return Err(rollback(
+                        &self.cache,
+                        &journal,
                         &moved,
                         format!("历史清单在执行期间无法确认，正文尚未移动：{e}"),
                     ))
@@ -135,12 +162,16 @@ impl Migration {
                 }
                 Ok(_) => {
                     return Err(rollback(
+                        &self.cache,
+                        &journal,
                         &moved,
                         "来源历史在执行期间变化，正文尚未移动".into(),
                     ))
                 }
                 Err(e) => {
                     return Err(rollback(
+                        &self.cache,
+                        &journal,
                         &moved,
                         format!("无法核对来源历史，正文尚未移动：{e}"),
                     ))
@@ -149,51 +180,98 @@ impl Migration {
             before_history(index);
             if let Err(error) = rename_no_replace(&old, &new) {
                 return Err(rollback(
+                    &self.cache,
+                    &journal,
                     &moved,
                     format!("历史迁移失败，正文尚未移动：{error}"),
                 ));
             }
-            moved.push((old, new));
+            moved.push(entry);
         }
         match self.target.try_exists() {
             Ok(false) => {}
             Ok(true) => {
                 return Err(rollback(
+                    &self.cache,
+                    &journal,
                     &moved,
                     "目标在执行期间被占用，正文尚未移动".into(),
                 ))
             }
-            Err(e) => return Err(rollback(&moved, format!("无法核对目标，正文尚未移动：{e}"))),
+            Err(e) => {
+                return Err(rollback(
+                    &self.cache,
+                    &journal,
+                    &moved,
+                    format!("无法核对目标，正文尚未移动：{e}"),
+                ))
+            }
         }
         match move_document() {
-            Ok(()) => Ok(()),
+            Ok(()) => {
+                if !matches!(self.source.try_exists(), Ok(false))
+                    || !matches!(self.target.try_exists(), Ok(true))
+                {
+                    return Err(journal.needs_review("移动返回成功但文件位置需核对".into()));
+                }
+                for entry in &self.entries {
+                    match inspect(&self.cache, &entry.target, &entry.source) {
+                        Ok(observed) if entry.expected.same_snapshots(&observed) => {}
+                        _ => {
+                            return Err(journal.needs_review(
+                                "文件已移动，但历史状态在执行期间变化，请核对".into(),
+                            ))
+                        }
+                    }
+                }
+                journal.finish(Outcome::Completed)
+            }
             Err(error) => {
                 if matches!(self.source.try_exists(), Ok(true))
                     && matches!(self.target.try_exists(), Ok(false))
                 {
-                    Err(rollback(&moved, format!("文件移动失败：{error}")))
+                    Err(rollback(
+                        &self.cache,
+                        &journal,
+                        &moved,
+                        format!("文件移动失败：{error}"),
+                    ))
                 } else {
-                    Err(format!("文件移动失败：{error}；文件位置状态需核对，已迁移历史保留在新位置，不推断原位置已恢复；请勿重复全量操作"))
+                    Err(journal.needs_review(format!("文件移动失败：{error}；文件位置状态需核对，已迁移历史保留在新位置，不推断原位置已恢复；请勿重复全量操作")))
                 }
             }
         }
     }
 }
 
-fn rollback(moved: &[(PathBuf, PathBuf)], error: String) -> String {
+fn rollback(cache: &Path, journal: &Journal, moved: &[&Entry], error: String) -> MoveFailure {
     let mut failures = Vec::new();
-    for (old, new) in moved.iter().rev() {
-        if let Err(e) = rename_no_replace(new, old) {
+    for entry in moved.iter().rev() {
+        let old = history_path(cache, &entry.source);
+        let new = history_path(cache, &entry.target);
+        // A different writer may have changed the moved snapshots. Never move
+        // those bytes back and claim they are the verified original inventory.
+        match inspect(cache, &entry.target, &entry.source) {
+            Ok(observed) if entry.expected.same_snapshots(&observed) => {}
+            _ => {
+                failures.push(format!("{} 的历史位置或摘要已变化", entry.source.display()));
+                continue;
+            }
+        }
+        if let Err(e) = rename_no_replace(&new, &old) {
             failures.push(format!("{} → {}：{e}", new.display(), old.display()));
         }
     }
     if failures.is_empty() {
-        format!("{error}；已恢复本次迁移的历史，未覆盖目标历史")
+        if let Err(failure) = journal.finish(Outcome::RolledBack) {
+            return failure;
+        }
+        format!("{error}；已恢复本次迁移的历史，未覆盖目标历史").into()
     } else {
-        format!(
+        journal.needs_review(format!(
             "{error}；历史回退未全部完成，原记录仍保留，请核对，勿重复全量操作：{}",
             failures.join("；")
-        )
+        ))
     }
 }
 
@@ -202,7 +280,7 @@ pub(crate) fn with_history_move(
     source: &Path,
     target: &Path,
     move_document: impl FnOnce() -> Result<(), String>,
-) -> Result<(), String> {
+) -> Result<(), MoveFailure> {
     Migration::inspect(cache, source, target)?.execute(move_document)
 }
 
@@ -243,7 +321,7 @@ mod tests {
             fs::write(directory.join("100.md"), body).unwrap();
             directory
         }
-        fn move_file(&self, source: &Path, target: &Path) -> Result<(), String> {
+        fn move_file(&self, source: &Path, target: &Path) -> Result<(), MoveFailure> {
             with_history_move(&self.cache(), source, target, || {
                 super::super::archive_move::rename_no_replace(source, target)
                     .map_err(|e| e.to_string())
@@ -407,7 +485,7 @@ mod tests {
             fs::write(old.join("100.md"), "external writer").unwrap();
             Err("document move failed".into())
         });
-        assert!(result.unwrap_err().contains("回退未全部完成"));
+        assert!(result.unwrap_err().message.contains("回退未全部完成"));
         assert!(source.exists());
         assert!(!target.exists());
         assert_eq!(
@@ -445,7 +523,7 @@ mod tests {
         f.move_file(&source, &target).unwrap();
         assert!(!source.exists());
         assert_eq!(fs::read_to_string(&target).unwrap(), "current");
-        assert!(!f.cache().exists());
+        assert!(file_move_journal::pending(&f.cache()).unwrap().is_empty());
     }
     #[test]
     fn history_cache_as_a_file_cannot_be_silently_ignored() {
@@ -474,7 +552,7 @@ mod tests {
             Err("position rollback was blocked".into())
         })
         .unwrap_err();
-        assert!(error.contains("位置状态需核对"));
+        assert!(error.message.contains("位置状态需核对"));
         assert!(!source.exists() && !old.exists());
         assert_eq!(fs::read_to_string(&target).unwrap(), "own document");
         assert_eq!(
@@ -493,5 +571,131 @@ mod tests {
         assert!(source.exists());
         assert!(!target.exists());
         assert_eq!(fs::read_to_string(old.join("100.md")).unwrap(), "12345");
+    }
+    #[test]
+    fn interrupted_history_move_leaves_durable_intent_and_blocks_blind_retry() {
+        let f = Fixture::new();
+        let source = f.0.join("folder");
+        let target = f.0.join("renamed");
+        fs::create_dir(&source).unwrap();
+        let a = source.join("a.md");
+        let b = source.join("b.md");
+        fs::write(&a, "a").unwrap();
+        fs::write(&b, "b").unwrap();
+        let old_a = f.history(&a, "history a");
+        let old_b = f.history(&b, "history b");
+        let plan = Migration::inspect(&f.cache(), &source, &target).unwrap();
+        let result = std::panic::catch_unwind(|| {
+            plan.execute_with_hook(
+                || panic!("document must not move yet"),
+                |index| {
+                    if index == 1 {
+                        panic!("simulated process interruption");
+                    }
+                },
+            )
+        });
+        assert!(result.is_err());
+        assert!(!old_a.exists() && old_b.exists());
+        assert!(a.exists() && b.exists() && !target.exists());
+        let stages: Vec<_> = fs::read_dir(f.cache().join(".file-moves"))
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| {
+                path.file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .starts_with(".move-stage-")
+            })
+            .collect();
+        assert_eq!(
+            stages.len(),
+            1,
+            "an interrupted move needs a durable record, not just an in-memory vector"
+        );
+        let intent = fs::read_to_string(stages[0].join("intent.json")).unwrap();
+        assert!(
+            !intent.contains("history a"),
+            "never put snapshot bodies in the journal"
+        );
+        assert!(intent.contains("sha256"));
+        assert!(
+            f.move_file(&source, &target).is_err(),
+            "unknown state must not be blindly retried"
+        );
+        assert!(!old_a.exists() && old_b.exists());
+    }
+    #[test]
+    fn changed_moved_history_is_not_blindly_rolled_back_or_marked_retryable() {
+        let f = Fixture::new();
+        let source = f.0.join("a.md");
+        let target = f.0.join("b.md");
+        fs::write(&source, "body").unwrap();
+        let old = f.history(&source, "original history");
+        let new = history_path(&f.cache(), &target);
+        let failure = with_history_move(&f.cache(), &source, &target, || {
+            fs::write(new.join("100.md"), "changed by another writer").unwrap();
+            Err("body not moved".into())
+        })
+        .unwrap_err();
+        assert_eq!(
+            failure.disposition,
+            file_move_journal::FailureDisposition::NeedsReview
+        );
+        assert!(failure.recovery_id.is_some());
+        assert!(source.exists() && !target.exists() && !old.exists());
+        assert_eq!(
+            fs::read_to_string(new.join("100.md")).unwrap(),
+            "changed by another writer"
+        );
+        assert_eq!(file_move_journal::pending(&f.cache()).unwrap().len(), 1);
+        assert!(f.move_file(&source, &f.0.join("different.md")).is_err());
+    }
+    #[test]
+    fn uncertain_body_error_and_failed_terminal_record_are_never_retryable() {
+        let f = Fixture::new();
+        let source = f.0.join("a.md");
+        let target = f.0.join("b.md");
+        fs::write(&source, "body").unwrap();
+        let failure = with_history_move(&f.cache(), &source, &target, || {
+            rename_no_replace(&source, &target).unwrap();
+            let stage = fs::read_dir(f.cache().join(".file-moves"))
+                .unwrap()
+                .next()
+                .unwrap()
+                .unwrap()
+                .path();
+            fs::write(stage.join("terminal.json"), "another writer's record").unwrap();
+            Ok(())
+        })
+        .unwrap_err();
+        assert_eq!(
+            failure.disposition,
+            file_move_journal::FailureDisposition::NeedsReview
+        );
+        assert_eq!(fs::read_to_string(&target).unwrap(), "body");
+        assert!(!source.exists());
+        assert!(file_move_journal::pending(&f.cache()).is_err());
+        assert!(f.move_file(&target, &source).is_err());
+    }
+    #[test]
+    fn fully_rolled_back_failure_is_explicitly_not_executed_and_can_be_retried() {
+        let f = Fixture::new();
+        let source = f.0.join("a.md");
+        let target = f.0.join("b.md");
+        fs::write(&source, "body").unwrap();
+        f.history(&source, "history");
+        let failure = with_history_move(&f.cache(), &source, &target, || {
+            Err("simulated move failure".into())
+        })
+        .unwrap_err();
+        assert_eq!(
+            failure.disposition,
+            file_move_journal::FailureDisposition::NotExecuted
+        );
+        assert!(failure.recovery_id.is_none());
+        assert!(file_move_journal::pending(&f.cache()).unwrap().is_empty());
+        f.move_file(&source, &target).unwrap();
+        assert_eq!(fs::read_to_string(target).unwrap(), "body");
     }
 }

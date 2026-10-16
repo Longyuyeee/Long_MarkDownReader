@@ -1,5 +1,5 @@
 use super::file_management::{
-    move_to, visible_item, OperationError, OperationResult, PathChange, OPERATIONS,
+    move_to_checked, visible_item, OperationError, OperationResult, PathChange, OPERATIONS,
 };
 use crate::services::workspace_guard::WorkspaceGuard;
 use serde::{Deserialize, Serialize};
@@ -199,11 +199,11 @@ fn execute(
         }
         let attempt = (|| {
             if row.status == "error" {
-                return Err(row.message);
+                return Err(row.message.into());
             }
             let source = visible_item(&guard, &row.path, true)?;
             let target = source.parent().unwrap().join(row.new_name);
-            move_to(app, &guard, &source, &target)?;
+            move_to_checked(app, &guard, &source, &target)?;
             Ok(PathChange {
                 old_path: row.path.clone(),
                 new_path: target.to_string_lossy().into_owned(),
@@ -211,10 +211,7 @@ fn execute(
         })();
         match attempt {
             Ok(item) => result.items.push(item),
-            Err(message) => result.errors.push(OperationError {
-                path: row.path,
-                message,
-            }),
+            Err(failure) => result.errors.push(OperationError::from_move(row.path, failure)),
         }
     }
     Ok(result)

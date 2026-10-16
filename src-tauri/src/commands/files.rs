@@ -688,7 +688,7 @@ pub async fn import_library_files(access: State<'_, ExternalFileAccess>, source_
             if source.as_ref().is_ok_and(|path| !seen.insert(path.clone())) { continue; }
             match source.and_then(|source| import_selected_file(&source, &destination)) {
                 Ok(path) => result.items.push(PathChange { old_path: raw, new_path: path }),
-                Err(message) => result.errors.push(OperationError { path: raw, message }),
+                Err(message) => result.errors.push(OperationError::ordinary(raw, message)),
             }
         }
         Ok(result)

@@ -50,6 +50,9 @@ pub(crate) fn acquire(cache: &Path) -> Result<HistoryLease, String> {
 
 /// Do not let ordinary history clearing erase unfinished archive evidence.
 pub(crate) fn ensure_clearable(cache: &Path) -> Result<(), String> {
+    if !super::file_move_journal::pending(cache)?.is_empty() {
+        return Err("存在待核对的文件移动记录，暂不能清空历史；请保留恢复材料".into());
+    }
     let entries = match std::fs::read_dir(cache) {
         Ok(entries) => entries,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
