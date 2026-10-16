@@ -56,6 +56,6 @@ const manifest={schemaVersion:1,stage:'v1.1.8-E2c-native-user',productCommit:nat
   releaseCandidate:false,releasePublished:false,sourceUserContentIncluded:false,sourceHashBasis:'git-index-bytes',
   checks:{harnessContracts:64,headlessHelperContracts:2,localQualityGate:'passed',productionVulnerabilities:0,native},
   limitations:['Debug Wry input is not installed acceptance or OS desktop takeover.','Office location, inherited installation scenarios and candidate lifecycle remain required.',
-    'No arbitrary-scale or search-speedup claim.'],
+    'Visual review found header-only paging errors; footer recovery remains a separate required product fix.','No arbitrary-scale or search-speedup claim.'],
   sourceFiles:sources.map(name=>digest(name,execFileSync('git',['show',':'+name],{maxBuffer:4*1024*1024}))),evidenceFiles:walk(root)}
 fs.writeFileSync(target,JSON.stringify(manifest,null,2)+'\n');console.log(JSON.stringify({native,sources:sources.length,evidenceFiles:manifest.evidenceFiles.length}))
