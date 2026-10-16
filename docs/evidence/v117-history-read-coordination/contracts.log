@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: link and image titles in document content remain serializable without UI decoration
+ok 1 - link and image titles in document content remain serializable without UI decoration
+  ---
+  duration_ms: 1.9909
+  ...
+# Subtest: normal application controls retain themed tooltips and accessible labels
+ok 2 - normal application controls retain themed tooltips and accessible labels
+  ---
+  duration_ms: 0.2334
+  ...
+# Subtest: v116 requires its own complete installed move evidence in addition to retained workflows
+ok 3 - v116 requires its own complete installed move evidence in addition to retained workflows
+  ---
+  duration_ms: 24.9639
+  ...
+# Subtest: v116 rejects a missing task, wrong installer or different product source
+ok 4 - v116 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 10.82
+  ...
+# Subtest: v116 still requires actual predecessor workflow reports
+ok 5 - v116 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 1.5725
+  ...
+# Subtest: installed draft observation handles Windows device paths and emits valid page JavaScript
+ok 6 - installed draft observation handles Windows device paths and emits valid page JavaScript
+  ---
+  duration_ms: 51.3258
+  ...
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 7 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 39.117
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 8 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 13.199
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 9 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 1.664
+  ...
+# Subtest: cross-library preflight captures pending input without writing and disposes snapshot hooks
+ok 10 - cross-library preflight captures pending input without writing and disposes snapshot hooks
+  ---
+  duration_ms: 112.2384
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1476.7596

@@ -50,6 +50,8 @@ impl TextDocumentError {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TextDocumentSnapshot {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub history_warning: Option<String>,
     pub content: String,
     pub encoding: String,
     pub encoding_confidence: String,
@@ -169,6 +171,7 @@ pub fn read_text_snapshot_with_options(
     let line_ending = detect_line_ending(&content);
     let identity = text_document_identity(&metadata, &bytes);
     Ok(TextDocumentSnapshot {
+        history_warning: None,
         encoding: encoding.name().to_string(),
         encoding_confidence: encoding_confidence(&bytes, encoding, selected_encoding.is_some()),
         bom: bom.into(),

@@ -4,11 +4,11 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import { test } from 'node:test'
 const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
-const code = source.slice(source.indexOf('const fetchHistory = async'), source.indexOf('const formatTime ='))
+const code = source.slice(source.indexOf('const fetchHistory = async'), source.indexOf('const clearAllHistory ='))
 function setup() {
   const requests = [], values = [], messages = []
   const ctx = vm.createContext({
-    historyGeneration: 0, historyList: { value: [] }, activeTabId: { value: 'A' }, store: { libraryPath: 'root', updateTabContent: () => {} }, wordCount: { value: 0 },
+    historyGeneration: 0, historyList: { value: [] }, historyLoading:{value:false}, historyError:{value:''}, activeTabId: { value: 'A' }, store: { libraryPath: 'root', updateTabContent: () => {} }, wordCount: { value: 0 },
     vditor: { setValue: value => values.push(value), getValue: () => '当前草稿' }, isVditorReady: true, lastLoadedPath: 'A', tabs: { value: [{ path: 'A', isDirty: false }] },
     historyComparison: { value: null }, historyActionBusy: { value: false }, historyActionError: { value: '' }, comparisonGeneration: 0,
     closeHistoryComparison: () => { ctx.comparisonGeneration++; ctx.historyComparison.value = null }, confirmAppAction: async () => true,
@@ -17,7 +17,7 @@ function setup() {
     invoke: (command, args) => new Promise((resolve, reject) => requests.push({ command, args, resolve, reject })),
     dialog: {},
   })
-  vm.runInContext(ts.transpile(code + '\nglobalThis.actions = { fetchHistory, restoreHistory, recoverHistory, deleteHistory }', { target: ts.ScriptTarget.ES2022 }), ctx)
+  vm.runInContext(ts.transpile(code + '\nglobalThis.actions = { fetchHistory, restoreHistory, recoverHistory }', { target: ts.ScriptTarget.ES2022 }), ctx)
   return { ctx, requests, values, messages, ...ctx.actions }
 }
 test('late history of A cannot populate B, even when timestamps collide', async () => {
@@ -56,12 +56,15 @@ test('restore rejects stale entries, loading editors, read-only and pending writ
   assert.equal(x.requests[3].command, 'list_history')
 })
 test('delete is bound to its source and cannot refresh a different document', async () => {
-  const x = setup(), load = x.fetchHistory(); x.requests[0].resolve([[1, 'A正文']]); await load
-  const entry = x.ctx.historyList.value[0], deletion = x.deleteHistory(entry)
-  x.ctx.activeTabId.value = 'B'; x.ctx.historyList.value = []
-  x.requests[1].resolve(); await deletion
-  assert.equal(x.requests[1].args.path, 'A'); assert.equal(x.requests.length, 2)
-  await x.deleteHistory(entry); assert.equal(x.requests.length, 2)
+  const component = fs.readFileSync('src/components/HistoryVersionList.vue','utf8')
+  const code = component.slice(component.indexOf('const selectAction ='),component.indexOf('const saveNote ='))
+  const requests=[], emitted=[]
+  const ctx=vm.createContext({menu:{timestamp:1,show:true},metadata:{value:{}},props:{path:'A',libraryRoot:'root'},generation:1,disposed:false,dialog:{},confirmAppAction:async()=>true,emit:(...a)=>emitted.push(a),message:{error:()=>{}},invoke:(command,args)=>new Promise(resolve=>requests.push({command,args,resolve}))})
+  vm.runInContext(ts.transpile(code+'\nglobalThis.run=selectAction',{target:ts.ScriptTarget.ES2022}),ctx)
+  const deletion=ctx.run('delete'); await new Promise(resolve=>setImmediate(resolve))
+  ctx.props.path='B'; ctx.generation++
+  requests[0].resolve(); await deletion
+  assert.equal(requests[0].args.path,'A'); assert.equal(requests[0].args.libraryRoot,'root'); assert.deepEqual(emitted,[])
 })
 
 test('draft changes during protection and protection errors never replace the editor', async () => {

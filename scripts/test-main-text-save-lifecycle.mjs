@@ -43,6 +43,16 @@ function harness(viewSource = source) {
   return { tab, ctx, requests, errors, messages, writes, resolve, guards: () => guards }
 }
 
+test('a successful save with a history warning advances identity and retains subsequent input', async () => {
+  const x = harness(), save = x.ctx.save(), submitted = x.tab.content
+  x.tab.content += '，随后补充'
+  x.requests[0].resolve({content:submitted,signature:'disk-with-warning',historyWarning:'文件已保存，但新历史未追加'})
+  await save
+  assert.equal(x.tab.textSignature,'disk-with-warning'); assert.equal(x.tab.isDirty,true)
+  assert.match(x.tab.content,/随后补充/);assert.equal(x.errors.length,0)
+  assert.equal(x.messages.length,1);assert.match(x.messages[0],/新增编辑尚未保存/)
+})
+
 test('pre-fix code reproduces lost subsequent typing and cross-tab overwrite', async () => {
   const old = execFileSync('git', ['show', '5251c5d7:src/views/LibraryMode.vue'], { encoding: 'utf8' })
   const typing = harness(old); const first = typing.ctx.save(); typing.tab.content += '，价格还要确认'

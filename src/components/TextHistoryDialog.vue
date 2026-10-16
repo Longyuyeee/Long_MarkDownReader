@@ -1,8 +1,6 @@
 <template>
   <n-modal :show="!comparison" preset="card" title="文本历史与差异" :style="{ width: 'min(600px, 94vw)' }" @update:show="value => { if (!value) $emit('close') }">
-    <p v-if="loading">正在读取历史…</p><p v-else-if="!entries.length && !error">暂无历史。保存文本时会保留修改前后的版本。</p>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <div class="text-history-entries"><button v-for="[timestamp, content] in entries" :key="timestamp" @click="compare(timestamp)"><Clock :size="16" /><span><strong>{{ new Date(timestamp * 1000).toLocaleString() }}</strong><small>{{ content.slice(0, 140) || '空白文本' }}</small></span><ChevronRight :size="16" /></button></div>
+    <HistoryVersionList :entries="entries.map(([timestamp,content]) => ({timestamp,content}))" :path="path" :library-root="libraryRoot" :loading="loading" :error="error" class="text-history-list" @compare="compare" @refresh="load" />
     <template #footer><n-button @click="$emit('close')">关闭</n-button></template>
   </n-modal>
   <HistoryDiffDialog v-if="comparison" :path="path" :timestamp="comparison.timestamp" :draft="comparison.draft" :disk="comparison.disk" :historical="comparison.content" :busy="busy" :error="actionError" @close="comparison = null" @copy="recover('copy')" @replace="recover('replace')" @partial="id => recover('partial', id)" />
@@ -10,7 +8,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { NButton, NModal, useDialog } from 'naive-ui'
-import { Clock, ChevronRight } from 'lucide-vue-next'
+import HistoryVersionList from './HistoryVersionList.vue'
 import { invoke } from '../services/tauriRuntime'
 import { confirmAppAction } from '../services/appDialog'
 import { beginWindowSave } from '../services/windowDrafts'
@@ -23,7 +21,7 @@ const comparison = ref<{ timestamp: number; draft: string; disk: string; content
 const dialog = useDialog()
 let disposed = false, generation = 0
 async function load() {
-  loading.value = true
+  loading.value = true; error.value = ''
   try { const result = await invoke<[number, string][]>('list_history', { libraryRoot: props.libraryRoot, path: props.path }); if (!disposed) entries.value = result }
   catch (cause) { if (!disposed) error.value = '历史暂时无法读取：' + String(cause) }
   finally { loading.value = false }
@@ -53,5 +51,6 @@ onMounted(load)
 onBeforeUnmount(() => { disposed = true; ++generation })
 </script>
 <style scoped>
+.text-history-list { height: min(60vh, 560px); }
 .text-history-entries { max-height: 55vh; overflow: auto; display: grid; gap: 8px; }button { display: flex; align-items: center; gap: 12px; padding: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); color: var(--theme-text); background: var(--theme-surface); cursor: pointer; text-align: left; }button>span { display: grid; gap: 5px; min-width: 0; flex: 1; }small { color: var(--theme-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }[role=alert] { color: var(--status-danger); }
 </style>

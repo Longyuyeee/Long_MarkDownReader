@@ -17,6 +17,7 @@ window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
   if (command === 'get_all_tags') return [{ tag: '项目', count: 2 }, { tag: '工作', count: 1 }]
   if (command === 'search_by_tag') return [{ name: '项目方案.md', path: root + '/项目方案.md', is_dir: false }]
   if (command === 'search_smart_collection') return { results: [...a.disk].map(([path, content]) => ({ title: path.split('/').pop(), path, objectType: path.endsWith('.txt') ? 'plain-text' : 'markdown', matchKind: 'title', context: content.slice(0, 30), score: 100, extractionFailed: false })), truncated: false }
+  if (command === 'get_history_metadata') return {}
   if (command === 'list_history') return [...a.history].reverse()
   if (command === 'save_history_version') { if (!a.history.some(([, content]) => content === args.content)) a.history.push([10 + a.history.length, args.content]); return }
   if (command === 'compare_history_version') return { disk: a.disk.get(args.path), content: a.history.find(([time]) => time === args.timestamp)[1], diskSignature: 'disk', historySignature: 'history' }

@@ -136,6 +136,7 @@
       />
     </main>
 
+    <TextConflictDialog v-if="conflict" :path="conflict.path" :library-root="conflict.root" :draft="conflict.draft" :format-id="conflict.format" :read-encoding="conflict.encoding" :save-policy="conflict.policy" :is-current="conflict.current" @close="conflict = null" @reload="useConflictDisk" @copy="finishTextConflictCopy" />
     <TextHistoryDialog v-if="showHistory" :key="textPath" :library-root="store.libraryPath" :path="textPath" :draft="historyDraft" :max-count="store.maxHistoryCount" @close="showHistory = false" @replace="applyHistoryDraft" @copy="openHistoryCopy" />
     <footer class="status-bar">
       <div v-if="viewMode === 'source'">
@@ -158,6 +159,7 @@
 </template>
 
 <script setup lang="ts">
+import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import SearchMatchNavigation from '../components/SearchMatchNavigation.vue'
 import { searchRanges, wrapSearchIndex } from '../utils/searchLocation'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -650,6 +652,15 @@ const loadNextRange = async () => {
   }
 }
 
+const conflict = ref<{path:string; root?:string; draft:string; format:string; encoding:string; policy:Record<string,unknown>; current:()=>boolean} | null>(null)
+const useConflictDisk = (snapshot: ConflictSnapshot, protectedCopy?: string) => {
+  if (!conflict.value?.current()) return
+  applySnapshot({...snapshot, encodingConfidence:snapshot.encodingConfidence || '', readOnlyReason:snapshot.readOnlyReason || undefined})
+  dirty.value = false; syncCurrentTab(false); conflict.value = null
+  message.success(protectedCopy ? '已使用磁盘版本，原草稿保存在同目录：' + protectedCopy.split(/[\\/]/).pop() : '已使用磁盘版本，原草稿已保留在历史中')
+}
+const finishTextConflictCopy = (path:string) => { conflict.value = null; message.success('当前副本已保存：' + path.split(/[\\/]/).pop()) }
+watch(textPath, () => { conflict.value = null }, {flush:'sync'})
 const save = async () => {
   if (!editor || readOnly.value || !dirty.value || saving.value || !format.value) return
   saving.value = true
@@ -712,13 +723,14 @@ const save = async () => {
   } catch (cause) {
     const error = cause as TextDocumentError
     if (isCurrent() && error?.code === 'external-modified') {
-      dialog.warning({
-        title: '文件已在外部修改',
-        content: errorMessage(cause),
-        positiveText: '重新加载',
-        negativeText: '保留编辑内容',
-        onPositiveClick: () => { if (isCurrent()) void load(sourceEncoding.value, true) },
-      })
+      if (format.value?.id === 'plain-text') {
+        const draft = savedEditor.state.doc.toString(), root = isExternal.value ? undefined : historyRoot
+        const policy = {encoding:saveEncoding.value,bom:saveBom.value,lineEnding:saveLineEnding.value,hasFinalNewline:saveFinalNewline.value}
+        conflict.value = {path:savedPath, root, draft, format:format.value.id, encoding:sourceEncoding.value, policy,
+          current:()=>isCurrent() && (!root || store.libraryPath === root) && savedEditor.state.doc.toString() === draft && saveEncoding.value === policy.encoding && saveBom.value === policy.bom && saveLineEnding.value === policy.lineEnding && saveFinalNewline.value === policy.hasFinalNewline}
+      } else {
+        dialog.warning({title:'文件已在外部修改',content:errorMessage(cause),positiveText:'重新加载',negativeText:'保留编辑内容',onPositiveClick:()=>{if(isCurrent()) void load(sourceEncoding.value, true)}})
+      }
     } else {
       message.error(`${savedPath.split(/[\\/]/).pop()} 保存失败：${errorMessage(cause)}`)
     }

@@ -135,7 +135,8 @@ mod tests {
                 .iter()
                 .map(|r| r.result.is_ok())
                 .collect::<Vec<_>>(),
-            [true, false, true, false]
+            [true, false, true, false],
+            "{receipts:?}"
         );
         for (receipt, (source, target)) in receipts.iter().zip(&items) {
             assert_eq!((&receipt.source, &receipt.target), (source, target));

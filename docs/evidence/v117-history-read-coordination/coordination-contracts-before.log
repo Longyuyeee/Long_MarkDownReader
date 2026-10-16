@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: both UI history reads use shared coordination before resolving the document
+ok 1 - both UI history reads use shared coordination before resolving the document
+  ---
+  duration_ms: 1.1882
+  ...
+# Subtest: history mutations and signature-checked recovery retain exclusive coordination
+not ok 2 - history mutations and signature-checked recovery retain exclusive coordination
+  ---
+  duration_ms: 0.7664
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-history-read-coordination.mjs:24:1'
+  failureType: 'testCodeFailure'
+  error: 'missing history command: recover_history_as_copy'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    command (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-history-read-coordination.mjs:8:10)
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-history-read-coordination.mjs:26:18)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 3 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 3.395
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 4 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 3.4082
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 5 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 0.8618
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 339.4045

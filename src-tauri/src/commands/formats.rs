@@ -434,6 +434,107 @@ async fn write_external_log_document_with_access(
 
 #[tauri::command]
 pub async fn write_text_document(
+    app_handle: tauri::AppHandle,
+    library_root: String,
+    path: String,
+    format_id: String,
+    content: String,
+    expected_signature: Option<String>,
+    save_policy: Option<TextSavePolicy>,
+    max_history_count: Option<u32>,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    if format_id == "markdown" && max_history_count.is_some() {
+        let _history = super::history::history_lease(&app_handle)
+            .map_err(|error| text_boundary_error("history-busy", error))?;
+        let resolved = WorkspaceGuard::new(&library_root)
+            .and_then(|guard| guard.resolve_existing_file(&path, &["md", "markdown"]))
+            .map_err(|error| text_boundary_error("workspace-root-invalid", error))?;
+        let directory = super::history::history_dir(&app_handle, &resolved.to_string_lossy())
+            .map_err(|error| text_boundary_error("history-unavailable", error))?;
+        return write_with_history(
+            &directory,
+            library_root,
+            resolved.to_string_lossy().into_owned(),
+            format_id,
+            content,
+            expected_signature,
+            save_policy,
+            max_history_count.unwrap_or(20),
+        )
+        .await;
+    }
+    write_text_document_base(
+        library_root,
+        path,
+        format_id,
+        content,
+        expected_signature,
+        save_policy,
+    )
+    .await
+}
+
+/// A history failure before the write must leave the original alone; a failure
+/// after a verified write is returned as a warning on the successful receipt.
+async fn write_with_history(
+    directory: &Path,
+    library_root: String,
+    path: String,
+    format_id: String,
+    content: String,
+    expected_signature: Option<String>,
+    save_policy: Option<TextSavePolicy>,
+    max_count: u32,
+) -> Result<TextDocumentSnapshot, TextDocumentError> {
+    let original = read_text_snapshot(Path::new(&path))?;
+    let baseline = expected_signature.unwrap_or(original.signature.clone());
+    verify_current_signature(Path::new(&path), Some(&baseline))?;
+    let now = || {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    };
+    super::history::save_history_in_dir(directory, &original.content, max_count.max(1), now())
+        .map_err(|error| {
+            text_boundary_error(
+                "history-protection-failed",
+                format!("原版本未能保留，文件未写回：{error}"),
+            )
+        })?;
+    let mut saved = write_text_document_base(
+        library_root,
+        path,
+        format_id,
+        content,
+        Some(baseline),
+        save_policy,
+    )
+    .await?;
+    record_saved_history(directory, &mut saved, max_count, now());
+    Ok(saved)
+}
+
+fn record_saved_history(
+    directory: &Path,
+    saved: &mut TextDocumentSnapshot,
+    max_count: u32,
+    now: u64,
+) {
+    // With one slot retain the previous state: the new state is already on disk.
+    if max_count <= 1 {
+        return;
+    }
+    if let Err(error) =
+        super::history::save_history_in_dir(directory, &saved.content, max_count, now)
+    {
+        saved.history_warning = Some(format!(
+            "文件已保存，修改前版本已保留，但本次新版本未能追加到历史：{error}"
+        ));
+    }
+}
+
+pub(crate) async fn write_text_document_base(
     library_root: String,
     path: String,
     format_id: String,
@@ -677,6 +778,115 @@ mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
 
+    #[test]
+    fn explicit_markdown_saves_record_preimage_and_real_a_b_a_sequence() {
+        let root = move_save_fixture();
+        let file = root.join("note.md");
+        let history = root.join("history");
+        fs::write(&file, "A\n").unwrap();
+        for content in ["B\n", "A\n"] {
+            let baseline = read_text_snapshot(&file).unwrap().signature;
+            let saved = tauri::async_runtime::block_on(write_with_history(
+                &history,
+                root.to_string_lossy().into_owned(),
+                file.to_string_lossy().into_owned(),
+                "markdown".into(),
+                content.into(),
+                Some(baseline),
+                None,
+                20,
+            ))
+            .unwrap();
+            assert!(saved.history_warning.is_none());
+            assert_eq!(fs::read_to_string(&file).unwrap(), content);
+        }
+        let mut versions: Vec<_> = fs::read_dir(&history)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .collect();
+        versions.sort();
+        assert_eq!(
+            versions
+                .into_iter()
+                .map(|p| fs::read_to_string(p).unwrap())
+                .collect::<Vec<_>>(),
+            vec!["A\n", "B\n", "A\n"]
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn explicit_save_rejects_stale_disk_and_failed_history_protection_without_writing() {
+        let root = move_save_fixture();
+        let file = root.join("note.md");
+        let history = root.join("history");
+        fs::write(&file, "A\n").unwrap();
+        let old = read_text_snapshot(&file).unwrap().signature;
+        fs::write(&file, "externally changed\n").unwrap();
+        let run = |signature| {
+            tauri::async_runtime::block_on(write_with_history(
+                &history,
+                root.to_string_lossy().into_owned(),
+                file.to_string_lossy().into_owned(),
+                "markdown".into(),
+                "draft\n".into(),
+                Some(signature),
+                None,
+                20,
+            ))
+        };
+        assert_eq!(run(old).unwrap_err().code, "external-modified");
+        assert!(!history.exists());
+        fs::write(&history, "blocked").unwrap();
+        let current = read_text_snapshot(&file).unwrap().signature;
+        assert_eq!(run(current).unwrap_err().code, "history-protection-failed");
+        assert_eq!(fs::read_to_string(&file).unwrap(), "externally changed\n");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn post_save_history_failure_is_a_warning_on_a_successful_receipt() {
+        let root = move_save_fixture();
+        let file = root.join("note.md");
+        let history = root.join("history");
+        fs::write(&file, "verified saved content\n").unwrap();
+        fs::write(&history, "blocked").unwrap();
+        let mut saved = read_text_snapshot(&file).unwrap();
+        let signature = saved.signature.clone();
+        record_saved_history(&history, &mut saved, 20, 100);
+        assert!(saved
+            .history_warning
+            .as_ref()
+            .unwrap()
+            .contains("文件已保存"));
+        assert_eq!(saved.signature, signature);
+        assert_eq!(fs::read_to_string(&file).unwrap(), saved.content);
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn a_single_history_slot_keeps_the_pre_save_version() {
+        let root = move_save_fixture();
+        let file = root.join("note.md");
+        let history = root.join("history");
+        fs::write(&file, "original\n").unwrap();
+        let saved = tauri::async_runtime::block_on(write_with_history(
+            &history,
+            root.to_string_lossy().into_owned(),
+            file.to_string_lossy().into_owned(),
+            "markdown".into(),
+            "saved\n".into(),
+            None,
+            None,
+            1,
+        ))
+        .unwrap();
+        assert_eq!(saved.content, "saved\n");
+        let versions: Vec<_> = fs::read_dir(history)
+            .unwrap()
+            .map(|e| fs::read_to_string(e.unwrap().path()).unwrap())
+            .collect();
+        assert_eq!(versions, vec!["original\n"]);
+        fs::remove_dir_all(root).unwrap();
+    }
+
     fn move_save_fixture() -> std::path::PathBuf {
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         loop {
@@ -784,7 +994,7 @@ mod tests {
         ))
         .unwrap();
         assert!(loaded.content.contains("Generic adapter fixture"));
-        let saved = tauri::async_runtime::block_on(write_text_document(
+        let saved = tauri::async_runtime::block_on(write_text_document_base(
             root_string.clone(),
             path.clone(),
             "plain-text".into(),

@@ -404,6 +404,8 @@ mod tests {
         fs::write(&file, "document").unwrap();
         let old = f.history(&file, "snapshot\r\nwith encoding preserved");
         let original = fs::read(old.join("100.md")).unwrap();
+        let metadata = br#"{"100":{"pinned":true,"note":"milestone"}}"#;
+        fs::write(old.join("metadata.json"), metadata).unwrap();
         f.move_file(&source, &target).unwrap();
         let new = super::super::archive_history::history_path(
             &f.cache(),
@@ -411,10 +413,12 @@ mod tests {
         );
         assert!(!old.exists());
         assert_eq!(fs::read(new.join("100.md")).unwrap(), original);
+        assert_eq!(fs::read(new.join("metadata.json")).unwrap(), metadata);
         f.move_file(&target, &source).unwrap();
         assert!(file.exists());
         assert!(!new.exists());
         assert_eq!(fs::read(old.join("100.md")).unwrap(), original);
+        assert_eq!(fs::read(old.join("metadata.json")).unwrap(), metadata);
     }
     #[test]
     fn failed_document_move_keeps_history_with_source() {
