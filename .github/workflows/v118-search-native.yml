@@ -1,0 +1,70 @@
+name: v1.1.8 Real Search IPC Audit
+
+"on":
+  push:
+    branches: [codex/v118-native-ipc-audit]
+    paths:
+      - .github/workflows/v118-search-native.yml
+      - scripts/capture-v118-native-search.mjs
+      - scripts/run-v118-native-search.ps1
+      - scripts/lib/v118-native-search-fixture.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v118-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-search:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Check out audit harness
+        uses: actions/checkout@v6
+        with:
+          path: orchestration
+      - name: Check out immutable development product (not an installer candidate)
+        uses: actions/checkout@v6
+        with:
+          ref: c70735c7064d9e8f30f1bfae98acee634ba040d8
+          path: product
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: product/package-lock.json
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: product/src-tauri -> target
+      - name: Install frozen dependencies and build frontend
+        working-directory: product
+        run: npm ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run build
+      - name: Build actual Debug Tauri application with isolated E2E identity
+        working-directory: product
+        shell: powershell
+        run: |
+          $env:TAURI_CONFIG=Get-Content -LiteralPath src-tauri/tauri.e2e.conf.json -Raw
+          # Start on existing Settings so WorkspaceHome cannot auto-build the
+          # index before the explicitly measured cold search. No product patch.
+          $config=$env:TAURI_CONFIG | ConvertFrom-Json
+          $config | Add-Member -NotePropertyName app -NotePropertyValue @{windows=@(@{label='main';title='LongEdit Search IPC - isolated';url='http://127.0.0.1:14200/#/settings';width=1000;height=700;visible=$false;decorations=$false})}
+          $env:TAURI_CONFIG=$config | ConvertTo-Json -Depth 10 -Compress
+          cargo build --locked --manifest-path src-tauri/Cargo.toml --bin tauri-app
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Real native page IPC, generated files, isolation and same-binary restart
+        shell: powershell
+        run: |
+          & orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v118-native-search-${{ github.run_id }}
+          path: native-search-evidence
+          if-no-files-found: warn
+          retention-days: 14
