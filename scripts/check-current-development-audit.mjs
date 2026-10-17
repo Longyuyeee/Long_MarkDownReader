@@ -150,6 +150,9 @@ if (pkg.version === '1.1.10' && policy.gates?.githubReleasePublished === true) {
 if (pkg.version === '1.1.11' && policy.gates?.githubReleasePublished === true) {
   execFileSync(process.execPath, ['scripts/check-v1111-readme-publication.mjs'], { stdio: 'inherit' })
 }
+if (pkg.version === '1.1.12' && policy.gates?.githubReleasePublished === true) {
+  execFileSync(process.execPath, ['scripts/check-v1112-readme-publication.mjs'], { stdio: 'inherit' })
+}
 const v122Published = policy.appVersion === '1.0.22' && policy.gates?.githubReleasePublished === true
 const v123Candidate = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === false && development.publicVersion === '1.0.22'
 const v123Published = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === true && development.publicVersion === '1.0.23'

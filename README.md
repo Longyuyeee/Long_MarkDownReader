@@ -529,4 +529,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.12 深化本地内容备份与可靠恢复，优先明确备份范围、清单校验、恢复预览和原资料库保护；目前仅完成代码接续审计，不是已交付能力。[接续审计](docs/V1_1_12_Local_Backup_Preimplementation_Audit_2026-10-17.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.12 深化本地内容备份与可靠恢复，已进入固定安装包验证；公开下载仍为 v1.1.11，尚未封板发布。[开发与验证](docs/V1_1_12_Content_Backup_Development_2026-10-18.md) · [接续审计](docs/V1_1_12_Local_Backup_Preimplementation_Audit_2026-10-17.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。

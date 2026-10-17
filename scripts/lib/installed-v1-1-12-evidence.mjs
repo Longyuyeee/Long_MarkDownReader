@@ -29,10 +29,12 @@ export function validateInstalledContentBackup(report,manifest){
  assert.equal(report.sourceFiles.length,5);assert.equal(new Set(report.sourceFiles.map(f=>f.path)).size,5)
  for(const f of report.sourceFiles){assert.match(f.before,/^[a-f0-9]{64}$/);assert.equal(f.before,f.after);assert.equal(f.before,f.restored)}
  assert.equal(report.pdfTime.before,report.pdfTime.restored);assert.deepEqual(report.pdfAnnotations.before,report.pdfAnnotations.restored)
+ assert.equal(report.pdfAnnotations.before.schemaVersion,1);assert.equal(report.pdfAnnotations.before.annotations.length,1);assert.equal(report.pdfAnnotations.before.annotations[0].comment,'恢复后应保留的页评论')
  assert.deepEqual(report.history.before,report.history.restored);assert.deepEqual(report.history.metadataBefore,report.history.metadataRestored);assert.equal(report.history.pinned,true)
+ assert.equal(report.history.before.length,1);const savedMetadata=report.history.metadataBefore[report.history.before[0][0]];assert.equal(savedMetadata.pinned,true);assert.equal(savedMetadata.note,'跨位置恢复也要保留')
  for(const key of ['sourceChangeRejected','existingZipPreserved','badPackageRejected','targetConflictBlocked','explicitAddOnly','activeLibraryUnchanged','explicitSaveAfterChecks','markdownBodyVisible','markdownImageLoaded','pdfPageVisible'])assert.equal(report[key],true,key)
  assert.ok(report.draftChecks.length>=3);for(const c of report.draftChecks){assert.equal(c.dirty,true);assert.equal(c.exactModel,true);assert.equal(c.contentSha256,report.draftSha256);assert.equal(c.diskSha256,report.draftDiskBefore)}
- assert.equal(report.cancel.accepted,true);assert.equal(report.cancel.published,false);assert.equal(report.cancel.remainingStages,0);assert.match(report.cancel.error,/取消/)
+ assert.equal(report.cancel.stageObserved,true);assert.equal(report.cancel.accepted,true);assert.equal(report.cancel.published,false);assert.equal(report.cancel.remainingStages,0);assert.match(report.cancel.error,/取消/)
  assert.deepEqual(report.denials.map(d=>d.command),contentBackupCommands);for(const d of report.denials){assert.equal(d.rejected,true);assert.match(d.error,/主工作台/)}
  assert.ok(report.nativePickers.length>=4);for(const p of report.nativePickers){assert.equal(p.status,'selected-real-native-dialog');assert.equal(p.desktopUserSession,'disposable-github-hosted');assert.ok(p.processId>0);assert.ok(p.selectedPath)}
  for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted));assert.ok(report.inputTrace.every(e=>e.trusted));assert.deepEqual(report.runtimeErrors,[])
