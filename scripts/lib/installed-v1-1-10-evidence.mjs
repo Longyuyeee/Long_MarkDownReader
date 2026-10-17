@@ -21,6 +21,7 @@ export function validateInstalledTagCollections(report, manifest) {
  assert.equal(report.dirtyExcluded,true);assert.equal(report.dirtyPreserved,true);assert.equal(report.secondaryDirtyBlocked,true);assert.equal(report.secondaryContentReloaded,true)
  assert.equal(report.collectionTagUnchanged,true);assert.equal(report.explicitSaveAfterChecks,true)
  assert.deepEqual(report.denials.map(item=>item.command),['search_collection_page','get_tag_catalog_page','preview_tag_edit','apply_tag_edit','close_tag_edit']);assert.ok(report.denials.every(item=>item.rejected&&/主工作台/.test(item.error)))
+ for(const [index,item] of report.denials.entries()){if(index<2){assert.equal(item.nativeError.code,'forbidden');assert.equal(item.nativeError.message,item.error)}else assert.equal(item.nativeError,item.error)}
  for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(event=>event.type===type&&event.trusted))
  assert.ok(report.inputTrace.every(event=>event.trusted));assert.deepEqual(report.runtimeErrors,[]);assert.equal(report.errorOverlay,false)
  for(const type of ['click','keydown','input'])assert.ok(report.secondaryInputTrace.some(event=>event.type===type&&event.trusted))
