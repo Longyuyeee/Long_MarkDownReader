@@ -8,9 +8,10 @@ import {withDeadline} from './lib/with-deadline.mjs'
 import {assertHostedSearchAudit,fixturePaths,nativeSearchProduct} from './lib/v118-native-search-fixture.mjs'
 import {nativeUserInput} from './lib/v118-native-user-input.mjs'
 import {runNativeOfficeInput} from './lib/v118-native-office-input.mjs'
+import {searchRuntimeIdentity,matchesSearchRuntimeTarget} from './lib/v118-search-runtime-identity.mjs'
 assertHostedSearchAudit()
 const [phase,root,repo,output]=process.argv.slice(2),fixture=fixturePaths(root)
-assert.equal(phase,'user');assert.equal(process.env.LONGEDIT_NATIVE_PRODUCT_COMMIT,nativeSearchProduct)
+assert.equal(phase,'user');const identity=searchRuntimeIdentity()
 const owner=JSON.parse(await fs.readFile(path.join(root,'.v118-native-owner'),'utf8'))
 assert.equal(owner.kind,'generated-search-fixture');assert.match(owner.nonce,/^[a-f0-9-]{36}$/)
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
@@ -18,8 +19,8 @@ const draftPath=path.join(fixture.library,'zz-项目预算.md'),changedPath=path
 const referencePath=path.join(fixture.library,'a-0000-记录.md')
 const pdfPath=path.join(fixture.library,'多批注.pdf'),sidecar=pdfPath+'.annotations.json'
 const originals=new Map(await Promise.all([draftPath,changedPath,referencePath,pdfPath,sidecar].map(async name=>[name,await fs.readFile(name)])))
-const report={schemaVersion:1,status:'running',phase:'user',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',
-  productCommit:nativeSearchProduct,harnessCommit:process.env.GITHUB_SHA,runtimeBaseVersion:'1.1.7',
+const report={...identity,schemaVersion:1,status:'running',phase:'user',evidenceLevel:identity.installed?'installed-webview-input-events-and-disk':'actual-wry-webview-input-events-generated-disk-not-installed',
+  productCommit:identity.productCommit,harnessCommit:process.env.GITHUB_SHA,runtimeBaseVersion:identity.runtimeBaseVersion,
   executableSha256:hash(await fs.readFile(process.env.LONGEDIT_NATIVE_EXECUTABLE)),sourceUserContentIncluded:false,
   nativeBridgeMocked:false,desktopInputUsed:false,checks:[],runtimeErrors:[],inputTrace:[],sourceFiles:[],draftChecks:[]}
 let socket,send,evaluate,modifiedBytes,failure
@@ -30,11 +31,11 @@ const q=value=>JSON.stringify(value)
 const pathKey=value=>value.replaceAll('\\','/').replace(/^\/\/\?\//,'').toLowerCase()
 const capture=async name=>{const result=await send('Page.captureScreenshot',{format:'png'});await fs.writeFile(path.join(output,'user-'+name+'.png'),Buffer.from(result.data,'base64'))}
 try{
-  const endpoint='http://127.0.0.1:9458'
+  const endpoint=identity.endpoint
   let target
   for(let n=0;n<160;n++){
     const targets=await fetch(endpoint+'/json/list').then(r=>r.json()).catch(()=>[])
-    target=targets.find(t=>t.type==='page'&&t.url.startsWith('http://127.0.0.1:14200/')&&!t.url.includes('quick-note'))
+    target=targets.find(t=>t.type==='page'&&matchesSearchRuntimeTarget(t,identity))
     if(target)break;await new Promise(resolve=>setTimeout(resolve,250))
   }
   assert.ok(target?.webSocketDebuggerUrl,'actual main WebView target required')
@@ -51,7 +52,7 @@ try{
   await send('Runtime.enable')
   const ui=nativeUserInput({send,evaluate},{timeoutMs:30000})
   await ui.waitFor(`!!document.querySelector('.settings-view')&&${store}?.configReady===true`,'actual Settings and store bootstrap')
-  assert.equal(await evaluate('window.__TAURI_INTERNALS__.invoke("plugin:app|version")'),'1.1.7')
+  assert.equal(await evaluate('window.__TAURI_INTERNALS__.invoke("plugin:app|version")'),identity.runtimeBaseVersion)
   assert.equal(await evaluate(`${store}.activeLibraryPath`),fixture.library)
   await evaluate(`(() => {window.__v118UserInputTrace=[];for(const type of ['click','keydown','input'])document.addEventListener(type,event=>{const trace=window.__v118UserInputTrace;if(trace.length<600)trace.push({type,key:event.key||'',trusted:event.isTrusted,target:event.target?.getAttribute?.('aria-label')||event.target?.tagName||''})},true)})()`)
   await ui.clickText('.app-navigation a','资料库')
@@ -135,7 +136,7 @@ try{
   report.pdf={annotationId:'批注-3',page:1,comment:pdfState.comment};await capture('pdf-annotation')
   report.checks.push('trusted-pdf-annotation-identity-and-draft-preservation')
   await runNativeOfficeInput({root,repo,output,ui,evaluate,capture,assertDraft,store,
-    identity:{productCommit:report.productCommit,harnessCommit:report.harnessCommit,executableSha256:report.executableSha256,runtimeBaseVersion:report.runtimeBaseVersion,runtimeErrors:report.runtimeErrors}})
+    identity:{...identity,productCommit:report.productCommit,harnessCommit:report.harnessCommit,executableSha256:report.executableSha256,runtimeBaseVersion:report.runtimeBaseVersion,runtimeErrors:report.runtimeErrors}})
   report.uiObservation=await evaluate('({hash:location.hash,errorOverlay:!!document.querySelector("#crash-screen,#runtime-error-notice,.route-error-notice,.global-error-overlay,.startup-fatal-screen")})')
   assert.equal(report.uiObservation.errorOverlay,false)
   assert.deepEqual(report.runtimeErrors,[])
@@ -148,7 +149,7 @@ finally{
   if(evaluate)report.inputTrace=await evaluate('window.__v118UserInputTrace||[]').catch(()=>[])
   if(send)await capture(failure?'failure':'final').catch(()=>{})
   report.status=failure?'failed':'passed'
-  await fs.writeFile(path.join(output,'native-user.json'),JSON.stringify(report,null,2)+'\n')
+  await fs.writeFile(path.join(output,identity.installed?'installed-v118-user.json':'native-user.json'),JSON.stringify(report,null,2)+'\n')
   socket?.close()
 }
 if(failure)throw failure

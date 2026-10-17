@@ -18,7 +18,7 @@ export const officeRouteQuery=hash=>{
 }
 export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture,assertDraft,identity,store}){
   assertHostedSearchAudit()
-  const report={...identity,schemaVersion:1,phase:'office',status:'running',evidenceLevel:'actual-wry-webview-input-events-generated-disk-not-installed',
+  const report={...identity,schemaVersion:1,phase:'office',status:'running',evidenceLevel:identity.installed?'installed-webview-input-events-and-disk':'actual-wry-webview-input-events-generated-disk-not-installed',
     nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],sourceFiles:[],observations:{}}
   let files=[],failure
   const palette='.command-palette-container',q=JSON.stringify
@@ -84,7 +84,7 @@ export async function runNativeOfficeInput({root,repo,output,ui,evaluate,capture
     if(report.uiObservation.errorOverlay||report.runtimeErrors.length)failure ||= Error('Office runtime error surface or exception')
     report.status=failure?'failed':'passed'
     if(failure)await capture('office-failure').catch(()=>{})
-    await fs.writeFile(path.join(output,'native-office.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx'})
+    await fs.writeFile(path.join(output,identity.installed?'installed-v118-office.json':'native-office.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx'})
   }
   if(failure)throw failure
   return report

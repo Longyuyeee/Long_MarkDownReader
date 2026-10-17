@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 execFileSync(process.execPath, ['--test', 'scripts/test-v118-native-search-audit.mjs','scripts/test-search-feedback-contract.mjs','scripts/test-v118-native-search-evidence.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v118-native-user.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v118-native-office.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-v118-installed-release.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-file-move-protection.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-local-image-continuity.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-local-markdown-links.mjs'], { stdio: 'inherit' })

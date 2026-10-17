@@ -7,15 +7,17 @@ import assert from 'node:assert/strict'
 import { performance } from 'node:perf_hooks'
 import { withDeadline } from './lib/with-deadline.mjs'
 import { assertHostedSearchAudit,createNativeSearchFixture,fixturePaths,groupIdentity,nativeSearchProduct } from './lib/v118-native-search-fixture.mjs'
+import { searchRuntimeIdentity, matchesSearchRuntimeTarget } from './lib/v118-search-runtime-identity.mjs'
 assertHostedSearchAudit()
 const [mode,root,repo,output]=process.argv.slice(2),fixture=fixturePaths(root)
 if(mode==='fixture'){await createNativeSearchFixture(root,repo,{unregisteredEntries:Number(process.env.LONGEDIT_SEARCH_UNREGISTERED_ENTRIES||0)});process.exit(0)}
-assert.ok(['baseline','disk'].includes(mode));assert.equal(process.env.LONGEDIT_NATIVE_PRODUCT_COMMIT,nativeSearchProduct)
+assert.ok(['baseline','disk'].includes(mode));const identity=searchRuntimeIdentity()
+assert.ok(!identity.installed||mode==='baseline','installed restart evidence must come from a real process restart, never a page reload')
 await fs.access(path.join(root,'.v118-native-owner'))
 const executable=path.resolve(process.env.LONGEDIT_NATIVE_EXECUTABLE||'')
 const executableSha256=crypto.createHash('sha256').update(await fs.readFile(executable)).digest('hex')
-const endpoint='http://127.0.0.1:9458',connections=[],calls=[],checks=[]
-const report={schemaVersion:1,status:'running',phase:mode,evidenceLevel:'debug-tauri-wry-real-ipc-and-generated-disk-not-installed',productCommit:nativeSearchProduct,harnessCommit:process.env.GITHUB_SHA,executableSha256,runtimeBaseVersion:'1.1.7',sourceUserContentIncluded:false,desktopInputUsed:false,checks,calls,samples:[]}
+const endpoint=identity.endpoint,connections=[],calls=[],checks=[]
+const report={...identity,schemaVersion:1,status:'running',phase:mode,evidenceLevel:identity.installed?'installed-tauri-ipc-and-disk':'debug-tauri-wry-real-ipc-and-generated-disk-not-installed',productCommit:identity.productCommit,harnessCommit:process.env.GITHUB_SHA,executableSha256,runtimeBaseVersion:identity.runtimeBaseVersion,sourceUserContentIncluded:false,desktopInputUsed:false,checks,calls,samples:[]}
 const pressureEntries=await fs.readdir(path.join(fixture.library,'a-枚举压力'))
 assert.equal(pressureEntries.length,21050);assert.ok(pressureEntries.every(name=>name.endsWith('.unknown-longedit-audit')))
 report.generatedFixture={unregisteredEntries:pressureEntries.length}
@@ -53,7 +55,7 @@ async function allSingle(req){let frame=await readySingle(req);const first=frame
 const multiRequest=(extra={})=>({libraryRoot:null,query:'预算',sort:'relevance',pageSize:40,channel:'palette',cursor:null,...extra})
 async function allLibraries(req){let frame;for(let n=0;n<200;n++){frame=await main.invoke('search_knowledge_libraries_page',{request:req});if(!frame.continueCursor)break;req={...req,cursor:frame.continueCursor};await delay(20)}assert.equal(frame.continueCursor,null);const first=frame,files=[...frame.files];for(let n=0;frame.nextCursor&&n<250;n++){frame=await main.invoke('search_knowledge_libraries_page',{request:{...req,cursor:frame.nextCursor}});assert.equal(frame.snapshotId,first.snapshotId);assert.equal(frame.pageOffset,files.length);files.push(...frame.files)}assert.equal(new Set(files.map(file=>file.path)).size,files.length);return {first,files}}
 try{
-  main=await connect(target=>target.url.startsWith('http://127.0.0.1:14200/')&&!target.url.includes('quick-note'))
+  main=await connect(target=>matchesSearchRuntimeTarget(target,identity))
   for(let n=0;n<120&&!await main.evaluate('!!window.__TAURI_INTERNALS__?.invoke');n++)await delay(100)
   // The native bridge precedes Vue bootstrap in a development WebView. Wait
   // for the actual user-facing route and loaded store, not an arbitrary sleep
@@ -61,7 +63,7 @@ try{
   const surfaceReady=`(() => { const app=document.querySelector('#app').__vue_app__; const store=app?.config.globalProperties.$pinia?._s.get('app'); return !!document.querySelector('.settings-view') && !document.querySelector('#app-startup-screen') && store?.configReady===true && store.activeLibraryPath===${JSON.stringify(fixture.library)}; })()`
   for(let n=0;n<600&&!await main.evaluate(surfaceReady);n++)await delay(100)
   assert.equal(await main.evaluate(surfaceReady),true,'actual settings page and fixture store must finish bootstrap before a user search')
-  assert.equal(await main.invoke('plugin:app|version'),'1.1.7')
+  assert.equal(await main.invoke('plugin:app|version'),identity.runtimeBaseVersion)
   const config=await main.invoke('get_config');assert.equal(config.activeLibraryPath,fixture.library);assert.equal(config.libraries.length,3)
   checks.push('actual-product-identity-and-generated-config')
   if(mode==='disk'){
@@ -100,6 +102,7 @@ try{
     const own=await page(request({query:'不存在-quick'}),quick);assert.equal(await close(own,'library',quick),true)
     await close(first);await close(palette,'palette')
     checks.push('native-window-label-and-channel-isolation-prevent-cross-window-close-or-page')
+    if(identity.installed)await main.invoke('plugin:window|close',{label:await quick.evaluate('window.__TAURI_INTERNALS__.metadata.currentWindow.label')})
     const all=await allLibraries(multiRequest());assert.equal(all.files.length,487);assert.equal(all.first.scanState,'limited');assert.equal(all.first.totalFiles,null);assert.ok(all.first.libraries.some(library=>library.state==='unavailable'));assert.equal(all.first.libraries.filter(library=>library.state==='ready').length,2);await close(all.first,'palette')
     const failed=await allLibraries(multiRequest({libraryRoot:fixture.missing}));assert.equal(failed.first.scanState,'failed');assert.equal(failed.files.length,0);assert.equal(failed.first.scanComplete,false);await close(failed.first,'palette')
     const empty=await allLibraries(multiRequest({libraryRoot:fixture.library,query:'不存在-413987'}));assert.equal(empty.first.scanState,'ready');assert.equal(empty.first.totalFiles,0);assert.equal(empty.first.scanComplete,true);await close(empty.first,'palette')
@@ -122,6 +125,6 @@ try{
 }catch(error){report.status='failed';report.error=error&&typeof error==='object'?{message:error.message,code:error.code,stack:error.stack}:String(error);throw error}
 finally{
   if(main)await main.send('Page.captureScreenshot',{format:'png'}).then(result=>fs.writeFile(path.join(output,`native-${mode}.png`),Buffer.from(result.data,'base64'))).catch(()=>{})
-  await fs.writeFile(path.join(output,`native-${mode}.json`),JSON.stringify(report,null,2)+'\n')
+  await fs.writeFile(path.join(output,identity.installed?'installed-v118-baseline.json':`native-${mode}.json`),JSON.stringify(report,null,2)+'\n')
   for(const socket of connections)socket.close()
 }
