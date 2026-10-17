@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.1.10",
-  "runtimeBaseVersion": "1.1.9",
+  "runtimeBaseVersion": "1.1.10",
   "publicVersion": "1.1.9",
   "publicTag": "v1.1.9",
   "publicTagCommit": "b92c18a1705cf787a05c2b3a97e78feeb29d46fb",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-48-v1.1.10-tags-collections",
-  "binaryVersionTransition": "v1.1.9-public-release-published",
-  "displayLabel": "v1.1.10 标签与集合开发 · 正式版 v1.1.9",
+  "currentStage": "M8-48-v1.1.10-version-candidate",
+  "binaryVersionTransition": "v1.1.10-quality-gate-pending",
+  "displayLabel": "v1.1.10 标签与集合候选 · 当前公开 v1.1.9",
   "activeSlice": {
     "id": "v1.1.10-tags-collections",
-    "status": "native-core-in-progress-ui-awaiting-approval",
+    "status": "candidate-validation-pending",
     "document": "docs/V1_1_10_Tag_Collections_Development_2026-10-17.md"
   }
 }

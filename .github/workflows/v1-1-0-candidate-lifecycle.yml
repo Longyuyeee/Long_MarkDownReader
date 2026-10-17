@@ -9,11 +9,11 @@ name: Community Release Installer Lifecycle
       current_version:
         description: Current package version
         required: true
-        default: "1.1.9"
+        default: "1.1.10"
       previous_version:
         description: Previous official public version
         required: true
-        default: "1.1.8"
+        default: "1.1.9"
 
 permissions:
   contents: read

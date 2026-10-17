@@ -14,7 +14,7 @@ export const workSessionChecks=[
  'trusted-input-and-normal-dialog-layout-without-global-errors',
 ]
 export function validateInstalledWorkSession(report,manifest,{beforeProcessRestart=false}={}){
- assert.equal(manifest.appVersion,'1.1.9');assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit)
+ assert.ok(['1.1.9','1.1.10'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit)
  assert.equal(report.installerSha256,manifest.artifacts.find(item=>item.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed')

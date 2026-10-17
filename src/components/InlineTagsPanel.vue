@@ -1,5 +1,5 @@
 <template>
-  <section class="inline-tags" aria-label="文内标签">
+  <section ref="panel" class="inline-tags" aria-label="文内标签">
     <section v-if="currentNote" class="current-note" aria-label="当前笔记标签">
       <div class="note-name"><NotebookPen /><strong>{{ currentNote.name }}</strong><span v-if="currentNote.dirty" class="draft-state">未保存</span></div>
       <div v-if="noteTags.length" class="note-tags"><button v-for="tag in noteTags" :key="tag" :aria-label="`查看 #${tag} 的笔记`" @click="selectTag(tag)">#{{ tag }}</button></div>
@@ -87,6 +87,7 @@ const addError = ref(''), notice = ref(''), selecting = ref(false), selectedPath
 const lookup = createSearchPages(invoke)
 const { files: results, busy: running, error: resultError, status: pageState, retainingView: retaining, nextPage, canContinue } = lookup
 const tagInput = ref<HTMLInputElement>()
+const panel = ref<HTMLElement>()
 const noteTags = computed(() => inlineTags(props.currentNote?.content || ''))
 const filteredTags = computed(() => {
   const query = filter.value.trim().replace(/^#+/, '').toLowerCase(), pref = preferences.value
@@ -97,11 +98,14 @@ const resultPath = (path: string) => searchResultPath(path, store.libraryPath)
 const noteIconColor = computed(() => store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : resolveFileTreeVisual('markdown').color)
 let generation = 0, disposed = false
 async function selectTag(tag: string) {
-  ++generation
+  const token = ++generation, root = store.libraryPath
   const preserve = tag === selectedTag.value, depth = preserve ? results.value.length : 0
+  const top = preserve ? panel.value?.parentElement?.scrollTop || 0 : 0
   if (!preserve) { selectedPaths.value = []; selecting.value = false }
   selectedTag.value = tag
   await lookup.start({ libraryRoot: store.libraryPath, query: '', sort: 'name', channel: 'collection', kind: 'collection', objectTypes: ['markdown'], filters: { directory: '', tag, modifiedWithinDays: null } }, { preserve, loadUntil: depth })
+  await nextTick()
+  if (!disposed && token === generation && root === store.libraryPath && panel.value?.parentElement) panel.value.parentElement.scrollTop = top
 }
 const back = () => { ++generation; selectedTag.value = ''; lookup.reset(); selectedPaths.value = []; selecting.value = false }
 const refresh = () => { emit('refresh'); if (selectedTag.value) void selectTag(selectedTag.value) }
