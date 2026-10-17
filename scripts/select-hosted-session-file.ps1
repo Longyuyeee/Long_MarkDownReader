@@ -24,6 +24,7 @@ public static class SessionPickerWindows {
   [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
   [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h,uint m,IntPtr w,string value);
   [DllImport("user32.dll",EntryPoint="SendMessageW",CharSet=CharSet.Unicode)] static extern IntPtr ReadControlText(IntPtr h,uint m,IntPtr capacity,StringBuilder text);
+  [DllImport("user32.dll",EntryPoint="SendMessageW")] public static extern IntPtr SendInputMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
   public class Item { public long Handle; public long ParentHandle; public uint Pid; public uint OwnerPid; public string Title; public string ClassName; public int ControlId; }
   static Item Read(IntPtr h) { uint pid,owner;GetWindowThreadProcessId(h,out pid);GetWindowThreadProcessId(GetWindow(h,4),out owner);var title=new StringBuilder(4096);var cls=new StringBuilder(256);GetWindowText(h,title,title.Capacity);GetClassName(h,cls,cls.Capacity);return new Item{Handle=h.ToInt64(),ParentHandle=GetParent(h).ToInt64(),Pid=pid,OwnerPid=owner,Title=title.ToString(),ClassName=cls.ToString(),ControlId=GetDlgCtrlID(h)}; }
@@ -70,11 +71,16 @@ do {
     $field=$children | Where-Object { $_.ClassName -eq 'Edit' -and $_.ControlId -in @(1001,1148,1152) } | Sort-Object { if($_.ControlId -eq 1148){0}elseif($_.ControlId -eq 1152){1}else{2} } | Select-Object -First 1
     $ok=$children | Where-Object { $_.ClassName -eq 'Button' -and $_.ControlId -eq 1 } | Select-Object -First 1
     if ($null -eq $field -or $null -eq $ok -or -not [SessionPickerWindows]::IsWindowEnabled([IntPtr]$ok.Handle)) { continue }
-    [SessionPickerWindows]::SendMessage([IntPtr]$field.Handle,12,[IntPtr]::Zero,$resolvedFile) > $null
+    # WM_SETTEXT changes the edit's visible text but can leave the modern Save
+    # dialog's filename model unchanged. Actual character input raises its edit
+    # notifications, just as typing into this specific owned native control.
+    [SessionPickerWindows]::SendInputMessage([IntPtr]$field.Handle,177,[IntPtr]::Zero,[IntPtr](-1)) > $null
+    [SessionPickerWindows]::SendInputMessage([IntPtr]$field.Handle,258,[IntPtr]8,[IntPtr]1) > $null
+    foreach($character in $resolvedFile.ToCharArray()) { [SessionPickerWindows]::SendInputMessage([IntPtr]$field.Handle,258,[IntPtr]([int]$character),[IntPtr]1) > $null }
     $actual=[SessionPickerWindows]::Text($field.Handle)
     if ($actual -ne $resolvedFile) { throw 'Real native filename edit did not retain the intended generated path' }
     if (-not [SessionPickerWindows]::PostMessage([IntPtr]$native.Handle,273,[IntPtr]1,[IntPtr]$ok.Handle)) { throw 'Could not notify the real native OK button' }
-    $selected=[ordered]@{status='selected-real-native-dialog';processId=$process.Id;dialogProcessId=$native.Pid;executable=$process.Path;title=$native.Title;fileNameAutomationId=[string]$field.ControlId;selectedPath=$actual;method='Windows-Win32-filename-edit-and-OK-notification';desktopUserSession='disposable-github-hosted';controlCandidates=@($children | Where-Object ClassName -match 'Edit|Combo|Static|Search|FileName' | Select-Object Handle,ParentHandle,ControlId,ClassName,Title)}
+    $selected=[ordered]@{status='selected-real-native-dialog';processId=$process.Id;dialogProcessId=$native.Pid;executable=$process.Path;title=$native.Title;fileNameAutomationId=[string]$field.ControlId;selectedPath=$actual;inputCharacters=$resolvedFile.Length;method='Windows-Win32-filename-character-input-and-OK-notification';desktopUserSession='disposable-github-hosted';controlCandidates=@($children | Where-Object ClassName -match 'Edit|Combo|Static|Search|FileName' | Select-Object Handle,ParentHandle,ControlId,ClassName,Title)}
     break
   }
   if ($null -eq $selected) { Start-Sleep -Milliseconds 150 }
