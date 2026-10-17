@@ -7,7 +7,7 @@ import {withDeadline} from './with-deadline.mjs'
 import {assertSessionHosted} from './v119-native-session-fixture.mjs'
 import {nativeUserInput} from './v118-native-user-input.mjs'
 import {workSessionChecks,validateInstalledWorkSession} from './installed-v1-1-9-evidence.mjs'
-import {installedSessionBootProbe} from './installed-session-boot.mjs'
+import {installedSessionBootProbe,installedSessionBridgeProbe} from './installed-session-boot.mjs'
 const q=JSON.stringify,key=value=>value.replaceAll('\\','/').replace(/^\/\/\?\//,'').toLowerCase()
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
@@ -75,7 +75,15 @@ export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,c
   // Verify actual secondary WebView IPC instead of calling a Rust helper.
   await invoke('open_quick_note');let quick;for(let n=0;n<160;n++){const targets=await fetch('http://127.0.0.1:9343/json/list').then(r=>r.json());quick=targets.find(t=>t.url.includes('quick-note')&&t.webSocketDebuggerUrl);if(quick)break;await new Promise(resolve=>setTimeout(resolve,100))}assert.ok(quick)
   const socket=new WebSocket(quick.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})});let seq=0
-  try{for(const [command,args]of [['read_work_session_bundle',{sourcePath:source}],['export_work_session_bundle',{targetPath:path.join(root,'quick-must-not-write.longedit-session.json'),bundle:exported}],['preflight_work_session',{libraryRoot:library,relativePaths:[relative+'/草稿.md']}],['locate_work_session_file',{libraryRoot:library,path:repair}]]){const id=++seq,result=await withDeadline(()=>new Promise((resolve,reject)=>{const listener=event=>{const response=JSON.parse(event.data);if(response.id!==id)return;socket.removeEventListener('message',listener);response.error?reject(Error(response.error.message)):resolve(response.result.result.value)};socket.addEventListener('message',listener);socket.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression:`(async()=>{try{await window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)});return {rejected:false}}catch(e){return {rejected:true,error:String(e)}}})()`,awaitPromise:true,returnByValue:true}}))}),30000,'secondary scene rejection');report.quickDenials.push({command,...result})}}finally{socket.close()}
+  const evaluateQuick=expression=>{const id=++seq;return withDeadline(()=>new Promise((resolve,reject)=>{const listener=event=>{const response=JSON.parse(event.data);if(response.id!==id)return;socket.removeEventListener('message',listener);if(response.error)reject(Error(response.error.message));else if(response.result.exceptionDetails)reject(Error(JSON.stringify(response.result.exceptionDetails)));else resolve(response.result.result?.value)};socket.addEventListener('message',listener);socket.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression,awaitPromise:true,returnByValue:true}}))}),30000,'actual secondary WebView evaluation')}
+  try{
+   report.quickBridgeReady=false
+   for(let n=0;n<160;n++){if(await evaluateQuick(installedSessionBridgeProbe())){report.quickBridgeReady=true;break}await new Promise(resolve=>setTimeout(resolve,100))}
+   assert.equal(report.quickBridgeReady,true,'the real secondary native bridge must initialize before testing permissions')
+   for(const [command,args]of [['read_work_session_bundle',{sourcePath:source}],['export_work_session_bundle',{targetPath:path.join(root,'quick-must-not-write.longedit-session.json'),bundle:exported}],['preflight_work_session',{libraryRoot:library,relativePaths:[relative+'/草稿.md']}],['locate_work_session_file',{libraryRoot:library,path:repair}]]){
+    const result=await evaluateQuick(`(async()=>{try{await window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)});return {rejected:false}}catch(e){return {rejected:true,error:String(e)}}})()`);report.quickDenials.push({command,...result});assert.equal(result.rejected,true);assert.match(result.error,/主工作台/)
+   }
+  }finally{socket.close()}
   assert.ok(report.quickDenials.every(item=>item.rejected));await assert.rejects(()=>fs.access(path.join(root,'quick-must-not-write.longedit-session.json')));check(9)
   // The Markdown source was explicitly saved, so compare it against the
   // protected pre-save checkpoints rather than misreporting it as unchanged.

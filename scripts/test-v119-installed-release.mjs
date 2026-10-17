@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 import {test} from 'node:test'
 import {parse} from 'yaml'
 import vm from 'node:vm'
-import {installedSessionBootProbe} from './lib/installed-session-boot.mjs'
+import {installedSessionBootProbe,installedSessionBridgeProbe} from './lib/installed-session-boot.mjs'
 import {workSessionChecks,validateInstalledWorkSession} from './lib/installed-v1-1-9-evidence.mjs'
 import {assertInstalledReleaseRuntime} from './lib/installed-release-runtime.mjs'
 import {assertV121DevelopmentBoundary,assertV121UpdaterStatus} from './lib/v121-updater-status.mjs'
@@ -18,12 +18,18 @@ test('reload probe waits through absent app/Pinia/reader, without hiding real sc
  assert.equal(ready(100,{}),false);assert.equal(ready(200,null),false);assert.equal(ready(200,{}),true)
  assert.throws(()=>installedSessionBootProbe(NaN));assert.throws(()=>vm.runInNewContext(expression,{performance:{timeOrigin:200},document:{querySelector:()=>{throw Error('real script error')}}}),/real script error/)
 })
+test('secondary permission checks must wait for an actual callable bridge',()=>{
+ for(const window of [{},{__TAURI_INTERNALS__:{}},{__TAURI_INTERNALS__:{invoke:'not a function'}}])assert.equal(vm.runInNewContext(installedSessionBridgeProbe(),{window}),false)
+ assert.equal(vm.runInNewContext(installedSessionBridgeProbe(),{window:{__TAURI_INTERNALS__:{invoke(){}}}}),true)
+})
 function scene(){return {appVersion:'1.1.9',sourceCommit:'a'.repeat(40),harnessSourceCommit:'b'.repeat(40),executableSha256:'c'.repeat(64),installerSha256:'d'.repeat(64),status:'passed',evidenceLevel:'installed-webview-input-native-picker-and-disk',sourceUserContentIncluded:false,nativeBridgeMocked:false,desktopInputUsed:false,nativePickerScope:'disposable-github-hosted-owned-process',checks:workSessionChecks.map(id=>({id,status:'passed'})),inputTrace:['click','keydown','input'].map(type=>({type,trusted:true})),nativePickers:Array.from({length:5},()=>({status:'selected-real-native-dialog',processId:42,selectedPath:'C:/owned/a.json',title:'选择工作现场文件',method:'Windows-UIAutomation-ValuePattern-and-InvokePattern'})),positions:{count:40,first:340,last:457,afterReload:457},draftSha256:'e'.repeat(64),draftChecks:Array.from({length:2},()=>({dirty:true,exactModel:true,sha256:'e'.repeat(64)})),quickDenials:['read_work_session_bundle','export_work_session_bundle','preflight_work_session','locate_work_session_file'].map(command=>({command,rejected:true,error:'只能在主工作台管理工作现场'})),sourceFiles:Array.from({length:42},(_,n)=>({path:`C:/owned/${n}.txt`,before:'f'.repeat(64),after:'f'.repeat(64)})),beforeExplicitSave:Array.from({length:42},(_,n)=>({path:`C:/owned/${n}.txt`,sha256:'f'.repeat(64)})),explicitSave:{path:'C:/owned/0.txt',after:'f'.repeat(64),afterAllDraftChecks:true},runtimeErrors:[],errorOverlay:false}}
 const manifestFor=report=>({appVersion:report.appVersion,sourceCommit:report.sourceCommit,artifacts:[{target:'nsis',sha256:report.installerSha256}]})
 const originalScene=scene
-function completedScene(){const r=originalScene();r.processRestart={status:'passed',executableSha256:r.executableSha256,nativeVersion:r.appVersion,sceneFiles:41,first:340,last:457};return r}
+function completedScene(){const r=originalScene();r.quickBridgeReady=true;r.processRestart={status:'passed',executableSha256:r.executableSha256,nativeVersion:r.appVersion,sceneFiles:41,first:340,last:457};return r}
 test('installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity',()=>{
  const good=completedScene();assert.doesNotThrow(()=>validateInstalledWorkSession(good,manifestFor(good)))
+ const notNative=completedScene();notNative.quickDenials[0].error="TypeError: Cannot read properties of undefined (reading 'invoke')";assert.throws(()=>validateInstalledWorkSession(notNative,manifestFor(notNative)))
+ const notReady=completedScene();notReady.quickBridgeReady=false;assert.throws(()=>validateInstalledWorkSession(notReady,manifestFor(notReady)))
  const native=completedScene();for(const item of native.nativePickers)Object.assign(item,{method:'Windows-Win32-filename-character-input-and-OK-notification',inputCharacters:item.selectedPath.length,dialogProcessId:42,fileNameAutomationId:'1001'});assert.doesNotThrow(()=>validateInstalledWorkSession(native,manifestFor(native)));native.nativePickers[0].inputCharacters=0;assert.throws(()=>validateInstalledWorkSession(native,manifestFor(native)))
  const mocked=completedScene();mocked.nativePickers[0].method='mock-dialog';assert.throws(()=>validateInstalledWorkSession(mocked,manifestFor(mocked)))
  for(const mutate of [r=>r.checks.pop(),r=>r.installerSha256='0'.repeat(64),r=>r.appVersion='1.1.8',r=>r.harnessSourceCommit='',r=>r.nativeBridgeMocked=true,r=>r.inputTrace[0].trusted=false,r=>r.nativePickers.pop(),r=>r.nativePickers[0].processId=0,r=>r.positions.last=0,r=>r.positions.count=24,r=>r.beforeExplicitSave[0].sha256='0'.repeat(64),r=>r.sourceFiles[1].after='0'.repeat(64),r=>r.explicitSave.afterAllDraftChecks=false,r=>r.draftChecks[0].exactModel=false,r=>r.quickDenials[0].rejected=false,r=>r.runtimeErrors.push('error'),r=>delete r.processRestart,r=>r.processRestart.executableSha256='0'.repeat(64)]){const bad=completedScene(),manifest=manifestFor(bad);mutate(bad);assert.throws(()=>validateInstalledWorkSession(bad,manifest))}
