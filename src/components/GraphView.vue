@@ -17,6 +17,7 @@
           <span>如何关联资料</span>
         </button>
         <button class="graph-tools-entry" type="button" data-testid="graph-tools-entry" title="探索、导出、布局与视图工具" :aria-expanded="graphToolsOpen" @click="graphToolsOpen = !graphToolsOpen"><SlidersHorizontal :size="16" /><span>图谱工具</span></button>
+        <button class="graph-tools-entry" type="button" data-testid="graph-refresh" :disabled="isLoading" :aria-busy="isLoading" @click="loadGraph"><RotateCcw :size="16" /><span>{{ isLoading ? '读取中' : '刷新' }}</span></button>
           <div v-if="graphToolsOpen" class="graph-tools-menu" data-testid="graph-tools-menu" @click="graphToolsOpen = false">
             <div class="graph-tools-explore">
               <button :class="{ active: pathOpen }" data-testid="graph-path-entry" @click="togglePathPanel">最短路径</button>
@@ -296,7 +297,7 @@
     />
 
     <transition name="hint-fade">
-      <div v-if="isLoading" class="graph-loading" role="status" aria-live="polite">
+      <div v-if="isLoading && !graphData.nodes.length" class="graph-loading" role="status" aria-live="polite">
         <div class="graph-loader" aria-hidden="true">
           <span></span><span></span><span></span>
         </div>
@@ -307,7 +308,7 @@
 
     <!-- 空状态和随时可打开的链接教程 -->
     <transition name="hint-fade">
-    <div v-if="!isLoading && (showTutorial || graphData.nodes.length === 0)" class="empty-graph-hint tutorial-card">
+    <div v-if="!isLoading && !graphLoadError && (showTutorial || graphData.nodes.length === 0)" class="empty-graph-hint tutorial-card">
       <button v-if="showTutorial && graphData.nodes.length > 0" class="tutorial-close" @click="showTutorial = false" aria-label="关闭教程">×</button>
       <div class="empty-icon">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -343,7 +344,12 @@
     </div>
     </transition>
 
-    <WorkspaceStatusBar class="graph-stats">
+    <div v-if="graphLoadError && !graphData.nodes.length" class="graph-loading graph-load-failure" role="alert" data-testid="graph-initial-error">
+      <strong>暂时无法读取图谱</strong><p>{{ graphLoadError }}</p><button class="graph-tools-entry" type="button" @click="loadGraph">重新读取</button>
+    </div>
+    <WorkspaceStatusBar class="graph-stats" data-horizontal-wheel="always">
+      <span v-if="isLoading && graphData.nodes.length" class="graph-refresh-status" data-testid="graph-refresh-status">正在刷新，当前图谱仍可浏览</span>
+      <span v-else-if="graphLoadError && graphData.nodes.length" class="graph-refresh-status" data-testid="graph-refresh-error"><span>刷新失败，已保留当前图谱</span><button type="button" @click="loadGraph">重试</button></span>
       <div class="stat-item">
         <Circle :size="14" />
         {{ visibleNodes.length }} / {{ graphData.nodes.length }} 节点
@@ -485,6 +491,7 @@ import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
 import { createGraphLoadGate, prepareGraphRefresh } from '../utils/graphRefresh'
 import { buildGraphTopology } from '../utils/graphTopology'
+import { placeGraphLabels, type GraphLabelCandidate } from '../utils/graphLabels'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
 import { announceFileRelationsChanged, onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
@@ -542,6 +549,7 @@ const minimapNavigationState = ref<'idle' | 'click' | 'drag'>('idle')
 const minimapNavigationCount = ref(0)
 const neighborFocusRootId = ref('')
 const neighborFocusDepth = ref(1)
+let neighborReturnPose: { libraryRoot: string; pose: GraphCameraPose } | null = null
 const pathOpen = ref(false)
 const pathStartId = ref('')
 const pathEndId = ref('')
@@ -709,7 +717,8 @@ const showCommunityOverview = computed(() => semanticZoomLevel.value === 'far'
   && !neighborFocusRootId.value
   && !activeCommunityId.value
   && !activeShortestPath.value
-  && !comparisonOpen.value)
+  && !comparisonOpen.value
+  && !(selectedNode.value && cameraMotionReason.value === 'node-focus'))
 const graphNodeStatusNowSeconds = ref(Math.floor(Date.now() / 1000))
 const graphNodeStatusSummary = computed(() => measureGraphPhase('node-status-derivation', () => deriveGraphNodeStatus(visibleGraph.value, graphNodeStatusNowSeconds.value)))
 const graphNodeStatusById = computed(() => new Map(graphNodeStatusSummary.value.nodes.map(status => [status.nodeId, status])))
@@ -933,6 +942,7 @@ let activePointerId: number | null = null
 let dragStartClientX = 0
 let dragStartClientY = 0
 let pendingCommunityId = ''
+let pendingClearSelection = false
 let offsetX = 0, offsetY = 0
 let viewX = 0, viewY = 0, zoom = 1
 type CameraTransition = {
@@ -980,6 +990,8 @@ let layoutWorkerStaleResults = 0
 let autoFitAfterLayout = false
 let autoFitCompletionCount = 0
 let autoFitTimer = 0
+let autoFitFrame = 0
+const autoFitGate = createGraphLoadGate()
 let selectionEffectStartedAt = 0
 let selectionEffectNodeId = ''
 
@@ -1032,6 +1044,29 @@ const invalidateLayoutWorker = () => {
   if (layoutWorkerState !== 'failed') layoutWorkerState = 'idle'
 }
 
+const cancelAutomaticFit = () => {
+  autoFitGate.invalidate()
+  autoFitAfterLayout = false
+  window.clearTimeout(autoFitTimer)
+  cancelAnimationFrame(autoFitFrame)
+  autoFitFrame = 0
+}
+const scheduleAutomaticFit = () => {
+  const ticket = autoFitGate.begin(graphLibraryRoot)
+  const current = () => autoFitGate.accepts(ticket, store.libraryPath, graphLoopMounted && props.show !== false)
+  autoFitFrame = requestAnimationFrame(() => {
+    autoFitFrame = 0
+    if (!current()) return
+    fitGraph()
+    window.clearTimeout(autoFitTimer)
+    autoFitTimer = window.setTimeout(() => {
+      if (!current()) return
+      fitGraph()
+      autoFitCompletionCount += 1
+    }, 160)
+  })
+}
+
 const handleLayoutWorkerMessage = (event: MessageEvent<GraphForceLayoutWorkerResult | GraphForceLayoutWorkerError>) => {
   const result = event.data
   if (result.jobId !== layoutWorkerJobId || !layoutWorkerInitialized || viewMode.value !== 'network') {
@@ -1082,14 +1117,7 @@ const handleLayoutWorkerMessage = (event: MessageEvent<GraphForceLayoutWorkerRes
     scheduleLayoutSave()
     if (autoFitAfterLayout) {
       autoFitAfterLayout = false
-      requestAnimationFrame(() => {
-        fitGraph()
-        window.clearTimeout(autoFitTimer)
-        autoFitTimer = window.setTimeout(() => {
-          fitGraph()
-          autoFitCompletionCount += 1
-        }, 160)
-      })
+      scheduleAutomaticFit()
     }
   } else {
     layoutWorkerState = 'running'
@@ -1165,8 +1193,7 @@ const loadGraph = async () => {
   const ticket = graphLoadGate.begin(root)
   const current = () => graphLoadGate.accepts(ticket, store.libraryPath, graphLoopMounted && props.show !== false)
   invalidateLayoutWorker()
-  window.clearTimeout(autoFitTimer)
-  autoFitAfterLayout = false
+  cancelAutomaticFit()
   const sameRoot = graphLibraryRoot === root
   if (!sameRoot) {
     persistLayout()
@@ -1177,6 +1204,7 @@ const loadGraph = async () => {
     contextNode.value = null
     contextMenu.show = false
     neighborFocusRootId.value = ''
+    neighborReturnPose = null
     activeCommunityId.value = ''
     shortestPathResult.value = null
     pathStartId.value = ''; pathEndId.value = ''
@@ -1252,6 +1280,7 @@ const loadGraph = async () => {
 
 const initLayout = (options: { preserveCurrentPositions?: boolean; fit?: boolean } = {}) => {
   invalidateLayoutWorker()
+  cancelAutomaticFit()
   autoFitAfterLayout = options.fit !== false
   const nodes = graphData.value.nodes
   const cx = (containerRef.value?.clientWidth || 800) / 2
@@ -1270,14 +1299,7 @@ const initLayout = (options: { preserveCurrentPositions?: boolean; fit?: boolean
   layoutSettled = restored === nodes.length && nodes.length > 0
   if (layoutSettled && autoFitAfterLayout) {
     autoFitAfterLayout = false
-    requestAnimationFrame(() => {
-      fitGraph()
-      window.clearTimeout(autoFitTimer)
-      autoFitTimer = window.setTimeout(() => {
-        fitGraph()
-        autoFitCompletionCount += 1
-      }, 160)
-    })
+    scheduleAutomaticFit()
   }
   if (!restored && graphLayoutMode.value !== 'force') positionGraphLayout(graphLayoutMode.value)
 }
@@ -1553,6 +1575,7 @@ const toggleSelection = (node: GraphNode) => {
 }
 
 const changeGraphZoom = (factor: number, clientX?: number, clientY?: number) => {
+  cancelAutomaticFit()
   const canvas = canvasRef.value
   if (!canvas) return
   cancelCameraMotion()
@@ -1664,6 +1687,7 @@ const cancelCameraMotion = (countCancellation = true) => {
 }
 
 const requestCameraPose = (target: GraphCameraPose, reason: string, targetNodeId = '') => {
+  cancelAutomaticFit()
   cancelCameraMotion()
   cameraMotionReason.value = reason
   cameraMotionFrames.value = 0
@@ -1689,7 +1713,8 @@ const currentNodeFocusTarget = (nodeId: string) => {
   if (!canvas || !node) return null
   const point = { x: node.x || 0, y: node.y || 0 }
   const viewport = availableNodeFocusViewport(canvas)
-  const target = graphCameraPoseForPoint(point, viewport, zoom)
+  const readableZoom = Math.min(3, Math.max(1, Math.sqrt(visibleNodes.value.length / 80) * 0.5))
+  const target = graphCameraPoseForPoint(point, viewport, Math.max(zoom, readableZoom))
   cameraFocusDiagnostics.value = JSON.stringify({ nodeId, point, viewport, target })
   return target
 }
@@ -1763,6 +1788,8 @@ const selectAndCenter = (node: GraphNode) => {
 }
 const focusSelectedNeighbors = () => {
   if (!selectedNode.value) return
+  cancelAutomaticFit()
+  if (!neighborFocusRootId.value) neighborReturnPose = { libraryRoot: graphLibraryRoot, pose: { x: viewX, y: viewY, zoom } }
   closePathPanel()
   closeComparisonPanel()
   communityOpen.value = false
@@ -1780,8 +1807,15 @@ const pinSelectedNeighborsToEditor = () => {
 }
 const clearNeighborFocus = () => {
   const root = neighborFocusRoot.value
+  const returnPose = neighborReturnPose
+  neighborReturnPose = null
   neighborFocusRootId.value = ''
   requestAnimationFrame(() => {
+    if (returnPose?.libraryRoot === graphLibraryRoot && graphLibraryRoot === store.libraryPath) {
+      if (root) selectOnly(root)
+      requestCameraPose(returnPose.pose, 'return-from-neighbors')
+      return
+    }
     fitGraph()
     if (root) selectAndCenter(root)
   })
@@ -2526,7 +2560,7 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   }
 
   // 节点 - 光晕效果
-  const labelBoxes: Array<{ left: number; right: number; top: number; bottom: number }> = []
+  const labelCandidates: GraphLabelCandidate[] = []
   for (const n of showCommunityOverview.value ? [] : renderNodes) {
     // Keep overview nodes expressive while preventing near zoom from turning
     // them into screen-sized bubbles. The square-root scale preserves spatial
@@ -2672,31 +2706,37 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
     }
 
     // 标签 - 根据缩放级别动态显示
-    if (semanticZoomLevel.value === 'near' || (semanticZoomLevel.value === 'middle' && (semanticKeyNodeIds.value.has(n.id) || isSelected || isHovered))) {
-      const maxLen = zoom > 1 ? 10 : Math.floor(10 / (1.5 - zoom * 0.5))
-      const display = n.title.length > maxLen ? n.title.slice(0, maxLen) + '…' : n.title
-      const fontSize = (isSelected || isHovered ? 13 : 12) / zoom
-      ctx.font = `${isSelected || isHovered ? 700 : 600} ${fontSize}px Inter, "Microsoft YaHei", sans-serif`
-      const textWidth = ctx.measureText(display).width
-      const labelX = nx
-      const labelY = ny + r + 8 / zoom
-      const paddingX = 6 / zoom, paddingY = 3 / zoom
-      const box = { left: labelX - textWidth / 2 - paddingX, right: labelX + textWidth / 2 + paddingX, top: labelY - paddingY, bottom: labelY + fontSize + paddingY }
-      const collides = labelBoxes.some(item => box.left < item.right && box.right > item.left && box.top < item.bottom && box.bottom > item.top)
-      const labelLimit = visibleNodes.value.length > 120 ? (zoom >= 2 ? 28 : 36) : 64
-      if ((!collides && labelBoxes.length < labelLimit) || isSelected || isHovered) {
-        ctx.beginPath()
-        ctx.roundRect(box.left, box.top, box.right - box.left, box.bottom - box.top, 5 / zoom)
-        ctx.fillStyle = isDark ? 'rgba(16,22,31,.82)' : 'rgba(255,255,255,.88)'
-        ctx.fill()
-        ctx.fillStyle = isDark ? 'rgba(245,248,252,.94)' : 'rgba(18,24,33,.9)'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'top'
-        ctx.fillText(display, labelX, labelY)
-        labelBoxes.push(box)
-      }
+    if (isSelected || isHovered || semanticZoomLevel.value === 'near' || (semanticZoomLevel.value === 'middle' && semanticKeyNodeIds.value.has(n.id))) {
+      labelCandidates.push({ id: n.id, text: n.title, x: nx * zoom + viewX, y: ny * zoom + viewY, radius: r * zoom,
+        priority: selectedNode.value?.id === n.id ? 0 : isHovered ? 1 : isSelected ? 2 : 4, weight: nodeDegree(n.id) })
     }
   }
+
+  ctx.save()
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  const measured = new Map<string, number>()
+  const labels = placeGraphLabels(labelCandidates, { width, height }, (text, emphasized) => {
+    const key = `${emphasized}:${text}`
+    if (!measured.has(key)) {
+      ctx.font = `${emphasized ? 700 : 600} ${emphasized ? 13 : 12}px Inter, "Microsoft YaHei", sans-serif`
+      measured.set(key, ctx.measureText(text).width)
+    }
+    return measured.get(key)!
+  }, visibleNodes.value.length > 120 ? 36 : 64)
+  for (const label of labels) {
+    ctx.beginPath()
+    ctx.roundRect(label.left, label.top, label.right - label.left, label.bottom - label.top, 5)
+    ctx.fillStyle = isDark ? 'rgba(16,22,31,.90)' : 'rgba(255,255,255,.94)'
+    ctx.fill()
+    ctx.font = `${label.emphasized ? 700 : 600} ${label.emphasized ? 13 : 12}px Inter, "Microsoft YaHei", sans-serif`
+    ctx.fillStyle = isDark ? 'rgba(245,248,252,.94)' : 'rgba(18,24,33,.9)'
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top'
+    ctx.fillText(label.text, label.x, label.y)
+  }
+  canvas.dataset.labelCount = String(labels.length)
+  canvas.dataset.labelCandidates = String(labelCandidates.length)
+  canvas.dataset.labelDiagnostics = JSON.stringify(labels)
+  ctx.restore()
 
   if (selectionBox) {
     const left = Math.min(selectionBox.startX, selectionBox.x)
@@ -2782,6 +2822,7 @@ const loop = (timestamp = performance.now()) => {
 
 const startDrag = (e: PointerEvent) => {
   if (e.button !== 0 && e.button !== 1) return
+  cancelAutomaticFit()
   const canvas = canvasRef.value
   if (!canvas) return
   cancelCameraMotion()
@@ -2791,6 +2832,7 @@ const startDrag = (e: PointerEvent) => {
   dragStartClientX = e.clientX
   dragStartClientY = e.clientY
   pendingCommunityId = ''
+  pendingClearSelection = false
   canvas.setPointerCapture(e.pointerId)
   const rect = canvas.getBoundingClientRect()
   const mx = (e.clientX - rect.left - viewX) / zoom
@@ -2826,7 +2868,7 @@ const startDrag = (e: PointerEvent) => {
     return
   }
   if (e.button !== 0 && e.button !== 1) return
-  clearSelection()
+  pendingClearSelection = e.button === 0
   dragging = { id: '', title: '', path: '', size: 0, x: e.clientX, y: e.clientY } as any
   offsetX = viewX; offsetY = viewY
   wasDragging = false
@@ -2882,6 +2924,7 @@ const resetDragState = () => {
   wasDragging = false
   activePointerId = null
   pendingCommunityId = ''
+  pendingClearSelection = false
 }
 
 const endDrag = (event: PointerEvent) => {
@@ -2907,6 +2950,7 @@ const endDrag = (event: PointerEvent) => {
     scheduleLayoutSave()
   }
   if (pendingCommunityId && !wasDragging) selectCommunity(pendingCommunityId)
+  if (pendingClearSelection && !wasDragging) clearSelection()
   // Single click only selects. Opening is reserved for double click so click,
   // node drag and canvas pan no longer compete with navigation.
   resetDragState()
@@ -3011,6 +3055,12 @@ const handleGraphKeydown = (event: KeyboardEvent) => {
 }
 
 watch(() => props.show, (v) => { if (v !== false) void loadGraph(); else { graphLoadGate.invalidate(); isLoading.value = false } })
+watch([graphLoadError, isLoading], () => {
+  if (graphLoadError.value || isLoading.value) void nextTick(() => {
+    const status = containerRef.value?.querySelector<HTMLElement>('.graph-stats')
+    if (status) status.scrollLeft = 0
+  })
+})
 watch(() => store.libraryPath, () => { if (props.show !== false) void loadGraph(); else graphLoadGate.invalidate() }, { flush: 'sync' })
 watch(() => selectedNode.value?.id, nodeId => {
   relationDraftTarget.value = ''
@@ -3148,7 +3198,7 @@ onMounted(() => {
   if (canvasRef.value) graphResizeObserver.observe(canvasRef.value)
 })
 const stopRelationChanges = onFileRelationsChanged(root => { if (root === store.libraryPath && props.show !== false) void reloadAfterRelationMutation(selectedNode.value?.path || '') })
-onUnmounted(() => graphLoadGate.invalidate())
+onUnmounted(() => { graphLoadGate.invalidate(); cancelAutomaticFit() })
 onUnmounted(stopRelationChanges)
 onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); window.clearTimeout(autoFitTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>
@@ -3505,7 +3555,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   border-radius: 6px;
   box-shadow: var(--workspace-shadow-sm);
   border: 1px solid var(--workspace-border-color);
-  pointer-events: none;
+  pointer-events: auto;
   animation: slideUp 0.6s var(--ease-premium);
   max-width: calc(100% - 32px);
   overflow-x: auto;
@@ -3514,6 +3564,9 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   scrollbar-width: none;
 }
 .graph-stats::-webkit-scrollbar { display: none; }
+.graph-refresh-status { display: flex; align-items: center; gap: 8px; color: var(--theme-text); }
+.graph-refresh-status button { pointer-events: auto; flex: none; padding: 3px 8px; border: 1px solid var(--workspace-border-color); border-radius: 5px; background: var(--workspace-control-bg); color: var(--theme-primary); cursor: pointer; font: inherit; }
+.graph-load-failure { pointer-events: auto; }
 
 .stat-item {
   flex: none;
@@ -3558,7 +3611,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   position: absolute;
   top: auto;
   right: var(--workspace-floating-gutter);
-  bottom: 16px;
+  bottom: 60px;
   z-index: 5;
   width: var(--workspace-inspector-width);
   max-width: min(380px, calc(100% - 32px));
@@ -3991,7 +4044,7 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   .node-details {
     top: auto;
     right: 12px;
-    bottom: 16px;
+    bottom: 60px;
     left: auto;
     width: var(--workspace-inspector-width);
     max-width: min(380px, calc(100% - 24px));
@@ -4015,7 +4068,13 @@ onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void 
   .health-entry { width: 36px; padding: 0; justify-content: center; font-size: 0; }
   .tutorial-card { padding: 24px 18px; }
   .empty-icon { display: none; }
-  .node-details { right: 10px; bottom: 10px; width: calc(100% - 20px); max-height: 46vh; }
+  .node-details { right: 10px; bottom: 60px; width: calc(100% - 20px); max-height: 46vh; }
+}
+@media (min-width: 641px) and (max-width: 1100px) {
+  .node-details-active:not(.graph-path-active):not(.graph-comparison-active) .graph-minimap { left: 12px; right: auto; }
+}
+@media (max-width: 640px) and (max-height: 700px) {
+  .node-details { max-height: calc(100% - var(--graph-stage-top, 146px) - 202px); }
 }
 
 :global(.graph-project-note-disclosure) { max-width: 580px; display: grid; gap: 8px; line-height: 1.55; }

@@ -1,0 +1,63 @@
+{
+  "scope": "production GraphView; generated isolated data and simulated IPC, not native/installed",
+  "checks": [
+    "dense search focuses an actual node, retains long active name and resolves label collisions",
+    "refresh button, non-blocking progress and pending user pan stay usable",
+    "failure shows retained results and a real retry action",
+    "local neighbor exploration refreshes in place and returns to its previous camera",
+    "six actual style attributes and light/dark themes rendered with ordinary motion",
+    "short/narrow search, refresh, retry remain reachable without page overflow",
+    "initial failure is distinct from a valid empty graph and can retry"
+  ],
+  "styles": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    }
+  ],
+  "errors": []
+}

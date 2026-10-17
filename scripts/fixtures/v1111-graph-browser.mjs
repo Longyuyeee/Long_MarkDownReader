@@ -1,5 +1,5 @@
 // Production GraphView, simulated IPC and isolated generated data. Never native proof.
-import {createApp,h,nextTick,ref} from 'vue'
+import {createApp,h,nextTick,ref,watch} from 'vue'
 import {createPinia} from 'pinia'
 import {createRouter,createMemoryHistory} from 'vue-router'
 import * as naive from 'naive-ui'
@@ -33,8 +33,12 @@ window.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}}
 const positions=Object.fromEntries(Array.from({length:count},(_,i)=>['n'+i,{x:(i%18)*64,y:Math.floor(i/18)*64}]))
 localStorage.setItem('longedit.graph.layouts.v1',JSON.stringify({version:1,layouts:Object.fromEntries([rootA,rootB].map(root=>[root+'\nnetwork:force',{updatedAt:Date.now(),positions}]))}))
 store.activeLibraryPath=rootA;store.configReady=true;store.motionSpeed='normal';store.theme=params.get('theme')||'white'
+watch(()=>store.theme,value=>{document.body.dataset.theme=value;document.body.classList.toggle('is-dark',value==='dark')},{immediate:true})
+watch(()=>store.visualStyle,value=>{document.body.dataset.style=value},{immediate:true})
+watch(()=>store.motionSpeed,value=>{document.body.dataset.motion=value},{immediate:true})
 const router=createRouter({history:createMemoryHistory(),routes:[{path:'/graph',name:'Graph',component:GraphView},{path:'/library',name:'LibraryMode',component:{render:()=>h('div','资料库')}}]})
 await router.push('/graph')
+audit.router=router
 document.body.dataset.theme=store.theme;document.body.style.margin='0';document.querySelector('#app').style.height='100vh'
 const app=createApp({render:()=>h(naive.NDialogProvider,{},()=>h(naive.NMessageProvider,{},()=>h(GraphView,{show:show.value})))})
 registerNaiveComponents(app);app.use(pinia).use(router).mount('#app');await nextTick()

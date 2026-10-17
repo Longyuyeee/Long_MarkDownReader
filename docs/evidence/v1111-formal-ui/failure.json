@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "dense search focuses an actual node, retains long active name and resolves label collisions",
+    "refresh button, non-blocking progress and pending user pan stay usable",
+    "failure shows retained results and a real retry action"
+  ],
+  "styles": [],
+  "errors": [],
+  "error": "locator.click: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '聚焦直接邻居', exact: true })\u001b[22m\n\n    at E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1111-graph-ui.mjs:33:99\n    at async check (E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1111-graph-ui.mjs:11:30)\n    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-ui.mjs:32:2"
+}
