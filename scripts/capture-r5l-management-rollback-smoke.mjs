@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import {managementMainTarget,assertPreparedManagementFixture,assertRestoredManagementFixture} from './lib/installed-management-fixture.mjs'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:9343'
 const libraryInput = process.env.LONGEDIT_R5L_LIBRARY || ''
@@ -16,7 +17,7 @@ if (!libraryInput || !outputInput || !backupInput || !['prepare', 'restore'].inc
 
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds))
 const targets = await fetch(`${endpoint}/json`).then(response => response.json())
-const target = targets.find(item => item.type === 'page')
+const target = managementMainTarget(targets)
 if (!target?.webSocketDebuggerUrl) throw new Error('R5L installed Tauri WebView CDP target was not found')
 
 const socket = new WebSocket(target.webSocketDebuggerUrl)
@@ -95,14 +96,13 @@ try {
   if (mode === 'prepare') {
     await fs.rm(backupPath, { force: true })
     const config = await invoke('get_config')
-    if (config.activeLibraryPath !== library || config.libraries?.length !== 1 || config.savedSearches?.length !== 1) {
-      throw new Error('Installed release did not load the isolated formal config.json')
-    }
+    await fs.writeFile(path.join(output,'management-config-observation.json'),JSON.stringify({sourceUserContentIncluded:false,activeLibraryPath:config.activeLibraryPath,libraryPaths:config.libraries?.map(entry=>entry.path),collections:config.savedSearches},null,2)+'\n')
+    const collectionSnapshot=assertPreparedManagementFixture(config,library,await invoke('plugin:app|version'))
 
     const receipt = await invoke('export_management_backup', { targetPath: backupPath })
     const preflight = await invoke('preflight_management_backup_import', { backupPath })
     const requiredExclusions = ['document-body', 'api-key', 'system-credential', 'absolute-user-path']
-    if (!preflight.valid || !preflight.requiresLibraryMapping ||
+    if (!preflight.valid || preflight.savedSearchCount !== collectionSnapshot.length || !preflight.requiresLibraryMapping ||
         preflight.requiredLibraryMappings?.length !== 1 ||
         !requiredExclusions.every(item => preflight.excluded?.includes(item))) {
       throw new Error(`Management backup privacy preflight failed: ${JSON.stringify(preflight)}`)
@@ -140,6 +140,7 @@ try {
         excluded: receipt.excluded,
       },
       preflight: sanitizedPreflight(preflight),
+      collectionSnapshot,
       indexBeforeRollback: {
         state: rebuilt.state,
         schemaVersion: rebuilt.schemaVersion,
@@ -164,14 +165,11 @@ try {
       backupPath,
       libraryMappings: [{ pathFingerprint, path: library }],
     })
-    if (restored.libraryCount !== 1 || restored.savedSearchCount !== 1) {
+    if (restored.libraryCount !== 1 || restored.savedSearchCount !== prior.collectionSnapshot.length) {
       throw new Error(`Management restore receipt is incomplete: ${JSON.stringify(restored)}`)
     }
     const config = await invoke('get_config')
-    if (config.activeLibraryPath !== library || config.libraries?.[0]?.path !== library ||
-        config.savedSearches?.[0]?.query !== 'R5L') {
-      throw new Error('Restored management config did not remap the isolated library')
-    }
+    assertRestoredManagementFixture(config,library,prior.collectionSnapshot)
     const rebuilt = await invoke('rebuild_knowledge_index', { libraryRoot: library })
     assertReadyIndex(rebuilt)
 
@@ -184,6 +182,7 @@ try {
     if (reloadedConfig.activeLibraryPath !== library || reloadedConfig.libraries?.[0]?.path !== library) {
       throw new Error('Reloaded application did not adopt the restored library mapping')
     }
+    assertRestoredManagementFixture(reloadedConfig,library,prior.collectionSnapshot)
 
     const textFile = path.join(library, 'r5j-notes.txt')
     const jsonFile = path.join(library, 'r5j-config.json')
