@@ -17,7 +17,7 @@ export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,c
  const button=(scope,label)=>`[...document.querySelectorAll(${q(scope+' button')})].find(e=>e.textContent.trim()===${q(label)})`
  const invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`)
  const root=path.join(library,'v119-session-'+crypto.randomUUID()),relative=path.basename(root),paths=Array.from({length:40},(_,n)=>path.join(root,`阅读${String(n).padStart(2,'0')}.txt`)),draft=path.join(root,'草稿.md'),repair=path.join(root,'重新找到.txt'),exportPath=path.join(root,'已导出.longedit-session.json'),source=path.join(root,'接续.longedit-session.json'),bad=path.join(root,'损坏.longedit-session.json')
- let failure
+ let failure, reloadDiagnostic
  const pick=async(title,file,action)=>{
   const fileReport=path.join(output,`v119-picker-${report.nativePickers.length}.json`),child=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts','select-hosted-session-file.ps1'),'-Executable',installedExecutable,'-Title',title,'-SelectedPath',file,'-OwnerRoot',root,'-Report',fileReport],{windowsHide:true,stdio:'inherit'})
   const completed=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('Real native file selection failed: '+code)))})
@@ -67,7 +67,9 @@ export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,c
   for(const file of report.sourceFiles)assert.equal(report.beforeExplicitSave.find(item=>item.path===file.path).sha256,file.before)
   await ui.clickText('.app-navigation a','资料库');await ui.clickTarget(`document.querySelector('[data-testid="library-explicit-save"]')`);await ui.waitFor(`!window.__v119Draft.isDirty`,'explicit save after protection evidence');await goHome();await chooseScene('安装验收现场');await ui.clickText(bar+' button','继续工作');await ui.waitFor(`!!document.querySelector('.text-workspace .cm-scroller')&&Math.abs(document.querySelector('.text-workspace .cm-scroller').scrollTop-340)<3`,'first staged position actually consumed');const first=await readScroll()
   await ui.clickTarget(`[...document.querySelectorAll('.workspace-tab')].find(e=>e.textContent.includes('阅读39'))`);await ui.waitFor(`document.querySelector('.text-workspace .document-title')?.textContent.includes('阅读39')&&Math.abs(document.querySelector('.text-workspace .cm-scroller')?.scrollTop-457)<3`,'last unopened staged position actually consumed');const last=await readScroll();report.positions={count:40,first,last};await capture('installed-v119-reading.jpg');check(7)
-  report.inputTrace=await evaluate('window.__v119Trace');report.runtimeErrors=await evaluate('window.__v119Errors');const origin=await evaluate('performance.timeOrigin');await send('Page.reload');for(let n=0;n<600;n++){try{if(await evaluate(`performance.timeOrigin!==${origin}&&${store}?.configReady===true&&!!document.querySelector('.text-workspace .cm-scroller')`))break}catch(error){if(!/context|navigat/i.test(String(error)))throw error}await new Promise(resolve=>setTimeout(resolve,100))}
+  report.inputTrace=await evaluate('window.__v119Trace');report.runtimeErrors=await evaluate('window.__v119Errors')
+  reloadDiagnostic=await send('Page.addScriptToEvaluateOnNewDocument',{source:"window.__v119ReloadErrors=[];addEventListener('error',e=>window.__v119ReloadErrors.push(e.message));addEventListener('unhandledrejection',e=>window.__v119ReloadErrors.push(String(e.reason)))"})
+  const origin=await evaluate('performance.timeOrigin');await send('Page.reload');for(let n=0;n<600;n++){try{if(await evaluate(`performance.timeOrigin!==${origin}&&${store}?.configReady===true&&!!document.querySelector('.text-workspace .cm-scroller')`))break}catch(error){if(!/context|navigat/i.test(String(error)))throw error}await new Promise(resolve=>setTimeout(resolve,100))}
   await ui.waitFor(`Math.abs(document.querySelector('.text-workspace .cm-scroller')?.scrollTop-457)<3`,'reading metadata survives WebView restart');report.positions.afterReload=await readScroll();assert.equal((await records()).find(item=>item.name==='安装验收现场').tabs.length,41);check(8)
   // Verify actual secondary WebView IPC instead of calling a Rust helper.
   await invoke('open_quick_note');let quick;for(let n=0;n<160;n++){const targets=await fetch('http://127.0.0.1:9343/json/list').then(r=>r.json());quick=targets.find(t=>t.url.includes('quick-note')&&t.webSocketDebuggerUrl);if(quick)break;await new Promise(resolve=>setTimeout(resolve,100))}assert.ok(quick)
@@ -78,8 +80,9 @@ export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,c
   // protected pre-save checkpoints rather than misreporting it as unchanged.
   for(const file of report.sourceFiles)file.after=sha(await fs.readFile(file.path))
   report.explicitSave={path:draft,after:sha(await fs.readFile(draft)),afterAllDraftChecks:true};assert.match(await fs.readFile(draft,'utf8'),/我正在写客户交付/);check(10)
+  const reloadErrors=await evaluate('window.__v119ReloadErrors');assert.ok(Array.isArray(reloadErrors));report.runtimeErrors.push(...reloadErrors)
   report.errorOverlay=await evaluate(`!!document.querySelector('.app-error-overlay,.global-error-overlay,#app-startup-error')`);await capture('installed-v119-final.jpg');check(11);report.status='passed';validateInstalledWorkSession(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]},{beforeProcessRestart:true})
  }catch(error){failure=error;report.status='failed';report.error={message:String(error),stack:error.stack};await capture('installed-v119-failure.jpg').catch(()=>{})}
- finally{await fs.writeFile(path.join(output,'installed-v119-workflow.json'),JSON.stringify(report,null,2)+'\n')}
+ finally{if(reloadDiagnostic?.identifier)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:reloadDiagnostic.identifier}).catch(()=>{});await fs.writeFile(path.join(output,'installed-v119-workflow.json'),JSON.stringify(report,null,2)+'\n')}
  if(failure)throw failure
 }
