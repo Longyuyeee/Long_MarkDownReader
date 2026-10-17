@@ -1,5 +1,9 @@
 # v1.1.8 安装与发布收尾
 
+## 发布已完成（最新）
+
+[发布与公开回下载 39013950570](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39013950570) **success**，[正式 v1.1.8](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.8) 已公开。固定源码 **60476b3e**，原 MSI/NSIS 与 SHA256SUMS 三附件逐项下载/大小/摘要核验一致，发布收据已严格导入到 `evidence/v1.1.8-release/`。README 正式下载和末尾摘要已更新；公开/运行时均 1.1.8，下一目标 1.1.9。以下封板前/失败快照保留，不作为当前待办；完整依据见[发布审计](V1_1_8_Unsigned_Community_Release_Audit_2026-10-17.md)。
+
 ## 最终同包完整通过，进入封板发布
 
 **39013468078 success**，固定产品 **60476b3e**、原安装器构建 **39009632854**、驱动 **4d8c3457**。本版 20 项、全部历版 77 项、22 项生命周期、18 项安装工作区、11 条路由、7 项管理恢复及 4 项版本身份完整通过；所有原始报告导入并经严格源码/驱动/包摘要校验，最终关键原图已实看。最终驱动完整 CI **39013469737 success**，PR #57 合入 main `be6dd079`。达到社区版封板条件，下一步直接发布已验收字节并回下载，尚不提前将 README 正式下载改为 1.1.8。详见[最终审计](V1_1_8_Unsigned_Community_Release_Audit_2026-10-17.md)。下方三轮失败均保留，不覆盖为通过。

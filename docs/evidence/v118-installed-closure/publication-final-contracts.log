@@ -1,0 +1,170 @@
+TAP version 13
+# Subtest: publication intake accepts the exact successful remote download and installer receipts
+ok 1 - publication intake accepts the exact successful remote download and installer receipts
+  ---
+  duration_ms: 1.1326
+  ...
+# Subtest: publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+ok 2 - publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+  ---
+  duration_ms: 4.7692
+  ...
+# Subtest: grouped palette targets the exact filename open button, never its row, substring or reference
+ok 3 - grouped palette targets the exact filename open button, never its row, substring or reference
+  ---
+  duration_ms: 1.7856
+  ...
+# Subtest: legacy palette accepts exact stem or full filename while rejecting a near-duplicate title
+ok 4 - legacy palette accepts exact stem or full filename while rejecting a near-duplicate title
+  ---
+  duration_ms: 1.0231
+  ...
+# Subtest: new completed zero is distinct from preparation, failure and a local format-filter zero
+ok 5 - new completed zero is distinct from preparation, failure and a local format-filter zero
+  ---
+  duration_ms: 2.5892
+  ...
+# Subtest: legacy installed packages retain their original empty/error contract
+ok 6 - legacy installed packages retain their original empty/error contract
+  ---
+  duration_ms: 0.9397
+  ...
+# Subtest: installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+ok 7 - installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+  ---
+  duration_ms: 0.5629
+  ...
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 8 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 71.1257
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 9 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 43.4951
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 10 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 0.5047
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 11 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 10.3336
+  ...
+# Subtest: v118 candidate/public handoff never inherits an official update observation
+ok 12 - v118 candidate/public handoff never inherits an official update observation
+  ---
+  duration_ms: 0.5443
+  ...
+# Subtest: published v1.0.24 requires its exact tag and keeps the new updater pending
+ok 13 - published v1.0.24 requires its exact tag and keeps the new updater pending
+  ---
+  duration_ms: 1.2833
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=pending
+ok 14 - hosted-execution-pending: community=pending, receipt=pending
+  ---
+  duration_ms: 0.1361
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=passed
+ok 15 - hosted-execution-pending: community=pending, receipt=passed
+  ---
+  duration_ms: 0.1669
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=pending
+ok 16 - hosted-execution-pending: community=passed, receipt=pending
+  ---
+  duration_ms: 0.0565
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=passed
+ok 17 - hosted-execution-pending: community=passed, receipt=passed
+  ---
+  duration_ms: 0.1011
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=pending
+ok 18 - hosted-managed-update-passed: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0431
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=passed
+ok 19 - hosted-managed-update-passed: community=pending, receipt=passed
+  ---
+  duration_ms: 0.0739
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=pending
+ok 20 - hosted-managed-update-passed: community=passed, receipt=pending
+  ---
+  duration_ms: 0.0415
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=passed
+ok 21 - hosted-managed-update-passed: community=passed, receipt=passed
+  ---
+  duration_ms: 0.1434
+  ...
+# Subtest: unknown status fails closed
+ok 22 - unknown status fails closed
+  ---
+  duration_ms: 0.2371
+  ...
+# Subtest: v1.0.23 candidate does not inherit historical updater acceptance
+ok 23 - v1.0.23 candidate does not inherit historical updater acceptance
+  ---
+  duration_ms: 0.1599
+  ...
+# Subtest: published successor boundary requires its own real release identity
+ok 24 - published successor boundary requires its own real release identity
+  ---
+  duration_ms: 0.1471
+  ...
+# Subtest: successor keeps the historical receipt and a separate pending update path
+ok 25 - successor keeps the historical receipt and a separate pending update path
+  ---
+  duration_ms: 0.0644
+  ...
+# Subtest: successor rejects pending-predecessor
+ok 26 - successor rejects pending-predecessor
+  ---
+  duration_ms: 0.0694
+  ...
+# Subtest: successor rejects stale-successor-path
+ok 27 - successor rejects stale-successor-path
+  ---
+  duration_ms: 0.031
+  ...
+# Subtest: successor rejects wrong-previous
+ok 28 - successor rejects wrong-previous
+  ---
+  duration_ms: 0.0272
+  ...
+# Subtest: successor rejects wrong-tag
+ok 29 - successor rejects wrong-tag
+  ---
+  duration_ms: 0.0272
+  ...
+# Subtest: successor rejects unknown-version
+ok 30 - successor rejects unknown-version
+  ---
+  duration_ms: 0.451
+  ...
+# Subtest: successor rejects changed-receipt
+ok 31 - successor rejects changed-receipt
+  ---
+  duration_ms: 0.0287
+  ...
+# Subtest: version boundary admits only current and planned successor runtime
+ok 32 - version boundary admits only current and planned successor runtime
+  ---
+  duration_ms: 0.1206
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 32
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 231.4146
