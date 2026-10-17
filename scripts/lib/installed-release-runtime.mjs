@@ -31,7 +31,11 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.deepEqual(report.checks.map(check=>[check.id,check.status]),saveHistoryChecks.map(id=>[id,'passed']))
   }
   const { workspace, routes, search, version, stability } = reports
-  if (manifest.appVersion === '1.1.9') validateInstalledWorkSession(reports.workSession, manifest)
+  if (manifest.appVersion === '1.1.9') {
+    validateInstalledWorkSession(reports.workSession, manifest)
+    assert.equal(reports.workSession.executableSha256, reports.searchCompleteness.executableSha256, 'all current/historical tasks must use the same installed executable')
+    assert.equal(reports.workSession.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit, 'all current/historical tasks must use the same review driver')
+  }
   if (['1.1.8','1.1.9'].includes(manifest.appVersion)) {
     validateInstalledSearchCompleteness(reports.searchCompleteness, reports.searchBaseline, reports.searchUser, reports.searchOffice, manifest)
   }

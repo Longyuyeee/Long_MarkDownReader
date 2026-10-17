@@ -24,7 +24,9 @@ function inherited(){
   if(report.observations)for(const key of Object.keys(report.observations))if(typeof report.observations[key]==='string')report.observations[key]=report.observations[key].replaceAll('1.1.8','1.1.9')
   records[name]={file:item.path.split('/').pop(),report}
  }
- records.workSession={file:'installed-v119-workflow.json',report:{...completedScene(),sourceCommit:manifest.sourceCommit,installerSha256:nsis}}
+ const report={...completedScene(),sourceCommit:manifest.sourceCommit,installerSha256:nsis,executableSha256:records.searchCompleteness.report.executableSha256,harnessSourceCommit:records.searchCompleteness.report.harnessSourceCommit}
+ report.processRestart.executableSha256=report.executableSha256
+ records.workSession={file:'installed-v119-workflow.json',report}
  const update=()=>manifest.runtimeSmoke.reports=Object.fromEntries(Object.entries(records).map(([name,{file,report}])=>{const path='docs/evidence/v1-1-9-candidate-lifecycle/'+file,buffer=Buffer.from(JSON.stringify(report));bytes.set(path,buffer);return [name,{path,sha256:hash(buffer)}]}))
  update();return {manifest,records,update,read:file=>bytes.get(file)}
 }
@@ -32,6 +34,7 @@ test('v119 inherits all exact-installer historical reports and refuses any missi
  const good=inherited();assert.doesNotThrow(()=>assertInstalledReleaseRuntime(good.manifest,good.read))
  for(const name of ['workSession','workflow','experience','fileManagement','foundation','foundationExtended','foundationHardening','moveContinuity','saveHistory','searchCompleteness','searchBaseline','searchUser','searchOffice']){const f=inherited();delete f.records[name];f.update();assert.throws(()=>assertInstalledReleaseRuntime(f.manifest,f.read),name)}
  const f=inherited();f.records.workSession.report.sourceCommit='0'.repeat(40);f.update();assert.throws(()=>assertInstalledReleaseRuntime(f.manifest,f.read))
+ const different=inherited();different.records.workSession.report.executableSha256='0'.repeat(64);different.records.workSession.report.processRestart.executableSha256='0'.repeat(64);different.update();assert.throws(()=>assertInstalledReleaseRuntime(different.manifest,different.read),/same installed executable/)
 })
 test('v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker',()=>{
  const smoke=fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8');for(let n=0;n<=9;n++){assert.match(smoke,new RegExp('runInstalledV11'+n+'Workflow'));if(n<8)assert.ok(fs.readFileSync(`scripts/lib/installed-v1-1-${n}-workflow.mjs`,'utf8').includes("'1.1.9'"))}

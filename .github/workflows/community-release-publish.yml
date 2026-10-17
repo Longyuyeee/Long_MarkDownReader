@@ -104,6 +104,7 @@ jobs:
           if ($env:RELEASE_VERSION -eq '1.1.9') {
             $sceneReview = Get-Content verified-review/installed-v119-workflow.json -Raw | ConvertFrom-Json
             if ($sceneReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed scene report does not belong to this successful review driver' }
+            if ($sceneReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Scene and historical search checks used different installed executable bytes' }
             @'
           import fs from 'node:fs';
           import { validateInstalledWorkSession } from './scripts/lib/installed-v1-1-9-evidence.mjs';
