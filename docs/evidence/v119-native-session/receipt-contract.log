@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: actual hosted session reports bind 13 checks to exact source, driver, program and complete successful jobs
+ok 1 - actual hosted session reports bind 13 checks to exact source, driver, program and complete successful jobs
+  ---
+  duration_ms: 1.415
+  ...
+# Subtest: missing or stale native evidence, mismatched programs and failed/pending jobs never count as success
+ok 2 - missing or stale native evidence, mismatched programs and failed/pending jobs never count as success
+  ---
+  duration_ms: 5.6118
+  ...
+# Subtest: native session driver refuses a user or self-hosted machine
+ok 3 - native session driver refuses a user or self-hosted machine
+  ---
+  duration_ms: 5.6317
+  ...
+# Subtest: evidence requires every real native check, exact source/runtime and secondary-window denial
+ok 4 - evidence requires every real native check, exact source/runtime and secondary-window denial
+  ---
+  duration_ms: 3.9839
+  ...
+# Subtest: workflow and runner use fixed product and isolated hosted-only process lifecycle
+ok 5 - workflow and runner use fixed product and isolated hosted-only process lifecycle
+  ---
+  duration_ms: 0.2557
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 80.1756

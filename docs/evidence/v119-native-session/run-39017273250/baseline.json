@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "phase": "baseline",
+  "status": "passed",
+  "productCommit": "6a3b10357bda9a2ee095fa07fe26cafd622a2ab0",
+  "harnessCommit": "3e426634f71e437a2d65ad3af575d1aa381a28e9",
+  "executableSha256": "3aafe9ced04a5209473ea4b5b66c7cbd8f99732e7153590d0f7ae0f0c827f201",
+  "runtimeBaseVersion": "1.1.8",
+  "evidenceLevel": "debug-tauri-wry-real-session-ipc-not-installed",
+  "releaseCandidate": false,
+  "isInstaller": false,
+  "sourceUserContentIncluded": false,
+  "desktopInputUsed": false,
+  "checks": [
+    "runtime-and-config-identity",
+    "metadata-export-whitelist-and-real-roundtrip",
+    "existing-export-and-invalid-fields-never-write",
+    "invalid-schema-and-oversize-import-preserve-bytes",
+    "configured-new-root-partial-preflight",
+    "traversal-duplicates-and-unconfigured-root-rejected",
+    "canonical-junction-and-private-files-rejected",
+    "locate-real-inside-file-only",
+    "secondary-window-rejects-all-four-session-commands",
+    "real-webview-storage-import-is-idempotent",
+    "metadata-actions-preserve-document-bytes"
+  ],
+  "calls": [
+    {
+      "window": "main",
+      "command": "plugin:app|version",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "get_config",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "export_work_session_bundle",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "read_work_session_bundle",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "export_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "export_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "read_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "read_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "read_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "preflight_work_session",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "locate_work_session_file",
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "locate_work_session_file",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "locate_work_session_file",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "locate_work_session_file",
+      "ok": false
+    },
+    {
+      "window": "main",
+      "command": "open_quick_note",
+      "ok": true
+    },
+    {
+      "window": "quick-note",
+      "command": "export_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "quick-note",
+      "command": "read_work_session_bundle",
+      "ok": false
+    },
+    {
+      "window": "quick-note",
+      "command": "preflight_work_session",
+      "ok": false
+    },
+    {
+      "window": "quick-note",
+      "command": "locate_work_session_file",
+      "ok": false
+    }
+  ],
+  "exportSha256": "77deba241784ad41101683651e49d88d1376af1b2e3b270bb119e2b7bc22538d"
+}
