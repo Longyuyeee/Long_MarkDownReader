@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.10"><img src="https://img.shields.io/badge/Stable-v1.1.10-cca43b" alt="v1.1.10 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.11"><img src="https://img.shields.io/badge/Stable-v1.1.11-cca43b" alt="v1.1.11 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.10**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.11**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.10_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.10/LongEdit_1.1.10_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.10_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.10/LongEdit_1.1.10_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.10](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.10) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.11_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.11/LongEdit_1.1.11_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.11_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.11/LongEdit_1.1.11_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.11](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.11) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.10/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.11/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.10_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.11_x64-setup.exe
 ```
 
 ```text
-ffa8ee662196f9cb26faee1ac2822bb91cad2a24c102b150c65dd083f37fd8e6  LongEdit_1.1.10_x64_zh-CN.msi
-d194b1573cea60c344ea11acef44bf1d8d3a20d6124911dbba296c9d0be013b0  LongEdit_1.1.10_x64-setup.exe
+57050ce34f14e27cf5684d829b8f4c7c83e6896de0a9ea89fd7574035fda0cfb  LongEdit_1.1.11_x64_zh-CN.msi
+7bc394a20893176103956d2a8cd310ea4fb9fcc04f70896eafaab91230c2b644  LongEdit_1.1.11_x64-setup.exe
 ```
 
 </details>
@@ -499,7 +499,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_10_Unsigned_Community_Release_Audit_2026-10-17.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_11_Unsigned_Community_Release_Audit_2026-10-17.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
 欢迎围绕真实使用任务提出问题、补充最小复现或贡献改进。开发 UI 时先查看相关实际页面，保留现有能力；修改后验证草稿保护、保存复开与错误反馈，不能仅为了通过验收而降低要求。
@@ -514,6 +514,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.11 | 图谱刷新保留视角与选择、失败保留和重试、密集长名避让、局部返回与思维导图接续；修复加载期主题定位和实际路由加载 | [发布说明](docs/RELEASE_NOTES_v1.1.11.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.11) · [发布审计](docs/V1_1_11_Unsigned_Community_Release_Audit_2026-10-17.md) |
 | v1.1.10 | 标签同源统计；集合按文件续载、全查询排序、刷新和条件草稿接续；标签修改预览、原文历史与多窗口草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.10.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.10) · [发布审计](docs/V1_1_10_Unsigned_Community_Release_Audit_2026-10-17.md) |
 | v1.1.9 | 工作现场导入/导出、目标库映射、缺失文件重定位；草稿保护、隐私默认值与惰性阅读位置恢复 | [发布说明](docs/RELEASE_NOTES_v1.1.9.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.9) · [发布审计](docs/V1_1_9_Unsigned_Community_Release_Audit_2026-10-17.md) |
 | v1.1.8 | 搜索按文件分组与续载、修改时间排序、跨库完整性反馈；底部重搜保留现场，PDF/Office 定位与未保存草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.8.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.8) · [发布审计](docs/V1_1_8_Unsigned_Community_Release_Audit_2026-10-17.md) |
@@ -528,4 +529,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.11 深化现有图谱，优先处理刷新与切库连续性、密集标签可读性、局部探索和正常动效下的性能；目前是规划与代码审计，不是已交付能力。[接续审计](docs/V1_1_11_Graph_Preimplementation_Audit_2026-10-17.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.12 深化本地内容备份与可靠恢复，优先明确备份范围、清单校验、恢复预览和原资料库保护；目前仅完成代码接续审计，不是已交付能力。[接续审计](docs/V1_1_12_Local_Backup_Preimplementation_Audit_2026-10-17.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。

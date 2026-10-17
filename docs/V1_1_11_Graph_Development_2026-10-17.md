@@ -1,8 +1,8 @@
 # v1.1.11 图谱深化开发与审计
 
-基于 main `35a60c8d1db6f4fcfbe6e369ec50a090ace6b247`，分支 `codex/v1111-graph-continuity`。当前运行时已原子迁移 1.1.11，公开仍 1.1.10；候选原生及安装收尾中，未封板、未发布新包。原始任务沿[代码接续审计](V1_1_11_Graph_Preimplementation_Audit_2026-10-17.md)及[既定路线](Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)，不扩张新模块、不删除既有图谱工具。
+基于 main `35a60c8d1db6f4fcfbe6e369ec50a090ace6b247`，分支 `codex/v1111-graph-continuity`。2026-10-18 最新事实：公开/运行时 **1.1.11**，已封板并[正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.11)。最终产品 **9b5adba2**，原构建 **39049461150**、独立同包 **39052642943**、封板 main CI **39053737887**、原包发布/公开回下载 **39054431188** 均 success；本版 12 + 历版 122 功能、完整安装生命周期与真正重启通过，原图实看，来源文件摘要不变。[正式审计](V1_1_11_Unsigned_Community_Release_Audit_2026-10-17.md)登记原始收据和完整摘要。下一目标 **1.1.12** 尚未实施。原始任务沿[代码接续审计](V1_1_11_Graph_Preimplementation_Audit_2026-10-17.md)及[既定路线](Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)，不扩张新模块、不删除既有图谱工具。下文候选/待执行语句为过程快照，保留失败和纠偏，不再代表当前状态。
 
-## 候选与发布接线（最新）
+## 候选与发布接线（历史快照）
 
 第三固定产品 **9b5adba245d3c24d6c891e3b0c4e7a7e326ca6ed**，构建/安装 **39049461150** 进行中；PR #70 CI **39049460499 success** 并合入 main。当前唯一待验收产品为第三候选，前两批失败包不发布。新安装及同包复核通过前，仍不宣布封板。以下为前批执行与原因纠偏。
 

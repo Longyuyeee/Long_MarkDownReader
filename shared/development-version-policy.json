@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.11",
+  "developmentTargetVersion": "1.1.12",
   "runtimeBaseVersion": "1.1.11",
-  "publicVersion": "1.1.10",
-  "publicTag": "v1.1.10",
-  "publicTagCommit": "599374bf4f11454889e11a6f0f9a7ac6e2cabb0e",
+  "publicVersion": "1.1.11",
+  "publicTag": "v1.1.11",
+  "publicTagCommit": "9b5adba245d3c24d6c891e3b0c4e7a7e326ca6ed",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-50-v1.1.11-version-candidate",
-  "binaryVersionTransition": "v1.1.11-release-ready",
-  "displayLabel": "v1.1.11 图谱深化候选 · 当前公开 v1.1.10",
+  "currentStage": "M8-51-v1.1.11-published",
+  "binaryVersionTransition": "v1.1.11-public-release-published",
+  "displayLabel": "v1.1.11 已发布 · 下一版本 v1.1.12",
   "activeSlice": {
     "id": "v1.1.11-graph-exploration",
-    "status": "installed-workflows-passed-ready-to-publish",
-    "document": "docs/V1_1_11_Graph_Development_2026-10-17.md"
+    "status": "published-remote-assets-verified",
+    "document": "docs/V1_1_11_Unsigned_Community_Release_Audit_2026-10-17.md"
   }
 }
