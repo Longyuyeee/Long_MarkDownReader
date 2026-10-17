@@ -1,0 +1,135 @@
+TAP version 13
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 1 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 80.5813
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 2 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 43.3116
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 3 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 0.5365
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 4 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 10.4677
+  ...
+# Subtest: v118 candidate/public handoff never inherits an official update observation
+ok 5 - v118 candidate/public handoff never inherits an official update observation
+  ---
+  duration_ms: 0.5026
+  ...
+# Subtest: published v1.0.24 requires its exact tag and keeps the new updater pending
+ok 6 - published v1.0.24 requires its exact tag and keeps the new updater pending
+  ---
+  duration_ms: 0.9377
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=pending
+ok 7 - hosted-execution-pending: community=pending, receipt=pending
+  ---
+  duration_ms: 0.1157
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=passed
+ok 8 - hosted-execution-pending: community=pending, receipt=passed
+  ---
+  duration_ms: 0.1405
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=pending
+ok 9 - hosted-execution-pending: community=passed, receipt=pending
+  ---
+  duration_ms: 0.049
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=passed
+ok 10 - hosted-execution-pending: community=passed, receipt=passed
+  ---
+  duration_ms: 0.0852
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=pending
+ok 11 - hosted-managed-update-passed: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0412
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=passed
+ok 12 - hosted-managed-update-passed: community=pending, receipt=passed
+  ---
+  duration_ms: 0.0722
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=pending
+ok 13 - hosted-managed-update-passed: community=passed, receipt=pending
+  ---
+  duration_ms: 0.0395
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=passed
+ok 14 - hosted-managed-update-passed: community=passed, receipt=passed
+  ---
+  duration_ms: 0.1399
+  ...
+# Subtest: unknown status fails closed
+ok 15 - unknown status fails closed
+  ---
+  duration_ms: 0.2248
+  ...
+# Subtest: v1.0.23 candidate does not inherit historical updater acceptance
+ok 16 - v1.0.23 candidate does not inherit historical updater acceptance
+  ---
+  duration_ms: 0.1497
+  ...
+# Subtest: published successor boundary requires its own real release identity
+ok 17 - published successor boundary requires its own real release identity
+  ---
+  duration_ms: 0.1428
+  ...
+# Subtest: successor keeps the historical receipt and a separate pending update path
+ok 18 - successor keeps the historical receipt and a separate pending update path
+  ---
+  duration_ms: 0.0609
+  ...
+# Subtest: successor rejects pending-predecessor
+ok 19 - successor rejects pending-predecessor
+  ---
+  duration_ms: 0.0674
+  ...
+# Subtest: successor rejects stale-successor-path
+ok 20 - successor rejects stale-successor-path
+  ---
+  duration_ms: 0.0316
+  ...
+# Subtest: successor rejects wrong-previous
+ok 21 - successor rejects wrong-previous
+  ---
+  duration_ms: 0.0299
+  ...
+# Subtest: successor rejects wrong-tag
+ok 22 - successor rejects wrong-tag
+  ---
+  duration_ms: 0.4477
+  ...
+# Subtest: successor rejects unknown-version
+ok 23 - successor rejects unknown-version
+  ---
+  duration_ms: 0.0673
+  ...
+# Subtest: successor rejects changed-receipt
+ok 24 - successor rejects changed-receipt
+  ---
+  duration_ms: 0.0296
+  ...
+# Subtest: version boundary admits only current and planned successor runtime
+ok 25 - version boundary admits only current and planned successor runtime
+  ---
+  duration_ms: 0.1338
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 236.6771

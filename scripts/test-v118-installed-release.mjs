@@ -96,6 +96,7 @@ test('all historical installed entry guards accept v118 without removing their t
   for (let n = 0; n <= 7; n++) assert.match(smoke, new RegExp('runInstalledV11' + n + 'Workflow'))
   const publisher = fs.readFileSync('.github/workflows/community-release-publish.yml', 'utf8')
   assert.match(publisher, /validateInstalledSearchCompleteness/)
+  assert.ok(publisher.includes('$searchReview.harnessSourceCommit -ne $review.head_sha'))
   for (const file of ['v1-1-0-candidate-lifecycle.yml', 'v1-1-0-installer-review.yml']) {
     const workflow = parse(fs.readFileSync('.github/workflows/' + file, 'utf8'))
     assert.equal(workflow.on.workflow_dispatch.inputs.current_version.default, '1.1.8')

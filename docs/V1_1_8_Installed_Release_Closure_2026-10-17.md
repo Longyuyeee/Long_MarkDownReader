@@ -26,6 +26,8 @@
 
 ## 持续推进顺序
 
+固定候选产品 **`60476b3e0663fca4f933271dfe56446ec33ffec9`**，独立固定分支 `codex/v118-candidate` 不随文档/驱动更新移动。完整远端 CI [39009627407](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39009627407) **success**；[固定安装器构建/升级 39009632854](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39009632854) 正在执行，尚不将其整体标记通过。最后仅加强发布端报告与实际 review head 的绑定（相关 25 项通过），不改变候选产品或重建已验收字节。
+
 候选最终 `npm run ci:patch-release` **通过/生产依赖 0 漏洞**，只有既有 dead-code 警告，见 `quality-candidate-final.log`。最终升级边界 25 项再次通过（`handoff-final.log`）；显式保存仅发生在全部草稿保护检查结束后，正式复核还要求这份最终保存回执。后续固定本提交源码，不重建已验收字节来替代同包复核。
 
 1. 驱动审计、提交和推送，固定产品版本身份到 1.1.8，完整质量门通过。

@@ -90,6 +90,8 @@ jobs:
             if ($history.status -ne 'passed' -or $history.checks.Count -ne 12 -or @($history.checks | Where-Object status -ne 'passed').Count -or $history.sourceCommit -ne $env:PRODUCT_COMMIT -or $history.appVersion -ne $env:RELEASE_VERSION -or $history.sourceUserContentIncluded -ne $false -or $history.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Save/history workflows did not pass in the exact installed product' }
           }
           if ($env:RELEASE_VERSION -eq '1.1.8') {
+            $searchReview = Get-Content verified-review/installed-v118-workflow.json -Raw | ConvertFrom-Json
+            if ($searchReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed search report does not belong to the successful review driver' }
             @'
           import fs from 'node:fs';
           import { validateInstalledSearchCompleteness } from './scripts/lib/installed-v1-1-8-evidence.mjs';
