@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 execFileSync(process.execPath, ['--test', 'scripts/test-v1111-installed-release.mjs'], { stdio: 'inherit' })
-execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-graph-refresh.mjs', 'scripts/test-graph-topology.mjs', 'scripts/test-graph-labels.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-graph-refresh.mjs', 'scripts/test-graph-topology.mjs', 'scripts/test-graph-labels.mjs', 'scripts/test-v1111-graph-search-fixture.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-management-fixture.mjs', 'scripts/test-observed-native-command.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v119-installed-release.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v1110-installed-release.mjs'], { stdio: 'inherit' })
@@ -144,6 +144,9 @@ const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.js
 const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json', 'utf8'))
 if (pkg.version === '1.1.10' && policy.gates?.githubReleasePublished === true) {
   execFileSync(process.execPath, ['scripts/check-v1110-readme-publication.mjs'], { stdio: 'inherit' })
+}
+if (pkg.version === '1.1.11' && policy.gates?.githubReleasePublished === true) {
+  execFileSync(process.execPath, ['scripts/check-v1111-readme-publication.mjs'], { stdio: 'inherit' })
 }
 const v122Published = policy.appVersion === '1.0.22' && policy.gates?.githubReleasePublished === true
 const v123Candidate = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === false && development.publicVersion === '1.0.22'

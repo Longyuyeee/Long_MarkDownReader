@@ -21,7 +21,9 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
  const frame=()=>evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true))))')
  const settled=async()=>{await frame();await ui.waitFor(`document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraMotionState!=='running'`,'actual camera transition settled');await frame()}
  const refresh=async()=>{await ui.click('[data-testid="graph-refresh"]');await graphReady();await settled()}
- const select=async()=>{await ui.fill('.graph-search input','图谱验收主题017');await ui.key('Enter','Enter',13);await ui.waitFor(`!!document.querySelector('[data-testid="graph-selected-node"]')`,'actual selected graph node');await ui.fill('.graph-search input','');await settled()}
+ // Names also occur in other notes' wikilinks. A full path is the user's unambiguous query,
+ // not an instruction to change ranking or force a particular component selection.
+ const select=async()=>{await ui.fill('.graph-search input',files[17]);await ui.key('Enter','Enter',13);await ui.waitFor(`!!document.querySelector('[data-testid="graph-selected-node"]')`,'actual selected graph node');await ui.fill('.graph-search input','');await settled()}
  const restoreRoot=async()=>{if(moved){await fs.rename(offline,library);moved=false;report.offlineRootRestored=true}}
  try{
   await fs.mkdir(folder,{recursive:false});await fs.writeFile(path.join(folder,'.v1111-owned'),crypto.randomUUID(),{flag:'wx'})
@@ -64,7 +66,7 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
   report.inputTrace=await evaluate('window.__v1111Trace');report.runtimeErrors=await evaluate('window.__v1111Errors');report.errorOverlay=await evaluate(`!!document.querySelector('.app-error-overlay,.global-error-overlay,#app-startup-error')`);check(11)
   report.status='passed';validateInstalledGraphExploration(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]});await capture('installed-v1111-final.jpg')
  }catch(error){failure=error;report.status='failed';report.error={message:String(error),stack:error.stack};await capture('installed-v1111-failure.jpg').catch(()=>{})}
- finally{await restoreRoot();await fs.writeFile(path.join(output,'installed-v1111-workflow.json'),JSON.stringify(report,null,2)+'\n')}
+ finally{try{await restoreRoot()}catch(error){report.status='failed';report.restoreError=String(error);failure??=error}finally{await fs.writeFile(path.join(output,'installed-v1111-workflow.json'),JSON.stringify(report,null,2)+'\n')}}
  if(failure)throw failure
  return report
 }
