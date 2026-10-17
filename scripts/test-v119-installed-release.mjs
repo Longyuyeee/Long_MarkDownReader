@@ -43,6 +43,8 @@ test('v119 orchestration keeps every old workflow, exact driver publication guar
  for(const file of ['v1-1-0-candidate-lifecycle.yml','v1-1-0-installer-review.yml']){const w=parse(fs.readFileSync('.github/workflows/'+file,'utf8'));assert.equal(w.on.workflow_dispatch.inputs.current_version.default,'1.1.9');assert.equal(w.on.workflow_dispatch.inputs.previous_version.default,'1.1.8')}
  const publisher=fs.readFileSync('.github/workflows/community-release-publish.yml','utf8');assert.match(publisher,/validateInstalledWorkSession/);assert.ok(publisher.includes('$sceneReview.harnessSourceCommit -ne $review.head_sha'))
  const picker=fs.readFileSync('scripts/select-hosted-session-file.ps1','utf8');for(const token of ['github-hosted','LONGEDIT_R5I_DISPOSABLE','.v119-installed-owner','GetWindowThreadProcessId','OwnerPid','Where-Object Title -eq $Title','FromHandle','ValuePattern','InvokePattern','PostMessage'])assert.ok(picker.includes(token))
+ assert.match(picker,/ReadControlText\(new IntPtr\(handle\),13/,'cross-process edit readback must use WM_GETTEXT, never GetWindowText captions')
+ assert.ok(picker.includes('$actual -ne $resolvedFile'),'the full generated path still must roundtrip through the native control')
 })
 test('v119 candidate and publication retain precise predecessor and independent updater observation',()=>{
  const development={runtimeBaseVersion:'1.1.9',publicVersion:'1.1.8',publicTag:'v1.1.8',publicTagCommit:'60476b3e0663fca4f933271dfe56446ec33ffec9',developmentTargetVersion:'1.1.9'},community={appVersion:'1.1.9',targetRelease:{tag:'v1.1.9'},gates:{githubReleasePublished:false},release:null,patchValidation:{previousPublicVersion:'1.1.8',managedUpdaterUpgradePath:'1.1.8-to-1.1.9-pending'}}

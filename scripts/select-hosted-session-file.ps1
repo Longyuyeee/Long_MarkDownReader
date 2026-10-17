@@ -22,12 +22,13 @@ public static class SessionPickerWindows {
   [DllImport("user32.dll")] static extern int GetDlgCtrlID(IntPtr h);
   [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
   [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h,uint m,IntPtr w,string value);
+  [DllImport("user32.dll",EntryPoint="SendMessageW",CharSet=CharSet.Unicode)] static extern IntPtr ReadControlText(IntPtr h,uint m,IntPtr capacity,StringBuilder text);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
   public class Item { public long Handle; public uint Pid; public uint OwnerPid; public string Title; public string ClassName; public int ControlId; }
   static Item Read(IntPtr h) { uint pid,owner;GetWindowThreadProcessId(h,out pid);GetWindowThreadProcessId(GetWindow(h,4),out owner);var title=new StringBuilder(4096);var cls=new StringBuilder(256);GetWindowText(h,title,title.Capacity);GetClassName(h,cls,cls.Capacity);return new Item{Handle=h.ToInt64(),Pid=pid,OwnerPid=owner,Title=title.ToString(),ClassName=cls.ToString(),ControlId=GetDlgCtrlID(h)}; }
   public static Item[] Top() {var list=new List<Item>();EnumWindows((h,p)=>{list.Add(Read(h));return true;},IntPtr.Zero);return list.ToArray();}
   public static Item[] Children(long root) {var list=new List<Item>();EnumChildWindows(new IntPtr(root),(h,p)=>{list.Add(Read(h));return true;},IntPtr.Zero);return list.ToArray();}
-  public static string Text(long handle) {return Read(new IntPtr(handle)).Title;}
+  public static string Text(long handle) {var text=new StringBuilder(4096);ReadControlText(new IntPtr(handle),13,new IntPtr(text.Capacity),text);return text.ToString();}
 }
 '@
 $deadline=[DateTime]::UtcNow.AddSeconds(45)
