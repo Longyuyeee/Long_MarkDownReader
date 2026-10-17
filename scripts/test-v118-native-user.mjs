@@ -45,6 +45,19 @@ test('typing and Enter use real WebView input phases without setting DOM values'
   assert.ok(calls.some(call=>call.args.key==='a'&&call.args.modifiers===2))
   assert.ok(calls.some(call=>call.args.key==='Enter'&&call.args.type==='keyDown'&&call.args.text==='\r'))
 })
+
+test('right-click and hover wait through disappearing moving rows and send finite coordinates only once',async()=>{
+ for(const action of ['right','hover']){
+  let observations=0;const calls=[]
+  const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async()=>{observations++;return observations===2?null:{x:Math.min(observations,5)*10,y:20}}},{timeoutMs:150,pollMs:1,stableMs:3})
+  if(action==='right')await ui.clickTarget("document.querySelector('[data-drop-path]')",'right')
+  else await ui.hoverTarget("document.querySelector('.n-dropdown-option-body')")
+  assert.ok(observations>=6);assert.equal(calls.length,action==='right'?2:1)
+  assert.ok(calls.every(({method,args})=>method==='Input.dispatchMouseEvent'&&Number.isFinite(args.x)&&args.x===50&&args.y===20))
+  if(action==='right')assert.deepEqual(calls.map(({args})=>[args.type,args.button]),[['mousePressed','right'],['mouseReleased','right']])
+  else assert.equal(calls[0].args.type,'mouseMoved')
+ }
+})
 test('native user driver is hosted-only, real-bridge and actionability based',()=>{
   const source=fs.readFileSync('scripts/capture-v118-native-user.mjs','utf8'),helper=fs.readFileSync('scripts/lib/v118-native-user-input.mjs','utf8')
   assert.ok(source.indexOf('assertHostedSearchAudit()')<source.indexOf('await fs.readFile'))

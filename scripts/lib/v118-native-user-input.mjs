@@ -11,7 +11,7 @@ export function nativeUserInput({send,evaluate},{timeoutMs=20000,pollMs=80,stabl
     await send('Input.dispatchKeyEvent',{type:key==='Enter'?'keyDown':'rawKeyDown',key,code,windowsVirtualKeyCode,modifiers,...(key==='Enter'?{text:'\r',unmodifiedText:'\r'}:{})})
     await send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode,modifiers})
   }
-  const clickTarget=async(target)=>{
+  const settledPoint=async(target)=>{
     const scroll="e.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});"
     const expression=`(() => {const e=(${target});if(!e||e.disabled||getComputedStyle(e).display==='none'||getComputedStyle(e).visibility==='hidden')return null;${scroll}const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
     await waitFor(expression,'unobscured target '+target)
@@ -28,8 +28,14 @@ export function nativeUserInput({send,evaluate},{timeoutMs=20000,pollMs=80,stabl
       await new Promise(resolve=>setTimeout(resolve,pollMs))
     }
     assert.ok(point,'target did not settle before native input: '+target)
-    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,x:point.x,y:point.y,button:'left',clickCount:1})
+    return point
   }
+  const clickTarget=async(target,button='left')=>{
+    assert.ok(['left','right'].includes(button),'unsupported native input button')
+    const point=await settledPoint(target)
+    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,x:point.x,y:point.y,button,clickCount:1})
+  }
+  const hoverTarget=async(target)=>{const point=await settledPoint(target);await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:point.x,y:point.y})}
   const click=selector=>clickTarget(`document.querySelector(${JSON.stringify(selector)})`)
   const clickText=(selector,text)=>clickTarget(`[...document.querySelectorAll(${JSON.stringify(selector)})].find(e=>e.textContent.trim()===${JSON.stringify(text)})`)
   const fill=async(selector,text)=>{
@@ -45,5 +51,5 @@ export function nativeUserInput({send,evaluate},{timeoutMs=20000,pollMs=80,stabl
     }
     throw Error('Native keyboard cannot reach '+selector)
   }
-  return {waitFor,key,clickTarget,click,clickText,fill,tabTo}
+  return {waitFor,key,clickTarget,hoverTarget,click,clickText,fill,tabTo}
 }

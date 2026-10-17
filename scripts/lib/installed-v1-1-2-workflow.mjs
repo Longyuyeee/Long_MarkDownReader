@@ -18,14 +18,8 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     await capture(name)
   }
   const exists = file => fs.stat(file).then(() => true, () => false)
-  const point = expression => `(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
-  const mouse = async (expression, button = 'left') => {
-    await waitFor(`!!(${expression})`, 'file operation control exists: ' + expression)
-    await evaluate(`(${expression})?.scrollIntoView({block:'nearest'})`)
-    await waitFor(point(expression), 'visible file operation control: ' + expression)
-    const coordinates = await evaluate(point(expression))
-    for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, ...coordinates, button, clickCount: 1 })
-  }
+  const ui = nativeUserInput({ send, evaluate })
+  const mouse = (expression, button = 'left') => ui.clickTarget(expression, button)
   const item = label => `[...document.querySelectorAll('.n-dropdown-option-body')].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
   const button = (label, root = 'document') => `[...(${root}?.querySelectorAll('button') || [])].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
   const row = name => `[...document.querySelectorAll('[data-drop-path]')].find(e=>e.dataset.dropPath.replaceAll('\\\\','/').endsWith(${JSON.stringify(name.replaceAll('\\', '/'))}))`
@@ -33,9 +27,7 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
   const more = async (name, label) => {
     await mouse(row(name), 'right')
     await waitFor(`!!(${item('更多操作')})`, 'more file operations menu item')
-    await evaluate(`(${item('更多操作')}).scrollIntoView({block:'nearest'})`)
-    await waitFor(point(item('更多操作')), 'more file operations')
-    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...await evaluate(point(item('更多操作'))) })
+    await ui.hoverTarget(item('更多操作'))
     await mouse(item(label))
   }
   const sourceName = 'release-v112-note.md', duplicateName = 'release-v112-note - 副本.md'
@@ -48,7 +40,6 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
     // Enter file management as a user would, without resetting product state or
     // mistaking the search-results panel for a missing filesystem entry.
     const navigationInput = '.search-control-row input'
-    const ui = nativeUserInput({ send, evaluate })
     report.fileNavigationSetup = { searchBefore: await evaluate(`document.querySelector(${JSON.stringify(navigationInput)})?.value`), method: 'native-webview-keyboard' }
     await ui.fill(navigationInput, '')
     await ui.waitFor(`document.querySelector(${JSON.stringify(navigationInput)})?.value===''`, 'explicitly clear inherited search before native file operations')
