@@ -82,7 +82,7 @@ export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,c
   report.explicitSave={path:draft,after:sha(await fs.readFile(draft)),afterAllDraftChecks:true};assert.match(await fs.readFile(draft,'utf8'),/我正在写客户交付/);check(10)
   const reloadErrors=await evaluate('window.__v119ReloadErrors');assert.ok(Array.isArray(reloadErrors));report.runtimeErrors.push(...reloadErrors)
   report.errorOverlay=await evaluate(`!!document.querySelector('.app-error-overlay,.global-error-overlay,#app-startup-error')`);await capture('installed-v119-final.jpg');check(11);report.status='passed';validateInstalledWorkSession(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]},{beforeProcessRestart:true})
- }catch(error){failure=error;report.status='failed';report.error={message:String(error),stack:error.stack};await capture('installed-v119-failure.jpg').catch(()=>{})}
+ }catch(error){failure=error;report.status='failed';report.error={message:String(error),stack:error.stack};report.generatedFiles=await fs.readdir(root).catch(()=>[]);report.exportDiscoveries=[];for(const folder of [root,repoRoot,path.dirname(installedExecutable),path.join(process.env.USERPROFILE||root,'Documents')]){const names=await fs.readdir(folder).catch(()=>[]);report.exportDiscoveries.push(...names.filter(name=>name.endsWith('.longedit-session.json')).map(name=>path.join(folder,name)))};await capture('installed-v119-failure.jpg').catch(()=>{})}
  finally{if(reloadDiagnostic?.identifier)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:reloadDiagnostic.identifier}).catch(()=>{});await fs.writeFile(path.join(output,'installed-v119-workflow.json'),JSON.stringify(report,null,2)+'\n')}
  if(failure)throw failure
 }

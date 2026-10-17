@@ -19,13 +19,14 @@ public static class SessionPickerWindows {
   [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern int GetClassName(IntPtr h,StringBuilder b,int n);
   [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h,out uint p);
   [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h,uint flag);
+  [DllImport("user32.dll")] static extern IntPtr GetParent(IntPtr h);
   [DllImport("user32.dll")] static extern int GetDlgCtrlID(IntPtr h);
   [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
   [DllImport("user32.dll",CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h,uint m,IntPtr w,string value);
   [DllImport("user32.dll",EntryPoint="SendMessageW",CharSet=CharSet.Unicode)] static extern IntPtr ReadControlText(IntPtr h,uint m,IntPtr capacity,StringBuilder text);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
-  public class Item { public long Handle; public uint Pid; public uint OwnerPid; public string Title; public string ClassName; public int ControlId; }
-  static Item Read(IntPtr h) { uint pid,owner;GetWindowThreadProcessId(h,out pid);GetWindowThreadProcessId(GetWindow(h,4),out owner);var title=new StringBuilder(4096);var cls=new StringBuilder(256);GetWindowText(h,title,title.Capacity);GetClassName(h,cls,cls.Capacity);return new Item{Handle=h.ToInt64(),Pid=pid,OwnerPid=owner,Title=title.ToString(),ClassName=cls.ToString(),ControlId=GetDlgCtrlID(h)}; }
+  public class Item { public long Handle; public long ParentHandle; public uint Pid; public uint OwnerPid; public string Title; public string ClassName; public int ControlId; }
+  static Item Read(IntPtr h) { uint pid,owner;GetWindowThreadProcessId(h,out pid);GetWindowThreadProcessId(GetWindow(h,4),out owner);var title=new StringBuilder(4096);var cls=new StringBuilder(256);GetWindowText(h,title,title.Capacity);GetClassName(h,cls,cls.Capacity);return new Item{Handle=h.ToInt64(),ParentHandle=GetParent(h).ToInt64(),Pid=pid,OwnerPid=owner,Title=title.ToString(),ClassName=cls.ToString(),ControlId=GetDlgCtrlID(h)}; }
   public static Item[] Top() {var list=new List<Item>();EnumWindows((h,p)=>{list.Add(Read(h));return true;},IntPtr.Zero);return list.ToArray();}
   public static Item[] Children(long root) {var list=new List<Item>();EnumChildWindows(new IntPtr(root),(h,p)=>{list.Add(Read(h));return true;},IntPtr.Zero);return list.ToArray();}
   public static string Text(long handle) {var text=new StringBuilder(4096);ReadControlText(new IntPtr(handle),13,new IntPtr(text.Capacity),text);return text.ToString();}
@@ -64,14 +65,16 @@ do {
     # hidden HWND. No returned path, IPC result, DOM handler or bridge is faked.
     $children=@([SessionPickerWindows]::Children($native.Handle))
     $diagnostics+=[ordered]@{dialog=$native.Title;controls=@($children)}
-    $field=$children | Where-Object { $_.ClassName -eq 'Edit' -and $_.ControlId -in @(1001,1148,1152) } | Select-Object -First 1
+    # A Save dialog may enumerate a search edit (1001) before the filename
+    # edit. Prefer the standard File name identifiers, not descendant order.
+    $field=$children | Where-Object { $_.ClassName -eq 'Edit' -and $_.ControlId -in @(1001,1148,1152) } | Sort-Object { if($_.ControlId -eq 1148){0}elseif($_.ControlId -eq 1152){1}else{2} } | Select-Object -First 1
     $ok=$children | Where-Object { $_.ClassName -eq 'Button' -and $_.ControlId -eq 1 } | Select-Object -First 1
     if ($null -eq $field -or $null -eq $ok -or -not [SessionPickerWindows]::IsWindowEnabled([IntPtr]$ok.Handle)) { continue }
     [SessionPickerWindows]::SendMessage([IntPtr]$field.Handle,12,[IntPtr]::Zero,$resolvedFile) > $null
     $actual=[SessionPickerWindows]::Text($field.Handle)
     if ($actual -ne $resolvedFile) { throw 'Real native filename edit did not retain the intended generated path' }
     if (-not [SessionPickerWindows]::PostMessage([IntPtr]$native.Handle,273,[IntPtr]1,[IntPtr]$ok.Handle)) { throw 'Could not notify the real native OK button' }
-    $selected=[ordered]@{status='selected-real-native-dialog';processId=$process.Id;dialogProcessId=$native.Pid;executable=$process.Path;title=$native.Title;fileNameAutomationId=[string]$field.ControlId;selectedPath=$actual;method='Windows-Win32-filename-edit-and-OK-notification';desktopUserSession='disposable-github-hosted'}
+    $selected=[ordered]@{status='selected-real-native-dialog';processId=$process.Id;dialogProcessId=$native.Pid;executable=$process.Path;title=$native.Title;fileNameAutomationId=[string]$field.ControlId;selectedPath=$actual;method='Windows-Win32-filename-edit-and-OK-notification';desktopUserSession='disposable-github-hosted';controlCandidates=@($children | Where-Object ClassName -match 'Edit|Combo|Static|Search|FileName' | Select-Object Handle,ParentHandle,ControlId,ClassName,Title)}
     break
   }
   if ($null -eq $selected) { Start-Sleep -Milliseconds 150 }
