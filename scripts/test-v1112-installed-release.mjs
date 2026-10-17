@@ -23,6 +23,15 @@ test('inherited relation selection uses stable trusted input and retains native 
  for(const token of ['nativeUserInput','await nativeInput.clickTarget(selector)','actual attachment selected before submitting its relation','toolbar-dialog-saves-cross-format-relation','relationship-persisted-without-editing-files','renaming-retains-file-relationship','removing-relation-retains-both-files'])assert.ok(source.includes(token),token)
  for(const forbidden of ['dispatchEvent(','.click()','force:true','isDirty=false'])assert.ok(!source.includes(forbidden),forbidden)
 })
+test('native preflight and export reject libraries overlapping application data before reading content',()=>{
+ const source=fs.readFileSync('src-tauri/src/commands/content_backup.rs','utf8')
+ const configured=source.slice(source.indexOf('fn configured('),source.indexOf('fn source_outside_app_data('))
+ for(const token of ['source_outside_app_data','app_config_dir()','app_cache_dir()'])assert.ok(configured.includes(token),token)
+ for(const command of ['preview_content_backup','export_content_backup']){
+  const body=source.slice(source.indexOf('pub async fn '+command),source.indexOf('pub async fn '+command)+1400)
+  assert.ok(body.indexOf('configured(&app,')>=0&&body.indexOf('configured(&app,')<body.indexOf('service::'),command)
+ }
+})
 test('current runtime requires the current report plus every inherited report, same installed EXE and driver',()=>{
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.11-release/artifact-manifest.json','utf8'));manifest.appVersion=manifest.sourceVersion='1.1.12';const reports={},bytes=new Map()
  for(const [k,item]of Object.entries(manifest.runtimeSmoke.reports))reports[k]=JSON.parse(fs.readFileSync(item.path,'utf8').replaceAll('1.1.11','1.1.12'))

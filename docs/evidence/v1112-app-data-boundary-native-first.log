@@ -1,0 +1,57 @@
+   Compiling tauri-app v1.1.12 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning (1 duplicate)
+warning: `tauri-app` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 42.12s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-38d5dbc0a69a3958.exe)
+
+running 28 tests
+test commands::content_backup::tests::content_backup_commands_are_main_window_only ... ok
+test commands::content_backup::tests::content_jobs_are_exclusive_and_cancellable_without_acknowledging_commit ... ok
+test services::content_backup::tests::content_history_names_have_the_exact_identity_the_existing_history_reader_uses ... ok
+test services::content_backup::tests::content_disk_budget_and_write_failure_are_errors_not_success ... ok
+
+thread 'commands::content_backup::tests::content_backup_rejects_application_data_overlap_before_scanning' (40332) panicked at src\services\test_workspace.rs:37:31:
+called `Result::unwrap()` on an `Err` value: Os { code: 3, kind: NotFound, message: "系统找不到指定的路径。" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::content_backup::tests::content_backup_rejects_application_data_overlap_before_scanning ... FAILED
+File-symlink fixture unavailable without privilege; this branch is not symlink evidence. The separate mandatory junction test verifies an actual reparse point.
+test services::content_backup::tests::content_cancel_mid_stream_stops_at_a_bounded_chunk_and_owned_stage_is_cleaned ... ok
+test services::content_backup::tests::content_actual_symlink_is_rejected_without_following_outside_library ... ok
+test services::content_backup::tests::content_history_and_annotation_require_source_selection ... ok
+test services::content_backup::tests::content_interrupted_history_is_not_silently_excluded_or_recovered ... ok
+test services::content_backup::tests::content_manifest_rejects_budget_bombs_and_missing_source_bindings ... ok
+test services::content_backup::tests::content_export_never_overwrites_or_recurses_into_source ... ok
+test services::content_backup::tests::content_export_detects_same_length_rewrite_even_when_timestamp_is_preserved ... ok
+test services::content_backup::tests::content_scope_and_known_sensitive_exclusions_are_explicit ... ok
+test services::content_backup::tests::content_preflight_refuses_corrupt_history_and_stale_pdf_annotations ... ok
+test services::content_backup::tests::content_export_commit_race_never_replaces_an_intervening_file ... ok
+test services::content_backup::tests::content_cancel_before_any_mutation_and_commit_cannot_be_falsely_cancelled ... ok
+test services::content_backup::tests::content_zip_rejects_paths_traversal_devices_ads_and_case_collision ... ok
+test services::content_backup::tests::content_export_detects_new_and_missing_files ... ok
+test services::content_backup::tests::content_restore_rejects_replaced_archive_and_preserves_sources ... ok
+test services::content_backup::tests::content_restored_history_never_overwrites_a_prior_deleted_path_history ... ok
+test services::content_backup::tests::content_subdirectory_scope_preserves_relative_paths_without_scanning_other_content ... ok
+test services::content_backup::tests::content_zip_directory_count_is_bounded_before_allocating_untrusted_central_entries ... ok
+test services::content_backup::tests::content_actual_junction_is_rejected_without_following_external_directory ... ok
+test services::content_backup::tests::content_restore_commit_race_rolls_new_history_back_without_touching_raced_target ... ok
+test services::content_backup::tests::content_package_roundtrip_preserves_files_pdf_identity_and_rebound_history ... ok
+test services::content_backup::tests::content_restore_never_merges_with_an_existing_empty_or_populated_directory ... ok
+test services::content_backup::tests::content_zip_rejects_changed_digest_extra_entries_and_unsupported_schema ... ok
+test services::content_backup::tests::content_restore_retains_empty_folders_without_overwriting_conflicts ... ok
+
+failures:
+
+failures:
+    commands::content_backup::tests::content_backup_rejects_application_data_overlap_before_scanning
+
+test result: FAILED. 27 passed; 1 failed; 0 ignored; 0 measured; 1011 filtered out; finished in 0.14s
+
+error: test failed, to rerun pass `--lib`

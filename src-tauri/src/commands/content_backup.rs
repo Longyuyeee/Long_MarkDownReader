@@ -99,10 +99,44 @@ impl Drop for Operation {
     }
 }
 fn configured(app: &tauri::AppHandle, root: &str) -> Result<PathBuf, String> {
+    use tauri::Manager;
     let config = super::config::get_config(app.clone());
     let selected = super::index::search_pages::configured_page_scope(&config.libraries, root)
         .map_err(|e| e.message)?;
-    Ok(WorkspaceGuard::new(selected)?.root().to_owned())
+    let root = WorkspaceGuard::new(selected)?.root().to_owned();
+    source_outside_app_data(
+        &root,
+        &[
+            app.path().app_config_dir().map_err(|e| e.to_string())?,
+            app.path().app_cache_dir().map_err(|e| e.to_string())?,
+        ],
+    )?;
+    Ok(root)
+}
+fn source_outside_app_data(root: &Path, protected: &[PathBuf]) -> Result<(), String> {
+    // Fail closed for broad libraries as well as libraries inside application data.
+    // Name-based exclusions cannot distinguish an app's config.json from user data.
+    let key = |path: &Path| {
+        let path = path.canonicalize().unwrap_or_else(|_| path.to_owned());
+        let text = path.to_string_lossy().replace('\\', "/").to_lowercase();
+        let text = text
+            .strip_prefix("//?/UNC/")
+            .or_else(|| text.strip_prefix("//?/unc/"))
+            .map(|tail| format!("//{tail}"))
+            .unwrap_or_else(|| text.trim_start_matches("//?/").to_owned());
+        text.trim_end_matches('/').to_owned()
+    };
+    let source = key(root);
+    for path in protected {
+        let app_data = key(path);
+        if source == app_data
+            || source.starts_with(&format!("{app_data}/"))
+            || app_data.starts_with(&format!("{source}/"))
+        {
+            return Err("资料库范围与应用配置或缓存目录重叠，不能进行内容备份；请使用独立的资料文件夹作为资料库".into());
+        }
+    }
+    Ok(())
 }
 fn target_outside_libraries(app: &tauri::AppHandle, target: &str) -> Result<(), String> {
     use tauri::Manager;
@@ -267,6 +301,60 @@ pub fn discard_content_backup_plan(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn content_backup_rejects_application_data_overlap_before_scanning() {
+        let workspace = crate::services::test_workspace::TestWorkspace::new();
+        workspace.dir("application");
+        let config = workspace.dir("application/config");
+        let cache = workspace.dir("application/cache");
+        let nested = workspace.dir("application/config/nested");
+        let sibling = workspace.dir("application/config-not-the-app");
+        let documents = workspace.dir("documents");
+        std::fs::write(config.join("config.json"), b"private settings").unwrap();
+        std::fs::write(cache.join("index.json"), b"private index").unwrap();
+        let protected = [config.clone(), cache.clone()];
+        for source in [&workspace.0, &config, &cache, &nested] {
+            assert!(source_outside_app_data(source, &protected)
+                .unwrap_err()
+                .contains("重叠"));
+        }
+        for source in [&documents, &sibling] {
+            assert!(source_outside_app_data(source, &protected).is_ok());
+        }
+        // Comparison must handle canonical extended Windows paths, case and a
+        // protected directory that has not been created yet, without prefix collisions.
+        #[cfg(windows)]
+        {
+            assert!(source_outside_app_data(
+                &PathBuf::from(config.to_string_lossy().to_uppercase()),
+                &protected
+            )
+            .is_err());
+            assert!(source_outside_app_data(
+                &workspace.0,
+                &[workspace.0.join("not-created/app-data")]
+            )
+            .is_err());
+            assert!(source_outside_app_data(
+                Path::new(r"\\?\UNC\server\share\notes"),
+                &[PathBuf::from(r"\\server\share\notes\app")]
+            )
+            .is_err());
+            assert!(source_outside_app_data(
+                Path::new(r"\\server\share\notes-other"),
+                &[PathBuf::from(r"\\?\UNC\server\share\notes")]
+            )
+            .is_ok());
+        }
+        assert_eq!(
+            std::fs::read(config.join("config.json")).unwrap(),
+            b"private settings"
+        );
+        assert_eq!(
+            std::fs::read(cache.join("index.json")).unwrap(),
+            b"private index"
+        );
+    }
     #[test]
     fn content_backup_commands_are_main_window_only() {
         assert!(main_only("main").is_ok());

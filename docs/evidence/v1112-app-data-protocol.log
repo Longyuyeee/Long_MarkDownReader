@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: content backup schema rejects missing workflows, source changes, incomplete restores and false native input
+ok 1 - content backup schema rejects missing workflows, source changes, incomplete restores and false native input
+  ---
+  duration_ms: 39.8603
+  ...
+# Subtest: new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts
+ok 2 - new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts
+  ---
+  duration_ms: 0.6289
+  ...
+# Subtest: inherited relation selection uses stable trusted input and retains native relationship assertions
+ok 3 - inherited relation selection uses stable trusted input and retains native relationship assertions
+  ---
+  duration_ms: 0.6496
+  ...
+# Subtest: native preflight and export reject libraries overlapping application data before reading content
+ok 4 - native preflight and export reject libraries overlapping application data before reading content
+  ---
+  duration_ms: 0.454
+  ...
+# Subtest: current runtime requires the current report plus every inherited report, same installed EXE and driver
+ok 5 - current runtime requires the current report plus every inherited report, same installed EXE and driver
+  ---
+  duration_ms: 232.8569
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 545.4971
