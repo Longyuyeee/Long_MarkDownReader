@@ -13,7 +13,7 @@ for(const file of [...walk('scripts'),...walk('.github/workflows')].filter(f=>/\
   return states.length?whole.slice(0,-1)+', '+states.map(JSON.stringify).join(', ')+']':whole
  })
  if(['import-community-release-review.mjs','installed-release-runtime.mjs'].includes(path.basename(file)))after=after.replaceAll("version === '1.1.12'","['1.1.12','1.1.13'].includes(version)").replaceAll("manifest.appVersion === '1.1.12'","['1.1.12','1.1.13'].includes(manifest.appVersion)")
- if(path.basename(file)==='installed-release-runtime.mjs')after=after.replace('const evidenceRoot = ',"const evidenceRoot = manifest.appVersion === '1.1.13' ? 'docs/evidence/v1-1-13-candidate-lifecycle/' : ")
+ if(path.basename(file)==='installed-release-runtime.mjs'&&!after.includes("manifest.appVersion === '1.1.13' ? 'docs/evidence/v1-1-13-candidate-lifecycle/'"))after=after.replace('const evidenceRoot = ',"const evidenceRoot = manifest.appVersion === '1.1.13' ? 'docs/evidence/v1-1-13-candidate-lifecycle/' : ")
  if(['v1-1-0-candidate-lifecycle.yml','v1-1-0-installer-review.yml'].includes(path.basename(file)))after=after.replace(/(current_version:[\s\S]*?default: ")1\.1\.\d+("?)/,'$11.1.13$2').replace(/(previous_version:[\s\S]*?default: ")1\.1\.\d+("?)/,'$11.1.12$2')
  if(path.basename(file)==='community-release-publish.yml')after=after.replaceAll("-eq '1.1.12'","-in @('1.1.12','1.1.13')")
  if(path.basename(file)==='capture-r5j-installed-artifact-smoke.mjs')after=after.replaceAll("appVersion === '1.1.12'","['1.1.12','1.1.13'].includes(appVersion)")

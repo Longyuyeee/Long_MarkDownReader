@@ -10,6 +10,7 @@ const example=()=>{
  const report={appVersion:manifest.appVersion,sourceCommit:manifest.sourceCommit,installerSha256:manifest.artifacts[0].sha256,harnessSourceCommit:'d'.repeat(40),executableSha256:'e'.repeat(64),status:'passed',evidenceLevel:'installed-webview-input-native-pdf-notes-picker-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,errorOverlay:false,checks:pdfReadingChecks.map(id=>({id,status:'passed'})),pdfPages:86,annotationCount:240,filteredCount:6,previewCount:2,selectedIds:['reading-11','reading-14'],sourceBefore:digest,sourceAfter:digest,sidecarBefore:digest,sidecarAfter:digest,unselectedBefore:digest,unselectedAfter:digest,targetSignatureBefore:'original',targetSignatureAfterInsert:'original',draftBeforeSaveSha256:digest,explicitSavedSha256:digest,nativePicker:{status:'selected-real-native-dialog',dialogClosed:true,desktopUserSession:'disposable-github-hosted',processId:1},inputTrace:['click','keydown','input'].map(type=>({type,trusted:true})),runtimeErrors:[],editorModes:{before:'sv',after:'sv'}}
  for(const key of ['dirtyBeforeInsert','dirtyAfterInsert','exactDraftPrefix','draftDiskUnchangedBeforeSave','explicitSave','returnedExactAnnotation','deletedAnnotationNotice','legacyNotice','newNoteSelectedOnly','existingTargetPreserved','replacementRejected','replacementTimestampPreserved','movedRelinkDirtyOnly','movedRelinkReturnedExact','restoredReferenceVerified','restoredPageVisible'])report[key]=true
  report.snapshot={items:report.selectedIds.map((id,i)=>({annotation:{id,page:i+12},uri:`longedit://pdf?path=p.pdf&page=${i+12}&annotation=${id}&sha256=${digest}`}))}
+ for(const field of ['sourceRender','movedRender','restoredRender'])report[field]={observedFrom:'rendered-pdf-controls-text-and-canvas',page:12,annotationId:'reading-11',placeholderAbsent:true,text:'Reading source page 12',width:612,height:792,opaquePixels:200,inkPixels:40}
  return [report,manifest]
 }
 test('PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts',()=>{
@@ -20,6 +21,9 @@ test('PDF workflow uses real input, owned native chooser and independent disk ch
  const source=fs.readFileSync('scripts/lib/installed-v1-1-13-workflow.mjs','utf8')
  for(const token of ['LONGEDIT_R5I_DISPOSABLE','github-hosted','nativeUserInput','observedNativeCommand','select-hosted-session-file.ps1','replace-hosted-pdf-source.ps1','fs.readFile','explicitSave','validateInstalledPdfReading','sourceBefore'])assert.ok(source.includes(token),token)
  for(const token of ['dispatchEvent(','__TAURI_INTERNALS__ =','__TAURI_INTERNALS__=','isDirty=false','isDirty = false','force:true','force: true'])assert.ok(!source.includes(token),token)
+})
+test('a tab label or blank/wrong canvas cannot stand in for an actual source page',()=>{
+ for(const mutate of [r=>r.sourceRender.inkPixels=0,r=>r.movedRender.page=1,r=>r.restoredRender.text='wrong page',r=>r.sourceRender.annotationId='wrong',r=>r.pdfPages=2]){const [r,m]=example();mutate(r);assert.throws(()=>validateInstalledPdfReading(r,m))}
 })
 test('v1.1.13 requires its PDF report and every predecessor, with the same executable and driver',()=>{
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.12-release/artifact-manifest.json','utf8'));manifest.appVersion=manifest.sourceVersion='1.1.13'
