@@ -1,0 +1,90 @@
+TAP version 13
+# Subtest: publication intake accepts the exact successful remote download and installer receipts
+ok 1 - publication intake accepts the exact successful remote download and installer receipts
+  ---
+  duration_ms: 1.2517
+  ...
+# Subtest: publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+ok 2 - publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+  ---
+  duration_ms: 5.3193
+  ...
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+ok 3 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 18.3364
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 4 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 21.3527
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 5 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 189.6762
+  ...
+# Subtest: right-click and hover wait through disappearing moving rows and send finite coordinates only once
+ok 6 - right-click and hover wait through disappearing moving rows and send finite coordinates only once
+  ---
+  duration_ms: 109.2321
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 7 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.5884
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 8 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.4954
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 9 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 2.0209
+  ...
+# Subtest: reload probe waits through absent app/Pinia/reader, without hiding real script exceptions
+ok 10 - reload probe waits through absent app/Pinia/reader, without hiding real script exceptions
+  ---
+  duration_ms: 3.1772
+  ...
+# Subtest: secondary permission checks must wait for an actual callable bridge
+ok 11 - secondary permission checks must wait for an actual callable bridge
+  ---
+  duration_ms: 1.136
+  ...
+# Subtest: installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+ok 12 - installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+  ---
+  duration_ms: 12.5629
+  ...
+# Subtest: v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+ok 13 - v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+  ---
+  duration_ms: 85.437
+  ...
+# Subtest: v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+ok 14 - v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+  ---
+  duration_ms: 13.9149
+  ...
+# Subtest: historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions
+ok 15 - historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions
+  ---
+  duration_ms: 0.2575
+  ...
+# Subtest: v119 candidate and publication retain precise predecessor and independent updater observation
+ok 16 - v119 candidate and publication retain precise predecessor and independent updater observation
+  ---
+  duration_ms: 0.7435
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 635.5648

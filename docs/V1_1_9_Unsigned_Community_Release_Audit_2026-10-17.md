@@ -1,10 +1,12 @@
-# v1.1.9 社区版发布审计（已封板，公开发布待完成）
+# v1.1.9 社区版发布审计（已封板、已公开）
 
-本版已完成同包安装复核和实际页面审查，可以封板；当前正式公开版仍 1.1.8，未提前登记发布。本版 UI、相对路径元数据与恢复保护实现见[开发审计](V1_1_9_Work_Session_Development_2026-10-17.md)，正式页面与失败保留见[页面证据](evidence/v119-session-ui/README.md)。
+**[v1.1.9 正式 Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.9) 已公开**，发布时间 2026-10-17 18:55:40（北京时间）。发布与公开回下载 **39026697077 success**，三个附件大小、SHA-256 和 GitHub digest 与原验收包一致；不是重新打包。原始 API、工作流、收据与回下载结果已严格导入 `evidence/v1.1.9-release/publication/`。运行时/公开均 **1.1.9**，下一开发目标 **1.1.10**。
+
+本版 UI、相对路径元数据与恢复保护实现见[开发审计](V1_1_9_Work_Session_Development_2026-10-17.md)，正式页面与失败保留见[页面证据](evidence/v119-session-ui/README.md)。
 
 ## 固定源码与通过的证据
 
-固定产品/将来标签源码 **b92c18a1705cf787a05c2b3a97e78feeb29d46fb**。原构建 **39020293589** 整体 failure，但完整质量门、完整 Rust 回归、MSI/NSIS 生成及不可变收据四项构建门成功。后续未修改产品或重建安装器；独立同包复核 **[39025506534](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39025506534) success**，驱动 **61b94e5fdd06a6db07eb5159df44749838f31293**，不是把原失败运行改称成功。
+产品与标签固定源码 **b92c18a1705cf787a05c2b3a97e78feeb29d46fb**。原构建 **39020293589** 整体 failure，但完整质量门、完整 Rust 回归、MSI/NSIS 生成及不可变收据四项构建门成功。后续未修改产品或重建安装器；独立同包复核 **[39025506534](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39025506534) success**，驱动 **61b94e5fdd06a6db07eb5159df44749838f31293**，不是把原失败运行改称成功。
 
 | 范围 | 实际结果 |
 | --- | --- |
@@ -29,8 +31,10 @@
 
 ## 发布边界与下一步
 
-开发策略 `releaseCandidate=false` 表示没有企业 RC 提升；社区发布策略 `releaseCandidate=true` 表示社区渠道具有封板证据，二者不是矛盾，也不代表 Authenticode 签名完成。接下来标签固定上述产品，发布相同安装器，公开回下载核对三附件后，才更新公开版本和 README；更新摘要放在末尾。下一版按[标签与集合接续审计](V1_1_10_Tag_Collections_Preimplementation_Audit_2026-10-17.md)实施，仍保留先示意、实际页面核对和全部功能。
+开发策略 `releaseCandidate=false` 表示没有企业 RC 提升；社区发布策略 `releaseCandidate=true` 表示社区渠道具有封板证据，二者不是矛盾，也不代表 Authenticode 签名完成。标签已固定上述产品，发布相同安装器并公开回下载核对三附件；README 更新摘要放在末尾。下一版按[标签与集合接续审计](V1_1_10_Tag_Collections_Preimplementation_Audit_2026-10-17.md)实施，仍保留先示意、实际页面核对和全部功能。
 
 未签名 `community-unsigned` 社区包保留“未知发布者”警示，用户可从正式 GitHub Release 手动下载安装并核对 SHA-256，自动更新观察独立。MSI 摘要验证不称完整 MSI 生命周期；覆盖安装不称应用内更新通过。当前安装及发布进度见[收尾台账](V1_1_9_Installed_Release_Closure_2026-10-17.md)。
 
-封板时完整 `npm run ci:patch-release` **退出 0 / 生产依赖 0 漏洞**，当前开发审计通过；原始日志 `evidence/v119-installed-closure/freeze-{quality,audit}.log`。驱动完整 CI **39025508640 success**，PR **#60** 合入 main **8866da6f**。后续证据/发布文档独立提交，不移动固定产品或安装器；公开发布和回下载仍须实际完成。
+封板时完整 `npm run ci:patch-release` **退出 0 / 生产依赖 0 漏洞**，当前开发审计通过；原始日志 `evidence/v119-installed-closure/freeze-{quality,audit}.log`。驱动 CI **39025508640**、main CI **39026105794**、封板证据 CI **39026136426** 均 success；PR **#60 / #61** 分别合入 main **8866da6f / 48104dfb**。证据/发布文档独立提交，不移动产品或安装器；发布及公开回下载已经真实完成，原始收据不可改写。
+
+发布导入后最终完整质量门 **退出 0 / 生产依赖 0 漏洞**，当前开发审计通过，相关发布/安装/输入合同 **16 项通过**；原始日志 `evidence/v119-installed-closure/publication-final-{quality,audit,contracts}.log`。另用只读脚本核对 README 开头图标/介绍不变、历版行保留、更新摘要在末尾、正式附件路径和摘要、Release 正文及下一目标一致。首轮正文比较仅因 Windows Actions 的 CRLF 与本地 LF 不同而失败，原日志 `publication-readme-before.log` 保留；只规范比较换行，不重写原 API/发布正文、安装器或原始收据，复核通过。
