@@ -500,7 +500,8 @@ import type { GraphData, GraphNode, RelationMention } from '../types/graph'
 import type { GraphPathEdgeEvidence } from '../utils/graphEvidence'
 import type { GraphComparisonDirectRelation } from '../utils/graphComparison'
 
-const props = defineProps<{ show?: boolean }>()
+// Routed pages omit this optional Boolean; Vue otherwise casts absence to false.
+const props = withDefaults(defineProps<{ show?: boolean }>(), { show: true })
 const emit = defineEmits(['selectFile'])
 
 const containerRef = ref<HTMLElement | null>(null)

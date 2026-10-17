@@ -33,6 +33,15 @@ test('governance loading repair has real-component early-click proof and preserv
  assert.ok(part.includes("nativeUserInput({send,evaluate}).click"));assert.ok(part.includes('selectedTopic.nodeId'));assert.ok(part.includes('selectedTopic.title'));assert.ok(!part.includes('layoutSettled'),'do not wait away an early click to hide the product race')
 })
 
+test('real router omitted visibility defaults to true without removing explicit hidden-response isolation',()=>{
+ const proof=JSON.parse(fs.readFileSync('docs/evidence/v1111-route-props-final/results.json','utf8'))
+ assert.equal(proof.checks.length,5);assert.deepEqual(proof.errors,[])
+ const graph=fs.readFileSync('src/components/GraphView.vue','utf8'),fixture=fs.readFileSync('scripts/fixtures/v1111-graph-browser.mjs','utf8')
+ assert.ok(graph.includes('withDefaults(defineProps<{ show?: boolean }>(), { show: true })'))
+ assert.ok(graph.includes('graphLoopMounted && props.show !== false'))
+ assert.ok(fixture.includes("params.has('omittedShow')?h(RouterView)"),'the real RouterView, not an always-true wrapper, must cover omitted props')
+})
+
 test('v1.1.11 manifest requires graph evidence and every inherited report with the same executable and driver',()=>{
  // In-memory schema mutation only; original public evidence is never edited.
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.10-release/artifact-manifest.json','utf8'))

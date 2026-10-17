@@ -2,7 +2,15 @@
 
 公开仍 1.1.10，运行时候选 1.1.11，尚未封板或发布。当前任务持续推进到真实闭环；[开发审计](V1_1_11_Graph_Development_2026-10-17.md)登记全部正式页面与性能事实。
 
-## 第二候选：构建与安装验收中（最新）
+## 第三候选准备：真实路由可见性默认值（最新）
+
+第二候选 **920ba39c / 39046576581 failure** 同样在主题选择中断，不能发布。[实际安装诊断](evidence/v1111-installed-closure/build-39046576581/installed-knowledge-topic-selection-failure.json)显示主题身份/路由正确，但画布仍 `0 / 0` 且一直 loading；[原图](evidence/v1111-installed-closure/build-39046576581/installed-knowledge-topic-selection-failure.jpg)已经实看。之前的加载期点击丢失确实是一个产品问题，但不是安装态持续加载的完整解释，不能将第二候选视为通过。
+
+进一步实读实际路由及 Vue 行为：路由不传 GraphView 的可选布尔 `show`，Vue 会将缺省布尔转换为 false；新增请求 gate 因此拒收成功响应，finally 也不清 loading。先前隔离夹具显式传 true，漏掉了真实挂载方式，这是回归覆盖缺口。已用缺省属性稳定复现原图，并改为 `withDefaults(..., { show: true })`；显式 false 和隐藏中迟到响应保护均保留，没有去掉安全 gate 来凑通过。
+
+最终验证使用真正 `RouterView` 路由挂载、不传 show，而非始终显式 true 的包装组件。缺省路由加载/切库、早期主题点击/居中、显式隐藏后恢复、隐藏迟到响应五场景通过，原图已经实看；见[最终报告](evidence/v1111-route-props-final/results.json)。连续性 8 场景、原治理交接 4 场景及[完整质量门](evidence/v1111-installed-closure/route-fixed-quality.log)退出 0，生产依赖 0 漏洞；隐藏 gate 未删除。第三候选仍需重新固定源码和构建、完整安装及同包独立复核。前两个候选的 MSI/NSIS 都不能发布。
+
+## 第二候选：已失败（以下为执行快照）
 
 固定产品 **920ba39cdbafbc6b5ab8229604930fe711cb1a99**，构建 **39046576581**，PR #69 CI **39046576029 success**，已合入 main。新包尚未完整验收，未封板或发布；成功后必须独立复核相同新包。原生完整测试由新构建重新执行，原失败候选不能混入最终附件或导入清单。后续事实继续追加。
 

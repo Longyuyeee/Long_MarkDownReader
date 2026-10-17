@@ -1,7 +1,7 @@
 // Production GraphView, simulated IPC and isolated generated data. Never native proof.
 import {createApp,h,nextTick,ref,watch} from 'vue'
 import {createPinia} from 'pinia'
-import {createRouter,createMemoryHistory} from 'vue-router'
+import {createRouter,createMemoryHistory,RouterView} from 'vue-router'
 import * as naive from 'naive-ui'
 import GraphView from '/src/components/GraphView.vue'
 import {useAppStore} from '/src/store/app.ts'
@@ -10,7 +10,7 @@ import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
 const params=new URLSearchParams(location.search),count=Number(params.get('count')||180),kind=params.get('kind')||'connected'
 if(![12,180,540,1200].includes(count))throw Error('Unexpected generated fixture size')
-const pinia=createPinia(),store=useAppStore(pinia),show=ref(true),calls=[],pending=[]
+const pinia=createPinia(),store=useAppStore(pinia),show=ref(!params.has('initialHidden')),calls=[],pending=[]
 const rootA='C:/graph-a',rootB='C:/graph-b'
 const graphFor=root=>({nodes:Array.from({length:count},(_,i)=>({id:'n'+i,title:(root===rootB?'另一资料库 · ':'')+['项目方案与长期研究记录','会议纪要与行动清单','阅读摘录与来源核对'][i%3]+' · '+i,path:root+'/资料'+i+'.md',size:8+i%16,tags:[i%2?'研究':'项目'],directory:'',modifiedAt:1800000000,objectType:['markdown','pdf','table','image'][i%4],searchText:'项目 研究 '+i})),edges:kind==='orphans'?[]:Array.from({length:count*2},(_,i)=>({source:'n'+Math.floor(i/2),target:'n'+((Math.floor(i/2)+(i%2?7:1))%count),relationType:i%2?'related':'links-to',directed:i%2===0,mentions:[]}))})
 const graphs=new Map([[rootA,graphFor(rootA)],[rootB,graphFor(rootB)]])
@@ -46,7 +46,7 @@ const router=createRouter({history:createMemoryHistory(),routes:[{path:'/graph',
 await router.push(params.has('health')?'/graph?focus=overview':'/graph')
 audit.router=router
 document.body.dataset.theme=store.theme;document.body.style.margin='0';document.querySelector('#app').style.height='100vh'
-const app=createApp({render:()=>h(naive.NDialogProvider,{},()=>h(naive.NMessageProvider,{},()=>h(GraphView,{show:show.value})))})
+const app=createApp({render:()=>h(naive.NDialogProvider,{},()=>h(naive.NMessageProvider,{},()=>params.has('omittedShow')?h(RouterView):h(GraphView,{show:show.value})))})
 registerNaiveComponents(app);app.use(pinia).use(router).mount('#app');await nextTick()
 audit.unmount=()=>app.unmount()
 // Proposal-only chrome. It is not part of GraphView and never used by acceptance.

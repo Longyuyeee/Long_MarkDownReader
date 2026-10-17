@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "router-style omitted Boolean defaults to visible and commits native response",
+    "omitted prop also reloads the actual new library instead of invalidating its response",
+    "omitted prop plus an early real health click loads and selects the requested topic",
+    "explicit false still blocks commit, and explicit true resumes the graph",
+    "hidden in-flight response remains invalidated before visible reload"
+  ],
+  "errors": []
+}
