@@ -8,6 +8,8 @@
 
 修复产品4fb14270的原构建 **39063418440 success**：完整质量、1033功能+1性能、MSI/NSIS、不可变收据和完整安装流程均通过，[构建完整日志](evidence/v1112-corrected-build-39063418440.log)。当前NSIS摘要为`1fed0d5d40ef4c56efb9e8e23a6837217e56680b7e4187f8f825b8730b440409`。独立同包 **39066551529** 已启动，驱动1cd954f7；此时未记复核通过，未封板/发布。后续不得重建替换此已通过包。此前“新构建执行中”为上批快照。
 
+已下载并原样保留[修复后原构建报告](evidence/v1112-corrected-build-39063418440/installed-v1112-workflow.json)和[不可变收据](evidence/v1112-corrected-build-39063418440/installer-build-receipt.json)，不下载或执行本机安装器。实际查看原构建的预检、导出、坏包拒绝、恢复准备/完成、恢复Markdown图片和PDF七张原图；正式16项报告严格校验通过，真实写入暂存后取消accepted=true、published=false、remainingStages=0，模式sv→所见检查图片→sv，源摘要/时间、批注、历史备注与草稿均通过。MSI **77291520**字节 / SHA-256 `1bc120e4c7865dc928c9a232e8f9e40fe787ae332d7d976e4d5f5528f764d776`，NSIS **68147972**字节，EXE `cb21d6aa611c70309f86773bbba5dd9f8c02c758a7ae44fbba75565bc04325e6`。独立复核仍须另行通过，不能把这一轮原构建报告冒充独立结果。
+
 补审修复专项28/28、协议5/5、完整1033功能+1性能（0失败，5既有ignored）和完整质量门禁/生产依赖0漏洞通过，[修复质量日志](evidence/v1112-app-data-quality.log)。新固定产品 **4fb14270513d556ed965a0c27308bdc727eacd4b**，新构建 **39063418440** 执行中，尚未记安装通过。旧包第三次复核39062801630成功，已实看其原始页面；[报告](evidence/v1112-installed-closure/review-39062801630/installed-v1112-workflow.json)与[日志](evidence/v1112-review-39062801630.log)仅为修复前证据，不导入为可发布收据。
 
 1. 44份活动版本身份受限原子迁移到1.1.12，公开下载暂保持1.1.11；保留所有旧收据字节。
