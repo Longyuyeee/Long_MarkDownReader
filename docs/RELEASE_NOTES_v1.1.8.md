@@ -1,6 +1,6 @@
 # Long编辑 v1.1.8 · 搜索更完整，接着找不丢现场
 
-> 发布说明预备稿：固定安装包验收和同包复核通过后才公开发布，目前正式下载仍为 v1.1.7。
+本版继续深化已有资料库搜索和 `Ctrl+P` 命令面板：大资料库可接着查，结果来源和未查全状态更清楚，打开资料时仍保护正在写的内容。
 
 ## 找全资料，也看得懂结果
 
@@ -21,4 +21,13 @@
 
 搜索有资源预算，不能承诺任意规模全部一次返回；跨库异常明确显示，不虚报完整总数。工作簿定位到工作表，不宣传为单元格级定位。支持打开/定点阅读不代表完整 Office 编辑等价。
 
-详见[本版开发与证据](V1_1_8_Search_Development_2026-10-17.md)及[安装发布收尾](V1_1_8_Installed_Release_Closure_2026-10-17.md)。
+## 安装包与验证
+
+Windows 10/11 x64，通常选择 NSIS 安装程序；MSI 供使用相应部署流程的用户。安装包与完整同包复核使用相同字节，不在验收后重新构建。已完成本版 20 项搜索/Office、历版 77 项功能继承、22 项安装生命周期、18 项工作区、11 条页面、7 项管理恢复及 4 项版本身份验证。
+
+```text
+e8fe3697f4a279beb191902c1f9de314e63acb7e03e839f605869e74694e0785  LongEdit_1.1.8_x64_zh-CN.msi
+69ec121088e98fa58b5a10b0abde339ddc7676c242196b576b08033f08950481  LongEdit_1.1.8_x64-setup.exe
+```
+
+详见[本版开发记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_8_Search_Development_2026-10-17.md)与[发布审计](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_8_Unsigned_Community_Release_Audit_2026-10-17.md)。
