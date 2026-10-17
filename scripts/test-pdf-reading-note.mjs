@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {test} from 'node:test'
 import ts from 'typescript'
 const load=async file=>import('data:text/javascript;base64,'+Buffer.from(ts.transpile(fs.readFileSync(file,'utf8'),{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022})).toString('base64'))
-const {readingNoteMarkdown,appendReadingDraft,annotationPageFilter}=await load('src/utils/pdfReadingNote.ts')
+const {readingNoteMarkdown,appendReadingDraft,annotationPageFilter,readingTargetDirectory}=await load('src/utils/pdfReadingNote.ts')
 const {parsePdfReferenceUri}=await load('src/utils/pdfReference.ts')
 test('PDF notes page range works for one page, disjoint ranges and rejects invalid/outside ranges',()=>{
  assert.deepEqual([...annotationPageFilter('1',1)],[1]);assert.deepEqual([...annotationPageFilter('1-3，5',6)],[1,2,3,5]);assert.equal(annotationPageFilter('',4),null)
@@ -25,4 +25,10 @@ test('PDF reference validates digest, keeps legacy compatibility and rejects tra
  const base='longedit://pdf?path=资料%2F阅读.pdf&page=2&annotation=a'
  assert.equal(parsePdfReferenceUri(base).sourceDigest,undefined);assert.equal(parsePdfReferenceUri(base+'&sha256='+'a'.repeat(64)).sourceDigest,'a'.repeat(64))
  assert.equal(parsePdfReferenceUri(base+'&sha256=bad'),null);assert.equal(parsePdfReferenceUri(base.replace('资料%2F阅读.pdf','..%2Fprivate.pdf')),null)
+})
+test('Same-named draft targets show their actual folder including Windows extended aliases',()=>{
+ assert.equal(readingTargetDirectory('C:/library','C:/library/方案.md'),'库根目录')
+ assert.equal(readingTargetDirectory('C:/library','\\\\?\\C:\\library\\项目甲\\方案.md'),'项目甲')
+ assert.equal(readingTargetDirectory('C:/library','C:/library/项目乙/方案.md'),'项目乙')
+ assert.equal(readingTargetDirectory('\\\\server\\share','\\\\?\\UNC\\server\\share\\资料\\方案.md'),'资料')
 })

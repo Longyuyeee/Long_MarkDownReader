@@ -3,6 +3,12 @@ import type { TabInfo } from '../store/app'
 export interface PdfReadingItem { annotation: PdfAnnotation; uri: string; label: string }
 export interface PdfReadingSnapshot { sourceDigest: string; sourceSignature: string; relativePath: string; items: PdfReadingItem[] }
 export const MAX_READING_SELECTION = 200
+export const readingTargetDirectory = (root: string, path: string) => {
+  const clean = (value: string) => value.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
+  const base = clean(root), parent = clean(path).replace(/\/[^/]+$/, '')
+  if (base.toLowerCase() === parent.toLowerCase()) return '库根目录'
+  return parent.toLowerCase().startsWith(base.toLowerCase()+'/') ? parent.slice(base.length+1) : parent
+}
 const escapeText = (value: string) => value.replace(/([\\`*_[\]<>#!|])/g, '\\$1')
 export const readingItemMarkdown = (item: PdfReadingItem, comments = true) => {
   const {annotation: a} = item

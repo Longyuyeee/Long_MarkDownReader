@@ -1,6 +1,7 @@
 {
   "status": "passed",
   "checks": [
+    "Same-named opened notes display distinct folders before choosing insertion target",
     "240 annotations paginate without 240 list cards; legacy single actions remain",
     "Filtering supports page, type, color and text; invalid page range is visible",
     "Selection remains explicit across filters; whole-match selection refuses more than 200",
