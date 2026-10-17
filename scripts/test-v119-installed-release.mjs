@@ -4,10 +4,20 @@ import fs from 'node:fs'
 import crypto from 'node:crypto'
 import {test} from 'node:test'
 import {parse} from 'yaml'
+import vm from 'node:vm'
+import {installedSessionBootProbe} from './lib/installed-session-boot.mjs'
 import {workSessionChecks,validateInstalledWorkSession} from './lib/installed-v1-1-9-evidence.mjs'
 import {assertInstalledReleaseRuntime} from './lib/installed-release-runtime.mjs'
 import {assertV121DevelopmentBoundary,assertV121UpdaterStatus} from './lib/v121-updater-status.mjs'
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex'),json=file=>JSON.parse(fs.readFileSync(file,'utf8'))
+test('reload probe waits through absent app/Pinia/reader, without hiding real script exceptions',()=>{
+ const expression=installedSessionBootProbe(100)
+ for(const app of [null,{}, {__vue_app__:{}},{__vue_app__:{config:{globalProperties:{$pinia:{_s:new Map()}}}}}])assert.equal(vm.runInNewContext(expression,{performance:{timeOrigin:200},document:{querySelector:()=>app}}),false)
+ const app={__vue_app__:{config:{globalProperties:{$pinia:{_s:new Map([['app',{configReady:true}]])}}}}}
+ const ready=(origin,reader)=>vm.runInNewContext(expression,{performance:{timeOrigin:origin},document:{querySelector:selector=>selector==='#app'?app:reader}})
+ assert.equal(ready(100,{}),false);assert.equal(ready(200,null),false);assert.equal(ready(200,{}),true)
+ assert.throws(()=>installedSessionBootProbe(NaN));assert.throws(()=>vm.runInNewContext(expression,{performance:{timeOrigin:200},document:{querySelector:()=>{throw Error('real script error')}}}),/real script error/)
+})
 function scene(){return {appVersion:'1.1.9',sourceCommit:'a'.repeat(40),harnessSourceCommit:'b'.repeat(40),executableSha256:'c'.repeat(64),installerSha256:'d'.repeat(64),status:'passed',evidenceLevel:'installed-webview-input-native-picker-and-disk',sourceUserContentIncluded:false,nativeBridgeMocked:false,desktopInputUsed:false,nativePickerScope:'disposable-github-hosted-owned-process',checks:workSessionChecks.map(id=>({id,status:'passed'})),inputTrace:['click','keydown','input'].map(type=>({type,trusted:true})),nativePickers:Array.from({length:5},()=>({status:'selected-real-native-dialog',processId:42,selectedPath:'C:/owned/a.json',title:'选择工作现场文件',method:'Windows-UIAutomation-ValuePattern-and-InvokePattern'})),positions:{count:40,first:340,last:457,afterReload:457},draftSha256:'e'.repeat(64),draftChecks:Array.from({length:2},()=>({dirty:true,exactModel:true,sha256:'e'.repeat(64)})),quickDenials:['read_work_session_bundle','export_work_session_bundle','preflight_work_session','locate_work_session_file'].map(command=>({command,rejected:true,error:'只能在主工作台管理工作现场'})),sourceFiles:Array.from({length:42},(_,n)=>({path:`C:/owned/${n}.txt`,before:'f'.repeat(64),after:'f'.repeat(64)})),beforeExplicitSave:Array.from({length:42},(_,n)=>({path:`C:/owned/${n}.txt`,sha256:'f'.repeat(64)})),explicitSave:{path:'C:/owned/0.txt',after:'f'.repeat(64),afterAllDraftChecks:true},runtimeErrors:[],errorOverlay:false}}
 const manifestFor=report=>({appVersion:report.appVersion,sourceCommit:report.sourceCommit,artifacts:[{target:'nsis',sha256:report.installerSha256}]})
 const originalScene=scene

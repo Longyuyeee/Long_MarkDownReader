@@ -7,6 +7,7 @@ import {withDeadline} from './with-deadline.mjs'
 import {assertSessionHosted} from './v119-native-session-fixture.mjs'
 import {nativeUserInput} from './v118-native-user-input.mjs'
 import {workSessionChecks,validateInstalledWorkSession} from './installed-v1-1-9-evidence.mjs'
+import {installedSessionBootProbe} from './installed-session-boot.mjs'
 const q=JSON.stringify,key=value=>value.replaceAll('\\','/').replace(/^\/\/\?\//,'').toLowerCase()
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
@@ -69,7 +70,7 @@ export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,c
   await ui.clickTarget(`[...document.querySelectorAll('.workspace-tab')].find(e=>e.textContent.includes('阅读39'))`);await ui.waitFor(`document.querySelector('.text-workspace .document-title')?.textContent.includes('阅读39')&&Math.abs(document.querySelector('.text-workspace .cm-scroller')?.scrollTop-457)<3`,'last unopened staged position actually consumed');const last=await readScroll();report.positions={count:40,first,last};await capture('installed-v119-reading.jpg');check(7)
   report.inputTrace=await evaluate('window.__v119Trace');report.runtimeErrors=await evaluate('window.__v119Errors')
   reloadDiagnostic=await send('Page.addScriptToEvaluateOnNewDocument',{source:"window.__v119ReloadErrors=[];addEventListener('error',e=>window.__v119ReloadErrors.push(e.message));addEventListener('unhandledrejection',e=>window.__v119ReloadErrors.push(String(e.reason)))"})
-  const origin=await evaluate('performance.timeOrigin');await send('Page.reload');for(let n=0;n<600;n++){try{if(await evaluate(`performance.timeOrigin!==${origin}&&${store}?.configReady===true&&!!document.querySelector('.text-workspace .cm-scroller')`))break}catch(error){if(!/context|navigat/i.test(String(error)))throw error}await new Promise(resolve=>setTimeout(resolve,100))}
+  const origin=await evaluate('performance.timeOrigin');await send('Page.reload');let bootReady=false;for(let n=0;n<600;n++){try{if(await evaluate(installedSessionBootProbe(origin))){bootReady=true;break}}catch(error){if(!/context|navigat/i.test(String(error)))throw error}await new Promise(resolve=>setTimeout(resolve,100))}assert.equal(bootReady,true,'the reloaded Vue/Pinia and real reader must finish initialization')
   await ui.waitFor(`Math.abs(document.querySelector('.text-workspace .cm-scroller')?.scrollTop-457)<3`,'reading metadata survives WebView restart');report.positions.afterReload=await readScroll();assert.equal((await records()).find(item=>item.name==='安装验收现场').tabs.length,41);check(8)
   // Verify actual secondary WebView IPC instead of calling a Rust helper.
   await invoke('open_quick_note');let quick;for(let n=0;n<160;n++){const targets=await fetch('http://127.0.0.1:9343/json/list').then(r=>r.json());quick=targets.find(t=>t.url.includes('quick-note')&&t.webSocketDebuggerUrl);if(quick)break;await new Promise(resolve=>setTimeout(resolve,100))}assert.ok(quick)
