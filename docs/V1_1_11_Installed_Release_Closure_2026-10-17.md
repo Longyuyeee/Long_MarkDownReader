@@ -4,6 +4,8 @@
 
 ## 第三候选准备：真实路由可见性默认值（最新）
 
+第三固定产品 **9b5adba245d3c24d6c891e3b0c4e7a7e326ca6ed**，完整构建/安装 **39049461150** 正在执行；PR #70 CI **39049460499 success**，已合入 main。新安装态尚未完成，未封板/发布；后续仅导入本产品及相同安装包的成功独立复核证据，不混入前两候选。
+
 第二候选 **920ba39c / 39046576581 failure** 同样在主题选择中断，不能发布。[实际安装诊断](evidence/v1111-installed-closure/build-39046576581/installed-knowledge-topic-selection-failure.json)显示主题身份/路由正确，但画布仍 `0 / 0` 且一直 loading；[原图](evidence/v1111-installed-closure/build-39046576581/installed-knowledge-topic-selection-failure.jpg)已经实看。之前的加载期点击丢失确实是一个产品问题，但不是安装态持续加载的完整解释，不能将第二候选视为通过。
 
 进一步实读实际路由及 Vue 行为：路由不传 GraphView 的可选布尔 `show`，Vue 会将缺省布尔转换为 false；新增请求 gate 因此拒收成功响应，finally 也不清 loading。先前隔离夹具显式传 true，漏掉了真实挂载方式，这是回归覆盖缺口。已用缺省属性稳定复现原图，并改为 `withDefaults(..., { show: true })`；显式 false 和隐藏中迟到响应保护均保留，没有去掉安全 gate 来凑通过。
