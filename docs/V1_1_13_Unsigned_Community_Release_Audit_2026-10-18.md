@@ -1,8 +1,10 @@
-# v1.1.13 未签名社区版封板前审计
+# v1.1.13 未签名社区版发布审计
 
 ## 当前结论
 
-固定产品 **8c5a50afcb594519fbe14f0009112491ce14308c** 的安装验收已完成，独立同包复核 **39076247421 success**，驱动 **9daca4089925e11037527be2627facd52344b3c4**。完整报告严格导入，产品实现相对固定源码无变化；当前运行时/目标1.1.13，公开仍1.1.12。**本提交等待最终 main CI，尚未封板或公开发布1.1.13**；通过后标签绑定固定产品，用已验收原包发布并公开回下载，再更新README下载和末尾摘要、Release与交接，不重建替换安装器。
+**v1.1.13已封板并正式发布。** 北京时间2026-10-18 **07:06:12**（UTC2026-10-17 23:06:12）[公开发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13)，运行时/公开1.1.13，下一目标1.1.14。产品/标签 **8c5a50afcb594519fbe14f0009112491ce14308c**，独立同包 **39076247421 success**，驱动 **9daca4089925e11037527be2627facd52344b3c4**；封板main CI **39076982398 success**，文档头f4f27c75；原包发布与公开回下载 **39077645643 success**。两个已验收原安装器和校验文件大小、SHA-256及GitHub digest一致，只更改公开文件名前缀，不重建替换。原构建任务的旧驱动观察失败保留，下表不将它泛称success。
+
+完整报告与原始发布收据已严格导入，产品实现相对固定源码无变化。README下载、末尾更新摘要、Release与交接已同步，开头图标/介绍及全部旧历史行保持；发布后文档提交受main完整CI核验，不为填写自身CI编号再制造新提交。
 
 本版沿原PDF工作面完成“筛选批注—选择整理—预览—草稿/新笔记—核对来源回原页”，保留阅读、搜索、表单、OCR、脱敏、水印、属性和页面工具，不另建阅读器。实现和基线见[开发审计](V1_1_13_PDF_Reading_Development_2026-10-18.md)，用户操作见[PDF阅读笔记](PDF_Reading_Notes_User_Guide.md)。
 
@@ -10,7 +12,7 @@
 
 | 项目 | 实际结果 |
 | --- | --- |
-| 产品/拟标签源码 | 8c5a50afcb594519fbe14f0009112491ce14308c |
+| 产品/标签源码 | 8c5a50afcb594519fbe14f0009112491ce14308c |
 | 原包构建 | [39073940910](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39073940910)：质量门禁、完整Rust、MSI/NSIS和不可变收据四项success；原安装驱动失败另记，**不称整个原任务success** |
 | 原构建报告 | [原始目录入口](evidence/v1113-fixed-c-original-build-39073940910/installed-v1113-workflow.json)、[构建收据](evidence/v1113-fixed-c-original-build-39073940910/installer-build-receipt.json)、[完整日志](evidence/v1113-fixed-c-build-39073940910.log)，103个原文件保留 |
 | 独立同包完整复核 | [39076247421](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39076247421) success；[完整日志](evidence/v1113-fixed-c-review-39076247421.log)，没有重建 |
@@ -20,7 +22,8 @@
 | 严格导入 | [原文件清单](evidence/v1.1.13-release/import-manifest.json)、[安装器与运行报告](evidence/v1.1.13-release/artifact-manifest.json)，逐文件哈希、同源码/EXE/驱动核对 |
 | 原生回归 | 1039功能+1独立性能=1040通过、0失败、5既有ignored；本版专项6包含在内 |
 | 正式组件与逻辑 | 19个PDF组件场景、六风格深浅12组、760×620/480×800/360×620；逻辑5、协议4及编辑器序列化复放2项；模拟IPC不冒充磁盘证明 |
-| 最近main CI | 驱动9daca408的[39075040226](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39075040226) success；安装收据/封板文档提交仍须独立通过最终CI |
+| 封板main CI | [39076982398](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39076982398) success，文档头f4f27c75；[原始元数据](evidence/v1.1.13-release/freeze-ci.json)；此前驱动9daca408的39075040226亦success |
+| 原包发布/公开回下载 | [39077645643](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39077645643) success；[正式收据](evidence/v1.1.13-release/release-receipt.json)、[原API/下载校验清单](evidence/v1.1.13-release/publication-import-manifest.json)，Release ID416120851 |
 
 原包身份如下，发行时只把中文文件名前缀换成LongEdit，不改字节：
 
@@ -55,7 +58,7 @@
 
 ## 发布边界与下一步
 
-通道 **community-unsigned**，Windows x64未签名，系统可能提示未知发布者；企业 **releaseCandidate=false**，社区通过不替代企业签名与系统矩阵。正式发布后可**手动下载安装**；1.1.12→1.1.13应用内更新观测单独pending，不借用旧更新成功或覆盖安装来冒充通过。
+通道 **community-unsigned**，Windows x64未签名，系统可能提示未知发布者；企业 **releaseCandidate=false**，社区通过不替代企业签名与系统矩阵。本版可**手动下载安装**；1.1.12→1.1.13应用内更新观测单独pending，不借用旧更新成功或覆盖安装来冒充通过。
 
 每次1–200条，所选摘录/评论4MiB，笔记保存8MiB，sidecar5MiB，PDF仍沿原阅读器2GiB上限。流式摘要需要读取整份文件，不宣称大文件零等待或OCR质量新增提升。旧链接仍未经过内容摘要验证；不自动扫描全库猜同名来源、迁移或代存正文。新笔记仅库内新名称，不覆盖已有文件。
 

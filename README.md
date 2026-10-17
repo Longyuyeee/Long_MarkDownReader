@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.12"><img src="https://img.shields.io/badge/Stable-v1.1.12-cca43b" alt="v1.1.12 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13"><img src="https://img.shields.io/badge/Stable-v1.1.13-cca43b" alt="v1.1.13 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.12**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.13**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.12_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.12/LongEdit_1.1.12_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.12_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.12/LongEdit_1.1.12_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.12](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.12) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.13_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.13/LongEdit_1.1.13_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.13_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.13/LongEdit_1.1.13_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.13](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.12/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.13/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.12_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.13_x64-setup.exe
 ```
 
 ```text
-1bc120e4c7865dc928c9a232e8f9e40fe787ae332d7d976e4d5f5528f764d776  LongEdit_1.1.12_x64_zh-CN.msi
-1fed0d5d40ef4c56efb9e8e23a6837217e56680b7e4187f8f825b8730b440409  LongEdit_1.1.12_x64-setup.exe
+6718f8bb300eeeaa4020fc05440143cf6bd245fafe2da581d911abb75590bcac  LongEdit_1.1.13_x64_zh-CN.msi
+3142d613db486a22ff0a6bb1bac52fa36af44a7036b2169cb9553fbb7852aacd  LongEdit_1.1.13_x64-setup.exe
 ```
 
 </details>
@@ -186,6 +186,14 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 需要换电脑或分享模板时，在模板管理的“更多操作”导出当前模板或全部已保存模板；导入时勾选、预览正文，同名项可保留两份或跳过。模板文件保留变量，不携带本机目录和资料库默认设置；原有模板及未保存编辑保持不变。
 
 标签右键可固定、关闭其他/右侧未固定标签或恢复关闭；可拖动排序，使用 Ctrl+Shift+T 恢复最近关闭的文档入口。Markdown 和文本保留阅读位置；已明确放弃的未保存内容不会随关闭入口恢复。文内标签可右键固定常用项，智能集合支持顺序调整和多个标签同时筛选。
+
+### ⑨ 把 PDF 批注整理成可追溯笔记
+
+在 PDF 侧栏“批注”按页码、颜色、类型和摘录/评论筛选，勾选需要的条目后“整理为笔记”。预览保留原页、摘录、可选评论及来源；可按页码或颜色组织。每组列表50条，每次最多200条，隐藏选择会显示数量，不会静默丢掉勾选。
+
+插入时看清目标文件名和所属文件夹，只追加到最新草稿，不替你保存；也可选择库内新名称创建笔记，已有文件不会被覆盖。原 PDF 和批注不因整理笔记而被改写。
+
+在 Long编辑 中点击笔记来源，先核对内容摘要再返回原页/批注；同名替换不会被当成原来源。文件移动后可明确验证新相对路径、只重新关联草稿，仍需手动保存。旧链接和已删批注会在侧栏顶部说明情况。[完整用法](docs/PDF_Reading_Notes_User_Guide.md)。
 
 ## 真实界面
 
@@ -504,7 +512,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_12_Unsigned_Community_Release_Audit_2026-10-18.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_13_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
 欢迎围绕真实使用任务提出问题、补充最小复现或贡献改进。开发 UI 时先查看相关实际页面，保留现有能力；修改后验证草稿保护、保存复开与错误反馈，不能仅为了通过验收而降低要求。
@@ -519,6 +527,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.13 | PDF 批注筛选、多选与阅读笔记；只追加草稿、显式新建保存，摘要核验来源与移动重关联，长列表提示可见 | [发布说明](docs/RELEASE_NOTES_v1.1.13.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13) · [发布审计](docs/V1_1_13_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.12 | 本地资料内容备份与新目录恢复；逐文件摘要、相对图片/PDF批注/可选历史接续，源变化拒绝与草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.12.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.12) · [发布审计](docs/V1_1_12_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.11 | 图谱刷新保留视角与选择、失败保留和重试、密集长名避让、局部返回与思维导图接续；修复加载期主题定位和实际路由加载 | [发布说明](docs/RELEASE_NOTES_v1.1.11.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.11) · [发布审计](docs/V1_1_11_Unsigned_Community_Release_Audit_2026-10-17.md) |
 | v1.1.10 | 标签同源统计；集合按文件续载、全查询排序、刷新和条件草稿接续；标签修改预览、原文历史与多窗口草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.10.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.10) · [发布审计](docs/V1_1_10_Unsigned_Community_Release_Audit_2026-10-17.md) |
@@ -535,4 +544,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.13 深化 PDF 阅读到笔记：批注整理、摘录成文与准确返回来源，优先验证草稿和来源保护，保留现有全部 PDF 工具。[实际代码接续审计](docs/V1_1_13_PDF_Reading_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.14 深化模板写作与文章交付：先实测和修复 PDF/HTML/Markdown 导出，再完善模板参数、保存位置与本地图片依赖，保留现有编辑器和共享资源。[实际代码接续审计](docs/V1_1_14_Writing_Delivery_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。

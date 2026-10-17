@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.13",
+  "developmentTargetVersion": "1.1.14",
   "runtimeBaseVersion": "1.1.13",
-  "publicVersion": "1.1.12",
-  "publicTag": "v1.1.12",
-  "publicTagCommit": "4fb14270513d556ed965a0c27308bdc727eacd4b",
+  "publicVersion": "1.1.13",
+  "publicTag": "v1.1.13",
+  "publicTagCommit": "8c5a50afcb594519fbe14f0009112491ce14308c",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-54-v1.1.13-version-candidate",
-  "binaryVersionTransition": "v1.1.13-release-ready",
-  "displayLabel": "v1.1.13 PDF 阅读笔记候选 · 当前公开 v1.1.12",
+  "currentStage": "M8-55-v1.1.13-published",
+  "binaryVersionTransition": "v1.1.13-public-release-published",
+  "displayLabel": "v1.1.13 已发布 · 下一版本 v1.1.14",
   "activeSlice": {
     "id": "v1.1.13-pdf-reading-notes",
-    "status": "installed-workflows-passed-ready-to-publish",
-    "document": "docs/V1_1_13_PDF_Reading_Development_2026-10-18.md"
+    "status": "published-remote-assets-verified",
+    "document": "docs/V1_1_13_Unsigned_Community_Release_Audit_2026-10-18.md"
   }
 }
