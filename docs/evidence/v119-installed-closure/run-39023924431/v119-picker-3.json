@@ -1,0 +1,111 @@
+{
+    "status":  "selected-real-native-dialog",
+    "processId":  9360,
+    "dialogProcessId":  9360,
+    "executable":  "C:\\LongEditR5I\\tauri-app.exe",
+    "title":  "导出工作现场（请选择新文件）",
+    "fileNameAutomationId":  "1001",
+    "selectedPath":  "C:\\LongEditR5ILibrary\\v119-session-354c8626-6a30-4ec9-9663-8d3513ac9869\\已导出.longedit-session.json",
+    "method":  "Windows-Win32-filename-edit-and-OK-notification",
+    "desktopUserSession":  "disposable-github-hosted",
+    "controlCandidates":  [
+                              {
+                                  "Handle":  393878,
+                                  "ParentHandle":  459380,
+                                  "ControlId":  0,
+                                  "ClassName":  "ComboBox",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  328414,
+                                  "ParentHandle":  393878,
+                                  "ControlId":  1001,
+                                  "ClassName":  "Edit",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262866,
+                                  "ParentHandle":  262864,
+                                  "ControlId":  0,
+                                  "ClassName":  "Static",
+                                  "Title":  "Namespace Tree Control"
+                              },
+                              {
+                                  "Handle":  328268,
+                                  "ParentHandle":  459362,
+                                  "ControlId":  0,
+                                  "ClassName":  "ComboBox",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  328444,
+                                  "ParentHandle":  393942,
+                                  "ControlId":  1092,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  393822,
+                                  "ParentHandle":  393942,
+                                  "ControlId":  1091,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262738,
+                                  "ParentHandle":  393942,
+                                  "ControlId":  1093,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262728,
+                                  "ParentHandle":  393942,
+                                  "ControlId":  1095,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262734,
+                                  "ParentHandle":  262752,
+                                  "ControlId":  41477,
+                                  "ClassName":  "ComboBoxEx32",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262896,
+                                  "ParentHandle":  262734,
+                                  "ControlId":  41477,
+                                  "ClassName":  "ComboBox",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262768,
+                                  "ParentHandle":  262896,
+                                  "ControlId":  41477,
+                                  "ClassName":  "Edit",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262858,
+                                  "ParentHandle":  328276,
+                                  "ControlId":  0,
+                                  "ClassName":  "UniversalSearchBand",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  328344,
+                                  "ParentHandle":  262858,
+                                  "ControlId":  0,
+                                  "ClassName":  "Search Box",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  262898,
+                                  "ParentHandle":  328344,
+                                  "ControlId":  0,
+                                  "ClassName":  "SearchEditBoxWrapperClass",
+                                  "Title":  ""
+                              }
+                          ]
+}

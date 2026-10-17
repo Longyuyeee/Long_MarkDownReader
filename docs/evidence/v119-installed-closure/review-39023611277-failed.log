@@ -1,0 +1,57 @@
+review	Run complete same-installer lifecycle and installed workflow	﻿2026-10-17T10:06:45.9220744Z ##[group]Run & powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9221840Z ^[[36;1m& powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9222492Z ^[[36;1m  -InstallerDirectory $env:CURRENT_INSTALLER_DIRECTORY `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9222980Z ^[[36;1m  -PreviousInstallerDirectory $env:PREVIOUS_INSTALLER_DIRECTORY `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9223543Z ^[[36;1m  -CurrentVersion $env:RELEASE_VERSION -PreviousVersion $env:PREVIOUS_VERSION `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9224256Z ^[[36;1m  -ExpectedCurrentSha256 $env:CURRENT_INSTALLER_SHA256 `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9224664Z ^[[36;1m  -NodeExecutable (Get-Command node.exe).Source `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9225269Z ^[[36;1m  -InstalledSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5j-installed-artifact-smoke.mjs') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9226153Z ^[[36;1m  -ManagementRollbackSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5l-management-rollback-smoke.mjs') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9227032Z ^[[36;1m  -EvidenceExporter (Join-Path $env:GITHUB_WORKSPACE 'scripts/export-r5k-windows-evidence-bundle.ps1') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9227603Z ^[[36;1m  -ExpectedSourceCommit $env:CANDIDATE_COMMIT `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9228066Z ^[[36;1m  -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'same-installer-review') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9228559Z ^[[36;1m  -ConfirmDisposableMachine -AllowInstallerMutation^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9229007Z ^[[36;1mif ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9295847Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9296276Z env:
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9296471Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9296739Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9296963Z   RELEASE_VERSION: 1.1.9
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9297187Z   PREVIOUS_VERSION: 1.1.8
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9297495Z   CANDIDATE_COMMIT: b92c18a1705cf787a05c2b3a97e78feeb29d46fb
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9297826Z   INSTALLER_RUN_ID: 39020293589
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9298429Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9299307Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9299992Z   CURRENT_INSTALLER_SHA256: d9d7497867c6461bdf30f8fd36d138cf070c999baddf29969375f9e14a96b126
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:06:45.9300432Z ##[endgroup]
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9513663Z node:internal/modules/run_main:123
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9515849Z     triggerUncaughtException(
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9516448Z     ^
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9516803Z 
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9519004Z Error: ENOENT: no such file or directory, open 'C:\LongEditR5ILibrary\v119-session-8c47c15a-e23b-4220-a82a-b68638586f3e\已导出.longedit-session.json'
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9520507Z     at async open (node:internal/fs/promises:639:25)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9520981Z     at async Object.readFile (node:internal/fs/promises:1252:14)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9521789Z     at async runInstalledV119Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-9-workflow.mjs:61:184)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9522798Z     at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:936:5 {
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9523364Z   errno: -4058,
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9523563Z   code: 'ENOENT',
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9523780Z   syscall: 'open',
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9524835Z   path: 'C:\\LongEditR5ILibrary\\v119-session-8c47c15a-e23b-4220-a82a-b68638586f3e\\已导出.longedit-session.json'
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9525375Z }
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9525475Z 
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:38.9525569Z Node.js v22.23.3
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2350993Z R5J installed-artifact route and I/O smoke failed.
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2352324Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\run-r5i-isolated-install-lifecycle.ps1:428 char:9
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2356016Z +         throw "R5J installed-artifact route and I/O smoke failed."
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2356486Z +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2357090Z     + CategoryInfo          : OperationStopped: (R5J installed-a...O smoke failed.:String) [], RuntimeException
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2357757Z     + FullyQualifiedErrorId : R5J installed-artifact route and I/O smoke failed.
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.2358148Z  
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4030737Z Same-installer lifecycle failed
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4032014Z At D:\a\_temp\89b9602b-1d53-4ec2-890d-0183bb2ed583.ps1:14 char:28
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4032921Z + if ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4033768Z +                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4034803Z     + CategoryInfo          : OperationStopped: (Same-installer lifecycle failed:String) [], RuntimeException
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4035903Z     + FullyQualifiedErrorId : Same-installer lifecycle failed
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4036457Z  
+review	Run complete same-installer lifecycle and installed workflow	2026-10-17T10:07:39.4202502Z ##[error]Process completed with exit code 1.

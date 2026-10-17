@@ -21,6 +21,18 @@ try{
   await ui.click('#moving')
   assert.ok(await page.locator('#moving').evaluate((e,start)=>Number(e.dataset.clickedAt)-start>=300,movingStarted),'native helper must not click while target geometry is still moving')
   checks.push('CDP input waits for settled geometry after an actual animated layout change, without disabling motion or retrying a click')
+  for(const action of ['right','hover']){
+    await page.setContent(`<button id="start" onclick="document.querySelector('#moving').classList.add('moving')">展开</button><button id="moving" style="position:absolute;top:180px;left:20px;transition:transform .35s linear">文件操作</button><style>#moving.moving{transform:translateX(400px)}</style>`)
+    await page.evaluate(()=>{window.inputEvidence=[];for(const type of ['contextmenu','mouseover'])document.querySelector('#moving').addEventListener(type,event=>{event.preventDefault();window.inputEvidence.push({type,trusted:event.isTrusted,at:performance.now()})})})
+    await page.locator('#start').click()
+    const started=await page.evaluate(()=>performance.now())
+    if(action==='right')await ui.clickTarget("document.querySelector('#moving')",'right')
+    else await ui.hoverTarget("document.querySelector('#moving')")
+    const events=await page.evaluate(()=>window.inputEvidence)
+    const relevant=events.filter(e=>e.type===(action==='right'?'contextmenu':'mouseover'))
+    assert.equal(relevant.length,1);assert.equal(relevant[0].trusted,true);assert.ok(relevant[0].at-started>=300)
+    checks.push(`Actual animated target ${action} uses trusted WebView input only after geometry settles`)
+  }
   await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9018')+'/scripts/fixtures/v118-search-pages-browser.html')
   await ui.clickText('.app-navigation a','资料库')
   await ui.fill('.search-area input','预算')

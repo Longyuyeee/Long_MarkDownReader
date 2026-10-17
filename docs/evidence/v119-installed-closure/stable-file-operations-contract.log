@@ -1,0 +1,105 @@
+TAP version 13
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 1 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 84.9861
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 2 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 57.6081
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 3 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 1.3748
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 4 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 12.3242
+  ...
+# Subtest: v118 candidate/public handoff never inherits an official update observation
+ok 5 - v118 candidate/public handoff never inherits an official update observation
+  ---
+  duration_ms: 0.6322
+  ...
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+ok 6 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 15.6063
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 7 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 28.0155
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 8 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 188.5358
+  ...
+# Subtest: right-click and hover wait through disappearing moving rows and send finite coordinates only once
+ok 9 - right-click and hover wait through disappearing moving rows and send finite coordinates only once
+  ---
+  duration_ms: 94.2628
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 10 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 1.0993
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 11 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.9506
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 12 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 2.8696
+  ...
+# Subtest: reload probe waits through absent app/Pinia/reader, without hiding real script exceptions
+ok 13 - reload probe waits through absent app/Pinia/reader, without hiding real script exceptions
+  ---
+  duration_ms: 3.0729
+  ...
+# Subtest: secondary permission checks must wait for an actual callable bridge
+ok 14 - secondary permission checks must wait for an actual callable bridge
+  ---
+  duration_ms: 1.3185
+  ...
+# Subtest: installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+ok 15 - installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+  ---
+  duration_ms: 15.9463
+  ...
+# Subtest: v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+ok 16 - v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+  ---
+  duration_ms: 88.1065
+  ...
+# Subtest: v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+ok 17 - v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+  ---
+  duration_ms: 12.1545
+  ...
+# Subtest: historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions
+ok 18 - historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions
+  ---
+  duration_ms: 0.3025
+  ...
+# Subtest: v119 candidate and publication retain precise predecessor and independent updater observation
+ok 19 - v119 candidate and publication retain precise predecessor and independent updater observation
+  ---
+  duration_ms: 0.8363
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 651.3606

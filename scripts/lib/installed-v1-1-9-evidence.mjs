@@ -23,10 +23,11 @@ export function validateInstalledWorkSession(report,manifest,{beforeProcessResta
  assert.deepEqual(report.checks.map(check=>[check.id,check.status]),workSessionChecks.map(id=>[id,'passed']))
  assert.ok(report.inputTrace.length>0&&report.inputTrace.every(event=>event.trusted===true))
  for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(event=>event.type===type))
- assert.ok(report.nativePickers.length>=5&&report.nativePickers.every(item=>item.status==='selected-real-native-dialog'&&item.processId>0&&item.selectedPath&&item.title&&item.method==='Windows-UIAutomation-ValuePattern-and-InvokePattern'))
+ assert.ok(report.nativePickers.length>=5&&report.nativePickers.every(item=>item.status==='selected-real-native-dialog'&&item.processId>0&&item.selectedPath&&item.title&&['Windows-UIAutomation-ValuePattern-and-InvokePattern','Windows-Win32-filename-character-input-and-OK-notification'].includes(item.method)))
+ for(const picker of report.nativePickers)if(picker.method==='Windows-Win32-filename-character-input-and-OK-notification'){assert.equal(picker.inputCharacters,picker.selectedPath.length);assert.ok(picker.dialogProcessId>0&&['1001','1148','1152'].includes(picker.fileNameAutomationId))}
  assert.equal(report.positions.count,40);assert.ok(Math.abs(report.positions.first-340)<3&&Math.abs(report.positions.last-457)<3);assert.equal(report.positions.afterReload,457)
  assert.ok(report.draftChecks.length>=2&&report.draftChecks.every(item=>item.dirty&&item.exactModel&&item.sha256===report.draftSha256))
- assert.deepEqual(report.quickDenials.map(item=>item.command),['read_work_session_bundle','export_work_session_bundle','preflight_work_session','locate_work_session_file']);assert.ok(report.quickDenials.every(item=>item.rejected&&/主工作台/.test(item.error)))
+ assert.equal(report.quickBridgeReady,true);assert.deepEqual(report.quickDenials.map(item=>item.command),['read_work_session_bundle','export_work_session_bundle','preflight_work_session','locate_work_session_file']);assert.ok(report.quickDenials.every(item=>item.rejected&&/主工作台/.test(item.error)))
  assert.ok(report.sourceFiles.length>=42);assert.equal(report.beforeExplicitSave.length,report.sourceFiles.length)
  assert.equal(report.explicitSave.afterAllDraftChecks,true);assert.match(report.explicitSave.after,/^[a-f0-9]{64}$/)
  for(const file of report.sourceFiles){assert.match(file.before,/^[a-f0-9]{64}$/);assert.equal(report.beforeExplicitSave.find(item=>item.path===file.path)?.sha256,file.before);assert.equal(file.after,file.path===report.explicitSave.path?report.explicitSave.after:file.before)}
