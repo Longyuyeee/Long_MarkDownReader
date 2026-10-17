@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import {nativeUserInput} from './v118-native-user-input.mjs'
 
 export async function runInstalledV114Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
   if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) throw Error('Disposable 1.1.4 installation required')
@@ -11,13 +12,8 @@ export async function runInstalledV114Workflow({ send, evaluate, navigate, waitF
   }
   const check = (id, condition) => { assert.ok(condition, id); report.checks.push({ id, status: 'passed' }) }
   const button = (label, root = 'document') => `[...(${root}?.querySelectorAll('button')||[])].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
-  const mouse = async (expression, button = 'left', modifiers = 0) => {
-    await waitFor(`!!(${expression})`, 'v114 control exists')
-    await evaluate(`(${expression}).scrollIntoView({block:'nearest'})`)
-    const point = `(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
-    await waitFor(point, 'v114 control clickable'); const p = await evaluate(point)
-    for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, ...p, button, modifiers, clickCount: 1 })
-  }
+  const ui = nativeUserInput({send,evaluate})
+  const mouse = (expression, button = 'left', modifiers = 0) => ui.clickTarget(expression,button,modifiers)
   const fill = async (selector, text) => {
     await mouse(`document.querySelector(${JSON.stringify(selector)})`)
     for (const type of ['keyDown', 'keyUp']) await send('Input.dispatchKeyEvent', { type, key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 })
