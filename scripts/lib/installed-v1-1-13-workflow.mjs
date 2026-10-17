@@ -50,7 +50,7 @@ export async function runInstalledV1113Workflow({send,evaluate,navigate,capture,
   report.saveExpectation=await evaluate(`({...(${observeReadingNoteSource.toString()})(),encoding:${noteTab()}.textEncoding,bom:${noteTab()}.textBom,lineEnding:${noteTab()}.textLineEnding,hasFinalNewline:${noteTab()}.textHasFinalNewline})`)
   assert.ok(report.saveExpectation.markdown.startsWith(draftText.trimEnd()+'\n\n'),'visible editor must retain all original user text')
   for(const item of report.snapshot.items)assert.ok(report.saveExpectation.markdown.includes(item.uri),'visible editor must retain exact selected source URI')
-  assert.deepEqual([report.saveExpectation.encoding,report.saveExpectation.bom,report.saveExpectation.lineEnding,report.saveExpectation.hasFinalNewline],['utf-8','none','lf',true])
+  assert.deepEqual([report.saveExpectation.encoding.toLowerCase(),report.saveExpectation.bom,report.saveExpectation.lineEnding,report.saveExpectation.hasFinalNewline],['utf-8','none','lf',true])
   report.draftBeforeSaveSha256=sha(Buffer.from(report.saveExpectation.markdown.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n+$/,'')+'\n'))
   await ui.click('[data-testid="library-explicit-save"]');await ui.waitFor(`!${noteTab()}?.isDirty`,'user explicit save');report.explicitSavedSha256=sha(await fs.readFile(note));report.explicitSave=true;assert.equal(report.explicitSavedSha256,report.draftBeforeSaveSha256);check(4)
   if(await evaluate(`${store}.editorMode`)!=='wysiwyg')await chooseMode('wysiwyg')

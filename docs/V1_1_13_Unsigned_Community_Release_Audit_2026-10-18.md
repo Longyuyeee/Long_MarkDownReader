@@ -8,6 +8,8 @@
 
 仅修正验收观察器：在源模式直接观察真实编辑 DOM，按锁定 Vditor 的公开序列化规则读取，并按目标文件原有编码/换行元数据计算预期字节；仍要求与真实磁盘 SHA-256 **完全一致**，另保留原草稿前缀、dirty、插入前磁盘不变与两个完整来源 URI 的断言。协议拒绝缺失观察、原文改变、磁盘哈希改变或换行政策不符。[两项实际组件复放](evidence/v1113-save-observation/results.json)通过，模拟 IPC 不冒充磁盘证明；此批不改产品，不重建或替换 C 包。独立同包必须用更新驱动重新跑全部历版及本版14项。
 
+更新驱动6e6c57a8在旧B包的诊断复核39074631714已实际观察完整源DOM，但原生编码字段为 `UTF-8`，驱动只接受小写 `utf-8` 而停止；[原报告](evidence/v1113-obsolete-b-review-39074631714/installed-v1113-workflow.json)与[完整日志](evidence/v1113-obsolete-b-review-39074631714.log)保留。只对编码名大小写等价处理，仍拒绝 UTF-16LE 等不同编码、BOM/换行政策改变、缺失证据或不同磁盘哈希；协议4项通过。旧B首次原报告另存[evidence](evidence/v1113-obsolete-b-original/installed-v1113-workflow.json)，不得导入最终发布清单。驱动观察修正后[完整质量门禁](evidence/v1113-driver-save-quality.log)通过，生产依赖0漏洞；当前产品仍8c5a50af，不因测试驱动修正重建。
+
 当前运行时 1.1.13、公开 1.1.12，**尚未封板或发布 1.1.13**。本版按既定路线深化原 PDF 阅读、批注与笔记能力，原表单、OCR、脱敏、水印、属性和页面工具全部保留。[开发审计](V1_1_13_PDF_Reading_Development_2026-10-18.md)记录旧插入代存问题的真实复现、首批源码、实施前示意与正式页面；[用户用法](PDF_Reading_Notes_User_Guide.md)说明操作与限制。
 
 ## 当前验证

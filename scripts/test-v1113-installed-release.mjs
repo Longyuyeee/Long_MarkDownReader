@@ -11,7 +11,7 @@ const example=()=>{
  for(const key of ['dirtyBeforeInsert','dirtyAfterInsert','exactDraftPrefix','draftDiskUnchangedBeforeSave','explicitSave','returnedExactAnnotation','deletedAnnotationNotice','legacyNotice','newNoteSelectedOnly','existingTargetPreserved','replacementRejected','replacementTimestampPreserved','movedRelinkDirtyOnly','movedRelinkReturnedExact','restoredReferenceVerified','restoredPageVisible'])report[key]=true
  report.snapshot={items:report.selectedIds.map((id,i)=>({annotation:{id,page:i+12},uri:`longedit://pdf?path=p.pdf&page=${i+12}&annotation=${id}&sha256=${digest}`}))}
  report.appendedDraftSha256=digest
- report.saveExpectation={observedFrom:'rendered-vditor-source-before-explicit-save',mode:'sv',encoding:'utf-8',bom:'none',lineEnding:'lf',hasFinalNewline:true,markdown:'# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n用户阅读评论 11\n\nReading source page 15\n\n用户阅读评论 14\n\n'+report.snapshot.items.map(i=>i.uri).join('\n')+'\n'}
+ report.saveExpectation={observedFrom:'rendered-vditor-source-before-explicit-save',mode:'sv',encoding:'UTF-8',bom:'none',lineEnding:'lf',hasFinalNewline:true,markdown:'# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n用户阅读评论 11\n\nReading source page 15\n\n用户阅读评论 14\n\n'+report.snapshot.items.map(i=>i.uri).join('\n')+'\n'}
  report.draftBeforeSaveSha256=report.explicitSavedSha256=crypto.createHash('sha256').update(report.saveExpectation.markdown).digest('hex')
  for(const field of ['sourceRender','movedRender','restoredRender'])report[field]={observedFrom:'rendered-pdf-controls-text-and-canvas',page:12,annotationId:'reading-11',placeholderAbsent:true,text:'Reading source page 12',width:612,height:792,opaquePixels:200,inkPixels:40}
  for(const [field,text]of [['deletedNotice','批注不存在或已被删除'],['legacySourceNotice','旧引用没有内容摘要']])report[field]={observedFrom:'rendered-reference-notice-in-panel-viewport',text,visible:true,top:200,bottom:250,parentTop:190,parentBottom:900}
@@ -19,6 +19,7 @@ const example=()=>{
 }
 test('PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts',()=>{
  assert.doesNotThrow(()=>validateInstalledPdfReading(...example()))
+ const [caseAlias,m]=example();caseAlias.saveExpectation.encoding='utf-8';assert.doesNotThrow(()=>validateInstalledPdfReading(caseAlias,m));caseAlias.saveExpectation.encoding='UTF-16LE';assert.throws(()=>validateInstalledPdfReading(caseAlias,m))
  for(const mutate of [r=>r.checks.pop(),r=>r.nativeBridgeMocked=true,r=>r.sourceAfter='f'.repeat(64),r=>r.snapshot.items.pop(),r=>r.snapshot.items[0].annotation.id='unselected',r=>r.draftDiskUnchangedBeforeSave=false,r=>r.dirtyAfterInsert=false,r=>r.returnedExactAnnotation=false,r=>r.movedRelinkDirtyOnly=false,r=>r.nativePicker.dialogClosed=false,r=>r.replacementTimestampPreserved=false,r=>r.inputTrace[0].trusted=false,r=>r.runtimeErrors.push('error'),r=>r.editorModes.after='ir',r=>delete r.saveExpectation,r=>r.saveExpectation.markdown=r.saveExpectation.markdown.replace('不能代存','丢失'),r=>r.explicitSavedSha256='0'.repeat(64),r=>r.saveExpectation.hasFinalNewline=false]){const [r,m]=example();mutate(r);assert.throws(()=>validateInstalledPdfReading(r,m))}
 })
 test('PDF workflow uses real input, owned native chooser and independent disk checks',()=>{

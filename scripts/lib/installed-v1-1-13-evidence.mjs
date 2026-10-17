@@ -14,7 +14,7 @@ export function validateInstalledPdfReading(report,manifest){
  for(const key of ['dirtyBeforeInsert','dirtyAfterInsert','exactDraftPrefix','draftDiskUnchangedBeforeSave','explicitSave','returnedExactAnnotation','deletedAnnotationNotice','legacyNotice','newNoteSelectedOnly','existingTargetPreserved','replacementRejected','replacementTimestampPreserved','movedRelinkDirtyOnly','movedRelinkReturnedExact','restoredReferenceVerified','restoredPageVisible'])assert.equal(report[key],true,key)
  assert.equal(report.targetSignatureBefore,report.targetSignatureAfterInsert);assert.equal(report.draftBeforeSaveSha256,report.explicitSavedSha256)
  assert.match(report.appendedDraftSha256,/^[a-f0-9]{64}$/)
- const s=report.saveExpectation;assert.equal(s.observedFrom,'rendered-vditor-source-before-explicit-save');assert.deepEqual([s.mode,s.encoding,s.bom,s.lineEnding,s.hasFinalNewline],['sv','utf-8','none','lf',true])
+ const s=report.saveExpectation;assert.equal(s.observedFrom,'rendered-vditor-source-before-explicit-save');assert.deepEqual([s.mode,s.encoding.toLowerCase(),s.bom,s.lineEnding,s.hasFinalNewline],['sv','utf-8','none','lf',true])
  assert.ok(s.markdown.startsWith('# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n'))
  for(const item of report.snapshot.items)assert.ok(s.markdown.includes(item.uri))
  for(const text of ['用户阅读评论 11','Reading source page 15','用户阅读评论 14'])assert.ok(s.markdown.includes(text))
