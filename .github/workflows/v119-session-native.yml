@@ -1,0 +1,64 @@
+name: v1.1.9 Work Session Native Core Audit
+"on":
+  push:
+    branches: [codex/v119-native-session-audit]
+    paths:
+      - .github/workflows/v119-session-native.yml
+      - scripts/capture-v119-native-session.mjs
+      - scripts/run-v119-native-session.ps1
+      - scripts/lib/v119-native-session-fixture.mjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v119-native-session-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  native-session:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Check out audit driver
+        uses: actions/checkout@v6
+        with:
+          path: orchestration
+      - name: Check out fixed product (not an installer candidate)
+        uses: actions/checkout@v6
+        with:
+          ref: 6a3b10357bda9a2ee095fa07fe26cafd622a2ab0
+          path: product
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: product/package-lock.json
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: product/src-tauri -> target
+          cache-on-failure: true
+      - name: Install locked dependencies and build fixed frontend
+        working-directory: product
+        run: npm ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run build
+      - name: Build fixed Debug Tauri program with isolated identity
+        working-directory: product
+        shell: powershell
+        run: |
+          $config=Get-Content -LiteralPath src-tauri/tauri.e2e.conf.json -Raw | ConvertFrom-Json
+          $config | Add-Member -NotePropertyName app -NotePropertyValue @{windows=@(@{label='main';title='LongEdit Session IPC - isolated';url='http://127.0.0.1:14200/#/settings';width=1000;height=760;visible=$true;decorations=$false})}
+          $env:TAURI_CONFIG=$config | ConvertTo-Json -Depth 10 -Compress
+          cargo build --locked --manifest-path src-tauri/Cargo.toml --bin tauri-app
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify actual native session IPC and same-program restart
+        shell: powershell
+        run: |
+          & orchestration/scripts/run-v119-native-session.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'session-native-evidence')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v119-native-session-${{ github.run_id }}
+          path: session-native-evidence
+          if-no-files-found: warn
+          retention-days: 14
