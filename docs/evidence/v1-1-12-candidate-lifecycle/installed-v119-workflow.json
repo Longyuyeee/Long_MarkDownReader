@@ -1,0 +1,1372 @@
+{
+  "appVersion": "1.1.12",
+  "sourceCommit": "4fb14270513d556ed965a0c27308bdc727eacd4b",
+  "installerSha256": "1fed0d5d40ef4c56efb9e8e23a6837217e56680b7e4187f8f825b8730b440409",
+  "harnessSourceCommit": "1cd954f70606a3ea96c3857a64eabc81d02520d5",
+  "executableSha256": "cb21d6aa611c70309f86773bbba5dd9f8c02c758a7ae44fbba75565bc04325e6",
+  "evidenceLevel": "installed-webview-input-native-picker-and-disk",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "nativePickerScope": "disposable-github-hosted-owned-process",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "installed-runtime-and-real-native-bridge",
+      "status": "passed"
+    },
+    {
+      "id": "native-picker-import-previews-partial-record-without-opening",
+      "status": "passed"
+    },
+    {
+      "id": "same-source-reimport-is-idempotent",
+      "status": "passed"
+    },
+    {
+      "id": "actual-dirty-editor-preserved-by-partial-restore",
+      "status": "passed"
+    },
+    {
+      "id": "native-relocation-repairs-record-not-document",
+      "status": "passed"
+    },
+    {
+      "id": "native-picker-export-default-excludes-private-context",
+      "status": "passed"
+    },
+    {
+      "id": "existing-export-and-invalid-import-preserve-bytes",
+      "status": "passed"
+    },
+    {
+      "id": "forty-reading-positions-first-and-last-consumed-by-real-editor",
+      "status": "passed"
+    },
+    {
+      "id": "reload-retains-named-record-and-unopened-reading-metadata",
+      "status": "passed"
+    },
+    {
+      "id": "secondary-window-rejects-all-four-session-commands",
+      "status": "passed"
+    },
+    {
+      "id": "all-source-bytes-unchanged-until-explicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-and-normal-dialog-layout-without-global-errors",
+      "status": "passed"
+    }
+  ],
+  "inputTrace": [
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true
+    }
+  ],
+  "nativePickers": [
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 8260,
+      "dialogProcessId": 8260,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择工作现场文件",
+      "fileNameAutomationId": "1148",
+      "selectedPath": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\接续.longedit-session.json",
+      "inputCharacters": 96,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 66302,
+          "ParentHandle": 66300,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 66176,
+          "ParentHandle": 66164,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "File &name:"
+        },
+        {
+          "Handle": 66180,
+          "ParentHandle": 66164,
+          "ControlId": 1148,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 66182,
+          "ParentHandle": 66180,
+          "ControlId": 1148,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 66186,
+          "ParentHandle": 66182,
+          "ControlId": 1148,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 66190,
+          "ParentHandle": 66164,
+          "ControlId": 1089,
+          "ClassName": "Static",
+          "Title": "Files of &type:"
+        },
+        {
+          "Handle": 66192,
+          "ParentHandle": 66164,
+          "ControlId": 1136,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 66166,
+          "ParentHandle": 66164,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 66168,
+          "ParentHandle": 66164,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 66170,
+          "ParentHandle": 66164,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 66174,
+          "ParentHandle": 66164,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 66322,
+          "ParentHandle": 66242,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 66324,
+          "ParentHandle": 66322,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 66328,
+          "ParentHandle": 66324,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 66254,
+          "ParentHandle": 66226,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 66256,
+          "ParentHandle": 66254,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 66258,
+          "ParentHandle": 66256,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 8260,
+      "dialogProcessId": 8260,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择工作现场文件",
+      "fileNameAutomationId": "1148",
+      "selectedPath": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\接续.longedit-session.json",
+      "inputCharacters": 96,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 197214,
+          "ParentHandle": 262926,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 131708,
+          "ParentHandle": 131878,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "File &name:"
+        },
+        {
+          "Handle": 131704,
+          "ParentHandle": 131878,
+          "ControlId": 1148,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 131702,
+          "ParentHandle": 131704,
+          "ControlId": 1148,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 131822,
+          "ParentHandle": 131702,
+          "ControlId": 1148,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 131728,
+          "ParentHandle": 131878,
+          "ControlId": 1089,
+          "ClassName": "Static",
+          "Title": "Files of &type:"
+        },
+        {
+          "Handle": 131730,
+          "ParentHandle": 131878,
+          "ControlId": 1136,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 262748,
+          "ParentHandle": 131878,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 131894,
+          "ParentHandle": 131878,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 131700,
+          "ParentHandle": 131878,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 131710,
+          "ParentHandle": 131878,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 197314,
+          "ParentHandle": 131844,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 197396,
+          "ParentHandle": 197314,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 197400,
+          "ParentHandle": 197396,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 131760,
+          "ParentHandle": 131824,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 131762,
+          "ParentHandle": 131760,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 131800,
+          "ParentHandle": 131762,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 8260,
+      "dialogProcessId": 8260,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择目标资料库内的文件",
+      "fileNameAutomationId": "1148",
+      "selectedPath": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\重新找到.txt",
+      "inputCharacters": 80,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 328406,
+          "ParentHandle": 393986,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 197272,
+          "ParentHandle": 393782,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "File &name:"
+        },
+        {
+          "Handle": 197430,
+          "ParentHandle": 393782,
+          "ControlId": 1148,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 328284,
+          "ParentHandle": 197430,
+          "ControlId": 1148,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 197416,
+          "ParentHandle": 328284,
+          "ControlId": 1148,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 197266,
+          "ParentHandle": 393782,
+          "ControlId": 1089,
+          "ClassName": "Static",
+          "Title": "Files of &type:"
+        },
+        {
+          "Handle": 197262,
+          "ParentHandle": 393782,
+          "ControlId": 1136,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 197280,
+          "ParentHandle": 393782,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 131900,
+          "ParentHandle": 393782,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 197414,
+          "ParentHandle": 393782,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 197246,
+          "ParentHandle": 393782,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 328386,
+          "ParentHandle": 197300,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 328468,
+          "ParentHandle": 328386,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 262918,
+          "ParentHandle": 328468,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 197360,
+          "ParentHandle": 197410,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 197330,
+          "ParentHandle": 197360,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 197296,
+          "ParentHandle": 197330,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 8260,
+      "dialogProcessId": 8260,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "导出工作现场（请选择新文件）",
+      "fileNameAutomationId": "1001",
+      "selectedPath": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\已导出.longedit-session.json",
+      "inputCharacters": 97,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 394008,
+          "ParentHandle": 394004,
+          "ControlId": 0,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 394000,
+          "ParentHandle": 394008,
+          "ControlId": 1001,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 328466,
+          "ParentHandle": 262834,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 262938,
+          "ParentHandle": 197434,
+          "ControlId": 0,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 393960,
+          "ParentHandle": 328316,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 262904,
+          "ParentHandle": 328316,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 459318,
+          "ParentHandle": 328316,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 262782,
+          "ParentHandle": 328316,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 262820,
+          "ParentHandle": 328470,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 328444,
+          "ParentHandle": 262820,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 328364,
+          "ParentHandle": 328444,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 262792,
+          "ParentHandle": 328352,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 262942,
+          "ParentHandle": 262792,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 328388,
+          "ParentHandle": 262942,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    },
+    {
+      "status": "selected-real-native-dialog",
+      "processId": 8260,
+      "dialogProcessId": 8260,
+      "executable": "C:\\LongEditR5I\\tauri-app.exe",
+      "title": "选择工作现场文件",
+      "fileNameAutomationId": "1148",
+      "selectedPath": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\损坏.longedit-session.json",
+      "inputCharacters": 96,
+      "method": "Windows-Win32-filename-character-input-and-OK-notification",
+      "desktopUserSession": "disposable-github-hosted",
+      "controlCandidates": [
+        {
+          "Handle": 393862,
+          "ParentHandle": 328404,
+          "ControlId": 0,
+          "ClassName": "Static",
+          "Title": "Namespace Tree Control"
+        },
+        {
+          "Handle": 459478,
+          "ParentHandle": 524966,
+          "ControlId": 1090,
+          "ClassName": "Static",
+          "Title": "File &name:"
+        },
+        {
+          "Handle": 328440,
+          "ParentHandle": 524966,
+          "ControlId": 1148,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 459496,
+          "ParentHandle": 328440,
+          "ControlId": 1148,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 328402,
+          "ParentHandle": 459496,
+          "ControlId": 1148,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 394038,
+          "ParentHandle": 524966,
+          "ControlId": 1089,
+          "ClassName": "Static",
+          "Title": "Files of &type:"
+        },
+        {
+          "Handle": 393874,
+          "ParentHandle": 524966,
+          "ControlId": 1136,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 328490,
+          "ParentHandle": 524966,
+          "ControlId": 1092,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 393852,
+          "ParentHandle": 524966,
+          "ControlId": 1091,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 328324,
+          "ParentHandle": 524966,
+          "ControlId": 1093,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 328310,
+          "ParentHandle": 524966,
+          "ControlId": 1095,
+          "ClassName": "Static",
+          "Title": ""
+        },
+        {
+          "Handle": 328384,
+          "ParentHandle": 328428,
+          "ControlId": 41477,
+          "ClassName": "ComboBoxEx32",
+          "Title": ""
+        },
+        {
+          "Handle": 394016,
+          "ParentHandle": 328384,
+          "ControlId": 41477,
+          "ClassName": "ComboBox",
+          "Title": ""
+        },
+        {
+          "Handle": 459380,
+          "ParentHandle": 394016,
+          "ControlId": 41477,
+          "ClassName": "Edit",
+          "Title": ""
+        },
+        {
+          "Handle": 393924,
+          "ParentHandle": 393870,
+          "ControlId": 0,
+          "ClassName": "UniversalSearchBand",
+          "Title": ""
+        },
+        {
+          "Handle": 393866,
+          "ParentHandle": 393924,
+          "ControlId": 0,
+          "ClassName": "Search Box",
+          "Title": ""
+        },
+        {
+          "Handle": 393984,
+          "ParentHandle": 393866,
+          "ControlId": 0,
+          "ClassName": "SearchEditBoxWrapperClass",
+          "Title": ""
+        }
+      ],
+      "dialogClosed": true,
+      "folderConfirmedAgain": false,
+      "folderObservations": []
+    }
+  ],
+  "draftChecks": [
+    {
+      "dirty": true,
+      "exactModel": true,
+      "sha256": "5684d8279285249bde9159b1d1c639353053d4b4e91da091a0c4c79f9d83860a"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "sha256": "5684d8279285249bde9159b1d1c639353053d4b4e91da091a0c4c79f9d83860a"
+    },
+    {
+      "dirty": true,
+      "exactModel": true,
+      "sha256": "5684d8279285249bde9159b1d1c639353053d4b4e91da091a0c4c79f9d83860a"
+    }
+  ],
+  "quickDenials": [
+    {
+      "command": "read_work_session_bundle",
+      "rejected": true,
+      "error": "只能在主工作台管理工作现场"
+    },
+    {
+      "command": "export_work_session_bundle",
+      "rejected": true,
+      "error": "只能在主工作台管理工作现场"
+    },
+    {
+      "command": "preflight_work_session",
+      "rejected": true,
+      "error": "只能在主工作台管理工作现场"
+    },
+    {
+      "command": "locate_work_session_file",
+      "rejected": true,
+      "error": "只能在主工作台管理工作现场"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读00.txt",
+      "before": "104e5c0976fef741368400f33582157379365dcd299f931abef8c55ea1f3837a",
+      "after": "104e5c0976fef741368400f33582157379365dcd299f931abef8c55ea1f3837a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读01.txt",
+      "before": "82535bbce520de7038820714a16d981bcd190e6c3f3d8832a9d8d83c36f81303",
+      "after": "82535bbce520de7038820714a16d981bcd190e6c3f3d8832a9d8d83c36f81303"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读02.txt",
+      "before": "923d9dd5b941a90b21d55e87661e93c5e76a1492fd179081ef6ae5f4593a3eb1",
+      "after": "923d9dd5b941a90b21d55e87661e93c5e76a1492fd179081ef6ae5f4593a3eb1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读03.txt",
+      "before": "41ce394d8c4ef4663b65333624551af96836a6ec85f5627b25001615ac22be2b",
+      "after": "41ce394d8c4ef4663b65333624551af96836a6ec85f5627b25001615ac22be2b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读04.txt",
+      "before": "d74d03632e5b7ac412f0d5508b4a24d09d39536e7062547d7965d9050dc71af1",
+      "after": "d74d03632e5b7ac412f0d5508b4a24d09d39536e7062547d7965d9050dc71af1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读05.txt",
+      "before": "044f65ca66abdc689250c21f7fa6383e2edcb6f6da4ad38ecdd014eca3e1a514",
+      "after": "044f65ca66abdc689250c21f7fa6383e2edcb6f6da4ad38ecdd014eca3e1a514"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读06.txt",
+      "before": "30ec53a3b3d42df6481684709ae1f2fb7819f66b847e122bd047e335864ccf0d",
+      "after": "30ec53a3b3d42df6481684709ae1f2fb7819f66b847e122bd047e335864ccf0d"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读07.txt",
+      "before": "5f5e0a7de5acfa5579da9d37109e965bc63d568b0b9d4d8a1fcdae87b1d6efd1",
+      "after": "5f5e0a7de5acfa5579da9d37109e965bc63d568b0b9d4d8a1fcdae87b1d6efd1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读08.txt",
+      "before": "fab7a87da9a34232cb0e4885347cdc857e94653cb382754ed6a614c1a2052bf8",
+      "after": "fab7a87da9a34232cb0e4885347cdc857e94653cb382754ed6a614c1a2052bf8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读09.txt",
+      "before": "20739a65e38108e235f842b1e11a7d38ee62b7b93afa22be55ddd61387692098",
+      "after": "20739a65e38108e235f842b1e11a7d38ee62b7b93afa22be55ddd61387692098"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读10.txt",
+      "before": "cab7026b26deb7f66fcb5f0f979ece49fced1b0e656525978d26e6b28c64673e",
+      "after": "cab7026b26deb7f66fcb5f0f979ece49fced1b0e656525978d26e6b28c64673e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读11.txt",
+      "before": "288782bb450c5e0c41c0f3cc6b2ec6d64f5fea5a7905006e15200f01d39ac707",
+      "after": "288782bb450c5e0c41c0f3cc6b2ec6d64f5fea5a7905006e15200f01d39ac707"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读12.txt",
+      "before": "f425d7a6e186f0c04a806fee61ddd616b597ba61a6815139d8538aecc1b856ab",
+      "after": "f425d7a6e186f0c04a806fee61ddd616b597ba61a6815139d8538aecc1b856ab"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读13.txt",
+      "before": "acb558ac0db978d968305588fc81eef42613ac5e6a4a916f5d8eff4092d51b06",
+      "after": "acb558ac0db978d968305588fc81eef42613ac5e6a4a916f5d8eff4092d51b06"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读14.txt",
+      "before": "3fe8cc1f3239e464f7e774e98cc69f62e4fc60d4eca6c9ccb20c17381833b516",
+      "after": "3fe8cc1f3239e464f7e774e98cc69f62e4fc60d4eca6c9ccb20c17381833b516"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读15.txt",
+      "before": "8b4444c9ed731ba10b4996cd7c5e5df332a5d0f8e9d01e7046b4de2ceab308fb",
+      "after": "8b4444c9ed731ba10b4996cd7c5e5df332a5d0f8e9d01e7046b4de2ceab308fb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读16.txt",
+      "before": "8cc4972be09ecc912f157666765f1d3ffda88d1393ba6c3a1f8abc55f168ac73",
+      "after": "8cc4972be09ecc912f157666765f1d3ffda88d1393ba6c3a1f8abc55f168ac73"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读17.txt",
+      "before": "bb9aff5ea87f621e2384c4b7fd674070109707148400486ec364bf43c6a3e139",
+      "after": "bb9aff5ea87f621e2384c4b7fd674070109707148400486ec364bf43c6a3e139"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读18.txt",
+      "before": "dce73d2c01ba3966ed1e65aa16990e94598048ff2c5d71f4d0d10307f0dc2bdd",
+      "after": "dce73d2c01ba3966ed1e65aa16990e94598048ff2c5d71f4d0d10307f0dc2bdd"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读19.txt",
+      "before": "c0d451a85df098e66a49812819dad59e4391965af800650db0fb308b419b7d0a",
+      "after": "c0d451a85df098e66a49812819dad59e4391965af800650db0fb308b419b7d0a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读20.txt",
+      "before": "d17dc0e75b3b5b56f547dc91d681d36f0bae4300cefc94b7620307cbff820106",
+      "after": "d17dc0e75b3b5b56f547dc91d681d36f0bae4300cefc94b7620307cbff820106"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读21.txt",
+      "before": "1c56deff8a0234aca0f954caaab6bb089f7c711cd0cdc71dd050e6212372abef",
+      "after": "1c56deff8a0234aca0f954caaab6bb089f7c711cd0cdc71dd050e6212372abef"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读22.txt",
+      "before": "ca41892dd8a0bb273d4ff3cef84dcdebe2fde0826aecba046b1ed1fa8ae8cdc3",
+      "after": "ca41892dd8a0bb273d4ff3cef84dcdebe2fde0826aecba046b1ed1fa8ae8cdc3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读23.txt",
+      "before": "2f2dfe28c287b161b523d1c6cb811e2333540aaedade0f7b353780b839d3f2b3",
+      "after": "2f2dfe28c287b161b523d1c6cb811e2333540aaedade0f7b353780b839d3f2b3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读24.txt",
+      "before": "cd1afcf6a01a8ffd0d6e033177046b629cdef0577fe76c5200f7ccd9f4938ddb",
+      "after": "cd1afcf6a01a8ffd0d6e033177046b629cdef0577fe76c5200f7ccd9f4938ddb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读25.txt",
+      "before": "9cd64d11ea3a3b9687fc246fbde076c37cfa116bd901bcf9ed0bcf1b906c87b2",
+      "after": "9cd64d11ea3a3b9687fc246fbde076c37cfa116bd901bcf9ed0bcf1b906c87b2"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读26.txt",
+      "before": "b8ab171ea0d9f839565dd87221503ae6945b5c8a7ff1c68d7913463450c07d1f",
+      "after": "b8ab171ea0d9f839565dd87221503ae6945b5c8a7ff1c68d7913463450c07d1f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读27.txt",
+      "before": "8138d0dd6be77ed45cffe13df892dc549a60147f94feb1aff34fd00e5e95bfa0",
+      "after": "8138d0dd6be77ed45cffe13df892dc549a60147f94feb1aff34fd00e5e95bfa0"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读28.txt",
+      "before": "5776d86358d798c42971bd84d9d681db3ce7764ef43f7bacd6738b8bb4ca974c",
+      "after": "5776d86358d798c42971bd84d9d681db3ce7764ef43f7bacd6738b8bb4ca974c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读29.txt",
+      "before": "31ba4103b87557ad0b4d93d442e972328fc8e71eab96caeb170dfc953bcbbf7f",
+      "after": "31ba4103b87557ad0b4d93d442e972328fc8e71eab96caeb170dfc953bcbbf7f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读30.txt",
+      "before": "f2d968ea86127fb18fc15ad01edcf3bdc1daa20adc0aa29563282eba3d3408b6",
+      "after": "f2d968ea86127fb18fc15ad01edcf3bdc1daa20adc0aa29563282eba3d3408b6"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读31.txt",
+      "before": "d27972bfd8756797b5438f435ba7ed39199c35d271d5a4a27b6caf708abaab2b",
+      "after": "d27972bfd8756797b5438f435ba7ed39199c35d271d5a4a27b6caf708abaab2b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读32.txt",
+      "before": "9f048de8380a64b353681c3688c1f63c4b786ae5314863baff278688fa575ff5",
+      "after": "9f048de8380a64b353681c3688c1f63c4b786ae5314863baff278688fa575ff5"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读33.txt",
+      "before": "299cac9cc7ac2fab2b07cb1f03779b9bbca69d7791af5542c4824b8ece78188f",
+      "after": "299cac9cc7ac2fab2b07cb1f03779b9bbca69d7791af5542c4824b8ece78188f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读34.txt",
+      "before": "288aa60f7324ac43aec5cf9f434a304c9e547c6caf7a6e10905d54373d79a2be",
+      "after": "288aa60f7324ac43aec5cf9f434a304c9e547c6caf7a6e10905d54373d79a2be"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读35.txt",
+      "before": "5ccf9a09ce527a4c52dd36b8c7c1f0fa22d2f0fc9bf4582281eda8356b6bf1d7",
+      "after": "5ccf9a09ce527a4c52dd36b8c7c1f0fa22d2f0fc9bf4582281eda8356b6bf1d7"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读36.txt",
+      "before": "110a68ad42fd4b2ef08658571fc211d957d214b638f327afd896a5a81f224db4",
+      "after": "110a68ad42fd4b2ef08658571fc211d957d214b638f327afd896a5a81f224db4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读37.txt",
+      "before": "d95ed02f4119fd9974941b1ce31483999acc70ce2d4ce78156b42f49f26439e0",
+      "after": "d95ed02f4119fd9974941b1ce31483999acc70ce2d4ce78156b42f49f26439e0"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读38.txt",
+      "before": "c0a97f97d09319295ef4853f7d869e868a627751c95e055fbad3f32fc6d72cb4",
+      "after": "c0a97f97d09319295ef4853f7d869e868a627751c95e055fbad3f32fc6d72cb4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读39.txt",
+      "before": "7777b2814ebd8764ae36b842c077a328dd356ab8804ea9707ff02431f5fcfb23",
+      "after": "7777b2814ebd8764ae36b842c077a328dd356ab8804ea9707ff02431f5fcfb23"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\草稿.md",
+      "before": "032af6c506d62c7d708c362d5b89fef9d063ac3a635805dc13c05eb9585b5fda",
+      "after": "5684d8279285249bde9159b1d1c639353053d4b4e91da091a0c4c79f9d83860a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\重新找到.txt",
+      "before": "58a37b75ef37ef922e63bd22f63e154b911313d3fbc9970e9ba89bcc40ba4a54",
+      "after": "58a37b75ef37ef922e63bd22f63e154b911313d3fbc9970e9ba89bcc40ba4a54"
+    }
+  ],
+  "runtimeErrors": [],
+  "draftSha256": "5684d8279285249bde9159b1d1c639353053d4b4e91da091a0c4c79f9d83860a",
+  "beforeExplicitSave": [
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读00.txt",
+      "sha256": "104e5c0976fef741368400f33582157379365dcd299f931abef8c55ea1f3837a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读01.txt",
+      "sha256": "82535bbce520de7038820714a16d981bcd190e6c3f3d8832a9d8d83c36f81303"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读02.txt",
+      "sha256": "923d9dd5b941a90b21d55e87661e93c5e76a1492fd179081ef6ae5f4593a3eb1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读03.txt",
+      "sha256": "41ce394d8c4ef4663b65333624551af96836a6ec85f5627b25001615ac22be2b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读04.txt",
+      "sha256": "d74d03632e5b7ac412f0d5508b4a24d09d39536e7062547d7965d9050dc71af1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读05.txt",
+      "sha256": "044f65ca66abdc689250c21f7fa6383e2edcb6f6da4ad38ecdd014eca3e1a514"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读06.txt",
+      "sha256": "30ec53a3b3d42df6481684709ae1f2fb7819f66b847e122bd047e335864ccf0d"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读07.txt",
+      "sha256": "5f5e0a7de5acfa5579da9d37109e965bc63d568b0b9d4d8a1fcdae87b1d6efd1"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读08.txt",
+      "sha256": "fab7a87da9a34232cb0e4885347cdc857e94653cb382754ed6a614c1a2052bf8"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读09.txt",
+      "sha256": "20739a65e38108e235f842b1e11a7d38ee62b7b93afa22be55ddd61387692098"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读10.txt",
+      "sha256": "cab7026b26deb7f66fcb5f0f979ece49fced1b0e656525978d26e6b28c64673e"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读11.txt",
+      "sha256": "288782bb450c5e0c41c0f3cc6b2ec6d64f5fea5a7905006e15200f01d39ac707"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读12.txt",
+      "sha256": "f425d7a6e186f0c04a806fee61ddd616b597ba61a6815139d8538aecc1b856ab"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读13.txt",
+      "sha256": "acb558ac0db978d968305588fc81eef42613ac5e6a4a916f5d8eff4092d51b06"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读14.txt",
+      "sha256": "3fe8cc1f3239e464f7e774e98cc69f62e4fc60d4eca6c9ccb20c17381833b516"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读15.txt",
+      "sha256": "8b4444c9ed731ba10b4996cd7c5e5df332a5d0f8e9d01e7046b4de2ceab308fb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读16.txt",
+      "sha256": "8cc4972be09ecc912f157666765f1d3ffda88d1393ba6c3a1f8abc55f168ac73"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读17.txt",
+      "sha256": "bb9aff5ea87f621e2384c4b7fd674070109707148400486ec364bf43c6a3e139"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读18.txt",
+      "sha256": "dce73d2c01ba3966ed1e65aa16990e94598048ff2c5d71f4d0d10307f0dc2bdd"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读19.txt",
+      "sha256": "c0d451a85df098e66a49812819dad59e4391965af800650db0fb308b419b7d0a"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读20.txt",
+      "sha256": "d17dc0e75b3b5b56f547dc91d681d36f0bae4300cefc94b7620307cbff820106"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读21.txt",
+      "sha256": "1c56deff8a0234aca0f954caaab6bb089f7c711cd0cdc71dd050e6212372abef"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读22.txt",
+      "sha256": "ca41892dd8a0bb273d4ff3cef84dcdebe2fde0826aecba046b1ed1fa8ae8cdc3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读23.txt",
+      "sha256": "2f2dfe28c287b161b523d1c6cb811e2333540aaedade0f7b353780b839d3f2b3"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读24.txt",
+      "sha256": "cd1afcf6a01a8ffd0d6e033177046b629cdef0577fe76c5200f7ccd9f4938ddb"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读25.txt",
+      "sha256": "9cd64d11ea3a3b9687fc246fbde076c37cfa116bd901bcf9ed0bcf1b906c87b2"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读26.txt",
+      "sha256": "b8ab171ea0d9f839565dd87221503ae6945b5c8a7ff1c68d7913463450c07d1f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读27.txt",
+      "sha256": "8138d0dd6be77ed45cffe13df892dc549a60147f94feb1aff34fd00e5e95bfa0"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读28.txt",
+      "sha256": "5776d86358d798c42971bd84d9d681db3ce7764ef43f7bacd6738b8bb4ca974c"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读29.txt",
+      "sha256": "31ba4103b87557ad0b4d93d442e972328fc8e71eab96caeb170dfc953bcbbf7f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读30.txt",
+      "sha256": "f2d968ea86127fb18fc15ad01edcf3bdc1daa20adc0aa29563282eba3d3408b6"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读31.txt",
+      "sha256": "d27972bfd8756797b5438f435ba7ed39199c35d271d5a4a27b6caf708abaab2b"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读32.txt",
+      "sha256": "9f048de8380a64b353681c3688c1f63c4b786ae5314863baff278688fa575ff5"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读33.txt",
+      "sha256": "299cac9cc7ac2fab2b07cb1f03779b9bbca69d7791af5542c4824b8ece78188f"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读34.txt",
+      "sha256": "288aa60f7324ac43aec5cf9f434a304c9e547c6caf7a6e10905d54373d79a2be"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读35.txt",
+      "sha256": "5ccf9a09ce527a4c52dd36b8c7c1f0fa22d2f0fc9bf4582281eda8356b6bf1d7"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读36.txt",
+      "sha256": "110a68ad42fd4b2ef08658571fc211d957d214b638f327afd896a5a81f224db4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读37.txt",
+      "sha256": "d95ed02f4119fd9974941b1ce31483999acc70ce2d4ce78156b42f49f26439e0"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读38.txt",
+      "sha256": "c0a97f97d09319295ef4853f7d869e868a627751c95e055fbad3f32fc6d72cb4"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\阅读39.txt",
+      "sha256": "7777b2814ebd8764ae36b842c077a328dd356ab8804ea9707ff02431f5fcfb23"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\草稿.md",
+      "sha256": "032af6c506d62c7d708c362d5b89fef9d063ac3a635805dc13c05eb9585b5fda"
+    },
+    {
+      "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\重新找到.txt",
+      "sha256": "58a37b75ef37ef922e63bd22f63e154b911313d3fbc9970e9ba89bcc40ba4a54"
+    }
+  ],
+  "positions": {
+    "count": 40,
+    "first": 340,
+    "last": 457,
+    "afterReload": 457
+  },
+  "quickBridgeReady": true,
+  "explicitSave": {
+    "path": "C:\\LongEditR5ILibrary\\v119-session-4da28f86-8e13-4f26-89ed-65de177b1734\\草稿.md",
+    "after": "5684d8279285249bde9159b1d1c639353053d4b4e91da091a0c4c79f9d83860a",
+    "afterAllDraftChecks": true
+  },
+  "errorOverlay": false,
+  "processRestart": {
+    "status": "passed",
+    "executableSha256": "cb21d6aa611c70309f86773bbba5dd9f8c02c758a7ae44fbba75565bc04325e6",
+    "nativeVersion": "1.1.12",
+    "sceneFiles": 41,
+    "first": 340,
+    "last": 457,
+    "mainTargetId": "662E526E29BBC8D8EDB5C034E91DF706",
+    "evidenceLevel": "same-installed-process-image-relaunched-by-owned-lifecycle"
+  }
+}
