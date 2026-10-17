@@ -1,0 +1,6 @@
+{
+  "message": "TimeoutError: locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog').filter({ has: locator('.session-transfer-body') }).locator('.session-file-state.ready') to be visible\u001b[22m\n",
+  "stack": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog').filter({ has: locator('.session-transfer-body') }).locator('.session-file-state.ready') to be visible\u001b[22m\n\n    at startImport (E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v119-session-edge-browser.mjs:12:290)\n    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v119-session-edge-browser.mjs:17:2",
+  "checks": [],
+  "errors": []
+}

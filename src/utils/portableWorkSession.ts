@@ -114,6 +114,11 @@ export function exportableWorkSession(session: WorkSession, includeContext = tru
 export function portableSessionPaths(bundle: PortableWorkSession): string[] {
   return [...new Map([...bundle.files.map(file=>file.relativePath), ...(bundle.reference ? [bundle.reference.relativePath] : [])].map(value=>[key(value), value])).values()]
 }
+// Local v1 scenes predate the portable 128-file envelope. Keep their existing
+// continuation capability; only migration files have the new envelope limit.
+export function localSessionPaths(session: WorkSession): string[] {
+  return [...new Map([...session.tabs.map(tab=>relativeSessionPath(session.libraryRoot,tab.path)),...(session.reference?[relativeSessionPath(session.libraryRoot,session.reference.path)]:[])].map(value=>[key(value),value])).values()]
+}
 export function materializeWorkSession(bundle: PortableWorkSession, root: string, id: string, name = bundle.name, fingerprint?: string): WorkSession {
   const checked = validatePortableWorkSession(bundle)
   const checkedName=boundedString(name,60,'现场名称',false).trim(),checkedId=boundedString(id,200,'现场标识',false)
@@ -133,8 +138,8 @@ export function remapPortableFile(bundle: PortableWorkSession, from: string, to:
 
 export function availableWorkSession(session: WorkSession, preflight: SessionPreflight): { session: WorkSession; missing: SessionFileCheck[] } {
   if (key(absolute(preflight.libraryRoot)) !== key(absolute(session.libraryRoot))) throw Error('资料库已变化，请重新核对现场')
-  const bundle = exportableWorkSession(session), checks = new Map(preflight.files.map(file=>[key(sessionRelativePath(file.relativePath)),file]))
-  if (checks.size !== preflight.files.length || checks.size !== portableSessionPaths(bundle).length || portableSessionPaths(bundle).some(file=>!checks.has(key(file)))) throw Error('现场预检清单不完整或重复')
+  const requested = localSessionPaths(session), checks = new Map(preflight.files.map(file=>[key(sessionRelativePath(file.relativePath)),file]))
+  if (checks.size !== preflight.files.length || checks.size !== requested.length || requested.some(file=>!checks.has(key(file)))) throw Error('现场预检清单不完整或重复')
   for(const checked of checks.values()) if(checked.state==='ready') {
     if(!checked.path)throw Error('预检缺少真实文件位置')
     if(key(relativeSessionPath(preflight.libraryRoot,checked.path))!==key(checked.relativePath))throw Error('预检文件身份不一致，请重新核对')
@@ -145,7 +150,7 @@ export function availableWorkSession(session: WorkSession, preflight: SessionPre
     const path=checked.path!
     return [{...tab,id:path,path,title:path.replace(/\\/g,'/').split('/').pop()!,isDirty:false as const}]
   })
-  const reference = bundle.reference ? checks.get(key(bundle.reference.relativePath)) : undefined
+  const reference = session.reference ? checks.get(key(relativeSessionPath(session.libraryRoot,session.reference.path))) : undefined
   if (reference?.state==='ready' && reference.path) relativeSessionPath(preflight.libraryRoot,reference.path)
   const active = session.activeTabId ? checks.get(key(relativeSessionPath(session.libraryRoot,session.activeTabId))) : undefined
   return {session:{...session,tabs,activeTabId:active?.state==='ready'?active.path || tabs[0]?.id || null:tabs[0]?.id || null,

@@ -52,3 +52,25 @@ test('real search remember persists a locator without serializing the result exc
   assert.equal(restarted.selection[0],'C:/notes/a.md')
   scope.stop()
 })
+
+test('staged reading metadata survives more than 24 files and restart without expanding the live draft cache',()=>{
+ entries.clear();const views=moduleAt('src/services/workspaceViewState.ts'),paths=Array.from({length:40},(_,n)=>`C:/notes/${n}.pdf`)
+ views.stageWorkspaceViewStates(Object.fromEntries(paths.map((path,n)=>[path,{scrollTop:n*10,scrollLeft:0,section:String(n+1),draft:'PRIVATE',selection:'PRIVATE'}])),paths)
+ for(let n=0;n<39;n++)views.rememberWorkspaceViewState(paths[n],{scrollTop:1000+n,scrollLeft:0,section:String(n+1),draft:'PRIVATE'})
+ assert.equal(views.recallWorkspaceViewState(paths[0]).scrollTop,1000)
+ const restarted=moduleAt('src/services/workspaceViewState.ts');assert.equal(restarted.recallWorkspaceViewState(paths[0]).scrollTop,1000);assert.equal(restarted.recallWorkspaceViewState(paths[39]).section,'40')
+ assert.equal([...entries.values()].join('').includes('PRIVATE'),false)
+ assert.ok(Object.keys(JSON.parse(entries.get('longedit.view-state.v1'))).length<=24)
+})
+
+test('staging respects protected models, aliases and rollback; quota failure cannot replace the current view',()=>{
+ entries.clear();const views=moduleAt('src/services/workspaceViewState.ts')
+ views.rememberWorkspaceViewState('C:/notes/dirty.md',{scrollTop:9,scrollLeft:0,draft:'PRIVATE'})
+ views.rememberWorkspaceViewState('C:/notes/a.pdf',{scrollTop:12,scrollLeft:0})
+ const undo=views.stageWorkspaceViewStates({'C:/notes/a.pdf':{scrollTop:100,scrollLeft:0}},['\\\\?\\C:\\notes\\a.pdf'])
+ assert.equal(views.recallWorkspaceViewState('C:/notes/a.pdf').scrollTop,100);assert.equal(views.recallWorkspaceViewState('C:/notes/dirty.md').draft,'PRIVATE');undo()
+ assert.equal(views.recallWorkspaceViewState('C:/notes/a.pdf').scrollTop,12)
+ const original=localStorage.setItem;localStorage.setItem=()=>{throw Error('quota')}
+ try{assert.throws(()=>views.stageWorkspaceViewStates({'C:/notes/a.pdf':{scrollTop:200,scrollLeft:0}},['C:/notes/a.pdf']),/quota/)}finally{localStorage.setItem=original}
+ assert.equal(views.recallWorkspaceViewState('C:/notes/a.pdf').scrollTop,12)
+})

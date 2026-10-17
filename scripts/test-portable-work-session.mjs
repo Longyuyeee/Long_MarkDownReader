@@ -8,6 +8,14 @@ function load(file){const exports={};vm.runInNewContext(ts.transpile(fs.readFile
 const p=load('src/utils/portableWorkSession.ts'),w=load('src/utils/workSessions.ts')
 const plain=value=>JSON.parse(JSON.stringify(value))
 function session(){return {version:1,id:'sample',name:'周五交付',libraryRoot:'C:/private-old-root',savedAt:100,tabs:[{id:'C:/private-old-root/项目/纪要.md',path:'C:/private-old-root/项目/纪要.md',title:'SECRET TITLE',isDirty:true,content:'PRIVATE BODY',pinned:true},{id:'C:/private-old-root/报告.pdf',path:'C:/private-old-root/报告.pdf',title:'报告',isDirty:false}],activeTabId:'C:/private-old-root/项目/纪要.md',search:{query:'交付 -旧版',types:['markdown','pdf'],selected:JSON.stringify(['C:/private-old-root/报告.pdf','PRIVATE EXCERPT']),scroll:123,loadedFiles:80,sort:'modified'},views:{'C:/private-old-root/报告.pdf':{scrollTop:500,scrollLeft:0,section:'7',zoom:1.2,draft:'PRIVATE BODY',selection:'PRIVATE EXCERPT',externalApplication:'C:/private-tool.exe'}},reference:{path:'C:/private-old-root/报告.pdf',title:'PRIVATE TITLE',query:'交付',page:7,content:'PRIVATE REFERENCE'}}}
+
+test('legacy local scenes beyond 128 tabs still continue completely; the migration envelope alone is limited',()=>{
+ const scene=session();scene.tabs=Array.from({length:160},(_,n)=>({id:`C:/private-old-root/${n}.md`,path:`C:/private-old-root/${n}.md`,title:`${n}.md`,isDirty:false}));scene.activeTabId=scene.tabs[159].id
+ const paths=p.localSessionPaths(scene);assert.equal(paths.length,161)
+ const frame={libraryRoot:scene.libraryRoot,files:paths.map(relativePath=>({relativePath,state:'ready',path:scene.libraryRoot+'/'+relativePath}))}
+ const result=p.availableWorkSession(scene,frame);assert.equal(result.session.tabs.length,160);assert.equal(result.session.activeTabId,scene.tabs[159].id);assert.equal(result.session.reference.path,scene.reference.path)
+ assert.throws(()=>p.exportableWorkSession(scene),/128/)
+})
 test('portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets',()=>{
  const bundle=p.exportableWorkSession(session()),raw=JSON.stringify(bundle)
  for(const secret of ['private-old-root','PRIVATE','SECRET','content','selected','externalApplication','libraryRoot'])assert.equal(raw.includes(secret),false,secret)
