@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Title,[Parameter(Mandatory=$true)][string]$SelectedPath,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Report)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Title,[Parameter(Mandatory=$true)][string]$SelectedPath,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Report,[switch]$SelectDirectory)
 $ErrorActionPreference='Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows' -or $env:LONGEDIT_R5I_DISPOSABLE -ne '1') { throw 'Only a disposable hosted Windows UI test may select this dialog' }
 $resolvedRoot=[IO.Path]::GetFullPath($OwnerRoot).TrimEnd('\')+'\'
@@ -89,4 +89,30 @@ if ($null -eq $selected) {
   [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),([ordered]@{status='failed';expectedTitle=$Title;expectedExecutable=$Executable;ownedProcesses=@($processes | Select-Object Id,Path);ownedWindows=$diagnostics} | ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
   throw "Owned native file dialog was not found: $Title"
 }
+# A folder chooser can first navigate into the typed existing directory. Do not
+# report completion merely because the filename control accepted text: require
+# this exact owned HWND to close. The optional second Select Folder action is
+# limited to existing generated directories, never files/overwrites or desktop input.
+if ($SelectDirectory -and -not (Test-Path -LiteralPath $resolvedFile -PathType Container)) { throw 'The generated folder selection must already exist' }
+$closingDeadline=[DateTime]::UtcNow.AddSeconds(10)
+$firstConfirmation=[DateTime]::UtcNow
+$folderConfirmedAgain=$false
+$folderObservations=@()
+do {
+  $stillOpen=@([SessionPickerWindows]::Top() | Where-Object { $_.Handle -eq $native.Handle -and ($_.Pid -in $ownedPids -or $_.OwnerPid -in $ownedPids) })
+  if ($stillOpen.Count -eq 0) { break }
+  if ($SelectDirectory -and -not $folderConfirmedAgain -and ([DateTime]::UtcNow-$firstConfirmation).TotalMilliseconds -ge 750) {
+    $currentChildren=@([SessionPickerWindows]::Children($native.Handle))
+    $folderObservations+=@($currentChildren | Where-Object { $_.ClassName -match 'Edit|Button|Static|Combo' } | Select-Object ControlId,ClassName,Title)
+    $folderOk=$currentChildren | Where-Object { $_.ClassName -eq 'Button' -and $_.ControlId -eq 1 } | Select-Object -First 1
+    if ($null -eq $folderOk -or -not [SessionPickerWindows]::IsWindowEnabled([IntPtr]$folderOk.Handle)) { throw 'Owned Select Folder control is not ready' }
+    if (-not [SessionPickerWindows]::PostMessage([IntPtr]$native.Handle,273,[IntPtr]1,[IntPtr]$folderOk.Handle)) { throw 'Could not confirm the actual owned folder chooser' }
+    $folderConfirmedAgain=$true
+  }
+  Start-Sleep -Milliseconds 100
+} while ([DateTime]::UtcNow -lt $closingDeadline)
+$selected['dialogClosed']=($stillOpen.Count -eq 0)
+$selected['folderConfirmedAgain']=$folderConfirmedAgain
+$selected['folderObservations']=$folderObservations
 [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($selected | ConvertTo-Json -Depth 5),[Text.UTF8Encoding]::new($false))
+if (-not $selected.dialogClosed) { throw 'The actual owned native dialog did not close; selection is not complete' }
