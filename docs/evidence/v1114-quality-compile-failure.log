@@ -1,0 +1,26 @@
+
+> tauri-app@1.1.13 ci:patch-release
+> npm run build && npm run check:theme-contract && npm run check:brand-icon-contract && npm run check:ui-consistency && npm run check:ui-typography && npm run check:ui-shared-components && npm run check:ui-management-shell && npm run check:ui4a-shell-visual-harness && npm run check:ui4a-shell-visual-evidence && npm run check:ui4c-release-fact-alignment && npm run check:ui-color-semantics && npm run check:ui-state-semantics && npm run check:dialog-acl && npm run check:settings-navigation-localization && npm run check:settings-information-architecture && npm run check:index-auto-preparation-experience && npm run check:table-row-editing-experience && npm run check:library-context-restoration && npm run check:markdown-default-mode && npm run check:markdown-code-theme-contrast && npm run check:code-editor-theme-contract && npm run check:structured-source-workspace && npm run check:workbook-workspace-experience && npm run check:json-workspace-experience && npm run check:text-workspace-layout && npm run check:external-change-identity && npm run check:managed-file-routing && npm run check:format-registry && npm run check:r1-release-capability-matrix && npm run check:r2-windows-lifecycle-contract && npm run check:d2-safe-degradation-contract && npm run check:v1-installed-hotfix && npm run check:v1-community-release && npm run check:current-development-audit && npm run check:ux33j-installed-docx-harness && cargo check --locked --manifest-path src-tauri/Cargo.toml && npm run audit:prod
+
+
+> tauri-app@1.1.13 build
+> vue-tsc --noEmit && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 3283 modules transformed.
+✗ Build failed in 5.59s
+error during build:
+[vite:vue] [plugin vite:vue] src/components/NoteTemplateManager.vue (12:53): Error parsing JavaScript expression: Unterminated string constant. (1:1)
+file: E:/ProjectSave/GeminiProject/MarkDownReader/src/components/NoteTemplateManager.vue:12:53
+SyntaxError: [plugin vite:vue] src/components/NoteTemplateManager.vue (12:53): Error parsing JavaScript expression: Unterminated string constant. (1:1)
+    at createCompilerError (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:1374:17)
+    at emitError (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:2980:5)
+    at createExp (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:2973:7)
+    at Object.oninterpolation (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:2347:16)
+    at Tokenizer.stateInterpolationClose (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:596:18)
+    at Tokenizer.parse (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:1097:16)
+    at Object.baseParse (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-core\dist\compiler-core.cjs.prod.js:3012:13)
+    at Object.parse (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-dom\dist\compiler-dom.cjs.prod.js:665:23)
+    at Object.parse$1 [as parse] (E:\ProjectSave\GeminiProject\MarkDownReader\node_modules\@vue\compiler-sfc\dist\compiler-sfc.cjs.js:1824:24)
+    at createDescriptor (file:///E:/ProjectSave/GeminiProject/MarkDownReader/node_modules/@vitejs/plugin-vue/dist/index.mjs:71:43)

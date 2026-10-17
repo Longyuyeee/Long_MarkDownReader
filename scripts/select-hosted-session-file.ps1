@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Title,[Parameter(Mandatory=$true)][string]$SelectedPath,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Report,[switch]$SelectDirectory)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Title,[Parameter(Mandatory=$true)][string]$SelectedPath,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Report,[switch]$SelectDirectory,[switch]$Cancel)
 $ErrorActionPreference='Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows' -or $env:LONGEDIT_R5I_DISPOSABLE -ne '1') { throw 'Only a disposable hosted Windows UI test may select this dialog' }
 $resolvedRoot=[IO.Path]::GetFullPath($OwnerRoot).TrimEnd('\')+'\'
@@ -45,6 +45,11 @@ do {
   $diagnostics=@($windows | ForEach-Object { [ordered]@{handle=$_.Handle;pid=$_.Pid;ownerPid=$_.OwnerPid;title=$_.Title;className=$_.ClassName} })
   foreach ($native in @($windows | Where-Object Title -eq $Title)) {
     $process=$processes | Where-Object { $_.Id -eq $native.Pid -or $_.Id -eq $native.OwnerPid } | Select-Object -First 1
+    if($Cancel){
+      if(-not [SessionPickerWindows]::PostMessage([IntPtr]$native.Handle,273,[IntPtr]2,[IntPtr]::Zero)){throw 'Could not cancel the exact owned native picker'}
+      $selected=[ordered]@{status='cancelled-real-native-dialog';processId=$process.Id;dialogProcessId=$native.Pid;executable=$process.Path;title=$native.Title;desktopUserSession='disposable-github-hosted';method='Windows-Win32-owned-cancel-button'}
+      break
+    }
     try {
     $window=[System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$native.Handle)
     $edits=$window.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::Edit))

@@ -6,8 +6,7 @@
   <label v-for="field in fields" :key="field">{{field}}<input v-model="parameters[field]" :disabled="busy" maxlength="500" :aria-label="`模板参数 ${field}`" /></label>
   <p v-if="fields.length>16" class="template-error" role="alert">字段超过 16 个，请在管理模板中缩减后使用。</p>
   <pre aria-label="新笔记填充预览">{{rendered || '空白笔记'}}</pre>
-  <p v-if="error" class="template-error" role="alert">{{error}}</p>
-  <template #footer><div class="template-create-actions"><n-button :disabled="busy" @click="close">取消</n-button><n-button type="primary" :loading="busy" :disabled="busy||!title.trim()||fields.length>16" @click="create">在此新建</n-button></div></template>
+  <template #footer><p v-if="error" class="template-error" role="alert">{{error}}</p><div class="template-create-actions"><n-button :disabled="busy" @click="close">取消</n-button><n-button type="primary" :loading="busy" :disabled="busy||!title.trim()||fields.length>16" @click="create">在此新建</n-button></div></template>
  </n-modal>
 </template>
 <script setup lang="ts">
@@ -36,7 +35,7 @@ async function create(){
 }
 </script>
 <style scoped>
-.template-destination{color:var(--text-secondary);font-size:13px;overflow-wrap:anywhere}.template-error{color:var(--status-danger-text);overflow-wrap:anywhere}
+.template-destination{color:var(--text-secondary);font-size:13px;overflow-wrap:anywhere}.template-error{color:var(--status-danger-text);overflow-wrap:anywhere;max-height:14vh;overflow:auto;margin:0 0 10px}
 label{display:block;margin:10px 0;font-size:14px}input,select{box-sizing:border-box;display:block;width:100%;margin-top:5px;padding:8px 10px;font:inherit;color:var(--text-primary);background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm,6px)}
 pre{max-height:28vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;color:var(--text-primary);background:var(--bg-secondary);border:1px solid var(--border-color);font-size:13px}.template-create-actions{display:flex;gap:8px;justify-content:flex-end}
 .template-create-dialog :deep(.n-card__content){min-height:0;overflow:auto}

@@ -3,11 +3,9 @@
     <p class="delivery-context">导出当前草稿，不会保存或改写原文件。<br>{{ path }}</p>
     <p class="delivery-context">HTML 携带本地位图；PDF 通过系统打印选择“另存为 PDF”。字体使用本机字体及后备字体，交互图等请核对预览。</p>
     <p v-if="loading" role="status">正在准备正文与图片…</p>
-    <p v-if="error" role="alert" class="delivery-error">{{error}} <n-button v-if="!busy" size="small" @click="prepare">重新准备</n-button></p>
     <details v-if="warnings.length" class="delivery-warnings" open><summary>交付注意事项（{{warnings.length}}）</summary><ul><li v-for="warning in warnings" :key="warning">{{warning}}</li></ul></details>
     <iframe v-if="documentHtml" ref="preview" title="实际交付预览" sandbox="allow-same-origin allow-modals" :srcdoc="documentHtml" @load="frameReady=true" />
-    <p v-if="result" role="status" class="delivery-context">{{result}}</p>
-    <template #footer><div class="delivery-actions"><n-button :disabled="busy" @click="emit('close')">关闭</n-button><n-button :disabled="busy" @click="save('md')">Markdown 仅正文…</n-button><n-button :disabled="busy||!frameReady||!documentHtml" @click="save('html')">独立 HTML…</n-button><n-button type="primary" :disabled="busy||!frameReady||!documentHtml" @click="print">打印 / PDF…</n-button></div><p class="delivery-footnote">Markdown 图片仍依赖原引用；需要换目录阅读时建议使用独立 HTML。已有文件不直接覆盖。</p></template>
+    <template #footer><p v-if="error" role="alert" class="delivery-error">{{error}} <n-button v-if="!busy&&!documentHtml" size="small" @click="prepare">重新准备</n-button></p><p v-if="result" role="status" class="delivery-result">{{result}}</p><div class="delivery-actions"><n-button :disabled="busy" @click="emit('close')">关闭</n-button><n-button :disabled="busy" @click="save('md')">Markdown 仅正文…</n-button><n-button :disabled="busy||!frameReady||!documentHtml" @click="save('html')">独立 HTML…</n-button><n-button type="primary" :disabled="busy||!frameReady||!documentHtml" @click="print">打印 / PDF…</n-button></div><p class="delivery-footnote">Markdown 图片仍依赖原引用；需要换目录阅读时建议使用独立 HTML。已有文件不直接覆盖。</p></template>
   </n-modal>
 </template>
 <script setup lang="ts">
@@ -52,7 +50,7 @@ onMounted(prepare)
 </script>
 <style scoped>
 .delivery-context,.delivery-footnote{font-size:var(--font-size-sm,13px);color:var(--text-secondary);overflow-wrap:anywhere;margin:0 0 10px}
-.delivery-error{color:var(--status-danger-text);overflow-wrap:anywhere}.delivery-warnings{font-size:13px;margin:10px 0;overflow-wrap:anywhere;max-height:100px;overflow:auto}
+.delivery-error,.delivery-result{color:var(--text-secondary);overflow-wrap:anywhere;max-height:14vh;overflow:auto;font-size:13px;margin:0 0 10px}.delivery-error{color:var(--status-danger-text)}.delivery-warnings{font-size:13px;margin:10px 0;overflow-wrap:anywhere;max-height:100px;overflow:auto}
 iframe{display:block;width:100%;height:clamp(120px,43vh,460px);border:1px solid var(--border-color);background:#fff;border-radius:var(--radius-sm,6px)}
 .delivery-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.delivery-footnote{margin:8px 0 0}
 .writing-delivery-dialog :deep(.n-card__content){min-height:0;overflow:auto}
@@ -60,4 +58,5 @@ iframe{display:block;width:100%;height:clamp(120px,43vh,460px);border:1px solid 
 <style>
 .writing-delivery-dialog > .n-card__content{min-height:0;overflow:auto}
 .writing-delivery-dialog > .n-card-header,.writing-delivery-dialog > .n-card__footer{flex-shrink:0}
+.writing-delivery-dialog .n-card-header__main{min-width:0;overflow-wrap:anywhere}
 </style>

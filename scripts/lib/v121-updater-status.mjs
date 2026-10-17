@@ -1,6 +1,19 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (community.appVersion === '1.1.14'
+    && community.patchValidation?.previousPublicVersion === '1.1.13'
+    && development.runtimeBaseVersion === '1.1.14'
+    && community.targetRelease?.tag === 'v1.1.14'
+    && /^[0-9a-f]{40}$/.test(development.publicTagCommit)
+    && (community.gates?.githubReleasePublished === true
+      ? development.publicVersion === '1.1.14' && development.publicTag === 'v1.1.14'
+        && development.developmentTargetVersion === '1.1.15'
+        && community.release?.taggedCommit === development.publicTagCommit
+      : community.gates?.githubReleasePublished === false && community.release === null
+        && development.publicVersion === '1.1.13' && development.publicTag === 'v1.1.13'
+        && development.publicTagCommit === '8c5a50afcb594519fbe14f0009112491ce14308c'
+        && development.developmentTargetVersion === '1.1.14')) return
   if (community.appVersion === '1.1.13'
     && community.patchValidation?.previousPublicVersion === '1.1.12'
     && development.runtimeBaseVersion === '1.1.13'
@@ -278,6 +291,13 @@ export function assertV121DevelopmentBoundary(development, community) {
 }
 
 export function assertV121UpdaterStatus(policy, community, receipt) {
+  if (community.appVersion === '1.1.14') {
+    if (policy.status !== 'hosted-managed-update-passed'
+      || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'
+      || community.patchValidation?.previousPublicVersion !== '1.1.13'
+      || !['1.1.13-to-1.1.14-pending','1.1.13-to-1.1.14-passed'].includes(community.patchValidation?.managedUpdaterUpgradePath)) throw Error('1.1.14 must retain its separate update observation and immutable predecessor')
+    return
+  }
   if (community.appVersion === '1.1.13') {
     if (policy.status !== 'hosted-managed-update-passed'
       || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'

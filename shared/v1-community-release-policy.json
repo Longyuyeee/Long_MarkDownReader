@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.13",
-  "releaseCandidate": true,
+  "appVersion": "1.1.14",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-18",
-  "currentStatus": "v1.1.13-community-release-published",
+  "currentStatus": "v1.1.14-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.12",
+    "previousPublicVersion": "1.1.13",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.12-to-1.1.13-pending",
-    "scope": "pdf-reading-notes-draft-safety-and-content-verified-sources"
+    "managedUpdaterUpgradePath": "1.1.13-to-1.1.14-pending",
+    "scope": "writing-templates-local-images-and-portable-delivery"
   },
   "targetRelease": {
-    "tag": "v1.1.13",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13",
+    "tag": "v1.1.14",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "8c5a50afcb594519fbe14f0009112491ce14308c",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39073940910,
-    "hostedInstalledLifecycleRunId": 39076247421,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.13_x64_zh-CN.msi",
-        "sizeBytes": 77340672,
-        "sha256": "6718f8bb300eeeaa4020fc05440143cf6bd245fafe2da581d911abb75590bcac",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.13_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.13_x64-setup.exe",
-        "sizeBytes": 68185718,
-        "sha256": "3142d613db486a22ff0a6bb1bac52fa36af44a7036b2169cb9553fbb7852aacd",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.13_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.13",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13",
-    "databaseId": 416120851,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "8c5a50afcb594519fbe14f0009112491ce14308c",
-    "publishedAt": "2026-10-17T23:06:12Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -97,7 +66,8 @@
     "v1.1.9-to-v1.1.10-managed-update-observation-pending",
     "1.1.10-to-1.1.11-managed-update-observation-pending",
     "1.1.11-to-1.1.12-managed-update-observation-pending",
-    "1.1.12-to-1.1.13-managed-update-observation-pending"
+    "1.1.12-to-1.1.13-managed-update-observation-pending",
+    "1.1.13-to-1.1.14-managed-update-observation-pending"
   ],
-  "nextAction": "audit-v1.1.14-approved-foundation-roadmap"
+  "nextAction": "validate-and-build-v1.1.14-installers"
 }

@@ -19,7 +19,7 @@ export const saveHistoryChecks = [
 ]
 
 export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,capture,library,output,sourceCommit,installerSha256,appVersion}) {
-  assert.ok(['1.1.7','1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13'].includes(appVersion))
+  assert.ok(['1.1.7','1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14'].includes(appVersion))
   if(process.env.LONGEDIT_R5I_DISPOSABLE!=='1'||path.resolve(library).toLowerCase()!=='c:\\longeditr5ilibrary')throw Error('Disposable installer fixture required')
   const report={appVersion,sourceCommit,installerSha256,evidenceLevel:'installed-tauri-ipc-and-disk',sourceUserContentIncluded:false,status:'running',checks:[]}
   const check=id=>report.checks.push({id,status:'passed'})

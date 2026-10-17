@@ -462,7 +462,7 @@ try {
     $startedProcess = $null
     Wait-ForPort -Port 9343 -Listening $false
 
-    if ($CurrentVersion -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
+    if ($CurrentVersion -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14')) {
         # Same installed image/profile, after every inherited smoke workflow.
         # The new scene must still be recoverable after an actual process exit.
         $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
