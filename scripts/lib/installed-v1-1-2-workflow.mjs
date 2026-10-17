@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { nativeUserInput } from './v118-native-user-input.mjs'
 
 // Packaged UI, native IPC and a synthetic library on the disposable runner.
 export async function runInstalledV112Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
@@ -43,6 +44,15 @@ export async function runInstalledV112Workflow({ send, evaluate, navigate, waitF
   try {
     await fs.writeFile(source, content, { flag: 'wx' })
     await navigate('#/library?path=' + encodeURIComponent(source), '.library-mode', 'installed file management')
+    // Earlier work-session/search checks intentionally preserve their filters.
+    // Enter file management as a user would, without resetting product state or
+    // mistaking the search-results panel for a missing filesystem entry.
+    const navigationInput = '.search-control-row input'
+    const ui = nativeUserInput({ send, evaluate })
+    report.fileNavigationSetup = { searchBefore: await evaluate(`document.querySelector(${JSON.stringify(navigationInput)})?.value`), method: 'native-webview-keyboard' }
+    await ui.fill(navigationInput, '')
+    await ui.waitFor(`document.querySelector(${JSON.stringify(navigationInput)})?.value===''`, 'explicitly clear inherited search before native file operations')
+    report.fileNavigationSetup.searchAfter = await evaluate(`document.querySelector(${JSON.stringify(navigationInput)}).value`)
     await mouse(`document.querySelector('#tab-files')`)
     // The shared tooltip service promotes native titles to accessible labels.
     await mouse(`document.querySelector('#panel-files button[aria-label="刷新列表"], #panel-files button[data-app-tooltip="刷新列表"], #panel-files button[title="刷新列表"]')`)

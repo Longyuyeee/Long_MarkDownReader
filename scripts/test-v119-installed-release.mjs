@@ -62,6 +62,15 @@ test('v119 orchestration keeps every old workflow, exact driver publication guar
  assert.match(picker,/ReadControlText\(new IntPtr\(handle\),13/,'cross-process edit readback must use WM_GETTEXT, never GetWindowText captions')
  assert.ok(picker.includes('$actual -ne $resolvedFile'),'the full generated path still must roundtrip through the native control')
 })
+
+test('historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions',()=>{
+ const source=fs.readFileSync('scripts/lib/installed-v1-1-2-workflow.mjs','utf8')
+ assert.ok(source.includes("await ui.fill(navigationInput, '')"))
+ assert.ok(source.indexOf("await ui.fill(navigationInput, '')")<source.indexOf("'new file in native tree'"))
+ assert.ok(source.includes("'context-duplicate-writes-real-copy-and-preserves-source'"))
+ assert.ok(source.includes("await fs.readFile(duplicate, 'utf8') === content"))
+ assert.ok(!source.includes('searchQuery.value ='))
+})
 test('v119 candidate and publication retain precise predecessor and independent updater observation',()=>{
  const development={runtimeBaseVersion:'1.1.9',publicVersion:'1.1.8',publicTag:'v1.1.8',publicTagCommit:'60476b3e0663fca4f933271dfe56446ec33ffec9',developmentTargetVersion:'1.1.9'},community={appVersion:'1.1.9',targetRelease:{tag:'v1.1.9'},gates:{githubReleasePublished:false},release:null,patchValidation:{previousPublicVersion:'1.1.8',managedUpdaterUpgradePath:'1.1.8-to-1.1.9-pending'}}
  assert.doesNotThrow(()=>assertV121DevelopmentBoundary(development,community));assert.throws(()=>assertV121DevelopmentBoundary({...development,publicTagCommit:'0'.repeat(40)},community))
