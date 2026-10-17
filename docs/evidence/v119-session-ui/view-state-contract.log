@@ -1,0 +1,41 @@
+TAP version 13
+# [Vue warn]: onBeforeUnmount is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+# Subtest: reading position survives restart without draft or selection contents
+ok 1 - reading position survives restart without draft or selection contents
+  ---
+  duration_ms: 64.6821
+  ...
+# Subtest: search filters survive restart and remain scoped to their library
+ok 2 - search filters survive restart and remain scoped to their library
+  ---
+  duration_ms: 54.53
+  ...
+# Subtest: reference persists only identity and never stale excerpt text
+ok 3 - reference persists only identity and never stale excerpt text
+  ---
+  duration_ms: 13.5318
+  ...
+# Subtest: real search remember persists a locator without serializing the result excerpt
+ok 4 - real search remember persists a locator without serializing the result excerpt
+  ---
+  duration_ms: 38.4333
+  ...
+# Subtest: staged reading metadata survives more than 24 files and restart without expanding the live draft cache
+ok 5 - staged reading metadata survives more than 24 files and restart without expanding the live draft cache
+  ---
+  duration_ms: 13.7826
+  ...
+# Subtest: staging respects protected models, aliases and rollback; quota failure cannot replace the current view
+ok 6 - staging respects protected models, aliases and rollback; quota failure cannot replace the current view
+  ---
+  duration_ms: 5.0029
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 499.7139

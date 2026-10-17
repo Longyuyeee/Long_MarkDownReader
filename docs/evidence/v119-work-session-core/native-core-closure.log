@@ -1,0 +1,53 @@
+   Compiling tauri-app v1.1.8 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning (1 duplicate)
+warning: `tauri-app` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 30.89s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-9c5190fc2e09aaf7.exe)
+
+running 11 tests
+test commands::work_sessions::tests::rejects_absolute_traversal_windows_devices_private_metadata_and_controls ... ok
+test commands::work_sessions::tests::bundle_names_cannot_address_windows_streams_devices_or_directories ... ok
+test commands::work_sessions::tests::import_rejects_nested_body_fields_nulls_unsupported_references_and_non_finite_view_values ... ok
+test commands::work_sessions::tests::bounded_preflight_accepts_128_files_plus_a_reference_but_rejects_extra_duplicates_and_traversal ... ok
+test commands::work_sessions::tests::rejects_injected_content_private_roots_bad_schema_duplicates_and_ranges ... ok
+test commands::work_sessions::tests::preflight_readable_missing_unsupported_and_private_without_reading_document_bodies ... ok
+test commands::work_sessions::tests::relocation_accepts_only_a_real_readable_file_inside_the_configured_library ... ok
+test commands::work_sessions::tests::unavailable_directories_oversize_files_and_invalid_utf8_never_change_original_data ... ok
+test commands::work_sessions::tests::bundle_roundtrip_bom_and_new_target_never_overwrite_files ... ok
+test commands::work_sessions::tests::an_in_library_directory_alias_cannot_reveal_private_metadata ... ok
+test commands::work_sessions::tests::directory_alias_escape_is_reported_unavailable_and_never_exposes_an_outside_path ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 982 filtered out; finished in 0.01s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-2a30d62a4a3b3db7.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-e13439469c00e599.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-aa8882e93c2a3531.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-dc570128a4f3d3fa.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

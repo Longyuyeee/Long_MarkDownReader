@@ -1,4 +1,26 @@
 export interface SessionTab { id: string; path: string; title: string; isDirty: false; pinned?: boolean }
+export type SearchSelection = [string, string, string, number | null, string | null, string | null, string | null]
+export interface WorkSessionSearch { query:string; types:string[]; selected:string; selection?:SearchSelection; scroll:number; loadedFiles?:number; sort?:'relevance'|'modified' }
+// Search result keys include an eighth value containing the document excerpt.
+// Persist only the first seven locator values, shared by automatic and named scenes.
+export function safeSearchSelection(value: unknown): SearchSelection | undefined {
+  try {
+    const item = typeof value === 'string' ? JSON.parse(value) : value
+    if (!Array.isArray(item) || item.length < 7 || typeof item[0] !== 'string' || !item[0] || item[0].length > 4096
+      || ![item[1],item[2]].every(part=>typeof part === 'string' && /^[a-z][a-z0-9-]{0,39}$/.test(part))
+      || (item[3] != null && (!Number.isInteger(item[3]) || item[3] < 1 || item[3] > 100000))
+      || item.slice(4,7).some(part=>part != null && (typeof part !== 'string' || part.length > 500))) return undefined
+    return [item[0],item[1],item[2],item[3] ?? null,item[4] ?? null,item[5] ?? null,item[6] ?? null]
+  } catch { return undefined }
+}
+export function safeSessionSearch(value: unknown): WorkSessionSearch | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const item = value as Record<string, any>
+  if (typeof item.query !== 'string' || !Array.isArray(item.types)) return undefined
+  return {query:item.query.slice(0,500),types:item.types.filter((type:unknown)=>typeof type==='string').slice(0,8),selected:'',
+    selection:safeSearchSelection(item.selection)||safeSearchSelection(item.selected),scroll:Number.isFinite(item.scroll)?Math.max(0,Math.min(1e9,item.scroll)):0,
+    loadedFiles:Number.isFinite(item.loadedFiles)?Math.max(0,Math.min(10000,Math.floor(item.loadedFiles))):0,sort:item.sort==='modified'?'modified':'relevance'}
+}
 export interface WorkSession {
   version: 1
   id: string
@@ -7,7 +29,8 @@ export interface WorkSession {
   tabs: SessionTab[]
   activeTabId: string | null
   savedAt: number
-  search?: { query: string; types: string[]; selected: string; scroll: number; loadedFiles?: number; sort?: 'relevance' | 'modified' }
+  importFingerprint?: string
+  search?: WorkSessionSearch
   views?: Record<string, { scrollTop: number; scrollLeft: number; section?: string; zoom?: number }>
   reference?: { path: string; title: string; query: string; page?: number; annotationId?: string }
 }
@@ -26,8 +49,8 @@ export function sessionTabs(root: string, tabs: unknown): SessionTab[] {
   if (!Array.isArray(tabs)) return []
   const seen = new Set<string>()
   return tabs.filter(tab => {
-    if (!tab || tab.external || !belongsToLibrary(root, tab.path) || seen.has(identity(tab.path))) return false
-    seen.add(identity(tab.path)); return true
+    if (!tab || tab.external || !belongsToLibrary(root, tab.path) || seen.has(membershipIdentity(tab.path))) return false
+    seen.add(membershipIdentity(tab.path)); return true
   }).map(tab => ({ id: tab.path, path: tab.path, title: typeof tab.title === 'string' ? tab.title : tab.path.split(/[\\/]/).pop()!, isDirty: false, ...(tab.pinned === true ? { pinned: true } : {}) }))
 }
 export function captureWorkSession(root: string, tabs: unknown, active: string | null, name: string): WorkSession {
@@ -45,21 +68,21 @@ export function readWorkSessions(storage: Pick<Storage, 'getItem'>, root: string
   }
   return parsed.map(item => {
     const tabs = sessionTabs(root, item.tabs)
-    return { ...item, tabs, activeTabId: tabs.some(tab => tab.path === item.activeTabId) ? item.activeTabId : tabs[0]?.path || null }
+    return { ...item, tabs, search:safeSessionSearch(item.search), activeTabId: tabs.some(tab => tab.path === item.activeTabId) ? item.activeTabId : tabs[0]?.path || null }
   })
 }
 export function saveWorkSession(storage: Pick<Storage, 'getItem' | 'setItem'>, session: WorkSession): WorkSession[] {
   const current = readWorkSessions(storage, session.libraryRoot)
   if (current.some(item => item.name.toLowerCase() === session.name.toLowerCase())) throw new Error('已有同名工作现场，请使用不同名称')
   if (current.length >= 32) throw new Error('最多保存 32 个工作现场')
-  const next = [session, ...current]
+  const next = [{...session,search:safeSessionSearch(session.search)}, ...current]
   storage.setItem(workSessionKey(session.libraryRoot), JSON.stringify(next))
   return next
 }
 export function mergeSessionTabs<T extends { path: string; isDirty: boolean }>(current: T[], restored: SessionTab[]): (T | SessionTab)[] {
   const dirty = current.filter(tab => tab.isDirty)
-  const retained = new Set(dirty.map(tab => identity(tab.path)))
-  return [...restored.filter(tab => !retained.has(identity(tab.path))), ...dirty]
+  const retained = new Set(dirty.map(tab => membershipIdentity(tab.path)))
+  return [...restored.filter(tab => !retained.has(membershipIdentity(tab.path))), ...dirty]
 }
 export function editWorkSession(storage: Pick<Storage, 'getItem' | 'setItem'>, root: string, expected: WorkSession, name: string | null): WorkSession[] {
   const current = readWorkSessions(storage, root)

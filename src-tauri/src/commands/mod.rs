@@ -37,6 +37,7 @@ pub mod toml;
 pub mod updater;
 pub mod workbook;
 pub mod workspace;
+pub mod work_sessions;
 pub mod wps_native;
 pub mod xml;
 pub mod yaml;

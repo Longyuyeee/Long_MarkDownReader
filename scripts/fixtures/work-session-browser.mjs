@@ -9,6 +9,7 @@ import '/src/styles/themes.scss'
 window.sessionAudit = { calls: [] }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
   window.sessionAudit.calls.push({ command, args })
+  if (command === 'preflight_work_session') return {libraryRoot:args.libraryRoot,files:args.relativePaths.map(relativePath=>({relativePath,state:'ready',path:args.libraryRoot+'/'+relativePath}))}
   if (command === 'get_workspace_overview') return { totalFiles: 2, tasks: [], completedTasks: [], recentFiles: [], canvases: [], formatCounts: [] }
   if (command === 'get_knowledge_index_status') return { state: 'ready', sourceCount: 2, objectCount: 2, relationCount: 0, progress: 100, cacheBytes: 0, recoveryAvailable: false }
   if (command === 'summarize_graph_relations') return []

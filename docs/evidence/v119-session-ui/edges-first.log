@@ -1,0 +1,17 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 15000ms exceeded.
+Call log:
+  - waiting for getByRole('dialog').filter({ has: locator('.session-transfer-body') }).locator('.session-file-state.ready') to be visible
+
+    at startImport (E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-v119-session-edge-browser.mjs:12:290)
+    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v119-session-edge-browser.mjs:17:2 {
+  log: [
+    "  - waiting for getByRole('dialog').filter({ has: locator('.session-transfer-body') }).locator('.session-file-state.ready') to be visible"
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v22.12.0

@@ -1,0 +1,65 @@
+TAP version 13
+# Subtest: portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+ok 1 - portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+  ---
+  duration_ms: 2.4315
+  ...
+# Subtest: relative paths reject Windows traversal, aliases, private metadata and device names
+ok 2 - relative paths reject Windows traversal, aliases, private metadata and device names
+  ---
+  duration_ms: 0.3878
+  ...
+# Subtest: strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+ok 3 - strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+  ---
+  duration_ms: 0.7112
+  ...
+# Subtest: relocation preserves active file, pin and reference without silently merging two existing targets
+ok 4 - relocation preserves active file, pin and reference without silently merging two existing targets
+  ---
+  duration_ms: 0.3485
+  ...
+# Subtest: preflight partitions real available files and missing reference without losing the original repairable record
+ok 5 - preflight partitions real available files and missing reference without losing the original repairable record
+  ---
+  duration_ms: 0.4735
+  ...
+# Subtest: canonical alias merging preserves the exact dirty model and the existing storage namespace
+ok 6 - canonical alias merging preserves the exact dirty model and the existing storage namespace
+  ---
+  duration_ms: 0.1702
+  ...
+# Subtest: preflight rejects substituted reference identities and unexpected or incomplete checks
+ok 7 - preflight rejects substituted reference identities and unexpected or incomplete checks
+  ---
+  duration_ms: 0.5024
+  ...
+# Subtest: internal page identifiers may contain separators without being mistaken for an absolute disk path
+not ok 8 - internal page identifiers may contain separators without being mistaken for an absolute disk path
+  ---
+  duration_ms: 0.1355
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-portable-work-session.mjs:58:1'
+  failureType: 'testCodeFailure'
+  error: '视图位置不能包含文件系统路径'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    validatePortableView (evalmachine.<anonymous>:65:23)
+    evalmachine.<anonymous>:131:20
+    Array.map (<anonymous>)
+    Object.exportableWorkSession (evalmachine.<anonymous>:126:32)
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-portable-work-session.mjs:60:17)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 7
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 359.9337

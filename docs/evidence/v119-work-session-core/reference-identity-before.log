@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+ok 1 - portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+  ---
+  duration_ms: 2.9465
+  ...
+# Subtest: relative paths reject Windows traversal, aliases, private metadata and device names
+ok 2 - relative paths reject Windows traversal, aliases, private metadata and device names
+  ---
+  duration_ms: 0.4978
+  ...
+# Subtest: strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+ok 3 - strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+  ---
+  duration_ms: 1.0577
+  ...
+# Subtest: relocation preserves active file, pin and reference without silently merging two existing targets
+ok 4 - relocation preserves active file, pin and reference without silently merging two existing targets
+  ---
+  duration_ms: 0.5099
+  ...
+# Subtest: preflight partitions real available files and missing reference without losing the original repairable record
+ok 5 - preflight partitions real available files and missing reference without losing the original repairable record
+  ---
+  duration_ms: 0.7013
+  ...
+# Subtest: canonical alias merging preserves the exact dirty model and the existing storage namespace
+ok 6 - canonical alias merging preserves the exact dirty model and the existing storage namespace
+  ---
+  duration_ms: 0.2512
+  ...
+# Subtest: preflight rejects substituted reference identities and unexpected or incomplete checks
+not ok 7 - preflight rejects substituted reference identities and unexpected or incomplete checks
+  ---
+  duration_ms: 0.7334
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-portable-work-session.mjs:46:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-portable-work-session.mjs:49:9)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 6
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 391.6799

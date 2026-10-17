@@ -1,0 +1,14 @@
+{
+  "scope": "Actual Vue components with simulated IPC; not installed acceptance",
+  "checks": [
+    "importing an entirely missing scene into a different configured library stores only a recoverable record; it does not switch library or replace the exact draft",
+    "cancel leaves no target record; importing the same source into a separate library is independently scoped",
+    "a changed real-file preflight requires a second explicit confirmation instead of silently applying a different partition",
+    "stale record CAS rejects a second-window rename without replacing its bytes or the current editor",
+    "a late tab-storage failure rolls back staged reading/search/reference metadata and preserves the exact dirty model",
+    "a legacy 130-file local scene continues in bounded 128/2 native batches while preserving the dirty active document; migration limits do not remove old local functionality",
+    "a legacy empty scene still restores search and a preflighted reference without clearing any current documents",
+    "360 by 540 short viewport retains reachable actions and no horizontal page overflow"
+  ],
+  "errors": []
+}

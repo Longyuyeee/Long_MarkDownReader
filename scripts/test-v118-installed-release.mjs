@@ -101,8 +101,10 @@ test('all historical installed entry guards accept v118 without removing their t
   assert.ok(publisher.includes('$searchReview.harnessSourceCommit -ne $review.head_sha'))
   for (const file of ['v1-1-0-candidate-lifecycle.yml', 'v1-1-0-installer-review.yml']) {
     const workflow = parse(fs.readFileSync('.github/workflows/' + file, 'utf8'))
-    assert.equal(workflow.on.workflow_dispatch.inputs.current_version.default, '1.1.8')
-    assert.equal(workflow.on.workflow_dispatch.inputs.previous_version.default, '1.1.7')
+    // Mutable orchestration defaults now target the next release. Historical
+    // report/version assertions above remain fixed to 1.1.8.
+    assert.equal(workflow.on.workflow_dispatch.inputs.current_version.default, '1.1.9')
+    assert.equal(workflow.on.workflow_dispatch.inputs.previous_version.default, '1.1.8')
     if (file.includes('installer-review')) {
       const diagnostics = workflow.jobs.review.steps.find(step => step.name === 'Retain original build reports separately from installer bytes')
       assert.equal(diagnostics.if, 'always()')

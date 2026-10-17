@@ -1,0 +1,64 @@
+{
+  "scope": "Actual Vue App/WorkspaceHome/WorkSessionBar/transfer dialog; generated simulated IPC/file dialog adapter, not installed or native user-input acceptance",
+  "checks": [
+    "actual import previews ready/missing files; quota failure keeps input and records, retry saves metadata without replacing or persisting the original dirty document",
+    "reimporting the same source uses its original fingerprint and does not duplicate or rename the existing record",
+    "export excludes optional private search/reference by default; existing destination errors preserve the dialog and an explicit new destination can include chosen context",
+    "restore rejects an outside replacement, accepts a real inside replacement, persists only the repair and preserves the exact dirty model and active editor",
+    "an actual pending-save ownership guard blocks scene changes before any new native preflight",
+    "partial restore keeps missing entries in the named record; a position-storage failure never replaces the live document, and retry can continue the available files",
+    "six styles at wide/narrow keep the original import controls and fixed footer reachable, with native modal keyboard dismissal",
+    "a library change retires an in-flight preflight; the late reply cannot import into the new library or reopen the closed dialog"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1180
+    },
+    {
+      "style": "soft",
+      "width": 480
+    },
+    {
+      "style": "neo",
+      "width": 1180
+    },
+    {
+      "style": "neo",
+      "width": 480
+    },
+    {
+      "style": "glass",
+      "width": 1180
+    },
+    {
+      "style": "glass",
+      "width": 480
+    },
+    {
+      "style": "airy",
+      "width": 1180
+    },
+    {
+      "style": "airy",
+      "width": 480
+    },
+    {
+      "style": "minimal",
+      "width": 1180
+    },
+    {
+      "style": "minimal",
+      "width": 480
+    },
+    {
+      "style": "sharp",
+      "width": 1180
+    },
+    {
+      "style": "sharp",
+      "width": 480
+    }
+  ],
+  "errors": []
+}

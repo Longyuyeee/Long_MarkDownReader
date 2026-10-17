@@ -1,0 +1,51 @@
+TAP version 13
+# [Vue warn]: onBeforeUnmount is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+# Subtest: reading position survives restart without draft or selection contents
+ok 1 - reading position survives restart without draft or selection contents
+  ---
+  duration_ms: 64.4115
+  ...
+# Subtest: search filters survive restart and remain scoped to their library
+ok 2 - search filters survive restart and remain scoped to their library
+  ---
+  duration_ms: 40.1751
+  ...
+# Subtest: reference persists only identity and never stale excerpt text
+ok 3 - reference persists only identity and never stale excerpt text
+  ---
+  duration_ms: 15.7313
+  ...
+# Subtest: real search remember persists a locator without serializing the result excerpt
+not ok 4 - real search remember persists a locator without serializing the result excerpt
+  ---
+  duration_ms: 15.1452
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-work-session-context.mjs:43:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-work-session-context.mjs:49:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 473.429

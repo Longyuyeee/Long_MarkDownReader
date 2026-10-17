@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.1.8",
+  "version": "1.1.9",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -16,6 +16,7 @@
     "test:note-templates-browser": "node scripts/test-note-templates-browser.mjs",
     "test:foundation-browser": "node scripts/test-foundation-v113-browser.mjs",
     "test:foundation-v114-browser": "node scripts/test-foundation-v114-browser.mjs",
+    "test:work-session-transfer": "node --test scripts/test-portable-work-session.mjs scripts/test-work-session-transfer.mjs scripts/test-work-session-context.mjs scripts/test-work-sessions.mjs scripts/test-search-return.mjs",
     "test:external-import-browser": "node scripts/test-external-import-browser.mjs",
     "test:search-consistency-browser": "node scripts/test-search-consistency-browser.mjs",
     "test:search-query": "node --experimental-strip-types --test scripts/test-search-query.mjs scripts/test-window-draft-snapshot.mjs",

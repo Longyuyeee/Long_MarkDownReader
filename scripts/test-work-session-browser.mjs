@@ -4,13 +4,13 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 const require = createRequire(import.meta.url)
 const { chromium } = require(process.env.LONGEDIT_PLAYWRIGHT_MODULE || 'playwright')
-const out = path.resolve('docs/evidence/v110-work-session-browser')
+const out = path.resolve(process.env.LONGEDIT_WORK_SESSION_OUTPUT || 'docs/evidence/v110-work-session-browser')
 await fs.mkdir(out, { recursive: true })
 const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
   const errors = []; page.on('pageerror', e => errors.push(e.message))
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/work-session-browser.html')
+  await page.goto((process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000')+'/scripts/fixtures/work-session-browser.html')
   const bar = page.getByRole('region', { name: '工作现场', exact: true })
   await bar.getByRole('button', { name: '命名保存…' }).click()
   await bar.getByLabel('名称', { exact: true }).fill('周五客户交付')

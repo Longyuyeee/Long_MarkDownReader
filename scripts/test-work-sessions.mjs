@@ -77,3 +77,12 @@ test('rename/delete preserve files and reject stale management dialogs', () => {
   assert.throws(() => exports.editWorkSession(storage, 'C:/notes', original, null), /已变化/)
   assert.equal(exports.editWorkSession(storage, 'C:/notes', renamed[0], null).length, 0)
 })
+
+test('named scenes whitelist search metadata and never copy result snippets into storage',()=>{
+ const entries=new Map(),storage={getItem:key=>entries.get(key)||null,setItem:(key,value)=>entries.set(key,value)}
+ const session=captureWorkSession('C:/notes',[tab('C:/notes/a.md')],null,'项目')
+ session.search={query:'预算',types:['markdown'],selected:JSON.stringify(['C:/notes/a.md','markdown','body',null,null,null,null,'PRIVATE EXCERPT']),scroll:123,loadedFiles:80,sort:'modified',content:'PRIVATE BODY'}
+ saveWorkSession(storage,session)
+ assert.equal([...entries.values()].join('').includes('PRIVATE'),false)
+ assert.equal(readWorkSessions(storage,'C:/notes')[0].search.selection[0],'C:/notes/a.md')
+})
