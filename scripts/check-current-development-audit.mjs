@@ -209,6 +209,12 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.
     required[9] = ['当前阶段：**v1.1.10 标签与集合开发**', published && development.releaseCandidate === false
       && development.currentStage === 'M8-48-v1.1.10-tags-collections' && fs.existsSync(development.activeSlice.document)]
   }
+  if (version === '1.1.11' && development.activeSlice?.id === 'v1.1.12-content-backup') {
+    required[9] = ['当前阶段：**v1.1.12 内容备份开发**', published && policy.appVersion === '1.1.11'
+      && development.publicVersion === '1.1.11' && development.runtimeBaseVersion === '1.1.11'
+      && development.developmentTargetVersion === '1.1.12' && development.releaseCandidate === false
+      && development.currentStage === 'M8-52-v1.1.12-content-backup' && fs.existsSync(development.activeSlice.document)]
+  }
 }
 
 for (const [token, condition] of required) {
