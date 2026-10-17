@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import {nativeUserInput} from './v118-native-user-input.mjs'
 
 // Uses the actual packaged UI and IPC only on the disposable release runner.
 export async function runInstalledV111Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
@@ -12,12 +13,10 @@ export async function runInstalledV111Workflow({ send, evaluate, navigate, waitF
     return result.value
   }
   const check = (id, condition) => { assert.ok(condition,id); report.checks.push({id,status:'passed'}) }
+  const nativeInput=nativeUserInput({send,evaluate})
   const click = async selector => {
     report.lastControlSelector = selector
-    const point = `(()=>{const e=${selector};if(!e||e.disabled)return null;e.scrollIntoView({block:'nearest',inline:'nearest'});const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
-    await waitFor(point,'visible file relation control')
-    const coordinates=await evaluate(point)
-    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...coordinates,button:'left',clickCount:1})
+    await nativeInput.clickTarget(selector)
   }
   const dir=path.join(library,'release-v111-workflow')
   try {
@@ -44,6 +43,7 @@ export async function runInstalledV111Workflow({ send, evaluate, navigate, waitF
     await send('Input.insertText',{text:'关系目标'})
     await waitFor(`[...document.querySelectorAll('.n-base-select-option')].some(e=>e.textContent.includes('关系目标.attachment'))`,'native attachment search option')
     await click(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.textContent.includes('关系目标.attachment'))`)
+    await waitFor(`document.querySelector('.file-relation-dialog .relation-preview')?.textContent.includes('关系目标.attachment')`,'actual attachment selected before submitting its relation')
     await click(`document.querySelector('.file-relation-dialog button[type="submit"]')`)
     await waitFor(`document.querySelector('.dialog-notice')?.textContent.includes('关系已保存')`,'native relationship saved from UI')
     const [entry]=await invoke('list_file_relations',{libraryRoot:library,path:source})

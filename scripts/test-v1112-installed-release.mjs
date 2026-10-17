@@ -18,6 +18,11 @@ test('new installed driver uses actual IPC, owned native selectors and independe
  for(const token of ['github-hosted','LONGEDIT_R5I_DISPOSABLE','nativeUserInput','select-hosted-session-file.ps1','inspect-hosted-content-backup.ps1','observedNativeCommand','fs.readFile','sha','snapshotDraft','read_pdf_annotations','get_history_metadata','validateInstalledContentBackup'])assert.ok(source.includes(token),token)
  for(const forbidden of ['dispatchEvent(','__TAURI_INTERNALS__=','__TAURI_INTERNALS__ =','isDirty=false','isDirty = false','force:true','force: true'])assert.ok(!source.includes(forbidden),forbidden)
 })
+test('inherited relation selection uses stable trusted input and retains native relationship assertions',()=>{
+ const source=fs.readFileSync('scripts/lib/installed-v1-1-1-workflow.mjs','utf8')
+ for(const token of ['nativeUserInput','await nativeInput.clickTarget(selector)','actual attachment selected before submitting its relation','toolbar-dialog-saves-cross-format-relation','relationship-persisted-without-editing-files','renaming-retains-file-relationship','removing-relation-retains-both-files'])assert.ok(source.includes(token),token)
+ for(const forbidden of ['dispatchEvent(','.click()','force:true','isDirty=false'])assert.ok(!source.includes(forbidden),forbidden)
+})
 test('current runtime requires the current report plus every inherited report, same installed EXE and driver',()=>{
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.11-release/artifact-manifest.json','utf8'));manifest.appVersion=manifest.sourceVersion='1.1.12';const reports={},bytes=new Map()
  for(const [k,item]of Object.entries(manifest.runtimeSmoke.reports))reports[k]=JSON.parse(fs.readFileSync(item.path,'utf8').replaceAll('1.1.11','1.1.12'))
