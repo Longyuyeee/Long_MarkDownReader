@@ -37,6 +37,12 @@ test('CDP input waits for an unobscured target and never calls a DOM handler',as
   await settled.click('#moving')
   assert.ok(observations>=5);assert.equal(moving.length,2);assert.ok(moving.every(args=>args.x===40))
 })
+test('Ctrl multi-select modifiers survive stable native pointer input and invalid flags send nothing',async()=>{
+ const calls=[],ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async()=>({x:8,y:16})},{timeoutMs:20,pollMs:1,stableMs:0})
+ await ui.clickTarget("document.querySelector('[data-drop-path]')",'left',2)
+ assert.deepEqual(calls.map(({args})=>[args.type,args.button,args.modifiers]),[['mousePressed','left',2],['mouseReleased','left',2]])
+ await assert.rejects(()=>ui.clickTarget('document.body','left',32),/modifiers/);assert.equal(calls.length,2)
+})
 test('typing and Enter use real WebView input phases without setting DOM values',async()=>{
   const calls=[]
   const ui=nativeUserInput({send:async(method,args)=>calls.push({method,args}),evaluate:async expression=>expression.includes('activeElement')?true:{x:5,y:5}})

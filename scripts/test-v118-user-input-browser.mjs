@@ -33,6 +33,18 @@ try{
     assert.equal(relevant.length,1);assert.equal(relevant[0].trusted,true);assert.ok(relevant[0].at-started>=300)
     checks.push(`Actual animated target ${action} uses trusted WebView input only after geometry settles`)
   }
+  await page.setContent('<div id="scroller" style="height:150px;overflow:auto"><div style="height:900px"></div><button id="target">下方文件</button></div>')
+  await page.evaluate(()=>{
+    window.scrollClicks=[];let restored=false;const scroller=document.querySelector('#scroller')
+    scroller.addEventListener('scroll',()=>{if(!restored){restored=true;setTimeout(()=>{scroller.scrollTop=0},50)}})
+    document.querySelector('#target').addEventListener('click',event=>window.scrollClicks.push({trusted:event.isTrusted,ctrl:event.ctrlKey,top:scroller.scrollTop}))
+  })
+  await ui.clickTarget("document.querySelector('#target')",'left',2)
+  const scrollClicks=await page.evaluate(()=>window.scrollClicks)
+  assert.equal(scrollClicks.length,1);assert.equal(scrollClicks[0].trusted,true);assert.equal(scrollClicks[0].ctrl,true);assert.ok(scrollClicks[0].top>700)
+  await assert.rejects(()=>ui.clickTarget("document.querySelector('#target')",'left',32),/modifiers/)
+  assert.equal(await page.evaluate(()=>window.scrollClicks.length),1)
+  checks.push('After a delayed scroll restoration, re-scroll before one trusted Ctrl-click; invalid modifier flags never send input')
   await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9018')+'/scripts/fixtures/v118-search-pages-browser.html')
   await ui.clickText('.app-navigation a','资料库')
   await ui.fill('.search-area input','预算')

@@ -30,10 +30,11 @@ export function nativeUserInput({send,evaluate},{timeoutMs=20000,pollMs=80,stabl
     assert.ok(point,'target did not settle before native input: '+target)
     return point
   }
-  const clickTarget=async(target,button='left')=>{
+  const clickTarget=async(target,button='left',modifiers=0)=>{
     assert.ok(['left','right'].includes(button),'unsupported native input button')
+    assert.ok(Number.isInteger(modifiers)&&modifiers>=0&&modifiers<=15,'unsupported native input modifiers')
     const point=await settledPoint(target)
-    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,x:point.x,y:point.y,button,clickCount:1})
+    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,x:point.x,y:point.y,button,modifiers,clickCount:1})
   }
   const hoverTarget=async(target)=>{const point=await settledPoint(target);await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:point.x,y:point.y})}
   const click=selector=>clickTarget(`document.querySelector(${JSON.stringify(selector)})`)

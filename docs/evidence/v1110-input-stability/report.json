@@ -1,0 +1,12 @@
+{
+  "scope": "headless CDP input-helper contract with actual Vue and simulated IPC; not native Wry acceptance",
+  "checks": [
+    "CDP input waits for settled geometry after an actual animated layout change, without disabling motion or retrying a click",
+    "Actual animated target right uses trusted WebView input only after geometry settles",
+    "Actual animated target hover uses trusted WebView input only after geometry settles",
+    "After a delayed scroll restoration, re-scroll before one trusted Ctrl-click; invalid modifier flags never send input",
+    "CDP click/fill/Tab/arrow keys reach the actual native HTML sort control",
+    "CDP keyboard editing, Ctrl+P and exact dropdown labels keep cross-library draft guard reachable"
+  ],
+  "errors": []
+}
