@@ -39,4 +39,5 @@ export function validateInstalledContentBackup(report,manifest){
  assert.ok(report.nativePickers.length>=4);for(const p of report.nativePickers){assert.equal(p.status,'selected-real-native-dialog');assert.equal(p.desktopUserSession,'disposable-github-hosted');assert.ok(p.processId>0);assert.ok(p.selectedPath)}
  for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted));assert.ok(report.inputTrace.every(e=>e.trusted));assert.deepEqual(report.runtimeErrors,[])
  assert.ok(['sv','ir','wysiwyg'].includes(report.editorModes.before));assert.equal(report.editorModes.before,report.editorModes.after)
+ assert.equal(report.pdfRender.placeholderAbsent,true);for(const key of ['width','height','opaquePixels','inkPixels'])assert.ok(Number.isFinite(report.pdfRender[key])&&report.pdfRender[key]>0)
 }
