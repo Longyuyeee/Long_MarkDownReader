@@ -111,7 +111,21 @@ const openSession = async () => {
       if (!session) throw new Error('工作现场记录已变化，请重新进入工作台')
       // Legacy empty scenes can still restore their search, without clearing
       // the user's current documents. Portable exports require actual files.
-      if (!session.tabs.length) { restoreSearchSession(root,session.search) }
+      if (!session.tabs.length) {
+        const paths=localSessionPaths(session)
+        const frame=paths.length?await invoke<SessionPreflight>('preflight_work_session',{libraryRoot:root,relativePaths:paths}):{libraryRoot:root,files:[]}
+        assertContext(root,generation);assertNoSave()
+        const found=readWorkSessions(localStorage,root).find(item=>item.id===session.id)
+        if(!found||JSON.stringify(found)!==JSON.stringify(session))throw Error('工作现场已变化，请重新选择')
+        const result=availableWorkSession(session,frame),oldReference=readWorkspaceReference(root),oldSearch=snapshotSearchSession(root)
+        try{writeWorkspaceReference(root,result.session.reference);restoreSearchSession(root,session.search)}
+        catch(cause){
+          let incomplete=false
+          for(const undo of [()=>writeWorkspaceReference(root,oldReference),()=>restoreSearchSession(root,oldSearch)])try{undo()}catch{incomplete=true}
+          throw Error(`空现场设置恢复未完成：${String(cause)}${incomplete?'；请核对阅读/参考设置。':''}`)
+        }
+        if(result.missing.length)message.warning('参考资料暂不可用，仍保留在原命名记录中；当前文稿未替换。')
+      }
       else {
         const paths = localSessionPaths(session), frame: SessionPreflight = {libraryRoot:root,files:[]}
         for(let offset=0;offset<paths.length;offset+=128) {

@@ -462,6 +462,17 @@ try {
     $startedProcess = $null
     Wait-ForPort -Port 9343 -Listening $false
 
+    if ($CurrentVersion -eq '1.1.9') {
+        # Same installed image/profile, after every inherited smoke workflow.
+        # The new scene must still be recoverable after an actual process exit.
+        $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
+        Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase 'v119-scene-process-restart'
+        & $NodeExecutable (Join-Path (Split-Path -Parent $InstalledSmokeScript) 'capture-v119-installed-restart.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'v119 same-installed-image scene process restart failed' }
+        Stop-Process -Id $startedProcess.Id -Force
+        $startedProcess = $null
+        Wait-ForPort -Port 9343 -Listening $false
+    }
     $currentBinarySha256 = (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant()
     $downgradeProcess = Start-Process -FilePath $previousInstaller.FullName `
         -ArgumentList @("/S", "/D=$installRoot") `

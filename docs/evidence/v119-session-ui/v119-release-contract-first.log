@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+ok 1 - installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+  ---
+  duration_ms: 16.1223
+  ...
+# Subtest: v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+ok 2 - v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+  ---
+  duration_ms: 71.5801
+  ...
+# Subtest: v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+ok 3 - v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+  ---
+  duration_ms: 10.678
+  ...
+# Subtest: v119 candidate and publication retain precise predecessor and independent updater observation
+ok 4 - v119 candidate and publication retain precise predecessor and independent updater observation
+  ---
+  duration_ms: 1.456
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 192.8958

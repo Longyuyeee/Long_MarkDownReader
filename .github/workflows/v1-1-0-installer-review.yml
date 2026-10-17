@@ -9,11 +9,11 @@ name: Community Release Same Installer Review
       current_version:
         description: Current package version
         required: true
-        default: "1.1.8"
+        default: "1.1.9"
       previous_version:
         description: Previous official version
         required: true
-        default: "1.1.7"
+        default: "1.1.8"
       candidate_commit:
         description: Exact source commit from the original installer build receipt
         required: true

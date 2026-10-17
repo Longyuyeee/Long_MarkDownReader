@@ -9,4 +9,6 @@
 - 早期 `browser-first/` 原图暴露主题切换过渡的浅底浅字；`theme-reading-ground/` 区分过渡与最终状态，生产 CSS 统一表面后 `theme-transition-fixed/`/最终批次正常；没有禁用动效换通过。
 - `edges-first/` 失败原样保留：新增夹具缺必填参考 query，产品校验正确拒绝；补齐合法输入及多项 locator 后重跑，不削弱校验。
 
+候选补审：`edges-empty-compat/` 最终 **8** 边界场景通过，补旧空现场的搜索/参考恢复；`candidate-final/` 正式 **8 主场景 / 12 布局 / 0 异常** 再次通过。`release-contract-final.log` 本版及上版 **9** 安装报告/来源正反合同通过，内存构造验证输入不算实际安装。`candidate-quality-first/second` 等失败原样保留，问题分别为候选文档披露、历史允许版本/阶段枚举未扩展；不改旧摘要、数量或业务断言。`candidate-quality-final.log` 最终完整门退出 0 / 生产依赖 0 漏洞；仅既有 dead-code 警告。
+
 脚本：`scripts/test-v119-session-ui-browser.mjs` / `test-v119-session-edge-browser.mjs`，测试文件不参与生产构建。

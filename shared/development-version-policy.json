@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.1.9",
-  "runtimeBaseVersion": "1.1.8",
+  "runtimeBaseVersion": "1.1.9",
   "publicVersion": "1.1.8",
   "publicTag": "v1.1.8",
   "publicTagCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-46-v1.1.9-work-session-continuity",
-  "binaryVersionTransition": "v1.1.8-public-release-published",
-  "displayLabel": "v1.1.9 工作现场开发 · 公开版 v1.1.8",
+  "currentStage": "M8-46-v1.1.9-version-candidate",
+  "binaryVersionTransition": "v1.1.9-quality-gate-pending",
+  "displayLabel": "v1.1.9 工作现场候选 · 当前公开 v1.1.8",
   "activeSlice": {
     "id": "v1.1.9-work-session-continuity",
-    "status": "ui-implemented-native-installed-validation-pending",
-    "document": "docs/V1_1_9_Work_Session_Development_2026-10-17.md"
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_1_9_Installed_Release_Closure_2026-10-17.md"
   }
 }
