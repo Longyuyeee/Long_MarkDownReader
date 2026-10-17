@@ -9,11 +9,12 @@ import { assertHostedSearchAudit, createNativeSearchFixture } from './v118-nativ
 import { nativeUserInput } from './v118-native-user-input.mjs'
 import { validateInstalledSearchCompleteness, searchCompletenessChecks } from './installed-v1-1-8-evidence.mjs'
 
-export async function runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot }) {
+export async function runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot, mainTargetId }) {
   assertHostedSearchAudit()
   assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE, '1'); assert.equal(appVersion, '1.1.8')
   assert.equal(path.resolve(library).toLowerCase(), 'c:\\longeditr5ilibrary')
   assert.equal(installedExecutable, path.resolve(process.env.LONGEDIT_R5J_EXECUTABLE))
+  assert.match(mainTargetId, /^[a-zA-Z0-9_-]+$/)
   const harnessSourceCommit = process.env.GITHUB_SHA
   assert.match(harnessSourceCommit || '', /^[a-f0-9]{40}$/)
   const report = { appVersion, sourceCommit, installerSha256, harnessSourceCommit,
@@ -39,7 +40,7 @@ export async function runInstalledV118Workflow({ send, evaluate, navigate, waitF
   const run = async (script, phase) => {
     const child = spawn(process.execPath, [path.join(repoRoot, 'scripts', script), phase, root, repoRoot, output], {
       cwd: repoRoot, windowsHide: true, stdio: 'inherit', env: { ...process.env,
-        LONGEDIT_SEARCH_INSTALLED: '1', LONGEDIT_NATIVE_EXECUTABLE: installedExecutable,
+        LONGEDIT_SEARCH_INSTALLED: '1', LONGEDIT_NATIVE_EXECUTABLE: installedExecutable, LONGEDIT_SEARCH_TARGET_ID: mainTargetId,
         LONGEDIT_R5J_APP_VERSION: appVersion, LONGEDIT_R5J_SOURCE_COMMIT: sourceCommit, LONGEDIT_R5J_INSTALLER_SHA256: installerSha256 },
     })
     try {
@@ -72,7 +73,6 @@ export async function runInstalledV118Workflow({ send, evaluate, navigate, waitF
     const read = async file => JSON.parse(await fs.readFile(path.join(output, file), 'utf8'))
     const baseline = await read('installed-v118-baseline.json'), user = await read('installed-v118-user.json'), office = await read('installed-v118-office.json')
     report.checks = searchCompletenessChecks.map(id => ({ id, status: 'passed' })); report.status = 'passed'
-    validateInstalledSearchCompleteness(report, baseline, user, office, { appVersion, sourceCommit, artifacts: [{ target: 'nsis', sha256: installerSha256 }] })
     // Search must preserve this draft through all checks. Only now explicitly save.
     await ui.clickText('.app-navigation a', '资料库')
     await ui.clickTarget(`[...document.querySelectorAll('.workspace-tab')].find(e=>e.getAttribute('aria-label')?.includes('zz-项目预算'))`)
@@ -80,6 +80,7 @@ export async function runInstalledV118Workflow({ send, evaluate, navigate, waitF
     await ui.waitFor(`!document.querySelector('.workspace-tab.active[aria-label*="有未保存的修改"]')`, 'v118 own draft explicitly saved after preservation proof')
     assert.match(await fs.readFile(path.join(fixture.library, 'zz-项目预算.md'), 'utf8'), /我正在写正式预算/)
     report.finalDraftAction = 'explicit-user-save-after-all-preservation-checks'
+    validateInstalledSearchCompleteness(report, baseline, user, office, { appVersion, sourceCommit, artifacts: [{ target: 'nsis', sha256: installerSha256 }] })
   } catch (error) { failure = error; report.status = 'failed'; report.error = { message: error.message, stack: error.stack }; await capture('installed-v118-failure.jpg').catch(() => {}) }
   finally {
     if (originalConfig) {

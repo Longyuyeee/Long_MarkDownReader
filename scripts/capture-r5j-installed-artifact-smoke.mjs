@@ -933,7 +933,7 @@ if (process.env.LONGEDIT_INSTALLED_V124_STABILITY === '1') {
 if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
   if (appVersion === '1.1.8') {
     const { runInstalledV118Workflow } = await import('./lib/installed-v1-1-8-workflow.mjs')
-    await runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot })
+    await runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot, mainTargetId: mainTarget.id })
   }
   if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(appVersion)) {
     const { runInstalledV110Workflow } = await import('./lib/installed-v1-1-0-workflow.mjs')

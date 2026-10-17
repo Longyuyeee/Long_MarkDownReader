@@ -17,14 +17,15 @@ export function searchRuntimeIdentity(env = process.env) {
   assert.match(env.GITHUB_SHA || '', /^[a-f0-9]{40}$/)
   assert.equal(env.LONGEDIT_NATIVE_EXECUTABLE, env.LONGEDIT_R5J_EXECUTABLE)
   assert.ok(env.LONGEDIT_NATIVE_EXECUTABLE, 'installed executable required')
+  assert.match(env.LONGEDIT_SEARCH_TARGET_ID || '', /^[a-zA-Z0-9_-]+$/, 'the lifecycle must bind its already-verified main WebView target')
   return { installed: true, productCommit: env.LONGEDIT_R5J_SOURCE_COMMIT, runtimeBaseVersion: '1.1.8',
     appVersion: '1.1.8', sourceCommit: env.LONGEDIT_R5J_SOURCE_COMMIT,
     installerSha256: env.LONGEDIT_R5J_INSTALLER_SHA256, harnessSourceCommit: env.GITHUB_SHA,
-    endpoint: 'http://127.0.0.1:9343' }
+    endpoint: 'http://127.0.0.1:9343', targetId: env.LONGEDIT_SEARCH_TARGET_ID }
 }
 
 export function matchesSearchRuntimeTarget(target, identity) {
-  return !target.url.includes('quick-note') && (identity.installed
+  return (!identity.installed || target.id === identity.targetId) && !target.url.includes('quick-note') && (identity.installed
     ? /^(?:https?:\/\/tauri\.localhost|tauri:\/\/localhost)(?:\/|$)/.test(target.url)
     : target.url.startsWith(identity.urlPrefix))
 }

@@ -7,6 +7,7 @@ import { parse } from 'yaml'
 import { assertInstalledReleaseRuntime } from './lib/installed-release-runtime.mjs'
 import { validateInstalledSearchCompleteness, searchCompletenessChecks } from './lib/installed-v1-1-8-evidence.mjs'
 import { searchRuntimeIdentity, matchesSearchRuntimeTarget } from './lib/v118-search-runtime-identity.mjs'
+import { assertV121DevelopmentBoundary, assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''))
 
@@ -33,6 +34,7 @@ function fixture() {
   }
   const base = records.searchBaseline.data
   records.searchCompleteness = { file: 'installed-v118-workflow.json', data: { ...base,
+    finalDraftAction: 'explicit-user-save-after-all-preservation-checks',
     checks: searchCompletenessChecks.map(id => ({ id, status: 'passed' })) } }
   const bytes = new Map()
   const update = () => {
@@ -58,6 +60,7 @@ test('installed v118 rejects reused Debug identity, source/installer drift and w
   assert.doesNotThrow(() => validate(original))
   for (const mutate of [
     f => f.records.searchCompleteness.data.checks.pop(), f => f.records.searchUser.data.sourceCommit = '0'.repeat(40),
+    f => delete f.records.searchCompleteness.data.finalDraftAction,
     f => f.records.searchOffice.data.installerSha256 = '0'.repeat(64), f => f.records.searchBaseline.data.harnessSourceCommit = '0'.repeat(40),
     f => f.records.searchUser.data.evidenceLevel = 'actual-wry-webview-input-events-generated-disk-not-installed',
     f => f.records.searchBaseline.data.generatedFixture.unregisteredEntries = 100,
@@ -73,13 +76,14 @@ test('installed runtime identity refuses local, self-hosted, wrong version and m
   const env = { GITHUB_ACTIONS: 'true', RUNNER_ENVIRONMENT: 'github-hosted', RUNNER_OS: 'Windows',
     LONGEDIT_SEARCH_INSTALLED: '1', LONGEDIT_R5I_DISPOSABLE: '1', LONGEDIT_R5J_APP_VERSION: '1.1.8',
     LONGEDIT_R5J_SOURCE_COMMIT: 'a'.repeat(40), LONGEDIT_R5J_INSTALLER_SHA256: 'b'.repeat(64), GITHUB_SHA: 'c'.repeat(40),
-    LONGEDIT_NATIVE_EXECUTABLE: 'C:/owned/install/tauri-app.exe', LONGEDIT_R5J_EXECUTABLE: 'C:/owned/install/tauri-app.exe' }
+    LONGEDIT_NATIVE_EXECUTABLE: 'C:/owned/install/tauri-app.exe', LONGEDIT_R5J_EXECUTABLE: 'C:/owned/install/tauri-app.exe', LONGEDIT_SEARCH_TARGET_ID: 'MAIN-001' }
   const identity = searchRuntimeIdentity(env)
   assert.equal(identity.installed, true)
-  assert.equal(matchesSearchRuntimeTarget({ url: 'http://tauri.localhost/#/settings' }, identity), true)
-  assert.equal(matchesSearchRuntimeTarget({ url: 'http://127.0.0.1:14200/#/settings' }, identity), false)
-  assert.equal(matchesSearchRuntimeTarget({ url: 'http://tauri.localhost/#/quick-note' }, identity), false)
-  for (const changed of [{ RUNNER_ENVIRONMENT: 'self-hosted' }, { GITHUB_ACTIONS: '' }, { LONGEDIT_R5J_APP_VERSION: '1.1.7' }, { LONGEDIT_R5J_SOURCE_COMMIT: '' }, { LONGEDIT_R5J_INSTALLER_SHA256: '' }, { LONGEDIT_R5J_EXECUTABLE: 'C:/different.exe' }]) assert.throws(() => searchRuntimeIdentity({ ...env, ...changed }))
+  assert.equal(matchesSearchRuntimeTarget({ id: 'MAIN-001', url: 'http://tauri.localhost/#/settings' }, identity), true)
+  assert.equal(matchesSearchRuntimeTarget({ id: 'EXTERNAL-001', url: 'http://tauri.localhost/#/mindmap?external=1' }, identity), false)
+  assert.equal(matchesSearchRuntimeTarget({ id: 'MAIN-001', url: 'http://127.0.0.1:14200/#/settings' }, identity), false)
+  assert.equal(matchesSearchRuntimeTarget({ id: 'MAIN-001', url: 'http://tauri.localhost/#/quick-note' }, identity), false)
+  for (const changed of [{ RUNNER_ENVIRONMENT: 'self-hosted' }, { GITHUB_ACTIONS: '' }, { LONGEDIT_R5J_APP_VERSION: '1.1.7' }, { LONGEDIT_R5J_SOURCE_COMMIT: '' }, { LONGEDIT_R5J_INSTALLER_SHA256: '' }, { LONGEDIT_R5J_EXECUTABLE: 'C:/different.exe' }, { LONGEDIT_SEARCH_TARGET_ID: '' }]) assert.throws(() => searchRuntimeIdentity({ ...env, ...changed }))
 })
 
 test('all historical installed entry guards accept v118 without removing their tasks', () => {
@@ -97,4 +101,21 @@ test('all historical installed entry guards accept v118 without removing their t
     assert.equal(workflow.on.workflow_dispatch.inputs.current_version.default, '1.1.8')
     assert.equal(workflow.on.workflow_dispatch.inputs.previous_version.default, '1.1.7')
   }
+})
+
+test('v118 candidate/public handoff never inherits an official update observation', () => {
+  const development = { runtimeBaseVersion: '1.1.8', publicVersion: '1.1.7', publicTag: 'v1.1.7',
+    publicTagCommit: '84cc1ad6d4697bb98c17e3396b9d8d65da41847a', developmentTargetVersion: '1.1.8' }
+  const community = { appVersion: '1.1.8', targetRelease: { tag: 'v1.1.8' }, gates: { githubReleasePublished: false }, release: null,
+    patchValidation: { previousPublicVersion: '1.1.7', managedUpdaterUpgradePath: '1.1.7-to-1.1.8-pending' } }
+  assert.doesNotThrow(() => assertV121DevelopmentBoundary(development, community))
+  assert.throws(() => assertV121DevelopmentBoundary({ ...development, developmentTargetVersion: '1.1.9' }, community))
+  assert.throws(() => assertV121DevelopmentBoundary({ ...development, publicTagCommit: '0'.repeat(40) }, community))
+  const released = { ...development, publicVersion: '1.1.8', publicTag: 'v1.1.8', publicTagCommit: 'a'.repeat(40), developmentTargetVersion: '1.1.9' }
+  assert.doesNotThrow(() => assertV121DevelopmentBoundary(released, { ...community, gates: { githubReleasePublished: true }, release: { taggedCommit: released.publicTagCommit } }))
+  const policy = { status: 'hosted-managed-update-passed' }, receipt = { managedUpdaterObservation: '1.0.20-to-1.0.21-passed' }
+  assert.doesNotThrow(() => assertV121UpdaterStatus(policy, community, receipt))
+  assert.throws(() => assertV121UpdaterStatus({ status: 'hosted-execution-pending' }, community, receipt))
+  assert.throws(() => assertV121UpdaterStatus(policy, community, { managedUpdaterObservation: '1.0.20-to-1.0.21-pending' }))
+  assert.throws(() => assertV121UpdaterStatus(policy, { ...community, patchValidation: { ...community.patchValidation, managedUpdaterUpgradePath: '1.1.6-to-1.1.7-pending' } }, receipt))
 })

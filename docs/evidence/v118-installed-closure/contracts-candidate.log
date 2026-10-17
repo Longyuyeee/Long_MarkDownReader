@@ -1,0 +1,320 @@
+TAP version 13
+# Subtest: v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture
+ok 1 - v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture
+  ---
+  duration_ms: 5.1653
+  ...
+# Subtest: release uses real immutable installed reports, not invented debug counts
+ok 2 - release uses real immutable installed reports, not invented debug counts
+  ---
+  duration_ms: 0.896
+  ...
+# Subtest: installed release rejects bytes
+ok 3 - installed release rejects bytes
+  ---
+  duration_ms: 0.665
+  ...
+# Subtest: installed release rejects version
+ok 4 - installed release rejects version
+  ---
+  duration_ms: 5.5348
+  ...
+# Subtest: installed release rejects installer
+ok 5 - installed release rejects installer
+  ---
+  duration_ms: 1.2087
+  ...
+# Subtest: installed release rejects source
+ok 6 - installed release rejects source
+  ---
+  duration_ms: 0.99
+  ...
+# Subtest: installed release rejects failed-check
+ok 7 - installed release rejects failed-check
+  ---
+  duration_ms: 1.9642
+  ...
+# Subtest: installed release rejects missing-save
+ok 8 - installed release rejects missing-save
+  ---
+  duration_ms: 0.8265
+  ...
+# Subtest: installed release rejects crashed-route
+ok 9 - installed release rejects crashed-route
+  ---
+  duration_ms: 1.2061
+  ...
+# Subtest: v1.0.23 synthetic validator requires installed reports, not debug evidence
+ok 10 - v1.0.23 synthetic validator requires installed reports, not debug evidence
+  ---
+  duration_ms: 1.2345
+  ...
+# Subtest: v1.0.23 rejects old-native-version
+ok 11 - v1.0.23 rejects old-native-version
+  ---
+  duration_ms: 1.1799
+  ...
+# Subtest: v1.0.23 rejects dev-marker
+ok 12 - v1.0.23 rejects dev-marker
+  ---
+  duration_ms: 1.1586
+  ...
+# Subtest: v1.0.23 rejects wrong-source
+ok 13 - v1.0.23 rejects wrong-source
+  ---
+  duration_ms: 0.707
+  ...
+# Subtest: v1.0.23 rejects wrong-installer
+ok 14 - v1.0.23 rejects wrong-installer
+  ---
+  duration_ms: 1.0467
+  ...
+# Subtest: v1.0.23 rejects failed-check
+ok 15 - v1.0.23 rejects failed-check
+  ---
+  duration_ms: 0.9636
+  ...
+# Subtest: v1.0.23 rejects missing-version-report
+ok 16 - v1.0.23 rejects missing-version-report
+  ---
+  duration_ms: 0.5931
+  ...
+# Subtest: v1.0.23 rejects changed-bytes
+ok 17 - v1.0.23 rejects changed-bytes
+  ---
+  duration_ms: 0.3434
+  ...
+# Subtest: v1.0.23 rejects debug-status
+ok 18 - v1.0.23 rejects debug-status
+  ---
+  duration_ms: 0.4432
+  ...
+# Subtest: v1.0.24 requires its own stability observations
+ok 19 - v1.0.24 requires its own stability observations
+  ---
+  duration_ms: 1.0168
+  ...
+# Subtest: v1.0.24 accepts retained animations when the adaptive observer reports normal motion
+ok 20 - v1.0.24 accepts retained animations when the adaptive observer reports normal motion
+  ---
+  duration_ms: 0.7627
+  ...
+# Subtest: v1.0.24 rejects unconditional motion removal disguised as adaptive reduction
+ok 21 - v1.0.24 rejects unconditional motion removal disguised as adaptive reduction
+  ---
+  duration_ms: 1.2364
+  ...
+# Subtest: v1.0.24 rejects missing-stability
+ok 22 - v1.0.24 rejects missing-stability
+  ---
+  duration_ms: 1.0787
+  ...
+# Subtest: v1.0.24 rejects wrong-source
+ok 23 - v1.0.24 rejects wrong-source
+  ---
+  duration_ms: 0.764
+  ...
+# Subtest: v1.0.24 rejects legend-overlap
+ok 24 - v1.0.24 rejects legend-overlap
+  ---
+  duration_ms: 1.675
+  ...
+# Subtest: v1.0.24 rejects tutorial-overflow
+ok 25 - v1.0.24 rejects tutorial-overflow
+  ---
+  duration_ms: 1.8775
+  ...
+# Subtest: v1.0.24 rejects tutorial-obscured
+ok 26 - v1.0.24 rejects tutorial-obscured
+  ---
+  duration_ms: 0.9661
+  ...
+# Subtest: v1.0.24 rejects missing-viewport
+ok 27 - v1.0.24 rejects missing-viewport
+  ---
+  duration_ms: 0.8704
+  ...
+# Subtest: v1.0.24 rejects missing-close
+ok 28 - v1.0.24 rejects missing-close
+  ---
+  duration_ms: 0.8442
+  ...
+# Subtest: v1.0.24 rejects animated-markdown
+ok 29 - v1.0.24 rejects animated-markdown
+  ---
+  duration_ms: 1.0123
+  ...
+# Subtest: v1.0.24 rejects missing-markdown-input
+ok 30 - v1.0.24 rejects missing-markdown-input
+  ---
+  duration_ms: 1.0025
+  ...
+# Subtest: v117 requires its own complete installed save/history evidence in addition to retained workflows
+ok 31 - v117 requires its own complete installed save/history evidence in addition to retained workflows
+  ---
+  duration_ms: 7.4911
+  ...
+# Subtest: v117 rejects a missing task, wrong installer or different product source
+ok 32 - v117 rejects a missing task, wrong installer or different product source
+  ---
+  duration_ms: 6.6023
+  ...
+# Subtest: v117 still requires actual predecessor workflow reports
+ok 33 - v117 still requires actual predecessor workflow reports
+  ---
+  duration_ms: 1.677
+  ...
+# Subtest: v117 final safety checks are mandatory and publishing requires the current check count
+ok 34 - v117 final safety checks are mandatory and publishing requires the current check count
+  ---
+  duration_ms: 2.6496
+  ...
+# Subtest: installed final check detects the current runtime and route error notices
+ok 35 - installed final check detects the current runtime and route error notices
+  ---
+  duration_ms: 3.1899
+  ...
+# Subtest: installed v117 navigation supplies the real three-argument driver contract
+ok 36 - installed v117 navigation supplies the real three-argument driver contract
+  ---
+  duration_ms: 21.442
+  ...
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 37 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 117.47
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 38 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 68.0948
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 39 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 0.9606
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 40 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 16.7362
+  ...
+# Subtest: Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+ok 41 - Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+  ---
+  duration_ms: 15.3913
+  ...
+# Subtest: Office target selectors parse the actual public search key and never substitute a document open
+ok 42 - Office target selectors parse the actual public search key and never substitute a document open
+  ---
+  duration_ms: 4.7756
+  ...
+# Subtest: all literal and interpolated native user/browser expressions are syntactically valid
+ok 43 - all literal and interpolated native user/browser expressions are syntactically valid
+  ---
+  duration_ms: 32.1811
+  ...
+# Subtest: Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+ok 44 - Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+  ---
+  duration_ms: 1.4775
+  ...
+# Subtest: Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+ok 45 - Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+  ---
+  duration_ms: 1.2464
+  ...
+# Subtest: Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+ok 46 - Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+  ---
+  duration_ms: 10.7722
+  ...
+# Subtest: real runtime audit refuses local and self-hosted machines before any fixture IO
+ok 47 - real runtime audit refuses local and self-hosted machines before any fixture IO
+  ---
+  duration_ms: 1.9902
+  ...
+# Subtest: fixture paths reject broad or arbitrary user roots
+ok 48 - fixture paths reject broad or arbitrary user roots
+  ---
+  duration_ms: 0.6493
+  ...
+# Subtest: generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+ok 49 - generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+  ---
+  duration_ms: 1059.0478
+  ...
+# Subtest: owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+ok 50 - owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+  ---
+  duration_ms: 949.9491
+  ...
+# Subtest: workflow pins the product separately from its harness and cannot publish or install
+ok 51 - workflow pins the product separately from its harness and cannot publish or install
+  ---
+  duration_ms: 4.0497
+  ...
+# Subtest: native driver never substitutes IPC or simulates a desktop click
+ok 52 - native driver never substitutes IPC or simulates a desktop click
+  ---
+  duration_ms: 0.378
+  ...
+# Subtest: native driver waits for the actual page and rejects current runtime and route failure surfaces
+ok 53 - native driver waits for the actual page and rejects current runtime and route failure surfaces
+  ---
+  duration_ms: 2.8805
+  ...
+# Subtest: debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+ok 54 - debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+  ---
+  duration_ms: 0.3189
+  ...
+# Subtest: in-memory registry provider preserves all six debugger entries and unrelated values
+ok 55 - in-memory registry provider preserves all six debugger entries and unrelated values
+  ---
+  duration_ms: 402.4961
+  ...
+# Subtest: new runner and workflow PowerShell parse without launching anything
+ok 56 - new runner and workflow PowerShell parse without launching anything
+  ---
+  duration_ms: 2115.5622
+  ...
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+ok 57 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 26.3179
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 58 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 30.3279
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 59 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 186.376
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 60 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.9785
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 61 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.8153
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 62 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 3.6316
+  ...
+1..62
+# tests 62
+# suites 0
+# pass 62
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4710.253

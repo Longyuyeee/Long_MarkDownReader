@@ -22,6 +22,7 @@ export function validateInstalledSearchCompleteness(summary, baseline, user, off
     assert.equal(report.desktopInputUsed, false)
   }
   assert.equal(summary.evidenceLevel, 'installed-tauri-ipc-and-disk')
+  assert.equal(summary.finalDraftAction, 'explicit-user-save-after-all-preservation-checks')
   assert.deepEqual(summary.checks.map(check => [check.id, check.status]), searchCompletenessChecks.map(id => [id, 'passed']))
   for (const [report, phase, checks, level] of [
     [baseline, 'baseline', nativeBaselineChecks, 'installed-tauri-ipc-and-disk'],

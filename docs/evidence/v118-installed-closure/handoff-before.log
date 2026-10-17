@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 1 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 85.5071
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 2 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 69.3584
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 3 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 0.6979
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 4 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 11.4499
+  ...
+# Subtest: v118 candidate/public handoff never inherits an official update observation
+not ok 5 - v118 candidate/public handoff never inherits an official update observation
+  ---
+  duration_ms: 0.4454
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v118-installed-release.mjs:104:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "v1.0.21 development version boundary drift"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'v1.0.21 development version boundary drift'
+  stack: |-
+    assertV121DevelopmentBoundary (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/lib/v121-updater-status.mjs:198:11)
+    file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-installed-release.mjs:109:29
+    getActual (node:assert:498:5)
+    Function.doesNotThrow (node:assert:664:32)
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-installed-release.mjs:109:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-installed-release.mjs:109:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 271.1005

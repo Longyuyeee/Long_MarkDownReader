@@ -6,6 +6,8 @@
 
 本批从 `c747bd1c` 接续，其完整 CI [38982464566](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38982464566) 已 **success**。开发程序的 22 项联合检查仍见 [Office 审计](V1_1_8_Native_Office_Audit_2026-10-17.md)，不是本版安装态结果。当前公开/运行时仍 1.1.7；接下来固定 1.1.8 候选，未封板或发布。
 
+**后续候选推进：**驱动阶段 `7f5596fe` 已提交/推送；44 个当前版本文件已机械同步到运行时 **1.1.8**，公开仍 **1.1.7**，不是封板。主 WebView ID 显式绑定，保留旧外部窗口的验收情境，不能按相同 URL 任意选择第一个窗口。候选首轮质量门/两轮快速审计发现历史版本枚举和旧官方更新状态缺少新版本分支，失败日志分别保留 `quality-candidate.log`、`audit-candidate.log`、`audit-candidate-fixed.log`；只新增本版合法身份和同等阶段，不删除旧摘要或放开任意后继版本。升级边界首轮 4 通过/1 失败，修正后新旧相关 25 项通过（`handoff-before.log` / `handoff-after.log`），完整当前开发审计通过（`audit-candidate-final.log`）。最终候选完整质量门进行中。
+
 ## 安装继承与本版任务
 
 已扩展实际入口、各工作流版本守卫、原始报告目录、导入器、安装态校验与发布阻断条件。1.1.0—1.1.7 的 8/8/9/8/8/11/13/12 项全部保留，缺任意历史报告都拒绝本版验收，不能只改默认版本绕过继承。
@@ -23,6 +25,8 @@
 - 完整本地 `npm run ci:patch-release` **通过**，生产依赖 **0 漏洞**，仅既有 `scan_visible` dead-code 警告；原日志 `quality-driver.log` 保留。真实候选安装、覆盖升级和同包独立复核待执行。
 
 ## 持续推进顺序
+
+候选最终 `npm run ci:patch-release` **通过/生产依赖 0 漏洞**，只有既有 dead-code 警告，见 `quality-candidate-final.log`。最终升级边界 25 项再次通过（`handoff-final.log`）；显式保存仅发生在全部草稿保护检查结束后，正式复核还要求这份最终保存回执。后续固定本提交源码，不重建已验收字节来替代同包复核。
 
 1. 驱动审计、提交和推送，固定产品版本身份到 1.1.8，完整质量门通过。
 2. 固定源码，GitHub 托管 Windows 构建 MSI/NSIS、下载并核验公开 1.1.7 NSIS，执行安装/升级与所有继承、本版任务。
