@@ -14,6 +14,7 @@ export function validateInstalledPdfReading(report,manifest){
  assert.equal(report.targetSignatureBefore,report.targetSignatureAfterInsert);assert.equal(report.draftBeforeSaveSha256,report.explicitSavedSha256)
  assert.ok(typeof report.targetSignatureBefore==='string'&&report.targetSignatureBefore.length>0)
  for(const field of ['sourceRender','movedRender','restoredRender']){const p=report[field];assert.equal(p.observedFrom,'rendered-pdf-controls-text-and-canvas');assert.equal(p.page,12);assert.equal(p.annotationId,'reading-11');assert.equal(p.placeholderAbsent,true);assert.ok(p.text.includes('Reading source page 12'));for(const k of ['width','height','opaquePixels','inkPixels'])assert.ok(Number.isFinite(p[k])&&p[k]>0)}
+ for(const [field,text]of [['deletedNotice','批注不存在或已被删除'],['legacySourceNotice','旧引用没有内容摘要']]){const n=report[field];assert.equal(n.observedFrom,'rendered-reference-notice-in-panel-viewport');assert.equal(n.visible,true);assert.ok(n.text.includes(text));assert.ok(n.top>=n.parentTop&&n.bottom<=n.parentBottom)}
  assert.equal(report.nativePicker.status,'selected-real-native-dialog');assert.equal(report.nativePicker.dialogClosed,true);assert.equal(report.nativePicker.desktopUserSession,'disposable-github-hosted');assert.ok(report.nativePicker.processId>0)
  assert.ok(report.inputTrace.every(e=>e.trusted));for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted))
  assert.deepEqual(report.runtimeErrors,[]);assert.equal(report.editorModes.before,report.editorModes.after)

@@ -1,0 +1,17 @@
+{
+  "status": "failed",
+  "checks": [],
+  "geometry": [
+    {
+      "name": "legacy",
+      "top": 3909.453125,
+      "bottom": 3959.328125,
+      "parentTop": 206.390625,
+      "parentBottom": 900,
+      "visible": false
+    }
+  ],
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "failure": "AssertionError [ERR_ASSERTION]: Reference warning must actually be in the viewport, not merely somewhere in the DOM\n\nfalse !== true\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1113-pdf-notice-ui.mjs:16:10"
+}

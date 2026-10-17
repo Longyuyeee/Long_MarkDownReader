@@ -1,6 +1,10 @@
 {
   "status": "passed",
   "checks": [
+    "Lazy restored target loads full save metadata then appends only a dirty draft",
+    "A lazy target reported read-only is not turned into an editable draft",
+    "Target rename during source verification cancels insertion instead of retargeting a late reply",
+    "External annotation changes during generation are rejected with explicit reopen guidance",
     "Same-named opened notes display distinct folders before choosing insertion target",
     "240 annotations paginate without 240 list cards; legacy single actions remain",
     "Filtering supports page, type, color and text; invalid page range is visible",

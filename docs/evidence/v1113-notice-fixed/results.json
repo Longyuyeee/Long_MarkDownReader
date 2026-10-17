@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "checks": [
+    "legacy source notice is visible above the long annotation list",
+    "deleted source notice is visible above the long annotation list",
+    "damaged sidecar remains a visible read-only error, not a false empty-annotation hint"
+  ],
+  "geometry": [
+    {
+      "name": "legacy",
+      "top": 215.390625,
+      "bottom": 265.265625,
+      "parentTop": 206.390625,
+      "parentBottom": 900,
+      "visible": true
+    },
+    {
+      "name": "deleted",
+      "top": 215.390625,
+      "bottom": 265.265625,
+      "parentTop": 206.390625,
+      "parentBottom": 900,
+      "visible": true
+    }
+  ],
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "scope": "actual PdfView at 240 annotations; simulated IPC, not native proof"
+}

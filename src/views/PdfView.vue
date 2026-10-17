@@ -78,7 +78,8 @@
         </div>
         <div v-else-if="!isExternal && sidebarTab === 'annotations'" class="annotation-panel">
           <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
-          <div v-else-if="!annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
+          <div v-if="referenceNotice" class="annotation-alert reference-notice" role="status" aria-live="polite">{{ referenceNotice }}</div>
+          <div v-if="!annotationError && !annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
           <div v-if="annotations.length" class="reading-filters">
             <input v-model="annotationQuery" aria-label="查找批注摘录或评论" placeholder="查找摘录或评论" maxlength="200" />
             <input v-model="annotationPages" aria-label="筛选批注页码" placeholder="全部页码，如 1-5,8" maxlength="512" />
@@ -109,7 +110,6 @@
             </div>
             <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation">删除批注</button>
           </div>
-          <div v-if="referenceNotice" class="annotation-alert" aria-live="polite">{{ referenceNotice }}</div>
           <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</WorkspaceStateNotice>
         </div>
         <PdfFormInspectorPanel
@@ -2268,7 +2268,7 @@ const buildReadingSnapshot = async (ids: string[]): Promise<PdfReadingSnapshot> 
   if (annotationDirty.value || annotationSaveError.value) throw new Error(annotationSaveError.value || '批注尚未保存')
   const snapshot = await invoke<PdfReadingSnapshot>('build_pdf_reading_note', { libraryRoot: root, pdfPath: path, expectedSignature: signature, annotationIds: [...ids] })
   if (!current()) throw Error('PDF 已切换，已取消本次整理')
-  if (snapshot.items.length !== ids.length || snapshot.items.some(item => item.annotation.page > (pdfDocument.value?.numPages || 0) || selected.get(item.annotation.id) !== JSON.stringify(item.annotation) || JSON.stringify(annotations.value.find(a => a.id === item.annotation.id)) !== selected.get(item.annotation.id))) throw Error('所选批注已变化或页码无效，请重新整理')
+  if (snapshot.items.length !== ids.length || snapshot.items.some(item => item.annotation.page > (pdfDocument.value?.numPages || 0) || selected.get(item.annotation.id) !== JSON.stringify(item.annotation) || JSON.stringify(annotations.value.find(a => a.id === item.annotation.id)) !== selected.get(item.annotation.id))) throw Error('所选批注已变化或页码无效，请重新打开此 PDF 后再整理')
   return snapshot
 }
 const openReadingPreview = async (ids: string[]) => {
@@ -2308,19 +2308,21 @@ const insertReadingNote = async () => {
   if (!readingSnapshot.value || referenceWorking.value || readingNoteSaving.value) return
   const snapshot = readingSnapshot.value, target = readingTargets.value.find(tab => tab.id === readingTargetId.value)
   if (!target) { readingNoteError.value = '目标已关闭或不可编辑，请重新选择'; return }
-  const root = store.libraryPath, path = pdfPath.value, generation = referenceGeneration, active = store.activeTabId, targetId = target.id, markdown = readingMarkdown.value
-  const current = () => generation === referenceGeneration && store.libraryPath === root && pdfPath.value === path && store.activeTabId === active && readingTargetId.value === targetId && readingTargets.value.includes(target)
+  const root = store.libraryPath, path = pdfPath.value, generation = referenceGeneration, active = store.activeTabId, targetId = target.id, targetPath = target.path, markdown = readingMarkdown.value
+  const current = () => generation === referenceGeneration && store.libraryPath === root && pdfPath.value === path && store.activeTabId === active && readingTargetId.value === targetId && target.id === targetId && target.path === targetPath && readingTargets.value.includes(target)
   referenceWorking.value = true; readingNoteError.value = ''
   try {
     await invoke('verify_pdf_reference', { libraryRoot: root, pdfPath: path, sourceDigest: snapshot.sourceDigest, expectedSignature: snapshot.sourceSignature })
     if (!current()) throw Error('目标或工作现场已切换，未插入；请重新选择')
     if (target.content === undefined) {
       if (target.isDirty) throw Error('目标有尚未完整加载的草稿，请先打开核对')
-      const disk = await invoke<{content:string;signature:string;contentDigest:string;encoding:string;bom:string;lineEnding:string;hasFinalNewline:boolean}>('read_text_document', { libraryRoot: root, path: target.path, formatId: 'markdown', ...(target.textReadEncoding ? {readOptions:{encoding:target.textReadEncoding}} : {}) })
+      const disk = await invoke<{content:string;signature:string;contentDigest:string;encoding:string;encodingConfidence:string;bom:string;lineEnding:string;hasFinalNewline:boolean;size:number;modified:number;readOnlyReason?:string}>('read_text_document', { libraryRoot: root, path: target.path, formatId: 'markdown', ...(target.textReadEncoding ? {readOptions:{encoding:target.textReadEncoding}} : {}) })
       if (!current()) throw Error('目标已切换，未插入')
+      if (disk.readOnlyReason) throw Error(`目标为只读，未插入：${disk.readOnlyReason}`)
       if (target.content === undefined) {
         target.content = disk.content; target.textSignature = disk.signature; target.textContentDigest = disk.contentDigest
         target.textEncoding = disk.encoding; target.textBom = disk.bom; target.textLineEnding = disk.lineEnding; target.textHasFinalNewline = disk.hasFinalNewline
+        target.textSize = disk.size; target.textModified = disk.modified; target.textEncodingConfidence = disk.encodingConfidence
       }
     }
     appendReadingDraft(target, markdown)

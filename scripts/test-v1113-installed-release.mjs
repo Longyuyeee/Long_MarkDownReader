@@ -11,6 +11,7 @@ const example=()=>{
  for(const key of ['dirtyBeforeInsert','dirtyAfterInsert','exactDraftPrefix','draftDiskUnchangedBeforeSave','explicitSave','returnedExactAnnotation','deletedAnnotationNotice','legacyNotice','newNoteSelectedOnly','existingTargetPreserved','replacementRejected','replacementTimestampPreserved','movedRelinkDirtyOnly','movedRelinkReturnedExact','restoredReferenceVerified','restoredPageVisible'])report[key]=true
  report.snapshot={items:report.selectedIds.map((id,i)=>({annotation:{id,page:i+12},uri:`longedit://pdf?path=p.pdf&page=${i+12}&annotation=${id}&sha256=${digest}`}))}
  for(const field of ['sourceRender','movedRender','restoredRender'])report[field]={observedFrom:'rendered-pdf-controls-text-and-canvas',page:12,annotationId:'reading-11',placeholderAbsent:true,text:'Reading source page 12',width:612,height:792,opaquePixels:200,inkPixels:40}
+ for(const [field,text]of [['deletedNotice','批注不存在或已被删除'],['legacySourceNotice','旧引用没有内容摘要']])report[field]={observedFrom:'rendered-reference-notice-in-panel-viewport',text,visible:true,top:200,bottom:250,parentTop:190,parentBottom:900}
  return [report,manifest]
 }
 test('PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts',()=>{

@@ -19,7 +19,7 @@ window.pdfNotesAudit=state
 window.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},transformCallback:()=>1,invoke:async(command,args)=>{
  calls.push({command,args:JSON.parse(JSON.stringify(args||{}))})
  if(command==='read_pdf_info')return {length:bytes.length,signature:'fixture',fullData:bytes}
- if(command==='read_pdf_annotations')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1},annotations:JSON.parse(JSON.stringify(annotations))}
+ if(command==='read_pdf_annotations'){if(state.annotationError)throw Error(state.annotationError);return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1},annotations:JSON.parse(JSON.stringify(annotations))}}
  if(command==='read_pdf_ocr')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:bytes.length,modifiedAt:1},provider:{id:'tesseract-wasm',version:'fixture',languages:['eng']},pages:[]}
  if(command==='build_pdf_annotation_reference'){
   if(state.delay)await new Promise(r=>setTimeout(r,state.delay))
@@ -41,7 +41,7 @@ window.__TAURI_INTERNALS__={metadata:{currentWindow:{label:'main'},currentWebvie
  if(command==='save_pdf_reading_note'){if(state.fail)throw Error('目标文件已存在，未覆盖');state.saved={path:args.targetPath,content:args.content};return args.targetPath}
  if(command==='read_markdown_file')return {content:state.disk}
  if(command==='write_markdown_file'){state.disk=args.content;return}
- if(command==='read_text_document')return {content:state.disk,signature:'original',contentDigest:'digest',encoding:'utf-8',bom:'none',lineEnding:'lf',hasFinalNewline:false}
+ if(command==='read_text_document')return {content:state.disk,signature:'original',contentDigest:'digest',encoding:'utf-8',encodingConfidence:'certain',bom:'none',lineEnding:'lf',hasFinalNewline:false,size:new TextEncoder().encode(state.disk).length,modified:1,readOnlyReason:state.targetReadOnly||undefined}
  if(command==='write_pdf_annotations'){annotations.splice(0,annotations.length,...JSON.parse(JSON.stringify(args.document.annotations)));return}
  if(command==='save_config')return
  if(command==='plugin:event|listen')return 1
