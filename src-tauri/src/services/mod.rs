@@ -25,6 +25,7 @@ pub mod reliable_write;
 pub(crate) mod search_query;
 pub(crate) mod search_scan;
 pub mod smart_collection;
+pub(crate) mod tag_edit;
 #[cfg(test)]
 pub(crate) mod test_workspace;
 pub mod workspace_guard;

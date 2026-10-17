@@ -16,6 +16,7 @@ pub(crate) struct Notice {
     pub old_path: String,
     pub new_path: String,
     pub documents: Vec<String>,
+    pub content_only: bool,
 }
 struct Pending {
     waiting: BTreeSet<String>,
@@ -76,6 +77,29 @@ impl Protection {
             source: paths.first().ok_or("缺少移动来源")?.clone(),
             target: paths.get(1).ok_or("缺少移动目标")?.clone(),
         };
+        Self::begin_checked(app, root, paths, rewrite_paths, Some(context))
+    }
+    pub(crate) fn begin_content_edit(
+        app: &tauri::AppHandle,
+        root: &std::path::Path,
+        paths: &[PathBuf],
+    ) -> Result<Self, String> {
+        if paths.is_empty() {
+            return Err("尚未选择需要修改的笔记".into());
+        }
+        Self::begin_checked(app, root, paths, paths, None)
+    }
+    fn begin_checked(
+        app: &tauri::AppHandle,
+        root: &std::path::Path,
+        paths: &[PathBuf],
+        rewrite_paths: &[PathBuf],
+        context: Option<DraftContext>,
+    ) -> Result<Self, String> {
+        let source_paths = context
+            .as_ref()
+            .map(|context| vec![context.source.to_string_lossy().into_owned()])
+            .unwrap_or_default();
         static NEXT: AtomicU64 = AtomicU64::new(1);
         let id = format!(
             "move-{}-{}",
@@ -96,7 +120,7 @@ impl Protection {
                 Pending {
                     waiting: windows.keys().cloned().collect(),
                     sender,
-                    context: Some(context),
+                    context,
                 },
             );
         let protection = Self {
@@ -116,11 +140,7 @@ impl Protection {
                 .iter()
                 .map(|path| path.to_string_lossy().into_owned())
                 .collect(),
-            source_paths: paths
-                .first()
-                .into_iter()
-                .map(|path| path.to_string_lossy().into_owned())
-                .collect(),
+            source_paths,
         };
         for window in windows.values() {
             window
@@ -131,14 +151,20 @@ impl Protection {
         for _ in 0..windows.len() {
             receiver
                 .recv_timeout(deadline.saturating_duration_since(std::time::Instant::now()))
-                .map_err(|_| "有编辑窗口暂未响应，未移动文件；请稍后重试")??;
+                .map_err(|_| "有编辑窗口暂未响应，未修改文件；请稍后重试")??;
         }
         if windows.keys().cloned().collect::<BTreeSet<_>>()
             != app.webview_windows().keys().cloned().collect()
         {
-            return Err("编辑窗口已变化，尚未移动，请重试".into());
+            return Err("编辑窗口已变化，尚未修改文件，请重试".into());
         }
         Ok(protection)
+    }
+    pub(crate) fn windows_unchanged(&self) -> Result<(), String> {
+        if self.labels != self.app.webview_windows().keys().cloned().collect() {
+            return Err("编辑窗口已变化，已暂停后续写入；请重新核对".into());
+        }
+        Ok(())
     }
     pub(crate) fn completed(&mut self, notice: Notice) {
         self.notice = Some(notice);
@@ -223,10 +249,10 @@ pub async fn reply_file_move_protection(
             (p.sender.clone(), p.context.clone())
         };
         let result = if !ready {
-            Err("编辑窗口正在初始化或保存，尚未移动，请稍后重试".into())
+            Err("编辑窗口正在初始化或保存，尚未修改文件，请稍后重试".into())
         } else if !dirty_paths.is_empty() {
             Err(format!(
-                "请先保存以下文档的修改，再移动或改名：{}",
+                "以下文档有未保存内容，本次未修改；请先自行保存或取消修改，再重新核对：{}",
                 dirty_paths.join("、")
             ))
         } else {
@@ -252,7 +278,11 @@ fn inspect_drafts(context: Option<&DraftContext>, drafts: &[DraftSnapshot]) -> R
     {
         return Err("未保存正文较多，请先保存后再整理文件".into());
     }
-    let names = if !drafts.is_empty() && context.source.exists() { Some(super::file_move_links::moved_names(&context.source)?) } else { None };
+    let names = if !drafts.is_empty() && context.source.exists() {
+        Some(super::file_move_links::moved_names(&context.source)?)
+    } else {
+        None
+    };
     for draft in drafts {
         let path = std::path::Path::new(&draft.path);
         let needs_save = match &draft.content {

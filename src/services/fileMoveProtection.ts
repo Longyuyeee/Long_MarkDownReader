@@ -1,13 +1,14 @@
 import { fileStylePathKey } from '../utils/fileDisplayStyles'
 import { snapshotWindowDrafts, dirtyDocumentPaths, pendingDocumentSaves } from './windowDrafts'
 import { invoke } from './tauriRuntime'
-export interface FileMoveNotice { root: string; oldPath: string; newPath: string; documents: string[] }
+export interface FileMoveNotice { root: string; oldPath: string; newPath: string; documents: string[]; contentOnly?: boolean }
 export interface FileMoveRequest { requestId: string; libraryRoot?: string; paths: string[]; rewritePaths?: string[]; sourcePaths?: string[] }
 export const pathsOverlap = (a: string, b: string) => {
   const left = fileStylePathKey(a), right = fileStylePathKey(b)
   return Boolean(left && right && (left === right || left.startsWith(right + '/') || right.startsWith(left + '/')))
 }
 export const movedPath = (path: string, notice: FileMoveNotice) => {
+  if (notice.contentOnly) return path
   const key = fileStylePathKey(path), old = fileStylePathKey(notice.oldPath)
   const clean = (value: string) => value.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
   const target = notice.newPath.replace(/[\\/]$/, '')

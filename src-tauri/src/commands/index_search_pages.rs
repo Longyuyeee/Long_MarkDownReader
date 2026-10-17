@@ -394,7 +394,7 @@ async fn run_scoped_page(
     })?
 }
 
-fn configured_page_scope<'a>(
+pub(crate) fn configured_page_scope<'a>(
     libraries: &'a [crate::commands::config::LibraryConfig],
     requested: &str,
 ) -> Result<&'a str, SearchPageError> {
@@ -522,7 +522,6 @@ struct QuerySession {
     collection_cutoff: Option<u64>,
     pending_collection: bool,
     catalog: Option<collections::CatalogState>,
-    pending_catalog: bool,
     page_size: usize,
     revision: u64,
     index_epoch: u64,
@@ -582,7 +581,6 @@ impl QuerySession {
             collection_cutoff: None,
             pending_collection: false,
             catalog: None,
-            pending_catalog: false,
             page_size: request.page_size,
             revision,
             index_epoch: 0,
@@ -1183,7 +1181,7 @@ impl QuerySession {
                 continue;
             }
             let empty_collection = self.collection.is_some() && self.query.is_empty();
-            if self.catalog.is_some() && !self.pending_catalog {
+            if self.catalog.is_some() {
                 match collections::catalog_source(
                     &path,
                     source,
@@ -1191,8 +1189,13 @@ impl QuerySession {
                     self.catalog.as_mut().unwrap(),
                 )? {
                     collections::CatalogDecision::Match => {
-                        self.pending_catalog = true;
                         self.validate_source(source)?;
+                        self.pending_collection = false;
+                        self.source_position += 1;
+                        // Counts have no file-card page. Do not consume the
+                        // 10k result-file/8 MiB result-payload allowance merely
+                        // to count notes; source/dictionary limits still apply.
+                        continue;
                     }
                     collections::CatalogDecision::Pause => return Ok(()),
                     collections::CatalogDecision::Unread => {
@@ -1406,7 +1409,6 @@ impl QuerySession {
             }
             self.pending_segments = None;
             self.pending_collection = false;
-            self.pending_catalog = false;
             self.source_position += 1;
         }
         if self.source_position == self.sources.len() {

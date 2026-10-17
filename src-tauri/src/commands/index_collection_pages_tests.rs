@@ -121,6 +121,17 @@ fn v1110_collection_type_directory_multitag_time_and_full_query_modified_sort_ar
     fs::write(project.join("text.txt"), "#项目 #工作").unwrap();
     let newest = project.join("zz-newest.md");
     fs::write(&newest, "#项目 #工作").unwrap();
+    // Creation timestamps can tie on fast/low-resolution filesystems. Set
+    // explicit different source times; never infer ordering from write speed.
+    let yesterday = SystemTime::now() - Duration::from_secs(86400);
+    for n in 0..60 {
+        fs::OpenOptions::new()
+            .write(true)
+            .open(project.join(format!("note-{n:03}.md")))
+            .unwrap()
+            .set_times(fs::FileTimes::new().set_modified(yesterday))
+            .unwrap();
+    }
     let old = project.join("old.md");
     fs::write(&old, "#项目 #工作").unwrap();
     fs::OpenOptions::new()
@@ -296,6 +307,11 @@ fn v1110_catalog_counts_and_tag_results_share_one_snapshot_grammar_and_resumable
     assert_eq!(catalog.examined_notes, 600);
     assert_eq!(catalog.tags.len(), 2);
     assert!(catalog.tags.iter().all(|tag| tag.count == 600));
+    assert!(
+        state.groups.is_empty(),
+        "catalog must not retain incidental file cards or hit their payload cap"
+    );
+    assert_eq!(state.body_builds, 0);
     assert_eq!(
         legacy_tag_catalog(&fixture.0)
             .unwrap()
@@ -401,4 +417,28 @@ fn v1110_long_existing_tags_and_cursor_query_sort_page_and_scope_bindings_are_pr
         state.request(&next, 0, SearchLimits::default()).is_err(),
         "a changed tagged source cannot be appended from the old snapshot"
     );
+}
+
+#[test]
+fn v1110_catalog_does_not_hit_incidental_ten_thousand_file_card_cap() {
+    let fixture = TestWorkspace::new();
+    for n in 0..10001 {
+        fs::write(fixture.0.join(format!("{n:05}.md")), "#项目").unwrap();
+    }
+    let req = request(&fixture.0, "");
+    let mut state = QuerySession::new(&fixture.0, &req, 0, None, None).unwrap();
+    state
+        .set_collection(Some(CollectionScope {
+            filters: Default::default(),
+            types: vec!["markdown".into()],
+            catalog: true,
+        }))
+        .unwrap();
+    let pages = drain(&mut state, req);
+    let last = pages.last().unwrap();
+    assert!(last.scan_complete);
+    assert_eq!(last.catalog.as_ref().unwrap().examined_notes, 10001);
+    assert_eq!(last.catalog.as_ref().unwrap().tags[0].count, 10001);
+    assert!(pages.iter().all(|page| page.files.is_empty()));
+    assert_eq!(state.body_builds, 0);
 }

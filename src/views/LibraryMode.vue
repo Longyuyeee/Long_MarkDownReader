@@ -3586,8 +3586,10 @@ const refreshAfterFileMove = (event: Event) => {
   const { notice, pending } = (event as CustomEvent<{ notice: FileMoveNotice; pending: Promise<unknown>[] }>).detail
   if (!sameLibrary(notice.root, store.libraryPath)) return
   pending.push((async () => {
-    selectedKeys.value = selectedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
-    expandedKeys.value = expandedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+    if (!notice.contentOnly) {
+      selectedKeys.value = selectedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+      expandedKeys.value = expandedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+    }
     const tab = tabs.value.find(item => item.id === activeTabId.value)
     if (tab && !tab.isDirty && activeIsMarkdown.value && notice.documents.some(path => sameLibrary(path, tab.path))) {
       const scroller = document.querySelector('.editor-main .vditor-wysiwyg > .vditor-reset') as HTMLElement | null

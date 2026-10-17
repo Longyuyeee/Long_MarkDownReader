@@ -1,0 +1,34 @@
+(node:4636) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:45524) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 600-note catalog advances by issued cursors, never treats partial counts as totals and closes its own channel
+ok 1 - 600-note catalog advances by issued cursors, never treats partial counts as totals and closes its own channel
+  ---
+  duration_ms: 1.3412
+  ...
+# Subtest: failed or incomplete refresh keeps prior tags explicitly stale, only complete empty statistics clears them
+ok 2 - failed or incomplete refresh keeps prior tags explicitly stale, only complete empty statistics clears them
+  ---
+  duration_ms: 0.2696
+  ...
+# Subtest: same-cursor retry cannot duplicate counts and stale library responses cannot replace the active library
+ok 3 - same-cursor retry cannot duplicate counts and stale library responses cannot replace the active library
+  ---
+  duration_ms: 0.3366
+  ...
+# Subtest: unknown or contradictory totals and malformed rows are not accepted as complete
+ok 4 - unknown or contradictory totals and malformed rows are not accepted as complete
+  ---
+  duration_ms: 0.2805
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 140.7083

@@ -27,6 +27,18 @@ test('fresh snapshots reject affected drafts but allow unrelated unsaved work an
   await bridge.protect({ requestId: 'two', paths: ['C:/Lib/another.md'] }); assert.equal(f.calls.at(-1).args.dirtyPaths.length, 0)
   await bridge.release({ requestId: 'two' }); bridge.dispose(); scope.stop()
 })
+
+test('content-only tag edits never retain affected drafts as movable and never remap file identity', async () => {
+  const f = fixture(), scope = Vue.effectScope()
+  scope.run(() => f.drafts.useWindowDraftSnapshot(() => {}))
+  const request = { requestId: 'tags', libraryRoot: 'C:/Lib', paths: ['C:/Lib/a.md'], rewritePaths: ['C:/Lib/a.md'], sourcePaths: [] }
+  assert.equal(f.api.canRetainMovedDraft('C:/Lib/a.md', request, () => ({ id: 'markdown', routeName: 'Library' })), false)
+  const bridge = f.api.createFileMoveProtection({ ready: () => true, dirtyPaths: () => ['C:/Lib/a.md', 'C:/Other/b.md'], completed: async () => {} })
+  await bridge.protect(request); assert.deepEqual(Array.from(f.calls[0].args.dirtyPaths), ['a.md'])
+  const notice = { root: 'C:/Lib', oldPath: 'C:/Lib', newPath: 'C:/Lib', documents: ['C:/Lib/a.md'], contentOnly: true }
+  assert.equal(f.api.movedPath('C:\\LIB\\a.md', notice), 'C:\\LIB\\a.md')
+  await bridge.release({ requestId: 'tags', notice }); assert.equal(f.body.inert, false); bridge.dispose(); scope.stop()
+})
 test('specialized drafts participate by current path and dispose without keeping a stale block', async () => {
   const f = fixture(), scope = Vue.effectScope(); const dirty = Vue.ref(true)
   scope.run(() => f.drafts.useWindowDraft(() => dirty.value, () => 'C:/Lib/sub/book.xlsx'))
