@@ -1,0 +1,19 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /177/. Input:
+
+'25 / 179 节点\n36 连接\n80%\n0 个已选\n近景'
+
+    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-continuity.mjs:49:80
+    at async check (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-continuity.mjs:12:30)
+    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-continuity.mjs:47:2 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '25 / 179 节点\n36 连接\n80%\n0 个已选\n近景',
+  expected: /177/,
+  operator: 'match'
+}
+
+Node.js v22.12.0

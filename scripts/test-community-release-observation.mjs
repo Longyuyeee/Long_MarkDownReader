@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { test } from 'node:test'
-import { assertCommunityReleaseObservation } from './lib/community-release-observation.mjs'
+import { assertCommunityReleaseObservation, communityObservationPolicyPath } from './lib/community-release-observation.mjs'
+
+test('minor-version policy names never borrow 1.0.x update evidence', () => {
+  assert.equal(communityObservationPolicyPath('1.0.10'), 'shared/v110-managed-updater-lifecycle-policy.json')
+  assert.equal(communityObservationPolicyPath('1.0.26'), 'shared/v126-managed-updater-lifecycle-policy.json')
+  assert.equal(communityObservationPolicyPath('1.1.10'), 'shared/v1-1-10-managed-updater-lifecycle-policy.json')
+  assert.notEqual(communityObservationPolicyPath('1.1.11'), communityObservationPolicyPath('1.0.11'))
+  assert.throws(() => communityObservationPolicyPath('1.1.11/../10'))
+})
 
 const candidate = () => ({
   appVersion: '1.0.22', gates: { githubReleasePublished: false, installedLifecyclePassed: true },

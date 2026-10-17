@@ -1,0 +1,78 @@
+(node:38612) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:35256) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: measured truncation fits width and never splits a Unicode surrogate pair
+ok 1 - measured truncation fits width and never splits a Unicode surrogate pair
+  ---
+  duration_ms: 1.9279
+  ...
+# Subtest: active name gets a longer first placement even if it occurs last in native order
+ok 2 - active name gets a longer first placement even if it occurs last in native order
+  ---
+  duration_ms: 0.3201
+  ...
+# Subtest: dense labels remain in viewport, avoid each other and honor a strict render budget
+ok 3 - dense labels remain in viewport, avoid each other and honor a strict render budget
+  ---
+  duration_ms: 13.7998
+  ...
+# Subtest: alternate anchors allow two near nodes to retain labels without forced overlap
+ok 4 - alternate anchors allow two near nodes to retain labels without forced overlap
+  ---
+  duration_ms: 0.2193
+  ...
+# (node:43772) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: latest same-root request wins, including late failures and switch-away/switch-back
+ok 5 - latest same-root request wins, including late failures and switch-away/switch-back
+  ---
+  duration_ms: 0.6524
+  ...
+# Subtest: hidden, unmounted, rootless and invalidated work cannot commit
+ok 6 - hidden, unmounted, rootless and invalidated work cannot commit
+  ---
+  duration_ms: 0.1344
+  ...
+# Subtest: refresh copies latest dragged coordinates but updates metadata and rebinds selection
+ok 7 - refresh copies latest dragged coordinates but updates metadata and rebinds selection
+  ---
+  duration_ms: 0.5788
+  ...
+# Subtest: deleted IDs and reused identities cannot retain an old selection or coordinates
+ok 8 - deleted IDs and reused identities cannot retain an old selection or coordinates
+  ---
+  duration_ms: 0.1197
+  ...
+# Subtest: new nodes and non-finite old coordinates are not mistaken for settled restored nodes
+ok 9 - new nodes and non-finite old coordinates are not mistaken for settled restored nodes
+  ---
+  duration_ms: 0.1272
+  ...
+# (node:45420) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: one topology preserves directed counts, duplicate relation degree and undirected unique neighbors
+ok 10 - one topology preserves directed counts, duplicate relation degree and undirected unique neighbors
+  ---
+  duration_ms: 1.3665
+  ...
+# Subtest: all 1200 adjacency queries match the original edge traversal exactly
+ok 11 - all 1200 adjacency queries match the original edge traversal exactly
+  ---
+  duration_ms: 29.8082
+  ...
+# Subtest: empty and dangling topology does not fabricate nodes or lose an edge count
+ok 12 - empty and dangling topology does not fabricate nodes or lose an edge count
+  ---
+  duration_ms: 0.1858
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 159.7669

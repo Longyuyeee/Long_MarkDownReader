@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import crypto from 'node:crypto'
-import { assertCommunityReleaseObservation } from './lib/community-release-observation.mjs'
+import { assertCommunityReleaseObservation, communityObservationPolicyPath } from './lib/community-release-observation.mjs'
 import { assertInstalledReleaseRuntime } from './lib/installed-release-runtime.mjs'
 
 const read = path => fs.readFileSync(path, 'utf8')
@@ -26,12 +26,11 @@ const [major, minor, patch] = pkg.version.split('.').map(Number)
 const previousPublicVersion = minor === 1 && patch === 0
   ? '1.0.26' : `${major}.${minor}.${patch - 1}`
 const managedUpdaterUpgradePrefix = `${previousPublicVersion}-to-${pkg.version}`
-const managedUpdaterPolicyToken = `${previousPublicVersion.split('.')[0]}${previousPublicVersion.split('.')[2]}`
-const managedUpdaterLifecyclePath = `shared/v${managedUpdaterPolicyToken}-managed-updater-lifecycle-policy.json`
+const managedUpdaterLifecyclePath = communityObservationPolicyPath(previousPublicVersion)
 const managedUpdaterLifecycle = fs.existsSync(managedUpdaterLifecyclePath) ? json(managedUpdaterLifecyclePath) : null
 const previousReleaseReceiptPath = `docs/evidence/v${previousPublicVersion}-release/release-receipt.json`
 const previousReleaseReceipt = fs.existsSync(previousReleaseReceiptPath) ? json(previousReleaseReceiptPath) : null
-const currentObservationPath = `shared/v${major}${patch}-managed-updater-lifecycle-policy.json`
+const currentObservationPath = communityObservationPolicyPath(pkg.version)
 try { assertCommunityReleaseObservation(policy, fs.existsSync(currentObservationPath) ? json(currentObservationPath) : null) }
 catch (error) { fail(error.message) }
 
@@ -133,7 +132,7 @@ if ((ready && !lifecycleVerified) || published) {
     const manifest = json(manifestPath)
     if (manifest.appVersion !== pkg.version || manifest.sourceVersion !== pkg.version || manifest.sourceCommit !== policy.candidate?.artifactSourceCommit || manifest.artifacts?.length !== 2 || manifest.artifacts.some(item => item.authenticodeStatus !== 'NotSigned')) fail('current artifact manifest drift')
     if (!/^[0-9a-f]{40}$/.test(manifest.sourceCommit ?? '')) fail('artifact source commit is invalid')
-    if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(pkg.version)) {
+    if (['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11'].includes(pkg.version)) {
       try { assertInstalledReleaseRuntime(manifest) } catch (error) { fail(`installed release runtime: ${error.message}`) }
     } else if (manifest.runtimeSmoke?.status !== 'passed-real-tauri-debug-webview2' || manifest.runtimeSmoke?.checksPassed !== 6 || manifest.runtimeSmoke?.routesPassed !== 11) fail('legacy debug runtime evidence drift')
     if (manifest.qualityGate?.status !== 'passed'
@@ -149,6 +148,7 @@ if ((ready && !lifecycleVerified) || published) {
       || manifest.hostedInstalledLifecycle?.sourceUserContentIncluded !== false
       || manifest.boundaries?.communityUnsigned !== true
       || manifest.boundaries?.enterprisePromotionEligible !== false) fail('current release evidence boundary drift')
+    if (pkg.version === '1.1.11' && manifest.hostedInstalledLifecycle?.graphExplorationChecksPassed !== 12) fail('current graph installed checks missing')
     for (const artifact of manifest.artifacts ?? []) {
       const candidate = policy.candidate?.artifacts?.find(item => item.target === artifact.target)
       if (!candidate || candidate.fileName !== artifact.fileName || candidate.sizeBytes !== artifact.sizeBytes || candidate.sha256 !== artifact.sha256 || candidate.authenticodeStatus !== artifact.authenticodeStatus) fail(`candidate artifact drift: ${artifact.target}`)
@@ -171,6 +171,7 @@ if ((ready && !lifecycleVerified) || published) {
         || hosted.checks?.managementRollbackPassed !== 7
         || hosted.releaseCandidate !== false
         || hosted.sourceUserContentIncluded !== false) fail('hosted lifecycle import boundary drift')
+      if (pkg.version === '1.1.11' && hosted.checks?.graphExplorationPassed !== 12) fail('hosted current graph import checks missing')
     }
 
     if (published) {

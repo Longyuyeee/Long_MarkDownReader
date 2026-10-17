@@ -1,0 +1,62 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 20000ms exceeded.
+Call log:
+  - waiting for getByTestId('graph-refresh-error').getByRole('button', { name: '重试', exact: true })
+    - locator resolved to <button type="button" data-v-45e2b161="">重试</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div data-v-45e2b161="" class="details-actions">…</div> from <aside data-v-45e2b161="" data-node-id="n17" class="node-details" data-testid="graph-selected-node">…</aside> subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div data-v-45e2b161="" class="details-actions">…</div> from <aside data-v-45e2b161="" data-node-id="n17" class="node-details" data-testid="graph-selected-node">…</aside> subtree intercepts pointer events
+    - retrying click action
+      - waiting 100ms
+    38 × waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - <div data-v-45e2b161="" class="details-actions">…</div> from <aside data-v-45e2b161="" data-node-id="n17" class="node-details" data-testid="graph-selected-node">…</aside> subtree intercepts pointer events
+     - retrying click action
+       - waiting 500ms
+
+    at E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-v1111-graph-ui.mjs:47:199 {
+  log: [
+    "  - waiting for getByTestId('graph-refresh-error').getByRole('button', { name: '重试', exact: true })",
+    '    - locator resolved to <button type="button" data-v-45e2b161="">重试</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-v-45e2b161="" class="details-actions">…</div> from <aside data-v-45e2b161="" data-node-id="n17" class="node-details" data-testid="graph-selected-node">…</aside> subtree intercepts pointer events',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-v-45e2b161="" class="details-actions">…</div> from <aside data-v-45e2b161="" data-node-id="n17" class="node-details" data-testid="graph-selected-node">…</aside> subtree intercepts pointer events',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    38 × waiting for element to be visible, enabled and stable',
+    '       - element is visible, enabled and stable',
+    '       - scrolling into view if needed',
+    '       - done scrolling',
+    '       - <div data-v-45e2b161="" class="details-actions">…</div> from <aside data-v-45e2b161="" data-node-id="n17" class="node-details" data-testid="graph-selected-node">…</aside> subtree intercepts pointer events',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v22.12.0
