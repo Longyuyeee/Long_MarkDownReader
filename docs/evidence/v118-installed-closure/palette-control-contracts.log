@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: 8.3 spelling is resolved through the filesystem before making any search fixture path
+ok 1 - 8.3 spelling is resolved through the filesystem before making any search fixture path
+  ---
+  duration_ms: 0.9372
+  ...
+# Subtest: unknown or different physical parents fail closed without a string fallback
+ok 2 - unknown or different physical parents fail closed without a string fallback
+  ---
+  duration_ms: 0.6921
+  ...
+# Subtest: a real owned directory alias resolves correctly and all original bytes remain unchanged
+ok 3 - a real owned directory alias resolves correctly and all original bytes remain unchanged
+  ---
+  duration_ms: 6.1005
+  ...
+# Subtest: grouped palette targets the exact filename open button, never its row, substring or reference
+ok 4 - grouped palette targets the exact filename open button, never its row, substring or reference
+  ---
+  duration_ms: 1.9133
+  ...
+# Subtest: legacy palette accepts exact stem or full filename while rejecting a near-duplicate title
+ok 5 - legacy palette accepts exact stem or full filename while rejecting a near-duplicate title
+  ---
+  duration_ms: 1.5866
+  ...
+# Subtest: new completed zero is distinct from preparation, failure and a local format-filter zero
+ok 6 - new completed zero is distinct from preparation, failure and a local format-filter zero
+  ---
+  duration_ms: 2.7594
+  ...
+# Subtest: legacy installed packages retain their original empty/error contract
+ok 7 - legacy installed packages retain their original empty/error contract
+  ---
+  duration_ms: 0.7839
+  ...
+# Subtest: installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+ok 8 - installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+  ---
+  duration_ms: 0.5139
+  ...
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 9 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 72.1486
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 10 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 45.5983
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 11 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 1.2112
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 12 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 9.3511
+  ...
+# Subtest: v118 candidate/public handoff never inherits an official update observation
+ok 13 - v118 candidate/public handoff never inherits an official update observation
+  ---
+  duration_ms: 0.5059
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 239.5581

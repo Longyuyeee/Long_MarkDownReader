@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { waitForInstalledIndex } from './installed-index-readiness.mjs'
-import { searchFeedbackContract } from './search-feedback-contract.mjs'
+import { searchFeedbackContract, paletteFileOpenExpression } from './search-feedback-contract.mjs'
 
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
@@ -45,7 +45,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await waitFor(`document.querySelector(${JSON.stringify(input)})?.value===${JSON.stringify(text)}&&!document.querySelector('${palette} .results-list[aria-busy="true"]')&&![...document.querySelectorAll('${palette} .palette-status')].some(e=>e.textContent.includes('正在查找'))`, 'v115 query settled')
   }
   const scopeAll = async () => { await mouse(`document.querySelector('${palette} .palette-scope')`); await mouse(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.textContent.trim()==='全部资料库')`) }
-  const result = name => `[...document.querySelectorAll('${palette} .result-item')].find(e=>e.querySelector('.item-title')?.textContent.includes(${JSON.stringify(name)}))`
+  const result = name => paletteFileOpenExpression(name, palette)
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
   const visibleSaveState = `(()=>{const s=document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app');return {state:document.querySelector('.document-save-state')?.textContent.trim(),tabs:[...document.querySelectorAll('.workspace-tab')].map(e=>e.getAttribute('aria-label')),error:document.querySelector('${palette} [role="alert"]')?.textContent,dirtyModels:s?.tabs.filter(t=>t.isDirty).map(t=>({path:t.path,content:t.content?.slice(0,300)})),tempDirty:s?.isTempDirty}})()`
   const contains = (results, file) => results.some(r => normalize(r.path) === normalize(file))
@@ -122,9 +122,9 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     check('shared-native-search-matches-txt-json-and-configured-library-scope', contains(local.results, main) && contains(local.results, data) && !contains(local.results, old) && !contains(local.results, remote) && contains(all.results, remote) && contains(legacy, main) && contains(legacy, data))
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 actual command panel')
     await waitFor(`(${editor})?.textContent.includes('安装态草稿')`, 'v115 draft ready')
-    await open(); await query(expression); await waitFor(`!!(${result('v115-预算资料')})&&!!(${result('v115-预算配置')})`, 'v115 TXT and JSON results')
-    await scopeAll(); await waitFor(`!!(${result('v115-另库预算')})`, 'v115 all-library result visible')
-    check('palette-scope-dropdown-is-clickable-and-shows-real-native-results', await evaluate(`!!(${result('v115-预算资料')})&&!!(${result('v115-预算配置')})&&!!(${result('v115-另库预算')})`))
+    await open(); await query(expression); await waitFor(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})`, 'v115 TXT and JSON results')
+    await scopeAll(); await waitFor(`!!(${result(path.basename(remote))})`, 'v115 all-library result visible')
+    check('palette-scope-dropdown-is-clickable-and-shows-real-native-results', await evaluate(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})&&!!(${result(path.basename(remote))})`))
     await snap('installed-v115-search.jpg')
     // Observe the valid result view, not transient syntax-error/loading chrome.
     const feedback=searchFeedbackContract(await evaluate(`!!document.querySelector('${palette} .search-page-status')`),palette)
@@ -132,14 +132,14 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     const invalidDistinct = !await evaluate(feedback.emptyExpression)
     await query('v115-不存在-410974'); await waitFor(feedback.emptyExpression, 'genuine empty result')
     check('invalid-query-and-genuine-empty-state-are-distinct', invalidDistinct && !await evaluate(`!!document.querySelector('${palette} [role="alert"]')`))
-    await query(expression); await waitFor(`!!(${result('v115-预算资料')})`, 'v115 main text result'); await mouse(result('v115-预算资料'))
+    await query(expression); await waitFor(`!!(${result(path.basename(main))})`, 'v115 main text result'); await mouse(result(path.basename(main)))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('预算已确认')`, 'v115 result opened in main editor')
     check('search-result-opens-in-main-editor-without-replacing-reference', await evaluate(`!!document.querySelector('.library-embedded-editor .text-workspace')&&!document.querySelector('.reference-workspace .text-workspace')`))
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 draft protection')
     await waitFor(`(${editor})?.textContent.includes('安装态草稿')`, 'draft loaded again')
     report.markdownInputMode = await evaluate(`(${editor}).closest('.vditor-wysiwyg,.vditor-ir,.vditor-sv')?.className`)
     await mouse(editor); await key('a', 'KeyA', 65, 2); await send('Input.insertText', { text: '用户刚输入的未保存预算草稿' })
-    await open(); await scopeAll(); await query(expression); await waitFor(`!!(${result('v115-另库预算')})`, 'cross-library result ready'); await mouse(result('v115-另库预算'))
+    await open(); await scopeAll(); await query(expression); await waitFor(`!!(${result(path.basename(remote))})`, 'cross-library result ready'); await mouse(result(path.basename(remote)))
     await waitFor(`document.querySelector('${palette} [role="alert"]')?.textContent.includes('未保存')`, 'unsaved draft blocks library switch')
     const protectedDraft = await fs.readFile(draft, 'utf8') === '# 安装态草稿\n\n尚未修改\n' && normalize((await invoke('get_config')).activeLibraryPath) === normalize(library)
     await key('Escape', 'Escape', 27); await waitFor(`!document.querySelector('${palette}')`, 'palette closed'); await mouse(button('保存'))
@@ -150,7 +150,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     const savedDraft = await invoke('read_text_document', { libraryRoot: library, path: draft, formatId: 'markdown' })
     assert.ok(savedDraft.content.includes('用户刚输入'), 'explicitly saved draft exists on disk after its receipt')
     report.afterDiskWrite = await evaluate(visibleSaveState)
-    await open(); await query(expression); await waitFor(`!!(${result('v115-另库预算')})`, 'other library ready after save'); await mouse(result('v115-另库预算'))
+    await open(); await query(expression); await waitFor(`!!(${result(path.basename(remote))})`, 'other library ready after save'); await mouse(result(path.basename(remote)))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('另库资料')`, 'saved draft permits switch')
     report.switchedDirectory = await invoke('scan_directory', { libraryRoot: second, path: second })
     report.navigationBeforeTreeWait = await evaluate(navigationState)
