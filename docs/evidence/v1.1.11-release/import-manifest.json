@@ -1,0 +1,532 @@
+{
+  "schemaVersion": 1,
+  "status": "hosted-installer-lifecycle-passed",
+  "githubRunId": 39052642943,
+  "artifactBuildRunId": 39049461150,
+  "productSourceCommit": "9b5adba245d3c24d6c891e3b0c4e7a7e326ca6ed",
+  "appVersion": "1.1.11",
+  "sourceUserContentIncluded": false,
+  "releaseCandidate": false,
+  "checks": {
+    "graphExplorationPassed": 12,
+    "tagCollectionsPassed": 13,
+    "workSessionPassed": 12,
+    "lifecyclePassed": 22,
+    "lifecycleFailed": 0,
+    "installedArtifactPassed": 18,
+    "installedArtifactFailed": 0,
+    "installedRoutesPassed": 11,
+    "managementRollbackPassed": 7,
+    "workflowPassed": 8,
+    "experiencePassed": 8,
+    "fileManagementPassed": 9,
+    "foundationPassed": 8,
+    "foundationExtendedPassed": 8,
+    "versionPassed": 4,
+    "foundationHardeningPassed": 11,
+    "saveHistoryPassed": 12,
+    "searchCompletenessPassed": 20
+  },
+  "files": [
+    {
+      "path": "installed-artifact-smoke.json",
+      "sizeBytes": 9852,
+      "sha256": "70b3425bc85b4c8a2b49677798cee3b64576593b5ebf6a9f2bdfc22089acbf9d"
+    },
+    {
+      "path": "installed-default-app-candidates.jpg",
+      "sizeBytes": 96442,
+      "sha256": "1556b0a51732c619f375e2cffd18627223f75e691e680ecd28e6ed17219d0bfa"
+    },
+    {
+      "path": "installed-default-app-lifecycle-evidence.json",
+      "sizeBytes": 981,
+      "sha256": "faf767bc3fe921c47be4524039b5a9553f5dbb9556c218aef8ef8529972d77da"
+    },
+    {
+      "path": "installed-docx-hyperlink-evidence.json",
+      "sizeBytes": 2859,
+      "sha256": "06a46ff6c6eb7078d8e77943e3e5ff3fa62d632bf1f47c9f63f38c2cfa00a368"
+    },
+    {
+      "path": "installed-graph-outcome-entry.jpg",
+      "sizeBytes": 90439,
+      "sha256": "92785274afe1f3929616e75973c2a6bd934e008441e3905cb90878b85fa9c42c"
+    },
+    {
+      "path": "installed-json-save-reopen.jpg",
+      "sizeBytes": 110863,
+      "sha256": "b491755bdca13f34eb0282bc400cff5a5645f0d735007a7d7de46777c5ab39c2"
+    },
+    {
+      "path": "installed-knowledge-guidance-comparison.json",
+      "sizeBytes": 1291,
+      "sha256": "17c354fec103a022e2ee61bd5922114f6a0d251a05d02d77251d5b926e28f7e6"
+    },
+    {
+      "path": "installed-knowledge-guidance-graph.jpg",
+      "sizeBytes": 121331,
+      "sha256": "07e1bad173f4212e0c704f79c0047ccaaf9b54f980eb1ad56d30c667e5ddadf8"
+    },
+    {
+      "path": "installed-knowledge-guidance-outcome-evidence.json",
+      "sizeBytes": 1928,
+      "sha256": "ab411323c0af2d9fea47e2f3a48b14f392f3edb27b364d5c2488b4296d6f653b"
+    },
+    {
+      "path": "installed-knowledge-network-evidence.json",
+      "sizeBytes": 2041,
+      "sha256": "e2c24d5aae7b40332b6ec49378fe9d88ee60bfe2d9a74444d38f98bb645284be"
+    },
+    {
+      "path": "installed-knowledge-network-pulse.jpg",
+      "sizeBytes": 122573,
+      "sha256": "f46abd22212d451c3e43861b15da39c7927a1a5a9f88196f4ad6a6f7b1536590"
+    },
+    {
+      "path": "installed-knowledge-observation-baseline.json",
+      "sizeBytes": 1421,
+      "sha256": "9ab99321a870e7235b03d57abc0a11c63241627ea25c2559e2046db887547367"
+    },
+    {
+      "path": "installed-knowledge-observation-entry-evidence.json",
+      "sizeBytes": 409,
+      "sha256": "ec090b28721c1babbf626e22a0fd643052dbed89a06d321f2295413a6adeda00"
+    },
+    {
+      "path": "installed-knowledge-observation-settings.jpg",
+      "sizeBytes": 87625,
+      "sha256": "527f290884cc09100a14abd1330cd8f9c057625c1fdd553aacc5d606ed42b4e1"
+    },
+    {
+      "path": "installed-knowledge-receipt-review-entry.jpg",
+      "sizeBytes": 99336,
+      "sha256": "7a4273cee12312ddc8dd5b78e62ad19729ad97d12795818c2cfd5e859fad5c1b"
+    },
+    {
+      "path": "installed-knowledge-receipt-review-evidence.json",
+      "sizeBytes": 1871,
+      "sha256": "506f6ff60e2dbd3d6e9e22dd2bd717554a7291368f1eb499fb0167a761f41e26"
+    },
+    {
+      "path": "installed-knowledge-session-evidence.json",
+      "sizeBytes": 529,
+      "sha256": "2b4efdc70868c9136f97410fafca763e3e34d70d8720a0146850981373818d7e"
+    },
+    {
+      "path": "installed-knowledge-session-ready.jpg",
+      "sizeBytes": 101230,
+      "sha256": "abcbd38f4de58b2b913cdcb87c2384dd2438758571757d5dfbd957e0ea22c410"
+    },
+    {
+      "path": "installed-knowledge-session-start.jpg",
+      "sizeBytes": 103791,
+      "sha256": "32bfe7ef7aad500678b183b893c10936eb90f7cea553a44cc8c3b951544db11f"
+    },
+    {
+      "path": "installed-knowledge-topic-centered.jpg",
+      "sizeBytes": 129701,
+      "sha256": "396b32b90050a426c2f1989cbe44fe936908ff01b621ab7cfb9f0d0f36b9d3c1"
+    },
+    {
+      "path": "installed-libreoffice-writer-docx-hyperlink.jpg",
+      "sizeBytes": 148934,
+      "sha256": "4968e74bc035ad6154fb94a9d2ff47b0f40312f5a68a601f3c30093bf1a1151a"
+    },
+    {
+      "path": "installed-microsoft-word-docx-hyperlink.jpg",
+      "sizeBytes": 146029,
+      "sha256": "ba1d198272f7f0ae9a7714480ca0ac3c5d34e3c36568e8b845ce1065905b6027"
+    },
+    {
+      "path": "installed-route-mount-evidence.json",
+      "sizeBytes": 1708,
+      "sha256": "621c770b4e248cc1471167fd58dafacaeb1f128d5dbd207f35b294e1395701af"
+    },
+    {
+      "path": "installed-route-performance-evidence.json",
+      "sizeBytes": 4613,
+      "sha256": "904f93e95a6077507be363018e6b2761708e3e0478720b3f4824dfdb0bb33526"
+    },
+    {
+      "path": "installed-txt-save-reopen.jpg",
+      "sizeBytes": 80600,
+      "sha256": "238fbd4d318c8d89b9b8ceee25177f0b87fc25758060125cba774ea0fd21619a"
+    },
+    {
+      "path": "installed-v110-workflow.jpg",
+      "sizeBytes": 145168,
+      "sha256": "b13a4ae78cb31e13faeb0639a39bb7d32cf6bff572b8dd872530b9670cd61f44"
+    },
+    {
+      "path": "installed-v110-workflow.json",
+      "sizeBytes": 1359,
+      "sha256": "98fb09849042169700d0db652e37cfc1dc71f4f8a34174ec8a7c040bf783fbf3"
+    },
+    {
+      "path": "installed-v111-relation-dialog.jpg",
+      "sizeBytes": 146402,
+      "sha256": "cd38699db148e538cce2e9387dac144541b6aa8cd2ff1c740909963a798b5af6"
+    },
+    {
+      "path": "installed-v111-workflow.json",
+      "sizeBytes": 1167,
+      "sha256": "b1b06f77cbd7d40a9b5730a036ae6e81c46dbd9b84f528121bbfe3e5b5962f52"
+    },
+    {
+      "path": "installed-v1110-final.jpg",
+      "sizeBytes": 176950,
+      "sha256": "6a087cca66ade19fc7ba1baf5bf860a6f54a0cffe7e8c059e0f090e44b8b7798"
+    },
+    {
+      "path": "installed-v1110-partial.jpg",
+      "sizeBytes": 155657,
+      "sha256": "04e4c766e25e2af6928752b1ad5a7d7a4aed44798e6c150e9a974d27c67dc6cd"
+    },
+    {
+      "path": "installed-v1110-preview.jpg",
+      "sizeBytes": 158493,
+      "sha256": "1e5c06859d87ce3aa128350b096e357bef63ffe90d68450e67d9b5b798734d46"
+    },
+    {
+      "path": "installed-v1110-refresh.jpg",
+      "sizeBytes": 174386,
+      "sha256": "dc0970cfc5ebf9e1f083dfa8c154821adebe563000107591b4a5274184850154"
+    },
+    {
+      "path": "installed-v1110-workflow.json",
+      "sizeBytes": 79368,
+      "sha256": "ad8576bae5a1b46bc2b5b1e0af9563e60832b974f5ee7b101218fbabfbbdcee4"
+    },
+    {
+      "path": "installed-v1111-final.jpg",
+      "sizeBytes": 189304,
+      "sha256": "357506450ffb6f6365f625914396f32800bc4fb5c5e299b28c409e5190c60a5c"
+    },
+    {
+      "path": "installed-v1111-initial-error.jpg",
+      "sizeBytes": 42711,
+      "sha256": "31c99132f3e02fd3bdd5495dd3b4893507a0173595e23e32c1f94675ec07bfd8"
+    },
+    {
+      "path": "installed-v1111-local.jpg",
+      "sizeBytes": 112827,
+      "sha256": "e99350b5ab6b5b527ec907b67c96f4234268dfde2781ce2724d7f81d5dfdb43b"
+    },
+    {
+      "path": "installed-v1111-mindmap.jpg",
+      "sizeBytes": 130167,
+      "sha256": "9ff425ad0dc41cbb6601c09e8c700a483692b035641bd7692850f04402e6b0ee"
+    },
+    {
+      "path": "installed-v1111-retained.jpg",
+      "sizeBytes": 214119,
+      "sha256": "df55b27b788c7fe42d4d9ebc92a8a1831e76dc7c0fd2880b928cddc99c26eec7"
+    },
+    {
+      "path": "installed-v1111-search.jpg",
+      "sizeBytes": 204308,
+      "sha256": "0add1661c48c9843ae2d27e95e88dad7c42db149dfc2aa86ec77ac75138c7ee3"
+    },
+    {
+      "path": "installed-v1111-workflow.json",
+      "sizeBytes": 69687,
+      "sha256": "714175f0dca41acc49e45e59ba79e09c92a3c2ea47c2955a6bd8fc5d362d837f"
+    },
+    {
+      "path": "installed-v112-context-result.jpg",
+      "sizeBytes": 171024,
+      "sha256": "a6dcb3c6844dc28b3972f17c36233cae21388ea6b1243b1b23787b003a1bb194"
+    },
+    {
+      "path": "installed-v112-move-dialog.jpg",
+      "sizeBytes": 147277,
+      "sha256": "cf1d557bb3c1116866d2b72460a880334d99a705559320efaa0d618fd223e8e0"
+    },
+    {
+      "path": "installed-v112-trash-dialog.jpg",
+      "sizeBytes": 143876,
+      "sha256": "78410010f3d9756fc5ee97c0e168297be24c960e0fd78ecec3ea016aa598ec1c"
+    },
+    {
+      "path": "installed-v112-workflow.json",
+      "sizeBytes": 1345,
+      "sha256": "949f4a12ff04bdbbd04bd03b60d561d27535cf53466b8ea5aaf62fb2a56744b6"
+    },
+    {
+      "path": "installed-v113-main.jpg",
+      "sizeBytes": 168272,
+      "sha256": "d841118f2a39a0254ca0cb8a203257e728ddba8d28e110d257533e52d6800965"
+    },
+    {
+      "path": "installed-v113-template-dialog.jpg",
+      "sizeBytes": 117423,
+      "sha256": "e6dd86a1195dd9127148c41edb66db5e347d77d3b4b4642d955a180a2178a106"
+    },
+    {
+      "path": "installed-v113-text-history-result.jpg",
+      "sizeBytes": 147752,
+      "sha256": "9879deaf5cbe8ba7b608516a8d6087d1fe6612c6dadb8dea7fa7bc8f41311197"
+    },
+    {
+      "path": "installed-v113-workflow.json",
+      "sizeBytes": 1102,
+      "sha256": "d1b89aa06b808d1e4c71467046e60e781edeb585a661a6608f578ff1bc1ba83b"
+    },
+    {
+      "path": "installed-v114-batch-rename.jpg",
+      "sizeBytes": 139259,
+      "sha256": "ee1374e0c727104822414c9ac47656faaad71ce0410a339d0aa38998b4342802"
+    },
+    {
+      "path": "installed-v114-result.jpg",
+      "sizeBytes": 174673,
+      "sha256": "98800331e9c7945432a307ca09207e47073d6df65a1cfd6fad6c41c845be826a"
+    },
+    {
+      "path": "installed-v114-workflow.json",
+      "sizeBytes": 1145,
+      "sha256": "33dbf7cafc193fa7698fffa6e9908a068c697ed3e7e7963853c4c6956412a32c"
+    },
+    {
+      "path": "installed-v115-genuine-empty.jpg",
+      "sizeBytes": 58410,
+      "sha256": "a369ba85a5870aef93a4c76595855d339355bd5e3b314d6d4374feb3491f68a6"
+    },
+    {
+      "path": "installed-v115-main.jpg",
+      "sizeBytes": 80636,
+      "sha256": "55eeac93e0a91826cc2b988ff8ec000a12a9391b8d459ada7eebecafcc9decc6"
+    },
+    {
+      "path": "installed-v115-progress.json",
+      "sizeBytes": 7544,
+      "sha256": "c890e6329f1f73e3bd6cea728d3db0983d12f0f74d146757579f29065afdaed6"
+    },
+    {
+      "path": "installed-v115-search.jpg",
+      "sizeBytes": 122952,
+      "sha256": "bcfc6bbe92668038d4c35c84e9d1cb611fde378b973182114b054220becbdde5"
+    },
+    {
+      "path": "installed-v115-workflow.json",
+      "sizeBytes": 7622,
+      "sha256": "8a1f5754bede3f17e28b2fa8d50d3be353a88e9a8098332b0711b38f1785dbe1"
+    },
+    {
+      "path": "installed-v116-images.jpg",
+      "sizeBytes": 166887,
+      "sha256": "02f57422720e181410567e5e6e5fdd8264bdc0283f0fea96a25c213cbd74a9ad"
+    },
+    {
+      "path": "installed-v116-move-continuity.jpg",
+      "sizeBytes": 165413,
+      "sha256": "62c4f86fe17552cb0ea3795afb8ae0b2a8791db65d6cfe0172001d2e591bd064"
+    },
+    {
+      "path": "installed-v116-workflow.json",
+      "sizeBytes": 1780,
+      "sha256": "ed6d27d2b333224881a28d84403323b45a17b574e4021bb1c7ec4b93e9a7c596"
+    },
+    {
+      "path": "installed-v117-conflict.jpg",
+      "sizeBytes": 123035,
+      "sha256": "06589707af6e6bf287ed4277513c8a425fe25d3397bb8550c6a8b0e1654ddbc4"
+    },
+    {
+      "path": "installed-v117-history.jpg",
+      "sizeBytes": 161416,
+      "sha256": "ce59203e0c6a11a97af91c5bcbc761adc2ceb78211667878c2fb66fb03a56420"
+    },
+    {
+      "path": "installed-v117-workflow.json",
+      "sizeBytes": 1560,
+      "sha256": "e926107df6ab156d7c3913dea5c4aed5bb7f03d72ee7f6062674d292fd15f71a"
+    },
+    {
+      "path": "installed-v118-baseline.json",
+      "sizeBytes": 212827,
+      "sha256": "68c8dd4f21084ec9a77b3b732f177172b058a377f5db5e193806e596081abfe9"
+    },
+    {
+      "path": "installed-v118-office.json",
+      "sizeBytes": 8956,
+      "sha256": "d0fccc9c79961a45568e17b22e485f2f75453778ec42726d45054044ee2dc3c0"
+    },
+    {
+      "path": "installed-v118-user.json",
+      "sizeBytes": 15294,
+      "sha256": "d0a788c9cce6fc375c93e0718c483d9bd983bd7df3994ec7221ad58d994e5ca1"
+    },
+    {
+      "path": "installed-v118-workflow.json",
+      "sizeBytes": 3015,
+      "sha256": "6436f3eafc35f8abf54474670d1ea69c3262c6d508e5775105b982c4876dcefc"
+    },
+    {
+      "path": "installed-v119-final.jpg",
+      "sizeBytes": 224453,
+      "sha256": "4a979442a996a7bdf5289b74255b705d30e7a1620933a910a70e1ecb6d3698e0"
+    },
+    {
+      "path": "installed-v119-import.jpg",
+      "sizeBytes": 105047,
+      "sha256": "7070ccbc024a7e476d61ffa72003c22b4a018d1edeb6c7864474fdb9c318a490"
+    },
+    {
+      "path": "installed-v119-process-restart.png",
+      "sizeBytes": 114758,
+      "sha256": "94431155f4ba80a8e52a132beb1c91ae8750f74dfa36d3e90f3d8502b7f2d056"
+    },
+    {
+      "path": "installed-v119-reading.jpg",
+      "sizeBytes": 226870,
+      "sha256": "47760e0cb663558024b67537c32cf8cbfaf50e30319311e460a8b1c090667175"
+    },
+    {
+      "path": "installed-v119-workflow.json",
+      "sizeBytes": 44226,
+      "sha256": "9c69307a3ad57f086731423d9832d6d5d0664b0da9cc2b6f2f8206f273c296e4"
+    },
+    {
+      "path": "installed-version-capabilities.jpg",
+      "sizeBytes": 93133,
+      "sha256": "f2ea488f796d6b2a8aa377f1d8f72ee63aa8156b67376c7e50e7b83b0d2fb051"
+    },
+    {
+      "path": "installed-version-identity.json",
+      "sizeBytes": 4979,
+      "sha256": "ffc24d51b7de7833ad2678180df81ae3a02a23ef71f963202c9e204326f774f3"
+    },
+    {
+      "path": "installed-version-library.jpg",
+      "sizeBytes": 193729,
+      "sha256": "76801ab3f6852224f96dd2faa9155697d10c3c068904c1208a67d1401879237c"
+    },
+    {
+      "path": "installed-version-settings.jpg",
+      "sizeBytes": 60946,
+      "sha256": "cba10201e44acf4993c76dc92dadea2baf9512ffd2d932dfce7a33cf2d504cf4"
+    },
+    {
+      "path": "installed-wps-writer-docx-hyperlink-readonly.jpg",
+      "sizeBytes": 141417,
+      "sha256": "eab5ae9f282cfe1b80bae66c40e3daae19fb30b146b8cea26319f2ad80e3924c"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1405,
+      "sha256": "d3f64565dd7305617c91ac31412da09245281a0ec062286438a9d00b177cb3e3"
+    },
+    {
+      "path": "lifecycle-result.json",
+      "sizeBytes": 5803,
+      "sha256": "da4dbc7a5a2e5805061678c3b51285cf007a16729543b0e2770233f81b0b48a0"
+    },
+    {
+      "path": "management-backup-index-evidence.json",
+      "sizeBytes": 2991,
+      "sha256": "1c7d7ef95727f7cf3db808541d820807b94c389dd685d511bd854e1b28a39d84"
+    },
+    {
+      "path": "management-config-observation.json",
+      "sizeBytes": 940,
+      "sha256": "664e7a33b5fc5ebdbc03f9379b503bb7138fc4cc8980a4bd98f6bc2a4fca8de7"
+    },
+    {
+      "path": "native-baseline.png",
+      "sizeBytes": 92289,
+      "sha256": "cb3f76902235e04d1bebfd944bc2ce20eb2d132afd864cee236c8dfe71c394e7"
+    },
+    {
+      "path": "user-cross-library-draft-block.png",
+      "sizeBytes": 294147,
+      "sha256": "1a55f84e75d41df60d7d5e301fd49bda23b8858b86689088fb219dc60dccfcd4"
+    },
+    {
+      "path": "user-draft-reference.png",
+      "sizeBytes": 104944,
+      "sha256": "731a2ed9445c5b35adb97e8d78af532fbc55df878217907cc98f487791a38247"
+    },
+    {
+      "path": "user-expired-page.png",
+      "sizeBytes": 78480,
+      "sha256": "b28c3e7d88c670cf6b4912c77841a145d18ecfe9cf0adb474c1526ffcdf6d0d5"
+    },
+    {
+      "path": "user-final.png",
+      "sizeBytes": 86412,
+      "sha256": "aa887ecc23480d5f9c1a55b8a53432c675665a0c48f29272d58acad8a1fefb6d"
+    },
+    {
+      "path": "user-modified-sort.png",
+      "sizeBytes": 79240,
+      "sha256": "3627bcb88be71eef3df0ab422caa6d78a3d7ea0a5c07bde1497bf91d6010f647"
+    },
+    {
+      "path": "user-office-docx-block.png",
+      "sizeBytes": 196545,
+      "sha256": "eadff62a1ef265d36a9d8114a10331476255604f2f242ae08e0b8fd1de7bac94"
+    },
+    {
+      "path": "user-office-pptx-notes.png",
+      "sizeBytes": 116521,
+      "sha256": "e7d9f68025c75d1ea6a49e83990fe5c5b317ceeb404e97c9e573eaeb51f345b0"
+    },
+    {
+      "path": "user-office-pptx-object.png",
+      "sizeBytes": 100604,
+      "sha256": "943e0e18f4de790c9c7af10ad64977398b283d53d5bcb36d35e14098f0ef4f4a"
+    },
+    {
+      "path": "user-office-workbook-details.png",
+      "sizeBytes": 86412,
+      "sha256": "aa887ecc23480d5f9c1a55b8a53432c675665a0c48f29272d58acad8a1fefb6d"
+    },
+    {
+      "path": "user-office-workbook-inventory.png",
+      "sizeBytes": 87107,
+      "sha256": "55acb94f8d80755bcfb23d5bea3c21357bf70f7f53e96471b3bc14f7f73791f9"
+    },
+    {
+      "path": "user-office-workbook-repeat-sheet.png",
+      "sizeBytes": 86412,
+      "sha256": "aa887ecc23480d5f9c1a55b8a53432c675665a0c48f29272d58acad8a1fefb6d"
+    },
+    {
+      "path": "user-pdf-annotation.png",
+      "sizeBytes": 108011,
+      "sha256": "89e259d913a6410365d620e38f1810cde01b09c12ad022a62bc5d0ccc504a78b"
+    },
+    {
+      "path": "user-refresh-retained.png",
+      "sizeBytes": 79771,
+      "sha256": "b7b30ad2224fa728c4404576d5d9a46241901a3e3d0d1dcde03526e98fd498fa"
+    },
+    {
+      "path": "v119-picker-0.json",
+      "sizeBytes": 6487,
+      "sha256": "7e302c58e5a2d5fe04e60428a137ac127fc4a8967f187748dea4726aac7cacfc"
+    },
+    {
+      "path": "v119-picker-1.json",
+      "sizeBytes": 6521,
+      "sha256": "650ffc35808b2959062e8692a056a27c04f3073410cebcceff4499e24b322eb5"
+    },
+    {
+      "path": "v119-picker-2.json",
+      "sizeBytes": 6518,
+      "sha256": "5c43beab704481292afef2947a7bfc387cb9c284a270cc444a8c006c7bd77719"
+    },
+    {
+      "path": "v119-picker-3.json",
+      "sizeBytes": 5465,
+      "sha256": "de9a166f26b2c486819b1d4d0222ba68aa52ef50dec47d94acf514a322590918"
+    },
+    {
+      "path": "v119-picker-4.json",
+      "sizeBytes": 6521,
+      "sha256": "12e87f4e3bc9f61cef82d5dfaae4f41dec235e8be052a7259fe4c0e1eb169354"
+    }
+  ]
+}
