@@ -1,0 +1,100 @@
+TAP version 13
+# Subtest: legacy one-marker invariant remains strict; current version requires both actual collections
+ok 1 - legacy one-marker invariant remains strict; current version requires both actual collections
+  ---
+  duration_ms: 10.4001
+  ...
+# Subtest: current preparation rejects missing markers, foreign roots, changed conditions and unrelated additions
+ok 2 - current preparation rejects missing markers, foreign roots, changed conditions and unrelated additions
+  ---
+  duration_ms: 1.7308
+  ...
+# Subtest: restore and reload preserve both complete metadata records, not merely an increased count
+ok 3 - restore and reload preserve both complete metadata records, not merely an increased count
+  ---
+  duration_ms: 2.0402
+  ...
+# Subtest: management uses the real main Tauri target even when external/quick-note pages appear first
+ok 4 - management uses the real main Tauri target even when external/quick-note pages appear first
+  ---
+  duration_ms: 0.4112
+  ...
+# Subtest: observed native command preserves successful native values and quoted arguments
+ok 5 - observed native command preserves successful native values and quoted arguments
+  ---
+  duration_ms: 1.0092
+  ...
+# Subtest: observed native command retains raw string rejection, not generic CDP promise text
+ok 6 - observed native command retains raw string rejection, not generic CDP promise text
+  ---
+  duration_ms: 0.3128
+  ...
+# Subtest: observed native command retains structured rejection code and original message
+ok 7 - observed native command retains structured rejection code and original message
+  ---
+  duration_ms: 0.141
+  ...
+# Subtest: current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input
+ok 8 - current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input
+  ---
+  duration_ms: 12.9915
+  ...
+# Subtest: current installer driver retains actual user input, all historical tasks and no synthetic native bridge
+ok 9 - current installer driver retains actual user input, all historical tasks and no synthetic native bridge
+  ---
+  duration_ms: 0.4003
+  ...
+# Subtest: v1.1.10 requires current report plus every historical generation with the same installed bytes and driver
+ok 10 - v1.1.10 requires current report plus every historical generation with the same installed bytes and driver
+  ---
+  duration_ms: 52.2555
+  ...
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+ok 11 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 16.6299
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 12 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 44.6179
+  ...
+# Subtest: Ctrl multi-select modifiers survive stable native pointer input and invalid flags send nothing
+ok 13 - Ctrl multi-select modifiers survive stable native pointer input and invalid flags send nothing
+  ---
+  duration_ms: 0.6771
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 14 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 189.7657
+  ...
+# Subtest: right-click and hover wait through disappearing moving rows and send finite coordinates only once
+ok 15 - right-click and hover wait through disappearing moving rows and send finite coordinates only once
+  ---
+  duration_ms: 125.881
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 16 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.9244
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 17 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.8004
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 18 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 1.8481
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 674.6945

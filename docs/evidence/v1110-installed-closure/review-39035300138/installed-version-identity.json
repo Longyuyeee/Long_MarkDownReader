@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "599374bf4f11454889e11a6f0f9a7ac6e2cabb0e",
+  "installerSha256": "d194b1573cea60c344ea11acef44bf1d8d3a20d6124911dbba296c9d0be013b0",
+  "appVersion": "1.1.10",
+  "evidenceLevel": "installed-webview-input-events",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "observations": {
+    "nativeVersion": "1.1.10",
+    "badge": " v1.1.10",
+    "badgeLabel": "当前软件版本 v1.1.10，更新检查失败，最新版本未知，点击查看更新",
+    "settingsRoute": "#/settings?category=system&focus=software-update",
+    "settings": "软件更新\n当前版本 v1.1.10 · 每 24 小时自动检查，也可随时手动检查\n更新失败：GitHub 更新检查失败：HTTP status client error (403 rate limit exceeded) for url (https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest)\n检查更新"
+  },
+  "checks": [],
+  "error": "Error: Timed out waiting for completed real official update check with enabled control"
+}
