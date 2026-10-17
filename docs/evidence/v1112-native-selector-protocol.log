@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: current installed graph evidence binds 12 actual workflows, exact bytes, all sources and native user input
+ok 1 - current installed graph evidence binds 12 actual workflows, exact bytes, all sources and native user input
+  ---
+  duration_ms: 14.1181
+  ...
+# Subtest: installed driver keeps the real bridge, trusted input, strict isolated root and byte comparisons
+ok 2 - installed driver keeps the real bridge, trusted input, strict isolated root and byte comparisons
+  ---
+  duration_ms: 0.3314
+  ...
+# Subtest: governance loading repair has real-component early-click proof and preserves the native topic assertion
+ok 3 - governance loading repair has real-component early-click proof and preserves the native topic assertion
+  ---
+  duration_ms: 1.3895
+  ...
+# Subtest: real router omitted visibility defaults to true without removing explicit hidden-response isolation
+ok 4 - real router omitted visibility defaults to true without removing explicit hidden-response isolation
+  ---
+  duration_ms: 1.3373
+  ...
+# Subtest: v1.1.11 manifest requires graph evidence and every inherited report with the same executable and driver
+ok 5 - v1.1.11 manifest requires graph evidence and every inherited report with the same executable and driver
+  ---
+  duration_ms: 97.3749
+  ...
+# Subtest: content backup schema rejects missing workflows, source changes, incomplete restores and false native input
+ok 6 - content backup schema rejects missing workflows, source changes, incomplete restores and false native input
+  ---
+  duration_ms: 14.4357
+  ...
+# Subtest: new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts
+ok 7 - new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts
+  ---
+  duration_ms: 0.37
+  ...
+# Subtest: current runtime requires the current report plus every inherited report, same installed EXE and driver
+ok 8 - current runtime requires the current report plus every inherited report, same installed EXE and driver
+  ---
+  duration_ms: 106.2908
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 204.7287

@@ -1,0 +1,70 @@
+{
+  "appVersion": "1.1.12",
+  "sourceCommit": "1f9424e94ed5b1ea5f72dce618fb2cebb20e95d3",
+  "installerSha256": "898af470c7576d1cbd6d8805167925e38ef7ab7947729ba120f035d120bcd700",
+  "harnessSourceCommit": "1f9424e94ed5b1ea5f72dce618fb2cebb20e95d3",
+  "executableSha256": "20a3d4ac26a829624ecb805106992d1d6d0ad2bd8a4650ee7be7fb4826b93d91",
+  "evidenceLevel": "installed-webview-input-native-content-backup-picker-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "installed-identity-and-preserved-settings-entries",
+      "status": "passed"
+    }
+  ],
+  "sourceFiles": [],
+  "nativePickers": [],
+  "draftChecks": [],
+  "denials": [],
+  "inputTrace": [],
+  "runtimeErrors": [],
+  "history": {
+    "before": [
+      [
+        1792264183,
+        "# 恢复前保留的版本\n"
+      ]
+    ],
+    "metadataBefore": {
+      "1792264183": {
+        "pinned": true,
+        "note": "跨位置恢复也要保留"
+      }
+    },
+    "pinned": true
+  },
+  "pdfAnnotations": {
+    "before": {
+      "schemaVersion": 1,
+      "source": {
+        "pdfFile": "参考.pdf",
+        "size": 1650,
+        "modifiedAt": 1792262509
+      },
+      "annotations": [
+        {
+          "id": "实际备份批注",
+          "kind": "comment",
+          "page": 1,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "恢复后应保留的页评论",
+          "createdAt": 1,
+          "updatedAt": 2
+        }
+      ]
+    }
+  },
+  "draftPath": "C:\\LongEditR5ILibrary\\v1111-graph-6cefec3a-3ad2-41b1-bf81-70072edf1c2e\\图谱验收主题017 - 项目长期研究与来源证据核对.md",
+  "draftDiskBefore": "2c2266c5bdd7caae732df4ea81ffcf887f7f99ff25b87403ff48521580f050d3",
+  "draftSha256": "6f3523874006bf1b860a9b2f57982638b9d52b841fc198ab8f4cb4aa9a7552ee",
+  "error": {
+    "message": "Error: Actual native UI did not become ready: unobscured target document.querySelector(\"input[aria-label=\\\"备份子目录\\\"]\")",
+    "stack": "Error: Actual native UI did not become ready: unobscured target document.querySelector(\"input[aria-label=\\\"备份子目录\\\"]\")\n    at waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async settledPoint (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:17:5)\n    at async clickTarget (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:36:17)\n    at async Object.fill (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:43:5)\n    at async runInstalledV1112Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-12-workflow.mjs:56:79)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:993:5"
+  },
+  "modalState": "备份资料内容只读取磁盘上已经保存的文件，不代存当前草稿。内容包可能包含私人资料，请妥善保管。资料库R5L Disposable Vault范围整个资料库（可填写相对子目录）选择子目录 文档与数据文件 图片及其他附件 PDF 批注（含源 PDF） Markdown / TXT 历史整包最多 512 MiB、单文件 128 MiB、10000 个文件条目。大资料库可选择子目录；不会自动跟随范围外链接或图片。历史默认不选，自定义模板仍使用原有模板导入/导出。保存位置请选择资料库以外的新 ZIP 文件，不会覆盖同名备份选择位置更改范围后需要重新预检取消预检所选内容"
+}
