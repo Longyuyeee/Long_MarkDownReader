@@ -1,0 +1,18 @@
+{
+  "status": "failed",
+  "checks": [
+    "settings preserves management backup and diagnostics next to distinct content entry",
+    "changing source categories invalidates native plan and clears dependent history and annotations",
+    "scope selector rejects another library without changing the source or writing files",
+    "export picker cancel does not write; successful explicit export shows receipt and digest",
+    "native source change remains an actionable error, not false export success",
+    "bad package fails before a restore target can be applied",
+    "restore target conflict is visible and a new name triggers automatic fresh validation",
+    "stale target response cannot enable a prior target after the name changes"
+  ],
+  "styles": [],
+  "errors": [],
+  "failure": "locator.waitFor: Timeout 18000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.content-backup-dialog').getByRole('button', { name: '已添加到资料库', exact: true }) to be visible\u001b[22m\n\n    at E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1112-content-backup-ui.mjs:17:399\n    at async check (E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1112-content-backup-ui.mjs:7:77)\n    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1112-content-backup-ui.mjs:17:2",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false
+}

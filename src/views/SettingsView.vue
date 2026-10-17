@@ -151,6 +151,10 @@
                 </n-button>
               </div>
             </div>
+            <div v-show="activeCategory === 'privacy'" class="setting-row" data-testid="content-backup-settings">
+              <div class="info"><div class="label">资料内容备份</div><div class="desc">选择整个资料库或子目录的文档、附件、PDF 批注和历史；只恢复到新目录，不覆盖原库。内容包未加密，请妥善保管。</div></div>
+              <div class="backup-actions"><n-button secondary @click="contentBackupMode = 'export'">备份资料</n-button><n-button secondary type="primary" @click="contentBackupMode = 'restore'">从备份恢复</n-button></div>
+            </div>
             <div v-show="activeCategory === 'privacy'" class="setting-row">
               <div class="info">
                 <div class="label">隐私诊断包</div>
@@ -389,11 +393,14 @@
       </div>
     </WorkspaceManagementContent>
   </div>
+  <ContentBackupDialog v-if="contentBackupMode" :mode="contentBackupMode" :add-library="registerRestoredContentLibrary" @close="contentBackupMode = null" />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, nextTick, computed } from 'vue'
 import DisplayPreferencesEditor from '../components/DisplayPreferencesEditor.vue'
+import ContentBackupDialog from '../components/ContentBackupDialog.vue'
+import { contentPathKey } from '../utils/contentBackup'
 import { normalizeDisplayPreferences, VISUAL_STYLE_RADII } from '../config/displayPreferences'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -582,6 +589,14 @@ const credentialDraft = ref('')
 const credentialSaving = ref(false)
 const backupExporting = ref(false)
 const backupRestoring = ref(false)
+const contentBackupMode = ref<'export' | 'restore' | null>(null)
+const registerRestoredContentLibrary = async (path: string, name: string) => {
+  if (store.libraries.some(item => contentPathKey(item.path) === contentPathKey(path))) return
+  const prepared = await invoke<string>('prepare_library_path', { path })
+  await store.updateConfig({ libraries: [...store.libraries, { name, path: prepared }] })
+  config.value.libraries = [...store.libraries]
+  message.success('已添加为资料库；当前资料库和草稿保持不变，可自行切换使用。')
+}
 const diagnosticExporting = ref(false)
 const observationExporting = ref(false)
 const observationComparisonExporting = ref(false)

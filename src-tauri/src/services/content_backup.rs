@@ -25,7 +25,7 @@ const KIND: &str = "longedit-library-content";
 const EXCLUDED: &[&str] = &[
     "未保存草稿",
     "应用配置与系统凭据",
-    "资料库外链接目标",
+    "所选范围外链接目标（不会自动跟随）",
     "隐藏和依赖目录",
     "已知敏感配置文件",
     "自定义模板（使用模板导入导出）",
@@ -34,6 +34,8 @@ const EXCLUDED: &[&str] = &[
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Options {
+    #[serde(default)]
+    pub directory: String,
     pub documents: bool,
     pub attachments: bool,
     pub annotations: bool,
@@ -42,6 +44,7 @@ pub struct Options {
 impl Default for Options {
     fn default() -> Self {
         Self {
+            directory: String::new(),
             documents: true,
             attachments: true,
             annotations: true,
@@ -97,6 +100,7 @@ pub struct Summary {
     pub sha256: Option<String>,
     pub max_total_bytes: u64,
     pub max_file_bytes: u64,
+    pub scope_directory: String,
 }
 impl Manifest {
     pub fn summary(&self, id: String, sha: Option<String>) -> Summary {
@@ -119,6 +123,7 @@ impl Manifest {
             sha256: sha,
             max_total_bytes: MAX_TOTAL,
             max_file_bytes: MAX_FILE,
+            scope_directory: self.options.directory.clone(),
         }
     }
 }
@@ -151,12 +156,16 @@ pub struct Receipt {
 #[derive(Clone, Default)]
 pub struct Control {
     state: Arc<AtomicU8>,
+    #[cfg(test)]
+    commit_hook: Option<Arc<dyn Fn() + Send + Sync>>,
 }
 impl Control {
     pub fn cancel(&self) -> bool {
-        self.state
-            .compare_exchange(0, 1, Ordering::SeqCst, Ordering::SeqCst)
-            .is_ok()
+        matches!(
+            self.state
+                .compare_exchange(0, 1, Ordering::SeqCst, Ordering::SeqCst),
+            Ok(_) | Err(1)
+        )
     }
     pub fn check(&self) -> Result<(), String> {
         if self.state.load(Ordering::SeqCst) == 1 {
@@ -169,7 +178,12 @@ impl Control {
         self.state
             .compare_exchange(0, 2, Ordering::SeqCst, Ordering::SeqCst)
             .map(|_| ())
-            .map_err(|_| "已取消，未进入提交阶段".into())
+            .map_err(|_| "已取消，未进入提交阶段".to_string())?;
+        #[cfg(test)]
+        if let Some(hook) = &self.commit_hook {
+            hook();
+        }
+        Ok(())
     }
 }
 fn now() -> u64 {
@@ -411,7 +425,7 @@ fn push_source(
 pub fn preview(
     root: &Path,
     cache: &Path,
-    options: Options,
+    mut options: Options,
     control: &Control,
 ) -> Result<ExportPlan, String> {
     if !options.documents && !options.attachments {
@@ -421,6 +435,29 @@ pub fn preview(
         return Err("PDF 批注和历史必须与源文档一起备份".into());
     }
     let guard = WorkspaceGuard::new(root)?;
+    let scope = if options.directory.is_empty() {
+        guard.root().to_owned()
+    } else {
+        relative(&options.directory)?;
+        let mut current = guard.root().to_owned();
+        for segment in options.directory.split('/') {
+            if excluded_name(segment, true) {
+                return Err("不能选择隐藏、依赖或受限目录作为备份范围".into());
+            }
+            current.push(segment);
+            let metadata = fs::symlink_metadata(&current).map_err(|e| e.to_string())?;
+            if linked(&metadata) || !metadata.is_dir() {
+                return Err("子目录范围不能包含链接或重解析点".into());
+            }
+        }
+        let path = guard.resolve_directory(&current, false)?;
+        options.directory = path
+            .strip_prefix(guard.root())
+            .map_err(|e| e.to_string())?
+            .to_string_lossy()
+            .replace('\\', "/");
+        path
+    };
     let _activity = super::file_activity::read_write(&[guard.root()])?;
     let _history = if options.history {
         Some(super::history_coordination::acquire_read(cache)?)
@@ -449,7 +486,17 @@ pub fn preview(
         },
         sources: vec![],
     };
-    let mut stack = vec![(guard.root().to_owned(), String::new())];
+    if !plan.manifest.options.directory.is_empty() {
+        let mut current = String::new();
+        for part in plan.manifest.options.directory.split('/') {
+            if !current.is_empty() {
+                current.push('/');
+            }
+            current.push_str(part);
+            plan.manifest.directories.push(current.clone());
+        }
+    }
+    let mut stack = vec![(scope, plan.manifest.options.directory.clone())];
     let mut scanned = 0usize;
     let mut names = BTreeSet::new();
     let mut annotations = vec![];
@@ -609,7 +656,10 @@ fn validate_history_name(name: &str) -> Result<(), String> {
     relative(name)?;
     if name.contains('/')
         || (name != "metadata.json"
-            && (!name.ends_with(".md") || name.trim_end_matches(".md").parse::<u64>().is_err()))
+            && !name
+                .strip_suffix(".md")
+                .and_then(|s| s.parse::<u64>().ok())
+                .is_some_and(|n| format!("{n}.md") == name))
     {
         Err(format!("历史含未知或未完成的记录，先在历史中核对：{name}"))
     } else {
@@ -618,6 +668,9 @@ fn validate_history_name(name: &str) -> Result<(), String> {
 }
 
 fn validate_manifest(m: &Manifest) -> Result<(), String> {
+    if !m.options.directory.is_empty() {
+        relative(&m.options.directory)?;
+    }
     if m.kind != KIND || m.schema_version != 1 {
         return Err("不是支持的 Long编辑资料内容包；管理备份请使用原来的导入入口".into());
     }
@@ -650,6 +703,13 @@ fn validate_manifest(m: &Manifest) -> Result<(), String> {
     let mut total = 0u64;
     for d in &m.directories {
         relative(d)?;
+        if !m.options.directory.is_empty()
+            && d != &m.options.directory
+            && !d.starts_with(&format!("{}/", m.options.directory))
+            && !m.options.directory.starts_with(&format!("{d}/"))
+        {
+            return Err("目录清单越过所选子目录范围".into());
+        }
         if d.split('/').any(|n| excluded_name(n, true)) || !dirs.insert(d.to_lowercase()) {
             return Err("目录清单包含受限名称、重复或大小写冲突".into());
         }
@@ -682,6 +742,13 @@ fn validate_manifest(m: &Manifest) -> Result<(), String> {
                 return Err("历史映射或选择范围无效".into());
             }
         } else {
+            if !m.options.directory.is_empty()
+                && !e
+                    .relative_path
+                    .starts_with(&format!("{}/", m.options.directory))
+            {
+                return Err("文件越过所选子目录范围".into());
+            }
             if e.path != format!("files/{}", e.relative_path)
                 || e.relative_path.split('/').any(|n| excluded_name(n, false))
                 || e.category != category(&e.relative_path)

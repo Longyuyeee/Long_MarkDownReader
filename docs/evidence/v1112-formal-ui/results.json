@@ -1,0 +1,11 @@
+{
+  "status": "failed",
+  "checks": [
+    "settings preserves management backup and diagnostics next to distinct content entry"
+  ],
+  "styles": [],
+  "errors": [],
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1112-content-backup-ui.mjs:10:300\n    at async check (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1112-content-backup-ui.mjs:7:77)\n    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1112-content-backup-ui.mjs:10:2",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false
+}

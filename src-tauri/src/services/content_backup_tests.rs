@@ -147,6 +147,7 @@ fn content_scope_and_known_sensitive_exclusions_are_explicit() {
             attachments: false,
             annotations: false,
             history: false,
+            ..Options::default()
         },
         &Control::default(),
     )
@@ -178,7 +179,8 @@ fn content_history_and_annotation_require_source_selection() {
             documents: false,
             attachments: true,
             annotations: true,
-            history: true
+            history: true,
+            ..Options::default()
         },
         &Control::default()
     )
@@ -505,6 +507,107 @@ fn content_actual_junction_is_rejected_without_following_external_directory() {
 }
 
 // Avoid requiring Debug for private native plans solely for an error assertion.
+#[test]
+fn content_subdirectory_scope_preserves_relative_paths_without_scanning_other_content() {
+    let (f, root, cache) = fixture();
+    let options = Options {
+        directory: "图片".into(),
+        documents: false,
+        attachments: true,
+        annotations: false,
+        history: false,
+    };
+    let plan = preview(&root, &cache, options, &Control::default()).unwrap();
+    assert_eq!(plan.manifest.entries.len(), 1);
+    assert_eq!(plan.manifest.entries[0].relative_path, "图片/流程.png");
+    fs::write(root.join("范围外新增.md"), "没有选择").unwrap();
+    let path = f.0.join("图片.zip");
+    export(&plan, &path, &Control::default()).unwrap();
+    let parsed = inspect_archive(&path, &Control::default()).unwrap();
+    let target = f.0.join("图片恢复");
+    restore(&parsed, &cache, &target, &Control::default()).unwrap();
+    assert!(target.join("图片/流程.png").exists());
+    assert!(!target.join("方案.md").exists());
+    assert!(preview(
+        &root,
+        &cache,
+        Options {
+            directory: "../escape".into(),
+            ..Options::default()
+        },
+        &Control::default()
+    )
+    .is_err());
+}
+#[test]
+fn content_export_commit_race_never_replaces_an_intervening_file() {
+    let (f, root, cache) = fixture();
+    let plan = preview(&root, &cache, all(), &Control::default()).unwrap();
+    let target = f.0.join("race.zip");
+    let raced = target.clone();
+    let control = Control {
+        commit_hook: Some(Arc::new(move || fs::write(&raced, "竞争者原文件").unwrap())),
+        ..Control::default()
+    };
+    assert!(export(&plan, &target, &control).is_err());
+    assert_eq!(fs::read_to_string(&target).unwrap(), "竞争者原文件");
+    assert!(!fs::read_dir(&f.0).unwrap().any(|e| e
+        .unwrap()
+        .file_name()
+        .to_string_lossy()
+        .starts_with(".longedit-content-stage-")));
+}
+#[test]
+fn content_restore_commit_race_rolls_new_history_back_without_touching_raced_target() {
+    let (f, root, cache) = fixture();
+    let (path, _) = valid_package(&f, &root, &cache);
+    let plan = inspect_archive(&path, &Control::default()).unwrap();
+    let target = f.0.join("restore-race");
+    let raced = target.clone();
+    let old = fs::read_dir(&cache).unwrap().count();
+    let control = Control {
+        commit_hook: Some(Arc::new(move || {
+            fs::create_dir(&raced).unwrap();
+            fs::write(raced.join("用户内容.md"), "不可替换").unwrap();
+        })),
+        ..Control::default()
+    };
+    assert!(restore(&plan, &cache, &target, &control).is_err());
+    assert_eq!(
+        fs::read_to_string(target.join("用户内容.md")).unwrap(),
+        "不可替换"
+    );
+    assert_eq!(fs::read_dir(cache).unwrap().count(), old);
+}
+#[test]
+fn content_zip_directory_count_is_bounded_before_allocating_untrusted_central_entries() {
+    let (f, root, cache) = fixture();
+    let (path, _) = valid_package(&f, &root, &cache);
+    let mut bytes = fs::read(&path).unwrap();
+    let pos = bytes.windows(4).rposition(|w| w == b"PK\x05\x06").unwrap();
+    bytes[pos + 8..pos + 12].fill(255);
+    fs::write(&path, bytes).unwrap();
+    assert!(inspect_archive(&path, &Control::default()).is_err());
+}
+#[test]
+fn content_history_names_have_the_exact_identity_the_existing_history_reader_uses() {
+    assert!(validate_history_name("123.md").is_ok());
+    assert!(validate_history_name("metadata.json").is_ok());
+    for name in [
+        "01.md",
+        "12.md.md",
+        "12.MD",
+        "../12.md",
+        "notes.md",
+        ".metadata.json.longedit-bak",
+    ] {
+        assert!(validate_history_name(name).is_err(), "{name}")
+    }
+    let control = Control::default();
+    assert!(control.cancel());
+    assert!(control.cancel());
+    assert!(control.check().is_err());
+}
 trait PlanError {
     fn unwrap_err_string(self) -> String;
 }
