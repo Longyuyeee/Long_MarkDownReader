@@ -1,0 +1,41 @@
+
+2026-10-17T16:15:39.6537579Z   CURRENT_INSTALLER_SHA256: ea2a8649c3c91a1df39161134827a9a5ad9262204abfef4e37df5c16fd058c60
+2026-10-17T16:15:39.6538074Z   M8_21_OUTPUT: D:\a\Long_MarkDownReader\Long_MarkDownReader\community-release-output
+2026-10-17T16:15:39.6538461Z ##[endgroup]
+2026-10-17T16:16:40.2051740Z file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:106
+2026-10-17T16:16:40.2052778Z   throw new Error(`Timed out waiting for ${description}`)
+2026-10-17T16:16:40.2056531Z         ^
+2026-10-17T16:16:40.2056928Z 
+2026-10-17T16:16:40.2057607Z Error: Timed out waiting for centered graph topic selection
+2026-10-17T16:16:40.2058804Z     at waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:106:9)
+2026-10-17T16:16:40.2060270Z     at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:727:3
+2026-10-17T16:16:40.2061144Z 
+2026-10-17T16:16:40.2061369Z Node.js v22.23.3
+2026-10-17T16:16:40.4942931Z R5J installed-artifact route and I/O smoke failed.
+2026-10-17T16:16:40.4945790Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration\scripts\run-r5i-isolated-install-lifecycle.ps1:428 char:9
+2026-10-17T16:16:40.4946755Z +         throw "R5J installed-artifact route and I/O smoke failed."
+2026-10-17T16:16:40.4947308Z +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-17T16:16:40.4947982Z     + CategoryInfo          : OperationStopped: (R5J installed-a...O smoke failed.:String) [], RuntimeException
+2026-10-17T16:16:40.4948767Z     + FullyQualifiedErrorId : R5J installed-artifact route and I/O smoke failed.
+2026-10-17T16:16:40.4949230Z  
+2026-10-17T16:16:40.5618748Z ##[error]Process completed with exit code 1.
+2026-10-17T16:16:40.6006205Z ##[group]Run actions/upload-artifact@v4
+2026-10-17T16:16:40.6006768Z with:
+2026-10-17T16:16:40.6007007Z   name: community-release-candidate-lifecycle-39046576581
+2026-10-17T16:16:40.6007290Z   if-no-files-found: error
+2026-10-17T16:16:40.6007474Z   retention-days: 14
+2026-10-17T16:16:40.6008145Z   path: community-release-output
+current-product/src-tauri/target/release/bundle/msi/*_1.1.11_x64_zh-CN.msi
+current-product/src-tauri/target/release/bundle/nsis/*_1.1.11_x64-setup.exe
+previous-official/*_1.1.10_x64-setup.exe
+
+2026-10-17T16:16:40.6009047Z   compression-level: 6
+2026-10-17T16:16:40.6009223Z   overwrite: false
+2026-10-17T16:16:40.6009394Z   include-hidden-files: false
+2026-10-17T16:16:40.6009578Z env:
+2026-10-17T16:16:40.6009726Z   CARGO_TERM_COLOR: always
+2026-10-17T16:16:40.6009925Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-17T16:16:40.6010139Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-17T16:16:40.6010328Z   PREVIOUS_VERSION: 1.1.10
+2026-10-17T16:16:40.6010537Z   RELEASE_VERSION: 1.1.11
+2026-10-17T16:16:40.6010769Z   CANDIDATE_COMMIT: 920ba39cdbafbc6b5ab8229604930fe711
