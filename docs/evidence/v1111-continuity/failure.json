@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "same-library success preserves camera, selected identity and changed native metadata",
+    "failed refresh is not empty and does not move the selected view",
+    "same-root late success cannot overwrite a newer success or clear its pending state",
+    "late previous-root response cannot reintroduce old data or selection in another library",
+    "late error cannot erase a successful newer graph",
+    "mindmap refresh retains its dragged view, current root and mode"
+  ],
+  "errors": [],
+  "message": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /177/. Input:\n\n'25 / 179 节点\\n36 连接\\n80%\\n0 个已选\\n近景'\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-continuity.mjs:49:80\n    at async check (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-continuity.mjs:12:30)\n    at async file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1111-graph-continuity.mjs:47:2"
+}

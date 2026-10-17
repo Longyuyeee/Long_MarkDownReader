@@ -483,6 +483,8 @@ import { GRAPH_FORCE_LAYOUT_MAX_CANDIDATES_PER_NODE, type GraphForceLayoutEdge }
 import type { GraphMinimapProjection } from '../utils/graphMinimap'
 import type { GraphCommunityOverview } from '../utils/graphSemanticZoom'
 import { commitGraphSelection, emptyGraphSelectionHistory, moveGraphSelectionHistory } from '../utils/graphSelectionHistory'
+import { createGraphLoadGate, prepareGraphRefresh } from '../utils/graphRefresh'
+import { buildGraphTopology } from '../utils/graphTopology'
 import { writeLocalGraphPinned } from '../utils/localGraphPin'
 import { announceFileRelationsChanged, onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { graphLineDash, graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
@@ -511,6 +513,9 @@ const dialog = useDialog()
 
 const graphData = ref<GraphData>({ nodes: [], edges: [] })
 const isLoading = ref(true)
+const graphLoadError = ref('')
+const graphLoadGate = createGraphLoadGate()
+let graphLibraryRoot = ''
 const showTutorial = ref(false)
 const isCreatingCanvas = ref(false)
 const isExporting = ref(false)
@@ -617,14 +622,8 @@ const measureGraphPhase = <T>(name: string, operation: () => T): T => {
   try { return operation() } finally { recordGraphPhase(name, startedAt) }
 }
 
-const degreeMap = computed(() => {
-  const result = new Map<string, number>()
-  for (const edge of graphData.value.edges) {
-    result.set(edge.source, (result.get(edge.source) || 0) + 1)
-    result.set(edge.target, (result.get(edge.target) || 0) + 1)
-  }
-  return result
-})
+const graphTopology = computed(() => buildGraphTopology(graphData.value))
+const degreeMap = computed(() => graphTopology.value.degree)
 
 const communityResult = computed(() => measureGraphPhase('community-detection', () => detectGraphCommunities(graphData.value)))
 const activeCommunity = computed(() => communityResult.value.communities.find(community => community.id === activeCommunityId.value) || null)
@@ -650,9 +649,8 @@ const neighborFocusNodeIds = computed(() => {
   for (let depth = 0; depth < neighborFocusDepth.value && frontier.length; depth += 1) {
     const next: string[] = []
     for (const current of frontier) {
-      for (const edge of graphData.value.edges) {
-        const neighbor = edge.source === current ? edge.target : edge.target === current ? edge.source : ''
-        if (neighbor && !ids.has(neighbor)) { ids.add(neighbor); next.push(neighbor) }
+      for (const neighbor of graphTopology.value.neighbors.get(current) || []) {
+        if (!ids.has(neighbor)) { ids.add(neighbor); next.push(neighbor) }
       }
     }
     frontier = next
@@ -687,6 +685,7 @@ const visibleNodes = computed(() => {
 })
 
 const visibleNodeIds = computed(() => new Set(visibleNodes.value.map(node => node.id)))
+const visibleNodeMap = computed(() => new Map(visibleNodes.value.map(node => [node.id, node])))
 const visibleEdges = computed(() => {
   const pathEdges = activeShortestPath.value ? new Set(activeShortestPath.value.edges) : null
   return remediationGraph.value.edges.filter(edge => visibleNodeIds.value.has(edge.source) && visibleNodeIds.value.has(edge.target) && (!pathEdges || pathEdges.has(edge)))
@@ -805,16 +804,13 @@ const returnToLibrary = () => store.activeTabId
   ? router.push(managedFileLocation(store.activeTabId))
   : router.push({ name: 'LibraryMode' })
 const nodeDegree = (id: string) => degreeMap.value.get(id) || 0
-const incomingCount = (id: string) => graphData.value.edges.filter(edge => edge.directed && edge.target === id).length
-const outgoingCount = (id: string) => graphData.value.edges.filter(edge => edge.directed && edge.source === id).length
+const incomingCount = (id: string) => graphTopology.value.incoming.get(id) || 0
+const outgoingCount = (id: string) => graphTopology.value.outgoing.get(id) || 0
 const selectedNeighbors = computed(() => {
   if (!selectedNode.value) return []
-  const ids = new Set<string>()
-  for (const edge of graphData.value.edges) {
-    if (edge.source === selectedNode.value.id) ids.add(edge.target)
-    if (edge.target === selectedNode.value.id) ids.add(edge.source)
-  }
-  return graphData.value.nodes.filter(node => ids.has(node.id)).sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))
+  return [...graphTopology.value.neighbors.get(selectedNode.value.id) || []]
+    .map(id => graphTopology.value.byId.get(id)).filter((node): node is GraphNode => Boolean(node))
+    .sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))
 })
 const selectedRelations = computed(() => {
   if (!selectedNode.value) return []
@@ -854,8 +850,8 @@ const canDeleteRelation = (relation: SelectedRelation) => {
 }
 
 const reloadAfterRelationMutation = async (selectedPath: string) => {
-  clearSelection()
-  await loadGraph()
+  const root = store.libraryPath
+  if (!await loadGraph() || root !== store.libraryPath) return
   const refreshed = graphData.value.nodes.find(node => node.path === selectedPath)
   if (refreshed) selectOnly(refreshed)
 }
@@ -957,6 +953,8 @@ let communityOverviewCache: GraphCommunityOverview | null = null
 let communityOverviewCacheKey = ''
 let minimapProjectionCache: GraphMinimapProjection | null = null
 let minimapProjectionCacheKey = ''
+let minimapPointLayer: HTMLCanvasElement | null = null
+let minimapPointLayerKey = ''
 let minimapLayoutRevision = 0
 let minimapPointer: { id: number; startX: number; startY: number; dragged: boolean } | null = null
 const hoveredNode = ref<GraphNode | null>(null)
@@ -1015,10 +1013,10 @@ const currentLayoutId = () => viewMode.value === 'mindmap'
   : `network:${graphLayoutMode.value}`
 
 const layoutNodes = () => viewMode.value === 'network' ? graphData.value.nodes : visibleNodes.value
-const persistLayout = () => saveGraphLayout(store.libraryPath, currentLayoutId(), layoutNodes())
+const persistLayout = () => saveGraphLayout(graphLibraryRoot, currentLayoutId(), layoutNodes())
 const scheduleLayoutSave = () => {
   window.clearTimeout(layoutSaveTimer)
-  const libraryRoot = store.libraryPath
+  const libraryRoot = graphLibraryRoot
   const layoutId = currentLayoutId()
   const nodes = layoutNodes()
   layoutSaveTimer = window.setTimeout(() => saveGraphLayout(libraryRoot, layoutId, nodes), 350)
@@ -1163,23 +1161,68 @@ const dispatchLayoutWorkerTick = () => {
 }
 
 const loadGraph = async () => {
+  const root = store.libraryPath
+  const ticket = graphLoadGate.begin(root)
+  const current = () => graphLoadGate.accepts(ticket, store.libraryPath, graphLoopMounted && props.show !== false)
   invalidateLayoutWorker()
+  window.clearTimeout(autoFitTimer)
+  autoFitAfterLayout = false
+  const sameRoot = graphLibraryRoot === root
+  if (!sameRoot) {
+    persistLayout()
+    graphLibraryRoot = ''
+    graphData.value = { nodes: [], edges: [] }
+    clearSelection()
+    hoveredNode.value = null
+    contextNode.value = null
+    contextMenu.show = false
+    neighborFocusRootId.value = ''
+    activeCommunityId.value = ''
+    shortestPathResult.value = null
+    pathStartId.value = ''; pathEndId.value = ''
+    comparisonLeftId.value = ''; comparisonRightId.value = ''; comparisonHasRun.value = false
+    mindmapRoot.value = null; mindmapNodeIds.value = null
+    selectionHistoryState.value = emptyGraphSelectionHistory()
+    layoutUndoStack.value = []; layoutRedoStack.value = []
+    cancelCameraMotion()
+  }
+  graphLoadError.value = ''
   isLoading.value = true
-  if (!store.libraryPath) {
+  if (!root) {
     graphData.value = { nodes: [], edges: [] }
     isLoading.value = false
-    return
+    requestGraphFrame()
+    return false
   }
   try {
     const buildStartedAt = performance.now()
+    let incoming: GraphData
     try {
-      graphData.value = await invoke<any>('build_link_graph', { libraryRoot: store.libraryPath })
+      incoming = await invoke<GraphData>('build_link_graph', { libraryRoot: root })
     } finally {
       recordGraphPhase('build-link-graph', buildStartedAt)
     }
+    if (!current()) return false
+    const continuing = sameRoot && graphData.value.nodes.length > 0
+    const refreshed = prepareGraphRefresh(continuing ? graphData.value : { nodes: [], edges: [] }, incoming)
+    const oldById = new Map(graphData.value.nodes.map(node => [node.id, node]))
+    const selection = selectedNode.value
+    const selectedIds = selectedNodeIds.value.filter(id => refreshed.rebind(oldById.get(id) || null))
+    const oldMindmapRoot = mindmapRoot.value
+    selectedNode.value = refreshed.rebind(selection)
+    selectedNodeIds.value = selectedIds
+    hoveredNode.value = refreshed.rebind(hoveredNode.value)
+    contextNode.value = refreshed.rebind(contextNode.value)
+    graphLibraryRoot = root
+    graphData.value = refreshed.graph
+    minimapLayoutRevision += 1
+    if (neighborFocusRootId.value && !refreshed.byId.has(neighborFocusRootId.value)) neighborFocusRootId.value = ''
+    if (activeShortestPath.value) shortestPathResult.value = findShortestGraphPath(remediationGraph.value, pathStartId.value, pathEndId.value)
+    mindmapRoot.value = refreshed.rebind(oldMindmapRoot)
+    layoutUndoStack.value = []; layoutRedoStack.value = []
     graphNodeStatusNowSeconds.value = Math.floor(Date.now() / 1000)
     const strongest = [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
-    const requestedRoot = typeof route.query.root === 'string'
+    const requestedRoot = !continuing && typeof route.query.root === 'string'
       ? graphData.value.nodes.find(node => node.id === route.query.root)
       : undefined
     const initialNode = requestedRoot || selectedNode.value || strongest
@@ -1187,27 +1230,35 @@ const loadGraph = async () => {
       selectOnly(initialNode)
     }
 
-    if (route.query.mode === 'mindmap' && initialNode) {
+    if ((!continuing && route.query.mode === 'mindmap' || viewMode.value === 'mindmap') && (mindmapRoot.value || initialNode)) {
       viewMode.value = 'mindmap'
-      applyMindMapLayout(initialNode)
+      applyMindMapLayout(mindmapRoot.value || initialNode!, continuing)
     } else {
-      initLayout()
+      initLayout({ preserveCurrentPositions: continuing, fit: !continuing })
     }
+    return true
   } catch (e) {
-    graphData.value = { nodes: [], edges: [] }
+    if (!current()) return false
+    graphLoadError.value = '图谱加载失败，请检查资料库是否仍可访问'
+    layoutSettled = true
+    return false
   } finally {
-    isLoading.value = false
-    requestGraphFrame()
+    if (current()) {
+      isLoading.value = false
+      requestGraphFrame()
+    }
   }
 }
 
-const initLayout = () => {
+const initLayout = (options: { preserveCurrentPositions?: boolean; fit?: boolean } = {}) => {
   invalidateLayoutWorker()
-  autoFitAfterLayout = true
+  autoFitAfterLayout = options.fit !== false
   const nodes = graphData.value.nodes
   const cx = (containerRef.value?.clientWidth || 800) / 2
   const cy = (containerRef.value?.clientHeight || 600) / 2
-  const restored = restoreGraphLayout(store.libraryPath, currentLayoutId(), nodes)
+  const restored = options.preserveCurrentPositions
+    ? nodes.filter(node => Number.isFinite(node.x) && Number.isFinite(node.y)).length
+    : restoreGraphLayout(graphLibraryRoot, currentLayoutId(), nodes)
   nodes.forEach(n => {
     if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) {
       n.x = cx + (Math.random() - 0.5) * 400
@@ -1217,7 +1268,7 @@ const initLayout = () => {
   })
   frameCount = restored === nodes.length && nodes.length > 0 ? LAYOUT_MAX_FRAMES : 0
   layoutSettled = restored === nodes.length && nodes.length > 0
-  if (layoutSettled) {
+  if (layoutSettled && autoFitAfterLayout) {
     autoFitAfterLayout = false
     requestAnimationFrame(() => {
       fitGraph()
@@ -1232,12 +1283,7 @@ const initLayout = () => {
 }
 
 const adjacencyFor = (id: string) => {
-  const ids = new Set<string>()
-  for (const edge of graphData.value.edges) {
-    if (edge.source === id) ids.add(edge.target)
-    if (edge.target === id) ids.add(edge.source)
-  }
-  return [...ids]
+  return [...graphTopology.value.neighbors.get(id) || []]
 }
 
 let activeLayoutMode = graphLayoutMode.value
@@ -1376,7 +1422,7 @@ const updateMindmapDepth = (value: number) => {
   refreshMindMap()
 }
 
-const applyMindMapLayout = (root: GraphNode) => {
+const applyMindMapLayout = (root: GraphNode, continueView = false) => {
   invalidateLayoutWorker()
   const nodeMap = new Map(graphData.value.nodes.map(node => [node.id, node]))
   const visited = new Set<string>([root.id])
@@ -1400,12 +1446,14 @@ const applyMindMapLayout = (root: GraphNode) => {
     frontier = next
   }
 
+  const previousPositions = continueView ? new Map(graphData.value.nodes.filter(node => Number.isFinite(node.x) && Number.isFinite(node.y)).map(node => [node.id, { x: node.x!, y: node.y! }])) : null
   const height = Math.max(520, containerRef.value?.clientHeight || 600)
   levels.forEach((level, depth) => {
     level.sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))
     level.forEach((node, index) => {
-      node.x = 150 + depth * 260
-      node.y = depth === 0 ? height / 2 : ((index + 1) * height) / (level.length + 1)
+      const previous = previousPositions?.get(node.id)
+      node.x = previous?.x ?? 150 + depth * 260
+      node.y = previous?.y ?? (depth === 0 ? height / 2 : ((index + 1) * height) / (level.length + 1))
       node.vx = 0
       node.vy = 0
     })
@@ -1413,13 +1461,15 @@ const applyMindMapLayout = (root: GraphNode) => {
 
   mindmapRoot.value = root
   mindmapNodeIds.value = visited
-  restoreGraphLayout(store.libraryPath, currentLayoutId(), levels.flat())
+  if (!continueView) restoreGraphLayout(graphLibraryRoot, currentLayoutId(), levels.flat())
   layoutSettled = true
   frameCount = LAYOUT_MAX_FRAMES
-  viewX = 40
-  viewY = 0
-  zoom = Math.max(0.55, Math.min(1, 3.2 / Math.max(1, levels.length)))
-  zoomLevel.value = zoom
+  if (!continueView) {
+    viewX = 40
+    viewY = 0
+    zoom = Math.max(0.55, Math.min(1, 3.2 / Math.max(1, levels.length)))
+    zoomLevel.value = zoom
+  }
   minimapLayoutRevision += 1
   requestGraphFrame()
 }
@@ -2136,12 +2186,24 @@ const drawMinimap = () => {
   context.setTransform(dpr, 0, 0, dpr, 0, 0)
   context.clearRect(0, 0, width, height)
   const dark = isActiveThemeDark(store.theme)
-  for (const point of projection.points) {
-    context.beginPath()
-    context.arc(point.x, point.y, projection.sourceNodeCount > 1000 ? 1.15 : projection.sourceNodeCount > 100 ? 1.45 : 2.2, 0, Math.PI * 2)
-    context.fillStyle = graphSemanticColor(point.objectType, dark)
-    context.fill()
+  const pointLayerKey = `${minimapProjectionCacheKey}\u001e${dpr}\u001e${store.theme}`
+  if (!minimapPointLayer || minimapPointLayerKey !== pointLayerKey) {
+    const layer = document.createElement('canvas')
+    layer.width = minimap.width; layer.height = minimap.height
+    const pointsContext = layer.getContext('2d')
+    if (pointsContext) {
+      pointsContext.setTransform(dpr, 0, 0, dpr, 0, 0)
+      for (const point of projection.points) {
+        pointsContext.beginPath()
+        pointsContext.arc(point.x, point.y, projection.sourceNodeCount > 1000 ? 1.15 : projection.sourceNodeCount > 100 ? 1.45 : 2.2, 0, Math.PI * 2)
+        pointsContext.fillStyle = graphSemanticColor(point.objectType, dark)
+        pointsContext.fill()
+      }
+      minimapPointLayer = layer
+      minimapPointLayerKey = pointLayerKey
+    }
   }
+  if (minimapPointLayer) context.drawImage(minimapPointLayer, 0, 0, width, height)
   const viewport = graphMinimapViewportRect(projection, { x: viewX, y: viewY, zoom }, { width: main.clientWidth, height: main.clientHeight })
   const tone = getActiveThemeTone(store.theme)
   context.fillStyle = `${tone.ui.primary}18`
@@ -2264,8 +2326,7 @@ const draw = () => measureGraphPhase('canvas-draw', () => {
   const activeTone = getActiveThemeTone(store.theme)
 
   // 构建节点 Map 加速查找
-  const nodeMap = new Map<string, GraphNode>()
-  visibleNodes.value.forEach(n => nodeMap.set(n.id, n))
+  const nodeMap = visibleNodeMap.value
   const viewportPadding = 96 / zoom
   const worldLeft = -viewX / zoom - viewportPadding
   const worldTop = -viewY / zoom - viewportPadding
@@ -2949,8 +3010,8 @@ const handleGraphKeydown = (event: KeyboardEvent) => {
   if (event.key === 'ArrowDown') { event.preventDefault(); moveSelectedNodes(0, distance) }
 }
 
-watch(() => props.show, (v) => { if (v !== false) loadGraph() })
-watch(() => store.libraryPath, () => { if (props.show !== false) loadGraph() })
+watch(() => props.show, (v) => { if (v !== false) void loadGraph(); else { graphLoadGate.invalidate(); isLoading.value = false } })
+watch(() => store.libraryPath, () => { if (props.show !== false) void loadGraph(); else graphLoadGate.invalidate() }, { flush: 'sync' })
 watch(() => selectedNode.value?.id, nodeId => {
   relationDraftTarget.value = ''
   if (!nodeId || cameraMotionReduced.value) return
@@ -3087,6 +3148,7 @@ onMounted(() => {
   if (canvasRef.value) graphResizeObserver.observe(canvasRef.value)
 })
 const stopRelationChanges = onFileRelationsChanged(root => { if (root === store.libraryPath && props.show !== false) void reloadAfterRelationMutation(selectedNode.value?.path || '') })
+onUnmounted(() => graphLoadGate.invalidate())
 onUnmounted(stopRelationChanges)
 onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); window.clearTimeout(autoFitTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>

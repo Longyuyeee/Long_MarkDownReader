@@ -1,0 +1,56 @@
+(node:41152) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:41228) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: latest same-root request wins, including late failures and switch-away/switch-back
+ok 1 - latest same-root request wins, including late failures and switch-away/switch-back
+  ---
+  duration_ms: 0.4365
+  ...
+# Subtest: hidden, unmounted, rootless and invalidated work cannot commit
+ok 2 - hidden, unmounted, rootless and invalidated work cannot commit
+  ---
+  duration_ms: 0.0764
+  ...
+# Subtest: refresh copies latest dragged coordinates but updates metadata and rebinds selection
+ok 3 - refresh copies latest dragged coordinates but updates metadata and rebinds selection
+  ---
+  duration_ms: 0.4898
+  ...
+# Subtest: deleted IDs and reused identities cannot retain an old selection or coordinates
+ok 4 - deleted IDs and reused identities cannot retain an old selection or coordinates
+  ---
+  duration_ms: 0.1056
+  ...
+# Subtest: new nodes and non-finite old coordinates are not mistaken for settled restored nodes
+ok 5 - new nodes and non-finite old coordinates are not mistaken for settled restored nodes
+  ---
+  duration_ms: 0.1411
+  ...
+# (node:9608) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: one topology preserves directed counts, duplicate relation degree and undirected unique neighbors
+ok 6 - one topology preserves directed counts, duplicate relation degree and undirected unique neighbors
+  ---
+  duration_ms: 0.8166
+  ...
+# Subtest: all 1200 adjacency queries match the original edge traversal exactly
+ok 7 - all 1200 adjacency queries match the original edge traversal exactly
+  ---
+  duration_ms: 25.8175
+  ...
+# Subtest: empty and dangling topology does not fabricate nodes or lose an edge count
+ok 8 - empty and dangling topology does not fabricate nodes or lose an edge count
+  ---
+  duration_ms: 0.1439
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 110.4854

@@ -37,10 +37,14 @@ for (const token of [
   "event.key === 'ArrowRight'",
   "localStorage.setItem('longedit.graph.layout-mode'",
   "localStorage.setItem('longedit.graph.canvas-theme'",
-  'saveGraphLayout(store.libraryPath, currentLayoutId()',
+  'saveGraphLayout(graphLibraryRoot, currentLayoutId()',
+  'const libraryRoot = graphLibraryRoot',
+  'graphLibraryRoot = root',
+  'graphLoadGate.accepts(ticket, store.libraryPath, graphLoopMounted && props.show !== false)',
 ]) if (!source.includes(token)) fail(`interaction contract missing: ${token}`)
 
 for (const forbidden of [
+  'saveGraphLayout(store.libraryPath, currentLayoutId()',
   "invoke('write_text_file'",
   "invoke('write_markdown_file'",
   'autoSave',
