@@ -19,6 +19,7 @@ export function validateInstalledTagCollections(report, manifest) {
  assert.equal(report.refreshRetainedFiles,40);assert.equal(report.modifiedFirst,'标签笔记243.md')
  assert.deepEqual(report.partialOutcomes,['notExecuted','completed','notExecuted']);assert.equal(report.externalChangedPreserved,true);assert.equal(report.originalHistoryPreserved,true)
  assert.equal(report.dirtyExcluded,true);assert.equal(report.dirtyPreserved,true);assert.equal(report.secondaryDirtyBlocked,true);assert.equal(report.secondaryContentReloaded,true)
+ assert.equal(report.secondaryBlock.path,report.sourceFiles[3].path);assert.equal(report.secondaryBlock.before,report.sourceFiles[3].before);assert.equal(report.secondaryBlock.before,report.secondaryBlock.after);assert.match(report.secondaryBlock.error,/未保存/);assert.ok(report.secondaryBlock.error.includes(report.secondaryBlock.path.split(/[\\/]/).pop()));assert.equal(report.secondaryBlock.nativeError,report.secondaryBlock.error)
  assert.equal(report.collectionTagUnchanged,true);assert.equal(report.explicitSaveAfterChecks,true)
  assert.deepEqual(report.denials.map(item=>item.command),['search_collection_page','get_tag_catalog_page','preview_tag_edit','apply_tag_edit','close_tag_edit']);assert.ok(report.denials.every(item=>item.rejected&&/主工作台/.test(item.error)))
  for(const [index,item] of report.denials.entries()){if(index<2){assert.equal(item.nativeError.code,'forbidden');assert.equal(item.nativeError.message,item.error)}else assert.equal(item.nativeError,item.error)}

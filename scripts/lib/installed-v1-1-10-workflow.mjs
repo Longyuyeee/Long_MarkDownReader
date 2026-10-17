@@ -5,6 +5,7 @@ import crypto from 'node:crypto'
 import {withDeadline} from './with-deadline.mjs'
 import {nativeUserInput} from './v118-native-user-input.mjs'
 import {visibleMarkdownInput} from './visible-markdown-input.mjs'
+import {observedNativeCommand} from './observed-native-command.mjs'
 import {tagCollectionChecks,validateInstalledTagCollections} from './installed-v1-1-10-evidence.mjs'
 const q=JSON.stringify,hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 const store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`
@@ -22,7 +23,7 @@ export async function runInstalledV1110Workflow({send,evaluate,navigate,capture,
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:hash(await fs.readFile(installedExecutable)),evidenceLevel:'installed-webview-input-native-tag-ipc-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[],inputTrace:[],runtimeErrors:[],denials:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),check=n=>report.checks.push({id:tagCollectionChecks[n],status:'passed'})
  const mainEditor=visibleMarkdownInput('#vditor-lib'),otherEditor=visibleMarkdownInput('#vditor')
- const invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`)
+ const invoke=(command,args={})=>observedNativeCommand(evaluate,command,args)
  const folder=path.join(library,'v1110-tags-'+crypto.randomUUID()),relative=path.basename(folder),files=Array.from({length:244},(_,n)=>path.join(folder,`标签笔记${String(n).padStart(3,'0')}.md`)),oldTag='验收一零',newTag='验收一新',name='本版标签集合验收'
  let failure,external
  try{
@@ -73,7 +74,9 @@ export async function runInstalledV1110Workflow({send,evaluate,navigate,capture,
   const preview=()=>invoke('preview_tag_edit',{request:{libraryRoot:library,operation:{kind:'rename',from:oldTag,to:newTag},paths:[files[3]],excludedPaths:[]}})
   let plan=await preview();await other.clickTarget(otherEditor);await other.key('End','End',35,2);await external.send('Input.insertText',{text:'\n第二窗口仍在写的草稿'})
   await other.waitFor(`${store}.isTempDirty===true`,'actual secondary dirty state')
-  await assert.rejects(()=>invoke('apply_tag_edit',{request:{planId:plan.planId,selected:[0],confirmed:true}}),/未保存|文档/);report.secondaryDirtyBlocked=true
+  const secondaryBefore=hash(await fs.readFile(files[3]));let blockError
+  await assert.rejects(()=>invoke('apply_tag_edit',{request:{planId:plan.planId,selected:[0],confirmed:true}}),error=>{blockError=error;return /未保存/.test(error.message)&&error.message.includes(path.basename(files[3]))});report.secondaryDirtyBlocked=true
+  report.secondaryBlock={path:files[3],before:secondaryBefore,after:hash(await fs.readFile(files[3])),error:blockError.message,nativeError:blockError.nativeError};assert.equal(report.secondaryBlock.before,report.secondaryBlock.after)
   assert.ok(!(await fs.readFile(files[3],'utf8')).includes('第二窗口仍在写'));await other.clickText('button','保存');await other.waitFor(`${store}.isTempDirty===false`,'explicit secondary save');assert.ok((await fs.readFile(files[3],'utf8')).includes('第二窗口仍在写'))
   await invoke('close_tag_edit',{planId:plan.planId});plan=await preview();await invoke('apply_tag_edit',{request:{planId:plan.planId,selected:[0],confirmed:true}});check(10)
   await other.waitFor(`(${otherEditor})?.textContent.includes(${q(newTag)})`,'clean secondary content-only reload');report.secondaryContentReloaded=true;await invoke('close_tag_edit',{planId:plan.planId});check(11)
