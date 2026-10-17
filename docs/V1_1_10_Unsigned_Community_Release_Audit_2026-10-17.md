@@ -1,6 +1,14 @@
-# v1.1.10 社区版发布审计（完整同包验收通过，待公开）
+# v1.1.10 社区版发布审计（已封板、已公开、原包回下载通过）
 
-## 当前结论：完整验收通过，进入封板发布
+## 正式发布结论
+
+2026-10-17 **13:54:24 UTC / 北京时间 21:54:24**，[v1.1.10 正式发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.10)，非 draft、非 prerelease，当前公开/运行时均为 1.1.10。封板提交 `feb72bc07c0ad20b2c97c9f2719cfdf857cbd81d` 的 [main CI 39037946897 success](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39037946897)；标签明确指向产品 `599374bf4f11454889e11a6f0f9a7ac6e2cabb0e`，不是文档/驱动提交。
+
+[发布运行 39038439359 success](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39038439359) 上传同一份原 MSI/NSIS，随后从公开 Release 回下载三个附件，大小、SHA-256 与 GitHub asset digest 均一致，无重新构建或替换。公开原始 API、下载核验、工作流、构建收据及导入清单见[发布收据](evidence/v1.1.10-release/release-receipt.json)与[原始公开证据](evidence/v1.1.10-release/publication/)。下表字节即实际公开附件，原“待公开”段落为历史。
+
+README 保留开头软件图标和介绍，下载、校验、能力说明及末尾版本摘要已更新，Release 正文与 `RELEASE_NOTES_v1.1.10.md` 对齐；专用只读校验器同时检查历史行完整、摘要位置和下一目标。下一版 **1.1.11 图谱深化** 尚未实施。NotSigned、企业 RC=false 与应用内自动更新 `1.1.9-to-1.1.10-pending` 边界仍保留。
+
+## 封板前完整验收记录（已完成后续公开）
 
 固定产品 `599374bf4f11454889e11a6f0f9a7ac6e2cabb0e`；原始构建 [39031176731](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39031176731) 总体失败，但完整质量门、完整 Rust、构建 MSI/NSIS、不可变收据四个构建门均成功。后续只纠正驱动，没有重新编译产品或安装器。
 

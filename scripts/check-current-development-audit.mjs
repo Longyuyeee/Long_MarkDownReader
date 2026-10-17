@@ -140,6 +140,9 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
 const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
 const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json', 'utf8'))
+if (pkg.version === '1.1.10' && policy.gates?.githubReleasePublished === true) {
+  execFileSync(process.execPath, ['scripts/check-v1110-readme-publication.mjs'], { stdio: 'inherit' })
+}
 const v122Published = policy.appVersion === '1.0.22' && policy.gates?.githubReleasePublished === true
 const v123Candidate = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === false && development.publicVersion === '1.0.22'
 const v123Published = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === true && development.publicVersion === '1.0.23'
