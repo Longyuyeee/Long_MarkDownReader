@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: observed native command preserves successful native values and quoted arguments
+ok 1 - observed native command preserves successful native values and quoted arguments
+  ---
+  duration_ms: 0.878
+  ...
+# Subtest: observed native command retains raw string rejection, not generic CDP promise text
+ok 2 - observed native command retains raw string rejection, not generic CDP promise text
+  ---
+  duration_ms: 0.2736
+  ...
+# Subtest: observed native command retains structured rejection code and original message
+ok 3 - observed native command retains structured rejection code and original message
+  ---
+  duration_ms: 0.1319
+  ...
+# Subtest: current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input
+ok 4 - current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input
+  ---
+  duration_ms: 11.8469
+  ...
+# Subtest: current installer driver retains actual user input, all historical tasks and no synthetic native bridge
+ok 5 - current installer driver retains actual user input, all historical tasks and no synthetic native bridge
+  ---
+  duration_ms: 0.3018
+  ...
+# Subtest: v1.1.10 requires current report plus every historical generation with the same installed bytes and driver
+ok 6 - v1.1.10 requires current report plus every historical generation with the same installed bytes and driver
+  ---
+  duration_ms: 45.2809
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.2889
