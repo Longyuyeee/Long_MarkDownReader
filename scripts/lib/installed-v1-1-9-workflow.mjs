@@ -11,7 +11,7 @@ import {installedSessionBootProbe,installedSessionBridgeProbe} from './installed
 const q=JSON.stringify,key=value=>value.replaceAll('\\','/').replace(/^\/\/\?\//,'').toLowerCase()
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 export async function runInstalledV119Workflow({send,evaluate,navigate,waitFor,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
- assertSessionHosted();assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.9','1.1.10', '1.1.11', '1.1.12'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assertSessionHosted();assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),evidenceLevel:'installed-webview-input-native-picker-and-disk',sourceUserContentIncluded:false,nativeBridgeMocked:false,desktopInputUsed:false,nativePickerScope:'disposable-github-hosted-owned-process',status:'running',checks:[],inputTrace:[],nativePickers:[],draftChecks:[],quickDenials:[],sourceFiles:[],runtimeErrors:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),check=n=>report.checks.push({id:workSessionChecks[n],status:'passed'})
  const store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,bar='.work-session-bar',modal='.session-transfer-dialog'

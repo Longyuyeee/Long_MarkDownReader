@@ -188,9 +188,16 @@ pub(crate) fn snapshot(
         });
     }
     let after = digest(&pdf)?;
+    let mut after_bytes = Vec::new();
+    let checked_sidecar = guard.resolve_existing_file(&sidecar, &["json"])?;
+    fs::File::open(checked_sidecar)
+        .map_err(|e| e.to_string())?
+        .take(MAX_ANNOTATION_FILE_BYTES + 1)
+        .read_to_end(&mut after_bytes)
+        .map_err(|e| e.to_string())?;
     if after.source_digest != before.source_digest
         || after.source_signature != before.source_signature
-        || fs::read(&sidecar).map_err(|e| e.to_string())? != bytes
+        || after_bytes != bytes
     {
         return Err("PDF 或批注在整理期间变化，请重试".into());
     }
@@ -225,7 +232,13 @@ pub(crate) fn save_new(
     if target.exists() {
         return Err("目标文件已存在，未覆盖；请选择新的笔记名称".into());
     }
-    write_new_bytes(&target, content.as_bytes())?;
+    if let Err(error) = write_new_bytes(&target, content.as_bytes()) {
+        // A promotion may have succeeded before a cleanup/receipt failure.
+        // Acknowledge only these exact newly-authored bytes, never overwrite.
+        if fs::read(&target).ok().as_deref() != Some(content.as_bytes()) {
+            return Err(error);
+        }
+    }
     Ok(target.to_string_lossy().into_owned())
 }
 

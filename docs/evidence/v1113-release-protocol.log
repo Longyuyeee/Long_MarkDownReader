@@ -1,0 +1,155 @@
+TAP version 13
+# Subtest: content backup schema rejects missing workflows, source changes, incomplete restores and false native input
+ok 1 - content backup schema rejects missing workflows, source changes, incomplete restores and false native input
+  ---
+  duration_ms: 13.7478
+  ...
+# Subtest: new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts
+ok 2 - new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts
+  ---
+  duration_ms: 0.7462
+  ...
+# Subtest: inherited relation selection uses stable trusted input and retains native relationship assertions
+ok 3 - inherited relation selection uses stable trusted input and retains native relationship assertions
+  ---
+  duration_ms: 0.5848
+  ...
+# Subtest: native preflight and export reject libraries overlapping application data before reading content
+ok 4 - native preflight and export reject libraries overlapping application data before reading content
+  ---
+  duration_ms: 0.2743
+  ...
+# Subtest: current runtime requires the current report plus every inherited report, same installed EXE and driver
+ok 5 - current runtime requires the current report plus every inherited report, same installed EXE and driver
+  ---
+  duration_ms: 98.0349
+  ...
+# Subtest: PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts
+ok 6 - PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts
+  ---
+  duration_ms: 10.6812
+  ...
+# Subtest: PDF workflow uses real input, owned native chooser and independent disk checks
+ok 7 - PDF workflow uses real input, owned native chooser and independent disk checks
+  ---
+  duration_ms: 0.2444
+  ...
+# Subtest: v1.1.13 requires its PDF report and every predecessor, with the same executable and driver
+ok 8 - v1.1.13 requires its PDF report and every predecessor, with the same executable and driver
+  ---
+  duration_ms: 105.749
+  ...
+# Subtest: graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success
+ok 9 - graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success
+  ---
+  duration_ms: 1.17
+  ...
+# Subtest: published v1.0.24 requires its exact tag and keeps the new updater pending
+ok 10 - published v1.0.24 requires its exact tag and keeps the new updater pending
+  ---
+  duration_ms: 0.163
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=pending
+ok 11 - hosted-execution-pending: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0794
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=passed
+ok 12 - hosted-execution-pending: community=pending, receipt=passed
+  ---
+  duration_ms: 0.1546
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=pending
+ok 13 - hosted-execution-pending: community=passed, receipt=pending
+  ---
+  duration_ms: 0.1289
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=passed
+ok 14 - hosted-execution-pending: community=passed, receipt=passed
+  ---
+  duration_ms: 0.0488
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=pending
+ok 15 - hosted-managed-update-passed: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0415
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=passed
+ok 16 - hosted-managed-update-passed: community=pending, receipt=passed
+  ---
+  duration_ms: 0.0416
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=pending
+ok 17 - hosted-managed-update-passed: community=passed, receipt=pending
+  ---
+  duration_ms: 0.1583
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=passed
+ok 18 - hosted-managed-update-passed: community=passed, receipt=passed
+  ---
+  duration_ms: 0.1969
+  ...
+# Subtest: unknown status fails closed
+ok 19 - unknown status fails closed
+  ---
+  duration_ms: 0.1163
+  ...
+# Subtest: v1.0.23 candidate does not inherit historical updater acceptance
+ok 20 - v1.0.23 candidate does not inherit historical updater acceptance
+  ---
+  duration_ms: 0.1138
+  ...
+# Subtest: published successor boundary requires its own real release identity
+ok 21 - published successor boundary requires its own real release identity
+  ---
+  duration_ms: 0.0907
+  ...
+# Subtest: successor keeps the historical receipt and a separate pending update path
+ok 22 - successor keeps the historical receipt and a separate pending update path
+  ---
+  duration_ms: 0.0599
+  ...
+# Subtest: successor rejects pending-predecessor
+ok 23 - successor rejects pending-predecessor
+  ---
+  duration_ms: 0.5224
+  ...
+# Subtest: successor rejects stale-successor-path
+ok 24 - successor rejects stale-successor-path
+  ---
+  duration_ms: 0.0345
+  ...
+# Subtest: successor rejects wrong-previous
+ok 25 - successor rejects wrong-previous
+  ---
+  duration_ms: 0.0254
+  ...
+# Subtest: successor rejects wrong-tag
+ok 26 - successor rejects wrong-tag
+  ---
+  duration_ms: 0.0228
+  ...
+# Subtest: successor rejects unknown-version
+ok 27 - successor rejects unknown-version
+  ---
+  duration_ms: 0.0224
+  ...
+# Subtest: successor rejects changed-receipt
+ok 28 - successor rejects changed-receipt
+  ---
+  duration_ms: 0.0217
+  ...
+# Subtest: version boundary admits only current and planned successor runtime
+ok 29 - version boundary admits only current and planned successor runtime
+  ---
+  duration_ms: 0.1099
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 209.4705

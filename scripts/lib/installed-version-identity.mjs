@@ -31,7 +31,7 @@ export function validateInstalledVersionObservations(observations, appVersion) {
 }
 
 export async function runInstalledVersionScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12'].includes(appVersion)) throw new Error('Version scenario requires a supported disposable installer')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13'].includes(appVersion)) throw new Error('Version scenario requires a supported disposable installer')
   const observations = {}
   const report = { sourceCommit, installerSha256, appVersion, evidenceLevel: 'installed-webview-input-events', sourceUserContentIncluded: false, status: 'running', observations, checks: [] }
   const waitForVisibleSettings = async () => {

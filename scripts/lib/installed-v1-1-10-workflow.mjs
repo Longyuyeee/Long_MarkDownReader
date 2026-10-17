@@ -19,7 +19,7 @@ async function secondary(predicate){
  return {send,evaluate,close:()=>socket.close()}
 }
 export async function runInstalledV1110Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
- assert.equal(process.env.GITHUB_ACTIONS,'true');assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.10','1.1.11', '1.1.12'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.equal(process.env.GITHUB_ACTIONS,'true');assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.10','1.1.11', '1.1.12', '1.1.13'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:hash(await fs.readFile(installedExecutable)),evidenceLevel:'installed-webview-input-native-tag-ipc-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[],inputTrace:[],runtimeErrors:[],denials:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),check=n=>report.checks.push({id:tagCollectionChecks[n],status:'passed'})
  const mainEditor=visibleMarkdownInput('#vditor-lib'),otherEditor=visibleMarkdownInput('#vditor')

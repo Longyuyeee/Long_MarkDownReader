@@ -8,7 +8,7 @@ import {assertSessionHosted} from './lib/v119-native-session-fixture.mjs'
 import {nativeUserInput} from './lib/v118-native-user-input.mjs'
 import {validateInstalledWorkSession} from './lib/installed-v1-1-9-evidence.mjs'
 import {withDeadline} from './lib/with-deadline.mjs'
-assertSessionHosted();assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.9','1.1.10', '1.1.11', '1.1.12'].includes(process.env.LONGEDIT_R5J_APP_VERSION))
+assertSessionHosted();assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13'].includes(process.env.LONGEDIT_R5J_APP_VERSION))
 const output=process.env.LONGEDIT_R5J_OUTPUT,reportFile=path.join(output,'installed-v119-workflow.json'),report=JSON.parse(await fs.readFile(reportFile,'utf8'))
 assert.equal(report.status,'passed');assert.equal(report.sourceCommit,process.env.LONGEDIT_R5J_SOURCE_COMMIT)
 assert.equal(report.executableSha256,crypto.createHash('sha256').update(await fs.readFile(process.env.LONGEDIT_R5J_EXECUTABLE)).digest('hex'))

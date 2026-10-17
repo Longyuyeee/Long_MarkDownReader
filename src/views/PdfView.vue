@@ -867,6 +867,7 @@ let annotationRevision = 0
 let annotationSourcePath = ''
 let annotationLibraryRoot = ''
 let annotationLoadGeneration = 0
+let pdfLoadGeneration = 0
 let pdfFormInspectionGeneration = 0
 let ocrGeneration = 0
 let ocrWorker: TesseractWorker | null = null
@@ -2488,15 +2489,20 @@ const runSearch = async () => {
 }
 
 const loadPdf = async () => {
+  const generation = ++pdfLoadGeneration
+  const current = () => generation === pdfLoadGeneration
+  loading.value = true
   referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false; readingSnapshot.value = null
   readingSelection.value = []; readingListPage.value = 0
   annotationQuery.value = ''; annotationPages.value = ''; annotationKindFilter.value = ''; annotationColorFilter.value = ''
   await cancelOcr()
+  if (!current()) return
   ocrGeneration++
   annotationLoadGeneration++
   pdfFormInspectionGeneration++
   window.clearTimeout(annotationSaveTimer)
   await persistAnnotations()
+  if (!current()) return
   error.value = ''
   loading.value = true
   loadStartedAt = performance.now()
@@ -2580,6 +2586,7 @@ const loadPdf = async () => {
   dismissSelectionTool()
   clearTextState()
   await loadingTask?.destroy()
+  if (!current()) return
   rangeTransport?.abort()
   rangeTransport = null
   loadingTask = null
@@ -2595,10 +2602,12 @@ const loadPdf = async () => {
       ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: pdfPath.value,
     })
+    if (!current()) return
     pdfSourceSignature.value = descriptor.signature
     pdfSourceLength.value = descriptor.length
     if (!isExternal.value && route.query.sourceDigest) {
       await invoke('verify_pdf_reference', { libraryRoot: store.libraryPath, pdfPath: pdfPath.value, sourceDigest: String(route.query.sourceDigest), expectedSignature: descriptor.signature })
+      if (!current()) return
     }
     if (!isExternal.value) initializePdfMergeInputs(descriptor.signature)
     if (descriptor.fullData) {
@@ -2647,7 +2656,9 @@ const loadPdf = async () => {
         }
       })
     }
-    const document = await loadingTask.promise
+    const ownedTask = loadingTask
+    const document = await ownedTask.promise
+    if (!current()) { await ownedTask.destroy(); return }
     pdfDocument.value = document
     store.addTab({
       id: pdfPath.value,
@@ -2658,6 +2669,7 @@ const loadPdf = async () => {
     })
     if (!isExternal.value) initializePagePlan(document.numPages)
     const firstPage = await document.getPage(1)
+    if (!current()) return
     const viewport = firstPage.getViewport({ scale: 1 })
     basePage.value = { width: viewport.width, height: viewport.height }
     const routedPage = requestedPage()
@@ -2681,21 +2693,25 @@ const loadPdf = async () => {
     pdfMetadataCopyName.value = `${fileName.value}-文档属性.pdf`
     loading.value = false
     await nextTick()
+    if (!current()) return
     if (fitWidth.value) applyFitWidth()
     goToPage(restored, 'auto')
     if (!routedPage && viewState) {
       await nextTick()
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+      if (!current()) return
       scrollRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft, behavior: 'auto' })
     }
     loadOutline()
     if (!isExternal.value) {
       await loadAnnotations(document)
+      if (!current()) return
       await loadOcrDocument(document)
       if (sidebarTab.value === 'forms') void loadPdfFormInspection()
       if (sidebarTab.value === 'metadata') void loadPdfMetadataValues()
     }
   } catch (cause) {
+    if (!current()) return
     if (!error.value) error.value = String(cause).replace(/^Error:\s*/, '')
     loading.value = false
   }
@@ -2789,13 +2805,12 @@ const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   event.preventDefault()
   event.returnValue = ''
 }
-watch([pdfPath, () => store.libraryPath, isExternal], (_next, previous) => {
+watch([pdfPath, () => store.libraryPath, isExternal, () => route.query.sourceDigest], (_next, previous) => {
   if (previous?.[0]) rememberPdfViewState(previous[0])
   void loadPdf()
 })
-watch([() => route.query.page, () => route.query.annotation, () => route.query.sourceDigest], (_value, previous) => {
-  if (route.query.sourceDigest !== previous?.[2]) { void loadPdf(); return }
-  if (pdfDocument.value && annotationDocument.value) focusRequestedReference()
+watch([() => route.query.page, () => route.query.annotation], () => {
+  if (!loading.value && pdfDocument.value && annotationDocument.value) focusRequestedReference()
 })
 watch(searchQuery, () => {
   window.clearTimeout(searchTimer)
@@ -2815,6 +2830,7 @@ onMounted(() => {
   window.addEventListener('beforeunload', warnPagePlanBeforeUnload)
 })
 onBeforeUnmount(async () => {
+  pdfLoadGeneration++
   referenceGeneration++
   await cancelOcr()
   pdfFormInspectionGeneration++

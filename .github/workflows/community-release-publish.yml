@@ -69,27 +69,27 @@ jobs:
             if ($report.sourceCommit -and $report.sourceCommit -ne $env:PRODUCT_COMMIT) { throw 'Installed source identity mismatch' }
             if ($report.appVersion -and $report.appVersion -ne $env:RELEASE_VERSION) { throw 'Installed version mismatch' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.3','1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.3','1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $foundation = Get-Content verified-review/installed-v113-workflow.json -Raw | ConvertFrom-Json
             if ($foundation.status -ne 'passed' -or $foundation.checks.Count -ne 8 -or @($foundation.checks | Where-Object status -ne 'passed').Count -or $foundation.sourceCommit -ne $env:PRODUCT_COMMIT -or $foundation.appVersion -ne $env:RELEASE_VERSION -or $foundation.sourceUserContentIncluded -ne $false) { throw 'Foundation workflows did not pass in the exact installed product' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $extended = Get-Content verified-review/installed-v114-workflow.json -Raw | ConvertFrom-Json
             if ($extended.status -ne 'passed' -or $extended.checks.Count -ne 8 -or @($extended.checks | Where-Object status -ne 'passed').Count -or $extended.sourceCommit -ne $env:PRODUCT_COMMIT -or $extended.appVersion -ne $env:RELEASE_VERSION -or $extended.sourceUserContentIncluded -ne $false) { throw 'Template transfer, partial recovery and batch rename did not pass in the exact installed product' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $hardening = Get-Content verified-review/installed-v115-workflow.json -Raw | ConvertFrom-Json
             if ($hardening.status -ne 'passed' -or $hardening.checks.Count -ne 11 -or @($hardening.checks | Where-Object status -ne 'passed').Count -or $hardening.sourceCommit -ne $env:PRODUCT_COMMIT -or $hardening.appVersion -ne $env:RELEASE_VERSION -or $hardening.sourceUserContentIncluded -ne $false -or $hardening.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Safe import and scoped search did not pass in the exact installed product' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $continuity = Get-Content verified-review/installed-v116-workflow.json -Raw | ConvertFrom-Json
             if ($continuity.status -ne 'passed' -or $continuity.checks.Count -ne 13 -or @($continuity.checks | Where-Object status -ne 'passed').Count -or $continuity.sourceCommit -ne $env:PRODUCT_COMMIT -or $continuity.appVersion -ne $env:RELEASE_VERSION -or $continuity.sourceUserContentIncluded -ne $false -or $continuity.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Move, link and multi-window draft workflows did not pass in the exact installed product' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $history = Get-Content verified-review/installed-v117-workflow.json -Raw | ConvertFrom-Json
             if ($history.status -ne 'passed' -or $history.checks.Count -ne 12 -or @($history.checks | Where-Object status -ne 'passed').Count -or $history.sourceCommit -ne $env:PRODUCT_COMMIT -or $history.appVersion -ne $env:RELEASE_VERSION -or $history.sourceUserContentIncluded -ne $false -or $history.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Save/history workflows did not pass in the exact installed product' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $searchReview = Get-Content verified-review/installed-v118-workflow.json -Raw | ConvertFrom-Json
             if ($searchReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed search report does not belong to the successful review driver' }
             @'
@@ -101,7 +101,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Current installed search and Office workflows did not pass against the exact installer' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.9','1.1.10', '1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13')) {
             $sceneReview = Get-Content verified-review/installed-v119-workflow.json -Raw | ConvertFrom-Json
             if ($sceneReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed scene report does not belong to this successful review driver' }
             if ($sceneReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Scene and historical search checks used different installed executable bytes' }
@@ -114,7 +114,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Current scene workflow failed exact-installer validation' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.10','1.1.11', '1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.10','1.1.11', '1.1.12', '1.1.13')) {
             $tagReview = Get-Content verified-review/installed-v1110-workflow.json -Raw | ConvertFrom-Json
             if ($tagReview.harnessSourceCommit -ne $review.head_sha -or $tagReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Tag and collection review must use the exact successful driver and installed executable' }
             @'
@@ -126,7 +126,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Current tag/collection workflow failed exact-installer validation' }
           }
-          if ($env:RELEASE_VERSION -in @('1.1.11','1.1.12')) {
+          if ($env:RELEASE_VERSION -in @('1.1.11','1.1.12', '1.1.13')) {
             $graphReview = Get-Content verified-review/installed-v1111-workflow.json -Raw | ConvertFrom-Json
             if ($graphReview.harnessSourceCommit -ne $review.head_sha -or $graphReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Graph review must use the exact successful driver and installed executable' }
             @'
@@ -138,7 +138,7 @@ jobs:
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Current graph workflow failed exact-installer validation' }
           }
-          if ($env:RELEASE_VERSION -eq '1.1.12') {
+          if ($env:RELEASE_VERSION -in @('1.1.12','1.1.13')) {
             $backupReview = Get-Content verified-review/installed-v1112-workflow.json -Raw | ConvertFrom-Json
             if ($backupReview.harnessSourceCommit -ne $review.head_sha -or $backupReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Content backup must use the exact successful driver and installed executable' }
             @'
@@ -149,6 +149,18 @@ jobs:
           validateInstalledContentBackup(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});
           '@ | node --input-type=module
             if ($LASTEXITCODE -ne 0) { throw 'Content backup exact-installer validation failed' }
+          }
+          if ($env:RELEASE_VERSION -eq '1.1.13') {
+            $pdfReview = Get-Content verified-review/installed-v1113-workflow.json -Raw | ConvertFrom-Json
+            if ($pdfReview.harnessSourceCommit -ne $review.head_sha -or $pdfReview.executableSha256 -ne $searchReview.executableSha256) { throw 'PDF reading review must use the exact successful driver and installed executable' }
+            @'
+          import fs from 'node:fs';
+          import { validateInstalledPdfReading } from './scripts/lib/installed-v1-1-13-evidence.mjs';
+          const report = JSON.parse(fs.readFileSync('verified-review/installed-v1113-workflow.json','utf8').replace(/^\uFEFF/,''));
+          const receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));
+          validateInstalledPdfReading(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});
+          '@ | node --input-type=module
+            if ($LASTEXITCODE -ne 0) { throw 'Current PDF reading workflow failed exact-installer validation' }
           }
           New-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null
           $expected = @()
