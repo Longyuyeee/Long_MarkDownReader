@@ -43,3 +43,4 @@ pub mod xml;
 pub mod yaml;
 pub mod inbox;
 pub mod batch_rename;
+pub(crate) mod tag_edit;

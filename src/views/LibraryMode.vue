@@ -191,7 +191,7 @@
 
             <!-- 正文标签与相关笔记 -->
             <div v-else-if="activeSidebarTab === 'tags'" :key="'tags'" class="tab-pane tags-pane" role="tabpanel" id="panel-tags" aria-labelledby="tab-tags">
-              <InlineTagsPanel :tags="allTags" :loading="tagsLoading" :error="tagsError" :current-note="currentTaggedNote" :other-file-open="Boolean(activeTabId && !activeIsMarkdown)" :add-tag="addTagToCurrentFile"
+              <InlineTagsPanel :tags="allTags" :loading="tagsLoading" :error="tagsError" :catalog="tagCatalog.pendingStatus.value || tagCatalog.status.value" :catalog-more="tagCatalog.canContinue.value" :catalog-stale="tagCatalog.retaining.value" :current-note="currentTaggedNote" :other-file-open="Boolean(activeTabId && !activeIsMarkdown)" :add-tag="addTagToCurrentFile" @continue-catalog="tagCatalog.continueScan()"
                 @refresh="fetchAllTags" @open="path => handleNodeSelect([path])" @search="searchByTag" @browse="activeSidebarTab = 'files'" @save="saveCurrentFile" />
             </div>
 
@@ -720,6 +720,7 @@ import 'vditor/dist/index.css'
 import { useAppStore, THEME_MAP, type SavedSearchConfig, type TabInfo } from '../store/app'
 import SmartCollectionPanel from '../components/SmartCollectionPanel.vue'
 import InlineTagsPanel from '../components/InlineTagsPanel.vue'
+import { createTagCatalogPages } from '../services/tagCatalogPages'
 import NoteRelationsPanel from '../components/NoteRelationsPanel.vue'
 import { onFileRelationsChanged, requestFileRelation } from '../services/fileRelations'
 import { appendInlineTag } from '../utils/inlineTags'
@@ -1158,9 +1159,8 @@ const gitPull = async () => {
     refreshGitStatus()
   } catch (e: any) { message.destroyAll(); message.error('Pull 失败: ' + (e?.toString() || '')) }
 }
-const allTags = ref<{ tag: string; count: number }[]>([])
-const tagsLoading = ref(false), tagsError = ref('')
-let tagsGeneration = 0, tagsRoot = ''
+const tagCatalog = createTagCatalogPages(invoke)
+const { tags: allTags, busy: tagsLoading, error: tagsError } = tagCatalog
 const currentTaggedNote = computed(() => activeTabId.value && activeIsMarkdown.value ? {
   path: activeTabId.value,
   name: fileNameWithExtension(activeTabId.value),
@@ -1176,18 +1176,9 @@ const fetchLibStats = async () => {
 }
 
 const fetchAllTags = async () => {
-  const root = store.libraryPath, token = ++tagsGeneration
-  if (tagsRoot !== root) { tagsRoot = root; allTags.value = [] }
-  tagsError.value = ''
-  tagsLoading.value = Boolean(root)
-  if (!root) return
-  try {
-    const entries = await invoke<{ tag: string; count: number }[]>('get_all_tags', { libraryRoot: root })
-    if (token === tagsGeneration && root === store.libraryPath) allTags.value = entries
-  } catch (error) { if (token === tagsGeneration && root === store.libraryPath) tagsError.value = String(error) }
-  finally { if (token === tagsGeneration) tagsLoading.value = false }
+  await tagCatalog.start(store.libraryPath)
 }
-onBeforeUnmount(() => { ++tagsGeneration })
+onBeforeUnmount(() => { tagCatalog.dispose() })
 
 const addTagToCurrentFile = (tag: string) => {
   const note = currentTaggedNote.value
@@ -3586,8 +3577,10 @@ const refreshAfterFileMove = (event: Event) => {
   const { notice, pending } = (event as CustomEvent<{ notice: FileMoveNotice; pending: Promise<unknown>[] }>).detail
   if (!sameLibrary(notice.root, store.libraryPath)) return
   pending.push((async () => {
-    selectedKeys.value = selectedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
-    expandedKeys.value = expandedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+    if (!notice.contentOnly) {
+      selectedKeys.value = selectedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+      expandedKeys.value = expandedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
+    }
     const tab = tabs.value.find(item => item.id === activeTabId.value)
     if (tab && !tab.isDirty && activeIsMarkdown.value && notice.documents.some(path => sameLibrary(path, tab.path))) {
       const scroller = document.querySelector('.editor-main .vditor-wysiwyg > .vditor-reset') as HTMLElement | null
@@ -4485,11 +4478,7 @@ const handleKnowledgeIndexAction = (key: string) => {
 
 watch(() => store.libraryPath, (newPath) => {
   knowledgePages.reset()
-  ++tagsGeneration
-  tagsRoot = newPath
-  allTags.value = []
-  tagsError.value = ''
-  tagsLoading.value = false
+  tagCatalog.reset()
   ++knowledgeSearchGeneration
   if (searchTimer) clearTimeout(searchTimer)
   activeCollectionId.value = ''

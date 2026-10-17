@@ -1,0 +1,11 @@
+{
+  "scope": "pre-change Vue baseline with simulated IPC; not native acceptance",
+  "productBase": "2b3062fcac3c02bb151a7135ac3dfd9c0c3a8483",
+  "observed": {
+    "before": 1,
+    "during": 0,
+    "afterFailure": 0
+  },
+  "defect": "Refresh discards the existing file cards before a replacement succeeds",
+  "errors": []
+}

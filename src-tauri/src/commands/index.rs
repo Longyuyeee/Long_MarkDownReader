@@ -1313,6 +1313,24 @@ pub async fn search_knowledge_libraries_page(
 }
 
 #[tauri::command]
+pub async fn search_collection_page(
+    app: AppHandle,
+    window: tauri::Window,
+    request: search_pages::collections::CollectionPageRequest,
+) -> Result<search_pages::SearchPageResponse, search_pages::SearchPageError> {
+    search_pages::collections::run(app, window.label().to_owned(), request).await
+}
+
+#[tauri::command]
+pub async fn get_tag_catalog_page(
+    app: AppHandle,
+    window: tauri::Window,
+    request: search_pages::collections::CatalogPageRequest,
+) -> Result<search_pages::collections::CatalogPageResponse, search_pages::SearchPageError> {
+    search_pages::collections::run_catalog(app, window.label().to_owned(), request).await
+}
+
+#[tauri::command]
 pub async fn search_knowledge_page(
     app: AppHandle,
     window: tauri::Window,

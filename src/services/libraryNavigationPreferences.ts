@@ -3,7 +3,7 @@ interface Preferences {
   pinnedTags: string[]
   tagSort: 'name' | 'count'
   collectionOrder: string[]
-  resultViews: Record<string, { sort: 'name' | 'path'; scroll: number }>
+  resultViews: Record<string, { sort: 'name' | 'path' | 'modified' | 'relevance'; scroll: number }>
 }
 const cache = new Map<string, Preferences>()
 const key = (root: string) => 'longedit.library-navigation.v1:' + root.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()

@@ -324,13 +324,7 @@ impl LibrarySession {
         self.view.sort_by(|(a, ai), (b, bi)| {
             let left = &slots[*a].session.as_ref().unwrap().groups[*ai];
             let right = &slots[*b].session.as_ref().unwrap().groups[*bi];
-            let modified = if self.sort == SearchSort::Modified {
-                right.modified_nanos.cmp(&left.modified_nanos)
-            } else {
-                std::cmp::Ordering::Equal
-            };
-            modified
-                .then_with(|| compare_search_results(&left.matches[0], &right.matches[0]))
+            compare_groups(left, right, self.sort)
                 .then_with(|| slots[*a].scope.root.cmp(&slots[*b].scope.root))
         });
         // Overlapping configured roots can expose the exact same canonical file.

@@ -1,0 +1,84 @@
+(node:39248) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:7088) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: failure and retry preserve query: 项目
+ok 1 - failure and retry preserve query: 项目
+  ---
+  duration_ms: 5.0481
+  ...
+# Subtest: failure and retry preserve query: \#项目
+ok 2 - failure and retry preserve query: \#项目
+  ---
+  duration_ms: 1.9905
+  ...
+# Subtest: successful empty response is not failure
+ok 3 - successful empty response is not failure
+  ---
+  duration_ms: 2.2114
+  ...
+# Subtest: stale resolve cannot overwrite newer results
+ok 4 - stale resolve cannot overwrite newer results
+  ---
+  duration_ms: 2.3892
+  ...
+# Subtest: stale reject cannot overwrite newer results
+ok 5 - stale reject cannot overwrite newer results
+  ---
+  duration_ms: 5.44
+  ...
+# Subtest: clear invalidates pending response and clears busy state
+ok 6 - clear invalidates pending response and clears busy state
+  ---
+  duration_ms: 2.1197
+  ...
+# Subtest: library change rejects old response
+ok 7 - library change rejects old response
+  ---
+  duration_ms: 2.3439
+  ...
+# Subtest: new query immediately removes old result; missing library does not spin
+ok 8 - new query immediately removes old result; missing library does not spin
+  ---
+  duration_ms: 1.5807
+  ...
+# Subtest: component keeps errors distinct and offers accessible retry
+ok 9 - component keeps errors distinct and offers accessible retry
+  ---
+  duration_ms: 0.5583
+  ...
+# Subtest: real Vue watchers debounce changes and retry retains format filter
+ok 10 - real Vue watchers debounce changes and retry retains format filter
+  ---
+  duration_ms: 3.7139
+  ...
+# Subtest: real library watcher clears query, collection and busy state before late response
+ok 11 - real library watcher clears query, collection and busy state before late response
+  ---
+  duration_ms: 2.4824
+  ...
+# Subtest: real Vue clear cancels debounce without invoking backend
+ok 12 - real Vue clear cancels debounce without invoking backend
+  ---
+  duration_ms: 2.284
+  ...
+# Subtest: real Vue unmount cancels scheduled search
+ok 13 - real Vue unmount cancels scheduled search
+  ---
+  duration_ms: 4.8823
+  ...
+# Subtest: real Vue unmount invalidates a late response
+ok 14 - real Vue unmount invalidates a late response
+  ---
+  duration_ms: 1.895
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 433.8334

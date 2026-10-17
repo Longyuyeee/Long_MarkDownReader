@@ -1,0 +1,12 @@
+{
+  "scope": "formal Vue, simulated IPC, not native or installed acceptance",
+  "checks": [
+    "244 file groups load without a 200-hit cutoff",
+    "refresh pending and failure retain all previously loaded files, then restore depth",
+    "modified sort is a new server-side full-query order",
+    "unsubmitted collection conditions survive sidebar unmount",
+    "explicit preview excludes a real dirty tab, writes only chosen eligible file and preserves collection meaning",
+    "six styles and a short narrow window keep preview and result controls reachable"
+  ],
+  "errors": []
+}

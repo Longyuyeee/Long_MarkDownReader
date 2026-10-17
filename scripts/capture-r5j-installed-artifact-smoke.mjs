@@ -931,46 +931,50 @@ if (process.env.LONGEDIT_INSTALLED_V124_STABILITY === '1') {
   await runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256, appVersion })
 }
 if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
-  if (appVersion === '1.1.9') {
+  if (['1.1.9','1.1.10'].includes(appVersion)) {
     const { runInstalledV119Workflow } = await import('./lib/installed-v1-1-9-workflow.mjs')
     await runInstalledV119Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot })
   }
-  if (['1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV118Workflow } = await import('./lib/installed-v1-1-8-workflow.mjs')
     await runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot, mainTargetId: mainTarget.id })
   }
-  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV110Workflow } = await import('./lib/installed-v1-1-0-workflow.mjs')
     await runInstalledV110Workflow({ evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
   const { runInstalledVersionScenario } = await import('./lib/installed-version-identity.mjs')
-  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV111Workflow } = await import('./lib/installed-v1-1-1-workflow.mjs')
     await runInstalledV111Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
-  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV112Workflow } = await import('./lib/installed-v1-1-2-workflow.mjs')
     await runInstalledV112Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
-  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV113Workflow } = await import('./lib/installed-v1-1-3-workflow.mjs')
     await runInstalledV113Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
-  if (['1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV114Workflow } = await import('./lib/installed-v1-1-4-workflow.mjs')
     await runInstalledV114Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
-  if (['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV115Workflow } = await import('./lib/installed-v1-1-5-workflow.mjs')
     await runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
-  if (['1.1.6', '1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV116Workflow } = await import('./lib/installed-v1-1-6-workflow.mjs')
     await runInstalledV116Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
   }
-  if (['1.1.7', '1.1.8', '1.1.9'].includes(appVersion)) {
+  if (['1.1.7', '1.1.8', '1.1.9', '1.1.10'].includes(appVersion)) {
     const { runInstalledV117Workflow } = await import('./lib/installed-v1-1-7-workflow.mjs')
     await runInstalledV117Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion })
+  }
+  if (appVersion === '1.1.10') {
+    const { runInstalledV1110Workflow } = await import('./lib/installed-v1-1-10-workflow.mjs')
+    await runInstalledV1110Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot })
   }
   await runInstalledVersionScenario({ send, evaluate, waitFor, navigate, capture, output, sourceCommit, installerSha256, appVersion })
 }

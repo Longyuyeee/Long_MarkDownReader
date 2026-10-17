@@ -75,6 +75,16 @@ window.__TAURI_INTERNALS__ = {
   if(command==='read_text_document')return snapshot(args.path)
   if(command==='write_text_document'){disk.set(args.path,args.content);return snapshot(args.path)}
   if(command==='search_smart_collection')return {results:[{title:'项目方案.md',path:root+'/项目方案.md',objectType:'markdown',matchKind:'body',context:'让阅读、记录和继续工作更顺手。',score:100,extractionFailed:false}],truncated:false}
+  // Browser-only compatibility adapter for historical fixtures. Native and
+  // installed tests call the actual paged commands, never this adapter.
+  if(command==='get_tag_catalog_page'){const tags=await window.__TAURI_INTERNALS__.invoke('get_all_tags',{libraryRoot:args.request.libraryRoot});return {sessionId:'fixture-tags',tags,nextCursor:null,scanState:'ready',scanComplete:true,examinedNotes:Math.max(0,...tags.map(tag=>tag.count)),totalNotes:Math.max(0,...tags.map(tag=>tag.count)),unreadSources:0,warnings:[]}}
+  if(command==='close_knowledge_search')return true
+  if(command==='search_collection_page'){
+   const request=args.request,response=await window.__TAURI_INTERNALS__.invoke('search_smart_collection',{libraryRoot:request.libraryRoot,query:request.query,objectTypes:request.objectTypes,filters:request.filters})
+   const groups=new Map();for(const match of response.results){if(!groups.has(match.path))groups.set(match.path,{path:match.path,title:match.title,matches:[],mayHaveMoreMatches:false,locationLimitPerKind:5,unlocatedLimitPerKind:1});groups.get(match.path).matches.push(match)}
+   const files=[...groups.values()].sort((a,b)=>(request.sort==='path'?a.path:a.title).localeCompare(request.sort==='path'?b.path:b.title)),offset=Number(request.cursor?.split(':').at(-1)||0),end=offset+request.pageSize
+   return {sessionId:'fixture-collection',snapshotId:'fixture-collection',files:files.slice(offset,end),pageOffset:offset,nextCursor:end<files.length?'fixture:p:'+end:null,scanState:response.truncated?'limited':'ready',scanComplete:!response.truncated,totalFiles:response.truncated?null:files.length,warnings:[]}
+  }
   if(command==='search_knowledge')return [{title:'会议记录.md',path:root+'/会议记录.md',objectType:'markdown',matchKind:'body',context:'先确定保存的位置，再开始记录。',score:100,extractionFailed:false}]
   if(command==='preview_search_document')return {text:disk.get(args.path),label:'Markdown',truncated:false,matchFound:true}
   if(command==='plugin:dialog|open')return root+'/Inbox/参考资料'

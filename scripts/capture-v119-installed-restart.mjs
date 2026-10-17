@@ -8,7 +8,7 @@ import {assertSessionHosted} from './lib/v119-native-session-fixture.mjs'
 import {nativeUserInput} from './lib/v118-native-user-input.mjs'
 import {validateInstalledWorkSession} from './lib/installed-v1-1-9-evidence.mjs'
 import {withDeadline} from './lib/with-deadline.mjs'
-assertSessionHosted();assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.equal(process.env.LONGEDIT_R5J_APP_VERSION,'1.1.9')
+assertSessionHosted();assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1');assert.ok(['1.1.9','1.1.10'].includes(process.env.LONGEDIT_R5J_APP_VERSION))
 const output=process.env.LONGEDIT_R5J_OUTPUT,reportFile=path.join(output,'installed-v119-workflow.json'),report=JSON.parse(await fs.readFile(reportFile,'utf8'))
 assert.equal(report.status,'passed');assert.equal(report.sourceCommit,process.env.LONGEDIT_R5J_SOURCE_COMMIT)
 assert.equal(report.executableSha256,crypto.createHash('sha256').update(await fs.readFile(process.env.LONGEDIT_R5J_EXECUTABLE)).digest('hex'))
@@ -21,7 +21,7 @@ try{
  const evaluate=async expression=>{const data=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(data.exceptionDetails)throw Error(JSON.stringify(data.exceptionDetails));return data.result.value}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),store=`document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app')`
  await ui.waitFor(`${store}?.configReady===true&&!!document.querySelector('.app-navigation')`,'real process restart bootstrapped')
- const version=await evaluate(`window.__TAURI_INTERNALS__.invoke('plugin:app|version')`);assert.equal(version,'1.1.9')
+ const version=await evaluate(`window.__TAURI_INTERNALS__.invoke('plugin:app|version')`);assert.equal(version,process.env.LONGEDIT_R5J_APP_VERSION)
  await ui.clickText('.app-navigation a','工作台');await ui.click('#work-session-choice');await ui.key('Home','Home',36)
  const index=await evaluate(`Array.from(document.querySelector('#work-session-choice').options).findIndex(o=>o.textContent==='安装验收现场')`);assert.ok(index>0);for(let n=0;n<index;n++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)
  await ui.clickText('.work-session-bar button','继续工作');await ui.waitFor(`Math.abs(document.querySelector('.text-workspace .cm-scroller')?.scrollTop-340)<3`,'first position restored after real process restart');const first=await evaluate(`document.querySelector('.text-workspace .cm-scroller').scrollTop`)

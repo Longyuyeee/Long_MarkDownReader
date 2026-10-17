@@ -1,0 +1,25 @@
+   Compiling tauri-app v1.1.9 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 39.87s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-6c531fe148f04f14.exe)
+
+running 8 tests
+test commands::search::tests::searchable_extensions_are_case_insensitive_and_bounded ... ok
+test commands::search::tests::tag_search_rejects_missing_or_non_directory_root ... ok
+test commands::search::tests::link_lookup_can_skip_content_without_changing_regular_search ... ok
+test commands::search::tests::markdown_tags_stop_before_sentence_punctuation ... ok
+test commands::search::tests::tag_overview_distinguishes_empty_and_unavailable_library ... ok
+test commands::search::tests::tag_search_distinguishes_readable_empty_library_and_match ... ok
+test commands::search::tests::tag_catalog_matches_results_for_every_existing_tag_delimiter ... ok
+test commands::search::tests::tag_overview_counts_notes_and_includes_uppercase_markdown ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 992 filtered out; finished in 0.01s
+

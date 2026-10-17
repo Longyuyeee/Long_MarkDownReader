@@ -1,0 +1,151 @@
+(node:44428) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:44984) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: file pages append only the issued same-snapshot end and preserve locator payloads
+ok 1 - file pages append only the issued same-snapshot end and preserve locator payloads
+  ---
+  duration_ms: 4.4877
+  ...
+# Subtest: a failed next page retains loaded files and retries exactly the same cursor
+ok 2 - a failed next page retains loaded files and retries exactly the same cursor
+  ---
+  duration_ms: 0.3989
+  ...
+# Subtest: expired re-search preserves old files while waiting and preserves conditions
+ok 3 - expired re-search preserves old files while waiting and preserves conditions
+  ---
+  duration_ms: 0.404
+  ...
+# Subtest: expired restart retains all loaded cards across preparation and resumes the saved depth
+ok 4 - expired restart retains all loaded cards across preparation and resumes the saved depth
+  ---
+  duration_ms: 692.956
+  ...
+# Subtest: a failed replacement keeps the old cards and offers a fresh search, not stale paging
+ok 5 - a failed replacement keeps the old cards and offers a fresh search, not stale paging
+  ---
+  duration_ms: 0.4433
+  ...
+# Subtest: explicit cross-library refresh marks retained cards before IPC returns and retires old paging
+ok 6 - explicit cross-library refresh marks retained cards before IPC returns and retires old paging
+  ---
+  duration_ms: 0.2423
+  ...
+# Subtest: partial replacement with no usable files is not a successful empty search
+ok 7 - partial replacement with no usable files is not a successful empty search
+  ---
+  duration_ms: 0.2031
+  ...
+# Subtest: only a confirmed complete empty replacement removes the retained cards
+ok 8 - only a confirmed complete empty replacement removes the retained cards
+  ---
+  duration_ms: 0.1398
+  ...
+# Subtest: an inconsistent completion flag cannot turn a failed or partial replacement into empty success
+ok 9 - an inconsistent completion flag cannot turn a failed or partial replacement into empty success
+  ---
+  duration_ms: 0.4234
+  ...
+# Subtest: changing the query retires a pending replacement and cannot resurrect the old cards
+ok 10 - changing the query retires a pending replacement and cannot resurrect the old cards
+  ---
+  duration_ms: 0.3566
+  ...
+# Subtest: a newly ranked view waits for explicit refresh and never appends into the old list
+ok 11 - a newly ranked view waits for explicit refresh and never appends into the old list
+  ---
+  duration_ms: 0.2539
+  ...
+# Subtest: same-view progress cannot rewind the already-loaded page cursor
+ok 12 - same-view progress cannot rewind the already-loaded page cursor
+  ---
+  duration_ms: 0.3355
+  ...
+# Subtest: late query reply cannot replace new results or close the newer native session
+ok 13 - late query reply cannot replace new results or close the newer native session
+  ---
+  duration_ms: 0.2137
+  ...
+# Subtest: clear retires a late initial session
+ok 14 - clear retires a late initial session
+  ---
+  duration_ms: 0.1782
+  ...
+# Subtest: unmount retires a late initial session
+ok 15 - unmount retires a late initial session
+  ---
+  duration_ms: 0.0985
+  ...
+# Subtest: preparation is bounded and resumable, never reported as a completed empty result
+ok 16 - preparation is bounded and resumable, never reported as a completed empty result
+  ---
+  duration_ms: 0.1903
+  ...
+# Subtest: automatic preparation stops when a usable first page is ready
+ok 17 - automatic preparation stops when a usable first page is ready
+  ---
+  duration_ms: 2.5569
+  ...
+# Subtest: restoring previously loaded depth reads only the necessary pages
+ok 18 - restoring previously loaded depth reads only the necessary pages
+  ---
+  duration_ms: 0.2088
+  ...
+# Subtest: invalid phrase never invokes IPC, unknown native error never exposes raw paths
+ok 19 - invalid phrase never invokes IPC, unknown native error never exposes raw paths
+  ---
+  duration_ms: 0.3779
+  ...
+# Subtest: explicit tag mode uses the page protocol and keeps exact tag case
+ok 20 - explicit tag mode uses the page protocol and keeps exact tag case
+  ---
+  duration_ms: 0.1115
+  ...
+# Subtest: duplicate or cross-snapshot next pages fail without touching the old list
+ok 21 - duplicate or cross-snapshot next pages fail without touching the old list
+  ---
+  duration_ms: 0.2674
+  ...
+# Subtest: a malformed protocol response cannot become successful no-results
+ok 22 - a malformed protocol response cannot become successful no-results
+  ---
+  duration_ms: 0.0917
+  ...
+# Subtest: a malformed reply retires its allocated native session and invalid input retry stays local
+ok 23 - a malformed reply retires its allocated native session and invalid input retry stays local
+  ---
+  duration_ms: 0.1483
+  ...
+# Subtest: all failures, partial success with zero files and complete zero remain distinct
+ok 24 - all failures, partial success with zero files and complete zero remain distinct
+  ---
+  duration_ms: 0.3388
+  ...
+# (node:44532) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: empty-keyword collections call their real scoped command and page beyond 200 files without losing file-group locators
+ok 25 - empty-keyword collections call their real scoped command and page beyond 200 files without losing file-group locators
+  ---
+  duration_ms: 4.6337
+  ...
+# Subtest: refresh failure retains file cards but retires old cursors; a complete empty refresh alone clears them
+ok 26 - refresh failure retains file cards but retires old cursors; a complete empty refresh alone clears them
+  ---
+  duration_ms: 0.5914
+  ...
+# Subtest: a new collection cannot absorb a late old response or sort another query locally
+ok 27 - a new collection cannot absorb a late old response or sort another query locally
+  ---
+  duration_ms: 0.4191
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 881.8755

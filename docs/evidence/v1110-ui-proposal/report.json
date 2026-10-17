@@ -1,0 +1,9 @@
+{
+  "scope": "design proposal only, not production or native acceptance",
+  "checks": [
+    "continuation count is files, not mixed hit count",
+    "refresh recovery retains current cards",
+    "explicit batch preview, dirty exclusion and item outcome stay in one optional dialog"
+  ],
+  "errors": []
+}

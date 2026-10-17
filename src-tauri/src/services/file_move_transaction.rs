@@ -451,6 +451,7 @@ pub(crate) fn execute(
     }
     if let Some(protection) = &mut protection {
         protection.completed(super::move_windows::Notice {
+            content_only: false,
             root: guard.root().to_string_lossy().into_owned(),
             old_path: old.to_string_lossy().into_owned(),
             new_path: new.to_string_lossy().into_owned(),
@@ -817,6 +818,7 @@ fn resolve_stage(
             .relocate_authorizations(old, new)?;
     }
     let notice = super::move_windows::Notice {
+        content_only: false,
         root: stage.record.root.to_string_lossy().into_owned(),
         old_path: old.to_string_lossy().into_owned(),
         new_path: new.to_string_lossy().into_owned(),

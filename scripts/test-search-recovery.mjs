@@ -4,6 +4,7 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import { test } from 'node:test'
 import { createSearchPages } from '../src/services/searchPages.ts'
+import { createTagCatalogPages } from '../src/services/tagCatalogPages.ts'
 const queryModule = { exports: {} }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/searchQuery.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, queryModule)
 import { createRenderer, effectScope, nextTick, onUnmounted, reactive, ref, watch } from 'vue'
@@ -31,6 +32,7 @@ const harness = (vueWatchers = false) => {
   const context = vm.createContext({
     libraryLoadError: box(''), treeData: box([]), libraryLoadGeneration: 0,
     tagsGeneration: 0, tagsRoot: '', allTags: box([]), tagsError: box(''), tagsLoading: box(false),
+    tagCatalog: createTagCatalogPages(async () => true),
     parseSearchQuery: queryModule.exports.parseSearchQuery,
     searchQuery: box(''), knowledgeSearchResults: box([]), knowledgeSearchRunning: box(false), knowledgeSearchFailed: box(false), knowledgeSearchError: box(''),
     activeCollectionId: box(''), store: reactive({ libraryPath: 'synthetic-library' }), knowledgeSearchGeneration: 0,

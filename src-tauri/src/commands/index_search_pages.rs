@@ -12,6 +12,8 @@ use std::sync::{
 };
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+#[path = "index_collection_pages.rs"]
+pub mod collections;
 #[path = "index_search_libraries.rs"]
 pub mod libraries;
 
@@ -29,6 +31,8 @@ const MAX_AGE: Duration = Duration::from_secs(20 * 60);
 pub enum SearchChannel {
     Library,
     Palette,
+    Collection,
+    TagCatalog,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
@@ -37,6 +41,8 @@ pub enum SearchSort {
     #[default]
     Relevance,
     Modified,
+    Name,
+    Path,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
@@ -63,6 +69,15 @@ pub struct SearchPageRequest {
 
 impl SearchPageRequest {
     fn normalize_validate(&mut self) -> Result<(), SearchPageError> {
+        if !matches!(
+            self.channel,
+            SearchChannel::Library | SearchChannel::Palette
+        ) {
+            return Err(SearchPageError::new(
+                "invalidRequest",
+                "请使用原标签或集合入口继续查询。",
+            ));
+        }
         self.query = self.query.trim().to_owned();
         if self.match_mode == SearchMatchMode::Content {
             self.query = self.query.to_lowercase();
@@ -126,6 +141,8 @@ pub struct SearchPageResponse {
     pub indexed: bool,
     pub unread_sources: usize,
     pub warnings: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub catalog: Option<collections::CatalogSummary>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -293,6 +310,14 @@ pub async fn run_page(
     mut request: SearchPageRequest,
 ) -> Result<SearchPageResponse, SearchPageError> {
     request.normalize_validate()?;
+    run_scoped_page(app, window, request, None).await
+}
+async fn run_scoped_page(
+    app: AppHandle,
+    window: String,
+    request: SearchPageRequest,
+    collection: Option<collections::CollectionScope>,
+) -> Result<SearchPageResponse, SearchPageError> {
     let libraries = crate::commands::config::get_config(app.clone()).libraries;
     let selected = configured_page_scope(&libraries, &request.library_root)?;
     let guard = WorkspaceGuard::new(selected).map_err(|_| {
@@ -324,6 +349,7 @@ pub async fn run_page(
             snapshot,
             allow_index.then_some(cache),
         )?;
+        session.set_collection(collection.clone())?;
         session.index_epoch = revision.1;
         session.source_epoch = revision.2;
         runtime.insert(owner.clone(), session)?
@@ -341,6 +367,7 @@ pub async fn run_page(
                 "这是跨库查询的续载位置，请使用原搜索入口。",
             ));
         };
+        session.validate_collection_scope(&collection)?;
         session.validate_binding(&request)?;
         let result = session.request_live(&request, &index, SearchLimits::default());
         let result = if entry.cancelled.load(Ordering::Acquire) {
@@ -367,7 +394,7 @@ pub async fn run_page(
     })?
 }
 
-fn configured_page_scope<'a>(
+pub(crate) fn configured_page_scope<'a>(
     libraries: &'a [crate::commands::config::LibraryConfig],
     requested: &str,
 ) -> Result<&'a str, SearchPageError> {
@@ -491,6 +518,10 @@ struct QuerySession {
     sort: SearchSort,
     match_mode: SearchMatchMode,
     tag_pattern: Option<regex::Regex>,
+    collection: Option<collections::CollectionScope>,
+    collection_cutoff: Option<u64>,
+    pending_collection: bool,
+    catalog: Option<collections::CatalogState>,
     page_size: usize,
     revision: u64,
     index_epoch: u64,
@@ -546,6 +577,10 @@ impl QuerySession {
             } else {
                 None
             },
+            collection: None,
+            collection_cutoff: None,
+            pending_collection: false,
+            catalog: None,
             page_size: request.page_size,
             revision,
             index_epoch: 0,
@@ -898,13 +933,18 @@ impl QuerySession {
             next_cursor,
             scan_state: self.public_scan_state(),
             scan_complete: self.public_scan_state() == ScanState::Ready,
-            coverage: "registered-extractable-content",
+            coverage: if self.collection.is_some() && self.query.is_empty() {
+                "registered-file-metadata-and-tag-filter"
+            } else {
+                "registered-extractable-content"
+            },
             total_files: (self.public_scan_state() == ScanState::Ready)
                 .then_some(self.groups.len()),
             examined_sources: self.source_position,
             indexed: self.indexed,
             unread_sources: self.unread_sources,
             warnings: self.warnings.clone(),
+            catalog: self.catalog.as_ref().map(|catalog| catalog.summary()),
         }
     }
 
@@ -992,14 +1032,8 @@ impl QuerySession {
             self.warnings.push(warning);
         }
         let sort = self.sort;
-        self.groups.sort_by(|left, right| {
-            let modified = if sort == SearchSort::Modified {
-                right.modified_nanos.cmp(&left.modified_nanos)
-            } else {
-                std::cmp::Ordering::Equal
-            };
-            modified.then_with(|| compare_search_results(&left.matches[0], &right.matches[0]))
-        });
+        self.groups
+            .sort_by(|left, right| compare_groups(left, right, sort));
         // Ready pages keep only result payloads and source signatures, not all
         // source bodies, parser output or another copy of the index snapshot.
         self.scan = None;
@@ -1121,13 +1155,70 @@ impl QuerySession {
                 .guard
                 .root()
                 .join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+            if !self.pending_collection {
+                if let Some(scope) = &self.collection {
+                    let decision = scope.accept(&path, source, self.collection_cutoff, budget)?;
+                    if decision != collections::Decision::Pause {
+                        self.validate_source(source)?;
+                    }
+                    match decision {
+                        collections::Decision::Match => self.pending_collection = true,
+                        collections::Decision::Pause => return Ok(()),
+                        decision => {
+                            if decision == collections::Decision::Unread {
+                                self.unread_sources += 1;
+                            }
+                            self.source_position += 1;
+                            continue;
+                        }
+                    }
+                }
+            }
             if self.match_mode == SearchMatchMode::Tag
                 && !file_format_for_path(&path).is_ok_and(|format| format.id == "markdown")
             {
                 self.source_position += 1;
                 continue;
             }
-            let cached_file = self.indexed && !self.positions[self.source_position].is_empty();
+            let empty_collection = self.collection.is_some() && self.query.is_empty();
+            if self.catalog.is_some() {
+                match collections::catalog_source(
+                    &path,
+                    source,
+                    budget,
+                    self.catalog.as_mut().unwrap(),
+                )? {
+                    collections::CatalogDecision::Match => {
+                        self.validate_source(source)?;
+                        self.pending_collection = false;
+                        self.source_position += 1;
+                        // Counts have no file-card page. Do not consume the
+                        // 10k result-file/8 MiB result-payload allowance merely
+                        // to count notes; source/dictionary limits still apply.
+                        continue;
+                    }
+                    collections::CatalogDecision::Pause => return Ok(()),
+                    collections::CatalogDecision::Unread => {
+                        self.validate_source(source)?;
+                        self.unread_sources += 1;
+                        self.pending_collection = false;
+                        self.source_position += 1;
+                        continue;
+                    }
+                    collections::CatalogDecision::Limited => {
+                        self.finish(Some(
+                            "标签过长或统计达到会话载荷上限，已显示的数量仅为已统计部分。".into(),
+                        ));
+                        return Ok(());
+                    }
+                }
+            }
+            let cached_file = !empty_collection
+                && self.indexed
+                && !self.positions[self.source_position].is_empty();
+            if empty_collection && self.pending_segments.is_none() {
+                self.pending_segments = Some(vec![collections::file_segment(&path)?]);
+            }
             if !cached_file && self.pending_segments.is_none() {
                 let format =
                     file_format_for_path(&path).map_err(|_| SearchPageError::unavailable())?;
@@ -1210,7 +1301,13 @@ impl QuerySession {
             };
             let has_exclusions = crate::services::search_query::SearchQuery::parse(&self.query)
                 .is_ok_and(|parsed| !parsed.negative.is_empty());
-            let results = if unread && has_exclusions {
+            let results = if empty_collection {
+                budget.segment(0).map(|()| {
+                    vec![collections::file_result(
+                        self.pending_segments.as_ref().unwrap().first().unwrap(),
+                    )]
+                })
+            } else if unread && has_exclusions {
                 Ok(Vec::new())
             } else if let Some(pattern) = &self.tag_pattern {
                 if cached_file {
@@ -1311,6 +1408,7 @@ impl QuerySession {
                 self.groups.push(group);
             }
             self.pending_segments = None;
+            self.pending_collection = false;
             self.source_position += 1;
         }
         if self.source_position == self.sources.len() {
@@ -1323,6 +1421,20 @@ impl QuerySession {
         }
         Ok(())
     }
+}
+
+fn compare_groups(
+    left: &SearchFileGroup,
+    right: &SearchFileGroup,
+    sort: SearchSort,
+) -> std::cmp::Ordering {
+    let primary = match sort {
+        SearchSort::Modified => right.modified_nanos.cmp(&left.modified_nanos),
+        SearchSort::Name => left.title.to_lowercase().cmp(&right.title.to_lowercase()),
+        SearchSort::Path => left.path.to_lowercase().cmp(&right.path.to_lowercase()),
+        SearchSort::Relevance => std::cmp::Ordering::Equal,
+    };
+    primary.then_with(|| compare_search_results(&left.matches[0], &right.matches[0]))
 }
 
 // Windows can report directory metadata notifications while a read-only scan
@@ -1383,11 +1495,8 @@ fn tag_pattern(query: &str) -> Result<regex::Regex, SearchPageError> {
         .ok_or_else(|| {
             SearchPageError::new("invalidRequest", "标签筛选格式为 #标签，不含空格或引号。")
         })?;
-    regex::Regex::new(&format!(
-        r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#,
-        regex::escape(tag)
-    ))
-    .map_err(|_| SearchPageError::new("invalidRequest", "标签筛选条件无效。"))
+    crate::services::inline_tags::pattern(tag)
+        .map_err(|_| SearchPageError::new("invalidRequest", "标签筛选条件无效。"))
 }
 
 fn search_tag_segments<'a>(

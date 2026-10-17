@@ -1,0 +1,3 @@
+src/views/LibraryMode.vue(1412,118): error TS2322: Type 'Ref<SearchSort, SearchSort>' is not assignable to type 'Ref<"relevance" | "modified", "relevance" | "modified">'.
+  Type 'SearchSort' is not assignable to type '"relevance" | "modified"'.
+    Type '"path"' is not assignable to type '"relevance" | "modified"'.

@@ -489,10 +489,12 @@ const moveProtection = createFileMoveProtection({
         tab.content = undefined; tab.textSignature = undefined; tab.textContentDigest = undefined
       }
     }
-    if (store.activeTabId) store.activeTabId = movedPath(store.activeTabId, notice)
-    store.starredFiles = store.starredFiles.map(path => movedPath(path, notice))
-    store.recentFiles = store.recentFiles.map(item => ({ ...item, path: movedPath(item.path, notice) }))
-    try { await store.moveFileDisplayStyles(notice.oldPath, notice.newPath) } catch (error) { console.warn('文件位置已更新，显示设置稍后重试', error) }
+    if (!notice.contentOnly) {
+      if (store.activeTabId) store.activeTabId = movedPath(store.activeTabId, notice)
+      store.starredFiles = store.starredFiles.map(path => movedPath(path, notice))
+      store.recentFiles = store.recentFiles.map(item => ({ ...item, path: movedPath(item.path, notice) }))
+      try { await store.moveFileDisplayStyles(notice.oldPath, notice.newPath) } catch (error) { console.warn('文件位置已更新，显示设置稍后重试', error) }
+    }
     store.saveTabsState()
     const route = router.currentRoute.value, path = typeof route.query.path === 'string' ? route.query.path : ''
     const nextPath = path ? movedPath(path, notice) : ''

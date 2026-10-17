@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.9",
-  "releaseCandidate": true,
+  "appVersion": "1.1.10",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-17",
-  "currentStatus": "v1.1.9-community-release-published",
+  "currentStatus": "v1.1.10-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.8",
+    "previousPublicVersion": "1.1.9",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.8-to-1.1.9-pending",
-    "scope": "work-session-continuity"
+    "managedUpdaterUpgradePath": "1.1.9-to-1.1.10-pending",
+    "scope": "tags-and-collections-deepening"
   },
   "targetRelease": {
-    "tag": "v1.1.9",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.9",
+    "tag": "v1.1.10",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.10",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "b92c18a1705cf787a05c2b3a97e78feeb29d46fb",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39020293589,
-    "hostedInstalledLifecycleRunId": 39025506534,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.9_x64_zh-CN.msi",
-        "sizeBytes": 76877824,
-        "sha256": "e7206f10787df5587f6ec2e7e71a6ccfcd958fd6a5fdfcb9324551f89d999443",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.9_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.9_x64-setup.exe",
-        "sizeBytes": 67870194,
-        "sha256": "d9d7497867c6461bdf30f8fd36d138cf070c999baddf29969375f9e14a96b126",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.9_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.9",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.9",
-    "databaseId": 415747920,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "b92c18a1705cf787a05c2b3a97e78feeb29d46fb",
-    "publishedAt": "2026-10-17T10:55:40Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -93,7 +62,8 @@
     "v1.1.5-to-v1.1.6-managed-update-observation-pending",
     "v1.1.6-to-v1.1.7-managed-update-observation-pending",
     "v1.1.7-to-v1.1.8-managed-update-observation-pending",
-    "v1.1.8-to-v1.1.9-managed-update-observation-pending"
+    "v1.1.8-to-v1.1.9-managed-update-observation-pending",
+    "v1.1.9-to-v1.1.10-managed-update-observation-pending"
   ],
-  "nextAction": "audit-v1.1.10-approved-foundation-roadmap"
+  "nextAction": "validate-and-build-v1.1.10-installers"
 }

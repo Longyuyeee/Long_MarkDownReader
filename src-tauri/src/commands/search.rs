@@ -1,14 +1,11 @@
 use crate::commands::config::get_config;
+#[cfg(test)]
+use crate::services::inline_tags::TAGS as RE_TAG;
 use crate::FileEntry;
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
-
-static RE_TAG: LazyLock<regex::Regex> = LazyLock::new(|| {
-    regex::Regex::new(r#"(?:^|\s)#([^\s#`\[\](){}.,;:!?，。；：！？、\"'<>]+)"#).unwrap()
-});
 
 #[tauri::command]
 pub async fn search_library(
@@ -117,101 +114,66 @@ pub struct TagEntry {
 
 #[tauri::command]
 pub async fn get_all_tags(library_root: String) -> Result<Vec<TagEntry>, String> {
-    tags_in_library(Path::new(&library_root))
+    tauri::async_runtime::spawn_blocking(move || tags_in_library(Path::new(&library_root)))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 fn tags_in_library(root: &Path) -> Result<Vec<TagEntry>, String> {
     fs::read_dir(root).map_err(|_| "资料库不存在或无法读取，请检查路径后重试".to_string())?;
-    let mut tag_counts = HashMap::new();
-    collect_tags(root, &mut tag_counts);
-    let mut entries: Vec<TagEntry> = tag_counts
-        .into_iter()
-        .map(|(tag, count)| TagEntry { tag, count })
-        .collect();
-    entries.sort_by(|left, right| {
-        right
-            .count
-            .cmp(&left.count)
-            .then_with(|| left.tag.cmp(&right.tag))
-    });
-    Ok(entries)
+    super::index::search_pages::collections::legacy_tag_catalog(root).map(|entries| {
+        entries
+            .into_iter()
+            .map(|entry| TagEntry {
+                tag: entry.tag,
+                count: entry.count,
+            })
+            .collect()
+    })
 }
 
 #[tauri::command]
 pub async fn search_by_tag(library_root: String, tag: String) -> Result<Vec<FileEntry>, String> {
-    search_tags_in_library(Path::new(&library_root), &tag)
+    tauri::async_runtime::spawn_blocking(move || {
+        search_tags_in_library(Path::new(&library_root), &tag)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 fn search_tags_in_library(root: &Path, tag: &str) -> Result<Vec<FileEntry>, String> {
-    let mut results = Vec::new();
     // An unavailable library is a failed search, not a successful empty result.
     fs::read_dir(root).map_err(|_| "资料库不存在或无法读取，请检查路径后重试".to_string())?;
-    search_tag_recursive(root, tag, &mut results);
-    Ok(results)
-}
-
-fn collect_tags(dir: &Path, tag_counts: &mut HashMap<String, usize>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") {
-            continue;
-        }
-        if path.is_dir() {
-            collect_tags(&path, tag_counts);
-        } else if name.to_lowercase().ends_with(".md") {
-            if let Ok(content) = fs::read_to_string(path) {
-                let mut note_tags = HashSet::new();
-                for capture in RE_TAG.captures_iter(&content) {
-                    let tag = capture[1].to_string();
-                    if !tag.is_empty() && note_tags.insert(tag.clone()) {
-                        *tag_counts.entry(tag).or_insert(0) += 1;
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn search_tag_recursive(dir: &Path, tag: &str, results: &mut Vec<FileEntry>) {
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    let pattern = format!(
-        r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#,
-        regex::escape(tag)
-    );
-    let Ok(tag_regex) = regex::Regex::new(&pattern) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") {
-            continue;
-        }
-        if path.is_dir() {
-            search_tag_recursive(&path, tag, results);
-        } else if name.to_lowercase().ends_with(".md")
-            && fs::read_to_string(&path)
-                .map(|content| tag_regex.is_match(&content))
-                .unwrap_or(false)
-        {
-            results.push(FileEntry {
-                name: name.into_owned(),
-                path: path.to_string_lossy().into_owned(),
-                is_dir: false,
-            });
-        }
-    }
+    super::index::search_pages::collections::legacy_tag_files(root, tag)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tag_catalog_matches_results_for_every_existing_tag_delimiter() {
+        let fixture = crate::services::test_workspace::TestWorkspace::new();
+        fs::write(
+            fixture.0.join("punctuation.md"),
+            "正文 #项目`代码 #项目#后缀",
+        )
+        .unwrap();
+        let entries = tags_in_library(&fixture.0).unwrap();
+        assert_eq!(
+            entries
+                .iter()
+                .find(|entry| entry.tag == "项目")
+                .unwrap()
+                .count,
+            1
+        );
+        assert_eq!(
+            search_tags_in_library(&fixture.0, "项目").unwrap().len(),
+            1,
+            "a counted file must be reachable through that exact tag"
+        );
+    }
 
     #[test]
     fn tag_search_rejects_missing_or_non_directory_root() {

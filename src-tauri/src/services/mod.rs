@@ -18,12 +18,14 @@ pub(crate) mod file_move_links;
 pub(crate) mod file_move_transaction;
 pub(crate) mod history_coordination;
 pub mod knowledge_index;
+pub(crate) mod inline_tags;
 pub(crate) mod move_windows;
 pub mod pdf_index;
 pub mod reliable_write;
 pub(crate) mod search_query;
 pub(crate) mod search_scan;
 pub mod smart_collection;
+pub(crate) mod tag_edit;
 #[cfg(test)]
 pub(crate) mod test_workspace;
 pub mod workspace_guard;

@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases
+ok 1 - fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases
+  ---
+  duration_ms: 37.5621
+  ...
+# Subtest: specialized drafts participate by current path and dispose without keeping a stale block
+ok 2 - specialized drafts participate by current path and dispose without keeping a stale block
+  ---
+  duration_ms: 19.4918
+  ...
+# Subtest: a save in flight refuses execution while the originating move still counts for close protection
+ok 3 - a save in flight refuses execution while the originating move still counts for close protection
+  ---
+  duration_ms: 17.7377
+  ...
+# Subtest: composition and keyboard actions cannot add an unobserved edit after the acknowledgement
+ok 4 - composition and keyboard actions cannot add an unobserved edit after the acknowledgement
+  ---
+  duration_ms: 16.5741
+  ...
+# Subtest: refresh finishes before native release acknowledgement and the next batch item
+ok 5 - refresh finishes before native release acknowledgement and the next batch item
+  ---
+  duration_ms: 12.8972
+  ...
+# Subtest: lost release events use the native receipt to refresh once and restore interaction
+ok 6 - lost release events use the native receipt to refresh once and restore interaction
+  ---
+  duration_ms: 14.4159
+  ...
+# Subtest: path continuation retains filename case and excludes similarly named siblings
+ok 7 - path continuation retains filename case and excludes similarly named siblings
+  ---
+  duration_ms: 10.413
+  ...
+# Subtest: a cached Markdown draft follows a move when the native operation never rewrites its body
+ok 8 - a cached Markdown draft follows a move when the native operation never rewrites its body
+  ---
+  duration_ms: 9.5555
+  ...
+# Subtest: a dirty cached target from a deleted file is never mistaken for the moving draft
+ok 9 - a dirty cached target from a deleted file is never mistaken for the moving draft
+  ---
+  duration_ms: 10.7361
+  ...
+# Subtest: fresh reference drafts include unsaved-only incoming links and exclude another library
+ok 10 - fresh reference drafts include unsaved-only incoming links and exclude another library
+  ---
+  duration_ms: 11.6196
+  ...
+# Subtest: cached text drafts follow a move in the same editor while editor-type changes still require saving
+ok 11 - cached text drafts follow a move in the same editor while editor-type changes still require saving
+  ---
+  duration_ms: 7.9368
+  ...
+# Subtest: fresh protection passes the source and target to the cached text-draft retention decision
+ok 12 - fresh protection passes the source and target to the cached text-draft retention decision
+  ---
+  duration_ms: 8.2676
+  ...
+# Subtest: selecting a Windows spelling of an open dirty document reuses its tab and route
+ok 13 - selecting a Windows spelling of an open dirty document reuses its tab and route
+  ---
+  duration_ms: 3.6603
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 543.8738

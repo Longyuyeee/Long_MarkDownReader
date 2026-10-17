@@ -1,5 +1,5 @@
 <template>
-  <section class="inline-tags" aria-label="文内标签">
+  <section ref="panel" class="inline-tags" aria-label="文内标签">
     <section v-if="currentNote" class="current-note" aria-label="当前笔记标签">
       <div class="note-name"><NotebookPen /><strong>{{ currentNote.name }}</strong><span v-if="currentNote.dirty" class="draft-state">未保存</span></div>
       <div v-if="noteTags.length" class="note-tags"><button v-for="tag in noteTags" :key="tag" :aria-label="`查看 #${tag} 的笔记`" @click="selectTag(tag)">#{{ tag }}</button></div>
@@ -21,24 +21,32 @@
       <div v-if="tags.length" class="tag-filter"><Search /><input v-model="filter" aria-label="查找标签" placeholder="查找标签" /><button v-if="filter" class="icon-button" aria-label="清除标签查找" @click="filter = ''"><X /></button></div>
       <div v-if="error" class="tag-error" role="alert"><p>暂时没能读取资料库的标签。</p><button :disabled="loading" @click="$emit('refresh')"><RefreshCw />重试</button><details><summary>错误详情</summary><pre>{{ error }}</pre></details></div>
       <p v-if="loading" class="loading-state" role="status"><RefreshCw class="spinning" />正在整理已保存笔记的标签…</p>
-      <div v-if="filteredTags.length" class="all-tags"><button v-for="entry in filteredTags" :key="entry.tag" class="tag-item" @click="selectTag(entry.tag)" @contextmenu.prevent="openTagMenu($event, entry.tag)"><span class="tag-symbol"><Pin v-if="preferences.pinnedTags.includes(entry.tag)" /><template v-else>#</template></span><strong>{{ entry.tag }}</strong><small>{{ entry.count }} 篇</small><ChevronRight /></button></div>
-      <p v-else-if="!loading && !error" class="empty-label">{{ filter.trim() ? '没有找到这个标签' : '暂无已保存的标签' }}</p>
+      <p v-if="catalogStale" role="status">保留上次标签数量，本次统计尚未完成。</p>
+      <p v-else-if="catalog && !catalog.scanComplete" role="status">已统计 {{ catalog.examinedNotes }} 篇笔记，数量仅为已统计部分。{{ catalog.warnings.join('；') }}</p>
+      <button v-if="catalogMore" :disabled="loading" @click="$emit('continue-catalog')">继续统计标签</button>
+      <div v-if="filteredTags.length" class="all-tags"><button v-for="entry in filteredTags" :key="entry.tag" class="tag-item" @click="selectTag(entry.tag)" @contextmenu.prevent="openTagMenu($event, entry.tag)"><span class="tag-symbol"><Pin v-if="preferences.pinnedTags.includes(entry.tag)" /><template v-else>#</template></span><strong>{{ entry.tag }}</strong><small>{{ entry.count === null ? '待统计' : `${entry.count} 篇` }}</small><ChevronRight /></button></div>
+      <p v-else-if="!loading && !error" class="empty-label">{{ catalog && !catalog.scanComplete ? '标签尚未统计完整，请继续统计或查看提示。' : filter.trim() ? '没有找到这个标签' : '暂无已保存的标签' }}</p>
     </template>
 
     <template v-else>
       <button class="back-button" @click="back"><ArrowLeft />全部标签</button>
       <div class="selected-heading"><span class="tag-symbol">#</span><div><h3>{{ selectedTag }}</h3></div><button class="icon-button" aria-label="刷新标签笔记" :disabled="loading || running" @click="refresh"><RefreshCw :class="{ spinning: running }" /></button></div>
-      <div v-if="resultError" class="tag-error" role="alert"><p>暂时没能读取相关笔记，请重试。</p><button @click="selectTag(selectedTag)"><RefreshCw />重试</button><details><summary>错误详情</summary><pre>{{ resultError }}</pre></details></div>
-      <p v-else-if="running" class="loading-state" role="status"><RefreshCw class="spinning" />正在查找笔记…</p>
-      <template v-else>
-        <div class="section-label"><strong>相关笔记</strong><small>{{ results.length }} 篇</small></div>
-        <div v-if="!results.length" class="empty-tags"><strong>还没有保存的匹配笔记</strong><p>刚添加的标签需保存笔记后刷新。</p></div>
-        <div v-else class="tag-results"><button v-for="file in results" :key="file.path" class="tag-note" @click="$emit('open', file.path)"><NotebookPen :style="{ color: noteIconColor }" /><span><strong>{{ file.name }}</strong><small>{{ resultPath(file.path) }}</small></span><ChevronRight /></button></div>
+      <div v-if="resultError" class="tag-error" role="alert"><p>{{ resultError }}</p><button :disabled="running" @click="selectTag(selectedTag)"><RefreshCw />重试</button></div>
+      <p v-if="running" class="loading-state" role="status"><RefreshCw class="spinning" />正在查找笔记…</p>
+      <div class="tag-result-body">
+        <div class="section-label"><strong>相关笔记</strong><small>已加载 {{ results.length }}<template v-if="pageState?.totalFiles != null && !retaining"> / {{ pageState.totalFiles }}</template> 篇</small></div>
+        <p v-if="retaining">仍显示上次笔记，本次尚未更新。</p><p v-else-if="pageState && !pageState.scanComplete">尚未查全。{{ pageState.warnings?.join('；') }}</p>
+        <div class="note-actions"><button :disabled="!results.length || running" @click="selecting = !selecting; selectedPaths = []">{{ selecting ? '取消选择' : '选择笔记整理标签' }}</button><button v-if="selecting" :disabled="!selectedPaths.length" @click="editingTags = true">整理 {{ selectedPaths.length }} 份笔记</button></div>
+        <p v-if="selecting">最多选择 64 篇；仅处理明确选择的已加载笔记，不会代存草稿。</p>
+        <div v-if="!results.length && pageState?.scanComplete && !resultError" class="empty-tags"><strong>还没有保存的匹配笔记</strong><p>刚添加的标签需保存笔记后刷新。旧标签的固定记录仍保留，可右键取消固定。</p></div>
+        <div v-else class="tag-results"><div v-for="file in results" :key="file.path" class="tag-file-row"><input v-if="selecting" v-model="selectedPaths" type="checkbox" :value="file.path" :aria-label="`选择 ${file.title}`" :disabled="selectedPaths.length >= 64 && !selectedPaths.includes(file.path)" /><button class="tag-note" @click="$emit('open', file.path)"><NotebookPen :style="{ color: noteIconColor }" /><span><strong>{{ file.title }}</strong><small>{{ resultPath(file.path) }}</small></span><ChevronRight /></button></div></div>
+        <button v-if="nextPage" class="file-search" :disabled="running" @click="lookup.loadMore()">加载更多笔记</button><button v-if="canContinue" class="file-search" :disabled="running" @click="lookup.continueSearch()">继续查找笔记</button>
         <button class="file-search" @click="$emit('search', selectedTag)"><Search />在文件搜索中查看<ChevronRight /></button>
-      </template>
+      </div>
     </template>
 
     <n-dropdown :show="tagMenu.show" :x="tagMenu.x" :y="tagMenu.y" trigger="manual" placement="bottom-start" :options="tagMenuOptions" @select="tagMenuAction" @clickoutside="tagMenu.show = false" />
+    <TagEditDialog v-if="editingTags" :tag="selectedTag" :paths="selectedPaths" @close="editingTags = false" @completed="refresh" />
   </section>
 </template>
 
@@ -52,11 +60,13 @@ import { useAppStore } from '../store/app'
 import { inlineTags, normalizeInlineTag } from '../utils/inlineTags'
 import { searchResultPath } from '../utils/searchResultPath'
 import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
+import { createSearchPages } from '../services/searchPages'
+import type { TagCatalogFrame } from '../services/tagCatalogPages'
+import TagEditDialog from './TagEditDialog.vue'
 
 interface Note { path: string; name: string; content: string; dirty: boolean; editable: boolean }
-interface TagFile { path: string; name: string; is_dir: boolean }
-const props = defineProps<{ tags: { tag: string; count: number }[]; loading: boolean; error: string; currentNote: Note | null; otherFileOpen: boolean; addTag: (tag: string) => void | Promise<void> }>()
-const emit = defineEmits<{ refresh: []; open: [path: string]; search: [tag: string]; browse: []; save: [] }>()
+const props = defineProps<{ tags: { tag: string; count: number }[]; loading: boolean; error: string; catalog?: TagCatalogFrame | null; catalogMore?: boolean; catalogStale?: boolean; currentNote: Note | null; otherFileOpen: boolean; addTag: (tag: string) => void | Promise<void> }>()
+const emit = defineEmits<{ refresh: []; 'continue-catalog': []; open: [path: string]; search: [tag: string]; browse: []; save: [] }>()
 const store = useAppStore()
 const preferences = computed(() => libraryNavigationPreferences(store.libraryPath))
 const tagMenu = reactive({ show: false, x: 0, y: 0, tag: '' })
@@ -73,24 +83,31 @@ const tagMenuAction = (key: string) => {
   } else if (key === 'name' || key === 'count') updateLibraryNavigation(store.libraryPath, { tagSort: key })
 }
 const filter = ref(''), selectedTag = ref(''), newTag = ref(''), addingOpen = ref(false), adding = ref(false)
-const addError = ref(''), notice = ref(''), resultError = ref(''), running = ref(false), results = ref<TagFile[]>([])
+const addError = ref(''), notice = ref(''), selecting = ref(false), selectedPaths = ref<string[]>([]), editingTags = ref(false)
+const lookup = createSearchPages(invoke)
+const { files: results, busy: running, error: resultError, status: pageState, retainingView: retaining, nextPage, canContinue } = lookup
 const tagInput = ref<HTMLInputElement>()
+const panel = ref<HTMLElement>()
 const noteTags = computed(() => inlineTags(props.currentNote?.content || ''))
-const filteredTags = computed(() => { const query = filter.value.trim().replace(/^#+/, '').toLowerCase(); const preferencesValue = preferences.value; return props.tags.filter(entry => entry.tag.toLowerCase().includes(query)).sort((a, b) => Number(preferencesValue.pinnedTags.includes(b.tag)) - Number(preferencesValue.pinnedTags.includes(a.tag)) || (preferencesValue.tagSort === 'count' ? b.count - a.count : 0) || a.tag.localeCompare(b.tag, 'zh-CN', { numeric: true })) })
+const filteredTags = computed(() => {
+  const query = filter.value.trim().replace(/^#+/, '').toLowerCase(), pref = preferences.value
+  const entries: { tag: string; count: number | null }[] = [...props.tags, ...pref.pinnedTags.filter(tag => !props.tags.some(entry => entry.tag === tag)).map(tag => ({ tag, count: props.catalog?.scanComplete && !props.catalogStale ? 0 : null }))]
+  return entries.filter(entry => entry.tag.toLowerCase().includes(query)).sort((a, b) => Number(pref.pinnedTags.includes(b.tag)) - Number(pref.pinnedTags.includes(a.tag)) || (pref.tagSort === 'count' ? (b.count || 0) - (a.count || 0) : 0) || a.tag.localeCompare(b.tag, 'zh-CN', { numeric: true }))
+})
 const resultPath = (path: string) => searchResultPath(path, store.libraryPath)
 const noteIconColor = computed(() => store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : resolveFileTreeVisual('markdown').color)
 let generation = 0, disposed = false
 async function selectTag(tag: string) {
   const token = ++generation, root = store.libraryPath
-  selectedTag.value = tag; results.value = []; resultError.value = ''; running.value = true
-  try {
-    const files = await invoke<TagFile[]>('search_by_tag', { libraryRoot: root, tag })
-    if (disposed || generation !== token || root !== store.libraryPath) return
-    results.value = files
-  } catch (error) { if (!disposed && generation === token && root === store.libraryPath) resultError.value = String(error) }
-  finally { if (generation === token) running.value = false }
+  const preserve = tag === selectedTag.value, depth = preserve ? results.value.length : 0
+  const top = preserve ? panel.value?.parentElement?.scrollTop || 0 : 0
+  if (!preserve) { selectedPaths.value = []; selecting.value = false }
+  selectedTag.value = tag
+  await lookup.start({ libraryRoot: store.libraryPath, query: '', sort: 'name', channel: 'collection', kind: 'collection', objectTypes: ['markdown'], filters: { directory: '', tag, modifiedWithinDays: null } }, { preserve, loadUntil: depth })
+  await nextTick()
+  if (!disposed && token === generation && root === store.libraryPath && panel.value?.parentElement) panel.value.parentElement.scrollTop = top
 }
-const back = () => { ++generation; selectedTag.value = ''; running.value = false; results.value = []; resultError.value = '' }
+const back = () => { ++generation; selectedTag.value = ''; lookup.reset(); selectedPaths.value = []; selecting.value = false }
 const refresh = () => { emit('refresh'); if (selectedTag.value) void selectTag(selectedTag.value) }
 const toggleAdd = async () => { addingOpen.value = !addingOpen.value; addError.value = ''; notice.value = ''; if (addingOpen.value) { await nextTick(); tagInput.value?.focus() } }
 async function add() {
@@ -109,7 +126,7 @@ watch(() => props.currentNote?.path, () => { newTag.value = ''; addingOpen.value
 watch(newTag, () => { addError.value = '' })
 watch(() => props.currentNote?.dirty, (dirty, wasDirty) => { if (wasDirty && dirty === false) { notice.value = ''; if (selectedTag.value) void selectTag(selectedTag.value) } })
 watch(() => store.libraryPath, () => { back(); filter.value = ''; newTag.value = ''; addingOpen.value = false; addError.value = ''; notice.value = '' }, { flush: 'sync' })
-onBeforeUnmount(() => { disposed = true; ++generation })
+onBeforeUnmount(() => { disposed = true; ++generation; lookup.dispose() })
 </script>
 
 <style scoped>
@@ -132,4 +149,5 @@ svg { width: 16px; height: 16px; flex-shrink: 0; }.icon-button { width: 28px; mi
 .loading-state { display: flex; align-items: start; gap: 6px; }.tag-error { margin: 10px 0; padding: 10px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); }.tag-error p { margin: 0 0 9px; }.tag-error button { font-size: var(--text-compact); }.tag-error details { margin-top: 9px; color: var(--theme-text-secondary); font-size: 11px; }pre { font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: auto; }
 summary { cursor: pointer; }
 .spinning { animation: tag-spin 1s linear infinite; }@keyframes tag-spin { to { transform: rotate(360deg); } }@media (prefers-reduced-motion: reduce) { .spinning { animation: none; } }:global(body[data-motion="reduced"]) .spinning { animation: none; }
+.tag-file-row { display: flex; gap: 7px; align-items: start; }.tag-file-row > input { margin-top: 13px; width: 16px; min-height: 16px; flex-shrink: 0; }.tag-file-row > .tag-note { flex: 1; min-width: 0; }.section-label { flex-wrap: wrap; }
 </style>

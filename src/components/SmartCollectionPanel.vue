@@ -45,14 +45,18 @@
       <div v-if="error" class="collection-error" role="alert"><p>{{ error }}</p><button v-if="errorKind === 'run'" :disabled="running" @click="run"><RefreshCw />再试一次</button><details><summary>错误详情</summary><pre>{{ errorDetails }}</pre></details></div>
       <div v-if="mode === 'results'" class="results">
         <p v-if="running" class="result-waiting" role="status"><RefreshCw class="spinning" />正在查找匹配的资料…</p>
-        <template v-else-if="searched && !error">
-          <div class="section-label"><strong>匹配资料</strong><small>{{ results.length }} 项</small><select v-model="resultSort" aria-label="集合结果排序" @change="rememberView"><option value="name">名称排序</option><option value="path">路径排序</option></select></div>
-          <p v-if="truncated" class="result-limit">显示前 200 项，可调整条件缩小范围。</p>
-          <div v-if="!results.length" class="empty-collections"><Search /><strong>还没有匹配的资料</strong><p>换个关键词，或放宽筛选条件试试。</p><button @click="mode = 'editor'">调整条件</button></div>
+        <p v-if="lookupError" class="collection-error" role="alert">{{ lookupError }}<button :disabled="running" @click="run">重新查找</button><span v-if="directory">文件夹可能已移动或删除，请从“调整条件”重新选择；原集合仍保留。</span></p>
+        <template v-if="searched || results.length">
+          <div class="section-label"><strong>匹配资料</strong><small>已加载 {{ results.length }}<template v-if="pageState?.totalFiles != null && !retaining"> / {{ pageState.totalFiles }}</template> 个文件</small><select v-model="resultSort" :disabled="running" aria-label="集合结果排序" @change="run"><option value="name">名称排序</option><option value="path">路径排序</option><option value="modified">修改时间排序</option><option value="relevance">相关度排序</option></select></div>
+          <p v-if="retaining" class="result-limit" role="status">保留上次结果，尚未更新；旧续载位置已停用。</p>
+          <p v-else-if="pageState && !pageState.scanComplete" class="result-limit">尚未查全，当前数量仅代表已加载文件。{{ pageState.warnings?.join('；') }}</p>
+          <div v-if="!results.length && pageState?.scanComplete && !lookupError" class="empty-collections"><Search /><strong>还没有匹配的资料</strong><p>换个关键词，或放宽筛选条件试试。</p><button @click="mode = 'editor'">调整条件</button></div>
           <article v-for="(result, i) in sortedResults" :key="`${result.path}-${i}`" class="collection-result">
             <button class="result-open" @click="$emit('open', result)"><component :is="resultVisual(result).icon" :style="{ color: resultVisual(result).color }" /><span><strong>{{ result.title }}</strong><small>{{ formatLabel(result.objectType) }}<template v-if="result.locationLabel"> · {{ result.locationLabel }}</template><template v-else-if="result.page"> · 第 {{ result.page }} 页</template></small><span v-if="result.context && result.context !== '符合集合条件'" class="result-excerpt">{{ result.context }}</span></span><ChevronRight /></button>
-            <details class="result-details"><summary>{{ relativeResultPath(result) }}</summary><p v-if="result.context">{{ result.context }}</p><small>{{ result.path }}</small><small v-if="result.extractionFailed">正文暂未解析</small></details>
+            <details class="result-details"><summary>{{ relativeResultPath(result) }} · {{ files[i]?.matches.length || 1 }} 个匹配位置</summary><button v-for="(match, n) in files[i]?.matches" :key="n" class="match-location" @click="$emit('open', match)">{{ match.locationLabel || (match.page ? `第 ${match.page} 页` : match.context || '打开文件') }}</button><small>{{ result.path }}</small><small v-if="result.extractionFailed">正文暂未解析</small></details>
           </article>
+          <button v-if="nextPage" class="load-more" :disabled="running" @click="lookup.loadMore()">加载更多文件</button>
+          <button v-if="canContinue" class="load-more" :disabled="running" @click="lookup.continueSearch()">继续查找</button>
         </template>
       </div>
     </template>
@@ -70,6 +74,8 @@ import { resolveFileTreeVisual } from '../config/fileTreeAppearance'
 import { sameWorkspacePath, toCollectionRelativePath } from '../utils/savedCollections'
 import { searchResultPath } from '../utils/searchResultPath'
 import { libraryNavigationPreferences, updateLibraryNavigation, splitFilterTags } from '../services/libraryNavigationPreferences'
+import { createSearchPages, type CollectionSort } from '../services/searchPages'
+import { rememberCollectionDraft, readCollectionDraft, type CollectionDraft } from '../services/collectionDrafts'
 interface Result {
   title: string; path: string; objectType: string; matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
   context: string; page?: number; annotationId?: string; locatorKind?: string; locatorObjectId?: string; locationLabel?: string; score: number; extractionFailed: boolean
@@ -77,14 +83,17 @@ interface Result {
 const props = withDefaults(defineProps<{ selected: SavedSearchConfig | null; editing?: boolean; formats: { label: string; value: string }[]; collections: SavedSearchConfig[]; currentQuery?: string; summaryFor: (entry: SavedSearchConfig) => string }>(), { editing: false, currentQuery: '' })
 const emit = defineEmits<{ open: [result: Result]; select: [entry: SavedSearchConfig]; edit: [entry: SavedSearchConfig]; remove: [entry: SavedSearchConfig]; saved: [entry: SavedSearchConfig]; reset: []; 'save-search': [] }>()
 const store = useAppStore()
-const panel = ref<HTMLElement>(), resultSort = ref<'name' | 'path'>('name'), dragCollection = ref('')
+const panel = ref<HTMLElement>(), resultSort = ref<CollectionSort>('name'), dragCollection = ref('')
+const lookup = createSearchPages(invoke)
+const { files, busy: running, status: pageState, error: lookupError, retainingView: retaining, nextPage, canContinue } = lookup
 const preferences = computed(() => libraryNavigationPreferences(store.libraryPath))
 const orderedCollections = computed(() => [...props.collections].sort((a, b) => {
   const order = preferences.value.collectionOrder
   const rank = (id: string) => order.includes(id) ? order.indexOf(id) : order.length
   return rank(a.id) - rank(b.id)
 }))
-const sortedResults = computed(() => [...results.value].sort((a, b) => (resultSort.value === 'name' ? a.title.localeCompare(b.title, 'zh-CN', { numeric: true }) : a.path.localeCompare(b.path, 'zh-CN', { numeric: true }))))
+const results = computed(() => files.value.map(file => file.matches[0]))
+const sortedResults = results
 const moveCollection = (id: string, target?: string) => {
   if (!target) return
   const order = orderedCollections.value.map(entry => entry.id), from = order.indexOf(id), to = order.indexOf(target)
@@ -104,7 +113,7 @@ onMounted(() => scrollParent()?.addEventListener('scroll', rememberScroll, { pas
 const mode = ref<'home' | 'editor' | 'results'>('home'), advanced = ref(false)
 const name = ref(''), query = ref(''), directory = ref(''), tag = ref(''), editingId = ref('')
 const objectTypes = ref<string[]>([]), days = ref<number | null>(null)
-const results = ref<Result[]>([]), running = ref(false), saving = ref(false), choosing = ref(false), searched = ref(false), truncated = ref(false)
+const saving = ref(false), choosing = ref(false), searched = ref(false)
 const error = ref(''), errorDetails = ref(''), errorKind = ref(''), notice = ref('')
 const nameInput = ref<HTMLInputElement>(), tagInput = ref<HTMLInputElement>()
 const filters = () => { const tags = splitFilterTags(tag.value); return { directory: directory.value.trim(), tag: tags[0] || '', ...(tags.length > 1 ? { tags: tags.slice(1) } : {}), modifiedWithinDays: days.value } }
@@ -118,46 +127,49 @@ const relativeResultPath = (result: Result) => searchResultPath(result.path, sto
 const resultVisual = (result: Result) => { const visual = resolveFileTreeVisual(result.objectType); return { ...visual, color: store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : visual.color } }
 const entryOptions = (entry: SavedSearchConfig) => [{ label: '打开集合', key: 'open' }, ...(!entry.graphRoot ? [{ label: '修改条件', key: 'edit' }] : []), { label: '移到最前', key: 'first' }, { label: '删除集合', key: 'remove' }]
 const collectionAction = (action: string, entry: SavedSearchConfig) => { if (action === 'open') emit('select', entry); else if (action === 'edit') emit('edit', entry); else if (action === 'remove') emit('remove', entry); else if (action === 'first') moveCollection(entry.id, orderedCollections.value[0]?.id) }
-let generation = 0, previousRoot = '', disposed = false
-const invalidate = () => { generation++; results.value = []; searched.value = false; running.value = false; error.value = ''; errorDetails.value = ''; notice.value = '' }
+let generation = 0, previousRoot = '', disposed = false, resultKey = ''
+const preserveDraft = (root = previousRoot || store.libraryPath) => rememberCollectionDraft(root, hasDraft.value ? { id: editingId.value, name: name.value, query: query.value, directory: directory.value, tag: tag.value, days: days.value, objectTypes: [...objectTypes.value], baseline: baseline.value, advanced: advanced.value } : null, editingId.value)
+const restoreDraft = (draft: CollectionDraft) => { editingId.value = draft.id; name.value = draft.name; query.value = draft.query; directory.value = draft.directory; tag.value = draft.tag; days.value = draft.days; objectTypes.value = draft.objectTypes; baseline.value = draft.baseline; advanced.value = draft.advanced }
+const invalidate = () => { generation++; lookup.reset(); resultKey = ''; searched.value = false; error.value = ''; errorDetails.value = ''; notice.value = '' }
 watch([query, directory, tag, days, objectTypes], invalidate, { deep: true, flush: 'sync' })
 watch(name, () => { notice.value = '' })
 const resetFields = () => { invalidate(); editingId.value = ''; name.value = ''; query.value = ''; directory.value = ''; tag.value = ''; days.value = null; objectTypes.value = []; advanced.value = false; baseline.value = fingerprint() }
-const goHome = () => { mode.value = 'home'; emit('reset') }
-const beginNew = async () => { resetFields(); mode.value = 'editor'; emit('reset'); await nextTick(); nameInput.value?.focus() }
+const goHome = () => { preserveDraft(); mode.value = 'home'; emit('reset') }
+const beginNew = async () => { preserveDraft(); resetFields(); mode.value = 'editor'; emit('reset'); await nextTick(); nameInput.value?.focus() }
 const preset = async (kind: string) => {
   await beginNew()
-  if (kind === 'recent') { name.value = '最近更新'; days.value = 7; void run() }
+  if (kind === 'recent') { name.value = '最近更新'; days.value = 7; resultSort.value = 'modified'; void run() }
   else if (kind === 'notes') { name.value = '全部笔记'; objectTypes.value = ['markdown']; void run() }
   else { name.value = '标签笔记'; advanced.value = true; await nextTick(); tagInput.value?.focus() }
 }
 const fail = (message: string, cause: unknown, kind: string) => { error.value = message; errorDetails.value = String(cause); errorKind.value = kind }
 async function run() {
   if (running.value || saving.value) return
-  invalidate(); mode.value = 'results'
+  mode.value = 'results'; error.value = ''; notice.value = ''
   const token = generation, root = store.libraryPath
-  running.value = true
-  try {
-    const response = await invoke<{ results: Result[]; truncated: boolean }>('search_smart_collection', { libraryRoot: root, query: query.value, objectTypes: [...objectTypes.value], filters: filters() })
-    if (disposed || generation !== token || store.libraryPath !== root) return
-    results.value = response.results; truncated.value = response.truncated; searched.value = true
-    const view = preferences.value.resultViews[editingId.value]
-    resultSort.value = view?.sort === 'path' ? 'path' : 'name'
+  const key = JSON.stringify({ root, query: query.value, types: objectTypes.value, filters: filters(), sort: resultSort.value })
+  const preserve = resultKey === key && files.value.length > 0
+  const top = preserve ? scrollParent()?.scrollTop || 0 : preferences.value.resultViews[editingId.value]?.scroll || 0
+  const depth = preserve ? files.value.length : 0
+  resultKey = key
+  await lookup.start({ libraryRoot: root, query: query.value, sort: resultSort.value, kind: 'collection', channel: 'collection', objectTypes: [...objectTypes.value], filters: filters() }, { preserve, loadUntil: depth })
+  if (!disposed && generation === token && root === store.libraryPath) {
+    searched.value = true
     await nextTick()
-    if (generation === token && scrollParent()) scrollParent()!.scrollTop = Number.isFinite(view?.scroll) ? Math.max(0, view.scroll) : 0
-  } catch (cause) { if (generation === token && !disposed) fail('暂时没能找到资料，请重试或调整条件。', cause, 'run') }
-  finally { if (generation === token) running.value = false }
+    if (scrollParent()) scrollParent()!.scrollTop = Math.max(0, top)
+  }
 }
 async function save() {
   if (saving.value || running.value) return
   if (!name.value.trim()) { mode.value = 'editor'; await nextTick(); nameInput.value?.focus(); return }
-  const root = store.libraryPath, token = generation
+  const root = store.libraryPath, token = generation, draftId = editingId.value
   saving.value = true; error.value = ''; notice.value = ''
   try {
     const entry = await store.saveSmartCollection({ id: editingId.value || undefined, name: name.value, query: query.value, objectTypes: [...objectTypes.value], filters: filters() })
     if (disposed || store.libraryPath !== root || generation !== token) return
     editingId.value = entry.id; name.value = entry.name; query.value = entry.query; directory.value = entry.filters?.directory || ''; tag.value = [entry.filters?.tag, ...(entry.filters?.tags || [])].filter(Boolean).join(' ')
     baseline.value = fingerprint(); mode.value = 'results'; saving.value = false
+    rememberCollectionDraft(root, null, draftId)
     emit('saved', entry)
     const lookup = run(), shownGeneration = generation
     void lookup.then(() => { if (!disposed && store.libraryPath === root && editingId.value === entry.id && generation === shownGeneration) notice.value = '集合已保存，下次从“我的集合”打开。' })
@@ -177,17 +189,21 @@ const chooseDirectory = async () => {
 }
 watch(() => [props.selected, props.editing, store.libraryPath] as const, ([selected]) => {
   rememberView()
-  if (store.libraryPath !== previousRoot) { previousRoot = store.libraryPath; resetFields(); mode.value = 'home' }
-  if (!selected || selected.libraryPath !== store.libraryPath || selected.graphRoot) return
+  if (store.libraryPath !== previousRoot) { if (previousRoot) preserveDraft(previousRoot); previousRoot = store.libraryPath; resetFields(); mode.value = 'home' }
+  if (!selected || selected.libraryPath !== store.libraryPath || selected.graphRoot) { const draft = readCollectionDraft(store.libraryPath, ''); if (draft && !hasDraft.value) restoreDraft(draft); return }
+  if (selected.id === editingId.value && hasDraft.value) { if (props.editing) mode.value = 'editor'; return }
   if (selected.id === editingId.value && mode.value === 'results' && !props.editing && selected.name === name.value && selected.query === query.value && JSON.stringify(selected.filters || { directory: '', tag: '', modifiedWithinDays: null }) === JSON.stringify(filters()) && JSON.stringify([...selected.objectTypes].sort()) === JSON.stringify([...objectTypes.value].sort())) return
-  resetFields(); editingId.value = selected.id; name.value = selected.name; query.value = selected.query; objectTypes.value = [...selected.objectTypes]
+  preserveDraft(); resetFields(); editingId.value = selected.id; name.value = selected.name; query.value = selected.query; objectTypes.value = [...selected.objectTypes]
   directory.value = selected.filters?.directory || ''; tag.value = [selected.filters?.tag, ...(selected.filters?.tags || [])].filter(Boolean).join(' '); days.value = selected.filters?.modifiedWithinDays ?? null
   baseline.value = fingerprint(); advanced.value = Boolean(directory.value || tag.value || days.value || objectTypes.value.length)
+  resultSort.value = preferences.value.resultViews[selected.id]?.sort || 'name'
+  const draft = readCollectionDraft(store.libraryPath, selected.id)
+  if (draft) { restoreDraft(draft); mode.value = 'editor'; return }
   mode.value = props.editing ? 'editor' : 'results'
   if (!props.editing) void run()
 }, { immediate: true })
 watch(() => props.collections, entries => { if (editingId.value && !entries.some(entry => entry.id === editingId.value)) { resetFields(); mode.value = 'home'; emit('reset') } })
-onBeforeUnmount(() => { clearTimeout(viewTimer); rememberView(); scrollParent()?.removeEventListener('scroll', rememberScroll); disposed = true; invalidate() })
+onBeforeUnmount(() => { clearTimeout(viewTimer); rememberView(); preserveDraft(); scrollParent()?.removeEventListener('scroll', rememberScroll); disposed = true; lookup.dispose() })
 </script>
 
 <style scoped>
@@ -237,4 +253,5 @@ fieldset { display: grid; gap: 12px; padding: 14px 0 0; border: 0; margin: 0; mi
 .result-open { justify-content: start; align-items: start; gap: 8px; padding: 10px 7px; width: 100%; border: 0; background: transparent; text-align: left; min-height: var(--file-row-height); }.result-open > svg { margin-top: 2px; }.result-open > span { flex: 1; min-width: 0; display: grid; gap: 5px; }.result-open strong { overflow-wrap: anywhere; font-size: var(--text-sm); line-height: 1.5; }.result-open small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.result-open > svg:last-child { width: 12px; color: var(--theme-text-secondary); }.result-excerpt { color: var(--theme-text-secondary); font-size: var(--text-compact); line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .result-details { padding: 0 8px 8px 31px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.result-details summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.result-details p { font-size: var(--text-compact); }.result-details small { display: block; overflow-wrap: anywhere; line-height: 1.5; }
 .spinning { animation: collection-spin 1s linear infinite; }@keyframes collection-spin { to { transform: rotate(360deg); } }@media (prefers-reduced-motion: reduce) { .spinning { animation: none; } }:global(body[data-motion="reduced"]) .spinning { animation: none; }
+.section-label { flex-wrap: wrap; }.load-more { width: 100%; margin: 8px 0; }.match-location { display: block; margin: 5px 0; text-align: left; overflow-wrap: anywhere; }.collection-error > span { display: block; margin-top: 8px; }
 </style>

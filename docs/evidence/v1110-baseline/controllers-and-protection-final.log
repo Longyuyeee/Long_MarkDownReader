@@ -1,0 +1,123 @@
+(node:40460) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:36716) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases
+ok 1 - fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases
+  ---
+  duration_ms: 38.4558
+  ...
+# Subtest: content-only tag edits never retain affected drafts as movable and never remap file identity
+ok 2 - content-only tag edits never retain affected drafts as movable and never remap file identity
+  ---
+  duration_ms: 17.1327
+  ...
+# Subtest: specialized drafts participate by current path and dispose without keeping a stale block
+ok 3 - specialized drafts participate by current path and dispose without keeping a stale block
+  ---
+  duration_ms: 19.4437
+  ...
+# Subtest: a save in flight refuses execution while the originating move still counts for close protection
+ok 4 - a save in flight refuses execution while the originating move still counts for close protection
+  ---
+  duration_ms: 19.5432
+  ...
+# Subtest: composition and keyboard actions cannot add an unobserved edit after the acknowledgement
+ok 5 - composition and keyboard actions cannot add an unobserved edit after the acknowledgement
+  ---
+  duration_ms: 15.3034
+  ...
+# Subtest: refresh finishes before native release acknowledgement and the next batch item
+ok 6 - refresh finishes before native release acknowledgement and the next batch item
+  ---
+  duration_ms: 9.6013
+  ...
+# Subtest: lost release events use the native receipt to refresh once and restore interaction
+ok 7 - lost release events use the native receipt to refresh once and restore interaction
+  ---
+  duration_ms: 15.2674
+  ...
+# Subtest: path continuation retains filename case and excludes similarly named siblings
+ok 8 - path continuation retains filename case and excludes similarly named siblings
+  ---
+  duration_ms: 10.8692
+  ...
+# Subtest: a cached Markdown draft follows a move when the native operation never rewrites its body
+ok 9 - a cached Markdown draft follows a move when the native operation never rewrites its body
+  ---
+  duration_ms: 10.6072
+  ...
+# Subtest: a dirty cached target from a deleted file is never mistaken for the moving draft
+ok 10 - a dirty cached target from a deleted file is never mistaken for the moving draft
+  ---
+  duration_ms: 11.4328
+  ...
+# Subtest: fresh reference drafts include unsaved-only incoming links and exclude another library
+ok 11 - fresh reference drafts include unsaved-only incoming links and exclude another library
+  ---
+  duration_ms: 10.5756
+  ...
+# Subtest: cached text drafts follow a move in the same editor while editor-type changes still require saving
+ok 12 - cached text drafts follow a move in the same editor while editor-type changes still require saving
+  ---
+  duration_ms: 11.8236
+  ...
+# Subtest: fresh protection passes the source and target to the cached text-draft retention decision
+ok 13 - fresh protection passes the source and target to the cached text-draft retention decision
+  ---
+  duration_ms: 12.9433
+  ...
+# Subtest: selecting a Windows spelling of an open dirty document reuses its tab and route
+ok 14 - selecting a Windows spelling of an open dirty document reuses its tab and route
+  ---
+  duration_ms: 4.885
+  ...
+# (node:44540) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: empty-keyword collections call their real scoped command and page beyond 200 files without losing file-group locators
+ok 15 - empty-keyword collections call their real scoped command and page beyond 200 files without losing file-group locators
+  ---
+  duration_ms: 2.3798
+  ...
+# Subtest: refresh failure retains file cards but retires old cursors; a complete empty refresh alone clears them
+ok 16 - refresh failure retains file cards but retires old cursors; a complete empty refresh alone clears them
+  ---
+  duration_ms: 0.3915
+  ...
+# Subtest: a new collection cannot absorb a late old response or sort another query locally
+ok 17 - a new collection cannot absorb a late old response or sort another query locally
+  ---
+  duration_ms: 0.2947
+  ...
+# (node:38668) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 600-note catalog advances by issued cursors, never treats partial counts as totals and closes its own channel
+ok 18 - 600-note catalog advances by issued cursors, never treats partial counts as totals and closes its own channel
+  ---
+  duration_ms: 2.0537
+  ...
+# Subtest: failed or incomplete refresh keeps prior tags explicitly stale, only complete empty statistics clears them
+ok 19 - failed or incomplete refresh keeps prior tags explicitly stale, only complete empty statistics clears them
+  ---
+  duration_ms: 0.4161
+  ...
+# Subtest: same-cursor retry cannot duplicate counts and stale library responses cannot replace the active library
+ok 20 - same-cursor retry cannot duplicate counts and stale library responses cannot replace the active library
+  ---
+  duration_ms: 0.477
+  ...
+# Subtest: unknown or contradictory totals and malformed rows are not accepted as complete
+ok 21 - unknown or contradictory totals and malformed rows are not accepted as complete
+  ---
+  duration_ms: 0.3226
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 600.406
