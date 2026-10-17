@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import {nativeUserInput} from './v118-native-user-input.mjs'
+import {visibleMarkdownInput} from './visible-markdown-input.mjs'
 import {graphExplorationChecks,validateInstalledGraphExploration} from './installed-v1-1-11-evidence.mjs'
 const q=JSON.stringify,sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 const store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`
@@ -61,7 +62,9 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
   report.singleClickStayed=await evaluate(`!!document.querySelector('[data-testid="graph-canvas"]')`)
   for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...target,button:'left',clickCount:2})
   const activeTab=`${store}.tabs.find(t=>t.id===${store}.activeTabId)`
-  await ui.waitFor(`!!document.querySelector('.library-mode')&&${activeTab}?.path&&(${normalize.toString()})(${activeTab}.path)===${q(normalize(files[17]))}`,'actual managed document open by double-click');report.doubleClickPath=await evaluate(`${activeTab}.path`);check(10)
+  await ui.waitFor(`!!document.querySelector('.library-mode')&&${activeTab}?.path&&(${normalize.toString()})(${activeTab}.path)===${q(normalize(files[17]))}`,'actual managed document open by double-click');report.doubleClickPath=await evaluate(`${activeTab}.path`)
+  const markdownInput=visibleMarkdownInput('#vditor-lib')
+  await ui.waitFor(`(${markdownInput})?.textContent.includes('图谱验收主题017 · 项目长期研究与来源证据核对')&&!document.querySelector('.workspace-error-state,.crash-fallback')`,'actual target document body is rendered, not just its tab');report.documentContentVisible=true;check(10)
   for(const file of report.sourceFiles)file.after=sha(await fs.readFile(file.path))
   report.inputTrace=await evaluate('window.__v1111Trace');report.runtimeErrors=await evaluate('window.__v1111Errors');report.errorOverlay=await evaluate(`!!document.querySelector('.app-error-overlay,.global-error-overlay,#app-startup-error')`);check(11)
   report.status='passed';validateInstalledGraphExploration(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]});await capture('installed-v1111-final.jpg')

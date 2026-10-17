@@ -32,6 +32,7 @@ export function validateInstalledGraphExploration(report, manifest) {
  assert.deepEqual(report.layouts,['自动网络','树状层级','组织结构','放射聚焦','时间线'])
  assert.deepEqual(report.themes,['专业 · 克制网格','多彩 · 语义光域','专注 · 纯净画布'])
  assert.equal(report.singleClickStayed,true);assert.equal(normalizePath(report.doubleClickPath),normalizePath(report.sourceFiles[17].path))
+ assert.equal(report.documentContentVisible,true)
  for(const type of ['click','keydown','input','pointerdown','pointermove'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted))
  assert.ok(report.inputTrace.every(e=>e.trusted));assert.deepEqual(report.runtimeErrors,[]);assert.equal(report.errorOverlay,false)
 }
