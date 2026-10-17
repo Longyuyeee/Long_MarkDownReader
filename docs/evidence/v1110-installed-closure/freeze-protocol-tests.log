@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: publication intake accepts the exact successful remote download and installer receipts
+ok 1 - publication intake accepts the exact successful remote download and installer receipts
+  ---
+  duration_ms: 1.1903
+  ...
+# Subtest: publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+ok 2 - publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+  ---
+  duration_ms: 5.8383
+  ...
+# Subtest: legacy one-marker invariant remains strict; current version requires both actual collections
+ok 3 - legacy one-marker invariant remains strict; current version requires both actual collections
+  ---
+  duration_ms: 11.658
+  ...
+# Subtest: current preparation rejects missing markers, foreign roots, changed conditions and unrelated additions
+ok 4 - current preparation rejects missing markers, foreign roots, changed conditions and unrelated additions
+  ---
+  duration_ms: 1.8287
+  ...
+# Subtest: restore and reload preserve both complete metadata records, not merely an increased count
+ok 5 - restore and reload preserve both complete metadata records, not merely an increased count
+  ---
+  duration_ms: 2.2273
+  ...
+# Subtest: management uses the real main Tauri target even when external/quick-note pages appear first
+ok 6 - management uses the real main Tauri target even when external/quick-note pages appear first
+  ---
+  duration_ms: 0.322
+  ...
+# Subtest: observed native command preserves successful native values and quoted arguments
+ok 7 - observed native command preserves successful native values and quoted arguments
+  ---
+  duration_ms: 1.1527
+  ...
+# Subtest: observed native command retains raw string rejection, not generic CDP promise text
+ok 8 - observed native command retains raw string rejection, not generic CDP promise text
+  ---
+  duration_ms: 0.3685
+  ...
+# Subtest: observed native command retains structured rejection code and original message
+ok 9 - observed native command retains structured rejection code and original message
+  ---
+  duration_ms: 0.1734
+  ...
+# Subtest: current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input
+ok 10 - current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input
+  ---
+  duration_ms: 15.3077
+  ...
+# Subtest: current installer driver retains actual user input, all historical tasks and no synthetic native bridge
+ok 11 - current installer driver retains actual user input, all historical tasks and no synthetic native bridge
+  ---
+  duration_ms: 0.3267
+  ...
+# Subtest: v1.1.10 requires current report plus every historical generation with the same installed bytes and driver
+ok 12 - v1.1.10 requires current report plus every historical generation with the same installed bytes and driver
+  ---
+  duration_ms: 48.637
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 144.8191
