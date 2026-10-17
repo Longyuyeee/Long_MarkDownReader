@@ -117,6 +117,7 @@ use commands::pdf::{
     save_pdf_page_range_copy, save_pdf_redaction_copy, save_pdf_watermark_copy,
     write_pdf_annotations, write_pdf_ocr,
 };
+use commands::pdf_reading::{build_pdf_reading_note, verify_pdf_reference, save_pdf_reading_note};
 use commands::pptx::{
     audit_pptx_edit_baseline, preview_pptx_alt_text_patch_isolated_copy,
     preview_pptx_image_patch_isolated_copy, preview_pptx_patch_transaction,
@@ -534,6 +535,9 @@ pub fn run() {
             update_workbook_drawing,
             update_workbook_defined_name,
             build_pdf_annotation_reference,
+            build_pdf_reading_note,
+            verify_pdf_reference,
+            save_pdf_reading_note,
             analyze_graph_health,
             repair_graph_links,
             update_graph_relation,

@@ -79,16 +79,33 @@
         <div v-else-if="!isExternal && sidebarTab === 'annotations'" class="annotation-panel">
           <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
           <div v-else-if="!annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
-          <button v-for="annotation in sortedAnnotations" :key="annotation.id" :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @click="selectAnnotation(annotation.id)">
+          <div v-if="annotations.length" class="reading-filters">
+            <input v-model="annotationQuery" aria-label="查找批注摘录或评论" placeholder="查找摘录或评论" maxlength="200" />
+            <input v-model="annotationPages" aria-label="筛选批注页码" placeholder="全部页码，如 1-5,8" maxlength="512" />
+            <select v-model="annotationKindFilter" aria-label="筛选批注类型"><option value="">全部类型</option><option value="highlight">高亮</option><option value="area">区域批注</option><option value="comment">页评论</option></select>
+            <select v-model="annotationColorFilter" aria-label="筛选批注颜色"><option value="">全部颜色</option><option v-for="color in annotationColors" :key="color" :value="color">{{ annotationColorLabel(color) }}</option></select>
+          </div>
+          <p v-if="annotationFilterError" class="annotation-alert" role="alert">{{ annotationFilterError }}</p>
+          <div v-if="annotations.length" class="reading-selection">
+            <button :disabled="Boolean(annotationFilterError) || !filteredAnnotations.length" @click="selectFilteredAnnotations">全选筛选结果</button><button :disabled="!readingSelection.length" @click="readingSelection = []">清除选择</button>
+            <small aria-live="polite">{{ filteredAnnotations.length }} 条匹配 · 已选 {{ readingSelection.length }}<template v-if="hiddenReadingSelection">（含隐藏 {{ hiddenReadingSelection }}）</template></small>
+            <button class="reading-organize" :disabled="!readingSelection.length || referenceWorking || !annotationWritable" @click="openReadingPreview(readingSelection)">整理为笔记 · {{ readingSelection.length }}</button>
+          </div>
+          <p v-if="annotations.length && !filteredAnnotations.length && !annotationFilterError" class="sidebar-empty">没有匹配的批注，请调整筛选。</p>
+          <div v-for="annotation in visibleReadingAnnotations" :key="annotation.id" class="reading-row">
+          <input type="checkbox" :aria-label="`选择批注 ${annotation.id}`" :checked="readingSelection.includes(annotation.id)" @change="toggleReadingSelection(annotation.id)" />
+          <button :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @click="selectAnnotation(annotation.id)">
             <span class="annotation-card-head"><strong>第 {{ annotation.page }} 页 · {{ annotationKindLabel(annotation.kind) }}</strong><i :class="`dot-${annotation.color}`"></i></span>
             <span>{{ annotation.quote || annotation.comment || '未填写评论' }}</span>
           </button>
+          </div>
+          <div v-if="filteredAnnotations.length > 50" class="reading-pagination"><button :disabled="readingListPage === 0" @click="readingListPage--">上一组</button><span>{{ readingListPage + 1 }} / {{ Math.ceil(filteredAnnotations.length / 50) }}</span><button :disabled="(readingListPage + 1) * 50 >= filteredAnnotations.length" @click="readingListPage++">下一组</button></div>
           <div v-if="selectedAnnotation" class="annotation-editor">
             <label>评论<textarea v-model="selectedAnnotation.comment" :disabled="!annotationWritable" maxlength="20000" placeholder="为这条批注补充评论…" @change="touchSelectedAnnotation"></textarea></label>
             <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" :aria-label="`${annotationColorLabel(color)}批注`" :aria-pressed="selectedAnnotation.color === color" @click="setSelectedAnnotationColor(color)"></button></div>
             <div class="annotation-reference-actions">
-              <button :disabled="referenceWorking" @click="copySelectedAnnotationReference">复制引用</button>
-              <button v-if="markdownTarget" :disabled="referenceWorking" @click="insertSelectedAnnotationReference">插入到 {{ markdownTarget.title }}</button>
+              <button :disabled="referenceWorking || !annotationWritable" @click="copySelectedAnnotationReference">复制引用</button>
+              <button :disabled="referenceWorking || !annotationWritable" @click="insertSelectedAnnotationReference">插入笔记…</button>
             </div>
             <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation">删除批注</button>
           </div>
@@ -506,14 +523,23 @@
     </div>
     <div v-if="areaMode" class="area-mode-hint">区域批注模式：在任意页面拖出矩形，Esc 退出</div>
     <div v-if="redactionMode" class="redaction-mode-hint">永久脱敏框选：在页面拖出要彻底移除的区域，Esc 退出框选</div>
+    <NModal :show="readingPreviewOpen" :mask-closable="!readingNoteSaving" :close-on-esc="!readingNoteSaving" @update:show="value => { if (!value) closeReadingPreview() }">
+      <NCard class="pdf-reading-note-dialog" role="dialog" aria-modal="true" aria-label="整理阅读笔记" title="整理阅读笔记" :closable="!readingNoteSaving" @close="closeReadingPreview">
+        <p class="reading-preview-summary" aria-live="polite">{{ referenceWorking ? '正在核对来源和所选批注…' : `${fileName}.pdf · 已选 ${readingSnapshot?.items.length || 0} 条` }}</p>
+        <div v-if="readingSnapshot" class="reading-note-options"><label>组织方式 <select v-model="readingGrouping" :disabled="readingNoteSaving" aria-label="笔记组织方式"><option value="page">按页码</option><option value="color">按颜色</option></select></label><label><input v-model="readingComments" :disabled="readingNoteSaving" type="checkbox" /> 包含评论</label></div>
+        <div v-if="readingSnapshot" class="reading-note-preview" aria-label="阅读笔记预览"><h3>{{ fileName }} · 阅读笔记</h3><article v-for="item in orderedReadingItems" :key="item.annotation.id"><h4>第 {{ item.annotation.page }} 页 · {{ annotationKindLabel(item.annotation.kind) }} · {{ annotationColorLabel(item.annotation.color) }}</h4><blockquote v-if="item.annotation.quote">{{ item.annotation.quote }}</blockquote><p v-if="readingComments && item.annotation.comment">评论：{{ item.annotation.comment }}</p><span class="reading-source-label">来源：{{ item.label }}</span></article></div>
+        <p v-if="readingNoteError" class="reading-note-error" role="alert">{{ readingNoteError }}</p>
+        <template #footer><div class="reading-note-footer"><label>插入目标 <select v-model="readingTargetId" :disabled="referenceWorking || readingNoteSaving" aria-label="阅读笔记插入目标"><option value="">请选择已打开的 Markdown</option><option v-for="tab in readingTargets" :key="tab.id" :value="tab.id">{{ tab.title }}{{ tab.isDirty ? '（未保存草稿）' : '' }}</option></select></label><p>插入仅追加到所选草稿，需手动保存。新笔记选择库内位置后保存；不覆盖已有文件或原 PDF。</p><div><button :disabled="readingNoteSaving" @click="closeReadingPreview">取消</button><button :disabled="referenceWorking || readingNoteSaving || !readingSnapshot" @click="copyReadingNote">复制笔记</button><button :disabled="referenceWorking || readingNoteSaving || !readingSnapshot || !readingTargetId" @click="insertReadingNote">插入草稿</button><button class="primary" :disabled="referenceWorking || readingNoteSaving || !readingSnapshot" @click="saveReadingNote">新建并保存笔记</button></div></div></template>
+      </NCard>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useWindowDraft } from '../services/windowDrafts'
+import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { useDialog, useMessage } from 'naive-ui'
+import { NCard, NModal, useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
@@ -545,6 +571,8 @@ import PdfPage from '../components/PdfPage.vue'
 import { useAppStore } from '../store/app'
 import { buildPdfPageText, findPdfPageMatches, type PdfSearchMatch } from '../utils/pdfText'
 import type { PdfAnnotationReference } from '../utils/pdfReference'
+import { annotationPageFilter, appendReadingDraft, MAX_READING_SELECTION, readingItemMarkdown, readingNoteMarkdown, type PdfReadingSnapshot } from '../utils/pdfReadingNote'
+import { belongsToLibrary } from '../utils/workSessions'
 import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
 import type { PdfFormInspectionReport, PdfFormTextChange, PdfFormTextFillReport, PdfSavedFormTextReport } from '../types/pdfForms'
@@ -733,6 +761,12 @@ const annotationWritable = ref(true)
 const referenceWorking = ref(false)
 const referenceNotice = ref('')
 const selectedAnnotationId = ref('')
+const annotationQuery = ref(''), annotationPages = ref(''), annotationKindFilter = ref(''), annotationColorFilter = ref('')
+const readingSelection = ref<string[]>([]), readingListPage = ref(0)
+const readingPreviewOpen = ref(false), readingSnapshot = ref<PdfReadingSnapshot | null>(null)
+const readingGrouping = ref<'page'|'color'>('page'), readingComments = ref(true), readingTargetId = ref('')
+const readingNoteSaving = ref(false), readingNoteError = ref('')
+let referenceGeneration = 0
 const annotationColor = ref<PdfAnnotationColor>('yellow')
 const areaMode = ref(false)
 const ocrDocument = ref<PdfOcrDocument | null>(null)
@@ -864,8 +898,20 @@ const matchesByPage = computed(() => {
   return result
 })
 const annotations = computed(() => annotationDocument.value?.annotations || [])
-const markdownTarget = computed(() => store.tabs.find(tab => tab.id === store.activeTabId && tab.path.toLowerCase().endsWith('.md')))
 const sortedAnnotations = computed(() => [...annotations.value].sort((a, b) => a.page - b.page || a.createdAt - b.createdAt))
+const annotationFilterError = computed(() => { try { annotationPageFilter(annotationPages.value, pdfDocument.value?.numPages || 0); return '' } catch (cause) { return String(cause).replace(/^Error: /,'') } })
+const filteredAnnotations = computed(() => {
+  if (annotationFilterError.value) return []
+  const pages = annotationPageFilter(annotationPages.value, pdfDocument.value?.numPages || 0), needle = annotationQuery.value.trim().toLocaleLowerCase()
+  return sortedAnnotations.value.filter(a => (!pages || pages.has(a.page)) && (!annotationKindFilter.value || a.kind === annotationKindFilter.value) && (!annotationColorFilter.value || a.color === annotationColorFilter.value) && (!needle || `${a.quote}\n${a.comment}`.toLocaleLowerCase().includes(needle)))
+})
+const visibleReadingAnnotations = computed(() => filteredAnnotations.value.slice(readingListPage.value * 50, (readingListPage.value + 1) * 50))
+const hiddenReadingSelection = computed(() => readingSelection.value.filter(id => !filteredAnnotations.value.some(a => a.id === id)).length)
+const readingTargets = computed(() => store.tabs.filter(tab => !tab.external && tab.path.toLowerCase().endsWith('.md') && belongsToLibrary(store.libraryPath, tab.path) && !tab.textReadOnlyReason && !tab.textLoadError))
+const orderedReadingItems = computed(() => [...(readingSnapshot.value?.items || [])].sort((a,b) => (readingGrouping.value === 'color' ? a.annotation.color.localeCompare(b.annotation.color) : 0) || a.annotation.page - b.annotation.page || a.annotation.createdAt - b.annotation.createdAt))
+const readingMarkdown = computed(() => readingSnapshot.value ? readingNoteMarkdown(readingSnapshot.value, readingGrouping.value, readingComments.value) : '')
+watch([annotationQuery, annotationPages, annotationKindFilter, annotationColorFilter], () => { readingListPage.value = 0 })
+watch(annotations, value => { const ids = new Set(value.map(a => a.id)); readingSelection.value = readingSelection.value.filter(id => ids.has(id)) })
 const selectedAnnotation = computed(() => annotations.value.find(annotation => annotation.id === selectedAnnotationId.value))
 const annotationsByPage = computed(() => {
   const result = new Map<number, PdfAnnotation[]>()
@@ -1006,9 +1052,12 @@ const requestedAnnotationId = () => typeof route.query.annotation === 'string' &
 
 const focusRequestedReference = () => {
   const id = requestedAnnotationId()
+  if (requestedPage() && requestedPage()! > (pdfDocument.value?.numPages || 0)) { referenceNotice.value = '引用页码超出当前 PDF，未定位；请核对原文件。'; sidebarOpen.value = true; sidebarTab.value = 'annotations'; return }
   if (id) {
+    if (!annotationWritable.value) { referenceNotice.value = '来源已变化，未定位旧批注，请先核对原 PDF。'; sidebarOpen.value = true; sidebarTab.value = 'annotations'; return }
+    const legacyNotice = route.query.sourceDigest ? '' : '旧引用没有内容摘要，仅按路径、页码和批注 ID 定位，请核对来源。'
     if (annotations.value.some(annotation => annotation.id === id)) {
-      referenceNotice.value = ''
+      referenceNotice.value = legacyNotice
       selectAnnotation(id)
     } else {
       referenceNotice.value = '引用对应的批注不存在或已被删除，已定位到引用页码。'
@@ -2188,50 +2237,122 @@ const setSelectedAnnotationColor = (color: PdfAnnotationColor) => {
 
 const buildSelectedAnnotationReference = async (): Promise<PdfAnnotationReference> => {
   if (!selectedAnnotation.value) throw new Error('请先选择一条批注')
+  const snapshot = await buildReadingSnapshot([selectedAnnotation.value.id])
+  const item = snapshot.items[0]!
+  return { uri: item.uri, label: item.label, markdown: readingItemMarkdown(item) }
+}
+
+const toggleReadingSelection = (id: string) => {
+  if (readingSelection.value.includes(id)) readingSelection.value = readingSelection.value.filter(value => value !== id)
+  else if (readingSelection.value.length >= MAX_READING_SELECTION) message.warning('每次最多整理 200 条，请分批选择')
+  else readingSelection.value = [...readingSelection.value, id]
+}
+const selectFilteredAnnotations = () => {
+  if (filteredAnnotations.value.length > MAX_READING_SELECTION) { message.warning('匹配超过 200 条，请先用页码、颜色或关键词缩小范围；未更改原选择'); return }
+  readingSelection.value = filteredAnnotations.value.map(a => a.id)
+}
+const closeReadingPreview = () => {
+  if (readingNoteSaving.value) return
+  referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false
+  readingSnapshot.value = null; readingNoteError.value = ''
+}
+const buildReadingSnapshot = async (ids: string[]): Promise<PdfReadingSnapshot> => {
+  if (!annotationWritable.value || !pdfSourceSignature.value) throw Error('PDF 来源或批注不可写，请先核对来源')
+  const generation = referenceGeneration, root = store.libraryPath, path = pdfPath.value, signature = pdfSourceSignature.value
+  const selected = new Map(annotations.value.filter(a => ids.includes(a.id)).map(a => [a.id, JSON.stringify(a)]))
+  const current = () => referenceGeneration === generation && store.libraryPath === root && pdfPath.value === path && pdfSourceSignature.value === signature
   window.clearTimeout(annotationSaveTimer)
   await persistAnnotations()
+  if (!current()) throw Error('PDF 已切换，已取消本次整理')
   if (annotationDirty.value || annotationSaveError.value) throw new Error(annotationSaveError.value || '批注尚未保存')
-  return invoke<PdfAnnotationReference>('build_pdf_annotation_reference', {
-    libraryRoot: store.libraryPath,
-    pdfPath: pdfPath.value,
-    annotationId: selectedAnnotation.value.id,
-  })
+  const snapshot = await invoke<PdfReadingSnapshot>('build_pdf_reading_note', { libraryRoot: root, pdfPath: path, expectedSignature: signature, annotationIds: [...ids] })
+  if (!current()) throw Error('PDF 已切换，已取消本次整理')
+  if (snapshot.items.length !== ids.length || snapshot.items.some(item => item.annotation.page > (pdfDocument.value?.numPages || 0) || selected.get(item.annotation.id) !== JSON.stringify(item.annotation) || JSON.stringify(annotations.value.find(a => a.id === item.annotation.id)) !== selected.get(item.annotation.id))) throw Error('所选批注已变化或页码无效，请重新整理')
+  return snapshot
+}
+const openReadingPreview = async (ids: string[]) => {
+  if (referenceWorking.value || !ids.length) return
+  const generation = ++referenceGeneration
+  readingSnapshot.value = null; readingNoteError.value = ''; readingPreviewOpen.value = true; referenceWorking.value = true
+  readingTargetId.value = readingTargets.value.find(tab => tab.id === store.activeTabId)?.id || readingTargets.value[0]?.id || ''
+  try { const snapshot = await buildReadingSnapshot([...ids]); if (generation === referenceGeneration) readingSnapshot.value = snapshot }
+  catch (cause) { if (generation === referenceGeneration) readingNoteError.value = `整理失败，原资料未更改：${String(cause)}` }
+  finally { if (generation === referenceGeneration) referenceWorking.value = false }
 }
 
 const copySelectedAnnotationReference = async () => {
+  if (referenceWorking.value) return
+  const generation = ++referenceGeneration
   referenceWorking.value = true
   try {
     const reference = await buildSelectedAnnotationReference()
     await navigator.clipboard.writeText(reference.markdown)
     message.success('批注引用已复制')
   } catch (cause) {
-    message.error(`复制引用失败：${String(cause)}`)
+    if (generation === referenceGeneration) message.error(`复制引用失败：${String(cause)}`)
   } finally {
-    referenceWorking.value = false
+    if (generation === referenceGeneration) referenceWorking.value = false
   }
 }
 
 const insertSelectedAnnotationReference = async () => {
-  const target = markdownTarget.value
-  if (!target) return
-  referenceWorking.value = true
+  if (selectedAnnotation.value) await openReadingPreview([selectedAnnotation.value.id])
+}
+const copyReadingNote = async () => {
+  if (!readingSnapshot.value || referenceWorking.value) return
+  try { await navigator.clipboard.writeText(readingMarkdown.value); message.success('阅读笔记已复制') }
+  catch (cause) { readingNoteError.value = `复制失败，预览仍保留：${String(cause)}` }
+}
+const insertReadingNote = async () => {
+  if (!readingSnapshot.value || referenceWorking.value || readingNoteSaving.value) return
+  const snapshot = readingSnapshot.value, target = readingTargets.value.find(tab => tab.id === readingTargetId.value)
+  if (!target) { readingNoteError.value = '目标已关闭或不可编辑，请重新选择'; return }
+  const root = store.libraryPath, path = pdfPath.value, generation = referenceGeneration, active = store.activeTabId, targetId = target.id, markdown = readingMarkdown.value
+  const current = () => generation === referenceGeneration && store.libraryPath === root && pdfPath.value === path && store.activeTabId === active && readingTargetId.value === targetId && readingTargets.value.includes(target)
+  referenceWorking.value = true; readingNoteError.value = ''
   try {
-    const reference = await buildSelectedAnnotationReference()
-    const disk = target.content === undefined
-      ? await invoke<{ content: string }>('read_markdown_file', { libraryRoot: store.libraryPath, path: target.path })
-      : undefined
-    const content = target.content ?? disk?.content ?? ''
-    const separator = content ? (content.endsWith('\n') ? '\n' : '\n\n') : ''
-    const updated = `${content}${separator}${reference.markdown}\n`
-    await invoke('write_markdown_file', { libraryRoot: store.libraryPath, path: target.path, content: updated })
-    store.updateTabContent(target.path, updated)
-    message.success(`已插入到 ${target.title}`)
+    await invoke('verify_pdf_reference', { libraryRoot: root, pdfPath: path, sourceDigest: snapshot.sourceDigest, expectedSignature: snapshot.sourceSignature })
+    if (!current()) throw Error('目标或工作现场已切换，未插入；请重新选择')
+    if (target.content === undefined) {
+      if (target.isDirty) throw Error('目标有尚未完整加载的草稿，请先打开核对')
+      const disk = await invoke<{content:string;signature:string;contentDigest:string;encoding:string;bom:string;lineEnding:string;hasFinalNewline:boolean}>('read_text_document', { libraryRoot: root, path: target.path, formatId: 'markdown', ...(target.textReadEncoding ? {readOptions:{encoding:target.textReadEncoding}} : {}) })
+      if (!current()) throw Error('目标已切换，未插入')
+      if (target.content === undefined) {
+        target.content = disk.content; target.textSignature = disk.signature; target.textContentDigest = disk.contentDigest
+        target.textEncoding = disk.encoding; target.textBom = disk.bom; target.textLineEnding = disk.lineEnding; target.textHasFinalNewline = disk.hasFinalNewline
+      }
+    }
+    appendReadingDraft(target, markdown)
+    store.activateTab(target.id)
+    closeReadingPreview()
+    message.success(`已追加到 ${target.title} 草稿，请手动保存`)
     await router.push({ name: 'LibraryMode', query: { path: target.path } })
   } catch (cause) {
-    message.error(`插入引用失败：${String(cause)}`)
+    if (generation === referenceGeneration) readingNoteError.value = `未插入：${String(cause)}`
   } finally {
-    referenceWorking.value = false
+    if (generation === referenceGeneration) referenceWorking.value = false
   }
+}
+const saveReadingNote = async () => {
+  if (!readingSnapshot.value || readingNoteSaving.value || referenceWorking.value) return
+  const snapshot = readingSnapshot.value, markdown = readingMarkdown.value, root = store.libraryPath, path = pdfPath.value, generation = referenceGeneration
+  readingNoteSaving.value = true; readingNoteError.value = ''
+  const release = beginWindowSave()
+  let saved = ''
+  try {
+    const { save } = await import('@tauri-apps/plugin-dialog')
+    const target = await save({ title: '保存新的 PDF 阅读笔记（不覆盖已有文件）', defaultPath: `${root}/${fileName.value}-阅读笔记.md`, filters: [{name:'Markdown',extensions:['md']}] })
+    if (!target) return
+    if (generation !== referenceGeneration || store.libraryPath !== root || pdfPath.value !== path) throw Error('工作现场已切换，未保存')
+    saved = await invoke<string>('save_pdf_reading_note', { libraryRoot: root, pdfPath: path, sourceDigest: snapshot.sourceDigest, targetPath: target, content: markdown })
+    message.success(`阅读笔记已保存：${saved}`)
+    if (generation === referenceGeneration && store.libraryPath === root && pdfPath.value === path) {
+      readingNoteSaving.value = false; closeReadingPreview()
+      window.dispatchEvent(new CustomEvent('longedit:library-file-created', {detail:{path:saved,libraryRoot:root}}))
+      await openManagedFile(router, saved)
+    }
+  } catch (cause) { if (generation === referenceGeneration) readingNoteError.value = saved ? `文件已保存，无需重存；打开失败：${String(cause)}。${saved}` : `保存失败，预览仍保留：${String(cause)}` }
+  finally { readingNoteSaving.value = false; release() }
 }
 const deleteSelectedAnnotation = async () => {
   if (!annotationDocument.value || !selectedAnnotation.value || !await confirmAppAction(dialog, {
@@ -2367,6 +2488,9 @@ const runSearch = async () => {
 }
 
 const loadPdf = async () => {
+  referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false; readingSnapshot.value = null
+  readingSelection.value = []; readingListPage.value = 0
+  annotationQuery.value = ''; annotationPages.value = ''; annotationKindFilter.value = ''; annotationColorFilter.value = ''
   await cancelOcr()
   ocrGeneration++
   annotationLoadGeneration++
@@ -2473,6 +2597,9 @@ const loadPdf = async () => {
     })
     pdfSourceSignature.value = descriptor.signature
     pdfSourceLength.value = descriptor.length
+    if (!isExternal.value && route.query.sourceDigest) {
+      await invoke('verify_pdf_reference', { libraryRoot: store.libraryPath, pdfPath: pdfPath.value, sourceDigest: String(route.query.sourceDigest), expectedSignature: descriptor.signature })
+    }
     if (!isExternal.value) initializePdfMergeInputs(descriptor.signature)
     if (descriptor.fullData) {
       loadMode.value = 'full'
@@ -2666,7 +2793,8 @@ watch([pdfPath, () => store.libraryPath, isExternal], (_next, previous) => {
   if (previous?.[0]) rememberPdfViewState(previous[0])
   void loadPdf()
 })
-watch([() => route.query.page, () => route.query.annotation], () => {
+watch([() => route.query.page, () => route.query.annotation, () => route.query.sourceDigest], (_value, previous) => {
+  if (route.query.sourceDigest !== previous?.[2]) { void loadPdf(); return }
   if (pdfDocument.value && annotationDocument.value) focusRequestedReference()
 })
 watch(searchQuery, () => {
@@ -2687,6 +2815,7 @@ onMounted(() => {
   window.addEventListener('beforeunload', warnPagePlanBeforeUnload)
 })
 onBeforeUnmount(async () => {
+  referenceGeneration++
   await cancelOcr()
   pdfFormInspectionGeneration++
   savePosition()
@@ -2752,6 +2881,17 @@ onBeforeUnmount(async () => {
 .outline-list button:hover { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.07); }
 .sidebar-empty { padding: 24px 14px; color: var(--theme-text-secondary); font-size: var(--text-compact); text-align: center; }
 .annotation-panel { min-height: 0; flex: 1; overflow: auto; padding: 9px; }
+.pdf-sidebar:has(.annotation-panel) { width: min(310px, 48cqw); min-width: 220px; }
+.reading-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.reading-filters input { grid-column: 1 / -1; }
+.reading-filters input,.reading-filters select,.reading-selection button,.reading-pagination button { min-width: 0; max-width: 100%; border: 1px solid var(--workspace-border-color); border-radius: 5px; background: var(--theme-card); color: var(--theme-text); font: inherit; font-size: var(--text-compact); min-height: 30px; padding: 4px 6px; }
+.reading-selection { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.reading-selection small { width: 100%; color: var(--theme-text-secondary); }
+.reading-selection .reading-organize { width: 100%; border-color: var(--theme-primary); color: var(--theme-primary); }
+.reading-row { display: flex; align-items: flex-start; gap: 5px; }
+.reading-row > input { margin: 14px 0 0; flex: none; accent-color: var(--theme-primary); }
+.reading-row .annotation-card { flex: 1; min-width: 0; }
+.reading-pagination { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 8px 0; font-size: var(--text-compact); }
 .annotation-alert { margin-bottom: 8px; padding: 8px; border: 1px solid rgba(220,76,62,.24); border-radius: 7px; color: var(--status-danger); background: rgba(220,76,62,.08); font-size: var(--text-compact); line-height: 1.45; }
 .annotation-card { width: 100%; display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; padding: 9px; border: 1px solid var(--workspace-border-color); border-radius: 7px; color: var(--theme-text); background: var(--workspace-surface-raised); cursor: pointer; text-align: left; }
 .annotation-card:hover,.annotation-card.active { border-color: rgba(var(--theme-primary-rgb),.42); background: rgba(var(--theme-primary-rgb),.08); }
@@ -2840,4 +2980,29 @@ onBeforeUnmount(async () => {
   .document-title span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .pdf-search { width: 170px; }.pdf-search.active { width: 250px; }
 }
+</style>
+<style>
+/* NModal teleports outside PdfView; limit all unscoped rules to this dialog. */
+.pdf-reading-note-dialog.n-card { width: min(700px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; background: var(--theme-surface, var(--theme-card)); color: var(--theme-text); border-radius: var(--theme-radius-lg, 12px); box-shadow: var(--theme-shadow); }
+.pdf-reading-note-dialog.n-card > .n-card__content { min-height: 0; overflow: auto; }
+.pdf-reading-note-dialog.n-card > .n-card__footer { flex: none; border-top: 1px solid var(--workspace-border-color); }
+.pdf-reading-note-dialog .reading-preview-summary { color: var(--theme-text-secondary); margin: 0 0 12px; }
+.pdf-reading-note-dialog .reading-note-options { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.pdf-reading-note-dialog select,.pdf-reading-note-dialog button { font: inherit; color: var(--theme-text); background: var(--theme-card); border: 1px solid var(--workspace-border-color); border-radius: 6px; min-height: 32px; padding: 4px 9px; max-width: 100%; }
+.pdf-reading-note-dialog button:not(:disabled) { cursor: pointer; }
+.pdf-reading-note-dialog button:disabled { opacity: .5; }
+.pdf-reading-note-dialog button.primary { color: var(--theme-text-on-primary, #fff); background: var(--theme-primary); border-color: var(--theme-primary); }
+.pdf-reading-note-dialog .reading-note-preview { padding: 16px; border: 1px solid var(--workspace-border-color); border-radius: 8px; background: var(--workspace-surface-raised); overflow-wrap: anywhere; }
+.pdf-reading-note-dialog .reading-note-preview h3 { margin: 0 0 16px; }
+.pdf-reading-note-dialog .reading-note-preview article + article { border-top: 1px solid var(--workspace-border-color); margin-top: 16px; padding-top: 6px; }
+.pdf-reading-note-dialog .reading-note-preview h4 { margin: 8px 0; font-size: var(--text-base); }
+.pdf-reading-note-dialog .reading-note-preview blockquote { border-left: 3px solid var(--theme-primary); padding-left: 12px; margin: 10px 0; white-space: pre-wrap; }
+.pdf-reading-note-dialog .reading-note-preview p { white-space: pre-wrap; }
+.pdf-reading-note-dialog .reading-source-label { color: var(--theme-primary); font-size: var(--text-sm); }
+.pdf-reading-note-dialog .reading-note-footer > label { display: flex; gap: 8px; align-items: center; }
+.pdf-reading-note-dialog .reading-note-footer select { flex: 1; min-width: 0; }
+.pdf-reading-note-dialog .reading-note-footer p { color: var(--theme-text-secondary); font-size: var(--text-sm); margin: 8px 0 12px; }
+.pdf-reading-note-dialog .reading-note-footer > div { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.pdf-reading-note-dialog .reading-note-error { padding: 10px; border: 1px solid currentColor; color: var(--theme-danger, #b93232); overflow-wrap: anywhere; }
+@media(max-width:480px) { .pdf-reading-note-dialog.n-card { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); } .pdf-reading-note-dialog.n-card > .n-card__content,.pdf-reading-note-dialog.n-card > .n-card__footer { padding-left: 14px; padding-right: 14px; } }
 </style>

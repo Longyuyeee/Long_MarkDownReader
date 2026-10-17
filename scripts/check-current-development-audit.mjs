@@ -144,6 +144,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const matrix = JSON.parse(fs.readFileSync('shared/release-capability-matrix.json', 'utf8'))
 const policy = JSON.parse(fs.readFileSync('shared/v1-community-release-policy.json', 'utf8'))
 const development = JSON.parse(fs.readFileSync('shared/development-version-policy.json', 'utf8'))
+execFileSync(process.execPath, ['--test', 'scripts/test-pdf-reading-note.mjs'], { stdio: 'inherit' })
 if (pkg.version === '1.1.10' && policy.gates?.githubReleasePublished === true) {
   execFileSync(process.execPath, ['scripts/check-v1110-readme-publication.mjs'], { stdio: 'inherit' })
 }

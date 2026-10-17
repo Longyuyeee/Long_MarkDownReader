@@ -1,0 +1,65 @@
+{
+  "scope": "Actual original PdfView + Pinia, simulated IPC; confirms UI calls a disk-write command, not a native-disk test",
+  "findings": [
+    {
+      "scenario": "unsaved",
+      "disk": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "draft": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "writes": [
+        {
+          "command": "write_markdown_file",
+          "args": {
+            "libraryRoot": "C:/pdf-fixture",
+            "path": "C:/pdf-fixture/笔记.md",
+            "content": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n"
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "typing",
+      "disk": "尚未保存的用户草稿\n生成期间继续输入\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "draft": "尚未保存的用户草稿\n生成期间继续输入\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "writes": [
+        {
+          "command": "write_markdown_file",
+          "args": {
+            "libraryRoot": "C:/pdf-fixture",
+            "path": "C:/pdf-fixture/笔记.md",
+            "content": "尚未保存的用户草稿\n生成期间继续输入\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n"
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "external",
+      "disk": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "draft": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "writes": [
+        {
+          "command": "write_markdown_file",
+          "args": {
+            "libraryRoot": "C:/pdf-fixture",
+            "path": "C:/pdf-fixture/笔记.md",
+            "content": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n"
+          }
+        }
+      ]
+    },
+    {
+      "scenario": "target-switch",
+      "disk": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "draft": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n",
+      "writes": [
+        {
+          "command": "write_markdown_file",
+          "args": {
+            "libraryRoot": "C:/pdf-fixture",
+            "path": "C:/pdf-fixture/笔记.md",
+            "content": "尚未保存的用户草稿\n\n> 阅读摘录 0\n\n[来源](longedit://pdf?path=Paper.pdf&page=1&annotation=annotation-0)\n"
+          }
+        }
+      ]
+    }
+  ]
+}

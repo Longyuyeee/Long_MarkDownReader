@@ -4121,7 +4121,7 @@ const openSourceReference = async (event: MouseEvent) => {
   }
 }
 
-const openPdfReference = (event: MouseEvent) => {
+const openPdfReference = async (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
   if (!href.toLowerCase().startsWith('longedit://pdf')) return
@@ -4133,7 +4133,30 @@ const openPdfReference = (event: MouseEvent) => {
     message.warning('PDF 批注引用格式无效')
     return
   }
-  openManagedFile(router, path, { page: String(target.page), annotation: target.annotationId })
+  const root = store.libraryPath, notePath = activeTabId.value, editor = vditor, original = editor?.getValue()
+  const current = () => store.libraryPath === root && activeTabId.value === notePath && vditor === editor
+  if (target.sourceDigest) {
+    try { await invoke('verify_pdf_reference', {libraryRoot:root,pdfPath:path,sourceDigest:target.sourceDigest}) }
+    catch (cause) {
+      if (!current()) return
+      if (!editor || !activeIsMarkdown.value || !activeFormatCanEdit.value) { message.warning(`PDF 来源不可用：${String(cause)}`); return }
+      const replacement = (await promptAppAction(dialog, {title:'核对 PDF 来源',content:`原来源无法校验，未跳转：${String(cause)}。如果原 PDF 已移动，请输入库内新相对路径。只有内容摘要一致才会重新关联；只改草稿，可撤销，需手动保存。`,initialValue:'',positiveText:'验证并重新关联'}))?.trim()
+      if (!replacement || !current()) return
+      const uri = new URL(href); uri.searchParams.set('path',replacement)
+      const next = parsePdfReferenceUri(uri.toString()), nextPath = next && resolveLibraryPdfPath(root,next.relativePath)
+      if (!next || !nextPath) { message.warning('请输入库内有效的 PDF 相对路径'); return }
+      try { await invoke('verify_pdf_reference',{libraryRoot:root,pdfPath:nextPath,sourceDigest:target.sourceDigest}) }
+      catch (error) { if(current()) message.warning(`未重新关联：${String(error)}`); return }
+      if (!current() || !editor || editor.getValue() !== original || !original?.includes(href) || !activeFormatCanEdit.value) { message.warning('笔记已变化，未修改来源链接'); return }
+      editor.vditor.undo.addToUndoStack(editor.vditor)
+      const updated = original.split(href).join(uri.toString()); editor.setValue(updated)
+      editor.vditor.undo.addToUndoStack(editor.vditor); store.updateTabContent(notePath!,updated)
+      const tab = tabs.value.find(t=>t.path===notePath); if(tab)tab.isDirty=true
+      message.success('已验证并重新关联相同来源，可撤销；请手动保存后再次点击来源。')
+      return
+    }
+  }
+  if(current()) void openManagedFile(router, path, { page: String(target.page), annotation: target.annotationId, ...(target.sourceDigest ? {sourceDigest:target.sourceDigest} : {}) })
 }
 
 const handleExportHtml = async () => {

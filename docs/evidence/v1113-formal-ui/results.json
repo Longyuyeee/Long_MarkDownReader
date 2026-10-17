@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "checks": [
+    "240 annotations paginate without 240 list cards; legacy single actions remain",
+    "Filtering supports page, type, color and text; invalid page range is visible",
+    "Selection remains explicit across filters; whole-match selection refuses more than 200",
+    "Preview includes only selected real quotes, comments and source labels, with optional comments",
+    "Insertion appends to latest unsaved draft, preserves signature, leaves disk unchanged",
+    "Late generation reply after cancellation does not reopen or insert",
+    "Source failure retains preview and draft without writing",
+    "Target closed while verification is pending prevents stale insertion",
+    "Native Save chooser cancellation retains preview; explicit save sends selected contents only",
+    "Six styles and light/dark use actual component with normal animations",
+    "Narrow short view keeps final actions visible and hit-testable without page overflow"
+  ],
+  "styles": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    }
+  ],
+  "errors": [],
+  "evidenceLevel": "actual-PdfView-PDFjs-Pinia-with-simulated-IPC-not-native-disk-proof",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false
+}

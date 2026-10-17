@@ -28,6 +28,7 @@ pub mod mindmap;
 pub mod odf_content;
 pub mod odt;
 pub mod pdf;
+pub mod pdf_reading;
 pub mod pptx;
 pub mod search;
 pub mod svg;
