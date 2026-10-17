@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "244 file groups load without a 200-hit cutoff",
+    "refresh pending and failure retain all previously loaded files, then restore depth",
+    "modified sort is a new server-side full-query order",
+    "unsubmitted collection conditions survive sidebar unmount"
+  ],
+  "errors": [],
+  "error": "TimeoutError: locator.click: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('region', { name: '文内标签' }).getByRole('button', { name: '选择笔记整理标签', exact: true })\u001b[22m\n"
+}
