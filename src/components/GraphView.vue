@@ -523,6 +523,7 @@ const isLoading = ref(true)
 const graphLoadError = ref('')
 const graphLoadGate = createGraphLoadGate()
 let graphLibraryRoot = ''
+let pendingHealthFocus: { libraryRoot: string; nodeId: string } | null = null
 const showTutorial = ref(false)
 const isCreatingCanvas = ref(false)
 const isExporting = ref(false)
@@ -1195,6 +1196,7 @@ const loadGraph = async () => {
   invalidateLayoutWorker()
   cancelAutomaticFit()
   const sameRoot = graphLibraryRoot === root
+  if (pendingHealthFocus?.libraryRoot !== root) pendingHealthFocus = null
   if (!sameRoot) {
     persistLayout()
     graphLibraryRoot = ''
@@ -1249,10 +1251,13 @@ const loadGraph = async () => {
     mindmapRoot.value = refreshed.rebind(oldMindmapRoot)
     layoutUndoStack.value = []; layoutRedoStack.value = []
     graphNodeStatusNowSeconds.value = Math.floor(Date.now() / 1000)
+    const queuedFocus = pendingHealthFocus?.libraryRoot === root ? pendingHealthFocus : null
+    const queuedNode = queuedFocus ? refreshed.byId.get(queuedFocus.nodeId) : undefined
+    if (queuedFocus) pendingHealthFocus = null
     const strongest = [...graphData.value.nodes].sort((a, b) => nodeDegree(b.id) - nodeDegree(a.id))[0]
-    const requestedRoot = !continuing && typeof route.query.root === 'string'
+    const requestedRoot = queuedNode || (!continuing && typeof route.query.root === 'string'
       ? graphData.value.nodes.find(node => node.id === route.query.root)
-      : undefined
+      : undefined)
     const initialNode = requestedRoot || selectedNode.value || strongest
     if (initialNode && (requestedRoot || selectedNode.value || route.query.mode === 'mindmap')) {
       selectOnly(initialNode)
@@ -1264,6 +1269,9 @@ const loadGraph = async () => {
     } else {
       initLayout({ preserveCurrentPositions: continuing, fit: !continuing })
     }
+    if (queuedNode) void nextTick(() => {
+      if (current() && selectedNode.value?.id === queuedNode.id) centerOnNode(queuedNode)
+    })
     return true
   } catch (e) {
     if (!current()) return false
@@ -1564,6 +1572,7 @@ const useAsMindmapRoot = (node: GraphNode) => {
 
 const clearSelection = () => { selectedNode.value = null; selectedNodeIds.value = [] }
 const selectOnly = (node: GraphNode | null) => {
+  pendingHealthFocus = null
   selectedNode.value = node
   selectedNodeIds.value = node ? [node.id] : []
 }
@@ -1908,9 +1917,14 @@ const restoreSelectionHistory = (cursor: number) => {
 }
 const focusHealthNode = (nodeId: string) => {
   const node = graphData.value.nodes.find(candidate => candidate.id === nodeId)
-  if (!node) return
-  selectAndCenter(node)
-  router.replace({ name: 'Graph', query: { ...route.query, root: node.id } })
+  if (node) selectAndCenter(node)
+  else if (store.libraryPath) {
+    // The governance scan can finish before the canvas graph. Keep this real
+    // user intent root-bound and apply it only when that graph is committed.
+    pendingHealthFocus = { libraryRoot: store.libraryPath, nodeId }
+    if (!isLoading.value) void loadGraph()
+  }
+  router.replace({ name: 'Graph', query: { ...route.query, root: nodeId } })
 }
 const focusHealthGuidance = (focus: string) => {
   if (focus === 'library') {
@@ -3198,7 +3212,7 @@ onMounted(() => {
   if (canvasRef.value) graphResizeObserver.observe(canvasRef.value)
 })
 const stopRelationChanges = onFileRelationsChanged(root => { if (root === store.libraryPath && props.show !== false) void reloadAfterRelationMutation(selectedNode.value?.path || '') })
-onUnmounted(() => { graphLoadGate.invalidate(); cancelAutomaticFit() })
+onUnmounted(() => { graphLoadGate.invalidate(); cancelAutomaticFit(); pendingHealthFocus = null })
 onUnmounted(stopRelationChanges)
 onUnmounted(() => { if (document.fullscreenElement === containerRef.value) void document.exitFullscreen().catch(() => {}); graphLoopMounted = false; graphPageActive.value = false; cameraTransition = null; invalidateLayoutWorker(); layoutWorker?.terminate(); layoutWorker = null; persistLayout(); window.clearTimeout(layoutSaveTimer); window.clearTimeout(autoFitTimer); cancelAnimationFrame(animationId); animationId = 0; graphResizeObserver?.disconnect(); reducedMotionQuery?.removeEventListener('change', handleSystemReducedMotion); document.removeEventListener('visibilitychange', handleVisibility); document.removeEventListener('fullscreenchange', syncGraphFullscreen); document.removeEventListener('fullscreenerror', handleGraphFullscreenError); window.removeEventListener('blur', handleWindowBlur); window.removeEventListener('focus', handleWindowFocus); window.removeEventListener('keydown', handleGraphKeydown) })
 </script>

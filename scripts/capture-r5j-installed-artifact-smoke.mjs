@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { withDeadline } from './lib/with-deadline.mjs'
+import { nativeUserInput } from './lib/v118-native-user-input.mjs'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:9343'
 const library = path.resolve(process.env.LONGEDIT_R5J_LIBRARY || '')
@@ -719,10 +720,17 @@ await waitFor(`document.querySelector('.health-panel') !== null`, 'restored grap
 await waitFor(`document.querySelectorAll('[data-testid="knowledge-network-topic"]').length > 0`, 'restored installed knowledge network top topics')
 
 const selectedTopic = knowledgePulse.topics[0]
-await evaluate(`document.querySelector('[data-testid="knowledge-network-topic"]')?.click()`)
+await nativeUserInput({send,evaluate}).click('[data-testid="knowledge-network-topic"]')
 await waitFor(`document.querySelector('.graph-container') !== null`, 'knowledge graph route mount')
 await waitFor(`document.querySelector('.page-loader') === null`, 'knowledge graph route transition')
-await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') === ${JSON.stringify(selectedTopic.nodeId)}`, 'centered graph topic selection')
+try {
+  await waitFor(`document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') === ${JSON.stringify(selectedTopic.nodeId)}`, 'centered graph topic selection')
+} catch (error) {
+  await capture('installed-knowledge-topic-selection-failure.jpg')
+  const diagnostics=await evaluate(`({route:location.hash,loading:!!document.querySelector('.graph-loading'),stats:document.querySelector('.graph-stats')?.textContent,selected:document.querySelector('[data-testid="graph-selected-node"]')?.dataset.nodeId,topics:[...document.querySelectorAll('[data-testid="knowledge-network-topic"]')].map(e=>({id:e.dataset.nodeId,title:e.textContent})),canvas:document.querySelector('[data-testid="graph-canvas"]')?.dataset.cameraFocusDiagnostics})`)
+  await fs.writeFile(path.join(output,'installed-knowledge-topic-selection-failure.json'),JSON.stringify({expected:selectedTopic,diagnostics,error:String(error)},null,2)+'\n')
+  throw error
+}
 await delay(500)
 const centeredNavigation = await evaluate(`(() => ({
   nodeId: document.querySelector('[data-testid="graph-selected-node"]')?.getAttribute('data-node-id') || '',

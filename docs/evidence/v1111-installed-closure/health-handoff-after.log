@@ -1,0 +1,132 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 10000ms exceeded.
+Call log:
+  - waiting for getByTestId('graph-selected-node').getByRole('button', { name: '关闭节点详情' })
+    - locator resolved to <button data-v-45e2b161="" aria-label="关闭节点详情" class="details-close">×</button>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+    - retrying click action
+    - waiting 20ms
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+  2 × retrying click action
+      - waiting 100ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <button class="" data-v-9b4ad83b="">…</button> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+  4 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <button class="" data-v-9b4ad83b="">…</button> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+    - retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <button class="" data-v-9b4ad83b="">…</button> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+  2 × retrying click action
+      - waiting 500ms
+      - waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events
+  - retrying click action
+    - waiting 500ms
+
+    at E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-v1111-graph-health-handoff.mjs:18:55 {
+  log: [
+    "  - waiting for getByTestId('graph-selected-node').getByRole('button', { name: '关闭节点详情' })",
+    '    - locator resolved to <button data-v-45e2b161="" aria-label="关闭节点详情" class="details-close">×</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    - waiting for element to be visible, enabled and stable',
+    '    - element is visible, enabled and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling',
+    '    - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '  2 × retrying click action',
+    '      - waiting 100ms',
+    '      - waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <button class="" data-v-9b4ad83b="">…</button> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '  4 × retrying click action',
+    '      - waiting 500ms',
+    '      - waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '    - retrying click action',
+    '      - waiting 500ms',
+    '      - waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '    - retrying click action',
+    '      - waiting 500ms',
+    '      - waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <button class="" data-v-9b4ad83b="">…</button> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '    - retrying click action',
+    '      - waiting 500ms',
+    '      - waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <button class="" data-v-9b4ad83b="">…</button> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '  2 × retrying click action',
+    '      - waiting 500ms',
+    '      - waiting for element to be visible, enabled and stable',
+    '      - element is visible, enabled and stable',
+    '      - scrolling into view if needed',
+    '      - done scrolling',
+    '      - <div data-v-9b4ad83b="" class="health-summary">…</div> from <aside data-v-9b4ad83b="" data-v-45e2b161="" aria-label="知识图谱治理" class="health-panel">…</aside> subtree intercepts pointer events',
+    '  - retrying click action',
+    '    - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v22.12.0

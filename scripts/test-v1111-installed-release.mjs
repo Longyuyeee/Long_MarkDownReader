@@ -23,6 +23,15 @@ test('installed driver keeps the real bridge, trusted input, strict isolated roo
  for(const forbidden of ['dispatchEvent(', '__TAURI_INTERNALS__=', '__TAURI_INTERNALS__ =', 'force:true','force: true','isDirty=false','isDirty = false'])assert.ok(!source.includes(forbidden),forbidden)
 })
 
+test('governance loading repair has real-component early-click proof and preserves the native topic assertion',()=>{
+ const proof=JSON.parse(fs.readFileSync('docs/evidence/v1111-health-handoff-final-guarded/results.json','utf8'))
+ assert.equal(proof.checks.length,4);assert.deepEqual(proof.errors,[]);assert.ok(proof.checks[0].includes('during initial load'))
+ const graph=fs.readFileSync('src/components/GraphView.vue','utf8')
+ for(const token of ['pendingHealthFocus','pendingHealthFocus?.libraryRoot === root','queuedFocus.nodeId','current() && selectedNode.value?.id === queuedNode.id','pendingHealthFocus = null'])assert.ok(graph.includes(token),token)
+ const driver=fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8'),part=driver.slice(driver.indexOf('const selectedTopic = knowledgePulse.topics[0]'),driver.indexOf("await capture('installed-knowledge-topic-centered.jpg')"))
+ assert.ok(part.includes("nativeUserInput({send,evaluate}).click"));assert.ok(part.includes('selectedTopic.nodeId'));assert.ok(part.includes('selectedTopic.title'));assert.ok(!part.includes('layoutSettled'),'do not wait away an early click to hide the product race')
+})
+
 test('v1.1.11 manifest requires graph evidence and every inherited report with the same executable and driver',()=>{
  // In-memory schema mutation only; original public evidence is never edited.
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.10-release/artifact-manifest.json','utf8'))
