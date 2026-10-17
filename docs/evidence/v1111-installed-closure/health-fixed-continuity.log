@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "same-library success preserves camera, selected identity and changed native metadata",
+    "failed refresh is not empty and does not move the selected view",
+    "same-root late success cannot overwrite a newer success or clear its pending state",
+    "late previous-root response cannot reintroduce old data or selection in another library",
+    "late error cannot erase a successful newer graph",
+    "mindmap refresh retains its dragged view, current root and mode",
+    "removed selected node does not keep a stale details object",
+    "unmounted response is discarded without global errors"
+  ],
+  "errors": []
+}

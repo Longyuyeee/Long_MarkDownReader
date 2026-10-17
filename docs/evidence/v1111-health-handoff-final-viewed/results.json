@@ -1,0 +1,10 @@
+{
+  "scope": "production GraphView and GraphHealthPanel; generated data, simulated IPC, no installed acceptance",
+  "checks": [
+    "trusted topic click during initial load is applied to the loaded node and camera",
+    "ready graph topic selection still works",
+    "later user selection and camera are not reset to old route root on refresh",
+    "pending old-library topic and late graph do not select a node in another library"
+  ],
+  "errors": []
+}

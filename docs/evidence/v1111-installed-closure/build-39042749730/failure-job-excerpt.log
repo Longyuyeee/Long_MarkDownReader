@@ -1,0 +1,56 @@
+
+2026-10-17T15:33:02.8999236Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\current-product\src-tauri\target\release\bundle\nsis
+2026-10-17T15:33:02.9000012Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\previous-official
+2026-10-17T15:33:02.9000652Z   CURRENT_INSTALLER_SHA256: c1be9b43a37d7391e3d5b4b626a03fa4c2fa6a452740f500e7d623bafae2d788
+2026-10-17T15:33:02.9001243Z   M8_21_OUTPUT: D:\a\Long_MarkDownReader\Long_MarkDownReader\community-release-output
+2026-10-17T15:33:02.9001645Z ##[endgroup]
+2026-10-17T15:34:10.9629832Z file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:105
+2026-10-17T15:34:10.9633056Z   throw new Error(`Timed out waiting for ${description}`)
+2026-10-17T15:34:10.9634026Z         ^
+2026-10-17T15:34:10.9634239Z 
+2026-10-17T15:34:10.9634674Z Error: Timed out waiting for centered graph topic selection
+2026-10-17T15:34:10.9636017Z     at waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:105:9)
+2026-10-17T15:34:10.9637992Z     at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:725:1
+2026-10-17T15:34:10.9638960Z 
+2026-10-17T15:34:10.9639135Z Node.js v22.23.3
+2026-10-17T15:34:15.0805015Z R5J installed-artifact route and I/O smoke failed.
+2026-10-17T15:34:15.0810259Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration\scripts\run-r5i-isolated-install-lifecycle.ps1:428 char:9
+2026-10-17T15:34:15.0811595Z +         throw "R5J installed-artifact route and I/O smoke failed."
+2026-10-17T15:34:15.0812252Z +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-17T15:34:15.0813221Z     + CategoryInfo          : OperationStopped: (R5J installed-a...O smoke failed.:String) [], RuntimeException
+2026-10-17T15:34:15.0814998Z     + FullyQualifiedErrorId : R5J installed-artifact route and I/O smoke failed.
+2026-10-17T15:34:15.0815830Z  
+2026-10-17T15:34:15.1829405Z ##[error]Process completed with exit code 1.
+2026-10-17T15:34:15.2479585Z ##[group]Run actions/upload-artifact@v4
+2026-10-17T15:34:15.2525144Z with:
+2026-10-17T15:34:15.2526514Z   name: community-release-candidate-lifecycle-39042749730
+2026-10-17T15:34:15.2527132Z   if-no-files-found: error
+2026-10-17T15:34:15.2527530Z   retention-days: 14
+2026-10-17T15:34:15.2529025Z   path: community-release-output
+current-product/src-tauri/target/release/bundle/msi/*_1.1.11_x64_zh-CN.msi
+current-product/src-tauri/target/release/bundle/nsis/*_1.1.11_x64-setup.exe
+previous-official/*_1.1.10_x64-setup.exe
+
+2026-10-17T15:34:15.2530607Z   compression-level: 6
+2026-10-17T15:34:15.2530965Z   overwrite: false
+2026-10-17T15:34:15.2531328Z   include-hidden-files: false
+2026-10-17T15:34:15.2531716Z env:
+2026-10-17T15:34:15.2532016Z   CARGO_TERM_COLOR: always
+2026-10-17T15:34:15.2532421Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-17T15:34:15.2532895Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-17T15:34:15.2533840Z   PREVIOUS_VERSION: 1.1.10
+2026-10-17T15:34:15.2534263Z   RELEASE_VERSION: 1.1.11
+2026-10-17T15:34:15.2534752Z   CANDIDATE_COMMIT: fa550afe4319f6bc8a50ab68929b42b05d6269ec
+2026-10-17T15:34:15.2535465Z   PRODUCT_SOURCE_COMMIT: fa550afe4319f6bc8a50ab68929b42b05d6269ec
+2026-10-17T15:34:15.2536197Z   PREVIOUS_SOURCE_COMMIT: 599374bf4f11454889e11a6f0f9a7ac6e2cabb0e
+2026-10-17T15:34:15.2536780Z   CURRENT_APP_VERSION: 1.1.11
+2026-10-17T15:34:15.2537181Z   CACHE_ON_FAILURE: true
+2026-10-17T15:34:15.2537550Z   CARGO_INCREMENTAL: 0
+2026-10-17T15:34:15.2538464Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\current-product\src-tauri\target\release\bundle\nsis
+2026-10-17T15:34:15.2539764Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\previous-official
+2026-10-17T15:34:15.2540842Z   CURRENT_INSTALLER_SHA256: c1be9b43a37d7391e3d5b4b626a03fa4c2fa6a452740f500e7d623bafae2d788
+2026-10-17T15:34:15.2541861Z   M8_21_OUTPUT: D:\a\Long_MarkDownReader\Long_MarkDownReader\community-release-output
+2026-10-17T15:34:15.2542548Z ##[endgroup]
+2026-10-17T15:34:19.0301381Z (node:5944) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-17T15:34:19.0302708Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-
