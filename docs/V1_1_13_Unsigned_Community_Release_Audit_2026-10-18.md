@@ -1,37 +1,62 @@
-# v1.1.13 PDF 阅读笔记候选发布审计
+# v1.1.13 未签名社区版封板前审计
 
-## 最新固定源码与首次原生诊断
+## 当前结论
 
-最终产品固定为 **8c5a50afcb594519fbe14f0009112491ce14308c**，完整构建 [39073940910](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39073940910) 正在执行；尚未封板或公开发布。此前 db6481d5 / 39071096221、f2634cbb / 39072276053 产品均已废止发布资格，不与修正后源码混用。下文为逐批历史快照，不把早期计数当当前结论。
+固定产品 **8c5a50afcb594519fbe14f0009112491ce14308c** 的安装验收已完成，独立同包复核 **39076247421 success**，驱动 **9daca4089925e11037527be2627facd52344b3c4**。完整报告严格导入，产品实现相对固定源码无变化；当前运行时/目标1.1.13，公开仍1.1.12。**本提交等待最终 main CI，尚未封板或公开发布1.1.13**；通过后标签绑定固定产品，用已验收原包发布并公开回下载，再更新README下载和末尾摘要、Release与交接，不重建替换安装器。
 
-旧 A 包原生首次验收通过86页、240批注、筛选/预览及草稿不代存，随后“保存前模型哈希=磁盘哈希”失败。[原报告](evidence/v1113-obsolete-a/installed-v1113-workflow.json)、[原失败画面](evidence/v1113-obsolete-a/installed-v1113-failure.jpg)、[构建收据](evidence/v1113-obsolete-a/installer-build-receipt.json)及[完整任务日志](evidence/v1113-obsolete-a-job.log)保留。实际 LibraryMode/Vditor 重放精确复现原模型 dfa1e353… 与已存盘 4b00df5b… 两个摘要：原有 Vditor setValue 将标题前连续空行排版规范化，原生沿既有 LF/单末尾换行策略编码，未丢原文、评论或来源；这是驱动把“尚未序列化的标签模型”误当提交正文，不是发现正文丢失后放宽验收。
+本版沿原PDF工作面完成“筛选批注—选择整理—预览—草稿/新笔记—核对来源回原页”，保留阅读、搜索、表单、OCR、脱敏、水印、属性和页面工具，不另建阅读器。实现和基线见[开发审计](V1_1_13_PDF_Reading_Development_2026-10-18.md)，用户操作见[PDF阅读笔记](PDF_Reading_Notes_User_Guide.md)。
 
-仅修正验收观察器：在源模式直接观察真实编辑 DOM，按锁定 Vditor 的公开序列化规则读取，并按目标文件原有编码/换行元数据计算预期字节；仍要求与真实磁盘 SHA-256 **完全一致**，另保留原草稿前缀、dirty、插入前磁盘不变与两个完整来源 URI 的断言。协议拒绝缺失观察、原文改变、磁盘哈希改变或换行政策不符。[两项实际组件复放](evidence/v1113-save-observation/results.json)通过，模拟 IPC 不冒充磁盘证明；此批不改产品，不重建或替换 C 包。独立同包必须用更新驱动重新跑全部历版及本版14项。
+## 证据与身份
 
-更新驱动6e6c57a8在旧B包的诊断复核39074631714已实际观察完整源DOM，但原生编码字段为 `UTF-8`，驱动只接受小写 `utf-8` 而停止；[原报告](evidence/v1113-obsolete-b-review-39074631714/installed-v1113-workflow.json)与[完整日志](evidence/v1113-obsolete-b-review-39074631714.log)保留。只对编码名大小写等价处理，仍拒绝 UTF-16LE 等不同编码、BOM/换行政策改变、缺失证据或不同磁盘哈希；协议4项通过。旧B首次原报告另存[evidence](evidence/v1113-obsolete-b-original/installed-v1113-workflow.json)，不得导入最终发布清单。驱动观察修正后[完整质量门禁](evidence/v1113-driver-save-quality.log)通过，生产依赖0漏洞；当前产品仍8c5a50af，不因测试驱动修正重建。
+| 项目 | 实际结果 |
+| --- | --- |
+| 产品/拟标签源码 | 8c5a50afcb594519fbe14f0009112491ce14308c |
+| 原包构建 | [39073940910](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39073940910)：质量门禁、完整Rust、MSI/NSIS和不可变收据四项success；原安装驱动失败另记，**不称整个原任务success** |
+| 原构建报告 | [原始目录入口](evidence/v1113-fixed-c-original-build-39073940910/installed-v1113-workflow.json)、[构建收据](evidence/v1113-fixed-c-original-build-39073940910/installer-build-receipt.json)、[完整日志](evidence/v1113-fixed-c-build-39073940910.log)，103个原文件保留 |
+| 独立同包完整复核 | [39076247421](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39076247421) success；[完整日志](evidence/v1113-fixed-c-review-39076247421.log)，没有重建 |
+| 本版实际安装任务 | [14项全部通过](evidence/v1-1-13-candidate-lifecycle/installed-v1113-workflow.json)，真实WebView输入/原生保存选择器/磁盘/页文字及画布，不替换native bridge |
+| 全部继承任务 | 150项历版+14项本版=164项功能，另有22生命周期、18工作区、11路由、7管理恢复、4版本身份 |
+| 真正重启 | [工作现场](evidence/v1-1-13-candidate-lifecycle/installed-v119-workflow.json)：40个阅读位置，首尾340/457；同EXE进程重启后仍340/457 |
+| 严格导入 | [原文件清单](evidence/v1.1.13-release/import-manifest.json)、[安装器与运行报告](evidence/v1.1.13-release/artifact-manifest.json)，逐文件哈希、同源码/EXE/驱动核对 |
+| 原生回归 | 1039功能+1独立性能=1040通过、0失败、5既有ignored；本版专项6包含在内 |
+| 正式组件与逻辑 | 19个PDF组件场景、六风格深浅12组、760×620/480×800/360×620；逻辑5、协议4及编辑器序列化复放2项；模拟IPC不冒充磁盘证明 |
+| 最近main CI | 驱动9daca408的[39075040226](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39075040226) success；安装收据/封板文档提交仍须独立通过最终CI |
 
-当前运行时 1.1.13、公开 1.1.12，**尚未封板或发布 1.1.13**。本版按既定路线深化原 PDF 阅读、批注与笔记能力，原表单、OCR、脱敏、水印、属性和页面工具全部保留。[开发审计](V1_1_13_PDF_Reading_Development_2026-10-18.md)记录旧插入代存问题的真实复现、首批源码、实施前示意与正式页面；[用户用法](PDF_Reading_Notes_User_Guide.md)说明操作与限制。
+原包身份如下，发行时只把中文文件名前缀换成LongEdit，不改字节：
 
-## 当前验证
+| 文件 | 大小（字节） | SHA-256 |
+| --- | ---: | --- |
+| LongEdit_1.1.13_x64_zh-CN.msi | 77340672 | 6718f8bb300eeeaa4020fc05440143cf6bd245fafe2da581d911abb75590bcac |
+| LongEdit_1.1.13_x64-setup.exe | 68185718 | 3142d613db486a22ff0a6bb1bac52fa36af44a7036b2169cb9553fbb7852aacd |
+| SHA256SUMS.txt | 192 | cce3b18a594662076caf602c5e223fa4be2c959595c0c3647f349475d6abdb5d |
+| 实际安装EXE | 见原报告 | a2326c455cb38eb9715e4a95d852780eb789e08261812a811c6fba532be27b24 |
 
-最终候选补审还覆盖异步期间目标改名、外部批注更新，以及工作现场恢复后尚未加载的目标。目标 ID/路径改变即取消，批注变化明确要求重新打开；惰性目标读取完整保存身份、大小/编码元数据，原生报只读则不生成可编辑草稿。当前正式组件为16个基础场景+3个告警/损坏记录场景（共19），逻辑5、协议4、原生专项6，原生代码未再变动。告警移动同时保留损坏 sidecar 的原错误态，不把它误显示为“空批注”。新的固定源码将同时包含这些安全/交互闭环，旧两包仍禁止发布。
+前一正式1.1.12产品4fb14270513d556ed965a0c27308bdc727eacd4b，覆盖升级使用其官方原NSIS（摘要1fed0d5d40ef4c56efb9e8e23a6837217e56680b7e4187f8f825b8730b440409），不拿开发包充当旧稳定版。
 
-另一处布局问题已实测复现并修复：240 条批注时旧来源警告位于 y≈3909、可视侧栏仅到900，用户看不到；移动到侧栏顶部后 y≈215，两种旧引用/已删批注提示都在可视范围。[修复前失败](evidence/v1113-notice-baseline/results.json)、[修复后两项通过](evidence/v1113-notice-fixed/results.json)与实际页面保留，模拟 IPC 不冒充磁盘证明。安装协议现要求真实可视告警，不只查 DOM 文本；正式组件覆盖累计 12+2 场景，逻辑5、协议4。db6481d5/39071096221和f2634cbb/39072276053两轮旧产品均仅作诊断，不得发布。接下来对包含两处 UI 修正的新固定源码完整构建和独立同包验收。
+## 实际用户场景与页面
 
-封板补审增加同名目标的所属文件夹显示，避免“方案.md”重名时误选插入位置；纯逻辑增至 5 项、正式组件增至 12 场景。此为产品 UI 变更，原产品 db6481d5/构建39071096221不再具有最终发布资格，仅保留诊断，不能把它的安装器标成修正后源码。待该轮诊断结束后固定新产品并重新完整构建/独立复核；源码与已验收安装器必须一致。
+生成真实86页PDF和240条批注，筛选12/15页得到6条，只选reading-11和reading-14整理两条；每组最多50行、全选上限200和隐藏选择由实际组件另覆盖。用户用可信输入写入未保存方案，插入只追加最新草稿，原草稿前缀、保存身份和磁盘保持；之后点击实际保存按钮，真实文件SHA-256与实际源编辑器按原编码/换行政策计算的预期字节**完全相同**。
 
-首批源码 `8ec76dc5` 已推送，main CI `39070065471 success`。本地完整原生 1039 功能加 1 项独立性能通过、0 失败、5 既有 ignored；新专项 6、纯逻辑 4、实际 Vue/PDF.js 组件 11 场景通过。六风格深浅与三档窄短窗口实际截图已看；模拟 IPC 不冒充原生磁盘验收。候选版本身份 44 项统一，安装协议额外 3 项验证拒绝缺失报告、混用 EXE/驱动、假输入及草稿/源文件变化。
+点击实际来源链接，原来源、移动重关联来源与同字节恢复副本均读取第12页控件、reading-11批注、原页文字、612×792画布和138个采样墨迹像素。恢复检查是相对根下的同字节PDF副本，不宣称本版另做了一次全库切换；原1.1.12的真实内容恢复及打开回归仍完整继承。已删批注和旧引用提示均在真实侧栏可视范围y364–414，非“文本存在即可”。同大小、同Windows精确修改时间的替换副本仍被内容摘要拒绝。
 
-## 尚须完成
+新笔记由真实系统保存对话框选择库内名称，核对所属进程和HWND真正关闭；同名目标原生拒绝覆盖。来源被外部移动后，通过实际提示填写新相对路径、摘要验证，只修改原笔记草稿，磁盘不变；再次手动保存后返回相同原页原批注。原PDF、sidecar、未选文件最终摘要均不变；全部输入轨迹可信，runtimeErrors为空、无error overlay，原编辑模式恢复。
 
-固定候选产品/首次驱动为 `db6481d5c90a1b26bb580c95a56b3d49d66d015a`，远端完整构建/首次安装 [39071096221](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39071096221) 执行中，尚不称通过。本地最新完整质量门禁已通过，[原始日志](evidence/v1113-candidate-quality-4.log)保留；前面的文档缺项和旧版本边界校验失败日志也保留，既有断言未降低。下一 [1.1.14 实际代码预审](V1_1_14_Writing_Delivery_Preimplementation_Audit_2026-10-18.md)只作接续，不在本版等待期间改写下一版产品。
+已实看独立安装原图：[预览](evidence/v1-1-13-candidate-lifecycle/installed-v1113-preview.jpg)、[来源返回](evidence/v1-1-13-candidate-lifecycle/installed-v1113-source-return.jpg)、[新笔记](evidence/v1-1-13-candidate-lifecycle/installed-v1113-new-note.jpg)、[移动重关联](evidence/v1-1-13-candidate-lifecycle/installed-v1113-moved-source.jpg)。预览原图包含正常入场过渡，稳态布局另由[实际组件截图](evidence/v1113-formal-ui/results.json)核对，不修改像素或关闭动效。原用户100%缩放、PDF左栏及右参考同时开启时，正文可横向滚动；不为截图强改用户视图偏好，也不以截图代替页控件/文本/画布的独立读取。
 
-最新候选完整质量门禁、固定产品源码的 MSI/NSIS 构建、首次完整安装、独立同一安装器复核均须通过。安装场景使用真正生成的 86 页 PDF、240 条批注，实际检查选中范围、未保存正文保护、显式保存、正确页码/批注回跳、缺失/替换/移动/恢复来源和原始摘要。继承历版 150 项功能断言、生命周期、工作区、路由、管理恢复、版本身份及真正重启，不削减旧门禁。所有这些完成后才封板，标签绑定产品源码，用已验收原包发布并公开回下载，最后更新 README 下载、末尾摘要、Release 与交接。
+## 真实失败、纠偏与废止候选
 
-## 发布边界
+- 基线7bb913ea在四种实际组件场景均调用write_markdown_file：插入代存草稿、外部改写会被旧草稿覆盖；继续输入没有复现丢字，不虚构丢字事实。[原始复现](evidence/v1113-baseline/results.json)保留。现改为草稿追加、显式保存和原生新文件无覆盖写入。
+- 同名插入目标先只显示标题，补为文件名+所属文件夹。旧来源警告曾被240条列表挤到y3909而视口底仅900，[失败几何](evidence/v1113-notice-baseline/results.json)及[修复后](evidence/v1113-notice-fixed/results.json)保留；最后还保护异步改名、批注更新、惰性/只读目标和完整保存元数据。
+- 产品db6481d5/39071096221、f2634cbb/39072276053均已废止发布资格，不能与8c5a50af混用。[A原报告](evidence/v1113-obsolete-a/installed-v1113-workflow.json)/[完整日志](evidence/v1113-obsolete-a-job.log)，[B原报告](evidence/v1113-obsolete-b-original/installed-v1113-workflow.json)保留。
+- A及C原安装驱动把尚未序列化的标签模型当提交正文，因既有Vditor标题前连续空行与原生LF/单末尾换行政策而哈希不同。实际LibraryMode/Vditor[精确复放原两个摘要](evidence/v1113-save-observation/results.json)，原文、评论和来源未丢；仅修驱动观察真实源编辑DOM并按原编码/换行计算预期字节，仍要求独立磁盘完整摘要相等，另保留原草稿/来源断言。
+- 旧B诊断39074631714遇到原生UTF-8与驱动小写utf-8标签差异，[原报告](evidence/v1113-obsolete-b-review-39074631714/installed-v1113-workflow.json)/[日志](evidence/v1113-obsolete-b-review-39074631714.log)保留；只接受编码名大小写等价，仍拒绝UTF-16LE、BOM/换行政策变化、缺失观察或不同存盘摘要，协议负例覆盖。
+- 旧B二轮39075048002通过保存/来源前6项后，严格可视警告观察因该旧产品没有顶部reference-notice而失败，[报告](evidence/v1113-obsolete-b-review-39075048002/installed-v1113-workflow.json)/[日志](evidence/v1113-obsolete-b-review-39075048002.log)保留；不跳过此检查发布旧包。新的C同包39076247421已完整14项通过，未再修改产品或重建。
+- [最新完整质量日志](evidence/v1113-driver-save-quality.log)通过、生产依赖0漏洞。早期文档缺项和样例父容器等失败记录见开发审计与Git历史，不为过门禁移除既有断言。
 
-安装复核驱动进一步要求直接读取真实页数、批注数量、当前页码控件、选中批注 ID、对应页文字和非空画布像素；原来源、移动来源和恢复副本均检查，不能只凭路由或标签声称定位成功。协议测试补至 4 项，仍要求本版 14 项及全部历版报告、同 EXE/同驱动。此为验收强化，固定产品仍为 db6481d5，不重建或混用安装器。
+## 发布边界与下一步
 
-渠道 **community-unsigned**，安装器未签名。企业 **releaseCandidate=false**，不以社区通过替代企业签名和系统矩阵；正式发布后支持**手动下载安装**。1.1.12→1.1.13 应用内升级观测单独 pending，不借用旧成功记录。README 开头图标/介绍及旧历史行保持，升级记录放末尾；候选阶段公开下载仍为 1.1.12。
+通道 **community-unsigned**，Windows x64未签名，系统可能提示未知发布者；企业 **releaseCandidate=false**，社区通过不替代企业签名与系统矩阵。正式发布后可**手动下载安装**；1.1.12→1.1.13应用内更新观测单独pending，不借用旧更新成功或覆盖安装来冒充通过。
 
-批注每次 1–200 条，所选文本 4 MiB、笔记保存 8 MiB，源 PDF 仍沿原阅读器 2 GiB 上限；流式摘要需要读取整份文件，不承诺大文件零等待。旧链接兼容但明确缺少内容摘要。仅库内新名称保存，绝不覆盖已有笔记；插入已有笔记只修改草稿。两份用户排序文件不动，不接管本机桌面或在本机安装。
+每次1–200条，所选摘录/评论4MiB，笔记保存8MiB，sidecar5MiB，PDF仍沿原阅读器2GiB上限。流式摘要需要读取整份文件，不宣称大文件零等待或OCR质量新增提升。旧链接仍未经过内容摘要验证；不自动扫描全库猜同名来源、迁移或代存正文。新笔记仅库内新名称，不覆盖已有文件。
+
+下一既定版本 **1.1.14 模板写作到交付**，从[实际代码预审](V1_1_14_Writing_Delivery_Preimplementation_Audit_2026-10-18.md)接续：先复现PDF/HTML/Markdown导出，深化模板参数、保存位置和本地图片依赖，保留旧模板、共享资源、显式保存和紧凑布局。仍有1.1.14—1.1.20七个后续规划版本，未全部开发完成，无需另起新平台。README开头图标/介绍与旧历史行保持，更新摘要放末尾。用户两份排序文件未动，无本机安装或桌面接管。

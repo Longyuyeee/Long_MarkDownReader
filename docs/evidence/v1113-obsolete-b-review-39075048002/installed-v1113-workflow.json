@@ -1,0 +1,129 @@
+{
+  "appVersion": "1.1.13",
+  "sourceCommit": "f2634cbbed92112137341849f6caa5428a56857c",
+  "installerSha256": "c3868596bddaa9d3b3fdd768a39497b82aa01a4e37f0a71e9dd102991eecda5b",
+  "harnessSourceCommit": "9daca4089925e11037527be2627facd52344b3c4",
+  "executableSha256": "3c8d8d6b26b182f7d8718491ae325707f279cb8a9f824e92b4de75b5957763b5",
+  "evidenceLevel": "installed-webview-input-native-pdf-notes-picker-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "installed-identity-and-source-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "long-pdf-filtered-paginated-annotations",
+      "status": "passed"
+    },
+    {
+      "id": "selected-notes-preview-only",
+      "status": "passed"
+    },
+    {
+      "id": "draft-only-append-keeps-unsaved-input-and-disk",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-persists-source-links",
+      "status": "passed"
+    },
+    {
+      "id": "source-link-returns-exact-page-annotation",
+      "status": "passed"
+    }
+  ],
+  "sourceBefore": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+  "sidecarBefore": "fed36305f6d9010e762d92680d1a5fadfc2b233255c73c8c2800a50b2ea7de96",
+  "unselectedBefore": "c5cc304c5742c0f757b3dd9d343cc5fb6e3ab7a6b177d94481c14c9a7795808b",
+  "annotationCount": 240,
+  "selectedIds": [
+    "reading-11",
+    "reading-14"
+  ],
+  "pdfPages": 86,
+  "editorModes": {
+    "before": "sv"
+  },
+  "dirtyBeforeInsert": true,
+  "targetSignatureBefore": "15:1792276272073869500:aee6c983c93433d9a2204e99b40ddcf5",
+  "filteredCount": 6,
+  "previewCount": 2,
+  "snapshot": {
+    "sourceDigest": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+    "sourceSignature": "31248:1792276272067831800",
+    "relativePath": "v1113-reading-b8dc2b69-313b-4a2b-b081-9199a54ac464/研究 来源.pdf",
+    "items": [
+      {
+        "annotation": {
+          "id": "reading-11",
+          "kind": "comment",
+          "page": 12,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "用户阅读评论 11",
+          "createdAt": 12,
+          "updatedAt": 12
+        },
+        "uri": "longedit://pdf?path=v1113-reading-b8dc2b69-313b-4a2b-b081-9199a54ac464%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 12 页"
+      },
+      {
+        "annotation": {
+          "id": "reading-14",
+          "kind": "highlight",
+          "page": 15,
+          "color": "yellow",
+          "rects": [
+            {
+              "x": 0.08,
+              "y": 0.07,
+              "width": 0.6,
+              "height": 0.05
+            }
+          ],
+          "quote": "Reading source page 15",
+          "comment": "用户阅读评论 14",
+          "createdAt": 15,
+          "updatedAt": 15
+        },
+        "uri": "longedit://pdf?path=v1113-reading-b8dc2b69-313b-4a2b-b081-9199a54ac464%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 15 页"
+      }
+    ]
+  },
+  "exactDraftPrefix": true,
+  "dirtyAfterInsert": true,
+  "targetSignatureAfterInsert": "15:1792276272073869500:aee6c983c93433d9a2204e99b40ddcf5",
+  "draftDiskUnchangedBeforeSave": true,
+  "appendedDraftSha256": "c838b67b2771c3b26257f3d050e3bc375664acb6c1af64f41e0a9395094d87e2",
+  "saveExpectation": {
+    "observedFrom": "rendered-vditor-source-before-explicit-save",
+    "mode": "sv",
+    "markdown": "# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n# 研究 来源 · 阅读笔记\n\n## 第 12 页\n\n评论：用户阅读评论 11\n\n[来源：研究 来源.pdf · 第 12 页](longedit://pdf?path=v1113-reading-b8dc2b69-313b-4a2b-b081-9199a54ac464%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n## 第 15 页\n\n> Reading source page 15\n\n评论：用户阅读评论 14\n\n[来源：研究 来源.pdf · 第 15 页](longedit://pdf?path=v1113-reading-b8dc2b69-313b-4a2b-b081-9199a54ac464%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n",
+    "encoding": "UTF-8",
+    "bom": "none",
+    "lineEnding": "lf",
+    "hasFinalNewline": true
+  },
+  "draftBeforeSaveSha256": "3a1f3f2bd36569c9143f2f6107fb28edc60e5832ebbbeccc58fef4f0ae8e5089",
+  "explicitSavedSha256": "3a1f3f2bd36569c9143f2f6107fb28edc60e5832ebbbeccc58fef4f0ae8e5089",
+  "explicitSave": true,
+  "sourceRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "returnedExactAnnotation": true,
+  "deletedNotice": null,
+  "failure": "TypeError: Cannot read properties of null (reading 'visible')\n    at runInstalledV1113Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-13-workflow.mjs:60:496)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:997:5"
+}

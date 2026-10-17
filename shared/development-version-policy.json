@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-54-v1.1.13-version-candidate",
-  "binaryVersionTransition": "v1.1.13-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.13-release-ready",
   "displayLabel": "v1.1.13 PDF 阅读笔记候选 · 当前公开 v1.1.12",
   "activeSlice": {
     "id": "v1.1.13-pdf-reading-notes",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_13_PDF_Reading_Development_2026-10-18.md"
   }
 }
