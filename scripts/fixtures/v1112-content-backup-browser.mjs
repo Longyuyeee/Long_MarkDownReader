@@ -8,6 +8,7 @@ import {useAppStore} from '/src/store/app.ts'
 import {getThemeTone,resolveThemeName,isDarkTheme} from '/src/config/themePresets.ts'
 import {VISUAL_STYLE_RADII} from '/src/config/displayPreferences.ts'
 import {registerNaiveComponents} from '/src/services/naiveComponents.ts'
+import packageInfo from '/package.json'
 import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
 import '/src/styles/motion.scss'
@@ -32,8 +33,8 @@ window.__TAURI_INTERNALS__={transformCallback:()=>1,metadata:{currentWindow:{lab
   if(command==='prepare_library_path')return args.path
   if(command==='save_config'||command==='report_window_draft_session')return
   if(command==='register_window_draft_session')return 'content-backup-ui'
-  if(command==='plugin:app|version')return '1.1.11'
-  if(command==='check_community_update')return {available:false,currentVersion:'1.1.11',latestVersion:'1.1.11',releaseNotes:'',releaseUrl:''}
+  if(command==='plugin:app|version')return packageInfo.version
+  if(command==='check_community_update')return {available:false,currentVersion:packageInfo.version,latestVersion:packageInfo.version,releaseNotes:'',releaseUrl:''}
   if(command==='get_all_tags'||command==='discover_external_applications')return []
   if(command==='plugin:event|listen')return 1
   if(command.startsWith('plugin:event|'))return
