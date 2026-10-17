@@ -50,5 +50,7 @@ test('installed scenarios count file cards, retain trusted keyboard retry and ne
   const hardening=fs.readFileSync('scripts/lib/installed-v1-1-5-workflow.mjs','utf8')
   assert.ok(hardening.indexOf('const feedback=searchFeedbackContract')<hardening.indexOf("await query('\"未结束')"),'detect protocol while the valid page status exists')
   assert.match(hardening,/await waitFor\(feedback.emptyExpression, 'genuine empty result'\)/)
+  assert.ok(hardening.indexOf("await selectScope('当前资料库')")<hardening.indexOf("await query('v115-不存在-410974')"),'genuine zero uses a normally opened readable library, not the mixed incomplete range')
+  assert.match(hardening,/assert\.equal\(normalize\(report\.emptyResultScope\.activeLibrary\), normalize\(second\)/)
   assert.doesNotMatch(hardening,/\.no-results,\s*\.search-page-empty/)
 })
