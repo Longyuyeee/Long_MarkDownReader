@@ -1,0 +1,51 @@
+{
+  "appVersion": "1.1.10",
+  "sourceCommit": "599374bf4f11454889e11a6f0f9a7ac6e2cabb0e",
+  "installerSha256": "d194b1573cea60c344ea11acef44bf1d8d3a20d6124911dbba296c9d0be013b0",
+  "harnessSourceCommit": "599374bf4f11454889e11a6f0f9a7ac6e2cabb0e",
+  "executableSha256": "4896ab0052eb62d4d11bd49e49a7ecec1d484660cd588ae9c452e45d74be3800",
+  "evidenceLevel": "installed-webview-input-native-tag-ipc-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "installed-identity-and-configured-scope",
+      "status": "passed"
+    },
+    {
+      "id": "native-collection-pages-cover-244-files",
+      "status": "passed"
+    },
+    {
+      "id": "full-query-modified-order",
+      "status": "passed"
+    },
+    {
+      "id": "real-missing-directory-refresh-keeps-old-cards",
+      "status": "passed"
+    },
+    {
+      "id": "unsubmitted-conditions-survive-sidebar-switch",
+      "status": "passed"
+    },
+    {
+      "id": "native-tag-count-and-files-agree",
+      "status": "passed"
+    }
+  ],
+  "inputTrace": [],
+  "runtimeErrors": [],
+  "denials": [],
+  "collectionFiles": 244,
+  "uniqueFiles": 244,
+  "modifiedFirst": "标签笔记243.md",
+  "refreshRetainedFiles": 40,
+  "tagFiles": 244,
+  "tagCount": 244,
+  "error": {
+    "message": "Error: Actual native UI did not become ready: actual Markdown loaded",
+    "stack": "Error: Actual native UI did not become ready: actual Markdown loaded\n    at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async runInstalledV1110Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-10-workflow.mjs:49:134)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:977:5"
+  }
+}
