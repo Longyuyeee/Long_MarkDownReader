@@ -10,7 +10,7 @@ const settled = async page => page.waitForFunction(() => !document.querySelector
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 950 } }); page.setDefaultTimeout(15000)
   page.on('pageerror', error => errors.push(error.message))
-  await page.goto('http://127.0.0.1:9000/scripts/fixtures/foundation-v114-browser.html')
+  await page.goto((process.env.LONGEDIT_BROWSER_BASE_URL || 'http://127.0.0.1:9000') + '/scripts/fixtures/foundation-v114-browser.html')
   await page.getByRole('link', { name: '资料库', exact: true }).click()
   await page.locator('[data-drop-path="C:/workflow-fixture/项目方案.md"]').click()
   await page.locator('.vditor-wysiwyg pre').waitFor()
