@@ -1,5 +1,11 @@
 // Installing a candidate is not observing an update from public Release assets.
 // The latter can only be accepted after publication, with a separate run.
+export function communityObservationPolicyPath(version) {
+  if (!/^1\.\d+\.\d+$/.test(version)) throw new Error('invalid observation policy version')
+  const [major, minor, patch] = version.split('.')
+  // Preserve legacy 1.0.x filenames, but never confuse 1.1.10 with 1.0.10.
+  return `shared/v${minor === '0' ? major + patch : [major, minor, patch].join('-')}-managed-updater-lifecycle-policy.json`
+}
 export function assertCommunityReleaseObservation(policy, observation) {
   const previous = policy.patchValidation?.previousPublicVersion
   const current = policy.appVersion

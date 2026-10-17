@@ -1,0 +1,239 @@
+
+> tauri-app@1.1.11 ci:patch-release
+> npm run build && npm run check:theme-contract && npm run check:brand-icon-contract && npm run check:ui-consistency && npm run check:ui-typography && npm run check:ui-shared-components && npm run check:ui-management-shell && npm run check:ui4a-shell-visual-harness && npm run check:ui4a-shell-visual-evidence && npm run check:ui4c-release-fact-alignment && npm run check:ui-color-semantics && npm run check:ui-state-semantics && npm run check:dialog-acl && npm run check:settings-navigation-localization && npm run check:settings-information-architecture && npm run check:index-auto-preparation-experience && npm run check:table-row-editing-experience && npm run check:library-context-restoration && npm run check:markdown-default-mode && npm run check:markdown-code-theme-contrast && npm run check:code-editor-theme-contract && npm run check:structured-source-workspace && npm run check:workbook-workspace-experience && npm run check:json-workspace-experience && npm run check:text-workspace-layout && npm run check:external-change-identity && npm run check:managed-file-routing && npm run check:format-registry && npm run check:r1-release-capability-matrix && npm run check:r2-windows-lifecycle-contract && npm run check:d2-safe-degradation-contract && npm run check:v1-installed-hotfix && npm run check:v1-community-release && npm run check:current-development-audit && npm run check:ux33j-installed-docx-harness && cargo check --locked --manifest-path src-tauri/Cargo.toml && npm run audit:prod
+
+
+> tauri-app@1.1.11 build
+> vue-tsc --noEmit && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 6423 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                           0.92 kB │ gzip:   0.51 kB
+dist/assets/graphForceLayout.worker-BjFgAMK2.js           1.95 kB
+dist/assets/Inter-Regular-CBuHftWl.woff2                 98.80 kB
+dist/assets/Inter-Medium-9JPFU5u1.woff2                 105.50 kB
+dist/assets/FiraCode-Regular-CRwVj4V2.woff2             114.46 kB
+dist/assets/icon-CyZ12egh.png                           248.70 kB
+dist/assets/pdf.worker.min-CHFwMXne.mjs               1,262.40 kB
+dist/assets/WorkspaceEmptyState-C_98vStj.css              0.07 kB │ gzip:   0.08 kB
+dist/assets/WorkspaceFileIdentity-D65ZXkbw.css            0.11 kB │ gzip:   0.12 kB
+dist/assets/WorkspaceStatusBar-BxMrUX8P.css               0.11 kB │ gzip:   0.11 kB
+dist/assets/InboxView-BeDr8A7d.css                        0.21 kB │ gzip:   0.17 kB
+dist/assets/WorkspaceSegmentedControl-BiolGMUG.css        0.21 kB │ gzip:   0.15 kB
+dist/assets/WorkspaceToolbar-kiRGHJNI.css                 0.23 kB │ gzip:   0.15 kB
+dist/assets/WorkspaceManagementContent-CH-I_N32.css       0.43 kB │ gzip:   0.21 kB
+dist/assets/workspaceReference-CxqjI8An.css               0.88 kB │ gzip:   0.35 kB
+dist/assets/WorkspaceStateNotice-MiQRwCkj.css             1.69 kB │ gzip:   0.56 kB
+dist/assets/TextConflictDialog-Ci6gg3I9.css               1.70 kB │ gzip:   0.61 kB
+dist/assets/TableChartEmbed-OiWIaG-z.css                  1.75 kB │ gzip:   0.60 kB
+dist/assets/WorkspaceManagementHeader-ftASLKkN.css        2.02 kB │ gzip:   0.59 kB
+dist/assets/ExternalApplicationPanel-BvXKfsVN.css         2.45 kB │ gzip:   0.83 kB
+dist/assets/WorkspaceTabs-uc4hNkzk.css                    2.75 kB │ gzip:   0.85 kB
+dist/assets/localGraphPin-BP_cI0Vy.css                    2.98 kB │ gzip:   0.92 kB
+dist/assets/QuickNote-BxyYHCC8.css                        3.18 kB │ gzip:   0.93 kB
+dist/assets/ExternalOfficeView-DZFjwwcT.css               3.20 kB │ gzip:   1.02 kB
+dist/assets/TempMode-ByDd0VGs.css                         3.41 kB │ gzip:   1.02 kB
+dist/assets/searchLocation-BSPAE2sM.css                   3.51 kB │ gzip:   1.05 kB
+dist/assets/TomlEditorView-D5TbX-iD.css                   4.48 kB │ gzip:   1.14 kB
+dist/assets/TableChartEditor-jf2Hed-f.css                 4.70 kB │ gzip:   1.17 kB
+dist/assets/LegacyOfficeView-BgrpIVBQ.css                 5.28 kB │ gzip:   1.38 kB
+dist/assets/InboxBrowser-DiPW5-Ke.css                     5.45 kB │ gzip:   1.43 kB
+dist/assets/YamlEditorView-Da5oAxvD.css                   5.47 kB │ gzip:   1.30 kB
+dist/assets/XmlEditorView-DQYpb7aT.css                    5.57 kB │ gzip:   1.30 kB
+dist/assets/LogViewerView-CzG3mmss.css                    5.59 kB │ gzip:   1.40 kB
+dist/assets/TextEditorView-4BXTDhlm.css                   5.96 kB │ gzip:   1.44 kB
+dist/assets/DrawioEditorView-DRIssPpT.css                 6.47 kB │ gzip:   1.51 kB
+dist/assets/ReleaseCapabilitiesView-6HLdVVJo.css          7.68 kB │ gzip:   1.67 kB
+dist/assets/OdtReaderView-CSe7fdI2.css                    8.17 kB │ gzip:   1.91 kB
+dist/assets/MediaViewerView-kEq9PB95.css                 11.26 kB │ gzip:   2.59 kB
+dist/assets/MindMapView-rZ1j__vm.css                     12.05 kB │ gzip:   2.70 kB
+dist/assets/DiagramStudio-EvFK_Fdw.css                   12.07 kB │ gzip:   2.26 kB
+dist/assets/OdfContentReaderView-D3l6eWiA.css            12.70 kB │ gzip:   2.50 kB
+dist/assets/CanvasView-BQtFKIou.css                      15.25 kB │ gzip:   3.28 kB
+dist/assets/JsonEditorView-BCaYJR1C.css                  15.97 kB │ gzip:   2.87 kB
+dist/assets/PptxReaderView-BkGaRB_3.css                  20.77 kB │ gzip:   3.69 kB
+dist/assets/DocxReaderView-BjOHBsRN.css                  21.01 kB │ gzip:   3.53 kB
+dist/assets/TableView-b94ZPItp.css                       23.30 kB │ gzip:   3.98 kB
+dist/assets/WorkspaceHome-DwuqOste.css                   27.01 kB │ gzip:   4.35 kB
+dist/assets/SettingsView-CRy3PWe-.css                    34.07 kB │ gzip:   5.83 kB
+dist/assets/useAdaptiveMarkdownMotion-BLa3Bhig.css       35.86 kB │ gzip:   7.78 kB
+dist/assets/PdfView-Bh5X8DW7.css                         48.29 kB │ gzip:   6.93 kB
+dist/assets/WorkbookView-BL624gV_.css                    54.27 kB │ gzip:   7.38 kB
+dist/assets/GraphView-B0OREhTq.css                       64.91 kB │ gzip:   9.26 kB
+dist/assets/index-BMZ7J9Wl.css                          114.85 kB │ gzip:  20.02 kB
+dist/assets/LibraryMode-Dwco0rXM.css                    118.92 kB │ gzip:  17.79 kB
+dist/assets/structuredAnalysis-GSBgoIPk.js                0.07 kB │ gzip:   0.09 kB
+dist/assets/channel-durEBXbt.js                           0.11 kB │ gzip:   0.13 kB
+dist/assets/init-Gi6I4Gst.js                              0.15 kB │ gzip:   0.13 kB
+dist/assets/chunk-2Q5K7J3B-_uqr5xel.js                    0.19 kB │ gzip:   0.16 kB
+dist/assets/chunk-XXDRQBXY-D9zanq1j.js                    0.24 kB │ gzip:   0.21 kB
+dist/assets/chunk-JWPE2WC7-CDTq1C2c.js                    0.30 kB │ gzip:   0.21 kB
+dist/assets/WorkspaceFileIdentity-GRbiRM8m.js             0.30 kB │ gzip:   0.25 kB
+dist/assets/inboxDirectory-3yQ6gtSz.js                    0.32 kB │ gzip:   0.24 kB
+dist/assets/WorkspaceToolbar-BmOg0SMr.js                  0.33 kB │ gzip:   0.27 kB
+dist/assets/useResponsiveInspector-DqUBOs3K.js            0.34 kB │ gzip:   0.24 kB
+dist/assets/WorkspaceSegmentedControl-BPtIY0Se.js         0.35 kB │ gzip:   0.28 kB
+dist/assets/chunk-5VM5RSS4-DzdirruQ.js                    0.37 kB │ gzip:   0.27 kB
+dist/assets/WorkspaceEmptyState-D47BJAjZ.js               0.41 kB │ gzip:   0.31 kB
+dist/assets/WorkspaceStatusBar-XaKZLjhl.js                0.41 kB │ gzip:   0.32 kB
+dist/assets/WorkspaceManagementContent-DvGCzqNR.js        0.47 kB │ gzip:   0.34 kB
+dist/assets/chunk-KBJHAD2P-k4f5Gg22.js                    0.53 kB │ gzip:   0.38 kB
+dist/assets/stateDiagram-v2-UEYNNEHI-BRaPMIPN.js          0.56 kB │ gzip:   0.36 kB
+dist/assets/classDiagram-JCYQIIEL-RIF_t96q.js             0.60 kB │ gzip:   0.37 kB
+dist/assets/classDiagram-v2-OCEON4UE-RIF_t96q.js          0.60 kB │ gzip:   0.37 kB
+dist/assets/swimlanesDiagram-ULZ7WXOC-BI_Mmmr7.js         0.68 kB │ gzip:   0.43 kB
+dist/assets/infoDiagram-6WML65LV-t47U86YL.js              0.72 kB │ gzip:   0.46 kB
+dist/assets/WorkspaceStateNotice-DzraSheo.js              1.08 kB │ gzip:   0.61 kB
+dist/assets/sizeCapture-X5ZJPWSS-DPW9aJaQ.js              1.13 kB │ gzip:   0.62 kB
+dist/assets/ordinal-Cboi1Yqb.js                           1.19 kB │ gzip:   0.57 kB
+dist/assets/WorkspaceManagementHeader-gBSnWmUs.js         1.19 kB │ gzip:   0.68 kB
+dist/assets/appDialog-BM2iGN0A.js                         1.34 kB │ gzip:   0.68 kB
+dist/assets/index-BiiWHceP.js                             1.71 kB │ gzip:   0.52 kB
+dist/assets/railroadDiagram-AXF67PYL-CRO3wzKG.js          1.74 kB │ gzip:   0.81 kB
+dist/assets/chunk-2GRJ4B5K-BlFnEEpp.js                    1.88 kB │ gzip:   0.83 kB
+dist/assets/abnfDiagram-N423BO3Z-DTa5pSp-.js              1.94 kB │ gzip:   0.95 kB
+dist/assets/InboxView-C2hUh4Ju.js                         2.07 kB │ gzip:   1.14 kB
+dist/assets/pegDiagram-VL7TDLO6-Dj66eTDa.js               2.09 kB │ gzip:   0.98 kB
+dist/assets/ebnfDiagram-BXEA7PRR-ZSzk4MwH.js              2.14 kB │ gzip:   0.93 kB
+dist/assets/workspaceViewState-VNswgWOu.js                2.45 kB │ gzip:   1.14 kB
+dist/assets/ExternalOfficeView-CBeVybCt.js                3.20 kB │ gzip:   1.68 kB
+dist/assets/arc-B9tRLZ2k.js                               3.43 kB │ gzip:   1.47 kB
+dist/assets/TableChartEmbed-D_fcndEd.js                   3.92 kB │ gzip:   1.93 kB
+dist/assets/ExternalApplicationPanel-eU00LNim.js          4.34 kB │ gzip:   2.15 kB
+dist/assets/diagram-LBJQPF4R-Da2FwnsZ.js                  4.38 kB │ gzip:   1.92 kB
+dist/assets/defaultLocale-DX6XiGOO.js                     4.69 kB │ gzip:   2.18 kB
+dist/assets/workspaceReference-DYy1PcC7.js                5.11 kB │ gzip:   2.47 kB
+dist/assets/linear-DG5Aklu3.js                            5.66 kB │ gzip:   2.31 kB
+dist/assets/graph-D87UwisX.js                             5.82 kB │ gzip:   1.81 kB
+dist/assets/diagram-UB23O5K3-CW9fynjB.js                  6.36 kB │ gzip:   2.74 kB
+dist/assets/pieDiagram-7S7Q4E2Y-ggnj9-9v.js               6.49 kB │ gzip:   2.71 kB
+dist/assets/WorkspaceTabs-BakXPXDJ.js                     6.67 kB │ gzip:   3.13 kB
+dist/assets/index-Dw04C20z.js                             6.92 kB │ gzip:   1.90 kB
+dist/assets/useAdaptiveMarkdownMotion-BiK7-Lw0.js         6.94 kB │ gzip:   3.05 kB
+dist/assets/LegacyOfficeView-BvtCB34q.js                  7.05 kB │ gzip:   3.24 kB
+dist/assets/chunk-RYQCIY6F-BF-ZaBqe.js                    7.15 kB │ gzip:   2.76 kB
+dist/assets/QuickNote-owryIGgR.js                         7.49 kB │ gzip:   3.42 kB
+dist/assets/OdtReaderView-5Imf9JIj.js                     8.07 kB │ gzip:   3.60 kB
+dist/assets/InboxBrowser-BdLfZdTZ.js                      8.09 kB │ gzip:   3.43 kB
+dist/assets/TextConflictDialog-DXJ-pYAV.js                8.25 kB │ gzip:   3.64 kB
+dist/assets/diagram-7IWD3JNH-BcEZ2Tjv.js                  8.61 kB │ gzip:   3.82 kB
+dist/assets/dagre-VZM6K2ZE-CnjRAHV3.js                    9.01 kB │ gzip:   3.45 kB
+dist/assets/ReleaseCapabilitiesView-CCCglUi_.js           9.55 kB │ gzip:   4.08 kB
+dist/assets/appVersionIdentity-BbM1naWT.js                9.99 kB │ gzip:   4.01 kB
+dist/assets/cynefinDiagram-MW4NZA55-eQS0msFQ.js          10.23 kB │ gzip:   3.69 kB
+dist/assets/stateDiagram-OKZ733FA-5ZgtoU2K.js            10.53 kB │ gzip:   3.70 kB
+dist/assets/diagram-B4RE2ZJO-bnrLX9sf.js                 10.95 kB │ gzip:   4.22 kB
+dist/assets/localGraphPin-DshKy7F8.js                    11.01 kB │ gzip:   4.00 kB
+dist/assets/searchLocation-DU6SLpPx.js                   12.33 kB │ gzip:   5.46 kB
+dist/assets/TomlEditorView-BB8VPfV3.js                   12.57 kB │ gzip:   5.48 kB
+dist/assets/TempMode-CpzsmaVJ.js                         13.51 kB │ gzip:   6.01 kB
+dist/assets/LogViewerView-COT2ATbT.js                    15.01 kB │ gzip:   5.93 kB
+dist/assets/DrawioEditorView-ihazyguf.js                 15.15 kB │ gzip:   6.17 kB
+dist/assets/TableChartEditor-DUD5HcFJ.js                 15.60 kB │ gzip:   5.57 kB
+dist/assets/chunk-6Q2QTUOP-B2tYGigJ.js                   15.76 kB │ gzip:   4.43 kB
+dist/assets/index-qEfrVXE3.js                            15.83 kB │ gzip:   6.83 kB
+dist/assets/diagram-Q27KOJAE-DZNyJbWN.js                 16.21 kB │ gzip:   5.79 kB
+dist/assets/ishikawaDiagram-WSZJBQD7-DsaNrn-p.js         17.70 kB │ gzip:   6.74 kB
+dist/assets/kanban-definition-27J2QSJJ-BtvsVChV.js       20.84 kB │ gzip:   7.36 kB
+dist/assets/DiagramStudio-Bum7TQ0H.js                    23.16 kB │ gzip:   9.73 kB
+dist/assets/mindmap-definition-FAOFIHXS-B9lCWytV.js      23.50 kB │ gzip:   7.96 kB
+dist/assets/sankeyDiagram-W5VNT64P-gU9WFd0m.js           23.53 kB │ gzip:   8.64 kB
+dist/assets/OdfContentReaderView-CxxkvDGp.js             23.69 kB │ gzip:   8.53 kB
+dist/assets/journeyDiagram-NVQOT4AX-7sl1G9CK.js          23.71 kB │ gzip:   8.41 kB
+dist/assets/YamlEditorView-VB0RjndJ.js                   24.87 kB │ gzip:  10.87 kB
+dist/assets/layout-DnsnwPXv.js                           25.21 kB │ gzip:   8.86 kB
+dist/assets/index-Bzl79N44.js                            26.13 kB │ gzip:   8.71 kB
+dist/assets/wardleyDiagram-T6FBY63Y-CsRcaHCR.js          26.23 kB │ gzip:   7.00 kB
+dist/assets/erDiagram-JOGREHBK-DiNTldJX.js               27.35 kB │ gzip:   9.51 kB
+dist/assets/MindMapView-DzeG7nB_.js                      28.36 kB │ gzip:  10.84 kB
+dist/assets/XmlEditorView-BaX9frYp.js                    28.90 kB │ gzip:  11.96 kB
+dist/assets/gitGraphDiagram-DS77QQ5N-m2wXYvNG.js         30.07 kB │ gzip:   8.93 kB
+dist/assets/MediaViewerView-CjHJD44Y.js                  30.08 kB │ gzip:  11.10 kB
+dist/assets/requirementDiagram-LRYGKXZP-CCaG0-6I.js      31.34 kB │ gzip:   9.88 kB
+dist/assets/timeline-definition-Z64GVDOM-DTIFEZHf.js     31.49 kB │ gzip:  10.49 kB
+dist/assets/quadrantDiagram-CIZ2JOQS-BMHG1Pw5.js         34.63 kB │ gzip:  10.19 kB
+dist/assets/TableView-ICfuXfZm.js                        36.06 kB │ gzip:  13.22 kB
+dist/assets/DocxReaderView-DhJGScPU.js                   36.39 kB │ gzip:  12.47 kB
+dist/assets/chunk-5RXB4S5H-Xbcdz3SM.js                   38.63 kB │ gzip:  12.68 kB
+dist/assets/xychartDiagram-ELKLHX3M-BPQncOBR.js          42.08 kB │ gzip:  12.11 kB
+dist/assets/vennDiagram-T6HMQDX7-DXx1hqEj.js             42.51 kB │ gzip:  15.86 kB
+dist/assets/JsonEditorView-6TkGoSfX.js                   48.14 kB │ gzip:  15.57 kB
+dist/assets/CanvasView-CTxjZ0fQ.js                       48.81 kB │ gzip:  17.62 kB
+dist/assets/chunk-GF5L2VYU-Cs2ih7FN.js                   49.30 kB │ gzip:  15.78 kB
+dist/assets/WorkspaceHome-D7fYp0A2.js                    52.29 kB │ gzip:  19.01 kB
+dist/assets/SettingsView-Bz64Vomy.js                     52.31 kB │ gzip:  17.29 kB
+dist/assets/flowDiagram-UKHOOZJN-C8kYqgph.js             61.40 kB │ gzip:  19.67 kB
+dist/assets/PptxReaderView-BJY4AJR8.js                   63.42 kB │ gzip:  18.31 kB
+dist/assets/ganttDiagram-PKOTCBZU--rWa3_ez.js            69.83 kB │ gzip:  23.61 kB
+dist/assets/c4Diagram-5PPSVZJV-DnkUI0JI.js               70.11 kB │ gzip:  19.71 kB
+dist/assets/blockDiagram-VBNYF7ZC-Bg1PLorl.js            75.27 kB │ gzip:  21.67 kB
+dist/assets/cose-bilkent-JH36ORCC-CHU34k1W.js            81.85 kB │ gzip:  22.54 kB
+dist/assets/icon-vendor-BIVwxdle.js                      89.47 kB │ gzip:  15.65 kB
+dist/assets/vue-vendor-JEsgn9sH.js                      110.74 kB │ gzip:  43.19 kB
+dist/assets/sequenceDiagram-SI44F4Z6-BUTICBQd.js        117.59 kB │ gzip:  31.33 kB
+dist/assets/swimlanes-SLNWSIFB-llZiYVqY.js              120.47 kB │ gzip:  44.06 kB
+dist/assets/architectureDiagram-T3A2C74G-v3Lf0Ky1.js    152.15 kB │ gzip:  43.29 kB
+dist/assets/TextEditorView-Cb4ztyia.js                  164.58 kB │ gzip:  54.55 kB
+dist/assets/WorkbookView-CyFArKC5.js                    195.82 kB │ gzip:  57.97 kB
+dist/assets/index-B62rHnII.js                           199.42 kB │ gzip:  64.29 kB
+dist/assets/GraphView-IFfRYMaH.js                       228.59 kB │ gzip:  66.47 kB
+dist/assets/katex-C5jXJg4s.js                           261.33 kB │ gzip:  77.57 kB
+dist/assets/LibraryMode-D730-o3s.js                     261.56 kB │ gzip:  86.76 kB
+dist/assets/editor-vendor-CIbGjqDk.js                   293.92 kB │ gzip:  71.92 kB
+dist/assets/codeMirrorTheme-CT06c8p4.js                 400.75 kB │ gzip: 129.69 kB
+dist/assets/cytoscape.esm-DTSO7Bv0.js                   443.72 kB │ gzip: 142.36 kB
+dist/assets/ui-vendor-BYu8ublr.js                       563.00 kB │ gzip: 156.14 kB
+dist/assets/PdfView-BWfpJXUK.js                         590.10 kB │ gzip: 179.38 kB
+dist/assets/mermaid.core-Bvy9IxLJ.js                    636.42 kB │ gzip: 152.25 kB
+dist/assets/cynefin-VYW2F7L2-C8deUXfA.js                691.07 kB │ gzip: 155.13 kB
+[vite-plugin-static-copy] Copied 7 items.
+✓ built in 16.66s
+
+> tauri-app@1.1.11 check:theme-contract
+> node scripts/check-theme-contract.mjs
+
+Theme contract check passed: one registry, 3 core + 4 scenario presets, 12 Tauri visual proofs, one filtered theme library, shared editor/chart consumers.
+
+> tauri-app@1.1.11 check:brand-icon-contract
+> node scripts/check-brand-icon-contract.mjs
+
+Brand icon contract passed: solid-gold master, synchronized app assets, and platform icons are present.
+
+> tauri-app@1.1.11 check:ui-consistency
+> node scripts/check-ui-consistency.mjs
+
+UI consistency contract passed: shared branding, workspace tokens, embedded routes, and container-relative sizing are aligned.
+
+> tauri-app@1.1.11 check:ui-typography
+> node scripts/check-ui-typography.mjs
+
+UI typography contract passed: 102 style sources scanned, 0 unregistered fonts.
+
+> tauri-app@1.1.11 check:ui-shared-components
+> node scripts/check-ui-shared-components.mjs
+
+UI shared component contract passed: workspace and management primitives are used across high-risk surfaces.
+
+> tauri-app@1.1.11 check:ui-management-shell
+> node scripts/check-ui-management-shell.mjs
+
+UI management shell contract passed: management pages and the immersive graph share navigation, controls, status, and inspector dimensions.
+
+> tauri-app@1.1.11 check:ui4a-shell-visual-harness
+> node scripts/check-ui4a-shell-visual-harness.mjs
+
+UI-4A shell visual harness passed: 5 surfaces, 3 core themes, 3 Windows-equivalent scales, and Tauri-only evidence boundaries.
+
+> tauri-app@1.1.11 check:ui4a-shell-visual-evidence
+> node scripts/check-ui4a-shell-visual-audit.mjs
+
+UI-4A shell visual evidence passed: 5 surfaces, 3 core themes, 3 Windows-equivalent scales, 45 Tauri screenshots.
+
+> tauri-app@1.1.11 check:ui4c-release-fact-alignment
+> node scripts/check-ui4c-release-fact-alignment.mjs
+
+- release audit is missing community-unsigned
+- release audit is missing 手动下载安装

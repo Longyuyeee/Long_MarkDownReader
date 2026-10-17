@@ -3,6 +3,18 @@ import { test } from 'node:test'
 import fs from 'node:fs'
 import { assertV121DevelopmentBoundary, assertV121UpdaterStatus } from './lib/v121-updater-status.mjs'
 
+test('graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success',()=>{
+ const development={runtimeBaseVersion:'1.1.11',publicVersion:'1.1.10',publicTag:'v1.1.10',publicTagCommit:'599374bf4f11454889e11a6f0f9a7ac6e2cabb0e',developmentTargetVersion:'1.1.11'}
+ const community={appVersion:'1.1.11',targetRelease:{tag:'v1.1.11'},gates:{githubReleasePublished:false},release:null,patchValidation:{previousPublicVersion:'1.1.10',managedUpdaterUpgradePath:'1.1.10-to-1.1.11-pending'}}
+ assert.doesNotThrow(()=>assertV121DevelopmentBoundary(development,community))
+ assert.throws(()=>assertV121DevelopmentBoundary({...development,publicTagCommit:'a'.repeat(40)},community))
+ assert.throws(()=>assertV121DevelopmentBoundary({...development,developmentTargetVersion:'1.1.12'},community))
+ assert.doesNotThrow(()=>assertV121UpdaterStatus({status:'hosted-managed-update-passed'},community,{managedUpdaterObservation:'1.0.20-to-1.0.21-passed'}))
+ assert.throws(()=>assertV121UpdaterStatus({status:'hosted-managed-update-passed'},{...community,patchValidation:{...community.patchValidation,managedUpdaterUpgradePath:'1.0.20-to-1.0.21-passed'}},{managedUpdaterObservation:'1.0.20-to-1.0.21-passed'}))
+ const published={...community,gates:{githubReleasePublished:true},release:{taggedCommit:'b'.repeat(40)}}
+ assert.doesNotThrow(()=>assertV121DevelopmentBoundary({...development,publicVersion:'1.1.11',publicTag:'v1.1.11',publicTagCommit:'b'.repeat(40),developmentTargetVersion:'1.1.12'},published))
+})
+
 test('published v1.0.24 requires its exact tag and keeps the new updater pending', () => {
   const development = { publicVersion: '1.0.24', publicTag: 'v1.0.24', publicTagCommit: '9fa7ffa0f778773cfd999169e695e32a705168ae', runtimeBaseVersion: '1.0.24', developmentTargetVersion: '1.0.25' }
   const community = { appVersion: '1.0.24', gates: { githubReleasePublished: true }, release: { tag: 'v1.0.24', taggedCommit: development.publicTagCommit }, targetRelease: { tag: 'v1.0.24' }, patchValidation: { previousPublicVersion: '1.0.23', managedUpdaterUpgradePath: '1.0.23-to-1.0.24-pending' } }
