@@ -8,7 +8,7 @@ export const searchCompletenessChecks = [...nativeBaselineChecks, ...nativeUserC
 
 export function validateInstalledSearchCompleteness(summary, baseline, user, office, manifest) {
   const installer = manifest.artifacts.find(item => item.target === 'nsis')?.sha256
-  assert.ok(['1.1.8','1.1.9', '1.1.10', '1.1.11'].includes(manifest.appVersion))
+  assert.ok(['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12'].includes(manifest.appVersion))
   assert.match(manifest.sourceCommit, /^[a-f0-9]{40}$/)
   assert.match(installer || '', /^[a-f0-9]{64}$/)
   assert.match(summary.harnessSourceCommit, /^[a-f0-9]{40}$/)

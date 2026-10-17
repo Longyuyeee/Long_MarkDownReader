@@ -1,6 +1,7 @@
 pub mod ai;
 pub mod archive;
 pub mod backup;
+pub mod content_backup;
 pub mod canvas;
 pub mod config;
 pub mod diagnostics;

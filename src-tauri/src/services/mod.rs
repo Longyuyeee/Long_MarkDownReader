@@ -6,6 +6,7 @@ pub mod archive_history;
 pub(crate) mod archive_move;
 pub(crate) mod archive_plan;
 pub mod credentials;
+pub(crate) mod content_backup;
 pub mod data_migration;
 pub(crate) mod document_coordination;
 pub mod external_file_access;

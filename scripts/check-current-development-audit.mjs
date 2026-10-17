@@ -1,5 +1,7 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-content-backup-ui-state.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-v1112-installed-release.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v1111-installed-release.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-graph-refresh.mjs', 'scripts/test-graph-topology.mjs', 'scripts/test-graph-labels.mjs', 'scripts/test-v1111-graph-search-fixture.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-installed-management-fixture.mjs', 'scripts/test-observed-native-command.mjs'], { stdio: 'inherit' })
@@ -181,17 +183,17 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
   const patch = Number(version.split('.')[2])
   const next = '1.1.' + (patch + 1)
   const previous = patch === 0 ? '1.0.26' : '1.1.' + (patch - 1)
-  const slices = ['v1.1.0-ui-and-workflow', 'v1.1.1-library-experience', 'v1.1.2-file-management', 'v1.1.3-foundation-workflow', 'v1.1.4-foundation-workflow', 'v1.1.5-foundation-hardening', 'v1.1.6-move-continuity', 'v1.1.7-save-history', 'v1.1.8-search-completeness', 'v1.1.9-work-session-continuity', 'v1.1.10-tags-collections', 'v1.1.11-graph-exploration']
+  const slices = ['v1.1.0-ui-and-workflow', 'v1.1.1-library-experience', 'v1.1.2-file-management', 'v1.1.3-foundation-workflow', 'v1.1.4-foundation-workflow', 'v1.1.5-foundation-hardening', 'v1.1.6-move-continuity', 'v1.1.7-save-history', 'v1.1.8-search-completeness', 'v1.1.9-work-session-continuity', 'v1.1.10-tags-collections', 'v1.1.11-graph-exploration', 'v1.1.12-content-backup']
   const stage = 'M8-' + (28 + patch * 2 + Number(published)) + '-v' + version + (published ? '-published' : '-version-candidate')
   required[5] = ['当前开发目标：' + '\x60' + development.developmentTargetVersion + '\x60', development.developmentTargetVersion === (published ? next : version)]
   required[7] = ['当前公开版本：' + '\x60' + development.publicVersion + '\x60', development.publicVersion === (published ? version : previous) && development.publicTag === 'v' + development.publicVersion]
-  const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简', '基础功能深化', '基础功能深化', '安全导入与搜索一致性', '移动、改名与链接接续', '保存与历史深化', '搜索完整性', '工作现场', '标签与集合', '图谱深化']
+  const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简', '基础功能深化', '基础功能深化', '安全导入与搜索一致性', '移动、改名与链接接续', '保存与历史深化', '搜索完整性', '工作现场', '标签与集合', '图谱深化', '内容备份']
   required[9] = ['当前阶段：**v' + version + (published ? ' 已发布**' : ' ' + names[patch] + '候选**'), development.currentStage === stage && development.activeSlice?.id === slices[patch] && fs.existsSync(development.activeSlice.document)]
   if (version === '1.1.2' && development.activeSlice?.id === 'v1.1.3-custom-note-templates') {
     required[9] = ['当前阶段：**v1.1.3 自定义模板开发**', published && development.releaseCandidate === false
@@ -208,6 +210,12 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.
   if (version === '1.1.9' && development.activeSlice?.id === 'v1.1.10-tags-collections') {
     required[9] = ['当前阶段：**v1.1.10 标签与集合开发**', published && development.releaseCandidate === false
       && development.currentStage === 'M8-48-v1.1.10-tags-collections' && fs.existsSync(development.activeSlice.document)]
+  }
+  if (version === '1.1.11' && development.activeSlice?.id === 'v1.1.12-content-backup') {
+    required[9] = ['当前阶段：**v1.1.12 内容备份开发**', published && policy.appVersion === '1.1.11'
+      && development.publicVersion === '1.1.11' && development.runtimeBaseVersion === '1.1.11'
+      && development.developmentTargetVersion === '1.1.12' && development.releaseCandidate === false
+      && development.currentStage === 'M8-52-v1.1.12-content-backup' && fs.existsSync(development.activeSlice.document)]
   }
 }
 

@@ -1,0 +1,74 @@
+{
+  "status": "passed",
+  "checks": [
+    "settings preserves management backup and diagnostics next to distinct content entry",
+    "changing source categories invalidates native plan and clears dependent history and annotations",
+    "scope selector rejects another library without changing the source or writing files",
+    "export picker cancel does not write; successful explicit export shows receipt and digest",
+    "native source change remains an actionable error, not false export success",
+    "bad package fails before a restore target can be applied",
+    "restore target conflict is visible and a new name triggers automatic fresh validation",
+    "stale target response cannot enable a prior target after the name changes",
+    "adding a restored library is explicit and a config failure never reruns restoration",
+    "busy read cannot close on Escape; explicit accepted cancellation ends without writes",
+    "commit cancellation not accepted is stated honestly until the successful receipt",
+    "late preview after navigating away is discarded, without resurrecting the dialog",
+    "six styles and light/dark actual dialogs use normal motion without page overflow",
+    "narrow and short dialogs keep footer and final restore action reachable"
+  ],
+  "styles": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    }
+  ],
+  "errors": [],
+  "evidenceLevel": "real-vue-components-simulated-ipc-no-native-disk-proof",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false
+}

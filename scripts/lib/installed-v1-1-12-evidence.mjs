@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict'
+export const contentBackupChecks=[
+ 'installed-identity-and-preserved-settings-entries','scoped-native-preflight-and-exclusions',
+ 'source-change-rejected-without-zip','real-save-picker-and-independent-zip-digests',
+ 'existing-zip-never-overwritten','malformed-package-rejected-before-target',
+ 'existing-restore-directory-blocked','restored-file-bytes-and-pdf-time-preserved',
+ 'restored-pdf-annotations-rebound','restored-history-content-pins-and-notes',
+ 'explicit-add-keeps-current-library-and-draft','seven-secondary-window-command-denials',
+ 'native-cancellation-cleans-owned-stage','draft-model-and-disk-unchanged-before-explicit-save',
+ 'restored-markdown-image-and-pdf-actually-open','original-files-and-no-runtime-errors',
+]
+export const contentBackupCommands=['preview_content_backup','export_content_backup','preflight_content_restore','check_content_restore_target','restore_content_backup','cancel_content_backup','discard_content_backup_plan']
+export function validateInstalledContentBackup(report,manifest){
+ assert.equal(manifest.appVersion,'1.1.12');assert.equal(report.appVersion,manifest.appVersion)
+ assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
+ assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed')
+ assert.equal(report.evidenceLevel,'installed-webview-input-native-content-backup-picker-and-disk')
+ for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false)
+ assert.deepEqual(report.checks.map(c=>[c.id,c.status]),contentBackupChecks.map(id=>[id,'passed']))
+ assert.equal(report.preflight.observedFrom,'rendered-native-preflight');assert.equal(report.preflight.entryCount,7);assert.deepEqual(report.preflight.counts,{documents:3,attachments:1,annotations:1,history:2})
+ assert.ok(report.preflight.excludedCount>=1);assert.equal(report.zip.status,'passed');assert.equal(report.zip.reader,'dotnet-system-io-compression-independent-no-extraction')
+ assert.equal(report.zip.manifest.kind,'longedit-library-content');assert.equal(report.zip.manifest.appVersion,manifest.appVersion)
+ assert.equal(report.zip.entries.length,7);assert.equal(new Set(report.zip.entries.map(e=>e.path)).size,7)
+ for(const e of report.zip.entries){assert.match(e.sha256,/^[a-f0-9]{64}$/);assert.equal(e.sha256,report.zip.manifest.entries.find(m=>m.path===e.path)?.sha256)}
+ for(const item of [report.exportReceipt,report.restoreReceipt]){assert.equal(item.observedFrom,'rendered-native-completion');assert.equal(item.entryCount,7)}
+ assert.match(report.zip.sha256,/^[a-f0-9]{64}$/);assert.equal(report.exportReceipt.sha256,report.zip.sha256)
+ assert.equal(report.restoreReceipt.sha256,report.zip.sha256);assert.equal(report.restoreReceipt.status,'completed');assert.equal(report.restoreReceipt.sourceUnchanged,true)
+ assert.equal(report.sourceFiles.length,5);assert.equal(new Set(report.sourceFiles.map(f=>f.path)).size,5)
+ for(const f of report.sourceFiles){assert.match(f.before,/^[a-f0-9]{64}$/);assert.equal(f.before,f.after);assert.equal(f.before,f.restored)}
+ assert.equal(report.pdfTime.before,report.pdfTime.restored);assert.deepEqual(report.pdfAnnotations.before,report.pdfAnnotations.restored)
+ assert.deepEqual(report.history.before,report.history.restored);assert.deepEqual(report.history.metadataBefore,report.history.metadataRestored);assert.equal(report.history.pinned,true)
+ for(const key of ['sourceChangeRejected','existingZipPreserved','badPackageRejected','targetConflictBlocked','explicitAddOnly','activeLibraryUnchanged','explicitSaveAfterChecks','markdownBodyVisible','markdownImageLoaded','pdfPageVisible'])assert.equal(report[key],true,key)
+ assert.ok(report.draftChecks.length>=3);for(const c of report.draftChecks){assert.equal(c.dirty,true);assert.equal(c.exactModel,true);assert.equal(c.contentSha256,report.draftSha256);assert.equal(c.diskSha256,report.draftDiskBefore)}
+ assert.equal(report.cancel.accepted,true);assert.equal(report.cancel.published,false);assert.equal(report.cancel.remainingStages,0);assert.match(report.cancel.error,/取消/)
+ assert.deepEqual(report.denials.map(d=>d.command),contentBackupCommands);for(const d of report.denials){assert.equal(d.rejected,true);assert.match(d.error,/主工作台/)}
+ assert.ok(report.nativePickers.length>=4);for(const p of report.nativePickers){assert.equal(p.status,'selected-real-native-dialog');assert.equal(p.desktopUserSession,'disposable-github-hosted');assert.ok(p.processId>0);assert.ok(p.selectedPath)}
+ for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted));assert.ok(report.inputTrace.every(e=>e.trusted));assert.deepEqual(report.runtimeErrors,[])
+}

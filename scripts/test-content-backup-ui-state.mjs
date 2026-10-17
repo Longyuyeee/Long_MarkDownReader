@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import {contentScopeRelative,contentRestorePath,contentPathKey,contentBytes} from '../src/utils/contentBackup.ts'
+test('scope picker accepts only boundary-matched configured library descendants',()=>{assert.equal(contentScopeRelative('C:\\Project','c:\\Project\\会议'),'会议');assert.equal(contentScopeRelative('C:/Project','C:/Project'),'');for(const selected of ['C:/Project-extra/会议','C:/Other','C:/Project/../Other'])assert.throws(()=>contentScopeRelative('C:/Project',selected));assert.equal(contentScopeRelative('\\\\?\\C:\\Project','C:/Project/会议'),'会议')})
+test('restore paths are explicitly named new folders; malformed names cannot enable restore',()=>{assert.equal(contentRestorePath('D:\\备份','项目-恢复'),'D:\\备份\\项目-恢复');for(const name of ['','../x','a/b','a\\b','C:foo','.hidden','a.',' a','a '])assert.equal(contentRestorePath('D:/New',name),'');assert.equal(contentRestorePath('','新目录'),'')})
+test('native path keys handle canonical Windows prefixes without prefix collisions',()=>{assert.equal(contentPathKey('\\\\?\\C:\\项目\\'),contentPathKey('c:/项目'));assert.notEqual(contentPathKey('C:/Project'),contentPathKey('C:/Project-extra'));assert.equal(contentBytes(512*1024*1024),'512.0 MiB')})
