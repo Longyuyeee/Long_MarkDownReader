@@ -1,0 +1,42 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: error finalizing incremental compilation session directory `\\?\E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri\target\debug\incremental\tauri_app_lib-2t5ono0dpctl5\s-hn9veju1ht-07fun59-working`: 拒绝访问。 (os error 5)
+
+warning: `tauri-app` (lib test) generated 2 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 46.25s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 22 tests
+test commands::index::search_budget_tests::v118_query_budget_applies_to_disk_freshness_before_unbounded_traversal ... ok
+test commands::index::search_budget_tests::v118_query_budget_charges_pdf_sidecars_before_loading_any_of_them ... ok
+test commands::index::search_budget_tests::v118_query_budget_checks_cached_segment_count_text_and_elapsed_for_both_grammars ... ok
+test commands::index::search_budget_tests::v118_query_budget_is_cumulative_for_literal_and_complex_cold_reads ... ok
+test commands::index::search_budget_tests::v118_query_budget_keeps_whole_file_exclusions_when_terms_span_segments ... ok
+test commands::index::search_budget_tests::v118_query_budget_reports_incomplete_instead_of_partial_or_empty_success ... ok
+test commands::index::search_budget_tests::v118_query_budget_still_finds_late_filename_match_beyond_200_files ... ok
+test commands::index::search_ranking_tests::v118_ranking_cold_real_files_include_the_late_filename_hit ... ok
+test commands::index::search_ranking_tests::v118_ranking_collector_retains_only_200_payloads_and_matches_full_sort ... ok
+test commands::index::search_ranking_tests::v118_ranking_complex_does_not_drop_a_late_strong_match_or_ignore_exclusions ... ok
+test commands::index::search_ranking_tests::v118_ranking_equal_titles_use_file_identity_at_the_limit ... ok
+test commands::index::search_ranking_tests::v118_ranking_exact_identity_preserves_case_locations_and_context ... ok
+V118_RANKING_BASELINE {"observations":[{"maxMicros":46825,"medianMicros":45229,"minMicros":44632,"mode":"cold","strongestFound":true},{"maxMicros":1653,"medianMicros":1306,"minMicros":1203,"mode":"memory-index","strongestFound":true},{"maxMicros":6151,"medianMicros":6009,"minMicros":5318,"mode":"disk-index","strongestFound":true}],"resultLimit":200,"samplesPerMode":5,"sourceFiles":243}
+test commands::index::search_ranking_tests::v118_ranking_fixed_fixture_timing ... ok
+test commands::index::search_ranking_tests::v118_ranking_incremental_overlay_keeps_a_changed_strong_file ... ok
+test commands::index::search_ranking_tests::v118_ranking_literal_does_not_drop_a_late_strong_match ... ok
+test commands::index::search_ranking_tests::v118_ranking_local_top_k_and_cross_library_merge_share_one_order ... ok
+test commands::index::search_ranking_tests::v118_ranking_ready_disk_index_includes_the_late_filename_hit ... ok
+test services::search_scan::tests::v118_scan_budget_counts_unsupported_entries_and_preserves_privacy_filters ... ok
+test services::search_scan::tests::v118_scan_budget_distinguishes_empty_missing_and_depth_failure ... ok
+test services::search_scan::tests::v118_scan_budget_keeps_a_pending_source_when_source_budget_is_zero ... ok
+test services::search_scan::tests::v118_scan_budget_limits_bytes_segments_and_time_without_counter_overflow ... ok
+test services::search_scan::tests::v118_scan_budget_resumes_without_repeating_or_skipping_sources ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 905 filtered out; finished in 1.02s
+

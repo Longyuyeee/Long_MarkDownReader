@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "phase": "user",
+  "evidenceLevel": "actual-wry-webview-input-events-generated-disk-not-installed",
+  "productCommit": "ac90610dffcd27feeb69e79ca8d075701873ab0d",
+  "harnessCommit": "b2ce89d33a26fac917d46107494bc23e4e79016f",
+  "runtimeBaseVersion": "1.1.7",
+  "executableSha256": "14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "checks": [
+    "trusted-ui-library-80-files-and-main-editor",
+    "trusted-ui-dirty-draft-explicit-reference-no-disk-write"
+  ],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "STRONG"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "在侧边参考 a-0000-记录.md"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "关闭参考"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "name": "zz-项目预算.md",
+      "before": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d",
+      "after": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d"
+    },
+    {
+      "name": "a-0001-记录.md",
+      "before": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0",
+      "after": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0"
+    },
+    {
+      "name": "a-0000-记录.md",
+      "before": "b93c03066f9b55824838311f6fcfa7ca7032b71ce2b76684eb932e0045fffbb1",
+      "after": "b93c03066f9b55824838311f6fcfa7ca7032b71ce2b76684eb932e0045fffbb1"
+    },
+    {
+      "name": "多批注.pdf",
+      "before": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+      "after": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7"
+    },
+    {
+      "name": "多批注.pdf.annotations.json",
+      "before": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8",
+      "after": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8"
+    }
+  ],
+  "draftChecks": [
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    }
+  ],
+  "initialFiles": 80,
+  "draftContentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f",
+  "error": {
+    "message": "Actual native UI did not become ready: real source change expires the issued page",
+    "stack": "Error: Actual native UI did not become ready: real source change expires the issued page\n    at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:95:3"
+  }
+}

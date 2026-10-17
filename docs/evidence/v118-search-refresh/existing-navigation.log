@@ -1,0 +1,16 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:9015/scripts/fixtures/search-consistency-browser.html
+Call log:
+  - navigating to "http://127.0.0.1:9015/scripts/fixtures/search-consistency-browser.html", waiting until "load"
+
+    at E:\ProjectSave\GeminiProject\MarkDownReader\scripts\test-search-consistency-browser.mjs:14:14 {
+  log: [
+    '  - navigating to "http://127.0.0.1:9015/scripts/fixtures/search-consistency-browser.html", waiting until "load"'
+  ],
+  name: 'Error'
+}
+
+Node.js v22.12.0

@@ -2,10 +2,11 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { waitForInstalledIndex } from './installed-index-readiness.mjs'
+import { searchFeedbackContract } from './search-feedback-contract.mjs'
 
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6', '1.1.7'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
   if (path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') throw Error('Only the disposable installer fixture library may be changed')
   const harnessSourceCommit = process.env.GITHUB_SHA || process.env.LONGEDIT_INSTALLED_HARNESS_COMMIT || ''
   assert.match(harnessSourceCommit, /^[a-f0-9]{40}$/, 'record the exact installer verification harness revision')
@@ -125,9 +126,11 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await scopeAll(); await waitFor(`!!(${result('v115-另库预算')})`, 'v115 all-library result visible')
     check('palette-scope-dropdown-is-clickable-and-shows-real-native-results', await evaluate(`!!(${result('v115-预算资料')})&&!!(${result('v115-预算配置')})&&!!(${result('v115-另库预算')})`))
     await snap('installed-v115-search.jpg')
+    // Observe the valid result view, not transient syntax-error/loading chrome.
+    const feedback=searchFeedbackContract(await evaluate(`!!document.querySelector('${palette} .search-page-status')`),palette)
     await query('"未结束'); await waitFor(`document.querySelector('${palette} [role="alert"]')?.textContent.includes('缺少结束双引号')`, 'invalid phrase feedback')
-    const invalidDistinct = await evaluate(`!document.querySelector('${palette} .no-results')`)
-    await query('v115-不存在-410974'); await waitFor(`!!document.querySelector('${palette} .no-results')`, 'genuine empty result')
+    const invalidDistinct = !await evaluate(feedback.emptyExpression)
+    await query('v115-不存在-410974'); await waitFor(feedback.emptyExpression, 'genuine empty result')
     check('invalid-query-and-genuine-empty-state-are-distinct', invalidDistinct && !await evaluate(`!!document.querySelector('${palette} [role="alert"]')`))
     await query(expression); await waitFor(`!!(${result('v115-预算资料')})`, 'v115 main text result'); await mouse(result('v115-预算资料'))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('预算已确认')`, 'v115 result opened in main editor')

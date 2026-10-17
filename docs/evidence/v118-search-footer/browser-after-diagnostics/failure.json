@@ -1,0 +1,102 @@
+{
+  "error": "TimeoutError: page.waitForFunction: Timeout 15000ms exceeded.",
+  "checks": [],
+  "layouts": [
+    {
+      "channel": "library",
+      "style": "soft",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "soft",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "neo",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "neo",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "glass",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "glass",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "airy",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "airy",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "minimal",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "minimal",
+      "width": 1280
+    },
+    {
+      "channel": "library",
+      "style": "sharp",
+      "width": 1000
+    },
+    {
+      "channel": "library",
+      "style": "sharp",
+      "width": 1280
+    }
+  ],
+  "errors": [],
+  "observation": {
+    "calls": [
+      {
+        "command": "search_knowledge_page",
+        "request": {
+          "libraryRoot": "C:/workflow-fixture",
+          "query": "预算",
+          "sort": "relevance",
+          "pageSize": 40,
+          "channel": "library",
+          "cursor": null,
+          "matchMode": "content"
+        }
+      },
+      {
+        "command": "search_knowledge_page",
+        "request": {
+          "libraryRoot": "C:/workflow-fixture",
+          "query": "预算",
+          "sort": "relevance",
+          "pageSize": 40,
+          "channel": "library",
+          "cursor": "fixture-1:p:40",
+          "matchMode": "content"
+        }
+      }
+    ],
+    "closes": [],
+    "errors": [
+      "当前搜索任务较多，请稍后重试；已加载结果仍可使用。重试"
+    ],
+    "counts": [
+      40
+    ]
+  }
+}

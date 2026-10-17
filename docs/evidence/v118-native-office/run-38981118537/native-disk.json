@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "phase": "disk",
+  "evidenceLevel": "debug-tauri-wry-real-ipc-and-generated-disk-not-installed",
+  "productCommit": "ac90610dffcd27feeb69e79ca8d075701873ab0d",
+  "harnessCommit": "b318d216a404568e704d015ad9d59999e3d2f6fe",
+  "executableSha256": "14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99",
+  "runtimeBaseVersion": "1.1.7",
+  "sourceUserContentIncluded": false,
+  "desktopInputUsed": false,
+  "checks": [
+    "actual-product-identity-and-generated-config",
+    "same-executable-restart-disk-index-has-identical-244-groups-and-locators"
+  ],
+  "calls": [
+    {
+      "window": "main",
+      "command": "plugin:app|version",
+      "elapsedMs": 3.916,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "get_config",
+      "elapsedMs": 3.723,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 241.139,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 136.838,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 38.374,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 44.282,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 35.165,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 33.797,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 33.964,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 27.292,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 12.119,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 11.873,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 12.17,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 10.879,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 11.254,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "search_knowledge_page",
+      "elapsedMs": 5.725,
+      "ok": true
+    },
+    {
+      "window": "main",
+      "command": "close_knowledge_search",
+      "elapsedMs": 6.313,
+      "ok": true
+    }
+  ],
+  "samples": [
+    {
+      "kind": "single-ready",
+      "query": "预算",
+      "elapsedMs": 591.1327000000001,
+      "workCalls": 8,
+      "indexed": true,
+      "initialExaminedSources": 0
+    }
+  ],
+  "generatedFixture": {
+    "unregisteredEntries": 21050
+  },
+  "uiObservation": {
+    "title": "Long编辑",
+    "hash": "#/settings",
+    "errorOverlay": false
+  }
+}

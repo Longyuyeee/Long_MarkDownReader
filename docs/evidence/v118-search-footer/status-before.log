@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: file card has one full-width column; relation badge follows its title and locations
+ok 1 - file card has one full-width column; relation badge follows its title and locations
+  ---
+  duration_ms: 0.5966
+  ...
+# Subtest: title and metadata stack; long titles wrap and snippets remain bounded
+ok 2 - title and metadata stack; long titles wrap and snippets remain bounded
+  ---
+  duration_ms: 0.0845
+  ...
+# Subtest: full title and separate file/graph actions remain available
+ok 3 - full title and separate file/graph actions remain available
+  ---
+  duration_ms: 0.1006
+  ...
+# Subtest: actual file card stacks narrow actions and retains all lazy internal positions
+ok 4 - actual file card stacks narrow actions and retains all lazy internal positions
+  ---
+  duration_ms: 0.074
+  ...
+# Subtest: actual status identifies old cards immediately, without presenting an old total as fresh results
+ok 5 - actual status identifies old cards immediately, without presenting an old total as fresh results
+  ---
+  duration_ms: 4.1829
+  ...
+# Subtest: actual status retains a paused or failed replacement label and returns to normal after acceptance
+ok 6 - actual status retains a paused or failed replacement label and returns to normal after acceptance
+  ---
+  duration_ms: 0.9946
+  ...
+# Subtest: a loaded page failure exposes recovery in the actual footer instead of a disabled dead end
+not ok 7 - a loaded page failure exposes recovery in the actual footer instead of a disabled dead end
+  ---
+  duration_ms: 1.1905
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-search-result-layout.mjs:57:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /search-page-retry/. Input:
+    
+    '<div class="search-page-status" aria-busy="false"><!--v-if--><div class="search-page-actions"><small>已加载 1<!--[--> / 244<!--]--> 个文件<!--v-if--></small><span><!--v-if--><!--v-if--><button type="button" disabled>加载更多文件</button></span></div></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="search-page-status" aria-busy="false"><!--v-if--><div class="search-page-actions"><small>已加载 1<!--[--> / 244<!--]--> 个文件<!--v-if--></small><span><!--v-if--><!--v-if--><button type="button" disabled>加载更多文件</button></span></div></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-search-result-layout.mjs:60:10)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+# Subtest: footer keeps precise restart/refresh semantics and normal paging returns after recovery
+not ok 8 - footer keeps precise restart/refresh semantics and normal paging returns after recovery
+  ---
+  duration_ms: 0.6376
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-search-result-layout.mjs:63:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /class="search-page-retry"/. Input:
+    
+    '<div class="search-page-status" aria-busy="true"><!--v-if--><div class="search-page-actions"><small>已加载 1<!--v-if--> 个文件<!--[--> · 保留旧视图<!--]--></small><span><!--v-if--><!--v-if--><!--v-if--></span></div></div>'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: '<div class="search-page-status" aria-busy="true"><!--v-if--><div class="search-page-actions"><small>已加载 1<!--v-if--> 个文件<!--[--> · 保留旧视图<!--]--></small><span><!--v-if--><!--v-if--><!--v-if--></span></div></div>'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-search-result-layout.mjs:67:12)
+    async Test.run (node:internal/test_runner/test:935:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 6
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 443.8496

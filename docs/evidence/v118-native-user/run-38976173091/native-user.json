@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "phase": "user",
+  "evidenceLevel": "actual-wry-webview-input-events-generated-disk-not-installed",
+  "productCommit": "13e77754efc4fe3d7b4cef73e96e8165cdb45cae",
+  "harnessCommit": "6df00e82135a2d6dcf3cf56e5dcbb9e9e865ef74",
+  "runtimeBaseVersion": "1.1.7",
+  "executableSha256": "2155a32a9e580de42092899feb756ae2a1adcd663bcdfb9741ec76052fe256bf",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "checks": [],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "STRONG"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "name": "zz-项目预算.md",
+      "before": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d",
+      "after": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d"
+    },
+    {
+      "name": "a-0001-记录.md",
+      "before": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0",
+      "after": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0"
+    },
+    {
+      "name": "多批注.pdf",
+      "before": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+      "after": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7"
+    },
+    {
+      "name": "多批注.pdf.annotations.json",
+      "before": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8",
+      "after": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8"
+    }
+  ],
+  "draftChecks": [],
+  "initialFiles": 80,
+  "error": {
+    "message": "{\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":25,\"scriptId\":\"244\",\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"SyntaxError\",\"description\":\"SyntaxError: missing ) after argument list\",\"objectId\":\"-1478302488568470561.2.5\"}}",
+    "stack": "Error: {\"exceptionId\":1,\"text\":\"Uncaught\",\"lineNumber\":0,\"columnNumber\":25,\"scriptId\":\"244\",\"exception\":{\"type\":\"object\",\"subtype\":\"error\",\"className\":\"SyntaxError\",\"description\":\"SyntaxError: missing ) after argument list\",\"objectId\":\"-1478302488568470561.2.5\"}}\n    at evaluate (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:48:158)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:65:16"
+  }
+}

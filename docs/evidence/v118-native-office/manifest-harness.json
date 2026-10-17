@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-E2e-native-office",
+  "productCommit": "ac90610dffcd27feeb69e79ca8d075701873ab0d",
+  "sourceHashBasis": "git-index-bytes",
+  "publicVersion": "1.1.7",
+  "runtimeBaseVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "sourceUserContentIncluded": false,
+  "checks": {
+    "harnessContracts": 49,
+    "localQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "native": {
+      "status": "pending",
+      "plannedChecks": 22,
+      "reason": "new frozen footer product and Office real input need a completed successful run"
+    }
+  },
+  "limitations": [
+    "Debug native input is not installer/upgrade acceptance or OS desktop takeover.",
+    "Workbook search locations are sheets, not individual cells.",
+    "Inherited installation scenarios, current release report and candidate lifecycle remain required."
+  ],
+  "sourceFiles": [
+    {
+      "path": ".gitattributes",
+      "bytes": 9270,
+      "sha256": "b50c97e3f606c01c63f36837344808d4b51393c7a8a07084da1715d2d972ce19"
+    },
+    {
+      "path": ".github/workflows/v118-search-native.yml",
+      "bytes": 7826,
+      "sha256": "107f02d01e3a8f72fa16b102057041d224319c0c7d96ef28417c5115c82d4999"
+    },
+    {
+      "path": "scripts/run-v118-native-search.ps1",
+      "bytes": 6420,
+      "sha256": "a6b870f7500f1833fbc776f27fc2c7940ac35ab43b17b109d4a2e644777b300b"
+    },
+    {
+      "path": "scripts/capture-v118-native-search.mjs",
+      "bytes": 14387,
+      "sha256": "57a3e57f9a84afdcb25a1ddeffc179647021fd1206e34c7b55c9498fc9981bd5"
+    },
+    {
+      "path": "scripts/capture-v118-native-user.mjs",
+      "bytes": 14477,
+      "sha256": "2fc706e6d597372ce5d246ee9677dea7300ce34b0a55ac80d2f68d77b3df34ed"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-fixture.mjs",
+      "bytes": 4298,
+      "sha256": "4634ac12a26f55b76bd9cc5959973e3e96686c9f8951f1075bcd55bbd4496eab"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-evidence.mjs",
+      "bytes": 3465,
+      "sha256": "a5c701f8b206b10c707dd0e71ae768b16f655c34c9f261d8ad06d3e7cdc9051a"
+    },
+    {
+      "path": "scripts/lib/v118-native-user-input.mjs",
+      "bytes": 2514,
+      "sha256": "d23ddaf2668951ab9c41adefb37ffea73440c30fabd028b644b62d1bcf50cf88"
+    },
+    {
+      "path": "scripts/lib/v118-native-user-evidence.mjs",
+      "bytes": 2752,
+      "sha256": "64dbb92121edc69e255e88264dfbf86422d075e046dedca1e99986b0762b70d9"
+    },
+    {
+      "path": "scripts/lib/v118-native-office-fixture.mjs",
+      "bytes": 1908,
+      "sha256": "45b7c87a2558e714b173991ff07e7f72d332ff5df9893c7ef42dae86efbeb075"
+    },
+    {
+      "path": "scripts/lib/v118-native-office-input.mjs",
+      "bytes": 7146,
+      "sha256": "e404acac5bf8e205046f96bf2a58dc360b643588954c84bc3e0cfdc1ae777627"
+    },
+    {
+      "path": "scripts/lib/v118-native-office-evidence.mjs",
+      "bytes": 3362,
+      "sha256": "0da2f0a414d3c38806ff7caa7faa1562bd0d0b7151a234e9c819ed3f68e37d0d"
+    },
+    {
+      "path": "scripts/test-v118-native-office.mjs",
+      "bytes": 7607,
+      "sha256": "9ece1c25033b0f8f4f2a818e2553e76ef51516e24846a8c5df92eb81138d6662"
+    },
+    {
+      "path": "scripts/test-v118-native-user.mjs",
+      "bytes": 5873,
+      "sha256": "d5c597e8f30ab7713951ca0129f61373b55a27f662d723a066dad2fbea300dcb"
+    },
+    {
+      "path": "scripts/test-v118-native-search-audit.mjs",
+      "bytes": 13711,
+      "sha256": "2f3e533823e49a577afaa8c7c7497bf547447ab4ef0a44debd0931f9c91ef7eb"
+    },
+    {
+      "path": "scripts/test-v118-native-search-evidence.mjs",
+      "bytes": 3520,
+      "sha256": "e29c73faa3ac363e63a766f4f03899bef2c897f6e347dd0a71e1d21eee02050c"
+    },
+    {
+      "path": "scripts/check-current-development-audit.mjs",
+      "bytes": 21620,
+      "sha256": "5538fa4cc54c0b3443dbb442c575c05c7f5b08c68d59eca0ac444a2733eccd28"
+    },
+    {
+      "path": "scripts/collect-v118-native-office-evidence.mjs",
+      "bytes": 5825,
+      "sha256": "8a215972a5014922bffff4954d2c60f7ee0aa5524ad86af1e17b265d220596c1"
+    },
+    {
+      "path": "src/components/SearchPageStatus.vue",
+      "bytes": 7724,
+      "sha256": "80d7bc9fc4c4cb5e4480d0fb2ac7d812c54022950984d94bec6d16c9c5a18d29"
+    },
+    {
+      "path": "src/views/LibraryMode.vue",
+      "bytes": 311795,
+      "sha256": "c5b49354c2538003ede8de7a3a930f605e05068c9357d22b18667cf7196656e5"
+    },
+    {
+      "path": "src/components/CommandPalette.vue",
+      "bytes": 24540,
+      "sha256": "b6176f5fe01247e4b8addfcc083245300b17d618df09d070e4376e6eb13eed0e"
+    },
+    {
+      "path": "src/services/fileNavigation.ts",
+      "bytes": 3416,
+      "sha256": "735ddb2df8ff8a8afd7043c462ff4ab46cf5e145c40104cc5b24060940ef32b2"
+    },
+    {
+      "path": "src/views/DocxReaderView.vue",
+      "bytes": 83566,
+      "sha256": "05d34436f9718465fc13af362664972c971765c745a53dfe96c6ca7c12feacd3"
+    },
+    {
+      "path": "src/views/PptxReaderView.vue",
+      "bytes": 116997,
+      "sha256": "4df72e5dc424b35740ba1d37961ba3594195217580367681c5851b7d3eb1fafa"
+    },
+    {
+      "path": "src/views/WorkbookView.vue",
+      "bytes": 370849,
+      "sha256": "61f7ff2e09460faa949fa382049190e3df9124d76853178a316a0ec932aacb3c"
+    },
+    {
+      "path": "shared/development-version-policy.json",
+      "bytes": 712,
+      "sha256": "7c6c0a88e62ca77799c35b4edfa8a01b169cd71791e465723c2d8366e018fbcd"
+    },
+    {
+      "path": "docs/V1_1_8_Native_Office_Audit_2026-10-17.md",
+      "bytes": 4799,
+      "sha256": "747a324f3e4ca31cd114eed1a4659b7767d5e9257070f4ab4dcbab28b67ec2dc"
+    },
+    {
+      "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
+      "bytes": 22149,
+      "sha256": "3cea6b204e1b6c6b2689a831433d6e0b9de4c8c6c2b8dd5c3398b0fd60e08a22"
+    },
+    {
+      "path": "docs/Development_Handoff.md",
+      "bytes": 441868,
+      "sha256": "096f3952a8a5e042428f37c568db280823fb01c6c6b4ed3e4b6a3ee751aa6408"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/evidence/v118-native-office/footer-product-ci.json",
+      "bytes": 2175,
+      "sha256": "3b96cca0af215c9dc0d13f9f044d44106a0654cbe35a673d7ef08631a980bb2b"
+    },
+    {
+      "path": "docs/evidence/v118-native-office/harness-final-paths.log",
+      "bytes": 10656,
+      "sha256": "ec0123bdb6d228596046cd21fd559789720c2c53c1355f2e71835ef29790a918"
+    },
+    {
+      "path": "docs/evidence/v118-native-office/harness-final.log",
+      "bytes": 10658,
+      "sha256": "1ac1029bcfcff27a5d8b96ebfd640eef1e4b3afdcc5ed7d401c01858e753089f"
+    },
+    {
+      "path": "docs/evidence/v118-native-office/harness-first.log",
+      "bytes": 22744,
+      "sha256": "e70483b9c1f754ed0cc71555b1e46503113526f0f3e1fb24e9919ed909c19536"
+    },
+    {
+      "path": "docs/evidence/v118-native-office/quality-gate-first.log",
+      "bytes": 148096,
+      "sha256": "cb6a579d9752aacf151c4ceb2570abc3a02bf5ca7186cb67cebfd740416205cc"
+    }
+  ]
+}

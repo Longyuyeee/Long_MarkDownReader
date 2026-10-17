@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-E2a-large-library",
+  "productCommit": "96e9fc464f6935f0c3daf18f1708b6d6d80c2994",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "sourceUserContentIncluded": false,
+  "sourceHashBasis": "git-index-bytes",
+  "checks": {
+    "behaviorBefore": {
+      "passed": 0,
+      "failed": 2
+    },
+    "localFunctionalRust": 976,
+    "existingIgnoredRust": 5,
+    "independentPerformance": 1,
+    "harnessContracts": 58,
+    "localQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "native": {
+      "status": "passed",
+      "nativeChecks": 12,
+      "files": 244,
+      "federatedHealthyFiles": 487,
+      "unregisteredEntries": 21050,
+      "productCommit": "96e9fc464f6935f0c3daf18f1708b6d6d80c2994",
+      "harnessCommit": "821b0f98671ae9163c1eb87506dfa6f06b7181a7",
+      "executableSha256": "1a18f1ae37d1d165558a1f41d9be295316f1760c883cf7b43658f62d0292a283",
+      "evidenceLevel": "debug-tauri-wry-real-ipc-and-generated-disk-not-installed",
+      "runId": 38973227180,
+      "url": "https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/38973227180",
+      "programBuildRun": "38973227180",
+      "sizeBytes": 103791104
+    }
+  },
+  "limitations": [
+    "Preparation and matching verification is cooperative; already issued file pages retain stricter synchronous proof.",
+    "Debug IPC is not installer or trusted user-input acceptance.",
+    "No local desktop takeover or installation.",
+    "A fixed 21050-entry fixture is not an arbitrary-scale or speedup claim."
+  ],
+  "sourceFiles": [
+    {
+      "path": ".gitattributes",
+      "bytes": 9055,
+      "sha256": "45470022569c1763cc33713651f6618fa34e506a0045f95195f09da664be0b8b"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_pages.rs",
+      "bytes": 52001,
+      "sha256": "e97c2b7b25c5c755801091977bf1a24c7c75506c4f2ae2b812ee288bbe52fdbe"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_pages_tests.rs",
+      "bytes": 48602,
+      "sha256": "1d4f635f3215441339b5e3b2f751f39a9811451f249b0ead462be26af0f12d69"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_libraries.rs",
+      "bytes": 27632,
+      "sha256": "eb13539be3876f4559fdb05293e8c06f24816a31b6cd1e5706b3c710835b321b"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_libraries_tests.rs",
+      "bytes": 40007,
+      "sha256": "9b707c1224070689ca5ffe2180c203e5c6666d22221cb75297743057acf9fd27"
+    },
+    {
+      "path": "src-tauri/src/services/knowledge_index.rs",
+      "bytes": 79940,
+      "sha256": "85df29d32c74417cf0fb360aad7eaef628707fc655a266ab47f198f627d29efb"
+    },
+    {
+      "path": ".github/workflows/v118-search-native.yml",
+      "bytes": 7639,
+      "sha256": "dc4a3b4e8ed4d28d50defaabe0c9dea66a37bb20a77fa4ee7cc01c62dc011adc"
+    },
+    {
+      "path": "scripts/run-v118-native-search.ps1",
+      "bytes": 6291,
+      "sha256": "8150b30d4c0656a12c0d78f141ac567a96247e0bf8f97fe119887c18f69db342"
+    },
+    {
+      "path": "scripts/lib/v118-webview-test-policy.ps1",
+      "bytes": 2595,
+      "sha256": "cb0c937e3a390f78cb998d905e963598f758e90e170a6d9fcbed2bf4de0f367b"
+    },
+    {
+      "path": "scripts/capture-v118-native-search.mjs",
+      "bytes": 14387,
+      "sha256": "57a3e57f9a84afdcb25a1ddeffc179647021fd1206e34c7b55c9498fc9981bd5"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-fixture.mjs",
+      "bytes": 4298,
+      "sha256": "17aab96fb4059580b4d602049220eeaf6d25064caea16a34ee14e55097692f91"
+    },
+    {
+      "path": "scripts/lib/v118-native-search-evidence.mjs",
+      "bytes": 3465,
+      "sha256": "a5c701f8b206b10c707dd0e71ae768b16f655c34c9f261d8ad06d3e7cdc9051a"
+    },
+    {
+      "path": "scripts/test-v118-native-search-audit.mjs",
+      "bytes": 12550,
+      "sha256": "db8ce8f7de16e6a533e3f60ddd2b872991d6920e5b0958f8d80387ebf73376f8"
+    },
+    {
+      "path": "scripts/test-v118-native-search-evidence.mjs",
+      "bytes": 3520,
+      "sha256": "e29c73faa3ac363e63a766f4f03899bef2c897f6e347dd0a71e1d21eee02050c"
+    },
+    {
+      "path": "scripts/check-current-development-audit.mjs",
+      "bytes": 21414,
+      "sha256": "f699e1ade580635fc47b9485ca32722c2b3f6a88d68ef2af6877bb4f933c1532"
+    },
+    {
+      "path": "scripts/collect-v118-large-library-evidence.mjs",
+      "bytes": 5101,
+      "sha256": "7b09e8134a4728ea3244e407dada61bc94e76aaadb672590c3d2ffaeb67c11b7"
+    },
+    {
+      "path": "shared/development-version-policy.json",
+      "bytes": 702,
+      "sha256": "cab371cd8787322183b1fe8b8d7e6c27d10714a9bcdb555e166cbb5bc709515d"
+    },
+    {
+      "path": "docs/V1_1_8_Large_Library_Audit_2026-10-17.md",
+      "bytes": 8236,
+      "sha256": "eee2db73decefd12330d58140ddaebaa3cd97702fddd851091726730e373436c"
+    },
+    {
+      "path": "docs/V1_1_8_Search_Development_2026-10-17.md",
+      "bytes": 19208,
+      "sha256": "54b88492ff69b4317a1dafccadffcca97e224896c924a3bd164eb7eac4ff7ec7"
+    },
+    {
+      "path": "docs/Development_Handoff.md",
+      "bytes": 436295,
+      "sha256": "8e22e38cb1212b66142d339f6524d196e1d0ad04e90384256242c713a4ed6758"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "path": "docs/evidence/v118-large-library/current-head-ci.json",
+      "bytes": 2440,
+      "sha256": "e963fab17c258bc5e8cb307937436d6329ca6f6a97d10a37b3a0bd3bea4b347c"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/harness-contracts-final.log",
+      "bytes": 10324,
+      "sha256": "2a496a63e3cc4fc8100e6cd3b54e6ac7efb57f816b3777fbd36a025c76d25d8b"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/harness-contracts-first.log",
+      "bytes": 10071,
+      "sha256": "5f3975af5dc34cf7cd31b484e4a74a21fc11c24f65f57299460af83f0f6e24cf"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/harness-contracts-pinned.log",
+      "bytes": 10325,
+      "sha256": "1b98280d16c5a088282337bb10228a531ae713b7f1cc72a54478484938bb554c"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-after-first.log",
+      "bytes": 1122,
+      "sha256": "67f280fa62dba67c67fdcecfac926a56f8a5217edc23762361001711cad7b88f"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-after-second.log",
+      "bytes": 1021,
+      "sha256": "1d777fbcbb276a928669c24730e9ad78f37d3b9c50b35aa7b0ef49801e9b0401"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-before.log",
+      "bytes": 2171,
+      "sha256": "02025d1c46fd18db69803f30b5c0113a3bbcc718f139d949141282508fc266a1"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-functional-audited.log",
+      "bytes": 102013,
+      "sha256": "92f53e05b6e27f078150f6e7f56589057971e5d917eb10450fdfda0fad21402d"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-functional-final.log",
+      "bytes": 102013,
+      "sha256": "27e7996499a88307fdf6091b0d375093e5f0cef01b4dae2457b4573bac582f01"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-performance-final.log",
+      "bytes": 2057,
+      "sha256": "d76985fb8962a2a089d573875c147f6ecdc333b4ad35c5c982c0e905f799f77e"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-run-38973227180.json",
+      "bytes": 3805,
+      "sha256": "c24f127e2853b19b7ef361b27e4b8e2ad3f5fed5c4be74fd5019d6f18bd00c18"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/native-search-final-first.log",
+      "bytes": 12045,
+      "sha256": "fe962c7b02bc979a8649ef26e0fc4e7249d1cd0b3f63285d38d8e1e4a91ba8dd"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/previous-head-ci.json",
+      "bytes": 208,
+      "sha256": "fa5a47ea919bf0c69e8319a22fe3f09c6fd83d71cdb3f4d5efb088d81762eaad"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/quality-gate-final.log",
+      "bytes": 142574,
+      "sha256": "139db24a67eb6ef7f3f07208affce8adec9366048b50baf599820e159e487678"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/baseline.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/baseline.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/debugger-configuration.json",
+      "bytes": 2142,
+      "sha256": "a4794997b05b13beda1880fab4d7d612328e9b567fc37d8dcfc671055351bded"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/disk.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/disk.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-baseline.json",
+      "bytes": 191812,
+      "sha256": "6257ef0d66d9360f9d2cacffb2732714388577fcea9b1eba6328eb35cb6ced64"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-baseline.png",
+      "bytes": 81462,
+      "sha256": "2fe546a6e4103f474941a1e1e6dbe95946a6692f4678a32357cdf1c0e67aa2f5"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-disk.json",
+      "bytes": 3066,
+      "sha256": "5224ccf73a5fcc8ee4e463483b6dfb4c87ec937ba63e5ffcc6d3b3fa1b745f9d"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/native-disk.png",
+      "bytes": 82057,
+      "sha256": "e0d47d93433b8d15b02a8fa87f36acc194f5723efd4a72f26b37852c2e092f0a"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/program-build-receipt.json",
+      "bytes": 457,
+      "sha256": "aa48fba9625c09771cbd8669c2e24d195dc3b1cafb8abe2fef180ad42e108b0c"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/vite.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/v118-large-library/run-38973227180/vite.stdout.log",
+      "bytes": 226,
+      "sha256": "a59f7016fe71cfbffa238ee1d97d11b715a6d6471b41614e8a489d6816d19d45"
+    }
+  ]
+}

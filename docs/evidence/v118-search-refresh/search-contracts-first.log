@@ -1,0 +1,609 @@
+(node:31148) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:23460) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: switching results never displays late content from the previous file
+ok 1 - switching results never displays late content from the previous file
+  ---
+  duration_ms: 30.8183
+  ...
+# Subtest: failed preview can retry; closing discards pending responses
+ok 2 - failed preview can retry; closing discards pending responses
+  ---
+  duration_ms: 23.308
+  ...
+# Subtest: excerpt uses selected text and resets on a different source
+ok 3 - excerpt uses selected text and resets on a different source
+  ---
+  duration_ms: 16.3199
+  ...
+# Subtest: clipboard failure keeps the selection for retry
+ok 4 - clipboard failure keeps the selection for retry
+  ---
+  duration_ms: 13.7209
+  ...
+# Subtest: explicit side reference docks immediately, survives searches and clears on library change
+ok 5 - explicit side reference docks immediately, survives searches and clears on library change
+  ---
+  duration_ms: 54.3101
+  ...
+# Subtest: normal result opens use main document navigation and never replace the reference
+ok 6 - normal result opens use main document navigation and never replace the reference
+  ---
+  duration_ms: 10.8721
+  ...
+# Subtest: main open and side reference remain distinct accessible actions
+ok 7 - main open and side reference remain distinct accessible actions
+  ---
+  duration_ms: 1.5787
+  ...
+# Subtest: arrow keys move between main-open actions without opening files or swallowing Enter
+ok 8 - arrow keys move between main-open actions without opening files or swallowing Enter
+  ---
+  duration_ms: 7.6944
+  ...
+# Subtest: explicit return hides the reference, retains its source and focuses a visible writable editor after rendering
+ok 9 - explicit return hides the reference, retains its source and focuses a visible writable editor after rendering
+  ---
+  duration_ms: 6.6884
+  ...
+# Subtest: direct excerpt insertion requires a live bookmark in the current writable Markdown note
+ok 10 - direct excerpt insertion requires a live bookmark in the current writable Markdown note
+  ---
+  duration_ms: 8.6636
+  ...
+# Subtest: manual reference refresh clears selection and ignores an older read
+ok 11 - manual reference refresh clears selection and ignores an older read
+  ---
+  duration_ms: 9.3095
+  ...
+# (node:8872) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: new completed zero is distinct from preparation, failure and a local format-filter zero
+ok 12 - new completed zero is distinct from preparation, failure and a local format-filter zero
+  ---
+  duration_ms: 7.2893
+  ...
+# Subtest: legacy installed packages retain their original empty/error contract
+ok 13 - legacy installed packages retain their original empty/error contract
+  ---
+  duration_ms: 1.4302
+  ...
+# Subtest: installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+ok 14 - installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+  ---
+  duration_ms: 1.0431
+  ...
+# (node:2260) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [Vue warn]: Property undefined was accessed during render but is not defined on instance. 
+#   at <App>
+# Subtest: literal highlight preserves content: 预算确认与预算修订 / 预算
+ok 15 - literal highlight preserves content: 预算确认与预算修订 / 预算
+  ---
+  duration_ms: 6.1167
+  ...
+# Subtest: literal highlight preserves content: Needle needle NEEDLE /  needle 
+ok 16 - literal highlight preserves content: Needle needle NEEDLE /  needle 
+  ---
+  duration_ms: 0.3264
+  ...
+# Subtest: literal highlight preserves content: a.b axb [x] / a.b
+ok 17 - literal highlight preserves content: a.b axb [x] / a.b
+  ---
+  duration_ms: 0.1123
+  ...
+# Subtest: literal highlight preserves content: İ🙂预算 / 预算
+ok 18 - literal highlight preserves content: İ🙂预算 / 预算
+  ---
+  duration_ms: 0.1005
+  ...
+# Subtest: literal highlight preserves content: İstanbul / i
+ok 19 - literal highlight preserves content: İstanbul / i
+  ---
+  duration_ms: 0.1643
+  ...
+# Subtest: literal highlight preserves content: 🙂🙂 / 🙂
+ok 20 - literal highlight preserves content: 🙂🙂 / 🙂
+  ---
+  duration_ms: 0.2062
+  ...
+# Subtest: literal highlight preserves content: 正常文字 / 
+ok 21 - literal highlight preserves content: 正常文字 / 
+  ---
+  duration_ms: 0.2082
+  ...
+# Subtest: literal highlight preserves content: 没有结果 / 预算
+ok 22 - literal highlight preserves content: 没有结果 / 预算
+  ---
+  duration_ms: 0.125
+  ...
+# Subtest: actual highlight template escapes file content instead of rendering HTML
+ok 23 - actual highlight template escapes file content instead of rendering HTML
+  ---
+  duration_ms: 13.7438
+  ...
+# (node:39016) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: editor offsets: 🙂İ预算预算/预算
+ok 24 - editor offsets: 🙂İ预算预算/预算
+  ---
+  duration_ms: 1.6099
+  ...
+# Subtest: editor offsets: İstanbul/i
+ok 25 - editor offsets: İstanbul/i
+  ---
+  duration_ms: 0.3013
+  ...
+# Subtest: editor offsets: a.b axb/a.b
+ok 26 - editor offsets: a.b axb/a.b
+  ---
+  duration_ms: 0.1081
+  ...
+# Subtest: editor offsets: A needle/ NEEDLE 
+ok 27 - editor offsets: A needle/ NEEDLE 
+  ---
+  duration_ms: 0.0777
+  ...
+# Subtest: editor offsets: 预算/
+ok 28 - editor offsets: 预算/
+  ---
+  duration_ms: 0.1403
+  ...
+# Subtest: editor offsets: 已修改/预算
+ok 29 - editor offsets: 已修改/预算
+  ---
+  duration_ms: 0.0793
+  ...
+# Subtest: text editor locates in current draft without replacing it; repeated intent only runs once
+ok 30 - text editor locates in current draft without replacing it; repeated intent only runs once
+  ---
+  duration_ms: 10.5734
+  ...
+# Subtest: Markdown waits for the requested document and selects without changing editor mode or content
+ok 31 - Markdown waits for the requested document and selects without changing editor mode or content
+  ---
+  duration_ms: 9.923
+  ...
+# Subtest: navigation keeps adjacent matches separate and uses literal Unicode offsets
+ok 32 - navigation keeps adjacent matches separate and uses literal Unicode offsets
+  ---
+  duration_ms: 0.6964
+  ...
+# Subtest: DOM matching spans inline formatting but never joins separate paragraphs
+ok 33 - DOM matching spans inline formatting but never joins separate paragraphs
+  ---
+  duration_ms: 1.438
+  ...
+# Subtest: long paragraph scroll uses match geometry rather than paragraph geometry
+ok 34 - long paragraph scroll uses match geometry rather than paragraph geometry
+  ---
+  duration_ms: 0.4503
+  ...
+# (node:42068) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: file pages append only the issued same-snapshot end and preserve locator payloads
+ok 35 - file pages append only the issued same-snapshot end and preserve locator payloads
+  ---
+  duration_ms: 4.5549
+  ...
+# Subtest: a failed next page retains loaded files and retries exactly the same cursor
+ok 36 - a failed next page retains loaded files and retries exactly the same cursor
+  ---
+  duration_ms: 0.7942
+  ...
+# Subtest: expired re-search preserves old files while waiting and preserves conditions
+ok 37 - expired re-search preserves old files while waiting and preserves conditions
+  ---
+  duration_ms: 0.5992
+  ...
+# Subtest: expired restart retains all loaded cards across preparation and resumes the saved depth
+ok 38 - expired restart retains all loaded cards across preparation and resumes the saved depth
+  ---
+  duration_ms: 695.406
+  ...
+# Subtest: a failed replacement keeps the old cards and offers a fresh search, not stale paging
+ok 39 - a failed replacement keeps the old cards and offers a fresh search, not stale paging
+  ---
+  duration_ms: 0.5615
+  ...
+# Subtest: explicit cross-library refresh marks retained cards before IPC returns and retires old paging
+ok 40 - explicit cross-library refresh marks retained cards before IPC returns and retires old paging
+  ---
+  duration_ms: 0.4305
+  ...
+# Subtest: partial replacement with no usable files is not a successful empty search
+ok 41 - partial replacement with no usable files is not a successful empty search
+  ---
+  duration_ms: 0.2526
+  ...
+# Subtest: only a confirmed complete empty replacement removes the retained cards
+ok 42 - only a confirmed complete empty replacement removes the retained cards
+  ---
+  duration_ms: 0.1527
+  ...
+# Subtest: changing the query retires a pending replacement and cannot resurrect the old cards
+ok 43 - changing the query retires a pending replacement and cannot resurrect the old cards
+  ---
+  duration_ms: 0.3635
+  ...
+# Subtest: a newly ranked view waits for explicit refresh and never appends into the old list
+ok 44 - a newly ranked view waits for explicit refresh and never appends into the old list
+  ---
+  duration_ms: 0.372
+  ...
+# Subtest: same-view progress cannot rewind the already-loaded page cursor
+ok 45 - same-view progress cannot rewind the already-loaded page cursor
+  ---
+  duration_ms: 0.249
+  ...
+# Subtest: late query reply cannot replace new results or close the newer native session
+ok 46 - late query reply cannot replace new results or close the newer native session
+  ---
+  duration_ms: 0.1467
+  ...
+# Subtest: clear retires a late initial session
+ok 47 - clear retires a late initial session
+  ---
+  duration_ms: 0.0946
+  ...
+# Subtest: unmount retires a late initial session
+ok 48 - unmount retires a late initial session
+  ---
+  duration_ms: 0.0798
+  ...
+# Subtest: preparation is bounded and resumable, never reported as a completed empty result
+ok 49 - preparation is bounded and resumable, never reported as a completed empty result
+  ---
+  duration_ms: 0.0903
+  ...
+# Subtest: automatic preparation stops when a usable first page is ready
+ok 50 - automatic preparation stops when a usable first page is ready
+  ---
+  duration_ms: 1.739
+  ...
+# Subtest: restoring previously loaded depth reads only the necessary pages
+ok 51 - restoring previously loaded depth reads only the necessary pages
+  ---
+  duration_ms: 0.2261
+  ...
+# Subtest: invalid phrase never invokes IPC, unknown native error never exposes raw paths
+ok 52 - invalid phrase never invokes IPC, unknown native error never exposes raw paths
+  ---
+  duration_ms: 0.4543
+  ...
+# Subtest: explicit tag mode uses the page protocol and keeps exact tag case
+ok 53 - explicit tag mode uses the page protocol and keeps exact tag case
+  ---
+  duration_ms: 0.137
+  ...
+# Subtest: duplicate or cross-snapshot next pages fail without touching the old list
+ok 54 - duplicate or cross-snapshot next pages fail without touching the old list
+  ---
+  duration_ms: 0.2268
+  ...
+# Subtest: a malformed protocol response cannot become successful no-results
+ok 55 - a malformed protocol response cannot become successful no-results
+  ---
+  duration_ms: 0.081
+  ...
+# Subtest: a malformed reply retires its allocated native session and invalid input retry stays local
+ok 56 - a malformed reply retires its allocated native session and invalid input retry stays local
+  ---
+  duration_ms: 0.1743
+  ...
+# Subtest: all failures, partial success with zero files and complete zero remain distinct
+ok 57 - all failures, partial success with zero files and complete zero remain distinct
+  ---
+  duration_ms: 0.1516
+  ...
+# (node:23436) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: query grammar: "预算"
+ok 58 - query grammar: "预算"
+  ---
+  duration_ms: 2.9886
+  ...
+# Subtest: query grammar: " 项目  预算 -旧版 "
+ok 59 - query grammar: " 项目  预算 -旧版 "
+  ---
+  duration_ms: 0.2602
+  ...
+# Subtest: query grammar: "\\"项目 预算\\" -\\"旧版 文件\\""
+ok 60 - query grammar: "\\"项目 预算\\" -\\"旧版 文件\\""
+  ---
+  duration_ms: 0.2027
+  ...
+# Subtest: query grammar: "Alpha alpha JSON"
+ok 61 - query grammar: "Alpha alpha JSON"
+  ---
+  duration_ms: 0.2263
+  ...
+# Subtest: query grammar: "项目预算　-旧版"
+ok 62 - query grammar: "项目预算　-旧版"
+  ---
+  duration_ms: 0.1304
+  ...
+# Subtest: query grammar: "-旧版"
+ok 63 - query grammar: "-旧版"
+  ---
+  duration_ms: 0.0853
+  ...
+# Subtest: query grammar: "foo-bar -"
+ok 64 - query grammar: "foo-bar -"
+  ---
+  duration_ms: 0.1609
+  ...
+# Subtest: query grammar: "\\"a\\\\\\"b\\""
+ok 65 - query grammar: "\\"a\\\\\\"b\\""
+  ---
+  duration_ms: 0.0918
+  ...
+# Subtest: query grammar: ""
+ok 66 - query grammar: ""
+  ---
+  duration_ms: 0.3185
+  ...
+# Subtest: query grammar: "\\"未完成"
+ok 67 - query grammar: "\\"未完成"
+  ---
+  duration_ms: 0.7861
+  ...
+# Subtest: query grammar: "\\"\\""
+ok 68 - query grammar: "\\"\\""
+  ---
+  duration_ms: 0.1979
+  ...
+# Subtest: highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps
+ok 69 - highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps
+  ---
+  duration_ms: 0.6048
+  ...
+# Subtest: query limits and editor needles do not include operators or excluded words
+ok 70 - query limits and editor needles do not include operators or excluded words
+  ---
+  duration_ms: 0.2519
+  ...
+# (node:12044) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: failure and retry preserve query: 项目
+ok 71 - failure and retry preserve query: 项目
+  ---
+  duration_ms: 8.488
+  ...
+# Subtest: failure and retry preserve query: \#项目
+ok 72 - failure and retry preserve query: \#项目
+  ---
+  duration_ms: 3.6557
+  ...
+# Subtest: successful empty response is not failure
+ok 73 - successful empty response is not failure
+  ---
+  duration_ms: 5.085
+  ...
+# Subtest: stale resolve cannot overwrite newer results
+ok 74 - stale resolve cannot overwrite newer results
+  ---
+  duration_ms: 4.627
+  ...
+# Subtest: stale reject cannot overwrite newer results
+ok 75 - stale reject cannot overwrite newer results
+  ---
+  duration_ms: 9.9398
+  ...
+# Subtest: clear invalidates pending response and clears busy state
+ok 76 - clear invalidates pending response and clears busy state
+  ---
+  duration_ms: 4.1676
+  ...
+# Subtest: library change rejects old response
+ok 77 - library change rejects old response
+  ---
+  duration_ms: 3.4652
+  ...
+# Subtest: new query immediately removes old result; missing library does not spin
+ok 78 - new query immediately removes old result; missing library does not spin
+  ---
+  duration_ms: 2.8049
+  ...
+# Subtest: component keeps errors distinct and offers accessible retry
+ok 79 - component keeps errors distinct and offers accessible retry
+  ---
+  duration_ms: 0.7601
+  ...
+# Subtest: real Vue watchers debounce changes and retry retains format filter
+ok 80 - real Vue watchers debounce changes and retry retains format filter
+  ---
+  duration_ms: 6.8472
+  ...
+# Subtest: real library watcher clears query, collection and busy state before late response
+ok 81 - real library watcher clears query, collection and busy state before late response
+  ---
+  duration_ms: 4.3587
+  ...
+# Subtest: real Vue clear cancels debounce without invoking backend
+ok 82 - real Vue clear cancels debounce without invoking backend
+  ---
+  duration_ms: 3.4644
+  ...
+# Subtest: real Vue unmount cancels scheduled search
+ok 83 - real Vue unmount cancels scheduled search
+  ---
+  duration_ms: 8.2104
+  ...
+# Subtest: real Vue unmount invalidates a late response
+ok 84 - real Vue unmount invalidates a late response
+  ---
+  duration_ms: 3.6616
+  ...
+# (node:3628) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+#   at <App>
+# [Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+#   at <App>
+# Subtest: same file pages group together without merging same-named files or losing ranking
+ok 85 - same file pages group together without merging same-named files or losing ranking
+  ---
+  duration_ms: 1.9921
+  ...
+# Subtest: separate annotations and match kinds on one page remain independently accessible
+ok 86 - separate annotations and match kinds on one page remain independently accessible
+  ---
+  duration_ms: 0.2134
+  ...
+# Subtest: unlocated contexts and case-sensitive paths are preserved
+ok 87 - unlocated contexts and case-sensitive paths are preserved
+  ---
+  duration_ms: 0.424
+  ...
+# Subtest: actual result click forwards each PDF page and annotation to the existing router
+ok 88 - actual result click forwards each PDF page and annotation to the existing router
+  ---
+  duration_ms: 29.2244
+  ...
+# Subtest: actual grouped results template exposes separate page actions and bounded-count wording
+ok 89 - actual grouped results template exposes separate page actions and bounded-count wording
+  ---
+  duration_ms: 113.8998
+  ...
+# Subtest: restored fifth annotation expands the actual lazy position disclosure
+ok 90 - restored fifth annotation expands the actual lazy position disclosure
+  ---
+  duration_ms: 42.0372
+  ...
+# Subtest: body results carry a fresh location intent on repeated opens
+ok 91 - body results carry a fresh location intent on repeated opens
+  ---
+  duration_ms: 5.1406
+  ...
+# (node:23000) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: file card has one full-width column; relation badge follows its title and locations
+ok 92 - file card has one full-width column; relation badge follows its title and locations
+  ---
+  duration_ms: 0.8948
+  ...
+# Subtest: title and metadata stack; long titles wrap and snippets remain bounded
+ok 93 - title and metadata stack; long titles wrap and snippets remain bounded
+  ---
+  duration_ms: 0.1565
+  ...
+# Subtest: full title and separate file/graph actions remain available
+ok 94 - full title and separate file/graph actions remain available
+  ---
+  duration_ms: 0.2237
+  ...
+# Subtest: actual file card stacks narrow actions and retains all lazy internal positions
+ok 95 - actual file card stacks narrow actions and retains all lazy internal positions
+  ---
+  duration_ms: 0.1873
+  ...
+# Subtest: actual status identifies old cards immediately, without presenting an old total as fresh results
+ok 96 - actual status identifies old cards immediately, without presenting an old total as fresh results
+  ---
+  duration_ms: 7.3103
+  ...
+# Subtest: actual status retains a paused or failed replacement label and returns to normal after acceptance
+ok 97 - actual status retains a paused or failed replacement label and returns to normal after acceptance
+  ---
+  duration_ms: 1.5628
+  ...
+# (node:44520) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: leaving and reopening restores query, filters, selected result and scroll after fresh results
+ok 98 - leaving and reopening restores query, filters, selected result and scroll after fresh results
+  ---
+  duration_ms: 11.6062
+  ...
+# Subtest: paged return restores sort and depth, retaining a not-yet-loaded selection
+ok 99 - paged return restores sort and depth, retaining a not-yet-loaded selection
+  ---
+  duration_ms: 1.2209
+  ...
+# Subtest: named work-session restore retains bounded sort and page depth without old selection
+ok 100 - named work-session restore retains bounded sort and page depth without old selection
+  ---
+  duration_ms: 0.3735
+  ...
+# Subtest: missing result is explained; a failed refresh does not discard the saved selection
+ok 101 - missing result is explained; a failed refresh does not discard the saved selection
+  ---
+  duration_ms: 0.5531
+  ...
+# Subtest: changing query or library clears selection and libraries never inherit one another
+ok 102 - changing query or library clears selection and libraries never inherit one another
+  ---
+  duration_ms: 0.6693
+  ...
+# (node:4636) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: same titles retain distinct directory identity
+ok 103 - same titles retain distinct directory identity
+  ---
+  duration_ms: 0.7798
+  ...
+# Subtest: native Windows extended and UNC paths remain readable
+ok 104 - native Windows extended and UNC paths remain readable
+  ---
+  duration_ms: 0.1103
+  ...
+# Subtest: sibling roots and case-sensitive Unix paths are not shortened incorrectly
+ok 105 - sibling roots and case-sensitive Unix paths are not shortened incorrectly
+  ---
+  duration_ms: 0.1882
+  ...
+# (node:44276) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: cross-library preflight captures pending input without writing and disposes snapshot hooks
+ok 106 - cross-library preflight captures pending input without writing and disposes snapshot hooks
+  ---
+  duration_ms: 86.5877
+  ...
+# (node:17468) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: native Windows canonical search paths belong to their configured drive or UNC library
+ok 107 - native Windows canonical search paths belong to their configured drive or UNC library
+  ---
+  duration_ms: 0.9342
+  ...
+# Subtest: canonical Windows membership still rejects adjacent roots, traversal and device paths
+ok 108 - canonical Windows membership still rejects adjacent roots, traversal and device paths
+  ---
+  duration_ms: 0.2108
+  ...
+# Subtest: session capture excludes text, external files, traversal, duplicate and adjacent libraries
+ok 109 - session capture excludes text, external files, traversal, duplicate and adjacent libraries
+  ---
+  duration_ms: 0.8006
+  ...
+# Subtest: dirty tabs survive switching including a matching file with different casing
+ok 110 - dirty tabs survive switching including a matching file with different casing
+  ---
+  duration_ms: 0.2657
+  ...
+# Subtest: roundtrip isolates roots, preserves invalid records, and reports failed saves
+ok 111 - roundtrip isolates roots, preserves invalid records, and reports failed saves
+  ---
+  duration_ms: 1.4338
+  ...
+# Subtest: actual store restores scoped tabs and safely filters legacy mixed-library state
+ok 112 - actual store restores scoped tabs and safely filters legacy mixed-library state
+  ---
+  duration_ms: 11.9555
+  ...
+# Subtest: rename/delete preserve files and reject stale management dialogs
+ok 113 - rename/delete preserve files and reject stale management dialogs
+  ---
+  duration_ms: 0.7159
+  ...
+1..113
+# tests 113
+# suites 0
+# pass 113
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1053.1494

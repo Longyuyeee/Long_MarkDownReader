@@ -1,6 +1,6 @@
 import { nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
-interface SearchSession { query: string; types: string[]; selected: string; scroll: number }
+interface SearchSession { query: string; types: string[]; selected: string; scroll: number; loadedFiles?: number; sort?: 'relevance' | 'modified' }
 // Persist only search context; results and document text are always read afresh.
 const sessions = new Map<string, SearchSession>()
 const searchSessionKey = (root: string) => `longedit.search.v1:${encodeURIComponent(root.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase())}`
@@ -20,6 +20,8 @@ export const snapshotSearchSession = (root: string) => {
       if (saved && typeof saved.query === 'string' && Array.isArray(saved.types)) session = {
         query: saved.query.slice(0, 500), types: saved.types.filter((type: unknown) => typeof type === 'string').slice(0, 8),
         selected: typeof saved.selected === 'string' ? saved.selected : '', scroll: Number.isFinite(saved.scroll) ? Math.max(0, saved.scroll) : 0,
+        loadedFiles: Number.isFinite(saved.loadedFiles) ? Math.max(0, Math.min(10000, saved.loadedFiles)) : 0,
+        sort: saved.sort === 'modified' ? 'modified' : 'relevance',
       }
     } catch { /* Keep unreadable data available for recovery. */ }
   }
@@ -27,13 +29,17 @@ export const snapshotSearchSession = (root: string) => {
 }
 export const restoreSearchSession = (root: string, session?: SearchSession) => {
   if (!session) { sessions.delete(root); persistSearchSession(root); return }
-  sessions.set(root, { query: String(session.query || '').slice(0, 500), types: Array.isArray(session.types) ? session.types.filter(type => typeof type === 'string').slice(0, 8) : [], selected: '', scroll: 0 })
+  sessions.set(root, { query: String(session.query || '').slice(0, 500), types: Array.isArray(session.types) ? session.types.filter(type => typeof type === 'string').slice(0, 8) : [], selected: '', scroll: 0,
+    loadedFiles: Number.isFinite(session.loadedFiles) ? Math.max(0, Math.min(10000, session.loadedFiles!)) : 0,
+    sort: session.sort === 'modified' ? 'modified' : 'relevance' })
   persistSearchSession(root, sessions.get(root))
 }
 export function useSearchReturn(options: {
   root: () => string; query: Ref<string>; types: Ref<string[]>;
   running: Ref<boolean>; failed: Ref<boolean>; resultKeys: () => string[];
   viewport: Ref<HTMLElement | null>; showResults: () => void;
+  loadedFiles?: () => number; restoreLoadedFiles?: (count: number) => void;
+  sort?: Ref<'relevance' | 'modified'>; hasMore?: () => boolean;
 }) {
   const selectedKey = ref('')
   const notice = ref('')
@@ -43,7 +49,8 @@ export function useSearchReturn(options: {
     if (!options.query.value.trim()) { sessions.delete(root); persistSearchSession(root); return }
     if (!pending && !options.running.value && options.viewport.value) scroll = options.viewport.value.scrollTop
     sessions.delete(root)
-    sessions.set(root, { query: options.query.value, types: [...options.types.value], selected: selectedKey.value, scroll })
+    sessions.set(root, { query: options.query.value, types: [...options.types.value], selected: selectedKey.value, scroll,
+      loadedFiles: Math.min(10000, options.loadedFiles?.() || 0), sort: options.sort?.value })
     persistSearchSession(root, sessions.get(root))
     if (sessions.size > 8) sessions.delete(sessions.keys().next().value!)
   }
@@ -55,11 +62,15 @@ export function useSearchReturn(options: {
     viewport.scrollTop = scroll
     const result = Array.from(viewport.querySelectorAll<HTMLElement>('[data-search-key]')).find(item => item.dataset.searchKey === selectedKey.value)
     if (selectedKey.value && !result) {
+      if (options.hasMore?.()) { notice.value = '原来的结果尚未加载，已保留选择，可继续加载文件。'; return }
       notice.value = '原来的结果已变化，已保留搜索条件，请从当前结果中选择。'
       selectedKey.value = ''
-    } else if (result && focusResult) {
-      result.scrollIntoView({ block: 'nearest' })
-      result.querySelector<HTMLButtonElement>('.knowledge-result-open')?.focus({ preventScroll: true })
+    } else if (result) {
+      notice.value = ''
+      if (focusResult) {
+        result.scrollIntoView({ block: 'nearest' })
+        result.querySelector<HTMLButtonElement>('.knowledge-result-open')?.focus({ preventScroll: true })
+      }
     }
     pending = false; focusResult = false
   }
@@ -71,6 +82,8 @@ export function useSearchReturn(options: {
   const restore = () => {
     const session = snapshotSearchSession(options.root())
     if (!session) return
+    options.restoreLoadedFiles?.(session.loadedFiles || 0)
+    if (options.sort && session.sort) options.sort.value = session.sort
     options.query.value = session.query
     options.types.value = [...session.types]
     selectedKey.value = session.selected; scroll = session.scroll
@@ -92,5 +105,6 @@ export function useSearchReturn(options: {
   }, { flush: 'sync' })
   watch([options.viewport, options.running, options.failed, options.resultKeys], () => { void apply() }, { flush: 'post' })
   onBeforeUnmount(() => { save(); disposed = true })
-  return { selectedKey, notice, remember, restore, returnToResults }
+  const reconcile = () => { pending = true; focusResult = false; void apply() }
+  return { selectedKey, notice, remember, restore, returnToResults, reconcile }
 }

@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-B2a",
+  "status": "scan-budget-validated-file-pagination-required-before-merge",
+  "baselineCommit": "21b79be21d999913a1428c874385abd5d99e7efa",
+  "branch": "codex/v118-search-completeness",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "evidenceLevel": "rust-native-functions-real-disposable-files-and-existing-fixtures",
+  "sourceUserContentIncluded": false,
+  "sourceHashBasis": "git-index-bytes",
+  "checks": {
+    "initialCompile": {
+      "exitCode": 101,
+      "reason": "missing-GraphData-import-in-new-test",
+      "behaviorRedProof": false
+    },
+    "newNativeChecks": 13,
+    "initialTargeted": 22,
+    "finalTargeted": 23,
+    "completeNativeFunctional": {
+      "initialPassed": 922,
+      "finalPassed": 922,
+      "failed": 0,
+      "existingIgnored": 5,
+      "performanceExcluded": true
+    },
+    "separatePerformance": {
+      "passed": 1,
+      "workbookTotalMs": 4538
+    },
+    "searchContracts": {
+      "initialSubsetPassed": 20,
+      "finalPassed": 74,
+      "failed": 0
+    },
+    "patchQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "previousBatchCi": {
+      "runId": 38953491633,
+      "headSha": "21b79be21d999913a1428c874385abd5d99e7efa",
+      "observedStatus": "in_progress",
+      "qualityGate": "success",
+      "functional": "in_progress",
+      "coversCurrentBatch": false
+    }
+  },
+  "limits": {
+    "unit": "per-library-interactive-keyword-task",
+    "directoryIterationSteps": 20000,
+    "indexedSourceMetadata": 10000,
+    "sourceReadReservationBytes": 67108864,
+    "indexSegments": 100000,
+    "indexTextProcessingBytes": 67108864,
+    "cooperativeElapsedMs": 2000,
+    "directoryStackDepth": 64,
+    "sourceReservationIncludesPdfSidecars": true,
+    "incrementalHelperReadReservations": 2,
+    "physicalIoMeter": false,
+    "hardRealtimeDeadline": false,
+    "wholeProcessMemoryLimit": false
+  },
+  "boundaries": {
+    "retainedMatchPayloads": 200,
+    "perKindLocatedLimit": 5,
+    "sourceMetadataTraversalResumable": true,
+    "metadataCursorExposedToIpc": false,
+    "fileGroupPagination": false,
+    "snapshotBoundCursor": false,
+    "globalCrossLibraryBudget": false,
+    "nativeOwnerCancellation": false,
+    "uiChanged": false,
+    "installedArtifactEvidence": false,
+    "stableSnapshotAcrossMetadataPause": false,
+    "internalSmartCollectionMatcherBudgeted": false,
+    "mergeBlockedUntilFileContinuationAndCompleteness": true,
+    "coldSearchFasterClaim": false,
+    "memoryBenchmarkIncludesNewBudgetWrapper": false,
+    "unixSymlinkTestExecutedOnThisWindowsHost": false
+  },
+  "timings": [
+    {
+      "file": "docs/evidence/v118-search-budget/native-targeted-after.log",
+      "observations": [
+        {
+          "maxMicros": 46825,
+          "medianMicros": 45229,
+          "minMicros": 44632,
+          "mode": "cold",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 1653,
+          "medianMicros": 1306,
+          "minMicros": 1203,
+          "mode": "memory-index",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 6151,
+          "medianMicros": 6009,
+          "minMicros": 5318,
+          "mode": "disk-index",
+          "strongestFound": true
+        }
+      ],
+      "resultLimit": 200,
+      "samplesPerMode": 5,
+      "sourceFiles": 243
+    },
+    {
+      "file": "docs/evidence/v118-search-budget/native-targeted-final.log",
+      "observations": [
+        {
+          "maxMicros": 30211,
+          "medianMicros": 29864,
+          "minMicros": 28842,
+          "mode": "cold",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 1264,
+          "medianMicros": 1236,
+          "minMicros": 1191,
+          "mode": "memory-index",
+          "strongestFound": true
+        },
+        {
+          "maxMicros": 5789,
+          "medianMicros": 5176,
+          "minMicros": 4959,
+          "mode": "disk-index",
+          "strongestFound": true
+        }
+      ],
+      "resultLimit": 200,
+      "samplesPerMode": 5,
+      "sourceFiles": 243
+    }
+  ],
+  "files": [
+    {
+      "path": "docs/evidence/v118-search-budget/native-functional-final.log",
+      "bytes": 94871,
+      "sha256": "b1788a522be778e25a15baae4e713bf400fc79d104190a1da9492de1a7c782eb"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/native-functional.log",
+      "bytes": 95057,
+      "sha256": "df7cca4a4e0d7224db2ff3f67b71e7ab0f77471c6d202199ca3a2de7f7b99bc4"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/native-performance.log",
+      "bytes": 2057,
+      "sha256": "b42304bd0442bbc011a0bd72958b33c40207399ea7456d4e1c5a6967283cb4e2"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/native-targeted-after.log",
+      "bytes": 3906,
+      "sha256": "b02ca5860ddfd05b46f285e9bd1fbf757fa13f66416ecd6d98e8589d43530d2f"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/native-targeted-final.log",
+      "bytes": 3702,
+      "sha256": "9e3a45a0e3663d089e946495d045c050ebc92e96633e815dec52308fa87b4dc2"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/native-targeted-initial.log",
+      "bytes": 561,
+      "sha256": "87694867dfa851dc96fec4860984d6f34228b8c8617af197e32bb3b055f2918c"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/previous-batch-ci.json",
+      "bytes": 1770,
+      "sha256": "e2eac5c17d72ca2e6d377938220eb16b55ee7ea72fba77ff7a675551756985dd"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/quality-gate.log",
+      "bytes": 133310,
+      "sha256": "ebd5ac0fd2b522575cf226dce479ffec8516da9dca5e5a5ea957e92ec46790b4"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/search-contracts-final.log",
+      "bytes": 15291,
+      "sha256": "e176690beea54fba69d09d1001bbc16e2b5e343c2ff0cfb8399423bbe3acfa20"
+    },
+    {
+      "path": "docs/evidence/v118-search-budget/search-contracts.log",
+      "bytes": 4125,
+      "sha256": "60daa079ec35ba9c4e62bfff0a4c00edbbfb67fc559da34f61e70754e972a248"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "src-tauri/src/commands/index.rs",
+      "bytes": 87546,
+      "sha256": "bfc02fbc6cf60f013b18828bddc2896d32f5e965544a3b1cc38473a5a1d6cb6f"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_budget_tests.rs",
+      "bytes": 9529,
+      "sha256": "c0ec8294d0683fc6160222dbe702e4d76017bf0aff8b13b5715cf40271b4692e"
+    },
+    {
+      "path": "src-tauri/src/services/knowledge_index.rs",
+      "bytes": 73219,
+      "sha256": "946eea83473483b43323ccdb43e81d8fb0eabf8a1fb1596dfc8aa6cb3f721ae2"
+    },
+    {
+      "path": "src-tauri/src/services/mod.rs",
+      "bytes": 838,
+      "sha256": "6c6f52ba56aa6113a613d03241dad26c9bf4166852f7fd8ff7acc7668167870f"
+    },
+    {
+      "path": "src-tauri/src/services/search_scan.rs",
+      "bytes": 8041,
+      "sha256": "e0c652c33a48dc90518de9a1feafff850d163e1417b5c947b37996b3c41f0dbb"
+    },
+    {
+      "path": "src-tauri/src/services/search_scan_tests.rs",
+      "bytes": 6680,
+      "sha256": "57e7f66af44b52c2318906a28da182d9eb0f90fd25e515ba420c5be66592a3ae"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+warning: error finalizing incremental compilation session directory `\\?\E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri\target\debug\incremental\tauri_app_lib-2t5ono0dpctl5\s-hn9uyob4f6-1fd8f7w-working`: 拒绝访问。 (os error 5)
+
+warning: `tauri-app` (lib test) generated 2 warnings (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 52.20s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 7 tests
+
+thread 'commands::index::search_ranking_tests::v118_ranking_cold_real_files_include_the_late_filename_hit' (32148) panicked at src\commands\index_search_ranking_tests.rs:64:5:
+assertion `left == right` failed: a late exact filename hit outranks earlier body hits
+  left: "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v118-ranking-cold-40396-1792177522656478100-0\\资料 & project\\a-0000-记录.md"
+ right: "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v118-ranking-cold-40396-1792177522656478100-0\\资料 & project\\zz-项目预算.md"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::index::search_ranking_tests::v118_ranking_cold_real_files_include_the_late_filename_hit ... FAILED
+
+thread 'commands::index::search_ranking_tests::v118_ranking_complex_does_not_drop_a_late_strong_match_or_ignore_exclusions' (46108) panicked at src\commands\index_search_ranking_tests.rs:64:5:
+assertion `left == right` failed: a late exact filename hit outranks earlier body hits
+  left: "/资料/0000.md"
+ right: "/资料/zz-项目预算.md"
+test commands::index::search_ranking_tests::v118_ranking_complex_does_not_drop_a_late_strong_match_or_ignore_exclusions ... FAILED
+
+thread 'commands::index::search_ranking_tests::v118_ranking_equal_titles_use_file_identity_at_the_limit' (46700) panicked at src\commands\index_search_ranking_tests.rs:92:5:
+assertion `left == right` failed: same-score files must not depend on scan order
+  left: ["/目录/0239/同名.md", "/目录/0238/同名.md", "/目录/0237/同名.md", "/目录/0236/同名.md", "/目录/0235/同名.md", "/目录/0234/同名.md", "/目录/0233/同名.md", "/目录/0232/同名.md", "/目录/0231/同名.md", "/目录/0230/同名.md", "/目录/0229/同名.md", "/目录/0228/同名.md", "/目录/0227/同名.md", "/目录/0226/同名.md", "/目录/0225/同名.md", "/目录/0224/同名.md", "/目录/0223/同名.md", "/目录/0222/同名.md", "/目录/0221/同名.md", "/目录/0220/同名.md", "/目录/0219/同名.md", "/目录/0218/同名.md", "/目录/0217/同名.md", "/目录/0216/同名.md", "/目录/0215/同名.md", "/目录/0214/同名.md", "/目录/0213/同名.md", "/目录/0212/同名.md", "/目录/0211/同名.md", "/目录/0210/同名.md", "/目录/0209/同名.md", "/目录/0208/同名.md", "/目录/0207/同名.md", "/目录/0206/同名.md", "/目录/0205/同名.md", "/目录/0204/同名.md", "/目录/0203/同名.md", "/目录/0202/同名.md", "/目录/0201/同名.md", "/目录/0200/同名.md", "/目录/0199/同名.md", "/目录/0198/同名.md", "/目录/0197/同名.md", "/目录/0196/同名.md", "/目录/0195/同名.md", "/目录/0194/同名.md", "/目录/0193/同名.md", "/目录/0192/同名.md", "/目录/0191/同名.md", "/目录/0190/同名.md", "/目录/0189/同名.md", "/目录/0188/同名.md", "/目录/0187/同名.md", "/目录/0186/同名.md", "/目录/0185/同名.md", "/目录/0184/同名.md", "/目录/0183/同名.md", "/目录/0182/同名.md", "/目录/0181/同名.md", "/目录/0180/同名.md", "/目录/0179/同名.md", "/目录/0178/同名.md", "/目录/0177/同名.md", "/目录/0176/同名.md", "/目录/0175/同名.md", "/目录/0174/同名.md", "/目录/0173/同名.md", "/目录/0172/同名.md", "/目录/0171/同名.md", "/目录/0170/同名.md", "/目录/0169/同名.md", "/目录/0168/同名.md", "/目录/0167/同名.md", "/目录/0166/同名.md", "/目录/0165/同名.md", "/目录/0164/同名.md", "/目录/0163/同名.md", "/目录/0162/同名.md", "/目录/0161/同名.md", "/目录/0160/同名.md", "/目录/0159/同名.md", "/目录/0158/同名.md", "/目录/0157/同名.md", "/目录/0156/同名.md", "/目录/0155/同名.md", "/目录/0154/同名.md", "/目录/0153/同名.md", "/目录/0152/同名.md", "/目录/0151/同名.md", "/目录/0150/同名.md", "/目录/0149/同名.md", "/目录/0148/同名.md", "/目录/0147/同名.md", "/目录/0146/同名.md", "/目录/0145/同名.md", "/目录/0144/同名.md", "/目录/0143/同名.md", "/目录/0142/同名.md", "/目录/0141/同名.md", "/目录/0140/同名.md", "/目录/0139/同名.md", "/目录/0138/同名.md", "/目录/0137/同名.md", "/目录/0136/同名.md", "/目录/0135/同名.md", "/目录/0134/同名.md", "/目录/0133/同名.md", "/目录/0132/同名.md", "/目录/0131/同名.md", "/目录/0130/同名.md", "/目录/0129/同名.md", "/目录/0128/同名.md", "/目录/0127/同名.md", "/目录/0126/同名.md", "/目录/0125/同名.md", "/目录/0124/同名.md", "/目录/0123/同名.md", "/目录/0122/同名.md", "/目录/0121/同名.md", "/目录/0120/同名.md", "/目录/0119/同名.md", "/目录/0118/同名.md", "/目录/0117/同名.md", "/目录/0116/同名.md", "/目录/0115/同名.md", "/目录/0114/同名.md", "/目录/0113/同名.md", "/目录/0112/同名.md", "/目录/0111/同名.md", "/目录/0110/同名.md", "/目录/0109/同名.md", "/目录/0108/同名.md", "/目录/0107/同名.md", "/目录/0106/同名.md", "/目录/0105/同名.md", "/目录/0104/同名.md", "/目录/0103/同名.md", "/目录/0102/同名.md", "/目录/0101/同名.md", "/目录/0100/同名.md", "/目录/0099/同名.md", "/目录/0098/同名.md", "/目录/0097/同名.md", "/目录/0096/同名.md", "/目录/0095/同名.md", "/目录/0094/同名.md", "/目录/0093/同名.md", "/目录/0092/同名.md", "/目录/0091/同名.md", "/目录/0090/同名.md", "/目录/0089/同名.md", "/目录/0088/同名.md", "/目录/0087/同名.md", "/目录/0086/同名.md", "/目录/0085/同名.md", "/目录/0084/同名.md", "/目录/0083/同名.md", "/目录/0082/同名.md", "/目录/0081/同名.md", "/目录/0080/同名.md", "/目录/0079/同名.md", "/目录/0078/同名.md", "/目录/0077/同名.md", "/目录/0076/同名.md", "/目录/0075/同名.md", "/目录/0074/同名.md", "/目录/0073/同名.md", "/目录/0072/同名.md", "/目录/0071/同名.md", "/目录/0070/同名.md", "/目录/0069/同名.md", "/目录/0068/同名.md", "/目录/0067/同名.md", "/目录/0066/同名.md", "/目录/0065/同名.md", "/目录/0064/同名.md", "/目录/0063/同名.md", "/目录/0062/同名.md", "/目录/0061/同名.md", "/目录/0060/同名.md", "/目录/0059/同名.md", "/目录/0058/同名.md", "/目录/0057/同名.md", "/目录/0056/同名.md", "/目录/0055/同名.md", "/目录/0054/同名.md", "/目录/0053/同名.md", "/目录/0052/同名.md", "/目录/0051/同名.md", "/目录/0050/同名.md", "/目录/0049/同名.md", "/目录/0048/同名.md", "/目录/0047/同名.md", "/目录/0046/同名.md", "/目录/0045/同名.md", "/目录/0044/同名.md", "/目录/0043/同名.md", "/目录/0042/同名.md", "/目录/0041/同名.md", "/目录/0040/同名.md"]
+ right: ["/目录/0000/同名.md", "/目录/0001/同名.md", "/目录/0002/同名.md", "/目录/0003/同名.md", "/目录/0004/同名.md", "/目录/0005/同名.md", "/目录/0006/同名.md", "/目录/0007/同名.md", "/目录/0008/同名.md", "/目录/0009/同名.md", "/目录/0010/同名.md", "/目录/0011/同名.md", "/目录/0012/同名.md", "/目录/0013/同名.md", "/目录/0014/同名.md", "/目录/0015/同名.md", "/目录/0016/同名.md", "/目录/0017/同名.md", "/目录/0018/同名.md", "/目录/0019/同名.md", "/目录/0020/同名.md", "/目录/0021/同名.md", "/目录/0022/同名.md", "/目录/0023/同名.md", "/目录/0024/同名.md", "/目录/0025/同名.md", "/目录/0026/同名.md", "/目录/0027/同名.md", "/目录/0028/同名.md", "/目录/0029/同名.md", "/目录/0030/同名.md", "/目录/0031/同名.md", "/目录/0032/同名.md", "/目录/0033/同名.md", "/目录/0034/同名.md", "/目录/0035/同名.md", "/目录/0036/同名.md", "/目录/0037/同名.md", "/目录/0038/同名.md", "/目录/0039/同名.md", "/目录/0040/同名.md", "/目录/0041/同名.md", "/目录/0042/同名.md", "/目录/0043/同名.md", "/目录/0044/同名.md", "/目录/0045/同名.md", "/目录/0046/同名.md", "/目录/0047/同名.md", "/目录/0048/同名.md", "/目录/0049/同名.md", "/目录/0050/同名.md", "/目录/0051/同名.md", "/目录/0052/同名.md", "/目录/0053/同名.md", "/目录/0054/同名.md", "/目录/0055/同名.md", "/目录/0056/同名.md", "/目录/0057/同名.md", "/目录/0058/同名.md", "/目录/0059/同名.md", "/目录/0060/同名.md", "/目录/0061/同名.md", "/目录/0062/同名.md", "/目录/0063/同名.md", "/目录/0064/同名.md", "/目录/0065/同名.md", "/目录/0066/同名.md", "/目录/0067/同名.md", "/目录/0068/同名.md", "/目录/0069/同名.md", "/目录/0070/同名.md", "/目录/0071/同名.md", "/目录/0072/同名.md", "/目录/0073/同名.md", "/目录/0074/同名.md", "/目录/0075/同名.md", "/目录/0076/同名.md", "/目录/0077/同名.md", "/目录/0078/同名.md", "/目录/0079/同名.md", "/目录/0080/同名.md", "/目录/0081/同名.md", "/目录/0082/同名.md", "/目录/0083/同名.md", "/目录/0084/同名.md", "/目录/0085/同名.md", "/目录/0086/同名.md", "/目录/0087/同名.md", "/目录/0088/同名.md", "/目录/0089/同名.md", "/目录/0090/同名.md", "/目录/0091/同名.md", "/目录/0092/同名.md", "/目录/0093/同名.md", "/目录/0094/同名.md", "/目录/0095/同名.md", "/目录/0096/同名.md", "/目录/0097/同名.md", "/目录/0098/同名.md", "/目录/0099/同名.md", "/目录/0100/同名.md", "/目录/0101/同名.md", "/目录/0102/同名.md", "/目录/0103/同名.md", "/目录/0104/同名.md", "/目录/0105/同名.md", "/目录/0106/同名.md", "/目录/0107/同名.md", "/目录/0108/同名.md", "/目录/0109/同名.md", "/目录/0110/同名.md", "/目录/0111/同名.md", "/目录/0112/同名.md", "/目录/0113/同名.md", "/目录/0114/同名.md", "/目录/0115/同名.md", "/目录/0116/同名.md", "/目录/0117/同名.md", "/目录/0118/同名.md", "/目录/0119/同名.md", "/目录/0120/同名.md", "/目录/0121/同名.md", "/目录/0122/同名.md", "/目录/0123/同名.md", "/目录/0124/同名.md", "/目录/0125/同名.md", "/目录/0126/同名.md", "/目录/0127/同名.md", "/目录/0128/同名.md", "/目录/0129/同名.md", "/目录/0130/同名.md", "/目录/0131/同名.md", "/目录/0132/同名.md", "/目录/0133/同名.md", "/目录/0134/同名.md", "/目录/0135/同名.md", "/目录/0136/同名.md", "/目录/0137/同名.md", "/目录/0138/同名.md", "/目录/0139/同名.md", "/目录/0140/同名.md", "/目录/0141/同名.md", "/目录/0142/同名.md", "/目录/0143/同名.md", "/目录/0144/同名.md", "/目录/0145/同名.md", "/目录/0146/同名.md", "/目录/0147/同名.md", "/目录/0148/同名.md", "/目录/0149/同名.md", "/目录/0150/同名.md", "/目录/0151/同名.md", "/目录/0152/同名.md", "/目录/0153/同名.md", "/目录/0154/同名.md", "/目录/0155/同名.md", "/目录/0156/同名.md", "/目录/0157/同名.md", "/目录/0158/同名.md", "/目录/0159/同名.md", "/目录/0160/同名.md", "/目录/0161/同名.md", "/目录/0162/同名.md", "/目录/0163/同名.md", "/目录/0164/同名.md", "/目录/0165/同名.md", "/目录/0166/同名.md", "/目录/0167/同名.md", "/目录/0168/同名.md", "/目录/0169/同名.md", "/目录/0170/同名.md", "/目录/0171/同名.md", "/目录/0172/同名.md", "/目录/0173/同名.md", "/目录/0174/同名.md", "/目录/0175/同名.md", "/目录/0176/同名.md", "/目录/0177/同名.md", "/目录/0178/同名.md", "/目录/0179/同名.md", "/目录/0180/同名.md", "/目录/0181/同名.md", "/目录/0182/同名.md", "/目录/0183/同名.md", "/目录/0184/同名.md", "/目录/0185/同名.md", "/目录/0186/同名.md", "/目录/0187/同名.md", "/目录/0188/同名.md", "/目录/0189/同名.md", "/目录/0190/同名.md", "/目录/0191/同名.md", "/目录/0192/同名.md", "/目录/0193/同名.md", "/目录/0194/同名.md", "/目录/0195/同名.md", "/目录/0196/同名.md", "/目录/0197/同名.md", "/目录/0198/同名.md", "/目录/0199/同名.md"]
+test commands::index::search_ranking_tests::v118_ranking_equal_titles_use_file_identity_at_the_limit ... FAILED
+V118_RANKING_BASELINE {"observations":[{"maxMicros":16711,"medianMicros":16026,"minMicros":14369,"mode":"cold","strongestFound":false},{"maxMicros":983,"medianMicros":645,"minMicros":631,"mode":"memory-index","strongestFound":false},{"maxMicros":16018,"medianMicros":13418,"minMicros":12567,"mode":"disk-index","strongestFound":false}],"resultLimit":200,"samplesPerMode":5,"sourceFiles":243}
+test commands::index::search_ranking_tests::v118_ranking_fixed_fixture_timing ... ok
+
+thread 'commands::index::search_ranking_tests::v118_ranking_incremental_overlay_keeps_a_changed_strong_file' (33068) panicked at src\commands\index_search_ranking_tests.rs:64:5:
+assertion `left == right` failed: a late exact filename hit outranks earlier body hits
+  left: "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v118-ranking-overlay-40396-1792177522976157900-2\\资料 & project\\a-0000-记录.md"
+ right: "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v118-ranking-overlay-40396-1792177522976157900-2\\资料 & project\\zz-项目预算.md"
+test commands::index::search_ranking_tests::v118_ranking_incremental_overlay_keeps_a_changed_strong_file ... FAILED
+
+thread 'commands::index::search_ranking_tests::v118_ranking_literal_does_not_drop_a_late_strong_match' (3084) panicked at src\commands\index_search_ranking_tests.rs:64:5:
+assertion `left == right` failed: a late exact filename hit outranks earlier body hits
+  left: "/资料/0000.md"
+ right: "/资料/zz-项目预算.md"
+test commands::index::search_ranking_tests::v118_ranking_literal_does_not_drop_a_late_strong_match ... FAILED
+
+thread 'commands::index::search_ranking_tests::v118_ranking_ready_disk_index_includes_the_late_filename_hit' (33836) panicked at src\commands\index_search_ranking_tests.rs:64:5:
+assertion `left == right` failed: a late exact filename hit outranks earlier body hits
+  left: "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v118-ranking-ready-40396-1792177523067254100-3\\资料 & project\\a-0000-记录.md"
+ right: "C:\\Users\\Administrator\\AppData\\Local\\Temp\\longedit-v118-ranking-ready-40396-1792177523067254100-3\\资料 & project\\zz-项目预算.md"
+test commands::index::search_ranking_tests::v118_ranking_ready_disk_index_includes_the_late_filename_hit ... FAILED
+
+failures:
+
+failures:
+    commands::index::search_ranking_tests::v118_ranking_cold_real_files_include_the_late_filename_hit
+    commands::index::search_ranking_tests::v118_ranking_complex_does_not_drop_a_late_strong_match_or_ignore_exclusions
+    commands::index::search_ranking_tests::v118_ranking_equal_titles_use_file_identity_at_the_limit
+    commands::index::search_ranking_tests::v118_ranking_incremental_overlay_keeps_a_changed_strong_file
+    commands::index::search_ranking_tests::v118_ranking_literal_does_not_drop_a_late_strong_match
+    commands::index::search_ranking_tests::v118_ranking_ready_disk_index_includes_the_late_filename_hit
+
+test result: FAILED. 1 passed; 6 failed; 0 ignored; 0 measured; 905 filtered out; finished in 0.52s
+
+error: test failed, to rerun pass `--lib`

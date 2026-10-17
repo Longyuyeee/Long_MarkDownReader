@@ -1,0 +1,8 @@
+{
+  "scope": "headless CDP input-helper contract with actual Vue and simulated IPC; not native Wry acceptance",
+  "checks": [
+    "CDP click/fill/Tab/arrow keys reach the actual native HTML sort control",
+    "CDP keyboard editing, Ctrl+P and exact dropdown labels keep cross-library draft guard reachable"
+  ],
+  "errors": []
+}

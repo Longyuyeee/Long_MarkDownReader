@@ -1,0 +1,33 @@
+
+> tauri-app@1.1.8 check:current-development-audit
+> node scripts/check-current-development-audit.mjs && node scripts/check-ux34-drawio-canvas-stability.mjs && node scripts/check-ux35-file-tree-preview.mjs && node scripts/check-ux36-file-tree-actions.mjs && node scripts/check-ux37a-opml-canvas-contract.mjs && node scripts/check-ux37b-knowledge-graph-canvas-contract.mjs && node scripts/check-ux38-format-experience-matrix.mjs && node scripts/check-ux38b-workspace-tabs-contract.mjs && node scripts/check-ux38c-table-grid-experience.mjs && node scripts/check-workbook-workspace-experience.mjs && node scripts/check-ux38c2-workbook-context.mjs && node scripts/check-ux38d1-pdf-workspace.mjs && node scripts/check-ux38d2-document-workspace.mjs && node scripts/check-ux38d3-presentation-workspace.mjs && node scripts/check-ux38e-canvas-explicit-save.mjs && node scripts/check-ux38e-diagram-history.mjs && node scripts/check-ux38e-graphics-workspace.mjs && node scripts/check-ux38f-external-office-workspace.mjs && node scripts/check-ux38-final-closure.mjs && node scripts/check-ux39-packaging-preflight.mjs && node scripts/check-route-loading-fallback.mjs && node scripts/check-navigation-liveness.mjs && node scripts/check-external-file-workspace.mjs && node scripts/check-external-media-preview.mjs && node scripts/check-external-pdf-preview.mjs && node scripts/check-external-odf-preview.mjs && node scripts/check-external-odt-gate.mjs && node scripts/check-external-docx-preview.mjs && node scripts/check-external-pptx-preview.mjs && node scripts/check-external-xlsx-preview.mjs && node scripts/check-external-log-workspace.mjs && node scripts/check-external-canvas-workspace.mjs && node scripts/check-external-table-workspace.mjs && node scripts/check-external-drawio-workspace.mjs && node scripts/check-markdown-default-mode.mjs && node scripts/check-code-editor-theme-contract.mjs && node scripts/check-select-control-contract.mjs && node scripts/check-horizontal-wheel-navigation.mjs && node scripts/check-v115-context-menu-policy.mjs && node scripts/check-v115-app-dialog-policy.mjs && node scripts/check-canvas-pointer-interactions.mjs && node scripts/check-table-board-experience.mjs && node scripts/check-media-workspace.mjs && node scripts/check-image-transform-copy.mjs && node scripts/check-p1a2-image-editor-audit.mjs && node scripts/check-sidebar-tabs-responsive.mjs && node scripts/check-file-tree-appearance.mjs && node scripts/check-ui4c-release-fact-alignment.mjs && node scripts/check-ux39-unsigned-package.mjs && node scripts/check-post-v115-m2a1-workspace-task.mjs && node scripts/check-post-v115-m2a2-workspace-governance.mjs && node scripts/check-post-v115-m2a3-workspace-navigation.mjs && node scripts/check-post-v115-m2-closure.mjs && node scripts/check-post-v115-explicit-save-alignment.mjs && node scripts/check-post-v115-m1b2a-docx-object-selection.mjs && node scripts/check-post-v115-m1b2b-docx-paragraph-styles.mjs && node scripts/check-post-v115-m1b2c-docx-closure.mjs && node scripts/check-post-v115-m1ca-odf-feasibility.mjs && node scripts/check-post-v115-m1cb-ods-cell-edit.mjs && node scripts/check-post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke.mjs && node scripts/check-post-v115-m4f3a-v1016-hosted-installer-lifecycle-handoff.mjs && node scripts/check-post-v116-m5-6-v1017-hosted-installer-lifecycle.mjs
+
+Verified 5 native fault/recovery observations and original hashes; external responses were simulated, no installer acceptance claimed.
+Community updater contract passed: fixed GitHub source, SHA-256 verification, hidden install and automatic relaunch are aligned.
+Official v1.0.21 to v1.0.22 update accepted: 12 checks and nine immutable reviewed evidence files.
+Official v1.0.22 to v1.0.23 update accepted: 12 checks and nine immutable reviewed evidence files.
+Command strip layout passed: 11 workspaces keep controls readable, scrollable and reachable.
+V1.0.6 managed updater lifecycle contract passed: hosted 1.0.5 -> 1.0.6 evidence accepted.
+V1.0.7 managed updater lifecycle passed: hosted 1.0.6 -> 1.0.7 evidence accepted.
+V1.0.8 managed updater lifecycle contract passed: automatic relaunch failure is recorded for v1.0.9 recovery.
+V1.0.9 managed updater lifecycle contract passed: hosted 1.0.8 -> 1.0.9 evidence accepted.
+V1.0.10 managed updater lifecycle contract passed: hosted 1.0.9 -> 1.0.10 evidence accepted.
+V1.0.11 managed updater lifecycle contract passed: hosted 1.0.10 -> 1.0.11 evidence accepted.
+V1.0.12 managed updater lifecycle contract passed: hosted 1.0.11 -> 1.0.12 evidence accepted.
+V1.0.13 managed updater lifecycle contract passed: hosted 1.0.12 -> 1.0.13 evidence accepted.
+V1.0.14 managed updater lifecycle contract passed: hosted 1.0.13 -> 1.0.14 evidence accepted.
+V1.0.16 managed updater lifecycle contract passed: hosted 1.0.15 -> 1.0.16 evidence accepted.
+M5-0 accepted: v1.0.17 selects only M5-1 ODP slide-body producer fidelity and object selection; ODP remains preview-only.
+M5-1 accepted: only direct text-frame paragraphs on simple ODP slides advance to M5-2; notes and complex-object slides remain blocked.
+M5-2 accepted: bounded simple-slide ODP reliable copies pass real LibreOffice/PowerPoint reopen; UI and version promotion remain M5-3+ work.
+M5-3 accepted: real LibreOffice/PowerPoint ODP workspace copies, draft protection, responsive UI and whole-slide blockers are verified; M5-4 owns release readiness.
+M5-4 accepted: 548 Rust tests pass with zero failures, the complete patch release gate passes, and M5-5 owns atomic v1.0.17 packaging.
+M5-5 accepted: v1.0.17 candidate identity and historical local package receipts remain valid after publication.
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+M5-7 accepted: hosted lifecycle artifacts, SHA256SUMS and release boundaries remain valid after M5-8 publication.
+M5-8 accepted: v1.0.17 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+V1.0.17 managed updater lifecycle contract passed: hosted 1.0.16 -> 1.0.17 evidence accepted.
+V1.0.18 managed updater lifecycle contract passed: hosted 1.0.17 -> 1.0.18 evidence accepted.
+V1.0.19 managed updater lifecycle contract passed: hosted 1.0.18 -> 1.0.19 evidence accepted.
+- v1.0.21 development version boundary drift
+- v1.0.21 updater status conflict: community policy and release receipt must both be 1.0.20-to-1.0.21-passed

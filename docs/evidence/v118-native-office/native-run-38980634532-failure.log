@@ -1,0 +1,42 @@
+native-search	Real native page IPC, generated files, isolation and same-binary restart	﻿2026-10-16T23:19:17.3832116Z ##[group]Run $env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3832680Z ^[[36;1m$env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3833261Z ^[[36;1m& orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3833708Z ^[[36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3877071Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3877295Z env:
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3877945Z   CARGO_TERM_COLOR: always
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3878089Z   LONGEDIT_SEARCH_UNREGISTERED_ENTRIES: 21050
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3878247Z   NATIVE_PROGRAM_RUN_ID: 38979598860
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3878467Z   NATIVE_PROGRAM_SHA256: 14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3878766Z   NATIVE_PROGRAM_HARNESS_COMMIT: b2ce89d33a26fac917d46107494bc23e4e79016f
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:17.3878955Z ##[endgroup]
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7515079Z node:internal/modules/run_main:123
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7516893Z     triggerUncaughtException(
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7517403Z     ^
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7517514Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7517759Z AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7518106Z + actual - expected
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7518232Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7518302Z + '//'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7519154Z - 'd:/a/_temp/longedit-v118-native-4b61afde574e41e2bf2f24218a855d40/项目 & 资料/定位资料/原文定位.docx'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7519464Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7519902Z     at assertPath (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:29:43)
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7520733Z     at async runNativeOfficeInput (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:35:5)
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7521376Z     at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:137:3 {
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7521676Z   generatedMessage: true,
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7522051Z   code: 'ERR_ASSERTION',
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7522267Z   actual: '//',
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7522770Z   expected: 'd:/a/_temp/longedit-v118-native-4b61afde574e41e2bf2f24218a855d40/项目 & 资料/定位资料/原文定位.docx',
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7523223Z   operator: 'strictEqual',
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7523436Z   diff: 'simple'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7523612Z }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7523704Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:57.7523784Z Node.js v22.23.3
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2210313Z Real IPC user failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2211261Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration\scripts\run-v118-native-search.ps1:47 char:91
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2211825Z + ... ct $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2212221Z +                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2212663Z     + CategoryInfo          : OperationStopped: (Real IPC user failed:String) [], RuntimeException
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2213068Z     + FullyQualifiedErrorId : Real IPC user failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2213311Z  
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T23:19:58.2448071Z ##[error]Process completed with exit code 1.

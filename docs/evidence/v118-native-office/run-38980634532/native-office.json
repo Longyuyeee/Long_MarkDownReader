@@ -1,0 +1,93 @@
+{
+  "productCommit": "ac90610dffcd27feeb69e79ca8d075701873ab0d",
+  "harnessCommit": "16d296e30b513cac008e90a41bc5903af83ff72b",
+  "executableSha256": "14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99",
+  "runtimeBaseVersion": "1.1.7",
+  "runtimeErrors": [],
+  "schemaVersion": 1,
+  "phase": "office",
+  "status": "failed",
+  "evidenceLevel": "actual-wry-webview-input-events-generated-disk-not-installed",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [],
+  "sourceFiles": [
+    {
+      "name": "原文定位.docx",
+      "source": "fixtures/docx/producers/libreoffice-writer.docx",
+      "before": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3",
+      "after": "a549705f8650065a1fbb7111b598b5ae509f0b387ec58db47547f7445e26dea3"
+    },
+    {
+      "name": "演示定位.pptx",
+      "source": "fixtures/pptx/producers/libreoffice-impress.pptx",
+      "before": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140",
+      "after": "4ef5578bd9657eb7b1a04fa8c7ffb5eb7c2fc4046f49608ed7a0fff75d8c2140"
+    },
+    {
+      "name": "工作表定位.xlsx",
+      "source": "src-tauri/tests/fixtures/workbook/compatibility-baseline.xlsx",
+      "before": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c",
+      "after": "52410b394655fbcc20850c17397d671d5947540cc5bca1f1dfb1f69434f5486c"
+    }
+  ],
+  "observations": {},
+  "error": {
+    "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ '//'\n- 'd:/a/_temp/longedit-v118-native-4b61afde574e41e2bf2f24218a855d40/项目 & 资料/定位资料/原文定位.docx'\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '//'\n- 'd:/a/_temp/longedit-v118-native-4b61afde574e41e2bf2f24218a855d40/项目 & 资料/定位资料/原文定位.docx'\n\n    at assertPath (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:29:43)\n    at async runNativeOfficeInput (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:35:5)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:137:3"
+  },
+  "inputTrace": [
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "打开 多批注.pdf · 第 1 页 · 批注"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 原文定位.docx · 段落 8"
+    }
+  ],
+  "uiObservation": {
+    "errorOverlay": false
+  }
+}

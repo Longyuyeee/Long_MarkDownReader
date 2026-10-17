@@ -1,0 +1,110 @@
+TAP version 13
+# Subtest: real runtime audit refuses local and self-hosted machines before any fixture IO
+ok 1 - real runtime audit refuses local and self-hosted machines before any fixture IO
+  ---
+  duration_ms: 2.1073
+  ...
+# Subtest: fixture paths reject broad or arbitrary user roots
+ok 2 - fixture paths reject broad or arbitrary user roots
+  ---
+  duration_ms: 0.5748
+  ...
+# Subtest: generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+ok 3 - generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+  ---
+  duration_ms: 977.6598
+  ...
+# Subtest: owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+ok 4 - owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+  ---
+  duration_ms: 1177.4404
+  ...
+# Subtest: workflow pins the product separately from its harness and cannot publish or install
+ok 5 - workflow pins the product separately from its harness and cannot publish or install
+  ---
+  duration_ms: 2.1306
+  ...
+# Subtest: native driver never substitutes IPC or simulates a desktop click
+ok 6 - native driver never substitutes IPC or simulates a desktop click
+  ---
+  duration_ms: 0.2171
+  ...
+# Subtest: native driver waits for the actual page and rejects current runtime and route failure surfaces
+ok 7 - native driver waits for the actual page and rejects current runtime and route failure surfaces
+  ---
+  duration_ms: 2.035
+  ...
+# Subtest: debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+ok 8 - debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+  ---
+  duration_ms: 0.2685
+  ...
+# Subtest: in-memory registry provider preserves all six debugger entries and unrelated values
+ok 9 - in-memory registry provider preserves all six debugger entries and unrelated values
+  ---
+  duration_ms: 341.9232
+  ...
+# Subtest: new runner and workflow PowerShell parse without launching anything
+ok 10 - new runner and workflow PowerShell parse without launching anything
+  ---
+  duration_ms: 1465.542
+  ...
+# Subtest: validator accepts the complete separated native evidence schema, not an installed assertion
+ok 11 - validator accepts the complete separated native evidence schema, not an installed assertion
+  ---
+  duration_ms: 1.2617
+  ...
+# Subtest: unfinished or failed remote runs cannot be closed as passing evidence
+ok 12 - unfinished or failed remote runs cannot be closed as passing evidence
+  ---
+  duration_ms: 1.6271
+  ...
+# Subtest: source, harness, executable and evidence-level substitutions are rejected
+ok 13 - source, harness, executable and evidence-level substitutions are rejected
+  ---
+  duration_ms: 0.8296
+  ...
+# Subtest: missing tasks, duplicate groups and lost PDF annotation identity are rejected
+ok 14 - missing tasks, duplicate groups and lost PDF annotation identity are rejected
+  ---
+  duration_ms: 1.1495
+  ...
+# Subtest: fake cold completion, missing cache use and missing native window proof are rejected
+ok 15 - fake cold completion, missing cache use and missing native window proof are rejected
+  ---
+  duration_ms: 6.9869
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 16 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 4.0835
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 17 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 0.8303
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 18 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.6475
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 19 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.528
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 20 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 1.9019
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4079.2762

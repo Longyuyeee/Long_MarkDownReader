@@ -12,7 +12,18 @@ const hit = (title, path, objectType, context) => ({ title, path, objectType, co
 const hits = [hit('项目预算.txt', root + '/项目预算.txt', 'plain-text', '项目预算确认'), hit('预算配置.json', root + '/预算配置.json', 'json', '项目预算参数')]
 const nativePath = '\\\\?\\' + (root + '/项目预算.txt').replaceAll('/', '\\')
 const pathIdentity = path => path.replaceAll('\\', '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').toLowerCase()
+let pageSequence=0
 window.__TAURI_INTERNALS__.invoke = async (command, args = {}) => {
+  if(command==='close_knowledge_search')return true
+  if(command==='search_knowledge_page'||command==='search_knowledge_libraries_page'){
+    // Keep the historical navigation scenarios runnable against the current UI.
+    // Only this isolated IPC adapter translates its small fixture result set.
+    const multi=command==='search_knowledge_libraries_page',request=args.request
+    const old=await window.__TAURI_INTERNALS__.invoke(multi?'search_knowledge_libraries':'search_knowledge',request)
+    const matches=multi?old.results:old, files=matches.map(match=>({path:match.path,title:match.title,matches:[match],mayHaveMoreMatches:false,locationLimitPerKind:5,unlocatedLimitPerKind:1,libraryRoot:pathIdentity(match.path).startsWith(pathIdentity(root)+'/')?root:'C:/study-fixture',libraryName:pathIdentity(match.path).startsWith(pathIdentity(root)+'/')?'项目资料库':'学习资料库'}))
+    const limited=multi&&old.limitReached
+    return {sessionId:'navigation-'+(++pageSequence),snapshotId:'navigation-view',files,pageOffset:0,nextCursor:null,scanState:limited?'limited':'ready',scanComplete:!limited,totalFiles:limited?null:files.length,warnings:multi?old.warnings:[],...(multi?{availableFiles:files.length,libraries:[{libraryRoot:root,libraryName:'项目资料库',state:'ready',totalFiles:files.length,availableFiles:files.length},...(limited?[{libraryRoot:'C:/offline',libraryName:'离线资料库',state:'unavailable',totalFiles:null,availableFiles:0}]:[])]}:{})}
+  }
   if (command === 'scan_directory' && audit.canonicalDirectory) {
     const plain = args.path.replace(/^\\\\\?\\/, '').replaceAll('\\', '/')
     const entries = await original(command, { ...args, path: plain })

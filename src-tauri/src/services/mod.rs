@@ -22,6 +22,7 @@ pub(crate) mod move_windows;
 pub mod pdf_index;
 pub mod reliable_write;
 pub(crate) mod search_query;
+pub(crate) mod search_scan;
 pub mod smart_collection;
 #[cfg(test)]
 pub(crate) mod test_workspace;

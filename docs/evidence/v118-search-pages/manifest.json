@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1.1.8-B2b",
+  "status": "file-group-page-backend-validated-ui-and-multilibrary-required",
+  "baselineCommit": "5a42df0a6e8349733543fb9def571bdfc91e92aa",
+  "branch": "codex/v118-search-completeness",
+  "runtimeBaseVersion": "1.1.7",
+  "publicVersion": "1.1.7",
+  "releaseCandidate": false,
+  "releasePublished": false,
+  "evidenceLevel": "rust-native-functions-real-disposable-files-real-native-watcher",
+  "sourceUserContentIncluded": false,
+  "sourceHashBasis": "git-index-bytes",
+  "checks": {
+    "newNativeTests": 24,
+    "includesOneTimingSampleTest": true,
+    "firstNewSubsetPassed": 18,
+    "intermediateRelatedPassed": 43,
+    "finalRelatedPassed": 47,
+    "completeNativeFunctional": {
+      "initialPassed": 945,
+      "finalPassed": 946,
+      "failed": 0,
+      "existingIgnored": 5,
+      "performanceExcluded": true
+    },
+    "searchContracts": {
+      "passed": 74,
+      "failed": 0
+    },
+    "separatePerformance": {
+      "passed": 1,
+      "workbookTotalMs": 6301
+    },
+    "patchQualityGate": "passed",
+    "productionVulnerabilities": 0,
+    "realWatcherChecks": {
+      "contentChangeRevision": true,
+      "hiddenOrderDoesNotStale": true,
+      "monitorFailureStateInjection": true,
+      "realWindowsBackendFailureObserved": false
+    },
+    "previousBatchCi": {
+      "runId": 38955099107,
+      "headSha": "5a42df0a6e8349733543fb9def571bdfc91e92aa",
+      "conclusion": "success",
+      "coversCurrentBatch": false
+    }
+  },
+  "api": {
+    "commands": [
+      "search_knowledge_page",
+      "close_knowledge_search"
+    ],
+    "unit": "file-group",
+    "scope": "one-configured-library",
+    "owner": "injected-native-window-and-fixed-entry-channel",
+    "sorting": [
+      "relevance",
+      "modified"
+    ],
+    "snapshotIdentity": "session-nonce-source-and-relation-digests-and-process-change-revision",
+    "notBoundOnlyToSecondGranularityBuiltAt": true,
+    "scanStates": [
+      "preparing",
+      "ready",
+      "limited"
+    ],
+    "totalUnknownUnlessReady": true,
+    "coverage": "registered-extractable-content",
+    "rawMatchLimitPerFile": 200,
+    "locatedLimitPerKind": 5,
+    "unlocatedLimitPerKind": 1,
+    "workRetry": "last-issued-work-step-idempotent",
+    "pageRetry": "issued-offset-idempotent-with-source-signature-recheck",
+    "opaqueCursorIsAuthenticationSecret": false
+  },
+  "limits": {
+    "sessions": 4,
+    "activeNewPageTasks": 4,
+    "pageSizeMin": 1,
+    "pageSizeMax": 100,
+    "maxSourcesPerSession": 100000,
+    "maxFileGroupsPerSession": 10000,
+    "serializedResultPayloadBytesPerSession": 8388608,
+    "maxPendingSourceSegments": 100000,
+    "maxPendingSourceTextBytes": 67108864,
+    "idleTtlSeconds": 300,
+    "maxAgeSeconds": 1200,
+    "expiryCleanup": "lazy-on-request-and-window-destroy",
+    "prepareStep": {
+      "directoryIterationSteps": 20000,
+      "sourceMetadata": 10000,
+      "sourceReadReservationBytes": 67108864,
+      "indexSegments": 100000,
+      "indexTextBytes": 67108864,
+      "cooperativeElapsedMs": 2000,
+      "matchedSourceLimit": 256
+    },
+    "physicalIoMeter": false,
+    "wholeProcessRssLimit": false,
+    "hardRealtimeDeadline": false
+  },
+  "boundaries": {
+    "nativeCommandRegistered": true,
+    "nativeIpcExecuted": false,
+    "singleLibraryBackendValidated": true,
+    "fileGroupsInRealFixture": 244,
+    "firstAndLaterThan200FilesReachableInNativeFunctions": true,
+    "uiConnected": false,
+    "uiChanged": false,
+    "installedArtifactEvidence": false,
+    "multilibraryPageAggregation": false,
+    "legacyApisChangedToNewPages": false,
+    "allSearchAndBackgroundTasksBounded": false,
+    "completedBodiesRebuiltOnNextPage": false,
+    "filesystemAtomicSnapshot": false,
+    "nativeWatcherDeliveryAndTimestampPreservingMutationRaceFullySolved": false,
+    "newPartialStateHonest": true,
+    "mixedCaseAssetsWatcherScanParityCorrected": true,
+    "payloadLimitTestUsesDeterministicPrechargedCounter": true,
+    "real100000FileScaleBenchmark": false,
+    "mergeBlockedUntilCAndDAndFinalValidation": true
+  },
+  "timings": [
+    {
+      "file": "docs/evidence/v118-search-pages/native-pages-initial.log",
+      "includesConfiguredScopeOrWatcherSetup": false,
+      "includesNativeIpc": false,
+      "nextPageRebuildsCompletedBodies": false,
+      "observations": [
+        {
+          "firstPageMicros": [
+            67059,
+            71523,
+            73439,
+            81201,
+            83066
+          ],
+          "mode": "cold",
+          "nextPageMicros": [
+            1902,
+            1930,
+            1952,
+            2326,
+            2642
+          ]
+        },
+        {
+          "firstPageMicros": [
+            24285,
+            24881,
+            27224,
+            27860,
+            31872
+          ],
+          "mode": "memory",
+          "nextPageMicros": [
+            1886,
+            1986,
+            2193,
+            2567,
+            2650
+          ]
+        }
+      ],
+      "pageSize": 40,
+      "samplesPerMode": 5,
+      "sources": 243
+    },
+    {
+      "file": "docs/evidence/v118-search-pages/native-related-final.log",
+      "includesConfiguredScopeOrWatcherSetup": false,
+      "includesNativeIpc": false,
+      "nextPageRebuildsCompletedBodies": false,
+      "observations": [
+        {
+          "firstPageMicros": [
+            133963,
+            138280,
+            145484,
+            164594,
+            169491
+          ],
+          "mode": "cold",
+          "nextPageMicros": [
+            3245,
+            3607,
+            3726,
+            4251,
+            4804
+          ]
+        },
+        {
+          "firstPageMicros": [
+            51110,
+            65294,
+            72003,
+            72179,
+            122865
+          ],
+          "mode": "memory",
+          "nextPageMicros": [
+            3103,
+            3299,
+            4155,
+            7825,
+            11563
+          ]
+        }
+      ],
+      "pageSize": 40,
+      "samplesPerMode": 5,
+      "sources": 243
+    },
+    {
+      "file": "docs/evidence/v118-search-pages/native-related-closure.log",
+      "includesConfiguredScopeOrWatcherSetup": false,
+      "includesNativeIpc": false,
+      "nextPageRebuildsCompletedBodies": false,
+      "observations": [
+        {
+          "firstPageMicros": [
+            123618,
+            130909,
+            132004,
+            135227,
+            144064
+          ],
+          "mode": "cold",
+          "nextPageMicros": [
+            2664,
+            3038,
+            3616,
+            3754,
+            4070
+          ]
+        },
+        {
+          "firstPageMicros": [
+            29538,
+            32975,
+            33196,
+            35948,
+            38509
+          ],
+          "mode": "memory",
+          "nextPageMicros": [
+            2431,
+            2873,
+            3116,
+            3345,
+            3655
+          ]
+        }
+      ],
+      "pageSize": 40,
+      "samplesPerMode": 5,
+      "sources": 243
+    }
+  ],
+  "files": [
+    {
+      "path": "docs/evidence/v118-search-pages/native-functional-final.log",
+      "bytes": 97896,
+      "sha256": "521b78738d12f40bb5e53ad4c770db089b3abd9979b96bc78e790e04c4308651"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/native-functional.log",
+      "bytes": 97768,
+      "sha256": "b26cda523e73a170defac7fa73fe0564876d32fc0277c194052d368bae1d26c3"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/native-pages-initial.log",
+      "bytes": 3449,
+      "sha256": "6e157affa3e65b7d99f1e2fea8406c1ffdb8f6e03f935aab7c94d81224afb217"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/native-performance.log",
+      "bytes": 2057,
+      "sha256": "deccbc6cd84a1ec6ce50011183b808c02b63bc072e9c7d709142a80978f6805f"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/native-related-closure.log",
+      "bytes": 7158,
+      "sha256": "7ff99f67593ab9f692939ebbbb92ea1496064435c4cca33524dc9bdfc831937c"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/native-related-final.log",
+      "bytes": 6755,
+      "sha256": "ddddf69bd114c3753209ee6b8f48566694db2153f1e8933c31a790e955de84ea"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/previous-batch-ci-final.json",
+      "bytes": 1955,
+      "sha256": "e47c30017098ebde4865ffb3400221b063a78e8d784f3bc3aac1c811176a1bd4"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/previous-batch-ci.json",
+      "bytes": 1770,
+      "sha256": "1d4eb283a58b64e792a9fdc5a4d69bff0c2e833efba5a99076a1b4fd640e8e8c"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/quality-gate.log",
+      "bytes": 133384,
+      "sha256": "a108f7a5df908de63057942a3964c80dccf0ec393caf1204de6ab142e6ca9fd2"
+    },
+    {
+      "path": "docs/evidence/v118-search-pages/search-contracts.log",
+      "bytes": 15298,
+      "sha256": "359d0d4f9d0257738a66019834097924cf347184e29d1ceb9f1af5bd40ff0048"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "src-tauri/src/commands/index.rs",
+      "bytes": 88901,
+      "sha256": "3332bb2aba4c58307e47fed7517381b2b2c4d604368fc8fbad23e45046678e0c"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_pages.rs",
+      "bytes": 35425,
+      "sha256": "277f8880fcd1864b1740bb5a6687c55790a11a4a3b071be16e029cc1eb3d5dff"
+    },
+    {
+      "path": "src-tauri/src/commands/index_search_pages_tests.rs",
+      "bytes": 30904,
+      "sha256": "9667abc46e9a5c75de4b26ac802f5254aa9840543c19108c6d2f04107c52cdca"
+    },
+    {
+      "path": "src-tauri/src/lib.rs",
+      "bytes": 29348,
+      "sha256": "141f10330a03a1426cae326f25cf468acf0dda3f9537c5c6d8b8fbe227f83986"
+    },
+    {
+      "path": "src-tauri/src/services/knowledge_index.rs",
+      "bytes": 77318,
+      "sha256": "b69609b327a3b8c153634f52449afcab03b09cc49c48015dc65e168283f59c0a"
+    },
+    {
+      "path": "src-tauri/src/services/search_scan.rs",
+      "bytes": 8627,
+      "sha256": "54f74634e0a29b7509d878a965771f58dc4baa7f9e2a5a1357481a95875920a1"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+native-search	Real native page IPC, generated files, isolation and same-binary restart	﻿2026-10-16T20:52:24.1657217Z ##[group]Run & orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1659415Z ^[[36;1m& orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1660653Z ^[[36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1732176Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1732609Z env:
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1732830Z   CARGO_TERM_COLOR: always
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1733083Z   CACHE_ON_FAILURE: false
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1733412Z   CARGO_INCREMENTAL: 0
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:52:24.1733738Z ##[endgroup]
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8607067Z node:internal/modules/run_main:123
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8609735Z     triggerUncaughtException(
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8610387Z     ^
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8610567Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8610999Z AssertionError [ERR_ASSERTION]: the intended real Wry target was not advertised
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8612051Z     at connect (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-search.mjs:28:10)
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8613252Z     at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-search.mjs:52:8 {
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8614163Z   generatedMessage: false,
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8614576Z   code: 'ERR_ASSERTION',
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8615308Z   actual: undefined,
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8615577Z   expected: true,
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8615840Z   operator: '==',
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8616086Z   diff: 'simple'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8616321Z }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8616449Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:15.8616558Z Node.js v22.23.3
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3228103Z Real IPC baseline failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3228906Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration\scripts\run-v118-native-search.ps1:39 char:86
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3229531Z + ... ct $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3229905Z +                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3230324Z     + CategoryInfo          : OperationStopped: (Real IPC baseline failed:String) [], RuntimeException
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3230739Z     + FullyQualifiedErrorId : Real IPC baseline failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.3231004Z  
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T20:53:17.7003782Z ##[error]Process completed with exit code 1.

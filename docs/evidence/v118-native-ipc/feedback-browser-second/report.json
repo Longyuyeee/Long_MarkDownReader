@@ -1,0 +1,9 @@
+{
+  "scope": "actual Vue pages with isolated simulated IPC, not native or installed proof",
+  "checks": [
+    "same contract selected from a valid page detects invalid phrase then actual completed empty despite hidden syntax-error page status",
+    "actual aggregate failure and partial results do not satisfy the genuine-empty predicate",
+    "real paged error selector supports keyboard retry with the query preserved"
+  ],
+  "errors": []
+}

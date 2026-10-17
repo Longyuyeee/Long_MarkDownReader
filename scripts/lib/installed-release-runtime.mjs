@@ -5,22 +5,23 @@ import path from 'node:path'
 import { validateInstalledVersionObservations } from './installed-version-identity.mjs'
 import { saveHistoryChecks } from './installed-v1-1-7-workflow.mjs'
 import { moveContinuityChecks } from './installed-v1-1-6-workflow.mjs'
+import { validateInstalledSearchCompleteness } from './installed-v1-1-8-evidence.mjs'
 
 export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFileSync(file)) {
   const runtime = manifest.runtimeSmoke
   assert.equal(runtime.status, 'passed-installed-tauri-webview2')
   assert.equal(runtime.checksPassed, 18)
   assert.equal(runtime.routesPassed, 11)
-  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion))
+  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion))
   const versionCandidate = manifest.appVersion !== '1.0.22'
-  const evidenceRoot = manifest.appVersion === '1.1.7' ? 'docs/evidence/v1-1-7-candidate-lifecycle/' : manifest.appVersion === '1.1.6' ? 'docs/evidence/v1-1-6-candidate-lifecycle/' : manifest.appVersion === '1.1.5' ? 'docs/evidence/v1-1-5-candidate-lifecycle/' : manifest.appVersion === '1.1.4' ? 'docs/evidence/v1-1-4-candidate-lifecycle/' : manifest.appVersion === '1.1.3' ? 'docs/evidence/v1-1-3-candidate-lifecycle/' : manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
+  const evidenceRoot = manifest.appVersion === '1.1.8' ? 'docs/evidence/v1-1-8-candidate-lifecycle/' : manifest.appVersion === '1.1.7' ? 'docs/evidence/v1-1-7-candidate-lifecycle/' : manifest.appVersion === '1.1.6' ? 'docs/evidence/v1-1-6-candidate-lifecycle/' : manifest.appVersion === '1.1.5' ? 'docs/evidence/v1-1-5-candidate-lifecycle/' : manifest.appVersion === '1.1.4' ? 'docs/evidence/v1-1-4-candidate-lifecycle/' : manifest.appVersion === '1.1.3' ? 'docs/evidence/v1-1-3-candidate-lifecycle/' : manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
   const reports = Object.fromEntries(Object.entries(runtime.reports).map(([name, item]) => {
     assert.equal(item.path, evidenceRoot + path.posix.basename(item.path))
     const bytes = read(item.path)
     assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), item.sha256, `${name} raw evidence changed`)
     return [name, JSON.parse(bytes)]
   }))
-  if (manifest.appVersion === '1.1.7') {
+  if (['1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const report = reports.saveHistory
     assert.equal(report.status,'passed'); assert.equal(report.appVersion,manifest.appVersion)
     assert.equal(report.sourceCommit,manifest.sourceCommit)
@@ -29,7 +30,10 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.deepEqual(report.checks.map(check=>[check.id,check.status]),saveHistoryChecks.map(id=>[id,'passed']))
   }
   const { workspace, routes, search, version, stability } = reports
-  if (['1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (manifest.appVersion === '1.1.8') {
+    validateInstalledSearchCompleteness(reports.searchCompleteness, reports.searchBaseline, reports.searchUser, reports.searchOffice, manifest)
+  }
+  if (['1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const report = reports.moveContinuity
     assert.equal(report.status, 'passed'); assert.equal(report.appVersion, manifest.appVersion)
     assert.equal(report.sourceCommit, manifest.sourceCommit)
@@ -37,7 +41,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.equal(report.evidenceLevel, 'installed-tauri-ipc-and-disk'); assert.equal(report.sourceUserContentIncluded, false)
     assert.deepEqual(report.checks.map(check => [check.id, check.status]), moveContinuityChecks.map(id => [id, 'passed']))
   }
-  if (['1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (['1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const hardening = reports.foundationHardening
     assert.equal(hardening.status, 'passed'); assert.equal(hardening.appVersion, manifest.appVersion)
     assert.equal(hardening.sourceCommit, manifest.sourceCommit)
@@ -58,7 +62,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'v115-workflows-have-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (['1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const extended = reports.foundationExtended
     assert.equal(extended.status, 'passed'); assert.equal(extended.appVersion, manifest.appVersion)
     assert.equal(extended.sourceCommit, manifest.sourceCommit)
@@ -71,7 +75,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'batch-context-dialog-renames-real-files-and-retains-current-draft', 'v114-workflows-have-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const foundation = reports.foundation
     assert.equal(foundation.status, 'passed')
     assert.equal(foundation.appVersion, manifest.appVersion)
@@ -86,7 +90,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'txt-history-dialog-creates-copy-without-overwrite', 'foundation-workflow-has-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const files = reports.fileManagement
     assert.equal(files.status, 'passed')
     assert.equal(files.appVersion, manifest.appVersion)
@@ -106,7 +110,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'no-global-error-overlay-after-file-operations',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const experience = reports.experience
     assert.equal(experience.status, 'passed')
     assert.equal(experience.appVersion, manifest.appVersion)
@@ -121,7 +125,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'renaming-retains-file-relationship', 'removing-relation-retains-both-files',
     ].map(id=>[id,'passed']))
   }
-  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7'].includes(manifest.appVersion)) {
+  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8'].includes(manifest.appVersion)) {
     const workflow = reports.workflow
     assert.equal(workflow.status, 'passed')
     assert.equal(workflow.appVersion, manifest.appVersion)

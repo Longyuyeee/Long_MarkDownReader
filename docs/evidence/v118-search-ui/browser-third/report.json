@@ -1,0 +1,78 @@
+{
+  "scope": "Actual Vue App/LibraryMode/CommandPalette and readonly reference; native page IPC uses an isolated simulated adapter. Rust real-files tests are separate. Not installed/native IPC acceptance.",
+  "motion": "calm; not disabled",
+  "checks": [
+    "actual LibraryMode loads file pages, identifies duplicate titles, opens the main editor, and restores the 80-file search depth and selected late file after leaving the view",
+    "all 244 file cards are reachable beyond 200 without duplicate append; five PDF annotation positions occupy one file card",
+    "tag shortcut uses the bounded native page request with exact-case tag mode; changing sort starts a new request instead of sorting only the visible page",
+    "both explicit reference actions render the real readonly reference component without replacing the main file or saving its dirty draft",
+    "cross-library main open rejects dirty drafts; only the explicit Save action changes fixture disk content",
+    "new cross-library results wait in a notice; the old file list stays in place until explicit refresh, never mixed append",
+    "six styles and narrow view keep the actual controls accessible; keyboard file selection scrolls within the real palette viewport while help remains visible",
+    "complete empty, all failure, safe error and failed-next-page retry remain distinct; failure never clears the 40 loaded file cards",
+    "command/recent-file modes remain separate; a late native-page reply is retired and cannot overwrite command results"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "scope": "actual palette file cards and status fit"
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "scope": "actual palette file cards and status fit"
+    }
+  ],
+  "errors": []
+}

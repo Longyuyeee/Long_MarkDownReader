@@ -1,0 +1,11 @@
+{
+  "message": "Error: page.evaluate: Cannot serialize result: object reference chain is too long.",
+  "errors": [],
+  "checks": [
+    "actual LibraryMode loads file pages, identifies duplicate titles, opens the main editor, and restores the 80-file search depth and selected late file after leaving the view",
+    "all 244 file cards are reachable beyond 200 without duplicate append; five PDF annotation positions occupy one file card",
+    "tag shortcut uses the bounded native page request with exact-case tag mode; changing sort starts a new request instead of sorting only the visible page",
+    "both explicit reference actions render the real readonly reference component without replacing the main file or saving its dirty draft"
+  ],
+  "layouts": []
+}

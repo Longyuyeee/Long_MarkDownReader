@@ -1,0 +1,35 @@
+<template>
+  <article class="search-file-card knowledge-result-group" :data-search-key="searchMatchKey(first)" :class="{ 'is-search-selected': selectedKey === searchMatchKey(first) }" :aria-label="pathLabel">
+    <div class="search-file-heading"><button type="button" class="knowledge-result-open search-file-title" :aria-label="`打开 ${file.title}`" @click="$emit('open', first)"><FileText :size="16" aria-hidden="true"/><strong><SearchHighlight :text="file.title" :query="query"/></strong></button><button v-if="referenceAllowed && previewable" type="button" class="knowledge-preview-button" :aria-label="`在侧边参考 ${file.title}`" @click="$emit('reference', first)">在侧边参考</button></div>
+    <small class="search-file-path" :title="file.path">{{ file.libraryName ? `${file.libraryName} / ` : '' }}{{ pathLabel }}</small>
+    <p v-if="snippet" class="search-file-snippet"><SearchHighlight :text="snippet" :query="query"/></p>
+    <div class="search-file-matches"><div v-for="(match, index) in file.matches.slice(0,3)" :key="searchMatchKey(match)" class="knowledge-search-result" :data-search-key="index ? searchMatchKey(match) : undefined" :class="{ 'is-search-selected': selectedKey === searchMatchKey(match) }"><button type="button" class="knowledge-result-open search-match-open" :aria-label="`打开 ${file.title} · ${matchLabel(match)}`" @click="$emit('open', match)">{{ matchLabel(match) }}</button><button v-if="referenceAllowed && previewable && index" type="button" class="knowledge-preview-button search-match-reference" :aria-label="`在侧边参考 ${file.title} · ${matchLabel(match)}`" @click="$emit('reference', match)">参考此处</button></div></div>
+    <details v-if="file.matches.length > 3" :open="extraOpen" class="search-more-matches" @toggle="extraOpen = ($event.target as HTMLDetailsElement).open"><summary>其他 {{ file.matches.length - 3 }} 处命中</summary><div v-if="extraOpen" class="search-file-matches"><div v-for="match in file.matches.slice(3)" :key="searchMatchKey(match)" class="knowledge-search-result" :data-search-key="searchMatchKey(match)" :class="{ 'is-search-selected': selectedKey === searchMatchKey(match) }"><button type="button" class="knowledge-result-open search-match-open" @click="$emit('open', match)">{{ matchLabel(match) }}</button><button v-if="referenceAllowed && previewable" type="button" class="knowledge-preview-button" @click="$emit('reference', match)">参考此处</button></div></div></details>
+    <details v-if="file.matches.some(match => match.context && !['tag', 'title'].includes(match.matchKind))" class="knowledge-result-summary" @toggle="summaryOpen = ($event.target as HTMLDetailsElement).open"><summary :aria-label="`查看 ${file.title} 的命中摘要`">查看命中摘要</summary><template v-if="summaryOpen"><div v-for="match in file.matches.filter(match => match.context && !['tag','title'].includes(match.matchKind))" :key="searchMatchKey(match)"><small>{{ matchLabel(match) }}</small><p><SearchHighlight :text="match.context" :query="query"/></p></div><small>搜索摘要，非全文；打开文件查看完整内容。</small></template></details>
+    <small v-if="file.mayHaveMoreMatches" class="search-file-limit">已列出部分位置，不代表文件内全部出现次数。</small>
+    <slot/>
+  </article>
+</template>
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { FileText } from 'lucide-vue-next'
+import SearchHighlight from './SearchHighlight.vue'
+import type { SearchFile, SearchMatch } from '../services/searchPages'
+import { searchMatchKey } from '../utils/searchResultGroups'
+import { searchResultPath } from '../utils/searchResultPath'
+const props = defineProps<{ file: SearchFile; query: string; libraryRoot?: string; selectedKey?: string; referenceAllowed?: boolean }>()
+defineEmits<{ open: [match: SearchMatch]; reference: [match: SearchMatch] }>()
+const first = computed(() => props.file.matches[0])
+const snippet = computed(() => props.file.matches.find(match => !['title','tag'].includes(match.matchKind))?.context || '')
+const pathLabel = computed(() => searchResultPath(props.file.path, props.file.libraryRoot || props.libraryRoot || ''))
+const previewable = computed(() => ['markdown','plain-text','pdf'].includes(first.value.objectType))
+const extraOpen = ref(false), summaryOpen = ref(false)
+watch(() => props.selectedKey, key => { if (props.file.matches.slice(3).some(match => searchMatchKey(match) === key)) extraOpen.value = true }, { immediate:true })
+const labels: Record<string,string> = { title:'文件名匹配', body:'正文片段', tag:'标签', annotation:'批注', ocr:'OCR', object:'对象', notes:'备注', 'slide-title':'幻灯片标题', related:'附属内容' }
+const matchLabel = (match: SearchMatch) => match.locationLabel || (match.page ? `${match.objectType === 'pptx' ? '幻灯片' : '第'} ${match.page}${match.objectType === 'pptx' ? '' : ' 页'}${match.annotationId ? ' · 批注' : ''}` : labels[match.matchKind] || '匹配位置')
+</script>
+<style scoped>
+article.search-file-card{container-type:inline-size}
+@container (max-width:280px){.search-file-heading{display:block}.search-file-title{width:100%;min-width:0}.search-file-heading>.knowledge-preview-button{margin-top:6px}}
+.search-file-card{min-width:0;padding:10px;border:var(--theme-border);border-radius:var(--theme-radius-sm);background:rgba(var(--theme-primary-rgb),.025);color:var(--theme-text);overflow-wrap:anywhere}.search-file-heading{display:flex;justify-content:space-between;gap:6px;align-items:center;flex-wrap:wrap}.search-file-title{display:flex;align-items:center;gap:6px;flex:1;min-width:100px;border:0;background:transparent;color:inherit;padding:0;text-align:left;font:inherit;cursor:pointer}.search-file-title svg{flex-shrink:0}.search-file-title strong{overflow-wrap:anywhere}.search-file-path{display:block;color:var(--theme-text-secondary);font-size:var(--text-compact);margin-top:3px;white-space:normal}.search-file-snippet{margin:5px 0;color:var(--theme-text-secondary);font-size:var(--text-compact);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.search-file-matches{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.knowledge-search-result{display:inline-flex;align-items:center;gap:3px;max-width:100%;border-radius:var(--theme-radius-sm)}.search-match-open,.knowledge-preview-button{padding:4px 7px;border:var(--theme-border);border-radius:var(--theme-radius-sm);color:var(--theme-primary);background:var(--theme-surface);font:inherit;font-size:var(--text-compact);cursor:pointer;text-align:left;overflow-wrap:anywhere}.search-match-reference{border:0;background:transparent}.search-file-card.is-search-selected,.knowledge-search-result.is-search-selected{box-shadow:inset 3px 0 var(--theme-primary);background:rgba(var(--theme-primary-rgb),.065)}button:focus-visible,summary:focus-visible{outline:2px solid var(--theme-primary);outline-offset:2px}summary{cursor:pointer;color:var(--theme-primary);padding:4px 0}.search-more-matches,.knowledge-result-summary,.search-file-limit{font-size:var(--text-compact);color:var(--theme-text-secondary)}.knowledge-result-summary p{white-space:pre-wrap;user-select:text;margin:3px 0 8px}.search-file-limit{display:block;margin-top:5px}
+</style>

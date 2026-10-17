@@ -1,0 +1,81 @@
+{
+  "scope": "Actual App/CommandPalette/LibraryMode components and input; simulated native search. Grammar and real files tested separately.",
+  "motion": "calm (normal animations enabled)",
+  "checks": [
+    "Library search shares the query grammar and shows an actionable incomplete-phrase error rather than a fake empty result",
+    "Actual command panel returns TXT/JSON through the shared endpoint; scope and query controls fit all six styles and narrow windows with normal motion",
+    "Short narrow windows keep instructions visible; keyboard selection scrolls into view through a long result list",
+    "Late native responses cannot overwrite a newer query or command-mode results",
+    "Loading, unavailable libraries, partial results, invalid phrases and genuine empty results remain distinct",
+    "Closing invalidates pending requests; reopening clears the query without stale-result flash",
+    "Cross-library open blocks unsaved drafts; a clean open switches to the configured library and opens in the main workspace",
+    "Escape closes the panel after scope selection or a rejected click without refocusing the input; pending library persistence is announced and cannot be canceled or double-submitted mid-write",
+    "Windows canonical search paths with the native extended prefix open in the actual main TXT editor, without claiming the configured library was removed",
+    "Switching libraries with a delayed directory reply keeps the real file tree visible and permits returning to the first library, without manual refresh or disabling normal motion",
+    "Opening an ordinary Windows nested path does not strand a canonical-key file tree; an explicit refresh reveals newly added files with normal motion",
+    "Opening a newly added file before refreshing retains its pending reveal, so the refreshed canonical row is selected and located"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "controlsFit": true
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "controlsFit": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "controlsFit": true
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "controlsFit": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "controlsFit": true
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "controlsFit": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "controlsFit": true
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "controlsFit": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "controlsFit": true
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "controlsFit": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "controlsFit": true
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "controlsFit": true
+    }
+  ],
+  "errors": []
+}

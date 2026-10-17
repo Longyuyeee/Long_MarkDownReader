@@ -1,0 +1,158 @@
+<div id="v118-search-proposal">
+  <div class="viz-carousel viz-dotted-background" aria-label="搜索续载界面方案" data-previous-label="上一方案" data-next-label="下一方案">
+    <section data-variant="紧凑状态行" aria-label="紧凑搜索方案">
+      <div class="demo" aria-label="紧凑搜索面板" data-layout="compact">
+        <header><span>Long编辑 · 查找资料</span><small>交互示意 · 示例数据</small></header>
+        <div class="search"><i data-lucide="search" aria-hidden="true"></i><input aria-label="搜索条件示例" value="预算 -旧版" readonly><kbd>Esc</kbd></div>
+        <div class="filters"><label>范围 <select aria-label="搜索范围"><option>全部资料库</option><option>当前资料库</option></select></label><label>排序 <select aria-label="搜索排序"><option>相关性</option><option>修改时间</option></select></label><span class="coverage">文件名与可提取正文</span></div>
+        <div class="status" role="status" aria-live="polite"><span class="summary">已找到 486 个文件 · 2/3 库完成</span><span class="pending">其他库仍在搜索</span></div>
+        <details class="library-progress"><summary>各资料库进度</summary><div class="library-row"><span>项目资料</span><span>已完成 · 243 个文件</span></div><div class="library-row"><span>研究笔记</span><span>已完成 · 243 个文件</span></div><div class="library-row"><span>团队归档</span><span class="third-library">搜索中 · 未计入总数</span></div></details>
+        <div class="new-view" hidden role="status">新结果已就绪。刷新后重新排序，当前资料和草稿不受影响。<button class="refresh-view cursor-interaction" type="button">刷新结果</button></div>
+        <div class="results" aria-label="文件搜索结果">
+          <article class="result"><div class="result-top"><button class="file-title cursor-interaction" type="button"><i data-lucide="file-text" aria-hidden="true"></i>项目预算.md</button><button class="reference cursor-interaction" type="button"><i data-lucide="panel-right" aria-hidden="true"></i>在侧边参考</button></div><div class="path">项目资料 / 新产品 / 方案</div><p>本次<mark>预算</mark>按研发、验证与交付分阶段执行。</p><div class="positions"><button class="cursor-interaction" type="button">文件名匹配</button><button class="cursor-interaction" type="button">正文片段</button></div></article>
+          <article class="result"><div class="result-top"><button class="file-title cursor-interaction" type="button"><i data-lucide="file-text" aria-hidden="true"></i>项目预算.md</button><button class="reference cursor-interaction" type="button"><i data-lucide="panel-right" aria-hidden="true"></i>在侧边参考</button></div><div class="path">研究笔记 / 客户案例 / 北区</div><p>将项目目标与实际<mark>预算</mark>逐项对照。</p><div class="positions"><button class="cursor-interaction" type="button">正文片段</button></div></article>
+          <article class="result"><div class="result-top"><button class="file-title cursor-interaction" type="button"><i data-lucide="file" aria-hidden="true"></i>调研报告.pdf</button><button class="reference cursor-interaction" type="button"><i data-lucide="panel-right" aria-hidden="true"></i>在侧边参考</button></div><div class="path">项目资料 / 调研 / 市场</div><p>关于<mark>预算</mark>与样本范围的补充说明。</p><div class="positions"><button class="cursor-interaction" type="button">第 4 页</button><button class="cursor-interaction" type="button">批注 · 第 7 页</button><span>已列出部分位置</span></div></article>
+        </div>
+        <footer><span class="loaded">已展示 3 个文件 · 总数尚未确定</span><div><button class="continue-work cursor-interaction" type="button">继续搜索其他库</button><button class="load-more cursor-interaction" type="button">加载更多文件</button></div></footer>
+        <div class="action-feedback" aria-live="polite">点击文件名在主编辑区打开；侧边参考单独选择。</div>
+      </div>
+    </section>
+    <section data-variant="展开库状态" aria-label="展开进度搜索方案" hidden><div class="demo" aria-label="展开进度搜索面板" data-layout="expanded"></div></section>
+  </div>
+</div>
+<style>
+  #v118-search-proposal { color-scheme: light dark; }
+  #v118-search-proposal section { min-height: 690px; padding: 18px 6px 10px; }
+  #v118-search-proposal .demo { --le-bg: light-dark(#fff,#22262e); --le-text:light-dark(#222935,#edf0f5); --le-muted:light-dark(#657083,#aab5c5); --le-border:light-dark(#dce2ea,#424958); --le-soft:light-dark(#f5f7fa,#2c323d); --le-active:light-dark(#235ce9,#9db8ff); background:var(--le-bg); color:var(--le-text); border:1px solid var(--le-border); border-radius:12px; max-width:720px; margin:auto; box-shadow:0 8px 28px light-dark(#202a3a12,#0004); font:14px/1.6 "Segoe UI","Microsoft YaHei UI",sans-serif; --le-spacing:12px; }
+  #v118-search-proposal header { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 18px 8px; font-weight:600; }
+  #v118-search-proposal small, #v118-search-proposal .path, #v118-search-proposal .coverage, #v118-search-proposal .loaded { color:var(--le-muted); font-size:12px; font-weight:400; }
+  #v118-search-proposal .search { margin:4px 18px 10px; display:flex; align-items:center; gap:10px; border:1px solid var(--le-active); border-radius:7px; padding:7px 10px; }
+  #v118-search-proposal input { min-width:0; flex:1; width:100%; font:inherit; color:inherit; background:transparent; border:0; }
+  #v118-search-proposal kbd { color:var(--le-muted); border:1px solid var(--le-border); border-radius:4px; padding:0 5px; font:12px "Segoe UI",sans-serif; }
+  #v118-search-proposal .filters { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:0 18px 10px; border-bottom:1px solid var(--le-border); }
+  #v118-search-proposal label { display:flex; align-items:center; gap:5px; }
+  #v118-search-proposal button, #v118-search-proposal select { font:inherit; color:inherit; border:1px solid var(--le-border); background:var(--le-bg); border-radius:6px; padding:4px 9px; }
+  #v118-search-proposal button:hover { background:var(--le-soft); }
+  #v118-search-proposal button:focus-visible, #v118-search-proposal select:focus-visible { outline:2px solid var(--le-active); outline-offset:2px; }
+  #v118-search-proposal .status { padding:10px 18px 3px; display:flex; flex-wrap:wrap; gap:5px 12px; }
+  #v118-search-proposal .pending { color:var(--le-muted); font-size:12px; }
+  #v118-search-proposal .library-progress { margin:0 18px 10px; font-size:12px; color:var(--le-muted); }
+  #v118-search-proposal summary { width:fit-content; padding:3px 0; }
+  #v118-search-proposal .library-row { display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px 14px; padding:3px 10px; background:var(--le-soft); }
+  #v118-search-proposal .new-view { padding:10px 18px; background:var(--le-soft); font-size:12px; }
+  #v118-search-proposal .new-view button { margin-left:8px; }
+  #v118-search-proposal .result { padding:var(--le-spacing) 18px; border-top:1px solid var(--le-border); }
+  #v118-search-proposal .result-top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px 12px; }
+  #v118-search-proposal .file-title { display:inline-flex; gap:7px; align-items:center; font-weight:600; border:0; padding:0; text-align:left; }
+  #v118-search-proposal .reference { display:inline-flex; align-items:center; gap:5px; font-size:12px; }
+  #v118-search-proposal p { margin:3px 0 6px; overflow-wrap:anywhere; }
+  #v118-search-proposal mark { color:var(--le-text); background:light-dark(#fff0b3,#665222); border-radius:3px; }
+  #v118-search-proposal .positions { display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:12px; }
+  #v118-search-proposal .positions span { color:var(--le-muted); }
+  #v118-search-proposal .positions button { background:var(--le-soft); }
+  #v118-search-proposal footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:10px 18px; border-top:1px solid var(--le-border); }
+  #v118-search-proposal footer>div { display:flex; flex-wrap:wrap; gap:6px; }
+  #v118-search-proposal .load-more { color:var(--le-active); }
+  #v118-search-proposal .action-feedback { padding:5px 18px 12px; color:var(--le-muted); font-size:12px; }
+  #v118-search-proposal .demo [hidden] { display:none !important; }
+  #v118-search-proposal .demo svg, #v118-search-proposal .demo i[data-lucide] { width:16px; height:16px; flex-shrink:0; }
+  @media(max-width:500px) { #v118-search-proposal section { min-height:1020px; padding:8px 0; } #v118-search-proposal .coverage { width:100%; } #v118-search-proposal header, #v118-search-proposal .result, #v118-search-proposal footer { padding-left:12px; padding-right:12px; } #v118-search-proposal button, #v118-search-proposal select { min-height:36px; } }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('v118-search-proposal');
+  const compact = root.querySelector('[data-layout="compact"]');
+  const expanded = root.querySelector('[data-layout="expanded"]');
+  expanded.innerHTML = compact.innerHTML;
+  expanded.querySelector('details').open = true;
+  let saved = window.openai?.widgetState?.privateContent || {};
+  const views = [];
+  for (const demo of [compact, expanded]) {
+    const key = demo.dataset.layout;
+    const state = { spacing: saved[key]?.spacing || 12, positions: saved[key]?.positions !== false, phase: saved[key]?.phase || 'searching' };
+    const summary = demo.querySelector('.summary');
+    const persist = () => {
+      saved = { ...saved, [key]: { ...state, detailsOpen:demo.querySelector('details').open } };
+      window.openai?.setWidgetState?.({ modelContent:{proposal:'v1.1.8-search',layout:key}, privateContent:saved })?.catch(() => {});
+    };
+    const render = () => {
+      demo.style.setProperty('--le-spacing', state.spacing + 'px');
+      demo.querySelectorAll('.positions').forEach(element => element.hidden = !state.positions);
+      const offline = state.phase === 'offline';
+      summary.textContent = offline ? '已找到 486 个文件 · 2/3 库可用' : '已找到 486 个文件 · 2/3 库完成';
+      demo.querySelector('.pending').textContent = offline ? '1 个资料库离线 · 结果不完整' : '其他库仍在搜索';
+      demo.querySelector('.third-library').textContent = offline ? '无法访问 · 其他库结果保留' : '搜索中 · 未计入总数';
+      demo.querySelector('.continue-work').hidden = offline;
+    };
+    render();
+    if (typeof saved[key]?.detailsOpen === 'boolean') demo.querySelector('details').open = saved[key].detailsOpen;
+    views.push({ key, state, render, demo });
+    const originalResults = [...demo.querySelectorAll('.result')];
+    const controls = demo.querySelectorAll('.filters select');
+    controls[0].addEventListener('change', () => {
+      const current = controls[0].selectedIndex === 1;
+      originalResults[1].hidden = current;
+      demo.querySelector('details').hidden = current;
+      summary.textContent = current ? '共 243 个文件 · 当前资料库已完成' : '已找到 486 个文件 · 2/3 库完成';
+      demo.querySelector('.pending').textContent = current ? '未搜索其他库' : '其他库仍在搜索';
+      demo.querySelector('.action-feedback').textContent = current ? '示意：范围限定为当前资料库，不访问其他库。' : '示意：回到全部已配置资料库。';
+      persist();
+    });
+    controls[1].addEventListener('change', () => {
+      const items = controls[1].selectedIndex === 1 ? [...originalResults].reverse() : originalResults;
+      for (const item of items) demo.querySelector('.results').append(item);
+      demo.querySelector('.action-feedback').textContent = '示意：排序改变后重新建立文件列表，不向旧列表直接追加。';
+      persist();
+    });
+    demo.querySelectorAll('.file-title, .reference, .positions button').forEach(button => button.addEventListener('click', () => {
+      const file = button.closest('.result').querySelector('.file-title').textContent.trim();
+      demo.querySelector('.action-feedback').textContent = button.classList.contains('reference') ? '示意：在侧边参考 ' + file + '，当前草稿不变。' : '示意：在主编辑区打开 ' + file + '。';
+      persist();
+    }));
+    demo.querySelector('.continue-work').addEventListener('click', () => {
+      demo.querySelector('.new-view').hidden = false;
+      demo.querySelector('.pending').textContent = '新结果已就绪，当前列表保持原位';
+      persist();
+    });
+    demo.querySelector('.refresh-view').addEventListener('click', () => {
+      demo.querySelector('.new-view').hidden = true;
+      summary.textContent = '共 612 个文件 · 3/3 库完成';
+      demo.querySelector('.pending').textContent = '已按相关性更新当前列表';
+      demo.querySelector('.third-library').textContent = '已完成 · 126 个文件';
+      demo.querySelector('.continue-work').hidden = true;
+      demo.querySelector('.loaded').textContent = '已展示 3 / 612 个文件';
+      persist();
+    });
+    demo.querySelector('.load-more').addEventListener('click', event => {
+      const item = document.createElement('article'); item.className = 'result';
+      const name = document.createElement('strong'); name.textContent = '会议记录.md';
+      const path = document.createElement('div'); path.className = 'path'; path.textContent = '项目资料 / 会议 / 项目组';
+      const excerpt = document.createElement('p'); excerpt.textContent = '本周预算和执行安排已核对。';
+      item.append(name, path, excerpt); demo.querySelector('.results').append(item);
+      demo.querySelector('.loaded').textContent = '已展示 4 个文件 · 同一快照续载'; event.currentTarget.disabled = true;
+      persist();
+    });
+    if (globalThis.Tweak) {
+      const tweak = new Tweak({ container: demo, onChange: () => { render(); persist(); } });
+      tweak.addSlider(state, 'spacing', { label: '结果行留白', min:8, max:18, unit:'px' });
+      tweak.addToggle(state, 'positions', { label: '显示组内定位入口' });
+      tweak.addSelect(state, 'phase', { label: '多库场景', options:[{label:'还有库在搜索',value:'searching'},{label:'某库离线',value:'offline'}] });
+    }
+    demo.querySelector('summary').addEventListener('click', () => setTimeout(persist, 0));
+  }
+  window.addEventListener('openai:set_globals', event => {
+    const incoming = event.detail?.globals?.widgetState?.privateContent;
+    if (!incoming) return;
+    saved = incoming;
+    for (const view of views) {
+      const value = incoming[view.key]; if (!value) continue;
+      const previous = JSON.stringify(view.state);
+      if (typeof value.spacing === 'number') view.state.spacing = Math.min(18,Math.max(8,value.spacing));
+      if (typeof value.positions === 'boolean') view.state.positions = value.positions;
+      if (['searching','offline'].includes(value.phase)) view.state.phase = value.phase;
+      // A reflected persistence acknowledgement is not a new interaction.
+      if (JSON.stringify(view.state) !== previous) view.render();
+    }
+  });
+})();
+</script>

@@ -1,0 +1,17 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: preparation must preserve every loaded file card
+
+0 !== 80
+
+    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v118-search-refresh-browser.mjs:43:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 80,
+  operator: 'strictEqual'
+}
+
+Node.js v22.12.0

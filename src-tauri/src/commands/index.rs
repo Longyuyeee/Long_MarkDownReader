@@ -3,21 +3,22 @@ use crate::formats::file_registry::{file_format_for_path, is_sensitive_path};
 use crate::formats::odt::parse_odt;
 use crate::formats::opml::parse_opml;
 use crate::formats::table::parse_internal_table;
-#[cfg(test)]
-use crate::services::knowledge_index::snapshot_from_graph;
 use crate::services::knowledge_index::{
     build_odf_content_index_segments, build_opml_index_segments, build_pptx_index_segments,
     build_table_index_segments, build_workbook_index_segments, collect_index_sources, delete_index,
-    inspect_index, read_ready_snapshot, read_snapshot, ready_status_from_snapshot,
-    recover_index_cache, refresh_snapshot_incremental_for_paths, snapshot_from_graph_with_sources,
-    write_snapshot, IndexedSearchSegment, KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime,
+    inspect_index, read_snapshot, ready_status_from_snapshot, recover_index_cache,
+    refresh_snapshot_incremental_for_paths, snapshot_from_graph_with_sources, write_snapshot,
+    IndexedSearchSegment, IndexedSource, KnowledgeIndexRecoveryReport, KnowledgeIndexRuntime,
     KnowledgeIndexStatus,
 };
+#[cfg(test)]
+use crate::services::knowledge_index::{read_ready_snapshot, snapshot_from_graph};
 use crate::services::pdf_index::load_pdf_index;
+use crate::services::search_scan::{collect_search_sources, SearchBudget, SearchStop};
 use crate::services::workspace_guard::WorkspaceGuard;
 use chardetng::EncodingDetector;
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
@@ -25,6 +26,17 @@ use tauri::{AppHandle, Manager, State};
 const MAX_SEARCH_RESULTS: usize = 200;
 const MAX_LOCATED_MATCHES_PER_KIND: usize = 5;
 const MAX_TEXT_FILE_BYTES: u64 = 20 * 1024 * 1024;
+
+#[cfg(test)]
+#[path = "index_search_ranking_tests.rs"]
+mod search_ranking_tests;
+
+#[cfg(test)]
+#[path = "index_search_budget_tests.rs"]
+mod search_budget_tests;
+
+#[path = "index_search_pages.rs"]
+pub mod search_pages;
 
 fn knowledge_index_cache_root(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
@@ -287,7 +299,12 @@ fn match_snippet(value: &str, query: &str) -> String {
     let body = chars.by_ref().take(220).collect::<String>();
     let suffix = if chars.next().is_some() { "…" } else { "" };
     let prefix = if start > 0 { "…" } else { "" };
-    format!("{}{}{}", prefix, body.split_whitespace().collect::<Vec<_>>().join(" "), suffix)
+    format!(
+        "{}{}{}",
+        prefix,
+        body.split_whitespace().collect::<Vec<_>>().join(" "),
+        suffix
+    )
 }
 
 fn decode_text_file(path: &Path) -> Option<String> {
@@ -314,14 +331,21 @@ pub struct SearchDocumentPreview {
 
 fn preview_excerpt(text: &str, query: &str, label: String) -> SearchDocumentPreview {
     let query = query.trim().to_lowercase();
-    let found = if query.is_empty() { None } else { text.to_lowercase().find(&query) };
+    let found = if query.is_empty() {
+        None
+    } else {
+        text.to_lowercase().find(&query)
+    };
     let mut bytes = 0;
     let mut position: usize = 0;
     if let Some(at) = found {
         for ch in text.chars() {
             let len = ch.to_lowercase().map(char::len_utf8).sum::<usize>();
-            if bytes + len > at { break; }
-            bytes += len; position += 1;
+            if bytes + len > at {
+                break;
+            }
+            bytes += len;
+            position += 1;
         }
     }
     let start = position.saturating_sub(400);
@@ -423,41 +447,133 @@ pub async fn preview_search_document(
     .map_err(|error| format!("读取预览失败：{error}"))?
 }
 
+// Best first, with exact identity tie-breakers rather than filesystem/index order.
+// Keep case-sensitive paths distinct, as the existing frontend grouping does.
+fn compare_search_results(
+    left: &KnowledgeSearchResult,
+    right: &KnowledgeSearchResult,
+) -> std::cmp::Ordering {
+    right
+        .score
+        .cmp(&left.score)
+        .then_with(|| left.title.cmp(&right.title))
+        .then_with(|| left.path.cmp(&right.path))
+        .then_with(|| left.page.cmp(&right.page))
+        .then_with(|| left.object_type.cmp(&right.object_type))
+        .then_with(|| left.match_kind.cmp(&right.match_kind))
+        .then_with(|| left.annotation_id.cmp(&right.annotation_id))
+        .then_with(|| left.locator_kind.cmp(&right.locator_kind))
+        .then_with(|| left.locator_object_id.cmp(&right.locator_object_id))
+        .then_with(|| left.location_label.cmp(&right.location_label))
+        .then_with(|| left.context.cmp(&right.context))
+        .then_with(|| left.extraction_failed.cmp(&right.extraction_failed))
+}
+
 fn sort_search_results(results: &mut Vec<KnowledgeSearchResult>) {
-    results.sort_by(|left, right| {
-        right
-            .score
-            .cmp(&left.score)
-            .then_with(|| left.title.cmp(&right.title))
-            .then_with(|| left.page.cmp(&right.page))
-    });
+    results.sort_by(compare_search_results);
     results.truncate(MAX_SEARCH_RESULTS);
+}
+
+struct RankedSearchResult(KnowledgeSearchResult);
+
+impl PartialEq for RankedSearchResult {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other).is_eq()
+    }
+}
+impl Eq for RankedSearchResult {}
+impl PartialOrd for RankedSearchResult {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for RankedSearchResult {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        compare_search_results(&self.0, &other.0)
+    }
+}
+
+// The heap root is the worst retained match. Inspect later candidates without
+// collecting every matching payload or stopping before a better file is seen.
+struct SearchResultCollector {
+    heap: BinaryHeap<RankedSearchResult>,
+}
+
+impl SearchResultCollector {
+    fn new() -> Self {
+        Self {
+            heap: BinaryHeap::with_capacity(MAX_SEARCH_RESULTS),
+        }
+    }
+
+    fn push(&mut self, result: KnowledgeSearchResult) {
+        if self.heap.len() < MAX_SEARCH_RESULTS {
+            self.heap.push(RankedSearchResult(result));
+        } else if compare_search_results(&result, &self.heap.peek().unwrap().0).is_lt() {
+            self.heap.peek_mut().unwrap().0 = result;
+        }
+    }
+
+    fn extend(&mut self, results: impl IntoIterator<Item = KnowledgeSearchResult>) {
+        for result in results {
+            self.push(result);
+        }
+    }
+
+    fn into_results(self) -> Vec<KnowledgeSearchResult> {
+        let mut results = self
+            .heap
+            .into_iter()
+            .map(|entry| entry.0)
+            .collect::<Vec<_>>();
+        results.sort_by(compare_search_results);
+        results
+    }
 }
 
 pub(crate) fn search_segments(
     segments: &[IndexedSearchSegment],
     query: &str,
 ) -> Vec<KnowledgeSearchResult> {
-    let Ok(parsed) = crate::services::search_query::SearchQuery::parse(query) else {
-        return Vec::new();
-    };
-    if parsed.positive.len() == 1 && parsed.negative.is_empty() {
-        return search_literal_segments(segments, &parsed.positive[0]);
-    }
-    search_complex_segments(segments, query)
+    // Internal index/collection callers retain their existing API. Interactive
+    // search uses the checked entry point and reports incomplete work as an error.
+    search_segments_checked(segments, query, &mut None).unwrap()
 }
 
-fn search_literal_segments(
+fn search_segments_checked(
     segments: &[IndexedSearchSegment],
     query: &str,
-) -> Vec<KnowledgeSearchResult> {
-    let mut results = Vec::new();
+    budget: &mut Option<&mut SearchBudget>,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    search_segment_iter(segments.iter(), query, budget)
+}
+
+fn search_segment_iter<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment> + Clone,
+    query: &str,
+    budget: &mut Option<&mut SearchBudget>,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    let Ok(parsed) = crate::services::search_query::SearchQuery::parse(query) else {
+        return Ok(Vec::new());
+    };
+    if parsed.positive.len() == 1 && parsed.negative.is_empty() {
+        return search_literal_segments(segments, &parsed.positive[0], budget);
+    }
+    search_complex_segments(segments, query, budget)
+}
+
+fn search_literal_segments<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment>,
+    query: &str,
+    budget: &mut Option<&mut SearchBudget>,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    let mut results = SearchResultCollector::new();
     let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
     for segment in segments {
-        if results.len() >= MAX_SEARCH_RESULTS {
-            break;
+        if let Some(budget) = budget.as_deref_mut() {
+            budget.segment(segment.text.len())?;
         }
         if segment.title.to_lowercase().contains(query) && title_paths.insert(segment.path.as_str())
         {
@@ -467,7 +583,11 @@ fn search_literal_segments(
                 object_type: segment.object_type.clone(),
                 match_kind: "title".into(),
                 context: if segment.extraction_failed {
-                    "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    if segment.object_type == "pdf" {
+                        "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    } else {
+                        "正文未能读取或提取，仅匹配文件名".into()
+                    }
                 } else {
                     "文件名匹配".into()
                 },
@@ -537,24 +657,30 @@ fn search_literal_segments(
             extraction_failed: segment.extraction_failed,
         });
     }
-    sort_search_results(&mut results);
-    results
+    if let Some(budget) = budget.as_deref_mut() {
+        budget.check_time()?;
+    }
+    Ok(results.into_results())
 }
 
-fn search_complex_segments(
-    segments: &[IndexedSearchSegment],
+fn search_complex_segments<'a>(
+    segments: impl Iterator<Item = &'a IndexedSearchSegment> + Clone,
     query: &str,
-) -> Vec<KnowledgeSearchResult> {
+    budget: &mut Option<&mut SearchBudget>,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
     use crate::services::search_query::SearchQuery;
     let Ok(parsed) = SearchQuery::parse(query) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     if parsed.positive.is_empty() && parsed.negative.is_empty() {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let mut candidates: HashMap<&str, (Vec<bool>, bool, usize)> = HashMap::new();
-    let mut segment_hits = Vec::with_capacity(segments.len());
-    for segment in segments {
+    let mut segment_hits = Vec::with_capacity(segments.size_hint().0);
+    for segment in segments.clone() {
+        if let Some(budget) = budget.as_deref_mut() {
+            budget.segment(segment.text.len())?;
+        }
         let title = segment.title.to_lowercase();
         let text = segment.text.to_lowercase();
         let entry = candidates
@@ -574,19 +700,19 @@ fn search_complex_segments(
         entry.2 = entry.2.max(hits);
         segment_hits.push(hits);
     }
-    let mut results = Vec::new();
+    let mut results = SearchResultCollector::new();
     let mut seen_locations = HashSet::new();
     let mut title_paths = HashSet::new();
     let mut match_counts: HashMap<(&str, &str), usize> = HashMap::new();
-    for (index, segment) in segments.iter().enumerate() {
+    for (index, segment) in segments.enumerate() {
+        if let Some(budget) = budget.as_deref_mut() {
+            budget.check_time()?;
+        }
         let Some((found, excluded, best)) = candidates.get(segment.path.as_str()) else {
             continue;
         };
         if *excluded || found.iter().any(|found| !found) {
             continue;
-        }
-        if results.len() >= MAX_SEARCH_RESULTS {
-            break;
         }
         if parsed
             .positive
@@ -600,7 +726,11 @@ fn search_complex_segments(
                 object_type: segment.object_type.clone(),
                 match_kind: "title".into(),
                 context: if segment.extraction_failed {
-                    "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    if segment.object_type == "pdf" {
+                        "PDF 正文不可提取，可能是扫描件、加密文件或损坏文件".into()
+                    } else {
+                        "正文未能读取或提取，仅匹配文件名".into()
+                    }
                 } else {
                     "文件名匹配".into()
                 },
@@ -677,27 +807,83 @@ fn search_complex_segments(
             extraction_failed: segment.extraction_failed,
         });
     }
-    sort_search_results(&mut results);
-    results
+    if let Some(budget) = budget.as_deref_mut() {
+        budget.check_time()?;
+    }
+    Ok(results.into_results())
 }
 
-fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchResult>) {
-    if results.len() >= MAX_SEARCH_RESULTS {
-        return;
-    }
-    let Ok(entries) = fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        if results.len() >= MAX_SEARCH_RESULTS
-            || entry
-                .file_type()
-                .map(|kind| kind.is_symlink())
-                .unwrap_or(true)
-        {
-            continue;
+fn reserve_search_reads(
+    guard: &WorkspaceGuard,
+    path: &Path,
+    indexer: &str,
+    max_bytes: u64,
+    budget: &mut SearchBudget,
+) -> Result<(), SearchStop> {
+    fn reserve(
+        guard: &WorkspaceGuard,
+        path: &Path,
+        max_bytes: u64,
+        optional: bool,
+        budget: &mut SearchBudget,
+    ) -> Result<(), SearchStop> {
+        let metadata = match fs::symlink_metadata(path) {
+            Ok(metadata) => metadata,
+            Err(error) if optional && error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Err(_) => return Err(SearchStop::Io),
+        };
+        if !metadata.is_file() || metadata.file_type().is_symlink() {
+            return Err(SearchStop::Io);
         }
-        let path = entry.path();
+        guard.resolve_existing(path).map_err(|_| SearchStop::Io)?;
+        // Oversized inputs are already rejected by the existing format readers.
+        if metadata.len() <= max_bytes {
+            budget.read(metadata.len())?;
+        }
+        Ok(())
+    }
+    let limit = if indexer == "pdf" {
+        64 * 1024 * 1024
+    } else if matches!(
+        indexer,
+        "markdown" | "text" | "json-text" | "table" | "opml"
+    ) {
+        MAX_TEXT_FILE_BYTES
+    } else {
+        max_bytes
+    };
+    reserve(guard, path, limit, false, budget)?;
+    if indexer == "pdf" {
+        let name = path.file_name().ok_or(SearchStop::Io)?.to_string_lossy();
+        reserve(
+            guard,
+            &path.with_file_name(format!("{name}.annotations.json")),
+            crate::formats::pdf_annotations::MAX_ANNOTATION_FILE_BYTES,
+            true,
+            budget,
+        )?;
+        reserve(
+            guard,
+            &path.with_file_name(format!("{name}.ocr.json")),
+            crate::formats::pdf_ocr::MAX_OCR_SIDECAR_BYTES,
+            true,
+            budget,
+        )?;
+    }
+    Ok(())
+}
+
+fn search_sources(
+    root: &Path,
+    sources: &[IndexedSource],
+    query: &str,
+    results: &mut SearchResultCollector,
+    budget: &mut SearchBudget,
+) -> Result<(), SearchStop> {
+    let guard = WorkspaceGuard::new(root).map_err(|_| SearchStop::Io)?;
+    for source in sources {
+        budget.check_time()?;
+        let path = root.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
         let name = path.file_name().unwrap_or_default().to_string_lossy();
         if name.starts_with('.')
             || name.ends_with(".assets")
@@ -705,10 +891,6 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
             || name.ends_with(".ocr.json")
             || is_sensitive_path(&path)
         {
-            continue;
-        }
-        if path.is_dir() {
-            search_recursive(&path, query, results);
             continue;
         }
         let path_string = path.to_string_lossy().into_owned();
@@ -723,6 +905,7 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
         let Some(indexer) = format.adapters.indexer.as_deref() else {
             continue;
         };
+        reserve_search_reads(&guard, &path, indexer, format.max_bytes, budget)?;
         if indexer == "pdf" {
             let index = load_pdf_index(&path);
             if title_matches {
@@ -766,10 +949,14 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-            for (page_index, context) in
-                index.pages.iter().enumerate().filter_map(|(page, text)| {
+            for (page_index, context) in index
+                .pages
+                .iter()
+                .enumerate()
+                .filter_map(|(page, text)| {
                     text_match_context(text, query).map(|value| (page, value))
-                }).take(MAX_LOCATED_MATCHES_PER_KIND)
+                })
+                .take(MAX_LOCATED_MATCHES_PER_KIND)
             {
                 results.push(KnowledgeSearchResult {
                     title: title.clone(),
@@ -786,9 +973,14 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     extraction_failed: index.extraction_failed,
                 });
             }
-            for (page, context) in index.ocr_pages.iter().filter_map(|item| {
-                text_match_context(&item.text, query).map(|value| (item.page, value))
-            }).take(MAX_LOCATED_MATCHES_PER_KIND) {
+            for (page, context) in index
+                .ocr_pages
+                .iter()
+                .filter_map(|item| {
+                    text_match_context(&item.text, query).map(|value| (item.page, value))
+                })
+                .take(MAX_LOCATED_MATCHES_PER_KIND)
+            {
                 results.push(KnowledgeSearchResult {
                     title: title.clone(),
                     path: path_string.clone(),
@@ -944,7 +1136,11 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     .ok()
                 })
             {
-                results.extend(search_segments(&odf_segments, query));
+                results.extend(search_segments_checked(
+                    &odf_segments,
+                    query,
+                    &mut Some(budget),
+                )?);
             }
         } else if indexer == "pptx" {
             let pptx_segments = path
@@ -956,7 +1152,11 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     build_pptx_index_segments(&title, &path_string, &format.id, &bytes).ok()
                 });
             if let Some(pptx_segments) = pptx_segments {
-                results.extend(search_segments(&pptx_segments, query));
+                results.extend(search_segments_checked(
+                    &pptx_segments,
+                    query,
+                    &mut Some(budget),
+                )?);
             }
         } else if indexer == "workbook" {
             let workbook_segments = path
@@ -968,7 +1168,11 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     build_workbook_index_segments(&title, &path_string, &format.id, &bytes).ok()
                 });
             if let Some(workbook_segments) = workbook_segments {
-                results.extend(search_segments(&workbook_segments, query));
+                results.extend(search_segments_checked(
+                    &workbook_segments,
+                    query,
+                    &mut Some(budget),
+                )?);
             }
         } else if indexer == "opml" {
             if let Some(document) = decode_text_file(&path).and_then(|text| parse_opml(&text).ok())
@@ -980,7 +1184,11 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     &document,
                     MAX_TEXT_FILE_BYTES as usize,
                 );
-                results.extend(search_segments(&segments, query));
+                results.extend(search_segments_checked(
+                    &segments,
+                    query,
+                    &mut Some(budget),
+                )?);
             }
         } else if indexer == "table" && title.to_ascii_lowercase().ends_with(".table.json") {
             if let Some(table) =
@@ -993,7 +1201,11 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
                     &table,
                     MAX_TEXT_FILE_BYTES as usize,
                 );
-                results.extend(search_segments(&segments, query));
+                results.extend(search_segments_checked(
+                    &segments,
+                    query,
+                    &mut Some(budget),
+                )?);
             }
         } else if matches!(indexer, "markdown" | "text" | "json-text" | "table") {
             let content = decode_text_file(&path);
@@ -1018,31 +1230,105 @@ fn search_recursive(dir: &Path, query: &str, results: &mut Vec<KnowledgeSearchRe
             }
         }
     }
+    budget.check_time()
 }
 
+#[cfg(test)]
 fn search_workspace(
     root: &Path,
     query: &str,
     index: Option<(&Path, bool)>,
 ) -> Vec<KnowledgeSearchResult> {
+    search_workspace_checked(root, query, index, &mut SearchBudget::default())
+        .expect("test fixture must fit the interactive query budget")
+}
+
+fn search_workspace_checked(
+    root: &Path,
+    query: &str,
+    index: Option<(&Path, bool)>,
+    budget: &mut SearchBudget,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    // Collect bounded metadata once. Disk freshness checks must not trigger the
+    // previous unbounded collect_index_sources before cold-search limits apply.
+    let sources = collect_search_sources(root, budget)?;
     if let Some((cache_root, runtime_blocks_read)) = index {
-        if let Some(snapshot) = read_ready_snapshot(cache_root, root, runtime_blocks_read) {
-            return search_segments(&snapshot.search_segments, query);
+        if !runtime_blocks_read {
+            if let Some(snapshot) = read_snapshot(cache_root, root).ok().flatten() {
+                if !snapshot.search_segments.is_empty()
+                    && crate::services::knowledge_index::source_digest(&sources)
+                        == snapshot.source_digest
+                    && snapshot.file_relations_digest
+                        == crate::services::knowledge_index::file_relations_digest(root)
+                {
+                    return search_segments_checked(
+                        &snapshot.search_segments,
+                        query,
+                        &mut Some(budget),
+                    );
+                }
+            }
         }
     }
     if crate::services::search_query::SearchQuery::parse(query)
         .is_ok_and(|parsed| parsed.complex(query))
     {
-        let sources = collect_index_sources(root);
-        return search_segments(
-            &crate::services::knowledge_index::build_search_segments(root, &sources),
-            query,
-        );
+        let mut results = SearchResultCollector::new();
+        let guard = WorkspaceGuard::new(root).map_err(|_| SearchStop::Io)?;
+        for source in &sources {
+            if source.path.ends_with(".annotations.json") || source.path.ends_with(".ocr.json") {
+                continue;
+            }
+            let path = root.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
+            let Ok(format) = file_format_for_path(&path) else {
+                continue;
+            };
+            let Some(indexer) = format.adapters.indexer.as_deref() else {
+                continue;
+            };
+            reserve_search_reads(&guard, &path, indexer, format.max_bytes, budget)?;
+            let segments =
+                crate::services::knowledge_index::build_search_segments_for_source(root, source);
+            results.extend(search_segments_checked(
+                &segments,
+                query,
+                &mut Some(budget),
+            )?);
+        }
+        budget.check_time()?;
+        return Ok(results.into_results());
     }
-    let mut results = Vec::new();
-    search_recursive(root, query, &mut results);
-    sort_search_results(&mut results);
-    results
+    let mut results = SearchResultCollector::new();
+    search_sources(root, &sources, query, &mut results, budget)?;
+    Ok(results.into_results())
+}
+
+#[tauri::command]
+pub async fn search_knowledge_libraries_page(
+    app: AppHandle,
+    window: tauri::Window,
+    request: search_pages::libraries::LibrariesPageRequest,
+) -> Result<search_pages::libraries::LibrariesPageResponse, search_pages::SearchPageError> {
+    search_pages::libraries::run(app, window.label().to_owned(), request).await
+}
+
+#[tauri::command]
+pub async fn search_knowledge_page(
+    app: AppHandle,
+    window: tauri::Window,
+    request: search_pages::SearchPageRequest,
+) -> Result<search_pages::SearchPageResponse, search_pages::SearchPageError> {
+    search_pages::run_page(app, window.label().to_owned(), request).await
+}
+
+#[tauri::command]
+pub fn close_knowledge_search(
+    window: tauri::Window,
+    runtime: State<'_, search_pages::SearchPageRuntime>,
+    channel: search_pages::SearchChannel,
+    session_id: String,
+) -> bool {
+    runtime.close(window.label(), channel, &session_id)
 }
 
 #[tauri::command]
@@ -1075,22 +1361,73 @@ async fn search_library_knowledge(
         .then(|| runtime.cached_snapshot(&root))
         .flatten();
     tauri::async_runtime::spawn_blocking(move || {
-        if let Some(snapshot) = cached {
-            if changed_paths.is_empty() && snapshot.file_relations_digest == crate::services::knowledge_index::file_relations_digest(&root) {
-                return search_segments(&snapshot.search_segments, &query);
-            }
-            if let Some(overlay) =
-                refresh_snapshot_incremental_for_paths(&root, (*snapshot).clone(), &changed_paths)
-            {
-                return search_segments(&overlay.search_segments, &query);
-            }
-            search_workspace(&root, &query, None)
-        } else {
-            search_workspace(&root, &query, Some((&cache_root, runtime_blocks_read)))
-        }
+        let mut budget = SearchBudget::default();
+        search_library_snapshot(
+            &root,
+            &query,
+            cached.as_deref(),
+            &changed_paths,
+            Some((&cache_root, runtime_blocks_read)),
+            &mut budget,
+        )
+        .map_err(|error| error.to_string())
     })
     .await
-    .map_err(|error| format!("知识索引任务失败: {}", error))
+    .map_err(|error| format!("知识索引任务失败: {}", error))?
+}
+
+fn search_library_snapshot(
+    root: &Path,
+    query: &str,
+    cached: Option<&crate::services::knowledge_index::KnowledgeIndexSnapshot>,
+    changed_paths: &[PathBuf],
+    disk_index: Option<(&Path, bool)>,
+    budget: &mut SearchBudget,
+) -> Result<Vec<KnowledgeSearchResult>, SearchStop> {
+    if let Some(snapshot) = cached {
+        budget.check_time()?;
+        if changed_paths.is_empty()
+            && snapshot.file_relations_digest
+                == crate::services::knowledge_index::file_relations_digest(root)
+        {
+            return search_segments_checked(&snapshot.search_segments, query, &mut Some(budget));
+        }
+        // Never run the incremental helper's empty-path full-tree fallback in
+        // an interactive query. Deleted files and non-overlay formats go cold.
+        if let [path] = changed_paths {
+            if path.is_file() {
+                if let Ok(format) = file_format_for_path(path) {
+                    if let Some(indexer @ ("markdown" | "text" | "json-text" | "table" | "opml")) =
+                        format.adapters.indexer.as_deref()
+                    {
+                        // The existing helper reads once for relation safety,
+                        // then its segment builder reads again. Reserve both;
+                        // never enter its read-before-size-check with big input.
+                        if path.metadata().is_ok_and(|metadata| {
+                            metadata.len() <= format.max_bytes.min(MAX_TEXT_FILE_BYTES)
+                        }) {
+                            let guard = WorkspaceGuard::new(root).map_err(|_| SearchStop::Io)?;
+                            reserve_search_reads(&guard, path, indexer, format.max_bytes, budget)?;
+                            reserve_search_reads(&guard, path, indexer, format.max_bytes, budget)?;
+                            if let Some(overlay) = refresh_snapshot_incremental_for_paths(
+                                root,
+                                snapshot.clone(),
+                                changed_paths,
+                            ) {
+                                return search_segments_checked(
+                                    &overlay.search_segments,
+                                    query,
+                                    &mut Some(budget),
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return search_workspace_checked(root, query, None, budget);
+    }
+    search_workspace_checked(root, query, disk_index, budget)
 }
 
 #[derive(Serialize)]
@@ -1279,21 +1616,47 @@ mod tests {
     #[test]
     fn located_search_keeps_distinct_pages_deduplicates_and_bounds_results() {
         let base = IndexedSearchSegment {
-            title: "report.pdf".into(), path: "/report.pdf".into(), object_type: "pdf".into(),
-            match_kind: "body".into(), text: "budget".into(), page: Some(1),
-            annotation_id: None, locator_kind: None, locator_object_id: None,
-            location_label: None, extraction_failed: false,
+            title: "report.pdf".into(),
+            path: "/report.pdf".into(),
+            object_type: "pdf".into(),
+            match_kind: "body".into(),
+            text: "budget".into(),
+            page: Some(1),
+            annotation_id: None,
+            locator_kind: None,
+            locator_object_id: None,
+            location_label: None,
+            extraction_failed: false,
         };
         let mut segments = vec![base.clone(), base.clone()];
-        for page in 2..=8 { segments.push(IndexedSearchSegment { page: Some(page), ..base.clone() }); }
+        for page in 2..=8 {
+            segments.push(IndexedSearchSegment {
+                page: Some(page),
+                ..base.clone()
+            });
+        }
         let hits = search_segments(&segments, "budget");
-        assert_eq!(hits.iter().map(|hit| hit.page.unwrap()).collect::<Vec<_>>(), vec![1, 2, 3, 4, 5]);
-        let unlocated = segments.iter().map(|segment| IndexedSearchSegment { page: None, ..segment.clone() }).collect::<Vec<_>>();
+        assert_eq!(
+            hits.iter().map(|hit| hit.page.unwrap()).collect::<Vec<_>>(),
+            vec![1, 2, 3, 4, 5]
+        );
+        let unlocated = segments
+            .iter()
+            .map(|segment| IndexedSearchSegment {
+                page: None,
+                ..segment.clone()
+            })
+            .collect::<Vec<_>>();
         assert_eq!(search_segments(&unlocated, "budget").len(), 1);
-        let objects = (1..=3).map(|id| IndexedSearchSegment {
-            object_type: "docx".into(), page: None, locator_kind: Some("docx-block".into()),
-            locator_object_id: Some(format!("block-{id}")), ..base.clone()
-        }).collect::<Vec<_>>();
+        let objects = (1..=3)
+            .map(|id| IndexedSearchSegment {
+                object_type: "docx".into(),
+                page: None,
+                locator_kind: Some("docx-block".into()),
+                locator_object_id: Some(format!("block-{id}")),
+                ..base.clone()
+            })
+            .collect::<Vec<_>>();
         assert_eq!(search_segments(&objects, "budget").len(), 3);
     }
 
@@ -1309,8 +1672,13 @@ mod tests {
     #[test]
     fn search_context_preserves_case_and_expanding_unicode_offsets() {
         let text = format!("{} NEEDLE 中文结尾", "İ".repeat(300));
-        assert!(text_match_context(&text, "needle").unwrap().contains("NEEDLE 中文结尾"));
-        assert_eq!(text_match_context("第一行\n这里是匹配内容", "匹配"), Some("这里是匹配内容".into()));
+        assert!(text_match_context(&text, "needle")
+            .unwrap()
+            .contains("NEEDLE 中文结尾"));
+        assert_eq!(
+            text_match_context("第一行\n这里是匹配内容", "匹配"),
+            Some("这里是匹配内容".into())
+        );
         assert_eq!(text_match_context("无关", "预算"), None);
         assert_eq!(text_match_context("任意", ""), None);
     }
@@ -1324,7 +1692,7 @@ mod tests {
 
     const TWO_PAGE_PDF: &str = "JVBERi0xLjMKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3VyY2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhIC9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nIC9OYW1lIC9GMSAvU3VidHlwZSAvVHlwZTEgL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDggMCBSIC9NZWRpYUJveCBbIDAgMCAzMDAgMzAwIF0gL1BhcmVudCA3IDAgUiAvUmVzb3VyY2VzIDw8Ci9Gb250IDEgMCBSIC9Qcm9jU2V0IFsgL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSSBdCj4+IC9Sb3RhdGUgMCAvVHJhbnMgPDwKCj4+IAogIC9UeXBlIC9QYWdlCj4+CmVuZG9iago0IDAgb2JqCjw8Ci9Db250ZW50cyA5IDAgUiAvTWVkaWFCb3ggWyAwIDAgMzAwIDMwMCBdIC9QYXJlbnQgNyAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNSAwIG9iago8PAovUGFnZU1vZGUgL1VzZU5vbmUgL1BhZ2VzIDcgMCBSIC9UeXBlIC9DYXRhbG9nCj4+CmVuZG9iago2IDAgb2JqCjw8Ci9BdXRob3IgKGFub255bW91cykgL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDcxOTAxNTkyNSswOCcwMCcpIC9DcmVhdG9yIChhbm9ueW1vdXMpIC9LZXl3b3JkcyAoKSAvTW9kRGF0ZSAoRDoyMDI2MDcxOTAxNTkyNSswOCcwMCcpIC9Qcm9kdWNlciAoUmVwb3J0TGFiIFBERiBMaWJyYXJ5IC0gXChvcGVuc291cmNlXCkpIAogIC9TdWJqZWN0ICh1bnNwZWNpZmllZCkgL1RpdGxlICh1bnRpdGxlZCkgL1RyYXBwZWQgL0ZhbHNlCj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Db3VudCAyIC9LaWRzIFsgMyAwIFIgNCAwIFIgXSAvVHlwZSAvUGFnZXMKPj4KZW5kb2JqCjggMCBvYmoKPDwKL0xlbmd0aCA5Ngo+PgpzdHJlYW0KMSAwIDAgMSAwIDAgY20gIEJUIC9GMSAxMiBUZiAxNC40IFRMIEVUCkJUIDEgMCAwIDEgNDAgMjUwIFRtIChLbm93bGVkZ2UgR3JhcGggQWxwaGEpIFRqIFQqIEVUCiAKZW5kc3RyZWFtCmVuZG9iago5IDAgb2JqCjw8Ci9MZW5ndGggOTEKPj4Kc3RyZWFtCjEgMCAwIDEgMCAwIGNtICBCVCAvRjEgMTIgVGYgMTQuNCBUTCBFVApCVCAxIDAgMCAxIDQwIDI1MCBUbSAoU2Vjb25kIFBhZ2UgQmV0YSkgVGogVCogRVQKIAplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCAxMAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwNjEgMDAwMDAgbiAKMDAwMDAwMDA5MiAwMDAwMCBuIAowMDAwMDAwMTk5IDAwMDAwIG4gCjAwMDAwMDAzOTIgMDAwMDAgbiAKMDAwMDAwMDU4NSAwMDAwMCBuIAowMDAwMDAwNjUzIDAwMDAwIG4gCjAwMDAwMDA5MTQgMDAwMDAgbiAKMDAwMDAwMDk3OSAwMDAwMCBuIAowMDAwMDAxMTI0IDAwMDAwIG4gCnRyYWlsZXIKPDwKL0lEIApbPDg3ZGQ4ZDI4MmYyODI4ZmFkMDdiZjc2YTE0NjRkYzM0Pjw4N2RkOGQyODJmMjgyOGZhZDA3YmY3NmExNDY0ZGMzND5dCiUgUmVwb3J0TGFiIGdlbmVyYXRlZCBQREYgZG9jdW1lbnQgLS0gZGlnZXN0IChvcGVuc291cmNlKQoKL0luZm8gNiAwIFIKL1Jvb3QgNSAwIFIKL1NpemUgMTAKPj4Kc3RhcnR4cmVmCjEyNjQKJSVFT0YK";
 
-    fn docx_fixture() -> Vec<u8> {
+    pub(super) fn docx_fixture() -> Vec<u8> {
         let mut output = Cursor::new(Vec::new());
         {
             let mut zip = ZipWriter::new(&mut output);
@@ -1383,7 +1751,14 @@ mod tests {
 
         let body = search_workspace(&root, "second page beta", None);
         let pages = search_workspace(&root, "a", None);
-        assert_eq!(pages.iter().filter(|hit| hit.match_kind == "body").map(|hit| hit.page).collect::<Vec<_>>(), vec![Some(1), Some(2)]);
+        assert_eq!(
+            pages
+                .iter()
+                .filter(|hit| hit.match_kind == "body")
+                .map(|hit| hit.page)
+                .collect::<Vec<_>>(),
+            vec![Some(1), Some(2)]
+        );
         assert!(body.iter().any(|result| {
             result.match_kind == "body" && result.page == Some(2) && result.object_type == "pdf"
         }));
@@ -1425,7 +1800,14 @@ mod tests {
         write_snapshot(&cache, &root, &snapshot).unwrap();
         let indexed_body = search_workspace(&root, "second page beta", Some((&cache, false)));
         let indexed_pages = search_workspace(&root, "a", Some((&cache, false)));
-        assert_eq!(indexed_pages.iter().filter(|hit| hit.match_kind == "body").map(|hit| hit.page).collect::<Vec<_>>(), vec![Some(1), Some(2)]);
+        assert_eq!(
+            indexed_pages
+                .iter()
+                .filter(|hit| hit.match_kind == "body")
+                .map(|hit| hit.page)
+                .collect::<Vec<_>>(),
+            vec![Some(1), Some(2)]
+        );
         let indexed_annotation = search_workspace(&root, "critical insight", Some((&cache, false)));
         let indexed_ocr = search_workspace(&root, "unique scanned evidence", Some((&cache, false)));
         assert!(indexed_body

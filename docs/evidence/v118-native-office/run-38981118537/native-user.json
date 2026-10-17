@@ -1,0 +1,650 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "phase": "user",
+  "evidenceLevel": "actual-wry-webview-input-events-generated-disk-not-installed",
+  "productCommit": "ac90610dffcd27feeb69e79ca8d075701873ab0d",
+  "harnessCommit": "b318d216a404568e704d015ad9d59999e3d2f6fe",
+  "runtimeBaseVersion": "1.1.7",
+  "executableSha256": "14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "checks": [
+    "trusted-ui-library-80-files-and-main-editor",
+    "trusted-ui-dirty-draft-explicit-reference-no-disk-write",
+    "real-source-change-ui-expiry-refresh-restores-80",
+    "trusted-keyboard-native-modification-sort",
+    "trusted-palette-cross-library-draft-rejection",
+    "trusted-pdf-annotation-identity-and-draft-preservation"
+  ],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "STRONG"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "PRE"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "在侧边参考 a-0000-记录.md"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "关闭参考"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索现场已变化或过期，请重新搜索；已加载结果和草稿仍保留。"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "保存为常用搜索"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "文件：浏览和管理资料库文件"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "大纲：查看当前文档的标题大纲"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "最近：打开收藏文件和最近访问记录"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "智能集合：打开常看的资料清单，按保存的条件自动更新"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "标签：用正文中的 #标签 按主题查找笔记，仅适用于 Markdown"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "关系：查看我提到的笔记，以及哪些笔记提到我"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "历史：先比较当前内容，再恢复本地历史快照"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "在 项目资料库 中新建"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "刷新列表"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "keydown",
+      "key": "Tab",
+      "trusted": true,
+      "target": "搜索与关联选项"
+    },
+    {
+      "type": "keydown",
+      "key": "Home",
+      "trusted": true,
+      "target": "搜索结果排序"
+    },
+    {
+      "type": "keydown",
+      "key": "ArrowDown",
+      "trusted": true,
+      "target": "搜索结果排序"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索结果排序"
+    },
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "BODY"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 zz-项目预算.md"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 多批注.pdf · 第 1 页 · 批注"
+    },
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "打开 多批注.pdf · 第 1 页 · 批注"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 原文定位.docx · 段落 8"
+    },
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "BODY"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 演示定位.pptx · 幻灯片 1 · Body 1"
+    },
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "BODY"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 演示定位.pptx · 幻灯片 2 · 备注"
+    },
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "打开 演示定位.pptx · 幻灯片 2 · 备注"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "打开 工作表定位.xlsx · 工作表：Inventory"
+    },
+    {
+      "type": "keydown",
+      "key": "p",
+      "trusted": true,
+      "target": "BODY"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "搜索资料或命令"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "name": "zz-项目预算.md",
+      "before": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d",
+      "after": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d"
+    },
+    {
+      "name": "a-0001-记录.md",
+      "before": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0",
+      "after": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0"
+    },
+    {
+      "name": "a-0000-记录.md",
+      "before": "b93c03066f9b55824838311f6fcfa7ca7032b71ce2b76684eb932e0045fffbb1",
+      "after": "b93c03066f9b55824838311f6fcfa7ca7032b71ce2b76684eb932e0045fffbb1"
+    },
+    {
+      "name": "多批注.pdf",
+      "before": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+      "after": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7"
+    },
+    {
+      "name": "多批注.pdf.annotations.json",
+      "before": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8",
+      "after": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8"
+    }
+  ],
+  "draftChecks": [
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    },
+    {
+      "name": "zz-项目预算.md",
+      "dirty": true,
+      "contentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f"
+    }
+  ],
+  "initialFiles": 80,
+  "draftContentSha256": "25006ec4c87d4ffdfcfd87171eb678fd3f83c491b5e37471869bd94329c5073f",
+  "expiryText": "搜索现场已变化或过期，请重新搜索；已加载结果和草稿仍保留。重新搜索",
+  "footerRecovery": {
+    "label": "重新搜索",
+    "visibleWithoutRecoveryScroll": true,
+    "retainedFiles": 80
+  },
+  "refreshFiles": 80,
+  "pdf": {
+    "annotationId": "批注-3",
+    "page": 1,
+    "comment": "预算位置3"
+  },
+  "error": {
+    "message": "Actual native UI did not become ready: one real Office result \"A-001\"",
+    "stack": "Error: Actual native UI did not become ready: one real Office result \"A-001\"\n    at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async openSearch (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:32:5)\n    at async runNativeOfficeInput (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-office-input.mjs:63:7)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:137:3"
+  }
+}

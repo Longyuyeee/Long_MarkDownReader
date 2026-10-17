@@ -1,0 +1,295 @@
+TAP version 13
+# Subtest: only an explicit busy precondition is awaited before a real ready rebuild
+ok 1 - only an explicit busy precondition is awaited before a real ready rebuild
+  ---
+  duration_ms: 0.9016
+  ...
+# Subtest: a genuine native rebuild error is never retried
+ok 2 - a genuine native rebuild error is never retried
+  ---
+  duration_ms: 0.4164
+  ...
+# Subtest: a non-ready native result is a failure, not an invitation to retry
+ok 3 - a non-ready native result is a failure, not an invitation to retry
+  ---
+  duration_ms: 0.1448
+  ...
+# Subtest: the existing wait budget is bounded and transport errors are not retried
+ok 4 - the existing wait budget is bounded and transport errors are not retried
+  ---
+  duration_ms: 0.9919
+  ...
+# Subtest: v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture
+ok 5 - v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture
+  ---
+  duration_ms: 4.386
+  ...
+# Subtest: release uses real immutable installed reports, not invented debug counts
+ok 6 - release uses real immutable installed reports, not invented debug counts
+  ---
+  duration_ms: 0.8317
+  ...
+# Subtest: installed release rejects bytes
+ok 7 - installed release rejects bytes
+  ---
+  duration_ms: 0.687
+  ...
+# Subtest: installed release rejects version
+ok 8 - installed release rejects version
+  ---
+  duration_ms: 6.946
+  ...
+# Subtest: installed release rejects installer
+ok 9 - installed release rejects installer
+  ---
+  duration_ms: 1.1843
+  ...
+# Subtest: installed release rejects source
+ok 10 - installed release rejects source
+  ---
+  duration_ms: 0.7982
+  ...
+# Subtest: installed release rejects failed-check
+ok 11 - installed release rejects failed-check
+  ---
+  duration_ms: 2.7108
+  ...
+# Subtest: installed release rejects missing-save
+ok 12 - installed release rejects missing-save
+  ---
+  duration_ms: 0.9644
+  ...
+# Subtest: installed release rejects crashed-route
+ok 13 - installed release rejects crashed-route
+  ---
+  duration_ms: 2.5824
+  ...
+# Subtest: v1.0.23 synthetic validator requires installed reports, not debug evidence
+ok 14 - v1.0.23 synthetic validator requires installed reports, not debug evidence
+  ---
+  duration_ms: 1.6419
+  ...
+# Subtest: v1.0.23 rejects old-native-version
+ok 15 - v1.0.23 rejects old-native-version
+  ---
+  duration_ms: 1.4038
+  ...
+# Subtest: v1.0.23 rejects dev-marker
+ok 16 - v1.0.23 rejects dev-marker
+  ---
+  duration_ms: 0.876
+  ...
+# Subtest: v1.0.23 rejects wrong-source
+ok 17 - v1.0.23 rejects wrong-source
+  ---
+  duration_ms: 0.824
+  ...
+# Subtest: v1.0.23 rejects wrong-installer
+ok 18 - v1.0.23 rejects wrong-installer
+  ---
+  duration_ms: 0.6989
+  ...
+# Subtest: v1.0.23 rejects failed-check
+ok 19 - v1.0.23 rejects failed-check
+  ---
+  duration_ms: 1.5739
+  ...
+# Subtest: v1.0.23 rejects missing-version-report
+ok 20 - v1.0.23 rejects missing-version-report
+  ---
+  duration_ms: 0.7937
+  ...
+# Subtest: v1.0.23 rejects changed-bytes
+ok 21 - v1.0.23 rejects changed-bytes
+  ---
+  duration_ms: 1.146
+  ...
+# Subtest: v1.0.23 rejects debug-status
+ok 22 - v1.0.23 rejects debug-status
+  ---
+  duration_ms: 0.5049
+  ...
+# Subtest: v1.0.24 requires its own stability observations
+ok 23 - v1.0.24 requires its own stability observations
+  ---
+  duration_ms: 0.7671
+  ...
+# Subtest: v1.0.24 accepts retained animations when the adaptive observer reports normal motion
+ok 24 - v1.0.24 accepts retained animations when the adaptive observer reports normal motion
+  ---
+  duration_ms: 0.5022
+  ...
+# Subtest: v1.0.24 rejects unconditional motion removal disguised as adaptive reduction
+ok 25 - v1.0.24 rejects unconditional motion removal disguised as adaptive reduction
+  ---
+  duration_ms: 0.8352
+  ...
+# Subtest: v1.0.24 rejects missing-stability
+ok 26 - v1.0.24 rejects missing-stability
+  ---
+  duration_ms: 0.7627
+  ...
+# Subtest: v1.0.24 rejects wrong-source
+ok 27 - v1.0.24 rejects wrong-source
+  ---
+  duration_ms: 0.6371
+  ...
+# Subtest: v1.0.24 rejects legend-overlap
+ok 28 - v1.0.24 rejects legend-overlap
+  ---
+  duration_ms: 1.4288
+  ...
+# Subtest: v1.0.24 rejects tutorial-overflow
+ok 29 - v1.0.24 rejects tutorial-overflow
+  ---
+  duration_ms: 1.2216
+  ...
+# Subtest: v1.0.24 rejects tutorial-obscured
+ok 30 - v1.0.24 rejects tutorial-obscured
+  ---
+  duration_ms: 0.7808
+  ...
+# Subtest: v1.0.24 rejects missing-viewport
+ok 31 - v1.0.24 rejects missing-viewport
+  ---
+  duration_ms: 1.3306
+  ...
+# Subtest: v1.0.24 rejects missing-close
+ok 32 - v1.0.24 rejects missing-close
+  ---
+  duration_ms: 0.9272
+  ...
+# Subtest: v1.0.24 rejects animated-markdown
+ok 33 - v1.0.24 rejects animated-markdown
+  ---
+  duration_ms: 1.2328
+  ...
+# Subtest: v1.0.24 rejects missing-markdown-input
+ok 34 - v1.0.24 rejects missing-markdown-input
+  ---
+  duration_ms: 0.8618
+  ...
+# Subtest: new completed zero is distinct from preparation, failure and a local format-filter zero
+ok 35 - new completed zero is distinct from preparation, failure and a local format-filter zero
+  ---
+  duration_ms: 4.1215
+  ...
+# Subtest: legacy installed packages retain their original empty/error contract
+ok 36 - legacy installed packages retain their original empty/error contract
+  ---
+  duration_ms: 1.0837
+  ...
+# Subtest: installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+ok 37 - installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+  ---
+  duration_ms: 1.2643
+  ...
+# Subtest: real runtime audit refuses local and self-hosted machines before any fixture IO
+ok 38 - real runtime audit refuses local and self-hosted machines before any fixture IO
+  ---
+  duration_ms: 1.4511
+  ...
+# Subtest: fixture paths reject broad or arbitrary user roots
+ok 39 - fixture paths reject broad or arbitrary user roots
+  ---
+  duration_ms: 0.4821
+  ...
+# Subtest: generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+ok 40 - generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+  ---
+  duration_ms: 1097.7231
+  ...
+# Subtest: workflow pins the product separately from its harness and cannot publish or install
+ok 41 - workflow pins the product separately from its harness and cannot publish or install
+  ---
+  duration_ms: 3.9041
+  ...
+# Subtest: native driver never substitutes IPC or simulates a desktop click
+ok 42 - native driver never substitutes IPC or simulates a desktop click
+  ---
+  duration_ms: 0.2745
+  ...
+# Subtest: native driver waits for the actual page and rejects current runtime and route failure surfaces
+ok 43 - native driver waits for the actual page and rejects current runtime and route failure surfaces
+  ---
+  duration_ms: 2.6669
+  ...
+# Subtest: debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+ok 44 - debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+  ---
+  duration_ms: 0.3482
+  ...
+# Subtest: in-memory registry provider preserves all six debugger entries and unrelated values
+ok 45 - in-memory registry provider preserves all six debugger entries and unrelated values
+  ---
+  duration_ms: 535.5022
+  ...
+# Subtest: new runner and workflow PowerShell parse without launching anything
+ok 46 - new runner and workflow PowerShell parse without launching anything
+  ---
+  duration_ms: 2062.4655
+  ...
+# Subtest: validator accepts the complete separated native evidence schema, not an installed assertion
+ok 47 - validator accepts the complete separated native evidence schema, not an installed assertion
+  ---
+  duration_ms: 2.015
+  ...
+# Subtest: unfinished or failed remote runs cannot be closed as passing evidence
+ok 48 - unfinished or failed remote runs cannot be closed as passing evidence
+  ---
+  duration_ms: 2.545
+  ...
+# Subtest: source, harness, executable and evidence-level substitutions are rejected
+ok 49 - source, harness, executable and evidence-level substitutions are rejected
+  ---
+  duration_ms: 1.186
+  ...
+# Subtest: missing tasks, duplicate groups and lost PDF annotation identity are rejected
+ok 50 - missing tasks, duplicate groups and lost PDF annotation identity are rejected
+  ---
+  duration_ms: 1.8116
+  ...
+# Subtest: fake cold completion, missing cache use and missing native window proof are rejected
+ok 51 - fake cold completion, missing cache use and missing native window proof are rejected
+  ---
+  duration_ms: 8.9253
+  ...
+# Subtest: route query preserves the question mark in Windows extended-length paths
+ok 52 - route query preserves the question mark in Windows extended-length paths
+  ---
+  duration_ms: 2.0595
+  ...
+# Subtest: scenario targets accessible names retained by the actual tooltip adoption policy
+ok 53 - scenario targets accessible names retained by the actual tooltip adoption policy
+  ---
+  duration_ms: 45.0856
+  ...
+# Subtest: installed search reuses verified artifact and cannot publish
+ok 54 - installed search reuses verified artifact and cannot publish
+  ---
+  duration_ms: 0.5272
+  ...
+# Subtest: search scenario refuses arbitrary user library before performing any IO
+ok 55 - search scenario refuses arbitrary user library before performing any IO
+  ---
+  duration_ms: 0.6369
+  ...
+# Subtest: Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor
+ok 56 - Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor
+  ---
+  duration_ms: 1.0913
+  ...
+# Subtest: workflow PowerShell parses without installing
+ok 57 - workflow PowerShell parses without installing
+  ---
+  duration_ms: 661.1538
+  ...
+1..57
+# tests 57
+# suites 0
+# pass 57
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3877.6601

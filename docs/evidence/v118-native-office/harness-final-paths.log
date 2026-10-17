@@ -1,0 +1,255 @@
+TAP version 13
+# Subtest: new completed zero is distinct from preparation, failure and a local format-filter zero
+ok 1 - new completed zero is distinct from preparation, failure and a local format-filter zero
+  ---
+  duration_ms: 2.7193
+  ...
+# Subtest: legacy installed packages retain their original empty/error contract
+ok 2 - legacy installed packages retain their original empty/error contract
+  ---
+  duration_ms: 0.7099
+  ...
+# Subtest: installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+ok 3 - installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union
+  ---
+  duration_ms: 0.4544
+  ...
+# Subtest: editor offsets: 🙂İ预算预算/预算
+ok 4 - editor offsets: 🙂İ预算预算/预算
+  ---
+  duration_ms: 1.3178
+  ...
+# Subtest: editor offsets: İstanbul/i
+ok 5 - editor offsets: İstanbul/i
+  ---
+  duration_ms: 0.1623
+  ...
+# Subtest: editor offsets: a.b axb/a.b
+ok 6 - editor offsets: a.b axb/a.b
+  ---
+  duration_ms: 0.0628
+  ...
+# Subtest: editor offsets: A needle/ NEEDLE 
+ok 7 - editor offsets: A needle/ NEEDLE 
+  ---
+  duration_ms: 0.0523
+  ...
+# Subtest: editor offsets: 预算/
+ok 8 - editor offsets: 预算/
+  ---
+  duration_ms: 0.0449
+  ...
+# Subtest: editor offsets: 已修改/预算
+ok 9 - editor offsets: 已修改/预算
+  ---
+  duration_ms: 0.0423
+  ...
+# Subtest: text editor locates in current draft without replacing it; repeated intent only runs once
+ok 10 - text editor locates in current draft without replacing it; repeated intent only runs once
+  ---
+  duration_ms: 7.2901
+  ...
+# Subtest: Markdown waits for the requested document and selects without changing editor mode or content
+ok 11 - Markdown waits for the requested document and selects without changing editor mode or content
+  ---
+  duration_ms: 8.024
+  ...
+# Subtest: navigation keeps adjacent matches separate and uses literal Unicode offsets
+ok 12 - navigation keeps adjacent matches separate and uses literal Unicode offsets
+  ---
+  duration_ms: 0.5654
+  ...
+# Subtest: DOM matching spans inline formatting but never joins separate paragraphs
+ok 13 - DOM matching spans inline formatting but never joins separate paragraphs
+  ---
+  duration_ms: 0.7448
+  ...
+# Subtest: long paragraph scroll uses match geometry rather than paragraph geometry
+ok 14 - long paragraph scroll uses match geometry rather than paragraph geometry
+  ---
+  duration_ms: 0.2235
+  ...
+# Subtest: file card has one full-width column; relation badge follows its title and locations
+ok 15 - file card has one full-width column; relation badge follows its title and locations
+  ---
+  duration_ms: 0.9734
+  ...
+# Subtest: title and metadata stack; long titles wrap and snippets remain bounded
+ok 16 - title and metadata stack; long titles wrap and snippets remain bounded
+  ---
+  duration_ms: 0.1032
+  ...
+# Subtest: full title and separate file/graph actions remain available
+ok 17 - full title and separate file/graph actions remain available
+  ---
+  duration_ms: 0.1113
+  ...
+# Subtest: actual file card stacks narrow actions and retains all lazy internal positions
+ok 18 - actual file card stacks narrow actions and retains all lazy internal positions
+  ---
+  duration_ms: 0.081
+  ...
+# Subtest: actual status identifies old cards immediately, without presenting an old total as fresh results
+ok 19 - actual status identifies old cards immediately, without presenting an old total as fresh results
+  ---
+  duration_ms: 3.9688
+  ...
+# Subtest: actual status retains a paused or failed replacement label and returns to normal after acceptance
+ok 20 - actual status retains a paused or failed replacement label and returns to normal after acceptance
+  ---
+  duration_ms: 0.8396
+  ...
+# Subtest: a loaded page failure exposes recovery in the actual footer instead of a disabled dead end
+ok 21 - a loaded page failure exposes recovery in the actual footer instead of a disabled dead end
+  ---
+  duration_ms: 0.7315
+  ...
+# Subtest: footer keeps precise restart/refresh semantics and normal paging returns after recovery
+ok 22 - footer keeps precise restart/refresh semantics and normal paging returns after recovery
+  ---
+  duration_ms: 1.2431
+  ...
+# Subtest: Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+ok 23 - Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports
+  ---
+  duration_ms: 13.9508
+  ...
+# Subtest: Office target selectors parse the actual public search key and never substitute a document open
+ok 24 - Office target selectors parse the actual public search key and never substitute a document open
+  ---
+  duration_ms: 3.4933
+  ...
+# Subtest: all literal and interpolated native user/browser expressions are syntactically valid
+ok 25 - all literal and interpolated native user/browser expressions are syntactically valid
+  ---
+  duration_ms: 29.7552
+  ...
+# Subtest: Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+ok 26 - Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations
+  ---
+  duration_ms: 1.4586
+  ...
+# Subtest: Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+ok 27 - Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together
+  ---
+  duration_ms: 0.7764
+  ...
+# Subtest: Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+ok 28 - Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations
+  ---
+  duration_ms: 9.4504
+  ...
+# Subtest: real runtime audit refuses local and self-hosted machines before any fixture IO
+ok 29 - real runtime audit refuses local and self-hosted machines before any fixture IO
+  ---
+  duration_ms: 1.7706
+  ...
+# Subtest: fixture paths reject broad or arbitrary user roots
+ok 30 - fixture paths reject broad or arbitrary user roots
+  ---
+  duration_ms: 0.8386
+  ...
+# Subtest: generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+ok 31 - generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite
+  ---
+  duration_ms: 855.9813
+  ...
+# Subtest: owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+ok 32 - owned enumeration pressure is explicit, bounded and cannot silently replace the requested count
+  ---
+  duration_ms: 835.6449
+  ...
+# Subtest: workflow pins the product separately from its harness and cannot publish or install
+ok 33 - workflow pins the product separately from its harness and cannot publish or install
+  ---
+  duration_ms: 1.9301
+  ...
+# Subtest: native driver never substitutes IPC or simulates a desktop click
+ok 34 - native driver never substitutes IPC or simulates a desktop click
+  ---
+  duration_ms: 0.1873
+  ...
+# Subtest: native driver waits for the actual page and rejects current runtime and route failure surfaces
+ok 35 - native driver waits for the actual page and rejects current runtime and route failure surfaces
+  ---
+  duration_ms: 1.614
+  ...
+# Subtest: debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+ok 36 - debugger policy is app-scoped, refuses user machines and restores only its own unchanged values
+  ---
+  duration_ms: 0.1902
+  ...
+# Subtest: in-memory registry provider preserves all six debugger entries and unrelated values
+ok 37 - in-memory registry provider preserves all six debugger entries and unrelated values
+  ---
+  duration_ms: 620.4652
+  ...
+# Subtest: new runner and workflow PowerShell parse without launching anything
+ok 38 - new runner and workflow PowerShell parse without launching anything
+  ---
+  duration_ms: 1359.4226
+  ...
+# Subtest: validator accepts the complete separated native evidence schema, not an installed assertion
+ok 39 - validator accepts the complete separated native evidence schema, not an installed assertion
+  ---
+  duration_ms: 1.4238
+  ...
+# Subtest: unfinished or failed remote runs cannot be closed as passing evidence
+ok 40 - unfinished or failed remote runs cannot be closed as passing evidence
+  ---
+  duration_ms: 1.6666
+  ...
+# Subtest: source, harness, executable and evidence-level substitutions are rejected
+ok 41 - source, harness, executable and evidence-level substitutions are rejected
+  ---
+  duration_ms: 0.7002
+  ...
+# Subtest: missing tasks, duplicate groups and lost PDF annotation identity are rejected
+ok 42 - missing tasks, duplicate groups and lost PDF annotation identity are rejected
+  ---
+  duration_ms: 1.1558
+  ...
+# Subtest: fake cold completion, missing cache use and missing native window proof are rejected
+ok 43 - fake cold completion, missing cache use and missing native window proof are rejected
+  ---
+  duration_ms: 7.4424
+  ...
+# Subtest: literal browser expressions compile independently, including quoted attribute selectors
+ok 44 - literal browser expressions compile independently, including quoted attribute selectors
+  ---
+  duration_ms: 15.9702
+  ...
+# Subtest: CDP input waits for an unobscured target and never calls a DOM handler
+ok 45 - CDP input waits for an unobscured target and never calls a DOM handler
+  ---
+  duration_ms: 3.3944
+  ...
+# Subtest: typing and Enter use real WebView input phases without setting DOM values
+ok 46 - typing and Enter use real WebView input phases without setting DOM values
+  ---
+  duration_ms: 0.3448
+  ...
+# Subtest: native user driver is hosted-only, real-bridge and actionability based
+ok 47 - native user driver is hosted-only, real-bridge and actionability based
+  ---
+  duration_ms: 0.5344
+  ...
+# Subtest: user validator keeps new program identity and input evidence separate from IPC-only proof
+ok 48 - user validator keeps new program identity and input evidence separate from IPC-only proof
+  ---
+  duration_ms: 0.468
+  ...
+# Subtest: user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+ok 49 - user validator rejects unfinished runs, fake input, missing tasks, locator and source drift
+  ---
+  duration_ms: 3.0477
+  ...
+1..49
+# tests 49
+# suites 0
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3806.7232

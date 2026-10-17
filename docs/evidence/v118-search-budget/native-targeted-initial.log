@@ -1,0 +1,14 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+error[E0422]: cannot find struct, variant or union type `GraphData` in this scope
+  --> src\commands\index_search_budget_tests.rs:79:9
+   |
+79 |         GraphData {
+   |         ^^^^^^^^^ not found in this scope
+   |
+help: consider importing this struct through its public re-export
+   |
+ 1 + use crate::GraphData;
+   |
+
+For more information about this error, try `rustc --explain E0422`.
+error: could not compile `tauri-app` (lib test) due to 1 previous error

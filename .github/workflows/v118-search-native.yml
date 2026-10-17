@@ -1,0 +1,133 @@
+name: v1.1.8 Real Search IPC Audit
+
+"on":
+  push:
+    branches: [codex/v118-native-ipc-audit]
+    paths:
+      - .github/workflows/v118-search-native.yml
+      - scripts/capture-v118-native-search.mjs
+      - scripts/run-v118-native-search.ps1
+      - scripts/lib/v118-native-search-fixture.mjs
+      - scripts/lib/v118-webview-test-policy.ps1
+      - scripts/capture-v118-native-user.mjs
+      - scripts/lib/v118-native-user-input.mjs
+      - scripts/lib/v118-native-office-fixture.mjs
+      - scripts/lib/v118-native-office-input.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: v118-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-search:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      CARGO_TERM_COLOR: always
+      LONGEDIT_SEARCH_UNREGISTERED_ENTRIES: '21050'
+      # Driver-only input stability repair: keep the newly built footer program.
+      NATIVE_PROGRAM_RUN_ID: '38979598860'
+      NATIVE_PROGRAM_SHA256: '14d428af9bb8eba6d39924bd02e5cca5816c5b9a6b199191550341d9d9d8cc99'
+      NATIVE_PROGRAM_HARNESS_COMMIT: 'b2ce89d33a26fac917d46107494bc23e4e79016f'
+    steps:
+      - name: Check out audit harness
+        uses: actions/checkout@v6
+        with:
+          path: orchestration
+      - name: Check out immutable development product (not an installer candidate)
+        uses: actions/checkout@v6
+        with:
+          ref: ac90610dffcd27feeb69e79ca8d075701873ab0d
+          path: product
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: product/package-lock.json
+      - uses: Swatinem/rust-cache@v2
+        if: env.NATIVE_PROGRAM_RUN_ID == ''
+        with:
+          workspaces: product/src-tauri -> target
+          cache-on-failure: true
+      - name: Install frozen dependencies and build frontend
+        working-directory: product
+        run: npm ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run build
+      - name: Build actual Debug Tauri application with isolated E2E identity
+        if: env.NATIVE_PROGRAM_RUN_ID == ''
+        working-directory: product
+        shell: powershell
+        run: |
+          $env:TAURI_CONFIG=Get-Content -LiteralPath src-tauri/tauri.e2e.conf.json -Raw
+          # Start on existing Settings so WorkspaceHome cannot auto-build the
+          # index before the explicitly measured cold search. No product patch.
+          $config=$env:TAURI_CONFIG | ConvertFrom-Json
+          $config | Add-Member -NotePropertyName app -NotePropertyValue @{windows=@(@{label='main';title='LongEdit Search IPC - isolated';url='http://127.0.0.1:14200/#/settings';width=1000;height=700;visible=$true;decorations=$false})}
+          $env:TAURI_CONFIG=$config | ConvertTo-Json -Depth 10 -Compress
+          cargo build --locked --manifest-path src-tauri/Cargo.toml --bin tauri-app
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain immutable Debug program separately from test outcome
+        if: env.NATIVE_PROGRAM_RUN_ID == ''
+        shell: powershell
+        run: |
+          $folder=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program'
+          New-Item -ItemType Directory -Path $folder | Out-Null
+          $program=Get-Item -LiteralPath 'product/src-tauri/target/debug/tauri-app.exe'
+          Copy-Item -LiteralPath $program.FullName -Destination (Join-Path $folder 'tauri-app.exe')
+          @{schemaVersion=1;productCommit='ac90610dffcd27feeb69e79ca8d075701873ab0d';harnessCommit=$env:GITHUB_SHA;buildRunId=$env:GITHUB_RUN_ID;runtimeBaseVersion='1.1.7';releaseCandidate=$false;isInstaller=$false;sourceUserContentIncluded=$false;sha256=(Get-FileHash -Algorithm SHA256 -LiteralPath $program.FullName).Hash.ToLowerInvariant();sizeBytes=$program.Length} | ConvertTo-Json | Out-File -Encoding utf8 -LiteralPath (Join-Path $folder 'program-build-receipt.json')
+      - uses: actions/upload-artifact@v4
+        if: env.NATIVE_PROGRAM_RUN_ID == ''
+        with:
+          name: v118-native-program-${{ github.run_id }}
+          path: native-debug-program
+          retention-days: 14
+          if-no-files-found: error
+      - name: Download the original fixed Debug program
+        if: env.NATIVE_PROGRAM_RUN_ID != ''
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ env.NATIVE_PROGRAM_RUN_ID }}
+          name: v118-native-program-${{ env.NATIVE_PROGRAM_RUN_ID }}
+          path: native-debug-program
+      - name: Verify original build provenance and program bytes before reuse
+        if: env.NATIVE_PROGRAM_RUN_ID != ''
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if($env:NATIVE_PROGRAM_SHA256 -notmatch '^[a-f0-9]{64}$' -or $env:NATIVE_PROGRAM_HARNESS_COMMIT -notmatch '^[a-f0-9]{40}$'){throw 'Original program reuse requires exact digest and harness identity'}
+          $run=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:NATIVE_PROGRAM_RUN_ID" | ConvertFrom-Json
+          if($LASTEXITCODE -ne 0 -or $run.status -ne 'completed' -or $run.head_sha -ne $env:NATIVE_PROGRAM_HARNESS_COMMIT -or $run.path -ne '.github/workflows/v118-search-native.yml'){throw 'Original program run provenance differs'}
+          $jobs=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:NATIVE_PROGRAM_RUN_ID/jobs" | ConvertFrom-Json
+          if($LASTEXITCODE -ne 0){throw 'Original build job receipt unavailable'}
+          foreach($name in @('Build actual Debug Tauri application with isolated E2E identity','Retain immutable Debug program separately from test outcome')){
+            $step=@($jobs.jobs.steps | Where-Object {$_.name -eq $name})
+            if($step.Count -ne 1 -or $step[0].conclusion -ne 'success'){throw "Original program build did not pass: $name"}
+          }
+          $receipt=Get-Content -LiteralPath native-debug-program/program-build-receipt.json -Raw -Encoding UTF8 | ConvertFrom-Json
+          $program=Get-Item -LiteralPath native-debug-program/tauri-app.exe
+          $hash=(Get-FileHash -LiteralPath $program.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($hash -ne $env:NATIVE_PROGRAM_SHA256 -or $receipt.sha256 -ne $hash -or $receipt.sizeBytes -ne $program.Length -or $receipt.productCommit -ne 'ac90610dffcd27feeb69e79ca8d075701873ab0d' -or $receipt.harnessCommit -ne $run.head_sha -or $receipt.buildRunId -ne $env:NATIVE_PROGRAM_RUN_ID -or $receipt.runtimeBaseVersion -ne '1.1.7' -or $receipt.isInstaller -ne $false -or $receipt.releaseCandidate -ne $false -or $receipt.sourceUserContentIncluded -ne $false){throw 'Fixed Debug program byte/source identity drifted'}
+          $target=Join-Path $env:GITHUB_WORKSPACE 'product/src-tauri/target/debug'
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          if(Test-Path -LiteralPath (Join-Path $target 'tauri-app.exe')){throw 'Refuse to overwrite another program'}
+          Copy-Item -LiteralPath $program.FullName -Destination (Join-Path $target 'tauri-app.exe')
+      - name: Real native page IPC, generated files, isolation and same-binary restart
+        shell: powershell
+        run: |
+          $env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'
+          & orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v118-native-search-${{ github.run_id }}
+          path: native-search-evidence
+          if-no-files-found: warn
+          retention-days: 14

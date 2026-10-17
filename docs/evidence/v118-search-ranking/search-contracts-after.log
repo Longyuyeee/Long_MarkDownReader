@@ -1,0 +1,274 @@
+(node:38340) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:46688) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: editor offsets: 🙂İ预算预算/预算
+ok 1 - editor offsets: 🙂İ预算预算/预算
+  ---
+  duration_ms: 1.8383
+  ...
+# Subtest: editor offsets: İstanbul/i
+ok 2 - editor offsets: İstanbul/i
+  ---
+  duration_ms: 0.2332
+  ...
+# Subtest: editor offsets: a.b axb/a.b
+ok 3 - editor offsets: a.b axb/a.b
+  ---
+  duration_ms: 0.1049
+  ...
+# Subtest: editor offsets: A needle/ NEEDLE 
+ok 4 - editor offsets: A needle/ NEEDLE 
+  ---
+  duration_ms: 0.092
+  ...
+# Subtest: editor offsets: 预算/
+ok 5 - editor offsets: 预算/
+  ---
+  duration_ms: 0.0707
+  ...
+# Subtest: editor offsets: 已修改/预算
+ok 6 - editor offsets: 已修改/预算
+  ---
+  duration_ms: 0.0776
+  ...
+# Subtest: text editor locates in current draft without replacing it; repeated intent only runs once
+ok 7 - text editor locates in current draft without replacing it; repeated intent only runs once
+  ---
+  duration_ms: 9.1032
+  ...
+# Subtest: Markdown waits for the requested document and selects without changing editor mode or content
+ok 8 - Markdown waits for the requested document and selects without changing editor mode or content
+  ---
+  duration_ms: 9.352
+  ...
+# Subtest: navigation keeps adjacent matches separate and uses literal Unicode offsets
+ok 9 - navigation keeps adjacent matches separate and uses literal Unicode offsets
+  ---
+  duration_ms: 0.9713
+  ...
+# Subtest: DOM matching spans inline formatting but never joins separate paragraphs
+ok 10 - DOM matching spans inline formatting but never joins separate paragraphs
+  ---
+  duration_ms: 1.2911
+  ...
+# Subtest: long paragraph scroll uses match geometry rather than paragraph geometry
+ok 11 - long paragraph scroll uses match geometry rather than paragraph geometry
+  ---
+  duration_ms: 0.3496
+  ...
+# (node:42220) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: query grammar: "预算"
+ok 12 - query grammar: "预算"
+  ---
+  duration_ms: 2.1828
+  ...
+# Subtest: query grammar: " 项目  预算 -旧版 "
+ok 13 - query grammar: " 项目  预算 -旧版 "
+  ---
+  duration_ms: 0.2348
+  ...
+# Subtest: query grammar: "\\"项目 预算\\" -\\"旧版 文件\\""
+ok 14 - query grammar: "\\"项目 预算\\" -\\"旧版 文件\\""
+  ---
+  duration_ms: 0.1836
+  ...
+# Subtest: query grammar: "Alpha alpha JSON"
+ok 15 - query grammar: "Alpha alpha JSON"
+  ---
+  duration_ms: 0.2627
+  ...
+# Subtest: query grammar: "项目预算　-旧版"
+ok 16 - query grammar: "项目预算　-旧版"
+  ---
+  duration_ms: 0.124
+  ...
+# Subtest: query grammar: "-旧版"
+ok 17 - query grammar: "-旧版"
+  ---
+  duration_ms: 0.0902
+  ...
+# Subtest: query grammar: "foo-bar -"
+ok 18 - query grammar: "foo-bar -"
+  ---
+  duration_ms: 0.1533
+  ...
+# Subtest: query grammar: "\\"a\\\\\\"b\\""
+ok 19 - query grammar: "\\"a\\\\\\"b\\""
+  ---
+  duration_ms: 0.0798
+  ...
+# Subtest: query grammar: ""
+ok 20 - query grammar: ""
+  ---
+  duration_ms: 0.2872
+  ...
+# Subtest: query grammar: "\\"未完成"
+ok 21 - query grammar: "\\"未完成"
+  ---
+  duration_ms: 3.6838
+  ...
+# Subtest: query grammar: "\\"\\""
+ok 22 - query grammar: "\\"\\""
+  ---
+  duration_ms: 0.3622
+  ...
+# Subtest: highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps
+ok 23 - highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps
+  ---
+  duration_ms: 1.5001
+  ...
+# Subtest: query limits and editor needles do not include operators or excluded words
+ok 24 - query limits and editor needles do not include operators or excluded words
+  ---
+  duration_ms: 0.2357
+  ...
+# (node:37508) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: failure and retry preserve query: 项目
+ok 25 - failure and retry preserve query: 项目
+  ---
+  duration_ms: 4.5943
+  ...
+# Subtest: failure and retry preserve query: \#项目
+ok 26 - failure and retry preserve query: \#项目
+  ---
+  duration_ms: 3.5756
+  ...
+# Subtest: successful empty response is not failure
+ok 27 - successful empty response is not failure
+  ---
+  duration_ms: 3.8071
+  ...
+# Subtest: stale resolve cannot overwrite newer results
+ok 28 - stale resolve cannot overwrite newer results
+  ---
+  duration_ms: 1.5275
+  ...
+# Subtest: stale reject cannot overwrite newer results
+ok 29 - stale reject cannot overwrite newer results
+  ---
+  duration_ms: 3.9217
+  ...
+# Subtest: clear invalidates pending response and clears busy state
+ok 30 - clear invalidates pending response and clears busy state
+  ---
+  duration_ms: 1.2282
+  ...
+# Subtest: library change rejects old response
+ok 31 - library change rejects old response
+  ---
+  duration_ms: 20.0818
+  ...
+# Subtest: new query immediately removes old result; missing library does not spin
+ok 32 - new query immediately removes old result; missing library does not spin
+  ---
+  duration_ms: 1.9255
+  ...
+# Subtest: component keeps errors distinct and offers accessible retry
+ok 33 - component keeps errors distinct and offers accessible retry
+  ---
+  duration_ms: 0.8513
+  ...
+# Subtest: real Vue watchers debounce changes and retry retains format filter
+ok 34 - real Vue watchers debounce changes and retry retains format filter
+  ---
+  duration_ms: 4.8204
+  ...
+# Subtest: real library watcher clears query, collection and busy state before late response
+ok 35 - real library watcher clears query, collection and busy state before late response
+  ---
+  duration_ms: 1.5376
+  ...
+# Subtest: real Vue clear cancels debounce without invoking backend
+ok 36 - real Vue clear cancels debounce without invoking backend
+  ---
+  duration_ms: 1.7356
+  ...
+# Subtest: real Vue unmount cancels scheduled search
+ok 37 - real Vue unmount cancels scheduled search
+  ---
+  duration_ms: 6.69
+  ...
+# Subtest: real Vue unmount invalidates a late response
+ok 38 - real Vue unmount invalidates a late response
+  ---
+  duration_ms: 3.9966
+  ...
+# (node:32832) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: same file pages group together without merging same-named files or losing ranking
+ok 39 - same file pages group together without merging same-named files or losing ranking
+  ---
+  duration_ms: 4.5989
+  ...
+# Subtest: separate annotations and match kinds on one page remain independently accessible
+ok 40 - separate annotations and match kinds on one page remain independently accessible
+  ---
+  duration_ms: 0.2403
+  ...
+# Subtest: unlocated contexts and case-sensitive paths are preserved
+ok 41 - unlocated contexts and case-sensitive paths are preserved
+  ---
+  duration_ms: 0.245
+  ...
+# Subtest: actual result click forwards each PDF page and annotation to the existing router
+ok 42 - actual result click forwards each PDF page and annotation to the existing router
+  ---
+  duration_ms: 43.5752
+  ...
+# Subtest: actual grouped results template exposes separate page actions and bounded-count wording
+ok 43 - actual grouped results template exposes separate page actions and bounded-count wording
+  ---
+  duration_ms: 95.7163
+  ...
+# Subtest: body results carry a fresh location intent on repeated opens
+ok 44 - body results carry a fresh location intent on repeated opens
+  ---
+  duration_ms: 9.6866
+  ...
+# (node:46324) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: leaving and reopening restores query, filters, selected result and scroll after fresh results
+ok 45 - leaving and reopening restores query, filters, selected result and scroll after fresh results
+  ---
+  duration_ms: 9.4354
+  ...
+# Subtest: missing result is explained; a failed refresh does not discard the saved selection
+ok 46 - missing result is explained; a failed refresh does not discard the saved selection
+  ---
+  duration_ms: 6.4827
+  ...
+# Subtest: changing query or library clears selection and libraries never inherit one another
+ok 47 - changing query or library clears selection and libraries never inherit one another
+  ---
+  duration_ms: 1.3173
+  ...
+# (node:43732) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: same titles retain distinct directory identity
+ok 48 - same titles retain distinct directory identity
+  ---
+  duration_ms: 1.4608
+  ...
+# Subtest: native Windows extended and UNC paths remain readable
+ok 49 - native Windows extended and UNC paths remain readable
+  ---
+  duration_ms: 0.1957
+  ...
+# Subtest: sibling roots and case-sensitive Unix paths are not shortened incorrectly
+ok 50 - sibling roots and case-sensitive Unix paths are not shortened incorrectly
+  ---
+  duration_ms: 0.2027
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 979.5643

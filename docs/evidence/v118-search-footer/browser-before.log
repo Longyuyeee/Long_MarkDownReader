@@ -1,0 +1,17 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: footer must offer recovery where the user requested more files
+
+0 !== 1
+
+    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-search-footer-recovery-browser.mjs:24:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 1,
+  operator: 'strictEqual'
+}
+
+Node.js v22.12.0

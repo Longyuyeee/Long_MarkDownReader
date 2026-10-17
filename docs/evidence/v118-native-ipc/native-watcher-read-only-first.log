@@ -1,0 +1,28 @@
+   Compiling tauri-app v1.1.7 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 24.15s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 1 test
+
+thread 'commands::index::search_pages::tests::v118_pages_cold_read_only_search_with_real_watcher_keeps_its_revision' (42604) panicked at src\commands\index_search_pages_tests.rs:857:96:
+called `Result::unwrap()` on an `Err` value: SearchPageError { code: "expired", message: "资料或查询现场已变化，请重新搜索；不会替换或保存当前草稿。" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::index::search_pages::tests::v118_pages_cold_read_only_search_with_real_watcher_keeps_its_revision ... FAILED
+
+failures:
+
+failures:
+    commands::index::search_pages::tests::v118_pages_cold_read_only_search_with_real_watcher_keeps_its_revision
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 974 filtered out; finished in 0.66s
+
+error: test failed, to rerun pass `--lib`

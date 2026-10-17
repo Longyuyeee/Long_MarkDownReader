@@ -1,0 +1,51 @@
+
+> tauri-app@1.1.7 test:rust:performance
+> cargo test --locked --manifest-path src-tauri/Cargo.toml commands::workbook::tests::complex_workbook_performance_stays_within_release_budget -- --nocapture --test-threads=1
+
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: error finalizing incremental compilation session directory `\\?\E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri\target\debug\incremental\tauri_app_lib-2lroiiy387opk\s-hn9v1vzb88-0wf0lrm-working`: 拒绝访问。 (os error 5)
+
+warning: error finalizing incremental compilation session directory `\\?\E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri\target\debug\incremental\tauri_app_lib-2t5ono0dpctl5\s-hn9v1vzb8o-0ktirkw-working`: 拒绝访问。 (os error 5)
+
+warning: `tauri-app` (lib) generated 2 warnings
+warning: `tauri-app` (lib test) generated 2 warnings (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.38s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-4df3a39e69e2cc0a.exe)
+
+running 1 test
+workbook performance attempt 1/2: inspect=129ms page=2386ms patch=1858ms total=4374ms
+test commands::workbook::tests::complex_workbook_performance_stays_within_release_budget ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 914 filtered out; finished in 4.92s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-5e1e44f29de8d3a6.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-8a629ac519662dcc.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-2ab68047cab2bc27.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-0f23f9731da96c6a.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

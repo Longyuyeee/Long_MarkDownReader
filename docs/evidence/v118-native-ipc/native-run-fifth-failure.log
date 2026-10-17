@@ -1,0 +1,25 @@
+native-search	Real native page IPC, generated files, isolation and same-binary restart	﻿2026-10-16T21:31:13.1296968Z ##[group]Run $env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1298032Z ^[[36;1m$env:LONGEDIT_NATIVE_PROGRAM_RECEIPT=Join-Path $env:GITHUB_WORKSPACE 'native-debug-program/program-build-receipt.json'^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1299217Z ^[[36;1m& orchestration/scripts/run-v118-native-search.ps1 -ProductDirectory (Join-Path $env:GITHUB_WORKSPACE 'product') -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'native-search-evidence')^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1300109Z ^[[36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }^[[0m
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1367606Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1368043Z env:
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1368223Z   CARGO_TERM_COLOR: always
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1368451Z   NATIVE_PROGRAM_RUN_ID: 38967444304
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1368859Z   NATIVE_PROGRAM_SHA256: 18e66fc547ad7cf719fbd4c033a7608489529f1fee173e73d888e42b1dd093f4
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:13.1369321Z ##[endgroup]
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7921086Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7922326Z node:internal/modules/run_main:123
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7922925Z     triggerUncaughtException(
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7923372Z     ^
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7928498Z { code: 'expired', message: '资料或查询现场已变化，请重新搜索；不会替换或保存当前草稿。' }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7929622Z 
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:20.7932021Z Node.js v22.23.3
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4990580Z Real IPC baseline failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4991823Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration\scripts\run-v118-native-search.ps1:46 char:86
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4993033Z + ... ct $output; if($LASTEXITCODE -ne 0){throw "Real IPC $phase failed"} }
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4993746Z +                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4994629Z     + CategoryInfo          : OperationStopped: (Real IPC baseline failed:String) [], RuntimeException
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4995527Z     + FullyQualifiedErrorId : Real IPC baseline failed
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.4996035Z  
+native-search	Real native page IPC, generated files, isolation and same-binary restart	2026-10-16T21:31:21.5263511Z ##[error]Process completed with exit code 1.

@@ -184,6 +184,19 @@ struct RuntimeStatus {
     error: Option<String>,
 }
 
+// Search cursors track searchable source changes, not UI order/history writes.
+// Unknown/out-of-root event paths fail conservatively as relevant changes.
+pub(crate) fn relevant_search_path(workspace: &Path, path: &Path) -> bool {
+    let Ok(relative) = path.strip_prefix(workspace) else { return true; };
+    let normalized = relative.to_string_lossy().replace('\\', "/");
+    let management_path = if cfg!(windows) { normalized.to_lowercase() } else { normalized.clone() };
+    if management_path.is_empty() || management_path == ".longedit" || management_path == ".longedit/file-relations.json" { return true; }
+    if is_sensitive_path(path) { return false; }
+    // Match collect_index_sources / SourceScan exactly: .assets is an exact
+    // suffix there, including on Windows. Don't hide changes in .Assets trees.
+    !normalized.split('/').any(|component| component.starts_with('.') || component.ends_with(".assets"))
+}
+
 #[derive(Default)]
 pub struct KnowledgeIndexRuntime {
     states: Mutex<HashMap<String, RuntimeStatus>>,
@@ -191,6 +204,10 @@ pub struct KnowledgeIndexRuntime {
     cancellations: Mutex<HashMap<String, Arc<AtomicBool>>>,
     changed_paths: Arc<Mutex<HashMap<String, HashSet<PathBuf>>>>,
     watchers: Mutex<HashMap<String, RecommendedWatcher>>,
+    // (all changes, explicit cache/build-state changes, non-directory changes).
+    // One atomic stamp avoids treating an old file event as a new directory hint.
+    search_revisions: Arc<Mutex<HashMap<String, (u64, u64, u64)>>>,
+    search_watch_failures: Arc<Mutex<HashSet<String>>>,
 }
 
 impl KnowledgeIndexRuntime {
@@ -207,6 +224,7 @@ impl KnowledgeIndexRuntime {
                     error,
                 },
             );
+        if matches!(state, "building" | "error" | "cancelled") { self.note_search_change(workspace); }
     }
 
     fn get(&self, workspace: &Path) -> Option<RuntimeStatus> {
@@ -232,6 +250,7 @@ impl KnowledgeIndexRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .insert(workspace.to_string_lossy().into_owned(), Arc::new(snapshot));
+        self.note_search_change(workspace);
     }
 
     pub fn cached_snapshot(&self, workspace: &Path) -> Option<Arc<KnowledgeIndexSnapshot>> {
@@ -247,6 +266,7 @@ impl KnowledgeIndexRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .remove(workspace.to_string_lossy().as_ref());
+        self.note_search_change(workspace);
     }
 
     pub fn begin_build(&self, workspace: &Path) -> Arc<AtomicBool> {
@@ -288,21 +308,38 @@ impl KnowledgeIndexRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         if watchers.contains_key(&key) {
+            if !self.search_watch_healthy(workspace) { return Err("资料库变化监视尚未恢复，请稍后重试或重新启动软件".into()); }
             return Ok(());
         }
         let changed_paths = self.changed_paths.clone();
+        let search_revisions = self.search_revisions.clone();
+        let search_watch_failures = self.search_watch_failures.clone();
         let callback_key = key.clone();
         let mut watcher =
             notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
-                let Ok(event) = event else { return };
-                if matches!(event.kind, EventKind::Access(_)) {
+                if event.as_ref().is_ok_and(|event| matches!(event.kind, EventKind::Access(_))) {
                     return;
                 }
-                let mut changes = changed_paths
-                    .lock()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner());
-                let workspace_changes = changes.entry(callback_key.clone()).or_default();
-                workspace_changes.extend(event.paths);
+                let mut failures = search_watch_failures.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                if event.is_err() { failures.insert(callback_key.clone()); } else { failures.remove(&callback_key); }
+                drop(failures);
+                let relevant = event.as_ref().map_or(true, |event| event.paths.is_empty()
+                    || event.paths.iter().any(|path| relevant_search_path(Path::new(&callback_key), path)));
+                let directory_only = event.as_ref().is_ok_and(|event| !event.paths.is_empty()
+                    && event.paths.iter().filter(|path| relevant_search_path(Path::new(&callback_key), path))
+                        .all(|path| path.strip_prefix(Path::new(&callback_key)).is_ok()
+                            && fs::symlink_metadata(path).is_ok_and(|metadata|
+                                metadata.is_dir() && !metadata.file_type().is_symlink())));
+                if let Ok(event) = event {
+                    let mut changes = changed_paths.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                    changes.entry(callback_key.clone()).or_default().extend(event.paths);
+                }
+                if relevant {
+                    let mut revisions = search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                    let revision = revisions.entry(callback_key.clone()).or_default();
+                    revision.0 = revision.0.saturating_add(1);
+                    if !directory_only { revision.2 = revision.2.saturating_add(1); }
+                }
             })
             .map_err(|error| format!("启动资料库变化监视失败: {error}"))?;
         watcher
@@ -327,11 +364,83 @@ impl KnowledgeIndexRuntime {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .remove(workspace.to_string_lossy().as_ref());
     }
+
+    pub(crate) fn search_revision(&self, workspace: &Path) -> u64 {
+        self.search_revision_pair(workspace).0
+    }
+
+    pub(crate) fn search_revision_pair(&self, workspace: &Path) -> (u64, u64) {
+        let stamp = self.search_revision_stamp(workspace);
+        (stamp.0, stamp.1)
+    }
+
+    pub(crate) fn search_revision_stamp(&self, workspace: &Path) -> (u64, u64, u64) {
+        *self.search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+            .get(workspace.to_string_lossy().as_ref()).unwrap_or(&(0, 0, 0))
+    }
+
+    pub(crate) fn search_watch_healthy(&self, workspace: &Path) -> bool {
+        !self.search_watch_failures.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+            .contains(workspace.to_string_lossy().as_ref())
+    }
+
+    pub(crate) fn search_sources_changed(&self, workspace: &Path) -> bool {
+        let changes = self.changed_paths.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        changes.get(workspace.to_string_lossy().as_ref()).is_some_and(|paths|
+            paths.len() > 20_000 || paths.iter().any(|path| relevant_search_path(workspace, path)))
+    }
+
+    pub(crate) fn bounded_search_change_paths(&self, workspace: &Path, maximum: usize) -> Option<Vec<PathBuf>> {
+        let changes = self.changed_paths.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let paths = changes.get(workspace.to_string_lossy().as_ref())?;
+        if paths.len() > maximum { return None; }
+        Some(paths.iter().filter(|path| relevant_search_path(workspace, path)).cloned().collect())
+    }
+
+    pub(crate) fn note_search_change(&self, workspace: &Path) {
+        let mut revisions = self.search_revisions.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let revision = revisions.entry(workspace.to_string_lossy().into_owned()).or_default();
+        revision.0 = revision.0.saturating_add(1);
+        revision.1 = revision.1.saturating_add(1);
+    }
 }
 
 pub fn index_workspace_directory(cache_root: &Path, workspace: &Path) -> PathBuf {
     let fingerprint = workspace_fingerprint(workspace);
     cache_root.join(INDEX_DIRECTORY).join(fingerprint)
+}
+
+#[cfg(test)]
+#[test]
+fn v118_libraries_change_inspection_does_not_clone_an_unbounded_monitor_set() {
+    let workspace = crate::services::test_workspace::TestWorkspace::new();
+    let runtime = KnowledgeIndexRuntime::default();
+    let key = workspace.root();
+    let large = (0..20_001).map(|index| workspace.0.join(format!(".hidden-{index}"))).collect();
+    runtime.changed_paths.lock().unwrap().insert(key.clone(), large);
+    assert!(runtime.search_sources_changed(&workspace.0), "large sets conservatively disable old cache reads");
+    assert!(runtime.bounded_search_change_paths(&workspace.0, 64).is_none());
+    let visible = workspace.0.join("预算.md");
+    runtime.changed_paths.lock().unwrap().insert(key, [visible.clone(), workspace.0.join(".misty_order.json")].into_iter().collect());
+    assert_eq!(runtime.bounded_search_change_paths(&workspace.0, 64).unwrap(), vec![visible]);
+}
+
+#[cfg(test)]
+#[test]
+fn v118_pages_monitor_failure_state_blocks_fresh_session_until_recovery() {
+    let workspace = crate::services::test_workspace::TestWorkspace::new();
+    let runtime = KnowledgeIndexRuntime::default();
+    runtime.ensure_watcher(&workspace.0).unwrap();
+    // Inject monitor failure state deterministically; this is not an assertion
+    // that Windows itself produced a real notification-backend error.
+    let key = workspace.0.to_string_lossy().into_owned();
+    runtime.search_watch_failures.lock().unwrap().insert(key.clone());
+    assert!(!runtime.search_watch_healthy(&workspace.0));
+    assert!(runtime.ensure_watcher(&workspace.0).is_err());
+    runtime.clear_changes(&workspace.0);
+    assert!(!runtime.search_watch_healthy(&workspace.0));
+    runtime.search_watch_failures.lock().unwrap().remove(&key);
+    assert!(runtime.ensure_watcher(&workspace.0).is_ok());
 }
 
 pub fn index_snapshot_path(cache_root: &Path, workspace: &Path) -> PathBuf {
@@ -1437,6 +1546,9 @@ pub fn read_snapshot(
     Ok(Some(snapshot))
 }
 
+// Reference helper for native cache-parity regressions. Interactive commands
+// now validate freshness through the bounded query metadata scanner instead.
+#[cfg(test)]
 pub fn read_ready_snapshot(
     cache_root: &Path,
     workspace: &Path,

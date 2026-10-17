@@ -1,0 +1,38 @@
+﻿{
+    "scope":  "exact-test-host-values-on-disposable-hosted-runner",
+    "elevated":  true,
+    "schemaVersion":  1,
+    "entries":  [
+                    {
+                        "key":  "HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\AdditionalBrowserArguments",
+                        "name":  "com.longedit.app.e2e",
+                        "value":  "--remote-debugging-port=9458 --remote-allow-origins=http://127.0.0.1:9458"
+                    },
+                    {
+                        "key":  "HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\UserDataFolder",
+                        "name":  "com.longedit.app.e2e",
+                        "value":  "D:\\a\\_temp\\longedit-v118-native-bf0637aa8a1f486592ad3537bea46722\\webview"
+                    },
+                    {
+                        "key":  "HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\AdditionalBrowserArguments",
+                        "name":  "tauri-app.exe",
+                        "value":  "--remote-debugging-port=9458 --remote-allow-origins=http://127.0.0.1:9458"
+                    },
+                    {
+                        "key":  "HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\UserDataFolder",
+                        "name":  "tauri-app.exe",
+                        "value":  "D:\\a\\_temp\\longedit-v118-native-bf0637aa8a1f486592ad3537bea46722\\webview"
+                    },
+                    {
+                        "key":  "HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\AdditionalBrowserArguments",
+                        "name":  "tauri-app",
+                        "value":  "--remote-debugging-port=9458 --remote-allow-origins=http://127.0.0.1:9458"
+                    },
+                    {
+                        "key":  "HKLM:\\Software\\Policies\\Microsoft\\Edge\\WebView2\\UserDataFolder",
+                        "name":  "tauri-app",
+                        "value":  "D:\\a\\_temp\\longedit-v118-native-bf0637aa8a1f486592ad3537bea46722\\webview"
+                    }
+                ],
+    "sourceUserContentIncluded":  false
+}
