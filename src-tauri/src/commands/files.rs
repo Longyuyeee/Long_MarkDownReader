@@ -642,11 +642,15 @@ pub async fn get_image_base64(
     library_root: String,
     document_path: String,
     path: String,
+    draft_content: Option<String>,
 ) -> Result<String, String> {
     let guard = WorkspaceGuard::new(library_root)?;
     let document = guard.resolve_existing_file(document_path, &["md", "markdown"])?;
     let image = guard.resolve_existing_file(path, IMAGE_EXTENSIONS)?;
-    ensure_markdown_references_image(&document, &image)?;
+    if let Some(content)=draft_content {
+        if content.len()>8*1024*1024 {return Err("图片草稿授权超过 8 MiB".into());}
+        ensure_markdown_content_references_image(&document,&image,&content)?;
+    } else {ensure_markdown_references_image(&document, &image)?;}
     encode_image(&image)
 }
 
@@ -688,14 +692,18 @@ fn ensure_image_file(path: &Path) -> Result<(), String> {
 }
 
 fn ensure_markdown_references_image(document: &Path, image: &Path) -> Result<(), String> {
+    let content = fs::read_to_string(document).map_err(|error| error.to_string())?;
+    ensure_markdown_content_references_image(document,image,&content)
+}
+
+fn ensure_markdown_content_references_image(document: &Path, image: &Path, content: &str) -> Result<(), String> {
     ensure_image_file(image)?;
     let image = image
         .canonicalize()
         .map_err(|error| format!("图片路径无效: {error}"))?;
-    let content = fs::read_to_string(document).map_err(|error| error.to_string())?;
     let parent = document.parent().ok_or("Markdown 文件没有父目录")?;
-    let mut references = referenced_assets(&content);
-    for event in pulldown_cmark::Parser::new(&content) {
+    let mut references = referenced_assets(content);
+    for event in pulldown_cmark::Parser::new(content) {
         if let pulldown_cmark::Event::Start(pulldown_cmark::Tag::Image { dest_url, .. }) = event {
             references.insert(dest_url.into_string());
         }
@@ -1047,7 +1055,7 @@ mod tests {
     #[test]
     fn registered_markdown_extension_can_read_its_referenced_image() {
         let f=crate::services::test_workspace::TestWorkspace::new();let image=f.0.join("image.png");let document=f.0.join("note.markdown");fs::write(image,b"image").unwrap();fs::write(&document,"![image](image.png)").unwrap();
-        let data=tauri::async_runtime::block_on(get_image_base64(f.0.to_string_lossy().into_owned(),document.to_string_lossy().into_owned(),f.0.join("image.png").to_string_lossy().into_owned())).unwrap();assert!(data.starts_with("data:image/png;base64,"));
+        let data=tauri::async_runtime::block_on(get_image_base64(f.0.to_string_lossy().into_owned(),document.to_string_lossy().into_owned(),f.0.join("image.png").to_string_lossy().into_owned(),None)).unwrap();assert!(data.starts_with("data:image/png;base64,"));
     }
 
     #[test]

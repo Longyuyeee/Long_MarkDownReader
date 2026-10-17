@@ -9,6 +9,7 @@
         <pre v-if="preview" class="template-preview" aria-label="模板预览">{{ rendered || '空白笔记' }}</pre>
         <textarea v-else ref="bodyInput" v-model="content" aria-label="模板正文" :disabled="busy" :readonly="builtin" placeholder="写下每次都要用的结构…" />
         <div class="template-variables"><span>插入变量</span><button v-for="variable in variables" :key="variable.key" type="button" :disabled="busy || builtin || preview" @click="insertVariable(variable.key)">{{ variable.label }}</button></div>
+        <p class="template-field-hint">自定义填写项可写为 <code v-pre>{{param:作者}}</code>；新建时填写，未知变量保留原文。快速笔记中也可直接编辑占位文字。</p>
       </section>
     </div>
     <p v-if="error" class="template-error" role="alert">{{ error }}</p>

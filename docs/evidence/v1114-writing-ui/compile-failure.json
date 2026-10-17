@@ -1,0 +1,8 @@
+{
+  "evidenceLevel": "actual-Vue-Vditor-simulated-IPC-not-native-disk",
+  "checks": [],
+  "layouts": [],
+  "status": "failed",
+  "failure": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#vditor-lib [contenteditable=true]').first() to be visible\u001b[22m\n\n    at E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1114-writing-ui.mjs:14:67",
+  "errors": []
+}

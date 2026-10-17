@@ -1,0 +1,211 @@
+{
+  "evidenceLevel": "actual-Vue-Vditor-simulated-IPC-not-native-disk",
+  "checks": [
+    "Real PDF export now opens draft preview without calling nonexistent editor method or saving original",
+    "Real failure remains visible; true null cancellation quiet; retry preserves snapshot and exports draft, not stale disk",
+    "Actual local-image toolbar inserts relative reference into live draft without saving original (image picker IPC simulated)",
+    "Optional template fill preserves quick-create path; title/target/parameters preview, failure retry, nonrecursive values and unknown variables work"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    },
+    {
+      "size": {
+        "width": 760,
+        "height": 620
+      },
+      "box": {
+        "x": 616.90625,
+        "y": 502.390625,
+        "width": 103.890625,
+        "height": 34
+      },
+      "geometry": [
+        {
+          "name": "n-card n-modal writing-delivery-dialog",
+          "height": 550.375,
+          "top": 34.8125,
+          "flex": "0 1 auto",
+          "display": "flex",
+          "maxHeight": "570.4px"
+        },
+        {
+          "name": "n-card-header",
+          "height": 67.796875,
+          "top": 34.8125,
+          "flex": "0 0 auto",
+          "display": "flex",
+          "maxHeight": "none"
+        },
+        {
+          "name": "n-card__content",
+          "height": 399.78125,
+          "top": 102.609375,
+          "flex": "1 1 0%",
+          "display": "block",
+          "maxHeight": "none"
+        },
+        {
+          "name": "n-card__footer",
+          "height": 82.796875,
+          "top": 502.390625,
+          "flex": "0 0 auto",
+          "display": "block",
+          "maxHeight": "none"
+        }
+      ]
+    },
+    {
+      "width": 760,
+      "height": 620
+    },
+    {
+      "size": {
+        "width": 480,
+        "height": 800
+      },
+      "box": {
+        "x": 342.515625,
+        "y": 652.09375,
+        "width": 103.890625,
+        "height": 34
+      },
+      "geometry": [
+        {
+          "name": "n-card n-modal writing-delivery-dialog",
+          "height": 711.375,
+          "top": 44.3125,
+          "flex": "0 1 auto",
+          "display": "flex",
+          "maxHeight": "736px"
+        },
+        {
+          "name": "n-card-header",
+          "height": 67.796875,
+          "top": 44.3125,
+          "flex": "0 0 auto",
+          "display": "flex",
+          "maxHeight": "none"
+        },
+        {
+          "name": "n-card__content",
+          "height": 497.984375,
+          "top": 112.109375,
+          "flex": "1 1 0%",
+          "display": "block",
+          "maxHeight": "none"
+        },
+        {
+          "name": "n-card__footer",
+          "height": 145.59375,
+          "top": 610.09375,
+          "flex": "0 0 auto",
+          "display": "block",
+          "maxHeight": "none"
+        }
+      ]
+    },
+    {
+      "width": 480,
+      "height": 800
+    },
+    {
+      "size": {
+        "width": 360,
+        "height": 620
+      },
+      "box": {
+        "x": 224.90625,
+        "y": 491.59375,
+        "width": 103.890625,
+        "height": 34
+      },
+      "geometry": [
+        {
+          "name": "n-card n-modal writing-delivery-dialog",
+          "height": 570.390625,
+          "top": 24.796875,
+          "flex": "0 1 auto",
+          "display": "flex",
+          "maxHeight": "570.4px"
+        },
+        {
+          "name": "n-card-header",
+          "height": 67.796875,
+          "top": 24.796875,
+          "flex": "0 0 auto",
+          "display": "flex",
+          "maxHeight": "none"
+        },
+        {
+          "name": "n-card__content",
+          "height": 357,
+          "top": 92.59375,
+          "flex": "1 1 0%",
+          "display": "block",
+          "maxHeight": "none"
+        },
+        {
+          "name": "n-card__footer",
+          "height": 145.59375,
+          "top": 449.59375,
+          "flex": "0 0 auto",
+          "display": "block",
+          "maxHeight": "none"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "height": 620
+    }
+  ],
+  "status": "passed",
+  "errors": []
+}

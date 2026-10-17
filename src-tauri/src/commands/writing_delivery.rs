@@ -282,6 +282,38 @@ pub async fn insert_writing_image(
     .map_err(|e| e.to_string())?
 }
 
+#[tauri::command]
+pub async fn import_writing_image(
+    window: tauri::WebviewWindow,
+    app_handle: tauri::AppHandle,
+    library_root: String,
+    document_path: String,
+    source_path: Option<String>,
+) -> Result<Option<String>, String> {
+    main_only(&window)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        // Main-window OS drop is explicit input, as in the existing file-import
+        // workflow. Other windows cannot invoke this bounded bitmap import.
+        let source = match source_path {
+            Some(path) => PathBuf::from(path),
+            None => match app_handle
+                .dialog()
+                .file()
+                .set_title("插入本地图片")
+                .add_filter("位图", &["png", "jpg", "jpeg", "gif", "webp", "bmp", "ico"])
+                .blocking_pick_file()
+            {
+                None => return Ok(None),
+                Some(path) => path.into_path().map_err(|e| e.to_string())?,
+            },
+        };
+        let bytes = bounded_read(&source, MAX_IMAGE)?;
+        store_image(&library_root, &document_path, &bytes).map(Some)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[cfg(test)]
 #[path = "writing_delivery_tests.rs"]
 mod tests;

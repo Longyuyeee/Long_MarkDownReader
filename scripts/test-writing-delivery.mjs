@@ -5,6 +5,7 @@ const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_
 const output='docs/evidence/v1114-delivery-core';await fs.mkdir(output,{recursive:true})
 const browser=await chromium.launch({headless:true}),page=await browser.newPage()
 const report={evidenceLevel:'browser-DOM-static-export-utility-not-native-installed',checks:[]}
+const remote=[];page.on('request',request=>{if(request.url().startsWith('https://example.invalid/'))remote.push(request.url())})
 try{
  await page.goto('http://127.0.0.1:9022/')
  const value=await page.evaluate(async()=>{
@@ -20,6 +21,7 @@ try{
  await page.waitForFunction(()=>document.images[0]?.complete&&document.images[0].naturalWidth>0)
  assert.equal(await page.locator('img').count(),1);assert.ok(await page.locator('body').innerText().then(t=>t.includes('https://example.invalid/a.png')))
  assert.equal(await page.evaluate(()=>window.bad),undefined)
+ assert.deepEqual(remote,[],'export preparation and standalone reopening never download remote image URLs')
  await page.screenshot({path:output+'/standalone-reopened.png',fullPage:true})
  await page.pdf({path:output+'/browser-layout-only.pdf',format:'A4'})
  report.checks.push('Standalone file reopened outside app/Vite with embedded local image and no executable script; browser print layout generated (not native installed PDF proof)')

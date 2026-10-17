@@ -51,7 +51,7 @@ use commands::files::{
     rename_item, save_folder_order, scan_directory, write_external_markdown_file,
     write_markdown_file,
 };
-use commands::writing_delivery::{prepare_writing_delivery, save_writing_delivery, insert_writing_image};
+use commands::writing_delivery::{prepare_writing_delivery, save_writing_delivery, insert_writing_image, import_writing_image};
 pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
 use commands::formats::{
     create_format_file, get_file_format_registry, get_text_document_identity,
@@ -581,6 +581,7 @@ pub fn run() {
             prepare_writing_delivery,
             save_writing_delivery,
             insert_writing_image,
+            import_writing_image,
             get_config,
             prepare_library_path,
             save_config,

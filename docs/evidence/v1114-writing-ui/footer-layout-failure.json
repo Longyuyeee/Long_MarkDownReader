@@ -1,0 +1,68 @@
+{
+  "evidenceLevel": "actual-Vue-Vditor-simulated-IPC-not-native-disk",
+  "checks": [
+    "Real PDF export now opens draft preview without calling nonexistent editor method or saving original",
+    "Real failure remains visible; true null cancellation quiet; retry preserves snapshot and exports draft, not stale disk"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    },
+    {
+      "width": 760,
+      "height": 620
+    },
+    {
+      "width": 480,
+      "height": 800
+    }
+  ],
+  "status": "failed",
+  "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(box&&box.x>=0&&box.x+box.width<=size.width&&box.y+box.height<=size.height)\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1114-writing-ui.mjs:38:95",
+  "errors": []
+}

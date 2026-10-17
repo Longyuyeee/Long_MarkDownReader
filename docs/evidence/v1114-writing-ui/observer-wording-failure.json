@@ -1,0 +1,10 @@
+{
+  "evidenceLevel": "actual-Vue-Vditor-simulated-IPC-not-native-disk",
+  "checks": [
+    "Real PDF export now opens draft preview without calling nonexistent editor method or saving original"
+  ],
+  "layouts": [],
+  "status": "failed",
+  "failure": "AssertionError [ERR_ASSERTION]: false == true\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1114-writing-ui.mjs:24:9",
+  "errors": []
+}

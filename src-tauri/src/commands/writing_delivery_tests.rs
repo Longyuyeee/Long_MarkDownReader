@@ -4,6 +4,31 @@ struct Fixture {
     root: PathBuf,
     note: PathBuf,
 }
+#[test]
+fn newly_inserted_draft_image_is_authorized_without_saving_or_granting_unreferenced_access() {
+    let f = Fixture::new();
+    let root = f.root.to_string_lossy().into_owned();
+    let note = f.note.to_string_lossy().into_owned();
+    let image = f
+        .root
+        .join("共享 图/测试.png")
+        .to_string_lossy()
+        .into_owned();
+    let read = |draft| {
+        tauri::async_runtime::block_on(crate::commands::files::get_image_base64(
+            root.clone(),
+            note.clone(),
+            image.clone(),
+            draft,
+        ))
+    };
+    assert!(read(None).is_err());
+    assert!(read(Some("![图](../共享%20图/测试.png)".into()))
+        .unwrap()
+        .starts_with("data:image/png;base64,"));
+    assert!(read(Some("未引用的草稿".into())).is_err());
+    assert_eq!(fs::read_to_string(&f.note).unwrap(), "# 原稿\n不能代存");
+}
 impl Fixture {
     fn new() -> Self {
         let base = std::env::temp_dir().join(format!(

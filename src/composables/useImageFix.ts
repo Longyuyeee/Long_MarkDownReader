@@ -4,6 +4,7 @@ import { resolveLocalImagePath } from '../utils/localImagePath'
 interface ImageAccessContext {
   libraryRoot?: () => string
   external?: boolean
+  draft?: () => string
 }
 
 export function useImageFix(getVditor: () => any, getFilePath: () => string, access: ImageAccessContext = {}) {
@@ -52,11 +53,19 @@ export function useImageFix(getVditor: () => any, getFilePath: () => string, acc
 
       try {
         const command = access.external ? 'get_external_image_base64' : 'get_image_base64'
-        const b64 = await invoke<string>(command, {
+        const args = {
           documentPath: filePath,
           path: normalizedPath,
           ...(!access.external ? { libraryRoot: access.libraryRoot?.() || '' } : {}),
-        })
+        }
+        let b64:string
+        try {b64=await invoke<string>(command,args)}
+        catch(cause){
+          // New pasted/inserted references need not be on disk yet. Authorize
+          // against the live draft without saving it or widening the vault.
+          if(access.external||!access.draft)throw cause
+          b64=await invoke<string>(command,{...args,draftContent:access.draft()})
+        }
         if (getFilePath() !== filePath || img.getAttribute('src') !== rawSrc || !img.isConnected) return
         // src remains the Markdown destination. srcset changes only the rendered
         // resource, so displaying a local image never embeds it into the draft.

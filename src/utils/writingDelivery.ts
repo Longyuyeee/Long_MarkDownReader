@@ -7,11 +7,14 @@ const discard = new Set('script style link meta iframe object embed form textare
 
 /** Only static semantic content is delivered, not editor handlers/blob URLs. */
 export function deliveryDocument(title: string, html: string, resources: DeliveryResources, preferences: DisplayPreferences) {
-  const parsed = new DOMParser().parseFromString(html,'text/html'), warnings=[...resources.warnings]
+  // Template content is inert: even remote img/iframe URLs are not fetched
+  // before we replace/remove them. DOMParser can load external resources.
+  const parsed=document.createElement('template');parsed.innerHTML=html
+  const warnings=[...resources.warnings]
   const images=new Map(resources.images.map(item=>[item.source,item.dataUri]))
-  for (const element of Array.from(parsed.body.querySelectorAll('*')).reverse()) {
+  for (const element of Array.from(parsed.content.querySelectorAll('*')).reverse()) {
     const name=element.localName
-    if(name==='input') { element.replaceWith(parsed.createTextNode(element.hasAttribute('checked')?'☑ ':'☐ '));continue }
+    if(name==='input') { element.replaceWith(document.createTextNode(element.hasAttribute('checked')?'☑ ':'☐ '));continue }
     if(discard.has(name)) { if(!['script','style','link','meta'].includes(name))warnings.push(`未交付交互内容：${name}；请核对预览。`);element.remove();continue }
     if(!allowed.has(name)) {element.replaceWith(...element.childNodes);continue}
     const attrs=Object.fromEntries(Array.from(element.attributes).map(a=>[a.name,a.value]))
@@ -21,7 +24,7 @@ export function deliveryDocument(title: string, html: string, resources: Deliver
       if(data&&/^data:image\/(png|jpeg|gif|webp|bmp|x-icon);base64,[A-Za-z0-9+/=]+$/.test(data)) {
         element.setAttribute('src',data);element.setAttribute('alt',attrs.alt||'')
       } else {
-        const line=parsed.createElement('p');line.textContent=`[图片未携带：${attrs.alt||original||'未知图片'}] ${/^https?:\/\//i.test(original)?original:''}`
+        const line=document.createElement('p');line.textContent=`[图片未携带：${attrs.alt||original||'未知图片'}] ${/^https?:\/\//i.test(original)?original:''}`
         element.replaceWith(line);warnings.push(`图片未携带：${original||'未知图片'}`)
       }
     }
@@ -39,8 +42,8 @@ export function deliveryDocument(title: string, html: string, resources: Deliver
   // CSS string escapes every non-letter, including <, quotes, slash and newline.
   const font=(p.documentFont==='custom'?p.documentCustomFont:names[p.documentFont]||'Microsoft YaHei').replace(/[^\p{L}\p{N} -]/gu,c=>'\\'+c.codePointAt(0)!.toString(16)+' ')
   const css=`@page{size:auto;margin:18mm}html{color-scheme:light}body{margin:0 auto;padding:24px;max-width:850px;background:#fff;color:#20242b;font-family:"${font}","Microsoft YaHei",sans-serif;font-size:${p.documentFontSize}px;line-height:${p.documentLineHeight};letter-spacing:${p.documentLetterSpacing}px;text-align:${p.documentTextAlign};overflow-wrap:anywhere}p{margin:${p.documentParagraphSpacing}em 0}img{max-width:100%;height:auto}h1,h2,h3,h4,h5,h6{break-after:avoid}img,tr,blockquote{break-inside:avoid}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f5f7;padding:12px}code{font-family:Consolas,monospace}table{border-collapse:collapse;max-width:100%}td,th{border:1px solid #ccd2dc;padding:6px 10px}thead{display:table-header-group}blockquote{border-left:3px solid #8794a8;margin-left:0;padding-left:16px}@media print{body{max-width:none;padding:0}a{color:inherit;text-decoration:underline}details>*{display:block}}`
-  const document=`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src 'none'; base-uri 'none'; form-action 'none'"><title>${escape(title)}</title><style>${css}</style></head><body><main>${parsed.body.innerHTML}</main></body></html>`
-  return {document,warnings:[...new Set(warnings)]}
+  const output=`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src 'none'; base-uri 'none'; form-action 'none'"><title>${escape(title)}</title><style>${css}</style></head><body><main>${parsed.innerHTML}</main></body></html>`
+  return {document:output,warnings:[...new Set(warnings)]}
 }
 
 export async function waitForDeliveryFrame(frame: HTMLIFrameElement) {

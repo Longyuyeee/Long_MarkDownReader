@@ -685,6 +685,8 @@
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
     <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
+    <WritingDeliveryDialog v-if="writingDelivery" v-bind="writingDelivery" @close="writingDelivery=null" />
+    <NoteTemplateCreateDialog v-if="templateCreate" v-bind="templateCreate" :templates="store.allNoteTemplates" @close="templateCreate=null" @created="templateCreated" />
   </div>
 </template>
 
@@ -732,7 +734,9 @@ import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import ExternalImportDialog from '../components/ExternalImportDialog.vue'
 import { searchQueryNeedle } from '../utils/searchQuery'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
-import { BLANK_NOTE_TEMPLATE, type NoteTemplate } from '../config/noteTemplates'
+import WritingDeliveryDialog from '../components/WritingDeliveryDialog.vue'
+import NoteTemplateCreateDialog from '../components/NoteTemplateCreateDialog.vue'
+import { BLANK_NOTE_TEMPLATE, noteTemplateFields, type NoteTemplate } from '../config/noteTemplates'
 import { libraryFileClipboard, lastLibraryMove, fileOperationBusy, sameLibrary, fileParent, topLevelPaths, type FileOperation, type FileOperationResult } from '../services/libraryFileOperations'
 import { announceFileRelationsChanged } from '../services/fileRelations'
 import { Copy as CopyFileIcon, Scissors as CutFileIcon, ClipboardPaste as PasteFileIcon, FolderInput as MoveFileIcon, Undo2 as UndoFileIcon } from 'lucide-vue-next'
@@ -1617,7 +1621,7 @@ const refreshVisibleOutline = () => {
   setupOutlineObserver()
 }
 watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleOutline)
-const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath })
+const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath, draft:()=>vditor?.getValue()||'' })
 const activeHeadingKey = ref<string | null>(null)
 const revealLinkedHeading = () => {
   const fragment = typeof route.query.markdownAnchor === 'string' ? route.query.markdownAnchor : ''
@@ -2103,26 +2107,16 @@ const exportOptions = [
   { label: '导出 HTML', key: 'html' },
   { label: '导出 Markdown', key: 'md' },
 ]
+const writingDelivery=ref<{root:string;path:string;title:string;markdown:string;html:string;preferences:typeof store.displayPreferences}|null>(null)
+watch([activeTabId,()=>store.libraryPath],()=>{writingDelivery.value=null})
 const handleExport = async (key: string) => {
   if (!activeTabId.value || !vditor) return
   const tab = tabs.value.find(t => t.id === activeTabId.value)
   if (!tab) return
 
-  if (key === 'pdf') {
-    // Vditor 内置 exportPDF，打开打印对话框 → 用户选「另存为 PDF」
-    try { (vditor as any).exportPDF() } catch (e) { message.error('PDF 导出失败') }
-  } else if (key === 'html') {
-    try {
-      const html = vditor.getHTML()
-      await invoke('export_to_html', { libraryRoot: store.libraryPath, path: tab.path, htmlContent: html })
-      message.success('HTML 已导出到文件旁')
-    } catch (e) { message.error('导出失败') }
-  } else if (key === 'md') {
-    try {
-      const filePath = await invoke<string | null>('export_markdown_file', { suggestedName: tab.title, content: vditor.getValue() })
-      if (filePath) message.success('已导出')
-    } catch (e) { /* user cancelled */ }
-  }
+  if (!activeIsMarkdown.value || !isVditorReady || editorLoading.value) {message.warning('请等待 Markdown 文档加载完成后导出');return}
+  if (!['pdf','html','md'].includes(key))return
+  writingDelivery.value={root:store.libraryPath,path:tab.path,title:tab.title,markdown:vditor.getValue(),html:vditor.getHTML(),preferences:{...store.displayPreferences}}
 }
 interface HistoryEntry { timestamp: number; content: string; path: string; libraryRoot: string }
 const historyList = ref<HistoryEntry[]>([])
@@ -3401,6 +3395,7 @@ const onMenuAction = async (key: string) => {
     try {
       const template = formatId === 'markdown' ? defaultNoteTemplate.value : undefined
       const created = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, path) : await createRegisteredFile(formatId, path, undefined, undefined, extension)
+      if(!created)return
       await refreshNode(path)
       await requestLibraryTreeReveal(path, true)
       handleNodeSelect([created])
@@ -3434,6 +3429,9 @@ const onMenuAction = async (key: string) => {
 }
 
 const templateManager = ref<{ initialNote?: { name: string; content: string } } | null>(null)
+const templateCreate=ref<{root:string;target:string;initialId:string}|null>(null)
+watch(()=>store.libraryPath,()=>{templateCreate.value=null})
+const templateCreated=async(path:string)=>{const root=templateCreate.value?.root,target=templateCreate.value?.target;templateCreate.value=null;if(root!==store.libraryPath||!target)return;await refreshNode(target);handleNodeSelect([path])}
 const saveCurrentAsTemplate = () => {
   if (!activeIsMarkdown.value || !activeTabId.value || !vditor || !isVditorReady || lastLoadedPath !== activeTabId.value) {
     message.info('请等笔记加载完成后再保存模板'); return
@@ -3466,6 +3464,7 @@ const templateOptions = computed<DropdownOption[]>(() => {
       { label: selected ? '今日笔记' : '今日笔记（Daily）', key: '__daily', icon: () => h(NIcon, null, { default: () => h(CalendarIcon) }) },
     ] },
     { type: 'divider', key: 'template-divider' },
+    { label: '填写模板后新建…', key: '__fill-template' },
     { label: '笔记模板', key: 'note-templates', children: [
       ...store.allNoteTemplates.map(item => ({ label: item.name, key: '__template:' + item.id })),
       { type: 'divider', key: 'manage-template-divider' },
@@ -3507,6 +3506,7 @@ const createRegisteredFile = async (formatId: string, target: string, prefix?: s
 const handleTemplateCreate = async (key: string) => {
   if (!store.libraryPath) { openSettings(); return }
   if (key === '__manage-templates') { templateManager.value = {}; return }
+  if (key === '__fill-template') {templateCreate.value={root:store.libraryPath,target:selectedTargetDirectory(),initialId:defaultNoteTemplate.value?.id||BLANK_NOTE_TEMPLATE};return}
   if (key === '__folder') { await handleToolbarAction('folder'); return }
   if (key === '__daily') { await createDailyNote(); return }
   try {
@@ -3518,6 +3518,7 @@ const handleTemplateCreate = async (key: string) => {
     const p = template && template.id !== BLANK_NOTE_TEMPLATE
       ? await createNoteFromTemplate(template, target)
       : await createRegisteredFile(formatId, target)
+    if(!p)return
     await refreshNode(target)
     handleNodeSelect([p])
   } catch (e: any) {
@@ -3525,14 +3526,15 @@ const handleTemplateCreate = async (key: string) => {
   }
 }
 
-const createNoteFromTemplate = (template: NoteTemplate, target: string) => invoke<string>('create_note_from_template', {
-  libraryRoot: store.libraryPath, targetDir: target, name: template.name, content: template.content,
-})
+const createNoteFromTemplate = async (template: NoteTemplate, target: string) => {
+  if(noteTemplateFields(template.content).length){templateCreate.value={root:store.libraryPath,target,initialId:template.id};return null}
+  return invoke<string>('create_note_from_template',{libraryRoot:store.libraryPath,targetDir:target,name:template.name,content:template.content})
+}
 
 const handleToolbarAction = async (type: 'file' | 'folder') => {
   if (!store.libraryPath) { openSettings(); return }
   const target = selectedTargetDirectory()
-  try { if (type === 'file') { const template = defaultNoteTemplate.value; const p = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, target) : await createRegisteredFile('markdown', target); await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
+  try { if (type === 'file') { const template = defaultNoteTemplate.value; const p = template && template.id !== BLANK_NOTE_TEMPLATE ? await createNoteFromTemplate(template, target) : await createRegisteredFile('markdown', target); if(!p)return; await refreshNode(target); handleNodeSelect([p]) } else { await invoke('create_new_folder', { libraryRoot: store.libraryPath, parentPath: target }); await refreshNode(target) } } catch (e: any) { handleError(e, '操作失败', 'handleToolbarAction') }
 }
 
 const createDailyNote = async () => {
@@ -3840,6 +3842,28 @@ const handleEditorClick = (e: MouseEvent) => {
 }
 
 interface ChartSourceDocument { views: { id: string; name: string; kind: string }[] }
+let writingImageBusy=false
+const insertWritingImages=async(files?:File[],paths?:string[])=>{
+  if(writingImageBusy||!vditor||!activeIsMarkdown.value||!activeFormatCanEdit.value||editorLoading.value)return
+  const editor=vditor,path=activeTabId.value,root=store.libraryPath,original=editor.getValue()
+  if(!path)return
+  writingImageBusy=true
+  const inserted:string[]=[]
+  try{
+    if((files?.length||paths?.length||1)>16)throw Error('一次最多插入 16 张图片')
+    if(files){for(const file of files){
+      if(file.size>8*1024*1024)throw Error('图片超过 8 MiB，请缩小后插入')
+      const encoded=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('读取图片失败'));reader.readAsDataURL(file)})
+      inserted.push(await invoke<string>('insert_writing_image',{libraryRoot:root,documentPath:path,base64Content:encoded}))
+    }}else{for(const source of paths||[undefined]){const relative=await invoke<string|null>('import_writing_image',{libraryRoot:root,documentPath:path,sourcePath:source||null});if(relative)inserted.push(relative)}}
+    if(!inserted.length)return
+    if(vditor!==editor||activeTabId.value!==path||store.libraryPath!==root||editor.getValue()!==original){message.warning('正文或文档已变化，未在新位置插入；已复制图片保留在原文档 .assets 目录。');return}
+    editor.insertMD(inserted.map(source=>`![图片](${source})`).join('\n')+'\n');store.updateTabContent(path,editor.getValue());const tab=tabs.value.find(t=>t.id===path);if(tab)tab.isDirty=true
+    void fixEditorImages();message.success('图片已复制为相对引用，请手动保存正文。')
+  }catch(cause){message.error(`图片未插入：${String(cause)}${inserted.length?'；已复制资源仍保留，原稿未改动':''}`)}
+  finally{writingImageBusy=false}
+}
+const captureWritingImagePaste=(event:ClipboardEvent)=>{const files=Array.from(event.clipboardData?.files||[]).filter(file=>file.type.startsWith('image/'));if(files.length){event.preventDefault();event.stopImmediatePropagation();void insertWritingImages(files)}}
 const resolveMarkdownReference = (source: string, host: string) => {
   if (/^[A-Za-z]:[\\/]/.test(source) || source.startsWith('/')) return source
   const separator = host.includes('\\') ? '\\' : '/'
@@ -3904,6 +3928,7 @@ const initVditor = () => {
         { name: 'list', tip: '无序列表' }, { name: 'ordered-list', tip: '有序列表' }, { name: 'check', tip: '任务列表' }, '|',
         { name: 'code', tip: '代码块' }, { name: 'inline-code', tip: '行内代码' }, { name: 'link', tip: '插入链接' }, { name: 'table', tip: '插入表格' }, '|',
         { name: 'more', tip: '更多格式与工具', icon: '<span class="vditor-toolbar-label">更多格式</span>', toolbar: [
+        { name:'local-image',tip:'插入本地图片',icon:'<span class="vditor-toolbar-label">本地图片…</span>',click:()=>{void insertWritingImages()} },
         { name: 'emoji', tip: '表情' }, { name: 'strike', tip: '删除线' }, { name: 'line', tip: '分割线' }, '|',
         { name: 'table-chart', tip: '插入实时 Table 图表', icon: '<span class="vditor-toolbar-label">实时 Table 图表</span>', click: () => { void insertTableChartReference() } }, '|',
         { name: 'code-theme', tip: '切换代码高亮风格', icon: '<svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>', click: () => {
@@ -3942,6 +3967,7 @@ const initVditor = () => {
           documentShortcutHost.value = host
         }
         documentPreviewButton = toolbar?.querySelector<HTMLElement>('[data-type="preview"]') ?? null
+        writingImageRoot=document.getElementById('vditor-lib');writingImageRoot?.addEventListener('paste',captureWritingImagePaste,true)
         syncDocumentPreview()
         if (documentPreviewButton) {
           documentPreviewObserver = new MutationObserver(syncDocumentPreview)
@@ -4031,8 +4057,10 @@ let scrollUpdateHandler: (() => void) | null = null
 let pdfReferenceClickHandler: ((event: MouseEvent) => void) | null = null
 let currentContentEl: HTMLElement | null = null
 let currentViewport: HTMLElement | null = null
+let writingImageRoot: HTMLElement | null = null
 
 const cleanupEditorListeners = () => {
+  writingImageRoot?.removeEventListener('paste',captureWritingImagePaste,true);writingImageRoot=null
   documentPreviewObserver?.disconnect()
   documentPreviewObserver = undefined
   documentPreviewButton = null
@@ -4166,8 +4194,7 @@ const openPdfReference = async (event: MouseEvent) => {
 
 const handleExportHtml = async () => {
   if (!vditor || !isVditorReady || !activeTabId.value || !activeIsMarkdown.value) { message.warning('只有 Markdown 文档支持 HTML 导出'); return }
-  const html = vditor.getHTML()
-  try { await invoke('export_to_html', { libraryRoot: store.libraryPath, path: activeTabId.value, htmlContent: html }); message.success('HTML 已导出') } catch (e) { message.error('导出失败') }
+  await handleExport('html')
 }
 
 onMounted(async () => {
@@ -4211,6 +4238,10 @@ onMounted(async () => {
       externalFileDrag = true
       updateDropTarget(event.payload.position.x, event.payload.position.y)
     } else if (event.payload.type === 'drop') {
+      const point=event.payload.position,hit=document.elementFromPoint(point.x/window.devicePixelRatio,point.y/window.devicePixelRatio)
+      if(hit?.closest('#vditor-lib')&&event.payload.paths.length&&event.payload.paths.every(path=>/\.(png|jpe?g|gif|webp|bmp|ico)$/i.test(path))){
+        virtualDrag.dropTarget=null;virtualDrag.dropPosition=null;externalFileDrag=false;clearFileDragTimers();void insertWritingImages(undefined,event.payload.paths);return
+      }
       const targetPath = virtualDrag.dropTarget || store.libraryPath
       const position = virtualDrag.dropPosition
       

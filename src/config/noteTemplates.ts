@@ -22,14 +22,19 @@ export const MAX_NOTE_TEMPLATES = 64
 export const MAX_TEMPLATE_BYTES = 256 * 1024
 
 /** Replacements are not expanded recursively; unrecognized variables stay literal. */
-export function renderNoteTemplate(content: string, title: string, now = new Date()) {
+export function renderNoteTemplate(content: string, title: string, now = new Date(), parameters: Record<string,string> = {}) {
   const pad = (value: number) => String(value).padStart(2, '0')
   const values = {
     title,
     date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
     time: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
   }
-  return content.replace(/\{\{\s*(title|date|time)\s*\}\}/g, (_, key: keyof typeof values) => values[key])
+  return content.replace(/\{\{\s*(title|date|time|param:([^{}:\r\n]{1,40}))\s*\}\}/g, (original, key: string, field?: string) =>
+    key.startsWith('param:') ? parameters[field!.trim()] ?? original : values[key as keyof typeof values])
+}
+
+export function noteTemplateFields(content: string): string[] {
+  return [...new Set(Array.from(content.matchAll(/\{\{\s*param:([^{}:\r\n]{1,40})\s*\}\}/g),m=>m[1].trim()))]
 }
 
 export function validateNoteTemplate(template: NoteTemplate, others: NoteTemplate[]) {
