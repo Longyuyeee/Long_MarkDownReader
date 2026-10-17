@@ -1,0 +1,16 @@
+{
+  "appVersion": "1.1.8",
+  "sourceCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
+  "installerSha256": "69ec121088e98fa58b5a10b0abde339ddc7676c242196b576b08033f08950481",
+  "harnessSourceCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
+  "executableSha256": "46b8da91951882ec17fa5e4fb8f79832365c29ae3609356af17c2ed4400daa13",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "desktopInputUsed": false,
+  "status": "failed",
+  "checks": [],
+  "error": {
+    "message": "user installed search driver failed: 1/null",
+    "stack": "Error: user installed search driver failed: 1/null\n    at ChildProcess.<anonymous> (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-8-workflow.mjs:48:107)\n    at Object.onceWrapper (node:events:634:26)\n    at ChildProcess.emit (node:events:519:28)\n    at ChildProcess._handle.onexit (node:internal/child_process:293:12)"
+  }
+}

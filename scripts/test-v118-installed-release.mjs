@@ -35,6 +35,7 @@ function fixture() {
   const base = records.searchBaseline.data
   records.searchCompleteness = { file: 'installed-v118-workflow.json', data: { ...base,
     finalDraftAction: 'explicit-user-save-after-all-preservation-checks',
+    temporaryDirectoryIdentity: { input: 'C:/temp', canonical: 'C:/temp', samePhysicalDirectory: true },
     checks: searchCompletenessChecks.map(id => ({ id, status: 'passed' })) } }
   const bytes = new Map()
   const update = () => {
@@ -61,6 +62,7 @@ test('installed v118 rejects reused Debug identity, source/installer drift and w
   for (const mutate of [
     f => f.records.searchCompleteness.data.checks.pop(), f => f.records.searchUser.data.sourceCommit = '0'.repeat(40),
     f => delete f.records.searchCompleteness.data.finalDraftAction,
+    f => f.records.searchCompleteness.data.temporaryDirectoryIdentity.samePhysicalDirectory = false,
     f => f.records.searchOffice.data.installerSha256 = '0'.repeat(64), f => f.records.searchBaseline.data.harnessSourceCommit = '0'.repeat(40),
     f => f.records.searchUser.data.evidenceLevel = 'actual-wry-webview-input-events-generated-disk-not-installed',
     f => f.records.searchBaseline.data.generatedFixture.unregisteredEntries = 100,
@@ -101,6 +103,11 @@ test('all historical installed entry guards accept v118 without removing their t
     const workflow = parse(fs.readFileSync('.github/workflows/' + file, 'utf8'))
     assert.equal(workflow.on.workflow_dispatch.inputs.current_version.default, '1.1.8')
     assert.equal(workflow.on.workflow_dispatch.inputs.previous_version.default, '1.1.7')
+    if (file.includes('installer-review')) {
+      const diagnostics = workflow.jobs.review.steps.find(step => step.name === 'Retain original build reports separately from installer bytes')
+      assert.equal(diagnostics.if, 'always()')
+      assert.equal(diagnostics.with.path, 'immutable-build/community-release-output')
+    }
   }
 })
 

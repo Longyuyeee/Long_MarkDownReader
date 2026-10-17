@@ -2,8 +2,33 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import {test} from 'node:test'
-import { searchFeedbackContract } from './lib/search-feedback-contract.mjs'
+import { searchFeedbackContract, paletteFileOpenExpression } from './lib/search-feedback-contract.mjs'
 const evaluate=(expression,nodes)=>vm.runInNewContext(expression,{document:{querySelector:selector=>nodes[selector]||null}})
+
+test('grouped palette targets the exact filename open button, never its row, substring or reference',()=>{
+  const name='v115-预算资料.txt', scope='.command-palette-container '
+  const button=label=>({getAttribute:key=>key==='aria-label'?label:null})
+  const wrong=button('打开 v115-预算资料-旧版.txt'), reference=button('在侧边参考 '+name), exact=button('打开 '+name)
+  const expression=paletteFileOpenExpression(name)
+  const document={querySelector:selector=>selector===scope+'.search-file-card'?{}:null,querySelectorAll:selector=>selector===scope+'.search-file-title'?[wrong,reference,exact]:[]}
+  assert.equal(vm.runInNewContext(expression,{document}),exact)
+  document.querySelectorAll=()=>[wrong,reference]
+  assert.equal(vm.runInNewContext(expression,{document}),undefined)
+  const component=fs.readFileSync('src/components/SearchFileCard.vue','utf8')
+  assert.match(component,/class="knowledge-result-open search-file-title"[^>]*:aria-label="`打开 \$\{file.title\}`"[^>]*@click="\$emit\('open', first\)"/)
+})
+
+test('legacy palette accepts exact stem or full filename while rejecting a near-duplicate title',()=>{
+  const row=title=>({querySelector:selector=>selector==='.item-title'?{textContent:title}:null})
+  const wrong=row('v115-预算资料-旧版'), exact=row('v115-预算资料'), full=row('v115-预算资料.txt')
+  const document={querySelector:()=>null,querySelectorAll:()=>[wrong,exact]}
+  const expression=paletteFileOpenExpression('v115-预算资料.txt')
+  assert.equal(vm.runInNewContext(expression,{document}),exact)
+  document.querySelectorAll=()=>[wrong,full]
+  assert.equal(vm.runInNewContext(expression,{document}),full)
+  document.querySelectorAll=()=>[wrong]
+  assert.equal(vm.runInNewContext(expression,{document}),undefined)
+})
 test('new completed zero is distinct from preparation, failure and a local format-filter zero',()=>{
   const feedback=searchFeedbackContract(true,'.palette')
   for(const text of ['尚未获得可用文件，不代表没有匹配。','结果尚未查全','当前已加载文件中没有所选格式。',''])assert.equal(evaluate(feedback.emptyExpression,{'.palette .search-page-empty':{textContent:text}}),false)
@@ -25,5 +50,7 @@ test('installed scenarios count file cards, retain trusted keyboard retry and ne
   const hardening=fs.readFileSync('scripts/lib/installed-v1-1-5-workflow.mjs','utf8')
   assert.ok(hardening.indexOf('const feedback=searchFeedbackContract')<hardening.indexOf("await query('\"未结束')"),'detect protocol while the valid page status exists')
   assert.match(hardening,/await waitFor\(feedback.emptyExpression, 'genuine empty result'\)/)
+  assert.ok(hardening.indexOf("await selectScope('当前资料库')")<hardening.indexOf("await query('v115-不存在-410974')"),'genuine zero uses a normally opened readable library, not the mixed incomplete range')
+  assert.match(hardening,/assert\.equal\(normalize\(report\.emptyResultScope\.activeLibrary\), normalize\(second\)/)
   assert.doesNotMatch(hardening,/\.no-results,\s*\.search-page-empty/)
 })

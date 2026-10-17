@@ -8,6 +8,7 @@ import { withDeadline } from './with-deadline.mjs'
 import { assertHostedSearchAudit, createNativeSearchFixture } from './v118-native-search-fixture.mjs'
 import { nativeUserInput } from './v118-native-user-input.mjs'
 import { validateInstalledSearchCompleteness, searchCompletenessChecks } from './installed-v1-1-8-evidence.mjs'
+import { installedSearchTemporaryParent } from './installed-search-fixture-path.mjs'
 
 export async function runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot, mainTargetId }) {
   assertHostedSearchAudit()
@@ -23,7 +24,8 @@ export async function runInstalledV118Workflow({ send, evaluate, navigate, waitF
   const ui = nativeUserInput({ send, evaluate }, { timeoutMs: 60000 })
   const store = `document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`
   const invoke = (command, args = {}) => evaluate(`window.__TAURI_INTERNALS__.invoke(${JSON.stringify(command)},${JSON.stringify(args)})`)
-  const root = path.join(os.tmpdir(), 'longedit-v118-native-installed-' + crypto.randomUUID())
+  report.temporaryDirectoryIdentity = await installedSearchTemporaryParent(os.tmpdir())
+  const root = path.join(report.temporaryDirectoryIdentity.canonical, 'longedit-v118-native-installed-' + crypto.randomUUID())
   let originalConfig, failure
   const reloadConfig = async hash => {
     await evaluate(`location.hash=${JSON.stringify(hash)}`)

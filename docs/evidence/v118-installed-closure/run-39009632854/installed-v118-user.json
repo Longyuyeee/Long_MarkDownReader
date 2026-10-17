@@ -1,0 +1,99 @@
+{
+  "installed": true,
+  "productCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
+  "runtimeBaseVersion": "1.1.8",
+  "appVersion": "1.1.8",
+  "sourceCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
+  "installerSha256": "69ec121088e98fa58b5a10b0abde339ddc7676c242196b576b08033f08950481",
+  "harnessSourceCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
+  "endpoint": "http://127.0.0.1:9343",
+  "targetId": "3E628041479B9604D7E03CF1E69C485D",
+  "schemaVersion": 1,
+  "status": "failed",
+  "phase": "user",
+  "evidenceLevel": "installed-webview-input-events-and-disk",
+  "harnessCommit": "60476b3e0663fca4f933271dfe56446ec33ffec9",
+  "executableSha256": "46b8da91951882ec17fa5e4fb8f79832365c29ae3609356af17c2ed4400daa13",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "checks": [],
+  "runtimeErrors": [],
+  "inputTrace": [
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "a",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "key": "Backspace",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "key": "",
+      "trusted": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "key": "",
+      "trusted": true,
+      "target": "STRONG"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "name": "zz-项目预算.md",
+      "before": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d",
+      "after": "10c27fca99aa22e128ef5a19d5be737b2b9f4abfa6e2d215a4ac3083a151ca2d"
+    },
+    {
+      "name": "a-0001-记录.md",
+      "before": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0",
+      "after": "a113e87b484df0b05390e4ee208de4969e128b06a1b9958bde62351f58741ed0"
+    },
+    {
+      "name": "a-0000-记录.md",
+      "before": "b93c03066f9b55824838311f6fcfa7ca7032b71ce2b76684eb932e0045fffbb1",
+      "after": "b93c03066f9b55824838311f6fcfa7ca7032b71ce2b76684eb932e0045fffbb1"
+    },
+    {
+      "name": "多批注.pdf",
+      "before": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+      "after": "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7"
+    },
+    {
+      "name": "多批注.pdf.annotations.json",
+      "before": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8",
+      "after": "e14467f33c240e99edf745f51c4e64c77401d7325f89ff53e07c6b182779e6d8"
+    }
+  ],
+  "draftChecks": [],
+  "initialFiles": 80,
+  "error": {
+    "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'c:/users/runneradmin/appdata/local/temp/longedit-v118-native-installed-68a422af-5f17-4401-83c4-c439b4a5feba/项目 & 资料/zz-项目预算.md'\n- 'c:/users/runner~1/appdata/local/temp/longedit-v118-native-installed-68a422af-5f17-4401-83c4-c439b4a5feba/项目 & 资料/zz-项目预算.md'\n",
+    "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'c:/users/runneradmin/appdata/local/temp/longedit-v118-native-installed-68a422af-5f17-4401-83c4-c439b4a5feba/项目 & 资料/zz-项目预算.md'\n- 'c:/users/runner~1/appdata/local/temp/longedit-v118-native-installed-68a422af-5f17-4401-83c4-c439b4a5feba/项目 & 资料/zz-项目预算.md'\n\n    at file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-v118-native-user.mjs:67:10"
+  }
+}
