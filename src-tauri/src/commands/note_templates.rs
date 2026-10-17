@@ -139,17 +139,34 @@ pub fn render_note_template(content: &str, title: &str, date: &str, time: &str) 
         .into_owned()
 }
 
+pub fn render_with_parameters(content: &str, title: &str, date: &str, time: &str, parameters: &HashMap<String, String>) -> Result<String, String> {
+    if parameters.len() > 16 || parameters.iter().any(|(k,v)| k.trim().is_empty() || k.chars().count() > 40 || k.contains(['{','}',':','\n','\r']) || v.chars().count() > 500) {
+        return Err("模板最多 16 个字段，名称 1–40 字，填写内容最多 500 字".into());
+    }
+    static FIELDS: LazyLock<regex::Regex> = LazyLock::new(||regex::Regex::new(r"\{\{\s*(title|date|time|param:([^{}:\r\n]{1,40}))\s*\}\}").unwrap());
+    let rendered = FIELDS.replace_all(content, |capture: &regex::Captures| {
+        match &capture[1] {
+            "title" => title.to_owned(), "date" => date.to_owned(), "time" => time.to_owned(),
+            _ => parameters.get(capture[2].trim()).cloned().unwrap_or_else(||capture[0].to_owned()),
+        }
+    }).into_owned();
+    if rendered.len() > 256 * 1024 { return Err("填充后的笔记超过 256 KiB，请缩短内容".into()); }
+    Ok(rendered)
+}
+
 #[tauri::command]
 pub async fn create_note_from_template(
     library_root: String,
     target_dir: String,
     name: String,
     content: String,
+    parameters: Option<HashMap<String, String>>,
 ) -> Result<String, String> {
     if content.len() > 256 * 1024 {
         return Err("模板正文不能超过 256 KiB".into());
     }
     let base = crate::sanitize_filename(name.trim());
+    if parameters.is_some() && base != name.trim() { return Err("文章标题不能包含文件名非法字符，请修改后重试".into()); }
     if base.is_empty() || base.chars().count() > 80 {
         return Err("请填写有效的模板名称".into());
     }
@@ -171,7 +188,10 @@ pub async fn create_note_from_template(
         if path.exists() {
             continue;
         }
-        let body = render_note_template(&content, &title, &date, &time);
+        let body = match &parameters {
+            Some(values) => render_with_parameters(&content, &title, &date, &time, values)?,
+            None => render_note_template(&content, &title, &date, &time),
+        };
         write_new_bytes(&path, body.as_bytes())?;
         return Ok(path.to_string_lossy().into_owned());
     }
@@ -181,6 +201,13 @@ pub async fn create_note_from_template(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn explicit_parameters_expand_once_preserve_unknowns_and_enforce_budget() {
+        let params=HashMap::from([("作者".into(),"小林 {{date}}".into())]);
+        assert_eq!(render_with_parameters("# {{title}} {{param:作者}} {{missing}} {{param:未知}}", "文章 {{time}}", "2026-10-18", "08:00", &params).unwrap(), "# 文章 {{time}} 小林 {{date}} {{missing}} {{param:未知}}");
+        assert!(render_with_parameters("{{param:作者}}", "文章", "日期", "时间", &HashMap::from([("作者".into(),"x".repeat(501))])).is_err());
+        assert!(render_with_parameters(&"x".repeat(256*1024+1),"", "", "", &HashMap::new()).is_err());
+    }
     fn bundle_fixture() -> std::path::PathBuf {
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let root = std::env::temp_dir().join(format!("longedit-template-bundle-{}-{nonce}", std::process::id()));
@@ -305,6 +332,7 @@ mod tests {
                 directory.to_string_lossy().into(),
                 "客户记录".into(),
                 "# {{title}}\n日期：{{date}}".into(),
+                None,
             ))
             .unwrap()
         };
@@ -322,6 +350,7 @@ mod tests {
             root.join("..").to_string_lossy().into(),
             "记录".into(),
             "".into(),
+            None,
         ));
         assert!(result.is_err());
         fs::remove_dir_all(root).unwrap();

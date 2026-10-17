@@ -1,0 +1,13 @@
+{
+  "evidenceLevel": "browser-DOM-static-export-utility-not-native-installed",
+  "checks": [
+    "Static semantic content retained; handlers, temporary srcset, active embeds and unsafe URLs excluded",
+    "Standalone file reopened outside app/Vite with embedded local image and no executable script; browser print layout generated (not native installed PDF proof)"
+  ],
+  "warnings": [
+    "相对或不安全链接未作为可点击链接交付：javascript:alert(1)",
+    "未交付交互内容：iframe；请核对预览。",
+    "图片未携带：https://example.invalid/a.png"
+  ],
+  "status": "passed"
+}

@@ -104,7 +104,8 @@ creation_test!(
         root,
         dir,
         "meeting".into(),
-        "# {{title}}".into()
+        "# {{title}}".into(),
+        None
     ))
 );
 creation_test!(
@@ -136,6 +137,7 @@ fn specialized_future_directory_is_not_created_while_reserved() {
         input.clone(),
         "meeting".into(),
         "# {{title}}".into(),
+        None,
     ));
     let capture = tauri::async_runtime::block_on(quick_note::save_quick_note(
         fixture.root(),

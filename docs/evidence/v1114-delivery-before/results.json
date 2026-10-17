@@ -1,0 +1,17 @@
+{
+  "evidenceLevel": "actual-LibraryMode-Vditor-simulated-IPC",
+  "checks": [
+    "Clicking the real PDF export entry fails immediately; no print dialog is requested",
+    "The rejected Markdown IPC adds no error feedback; it is swallowed as cancellation"
+  ],
+  "calls": [
+    {
+      "command": "export_markdown_file",
+      "args": {
+        "suggestedName": "项目方案.md",
+        "content": "# 项目方案\n\n记录想法，整理资料，继续昨天的工作。\n\n## 让记录更顺手\n\n快速笔记保存前就能选好位置，之后记住上次使用的目录。\n\n搜索资料直接在主编辑区打开，需要边看边写时再展开参考栏。\n\n## 下一步\n\n- 使用智能集合找到项目近期资料\n- 重开后继续上次工作\n- 恢复历史前先比较\n\n#产品升级\n"
+      }
+    }
+  ],
+  "status": "reproduced"
+}
