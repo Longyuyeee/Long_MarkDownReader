@@ -1,0 +1,165 @@
+
+> tauri-app@1.1.8 test:work-session-transfer
+> node --test scripts/test-portable-work-session.mjs scripts/test-work-session-transfer.mjs scripts/test-work-session-context.mjs scripts/test-work-sessions.mjs scripts/test-search-return.mjs
+
+TAP version 13
+# Subtest: portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+ok 1 - portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+  ---
+  duration_ms: 2.7988
+  ...
+# Subtest: relative paths reject Windows traversal, aliases, private metadata and device names
+ok 2 - relative paths reject Windows traversal, aliases, private metadata and device names
+  ---
+  duration_ms: 0.6303
+  ...
+# Subtest: strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+ok 3 - strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+  ---
+  duration_ms: 3.1408
+  ...
+# Subtest: relocation preserves active file, pin and reference without silently merging two existing targets
+ok 4 - relocation preserves active file, pin and reference without silently merging two existing targets
+  ---
+  duration_ms: 0.6185
+  ...
+# Subtest: preflight partitions real available files and missing reference without losing the original repairable record
+ok 5 - preflight partitions real available files and missing reference without losing the original repairable record
+  ---
+  duration_ms: 1.5349
+  ...
+# Subtest: canonical alias merging preserves the exact dirty model and the existing storage namespace
+ok 6 - canonical alias merging preserves the exact dirty model and the existing storage namespace
+  ---
+  duration_ms: 0.3906
+  ...
+# Subtest: preflight rejects substituted reference identities and unexpected or incomplete checks
+ok 7 - preflight rejects substituted reference identities and unexpected or incomplete checks
+  ---
+  duration_ms: 1.1063
+  ...
+# Subtest: leaving and reopening restores query, filters, selected result and scroll after fresh results
+ok 8 - leaving and reopening restores query, filters, selected result and scroll after fresh results
+  ---
+  duration_ms: 4.3165
+  ...
+# Subtest: paged return restores sort and depth, retaining a not-yet-loaded selection
+ok 9 - paged return restores sort and depth, retaining a not-yet-loaded selection
+  ---
+  duration_ms: 0.7583
+  ...
+# Subtest: named work-session restore retains bounded sort and page depth without old selection
+ok 10 - named work-session restore retains bounded sort and page depth without old selection
+  ---
+  duration_ms: 0.3436
+  ...
+# Subtest: missing result is explained; a failed refresh does not discard the saved selection
+ok 11 - missing result is explained; a failed refresh does not discard the saved selection
+  ---
+  duration_ms: 0.3807
+  ...
+# Subtest: changing query or library clears selection and libraries never inherit one another
+ok 12 - changing query or library clears selection and libraries never inherit one another
+  ---
+  duration_ms: 0.3512
+  ...
+# Subtest: named restore resolves fresh result identity after an excerpt changes, while retaining scroll and depth
+ok 13 - named restore resolves fresh result identity after an excerpt changes, while retaining scroll and depth
+  ---
+  duration_ms: 0.6969
+  ...
+# [Vue warn]: onBeforeUnmount is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+# Subtest: reading position survives restart without draft or selection contents
+ok 14 - reading position survives restart without draft or selection contents
+  ---
+  duration_ms: 91.8112
+  ...
+# Subtest: search filters survive restart and remain scoped to their library
+ok 15 - search filters survive restart and remain scoped to their library
+  ---
+  duration_ms: 89.5463
+  ...
+# Subtest: reference persists only identity and never stale excerpt text
+ok 16 - reference persists only identity and never stale excerpt text
+  ---
+  duration_ms: 19.2758
+  ...
+# Subtest: real search remember persists a locator without serializing the result excerpt
+ok 17 - real search remember persists a locator without serializing the result excerpt
+  ---
+  duration_ms: 47.7678
+  ...
+# Subtest: same portable file in the same vault is idempotent without renaming or overwriting unrelated records
+ok 18 - same portable file in the same vault is idempotent without renaming or overwriting unrelated records
+  ---
+  duration_ms: 7.6508
+  ...
+# Subtest: import failure retains corrupt records and storage quota failure retains every original byte
+ok 19 - import failure retains corrupt records and storage quota failure retains every original byte
+  ---
+  duration_ms: 0.4707
+  ...
+# Subtest: repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs
+ok 20 - repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs
+  ---
+  duration_ms: 0.8222
+  ...
+# Subtest: restore keeps exact text and specialized dirty models active and skips their incoming view
+ok 21 - restore keeps exact text and specialized dirty models active and skips their incoming view
+  ---
+  duration_ms: 0.341
+  ...
+# Subtest: suggested names are unique and bounded even with full-width emoji names
+ok 22 - suggested names are unique and bounded even with full-width emoji names
+  ---
+  duration_ms: 0.3626
+  ...
+# Subtest: native Windows canonical search paths belong to their configured drive or UNC library
+ok 23 - native Windows canonical search paths belong to their configured drive or UNC library
+  ---
+  duration_ms: 1.0402
+  ...
+# Subtest: canonical Windows membership still rejects adjacent roots, traversal and device paths
+ok 24 - canonical Windows membership still rejects adjacent roots, traversal and device paths
+  ---
+  duration_ms: 0.1999
+  ...
+# Subtest: session capture excludes text, external files, traversal, duplicate and adjacent libraries
+ok 25 - session capture excludes text, external files, traversal, duplicate and adjacent libraries
+  ---
+  duration_ms: 0.6877
+  ...
+# Subtest: dirty tabs survive switching including a matching file with different casing
+ok 26 - dirty tabs survive switching including a matching file with different casing
+  ---
+  duration_ms: 0.2378
+  ...
+# Subtest: roundtrip isolates roots, preserves invalid records, and reports failed saves
+ok 27 - roundtrip isolates roots, preserves invalid records, and reports failed saves
+  ---
+  duration_ms: 0.9385
+  ...
+# Subtest: actual store restores scoped tabs and safely filters legacy mixed-library state
+ok 28 - actual store restores scoped tabs and safely filters legacy mixed-library state
+  ---
+  duration_ms: 10.9891
+  ...
+# Subtest: rename/delete preserve files and reject stale management dialogs
+ok 29 - rename/delete preserve files and reject stale management dialogs
+  ---
+  duration_ms: 1.799
+  ...
+# Subtest: named scenes whitelist search metadata and never copy result snippets into storage
+ok 30 - named scenes whitelist search metadata and never copy result snippets into storage
+  ---
+  duration_ms: 0.5264
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 30
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 710.5877

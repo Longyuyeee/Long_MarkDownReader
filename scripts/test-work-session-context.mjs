@@ -8,7 +8,7 @@ const entries = new Map()
 const localStorage = { getItem: key => entries.get(key) || null, setItem: (key, value) => entries.set(key, value), removeItem: key => entries.delete(key) }
 function moduleAt(path, deps = {}) {
   const exports = {}
-  vm.runInNewContext(ts.transpile(fs.readFileSync(path, 'utf8'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }), { exports, localStorage, require: name => deps[name] || Vue })
+  vm.runInNewContext(ts.transpile(fs.readFileSync(path, 'utf8'), { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }), { exports, localStorage, require: name => deps[name] || (name==='../utils/workSessions'?moduleAt('src/utils/workSessions.ts'):Vue) })
   return exports
 }
 test('reading position survives restart without draft or selection contents', () => {
@@ -38,4 +38,17 @@ test('reference persists only identity and never stale excerpt text', () => {
   assert.equal(refs.readWorkspaceReference('C:/notes').path, 'C:/notes/a.md')
   assert.equal(refs.readWorkspaceReference('C:/other'), undefined)
   assert.throws(() => refs.writeWorkspaceReference('C:/notes', { path: 'C:/other/a.md' }), /不属于/)
+})
+
+test('real search remember persists a locator without serializing the result excerpt', () => {
+  entries.clear()
+  const first = moduleAt('src/composables/useSearchReturn.ts'), scope = Vue.effectScope()
+  const hook = scope.run(() => first.useSearchReturn({root:()=> 'C:/notes',query:Vue.ref('预算'),types:Vue.ref(['markdown']),running:Vue.ref(false),failed:Vue.ref(false),resultKeys:()=>[],viewport:Vue.ref(null),showResults:()=>{}}))
+  const selected = JSON.stringify(['C:/notes/a.md','markdown','body',null,null,null,null,'PRIVATE SEARCH EXCERPT'])
+  hook.remember(selected)
+  assert.equal([...entries.values()].join('').includes('PRIVATE SEARCH EXCERPT'),false)
+  const restarted=moduleAt('src/composables/useSearchReturn.ts').snapshotSearchSession('C:/notes')
+  assert.equal(restarted.selected,'')
+  assert.equal(restarted.selection[0],'C:/notes/a.md')
+  scope.stop()
 })

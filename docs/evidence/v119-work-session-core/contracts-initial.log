@@ -1,0 +1,115 @@
+TAP version 13
+# Subtest: portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+ok 1 - portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets
+  ---
+  duration_ms: 3.1951
+  ...
+# Subtest: relative paths reject Windows traversal, aliases, private metadata and device names
+ok 2 - relative paths reject Windows traversal, aliases, private metadata and device names
+  ---
+  duration_ms: 0.5087
+  ...
+# Subtest: strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+ok 3 - strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input
+  ---
+  duration_ms: 1.0848
+  ...
+# Subtest: relocation preserves active file, pin and reference without silently merging two existing targets
+ok 4 - relocation preserves active file, pin and reference without silently merging two existing targets
+  ---
+  duration_ms: 0.5021
+  ...
+# Subtest: preflight partitions real available files and missing reference without losing the original repairable record
+ok 5 - preflight partitions real available files and missing reference without losing the original repairable record
+  ---
+  duration_ms: 0.7075
+  ...
+# Subtest: canonical alias merging preserves the exact dirty model and the existing storage namespace
+ok 6 - canonical alias merging preserves the exact dirty model and the existing storage namespace
+  ---
+  duration_ms: 0.2526
+  ...
+# Subtest: reading position survives restart without draft or selection contents
+ok 7 - reading position survives restart without draft or selection contents
+  ---
+  duration_ms: 74.6782
+  ...
+# Subtest: search filters survive restart and remain scoped to their library
+ok 8 - search filters survive restart and remain scoped to their library
+  ---
+  duration_ms: 42.4719
+  ...
+# Subtest: reference persists only identity and never stale excerpt text
+ok 9 - reference persists only identity and never stale excerpt text
+  ---
+  duration_ms: 14.3393
+  ...
+# Subtest: same portable file in the same vault is idempotent without renaming or overwriting unrelated records
+ok 10 - same portable file in the same vault is idempotent without renaming or overwriting unrelated records
+  ---
+  duration_ms: 6.5739
+  ...
+# Subtest: import failure retains corrupt records and storage quota failure retains every original byte
+ok 11 - import failure retains corrupt records and storage quota failure retains every original byte
+  ---
+  duration_ms: 0.3106
+  ...
+# Subtest: repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs
+ok 12 - repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs
+  ---
+  duration_ms: 0.4872
+  ...
+# Subtest: restore keeps exact text and specialized dirty models active and skips their incoming view
+ok 13 - restore keeps exact text and specialized dirty models active and skips their incoming view
+  ---
+  duration_ms: 0.1987
+  ...
+# Subtest: suggested names are unique and bounded even with full-width emoji names
+ok 14 - suggested names are unique and bounded even with full-width emoji names
+  ---
+  duration_ms: 0.3222
+  ...
+# Subtest: native Windows canonical search paths belong to their configured drive or UNC library
+ok 15 - native Windows canonical search paths belong to their configured drive or UNC library
+  ---
+  duration_ms: 0.6786
+  ...
+# Subtest: canonical Windows membership still rejects adjacent roots, traversal and device paths
+ok 16 - canonical Windows membership still rejects adjacent roots, traversal and device paths
+  ---
+  duration_ms: 0.162
+  ...
+# Subtest: session capture excludes text, external files, traversal, duplicate and adjacent libraries
+ok 17 - session capture excludes text, external files, traversal, duplicate and adjacent libraries
+  ---
+  duration_ms: 0.4961
+  ...
+# Subtest: dirty tabs survive switching including a matching file with different casing
+ok 18 - dirty tabs survive switching including a matching file with different casing
+  ---
+  duration_ms: 0.1572
+  ...
+# Subtest: roundtrip isolates roots, preserves invalid records, and reports failed saves
+ok 19 - roundtrip isolates roots, preserves invalid records, and reports failed saves
+  ---
+  duration_ms: 0.5233
+  ...
+# Subtest: actual store restores scoped tabs and safely filters legacy mixed-library state
+ok 20 - actual store restores scoped tabs and safely filters legacy mixed-library state
+  ---
+  duration_ms: 9.9664
+  ...
+# Subtest: rename/delete preserve files and reject stale management dialogs
+ok 21 - rename/delete preserve files and reject stale management dialogs
+  ---
+  duration_ms: 0.6265
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 478.8085

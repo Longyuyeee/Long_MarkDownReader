@@ -1,0 +1,54 @@
+TAP version 13
+# Subtest: same portable file in the same vault is idempotent without renaming or overwriting unrelated records
+ok 1 - same portable file in the same vault is idempotent without renaming or overwriting unrelated records
+  ---
+  duration_ms: 5.4383
+  ...
+# Subtest: import failure retains corrupt records and storage quota failure retains every original byte
+ok 2 - import failure retains corrupt records and storage quota failure retains every original byte
+  ---
+  duration_ms: 0.3427
+  ...
+# Subtest: repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs
+ok 3 - repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs
+  ---
+  duration_ms: 0.63
+  ...
+# Subtest: restore keeps exact text and specialized dirty models active and skips their incoming view
+ok 4 - restore keeps exact text and specialized dirty models active and skips their incoming view
+  ---
+  duration_ms: 0.2421
+  ...
+# Subtest: suggested names are unique and bounded even with full-width emoji names
+ok 5 - suggested names are unique and bounded even with full-width emoji names
+  ---
+  duration_ms: 0.2714
+  ...
+# Subtest: invalid names and conflicting record identities cannot poison the existing scene list
+not ok 6 - invalid names and conflicting record identities cannot poison the existing scene list
+  ---
+  duration_ms: 0.6443
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-work-session-transfer.mjs:41:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-work-session-transfer.mjs:45:11)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 389.2023

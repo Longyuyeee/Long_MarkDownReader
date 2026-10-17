@@ -1,13 +1,14 @@
 import { nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { safeSearchSelection as searchSelectionMetadata, safeSessionSearch, type SearchSelection, type WorkSessionSearch } from '../utils/workSessions'
 
-interface SearchSession { query: string; types: string[]; selected: string; scroll: number; loadedFiles?: number; sort?: 'relevance' | 'modified' }
+type SearchSession = WorkSessionSearch
 // Persist only search context; results and document text are always read afresh.
 const sessions = new Map<string, SearchSession>()
 const searchSessionKey = (root: string) => `longedit.search.v1:${encodeURIComponent(root.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase())}`
 const persistSearchSession = (root: string, session?: SearchSession) => {
   try {
     if (typeof localStorage === 'undefined') return
-    if (session) localStorage.setItem(searchSessionKey(root), JSON.stringify(session))
+    if (session) localStorage.setItem(searchSessionKey(root), JSON.stringify(safeSessionSearch(session)))
     else localStorage.removeItem(searchSessionKey(root))
   } catch { /* Best effort auto-resume; never interrupt editing. */ }
 }
@@ -17,21 +18,16 @@ export const snapshotSearchSession = (root: string) => {
     try {
       const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(searchSessionKey(root)) : null
       const saved = raw ? JSON.parse(raw) : null
-      if (saved && typeof saved.query === 'string' && Array.isArray(saved.types)) session = {
-        query: saved.query.slice(0, 500), types: saved.types.filter((type: unknown) => typeof type === 'string').slice(0, 8),
-        selected: typeof saved.selected === 'string' ? saved.selected : '', scroll: Number.isFinite(saved.scroll) ? Math.max(0, saved.scroll) : 0,
-        loadedFiles: Number.isFinite(saved.loadedFiles) ? Math.max(0, Math.min(10000, saved.loadedFiles)) : 0,
-        sort: saved.sort === 'modified' ? 'modified' : 'relevance',
-      }
+      session = safeSessionSearch(saved)
     } catch { /* Keep unreadable data available for recovery. */ }
   }
   return session ? { ...session, types: [...session.types] } : undefined
 }
 export const restoreSearchSession = (root: string, session?: SearchSession) => {
   if (!session) { sessions.delete(root); persistSearchSession(root); return }
-  sessions.set(root, { query: String(session.query || '').slice(0, 500), types: Array.isArray(session.types) ? session.types.filter(type => typeof type === 'string').slice(0, 8) : [], selected: '', scroll: 0,
-    loadedFiles: Number.isFinite(session.loadedFiles) ? Math.max(0, Math.min(10000, session.loadedFiles!)) : 0,
-    sort: session.sort === 'modified' ? 'modified' : 'relevance' })
+  const checked = safeSessionSearch(session)
+  if (!checked) return
+  sessions.set(root, checked)
   persistSearchSession(root, sessions.get(root))
 }
 export function useSearchReturn(options: {
@@ -42,6 +38,7 @@ export function useSearchReturn(options: {
   sort?: Ref<'relevance' | 'modified'>; hasMore?: () => boolean;
 }) {
   const selectedKey = ref('')
+  let selection: SearchSelection | undefined
   const notice = ref('')
   let scroll = 0, pending = false, focusResult = false, disposed = false
   const save = (root = options.root()) => {
@@ -49,7 +46,7 @@ export function useSearchReturn(options: {
     if (!options.query.value.trim()) { sessions.delete(root); persistSearchSession(root); return }
     if (!pending && !options.running.value && options.viewport.value) scroll = options.viewport.value.scrollTop
     sessions.delete(root)
-    sessions.set(root, { query: options.query.value, types: [...options.types.value], selected: selectedKey.value, scroll,
+    sessions.set(root, { query: options.query.value, types: [...options.types.value], selected: selectedKey.value, selection:searchSelectionMetadata(selectedKey.value) || selection, scroll,
       loadedFiles: Math.min(10000, options.loadedFiles?.() || 0), sort: options.sort?.value })
     persistSearchSession(root, sessions.get(root))
     if (sessions.size > 8) sessions.delete(sessions.keys().next().value!)
@@ -60,12 +57,14 @@ export function useSearchReturn(options: {
     if (disposed || !pending || options.running.value || options.failed.value || !options.viewport.value) return
     const viewport = options.viewport.value
     viewport.scrollTop = scroll
-    const result = Array.from(viewport.querySelectorAll<HTMLElement>('[data-search-key]')).find(item => item.dataset.searchKey === selectedKey.value)
-    if (selectedKey.value && !result) {
+    const results = Array.from(viewport.querySelectorAll<HTMLElement>('[data-search-key]'))
+    const result = results.find(item => item.dataset.searchKey === selectedKey.value) || (selection ? results.find(item=>JSON.stringify(searchSelectionMetadata(item.dataset.searchKey))===JSON.stringify(selection)) : undefined)
+    if ((selectedKey.value || selection) && !result) {
       if (options.hasMore?.()) { notice.value = '原来的结果尚未加载，已保留选择，可继续加载文件。'; return }
       notice.value = '原来的结果已变化，已保留搜索条件，请从当前结果中选择。'
-      selectedKey.value = ''
+      selectedKey.value = ''; selection = undefined
     } else if (result) {
+      selectedKey.value = result.dataset.searchKey || ''; selection = searchSelectionMetadata(selectedKey.value)
       notice.value = ''
       if (focusResult) {
         result.scrollIntoView({ block: 'nearest' })
@@ -75,7 +74,7 @@ export function useSearchReturn(options: {
     pending = false; focusResult = false
   }
   const remember = (key: string) => {
-    selectedKey.value = key; notice.value = ''; pending = false
+    selectedKey.value = key; selection = searchSelectionMetadata(key); notice.value = ''; pending = false
     scroll = options.viewport.value?.scrollTop ?? scroll
     save()
   }
@@ -86,7 +85,7 @@ export function useSearchReturn(options: {
     if (options.sort && session.sort) options.sort.value = session.sort
     options.query.value = session.query
     options.types.value = [...session.types]
-    selectedKey.value = session.selected; scroll = session.scroll
+    selectedKey.value = session.selected; selection = session.selection || searchSelectionMetadata(session.selected); scroll = session.scroll
     // Search runs afresh; restore after its results arrive, not against stale content.
     pending = true
     options.showResults()
@@ -97,11 +96,11 @@ export function useSearchReturn(options: {
     void apply()
   }
   watch([options.query, options.types], () => {
-    selectedKey.value = ''; notice.value = ''; scroll = 0; pending = false
+    selectedKey.value = ''; selection = undefined; notice.value = ''; scroll = 0; pending = false
   }, { flush: 'sync', deep: true })
   watch(options.root, (_root, oldRoot) => {
     save(oldRoot)
-    selectedKey.value = ''; notice.value = ''; scroll = 0; pending = false
+    selectedKey.value = ''; selection = undefined; notice.value = ''; scroll = 0; pending = false
   }, { flush: 'sync' })
   watch([options.viewport, options.running, options.failed, options.resultKeys], () => { void apply() }, { flush: 'post' })
   onBeforeUnmount(() => { save(); disposed = true })

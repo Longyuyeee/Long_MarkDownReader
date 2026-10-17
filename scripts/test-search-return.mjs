@@ -5,7 +5,9 @@ import ts from 'typescript'
 import * as Vue from 'vue'
 import { test } from 'node:test'
 let cleanupTarget
-const box = { exports: {}, require: () => ({ ...Vue, onBeforeUnmount: fn => cleanupTarget.push(fn) }) }
+const sessionHelpers={}
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/workSessions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports:sessionHelpers})
+const box = { exports: {}, require: name => name==='../utils/workSessions'?sessionHelpers:({ ...Vue, onBeforeUnmount: fn => cleanupTarget.push(fn) }) }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/composables/useSearchReturn.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, box)
 function harness(root, paging=false) {
   const cleanups = []; cleanupTarget = cleanups
@@ -54,4 +56,13 @@ test('changing query or library clears selection and libraries never inherit one
   a.query.value = ''; a.stop()
   const d = harness('/return-d'); d.state.restore(); assert.equal(d.query.value, ''); d.stop()
   const c = harness('/return-c'); c.running.value = true; c.state.restore(); assert.equal(c.query.value, '新条件'); assert.equal(c.state.selectedKey.value, 'new'); c.stop()
+})
+
+test('named restore resolves fresh result identity after an excerpt changes, while retaining scroll and depth',async()=>{
+ const old=JSON.stringify(['C:/notes/a.md','markdown','body',null,null,null,null,'PRIVATE OLD EXCERPT'])
+ const fresh=JSON.stringify(['C:/notes/a.md','markdown','body',null,null,null,null,'fresh content'])
+ box.exports.restoreSearchSession('/locator-return',{query:'预算',types:['markdown'],selected:old,scroll:500,loadedFiles:80,sort:'modified'})
+ const back=harness('/locator-return',true);back.running.value=true;back.state.restore();assert.equal(back.state.selectedKey.value,'')
+ back.keys.value=[fresh];back.running.value=false;await settle();assert.equal(back.state.selectedKey.value,fresh);assert.equal(back.node.scrollTop,500);assert.equal(back.restored(),80)
+ back.state.returnToResults();await settle();assert.equal(back.focus(),1);back.stop()
 })

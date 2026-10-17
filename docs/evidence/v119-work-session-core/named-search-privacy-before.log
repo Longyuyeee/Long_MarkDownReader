@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: native Windows canonical search paths belong to their configured drive or UNC library
+ok 1 - native Windows canonical search paths belong to their configured drive or UNC library
+  ---
+  duration_ms: 0.62
+  ...
+# Subtest: canonical Windows membership still rejects adjacent roots, traversal and device paths
+ok 2 - canonical Windows membership still rejects adjacent roots, traversal and device paths
+  ---
+  duration_ms: 0.1011
+  ...
+# Subtest: session capture excludes text, external files, traversal, duplicate and adjacent libraries
+ok 3 - session capture excludes text, external files, traversal, duplicate and adjacent libraries
+  ---
+  duration_ms: 0.3779
+  ...
+# Subtest: dirty tabs survive switching including a matching file with different casing
+ok 4 - dirty tabs survive switching including a matching file with different casing
+  ---
+  duration_ms: 0.1148
+  ...
+# Subtest: roundtrip isolates roots, preserves invalid records, and reports failed saves
+ok 5 - roundtrip isolates roots, preserves invalid records, and reports failed saves
+  ---
+  duration_ms: 0.4779
+  ...
+# Subtest: actual store restores scoped tabs and safely filters legacy mixed-library state
+ok 6 - actual store restores scoped tabs and safely filters legacy mixed-library state
+  ---
+  duration_ms: 5.9594
+  ...
+# Subtest: rename/delete preserve files and reject stale management dialogs
+ok 7 - rename/delete preserve files and reject stale management dialogs
+  ---
+  duration_ms: 0.3831
+  ...
+# Subtest: named scenes whitelist search metadata and never copy result snippets into storage
+not ok 8 - named scenes whitelist search metadata and never copy result snippets into storage
+  ---
+  duration_ms: 0.5596
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-work-sessions.mjs:81:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-work-sessions.mjs:86:9)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:633:7)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 7
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 330.19
