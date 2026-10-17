@@ -2,6 +2,7 @@ import { computed, ref, shallowRef } from 'vue'
 import { parseSearchQuery } from '../utils/searchQuery.ts'
 
 export type SearchSort = 'relevance' | 'modified'
+export type CollectionSort = SearchSort | 'name' | 'path'
 export interface SearchMatch {
   title: string; path: string; objectType: string
   matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
@@ -25,8 +26,10 @@ interface NativePage {
   totalFiles: number | null; availableFiles?: number; warnings?: string[]; libraries?: LibraryProgress[]
 }
 export interface SearchDefinition {
-  libraryRoot: string | null; query: string; sort: SearchSort
-  channel: 'library' | 'palette'; kind: 'single' | 'libraries'; matchMode?: 'content' | 'tag'
+  libraryRoot: string | null; query: string; sort: CollectionSort
+  channel: 'library' | 'palette' | 'collection'; kind: 'single' | 'libraries' | 'collection'; matchMode?: 'content' | 'tag'
+  objectTypes?: string[]
+  filters?: { directory: string; tag: string; tags?: string[]; modifiedWithinDays: number | null }
 }
 export interface SearchFrame extends NativePage { workCursor: string | null; pageCursor: string | null }
 export type SearchInvoke = <T>(command: string, args?: Record<string, unknown>) => Promise<T>
@@ -85,15 +88,16 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
     return { ...raw,
       files: raw.files.map(file => ({ ...file, libraryRoot: file.libraryRoot || def.libraryRoot || undefined })),
       workCursor: def.kind === 'libraries' ? raw.continueCursor || null : raw.scanState === 'preparing' ? raw.nextCursor : null,
-      pageCursor: def.kind === 'single' && raw.scanState === 'preparing' ? null : raw.nextCursor,
+      pageCursor: def.kind !== 'libraries' && raw.scanState === 'preparing' ? null : raw.nextCursor,
     }
   }
   const request = async (action: Action, token: number, forceView = false) => {
     const def = definition!
     lastAction = action
-    const raw = await invoke<NativePage>(def.kind === 'single' ? 'search_knowledge_page' : 'search_knowledge_libraries_page', {
+    const raw = await invoke<NativePage>(def.kind === 'collection' ? 'search_collection_page' : def.kind === 'single' ? 'search_knowledge_page' : 'search_knowledge_libraries_page', {
       request: { libraryRoot: def.libraryRoot, query: def.query, sort: def.sort, pageSize: options.pageSize ?? 40,
-        channel: def.channel, cursor: action.cursor, ...(def.kind === 'single' ? { matchMode: def.matchMode || 'content' } : {}) },
+        cursor: action.cursor, ...(def.kind === 'collection' ? { objectTypes: def.objectTypes || [], filters: def.filters || { directory: '', tag: '', modifiedWithinDays: null } }
+          : { channel: def.channel, ...(def.kind === 'single' ? { matchMode: def.matchMode || 'content' } : {}) }) },
     })
     if (token !== generation || disposed) { if (raw?.sessionId !== sessionId) closeSession(raw?.sessionId, def.channel); return false }
     let frame: SearchFrame
@@ -146,7 +150,9 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
   }
   const start = async (def: SearchDefinition, settings: { preserve?: boolean; loadUntil?: number } = {}) => {
     retire(); if (disposed) return
-    definition = { ...def }; pendingView.value = null; nextPage.value = null; status.value = null
+    definition = { ...def, ...(def.objectTypes ? { objectTypes: [...def.objectTypes] } : {}),
+      ...(def.filters ? { filters: { ...def.filters, tags: def.filters.tags ? [...def.filters.tags] : undefined } } : {}) }
+    pendingView.value = null; nextPage.value = null; status.value = null
     error.value = ''; errorCode.value = ''; viewId = null
     if (!settings.preserve) files.value = []
     retainingView.value = !!settings.preserve && files.value.length > 0
@@ -154,8 +160,8 @@ export function createSearchPages(invoke: SearchInvoke, options: { pageSize?: nu
     try { parseSearchQuery(def.query) } catch (cause) {
       error.value = String(cause).replace(/^Error:\s*/, ''); errorCode.value = 'invalidRequest'; return
     }
-    if (!def.query.trim()) return
-    if (def.kind === 'single' && !def.libraryRoot) { errorCode.value = 'scopeUnavailable'; error.value = publicErrors.scopeUnavailable; return }
+    if (!def.query.trim() && def.kind !== 'collection') return
+    if (def.kind !== 'libraries' && !def.libraryRoot) { errorCode.value = 'scopeUnavailable'; error.value = publicErrors.scopeUnavailable; return }
     await perform({ kind: 'first', cursor: null }, true)
   }
   const applyPending = async () => {

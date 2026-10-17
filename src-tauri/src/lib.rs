@@ -78,7 +78,7 @@ use commands::inbox::{create_inbox_directory, read_inbox_directory};
 use commands::index::{
     cancel_knowledge_index, delete_knowledge_index, get_knowledge_index_status,
     preview_search_document, rebuild_knowledge_index, recover_knowledge_index_cache,
-    search_knowledge, search_knowledge_libraries, search_knowledge_page, search_knowledge_libraries_page, close_knowledge_search,
+    search_knowledge, search_knowledge_libraries, search_knowledge_page, search_knowledge_libraries_page, close_knowledge_search, search_collection_page, get_tag_catalog_page,
 };
 use commands::json::{
     analyze_json_source, append_json_array_item_source, append_json_object_property_source,
@@ -552,6 +552,8 @@ pub fn run() {
             search_knowledge,
             search_knowledge_libraries,
             search_knowledge_page,
+            search_collection_page,
+            get_tag_catalog_page,
             search_knowledge_libraries_page,
             close_knowledge_search,
             commands::history::compare_history_version,

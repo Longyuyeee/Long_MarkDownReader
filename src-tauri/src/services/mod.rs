@@ -18,6 +18,7 @@ pub(crate) mod file_move_links;
 pub(crate) mod file_move_transaction;
 pub(crate) mod history_coordination;
 pub mod knowledge_index;
+pub(crate) mod inline_tags;
 pub(crate) mod move_windows;
 pub mod pdf_index;
 pub mod reliable_write;

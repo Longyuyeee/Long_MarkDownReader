@@ -11,7 +11,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CollectionFilters {
     #[serde(default)]
@@ -38,9 +38,9 @@ impl CollectionFilters {
             .filter(|tag| !tag.is_empty())
             .collect();
         if tags.len() > 8
-            || tags.iter().any(|tag| {
-                tag.chars().count() > 80 || tag.chars().any(|c| c.is_whitespace() || c == '#')
-            })
+            || tags
+                .iter()
+                .any(|tag| super::inline_tags::validate(tag).is_err())
         {
             return Err("标签请填写单个标签名，不含 # 或空格".into());
         }
@@ -114,11 +114,7 @@ pub fn search(
         .chain(&filters.tags)
         .filter(|tag| !tag.is_empty())
         .map(|tag| {
-            regex::Regex::new(&format!(
-                r#"(?:^|\s)#{}(?:$|\s|[.,;:!?，。；：！？、\[\](){{}}\"'<>])"#,
-                regex::escape(tag)
-            ))
-            .map_err(|e| format!("标签条件无效：{e}"))
+            crate::services::inline_tags::pattern(tag).map_err(|e| format!("标签条件无效：{e}"))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let cutoff = filters.modified_within_days.map(|days| {

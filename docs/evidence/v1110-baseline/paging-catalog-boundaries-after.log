@@ -1,0 +1,24 @@
+   Compiling tauri-app v1.1.9 (E:\ProjectSave\GeminiProject\MarkDownReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.03s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-6c531fe148f04f14.exe)
+
+running 7 tests
+test commands::index::search_pages::collections::tests::v1110_collection_rejects_scope_cursor_changes_and_private_directories ... ok
+test commands::index::search_pages::collections::tests::v1110_collection_metadata_only_does_not_extract_large_bodies_and_unread_tag_body_is_not_empty_complete ... ok
+test commands::index::search_pages::collections::tests::v1110_collection_type_directory_multitag_time_and_full_query_modified_sort_are_combined ... ok
+test commands::index::search_pages::collections::tests::v1110_long_existing_tags_and_cursor_query_sort_page_and_scope_bindings_are_preserved ... ok
+test commands::index::search_pages::collections::tests::v1110_catalog_limit_and_unread_are_explicit_and_failed_file_does_not_partially_increment_tags ... ok
+test commands::index::search_pages::collections::tests::v1110_collection_over_two_hundred_files_is_complete_grouped_and_globally_sorted ... ok
+test commands::index::search_pages::collections::tests::v1110_catalog_counts_and_tag_results_share_one_snapshot_grammar_and_resumable_steps ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 996 filtered out; finished in 0.78s
+

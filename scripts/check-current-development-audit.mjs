@@ -52,7 +52,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-version-identity.mjs'], 
 execFileSync(process.execPath, ['--test', 'scripts/test-version-audit-fixture.mjs'], { stdio: 'inherit' })
 import './check-v123-fault-observation.mjs'
 execFileSync(process.execPath, ['--test', 'scripts/test-v122-installer-receipt.mjs'], { stdio: 'inherit' })
-execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-search-recovery.mjs', 'scripts/test-search-pages.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-search-recovery.mjs', 'scripts/test-search-pages.mjs', 'scripts/test-v1110-collection-pages.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-search-result-layout.mjs'], { stdio: 'inherit' })
 import './check-community-updater-contract.mjs'
 import './check-v122-managed-updater-lifecycle.mjs'
@@ -194,6 +194,10 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.
   if (version === '1.1.8' && development.activeSlice?.id === 'v1.1.9-work-session-continuity') {
     required[9] = ['当前阶段：**v1.1.9 工作现场开发**', published && development.releaseCandidate === false
       && development.currentStage === 'M8-46-v1.1.9-work-session-continuity' && fs.existsSync(development.activeSlice.document)]
+  }
+  if (version === '1.1.9' && development.activeSlice?.id === 'v1.1.10-tags-collections') {
+    required[9] = ['当前阶段：**v1.1.10 标签与集合开发**', published && development.releaseCandidate === false
+      && development.currentStage === 'M8-48-v1.1.10-tags-collections' && fs.existsSync(development.activeSlice.document)]
   }
 }
 
