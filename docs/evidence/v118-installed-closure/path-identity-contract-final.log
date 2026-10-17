@@ -1,0 +1,75 @@
+TAP version 13
+# Subtest: publication intake accepts the exact successful remote download and installer receipts
+ok 1 - publication intake accepts the exact successful remote download and installer receipts
+  ---
+  duration_ms: 1.5393
+  ...
+# Subtest: publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+ok 2 - publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets
+  ---
+  duration_ms: 4.035
+  ...
+# Subtest: 8.3 spelling is resolved through the filesystem before making any search fixture path
+ok 3 - 8.3 spelling is resolved through the filesystem before making any search fixture path
+  ---
+  duration_ms: 0.7967
+  ...
+# Subtest: unknown or different physical parents fail closed without a string fallback
+ok 4 - unknown or different physical parents fail closed without a string fallback
+  ---
+  duration_ms: 0.6379
+  ...
+# Subtest: a real owned directory alias resolves correctly and all original bytes remain unchanged
+ok 5 - a real owned directory alias resolves correctly and all original bytes remain unchanged
+  ---
+  duration_ms: 6.911
+  ...
+# Subtest: extended Windows spelling still addresses the exact same physical directory
+ok 6 - extended Windows spelling still addresses the exact same physical directory
+  ---
+  duration_ms: 2.0518
+  ...
+# Subtest: a different existing directory never qualifies as the chosen destination
+ok 7 - a different existing directory never qualifies as the chosen destination
+  ---
+  duration_ms: 0.4572
+  ...
+# Subtest: files and missing directories cannot pass a destination check
+ok 8 - files and missing directories cannot pass a destination check
+  ---
+  duration_ms: 0.5316
+  ...
+# Subtest: v118 must retain every predecessor workflow and its own hash-bound installed report
+ok 9 - v118 must retain every predecessor workflow and its own hash-bound installed report
+  ---
+  duration_ms: 70.0289
+  ...
+# Subtest: installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+ok 10 - installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks
+  ---
+  duration_ms: 43.8876
+  ...
+# Subtest: installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+ok 11 - installed runtime identity refuses local, self-hosted, wrong version and missing provenance
+  ---
+  duration_ms: 0.4951
+  ...
+# Subtest: all historical installed entry guards accept v118 without removing their tasks
+ok 12 - all historical installed entry guards accept v118 without removing their tasks
+  ---
+  duration_ms: 10.1174
+  ...
+# Subtest: v118 candidate/public handoff never inherits an official update observation
+ok 13 - v118 candidate/public handoff never inherits an official update observation
+  ---
+  duration_ms: 0.5215
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 231.9578

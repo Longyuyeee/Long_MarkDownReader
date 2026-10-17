@@ -82,6 +82,16 @@ jobs:
           "CURRENT_INSTALLER_SHA256=$(@($receipt.artifacts | Where-Object { $_.target -eq 'nsis' })[0].sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Test directory identity without changing the filesystem
         run: node --test scripts/test-release-directory-identity.mjs
+      - name: Retain original build reports separately from installer bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: community-release-original-build-reports-${{ github.run_id }}
+          path: immutable-build/community-release-output
+          if-no-files-found: error
+          retention-days: 14
+      - name: Test canonical search fixture parents with owned temporary directories
+        run: node --test scripts/test-installed-search-fixture-path.mjs
       - name: Run complete same-installer lifecycle and installed workflow
         shell: powershell
         run: |
