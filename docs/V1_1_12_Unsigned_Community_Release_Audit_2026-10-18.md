@@ -2,7 +2,7 @@
 
 ## 当前结论
 
-**固定安装包与独立同包复核均通过，等待最终 main CI 后封板发布；当前尚未公开发布。** 运行候选/目标1.1.12，公开稳定版仍1.1.11。修复后的固定产品为 **4fb14270513d556ed965a0c27308bdc727eacd4b**，原构建 **39063418440 success**，独立复核 **39066551529 success**，驱动 **1cd954f70606a3ea96c3857a64eabc81d02520d5**。不重建或替换已通过的字节。
+**v1.1.12 已封板并正式发布。** 公开/运行时1.1.12，下一开发目标1.1.13。北京时间2026-10-18 **04:42:54**（UTC 2026-10-17 20:42:54）[发布](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.12)。产品/标签 **4fb14270513d556ed965a0c27308bdc727eacd4b**；构建39063418440、独立同包39066551529、封板main CI39067122280、原包发布/公开回下载39067822812均success。两安装器和校验文件大小、SHA-256、GitHub digest一致，没有重建替换。独立驱动 **1cd954f70606a3ea96c3857a64eabc81d02520d5**。
 
 本版已实现独立本地内容包：整库/子目录范围，文档与数据、附件、PDF批注及可选Markdown/TXT历史，清单/逐文件摘要，源变化拒绝，只恢复新目录，资源/批注/历史改绑，原库和草稿保护。管理备份、模板、工作现场及所有既有功能保持原语义；不增加日常“先保存再归档”的步骤。
 
@@ -16,6 +16,9 @@
 | 原构建安装报告 | [原始16项及磁盘结果](evidence/v1112-corrected-build-39063418440/installed-v1112-workflow.json)，原驱动4fb14270 |
 | 独立安装报告 | [本版16项](evidence/v1-1-12-candidate-lifecycle/installed-v1112-workflow.json)，驱动1cd954f7 |
 | 严格导入 | [清单](evidence/v1.1.12-release/import-manifest.json)、[安装器/运行时清单](evidence/v1.1.12-release/artifact-manifest.json)，逐文件保留原始摘要 |
+| 封板 main CI | [39067122280](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39067122280) success，文档头ee64f4ab；[原始元数据](evidence/v1.1.12-release/freeze-ci.json) |
+| 原包发布/公开回下载 | [39067822812](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39067822812) success；[正式收据](evidence/v1.1.12-release/release-receipt.json)、[原始API/下载结果](evidence/v1.1.12-release/publication-import-manifest.json) |
+| 仓库发布对齐 | 发布后README/Release/安装摘要/下一目标只读检查通过；[当前开发审计完整日志](evidence/v1112-publication-current-audit.log)，[发布前导入审计](evidence/v1112-freeze-current-audit.log)分别保留 |
 | 原生回归 | 28项专项；1033功能+1独立性能=1034通过，0失败，5既有ignored；本次构建也完整重跑 |
 | 正式组件/布局 | 14项模拟IPC，六风格深浅12组及760×620、480×800、360×620；3项工具、5项协议测试；不冒充原生安装证据 |
 | 完整安装任务 | 本版16+历版134功能，22生命周期、18工作区、11路由、7管理恢复、4版本身份均通过 |
@@ -54,7 +57,7 @@
 
 更早的真实组件页脚越界、样例system主题解析/JSON序列化与修复，见[开发过程](V1_1_12_Content_Backup_Development_2026-10-18.md)。失败和旧包目录不覆盖，不将模拟IPC、无权限创建符号链接、未发生的断电或物理耗尽磁盘冒充通过；实际Windows junction拒绝另有必测证据。
 
-## 边界和剩余发布步骤
+## 发布边界与后续接续
 
 发行通道为 **community-unsigned**，Windows x64未签名，系统可能提示未知发布者；企业矩阵 **releaseCandidate=false**。仅手动下载安装的社区发布；1.1.11→1.1.12应用内管理更新仍为独立pending，不以覆盖安装和本次发布冒充自动更新通过。
 
@@ -62,4 +65,4 @@
 
 验收限Windows本地磁盘。扩展UNC与普通UNC混用时，前端子目录选择仍可能安全拒绝；网络共享/断线恢复未列为通过。过短损坏输入目前可能显示“内容包为空或超过544MiB”，原因文案尚不够精确，但明确阻止恢复；这是非阻断文案改进项，不是已修复或正常ZIP失败的证据。
 
-下一步仅为最终main CI、产品标签、发布上述原包及公开回下载、README下载/末尾版本摘要与交接同步。此时README公开版仍1.1.11，尚未公开发布。下一开发方向仍是[1.1.13 PDF阅读到笔记](V1_1_13_PDF_Reading_Preimplementation_Audit_2026-10-18.md)，不重复立项；十三版路线仍4/13已发布，1.1.12待发布，1.1.13—1.1.20八版待开发。
+README已同步实际下载、原包摘要和末尾版本摘要，开头软件图标/介绍及所有旧版本行保持不变，Release正文与仓库说明一致。发布后的文档/收据提交受main完整CI校验，结果随该提交检查，不制造自引用编号。下一开发方向为[1.1.13 PDF阅读到笔记](V1_1_13_PDF_Reading_Preimplementation_Audit_2026-10-18.md)，先复现原有插入流程的草稿/并发安全，再出示紧凑批注整理与笔记预览方案；不是已实现新版本。十三版路线已发布**5/13**，**1.1.13—1.1.20八版**仍待开发，未走完前不重复规划。用户两份排序文件未动，无本机安装或桌面接管。
