@@ -4,6 +4,7 @@ execFileSync(process.execPath, ['--test', 'scripts/test-v118-native-search-audit
 execFileSync(process.execPath, ['--test', 'scripts/test-v118-native-user.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v118-native-office.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v118-installed-release.mjs'], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--test', 'scripts/test-community-publication.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-file-move-protection.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-local-image-continuity.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-local-markdown-links.mjs'], { stdio: 'inherit' })
