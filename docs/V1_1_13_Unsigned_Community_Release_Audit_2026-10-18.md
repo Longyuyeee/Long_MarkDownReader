@@ -1,5 +1,13 @@
 # v1.1.13 PDF 阅读笔记候选发布审计
 
+## 最新固定源码与首次原生诊断
+
+最终产品固定为 **8c5a50afcb594519fbe14f0009112491ce14308c**，完整构建 [39073940910](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39073940910) 正在执行；尚未封板或公开发布。此前 db6481d5 / 39071096221、f2634cbb / 39072276053 产品均已废止发布资格，不与修正后源码混用。下文为逐批历史快照，不把早期计数当当前结论。
+
+旧 A 包原生首次验收通过86页、240批注、筛选/预览及草稿不代存，随后“保存前模型哈希=磁盘哈希”失败。[原报告](evidence/v1113-obsolete-a/installed-v1113-workflow.json)、[原失败画面](evidence/v1113-obsolete-a/installed-v1113-failure.jpg)、[构建收据](evidence/v1113-obsolete-a/installer-build-receipt.json)及[完整任务日志](evidence/v1113-obsolete-a-job.log)保留。实际 LibraryMode/Vditor 重放精确复现原模型 dfa1e353… 与已存盘 4b00df5b… 两个摘要：原有 Vditor setValue 将标题前连续空行排版规范化，原生沿既有 LF/单末尾换行策略编码，未丢原文、评论或来源；这是驱动把“尚未序列化的标签模型”误当提交正文，不是发现正文丢失后放宽验收。
+
+仅修正验收观察器：在源模式直接观察真实编辑 DOM，按锁定 Vditor 的公开序列化规则读取，并按目标文件原有编码/换行元数据计算预期字节；仍要求与真实磁盘 SHA-256 **完全一致**，另保留原草稿前缀、dirty、插入前磁盘不变与两个完整来源 URI 的断言。协议拒绝缺失观察、原文改变、磁盘哈希改变或换行政策不符。[两项实际组件复放](evidence/v1113-save-observation/results.json)通过，模拟 IPC 不冒充磁盘证明；此批不改产品，不重建或替换 C 包。独立同包必须用更新驱动重新跑全部历版及本版14项。
+
 当前运行时 1.1.13、公开 1.1.12，**尚未封板或发布 1.1.13**。本版按既定路线深化原 PDF 阅读、批注与笔记能力，原表单、OCR、脱敏、水印、属性和页面工具全部保留。[开发审计](V1_1_13_PDF_Reading_Development_2026-10-18.md)记录旧插入代存问题的真实复现、首批源码、实施前示意与正式页面；[用户用法](PDF_Reading_Notes_User_Guide.md)说明操作与限制。
 
 ## 当前验证

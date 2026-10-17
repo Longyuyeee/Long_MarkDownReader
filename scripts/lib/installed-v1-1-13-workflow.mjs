@@ -9,7 +9,7 @@ import {observedNativeCommand} from './observed-native-command.mjs'
 import {withDeadline} from './with-deadline.mjs'
 import {readingPdfFixture} from './pdf-reading-fixture.mjs'
 import {pdfReadingChecks,validateInstalledPdfReading} from './installed-v1-1-13-evidence.mjs'
-import {observePdfReadingPage,observePdfReferenceNotice} from './pdf-reading-dom.mjs'
+import {observePdfReadingPage,observePdfReferenceNotice,observeReadingNoteSource} from './pdf-reading-dom.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex'),store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`
 export async function runInstalledV1113Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
  for(const [k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
@@ -35,6 +35,7 @@ export async function runInstalledV1113Workflow({send,evaluate,navigate,capture,
   await evaluate(`window.__v1113Trace=[];window.__v1113Errors=[];for(const type of ['click','keydown','input'])addEventListener(type,e=>window.__v1113Trace.push({type,trusted:e.isTrusted}),true);addEventListener('error',e=>window.__v1113Errors.push(e.message));addEventListener('unhandledrejection',e=>window.__v1113Errors.push(String(e.reason)))`)
   assert.equal(await invoke('plugin:app|version'),appVersion);check(0)
   await navigate('#/library?path='+encodeURIComponent(note),'.library-mode','real target note');await ui.waitFor(`(${editor})?.textContent.includes('磁盘原稿')`,'target disk loaded');report.editorModes={before:await evaluate(`${store}.editorMode`)}
+  if(report.editorModes.before!=='sv')await chooseMode('sv')
   await ui.clickTarget(editor);await ui.key('a','KeyA',65,2);await send('Input.insertText',{text:draftText});await ui.waitFor(`${noteTab()}?.isDirty&&${noteTab()}?.content.includes('不能代存')`,'user unsaved draft')
   const actualDraft=await noteBody(),diskBefore=sha(await fs.readFile(note));report.dirtyBeforeInsert=true;report.targetSignatureBefore=await evaluate(`${noteTab()}.textSignature`)
   await openPdf();report.pdfPages=Number(await evaluate(`document.querySelector('.page-jump span').textContent.replace(/[^0-9]/g,'')`));assert.equal(report.pdfPages,86);report.annotationCount=Number(await evaluate(`[...document.querySelectorAll('.sidebar-switch button')].find(e=>e.textContent.trim().startsWith('批注')).textContent.replace(/[^0-9]/g,'')`));assert.equal(report.annotationCount,240);await prepareSelected();report.filteredCount=6;report.previewCount=await evaluate(`document.querySelectorAll('.reading-note-preview article').length`);await capture('installed-v1113-preview.jpg');check(1);check(2)
@@ -44,9 +45,15 @@ export async function runInstalledV1113Workflow({send,evaluate,navigate,capture,
   for(let n=0;n<100;n++){if(await evaluate(`document.querySelector('[aria-label="阅读笔记插入目标"]')?.selectedOptions[0]?.textContent.startsWith('项目写作')`))break;await ui.key('ArrowDown','ArrowDown',40)}
   await ui.key('Enter','Enter',13);assert.match(await evaluate(`document.querySelector('[aria-label="阅读笔记插入目标"]').selectedOptions[0].textContent`),/^项目写作/)
   await button('插入草稿');await ui.waitFor(`${store}.activeTabId===${noteTab()}?.id&&${noteTab()}?.content.includes('sha256=')`,'draft receives source links')
-  const after=await noteBody();report.exactDraftPrefix=after.startsWith(actualDraft);report.dirtyAfterInsert=await evaluate(`${noteTab()}.isDirty`);report.targetSignatureAfterInsert=await evaluate(`${noteTab()}.textSignature`);report.draftDiskUnchangedBeforeSave=sha(await fs.readFile(note))===diskBefore;report.draftBeforeSaveSha256=sha(Buffer.from(after));assert.ok(report.exactDraftPrefix&&report.draftDiskUnchangedBeforeSave);check(3)
+  const after=await noteBody();report.exactDraftPrefix=after.startsWith(actualDraft);report.dirtyAfterInsert=await evaluate(`${noteTab()}.isDirty`);report.targetSignatureAfterInsert=await evaluate(`${noteTab()}.textSignature`);report.draftDiskUnchangedBeforeSave=sha(await fs.readFile(note))===diskBefore;report.appendedDraftSha256=sha(Buffer.from(after));assert.ok(report.exactDraftPrefix&&report.draftDiskUnchangedBeforeSave);check(3)
+  await ui.waitFor(`(()=>{const s=(${observeReadingNoteSource.toString()})();return s&&s.markdown.includes('annotation=reading-14')})()`,'complete inserted text rendered in actual source editor')
+  report.saveExpectation=await evaluate(`({...(${observeReadingNoteSource.toString()})(),encoding:${noteTab()}.textEncoding,bom:${noteTab()}.textBom,lineEnding:${noteTab()}.textLineEnding,hasFinalNewline:${noteTab()}.textHasFinalNewline})`)
+  assert.ok(report.saveExpectation.markdown.startsWith(draftText.trimEnd()+'\n\n'),'visible editor must retain all original user text')
+  for(const item of report.snapshot.items)assert.ok(report.saveExpectation.markdown.includes(item.uri),'visible editor must retain exact selected source URI')
+  assert.deepEqual([report.saveExpectation.encoding,report.saveExpectation.bom,report.saveExpectation.lineEnding,report.saveExpectation.hasFinalNewline],['utf-8','none','lf',true])
+  report.draftBeforeSaveSha256=sha(Buffer.from(report.saveExpectation.markdown.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n+$/,'')+'\n'))
   await ui.click('[data-testid="library-explicit-save"]');await ui.waitFor(`!${noteTab()}?.isDirty`,'user explicit save');report.explicitSavedSha256=sha(await fs.readFile(note));report.explicitSave=true;assert.equal(report.explicitSavedSha256,report.draftBeforeSaveSha256);check(4)
-  if(report.editorModes.before!=='wysiwyg')await chooseMode('wysiwyg')
+  if(await evaluate(`${store}.editorMode`)!=='wysiwyg')await chooseMode('wysiwyg')
   const sourceLink=`[...document.querySelectorAll('#vditor-lib a[href]')].find(a=>a.getAttribute('href').includes('annotation=reading-11'))`
   await ui.waitFor(`!!(${sourceLink})`,'rendered source link');await ui.clickTarget(sourceLink);await ui.waitFor(`document.querySelector('.annotation-card.active')?.textContent.includes('第 12 页')&&document.querySelector('.annotation-editor textarea')?.value==='用户阅读评论 11'`,'exact source page and annotation');report.sourceRender=await observePage();report.returnedExactAnnotation=true;await capture('installed-v1113-source-return.jpg');check(5)
   const deleted=path.join(folder,'批注已删');await fs.mkdir(deleted);const deletedPdf=path.join(deleted,path.basename(pdf));await fs.copyFile(pdf,deletedPdf,2);const missing=JSON.parse(await fs.readFile(sidecar,'utf8'));missing.annotations=missing.annotations.filter(a=>a.id!=='reading-11');await fs.writeFile(deletedPdf+'.annotations.json',JSON.stringify(missing),{flag:'wx'})

@@ -13,3 +13,12 @@ export function observePdfReferenceNotice(){
  const r=el.getBoundingClientRect(),p=panel.getBoundingClientRect()
  return {observedFrom:'rendered-reference-notice-in-panel-viewport',text:el.textContent,top:r.top,bottom:r.bottom,parentTop:p.top,parentBottom:p.bottom,visible:r.top>=p.top&&r.bottom<=p.bottom}
 }
+// Observe the source editor, not the inactive tab model or a component handler.
+// Vditor's locked getMarkdown implementation adds one terminal LF and converts
+// NBSP to ordinary spaces. The native writer then preserves the file's LF and
+// single-final-newline policy; raw setValue input is not its submitted content.
+export function observeReadingNoteSource(){
+ const el=document.querySelector('#vditor-lib .vditor-sv')
+ if(!el||!el.getClientRects().length||getComputedStyle(el).visibility==='hidden')return null
+ return {observedFrom:'rendered-vditor-source-before-explicit-save',mode:'sv',markdown:(el.textContent+'\n').replace(/\n\n$/,'\n').replace(/\u00a0/g,' ')}
+}

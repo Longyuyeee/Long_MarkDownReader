@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
 export const pdfReadingChecks=['installed-identity-and-source-fixtures','long-pdf-filtered-paginated-annotations','selected-notes-preview-only','draft-only-append-keeps-unsaved-input-and-disk','explicit-save-persists-source-links','source-link-returns-exact-page-annotation','deleted-annotation-honest-page-fallback','legacy-link-remains-explicitly-unverified','real-native-new-note-picker-and-selected-output','existing-note-never-overwritten','same-size-same-time-replacement-rejected','moved-source-user-relinks-verified-draft','relative-restored-copy-keeps-source-identity','original-pdf-sidecar-unselected-bytes-and-no-errors']
 export function validateInstalledPdfReading(report,manifest){
  assert.equal(manifest.appVersion,'1.1.13');assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
@@ -12,6 +13,12 @@ export function validateInstalledPdfReading(report,manifest){
  assert.equal(report.sourceBefore,report.sourceAfter);assert.equal(report.sidecarBefore,report.sidecarAfter);assert.equal(report.unselectedBefore,report.unselectedAfter)
  for(const key of ['dirtyBeforeInsert','dirtyAfterInsert','exactDraftPrefix','draftDiskUnchangedBeforeSave','explicitSave','returnedExactAnnotation','deletedAnnotationNotice','legacyNotice','newNoteSelectedOnly','existingTargetPreserved','replacementRejected','replacementTimestampPreserved','movedRelinkDirtyOnly','movedRelinkReturnedExact','restoredReferenceVerified','restoredPageVisible'])assert.equal(report[key],true,key)
  assert.equal(report.targetSignatureBefore,report.targetSignatureAfterInsert);assert.equal(report.draftBeforeSaveSha256,report.explicitSavedSha256)
+ assert.match(report.appendedDraftSha256,/^[a-f0-9]{64}$/)
+ const s=report.saveExpectation;assert.equal(s.observedFrom,'rendered-vditor-source-before-explicit-save');assert.deepEqual([s.mode,s.encoding,s.bom,s.lineEnding,s.hasFinalNewline],['sv','utf-8','none','lf',true])
+ assert.ok(s.markdown.startsWith('# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n'))
+ for(const item of report.snapshot.items)assert.ok(s.markdown.includes(item.uri))
+ for(const text of ['用户阅读评论 11','Reading source page 15','用户阅读评论 14'])assert.ok(s.markdown.includes(text))
+ const expected=Buffer.from(s.markdown.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n+$/,'')+'\n');assert.equal(crypto.createHash('sha256').update(expected).digest('hex'),report.draftBeforeSaveSha256)
  assert.ok(typeof report.targetSignatureBefore==='string'&&report.targetSignatureBefore.length>0)
  for(const field of ['sourceRender','movedRender','restoredRender']){const p=report[field];assert.equal(p.observedFrom,'rendered-pdf-controls-text-and-canvas');assert.equal(p.page,12);assert.equal(p.annotationId,'reading-11');assert.equal(p.placeholderAbsent,true);assert.ok(p.text.includes('Reading source page 12'));for(const k of ['width','height','opaquePixels','inkPixels'])assert.ok(Number.isFinite(p[k])&&p[k]>0)}
  for(const [field,text]of [['deletedNotice','批注不存在或已被删除'],['legacySourceNotice','旧引用没有内容摘要']]){const n=report[field];assert.equal(n.observedFrom,'rendered-reference-notice-in-panel-viewport');assert.equal(n.visible,true);assert.ok(n.text.includes(text));assert.ok(n.top>=n.parentTop&&n.bottom<=n.parentBottom)}

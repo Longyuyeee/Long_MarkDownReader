@@ -1,0 +1,20 @@
+{
+  "evidenceLevel": "actual-LibraryMode-Vditor-simulated-IPC-not-native-disk",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "status": "passed",
+  "checks": [
+    "Exact old failed model and saved-byte hashes reproduced without changing product code",
+    "Actual rendered source equals actual save payload; original words and both source URIs retained"
+  ],
+  "modelHash": "dfa1e3532eea69659e5edef8c552fb97f09fa367ae132e1c8872eda156827c22",
+  "submittedHash": "b8ebfb03d7e9e9a2584020dbad1f43dd7d113b5a0643de285af5f14c15d063da",
+  "nativeExpectedHash": "4b00df5be335603bf971360a86320d8eda0cde706955b211c093b0dfca43a944",
+  "originalFailedDiskHash": "4b00df5be335603bf971360a86320d8eda0cde706955b211c093b0dfca43a944",
+  "observed": {
+    "observedFrom": "rendered-vditor-source-before-explicit-save",
+    "mode": "sv",
+    "markdown": "# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n# 研究 来源 · 阅读笔记\n\n## 第 12 页\n\n评论：用户阅读评论 11\n\n[来源：研究 来源.pdf · 第 12 页](longedit://pdf?path=v1113-reading-578de255-ea08-4f3f-8bcf-e5c20c573a3c%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n## 第 15 页\n\n> Reading source page 15\n\n评论：用户阅读评论 14\n\n[来源：研究 来源.pdf · 第 15 页](longedit://pdf?path=v1113-reading-578de255-ea08-4f3f-8bcf-e5c20c573a3c%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n"
+  },
+  "errors": []
+}

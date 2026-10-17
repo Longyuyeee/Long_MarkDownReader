@@ -1,0 +1,98 @@
+{
+  "appVersion": "1.1.13",
+  "sourceCommit": "db6481d5c90a1b26bb580c95a56b3d49d66d015a",
+  "installerSha256": "4b10e40f46e4ba3e8b99ef1338db28ea8f632707752ede2e4f901505e67bba56",
+  "harnessSourceCommit": "db6481d5c90a1b26bb580c95a56b3d49d66d015a",
+  "executableSha256": "0c6ccd330ce32d76c28c5661d54f4f7412841f406ac6988f81fd1f555422e270",
+  "evidenceLevel": "installed-webview-input-native-pdf-notes-picker-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "installed-identity-and-source-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "long-pdf-filtered-paginated-annotations",
+      "status": "passed"
+    },
+    {
+      "id": "selected-notes-preview-only",
+      "status": "passed"
+    },
+    {
+      "id": "draft-only-append-keeps-unsaved-input-and-disk",
+      "status": "passed"
+    }
+  ],
+  "sourceBefore": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+  "sidecarBefore": "7c615290ae917e26cee04103327d3e33dce5e5e72b4aaccc570f369a23e55049",
+  "unselectedBefore": "c5cc304c5742c0f757b3dd9d343cc5fb6e3ab7a6b177d94481c14c9a7795808b",
+  "annotationCount": 240,
+  "selectedIds": [
+    "reading-11",
+    "reading-14"
+  ],
+  "pdfPages": 86,
+  "editorModes": {
+    "before": "sv"
+  },
+  "dirtyBeforeInsert": true,
+  "targetSignatureBefore": "15:1792275076969729500:aee6c983c93433d9a2204e99b40ddcf5",
+  "filteredCount": 6,
+  "previewCount": 2,
+  "snapshot": {
+    "sourceDigest": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+    "sourceSignature": "31248:1792275076967965900",
+    "relativePath": "v1113-reading-578de255-ea08-4f3f-8bcf-e5c20c573a3c/研究 来源.pdf",
+    "items": [
+      {
+        "annotation": {
+          "id": "reading-11",
+          "kind": "comment",
+          "page": 12,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "用户阅读评论 11",
+          "createdAt": 12,
+          "updatedAt": 12
+        },
+        "uri": "longedit://pdf?path=v1113-reading-578de255-ea08-4f3f-8bcf-e5c20c573a3c%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 12 页"
+      },
+      {
+        "annotation": {
+          "id": "reading-14",
+          "kind": "highlight",
+          "page": 15,
+          "color": "yellow",
+          "rects": [
+            {
+              "x": 0.08,
+              "y": 0.07,
+              "width": 0.6,
+              "height": 0.05
+            }
+          ],
+          "quote": "Reading source page 15",
+          "comment": "用户阅读评论 14",
+          "createdAt": 15,
+          "updatedAt": 15
+        },
+        "uri": "longedit://pdf?path=v1113-reading-578de255-ea08-4f3f-8bcf-e5c20c573a3c%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 15 页"
+      }
+    ]
+  },
+  "exactDraftPrefix": true,
+  "dirtyAfterInsert": true,
+  "targetSignatureAfterInsert": "15:1792275076969729500:aee6c983c93433d9a2204e99b40ddcf5",
+  "draftDiskUnchangedBeforeSave": true,
+  "draftBeforeSaveSha256": "dfa1e3532eea69659e5edef8c552fb97f09fa367ae132e1c8872eda156827c22",
+  "explicitSavedSha256": "4b00df5be335603bf971360a86320d8eda0cde706955b211c093b0dfca43a944",
+  "explicitSave": true,
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '4b00df5be335603bf971360a86320d8eda0cde706955b211c093b0dfca43a944'\n- 'dfa1e3532eea69659e5edef8c552fb97f09fa367ae132e1c8872eda156827c22'\n\n    at runInstalledV1113Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-13-workflow.mjs:43:211)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:997:5"
+}
