@@ -76,6 +76,10 @@ export async function runInstalledVersionScenario({ send, evaluate, waitFor, nav
   } catch (error) {
     report.status = 'failed'
     report.error = String(error)
+    // Preserve the actual failed request state; a timeout alone does not prove
+    // whether the product, native network, or input observation failed.
+    observations.failureSurface = await evaluate(`(() => { const panel=document.querySelector('[data-testid="app-update-settings"]');return {route:location.hash,settings:panel?.innerText||'',status:document.querySelector('.update-status')?.outerHTML||'',buttons:panel?Array.from(panel.querySelectorAll('button'),button=>({text:button.textContent,disabled:button.disabled,loading:!!button.querySelector('.n-base-loading')})):[]}; })()`).catch(() => null)
+    await capture('installed-version-failure.jpg').catch(() => {})
     throw error
   } finally {
     await fs.writeFile(path.join(output, 'installed-version-identity.json'), JSON.stringify(report, null, 2)+'\n')

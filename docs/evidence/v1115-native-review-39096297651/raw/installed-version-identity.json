@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "a40c0ea2a71a7cd1230c8704cb1e45b2c79c9cba",
+  "installerSha256": "c2c2b3ca35ab9bf47368fad2bd9d4f8bafe42809af8cac164b1ed82d28a49ff0",
+  "appVersion": "1.1.15",
+  "evidenceLevel": "installed-webview-input-events",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "observations": {
+    "nativeVersion": "1.1.15",
+    "badge": " v1.1.15",
+    "badgeLabel": "当前软件版本 v1.1.15，尚未检查更新，点击查看更新",
+    "settingsRoute": "#/settings?category=system&focus=software-update",
+    "settings": "软件更新\n当前版本 v1.1.15 · 每 24 小时自动检查，也可随时手动检查\n自动检查已启用；安装前会校验官方附件的 SHA-256。\n检查更新"
+  },
+  "checks": [],
+  "error": "Error: Timed out waiting for completed real official update check with enabled control"
+}
