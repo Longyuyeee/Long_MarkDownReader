@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: offline fault injection retries only real owned sharing refusals and never reports a failed setup as success
+ok 1 - offline fault injection retries only real owned sharing refusals and never reports a failed setup as success
+  ---
+  duration_ms: 1.604
+  ...
+# Subtest: actual source resolver ignores stale success and failure even after reselecting the same file
+ok 2 - actual source resolver ignores stale success and failure even after reselecting the same file
+  ---
+  duration_ms: 27.6882
+  ...
+# Subtest: organizing intake requires every task, original preservation and exact raw output identities
+ok 3 - organizing intake requires every task, original preservation and exact raw output identities
+  ---
+  duration_ms: 9.5723
+  ...
+# Subtest: all predecessor receipts and organizing bind to the same executable, driver and original bytes
+ok 4 - all predecessor receipts and organizing bind to the same executable, driver and original bytes
+  ---
+  duration_ms: 35.3717
+  ...
+# Subtest: actual native acceptance and independent output readers remain mandatory at all release gates
+ok 5 - actual native acceptance and independent output readers remain mandatory at all release gates
+  ---
+  duration_ms: 9.4674
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 342.3997
