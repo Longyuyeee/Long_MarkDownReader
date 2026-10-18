@@ -29,8 +29,8 @@ try {
  await page.getByTitle('撤销草稿修改').click()
  await page.getByTitle('重做草稿修改').click()
  assert.equal(await editor.locator('textarea').inputValue(),'我想保留这个修改，稍后再保存。')
- assert.equal(await page.getByTitle('保存到原文件').isDisabled(),true)
- checks.push('Search, editor close/reopen, draft undo/redo and verification-required save preserved')
+ assert.equal(await page.getByTitle('保存到原文件').isEnabled(),true)
+ checks.push('Search, editor close/reopen and draft undo/redo preserved; explicit save now performs its own verification')
  await page.screenshot({path:output+'/02-editing.png'})
  for(const width of [900,480]) {
   await page.setViewportSize({width,height:900})

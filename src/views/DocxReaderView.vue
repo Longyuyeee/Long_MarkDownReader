@@ -14,10 +14,10 @@
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
         <button type="button" class="named-action" :aria-pressed="outlineVisible" @click="toggleOutline">目录与详情</button>
-        <button v-if="!isExternal" type="button" :disabled="!draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
+        <button v-if="!isExternal" type="button" :disabled="saveBusy || !draftUndoStack.length" title="撤销草稿修改" @click="undoDraft">
           <UndoIcon :size="15" />
         </button>
-        <button v-if="!isExternal" type="button" :disabled="!draftRedoStack.length" title="重做草稿修改" @click="redoDraft">
+        <button v-if="!isExternal" type="button" :disabled="saveBusy || !draftRedoStack.length" title="重做草稿修改" @click="redoDraft">
           <RedoIcon :size="15" />
         </button>
         <label class="docx-search">
@@ -36,7 +36,7 @@
         <button type="button" :disabled="!matches.length" title="下一个结果" @click="moveSearch(1)">
           <ChevronDownIcon :size="15" />
         </button>
-        <button type="button" :disabled="loading" title="重新读取" @click="load">
+        <button type="button" :disabled="loading || saveBusy" title="重新读取" @click="confirmReload">
           <RefreshIcon :size="15" />
         </button>
         <button
@@ -54,7 +54,7 @@
         <button
           v-if="!isExternal"
           type="button"
-          :disabled="!previewReport || savingSource"
+          :disabled="!draftCount || draftLimitExceeded || saveBusy || previewing || loading"
           title="保存到原文件"
           @click="confirmSaveSource"
         >
@@ -68,13 +68,14 @@
       <n-spin size="small" />
       <strong>正在安全解析 DOCX</strong>
     </div>
-    <div v-else-if="loadError" class="docx-state error" role="alert">
+    <div v-else-if="loadError && !report" class="docx-state error" role="alert">
       <AlertIcon :size="18" />
       <div><strong>无法读取 DOCX</strong><p>{{ loadError }}</p></div>
-      <n-button size="small" @click="load">重试</n-button>
+      <n-button size="small" @click="load(true)">重试</n-button>
     </div>
 
     <template v-else-if="report">
+      <div v-if="loadError" class="docx-read-error" role="alert">{{ loadError }} · 当前草稿已保留，可稍后重新读取。</div>
       <section v-if="allWarnings.length" class="compatibility-warning" role="status">
         <ShieldAlertIcon :size="17" />
         <div>
@@ -281,13 +282,14 @@
           <header>
             <div>
               <strong>页面编辑</strong>
-              <span>修改先留在草稿，验证后才能保存</span>
+              <span>先留在草稿，点击保存时自动安全检查</span>
             </div>
             <button type="button" title="关闭编辑面板" @click="editorOpen = false">
               <XIcon :size="15" />
             </button>
           </header>
 
+          <fieldset class="docx-edit-fields" :disabled="saveBusy">
           <div class="edit-mode-tabs" role="tablist" aria-label="编辑类型">
             <button
               type="button"
@@ -415,11 +417,30 @@
               <p v-if="draftLimitExceeded" class="draft-limit" role="alert">一次最多验证 32 项，请先移除多余修改。</p>
             </template>
           </section>
+          </fieldset>
 
+          <div class="copy-save" :aria-busy="saveBusy">
+            <p v-if="saveBusy" class="save-progress" role="status" aria-live="polite">{{ savePhase === 'checking' ? '正在安全检查，草稿已锁定…' : savePhase === 'reloading' ? '已写入，正在重新读取…' : '正在可靠保存，请稍候…' }}</p>
+            <button type="button" :disabled="!draftCount || draftLimitExceeded || saveBusy || previewing" @click="confirmSaveSource">
+              <SaveIcon :size="15" />保存到原文件
+            </button>
+            <p class="save-boundary">会覆盖当前 DOCX；确认后才写入，自动检查外部修改、隔离验证及落盘复读，失败保留草稿。</p>
+            <label class="edit-field">
+              <span>或者另存副本</span>
+              <input v-model="copyFileName" :disabled="saveBusy" maxlength="255" @keydown.enter.prevent="saveCopy" />
+            </label>
+            <button type="button" :disabled="saveBusy || previewing || !draftCount || draftLimitExceeded || !copyFileName.trim()" @click="saveCopy">
+              <SaveIcon :size="15" />另存新 DOCX 并打开
+            </button>
+            <small v-if="saveError || editError" role="alert">{{ saveError || editError }}</small>
+          </div>
+
+          <details class="verification-details">
+          <summary>安全检查详情（可选）</summary>
           <button
             type="button"
             class="verify-edit"
-            :disabled="!draftCount || draftLimitExceeded || previewing"
+            :disabled="!draftCount || draftLimitExceeded || previewing || saveBusy"
             @click="previewEdit"
           >
             <ShieldCheckIcon :size="15" />
@@ -438,22 +459,7 @@
             </template>
           </div>
 
-          <div v-if="previewReport" class="copy-save">
-            <button type="button" :disabled="savingSource" aria-live="polite" @click="confirmSaveSource">
-              <SaveIcon :size="15" />
-              {{ savingSource ? '正在可靠保存并重开…' : '保存到原文件' }}
-            </button>
-            <p class="save-boundary">会覆盖当前 DOCX；保存前再次检查外部修改，失败时恢复原文件。</p>
-            <label class="edit-field">
-              <span>或者另存副本</span>
-              <input v-model="copyFileName" maxlength="255" @keydown.enter.prevent="saveCopy" />
-            </label>
-            <button type="button" :disabled="saving || !draftCount || !copyFileName.trim()" aria-live="polite" @click="saveCopy">
-              <SaveIcon :size="15" />
-              {{ saving ? '正在落盘并重开…' : '另存新 DOCX 并打开' }}
-            </button>
-            <small v-if="saveError" role="alert">{{ saveError }}</small>
-          </div>
+          </details>
         </aside>
       </div>
 
@@ -761,6 +767,9 @@ const editError = ref('')
 const copyFileName = ref('')
 const saving = ref(false)
 const savingSource = ref(false)
+const saveBusy = computed(() => saving.value || savingSource.value)
+const savePhase = ref<'checking' | 'writing' | 'reloading'>('checking')
+let disposed = false
 const saveError = ref('')
 const draftEntries = ref(new Map<string, DocxDraftEntry>())
 const draftUndoStack = ref<DraftSnapshot[]>([])
@@ -997,6 +1006,7 @@ const restoreDraftSnapshot = (snapshot: DraftSnapshot) => {
   void nextTick(() => { restoringDraftSnapshot = false })
 }
 const undoDraft = () => {
+  if (saveBusy.value) return
   const previous = draftUndoStack.value.pop()
   if (!previous) return
   draftRedoStack.value.push(draftSnapshot())
@@ -1004,6 +1014,7 @@ const undoDraft = () => {
   lastDraftHistoryAt = 0
 }
 const redoDraft = () => {
+  if (saveBusy.value) return
   const next = draftRedoStack.value.pop()
   if (!next) return
   draftUndoStack.value.push(draftSnapshot())
@@ -1011,15 +1022,18 @@ const redoDraft = () => {
   lastDraftHistoryAt = 0
 }
 const toggleDraftStyle = (property: 'bold' | 'italic' | 'underline') => {
+  if (saveBusy.value) return
   captureDraftHistory(true)
   if (property === 'bold') draftBold.value = !draftBold.value
   if (property === 'italic') draftItalic.value = !draftItalic.value
   if (property === 'underline') draftUnderline.value = !draftUnderline.value
 }
 const setDraftFontColor = (event: Event) => {
+  if (saveBusy.value) return
   draftFontColor.value = (event.target as HTMLInputElement).value
 }
 const clearDraftFontColor = () => {
+  if (saveBusy.value) return
   captureDraftHistory(true)
   draftFontColor.value = ''
 }
@@ -1053,6 +1067,7 @@ const syncCurrentDraft = () => {
   invalidatePreview()
 }
 const removeDraftEntry = (entry: DocxDraftEntry) => {
+  if (saveBusy.value) return
   captureDraftHistory(true)
   const entries = new Map(draftEntries.value)
   entries.delete(entry.anchor)
@@ -1061,6 +1076,7 @@ const removeDraftEntry = (entry: DocxDraftEntry) => {
   invalidatePreview()
 }
 const locateDraftEntry = (entry: DocxDraftEntry) => {
+  if (saveBusy.value) return
   const mode: DocxEditMode = entry.operation.kind
   editorOpen.value = true
   editMode.value = mode
@@ -1132,13 +1148,13 @@ const draftStyleForBlock = (block: DocxBlock) => {
   }
 }
 const selectTextTarget = (target?: DocxTextTarget) => {
-  if (!target || isExternal.value) return
+  if (!target || isExternal.value || saveBusy.value) return
   editorOpen.value = true
   editMode.value = 'text'
   selectedTargetId.value = target.id
 }
 const selectTextBlock = (block: DocxBlock) => {
-  if (isExternal.value) return
+  if (isExternal.value || saveBusy.value) return
   const target = activeTargets.value.find(candidate => candidate.blockId === block.id && !('rowIndex' in candidate && candidate.rowIndex !== null))
   if (!target) return
   editorOpen.value = true
@@ -1230,32 +1246,46 @@ const invalidatePreview = () => {
   editError.value = ''
   saveError.value = ''
 }
+// Every asynchronous receipt belongs to one document, library and immutable draft snapshot.
+// Route guards cover ordinary navigation; these checks also cover teardown and external root changes.
+const captureEditContext = () => {
+  const owner = report.value
+  const path = docxPath.value
+  const libraryRoot = store.libraryPath
+  const external = isExternal.value
+  const operations = draftOperations.value.map(operation => ({ ...operation }))
+  const serialized = JSON.stringify(operations)
+  return {
+    operations,
+    base: { libraryRoot, path, expectedSignature: owner?.signature || '' },
+    current: () => !disposed && !external && !isExternal.value && report.value === owner
+      && docxPath.value === path && store.libraryPath === libraryRoot
+      && JSON.stringify(draftOperations.value) === serialized,
+  }
+}
 const previewEdit = async () => {
-  const operations = draftOperations.value
-  if (!operations.length || operations.length > 32 || !report.value || previewing.value) return
+  const context = captureEditContext()
+  const { operations, base } = context
+  if (!operations.length || operations.length > 32 || !report.value || previewing.value || !context.current()) return null
   previewing.value = true
   invalidatePreview()
   try {
-    const base = {
-      libraryRoot: store.libraryPath,
-      path: docxPath.value,
-      expectedSignature: report.value.signature,
-    }
+    let preview: DocxPatchPreviewReport
     const operation = operations[0]
     if (operations.length > 1) {
-      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_patch_batch_isolated_copy', {
+      preview = await invoke<DocxPatchPreviewReport>('preview_docx_patch_batch_isolated_copy', {
         ...base,
         operations,
       })
     } else if (operation.kind === 'text') {
-      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_text_patch_isolated_copy', {
+      preview = await invoke<DocxPatchPreviewReport>('preview_docx_text_patch_isolated_copy', {
         ...base,
         targetId: operation.targetId,
         expectedTextDigest: operation.expectedTextDigest,
         replacementText: operation.replacementText,
       })
     } else if (operation.kind === 'style') {
-      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_style_patch_isolated_copy', {
+      preview = await invoke<DocxPatchPreviewReport>('preview_docx_style_patch_isolated_copy', {
         ...base,
         targetId: operation.targetId,
         expectedStyleDigest: operation.expectedStyleDigest,
@@ -1266,14 +1296,14 @@ const previewEdit = async () => {
         fontSizeHalfPoints: operation.fontSizeHalfPoints,
       })
     } else if (operation.kind === 'paragraphStyle') {
-      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_paragraph_style_patch_isolated_copy', {
+      preview = await invoke<DocxPatchPreviewReport>('preview_docx_paragraph_style_patch_isolated_copy', {
         ...base,
         targetId: operation.targetId,
         expectedParagraphStyleDigest: operation.expectedParagraphStyleDigest,
         replacementStyleId: operation.replacementStyleId,
       })
     } else {
-      previewReport.value = await invoke<DocxPatchPreviewReport>('preview_docx_image_alt_text_patch_isolated_copy', {
+      preview = await invoke<DocxPatchPreviewReport>('preview_docx_image_alt_text_patch_isolated_copy', {
         ...base,
         targetId: operation.targetId,
         expectedMetadataDigest: operation.expectedMetadataDigest,
@@ -1282,33 +1312,42 @@ const previewEdit = async () => {
     }
     const isBatch = operations.length > 1
     if (
-      previewReport.value.status !== (isBatch ? 'batch_isolated_verified' : 'isolated_verified')
-      || !previewReport.value.unchangedPartsVerified
-      || !previewReport.value.structuralReparseVerified
-      || !previewReport.value.semanticReparseVerified
-      || !previewReport.value.sourceUnchanged
-      || (isBatch && !previewReport.value.deterministicReplayVerified)
-      || (isBatch && !previewReport.value.temporaryCopyReopenVerified)
+      preview.status !== (isBatch ? 'batch_isolated_verified' : 'isolated_verified')
+      || !preview.unchangedPartsVerified
+      || !preview.structuralReparseVerified
+      || !preview.semanticReparseVerified
+      || !preview.sourceUnchanged
+      || (isBatch && !preview.deterministicReplayVerified)
+      || (isBatch && !preview.temporaryCopyReopenVerified)
     ) throw new Error('隔离副本未通过完整保真验证')
+    if (!context.current()) return null
+    previewReport.value = preview
+    return preview
   } catch (cause) {
-    previewReport.value = null
-    editError.value = String(cause).replace(/^Error:\s*/, '')
+    if (context.current()) {
+      previewReport.value = null
+      editError.value = String(cause).replace(/^Error:\s*/, '')
+    }
+    return null
   } finally {
     previewing.value = false
   }
 }
 const saveCopy = async () => {
-  const preview = previewReport.value
-  const operations = draftOperations.value
-  if (!preview || !operations.length || operations.length > 32 || !report.value || !copyFileName.value.trim() || saving.value) return
+  const context = captureEditContext()
+  const { operations } = context
+  const targetFileName = copyFileName.value.trim()
+  if (!operations.length || operations.length > 32 || !report.value || !targetFileName || saveBusy.value || previewing.value || !context.current()) return
   saving.value = true
+  savePhase.value = 'checking'
   saveError.value = ''
   try {
+    const preview = previewReport.value || await previewEdit()
+    if (!preview || !context.current()) return
+    savePhase.value = 'writing'
     const base = {
-      libraryRoot: store.libraryPath,
-      path: docxPath.value,
-      targetFileName: copyFileName.value.trim(),
-      expectedSignature: report.value.signature,
+      ...context.base,
+      targetFileName,
       expectedOutputDigest: preview.outputDigest,
     }
     const saved = operations.length > 1
@@ -1322,28 +1361,30 @@ const saveCopy = async () => {
       || !saved.semanticReopenVerified
       || saved.producerEvidence.length !== 3
     ) throw new Error('保存结果未通过完整复读与生产者门禁')
-    message.success(`已可靠另存并验证 ${operations.length} 项修改：${copyFileName.value.trim()}`)
+    if (!context.current()) return
+    message.success(`已可靠另存并验证 ${operations.length} 项修改：${targetFileName}`)
     const routeName = route.name === 'LibraryMode' ? 'LibraryMode' : 'DocxEditor'
     allowNextLeave.value = true
     await router.replace({ name: routeName, query: { path: saved.targetPath } })
   } catch (cause) {
     allowNextLeave.value = false
-    saveError.value = String(cause).replace(/^Error:\s*/, '')
+    if (context.current()) saveError.value = String(cause).replace(/^Error:\s*/, '')
   } finally {
     saving.value = false
   }
 }
-const saveSource = async (): Promise<boolean> => {
-  const preview = previewReport.value
-  const operations = draftOperations.value
-  if (!preview || !operations.length || operations.length > 32 || !report.value || savingSource.value) return false
+const saveSource = async (context = captureEditContext()): Promise<boolean> => {
+  const { operations } = context
+  if (!operations.length || operations.length > 32 || !report.value || saveBusy.value || previewing.value || !context.current()) return false
   savingSource.value = true
+  savePhase.value = 'checking'
   saveError.value = ''
   try {
+    const preview = previewReport.value || await previewEdit()
+    if (!preview || !context.current()) return false
+    savePhase.value = 'writing'
     const base = {
-      libraryRoot: store.libraryPath,
-      path: docxPath.value,
-      expectedSignature: report.value.signature,
+      ...context.base,
       expectedOutputDigest: preview.outputDigest,
     }
     const saved = operations.length > 1
@@ -1357,24 +1398,33 @@ const saveSource = async (): Promise<boolean> => {
       || !saved.semanticReopenVerified
       || saved.producerEvidence.length !== 3
     ) throw new Error('源文件保存结果未通过完整复读与恢复门禁')
+    if (!context.current()) return false
+    savePhase.value = 'reloading'
+    if (!await load(true)) {
+      if (context.current()) saveError.value = '文件已写入，但页面重新读取失败。草稿已保留，请核对原件后重新读取；不要重复另存。'
+      return false
+    }
     message.success(`DOCX 已可靠保存 ${operations.length} 项修改并重新读取`)
-    await load()
     return true
   } catch (cause) {
-    saveError.value = String(cause).replace(/^Error:\s*/, '')
+    if (context.current()) saveError.value = String(cause).replace(/^Error:\s*/, '')
     return false
   } finally {
     savingSource.value = false
   }
 }
 const confirmSaveSource = () => {
-  if (!previewReport.value || savingSource.value) return
+  if (!draftCount.value || draftLimitExceeded.value || saveBusy.value || previewing.value || loading.value || isExternal.value) return
+  const context = captureEditContext()
   dialog.warning({
     title: '覆盖当前 DOCX？',
     content: '只有确认后才会写入源文件。LongEdit 会再次检查外部修改，使用同目录临时文件可靠替换，并在落盘复读失败时恢复原文件。',
     positiveText: '保存到原文件',
     negativeText: '取消',
-    onPositiveClick: () => { void saveSource() },
+    onPositiveClick: () => {
+      if (!context.current()) { message.warning('文档或草稿已变化，请重新确认保存。'); return }
+      void saveSource(context)
+    },
   })
 }
 const mayLeave = () => {
@@ -1382,6 +1432,7 @@ const mayLeave = () => {
     allowNextLeave.value = false
     return true
   }
+  if (saveBusy.value) { message.info('正在保存 DOCX，请稍候再切换。'); return false }
   if (!draftCount.value) return true
   return new Promise<boolean>(resolve => {
     let dialogRef: ReturnType<typeof dialog.warning> | null = null
@@ -1394,9 +1445,7 @@ const mayLeave = () => {
     }
     dialogRef = dialog.warning({
       title: 'DOCX 还有未保存修改',
-      content: previewReport.value
-        ? '草稿已通过隔离验证。可以保存到原文件后离开、放弃草稿，或继续编辑。'
-        : '草稿尚未通过隔离验证。请继续编辑并先验证，或者明确放弃草稿。',
+      content: '可以自动安全检查并保存到原文件后离开、明确放弃草稿，或继续编辑。',
       closable: false,
       maskClosable: false,
       action: () => h('div', { class: 'docx-leave-actions' }, [
@@ -1405,13 +1454,30 @@ const mayLeave = () => {
         h(NButton, {
           size: 'small',
           type: 'primary',
-          disabled: !previewReport.value || savingSource.value,
+          disabled: saveBusy.value || previewing.value || draftLimitExceeded.value,
           loading: savingSource.value,
           onClick: async () => { if (await saveSource()) finish(true) },
-        }, { default: () => previewReport.value ? '保存并离开' : '先验证后保存' }),
+        }, { default: () => '保存并离开' }),
       ]),
     })
   })
+}
+const confirmReload = () => {
+  if (saveBusy.value || loading.value) return
+  if (!draftCount.value) { void load(true); return }
+  const context = captureEditContext()
+  dialog.warning({
+    title: '重新读取会放弃当前草稿',
+    content: '原件不会被修改。只有重新读取成功后才会清除当前草稿；取消或读取失败会保留。',
+    positiveText: '放弃并重新读取',
+    negativeText: '继续编辑',
+    onPositiveClick: () => { if (context.current() && !saveBusy.value) void load(true) },
+  })
+}
+const saveShortcut = (event: KeyboardEvent) => {
+  if (isExternal.value || !(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 's') return
+  event.preventDefault()
+  if (!event.repeat) confirmSaveSource()
 }
 const leaveDocx = () => { if (isExternal.value) void router.push({ name: 'LibraryMode' }); else router.back() }
 useWindowDraft(() => draftCount.value > 0, () => String(route.query.path || store.activeTabId || ''))
@@ -1434,22 +1500,26 @@ const moveSearch = (direction: -1 | 1) => {
   scrollToBlock(matches.value[matchIndex.value].id)
 }
 let loadRequestId = 0
-const load = async () => {
+const load = async (preserveOnFailure = false): Promise<boolean> => {
   const requestedPath = docxPath.value
   const requestedExternal = isExternal.value
-  if (!requestedPath) return
+  const requestedRoot = store.libraryPath
+  if (!requestedPath || disposed) return false
   const requestId = ++loadRequestId
   const requestedFileName = requestedPath.split(/[\\/]/).pop() || '未命名.docx'
   const viewState = recallWorkspaceViewState(requestedPath)
   loading.value = true
   loadError.value = ''
-  report.value = null
+  const previousReport = preserveOnFailure ? report.value : null
+  if (!preserveOnFailure) report.value = null
+  const current = () => !disposed && requestId === loadRequestId && requestedPath === docxPath.value
+    && requestedExternal === isExternal.value && requestedRoot === store.libraryPath
   try {
     const nextReport = await invoke<DocxReadReport>(requestedExternal ? 'read_external_docx_document' : 'read_docx_document', {
-      ...(requestedExternal ? {} : { libraryRoot: store.libraryPath }),
+      ...(requestedExternal ? {} : { libraryRoot: requestedRoot }),
       path: requestedPath,
     })
-    if (requestId !== loadRequestId) return
+    if (!current()) return false
     report.value = nextReport
     store.addTab({ id: requestedPath, title: requestedFileName, path: requestedPath, isDirty: false, external: requestedExternal })
     const baseName = requestedFileName.replace(/\.docx$/i, '')
@@ -1482,17 +1552,19 @@ const load = async () => {
     resetTargetDraft()
     invalidatePreview()
   } catch (cause) {
-    if (requestId !== loadRequestId) return
-    report.value = null
+    if (!current()) return false
+    report.value = previousReport
     loadError.value = String(cause).replace(/^Error:\s*/, '')
+    return false
   } finally {
     if (requestId === loadRequestId) loading.value = false
   }
-  if (requestId === loadRequestId && report.value) {
+  if (current() && report.value) {
     await nextTick()
     if (routeLocator.value) scrollToRouteLocator()
     else if (viewState) stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
   }
+  return current()
 }
 
 watch([docxPath, isExternal], (_next, previous) => {
@@ -1526,17 +1598,27 @@ onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
+  window.addEventListener('keydown', saveShortcut)
   if (workspaceRef.value) workspaceResizeObserver.observe(workspaceRef.value)
 })
 onBeforeUnmount(() => {
+  disposed = true
+  loadRequestId++
   workspaceResizeObserver.disconnect()
   rememberDocxViewState()
   window.removeEventListener('beforeunload', beforeUnload)
+  window.removeEventListener('keydown', saveShortcut)
 })
 </script>
 
 <style scoped>
 .docx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
+.docx-edit-fields { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.docx-edit-fields:disabled { opacity: .72; }
+.verification-details { border-top: 1px solid var(--border-color); padding-top: 12px; }
+.verification-details summary { cursor: pointer; color: var(--text-secondary); margin-bottom: 10px; }
+.save-progress, .docx-read-error { padding: 9px 12px; border-radius: 6px; background: var(--bg-secondary); color: var(--theme-primary); line-height: 1.6; }
+.docx-read-error { flex: none; color: var(--text-primary); }
 .docx-toolbar { min-height: 52px; padding: 7px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .docx-search, .compatibility-warning, .docx-status > div { display: flex; align-items: center; }
 .document-identity { gap: 9px; min-width: 0; }

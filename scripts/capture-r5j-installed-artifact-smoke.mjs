@@ -529,6 +529,7 @@ for (const fixture of nativeDocxFixtures) {
     if (!await clickByTitle('重做草稿修改')) throw new Error(`${fixture.producerId} installed redo unavailable`)
     await waitFor(`document.querySelector('.draft-list header span')?.textContent.trim() === '1/32'`, `${fixture.producerId} installed redo`)
     result.redoVerified = true
+    await evaluate(`document.querySelector('.verification-details:not([open]) > summary')?.click()`)
     const previewStarted = await evaluate(`(() => {
       const button = document.querySelector('.docx-editor .verify-edit')
       if (!button || button.disabled) return false

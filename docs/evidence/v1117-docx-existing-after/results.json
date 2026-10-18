@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Directory toggles, full compatibility details expandable, original body and footnote rendered",
+    "Search, editor close/reopen and draft undo/redo preserved; explicit save now performs its own verification",
+    "900px/480px directory remains accessible while editing; navigating and hiding it preserves the draft"
+  ],
+  "errors": [],
+  "scope": "Production DOCX Vue component with mocked native parse report; no native parse/save acceptance",
+  "releaseCandidate": false
+}

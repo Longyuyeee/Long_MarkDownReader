@@ -53,8 +53,8 @@ requireTokens(view, 'DOCX multi-target draft workspace', [
   "'batch_isolated_verified'",
   "'batch_saved_verified'",
   "'batch_source_saved_verified'",
-  'previewReport.value.deterministicReplayVerified',
-  'previewReport.value.temporaryCopyReopenVerified',
+  'preview.deterministicReplayVerified',
+  'preview.temporaryCopyReopenVerified',
   'message.success(`已可靠另存并验证 ${operations.length} 项修改',
 ])
 requireTokens(view, 'DOCX direct color and font-size editing', [
@@ -75,10 +75,21 @@ requireTokens(view, 'DOCX unsaved draft protection', [
   "title: 'DOCX 还有未保存修改'",
   "default: () => '继续编辑'",
   "default: () => '放弃并离开'",
-  "default: () => previewReport.value ? '保存并离开' : '先验证后保存'",
+  "default: () => '保存并离开'",
   'onBeforeRouteLeave(() => mayLeave())',
   'onBeforeRouteUpdate((to, from)',
   "window.addEventListener('beforeunload', beforeUnload)",
+])
+requireTokens(view, 'DOCX automatic checks and receipt ownership', [
+  'const captureEditContext = () =>',
+  'JSON.stringify(draftOperations.value) === serialized',
+  'store.libraryPath === libraryRoot',
+  'previewReport.value || await previewEdit()',
+  'if (!context.current()) return null',
+  'const confirmReload = () =>',
+  'if (!await load(true))',
+  ':disabled="saveBusy"',
+  "window.addEventListener('keydown', saveShortcut)",
 ])
 if (view.includes('原件始终只读')) fail('The obsolete DOCX source-read-only claim returned.')
 

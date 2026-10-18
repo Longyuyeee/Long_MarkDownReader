@@ -1,0 +1,12 @@
+{
+  "status": "reproduced-not-fixed",
+  "checks": [
+    "REPRODUCED: old preview is accepted after the user changes the draft; Save points at a mismatched output",
+    "REPRODUCED: Reload silently clears an unsaved draft",
+    "REPRODUCED: source-save completion reloads and erases a draft typed while writing"
+  ],
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false
+}
