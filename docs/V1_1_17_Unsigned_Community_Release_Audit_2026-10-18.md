@@ -1,5 +1,29 @@
 # v1.1.17 DOCX 未签名社区版发布审计
 
+## 正式发布结论（最新）
+
+**v1.1.17 已封板并正式发布**，北京时间2026-10-18 19:34:10（UTC11:34:10），[Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.17) ID416412322。当前公开/运行时17，下一开发目标18。请从该Release手动下载安装，并核对同页SHA256SUMS.txt；community-unsigned可能显示未知发布者，不关闭系统防护。企业releaseCandidate=false，16→17应用内更新观察pending独立保留，不用覆盖安装替代。
+
+| 绑定环节 | 原始身份与结果 |
+| --- | --- |
+| 产品/正式标签 | `bcbb9265f66faae396fd5f43cb3354562c89fcab`；v1.1.17准确指向该提交 |
+| 原构建 | 39117639338：完整质量、1050功能0失败/5旧忽略、1性能及MSI/NSIS/回执通过；整体因漏设Python前置失败，不称整轮成功 |
+| 独立同包 | 39122059807 success；驱动061b68226cd9ba5047ef3a57aacac8793ecf9e4c；未重建原包 |
+| 封板main CI | 39122888169 success；提交d1a0ebf1a543c0cdc862dd164f90a3b1967bfcc6 |
+| 产品标签CI | 39123485009 success；准确标签产品bcbb9265，原API/日志另存 |
+| 原字节发布与公开回下载 | 39123693876 success；3附件大小、SHA-256与GitHub digest一致 |
+| 正式证据 | 177份，14,438,293字节；原报告/图像/实际文件逐项摘要核对，Git内字节一致 |
+
+MSI **77,443,072字节**，SHA-256 `026871233cfcee72c1ae442d71f40303701c978cbb02e8694a63253cd50a81ac`；NSIS **68,278,260字节**，SHA-256 `1ad07e5e6ac30351cfeb85f452696799f6706b00850a8a12558eb5ae86d112ca`。公开名称只将Long编辑前缀改为LongEdit，包字节没有变化。正式[安装清单](evidence/v1.1.17-release/artifact-manifest.json)、[逐文件导入](evidence/v1.1.17-release/import-manifest.json)、[公开回下载收据](evidence/v1.1.17-release/release-receipt.json)及publication/原API可追溯。
+
+本版12+历版199项功能、22生命周期、18工作区/11路由、7管理、4版本、40位置及真正重启通过。Word/WPS/LibreOffice三来源各自真实原件/副本写入并在安装软件重开；9份DOCX与独立ZIP/XML报告强摘要绑定，所有未编辑包部件保持原字节，7张新安装页面已实看。真实冲突可见拒绝、他人更新字节/草稿保留、Ctrl+S单入口确认、多目标撤销、重名副本拒绝、同路径外部切换及未选文件保护通过。不是当前Office视觉验收，也不承诺完整Word编辑等价。六风格深浅/窄页与组件异步失败测试分层记录，模拟IPC不当原生证据。
+
+首次发布39123486162因尚未准备Release草稿，在上传前停止；原3份输出2,083字节及API/日志保存在 `evidence/v1117-publication-failure-39123486162/`。补齐草稿后用同一源码/安装器/门禁发布，没有改工作流过验收。两次同包失败、原构建失败和三轮废止候选均保留；发布成功不重写失败。README开头图标/介绍和历史行保留，稳定下载/末尾摘要、Release正文、用户指南与开发身份已同步。发布后完整本机质量再次通过，生产审计0漏洞，原日志 `evidence/v1117-local-validation/quality-published-final.log`；标签CI39123485009已成功。最终文档main CI按本次文档提交核验；未更改两份用户排序文件，自建9022服务已停止，不接管本机。
+
+路线10/13版已发布，下一按[18实际PPTX预审](V1_1_18_PPTX_Preimplementation_Audit_2026-10-18.md)继续对象选择、备注、保存接续与草稿保护；19画布/脑图、20总收口仍待开发，未到另起新路线阶段。
+
+## 以下为历史候选与封板准备过程
+
 当前公开1.1.16，运行时/开发目标1.1.17。固定产品bcbb9265与原包39117639338的独立同包 **39122059807 已成功**，驱动061b6822。177份原报告、截图及实际DOCX/XLSX/CSV/HTML/PDF共14,438,293字节已严格导入；本版12+历版199功能、22生命周期、18工作区/11路由、7管理、4版本、40位置与真正重启通过。三生产者各自原件/副本重开及独立ZIP/XML检查通过；9份实际DOCX逐字节摘要绑定，7张新安装截图已实看。当前进入封板CI，尚未公开发布，不重建包。本版为community-unsigned，企业releaseCandidate=false；届时从正式Release手动下载安装并核对SHA256SUMS.txt，16→17应用内更新pending单列。
 
 正式证据在 `evidence/v1-1-17-candidate-lifecycle/`，逐文件清单和安装器摘要在 `evidence/v1.1.17-release/`；成功运行API/日志在 `evidence/v1117-accepted-review-39122059807/`。同事更新的真实冲突已可见拒绝且保留草稿与WPS更新字节；Ctrl+S确认、取消读取/覆盖、同名副本拒绝、同路径外部切换和未选文件保护均通过。运行时错误为空，输入来自真实WebView可信事件，不替换原生桥。之前工作流/驱动与GitHub403失败全部保留，成功不覆盖失败。下一只完成本次main CI、准确产品标签、原字节公开及回下载、README末尾/Release/交接和最终main/tag CI。
