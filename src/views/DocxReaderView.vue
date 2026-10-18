@@ -1475,8 +1475,12 @@ const confirmReload = () => {
   })
 }
 const saveShortcut = (event: KeyboardEvent) => {
-  if (isExternal.value || !(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 's') return
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 's') return
   event.preventDefault()
+  // LibraryMode retains its text-editor save listener while embedding DOCX.
+  // Own this shortcut before bubbling handlers; never ask the hidden text editor to save DOCX.
+  event.stopImmediatePropagation()
+  if (isExternal.value) { message.info('外部 DOCX 只读，不会写回原文件。'); return }
   if (!event.repeat) confirmSaveSource()
 }
 const leaveDocx = () => { if (isExternal.value) void router.push({ name: 'LibraryMode' }); else router.back() }
@@ -1600,7 +1604,7 @@ onBeforeRouteUpdate((to, from) => (
 ) || mayLeave())
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
-  window.addEventListener('keydown', saveShortcut)
+  window.addEventListener('keydown', saveShortcut, true)
   if (workspaceRef.value) workspaceResizeObserver.observe(workspaceRef.value)
 })
 onBeforeUnmount(() => {
@@ -1609,7 +1613,7 @@ onBeforeUnmount(() => {
   workspaceResizeObserver.disconnect()
   rememberDocxViewState()
   window.removeEventListener('beforeunload', beforeUnload)
-  window.removeEventListener('keydown', saveShortcut)
+  window.removeEventListener('keydown', saveShortcut, true)
 })
 </script>
 

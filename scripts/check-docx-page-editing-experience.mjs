@@ -90,7 +90,9 @@ requireTokens(view, 'DOCX automatic checks and receipt ownership', [
   'const confirmReload = () =>',
   'if (!await load(true))',
   ':disabled="saveBusy"',
-  "window.addEventListener('keydown', saveShortcut)",
+  "window.addEventListener('keydown', saveShortcut, true)",
+  "window.removeEventListener('keydown', saveShortcut, true)",
+  'event.stopImmediatePropagation()',
 ])
 if (view.includes('原件始终只读')) fail('The obsolete DOCX source-read-only claim returned.')
 
