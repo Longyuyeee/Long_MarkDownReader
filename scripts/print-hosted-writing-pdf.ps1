@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Target,[Parameter(Mandatory=$true)][string]$Report)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Target,[Parameter(Mandatory=$true)][string]$Report)
 $ErrorActionPreference='Stop'
 if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows' -or $env:LONGEDIT_R5I_DISPOSABLE -ne '1'){throw 'Only the disposable hosted Windows test may print'}
 $root=[IO.Path]::GetFullPath($OwnerRoot).TrimEnd('\')+'\';$targetFile=[IO.Path]::GetFullPath($Target)
@@ -30,9 +30,10 @@ public static class WritingPrintWindows {
 $result=[ordered]@{status='running';desktopUserSession='disposable-github-hosted';target=$targetFile;actions=@();windows=@();controls=@()}
 try{
  $appRoots=@(Get-Process|Where-Object {try{$_.Path -eq $Executable}catch{$false}}|ForEach-Object Id)
- $mainWindow=@([WritingPrintWindows]::Top()|Where-Object {$_.Pid -in $appRoots -and $_.OwnerPid -eq 0 -and $_.Title -and $_.ClassName -notmatch 'IME|tooltips' -and $_.ClassName -ne '#32770'})|Select-Object -First 1
- if(-not $mainWindow){throw 'The exact owned application window is required for the user-visible print scenario'}
- $result.mainWindow=[ordered]@{handle=$mainWindow.Handle;pid=$mainWindow.Pid;title=$mainWindow.Title;wasVisible=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)}
+ $mainWindows=@([WritingPrintWindows]::Top()|Where-Object {$_.Pid -in $appRoots -and $_.OwnerPid -eq 0 -and $_.Title -ceq $MainWindowTitle -and $_.ClassName -eq 'Tauri Window'})
+ if($mainWindows.Count -ne 1){throw 'Exactly one configured main window of the installed executable is required; a quick-note or external document window is not equivalent'}
+ $mainWindow=$mainWindows[0]
+ $result.mainWindow=[ordered]@{handle=$mainWindow.Handle;pid=$mainWindow.Pid;title=$mainWindow.Title;configuredMainTitle=$MainWindowTitle;className=$mainWindow.ClassName;wasVisible=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)}
  if(-not $result.mainWindow.wasVisible){$null=[WritingPrintWindows]::ShowWindow([IntPtr]$mainWindow.Handle,4)}
  $result.mainWindow['visibleBeforePrint']=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)
  if(-not $result.mainWindow.visibleBeforePrint){throw 'The owned test window cannot become visible; do not claim print acceptance'}

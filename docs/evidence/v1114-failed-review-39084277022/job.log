@@ -1,0 +1,697 @@
+﻿2026-10-18T00:50:58.6891209Z Current runner version: '2.337.0'
+2026-10-18T00:50:58.6931182Z ##[group]Runner Image Provisioner
+2026-10-18T00:50:58.6932509Z Hosted Compute Agent
+2026-10-18T00:50:58.6933474Z Version: 20261002.596
+2026-10-18T00:50:58.6934602Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-18T00:50:58.6935839Z Build Date: 2026-10-02T22:28:27Z
+2026-10-18T00:50:58.6937099Z Worker ID: {b57135cf-447f-4697-a835-ab6963d35295}
+2026-10-18T00:50:58.6938484Z Region: eastus
+2026-10-18T00:50:58.6939440Z Cloud: Azure
+2026-10-18T00:50:58.6940437Z ##[endgroup]
+2026-10-18T00:50:58.6943273Z ##[group]Operating System
+2026-10-18T00:50:58.6944402Z Microsoft Windows Server 2025
+2026-10-18T00:50:58.6945401Z 10.0.26100
+2026-10-18T00:50:58.6946234Z Datacenter
+2026-10-18T00:50:58.6947137Z ##[endgroup]
+2026-10-18T00:50:58.6948052Z ##[group]Runner Image
+2026-10-18T00:50:58.6949143Z Image: windows-2025-vs2026
+2026-10-18T00:50:58.6950145Z Version: 20261007.264.1
+2026-10-18T00:50:58.6952765Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+2026-10-18T00:50:58.6955643Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+2026-10-18T00:50:58.6957430Z ##[endgroup]
+2026-10-18T00:50:58.6959769Z ##[group]GITHUB_TOKEN Permissions
+2026-10-18T00:50:58.6962517Z Actions: read
+2026-10-18T00:50:58.6963503Z Contents: read
+2026-10-18T00:50:58.6964442Z Metadata: read
+2026-10-18T00:50:58.6965658Z ##[endgroup]
+2026-10-18T00:50:58.6969043Z Secret source: Actions
+2026-10-18T00:50:58.6970627Z Cache mode: write
+2026-10-18T00:50:58.6971757Z Prepare workflow directory
+2026-10-18T00:50:58.7720601Z Prepare all required actions
+2026-10-18T00:50:58.7800647Z Getting action download info
+2026-10-18T00:50:58.9399468Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-10-18T00:50:59.1188946Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-10-18T00:50:59.2806427Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+2026-10-18T00:50:59.5665037Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-18T00:50:59.9529488Z Complete job name: review
+2026-10-18T00:51:00.2366223Z ##[group]Run actions/checkout@v6
+2026-10-18T00:51:00.2367732Z with:
+2026-10-18T00:51:00.2368200Z   fetch-depth: 0
+2026-10-18T00:51:00.2369103Z   repository: Longyuyeee/Long_MarkDownReader
+2026-10-18T00:51:00.2376501Z   token: ***
+2026-10-18T00:51:00.2377134Z   ssh-strict: true
+2026-10-18T00:51:00.2377659Z   ssh-user: git
+2026-10-18T00:51:00.2378184Z   persist-credentials: true
+2026-10-18T00:51:00.2378688Z   clean: true
+2026-10-18T00:51:00.2379122Z   sparse-checkout-cone-mode: true
+2026-10-18T00:51:00.2379630Z   fetch-tags: false
+2026-10-18T00:51:00.2380059Z   show-progress: true
+2026-10-18T00:51:00.2380505Z   lfs: false
+2026-10-18T00:51:00.2380948Z   submodules: false
+2026-10-18T00:51:00.2381389Z   set-safe-directory: true
+2026-10-18T00:51:00.2381871Z   allow-unsafe-pr-checkout: false
+2026-10-18T00:51:00.2382738Z env:
+2026-10-18T00:51:00.2383171Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:00.2383743Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:00.2384263Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:00.2384727Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:00.2385301Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:00.2385954Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:00.2386423Z ##[endgroup]
+2026-10-18T00:51:00.4227654Z Syncing repository: Longyuyeee/Long_MarkDownReader
+2026-10-18T00:51:00.4229705Z ##[group]Getting Git version info
+2026-10-18T00:51:00.4230489Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+2026-10-18T00:51:00.5367798Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T00:51:01.1178716Z git version 2.56.0.windows.2
+2026-10-18T00:51:01.1238254Z ##[endgroup]
+2026-10-18T00:51:01.1259434Z Temporarily overriding HOME='D:\a\_temp\3f4bad33-d098-4676-bf02-d581ef76b368' before making global git config changes
+2026-10-18T00:51:01.1263007Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T00:51:01.1272436Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+2026-10-18T00:51:01.2091849Z Deleting the contents of 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+2026-10-18T00:51:01.2099156Z ##[group]Determining repository object format
+2026-10-18T00:51:01.2102100Z ##[endgroup]
+2026-10-18T00:51:01.2103481Z ##[group]Initializing the repository
+2026-10-18T00:51:01.2114856Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader
+2026-10-18T00:51:01.3374615Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/
+2026-10-18T00:51:01.3425330Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+2026-10-18T00:51:01.4929956Z ##[endgroup]
+2026-10-18T00:51:01.4931821Z ##[group]Disabling automatic garbage collection
+2026-10-18T00:51:01.4938679Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-18T00:51:01.5344874Z ##[endgroup]
+2026-10-18T00:51:01.5347630Z ##[group]Setting up auth
+2026-10-18T00:51:01.5349670Z Removing SSH command configuration
+2026-10-18T00:51:01.5358012Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T00:51:01.5879960Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T00:51:04.9805113Z Removing HTTP extra header
+2026-10-18T00:51:04.9818750Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T00:51:05.0264428Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T00:51:05.6025713Z Removing includeIf entries pointing to credentials config files
+2026-10-18T00:51:05.6037981Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T00:51:05.6457847Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T00:51:06.3621759Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-18T00:51:06.4056257Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:51:06.4505098Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:51:06.9038077Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:51:06.9449954Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:51:06.9914852Z ##[endgroup]
+2026-10-18T00:51:06.9915814Z ##[group]Fetching the repository
+2026-10-18T00:51:06.9934608Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-18T00:51:17.9511147Z From https://github.com/Longyuyeee/Long_MarkDownReader
+2026-10-18T00:51:17.9512475Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+2026-10-18T00:51:17.9513416Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+2026-10-18T00:51:17.9514289Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+2026-10-18T00:51:17.9515218Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+2026-10-18T00:51:17.9516304Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+2026-10-18T00:51:17.9517526Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+2026-10-18T00:51:17.9518511Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+2026-10-18T00:51:17.9519426Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+2026-10-18T00:51:17.9520326Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+2026-10-18T00:51:17.9521061Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+2026-10-18T00:51:17.9521644Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+2026-10-18T00:51:17.9522239Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+2026-10-18T00:51:17.9522831Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+2026-10-18T00:51:17.9523404Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+2026-10-18T00:51:17.9524017Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+2026-10-18T00:51:17.9524631Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+2026-10-18T00:51:17.9525110Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+2026-10-18T00:51:17.9526487Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+2026-10-18T00:51:17.9527110Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+2026-10-18T00:51:17.9527696Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+2026-10-18T00:51:17.9528270Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+2026-10-18T00:51:17.9528863Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+2026-10-18T00:51:17.9529669Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+2026-10-18T00:51:17.9530215Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+2026-10-18T00:51:17.9532124Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+2026-10-18T00:51:17.9533334Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+2026-10-18T00:51:17.9534070Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+2026-10-18T00:51:17.9534736Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+2026-10-18T00:51:17.9535290Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+2026-10-18T00:51:17.9535831Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+2026-10-18T00:51:17.9536461Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+2026-10-18T00:51:17.9537062Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+2026-10-18T00:51:17.9537928Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+2026-10-18T00:51:17.9538588Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+2026-10-18T00:51:17.9539126Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+2026-10-18T00:51:17.9539576Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+2026-10-18T00:51:17.9540053Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+2026-10-18T00:51:17.9540573Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+2026-10-18T00:51:17.9541110Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+2026-10-18T00:51:17.9541612Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+2026-10-18T00:51:17.9542121Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+2026-10-18T00:51:17.9542711Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+2026-10-18T00:51:17.9543295Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+2026-10-18T00:51:17.9543829Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+2026-10-18T00:51:17.9544404Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+2026-10-18T00:51:17.9544985Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+2026-10-18T00:51:17.9545527Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+2026-10-18T00:51:17.9545982Z  * [new branch]        main                    -> origin/main
+2026-10-18T00:51:17.9546302Z  * [new tag]           v0.1.0                  -> v0.1.0
+2026-10-18T00:51:17.9546601Z  * [new tag]           v0.2.0                  -> v0.2.0
+2026-10-18T00:51:17.9546887Z  * [new tag]           v0.3.0                  -> v0.3.0
+2026-10-18T00:51:17.9547169Z  * [new tag]           v0.3.1                  -> v0.3.1
+2026-10-18T00:51:17.9547543Z  * [new tag]           v0.3.2                  -> v0.3.2
+2026-10-18T00:51:17.9547841Z  * [new tag]           v0.3.3                  -> v0.3.3
+2026-10-18T00:51:17.9548122Z  * [new tag]           v0.3.4                  -> v0.3.4
+2026-10-18T00:51:17.9548402Z  * [new tag]           v0.4.4                  -> v0.4.4
+2026-10-18T00:51:17.9548839Z  * [new tag]           v0.4.5                  -> v0.4.5
+2026-10-18T00:51:17.9549269Z  * [new tag]           v0.4.6                  -> v0.4.6
+2026-10-18T00:51:17.9550042Z  * [new tag]           v0.4.7                  -> v0.4.7
+2026-10-18T00:51:17.9550370Z  * [new tag]           v0.4.8                  -> v0.4.8
+2026-10-18T00:51:17.9550655Z  * [new tag]           v0.4.9                  -> v0.4.9
+2026-10-18T00:51:17.9550957Z  * [new tag]           v0.5.0                  -> v0.5.0
+2026-10-18T00:51:17.9551236Z  * [new tag]           v0.5.1                  -> v0.5.1
+2026-10-18T00:51:17.9551560Z  * [new tag]           v0.5.2                  -> v0.5.2
+2026-10-18T00:51:17.9551860Z  * [new tag]           v0.5.3                  -> v0.5.3
+2026-10-18T00:51:17.9552154Z  * [new tag]           v0.5.4                  -> v0.5.4
+2026-10-18T00:51:17.9552885Z  * [new tag]           v0.5.5                  -> v0.5.5
+2026-10-18T00:51:17.9553338Z  * [new tag]           v0.5.6                  -> v0.5.6
+2026-10-18T00:51:17.9553800Z  * [new tag]           v0.5.7                  -> v0.5.7
+2026-10-18T00:51:17.9554238Z  * [new tag]           v0.5.8                  -> v0.5.8
+2026-10-18T00:51:17.9554689Z  * [new tag]           v0.5.9                  -> v0.5.9
+2026-10-18T00:51:17.9555106Z  * [new tag]           v0.6.0                  -> v0.6.0
+2026-10-18T00:51:17.9555519Z  * [new tag]           v0.6.1                  -> v0.6.1
+2026-10-18T00:51:17.9556168Z  * [new tag]           v0.6.2                  -> v0.6.2
+2026-10-18T00:51:17.9556576Z  * [new tag]           v0.6.3                  -> v0.6.3
+2026-10-18T00:51:17.9557000Z  * [new tag]           v0.6.4                  -> v0.6.4
+2026-10-18T00:51:17.9557422Z  * [new tag]           v0.6.5                  -> v0.6.5
+2026-10-18T00:51:17.9557830Z  * [new tag]           v0.6.6                  -> v0.6.6
+2026-10-18T00:51:17.9558243Z  * [new tag]           v0.6.7                  -> v0.6.7
+2026-10-18T00:51:17.9558679Z  * [new tag]           v0.6.8                  -> v0.6.8
+2026-10-18T00:51:17.9559098Z  * [new tag]           v0.6.9                  -> v0.6.9
+2026-10-18T00:51:17.9559532Z  * [new tag]           v1.0.0                  -> v1.0.0
+2026-10-18T00:51:17.9559943Z  * [new tag]           v1.0.1                  -> v1.0.1
+2026-10-18T00:51:17.9560356Z  * [new tag]           v1.0.10                 -> v1.0.10
+2026-10-18T00:51:17.9560827Z  * [new tag]           v1.0.11                 -> v1.0.11
+2026-10-18T00:51:17.9561125Z  * [new tag]           v1.0.12                 -> v1.0.12
+2026-10-18T00:51:17.9561411Z  * [new tag]           v1.0.13                 -> v1.0.13
+2026-10-18T00:51:17.9561698Z  * [new tag]           v1.0.14                 -> v1.0.14
+2026-10-18T00:51:17.9561995Z  * [new tag]           v1.0.15                 -> v1.0.15
+2026-10-18T00:51:17.9562282Z  * [new tag]           v1.0.16                 -> v1.0.16
+2026-10-18T00:51:17.9562568Z  * [new tag]           v1.0.17                 -> v1.0.17
+2026-10-18T00:51:17.9562852Z  * [new tag]           v1.0.18                 -> v1.0.18
+2026-10-18T00:51:17.9563143Z  * [new tag]           v1.0.19                 -> v1.0.19
+2026-10-18T00:51:17.9563426Z  * [new tag]           v1.0.2                  -> v1.0.2
+2026-10-18T00:51:17.9563709Z  * [new tag]           v1.0.20                 -> v1.0.20
+2026-10-18T00:51:17.9564013Z  * [new tag]           v1.0.21                 -> v1.0.21
+2026-10-18T00:51:17.9564332Z  * [new tag]           v1.0.22                 -> v1.0.22
+2026-10-18T00:51:17.9564793Z  * [new tag]           v1.0.23                 -> v1.0.23
+2026-10-18T00:51:17.9565311Z  * [new tag]           v1.0.24                 -> v1.0.24
+2026-10-18T00:51:17.9566037Z  * [new tag]           v1.0.25                 -> v1.0.25
+2026-10-18T00:51:17.9566393Z  * [new tag]           v1.0.26                 -> v1.0.26
+2026-10-18T00:51:17.9566696Z  * [new tag]           v1.0.3                  -> v1.0.3
+2026-10-18T00:51:17.9566985Z  * [new tag]           v1.0.4                  -> v1.0.4
+2026-10-18T00:51:17.9567284Z  * [new tag]           v1.0.5                  -> v1.0.5
+2026-10-18T00:51:17.9567568Z  * [new tag]           v1.0.6                  -> v1.0.6
+2026-10-18T00:51:17.9567857Z  * [new tag]           v1.0.7                  -> v1.0.7
+2026-10-18T00:51:17.9568143Z  * [new tag]           v1.0.8                  -> v1.0.8
+2026-10-18T00:51:17.9568430Z  * [new tag]           v1.0.9                  -> v1.0.9
+2026-10-18T00:51:17.9568720Z  * [new tag]           v1.1.0                  -> v1.1.0
+2026-10-18T00:51:17.9569006Z  * [new tag]           v1.1.1                  -> v1.1.1
+2026-10-18T00:51:17.9569523Z  * [new tag]           v1.1.10                 -> v1.1.10
+2026-10-18T00:51:17.9569832Z  * [new tag]           v1.1.11                 -> v1.1.11
+2026-10-18T00:51:17.9570136Z  * [new tag]           v1.1.12                 -> v1.1.12
+2026-10-18T00:51:17.9570422Z  * [new tag]           v1.1.13                 -> v1.1.13
+2026-10-18T00:51:17.9570706Z  * [new tag]           v1.1.2                  -> v1.1.2
+2026-10-18T00:51:17.9570989Z  * [new tag]           v1.1.3                  -> v1.1.3
+2026-10-18T00:51:17.9571275Z  * [new tag]           v1.1.4                  -> v1.1.4
+2026-10-18T00:51:17.9571567Z  * [new tag]           v1.1.5                  -> v1.1.5
+2026-10-18T00:51:17.9572001Z  * [new tag]           v1.1.6                  -> v1.1.6
+2026-10-18T00:51:17.9572517Z  * [new tag]           v1.1.7                  -> v1.1.7
+2026-10-18T00:51:17.9574058Z  * [new tag]           v1.1.8                  -> v1.1.8
+2026-10-18T00:51:17.9574384Z  * [new tag]           v1.1.9                  -> v1.1.9
+2026-10-18T00:51:17.9585850Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/main
+2026-10-18T00:51:18.0056221Z   origin/main
+2026-10-18T00:51:18.0106328Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/main
+2026-10-18T00:51:18.0510796Z 67aa98a89a7788c56613b4823347820f3d12f088
+2026-10-18T00:51:18.0549533Z ##[endgroup]
+2026-10-18T00:51:18.0549922Z ##[group]Determining the checkout info
+2026-10-18T00:51:18.0551870Z ##[endgroup]
+2026-10-18T00:51:18.0561092Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-18T00:51:18.1159247Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-18T00:51:18.1548354Z ##[group]Checking out the ref
+2026-10-18T00:51:18.1557617Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B main refs/remotes/origin/main
+2026-10-18T00:51:19.2914820Z Updating files:  12% (1309/10786)
+2026-10-18T00:51:19.3725311Z Updating files:  13% (1403/10786)
+2026-10-18T00:51:19.4593199Z Updating files:  14% (1511/10786)
+2026-10-18T00:51:19.5256520Z Updating files:  15% (1618/10786)
+2026-10-18T00:51:19.5839493Z Updating files:  16% (1726/10786)
+2026-10-18T00:51:19.6709972Z Updating files:  17% (1834/10786)
+2026-10-18T00:51:19.7514555Z Updating files:  18% (1942/10786)
+2026-10-18T00:51:19.8633082Z Updating files:  19% (2050/10786)
+2026-10-18T00:51:19.9387232Z Updating files:  20% (2158/10786)
+2026-10-18T00:51:20.0280840Z Updating files:  21% (2266/10786)
+2026-10-18T00:51:20.1217867Z Updating files:  22% (2373/10786)
+2026-10-18T00:51:20.2091119Z Updating files:  23% (2481/10786)
+2026-10-18T00:51:20.2204152Z Updating files:  24% (2589/10786)
+2026-10-18T00:51:20.2915049Z Updating files:  24% (2603/10786)
+2026-10-18T00:51:20.3659783Z Updating files:  25% (2697/10786)
+2026-10-18T00:51:20.4287248Z Updating files:  26% (2805/10786)
+2026-10-18T00:51:20.6013783Z Updating files:  27% (2913/10786)
+2026-10-18T00:51:20.6663423Z Updating files:  28% (3021/10786)
+2026-10-18T00:51:20.7464327Z Updating files:  29% (3128/10786)
+2026-10-18T00:51:20.7870072Z Updating files:  30% (3236/10786)
+2026-10-18T00:51:20.8252255Z Updating files:  31% (3344/10786)
+2026-10-18T00:51:20.8663687Z Updating files:  32% (3452/10786)
+2026-10-18T00:51:20.9024852Z Updating files:  33% (3560/10786)
+2026-10-18T00:51:20.9806902Z Updating files:  34% (3668/10786)
+2026-10-18T00:51:21.0727723Z Updating files:  35% (3776/10786)
+2026-10-18T00:51:21.1557836Z Updating files:  36% (3883/10786)
+2026-10-18T00:51:21.2290061Z Updating files:  37% (3991/10786)
+2026-10-18T00:51:21.2341481Z Updating files:  38% (4099/10786)
+2026-10-18T00:51:21.3246418Z Updating files:  38% (4111/10786)
+2026-10-18T00:51:21.4332552Z Updating files:  39% (4207/10786)
+2026-10-18T00:51:21.5121518Z Updating files:  40% (4315/10786)
+2026-10-18T00:51:21.5916503Z Updating files:  41% (4423/10786)
+2026-10-18T00:51:21.7035569Z Updating files:  42% (4531/10786)
+2026-10-18T00:51:21.8652679Z Updating files:  43% (4638/10786)
+2026-10-18T00:51:22.0373439Z Updating files:  44% (4746/10786)
+2026-10-18T00:51:22.1144101Z Updating files:  45% (4854/10786)
+2026-10-18T00:51:22.1924149Z Updating files:  46% (4962/10786)
+2026-10-18T00:51:22.2473078Z Updating files:  47% (5070/10786)
+2026-10-18T00:51:22.2649982Z Updating files:  47% (5153/10786)
+2026-10-18T00:51:22.3411539Z Updating files:  48% (5178/10786)
+2026-10-18T00:51:22.4194999Z Updating files:  49% (5286/10786)
+2026-10-18T00:51:22.4938201Z Updating files:  50% (5393/10786)
+2026-10-18T00:51:22.5634690Z Updating files:  51% (5501/10786)
+2026-10-18T00:51:22.6475327Z Updating files:  52% (5609/10786)
+2026-10-18T00:51:22.7244487Z Updating files:  53% (5717/10786)
+2026-10-18T00:51:22.7905470Z Updating files:  54% (5825/10786)
+2026-10-18T00:51:22.8530565Z Updating files:  55% (5933/10786)
+2026-10-18T00:51:22.9062760Z Updating files:  56% (6041/10786)
+2026-10-18T00:51:22.9541652Z Updating files:  57% (6149/10786)
+2026-10-18T00:51:23.0034085Z Updating files:  58% (6256/10786)
+2026-10-18T00:51:23.0709900Z Updating files:  59% (6364/10786)
+2026-10-18T00:51:23.1494630Z Updating files:  60% (6472/10786)
+2026-10-18T00:51:23.2112473Z Updating files:  61% (6580/10786)
+2026-10-18T00:51:23.3567802Z Updating files:  62% (6688/10786)
+2026-10-18T00:51:23.4029560Z Updating files:  62% (6731/10786)
+2026-10-18T00:51:23.4385005Z Updating files:  63% (6796/10786)
+2026-10-18T00:51:23.4817497Z Updating files:  64% (6904/10786)
+2026-10-18T00:51:23.5397294Z Updating files:  65% (7011/10786)
+2026-10-18T00:51:23.6190043Z Updating files:  66% (7119/10786)
+2026-10-18T00:51:23.7659754Z Updating files:  67% (7227/10786)
+2026-10-18T00:51:23.8472072Z Updating files:  68% (7335/10786)
+2026-10-18T00:51:23.9209048Z Updating files:  69% (7443/10786)
+2026-10-18T00:51:23.9921735Z Updating files:  70% (7551/10786)
+2026-10-18T00:51:24.0680493Z Updating files:  71% (7659/10786)
+2026-10-18T00:51:24.1287759Z Updating files:  72% (7766/10786)
+2026-10-18T00:51:24.1881347Z Updating files:  73% (7874/10786)
+2026-10-18T00:51:24.2466319Z Updating files:  74% (7982/10786)
+2026-10-18T00:51:24.2777300Z Updating files:  75% (8090/10786)
+2026-10-18T00:51:24.3073347Z Updating files:  75% (8147/10786)
+2026-10-18T00:51:24.3732008Z Updating files:  76% (8198/10786)
+2026-10-18T00:51:24.4364031Z Updating files:  77% (8306/10786)
+2026-10-18T00:51:24.4603806Z Updating files:  78% (8414/10786)
+2026-10-18T00:51:24.4828688Z Updating files:  79% (8521/10786)
+2026-10-18T00:51:24.5491021Z Updating files:  80% (8629/10786)
+2026-10-18T00:51:24.6081719Z Updating files:  81% (8737/10786)
+2026-10-18T00:51:25.0420239Z Updating files:  82% (8845/10786)
+2026-10-18T00:51:25.0761740Z Updating files:  83% (8953/10786)
+2026-10-18T00:51:25.1045070Z Updating files:  84% (9061/10786)
+2026-10-18T00:51:25.1331747Z Updating files:  85% (9169/10786)
+2026-10-18T00:51:25.1672202Z Updating files:  86% (9276/10786)
+2026-10-18T00:51:25.1951950Z Updating files:  87% (9384/10786)
+2026-10-18T00:51:25.2201480Z Updating files:  88% (9492/10786)
+2026-10-18T00:51:25.2481436Z Updating files:  89% (9600/10786)
+2026-10-18T00:51:25.2818605Z Updating files:  90% (9708/10786)
+2026-10-18T00:51:25.2861907Z Updating files:  91% (9816/10786)
+2026-10-18T00:51:25.3072087Z Updating files:  91% (9834/10786)
+2026-10-18T00:51:25.3340783Z Updating files:  92% (9924/10786)
+2026-10-18T00:51:25.3600154Z Updating files:  93% (10031/10786)
+2026-10-18T00:51:25.3852286Z Updating files:  94% (10139/10786)
+2026-10-18T00:51:25.5555467Z Updating files:  95% (10247/10786)
+2026-10-18T00:51:25.6011788Z Updating files:  96% (10355/10786)
+2026-10-18T00:51:25.6374064Z Updating files:  97% (10463/10786)
+2026-10-18T00:51:25.6675677Z Updating files:  98% (10571/10786)
+2026-10-18T00:51:25.7042383Z Updating files:  99% (10679/10786)
+2026-10-18T00:51:25.7042853Z Updating files: 100% (10786/10786)
+2026-10-18T00:51:25.7043123Z Updating files: 100% (10786/10786), done.
+2026-10-18T00:51:25.7319579Z Switched to a new branch 'main'
+2026-10-18T00:51:25.7337393Z branch 'main' set up to track 'origin/main'.
+2026-10-18T00:51:25.8066470Z ##[endgroup]
+2026-10-18T00:51:25.8494979Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-18T00:51:25.8854038Z 67aa98a89a7788c56613b4823347820f3d12f088
+2026-10-18T00:51:25.9271177Z ##[group]Run if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }
+2026-10-18T00:51:25.9272895Z [36;1mif ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }[0m
+2026-10-18T00:51:26.0039445Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-18T00:51:26.0040902Z env:
+2026-10-18T00:51:26.0043186Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:26.0044779Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:26.0046184Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:26.0047063Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:26.0047693Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:26.0049695Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:26.0050090Z ##[endgroup]
+2026-10-18T00:51:28.3468083Z ##[group]Run actions/setup-node@v6
+2026-10-18T00:51:28.3468408Z with:
+2026-10-18T00:51:28.3468588Z   node-version: 22
+2026-10-18T00:51:28.3468792Z   check-latest: false
+2026-10-18T00:51:28.3471431Z   token: ***
+2026-10-18T00:51:28.3471637Z   package-manager-cache: true
+2026-10-18T00:51:28.3471857Z env:
+2026-10-18T00:51:28.3472034Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:28.3472305Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:28.3472518Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:28.3472723Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:28.3472983Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:28.3473283Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:28.3473486Z ##[endgroup]
+2026-10-18T00:51:28.5352845Z Found in cache @ C:\hostedtoolcache\windows\node\22.23.3\x64
+2026-10-18T00:51:28.5362182Z ##[group]Environment details
+2026-10-18T00:51:33.0133188Z node: v22.23.3
+2026-10-18T00:51:33.0133525Z npm: 10.9.9
+2026-10-18T00:51:33.0133780Z yarn: 1.22.22
+2026-10-18T00:51:33.0134273Z ##[endgroup]
+2026-10-18T00:51:33.0484834Z ##[group]Run actions/download-artifact@v4
+2026-10-18T00:51:33.0485169Z with:
+2026-10-18T00:51:33.0488259Z   github-token: ***
+2026-10-18T00:51:33.0488478Z   run-id: 39081167437
+2026-10-18T00:51:33.0488752Z   name: community-release-candidate-lifecycle-39081167437
+2026-10-18T00:51:33.0489097Z   path: immutable-build
+2026-10-18T00:51:33.0489313Z   merge-multiple: false
+2026-10-18T00:51:33.0489541Z   repository: Longyuyeee/Long_MarkDownReader
+2026-10-18T00:51:33.0489792Z env:
+2026-10-18T00:51:33.0489975Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:33.0490227Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:33.0490439Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:33.0490641Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:33.0490900Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:33.0491204Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:33.0491417Z ##[endgroup]
+2026-10-18T00:51:33.2337216Z Downloading single artifact
+2026-10-18T00:51:33.2408413Z (node:5672) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-18T00:51:33.2409226Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-18T00:51:33.2741098Z (node:5672) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-18T00:51:33.4265837Z Preparing to download the following artifacts:
+2026-10-18T00:51:33.4267818Z - community-release-candidate-lifecycle-39081167437 (ID: 12120390115, Size: 222394798, Expected Digest: sha256:85b6d856662901383fd1e052968329de829eeafbd2c739a85c3b29a11303f172)
+2026-10-18T00:51:33.4318011Z Downloading artifact '12120390115' from 'Longyuyeee/Long_MarkDownReader'
+2026-10-18T00:51:33.6195994Z Redirecting to blob download url: https://productionresultssa17.blob.core.windows.net/actions-results/9bf29872-452e-4cbb-b603-c383fbf36758/workflow-job-run-ba7861fa-354d-53ac-a130-8196d579c5c8/artifacts/11b1b4ba7513c17044cadccba7c042f95c8de8e742c82842e47f7c750aa4498e.zip
+2026-10-18T00:51:33.6198905Z Starting download of artifact to: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build
+2026-10-18T00:51:33.7105003Z (node:5672) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-10-18T00:51:37.4970024Z SHA256 digest of downloaded artifact is 85b6d856662901383fd1e052968329de829eeafbd2c739a85c3b29a11303f172
+2026-10-18T00:51:37.4971042Z Artifact download completed successfully.
+2026-10-18T00:51:37.4971582Z Total of 1 artifact(s) downloaded
+2026-10-18T00:51:37.4983614Z Download artifact has finished successfully
+2026-10-18T00:51:37.5373212Z ##[group]Run $ErrorActionPreference = 'Stop'
+2026-10-18T00:51:37.5373673Z [36;1m$ErrorActionPreference = 'Stop'[0m
+2026-10-18T00:51:37.5374226Z [36;1m$run = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID" | ConvertFrom-Json[0m
+2026-10-18T00:51:37.5374995Z [36;1mif ($LASTEXITCODE -ne 0 -or $run.head_sha -ne $env:CANDIDATE_COMMIT) { throw 'Original build source identity drifted' }[0m
+2026-10-18T00:51:37.5375779Z [36;1m$jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID/jobs" | ConvertFrom-Json[0m
+2026-10-18T00:51:37.5376414Z [36;1mif ($LASTEXITCODE -ne 0) { throw 'Original build job receipt unavailable' }[0m
+2026-10-18T00:51:37.5377298Z [36;1mforeach ($name in @('Run frozen candidate release quality gate', 'Run complete Rust regression suite', 'Build frozen candidate MSI and NSIS', 'Capture immutable installer receipt')) {[0m
+2026-10-18T00:51:37.5378230Z [36;1m  $step = @($jobs.jobs.steps | Where-Object { $_.name -eq $name })[0m
+2026-10-18T00:51:37.5378816Z [36;1m  if ($step.Count -ne 1 -or $step[0].conclusion -ne 'success') { throw "Original gate did not pass: $name" }[0m
+2026-10-18T00:51:37.5379288Z [36;1m}[0m
+2026-10-18T00:51:37.5379541Z [36;1m$root = Join-Path $env:GITHUB_WORKSPACE 'immutable-build'[0m
+2026-10-18T00:51:37.5380312Z [36;1m$receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'community-release-output\installer-build-receipt.json') -Raw | ConvertFrom-Json[0m
+2026-10-18T00:51:37.5381387Z [36;1m$previous = Get-Content -Encoding UTF8 -LiteralPath "docs/evidence/v$($env:PREVIOUS_VERSION)-release/release-receipt.json" -Raw | ConvertFrom-Json[0m
+2026-10-18T00:51:37.5383474Z [36;1mif ($receipt.candidateSourceCommit -ne $env:CANDIDATE_COMMIT -or $receipt.appVersion -ne $env:RELEASE_VERSION -or $receipt.previousVersion -ne $env:PREVIOUS_VERSION -or $receipt.previousSourceCommit -ne $previous.release.taggedCommit -or $receipt.previousInstallerSource -ne 'official-github-release' -or $receipt.sourceUserContentIncluded -ne $false -or $receipt.artifacts.Count -ne 2) { throw 'Installer receipt identity or boundary drifted' }[0m
+2026-10-18T00:51:37.5385210Z [36;1mforeach ($artifact in $receipt.artifacts) {[0m
+2026-10-18T00:51:37.5385884Z [36;1m  if ($artifact.target -notin @('msi','nsis') -or $artifact.authenticodeStatus -ne 'NotSigned') { throw 'Unexpected installer target or signing status' }[0m
+2026-10-18T00:51:37.5387374Z [36;1m  $folder = Join-Path $root "current-product\src-tauri\target\release\bundle\$($artifact.target)"[0m
+2026-10-18T00:51:37.5387981Z [36;1m  $file = Get-Item -LiteralPath (Join-Path $folder $artifact.fileName)[0m
+2026-10-18T00:51:37.5388910Z [36;1m  if ($file.Length -ne $artifact.sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName).Hash.ToLowerInvariant() -ne $artifact.sha256) { throw 'Current installer size/hash drifted' }[0m
+2026-10-18T00:51:37.5389715Z [36;1m}[0m
+2026-10-18T00:51:37.5390173Z [36;1m$old = Get-Item -LiteralPath (Join-Path $root "previous-official\LongEdit_$($env:PREVIOUS_VERSION)_x64-setup.exe")[0m
+2026-10-18T00:51:37.5390824Z [36;1m$oldAsset = @($previous.assets | Where-Object { $_.name -eq $old.Name })[0m
+2026-10-18T00:51:37.5392048Z [36;1mif ($oldAsset.Count -ne 1 -or $old.Length -ne $oldAsset[0].sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $old.FullName).Hash.ToLowerInvariant() -ne $oldAsset[0].sha256 -or $receipt.previousInstallerSha256 -ne $oldAsset[0].sha256) { throw 'Previous official installer drifted' }[0m
+2026-10-18T00:51:37.5394435Z [36;1m"CURRENT_INSTALLER_DIRECTORY=$(Join-Path $root 'current-product\src-tauri\target\release\bundle\nsis')" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append[0m
+2026-10-18T00:51:37.5395351Z [36;1m"PREVIOUS_INSTALLER_DIRECTORY=$($old.Directory.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append[0m
+2026-10-18T00:51:37.5398154Z [36;1m"CURRENT_INSTALLER_SHA256=$(@($receipt.artifacts | Where-Object { $_.target -eq 'nsis' })[0].sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append[0m
+2026-10-18T00:51:37.5465216Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-18T00:51:37.5465626Z env:
+2026-10-18T00:51:37.5465824Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:37.5466085Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:37.5466303Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:37.5466512Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:37.5466779Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:37.5467299Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:37.5470270Z   GH_TOKEN: ***
+2026-10-18T00:51:37.5470474Z ##[endgroup]
+2026-10-18T00:51:44.9214080Z ##[group]Run node --test scripts/test-release-directory-identity.mjs
+2026-10-18T00:51:44.9215246Z [36;1mnode --test scripts/test-release-directory-identity.mjs[0m
+2026-10-18T00:51:44.9418540Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T00:51:44.9419237Z env:
+2026-10-18T00:51:44.9419481Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:44.9419831Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:44.9420115Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:44.9420385Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:44.9420739Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:44.9421145Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:44.9421944Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+2026-10-18T00:51:44.9423187Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+2026-10-18T00:51:44.9424092Z   CURRENT_INSTALLER_SHA256: cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6
+2026-10-18T00:51:44.9424662Z ##[endgroup]
+2026-10-18T00:51:45.4978406Z TAP version 13
+2026-10-18T00:51:45.5615424Z # Subtest: extended Windows spelling still addresses the exact same physical directory
+2026-10-18T00:51:45.5624379Z ok 1 - extended Windows spelling still addresses the exact same physical directory
+2026-10-18T00:51:45.5626695Z   ---
+2026-10-18T00:51:45.5627049Z   duration_ms: 5.3868
+2026-10-18T00:51:45.5627426Z   type: 'test'
+2026-10-18T00:51:45.5627796Z   ...
+2026-10-18T00:51:45.5634378Z # Subtest: a different existing directory never qualifies as the chosen destination
+2026-10-18T00:51:45.5637726Z ok 2 - a different existing directory never qualifies as the chosen destination
+2026-10-18T00:51:45.5639486Z   ---
+2026-10-18T00:51:45.5639830Z   duration_ms: 1.244
+2026-10-18T00:51:45.5640203Z   type: 'test'
+2026-10-18T00:51:45.5640528Z   ...
+2026-10-18T00:51:45.5644008Z # Subtest: files and missing directories cannot pass a destination check
+2026-10-18T00:51:45.5647182Z ok 3 - files and missing directories cannot pass a destination check
+2026-10-18T00:51:45.5647865Z   ---
+2026-10-18T00:51:45.5648187Z   duration_ms: 1.609
+2026-10-18T00:51:45.5648545Z   type: 'test'
+2026-10-18T00:51:45.5648869Z   ...
+2026-10-18T00:51:45.5771906Z 1..3
+2026-10-18T00:51:45.5772237Z # tests 3
+2026-10-18T00:51:45.5772636Z # suites 0
+2026-10-18T00:51:45.5775699Z # pass 3
+2026-10-18T00:51:45.5776404Z # fail 0
+2026-10-18T00:51:45.5777690Z # cancelled 0
+2026-10-18T00:51:45.5778056Z # skipped 0
+2026-10-18T00:51:45.5779663Z # todo 0
+2026-10-18T00:51:45.5780163Z # duration_ms 155.5351
+2026-10-18T00:51:45.7375453Z ##[group]Run actions/upload-artifact@v4
+2026-10-18T00:51:45.7375979Z with:
+2026-10-18T00:51:45.7376252Z   name: community-release-original-build-reports-39084277022
+2026-10-18T00:51:45.7376643Z   path: immutable-build/community-release-output
+2026-10-18T00:51:45.7376936Z   if-no-files-found: error
+2026-10-18T00:51:45.7377148Z   retention-days: 14
+2026-10-18T00:51:45.7377338Z   compression-level: 6
+2026-10-18T00:51:45.7377522Z   overwrite: false
+2026-10-18T00:51:45.7377713Z   include-hidden-files: false
+2026-10-18T00:51:45.7377917Z env:
+2026-10-18T00:51:45.7378090Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:45.7378347Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:45.7378562Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:45.7379349Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:45.7379632Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:45.7379948Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:45.7380570Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+2026-10-18T00:51:45.7381925Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+2026-10-18T00:51:45.7382589Z   CURRENT_INSTALLER_SHA256: cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6
+2026-10-18T00:51:45.7383015Z ##[endgroup]
+2026-10-18T00:51:45.9343320Z (node:8636) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-18T00:51:45.9344325Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-18T00:51:45.9790996Z With the provided path, there will be 123 files uploaded
+2026-10-18T00:51:45.9797591Z Artifact name is valid!
+2026-10-18T00:51:45.9799219Z Root directory input is valid!
+2026-10-18T00:51:46.2040903Z Beginning upload of artifact content to blob storage
+2026-10-18T00:51:46.6075552Z (node:8636) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-18T00:51:46.8306138Z Uploaded bytes 8388608
+2026-10-18T00:51:46.8721743Z Uploaded bytes 8848627
+2026-10-18T00:51:46.8874564Z Finished uploading artifact content to blob storage!
+2026-10-18T00:51:46.8877241Z SHA256 digest of uploaded artifact zip is 0bd953e60873c1d9a9cd74ffebb522395b5ecebaf1e6a3585aa531dfd7397d3c
+2026-10-18T00:51:46.8879416Z Finalizing artifact upload
+2026-10-18T00:51:47.0730398Z Artifact community-release-original-build-reports-39084277022.zip successfully finalized. Artifact ID 12120073094
+2026-10-18T00:51:47.0732062Z Artifact community-release-original-build-reports-39084277022 has been successfully uploaded! Final size is 8848627 bytes. Artifact ID is 12120073094
+2026-10-18T00:51:47.0741481Z Artifact download URL: https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39084277022/artifacts/12120073094
+2026-10-18T00:51:47.1037137Z ##[group]Run node --test scripts/test-installed-search-fixture-path.mjs
+2026-10-18T00:51:47.1037792Z [36;1mnode --test scripts/test-installed-search-fixture-path.mjs[0m
+2026-10-18T00:51:47.1107670Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T00:51:47.1108015Z env:
+2026-10-18T00:51:47.1108221Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:47.1108485Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:47.1108713Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:47.1108939Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:47.1109226Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:47.1109537Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:47.1110148Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+2026-10-18T00:51:47.1111273Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+2026-10-18T00:51:47.1112148Z   CURRENT_INSTALLER_SHA256: cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6
+2026-10-18T00:51:47.1112576Z ##[endgroup]
+2026-10-18T00:51:47.4503664Z TAP version 13
+2026-10-18T00:51:47.5357813Z # Subtest: 8.3 spelling is resolved through the filesystem before making any search fixture path
+2026-10-18T00:51:47.5367905Z ok 1 - 8.3 spelling is resolved through the filesystem before making any search fixture path
+2026-10-18T00:51:47.5368480Z   ---
+2026-10-18T00:51:47.5369403Z   duration_ms: 11.9427
+2026-10-18T00:51:47.5369830Z   type: 'test'
+2026-10-18T00:51:47.5370172Z   ...
+2026-10-18T00:51:47.5377319Z # Subtest: unknown or different physical parents fail closed without a string fallback
+2026-10-18T00:51:47.5380370Z ok 2 - unknown or different physical parents fail closed without a string fallback
+2026-10-18T00:51:47.5381500Z   ---
+2026-10-18T00:51:47.5381822Z   duration_ms: 5.877
+2026-10-18T00:51:47.5382184Z   type: 'test'
+2026-10-18T00:51:47.5382526Z   ...
+2026-10-18T00:51:47.5458683Z # Subtest: a real owned directory alias resolves correctly and all original bytes remain unchanged
+2026-10-18T00:51:47.5466574Z ok 3 - a real owned directory alias resolves correctly and all original bytes remain unchanged
+2026-10-18T00:51:47.5467444Z   ---
+2026-10-18T00:51:47.5468059Z   duration_ms: 14.1651
+2026-10-18T00:51:47.5468701Z   type: 'test'
+2026-10-18T00:51:47.5469265Z   ...
+2026-10-18T00:51:47.5604027Z 1..3
+2026-10-18T00:51:47.5604452Z # tests 3
+2026-10-18T00:51:47.5605022Z # suites 0
+2026-10-18T00:51:47.5607750Z # pass 3
+2026-10-18T00:51:47.5608189Z # fail 0
+2026-10-18T00:51:47.5609742Z # cancelled 0
+2026-10-18T00:51:47.5610120Z # skipped 0
+2026-10-18T00:51:47.5611799Z # todo 0
+2026-10-18T00:51:47.5612292Z # duration_ms 129.8475
+2026-10-18T00:51:47.6876449Z ##[group]Run & powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `
+2026-10-18T00:51:47.6877535Z [36;1m& powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `[0m
+2026-10-18T00:51:47.6878191Z [36;1m  -InstallerDirectory $env:CURRENT_INSTALLER_DIRECTORY `[0m
+2026-10-18T00:51:47.6878653Z [36;1m  -PreviousInstallerDirectory $env:PREVIOUS_INSTALLER_DIRECTORY `[0m
+2026-10-18T00:51:47.6879178Z [36;1m  -CurrentVersion $env:RELEASE_VERSION -PreviousVersion $env:PREVIOUS_VERSION `[0m
+2026-10-18T00:51:47.6879689Z [36;1m  -ExpectedCurrentSha256 $env:CURRENT_INSTALLER_SHA256 `[0m
+2026-10-18T00:51:47.6880083Z [36;1m  -NodeExecutable (Get-Command node.exe).Source `[0m
+2026-10-18T00:51:47.6880679Z [36;1m  -InstalledSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5j-installed-artifact-smoke.mjs') `[0m
+2026-10-18T00:51:47.6881577Z [36;1m  -ManagementRollbackSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5l-management-rollback-smoke.mjs') `[0m
+2026-10-18T00:51:47.6882409Z [36;1m  -EvidenceExporter (Join-Path $env:GITHUB_WORKSPACE 'scripts/export-r5k-windows-evidence-bundle.ps1') `[0m
+2026-10-18T00:51:47.6882984Z [36;1m  -ExpectedSourceCommit $env:CANDIDATE_COMMIT `[0m
+2026-10-18T00:51:47.6883516Z [36;1m  -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'same-installer-review') `[0m
+2026-10-18T00:51:47.6884132Z [36;1m  -ConfirmDisposableMachine -AllowInstallerMutation[0m
+2026-10-18T00:51:47.6884569Z [36;1mif ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }[0m
+2026-10-18T00:51:47.6951633Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-18T00:51:47.6952049Z env:
+2026-10-18T00:51:47.6952238Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:51:47.6952499Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:51:47.6952723Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:51:47.6952942Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:51:47.6953217Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:51:47.6953528Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:51:47.6954111Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+2026-10-18T00:51:47.6955168Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+2026-10-18T00:51:47.6955839Z   CURRENT_INSTALLER_SHA256: cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6
+2026-10-18T00:51:47.6956270Z ##[endgroup]
+2026-10-18T00:56:01.5759038Z Owned synthetic Unicode clipboard is ready; the test must use a real paste key next.
+2026-10-18T00:56:59.7774066Z A real native print output was not produced; preserve print UI diagnostics
+2026-10-18T00:56:59.7776968Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\print-hosted-writing-pdf.ps1:106 char:63
+2026-10-18T00:56:59.7778544Z + ... argetFile)){throw 'A real native print output was not produced; prese ...
+2026-10-18T00:56:59.7779159Z +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-18T00:56:59.7779820Z     + CategoryInfo          : OperationStopped: (A real native p... UI diagnostics:String) [], RuntimeException
+2026-10-18T00:56:59.7780689Z     + FullyQualifiedErrorId : A real native print output was not produced; preserve print UI diagnostics
+2026-10-18T00:56:59.7781250Z  
+2026-10-18T00:57:14.6823298Z node:internal/modules/run_main:123
+2026-10-18T00:57:14.6823929Z     triggerUncaughtException(
+2026-10-18T00:57:14.6824453Z     ^
+2026-10-18T00:57:14.6824934Z 
+2026-10-18T00:57:14.6830340Z Error: Timed out after 60000 ms: installed CDP Input.dispatchMouseEvent
+2026-10-18T00:57:14.6831910Z     at Timeout.<anonymous> (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/with-deadline.mjs:7:41)
+2026-10-18T00:57:14.6835979Z     at listOnTimeout (node:internal/timers:585:17)
+2026-10-18T00:57:14.6836883Z     at process.processTimers (node:internal/timers:521:7)
+2026-10-18T00:57:14.6837364Z 
+2026-10-18T00:57:14.6837525Z Node.js v22.23.3
+2026-10-18T00:57:15.0243240Z R5J installed-artifact route and I/O smoke failed.
+2026-10-18T00:57:15.0244634Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\run-r5i-isolated-install-lifecycle.ps1:428 char:9
+2026-10-18T00:57:15.0247489Z +         throw "R5J installed-artifact route and I/O smoke failed."
+2026-10-18T00:57:15.0252590Z +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-18T00:57:15.0254677Z     + CategoryInfo          : OperationStopped: (R5J installed-a...O smoke failed.:String) [], RuntimeException
+2026-10-18T00:57:15.0310788Z     + FullyQualifiedErrorId : R5J installed-artifact route and I/O smoke failed.
+2026-10-18T00:57:15.0311975Z  
+2026-10-18T00:57:15.2104495Z Same-installer lifecycle failed
+2026-10-18T00:57:15.2105536Z At D:\a\_temp\95fcbbab-7c40-4c05-ac51-349c6af2c572.ps1:14 char:28
+2026-10-18T00:57:15.2106929Z + if ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }
+2026-10-18T00:57:15.2107831Z +                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-18T00:57:15.2108986Z     + CategoryInfo          : OperationStopped: (Same-installer lifecycle failed:String) [], RuntimeException
+2026-10-18T00:57:15.2110255Z     + FullyQualifiedErrorId : Same-installer lifecycle failed
+2026-10-18T00:57:15.2110765Z  
+2026-10-18T00:57:15.2309095Z ##[error]Process completed with exit code 1.
+2026-10-18T00:57:15.2520566Z ##[group]Run $source = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\installer-build-receipt.json'
+2026-10-18T00:57:15.2521907Z [36;1m$source = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\installer-build-receipt.json'[0m
+2026-10-18T00:57:15.2522842Z [36;1m$destination = Join-Path $env:GITHUB_WORKSPACE 'same-installer-review'[0m
+2026-10-18T00:57:15.2523290Z [36;1mif (Test-Path -LiteralPath $source) {[0m
+2026-10-18T00:57:15.2523721Z [36;1m  New-Item -ItemType Directory -Path $destination -Force | Out-Null[0m
+2026-10-18T00:57:15.2524337Z [36;1m  Copy-Item -LiteralPath $source -Destination (Join-Path $destination 'installer-build-receipt.json')[0m
+2026-10-18T00:57:15.2525068Z [36;1m}[0m
+2026-10-18T00:57:15.2598020Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-10-18T00:57:15.2598439Z env:
+2026-10-18T00:57:15.2598632Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:57:15.2598942Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:57:15.2599172Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:57:15.2599385Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:57:15.2599673Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:57:15.2600000Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:57:15.2600597Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+2026-10-18T00:57:15.2601805Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+2026-10-18T00:57:15.2602499Z   CURRENT_INSTALLER_SHA256: cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6
+2026-10-18T00:57:15.2603020Z ##[endgroup]
+2026-10-18T00:57:15.6287786Z ##[group]Run actions/upload-artifact@v4
+2026-10-18T00:57:15.6288172Z with:
+2026-10-18T00:57:15.6288443Z   name: community-release-installer-review-39084277022
+2026-10-18T00:57:15.6288771Z   retention-days: 14
+2026-10-18T00:57:15.6288988Z   if-no-files-found: error
+2026-10-18T00:57:15.6289232Z   path: same-installer-review
+2026-10-18T00:57:15.6289481Z   compression-level: 6
+2026-10-18T00:57:15.6289686Z   overwrite: false
+2026-10-18T00:57:15.6289885Z   include-hidden-files: false
+2026-10-18T00:57:15.6290101Z env:
+2026-10-18T00:57:15.6290294Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+2026-10-18T00:57:15.6290563Z   LONGEDIT_R5I_DISPOSABLE: 1
+2026-10-18T00:57:15.6290781Z   RELEASE_VERSION: 1.1.14
+2026-10-18T00:57:15.6290994Z   PREVIOUS_VERSION: 1.1.13
+2026-10-18T00:57:15.6291275Z   CANDIDATE_COMMIT: e4650640145d94e0c115b0e3993ae0358b355412
+2026-10-18T00:57:15.6292011Z   INSTALLER_RUN_ID: 39081167437
+2026-10-18T00:57:15.6292689Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+2026-10-18T00:57:15.6293605Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+2026-10-18T00:57:15.6294311Z   CURRENT_INSTALLER_SHA256: cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6
+2026-10-18T00:57:15.6294748Z ##[endgroup]
+2026-10-18T00:57:15.8280431Z (node:5844) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-18T00:57:15.8281231Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-18T00:57:15.8671520Z With the provided path, there will be 125 files uploaded
+2026-10-18T00:57:15.8679271Z Artifact name is valid!
+2026-10-18T00:57:15.8681108Z Root directory input is valid!
+2026-10-18T00:57:16.1562729Z Beginning upload of artifact content to blob storage
+2026-10-18T00:57:16.5590335Z (node:5844) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-18T00:57:16.7009469Z Uploaded bytes 8388608
+2026-10-18T00:57:16.7272817Z Uploaded bytes 8888892
+2026-10-18T00:57:16.7422291Z Finished uploading artifact content to blob storage!
+2026-10-18T00:57:16.7424630Z SHA256 digest of uploaded artifact zip is 27466becc2c8a1da9c29114b00641755799b0fab7030d35ab9cbc3d7d69e6b30
+2026-10-18T00:57:16.7427022Z Finalizing artifact upload
+2026-10-18T00:57:16.9620069Z Artifact community-release-installer-review-39084277022.zip successfully finalized. Artifact ID 12120330792
+2026-10-18T00:57:16.9622209Z Artifact community-release-installer-review-39084277022 has been successfully uploaded! Final size is 8888892 bytes. Artifact ID is 12120330792
+2026-10-18T00:57:16.9634053Z Artifact download URL: https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39084277022/artifacts/12120330792
+2026-10-18T00:57:17.0015579Z Post job cleanup.
+2026-10-18T00:57:17.2042135Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T00:57:17.2426630Z git version 2.56.0.windows.2
+2026-10-18T00:57:17.2509730Z Temporarily overriding HOME='D:\a\_temp\d7136367-44d7-41d9-9f0b-8ba3738c9fc1' before making global git config changes
+2026-10-18T00:57:17.2511190Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T00:57:17.2521282Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+2026-10-18T00:57:17.2927571Z Removing SSH command configuration
+2026-10-18T00:57:17.2939403Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T00:57:17.3348917Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T00:57:17.9053348Z Removing HTTP extra header
+2026-10-18T00:57:17.9063303Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T00:57:17.9466066Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T00:57:18.5345497Z Removing includeIf entries pointing to credentials config files
+2026-10-18T00:57:18.5357852Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T00:57:18.5710799Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+2026-10-18T00:57:18.5712545Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+2026-10-18T00:57:18.5713512Z includeif.gitdir:/github/workspace/.git.path
+2026-10-18T00:57:18.5714214Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-18T00:57:18.5759484Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+2026-10-18T00:57:18.6111543Z D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.6160111Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.6580686Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+2026-10-18T00:57:18.6938374Z D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.6987042Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.7389722Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-18T00:57:18.7742521Z /github/runner_temp/git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.7788780Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.8191055Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-18T00:57:18.8536081Z /github/runner_temp/git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.8586183Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config
+2026-10-18T00:57:18.8980709Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T00:57:19.4566918Z Removing credentials config 'D:\a\_temp\git-credentials-89538b62-e99a-44ae-a798-8437783a6a08.config'
+2026-10-18T00:57:19.4772807Z Cleaning up orphan processes
+2026-10-18T00:57:19.5721555Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/download-artifact@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

@@ -17,13 +17,13 @@ const example=()=>{
  for(const field of ['imagePicker','htmlPicker','markdownPicker'])report[field]={status:'selected-real-native-dialog',dialogClosed:true,desktopUserSession:'disposable-github-hosted',processId:1}
  report.pdfColorPixels=200
  report.previewStructure={headings:70,tables:70};report.inputTrace.push({type:'paste',trusted:true})
- report.nativePrint.mainWindow={visibleBeforePrint:true,pid:1}
+ report.nativePrint.mainWindow={visibleBeforePrint:true,pid:1,title:'Long编辑·md助手',configuredMainTitle:'Long编辑·md助手',className:'Tauri Window'}
  report.templateMainText='用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}'
  return [report,manifest]
 }
 test('writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input',()=>{
  assert.doesNotThrow(()=>validateInstalledWritingDelivery(...example()))
- for(const mutate of [r=>r.previewStructure.tables=0,r=>r.previewStructure.headings=69,r=>r.inputTrace=r.inputTrace.filter(e=>e.type!=='paste')]){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
+ for(const mutate of [r=>r.previewStructure.tables=0,r=>r.previewStructure.headings=69,r=>r.inputTrace=r.inputTrace.filter(e=>e.type!=='paste'),r=>r.nativePrint.mainWindow.title='快速笔记']){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
  for(const mutate of [r=>r.checks.pop(),r=>r.nativeBridgeMocked=true,r=>r.nativePrint.status='print-dialog-only',r=>r.pdfPages=0,r=>r.pdfText='wrong output',r=>r.pdfText+='快速笔记',r=>r.pdfInk=0,r=>r.pdfColorPixels=0,r=>r.pdfLastSectionVisible=false,r=>r.resourceErrorRetainedAfterMarkdown=false,r=>r.sourceAfter='f'.repeat(64),r=>r.sharedAfter='f'.repeat(64),r=>r.previewSha256='f'.repeat(64),r=>r.standalone.images[0].embedded=false,r=>r.standalone.scripts=1,r=>r.cancelCreatedFile=true,r=>r.markdownMatchesDraft=false,r=>r.draftStillDirty=false,r=>r.imagePicker.dialogClosed=false,r=>r.inputTrace[0].trusted=false,r=>r.runtimeErrors.push('error')]){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
 })
 test('real installed driver never replaces bridge, calls a component handler or synthesizes DOM input',()=>{
