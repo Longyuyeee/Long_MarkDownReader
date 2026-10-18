@@ -21,6 +21,13 @@ public static class WritingPrintWindows {
  [DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int command);
  [DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);
  [DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();
+ [DllImport("kernel32.dll")]static extern uint GetCurrentThreadId();
+ [DllImport("user32.dll")]static extern bool AttachThreadInput(uint first,uint second,bool attach);
+ [DllImport("user32.dll")]static extern bool BringWindowToTop(IntPtr h);
+ [StructLayout(LayoutKind.Sequential)]public struct Rect{public int Left,Top,Right,Bottom;}
+ [DllImport("user32.dll")]static extern bool GetClientRect(IntPtr h,out Rect r);
+ public static int[] ClientSize(long handle){Rect r;if(!GetClientRect(new IntPtr(handle),out r))throw new Exception("Cannot inspect the owned main client bounds");return new[]{r.Right-r.Left,r.Bottom-r.Top};}
+ public static bool FocusWithOwnedForeground(long target,uint process){var h=new IntPtr(target);uint foregroundPid;var foregroundThread=GetWindowThreadProcessId(GetForegroundWindow(),out foregroundPid);if(foregroundPid!=process)return false;var caller=GetCurrentThreadId();bool joined=caller!=foregroundThread&&AttachThreadInput(caller,foregroundThread,true);try{BringWindowToTop(h);return SetForegroundWindow(h);}finally{if(joined)AttachThreadInput(caller,foregroundThread,false);}}
  [DllImport("user32.dll",EntryPoint="SendMessageW")]public static extern IntPtr Send(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll")]public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
  public class Item{public long Handle;public uint Pid;public uint OwnerPid;public string Title;public string ClassName;public int Id;}
@@ -40,9 +47,16 @@ try{
  $result.mainWindow['visibleBeforePrint']=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)
  if(-not $result.mainWindow.visibleBeforePrint){throw 'The owned test window cannot become visible; do not claim print acceptance'}
  $result.mainWindow['foregroundBefore']=[WritingPrintWindows]::GetForegroundWindow().ToInt64()
- $null=[WritingPrintWindows]::SetForegroundWindow([IntPtr]$mainWindow.Handle)
+ $result.mainWindow['foregroundRequestAccepted']=[WritingPrintWindows]::SetForegroundWindow([IntPtr]$mainWindow.Handle)
+ for($attempt=0;$attempt -lt 30 -and [WritingPrintWindows]::GetForegroundWindow().ToInt64() -ne $mainWindow.Handle;$attempt++){
+  if($attempt -eq 5){try{[System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$mainWindow.Handle).SetFocus()}catch{$result.focusNotice=[string]$_}}
+  if($attempt -eq 15){$result.mainWindow['ownedForegroundRequestAccepted']=[WritingPrintWindows]::FocusWithOwnedForeground($mainWindow.Handle,$mainWindow.Pid)}
+  Start-Sleep -Milliseconds 100
+ }
  $result.mainWindow['foregroundBeforePrint']=[WritingPrintWindows]::GetForegroundWindow().ToInt64() -eq $mainWindow.Handle
  if(-not $result.mainWindow.foregroundBeforePrint){throw 'The actual user print scenario requires the exact main window in the foreground'}
+ $client=[WritingPrintWindows]::ClientSize($mainWindow.Handle);$result.mainWindow['clientWidth']=$client[0];$result.mainWindow['clientHeight']=$client[1]
+ if($client[0] -lt 200 -or $client[1] -lt 200){throw 'The actual main client viewport is too small for the user print scenario'}
  try { $spooler=Get-Service Spooler -ErrorAction Stop;if($spooler.Status -ne 'Running'){Start-Service Spooler -ErrorAction Stop} } catch { $result.spoolerNotice=[string]$_ }
  $printers=@(Get-CimInstance Win32_Printer -ErrorAction SilentlyContinue);$result.printers=@($printers|Select-Object Name,Default,DriverName)
  $pdfPrinter=$printers|Where-Object Name -eq 'Microsoft Print to PDF'|Select-Object -First 1

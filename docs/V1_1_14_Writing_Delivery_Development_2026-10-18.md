@@ -26,6 +26,8 @@
 
 ## 继续到发布的门禁
 
+第三轮 `39085461000`（驱动1a1c020d）在打印前的主窗前台门禁失败，**没有执行本轮打印点击**，不可记成新的产品打印失败。隔离机原桌面图显示快速笔记仍在上方，实际主窗客户区与1280×820的旧CDP视口也不同；原材料在 `evidence/v1114-failed-review-39085461000/`。后续驱动等待激活并尝试标准UIA焦点；必要时只在当前前台窗口也属于同一被验收EXE时临时连接这两个线程的输入队列、激活确切主窗，再立即解绑，不对其他程序窗口操作。参见微软[前台限制](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow)及[输入队列说明](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-attachthreadinput)。不关闭、代存或清空其他测试草稿；CDP视口改为实际客户区，确保按钮位置对应真实可见窗口。仍严格要求真实PDF、图像、末段和原始数据保护，不修改固定产品。
+
 第二轮同包 `39084798459`（驱动3a4cc12a）仍在打印失败，原8项均通过；报告实证真正主窗体 `wasVisible=false`、显示后 `visibleBeforePrint=true`，因此显示主窗体并未独自解决问题。原诊断/HTML/截图/API/日志在 `evidence/v1114-failed-review-39084798459/`。后续驱动只在托管隔离机将确切主窗体置于前台，模拟用户真正激活编辑窗口；另保留各窗体控件、全局窗体/进程只读诊断、打印期CDP目标，以及失败时隔离虚拟机桌面图，区分系统窗口漏识别和WebView打印阻塞。不操作本机桌面，不用后台源文件或静默渲染替代真实打印输出。
 
 微软[打印说明](https://learn.microsoft.com/en-us/microsoft-edge/webview2/how-to/print)的ShowPrintUI/PrintToPdf面向顶层文档，不能当本iframe流程已受验证。Tauri[iframe打印问题](https://github.com/tauri-apps/tauri/issues/13451)报告的是macOS，不据此认定本Windows故障；继续以当前安装器实际诊断判定。未完成真实输出前仍不可封板。

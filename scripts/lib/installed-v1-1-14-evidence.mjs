@@ -21,6 +21,7 @@ export function validateInstalledWritingDelivery(report,manifest){
  assert.equal(report.nativePrint.mainWindow.visibleBeforePrint,true);assert.ok(report.nativePrint.mainWindow.pid>0)
  assert.equal(report.nativePrint.mainWindow.title,'Long编辑·md助手');assert.equal(report.nativePrint.mainWindow.configuredMainTitle,report.nativePrint.mainWindow.title);assert.equal(report.nativePrint.mainWindow.className,'Tauri Window')
  assert.equal(report.nativePrint.mainWindow.foregroundBeforePrint,true)
+ assert.deepEqual(report.printViewport,{width:report.nativePrint.mainWindow.clientWidth,height:report.nativePrint.mainWindow.clientHeight});assert.ok(report.printViewport.width>=200&&report.printViewport.height>=200)
  assert.ok(report.pdfPages>=2);assert.ok(report.pdfText.includes('这篇交付方案仍未保存'));assert.ok(!report.pdfText.includes('快速笔记'));assert.ok(report.pdfInk>0);assert.ok(report.pdfColorPixels>100,'actual native PDF must retain the colored image')
  assert.equal(report.inputTrace.every(e=>e.trusted),true);for(const type of ['click','keydown','input','paste'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted))
  assert.deepEqual(report.runtimeErrors,[])
