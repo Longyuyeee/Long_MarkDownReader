@@ -1,0 +1,26 @@
+{
+  "appVersion": "1.1.15",
+  "sourceCommit": "a40c0ea2a71a7cd1230c8704cb1e45b2c79c9cba",
+  "installerSha256": "c2c2b3ca35ab9bf47368fad2bd9d4f8bafe42809af8cac164b1ed82d28a49ff0",
+  "harnessSourceCommit": "a40c0ea2a71a7cd1230c8704cb1e45b2c79c9cba",
+  "executableSha256": "c776d0e94ae4f6afc024cdf09fdf3e489c88d09856e5473eabb6c2facb0feb96",
+  "evidenceLevel": "installed-table-real-clipboard-native-save-export-and-independent-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "owned-fixture-and-installed-identity",
+      "status": "passed"
+    },
+    {
+      "id": "real-filtered-paste-no-hidden-row-write",
+      "status": "passed"
+    }
+  ],
+  "unselectedBefore": "e4cc9aa743710d91bb17da5b085a778fd621d9f2c9753f8e691fac52bd7b3c0b",
+  "filteredPasteExact": true,
+  "hiddenRowProtected": true,
+  "failure": "Error: Actual native UI did not become ready: unobscured target document.querySelector(\"[title=\\\"按 编号 排序\\\"]\")\n    at waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async settledPoint (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:17:5)\n    at async clickTarget (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:36:17)\n    at async runInstalledV1115Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-15-workflow.mjs:29:3)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:1001:5"
+}

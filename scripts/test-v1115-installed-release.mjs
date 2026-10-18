@@ -22,7 +22,8 @@ test('table evidence rejects partial/fake checks, changed hidden rows, flattened
 test('real table driver uses native clipboard and public input without mutating a handler or bridge',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-1-15-workflow.mjs','utf8')
  for(const token of ['dispatchEvent(','__TAURI_INTERNALS__=','__TAURI_INTERNALS__ =','isDirty=false','isDirty = false','force:true','force: true'])assert.ok(!source.includes(token),token)
- for(const token of ['nativeUserInput','set-hosted-writing-clipboard.ps1','read-hosted-table-clipboard.ps1','inspect-hosted-table-delivery.ps1','validateInstalledTableEditing','sourceSaved'])assert.ok(source.includes(token),token)
+ for(const token of ['nativeUserInput','set-hosted-writing-clipboard.ps1','read-hosted-table-clipboard.ps1','inspect-hosted-table-delivery.ps1','validateInstalledTableEditing','sourceSaved','aria-label="按 编号 排序"','failureButtons'])assert.ok(source.includes(token),token)
+ assert.ok(!source.includes('[title='),'Native application tooltip policy removes title; use public accessible names')
  for(const file of ['scripts/inspect-hosted-table-delivery.ps1','scripts/read-hosted-table-clipboard.ps1']){const guard=fs.readFileSync(file,'utf8');for(const token of ['GITHUB_ACTIONS','RUNNER_ENVIRONMENT','LONGEDIT_R5I_DISPOSABLE','.v119-installed-owner','StartsWith'])assert.ok(guard.includes(token),file+token)}
 })
 function syntheticBundle(){
