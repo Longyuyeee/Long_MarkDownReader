@@ -17,6 +17,8 @@ public static class WritingPrintWindows {
  [DllImport("user32.dll")]static extern int GetDlgCtrlID(IntPtr h);
  [DllImport("user32.dll")]static extern IntPtr GetWindow(IntPtr h,uint f);
  [DllImport("user32.dll")]public static extern bool IsWindowEnabled(IntPtr h);
+ [DllImport("user32.dll")]public static extern bool IsWindowVisible(IntPtr h);
+ [DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int command);
  [DllImport("user32.dll",EntryPoint="SendMessageW")]public static extern IntPtr Send(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll")]public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
  public class Item{public long Handle;public uint Pid;public uint OwnerPid;public string Title;public string ClassName;public int Id;}
@@ -27,6 +29,13 @@ public static class WritingPrintWindows {
 '@
 $result=[ordered]@{status='running';desktopUserSession='disposable-github-hosted';target=$targetFile;actions=@();windows=@();controls=@()}
 try{
+ $appRoots=@(Get-Process|Where-Object {try{$_.Path -eq $Executable}catch{$false}}|ForEach-Object Id)
+ $mainWindow=@([WritingPrintWindows]::Top()|Where-Object {$_.Pid -in $appRoots -and $_.OwnerPid -eq 0 -and $_.Title -and $_.ClassName -notmatch 'IME|tooltips' -and $_.ClassName -ne '#32770'})|Select-Object -First 1
+ if(-not $mainWindow){throw 'The exact owned application window is required for the user-visible print scenario'}
+ $result.mainWindow=[ordered]@{handle=$mainWindow.Handle;pid=$mainWindow.Pid;title=$mainWindow.Title;wasVisible=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)}
+ if(-not $result.mainWindow.wasVisible){$null=[WritingPrintWindows]::ShowWindow([IntPtr]$mainWindow.Handle,4)}
+ $result.mainWindow['visibleBeforePrint']=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)
+ if(-not $result.mainWindow.visibleBeforePrint){throw 'The owned test window cannot become visible; do not claim print acceptance'}
  try { $spooler=Get-Service Spooler -ErrorAction Stop;if($spooler.Status -ne 'Running'){Start-Service Spooler -ErrorAction Stop} } catch { $result.spoolerNotice=[string]$_ }
  $printers=@(Get-CimInstance Win32_Printer -ErrorAction SilentlyContinue);$result.printers=@($printers|Select-Object Name,Default,DriverName)
  $pdfPrinter=$printers|Where-Object Name -eq 'Microsoft Print to PDF'|Select-Object -First 1

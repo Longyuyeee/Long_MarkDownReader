@@ -11,11 +11,13 @@ export function validateInstalledWritingDelivery(report,manifest){
  for(const key of ['source','shared','unselected'])assert.equal(report[key+'Before'],report[key+'After'])
  assert.equal(report.htmlSha256,report.movedHtmlSha256);assert.equal(report.previewSha256,report.htmlSha256)
  assert.equal(report.templateBody,'# 用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}\n')
+ assert.ok(report.templateMainText.includes('用户填写的文章')&&report.templateMainText.includes('小林 {{time}}'),'a file alone cannot prove the newly created note opens in the main editor')
  assert.equal(report.standalone.nativeBridgeMocked,false);assert.equal(report.standalone.scripts,0);assert.equal(report.standalone.temporarySources,0);assert.ok(report.standalone.text.includes('这篇交付方案仍未保存'))
  assert.ok(report.standalone.images.length>=2);assert.ok(report.standalone.images.every(i=>i.embedded&&i.width===240&&i.height===100))
  for(const field of ['imagePicker','htmlPicker','markdownPicker']){assert.equal(report[field].status,'selected-real-native-dialog');assert.equal(report[field].dialogClosed,true);assert.equal(report[field].desktopUserSession,'disposable-github-hosted');assert.ok(report[field].processId>0)}
  assert.equal(report.cancelPicker.status,'cancelled-real-native-dialog');assert.equal(report.cancelPicker.dialogClosed,true);assert.equal(report.cancelCreatedFile,false)
  assert.equal(report.nativePrint.status,'saved-real-native-print-pdf');assert.equal(report.nativePrint.desktopUserSession,'disposable-github-hosted');assert.match(report.nativePrint.sha256,/^[a-f0-9]{64}$/);assert.ok(report.nativePrint.sizeBytes>1000)
+ assert.equal(report.nativePrint.mainWindow.visibleBeforePrint,true);assert.ok(report.nativePrint.mainWindow.pid>0)
  assert.ok(report.pdfPages>=2);assert.ok(report.pdfText.includes('这篇交付方案仍未保存'));assert.ok(!report.pdfText.includes('快速笔记'));assert.ok(report.pdfInk>0);assert.ok(report.pdfColorPixels>100,'actual native PDF must retain the colored image')
  assert.equal(report.inputTrace.every(e=>e.trusted),true);for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted))
  assert.deepEqual(report.runtimeErrors,[])

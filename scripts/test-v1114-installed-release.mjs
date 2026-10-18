@@ -16,6 +16,8 @@ const example=()=>{
  for(const key of ['sourceBefore','sourceAfter','sharedBefore','sharedAfter','unselectedBefore','unselectedAfter','htmlSha256','movedHtmlSha256','previewSha256'])report[key]=digest
  for(const field of ['imagePicker','htmlPicker','markdownPicker'])report[field]={status:'selected-real-native-dialog',dialogClosed:true,desktopUserSession:'disposable-github-hosted',processId:1}
  report.pdfColorPixels=200
+ report.nativePrint.mainWindow={visibleBeforePrint:true,pid:1}
+ report.templateMainText='用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}'
  return [report,manifest]
 }
 test('writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input',()=>{
