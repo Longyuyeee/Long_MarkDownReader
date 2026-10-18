@@ -6,9 +6,11 @@
 
 MSI 77,438,976字节 / `54dea9be1e12d2009642add2569b11f498b935ae0f6b7a3b85b2c46ef70bddaf`；NSIS 68,248,341字节 / `e2dc42924ae92267087cb0c717e45607725ee709e2ea5cc092800d1d75a0e10e`。只统一公开前缀为LongEdit。保留43格式/37能力、原工作表/专业工具、六风格、正常动效和显式保存；本版不是完整Excel兼容或任意公式计算。独立openpyxl检查不是Excel/LibreOffice视觉验收，打印/页面工具保留而非本版新增承诺。[日常操作与边界](Workbook_Editing_User_Guide.md)。
 
-渠道community-unsigned，Windows可能提示未知发布者；开发身份releaseCandidate=false，不是企业版RC。15→16应用内官方更新观察仍pending，与本轮实际手动覆盖安装分开。路线 **9/13已发布，17—20四版待开发**；[下一DOCX真实代码预审](V1_1_17_DOCX_Preimplementation_Audit_2026-10-18.md)不计实施。两份用户排序文件未改未提交，不接管本机，自建9022服务已停止。
+渠道community-unsigned，Windows可能提示未知发布者；开发身份releaseCandidate=false，不是企业版RC。现在可从正式Release手动下载安装，先核对同页SHA256SUMS.txt。15→16应用内官方更新观察仍pending，与本轮实际手动覆盖安装分开。路线 **9/13已发布，17—20四版待开发**；[下一DOCX真实代码预审](V1_1_17_DOCX_Preimplementation_Audit_2026-10-18.md)不计实施。两份用户排序文件未改未提交，不接管本机，自建9022服务已停止。
 
 收尾文档身份检查先后因收口计划缺少“当前开发目标1.1.17”的标准字段、把机器阶段代码当作面向用户的阶段名称而失败，两份原日志分别保留；只补齐真实17/16/16身份和“v1.1.16已发布”阶段，机器代码另列。未修改检查规则、安装器或产品。修正后完整文档审计与README/Release/公开回下载专门核对通过，原日志在 `evidence/v1116-local-validation/`。标签CI **39111531951 success**，最终main CI随本次收尾提交核验。
+
+首次收尾main CI39112190963因正式审计遗漏“手动下载安装”明确说明而失败，原日志/API保留在 `evidence/v1116-publication-ci-failure-39112190963/`；补齐真实操作说明，未改变产品、公开附件或检查条件。完整 `ci:patch-release` 重跑通过，生产审计0漏洞，原日志 `evidence/v1116-local-validation/quality-published-final.log`；再推送本次最终文档接受main CI核验。不能把失败轮次当成功，也不能因此重建或替换已公开验收包。
 
 ## 发布前过程与纠偏（历史）
 
