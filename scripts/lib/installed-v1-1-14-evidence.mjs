@@ -16,7 +16,7 @@ export function validateInstalledWritingDelivery(report,manifest){
  for(const field of ['imagePicker','htmlPicker','markdownPicker']){assert.equal(report[field].status,'selected-real-native-dialog');assert.equal(report[field].dialogClosed,true);assert.equal(report[field].desktopUserSession,'disposable-github-hosted');assert.ok(report[field].processId>0)}
  assert.equal(report.cancelPicker.status,'cancelled-real-native-dialog');assert.equal(report.cancelPicker.dialogClosed,true);assert.equal(report.cancelCreatedFile,false)
  assert.equal(report.nativePrint.status,'saved-real-native-print-pdf');assert.equal(report.nativePrint.desktopUserSession,'disposable-github-hosted');assert.match(report.nativePrint.sha256,/^[a-f0-9]{64}$/);assert.ok(report.nativePrint.sizeBytes>1000)
- assert.ok(report.pdfPages>=2);assert.ok(report.pdfText.includes('这篇交付方案仍未保存'));assert.ok(!report.pdfText.includes('快速笔记'));assert.ok(report.pdfInk>0)
+ assert.ok(report.pdfPages>=2);assert.ok(report.pdfText.includes('这篇交付方案仍未保存'));assert.ok(!report.pdfText.includes('快速笔记'));assert.ok(report.pdfInk>0);assert.ok(report.pdfColorPixels>100,'actual native PDF must retain the colored image')
  assert.equal(report.inputTrace.every(e=>e.trusted),true);for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted))
  assert.deepEqual(report.runtimeErrors,[])
 }
