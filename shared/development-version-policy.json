@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.16",
+  "developmentTargetVersion": "1.1.17",
   "runtimeBaseVersion": "1.1.16",
-  "publicVersion": "1.1.15",
-  "publicTag": "v1.1.15",
-  "publicTagCommit": "a40c0ea2a71a7cd1230c8704cb1e45b2c79c9cba",
+  "publicVersion": "1.1.16",
+  "publicTag": "v1.1.16",
+  "publicTagCommit": "05d562b182d81ab7c8c26a3bc902d16464d3596a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-60-v1.1.16-version-candidate",
-  "binaryVersionTransition": "v1.1.16-release-ready",
-  "displayLabel": "v1.1.16 XLSX 操作候选 · 当前公开 v1.1.15",
+  "currentStage": "M8-61-v1.1.16-published",
+  "binaryVersionTransition": "v1.1.16-public-release-published",
+  "displayLabel": "v1.1.16 已发布 · 下一版本 v1.1.17",
   "activeSlice": {
     "id": "v1.1.16-workbook-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
-    "document": "docs/V1_1_16_XLSX_Development_2026-10-18.md"
+    "status": "published-remote-assets-verified",
+    "document": "docs/V1_1_16_Unsigned_Community_Release_Audit_2026-10-18.md"
   }
 }

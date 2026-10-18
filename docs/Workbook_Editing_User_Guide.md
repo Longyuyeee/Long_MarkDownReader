@@ -1,6 +1,6 @@
 # XLSX 日常操作说明
 
-本文对应 v1.1.16 候选的实际界面；正式发布状态以 [发布审计](V1_1_16_Unsigned_Community_Release_Audit_2026-10-18.md) 和 README 下载区为准。它补充日常操作，不替代 [XLSX 公开兼容性矩阵](XLSX_Public_Compatibility_Matrix.md) 与 [发布兼容声明](XLSX_Release_Compatibility_Statement.md)。
+本文对应已正式发布的 v1.1.16，实际界面、原生文件与独立同包证据见 [发布审计](V1_1_16_Unsigned_Community_Release_Audit_2026-10-18.md)，下载见 README。它补充日常操作，不替代 [XLSX 公开兼容性矩阵](XLSX_Public_Compatibility_Matrix.md) 与 [发布兼容声明](XLSX_Release_Compatibility_Statement.md)。
 
 ## 选中、复制与粘贴
 
