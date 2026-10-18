@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    "copy read failure retains original draft",
+    "changed copy refuses navigation without discarding original edits"
+  ],
+  "releaseCandidate": false
+}

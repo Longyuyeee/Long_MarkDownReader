@@ -25,7 +25,7 @@ try{
  await page.keyboard.press('Escape')
  assert.equal(await page.getByRole('dialog').count(),0)
  checks.push('Default reading space, notes/details, text search and slideshow keyboard navigation/exit')
- await page.getByTitle('验证隔离编辑基线').click()
+ await page.getByTestId('m1b1c-edit-prepare').click()
  await page.locator('.baseline-error').getByText('Error: 测试场景：暂时无法完成编辑验证',{exact:true}).waitFor()
  assert.equal(await page.getByTitle('保存到原文件').isDisabled(),true)
  await page.screenshot({path:output+'/02-edit-error.png'})

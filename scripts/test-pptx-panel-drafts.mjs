@@ -2,16 +2,19 @@ import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import fs from 'node:fs/promises'
 const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright')
-const output='docs/evidence/v110-pptx-panels';await fs.mkdir(output,{recursive:true})
+const output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY||'docs/evidence/v110-pptx-panels';await fs.mkdir(output,{recursive:true})
 const browser=await chromium.launch(),errors=[]
 try{
  const page=await browser.newPage({viewport:{width:480,height:650}})
  page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(10000)
- await page.goto('http://127.0.0.1:9000/scripts/fixtures/pptx-redesign-browser.html?panels')
- await page.getByTitle('验证隔离编辑基线').click()
+ await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9000')+'/scripts/fixtures/pptx-redesign-browser.html?panels')
+ await page.getByTestId('m1b1c-edit-prepare').click()
  await page.getByTestId('c4b-text-value').fill('用户正在编辑的标题')
+ await page.locator('[data-testid=c4c-patch-panel] > summary').click()
  await page.getByTestId('c4c-font-size').fill('32')
+ await page.locator('[data-testid=c5b-shape-panel] > summary').click()
  await page.getByTestId('c5b-shape-type').selectOption('ellipse')
+ await page.locator('[data-testid=c5c-slide-panel] > summary').click()
  await page.getByTestId('c5c-reorder-mode').click()
  await page.getByTestId('c5c-order-down-0').click()
  assert.match(await page.getByTestId('c5c-slide-order').innerText(),/1\s+交付安排/)

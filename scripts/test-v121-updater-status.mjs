@@ -67,6 +67,18 @@ test('published successor boundary requires its own real release identity', () =
   assert.throws(() => assertV121DevelopmentBoundary({ ...development, publicTagCommit: 'b'.repeat(40) }, community))
 })
 const receipt = { managedUpdaterObservation: '1.0.20-to-1.0.21-passed' }
+test('v1.1.18 keeps its exact predecessor and a separate update observation in candidate and public states', () => {
+  const development = { publicVersion:'1.1.17',publicTag:'v1.1.17',publicTagCommit:'bcbb9265f66faae396fd5f43cb3354562c89fcab',runtimeBaseVersion:'1.1.18',developmentTargetVersion:'1.1.18',releaseCandidate:false }
+  const community = { appVersion:'1.1.18',targetRelease:{tag:'v1.1.18'},gates:{githubReleasePublished:false},release:null,patchValidation:{previousPublicVersion:'1.1.17',managedUpdaterUpgradePath:'1.1.17-to-1.1.18-pending'} }
+  const before = JSON.stringify([development,community,closed,receipt])
+  assert.doesNotThrow(()=>assertV121DevelopmentBoundary(development,community));assert.doesNotThrow(()=>assertV121UpdaterStatus(closed,community,receipt))
+  assert.equal(JSON.stringify([development,community,closed,receipt]),before)
+  for(const change of [{publicTagCommit:'0'.repeat(40)},{publicTagCommit:'a'.repeat(40)},{developmentTargetVersion:'1.1.19'},{runtimeBaseVersion:'1.1.17'},{releaseCandidate:true}])assert.throws(()=>assertV121DevelopmentBoundary({...development,...change},community))
+  const publicDevelopment={...development,publicVersion:'1.1.18',publicTag:'v1.1.18',publicTagCommit:'a'.repeat(40),developmentTargetVersion:'1.1.19'},publicCommunity={...community,gates:{githubReleasePublished:true},release:{tag:'v1.1.18',taggedCommit:'a'.repeat(40)}}
+  assert.doesNotThrow(()=>assertV121DevelopmentBoundary(publicDevelopment,publicCommunity));assert.throws(()=>assertV121DevelopmentBoundary(publicDevelopment,{...publicCommunity,release:{...publicCommunity.release,taggedCommit:'b'.repeat(40)}}))
+  for(const change of [{previousPublicVersion:'1.1.16'},{managedUpdaterUpgradePath:'1.0.20-to-1.0.21-passed'}])assert.throws(()=>assertV121UpdaterStatus(closed,{...community,patchValidation:{...community.patchValidation,...change}},receipt))
+  assert.throws(()=>assertV121UpdaterStatus(closed,community,{managedUpdaterObservation:'1.0.20-to-1.0.21-pending'}))
+})
 test('successor keeps the historical receipt and a separate pending update path', () => {
   const community = successor()
   const before = JSON.stringify([closed, community, receipt])

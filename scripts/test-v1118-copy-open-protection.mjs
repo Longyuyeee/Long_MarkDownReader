@@ -1,0 +1,14 @@
+// Real component / simulated disk. Read failures and peer-modified copies must never discard the original draft.
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import {createRequire} from 'node:module'
+const{chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY||'docs/evidence/v1118-copy-open-protection'
+await fs.mkdir(output);const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1360,height:925}}),errors=[];page.on('pageerror',e=>errors.push(e.message));let status='failed'
+try{
+ await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9022')+'/scripts/fixtures/v1118-pptx-browser.html');await page.locator('.slide-canvas [data-object-id=o0]').click();await page.getByTestId('c4b-text-value').fill('已经另存但原件草稿仍要保留');await page.getByTestId('c4b-text-preview').click();await page.waitForFunction(()=>document.querySelectorAll('.draft-labels li').length===1&&!document.querySelector('.editing-controls').disabled)
+ await page.getByTestId('c4d-copy-file-name').fill('送审副本.pptx');await page.getByTestId('c4d-save-copy').click();await page.getByTestId('c4d-open-copy').waitFor();await page.evaluate(()=>pptxAudit.failRead=true);await page.getByTestId('c4d-open-copy').click();await page.locator('.reliable-save-copy [role=alert]').filter({hasText:'页面重新读取失败'}).waitFor()
+ assert.equal(await page.getByTestId('c4b-text-value').inputValue(),'已经另存但原件草稿仍要保留');assert.equal(await page.locator('.draft-labels li').count(),1);assert.equal(await page.locator('.document-identity strong').innerText(),'项目方案.pptx')
+ await page.evaluate(()=>pptxAudit.disk.get('C:/ui/送审副本.pptx').signature='peer-copy-update');await page.getByTestId('c4d-open-copy').click();await page.locator('.reliable-save-copy [role=alert]').filter({hasText:'副本发生变化'}).waitFor()
+ assert.equal(await page.locator('.draft-labels li').count(),1);assert.equal(await page.getByTestId('c4b-text-value').inputValue(),'已经另存但原件草稿仍要保留');assert.equal(await page.evaluate(()=>pptxAudit.disk.get('C:/ui/项目方案.pptx').model.slides[0].title),'项目方向');assert.equal(await page.getByRole('dialog').count(),0)
+ assert.deepEqual(errors,[]);await page.screenshot({path:output+'/copy-reopen-keeps-original-draft.png'});status='passed';console.log('Copy read failure and later peer modification preserve the exact original draft without misleading discard confirmation.')
+}finally{await fs.writeFile(output+'/results.json',JSON.stringify({status,errors,nativeBridgeMocked:true,desktopInputUsed:false,checks:['copy read failure retains original draft','changed copy refuses navigation without discarding original edits'],releaseCandidate:false},null,2)+'\n');if(status!=='passed')await page.screenshot({path:output+'/failure.png'});await browser.close()}

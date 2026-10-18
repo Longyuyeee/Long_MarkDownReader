@@ -9,32 +9,33 @@
         <PresentationIcon :size="18" />
         <div>
           <strong :title="pptxPath">{{ fileName }}</strong>
-          <span>{{ isExternal ? '外部演示文稿 · 只读 · 不会写回' : draftOperations.length ? `${draftOperations.length} 个更改尚未保存` : '演示文稿编辑 · 显式保存' }}</span>
+          <span>{{ isExternal ? '外部演示文稿 · 只读 · 不会写回' : hasUnappliedInput ? '还有输入未加入更改' : draftOperations.length ? `${draftOperations.length} 个更改尚未保存` : '演示文稿编辑 · 显式保存' }}</span>
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
-        <button v-if="!isExternal" type="button" data-testid="m1b1c-undo" :disabled="!undoStack.length || savingSource" title="撤销草稿" @click="undoDraft"><UndoIcon :size="16" /></button>
-        <button v-if="!isExternal" type="button" data-testid="m1b1c-redo" :disabled="!redoStack.length || savingSource" title="重做草稿" @click="redoDraft"><RedoIcon :size="16" /></button>
-        <button v-if="!isExternal" type="button" :disabled="!draftOperations.length || !draftPreview || savingSource || stagingDraft" title="保存到原文件" data-testid="m1b1c-save-source" @click="savePptxSource">
+        <button v-if="!isExternal" type="button" data-testid="m1b1c-undo" :disabled="!undoStack.length || busy || hasUnappliedInput" title="撤销草稿" @click="undoDraft"><UndoIcon :size="16" /></button>
+        <button v-if="!isExternal" type="button" data-testid="m1b1c-redo" :disabled="!redoStack.length || busy || hasUnappliedInput" title="重做草稿" @click="redoDraft"><RedoIcon :size="16" /></button>
+        <button v-if="!isExternal" type="button" :disabled="!draftOperations.length || busy || hasUnappliedInput" title="保存到原文件" data-testid="m1b1c-save-source" @click="savePptxSource">
           <LoaderCircleIcon v-if="savingSource" :size="16" class="spin" /><SaveIcon v-else :size="16" /><span>{{ savingSource ? '保存中' : '保存' }}</span>
         </button>
         <label class="pptx-search">
           <SearchIcon :size="14" />
           <input
             v-model="searchQuery"
+            :disabled="busy"
             aria-label="搜索 PPTX 文本与备注"
             placeholder="搜索演示文稿"
             @keydown.enter.prevent="moveSearch(1)"
           >
           <span v-if="matches.length">{{ activeMatch + 1 }}/{{ matches.length }}</span>
         </label>
-        <button type="button" :disabled="!matches.length" title="上一个结果" @click="moveSearch(-1)">
+        <button type="button" :disabled="!matches.length || busy" title="上一个结果" @click="moveSearch(-1)">
           <ChevronUpIcon :size="16" />
         </button>
-        <button type="button" :disabled="!matches.length" title="下一个结果" @click="moveSearch(1)">
+        <button type="button" :disabled="!matches.length || busy" title="下一个结果" @click="moveSearch(1)">
           <ChevronDownIcon :size="16" />
         </button>
-        <button ref="presentButtonRef" type="button" :disabled="!report" title="放映" @click="presenting = true">
+        <button ref="presentButtonRef" type="button" :disabled="!report || busy" title="放映" @click="presenting = true">
           <PlayIcon :size="16" />
           <span>放映</span>
         </button>
@@ -42,29 +43,31 @@
           v-if="!isExternal"
           type="button"
           data-testid="m1b1c-edit-prepare"
-          :disabled="!report || baselineLoading"
+          :disabled="!report || busy"
           :class="{ active: Boolean(editBaseline) }"
-          title="验证隔离编辑基线"
+          title="打开演示文稿编辑"
           @click="prepareEditBaseline"
         >
           <LockKeyholeIcon :size="16" :class="{ spin: baselineLoading }" />
-          <span>{{ baselineLoading ? '验证中' : '编辑准备' }}</span>
+          <span>{{ baselineLoading ? '准备中' : '编辑' }}</span>
         </button>
         <button type="button" :class="{ active: showDetails }" :aria-pressed="showDetails" title="备注与兼容画像" @click="showDetails = !showDetails">
           <PanelRightIcon :size="16" />
           <span>备注与详情</span>
         </button>
-        <button type="button" :disabled="loading" title="重新读取" @click="requestReloadPresentation">
+        <button type="button" :disabled="busy" title="重新读取" @click="requestReloadPresentation">
           <RefreshCwIcon :size="16" :class="{ spin: loading }" />
         </button>
       </div>
     </header>
 
-    <div v-if="loading" class="pptx-state">
+    <p v-if="loadError && report" class="pptx-read-error" role="alert">无法重新读取，当前页面与更改已保留：{{ loadError }}</p>
+    <p v-if="sourceSaveError" class="pptx-read-error" role="alert">{{ sourceSaveError }}</p>
+    <div v-if="loading && !report" class="pptx-state">
       <LoaderCircleIcon :size="24" class="spin" />
       <span>正在安全解析演示文稿…</span>
     </div>
-    <div v-else-if="loadError" class="pptx-state error" role="alert">
+    <div v-else-if="loadError && !report" class="pptx-state error" role="alert">
       <AlertTriangleIcon :size="24" />
       <div>
         <strong>无法读取 PPTX</strong>
@@ -77,6 +80,7 @@
           v-for="(slide, index) in report.model.slides"
           :key="slide.id"
           type="button"
+          :disabled="busy"
           :data-slide-id="slide.id"
           :data-slide-index="index"
           :class="{ active: index === activeSlideIndex, hit: matchedSlideIndexes.has(index), 'route-target': index === routeTargetSlideIndex }"
@@ -115,9 +119,15 @@
             <div
               class="slide-object"
               :data-object-id="object.id"
-              :class="[object.kind, { 'search-hit': matchedObjectIds.has(object.id), 'route-target-object': routeTargetObjectId === object.id, 'expanded-group': object.kind === 'group' && object.childCount > 0 }]"
+              :class="[object.kind, { 'search-hit': matchedObjectIds.has(object.id), 'route-target-object': routeTargetObjectId === object.id, 'expanded-group': object.kind === 'group' && object.childCount > 0, 'edit-target-object': selectedObjectId === object.id || selectedEditTarget?.kind !== 'speaker-notes' && selectedEditTarget?.objectId === object.id && selectedEditTarget?.slideNumber === activeSlideIndex + 1 }]"
               :style="objectStyle(object)"
               :title="object.altText || object.name"
+              :role="isExternal ? undefined : 'button'"
+              :tabindex="isExternal || busy ? undefined : 0"
+              :aria-label="`选择对象：${object.name || object.text || object.kind}`"
+              @click="selectObjectForEditing(object)"
+              @keydown.enter.prevent="selectObjectForEditing(object)"
+              @keydown.space.prevent="selectObjectForEditing(object)"
             >
               <PptxObjectContent
                 :object="object"
@@ -129,15 +139,17 @@
         </div>
       </main>
 
-      <aside v-if="showDetails" class="pptx-details">
-        <header class="details-heading"><strong>文档工具与详情</strong><button type="button" title="关闭文档详情" @click="showDetails = false"><XIcon :size="16" /></button></header>
+      <aside v-if="showDetails" ref="detailsRef" class="pptx-details">
+        <header class="details-heading"><strong>编辑与交付</strong><button type="button" title="关闭文档详情" @click="showDetails = false"><XIcon :size="16" /></button></header>
+        <div v-if="hasUnappliedInput" class="pending-input-note" role="status">输入已保留。请在对应工具点击“加入更改”，再保存或另存；切换目标不会丢掉输入。<button type="button" :disabled="busy" class="discard-pending-input" @click="discardPendingInputs">撤回未加入的输入</button></div>
+        <fieldset class="editing-controls" :disabled="busy" @input="rememberFormInput" @change="rememberFormInput">
         <section v-if="!isExternal" class="edit-baseline">
           <header>
             <LockKeyholeIcon :size="15" />
             <strong>编辑安全基线</strong>
             <span v-if="editBaseline" class="verified-badge">已验证</span>
           </header>
-          <template v-if="editBaseline">
+          <details v-if="editBaseline" class="safety-details"><summary>安全检查详情</summary>
             <dl>
               <div><dt>隔离方式</dt><dd>内存 + 临时副本</dd></div>
               <div><dt>OOXML 部件</dt><dd>{{ editBaseline.partCount }}</dd></div>
@@ -150,19 +162,19 @@
               SHA-256 · {{ editBaseline.sourcePackageDigest.slice(0, 16) }}…
             </p>
             <p class="muted">保护基线覆盖文本/备注、基础字符样式、图片替代文本与替换、基础形状和幻灯片生命周期编辑；所有操作均在隔离副本中验证。</p>
-          </template>
+          </details>
           <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
           <p v-else class="muted">尚未启动编辑。所有修改先进入内存草稿，只有点击保存并确认后才写入原文件。</p>
         </section>
         <section v-if="editBaseline && !isExternal" class="isolated-text-patch">
           <header>
             <PenLineIcon :size="15" />
-            <strong>文本编辑预览</strong>
+            <strong>文本与备注</strong>
             <span v-if="textPatchReport" class="verified-badge">已通过</span>
           </header>
           <template v-if="safeEditTargets.length">
             <label>
-              <span>安全编辑目标</span>
+              <span>本次编辑目标</span>
               <select v-model="selectedEditTargetId" data-testid="c4b-text-target">
                 <option v-for="target in safeEditTargets" :key="target.id" :value="target.id">
                   幻灯片 {{ target.slideNumber }} · {{ target.kind === 'speaker-notes' ? '备注' : target.objectName }}
@@ -170,7 +182,7 @@
               </select>
             </label>
             <label>
-              <span>隔离替换文本</span>
+              <span>修改内容</span>
               <textarea
                 v-model="replacementText"
                 data-testid="c4b-text-value"
@@ -190,11 +202,11 @@
               >
                 <LoaderCircleIcon v-if="textPatchLoading" :size="13" class="spin" />
                 <ShieldCheckIcon v-else :size="13" />
-                {{ textPatchLoading ? '验证中' : '验证隔离补丁' }}
+                {{ textPatchLoading ? '检查中' : '加入更改' }}
               </button>
             </div>
             <p v-if="textPatchError" class="baseline-error">{{ textPatchError }}</p>
-            <dl v-if="textPatchReport" class="patch-report">
+            <details v-if="textPatchReport" class="safety-details"><summary>本次检查详情</summary><dl class="patch-report">
               <div><dt>变化部件</dt><dd>{{ textPatchReport.changedParts.length }}</dd></div>
               <div><dt>其余部件保全</dt><dd>{{ textPatchReport.unchangedPartCount }}</dd></div>
               <div><dt>语义复读</dt><dd>{{ textPatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
@@ -202,16 +214,16 @@
             </dl>
             <p v-if="textPatchReport" class="baseline-digest" :title="textPatchReport.targetPart">
               单部件白名单 · {{ textPatchReport.targetPart }}
-            </p>
+            </p></details>
           </template>
           <p v-else class="muted">此演示文稿没有符合安全编辑规则的单文本目标。</p>
         </section>
-        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c4c-patch-panel">
-          <header>
+        <details v-if="editBaseline && !isExternal" class="isolated-metadata-patch tool-drawer" data-testid="c4c-patch-panel" :open="toolDrawers['c4c-patch-panel']" @toggle="rememberDrawer('c4c-patch-panel', $event)">
+          <summary>
             <PaletteIcon :size="15" />
             <strong>样式与替代文本</strong>
             <span v-if="stylePatchReport || altTextPatchReport" class="verified-badge">已通过</span>
-          </header>
+          </summary>
           <div class="c4c-block">
             <h4>单运行字符样式</h4>
             <template v-if="safeStyleTargets.length">
@@ -299,7 +311,7 @@
                 >
                   <LoaderCircleIcon v-if="altTextPatchLoading" :size="13" class="spin" />
                   <ShieldCheckIcon v-else :size="13" />
-                  {{ altTextPatchLoading ? '验证中' : '验证替代文本' }}
+                  {{ altTextPatchLoading ? '验证中' : '加入更改' }}
                 </button>
               </div>
               <p v-if="altTextPatchError" class="baseline-error">{{ altTextPatchError }}</p>
@@ -312,13 +324,13 @@
             </template>
             <p v-else class="muted">没有符合规则的单一内嵌图片目标。</p>
           </div>
-        </section>
-        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5a-image-panel">
-          <header>
+        </details>
+        <details v-if="editBaseline && !isExternal" class="isolated-metadata-patch tool-drawer" data-testid="c5a-image-panel" :open="toolDrawers['c5a-image-panel']" @toggle="rememberDrawer('c5a-image-panel', $event)">
+          <summary>
             <ImageIcon :size="15" />
             <strong>图片替换</strong>
             <span v-if="imagePatchReport" class="verified-badge">已通过</span>
-          </header>
+          </summary>
           <template v-if="safeImageTargets.length">
             <label>
               <span>单引用图片目标</span>
@@ -367,13 +379,13 @@
             </dl>
           </template>
           <p v-else class="muted">没有符合“PNG/JPEG 且仅被一个对象引用”的安全图片目标。</p>
-        </section>
-        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5b-shape-panel">
-          <header>
+        </details>
+        <details v-if="editBaseline && !isExternal" class="isolated-metadata-patch tool-drawer" data-testid="c5b-shape-panel" :open="toolDrawers['c5b-shape-panel']" @toggle="rememberDrawer('c5b-shape-panel', $event)">
+          <summary>
             <ShapesIcon :size="15" />
             <strong>基础形状</strong>
             <span v-if="shapePatchReport" class="verified-badge">已通过</span>
-          </header>
+          </summary>
           <div class="shape-mode" role="tablist" aria-label="形状操作">
             <button
               type="button"
@@ -467,13 +479,13 @@
             <div><dt>语义复读</dt><dd>{{ shapePatchReport.semanticReparseVerified ? '通过' : '未通过' }}</dd></div>
             <div><dt>源文件写入</dt><dd>{{ shapePatchReport.writesUserFile ? '是' : '否' }}</dd></div>
           </dl>
-        </section>
-        <section v-if="editBaseline && !isExternal" class="isolated-metadata-patch" data-testid="c5c-slide-panel">
-          <header>
+        </details>
+        <details v-if="editBaseline && !isExternal" class="isolated-metadata-patch tool-drawer" data-testid="c5c-slide-panel" :open="toolDrawers['c5c-slide-panel']" @toggle="rememberDrawer('c5c-slide-panel', $event)">
+          <summary>
             <PresentationIcon :size="15" />
             <strong>幻灯片管理</strong>
             <span v-if="slideLifecycleReport" class="verified-badge">已通过</span>
-          </header>
+          </summary>
           <div class="slide-lifecycle-mode" role="tablist" aria-label="幻灯片操作">
             <button
               v-for="mode in slideLifecycleModes"
@@ -537,7 +549,7 @@
               >
                 <LoaderCircleIcon v-if="slideLifecycleLoading" :size="13" class="spin" />
                 <ShieldCheckIcon v-else :size="13" />
-                {{ slideLifecycleLoading ? '验证中' : '验证操作' }}
+                {{ slideLifecycleLoading ? '验证中' : '加入更改' }}
               </button>
             </div>
             <p v-if="slideLifecycleError" class="baseline-error">{{ slideLifecycleError }}</p>
@@ -549,7 +561,7 @@
             </dl>
           </template>
           <p v-else class="muted">没有通过关系和部件安全检查的幻灯片。</p>
-        </section>
+        </details>
         <section v-if="savePreview && draftOperations.length && !isExternal" class="reliable-save-copy" data-testid="c4d-save-panel" aria-live="polite">
           <header>
             <SaveIcon :size="15" />
@@ -573,14 +585,15 @@
           <button
             type="button"
             data-testid="c4d-save-copy"
-            :disabled="savingCopy || draftOperations.length !== 1 || !validCopyFileName || Boolean(savedCopyReport)"
+            :disabled="busy || !draftOperations.length || hasUnappliedInput || !validCopyFileName || Boolean(savedCopyReport)"
             @click="savePptxCopy"
           >
             <LoaderCircleIcon v-if="savingCopy" :size="14" class="spin" />
             <SaveIcon v-else :size="14" />
-            {{ savingCopy ? '正在落盘并复读' : '原子另存并验证' }}
+            {{ savingCopy ? '正在落盘并复读' : '另存新 PPTX' }}
           </button>
-          <p class="muted">单项草稿可可靠另存副本；多项事务请使用顶部保存按钮一次写入原文件。</p>
+          <p class="muted">支持多项更改一起另存；原件不变，不覆盖同名文件。</p>
+          <ul class="draft-labels" aria-label="待保存的更改"><li v-for="(label, index) in draftLabels" :key="index">{{ label }}</li></ul>
           <p v-if="sourceSaveError" class="baseline-error" role="alert">{{ sourceSaveError }}</p>
           <p v-if="saveCopyError" class="baseline-error" role="alert">{{ saveCopyError }}</p>
           <dl v-if="savedCopyReport" class="patch-report c4d-save-report">
@@ -606,6 +619,7 @@
           </header>
           <p v-if="activeSlide?.notes" class="notes">{{ activeSlide.notes }}</p>
           <p v-else class="muted">无备注</p>
+          <button v-if="!isExternal" type="button" class="edit-current-notes" @click="editCurrentNotes">编辑本页备注</button>
         </section>
         <section>
           <header>
@@ -632,6 +646,7 @@
             <li v-for="warning in allWarnings" :key="warning">{{ warning }}</li>
           </ul>
         </section>
+        </fieldset>
       </aside>
     </div>
 
@@ -1093,6 +1108,7 @@ interface PptxVerifiedPreview {
   operationLabel: string
 }
 interface PptxSavedCopyReport {
+  targetSignature: string
   status: string
   saveMode: 'copy'
   operationKind: string
@@ -1108,6 +1124,7 @@ interface PptxSavedCopyReport {
   externalProducerReopenRequired: boolean
 }
 interface PptxTransactionReport extends PptxVerifiedPreview {
+  unchangedPartsVerified: boolean
   status: string
   operationCount: number
   operationKinds: string[]
@@ -1118,6 +1135,9 @@ interface PptxTransactionReport extends PptxVerifiedPreview {
   writesUserFile: boolean
 }
 interface PptxSavedSourceReport {
+  unchangedPartsVerified: boolean
+  producerMatrixBaseline: string[]
+  externalProducerReopenRequired: boolean
   status: string
   saveMode: string
   signature: string
@@ -1229,6 +1249,127 @@ const routeTargetObjectId = ref('')
 const routeTargetLabel = ref('')
 const pptxPath = computed(() => String(route.query.path || store.activeTabId || ''))
 const isExternal = computed(() => route.query.external === '1')
+const detailsRef = ref<HTMLElement>()
+const selectedObjectId = ref('')
+const toolDrawers = ref<Record<string, boolean>>({})
+const rememberDrawer = (id: string, event: Event) => {
+  const drawer = event.target as HTMLDetailsElement
+  if (drawer.isConnected) toolDrawers.value[id] = drawer.open
+}
+let contextEpoch = 0
+let readRun = 0
+let alive = true
+let imageReadRun = 0
+const busy = computed(() => loading.value || baselineLoading.value || textPatchLoading.value
+  || stylePatchLoading.value || altTextPatchLoading.value || imagePatchLoading.value
+  || shapePatchLoading.value || slideLifecycleLoading.value || stagingDraft.value
+  || savingSource.value || savingCopy.value)
+const captureOwner = () => ({ epoch: contextEpoch, root: store.libraryPath, path: pptxPath.value,
+  external: isExternal.value, document: report.value })
+type Owner = ReturnType<typeof captureOwner>
+let savedCopyOwner: Owner | undefined
+let savedCopyDraftKey = ''
+let copyNavigation = ''
+let queuedCopyRead: { root: string; path: string; data: PptxReadReport } | undefined
+const sameContext = (owner: Owner) => alive && owner.epoch === contextEpoch
+  && owner.root === store.libraryPath && owner.path === pptxPath.value && owner.external === isExternal.value
+const owns = (owner: Owner) => sameContext(owner) && owner.document === report.value
+const formFingerprint = () => JSON.stringify([selectedEditTargetId.value, replacementText.value,
+  selectedStyleTargetId.value, styleFontSizePt.value, styleFontFamily.value, styleColor.value,
+  styleBold.value, styleItalic.value, styleUnderline.value, styleAlignment.value,
+  selectedAltTextTargetId.value, altTextValue.value, selectedImageTargetId.value,
+  replacementImageBase64.value, shapeMode.value, selectedShapeSlideId.value, selectedShapeTargetId.value,
+  shapeType.value, shapeXCm.value, shapeYCm.value, shapeWidthCm.value, shapeHeightCm.value,
+  shapeFillColor.value, shapeLineColor.value, shapeLineWidthPt.value,
+  slideLifecycleMode.value, selectedSlideLifecycleTargetId.value, slideOrderTargetIds.value])
+const captureEdit = () => ({ ...captureOwner(), form: formFingerprint() })
+const ownsEdit = (owner: ReturnType<typeof captureEdit>) => owns(owner) && owner.form === formFingerprint()
+const feedbackError = (text: string) => { sourceSaveError.value = text; message.error(text) }
+type FormKind = 'text' | 'style' | 'alt' | 'image' | 'shape' | 'slide'
+const formBuffers = ref<Record<string, { values: Record<string, unknown>; pending: boolean }>>({})
+const formFields: Record<FormKind, Record<string, { value: unknown }>> = {
+  text: { replacementText },
+  style: { styleFontSizePt, styleFontFamily, styleColor, styleBold, styleItalic, styleUnderline, styleAlignment },
+  alt: { altTextValue },
+  image: { replacementImageName, replacementImageMime, replacementImageBase64, replacementImagePreview, replacementImageBytes },
+  shape: { shapeType, shapeXCm, shapeYCm, shapeWidthCm, shapeHeightCm, shapeFillColor, shapeLineColor, shapeLineWidthPt },
+  slide: { slideOrderTargetIds },
+}
+const formKey = (kind: FormKind) => kind + ':' + ({
+  text: selectedEditTargetId.value, style: selectedStyleTargetId.value, alt: selectedAltTextTargetId.value,
+  image: selectedImageTargetId.value, shape: shapeMode.value + ':' + (shapeMode.value === 'add' ? selectedShapeSlideId.value : selectedShapeTargetId.value),
+  slide: slideLifecycleMode.value + ':' + selectedSlideLifecycleTargetId.value,
+}[kind])
+const hasUnappliedInput = computed(() => Object.values(formBuffers.value).some(item => item.pending))
+const hasUnsavedChanges = computed(() => draftOperations.value.length > 0 || hasUnappliedInput.value)
+const restoreFormBuffer = (kind: FormKind) => {
+  const values = formBuffers.value[formKey(kind)]?.values
+  if (values) for (const [name, field] of Object.entries(formFields[kind])) if (name in values) field.value = values[name]
+}
+const rememberFormInput = (event: Event) => {
+  const element = event.target as HTMLElement
+  const id = element.dataset.testid || (element.closest('[data-testid="c5b-shape-panel"]') ? 'c5b-field'
+    : element.closest('[data-testid="c4c-patch-panel"]') ? 'c4c-field' : '')
+  if (!id || /(?:target|mode)$/.test(id) || (id === 'c4d-copy-file-name' || id === 'c5a-image-file')) return
+  const kind: FormKind | undefined = id.startsWith('c4b-') ? 'text' : id.startsWith('c4c-alt') ? 'alt'
+    : id.startsWith('c4c-') ? 'style' : id.startsWith('c5a-') ? 'image'
+      : id.startsWith('c5b-') ? 'shape' : id.startsWith('c5c-') ? 'slide' : undefined
+  if (!kind) return
+  rememberForm(kind)
+}
+const rememberForm = (kind: FormKind) => {
+  formBuffers.value[formKey(kind)] = { values: JSON.parse(JSON.stringify(
+    Object.fromEntries(Object.entries(formFields[kind]).map(([name, field]) => [name, field.value])))), pending: true }
+  syncTabDirty()
+}
+const markOperationStaged = (operation: PptxPatchOperation) => {
+  const kind: FormKind = operation.kind === 'text' ? 'text' : operation.kind === 'style' ? 'style'
+    : operation.kind === 'imageAltText' ? 'alt' : operation.kind === 'imageBinary' ? 'image'
+      : operation.kind.startsWith('shape') ? 'shape' : 'slide'
+  const buffer = formBuffers.value[formKey(kind)]
+  if (buffer) buffer.pending = false
+}
+const ensureNoUnappliedInput = () => {
+  if (!hasUnappliedInput.value) return true
+  message.warning('还有输入未加入更改，请先在对应工具点击“加入更改”，或继续编辑。')
+  return false
+}
+const discardPendingInputs = () => {
+  if (busy.value) return
+  for (const [key, buffer] of Object.entries(formBuffers.value)) if (buffer.pending) delete formBuffers.value[key]
+  const text = draftOperations.value.find(op => op.kind === 'text' && op.targetId === selectedEditTargetId.value)
+  replacementText.value = text?.kind === 'text' ? text.replacementText : selectedEditTarget.value?.text || ''
+  syncStyleForm()
+  const style = draftOperations.value.find(op => op.kind === 'style' && op.targetId === selectedStyleTargetId.value)
+  if (style?.kind === 'style') {
+    styleFontSizePt.value = style.fontSizeHundredthPoints / 100; styleFontFamily.value = style.fontFamily
+    styleColor.value = '#' + style.color; styleBold.value = style.bold; styleItalic.value = style.italic
+    styleUnderline.value = style.underline; styleAlignment.value = style.alignment
+  }
+  const alt = draftOperations.value.find(op => op.kind === 'imageAltText' && op.targetId === selectedAltTextTargetId.value)
+  altTextValue.value = alt?.kind === 'imageAltText' ? alt.altText : selectedAltTextTarget.value?.altText || ''
+  clearReplacementImage()
+  const image = draftOperations.value.find(op => op.kind === 'imageBinary' && op.targetId === selectedImageTargetId.value)
+  if (image?.kind === 'imageBinary') {
+    replacementImageMime.value = image.replacementMimeType; replacementImageBase64.value = image.replacementBase64
+    replacementImagePreview.value = 'data:' + image.replacementMimeType + ';base64,' + image.replacementBase64
+    replacementImageName.value = '已加入的替换图片'
+    replacementImageBytes.value = Math.floor(image.replacementBase64.length * 3 / 4) - (image.replacementBase64.endsWith('==') ? 2 : image.replacementBase64.endsWith('=') ? 1 : 0)
+  }
+  const shape = draftOperations.value.find(op => op.kind === 'shapeAdd' && op.slideTargetId === selectedShapeSlideId.value)
+  shapeType.value = shape?.kind === 'shapeAdd' ? shape.shapeType : 'rectangle'
+  shapeXCm.value = shape?.kind === 'shapeAdd' ? shape.x / 360000 : 2.54
+  shapeYCm.value = shape?.kind === 'shapeAdd' ? shape.y / 360000 : 2.54
+  shapeWidthCm.value = shape?.kind === 'shapeAdd' ? shape.width / 360000 : 7.62
+  shapeHeightCm.value = shape?.kind === 'shapeAdd' ? shape.height / 360000 : 3.81
+  shapeFillColor.value = shape?.kind === 'shapeAdd' ? '#' + shape.fillColor : '#DDEEFF'
+  shapeLineColor.value = shape?.kind === 'shapeAdd' ? '#' + shape.lineColor : '#2255AA'
+  shapeLineWidthPt.value = shape?.kind === 'shapeAdd' ? shape.lineWidth / 12700 : 2
+  const order = draftOperations.value.find(op => op.kind === 'slideReorder')
+  slideOrderTargetIds.value = order?.kind === 'slideReorder' ? [...order.orderedTargetIds] : [...originalSlideOrderTargetIds.value]
+  sourceSaveError.value = ''
+  syncTabDirty()
+}
 const fileName = computed(() => pptxPath.value.split(/[\\/]/).pop() || '未命名.pptx')
 const profile = computed(() => report.value?.model.compatibility as PptxProfile)
 const safeEditTargets = computed(() => [
@@ -1464,6 +1605,8 @@ const syncRelationFocus = (index: number) => {
   })
 }
 const selectSlide = (index: number, preserveRouteTarget = false) => {
+  if (busy.value && !preserveRouteTarget) return
+  selectedObjectId.value = ''
   if (!preserveRouteTarget) clearRouteTarget()
   activeSlideIndex.value = Math.max(0, Math.min(index, (report.value?.model.slides.length || 1) - 1))
   syncRelationFocus(activeSlideIndex.value)
@@ -1508,16 +1651,19 @@ const moveSearch = (direction: -1 | 1) => {
   selectSlide(matches.value[activeMatch.value].slideIndex)
 }
 const prepareEditBaseline = async () => {
-  if (!report.value || baselineLoading.value || isExternal.value) return
+  if (busy.value || !report.value || baselineLoading.value || isExternal.value) return
+  if (editBaseline.value) { showDetails.value = true; return }
   showDetails.value = true
+  const owner = captureOwner()
   baselineLoading.value = true
   baselineError.value = ''
   try {
     const baseline = await invoke<PptxEditBaselineReport>('audit_pptx_edit_baseline', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
     })
+    if (!owns(owner)) return
     if (
       !baseline.exactPackageCopyVerified
       || !baseline.unchangedPartsVerified
@@ -1579,12 +1725,48 @@ const prepareEditBaseline = async () => {
     saveCopyError.value = ''
     showDetails.value = true
   } catch (error) {
+    if (!owns(owner)) return
     editBaseline.value = undefined
     baselineError.value = String(error)
     showDetails.value = true
   } finally {
-    baselineLoading.value = false
+    if (sameContext(owner)) baselineLoading.value = false
   }
+}
+const selectObjectForEditing = async (object: PptxObject) => {
+  if (busy.value) return
+  showDetails.value = true
+  if (isExternal.value) return
+  const owner = captureOwner(), slideNumber = activeSlideIndex.value + 1
+  await prepareEditBaseline()
+  if (!owns(owner) || !editBaseline.value) return
+  selectedObjectId.value = object.id
+  const text = safeEditTargets.value.find(target => target.slideNumber === slideNumber && target.objectId === object.id && target.kind !== 'speaker-notes')
+  let selector = '[data-testid="c4b-text-value"]'
+  if (text) selectedEditTargetId.value = text.id
+  else {
+    const picture = safeAltTextTargets.value.find(target => target.slideNumber === slideNumber && target.objectId === object.id)
+    if (picture) { selectedAltTextTargetId.value = picture.id; selector = '[data-testid="c4c-alt-text"]' }
+    else { message.info('该对象不在当前安全编辑范围，仍可查看详情；不会删除或修改复杂内容。'); return }
+  }
+  await nextTick()
+  const field = detailsRef.value?.querySelector<HTMLElement>(selector)
+  const drawer = field?.closest('details')
+  if (drawer) drawer.open = true
+  field?.scrollIntoView({ block: 'nearest' }); field?.focus()
+}
+const editCurrentNotes = async () => {
+  if (busy.value || isExternal.value) return
+  const owner = captureOwner(), slideNumber = activeSlideIndex.value + 1
+  await prepareEditBaseline()
+  if (!owns(owner)) return
+  const target = safeEditTargets.value.find(item => item.kind === 'speaker-notes' && item.slideNumber === slideNumber)
+  if (!target) { message.info('本页没有符合安全编辑范围的备注。'); return }
+  showDetails.value = true
+  selectedEditTargetId.value = target.id
+  await nextTick()
+  const field = detailsRef.value?.querySelector<HTMLTextAreaElement>('[data-testid="c4b-text-value"]')
+  field?.scrollIntoView({ block: 'nearest' }); field?.focus()
 }
 const clearSaveCandidate = () => {
   verifiedOperation.value = undefined
@@ -1595,109 +1777,123 @@ const clearSaveCandidate = () => {
 const cloneOperations = (operations: PptxPatchOperation[]) => structuredClone(toRaw(operations))
 const syncTabDirty = () => {
   const tab = store.tabs.find(item => item.id === pptxPath.value)
-  if (tab) tab.isDirty = draftOperations.value.length > 0
+  if (tab) tab.isDirty = hasUnsavedChanges.value
 }
-const refreshDraftPreview = async () => {
-  if (!report.value || !draftOperations.value.length) {
-    draftPreview.value = undefined
-    syncTabDirty()
-    return
+const validateTransaction = (preview: PptxTransactionReport, count: number) => {
+  if (preview.status !== 'transaction_verified' || preview.operationCount !== count
+    || !preview.unchangedPartsVerified
+    || !preview.deterministicReplayVerified || !preview.structuralReopenVerified
+    || !preview.semanticReopenVerified || !preview.sourceUnchanged || preview.writesUserFile) {
+    throw new Error('PPTX 草稿事务未通过确定性、安全复读与源文件保护检查')
   }
+}
+const previewOperations = async (owner: Owner, operations: PptxPatchOperation[], labels: string[]) => {
   const preview = await invoke<PptxTransactionReport>('preview_pptx_patch_transaction', {
-    libraryRoot: store.libraryPath,
-    path: pptxPath.value,
-    expectedSignature: report.value.signature,
-    operations: draftOperations.value,
+    libraryRoot: owner.root, path: owner.path, expectedSignature: owner.document!.signature, operations,
   })
-  if (
-    preview.status !== 'transaction_verified'
-    || preview.operationCount !== draftOperations.value.length
-    || !preview.deterministicReplayVerified
-    || !preview.structuralReopenVerified
-    || !preview.semanticReopenVerified
-    || !preview.sourceUnchanged
-    || preview.writesUserFile
-  ) throw new Error('PPTX 草稿事务未通过确定性、安全复读与源文件保护检查')
-  preview.operationLabel = draftLabels.value.join('、')
+  validateTransaction(preview, operations.length)
+  preview.operationLabel = labels.join('、')
+  return preview
+}
+const applyDraftState = async (state: { operations: PptxPatchOperation[]; labels: string[] }) => {
+  const owner = captureOwner(), before = JSON.stringify(draftOperations.value)
+  const preview = state.operations.length ? await previewOperations(owner, cloneOperations(state.operations), [...state.labels]) : undefined
+  if (!owns(owner) || before !== JSON.stringify(draftOperations.value)) return false
+  draftOperations.value = cloneOperations(state.operations)
+  draftLabels.value = [...state.labels]
   draftPreview.value = preview
+  savedCopyReport.value = undefined
+  saveCopyError.value = ''
   syncTabDirty()
+  return true
 }
 const stageVerifiedCandidate = async (operation: PptxPatchOperation, preview: PptxVerifiedPreview) => {
-  if (stagingDraft.value) return
+  if (stagingDraft.value || savingSource.value || savingCopy.value || isExternal.value) return
+  const owner = captureOwner()
   stagingDraft.value = true
   sourceSaveError.value = ''
   const previous = { operations: cloneOperations(draftOperations.value), labels: [...draftLabels.value] }
+  const key = (op: PptxPatchOperation) => op.kind + ':' + ('targetId' in op ? op.targetId : 'slideTargetId' in op ? op.slideTargetId : 'order')
+  const index = previous.operations.findIndex(item => key(item) === key(operation))
+  const next = { operations: cloneOperations(previous.operations), labels: [...previous.labels] }
+  if (index < 0) { next.operations.push(structuredClone(toRaw(operation))); next.labels.push(preview.operationLabel) }
+  else { next.operations[index] = structuredClone(toRaw(operation)); next.labels[index] = preview.operationLabel }
   try {
-    draftOperations.value = [...draftOperations.value, structuredClone(toRaw(operation))]
-    draftLabels.value = [...draftLabels.value, preview.operationLabel]
-    await refreshDraftPreview()
+    if (!await applyDraftState(next) || !owns(owner)) return
+    markOperationStaged(operation)
     undoStack.value.push(previous)
     redoStack.value = []
-    message.success(`${preview.operationLabel}已加入草稿`)
+    syncTabDirty()
+    message.success(`${preview.operationLabel}已加入更改`)
   } catch (error) {
-    draftOperations.value = previous.operations
-    draftLabels.value = previous.labels
-    await refreshDraftPreview().catch(() => {})
-    sourceSaveError.value = String(error).replace(/^Error:\s*/, '')
-    message.error(sourceSaveError.value)
+    if (owns(owner)) feedbackError(String(error).replace(/^Error:\s*/, ''))
   } finally {
-    verifiedOperation.value = undefined
-    verifiedPreview.value = undefined
-    stagingDraft.value = false
+    if (sameContext(owner)) {
+      verifiedOperation.value = undefined
+      verifiedPreview.value = undefined
+      stagingDraft.value = false
+    }
   }
 }
-const restoreDraftState = async (state: { operations: PptxPatchOperation[]; labels: string[] }) => {
-  draftOperations.value = cloneOperations(state.operations)
-  draftLabels.value = [...state.labels]
-  await refreshDraftPreview()
-}
-const undoDraft = async () => {
-  const state = undoStack.value.pop()
+const travelDraft = async (redo: boolean) => {
+  if (busy.value || !ensureNoUnappliedInput()) return
+  const owner = captureOwner(), from = redo ? redoStack : undoStack, to = redo ? undoStack : redoStack
+  const state = from.value[from.value.length - 1]
   if (!state) return
-  redoStack.value.push({ operations: cloneOperations(draftOperations.value), labels: [...draftLabels.value] })
-  await restoreDraftState(state)
+  const current = { operations: cloneOperations(draftOperations.value), labels: [...draftLabels.value] }
+  stagingDraft.value = true
+  try {
+    if (!await applyDraftState(state) || !owns(owner)) return
+    from.value.pop(); to.value.push(current)
+    formBuffers.value = {}
+    replacementText.value = selectedEditTarget.value?.text || ''
+    const text = draftOperations.value.find(op => op.kind === 'text' && op.targetId === selectedEditTargetId.value)
+    if (text?.kind === 'text') replacementText.value = text.replacementText
+  } catch (error) {
+    if (owns(owner)) feedbackError(String(error).replace(/^Error:\s*/, ''))
+  } finally { if (sameContext(owner)) stagingDraft.value = false }
 }
-const redoDraft = async () => {
-  const state = redoStack.value.pop()
-  if (!state) return
-  undoStack.value.push({ operations: cloneOperations(draftOperations.value), labels: [...draftLabels.value] })
-  await restoreDraftState(state)
-}
+const undoDraft = () => travelDraft(false)
+const redoDraft = () => travelDraft(true)
 const savePptxSource = async () => {
-  if (!report.value || !draftPreview.value || !draftOperations.value.length || savingSource.value) return
-  const accepted = await confirmAppAction(dialog, {
-    title: '保存到原演示文稿？',
-    content: `将一次写入 ${draftOperations.value.length} 个已验证更改。保存前仍会检查外部修改，失败时自动恢复原文件。`,
-    positiveText: '保存到原文件',
-  })
-  if (!accepted) return
+  if (!report.value || !draftOperations.value.length || busy.value || isExternal.value || !ensureNoUnappliedInput()) return false
+  const owner = captureOwner(), operations = cloneOperations(draftOperations.value), labels = [...draftLabels.value]
   savingSource.value = true
   sourceSaveError.value = ''
+  let written = false
   try {
-    const saved = await invoke<PptxSavedSourceReport>('save_pptx_patch_source_transaction', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
-      expectedOutputDigest: draftPreview.value.outputDigest,
-      operations: draftOperations.value,
+    const accepted = await confirmAppAction(dialog, {
+      title: '保存到原演示文稿？',
+      content: `将一次写入 ${operations.length} 个更改。自动检查外部修改、内容保真与可靠保存，失败保留草稿。`,
+      positiveText: '保存到原文件',
     })
-    if (saved.status !== 'transaction_source_saved_verified' || !saved.rollbackProtected || !saved.structuralReopenVerified || !saved.semanticReopenVerified) {
+    if (!accepted || !owns(owner)) return false
+    const preview = await previewOperations(owner, operations, labels)
+    if (!owns(owner)) return false
+    const saved = await invoke<PptxSavedSourceReport>('save_pptx_patch_source_transaction', {
+      libraryRoot: owner.root, path: owner.path, expectedSignature: owner.document!.signature,
+      expectedOutputDigest: preview.outputDigest, operations,
+    })
+    if (!owns(owner)) return false
+    if (saved.status !== 'transaction_source_saved_verified' || !saved.rollbackProtected || !saved.unchangedPartsVerified
+      || saved.digest !== preview.outputDigest || saved.producerMatrixBaseline.length !== 3 || !saved.externalProducerReopenRequired
+      || !saved.structuralReopenVerified || !saved.semanticReopenVerified) {
       throw new Error('PPTX 原文件保存回执未通过可靠写入检查')
     }
-    draftOperations.value = []
-    draftLabels.value = []
-    draftPreview.value = undefined
-    undoStack.value = []
-    redoStack.value = []
-    syncTabDirty()
-    message.success('演示文稿已可靠保存并复读')
-    await loadPresentation()
+    written = true
+    const reread = await loadPresentation()
+    if (!sameContext(owner)) return false
+    if (!reread) {
+      sourceSaveError.value = '文件已写入，但页面重新读取失败。更改仍保留，请先核对原件再重新读取。'
+      message.warning(sourceSaveError.value)
+      return false
+    }
+    message.success('演示文稿已可靠保存并重新读取')
+    return true
   } catch (error) {
-    sourceSaveError.value = String(error).replace(/^Error:\s*/, '')
-    message.error(sourceSaveError.value)
-  } finally {
-    savingSource.value = false
-  }
+    if (sameContext(owner)) feedbackError((written ? '文件已写入，但页面重新读取失败。' : '未保存 PPTX：') + String(error).replace(/^Error:\s*/, ''))
+    return false
+  } finally { if (sameContext(owner)) savingSource.value = false }
 }
 watch([verifiedOperation, verifiedPreview], ([operation, preview]) => {
   if (operation && preview) void stageVerifiedCandidate(operation, preview)
@@ -1709,21 +1905,23 @@ const clearTextPatchResult = () => {
 }
 const previewTextPatch = async () => {
   const target = selectedEditTarget.value
-  if (!report.value || !target || textPatchLoading.value) return
+  if (busy.value || !report.value || !target || textPatchLoading.value) return
+  const owner = captureEdit()
   textPatchLoading.value = true
   textPatchError.value = ''
   textPatchReport.value = undefined
   clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedTextPatchReport>('preview_pptx_text_patch_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       targetId: target.id,
       expectedTextDigest: target.expectedTextDigest,
       expectedPartDigest: target.expectedPartDigest,
       replacementText: replacementText.value,
     })
+    if (!ownsEdit(owner)) return
     if (
       patch.changedParts.length !== 1
       || patch.changedParts[0] !== target.partName
@@ -1753,9 +1951,10 @@ const previewTextPatch = async () => {
     savedCopyReport.value = undefined
     saveCopyError.value = ''
   } catch (error) {
+    if (!ownsEdit(owner)) return
     textPatchError.value = String(error)
   } finally {
-    textPatchLoading.value = false
+    if (sameContext(owner)) textPatchLoading.value = false
   }
 }
 const syncStyleForm = () => {
@@ -1767,22 +1966,24 @@ const syncStyleForm = () => {
   styleItalic.value = target?.italic || false
   styleUnderline.value = target?.underline || false
   styleAlignment.value = target?.alignment || 'left'
+  restoreFormBuffer('style')
   stylePatchReport.value = undefined
   stylePatchError.value = ''
   clearSaveCandidate()
 }
 const previewStylePatch = async () => {
   const target = selectedStyleTarget.value
-  if (!report.value || !target || !validStyleForm.value || stylePatchLoading.value) return
+  if (busy.value || !report.value || !target || !validStyleForm.value || stylePatchLoading.value) return
+  const owner = captureEdit()
   stylePatchLoading.value = true
   stylePatchError.value = ''
   stylePatchReport.value = undefined
   clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_style_patch_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       targetId: target.id,
       expectedStyleDigest: target.expectedStyleDigest,
       expectedPartDigest: target.expectedPartDigest,
@@ -1794,6 +1995,7 @@ const previewStylePatch = async () => {
       underline: styleUnderline.value,
       alignment: styleAlignment.value,
     })
+    if (!ownsEdit(owner)) return
     if (
       patch.operation !== 'character-style'
       || patch.changedParts.length !== 1
@@ -1830,28 +2032,31 @@ const previewStylePatch = async () => {
     savedCopyReport.value = undefined
     saveCopyError.value = ''
   } catch (error) {
+    if (!ownsEdit(owner)) return
     stylePatchError.value = String(error)
   } finally {
-    stylePatchLoading.value = false
+    if (sameContext(owner)) stylePatchLoading.value = false
   }
 }
 const previewAltTextPatch = async () => {
   const target = selectedAltTextTarget.value
-  if (!report.value || !target || altTextPatchLoading.value) return
+  if (busy.value || !report.value || !target || altTextPatchLoading.value) return
+  const owner = captureEdit()
   altTextPatchLoading.value = true
   altTextPatchError.value = ''
   altTextPatchReport.value = undefined
   clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_alt_text_patch_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       targetId: target.id,
       expectedMetadataDigest: target.expectedMetadataDigest,
       expectedPartDigest: target.expectedPartDigest,
       altText: altTextValue.value,
     })
+    if (!ownsEdit(owner)) return
     if (
       patch.operation !== 'picture-alt-text'
       || patch.changedParts.length !== 1
@@ -1882,12 +2087,14 @@ const previewAltTextPatch = async () => {
     savedCopyReport.value = undefined
     saveCopyError.value = ''
   } catch (error) {
+    if (!ownsEdit(owner)) return
     altTextPatchError.value = String(error)
   } finally {
-    altTextPatchLoading.value = false
+    if (sameContext(owner)) altTextPatchLoading.value = false
   }
 }
 const clearReplacementImage = () => {
+  imageReadRun++
   replacementImageName.value = ''
   replacementImageMime.value = ''
   replacementImageBase64.value = ''
@@ -1900,7 +2107,6 @@ const clearReplacementImage = () => {
 const selectReplacementImage = (event: Event) => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
-  clearReplacementImage()
   if (!file) return
   const target = selectedImageTarget.value
   if (!target) {
@@ -1918,11 +2124,14 @@ const selectReplacementImage = (event: Event) => {
     input.value = ''
     return
   }
+  const owner = captureOwner(), run = ++imageReadRun
   const reader = new FileReader()
   reader.onerror = () => {
+    if (!owns(owner) || run !== imageReadRun || target.id !== selectedImageTargetId.value) return
     imagePatchError.value = '无法读取替换图片'
   }
   reader.onload = () => {
+    if (!owns(owner) || run !== imageReadRun || target.id !== selectedImageTargetId.value) return
     const dataUrl = typeof reader.result === 'string' ? reader.result : ''
     const marker = ';base64,'
     const offset = dataUrl.indexOf(marker)
@@ -1935,27 +2144,30 @@ const selectReplacementImage = (event: Event) => {
     replacementImageBase64.value = dataUrl.slice(offset + marker.length)
     replacementImagePreview.value = dataUrl
     replacementImageBytes.value = file.size
+    rememberForm('image')
   }
   reader.readAsDataURL(file)
 }
 const previewImagePatch = async () => {
   const target = selectedImageTarget.value
-  if (!report.value || !target || !replacementImageBase64.value || imagePatchLoading.value) return
+  if (busy.value || !report.value || !target || !replacementImageBase64.value || imagePatchLoading.value) return
+  const owner = captureEdit()
   imagePatchLoading.value = true
   imagePatchError.value = ''
   imagePatchReport.value = undefined
   clearSaveCandidate()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_image_patch_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       targetId: target.id,
       expectedMediaDigest: target.expectedMediaDigest,
       expectedPartDigest: target.expectedPartDigest,
       replacementMimeType: replacementImageMime.value,
       replacementBase64: replacementImageBase64.value,
     })
+    if (!ownsEdit(owner)) return
     if (
       patch.operation !== 'picture-binary'
       || patch.changedParts.length !== 1
@@ -1985,9 +2197,10 @@ const previewImagePatch = async () => {
       operationLabel: '图片二进制',
     }
   } catch (error) {
+    if (!ownsEdit(owner)) return
     imagePatchError.value = String(error).replace(/^Error:\s*/, '')
   } finally {
-    imagePatchLoading.value = false
+    if (sameContext(owner)) imagePatchLoading.value = false
   }
 }
 const rememberPptxViewState = (path = pptxPath.value) => {
@@ -2006,15 +2219,16 @@ const clearShapePatch = () => {
 }
 const previewShapeAdd = async () => {
   const target = selectedShapeSlide.value
-  if (!report.value || !target || !validShapeAddForm.value || shapePatchLoading.value) return
+  if (busy.value || !report.value || !target || !validShapeAddForm.value || shapePatchLoading.value) return
   const geometry = shapeGeometry.value
+  const owner = captureEdit()
   shapePatchLoading.value = true
   clearShapePatch()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_shape_add_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       slideTargetId: target.id,
       expectedPartDigest: target.expectedPartDigest,
       shapeType: shapeType.value,
@@ -2022,6 +2236,7 @@ const previewShapeAdd = async () => {
       fillColor: shapeFillColor.value.slice(1).toUpperCase(),
       lineColor: shapeLineColor.value.slice(1).toUpperCase(),
     })
+    if (!ownsEdit(owner)) return
     if (
       patch.operation !== 'basic-shape-add'
       || patch.changedParts.length !== 1
@@ -2052,25 +2267,28 @@ const previewShapeAdd = async () => {
       operationLabel: `新增${shapeType.value === 'rectangle' ? '矩形' : shapeType.value === 'ellipse' ? '椭圆' : '线条'}`,
     }
   } catch (error) {
+    if (!ownsEdit(owner)) return
     shapePatchError.value = String(error).replace(/^Error:\s*/, '')
   } finally {
-    shapePatchLoading.value = false
+    if (sameContext(owner)) shapePatchLoading.value = false
   }
 }
 const previewShapeDelete = async () => {
   const target = selectedShapeTarget.value
-  if (!report.value || !target || shapePatchLoading.value) return
+  if (busy.value || !report.value || !target || shapePatchLoading.value) return
+  const owner = captureEdit()
   shapePatchLoading.value = true
   clearShapePatch()
   try {
     const patch = await invoke<PptxIsolatedMetadataPatchReport>('preview_pptx_shape_delete_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       targetId: target.id,
       expectedShapeDigest: target.expectedShapeDigest,
       expectedPartDigest: target.expectedPartDigest,
     })
+    if (!ownsEdit(owner)) return
     if (
       patch.operation !== 'basic-shape-delete'
       || patch.changedParts.length !== 1
@@ -2098,9 +2316,10 @@ const previewShapeDelete = async () => {
       operationLabel: `删除${shapeLabel(target.shapeType)}`,
     }
   } catch (error) {
+    if (!ownsEdit(owner)) return
     shapePatchError.value = String(error).replace(/^Error:\s*/, '')
   } finally {
-    shapePatchLoading.value = false
+    if (sameContext(owner)) shapePatchLoading.value = false
   }
 }
 const clearSlideLifecycle = () => {
@@ -2114,6 +2333,7 @@ const moveSlideOrder = (index: number, direction: -1 | 1) => {
   const nextOrder = [...slideOrderTargetIds.value]
   ;[nextOrder[index], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[index]]
   slideOrderTargetIds.value = nextOrder
+  rememberForm('slide')
 }
 const buildSlideLifecycleOperation = (): PptxPatchOperation | undefined => {
   if (slideLifecycleMode.value === 'reorder') {
@@ -2142,16 +2362,18 @@ const buildSlideLifecycleOperation = (): PptxPatchOperation | undefined => {
 }
 const previewSlideLifecycle = async () => {
   const operation = buildSlideLifecycleOperation()
-  if (!report.value || !operation || slideLifecycleLoading.value) return
+  if (busy.value || !report.value || !operation || slideLifecycleLoading.value) return
+  const owner = captureEdit()
   slideLifecycleLoading.value = true
   clearSlideLifecycle()
   try {
     const patch = await invoke<PptxSlideLifecycleReport>('preview_pptx_slide_lifecycle_isolated_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      expectedSignature: report.value.signature,
+      libraryRoot: owner.root,
+      path: owner.path,
+      expectedSignature: owner.document!.signature,
       operation,
     })
+    if (!ownsEdit(owner)) return
     const expectedOperation = `slide-${slideLifecycleMode.value}` as PptxSlideLifecycleReport['operation']
     const expectedSlideCount = patch.slideCountBefore
       + (slideLifecycleMode.value === 'add' || slideLifecycleMode.value === 'copy' ? 1 : 0)
@@ -2186,65 +2408,67 @@ const previewSlideLifecycle = async () => {
             : '重排幻灯片',
     }
   } catch (error) {
+    if (!ownsEdit(owner)) return
     slideLifecycleError.value = String(error).replace(/^Error:\s*/, '')
   } finally {
-    slideLifecycleLoading.value = false
+    if (sameContext(owner)) slideLifecycleLoading.value = false
   }
 }
 const savePptxCopy = async () => {
-  const preview = savePreview.value
-  const operation = draftOperations.value.length === 1 ? draftOperations.value[0] : undefined
-  if (
-    !preview
-    || !operation
-    || !report.value
-    || !validCopyFileName.value
-    || savingCopy.value
-  ) return
+  if (!report.value || !draftOperations.value.length || !validCopyFileName.value || busy.value
+    || isExternal.value || !ensureNoUnappliedInput()) return
+  const owner = captureOwner(), operations = cloneOperations(draftOperations.value), labels = [...draftLabels.value]
+  const targetFileName = copyFileName.value.trim()
   savingCopy.value = true
   saveCopyError.value = ''
   savedCopyReport.value = undefined
   try {
-    const saved = await invoke<PptxSavedCopyReport>('save_pptx_patch_copy', {
-      libraryRoot: store.libraryPath,
-      path: pptxPath.value,
-      targetFileName: copyFileName.value.trim(),
-      expectedSignature: report.value.signature,
-      expectedOutputDigest: preview.outputDigest,
-      operation,
+    const preview = await previewOperations(owner, operations, labels)
+    if (!owns(owner)) return
+    const saved = await invoke<PptxSavedCopyReport>('save_pptx_patch_copy_transaction', {
+      libraryRoot: owner.root, path: owner.path, targetFileName,
+      expectedSignature: owner.document!.signature, expectedOutputDigest: preview.outputDigest, operations,
     })
-    if (
-      saved.status !== 'saved_verified'
-      || saved.saveMode !== 'copy'
-      || !saved.sourceUnchanged
-      || saved.changedParts.length !== preview.changedParts.length
-      || saved.changedParts.some(part => !preview.changedParts.includes(part))
-      || !saved.unchangedPartsVerified
-      || !saved.structuralReopenVerified
-      || !saved.semanticReopenVerified
-      || saved.producerMatrixBaseline.length !== 3
-      || !saved.externalProducerReopenRequired
-    ) {
+    if (!owns(owner)) return
+    if (saved.status !== 'transaction_copy_saved_verified' || saved.saveMode !== 'copy' || saved.targetDigest !== preview.outputDigest
+      || saved.operationKind !== 'transaction:' + operations.length
+      || !saved.sourceUnchanged || saved.changedParts.length !== preview.changedParts.length
+      || saved.changedParts.some(part => !preview.changedParts.includes(part)) || !saved.unchangedPartsVerified
+      || !saved.structuralReopenVerified || !saved.semanticReopenVerified
+      || saved.producerMatrixBaseline.length !== 3 || !saved.externalProducerReopenRequired) {
       throw new Error('PPTX 保存结果未通过无覆盖、内容复读与源文件保护检查')
     }
     savedCopyReport.value = saved
-    message.success(`已可靠另存并验证：${copyFileName.value.trim()}`)
+    savedCopyOwner = owner
+    savedCopyDraftKey = JSON.stringify(operations)
+    message.success(`已另存 ${operations.length} 个更改：${targetFileName}，原件未修改`)
   } catch (error) {
-    saveCopyError.value = String(error).replace(/^Error:\s*/, '')
-  } finally {
-    savingCopy.value = false
-  }
+    if (owns(owner)) { saveCopyError.value = String(error).replace(/^Error:\s*/, ''); message.error(saveCopyError.value) }
+  } finally { if (sameContext(owner)) savingCopy.value = false }
 }
 const openSavedPptxCopy = async () => {
   const saved = savedCopyReport.value
-  if (!saved) return
+  const owner = savedCopyOwner
+  if (!saved || !owner || busy.value || !owns(owner) || hasUnappliedInput.value || savedCopyDraftKey !== JSON.stringify(draftOperations.value)) return
   const routeName = route.name === 'LibraryMode' ? 'LibraryMode' : 'PptxReader'
-  await router.replace({ name: routeName, query: { path: saved.targetPath } })
+  savingCopy.value = true
+  try {
+    const data = await invoke<PptxReadReport>('read_pptx_presentation', { libraryRoot: owner.root, path: saved.targetPath })
+    if (!owns(owner)) return
+    if (data.signature !== saved.targetSignature) throw new Error('已保存副本发生变化，当前更改仍保留，请先核对副本。')
+    const baseline = await invoke<PptxEditBaselineReport>('audit_pptx_edit_baseline', { libraryRoot: owner.root, path: saved.targetPath, expectedSignature: data.signature })
+    if (!owns(owner)) return
+    if (baseline.sourcePackageDigest !== saved.targetDigest || !baseline.sourceUnchanged || baseline.writesUserFile) throw new Error('已保存副本的内容不再与当前更改一致，当前更改仍保留。')
+    queuedCopyRead = { root: owner.root, path: saved.targetPath, data }
+    copyNavigation = saved.targetPath
+    await router.replace({ name: routeName, query: { path: saved.targetPath } })
+  } catch (error) {
+    if (owns(owner)) { saveCopyError.value = String(error).replace(/^Error:\s*/, ''); message.error(saveCopyError.value) }
+  } finally {
+    if (sameContext(owner)) { savingCopy.value = false; queuedCopyRead = undefined; copyNavigation = '' }
+  }
 }
-const loadPresentation = async () => {
-  if (!pptxPath.value || loading.value) return
-  loading.value = true
-  loadError.value = ''
+const resetEditingState = () => {
   editBaseline.value = undefined
   baselineError.value = ''
   selectedEditTargetId.value = ''
@@ -2272,43 +2496,58 @@ const loadPresentation = async () => {
   verifiedPreview.value = undefined
   savedCopyReport.value = undefined
   saveCopyError.value = ''
+  formBuffers.value = {}
+  discardDrafts()
+}
+const loadPresentation = async () => {
+  const owner = captureOwner(), run = ++readRun
+  if (!owner.path) return false
+  loading.value = true
+  loadError.value = ''
   try {
-    const viewState = recallWorkspaceViewState(pptxPath.value)
-    report.value = await invoke<PptxReadReport>(isExternal.value ? 'read_external_pptx_presentation' : 'read_pptx_presentation', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: pptxPath.value,
+    const viewState = recallWorkspaceViewState(owner.path)
+    const cached = queuedCopyRead
+    queuedCopyRead = undefined
+    const loaded = cached && cached.path === owner.path && cached.root === owner.root && !owner.external ? cached.data : await invoke<PptxReadReport>(owner.external ? 'read_external_pptx_presentation' : 'read_pptx_presentation', {
+      ...(owner.external ? {} : { libraryRoot: owner.root }), path: owner.path,
     })
-    store.addTab({ id: pptxPath.value, title: fileName.value, path: pptxPath.value, isDirty: false, external: isExternal.value })
-    const rememberedSlideIndex = viewState?.section
-      ? report.value.model.slides.findIndex(slide => slide.id === viewState.section)
-      : -1
-    activeSlideIndex.value = rememberedSlideIndex >= 0
-      ? rememberedSlideIndex
-      : Math.min(activeSlideIndex.value, Math.max(0, report.value.model.slides.length - 1))
+    if (!sameContext(owner) || run !== readRun) return false
+    report.value = loaded
+    resetEditingState()
+    store.addTab({ id: owner.path, title: owner.path.split(/[\\/]/).pop() || '演示文稿.pptx', path: owner.path, isDirty: false, external: owner.external })
+    const rememberedSlideIndex = viewState?.section ? loaded.model.slides.findIndex(slide => slide.id === viewState.section) : -1
+    activeSlideIndex.value = rememberedSlideIndex >= 0 ? rememberedSlideIndex
+      : Math.min(activeSlideIndex.value, Math.max(0, loaded.model.slides.length - 1))
     if (typeof viewState?.panelOpen === 'boolean') showDetails.value = viewState.panelOpen
     await applyRouteLocator()
     if (viewState && !route.query.locator && !route.query.slide) {
       await nextTick()
-      stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
+      if (sameContext(owner) && run === readRun) stageRef.value?.scrollTo({ top: viewState.scrollTop, left: viewState.scrollLeft })
     }
+    return true
   } catch (error) {
-    report.value = undefined
-    loadError.value = String(error)
-  } finally {
-    loading.value = false
-  }
+    if (sameContext(owner) && run === readRun) { loadError.value = String(error); message.error('无法重新读取 PPTX，当前页面和更改已保留：' + String(error)) }
+    return false
+  } finally { if (sameContext(owner) && run === readRun) loading.value = false }
 }
 const handleKeydown = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+    event.preventDefault(); event.stopImmediatePropagation()
+    if (isExternal.value) message.info('外部演示文稿只读，不会写回。')
+    else void savePptxSource()
+    return
+  }
   if (!presenting.value) return
   if (event.key === 'Escape') presenting.value = false
   if (event.key === 'ArrowLeft') previousSlide()
   if (event.key === 'ArrowRight' || event.key === ' ') nextSlide()
 }
-useWindowDraft(() => draftOperations.value.length > 0, () => String(route.query.path || store.activeTabId || ''))
+useWindowDraft(() => hasUnsavedChanges.value, () => String(route.query.path || store.activeTabId || ''))
 const warnBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (draftOperations.value.length) event.preventDefault()
+  if (hasUnsavedChanges.value) event.preventDefault()
 }
 const discardDrafts = () => {
+  formBuffers.value = {}
   draftOperations.value = []
   draftLabels.value = []
   draftPreview.value = undefined
@@ -2318,15 +2557,15 @@ const discardDrafts = () => {
   syncTabDirty()
 }
 const requestReloadPresentation = async () => {
-  if (!draftOperations.value.length) return void loadPresentation()
+  if (busy.value) return
+  if (!hasUnsavedChanges.value) return void loadPresentation()
   const accepted = await confirmAppAction(dialog, {
     title: '放弃未保存的演示文稿更改？',
-    content: `重新读取会丢弃 ${draftOperations.value.length} 个内存草稿。`,
+    content: `读取成功后才丢弃当前 ${draftOperations.value.length} 个更改及未加入的输入；读取失败会保留它们。`,
     positiveText: '放弃并重新读取',
     danger: true,
   })
   if (!accepted) return
-  discardDrafts()
   await loadPresentation()
 }
 const trapPresenterFocus = (event: KeyboardEvent) => {
@@ -2341,9 +2580,12 @@ const trapPresenterFocus = (event: KeyboardEvent) => {
 
 watch(selectedEditTargetId, () => {
   replacementText.value = selectedEditTarget.value?.text || ''
+  restoreFormBuffer('text')
   clearTextPatchResult()
 })
 watch(selectedStyleTargetId, syncStyleForm)
+watch(() => formKey('shape'), () => restoreFormBuffer('shape'), { flush: 'post' })
+watch(() => formKey('slide'), () => restoreFormBuffer('slide'), { flush: 'post' })
 watch(
   [styleFontSizePt, styleFontFamily, styleColor, styleBold, styleItalic, styleUnderline, styleAlignment],
   () => {
@@ -2354,6 +2596,7 @@ watch(
 )
 watch(selectedAltTextTargetId, () => {
   altTextValue.value = selectedAltTextTarget.value?.altText || ''
+  restoreFormBuffer('alt')
   altTextPatchReport.value = undefined
   altTextPatchError.value = ''
   clearSaveCandidate()
@@ -2363,7 +2606,7 @@ watch(altTextValue, () => {
   altTextPatchError.value = ''
   clearSaveCandidate()
 })
-watch(selectedImageTargetId, clearReplacementImage)
+watch(selectedImageTargetId, () => { clearReplacementImage(); restoreFormBuffer('image') })
 watch(
   [
     shapeMode,
@@ -2413,9 +2656,18 @@ watch(matches, value => {
   activeMatch.value = 0
   if (value.length) selectSlide(value[0].slideIndex)
 })
-watch([pptxPath, isExternal], (_next, previous) => {
-  if (previous?.[0]) rememberPptxViewState(previous[0])
-  discardDrafts()
+watch([pptxPath, isExternal, () => store.libraryPath], (_next, previous) => {
+  if (previous?.[0]) {
+    rememberPptxViewState(String(previous[0]))
+    const oldTab = store.tabs.find(tab => tab.id === previous[0])
+    if (oldTab) oldTab.isDirty = false
+  }
+  contextEpoch++; readRun++
+  copyNavigation = ''
+  report.value = undefined
+  resetEditingState()
+  for (const flag of [baselineLoading, textPatchLoading, stylePatchLoading, altTextPatchLoading,
+    imagePatchLoading, shapePatchLoading, slideLifecycleLoading, stagingDraft, savingSource, savingCopy]) flag.value = false
   void loadPresentation()
 })
 watch(
@@ -2428,26 +2680,35 @@ watch(presenting, async value => {
   else presentButtonRef.value?.focus()
 })
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('keydown', handleKeydown, true)
   window.addEventListener('beforeunload', warnBeforeUnload)
   loadPresentation()
 })
-const confirmUnsavedLeave = () => !draftOperations.value.length || confirmAppAction(dialog, {
-  title: '离开演示文稿？',
-  content: `还有 ${draftOperations.value.length} 个演示文稿更改尚未保存，离开后将无法恢复。`,
-  positiveText: '放弃修改并离开',
-  danger: true,
-})
+const confirmUnsavedLeave = () => {
+  if (busy.value) { message.info('正在核对或保存演示文稿，请稍候再切换。'); return false }
+  return !hasUnsavedChanges.value || confirmAppAction(dialog, {
+    title: '离开演示文稿？',
+    content: `还有 ${draftOperations.value.length} 个更改${hasUnappliedInput.value ? '及未加入的输入' : ''}尚未保存，离开后将无法恢复。`,
+    positiveText: '放弃修改并离开', danger: true,
+  })
+}
 onBeforeRouteLeave(confirmUnsavedLeave)
 onBeforeRouteUpdate(to => {
+  if (copyNavigation && String(to.query.path) === copyNavigation && to.query.external !== '1'
+    && savedCopyOwner && owns(savedCopyOwner) && !hasUnappliedInput.value
+    && savedCopyDraftKey === JSON.stringify(draftOperations.value)) return true
+  if (busy.value) { message.info('正在核对或保存演示文稿，请稍候再切换。'); return false }
   const nextPath = String(to.query.path || pptxPath.value)
   const nextExternal = to.query.external === '1'
   if (nextPath === pptxPath.value && nextExternal === isExternal.value) return true
   return confirmUnsavedLeave()
 })
 onBeforeUnmount(() => {
+  alive = false
+  contextEpoch++
+  readRun++
   rememberPptxViewState()
-  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('keydown', handleKeydown, true)
   window.removeEventListener('beforeunload', warnBeforeUnload)
   store.clearRelationObjectFocus()
 })
@@ -2455,6 +2716,23 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .pptx-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text-primary); background: var(--bg-secondary); font-size: 13px; container-type: inline-size; }
+.safety-details > summary { cursor: pointer; color: var(--theme-text-secondary); font-size: 12px; margin: 8px 0; }
+.tool-drawer { border-bottom: 1px solid var(--border-color); margin-bottom: 12px; padding-bottom: 12px; }
+.tool-drawer > summary { display: flex; align-items: center; gap: 7px; cursor: pointer; font-weight: 600; list-style: none; }
+.tool-drawer > summary::after { content: '⌄'; margin-left: auto; color: var(--theme-text-secondary); }
+.tool-drawer[open] > summary { margin-bottom: 12px; }
+.tool-drawer[open] > summary::after { content: '⌃'; }
+.editing-controls { border: 0; padding: 0; margin: 0; min-width: 0; }
+.editing-controls:disabled { opacity: .72; }
+.pending-input-note, .pptx-read-error { margin: 0; padding: 9px 12px; line-height: 1.6; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
+.pptx-read-error { color: var(--status-danger); }
+.pending-input-note { color: var(--text-secondary); margin-bottom: 12px; }
+.draft-labels { display: flex; flex-wrap: wrap; list-style: none; gap: 5px; margin: 9px 0; padding: 0; }
+.draft-labels li { padding: 4px 7px; border-radius: 5px; background: var(--bg-secondary); color: var(--text-secondary); font-size: 12px; }
+.slide-canvas .slide-object[role="button"] { cursor: pointer; }
+.slide-canvas .slide-object.edit-target-object, .slide-canvas .slide-object[role="button"]:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
+.edit-current-notes { padding: 5px 9px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-primary); background: var(--bg-secondary); cursor: pointer; }
+.discard-pending-input { display: block; margin-top: 8px; padding: 4px 7px; border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-secondary); background: var(--bg-secondary); cursor: pointer; }
 .pptx-toolbar { min-height: 52px; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-primary); }
 .document-identity, .toolbar-actions, .pptx-search, .pptx-details header, .pptx-status { display: flex; align-items: center; }
 .document-identity { min-width: 0; gap: 9px; }

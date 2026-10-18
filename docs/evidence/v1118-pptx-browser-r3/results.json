@@ -1,0 +1,21 @@
+{
+  "status": "failed",
+  "checks": [
+    "Clicking a real canvas object prepares the existing safe target and opens editing without deleting tools",
+    "Raw title and notes buffers survive target changes; staging one cannot silently drop another pending input",
+    "Two-target title/notes edits support atomic whole-operation undo/redo and copy delivery",
+    "Copy collision preserves all changes; a new multi-operation copy reopens correctly while the original is untouched",
+    "Source save cancellation never writes or clears changes",
+    "Reload cancellation and native read failure retain the exact prior page, input and staged changes",
+    "During validation, inputs and navigation controls are locked; isolated and transaction previews bind to the same text",
+    "Saving locks related input and route changes, then reads back before clearing the draft",
+    "A completed write followed by read failure is reported honestly and preserves the draft and old page",
+    "A source conflict remains globally visible even with tools closed and never overwrites the peer update",
+    "Write failure keeps the exact draft; a deliberate retry completes without weakening checks",
+    "Ctrl+S confirms exactly once and cannot leak to the hidden library text-save listener"
+  ],
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "releaseCandidate": false
+}

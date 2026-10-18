@@ -28,9 +28,10 @@ for (const token of [
 ]) requireText(backend, token, `external PPTX backend is missing ${token}`)
 for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
-  "isExternal.value ? 'read_external_pptx_presentation' : 'read_pptx_presentation'",
-  '...(isExternal.value ? {} : { libraryRoot: store.libraryPath })',
-  'external: isExternal.value',
+  "owner.external ? 'read_external_pptx_presentation' : 'read_pptx_presentation'",
+  '...(owner.external ? {} : { libraryRoot: owner.root })',
+  'external: owner.external',
+  'if (!sameContext(owner) || run !== readRun) return false',
   'v-if="!isExternal"',
   'editBaseline && !isExternal',
   'savePreview && draftOperations.length && !isExternal',

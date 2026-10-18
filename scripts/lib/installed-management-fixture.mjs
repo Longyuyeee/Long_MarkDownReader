@@ -10,10 +10,10 @@ function assertRoot(config,library) {
 }
 export function assertPreparedManagementFixture(config,library,version) {
  assertRoot(config,library)
- assert.equal(config.savedSearches.length,['1.1.10','1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(version)?2:1,'retain the legacy marker plus the explicitly created current-version collection')
+ assert.equal(config.savedSearches.length,['1.1.10','1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18'].includes(version)?2:1,'retain the legacy marker plus the explicitly created current-version collection')
  const marker=config.savedSearches.find(entry=>entry.id==='r5l-saved-search');assert.ok(marker)
  assert.equal(marker.name,'R5L Restore Marker');assert.equal(marker.query,'R5L');assert.deepEqual([...marker.objectTypes].sort(),['json','plain-text'])
- if(['1.1.10','1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(version)){
+ if(['1.1.10','1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18'].includes(version)){
   const added=config.savedSearches.find(entry=>entry.name==='本版标签集合验收');assert.ok(added&&added.id!=='r5l-saved-search')
   assert.equal(added.query,'');assert.deepEqual(added.objectTypes,[]);assert.equal(added.filters?.tag,'验收一零')
   assert.match(added.filters.directory,/^v1110-tags-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/)

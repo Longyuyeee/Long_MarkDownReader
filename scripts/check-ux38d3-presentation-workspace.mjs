@@ -7,7 +7,7 @@ const read = file => fs.readFileSync(file, 'utf8')
 const fail = message => { console.error(`UX-38D3 presentation workspace rejected: ${message}`); process.exit(1) }
 const pptx = read('src/views/PptxReaderView.vue')
 const odf = read('src/views/OdfContentReaderView.vue')
-for (const token of ['ref="stageRef" class="pptx-stage"', 'rememberPptxViewState()', 'recallWorkspaceViewState(pptxPath.value)', 'container-type: inline-size', '@container (max-width: 760px)']) {
+for (const token of ['ref="stageRef" class="pptx-stage"', 'rememberPptxViewState()', 'recallWorkspaceViewState(owner.path)', 'sameContext(owner)', 'container-type: inline-size', '@container (max-width: 760px)']) {
   if (!pptx.includes(token)) fail(`PPTX product token missing: ${token}`)
 }
 for (const token of ['rememberOdfViewState()', 'recallWorkspaceViewState(documentPath.value)', "format === 'ods'", 'container-type: inline-size', '@container (max-width: 700px)']) {

@@ -1122,6 +1122,131 @@ fn save_pptx_patch_copy_to_path(
     })
 }
 
+fn save_pptx_transaction_copy_to_path(
+    source_path: &Path,
+    target_path: &Path,
+    expected_signature: &str,
+    expected_output_digest: &str,
+    operations: &[PptxPatchOperation],
+) -> Result<PptxSavedCopyReport, String> {
+    if target_path == source_path {
+        return Err("可靠另存禁止覆盖源 PPTX".into());
+    }
+    if target_path.exists() {
+        return Err("目标文件已存在；可靠另存不会覆盖现有文件".into());
+    }
+    let _document_lease = acquire(&[source_path, target_path])?;
+    ensure_existing_file(source_path)?;
+    let expected_output_digest = expected_output_digest.trim().to_ascii_lowercase();
+    if expected_output_digest.len() != 64
+        || !expected_output_digest
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err("PPTX 隔离预览摘要无效".into());
+    }
+
+    let metadata = source_path
+        .metadata()
+        .map_err(|error| format!("读取 PPTX 元数据失败: {error}"))?;
+    if metadata.len() > MAX_PPTX_FILE_BYTES {
+        return Err("PPTX 文件超过 96 MiB 可靠另存上限".into());
+    }
+    let source_signature = file_signature(&metadata);
+    if source_signature != expected_signature {
+        return Err("PPTX 已被外部修改，请重新打开后再保存副本".into());
+    }
+    let source = fs::read(source_path).map_err(|error| format!("读取 PPTX 失败: {error}"))?;
+    let source_digest = format!("{:x}", Sha256::digest(&source));
+    let built = build_pptx_transaction(&source, operations)?;
+    if built.report.output_digest != expected_output_digest {
+        return Err("PPTX 编辑内容或隔离输出已变化，请重新验证后再另存".into());
+    }
+    if !built.report.deterministic_replay_verified
+        || !built.report.unchanged_parts_verified
+        || !built.report.structural_reopen_verified
+        || !built.report.semantic_reopen_verified
+    {
+        return Err("PPTX 隔离补丁未通过部件保真与语义复读".into());
+    }
+
+    let source_before_write =
+        fs::read(source_path).map_err(|error| format!("保存前复核源 PPTX 失败: {error}"))?;
+    let metadata_before_write = source_path
+        .metadata()
+        .map_err(|error| format!("保存前复核源 PPTX 元数据失败: {error}"))?;
+    if source_before_write != source
+        || file_signature(&metadata_before_write) != source_signature
+        || format!("{:x}", Sha256::digest(&source_before_write)) != source_digest
+    {
+        return Err("PPTX 在隔离验证期间发生变化，请重新打开后再保存".into());
+    }
+
+    write_new_bytes(target_path, &built.output)?;
+    let verification = (|| -> Result<(String, String), String> {
+        let saved = fs::read(target_path)
+            .map_err(|error| format!("目标已创建，但无法复读保存字节: {error}"))?;
+        let target_digest = format!("{:x}", Sha256::digest(&saved));
+        if saved != built.output || target_digest != built.report.output_digest {
+            return Err("目标落盘字节与隔离验证输出不一致".into());
+        }
+        parse_pptx(&saved).map_err(|error| format!("目标 PPTX 结构复读失败: {error}"))?;
+        let semantic = build_pptx_transaction(&source, operations)?;
+        if !semantic.report.deterministic_replay_verified
+            || semantic.output != saved
+            || !semantic.report.semantic_reopen_verified
+            || semantic.report.changed_parts != built.report.changed_parts
+        {
+            return Err("目标 PPTX 语义复读结果与已验证补丁不一致".into());
+        }
+        let source_after =
+            fs::read(source_path).map_err(|error| format!("复核源 PPTX 失败: {error}"))?;
+        let source_metadata_after = source_path
+            .metadata()
+            .map_err(|error| format!("复核源 PPTX 元数据失败: {error}"))?;
+        if source_after != source
+            || file_signature(&source_metadata_after) != source_signature
+            || format!("{:x}", Sha256::digest(&source_after)) != source_digest
+        {
+            return Err("源 PPTX 在另存期间发生变化".into());
+        }
+        let target_metadata = target_path
+            .metadata()
+            .map_err(|error| format!("读取已保存 PPTX 元数据失败: {error}"))?;
+        Ok((target_digest, file_signature(&target_metadata)))
+    })();
+    let (target_digest, target_signature) = match verification {
+        Ok(value) => value,
+        Err(error) => {
+            remove_created_pptx_if_exact(target_path, &built.output);
+            return Err(format!("可靠另存验证失败，已清理未验收副本: {error}"));
+        }
+    };
+
+    Ok(PptxSavedCopyReport {
+        status: "transaction_copy_saved_verified".into(),
+        engine: built.report.engine,
+        save_mode: "copy".into(),
+        operation_kind: format!("transaction:{}", built.report.operation_count),
+        target_path: target_path.to_string_lossy().into_owned(),
+        target_signature,
+        target_digest,
+        source_signature,
+        source_unchanged: true,
+        output_bytes: built.output.len(),
+        changed_parts: built.report.changed_parts,
+        unchanged_parts_verified: true,
+        structural_reopen_verified: true,
+        semantic_reopen_verified: true,
+        producer_matrix_baseline: vec![
+            "microsoft-powerpoint-16".into(),
+            "wps-presentation".into(),
+            "libreoffice-impress".into(),
+        ],
+        external_producer_reopen_required: true,
+    })
+}
+
 fn save_pptx_patch_source_to_path(
     source_path: &Path,
     expected_signature: &str,
@@ -1635,6 +1760,33 @@ pub async fn save_pptx_patch_copy(
 }
 
 #[tauri::command]
+pub async fn save_pptx_patch_copy_transaction(
+    library_root: String,
+    path: String,
+    target_file_name: String,
+    expected_signature: String,
+    expected_output_digest: String,
+    operations: Vec<PptxPatchOperation>,
+) -> Result<PptxSavedCopyReport, String> {
+    let guard = WorkspaceGuard::new(&library_root)?;
+    let source_path = guard.resolve_existing_file(path, &["pptx"])?;
+    let target_file_name = validate_pptx_copy_file_name(&target_file_name)?;
+    let target_path =
+        guard.resolve_file_for_write(source_path.with_file_name(target_file_name), &["pptx"])?;
+    tauri::async_runtime::spawn_blocking(move || {
+        save_pptx_transaction_copy_to_path(
+            &source_path,
+            &target_path,
+            &expected_signature,
+            &expected_output_digest,
+            &operations,
+        )
+    })
+    .await
+    .map_err(|error| format!("PPTX 多项副本保存失败: {error}"))?
+}
+
+#[tauri::command]
 pub async fn save_pptx_patch_source(
     library_root: String,
     path: String,
@@ -1693,6 +1845,10 @@ pub async fn save_pptx_patch_source_transaction(
     .await
     .map_err(|error| format!("PPTX M1B1B 事务保存任务失败: {error}"))?
 }
+
+#[cfg(test)]
+#[path = "pptx_transaction_copy_tests.rs"]
+mod transaction_copy_tests;
 
 #[cfg(test)]
 mod tests {

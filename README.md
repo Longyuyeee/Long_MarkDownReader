@@ -575,4 +575,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.18 深化现有 PPTX 编辑与演示，让对象选择、备注、撤销和原件/副本保存更连贯，继续保护未保存内容和复杂对象。已完成实际代码预审，尚未实施，不把规划当交付。后续仍按18—20顺序推进；原路线13版已有10版正式发布。[PPTX 接续预审](docs/V1_1_18_PPTX_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.18 深化现有 PPTX 编辑与演示，已实施对象定位、输入接续、多项副本和读取失败保护，并查看实际页面；正在推进固定安装器和独立同包验收，尚未公开。保留原有工具和安全边界，更新说明仍在末尾。后续继续19画布/脑图、20总收口，路线已有10/13版公开。[开发记录](docs/V1_1_18_PPTX_Development_2026-10-18.md) · [候选审计](docs/V1_1_18_Unsigned_Community_Release_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
