@@ -43,6 +43,8 @@ if (new URLSearchParams(window.location.search).has('v1116')) {
   sheet.autoFilter={top:0,bottom:4,left:0,right:3};sheet.autoFilterState={editable:true,columns:[],sortConditions:[]}
 }
 const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [], writes: [] }
+audit.inputTrace = []
+window.document.addEventListener('paste', event => audit.inputTrace.push({ type: event.type, trusted: event.isTrusted, types: [...(event.clipboardData?.types || [])] }), true)
 if (new URLSearchParams(window.location.search).has('drawingEdit')) {
   sheet.drawings.push({ id: 'editable-chart', kind: 'chart', editable: true, name: '客户交付', drawingPart: 'drawing1.xml', objectId: '1', anchorIndex: 0,
     from: { row: 0, column: 0 }, to: { row: 1, column: 1 },

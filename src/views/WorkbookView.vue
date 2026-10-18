@@ -1,5 +1,5 @@
 <template>
-  <div class="workbook-view" :class="{ 'external-readonly': isExternal }" tabindex="-1">
+  <div class="workbook-view" :class="{ 'external-readonly': isExternal }" tabindex="-1" @paste="handleWorkbookPaste">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <WorkspaceToolbar class="workbook-toolbar">
       <WorkspaceFileIdentity class="workbook-title">
@@ -907,7 +907,7 @@ import { useAppStore } from '../store/app'
 import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
 import TableChartEditor from '../components/TableChartEditor.vue'
-import { compareWorkbookValues, isWorkbookNumber, readWorkbookClipboard, validateWorkbookInput, workbookSeries, writeWorkbookClipboard, type ClipboardKind, type WorkbookClipboardCell } from '../utils/workbookClipboard'
+import { compareWorkbookValues, decodeWorkbookClipboard, isWorkbookNumber, readWorkbookClipboard, validateWorkbookInput, workbookSeries, writeWorkbookClipboard, type ClipboardKind, type WorkbookClipboardCell } from '../utils/workbookClipboard'
 
 interface WorkbookRangeReference { sheet: string; top: number; bottom: number; left: number; right: number }
 interface WorkbookDefinedName { name: string; formula: string; scope?: string; hidden: boolean; reference?: WorkbookRangeReference }
@@ -2344,7 +2344,7 @@ const workbookToolOptions = computed(() => [
 const workbookActionOptions = computed(() => [
   { label: '复制选区', key: 'copy', disabled: !selectedCell.value || saving.value },
   ...(!isExternal.value ? [
-    { label: '粘贴选区', key: 'paste', disabled: !selectedCell.value || saving.value || sheetProtected.value },
+    { label: '粘贴文本（自动识别）', key: 'paste', disabled: !selectedCell.value || saving.value || sheetProtected.value },
     { type: 'divider', key: 'edit-divider' },
     {
       label: calculating.value ? '正在重算公式…' : '重算已加载公式',
@@ -3625,14 +3625,22 @@ const captureEditContext = () => {
     && workbookPath.value === path && store.libraryPath === root
     && JSON.stringify([selectedCell.value, selectionAreas.value]) === selection
 }
-const pasteSelection = async () => {
+const handleWorkbookPaste = (event: ClipboardEvent) => {
+  if ((event.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]')) return
+  if (!event.clipboardData?.types.includes('text/plain')) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (isExternal.value || saving.value || !selectedCell.value) return
+  void pasteSelection({ text: event.clipboardData.getData('text/plain'), html: event.clipboardData.getData('text/html') })
+}
+const pasteSelection = async (clipboard?: { text: string; html: string }) => {
   if (isExternal.value || saving.value) return
   if (!selectedCell.value) return
   const isCurrent = captureEditContext()
   const draftSnapshot = JSON.stringify([...drafts.value])
   const canPaste = () => isCurrent() && draftSnapshot === JSON.stringify([...drafts.value])
   try {
-    const { matrix, cells, mode } = await readWorkbookClipboard()
+    const { matrix, cells, mode } = clipboard ? decodeWorkbookClipboard(clipboard.text, clipboard.html) : await readWorkbookClipboard()
     if (!canPaste()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
     const start = { ...selectedCell.value }
     const requests: FormulaTranslation[] = []
@@ -4986,7 +4994,9 @@ const handleShortcut = (event: KeyboardEvent) => {
   const key = event.key.toLowerCase()
   if (key === 's') { if (isExternal.value) return; event.preventDefault(); void saveWorkbook() }
   else if (!formulaFocused && key === 'c') { event.preventDefault(); void copySelection() }
-  else if (!isExternal.value && !formulaFocused && key === 'v') { event.preventDefault(); void pasteSelection() }
+  // The real paste event carries text/HTML without an asynchronous read-permission
+  // popup. Native control editing and empty/non-text clipboards keep their defaults.
+  else if (!isExternal.value && !formulaFocused && key === 'v') return
   else if (!isExternal.value && !formulaFocused && key === 'x') { event.preventDefault(); void cutSelection() }
   else if (!isExternal.value && !formulaFocused && key === 'z' && event.shiftKey) { event.preventDefault(); redo() }
   else if (!isExternal.value && !formulaFocused && key === 'z') { event.preventDefault(); undo() }

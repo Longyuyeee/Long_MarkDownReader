@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: copy budget is checked before assembling oversized retained cells
+ok 1 - copy budget is checked before assembling oversized retained cells
+  ---
+  duration_ms: 0.5581
+  ...
+# Subtest: integer sort distinguishes adjacent long identifiers without floating-point rounding
+ok 2 - integer sort distinguishes adjacent long identifiers without floating-point rounding
+  ---
+  duration_ms: 0.3014
+  ...
+# Subtest: clipboard quotes, embedded newlines, empty tails and exact text roundtrip
+ok 3 - clipboard quotes, embedded newlines, empty tails and exact text roundtrip
+  ---
+  duration_ms: 0.8553
+  ...
+# Subtest: filtered targets are stable IDs and whole paste has one reversible patch
+ok 4 - filtered targets are stable IDs and whole paste has one reversible patch
+  ---
+  duration_ms: 0.5134
+  ...
+# Subtest: append is bounded, undo preserves later-added columns and stable original identities
+ok 5 - append is bounded, undo preserves later-added columns and stable original identities
+  ---
+  duration_ms: 1.3956
+  ...
+# Subtest: out of view, columns, budgets and conflicting undo reject atomically
+ok 6 - out of view, columns, budgets and conflicting undo reject atomically
+  ---
+  duration_ms: 1.9261
+  ...
+# Subtest: zero-length and identical cells never cause spurious edits; formula-looking values stay text
+ok 7 - zero-length and identical cells never cause spurious edits; formula-looking values stay text
+  ---
+  duration_ms: 0.2555
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 363.1788

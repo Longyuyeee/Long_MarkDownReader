@@ -1,0 +1,124 @@
+{
+  "status": "passed",
+  "evidenceLevel": "actual-WorkbookView-real-headless-clipboard-and-input-simulated-native-IPC",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "Quoted multiline, empty trailing cell and identifier paste affect one row only; whole paste undo/redo; no auto-save",
+    "Own typed clipboard preserves literal = text and translates actual formula relative references, without guessing from its display",
+    "Copied multiline scalar is quoted and pastes back into one cell",
+    "Long-ID sort is exact; result copy includes header and only matching rows in sort order, preserving selection, hidden data and source grid",
+    "Actual pointer fill gives 0.1,0.2,0.3 and one undo restores the original target",
+    "Oversized native-cell text and malformed TSV reject whole paste without partial writes"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    },
+    {
+      "width": 760,
+      "height": 720
+    },
+    {
+      "width": 480,
+      "height": 720
+    },
+    {
+      "width": 360,
+      "height": 720
+    }
+  ],
+  "errors": [],
+  "requestedEdits": [
+    {
+      "sheet": "Sheet1",
+      "row": 1,
+      "column": 0,
+      "input": "会议\r\n备注",
+      "kind": "string"
+    },
+    {
+      "sheet": "Sheet1",
+      "row": 1,
+      "column": 2,
+      "input": "00124",
+      "kind": "string"
+    },
+    {
+      "sheet": "Sheet1",
+      "row": 1,
+      "column": 3,
+      "input": "",
+      "kind": "empty"
+    }
+  ],
+  "typedEdits": [
+    {
+      "sheet": "Sheet1",
+      "row": 5,
+      "column": 0,
+      "input": "=保留文本",
+      "kind": "string"
+    },
+    {
+      "sheet": "Sheet1",
+      "row": 5,
+      "column": 3,
+      "input": "=D3+D4",
+      "kind": "formula"
+    }
+  ],
+  "navigationOrder": [
+    "00007",
+    "00123",
+    "9007199254740993123",
+    "9007199254740993124"
+  ],
+  "resultClipboard": "任务\t状态\t编号\t数值\r\n=保留文本\t可见\t00007\t=D2+D3\r\n\"会议\r\n旧备注\"\t可见\t00123\t0.1\r\n核对文档\t可见\t9007199254740993123\t3"
+}

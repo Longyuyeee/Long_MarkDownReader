@@ -66,3 +66,11 @@ test('editing controls retain ordinary keys while an explicit save stays availab
  assert.deepEqual(calls,[])
  ctx.key({key:'s',target,ctrlKey:true,preventDefault(){}});assert.deepEqual(calls,['saveWorkbook'])
 })
+test('trusted paste event data is forwarded without reading async clipboard permissions',()=>{
+ const payloads=[],selectedCell=box({}),bindings={isExternal:box(false),saving:box(false),selectedCell,pasteSelection:payload=>payloads.push(payload)}
+ const ctx=extract('handleWorkbookPaste','pasteSelection',bindings,'globalThis.paste=handleWorkbookPaste')
+ const event=(types=['text/plain','text/html'],control=false)=>({target:{closest:()=>control?{}:null},clipboardData:{types,getData:type=>type==='text/plain'?'"会议\r\n备注"\t00123':'<table></table>'},preventDefault(){this.prevented=true},stopPropagation(){this.stopped=true}})
+ const valid=event();ctx.paste(valid);assert.equal(valid.prevented,true);assert.equal(valid.stopped,true);assert.equal(payloads[0].text,'"会议\r\n备注"\t00123')
+ for(const mode of ['control','empty','saving','external']){bindings.saving.value=mode==='saving';bindings.isExternal.value=mode==='external';const value=event(mode==='empty'?[]:['text/plain'],mode==='control');ctx.paste(value);assert.equal(payloads.length,1);if(mode==='control'||mode==='empty')assert.equal(value.prevented,undefined)}
+ assert.ok(!fs.readFileSync('src/utils/workbookClipboard.ts','utf8').includes('await navigator.clipboard.read()'))
+})

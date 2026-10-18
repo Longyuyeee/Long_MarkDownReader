@@ -72,16 +72,9 @@ export function decodeWorkbookClipboard(text: string, html = ''): { matrix: stri
   return { matrix, cells, mode: table?.getAttribute('data-operation') === 'cut' ? 'cut' : 'copy' }
 }
 export async function readWorkbookClipboard() {
-  if (!navigator.clipboard.read) return decodeWorkbookClipboard(await navigator.clipboard.readText())
-  const items = await navigator.clipboard.read()
-  const item = items.find(value => value.types.includes('text/plain'))
-  if (!item) throw Error('剪贴板没有可粘贴文本')
-  const plain = await item.getType('text/plain')
-  if (plain.size > WORKBOOK_CLIPBOARD_LIMITS.bytes) throw Error('剪贴板超过10MiB，本次未修改')
-  const text = await plain.text()
-  let html = ''
-  if (item.types.includes('text/html')) { const value = await item.getType('text/html'); if (value.size > WORKBOOK_CLIPBOARD_LIMITS.bytes) throw Error('剪贴板超过10MiB，本次未修改'); html = await value.text() }
-  return decodeWorkbookClipboard(text, html)
+  // The explicit menu preserves its original plain-text semantics. Keyboard
+  // paste uses ClipboardEvent data and never calls the permission-gated read().
+  return decodeWorkbookClipboard(await navigator.clipboard.readText())
 }
 export async function writeWorkbookClipboard(cells: WorkbookClipboardCell[][], mode: 'copy' | 'cut' = 'copy') {
   const { text, html } = encodeWorkbookClipboard(cells, mode)

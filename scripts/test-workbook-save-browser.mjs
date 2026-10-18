@@ -20,6 +20,9 @@ try {
   const errors = []; page.on('pageerror', error => { errors.push(error.message); console.error(error.message) })
   await page.goto(`${process.env.LONGEDIT_TEST_BASE_URL || 'http://127.0.0.1:9000'}/scripts/fixtures/workbook-save-browser.html`)
   const cell = page.locator('.workbook-cell').first()
+  // Deferred native-text reads are exercised through the real menu. Trusted
+  // keyboard ClipboardEvent paste is covered independently by the v1116 suite.
+  const pasteTextMenu = async () => { await page.locator('.action-menu-trigger').click(); await page.getByText('粘贴文本（自动识别）', { exact: true }).click() }
   await cell.waitFor(); await cell.dblclick()
   const formula = page.locator('input[placeholder="当前单元格不可编辑"]')
   await formula.fill('先核对交付日期'); await formula.press('Enter')
@@ -77,7 +80,7 @@ try {
   assert.equal(await page.getByText('过期读取失败', { exact: false }).count(), 0)
   await page.screenshot({ path: path.join(output, '06-sheet1-after-pending-read.png') })
   await cell.click()
-  await page.keyboard.press('Control+v')
+  await pasteTextMenu()
   await page.waitForFunction(() => !!window.clipboardAudit.read)
   await page.locator('.sheet-tabs button').filter({ hasText: 'Sheet2' }).click()
   await page.getByText('第二张表补充客户记录', { exact: true }).waitFor()
@@ -95,7 +98,7 @@ try {
   await page.waitForTimeout(250)
   await page.screenshot({ path: path.join(output, '07-stale-clipboard-blocked.png') })
   // Valid-context clipboard operations must still work.
-  await cell.click(); await page.keyboard.press('Control+v')
+  await cell.click(); await pasteTextMenu()
   await page.waitForFunction(() => !!window.clipboardAudit.read)
   await page.evaluate(() => window.clipboardAudit.read('当前选区正常粘贴'))
   await page.getByText('当前选区正常粘贴', { exact: true }).waitFor()

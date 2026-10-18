@@ -1,0 +1,210 @@
+TAP version 13
+# Subtest: workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input
+ok 1 - workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input
+  ---
+  duration_ms: 9.7433
+  ...
+# Subtest: v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes
+ok 2 - v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes
+  ---
+  duration_ms: 34.6605
+  ...
+# Subtest: driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement
+ok 3 - driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement
+  ---
+  duration_ms: 0.9909
+  ...
+# Subtest: XLSX identifiers remain exact text while ordinary numbers stay numeric
+ok 4 - XLSX identifiers remain exact text while ordinary numbers stay numeric
+  ---
+  duration_ms: 1.0089
+  ...
+# Subtest: XLSX integer sorting distinguishes long adjacent IDs, empty and zero
+ok 5 - XLSX integer sorting distinguishes long adjacent IDs, empty and zero
+  ---
+  duration_ms: 0.2399
+  ...
+# Subtest: decimal fill is exact and refuses unreliable results before mutation
+ok 6 - decimal fill is exact and refuses unreliable results before mutation
+  ---
+  duration_ms: 0.5082
+  ...
+# Subtest: quoted multiline/tab/quotes/empty tails and scalar literal quotes roundtrip
+ok 7 - quoted multiline/tab/quotes/empty tails and scalar literal quotes roundtrip
+  ---
+  duration_ms: 1.899
+  ...
+# Subtest: native length, coordinate shape and batch budgets refuse whole clipboard
+ok 8 - native length, coordinate shape and batch budgets refuse whole clipboard
+  ---
+  duration_ms: 20.845
+  ...
+# Subtest: actual batch validates all targets and types before changing drafts or history
+ok 9 - actual batch validates all targets and types before changing drafts or history
+  ---
+  duration_ms: 146.7669
+  ...
+# Subtest: actual filtered copy refuses unloaded pages and changed conditions without a clipboard write
+ok 10 - actual filtered copy refuses unloaded pages and changed conditions without a clipboard write
+  ---
+  duration_ms: 32.1017
+  ...
+# Subtest: cut cannot clear a later edit while awaiting the clipboard receipt
+ok 11 - cut cannot clear a later edit while awaiting the clipboard receipt
+  ---
+  duration_ms: 3.0365
+  ...
+# Subtest: editing controls retain ordinary keys while an explicit save stays available
+ok 12 - editing controls retain ordinary keys while an explicit save stays available
+  ---
+  duration_ms: 8.9129
+  ...
+# Subtest: trusted paste event data is forwarded without reading async clipboard permissions
+ok 13 - trusted paste event data is forwarded without reading async clipboard permissions
+  ---
+  duration_ms: 7.285
+  ...
+# Subtest: drawing context checks document, object, series and editability
+ok 14 - drawing context checks document, object, series and editability
+  ---
+  duration_ms: 39.6331
+  ...
+# Subtest: every drawing prompt rejects changed targets at each await and preserves cancellation
+ok 15 - every drawing prompt rejects changed targets at each await and preserves cancellation
+  ---
+  duration_ms: 117.3331
+  ...
+# Subtest: drawing delete and move confirmations reject changed contexts
+ok 16 - drawing delete and move confirmations reject changed contexts
+  ---
+  duration_ms: 19.5674
+  ...
+# Subtest: chart creation rejects a stale prompt without changing chart creation requirements
+ok 17 - chart creation rejects a stale prompt without changing chart creation requirements
+  ---
+  duration_ms: 10.3646
+  ...
+# Subtest: drawing writes preserve switched sheets and isolate replaced documents
+ok 18 - drawing writes preserve switched sheets and isolate replaced documents
+  ---
+  duration_ms: 37.5871
+  ...
+# Subtest: defined name writes isolate receipts and release save locks
+ok 19 - defined name writes isolate receipts and release save locks
+  ---
+  duration_ms: 19.3895
+  ...
+# Subtest: defined name prompts and deletion reject stale targets
+ok 20 - defined name prompts and deletion reject stale targets
+  ---
+  duration_ms: 42.0666
+  ...
+# Subtest: filter clear confirmation rejects changed context or region
+ok 21 - filter clear confirmation rejects changed context or region
+  ---
+  duration_ms: 7.7289
+  ...
+# Subtest: filter save isolates stale receipts and retains failure input
+ok 22 - filter save isolates stale receipts and retains failure input
+  ---
+  duration_ms: 18.5877
+  ...
+# Subtest: outline writes guard ownership, locking and row/column payloads
+ok 23 - outline writes guard ownership, locking and row/column payloads
+  ---
+  duration_ms: 38.0897
+  ...
+# Subtest: structure receipts isolate stale documents and preserve a switched sheet
+ok 24 - structure receipts isolate stale documents and preserve a switched sheet
+  ---
+  duration_ms: 32.7062
+  ...
+# Subtest: row/column deletion confirmation cannot follow a changed target
+ok 25 - row/column deletion confirmation cannot follow a changed target
+  ---
+  duration_ms: 14.0919
+  ...
+# Subtest: structure commit rechecks dirty and protected state after confirmation
+ok 26 - structure commit rechecks dirty and protected state after confirmation
+  ---
+  duration_ms: 16.8533
+  ...
+# Subtest: clear confirmations reject changed targets, drafts and busy state
+ok 27 - clear confirmations reject changed targets, drafts and busy state
+  ---
+  duration_ms: 19.9977
+  ...
+# Subtest: page setting writes snapshot parameters and isolate stale receipts
+ok 28 - page setting writes snapshot parameters and isolate stale receipts
+  ---
+  duration_ms: 10.5027
+  ...
+# Subtest: freeze writes lock editing, retain current sheet and reject old receipts
+ok 29 - freeze writes lock editing, retain current sheet and reject old receipts
+  ---
+  duration_ms: 20.2035
+  ...
+# Subtest: saving blocks direct draft mutation entry points
+ok 30 - saving blocks direct draft mutation entry points
+  ---
+  duration_ms: 18.7286
+  ...
+# Subtest: selection restoration stops when another view wins either read
+ok 31 - selection restoration stops when another view wins either read
+  ---
+  duration_ms: 19.5864
+  ...
+# Subtest: validation write receipts respect document ownership and release window save guards
+ok 32 - validation write receipts respect document ownership and release window save guards
+  ---
+  duration_ms: 17.6656
+  ...
+# Subtest: formula flush preserves existing values but validates actual edits
+ok 33 - formula flush preserves existing values but validates actual edits
+  ---
+  duration_ms: 4.8225
+  ...
+# Subtest: data validation single form preserves cancellation, stale-context and metadata guards
+ok 34 - data validation single form preserves cancellation, stale-context and metadata guards
+  ---
+  duration_ms: 34.3848
+  ...
+# Subtest: data validation edit and delete cannot commit to a changed sheet
+ok 35 - data validation edit and delete cannot commit to a changed sheet
+  ---
+  duration_ms: 7.7254
+  ...
+# Subtest: saving blocks editing shortcuts but preserves copying and navigation
+ok 36 - saving blocks editing shortcuts but preserves copying and navigation
+  ---
+  duration_ms: 8.5975
+  ...
+# Subtest: clipboard context is invalidated by save, document, sheet and selection changes
+ok 37 - clipboard context is invalidated by save, document, sheet and selection changes
+  ---
+  duration_ms: 2.2368
+  ...
+# Subtest: format dialogs ignore confirmations from a stale editing context
+ok 38 - format dialogs ignore confirmations from a stale editing context
+  ---
+  duration_ms: 9.3304
+  ...
+# Subtest: custom format still applies when context is unchanged
+ok 39 - custom format still applies when context is unchanged
+  ---
+  duration_ms: 2.7019
+  ...
+# Subtest: formula fill stops before applying edits when translation returns to a stale context
+ok 40 - formula fill stops before applying edits when translation returns to a stale context
+  ---
+  duration_ms: 11.7237
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 40
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1052.6698
