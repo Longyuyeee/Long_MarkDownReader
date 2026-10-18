@@ -165,6 +165,7 @@ if (pkg.version === '1.1.14' && policy.gates?.githubReleasePublished === true) {
   execFileSync(process.execPath,['scripts/check-v1114-readme-publication.mjs'],{stdio:'inherit'})
 }
 if (pkg.version === '1.1.15' && policy.gates?.githubReleasePublished === true) execFileSync(process.execPath,['scripts/check-v1115-readme-publication.mjs'],{stdio:'inherit'})
+if (pkg.version === '1.1.16' && policy.gates?.githubReleasePublished === true) execFileSync(process.execPath,['scripts/check-v1116-readme-publication.mjs'],{stdio:'inherit'})
 const v122Published = policy.appVersion === '1.0.22' && policy.gates?.githubReleasePublished === true
 const v123Candidate = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === false && development.publicVersion === '1.0.22'
 const v123Published = policy.appVersion === '1.0.23' && policy.gates?.githubReleasePublished === true && development.publicVersion === '1.0.23'
