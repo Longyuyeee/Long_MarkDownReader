@@ -27,6 +27,7 @@ export async function runInstalledV1117Workflow({send,evaluate,navigate,capture,
       if(index===0){
         await ui.click('[title="保存到原文件"]');await dialogButton('取消');assert.equal(sha(await fs.readFile(source)),beforeHash);assert.equal(await evaluate(body+'.value'),first);report.cancelExact=true;check(1)
         await ui.click('[title="重新读取"]');await dialogButton('继续编辑');assert.equal(await evaluate(body+'.value'),first);report.reloadCancelExact=true
+        await evaluate(`location.hash=${q('#/library?path='+encodeURIComponent(source)+'&external=1')}`);await ui.waitFor('!!document.querySelector(".n-dialog")','same-path external transition protects draft');await dialogButton('继续编辑');await ui.waitFor(`!!${body}&&${body}.value===${q(first)}`,'cancelled external transition retains draft');assert.equal(sha(await fs.readFile(source)),beforeHash);report.samePathExternalDraftProtected=true
         const count=await evaluate('document.querySelector(".docx-editor select").options.length');assert.ok(count>=2,'Producer must expose multiple genuine editable targets')
         await ui.click('.docx-editor select');await ui.key('Home','Home',36);await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)
         await ui.waitFor(`document.querySelector('.docx-editor select')?.selectedIndex===1&&${body}?.value!==${q(first)}`,'second genuine editable target selected')

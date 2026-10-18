@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input
+ok 1 - workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input
+  ---
+  duration_ms: 4.4998
+  ...
+# Subtest: v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes
+ok 2 - v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes
+  ---
+  duration_ms: 23.3347
+  ...
+# Subtest: driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement
+ok 3 - driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement
+  ---
+  duration_ms: 0.6337
+  ...
+# Subtest: DOCX receipt refuses partial checks, wrong identities, data loss, scripted input and overstated Office acceptance
+ok 4 - DOCX receipt refuses partial checks, wrong identities, data loss, scripted input and overstated Office acceptance
+  ---
+  duration_ms: 11.9656
+  ...
+# Subtest: DOCX raw output bytes cannot be substituted after validation
+ok 5 - DOCX raw output bytes cannot be substituted after validation
+  ---
+  duration_ms: 0.2184
+  ...
+# Subtest: v1.1.17 retains every prior installed report and binds all nine DOCX outputs to the same package and driver
+ok 6 - v1.1.17 retains every prior installed report and binds all nine DOCX outputs to the same package and driver
+  ---
+  duration_ms: 23.8736
+  ...
+# Subtest: native DOCX driver uses trusted input, real producer files and independent ZIP XML; all publication stages bind outputs
+ok 7 - native DOCX driver uses trusted input, real producer files and independent ZIP XML; all publication stages bind outputs
+  ---
+  duration_ms: 0.599
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 111.8058

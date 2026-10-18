@@ -1595,7 +1595,9 @@ watch(
 )
 watch(() => [route.query.locator, route.query.locatorToken], scrollToRouteLocator)
 onBeforeRouteLeave(() => mayLeave())
-onBeforeRouteUpdate((to, from) => to.query.path === from.query.path || mayLeave())
+onBeforeRouteUpdate((to, from) => (
+  to.query.path === from.query.path && to.query.external === from.query.external
+) || mayLeave())
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnload)
   window.addEventListener('keydown', saveShortcut)

@@ -8,7 +8,7 @@ export function validateInstalledDocxEditing(report, manifest) {
   assert.match(report.executableSha256,/^[a-f0-9]{64}$/); assert.equal(report.status,'passed'); assert.equal(report.evidenceLevel,'installed-docx-native-save-and-independent-zip-xml')
   for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)
   assert.deepEqual(report.checks.map(check=>[check.id,check.status]),docxEditingChecks.map(id=>[id,'passed']))
-  for(const key of ['cancelExact','sourceSavedExact','copySourceUnchanged','undoRedoExact','collisionExact','reloadCancelExact','shortcutConfirmed','externalReadOnly','unauthorizedExternalRejected'])assert.equal(report[key],true,key)
+  for(const key of ['cancelExact','sourceSavedExact','copySourceUnchanged','undoRedoExact','collisionExact','reloadCancelExact','shortcutConfirmed','externalReadOnly','unauthorizedExternalRejected','samePathExternalDraftProtected'])assert.equal(report[key],true,key)
   assert.equal(report.unselectedBefore,report.unselectedAfter); assert.match(report.unselectedBefore,/^[a-f0-9]{64}$/); assert.deepEqual(report.runtimeErrors,[])
   for(const type of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(event=>event.type===type&&event.trusted),type)
   assert.ok(report.inputTrace.every(event=>event.trusted))

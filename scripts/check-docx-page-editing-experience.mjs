@@ -78,6 +78,7 @@ requireTokens(view, 'DOCX unsaved draft protection', [
   "default: () => '保存并离开'",
   'onBeforeRouteLeave(() => mayLeave())',
   'onBeforeRouteUpdate((to, from)',
+  'to.query.path === from.query.path && to.query.external === from.query.external',
   "window.addEventListener('beforeunload', beforeUnload)",
 ])
 requireTokens(view, 'DOCX automatic checks and receipt ownership', [
