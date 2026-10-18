@@ -41,6 +41,7 @@ test('actual native acceptance and independent output readers remain mandatory a
  for(const token of ['dispatchEvent(','__TAURI_INTERNALS__=','force:true','force: true'])assert.ok(!driver.includes(token),token)
  for(const token of ['nativeUserInput','inspect-hosted-organizing.py','validateInstalledOrganizing','rename_item','originalExtendedSha256','flag:\'wx\''])assert.ok(driver.includes(token),token)
  for(const file of ['scripts/lib/installed-release-runtime.mjs','scripts/import-community-release-review.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('assertOrganizingOutputBytes'),file)
+ assert.ok(fs.readFileSync('scripts/retain-v1119-raw-evidence.mjs','utf8').includes('|canvas|opml|md|'),'Retain actual Canvas, OPML and unselected Markdown bytes, not JSON claims alone')
  const tree=ts.createSourceFile('driver.mjs',driver,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS);let count=0
  const walk=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ui\.waitFor)$/.test(node.expression.getText(tree))){const arg=node.arguments[0];if(arg&&(ts.isStringLiteral(arg)||ts.isNoSubstitutionTemplateLiteral(arg))){assert.doesNotThrow(()=>new vm.Script(arg.text),arg.text);count++}}ts.forEachChild(node,walk)};walk(tree);assert.ok(count>=15)
 })
