@@ -564,4 +564,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.16 深化现有 XLSX 的字段复制、编号、筛选结果、引用填充与输入保护。主要修复和实际组件验证已完成，正在固定安装包验收；尚未封板或发布，下载仍为 v1.1.15。[开发记录](docs/V1_1_16_XLSX_Development_2026-10-18.md) · [验收进度](docs/V1_1_16_Unsigned_Community_Release_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.16 深化现有 XLSX 的字段复制、编号、筛选结果、引用填充与输入保护。固定安装包及独立同包复核已通过，正在完成封板 CI 与发布收尾；尚未公开，下载仍为 v1.1.15。[开发记录](docs/V1_1_16_XLSX_Development_2026-10-18.md) · [验收进度](docs/V1_1_16_Unsigned_Community_Release_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
