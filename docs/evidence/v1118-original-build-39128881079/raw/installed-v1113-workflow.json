@@ -1,0 +1,523 @@
+{
+  "appVersion": "1.1.18",
+  "sourceCommit": "9b621511807e4233147a5a6d4265a2be97f53b0f",
+  "installerSha256": "18e42fd58844755100c02a6522c47fd7a22fc6a0cb366649d1d8de0c0e937213",
+  "harnessSourceCommit": "9b621511807e4233147a5a6d4265a2be97f53b0f",
+  "executableSha256": "578ce7e2c0ca745e5292dde5a8a4edd7b7cfa0c476a4a29f3666cbf00f28ce38",
+  "evidenceLevel": "installed-webview-input-native-pdf-notes-picker-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "installed-identity-and-source-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "long-pdf-filtered-paginated-annotations",
+      "status": "passed"
+    },
+    {
+      "id": "selected-notes-preview-only",
+      "status": "passed"
+    },
+    {
+      "id": "draft-only-append-keeps-unsaved-input-and-disk",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-persists-source-links",
+      "status": "passed"
+    },
+    {
+      "id": "source-link-returns-exact-page-annotation",
+      "status": "passed"
+    },
+    {
+      "id": "deleted-annotation-honest-page-fallback",
+      "status": "passed"
+    },
+    {
+      "id": "legacy-link-remains-explicitly-unverified",
+      "status": "passed"
+    },
+    {
+      "id": "real-native-new-note-picker-and-selected-output",
+      "status": "passed"
+    },
+    {
+      "id": "existing-note-never-overwritten",
+      "status": "passed"
+    },
+    {
+      "id": "same-size-same-time-replacement-rejected",
+      "status": "passed"
+    },
+    {
+      "id": "moved-source-user-relinks-verified-draft",
+      "status": "passed"
+    },
+    {
+      "id": "relative-restored-copy-keeps-source-identity",
+      "status": "passed"
+    },
+    {
+      "id": "original-pdf-sidecar-unselected-bytes-and-no-errors",
+      "status": "passed"
+    }
+  ],
+  "sourceBefore": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+  "sidecarBefore": "1263138c138fbcf89dae68cdac6f84cc3cd23b69e856fc4e79157b98a9a35f74",
+  "unselectedBefore": "c5cc304c5742c0f757b3dd9d343cc5fb6e3ab7a6b177d94481c14c9a7795808b",
+  "annotationCount": 240,
+  "selectedIds": [
+    "reading-11",
+    "reading-14"
+  ],
+  "pdfPages": 86,
+  "editorModes": {
+    "before": "sv",
+    "after": "sv"
+  },
+  "dirtyBeforeInsert": true,
+  "targetSignatureBefore": "15:1792329610590334300:aee6c983c93433d9a2204e99b40ddcf5",
+  "filteredCount": 6,
+  "previewCount": 2,
+  "snapshot": {
+    "sourceDigest": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+    "sourceSignature": "31248:1792329610585774900",
+    "relativePath": "v1113-reading-829392d5-bda5-41a7-af8b-7f5ad8d7935f/研究 来源.pdf",
+    "items": [
+      {
+        "annotation": {
+          "id": "reading-11",
+          "kind": "comment",
+          "page": 12,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "用户阅读评论 11",
+          "createdAt": 12,
+          "updatedAt": 12
+        },
+        "uri": "longedit://pdf?path=v1113-reading-829392d5-bda5-41a7-af8b-7f5ad8d7935f%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 12 页"
+      },
+      {
+        "annotation": {
+          "id": "reading-14",
+          "kind": "highlight",
+          "page": 15,
+          "color": "yellow",
+          "rects": [
+            {
+              "x": 0.08,
+              "y": 0.07,
+              "width": 0.6,
+              "height": 0.05
+            }
+          ],
+          "quote": "Reading source page 15",
+          "comment": "用户阅读评论 14",
+          "createdAt": 15,
+          "updatedAt": 15
+        },
+        "uri": "longedit://pdf?path=v1113-reading-829392d5-bda5-41a7-af8b-7f5ad8d7935f%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 15 页"
+      }
+    ]
+  },
+  "exactDraftPrefix": true,
+  "dirtyAfterInsert": true,
+  "targetSignatureAfterInsert": "15:1792329610590334300:aee6c983c93433d9a2204e99b40ddcf5",
+  "draftDiskUnchangedBeforeSave": true,
+  "appendedDraftSha256": "b6cdf6da8267e0cb8de908fdfe7addc090ec167fbac2c9cbda199318ff31b8f3",
+  "saveExpectation": {
+    "observedFrom": "rendered-vditor-source-before-explicit-save",
+    "mode": "sv",
+    "markdown": "# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n# 研究 来源 · 阅读笔记\n\n## 第 12 页\n\n评论：用户阅读评论 11\n\n[来源：研究 来源.pdf · 第 12 页](longedit://pdf?path=v1113-reading-829392d5-bda5-41a7-af8b-7f5ad8d7935f%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n## 第 15 页\n\n> Reading source page 15\n\n评论：用户阅读评论 14\n\n[来源：研究 来源.pdf · 第 15 页](longedit://pdf?path=v1113-reading-829392d5-bda5-41a7-af8b-7f5ad8d7935f%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n",
+    "encoding": "UTF-8",
+    "bom": "none",
+    "lineEnding": "lf",
+    "hasFinalNewline": true
+  },
+  "draftBeforeSaveSha256": "e590b55140af6197ce77156bfb531f94a913e94152598f53fa01aa169a96c817",
+  "explicitSavedSha256": "e590b55140af6197ce77156bfb531f94a913e94152598f53fa01aa169a96c817",
+  "explicitSave": true,
+  "sourceRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "returnedExactAnnotation": true,
+  "deletedNotice": {
+    "observedFrom": "rendered-reference-notice-in-panel-viewport",
+    "text": "引用对应的批注不存在或已被删除，已定位到引用页码。",
+    "top": 363.96875,
+    "bottom": 413.84375,
+    "parentTop": 354.96875,
+    "parentBottom": 789.40625,
+    "visible": true
+  },
+  "deletedAnnotationNotice": true,
+  "legacySourceNotice": {
+    "observedFrom": "rendered-reference-notice-in-panel-viewport",
+    "text": "旧引用没有内容摘要，仅按路径、页码和批注 ID 定位，请核对来源。",
+    "top": 363.96875,
+    "bottom": 413.84375,
+    "parentTop": 354.96875,
+    "parentBottom": 789.40625,
+    "visible": true
+  },
+  "legacyNotice": true,
+  "nativePicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 2868,
+    "dialogProcessId": 2868,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "保存新的 PDF 阅读笔记（不覆盖已有文件）",
+    "fileNameAutomationId": "1001",
+    "selectedPath": "C:\\LongEditR5ILibrary\\v1113-reading-829392d5-bda5-41a7-af8b-7f5ad8d7935f\\阅读成果.md",
+    "inputCharacters": 80,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 983816,
+        "ParentHandle": 1114906,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 656204,
+        "ParentHandle": 983816,
+        "ControlId": 1001,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 328572,
+        "ParentHandle": 656132,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 525164,
+        "ParentHandle": 656050,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 263048,
+        "ParentHandle": 590452,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 328536,
+        "ParentHandle": 590452,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 721664,
+        "ParentHandle": 590452,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 787120,
+        "ParentHandle": 590452,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 656070,
+        "ParentHandle": 394112,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 459614,
+        "ParentHandle": 656070,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 787110,
+        "ParentHandle": 459614,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 721644,
+        "ParentHandle": 459602,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 983826,
+        "ParentHandle": 721644,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 918314,
+        "ParentHandle": 983826,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "newNoteSelectedOnly": true,
+  "existingTargetPreserved": true,
+  "replacement": {
+    "beforeBytes": 31248,
+    "status": "same-size-same-native-timestamp",
+    "beforeTicks": "639279264105857749",
+    "afterBytes": 31248,
+    "afterTicks": "639279264105857749"
+  },
+  "replacementTimestampPreserved": true,
+  "replacementRejected": true,
+  "movedRelinkDirtyOnly": true,
+  "movedRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "movedRelinkReturnedExact": true,
+  "restoredReferenceVerified": true,
+  "restoredRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "restoredPageVisible": true,
+  "sourceAfter": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+  "sidecarAfter": "1263138c138fbcf89dae68cdac6f84cc3cd23b69e856fc4e79157b98a9a35f74",
+  "unselectedAfter": "c5cc304c5742c0f757b3dd9d343cc5fb6e3ab7a6b177d94481c14c9a7795808b",
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

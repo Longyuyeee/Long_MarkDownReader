@@ -1,0 +1,795 @@
+{
+  "appVersion": "1.1.18",
+  "sourceCommit": "9b621511807e4233147a5a6d4265a2be97f53b0f",
+  "installerSha256": "18e42fd58844755100c02a6522c47fd7a22fc6a0cb366649d1d8de0c0e937213",
+  "harnessSourceCommit": "c2767ccf88a5335e8b8c585b2889345b894504ca",
+  "executableSha256": "578ce7e2c0ca745e5292dde5a8a4edd7b7cfa0c476a4a29f3666cbf00f28ce38",
+  "evidenceLevel": "installed-workbook-real-clipboard-native-save-and-independent-producer",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "owned-independent-producer-fixture",
+      "status": "passed"
+    },
+    {
+      "id": "quoted-paste-and-whole-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "literal-text-copy-retains-type",
+      "status": "passed"
+    },
+    {
+      "id": "formula-copy-translates-relative-reference",
+      "status": "passed"
+    },
+    {
+      "id": "numeric-pointer-fill-and-undo",
+      "status": "passed"
+    },
+    {
+      "id": "precise-long-id-sort",
+      "status": "passed"
+    },
+    {
+      "id": "filtered-results-only-no-grid-mutation",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-native-save-and-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "independent-disk-types-and-untouched-parts",
+      "status": "passed"
+    },
+    {
+      "id": "independent-producer-reopen-and-app-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "formula-cut-preserves-references-and-undo",
+      "status": "passed"
+    },
+    {
+      "id": "editing-controls-own-delete-copy-paste-and-return-to-grid",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-no-overlay-unselected-preserved",
+      "status": "passed"
+    }
+  ],
+  "unselectedBefore": "e4cc9aa743710d91bb17da5b085a778fd621d9f2c9753f8e691fac52bd7b3c0b",
+  "sourceBefore": "9e588363c8ee04b3a7465714f7a82b4beb0cea898aa074130b8fb6653cf7a4ab",
+  "receivedClipboardText": [
+    "\"会议\r\n备注\"\t可见\t00124"
+  ],
+  "foregroundBeforePaste": [
+    true,
+    true,
+    true
+  ],
+  "focusAfterClick": [
+    {
+      "focused": true,
+      "activeElement": "DIV",
+      "activation": true,
+      "visibility": "visible"
+    }
+  ],
+  "pasteUndoExact": true,
+  "literalTextExact": true,
+  "formulaTranslationExact": true,
+  "cutFormulaExact": true,
+  "decimalFillExact": true,
+  "navigationOrder": [
+    "00007",
+    "00124",
+    "9007199254740993123",
+    "9007199254740993124"
+  ],
+  "filteredCopyExact": true,
+  "editControlsProtected": true,
+  "nativeReopenExact": true,
+  "workbookInspection": {
+    "status": "passed",
+    "nativeBridgeMocked": false,
+    "sourceUserContentIncluded": false,
+    "reader": "openpyxl-3.1.5-hash-pinned",
+    "sha256": "60ba2780afa9c17a86a3d8261f3a65ec2e105943b7cb59fad6076279c75adcf7",
+    "beforeSha256": "9e588363c8ee04b3a7465714f7a82b4beb0cea898aa074130b8fb6653cf7a4ab",
+    "cells": {
+      "A1": "任务",
+      "B1": "状态",
+      "C1": "编号",
+      "D1": "数值",
+      "A2": "会议\n备注",
+      "B2": "可见",
+      "C2": "00124",
+      "D2": "0.1",
+      "A3": "不要修改",
+      "B3": "隐藏",
+      "C3": "9007199254740993124",
+      "D3": "0.2",
+      "A4": "核对文档",
+      "B4": "可见",
+      "C4": "9007199254740993123",
+      "D4": "0.3",
+      "A5": "=保留文本",
+      "B5": "可见",
+      "C5": "00007",
+      "D5": "=D2+D3",
+      "A6": "=保留文本",
+      "B6": "",
+      "C6": "",
+      "D6": "=D3+D4"
+    },
+    "types": {
+      "A1": "s",
+      "B1": "s",
+      "C1": "s",
+      "D1": "s",
+      "A2": "s",
+      "B2": "s",
+      "C2": "s",
+      "D2": "n",
+      "A3": "s",
+      "B3": "s",
+      "C3": "s",
+      "D3": "n",
+      "A4": "s",
+      "B4": "s",
+      "C4": "s",
+      "D4": "n",
+      "A5": "s",
+      "B5": "s",
+      "C5": "s",
+      "D5": "f",
+      "A6": "s",
+      "B6": "n",
+      "C6": "n",
+      "D6": "f"
+    },
+    "preservedParts": [
+      {
+        "part": "xl/worksheets/sheet2.xml",
+        "sha256": "16e2c86340f5c5a8af4bc1691629b2a25a99362c394b83008c4c1fdf53abdb16"
+      },
+      {
+        "part": "docProps/core.xml",
+        "sha256": "638c16858cfdb1f55b324a01ff1c63071b39ee7c1557d76627e84887b49e049a"
+      },
+      {
+        "part": "docProps/app.xml",
+        "sha256": "209fca6b00afe72a5029754b94be5953d8f16d96f67130325566b9366ad4ccc5"
+      },
+      {
+        "part": "xl/_rels/workbook.xml.rels",
+        "sha256": "15586b8b5fa62b6cbe80c791dc12827c15c2c511f84901daf48e025d77259225"
+      },
+      {
+        "part": "[Content_Types].xml",
+        "sha256": "8b17c67fc07ed1bc8cddabf0c66e4fb2195cfdb89689998adc2dccbaca1fb71b"
+      }
+    ],
+    "producerReopen": {
+      "status": "passed",
+      "sha256": "156fe72f56c6d84353998a7e6c8dea13a446705b81eefcb328b12a9196f71888",
+      "formulaCalculated": false,
+      "officeVisualAcceptance": false
+    }
+  },
+  "producerAppReopenExact": true,
+  "unselectedAfter": "e4cc9aa743710d91bb17da5b085a778fd621d9f2c9753f8e691fac52bd7b3c0b",
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "v",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "c",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "v",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "c",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "v",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "x",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "v",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "z",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "y",
+      "ctrlKey": true,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SELECT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace",
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "BUTTON"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Home",
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Delete",
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "c",
+      "ctrlKey": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a",
+      "ctrlKey": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "v",
+      "ctrlKey": true,
+      "target": "INPUT"
+    },
+    {
+      "type": "paste",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "INPUT"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "ArrowRight",
+      "ctrlKey": false,
+      "target": "DIV"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false,
+  "uiMessages": [
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "已复制 1 × 1 区域",
+    "已复制 3 行会话结果和表头；原工作表与选区未改变",
+    "工作簿已保存"
+  ],
+  "clipboardCapabilities": {
+    "secure": true,
+    "read": "function",
+    "write": "function",
+    "readText": "function",
+    "focused": true
+  }
+}
