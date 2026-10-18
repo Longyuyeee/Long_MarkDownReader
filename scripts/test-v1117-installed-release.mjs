@@ -44,4 +44,7 @@ test('native DOCX driver uses trusted input, real producer files and independent
  for(const token of ['dispatchEvent(','__TAURI_INTERNALS__=','force: true','force:true'])assert.ok(!driver.includes(token),token)
  for(const token of ['nativeUserInput','fixtures/docx/producers','inspect-hosted-docx-delivery.py','validateInstalledDocxEditing','COPYFILE_EXCL','shortcutConfirmed'])assert.ok(driver.includes(token),token)
  for(const file of ['scripts/lib/installed-release-runtime.mjs','scripts/import-community-release-review.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('assertDocxOutputBytes'),file)
+ for(const file of ['.github/workflows/v1-1-0-candidate-lifecycle.yml','.github/workflows/v1-1-0-installer-review.yml']){
+  const source=fs.readFileSync(file,'utf8');assert.equal((source.match(/if: contains\(fromJSON\('\["1\.1\.16","1\.1\.17"\]'\), inputs\.current_version\)/g)||[]).length,2,'Both Python setup and pinned install must include the successor')
+ }
 })
