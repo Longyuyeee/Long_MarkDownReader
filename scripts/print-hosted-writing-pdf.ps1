@@ -16,6 +16,7 @@ public static class WritingPrintWindows {
  [DllImport("user32.dll",CharSet=CharSet.Unicode)]static extern int GetClassName(IntPtr h,StringBuilder b,int n);
  [DllImport("user32.dll")]static extern int GetDlgCtrlID(IntPtr h);
  [DllImport("user32.dll")]static extern IntPtr GetWindow(IntPtr h,uint f);
+ [DllImport("user32.dll")]public static extern bool IsWindowEnabled(IntPtr h);
  [DllImport("user32.dll",EntryPoint="SendMessageW")]public static extern IntPtr Send(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll")]public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
  public class Item{public long Handle;public uint Pid;public uint OwnerPid;public string Title;public string ClassName;public int Id;}
@@ -55,7 +56,7 @@ try{
     if($win.Title -match '^(Print|打印)$' -and $result.defaultPrinter -eq 'Microsoft Print to PDF'){
      $children=@([WritingPrintWindows]::Children($win.Handle));$result.nativePrintControls=$children
      $printOk=$children|Where-Object {$_.ClassName -eq 'Button' -and $_.Id -eq 1}|Select-Object -First 1
-     if($printOk){
+     if($printOk -and [WritingPrintWindows]::IsWindowEnabled([IntPtr]$printOk.Handle)){
       if(-not [WritingPrintWindows]::PostMessage([IntPtr]$win.Handle,273,[IntPtr]1,[IntPtr]$printOk.Handle)){throw 'Could not confirm the exact owned native Print dialog'}
       $result.actions+=@('confirmed-owned-native-system-print-dialog-with-PDF-default');$printed=$true;break
      }
@@ -87,8 +88,18 @@ try{
  }while([DateTime]::UtcNow -lt $deadline)
  if(-not $saved -or -not(Test-Path -LiteralPath $targetFile)){throw 'A real native print output was not produced; preserve print UI diagnostics'}
  $wait=[DateTime]::UtcNow.AddSeconds(20)
- do{$length=(Get-Item -LiteralPath $targetFile).Length;if($length -gt 1000){break};Start-Sleep -Milliseconds 100}while([DateTime]::UtcNow -lt $wait)
- if($length -le 1000){throw 'The native print output is empty or incomplete'}
+ $complete=$false
+ do{
+  $length=(Get-Item -LiteralPath $targetFile).Length
+  if($length -gt 1000){
+   try{
+    $stream=[IO.File]::Open($targetFile,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::None)
+    try{$null=$stream.Seek([Math]::Max(0,$stream.Length-1024),[IO.SeekOrigin]::Begin);$tail=New-Object byte[] 1024;$count=$stream.Read($tail,0,$tail.Length);$complete=[Text.Encoding]::ASCII.GetString($tail,0,$count).Contains('%%EOF')}finally{$stream.Dispose()}
+   }catch{$result.outputWaitNotice=[string]$_}
+  }
+  if($complete){break};Start-Sleep -Milliseconds 100
+ }while([DateTime]::UtcNow -lt $wait)
+ if(-not $complete){throw 'The native print output is empty, still open for writing, or lacks its PDF end marker'}
  $result.status='saved-real-native-print-pdf';$result.sizeBytes=$length;$result.sha256=(Get-FileHash -LiteralPath $targetFile -Algorithm SHA256).Hash.ToLowerInvariant();$result.executable=$Executable
 }catch{$result.status='failed';$result.failure=[string]$_;throw}
 finally{[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))}

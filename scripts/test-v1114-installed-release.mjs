@@ -2,6 +2,9 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
+import os from 'node:os'
+import path from 'node:path'
+import {execFileSync} from 'node:child_process'
 import {test} from 'node:test'
 import {writingDeliveryChecks,validateInstalledWritingDelivery} from './lib/installed-v1-1-14-evidence.mjs'
 import {assertInstalledReleaseRuntime} from './lib/installed-release-runtime.mjs'
@@ -33,4 +36,38 @@ test('v1.1.14 requires all predecessor reports plus writing with the same source
  update();assert.doesNotThrow(()=>assertInstalledReleaseRuntime(manifest,f=>bytes.get(f)))
  for(const key of Object.keys(reports)){const old=reports[key];delete reports[key];update();assert.throws(()=>assertInstalledReleaseRuntime(manifest,f=>bytes.get(f)),key);reports[key]=old}
  for(const field of ['executableSha256','harnessSourceCommit']){const old=reports.writingDelivery[field];reports.writingDelivery[field]='0'.repeat(old.length);update();assert.throws(()=>assertInstalledReleaseRuntime(manifest,f=>bytes.get(f)));reports.writingDelivery[field]=old}
+})
+
+test('the real review importer includes writing report, exact raw hashes and its summary in a disposable synthetic workspace',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'longedit-writing-import-protocol-')),input=path.join(root,'input'),json=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''))
+ const write=(file,value)=>{fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,JSON.stringify(value,null,2)+'\n')}
+ try{
+  fs.writeFileSync(path.join(root,'.owned-writing-import-protocol'),'synthetic protocol workspace\n',{flag:'wx'})
+  fs.mkdirSync(input);write(path.join(root,'package.json'),{version:'1.1.14'})
+  for(const file of ['shared/v1-community-release-policy.json','shared/development-version-policy.json']){
+   const policy=json(file);if(file.includes('community')){policy.gates.githubReleasePublished=false;policy.release=null;policy.candidate=null;policy.releaseCandidate=false;policy.currentStatus='v1.1.14-community-release-quality-gate-pending'}write(path.join(root,file),policy)
+  }
+  const old=json('docs/evidence/v1.1.13-release/artifact-manifest.json'),receipt=json('docs/evidence/v1-1-13-candidate-lifecycle/installer-build-receipt.json');receipt.appVersion='1.1.14';receipt.previousVersion='1.1.13'
+  write(path.join(input,'installer-build-receipt.json'),receipt)
+  const values={}
+  for(const[key,item]of Object.entries(old.runtimeSmoke.reports)){
+   const report=JSON.parse(fs.readFileSync(item.path,'utf8').replaceAll('1.1.13','1.1.14'));if(key==='lifecycle')report.previousVersion='1.1.13';values[key]=report;write(path.join(input,path.basename(item.path)),report)
+  }
+  for(const file of ['lifecycle-result.json','management-backup-index-evidence.json']){
+   const report=JSON.parse(fs.readFileSync('docs/evidence/v1-1-13-candidate-lifecycle/'+file,'utf8').replaceAll('1.1.13','1.1.14'));if(file==='lifecycle-result.json')report.previousVersion='1.1.13';write(path.join(input,file),report)
+  }
+  const writing={...example()[0],sourceCommit:receipt.candidateSourceCommit,installerSha256:receipt.artifacts.find(a=>a.target==='nsis').sha256,executableSha256:values.searchCompleteness.executableSha256,harnessSourceCommit:values.searchCompleteness.harnessSourceCommit}
+  write(path.join(input,'installed-v1114-workflow.json'),writing)
+  execFileSync(process.execPath,[path.resolve('scripts/import-community-release-review.mjs'),'--review-dir',input,'--build-run','101','--review-run','102'],{cwd:root,encoding:'utf8'})
+  const manifest=json(path.join(root,'docs/evidence/v1.1.14-release/artifact-manifest.json'))
+  assert.equal(manifest.hostedInstalledLifecycle.writingDeliveryChecksPassed,12)
+  const stored=manifest.runtimeSmoke.reports.writingDelivery,raw=fs.readFileSync(path.join(root,stored.path));assert.equal(stored.sha256,crypto.createHash('sha256').update(raw).digest('hex'));assert.deepEqual(raw,fs.readFileSync(path.join(input,'installed-v1114-workflow.json')))
+  assertInstalledReleaseRuntime(manifest,file=>fs.readFileSync(path.join(root,file)))
+  const manifestFile=path.join(root,'docs/evidence/v1.1.14-release/artifact-manifest.json'),accepted=fs.readFileSync(manifestFile)
+  assert.throws(()=>execFileSync(process.execPath,[path.resolve('scripts/import-community-release-review.mjs'),'--review-dir',input,'--build-run','101','--review-run','102'],{cwd:root,encoding:'utf8',stdio:'pipe'}),/do not overwrite immutable evidence/)
+  assert.deepEqual(fs.readFileSync(manifestFile),accepted,'repeated import cannot rewrite acknowledged bytes')
+ }finally{
+  const resolved=path.resolve(root);assert.equal(path.dirname(resolved),path.resolve(os.tmpdir()));assert.ok(path.basename(resolved).startsWith('longedit-writing-import-protocol-'));assert.ok(fs.existsSync(path.join(resolved,'.owned-writing-import-protocol')))
+  fs.rmSync(resolved,{recursive:true,force:true})
+ }
 })

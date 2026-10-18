@@ -65,11 +65,15 @@ if (['1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14'].include
 assert.equal(reports.lifecycle.report.currentInstallerSha256, nsis.sha256)
 const evidenceRoot = 'docs/evidence/v' + version.replaceAll('.', '-') + '-candidate-lifecycle'
 const releaseRoot = 'docs/evidence/v' + version + '-release'
+assert.equal(fs.existsSync(path.join(releaseRoot,'artifact-manifest.json')),false,'An accepted review already exists; do not overwrite immutable evidence')
+assert.equal(fs.existsSync(path.join(releaseRoot,'release-receipt.json')),false,'A published receipt already exists; do not overwrite it')
+assert.equal(json('shared/v1-community-release-policy.json').gates.githubReleasePublished,false,'Do not re-import a published release')
 fs.mkdirSync(evidenceRoot, { recursive: true }); fs.mkdirSync(releaseRoot, { recursive: true })
 const files = fs.readdirSync(directory).filter(file => /\.(?:json|jpg|png)$/i.test(file) && fs.statSync(path.join(directory, file)).isFile()).sort()
 for (const file of files) fs.copyFileSync(path.join(directory, file), path.join(evidenceRoot, file))
 const entries = files.map(file => { const bytes = fs.readFileSync(path.join(evidenceRoot, file)); return { path: file, sizeBytes: bytes.length, sha256: digest(bytes) } })
 const runtimeReports = Object.fromEntries([
+  ...(version === '1.1.14' ? [['writingDelivery',reports.writingDelivery.file]] : []),
   ...(['1.1.13','1.1.14'].includes(version) ? [['pdfReading',reports.pdfReading.file]] : []),
   ...(['1.1.12','1.1.13', '1.1.14'].includes(version) ? [['contentBackup',reports.contentBackup.file]] : []),
   ...(['1.1.11','1.1.12', '1.1.13', '1.1.14'].includes(version) ? [['graphExploration',reports.graphExploration.file]] : []),
@@ -89,6 +93,7 @@ const manifest = {
   qualityGate: { status: 'passed', command: 'npm run ci:patch-release', runId: buildRun },
   runtimeSmoke: { status: 'passed-installed-tauri-webview2', checksPassed: 18, routesPassed: 11, reports: runtimeReports },
   hostedInstalledLifecycle: {
+    ...(version === '1.1.14' ? {writingDeliveryChecksPassed:writingDeliveryChecks.length} : {}),
     status: 'passed', runId: reviewRun, sourceCommit: receipt.candidateSourceCommit, evidenceRoot,
     evidenceManifest: releaseRoot + '/import-manifest.json', lifecycleChecksPassed: 22, installedWorkspaceChecksPassed: 18,
     installedRoutesPassed: 11, managementRollbackChecksPassed: 7, workflowChecksPassed: 8,
@@ -115,6 +120,7 @@ write(path.join(releaseRoot, 'import-manifest.json'), {
   productSourceCommit: receipt.candidateSourceCommit, appVersion: version, sourceUserContentIncluded: false,
   releaseCandidate: false,
   checks: {
+    ...(version === '1.1.14' ? {writingDeliveryPassed:writingDeliveryChecks.length} : {}),
     ...(['1.1.13','1.1.14'].includes(version) ? {pdfReadingPassed:pdfReadingChecks.length} : {}),
     ...(['1.1.12','1.1.13', '1.1.14'].includes(version) ? {contentBackupPassed:contentBackupChecks.length} : {}),
     ...(['1.1.11','1.1.12', '1.1.13', '1.1.14'].includes(version) ? {graphExplorationPassed:graphExplorationChecks.length} : {}),
