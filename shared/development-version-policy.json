@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-58-v1.1.15-version-candidate",
-  "binaryVersionTransition": "v1.1.15-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.15-release-ready",
   "displayLabel": "v1.1.15 轻量表格候选 · 当前公开 v1.1.14",
   "activeSlice": {
     "id": "v1.1.15-table-editing",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_15_Table_Development_2026-10-18.md"
   }
 }
