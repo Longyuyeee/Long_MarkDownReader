@@ -1,7 +1,8 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$QuickNoteWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Target,[Parameter(Mandatory=$true)][string]$Report)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$QuickNoteWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Target,[Parameter(Mandatory=$true)][string]$Report,[Parameter(Mandatory=$true)][string]$SelectionReport)
 $ErrorActionPreference='Stop'
 if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows' -or $env:LONGEDIT_R5I_DISPOSABLE -ne '1'){throw 'Only the disposable hosted Windows test may print'}
 $root=[IO.Path]::GetFullPath($OwnerRoot).TrimEnd('\')+'\';$targetFile=[IO.Path]::GetFullPath($Target)
+if([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($SelectionReport)) -ine [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Report)) -or (Test-Path -LiteralPath $SelectionReport)){throw 'A new print-selection report alongside the owned test report is required'}
 if(-not $targetFile.StartsWith($root,[StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetExtension($targetFile) -ne '.pdf' -or (Test-Path -LiteralPath $targetFile) -or -not(Test-Path -LiteralPath (Join-Path $OwnerRoot '.v119-installed-owner'))){throw 'A new generated PDF inside the owned fixture is required'}
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
@@ -74,6 +75,8 @@ try{
  ))
  do{
   if($invocation -and $invocation.Completed -and $invocation.Error){throw $invocation.Error}
+  $browserSelectionReady=$false
+  if(Test-Path -LiteralPath $SelectionReport){$selectionState=$null;try{$selectionState=Get-Content -LiteralPath $SelectionReport -Raw -Encoding UTF8|ConvertFrom-Json}catch{};if($selectionState.status -eq 'failed'){throw $selectionState.failure};$browserSelectionReady=$selectionState.status -eq 'passed' -and $selectionState.selectedLabel -eq 'Save as PDF'}
   $all=@(Get-CimInstance Win32_Process);$rootProcesses=@($all|Where-Object {$_.ExecutablePath -eq $Executable});$owned=@($rootProcesses.ProcessId)
   for($i=0;$i -lt 8;$i++){$next=@($all|Where-Object {$_.ParentProcessId -in $owned}|ForEach-Object ProcessId);$owned=@($owned+$next|Select-Object -Unique)}
   if(-not $rootProcesses){throw 'The exact installed application is no longer running'}
@@ -82,7 +85,7 @@ try{
   $windows=@($topWindows|Where-Object {($_.Pid -in $owned -or $_.OwnerPid -in $owned) -and [WritingPrintWindows]::IsWindowVisible([IntPtr]$_.Handle) -and $_.ClassName -notmatch 'IME|tooltips|tray_icon' -and ($_.ClassName -ne 'Tauri Window' -or $_.Handle -eq $mainWindow.Handle)});$result.windows=@($windows)
   $result.stage='enumerated-owned-windows';[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
   foreach($win in $windows){
-   if($printed -and $win.Title -match '^(Save Print Output As|Save As|将打印输出另存为|另存为)$'){
+   if($printed -and -not $saved -and $win.Title -match '^(Save Print Output As|Save As|将打印输出另存为|另存为)$'){
     $children=@([WritingPrintWindows]::Children($win.Handle));$result.saveControls=$children
     $field=$children|Where-Object {$_.ClassName -eq 'Edit' -and $_.Id -in @(1148,1152,1001)}|Sort-Object {if($_.Id -eq 1148){0}elseif($_.Id -eq 1152){1}else{2}}|Select-Object -First 1
     $ok=$children|Where-Object {$_.ClassName -eq 'Button' -and $_.Id -eq 1}|Select-Object -First 1
@@ -95,7 +98,7 @@ try{
     }
    }
    if(-not $printed){
-    if($win.Title -match '^(Print|打印)$' -and $result.defaultPrinter -eq 'Microsoft Print to PDF'){
+    if($browserSelectionReady -and $win.Title -match '^(Print|打印)$' -and $result.defaultPrinter -eq 'Microsoft Print to PDF'){
      $children=@([WritingPrintWindows]::Children($win.Handle));$result.nativePrintControls=$children
      $printOk=$children|Where-Object {$_.ClassName -eq 'Button' -and $_.Id -eq 1}|Select-Object -First 1
      if($printOk -and [WritingPrintWindows]::IsWindowEnabled([IntPtr]$printOk.Handle)){
@@ -129,31 +132,7 @@ try{
       $chosen=$destinationValues|Where-Object {$_ -in @('Microsoft Print to PDF','Save as PDF')}|Select-Object -First 1
       if($chosen){$result.selectedDestination=$chosen;$result.printUiObserved=$true}
      }
-     if($printUi -and $pdfDestinationCombo -and $result.selectedDestination -ne 'Save as PDF' -and -not $result.destinationChoiceAttempted){
-      $result.destinationChoiceAttempted=$true;$pdfDestinationCombo.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand();$result.actions+=@('expanded-owned-PDF-destination')
-      $picked=$false;$savePdfName=[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Save as PDF')
-      for($choiceAttempt=0;$choiceAttempt -lt 25 -and -not $picked;$choiceAttempt++){
-       $choiceWindows=@([WritingPrintWindows]::Top()|Where-Object {($_.Pid -in $owned -or $_.OwnerPid -in $owned) -and [WritingPrintWindows]::IsWindowVisible([IntPtr]$_.Handle)})
-       foreach($choiceWindow in $choiceWindows){
-        $choiceRoot=[System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$choiceWindow.Handle);$choice=$choiceRoot.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$savePdfName)
-        if($choice -and -not $choice.Current.IsOffscreen){try{$choice.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select();$picked=$true}catch{try{$choice.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke();$picked=$true}catch{}}}
-        if($picked){break}
-       }
-       if(-not $picked){Start-Sleep -Milliseconds 100}
-      }
-      $result.destinationChoiceRequested=if($picked){'Save as PDF'}else{'not-selected'}
-      if($picked){$result.actions+=@('selected-browser-save-as-PDF-through-owned-native-menu')}
-     }
-     $destination=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ComboBox -and $_.Current.Name -match 'Destination|Printer|目标|打印机'}|Select-Object -First 1
-     if($destination -and -not $printed){
-      try{
-       $destination.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand()
-       $entries=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,$interactiveTypes))
-       $entry=$entries|Where-Object {$_.Current.Name -in @('Microsoft Print to PDF','Save as PDF')}|Select-Object -Last 1
-       if($entry){$entry.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select();$result.actions+=@('selected-PDF-destination-in-owned-print-UI')}
-      }catch{$result.destinationNotice=[string]$_}
-     }
-     if($printUi -and $result.selectedDestination -eq 'Save as PDF'){
+     if($printUi -and $result.selectedDestination -eq 'Save as PDF' -and $browserSelectionReady){
       $button=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Print','Save','打印','保存') -and $_.Current.IsEnabled}|Select-Object -Last 1
       if($button){$invocation=[HostedWritingPrintInvocation]::Begin($Executable,$win.Handle,[int]$win.Pid,$button.Current.Name);$result.actions+=@('queued-owned-native-print-ui-'+$button.Current.Name);$printed=$true;break}
      }

@@ -20,11 +20,13 @@ const example=()=>{
  report.nativePrint.mainWindow={visibleBeforePrint:true,foregroundBeforePrint:true,clientWidth:1000,clientHeight:700,pid:1,title:'Long编辑·md助手',configuredMainTitle:'Long编辑·md助手',className:'Tauri Window'};report.printViewport={width:1000,height:700}
  Object.assign(report.nativePrint,{selectedDestination:'Save as PDF',printUiObserved:true,companionsRestored:true})
  report.nativePrint.actions=['queued-owned-native-print-ui-Print'];report.nativePrint.buttonInvocation={started:true,completed:true,error:null}
+ report.browserPrintSelection={status:'passed',evidenceLevel:'real-WebView2-print-UI-trusted-keyboard',sourceCommit:report.sourceCommit,harnessSourceCommit:report.harnessSourceCommit,targetUrl:'edge://print/',initialLabel:'Microsoft Print to PDF',selectedLabel:'Save as PDF',nativeBridgeMocked:false,sourceUserContentIncluded:false,inputTrace:[{type:'keydown',trusted:true},{type:'change',trusted:true}]}
  report.templateMainText='用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}'
  return [report,manifest]
 }
 test('writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input',()=>{
  assert.doesNotThrow(()=>validateInstalledWritingDelivery(...example()))
+ for(const mutate of [r=>r.browserPrintSelection.selectedLabel='Microsoft Print to PDF',r=>r.browserPrintSelection.inputTrace[0].trusted=false,r=>r.browserPrintSelection.sourceCommit='0'.repeat(40)]){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
  for(const mutate of [r=>r.nativePrint.mainWindow.foregroundBeforePrint=false,r=>r.printViewport.width++]){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
  for(const mutate of [r=>r.previewStructure.tables=0,r=>r.previewStructure.headings=69,r=>r.inputTrace=r.inputTrace.filter(e=>e.type!=='paste'),r=>r.nativePrint.mainWindow.title='快速笔记']){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
  for(const mutate of [r=>r.checks.pop(),r=>r.nativeBridgeMocked=true,r=>r.nativePrint.status='print-dialog-only',r=>r.pdfPages=0,r=>r.pdfText='wrong output',r=>r.pdfText+='快速笔记',r=>r.pdfInk=0,r=>r.pdfColorPixels=0,r=>r.pdfLastSectionVisible=false,r=>r.resourceErrorRetainedAfterMarkdown=false,r=>r.sourceAfter='f'.repeat(64),r=>r.sharedAfter='f'.repeat(64),r=>r.previewSha256='f'.repeat(64),r=>r.standalone.images[0].embedded=false,r=>r.standalone.scripts=1,r=>r.cancelCreatedFile=true,r=>r.markdownMatchesDraft=false,r=>r.draftStillDirty=false,r=>r.imagePicker.dialogClosed=false,r=>r.inputTrace[0].trusted=false,r=>r.runtimeErrors.push('error')]){const[r,m]=example();mutate(r);assert.throws(()=>validateInstalledWritingDelivery(r,m))}
@@ -33,12 +35,14 @@ test('real installed driver never replaces bridge, calls a component handler or 
  const source=fs.readFileSync('scripts/lib/installed-v1-1-14-workflow.mjs','utf8')
  for(const token of ['dispatchEvent(','__TAURI_INTERNALS__=','__TAURI_INTERNALS__ =','isDirty=false','isDirty = false','force:true','force: true'])assert.ok(!source.includes(token),token)
  for(const token of ['nativeUserInput','set-hosted-writing-clipboard.ps1','select-hosted-session-file.ps1','print-hosted-writing-pdf.ps1','inspectStandaloneDelivery','validateInstalledWritingDelivery'])assert.ok(source.includes(token),token)
+ const printUi=fs.readFileSync('scripts/lib/hosted-writing-print-selection.mjs','utf8');for(const token of ['dispatchEvent(','__TAURI_INTERNALS__','Input.insertText'])assert.ok(!printUi.includes(token));assert.ok(!/\.value\s*=/.test(printUi));assert.ok(printUi.includes('Input.dispatchKeyEvent'))
 })
 test('v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver',()=>{
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.13-release/artifact-manifest.json','utf8'));manifest.appVersion=manifest.sourceVersion='1.1.14'
  const reports={},bytes=new Map()
  for(const[key,item]of Object.entries(manifest.runtimeSmoke.reports))reports[key]=JSON.parse(fs.readFileSync(item.path,'utf8').replaceAll('1.1.13','1.1.14'))
  reports.writingDelivery={...example()[0],sourceCommit:manifest.sourceCommit,installerSha256:manifest.artifacts.find(a=>a.target==='nsis').sha256,executableSha256:reports.searchCompleteness.executableSha256,harnessSourceCommit:reports.searchCompleteness.harnessSourceCommit}
+ Object.assign(reports.writingDelivery.browserPrintSelection,{sourceCommit:reports.writingDelivery.sourceCommit,harnessSourceCommit:reports.writingDelivery.harnessSourceCommit})
  const update=()=>{manifest.runtimeSmoke.reports=Object.fromEntries(Object.entries(reports).map(([key,value])=>{const file='docs/evidence/v1-1-14-candidate-lifecycle/'+key+'.json',buffer=Buffer.from(JSON.stringify(value));bytes.set(file,buffer);return[key,{path:file,sha256:crypto.createHash('sha256').update(buffer).digest('hex')}]}))}
  update();assert.doesNotThrow(()=>assertInstalledReleaseRuntime(manifest,f=>bytes.get(f)))
  for(const key of Object.keys(reports)){const old=reports[key];delete reports[key];update();assert.throws(()=>assertInstalledReleaseRuntime(manifest,f=>bytes.get(f)),key);reports[key]=old}
@@ -64,6 +68,7 @@ test('the real review importer includes writing report, exact raw hashes and its
    const report=JSON.parse(fs.readFileSync('docs/evidence/v1-1-13-candidate-lifecycle/'+file,'utf8').replaceAll('1.1.13','1.1.14'));if(file==='lifecycle-result.json')report.previousVersion='1.1.13';write(path.join(input,file),report)
   }
   const writing={...example()[0],sourceCommit:receipt.candidateSourceCommit,installerSha256:receipt.artifacts.find(a=>a.target==='nsis').sha256,executableSha256:values.searchCompleteness.executableSha256,harnessSourceCommit:values.searchCompleteness.harnessSourceCommit}
+  Object.assign(writing.browserPrintSelection,{sourceCommit:writing.sourceCommit,harnessSourceCommit:writing.harnessSourceCommit})
   write(path.join(input,'installed-v1114-workflow.json'),writing)
   const deliverables={'installed-v1114-native-print.pdf':Buffer.from('%PDF-synthetic-import-protocol-only\r\n%%EOF\n'),'installed-v1114-portable.html':Buffer.from('<!doctype html>\r\n<p>仅验证导入原字节，不是安装证据</p>\n')}
   for(const[file,bytes]of Object.entries(deliverables))fs.writeFileSync(path.join(input,file),bytes)
