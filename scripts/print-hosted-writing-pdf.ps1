@@ -42,12 +42,18 @@ try{
  if($pdfPrinter){$null=(New-Object -ComObject WScript.Network).SetDefaultPrinter('Microsoft Print to PDF');$result.defaultPrinter='Microsoft Print to PDF'}
  $result.status='ready-for-native-print'
  [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
- $deadline=[DateTime]::UtcNow.AddSeconds(70);$printed=$false;$saved=$false
+ $deadline=[DateTime]::UtcNow.AddSeconds(45);$printed=$false;$saved=$false
+ $interactiveTypes=[System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@(
+  [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::Button),
+  [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::ComboBox),
+  [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::ListItem)
+ ))
  do{
   $all=@(Get-CimInstance Win32_Process);$rootProcesses=@($all|Where-Object {$_.ExecutablePath -eq $Executable});$owned=@($rootProcesses.ProcessId)
   for($i=0;$i -lt 8;$i++){$next=@($all|Where-Object {$_.ParentProcessId -in $owned}|ForEach-Object ProcessId);$owned=@($owned+$next|Select-Object -Unique)}
   if(-not $rootProcesses){throw 'The exact installed application is no longer running'}
   $windows=@([WritingPrintWindows]::Top()|Where-Object {$_.Pid -in $owned -or $_.OwnerPid -in $owned});$result.windows=@($windows)
+  $result.stage='enumerated-owned-windows';[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
   foreach($win in $windows){
    if($printed -and $win.Title -match '^(Save Print Output As|Save As|将打印输出另存为|另存为)$'){
     $children=@([WritingPrintWindows]::Children($win.Handle));$result.saveControls=$children
@@ -72,15 +78,17 @@ try{
     }
     try{
      $element=[System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$win.Handle)
-     $controls=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition))
+     $result.stage='reading-owned-print-controls';$result.observingWindow=$win.Title;[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
+     $controls=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,$interactiveTypes))
      $names=@($controls|ForEach-Object {$_.Current.Name});$result.controls=@($controls|Select-Object -First 300|ForEach-Object {[ordered]@{name=$_.Current.Name;type=$_.Current.ControlType.ProgrammaticName;id=$_.Current.AutomationId}})
+     $result.stage='read-owned-print-controls';[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
      # Only the isolated app/its verified descendants are searched. No global
      # keyboard or mouse input, and no default website or DOM handler is called.
      $destination=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ComboBox -and $_.Current.Name -match 'Destination|Printer|目标|打印机'}|Select-Object -First 1
      if($destination -and -not $printed){
       try{
        $destination.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand()
-       $entries=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition))
+       $entries=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,$interactiveTypes))
        $entry=$entries|Where-Object {$_.Current.Name -in @('Microsoft Print to PDF','Save as PDF')}|Select-Object -Last 1
        if($entry){$entry.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select();$result.actions+=@('selected-PDF-destination-in-owned-print-UI')}
       }catch{$result.destinationNotice=[string]$_}

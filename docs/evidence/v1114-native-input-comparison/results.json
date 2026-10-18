@@ -1,0 +1,29 @@
+{
+  "evidenceLevel": "real-Vditor-simulated-file-IPC-input-comparison",
+  "observations": [
+    {
+      "input": "cdp-insertText",
+      "expected": "# 输入测试\n\n## 第一节\n\n保留中文段落。\n\n| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n",
+      "content": "# 输入测试\n\n## 第一节保留中文段落。| 任务 | 状态 || --- | --- || 整理 | 继续 |\n\n",
+      "html": "<div data-block=\"0\"><span class=\"vditor-sv__marker--heading h1\" data-type=\"heading-marker\"># </span><span data-type=\"text\" class=\"h1\">输入测试</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span class=\"vditor-sv__marker--heading h2\" data-type=\"heading-marker\">## </span><span data-type=\"text\" class=\"h2\">第一节保留中文段落。| 任务 | 状态 || --- | --- || 整理 | 继续 |</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div>",
+      "tables": 0,
+      "headings": 1
+    },
+    {
+      "input": "actual-clipboard-paste",
+      "expected": "# 输入测试\n\n## 第一节\n\n保留中文段落。\n\n| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n",
+      "content": "# 输入测试\n\n## 第一节\n\n保留中文段落。\n\n| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n\n\n",
+      "html": "<div data-block=\"0\"><span class=\"vditor-sv__marker--heading h1\" data-type=\"heading-marker\"># </span><span data-type=\"text\" class=\"h1\">输入测试</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span class=\"vditor-sv__marker--heading h2\" data-type=\"heading-marker\">## </span><span data-type=\"text\" class=\"h2\">第一节</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span data-type=\"text\">保留中文段落。</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span data-type=\"table\">| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n<span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></span></div><div data-block=\"0\"></div>",
+      "tables": 1,
+      "headings": 1
+    },
+    {
+      "input": "ordinary-enter-keys",
+      "expected": "# 输入测试\n\n## 第一节\n\n保留中文段落。\n\n| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n",
+      "content": "# 输入测试\n\n## 第一节\n\n保留中文段落。\n\n| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n\n\n",
+      "html": "<div data-block=\"0\"><span class=\"vditor-sv__marker--heading h1\" data-type=\"heading-marker\"># </span><span data-type=\"text\" class=\"h1\">输入测试</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span class=\"vditor-sv__marker--heading h2\" data-type=\"heading-marker\">## </span><span data-type=\"text\" class=\"h2\">第一节</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span data-type=\"text\">保留中文段落。</span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></div><div data-block=\"0\"><span data-type=\"table\">| 任务 | 状态 |\n| --- | --- |\n| 整理 | 继续 |\n<span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span><span data-type=\"newline\"><br><span style=\"display: none\">\n</span></span></span></div><div data-block=\"0\"></div><div data-block=\"0\"></div><div data-block=\"0\"></div>",
+      "tables": 1,
+      "headings": 1
+    }
+  ]
+}
