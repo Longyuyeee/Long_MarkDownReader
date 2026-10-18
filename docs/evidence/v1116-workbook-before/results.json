@@ -1,0 +1,34 @@
+{
+  "status": "reproduced-not-fixed",
+  "evidenceLevel": "actual-WorkbookView-real-headless-clipboard-native-IPC-simulated",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "productSourceCommit": "a40c0ea2a71a7cd1230c8704cb1e45b2c79c9cba",
+  "clipboardReceived": "\"会议\r\n备注\"\t可见\t00123",
+  "expected": {
+    "rows": 1,
+    "columns": 3,
+    "values": [
+      [
+        "会议\r\n备注",
+        "可见",
+        "00123"
+      ]
+    ]
+  },
+  "observed": [
+    [
+      "\"会议",
+      "",
+      ""
+    ],
+    [
+      "备注\"",
+      "可见",
+      "00123"
+    ]
+  ],
+  "errors": [],
+  "note": "Quoted multiline field is split into physical rows by current pasteSelection; no native save, no installed acceptance, no product changes."
+}
