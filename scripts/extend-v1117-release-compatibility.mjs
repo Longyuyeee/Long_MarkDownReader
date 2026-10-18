@@ -22,5 +22,3 @@ for(const file of [...walk('scripts'),...walk('.github/workflows')].filter(f=>/\
  if(after!==before){changed.push(file);if(apply)fs.writeFileSync(file,after)}
 }
 console.log(JSON.stringify({apply,files:changed},null,2))
-
-

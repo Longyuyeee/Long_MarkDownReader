@@ -29,6 +29,7 @@ export async function runInstalledV1117Workflow({send,evaluate,navigate,capture,
         await ui.click('[title="重新读取"]');await dialogButton('继续编辑');assert.equal(await evaluate(body+'.value'),first);report.reloadCancelExact=true
         const count=await evaluate('document.querySelector(".docx-editor select").options.length');assert.ok(count>=2,'Producer must expose multiple genuine editable targets')
         await ui.click('.docx-editor select');await ui.key('Home','Home',36);await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)
+        await ui.waitFor(`document.querySelector('.docx-editor select')?.selectedIndex===1&&${body}?.value!==${q(first)}`,'second genuine editable target selected')
         const second=(await evaluate(body+'.value'))+' [第二项也一起保存]';sourceEdits.push(second);await ui.fill('.docx-editor textarea',second);await ui.waitFor(`${draftCount}===2`,'batch draft');await ui.click('[title="撤销草稿修改"]');await ui.waitFor(`${draftCount}===1`,'whole target undo');await ui.click('[title="重做草稿修改"]');await ui.waitFor(`${draftCount}===2`,'whole target redo');report.undoRedoExact=true
       }
       assert.equal(await evaluate('document.querySelector(".verification-details")?.open'),false,'No manual verification step')
@@ -36,7 +37,7 @@ export async function runInstalledV1117Workflow({send,evaluate,navigate,capture,
       assert.notEqual(sha(await fs.readFile(source)),beforeHash);const savedHash=sha(await fs.readFile(source));await navigate('#/library?path='+encodeURIComponent(unselected),'.library-mode','leave saved DOCX');await open(source);await ui.waitFor(`document.querySelector('.docx-stage')?.textContent.includes(${q(first)})`,'saved producer text reopened')
       await capture('installed-v1117-'+producerId+'-source.jpg')
       const copied=(await evaluate(body+'.value'))+' [另存给同事]';copyEdits.push(copied);await ui.fill('.docx-editor textarea',copied)
-      if(index===0){await ui.fill('.copy-save input',path.basename(source));await button('另存新 DOCX 并打开');await ui.waitFor(`document.querySelector('.copy-save [role="alert"]')?.textContent.length>0`,'collision reported');assert.equal(await evaluate(body+'.value'),copied);assert.equal(sha(await fs.readFile(source)),savedHash);report.collisionExact=true}
+      if(index===0){await ui.fill('.copy-save input',path.basename(source));await button('另存新 DOCX 并打开');await ui.waitFor(`/禁止覆盖|已存在/.test(document.querySelector('.copy-save [role="alert"]')?.textContent||'')`,'actual source overwrite refusal reported');assert.equal(await evaluate(body+'.value'),copied);assert.equal(sha(await fs.readFile(source)),savedHash);report.collisionExact=true}
       await ui.fill('.copy-save input',copyName);await button('另存新 DOCX 并打开');await ui.waitFor(`document.querySelector('.document-title strong')?.textContent===${q(copyName)}&&${draftCount}===0&&!!document.querySelector('.docx-page')`,'native copy opened');assert.equal(sha(await fs.readFile(source)),savedHash)
       await ui.waitFor(`document.querySelector('.docx-stage')?.textContent.includes(${q(copied)})`,'native copy replacement text');await capture('installed-v1117-'+producerId+'-copy.jpg')
       cases.push({producerId,before:producerId+'-before.docx',source:path.basename(source),copy:copyName,sourceEdits,copyEdits})

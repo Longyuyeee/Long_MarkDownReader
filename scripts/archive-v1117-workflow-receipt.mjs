@@ -13,5 +13,3 @@ fs.mkdirSync(target)
 for(const[name,bytes]of [['workflow-run.json',runBytes],['jobs.json',jobs],['artifacts.json',artifacts]])fs.writeFileSync(path.join(target,name),bytes,{flag:'wx'})
 try{const log=execFileSync('gh',['run','view',run,'--log'],{maxBuffer:32*1024*1024});fs.writeFileSync(path.join(target,'workflow.log'),log,{flag:'wx'})}catch(error){fs.writeFileSync(path.join(target,'log-retrieval-failure.json'),JSON.stringify({status:'retrieval-failed',message:String(error.message),runId:Number(run)},null,2)+'\n',{flag:'wx'})}
 console.log(JSON.stringify({runId:Number(run),status:receipt.conclusion,headSha:receipt.head_sha,folder}))
-
-

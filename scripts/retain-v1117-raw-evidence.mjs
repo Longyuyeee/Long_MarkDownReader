@@ -13,5 +13,3 @@ fs.mkdirSync(raw,{recursive:true});const entries=[]
 for(const file of files){const destination=path.join(raw,file.relative);fs.mkdirSync(path.dirname(destination),{recursive:true});fs.copyFileSync(file.file,destination,fs.constants.COPYFILE_EXCL);const bytes=fs.readFileSync(destination);entries.push({path:'raw/'+file.relative.replaceAll('\\','/'),sizeBytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')})}
 fs.writeFileSync(path.join(target,'raw-import-manifest.json'),JSON.stringify({status:'retained-original-evidence-not-acceptance',sourceUserContentIncluded:false,files:entries},null,2)+'\n',{flag:'wx'})
 console.log(JSON.stringify({folder,files:entries.length,bytes:entries.reduce((sum,file)=>sum+file.sizeBytes,0)}))
-
-
