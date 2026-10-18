@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.19",
+  "developmentTargetVersion": "1.1.20",
   "runtimeBaseVersion": "1.1.19",
-  "publicVersion": "1.1.18",
-  "publicTag": "v1.1.18",
-  "publicTagCommit": "9b621511807e4233147a5a6d4265a2be97f53b0f",
+  "publicVersion": "1.1.19",
+  "publicTag": "v1.1.19",
+  "publicTagCommit": "591447cd9e3303cde9d1ebfde1df2fddb45d8c8c",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-66-v1.1.19-version-candidate",
-  "binaryVersionTransition": "v1.1.19-release-ready",
-  "displayLabel": "v1.1.19 画布与思维导图整理候选 · 当前公开 v1.1.18",
+  "currentStage": "M8-67-v1.1.19-published",
+  "binaryVersionTransition": "v1.1.19-public-release-published",
+  "displayLabel": "v1.1.19 已发布 · 下一版本 v1.1.20",
   "activeSlice": {
     "id": "v1.1.19-organizing",
-    "status": "installed-workflows-passed-ready-to-publish",
-    "document": "docs/V1_1_19_Organizing_Development_2026-10-18.md"
+    "status": "published-remote-assets-verified",
+    "document": "docs/V1_1_19_Unsigned_Community_Release_Audit_2026-10-18.md"
   }
 }
