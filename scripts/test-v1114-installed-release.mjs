@@ -60,11 +60,18 @@ test('the real review importer includes writing report, exact raw hashes and its
   }
   const writing={...example()[0],sourceCommit:receipt.candidateSourceCommit,installerSha256:receipt.artifacts.find(a=>a.target==='nsis').sha256,executableSha256:values.searchCompleteness.executableSha256,harnessSourceCommit:values.searchCompleteness.harnessSourceCommit}
   write(path.join(input,'installed-v1114-workflow.json'),writing)
+  const deliverables={'installed-v1114-native-print.pdf':Buffer.from('%PDF-synthetic-import-protocol-only\r\n%%EOF\n'),'installed-v1114-portable.html':Buffer.from('<!doctype html>\r\n<p>仅验证导入原字节，不是安装证据</p>\n')}
+  for(const[file,bytes]of Object.entries(deliverables))fs.writeFileSync(path.join(input,file),bytes)
   execFileSync(process.execPath,[path.resolve('scripts/import-community-release-review.mjs'),'--review-dir',input,'--build-run','101','--review-run','102'],{cwd:root,encoding:'utf8'})
   const manifest=json(path.join(root,'docs/evidence/v1.1.14-release/artifact-manifest.json'))
   assert.equal(manifest.hostedInstalledLifecycle.writingDeliveryChecksPassed,12)
   const stored=manifest.runtimeSmoke.reports.writingDelivery,raw=fs.readFileSync(path.join(root,stored.path));assert.equal(stored.sha256,crypto.createHash('sha256').update(raw).digest('hex'));assert.deepEqual(raw,fs.readFileSync(path.join(input,'installed-v1114-workflow.json')))
   assertInstalledReleaseRuntime(manifest,file=>fs.readFileSync(path.join(root,file)))
+  const imported=json(path.join(root,'docs/evidence/v1.1.14-release/import-manifest.json'))
+  for(const[file,bytes]of Object.entries(deliverables)){
+   const item=imported.files.find(item=>item.path===file);assert.ok(item);assert.equal(item.sizeBytes,bytes.length);assert.equal(item.sha256,crypto.createHash('sha256').update(bytes).digest('hex'))
+   assert.deepEqual(fs.readFileSync(path.join(root,manifest.hostedInstalledLifecycle.evidenceRoot,file)),bytes)
+  }
   const manifestFile=path.join(root,'docs/evidence/v1.1.14-release/artifact-manifest.json'),accepted=fs.readFileSync(manifestFile)
   assert.throws(()=>execFileSync(process.execPath,[path.resolve('scripts/import-community-release-review.mjs'),'--review-dir',input,'--build-run','101','--review-run','102'],{cwd:root,encoding:'utf8',stdio:'pipe'}),/do not overwrite immutable evidence/)
   assert.deepEqual(fs.readFileSync(manifestFile),accepted,'repeated import cannot rewrite acknowledged bytes')

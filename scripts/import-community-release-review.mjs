@@ -69,7 +69,7 @@ assert.equal(fs.existsSync(path.join(releaseRoot,'artifact-manifest.json')),fals
 assert.equal(fs.existsSync(path.join(releaseRoot,'release-receipt.json')),false,'A published receipt already exists; do not overwrite it')
 assert.equal(json('shared/v1-community-release-policy.json').gates.githubReleasePublished,false,'Do not re-import a published release')
 fs.mkdirSync(evidenceRoot, { recursive: true }); fs.mkdirSync(releaseRoot, { recursive: true })
-const files = fs.readdirSync(directory).filter(file => /\.(?:json|jpg|png)$/i.test(file) && fs.statSync(path.join(directory, file)).isFile()).sort()
+const files = fs.readdirSync(directory).filter(file => (/\.(?:json|jpg|png)$/i.test(file) || /^(?:installed-v1114-native-print\.pdf|installed-v1114-portable\.html)$/.test(file)) && fs.statSync(path.join(directory, file)).isFile()).sort()
 for (const file of files) fs.copyFileSync(path.join(directory, file), path.join(evidenceRoot, file))
 const entries = files.map(file => { const bytes = fs.readFileSync(path.join(evidenceRoot, file)); return { path: file, sizeBytes: bytes.length, sha256: digest(bytes) } })
 const runtimeReports = Object.fromEntries([
