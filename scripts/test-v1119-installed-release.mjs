@@ -4,12 +4,18 @@ import fs from 'node:fs'
 import crypto from 'node:crypto'
 import {test} from 'node:test'
 import vm from 'node:vm'
+import path from 'node:path'
 import ts from 'typescript'
 import {organizingChecks,validateInstalledOrganizing,assertOrganizingOutputBytes} from './lib/installed-v1-1-19-evidence.mjs'
 import {assertInstalledReleaseRuntime} from './lib/installed-release-runtime.mjs'
 import {renameOwnedOfflineFixture} from './lib/rename-owned-offline-fixture.mjs'
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),bytes=Buffer.from('synthetic-organizing-output-not-native')
 const flags=['canvasUnknownExact','canvasLocatorExact','canvasCancelExact','canvasConflictExact','groupUndoExact','groupContentsMoveExact','sourceRelinkExact','sourceOpenExact','moveReferenceExact','opmlReopenExact','opmlLocatorExact','opmlCancelExact','opmlConflictExact','lossOriginalBlocked','compatibleCopyExact','copyCollisionExact','shortcutExclusive']
+test('actual native fixture derives identical root-relative references from normal and canonical Windows paths',()=>{
+ const source=fs.readFileSync('scripts/lib/installed-v1-1-19-workflow.mjs','utf8'),start=source.indexOf('relative=file=>')+'relative='.length,end=source.indexOf(',p=file=>',start);assert.ok(start>10&&end>start)
+ const relative=vm.runInNewContext('('+source.slice(start,end)+')',{path:path.win32,library:'C:\\LongEditR5ILibrary'})
+ for(const file of ['C:\\LongEditR5ILibrary\\notes\\接续来源.md','\\\\?\\C:\\LongEditR5ILibrary\\notes\\接续来源.md'])assert.equal(relative(file),'notes/接续来源.md')
+})
 test('offline fault injection retries only real owned sharing refusals and never reports a failed setup as success',async()=>{
  const root='C:\\LongEditR5ILibrary',offline=root+'-v1111-offline-12345678-1234-1234-1234-123456789abc',marker='graph\\.v1111-owned';let attempts=0,clock=0
  const sharing=()=>Object.assign(Error('sharing refusal'),{code:'EPERM'}),io={access:async()=>{},rename:async(a,b)=>{assert.equal(a,root);assert.equal(b,offline);if(++attempts<3)throw sharing()},wait:async ms=>{clock+=ms},now:()=>clock}

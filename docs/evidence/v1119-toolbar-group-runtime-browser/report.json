@@ -1,0 +1,11 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    "actual-narrow-toolbar-wheel-reload-cancel-keeps-draft-with-tooltip-adoption",
+    "actual-wheel-in-both-directions-reaches-fit-and-undo-with-tooltip-adoption",
+    "actual-zoomed-out-group-background-drag-moves-contained-card"
+  ],
+  "errors": []
+}
