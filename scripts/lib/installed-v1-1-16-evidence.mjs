@@ -12,6 +12,7 @@ export function validateInstalledWorkbookEditing(report,manifest){
  const disk=report.workbookInspection;assert.equal(disk.status,'passed');assert.equal(disk.nativeBridgeMocked,false);assert.equal(disk.reader,'openpyxl-3.1.5-hash-pinned');assert.match(disk.sha256,/^[a-f0-9]{64}$/)
  assert.equal(disk.beforeSha256,report.sourceBefore);assert.match(report.sourceBefore,/^[a-f0-9]{64}$/)
  assert.equal(report.cutFormulaExact,true)
+ assert.ok(Array.isArray(report.foregroundBeforePaste)&&report.foregroundBeforePaste.length>0&&report.foregroundBeforePaste.every(value=>value===true),'Real window focus is a precondition, not an emulated clipboard permission')
  for(const [address,value]of Object.entries({C2:'00124',C3:'9007199254740993124',C4:'9007199254740993123',A5:'=保留文本',A6:'=保留文本',D4:'0.3',D6:'=D3+D4'}))assert.equal(disk.cells[address],value)
  for(const address of ['C2','C3','C4','A5','A6'])assert.equal(disk.types[address],'s');assert.equal(disk.types.D4,'n');assert.equal(disk.types.D6,'f');assert.equal(disk.cells.A2.replace(/\r\n/g,'\n'),'会议\n备注');assert.equal(disk.cells.A3,'不要修改')
  assert.deepEqual(disk.preservedParts.map(p=>p.part),['xl/worksheets/sheet2.xml','docProps/core.xml','docProps/app.xml','xl/_rels/workbook.xml.rels','[Content_Types].xml']);for(const p of disk.preservedParts)assert.match(p.sha256,/^[a-f0-9]{64}$/)

@@ -15,9 +15,12 @@ export async function runInstalledV1116Workflow({send,evaluate,navigate,capture,
  const run=async(executable,args,label)=>{const child=spawn(executable,args,{windowsHide:true,stdio:'inherit'});await withDeadline(()=>new Promise((r,j)=>{child.once('error',j);child.once('exit',c=>c===0?r():j(Error(label+' failed '+c)))}),60000,label)}
  const ps=(name,args)=>run('powershell.exe',['-NoProfile','-STA','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts',name),...args],name)
  const producer=(mode,file,result)=>run(process.env.LONGEDIT_XLSX_PYTHON,[path.join(repoRoot,'scripts/inspect-hosted-workbook-delivery.py'),mode,folder,file,result],'independent XLSX producer '+mode)
+ const config=JSON.parse(await fs.readFile(path.join(repoRoot,'src-tauri/tauri.conf.json'),'utf8')),mainWindowTitle=config.app.windows.find(w=>!w.label||w.label==='main')?.title
+ assert.equal(mainWindowTitle,'Long编辑·md助手');let focusIndex=0
+ const focusMain=async()=>{await ps('focus-hosted-workbook-window.ps1',['-Executable',installedExecutable,'-MainWindowTitle',mainWindowTitle,'-OwnerRoot',folder,'-Report',path.join(output,'v1116-main-focus-'+focusIndex+++'.json')]);await send('Page.bringToFront');await ui.waitFor('document.hasFocus()','actual native main WebView focus');(report.foregroundBeforePaste??=[]).push(await evaluate('document.hasFocus()'))}
  const target=(row,column)=>`document.querySelectorAll('.sheet-row')[${row}]?.querySelectorAll('.workbook-cell')[${column}]`
  const value=(row,column)=>`(${target(row,column)})?.querySelector('.cell-content')?.textContent`
- const paste=async(row,column,text)=>{await fs.writeFile(clip,text);await ps('set-hosted-writing-clipboard.ps1',['-OwnerRoot',folder,'-TextFile',clip]);const observed=path.join(folder,'.native-clipboard-observed');await ps('read-hosted-table-clipboard.ps1',['-OwnerRoot',folder,'-Output',observed]);(report.receivedClipboardText??=[]).push(await fs.readFile(observed,'utf8'));await ui.clickTarget(target(row,column));await ui.key('v','KeyV',86,2)}
+ const paste=async(row,column,text)=>{await fs.writeFile(clip,text);await ps('set-hosted-writing-clipboard.ps1',['-OwnerRoot',folder,'-TextFile',clip]);const observed=path.join(folder,'.native-clipboard-observed');await ps('read-hosted-table-clipboard.ps1',['-OwnerRoot',folder,'-Output',observed]);(report.receivedClipboardText??=[]).push(await fs.readFile(observed,'utf8'));await focusMain();await ui.clickTarget(target(row,column));await ui.key('v','KeyV',86,2)}
  const choose=async(selector,index)=>{await ui.click(selector);await ui.key('Home','Home',36);for(let i=0;i<index;i++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)}
  const button=text=>ui.clickText('.workbook-view button',text)
  let failure
