@@ -29,6 +29,10 @@ export function validateInstalledGraphExploration(report, manifest) {
  }
  assert.equal(report.failedGraphNodes,report.nativeGraph.nodes);assert.equal(report.retriedGraphNodes,report.nativeGraph.nodes)
  assert.equal(report.offlineRootRestored,true);assert.equal(report.initialErrorObserved,true);assert.equal(report.initialRetryObserved,true)
+ if(manifest.appVersion==='1.1.19'){
+  assert.equal(report.offlineRenameOperations?.length,4,'Both real offline injections and both restores are required')
+  for(const operation of report.offlineRenameOperations){assert.ok(Number.isInteger(operation.attempts)&&operation.attempts>=1&&operation.attempts<=40);assert.equal(operation.transientErrors.length,operation.attempts-1);assert.ok(operation.elapsedMs>=0);assert.ok(operation.transientErrors.every(e=>['EPERM','EBUSY'].includes(e.code)))}
+ }
  assert.deepEqual(report.layouts,['自动网络','树状层级','组织结构','放射聚焦','时间线'])
  assert.deepEqual(report.themes,['专业 · 克制网格','多彩 · 语义光域','专注 · 纯净画布'])
  assert.equal(report.singleClickStayed,true);assert.equal(normalizePath(report.doubleClickPath),normalizePath(report.sourceFiles[17].path))
