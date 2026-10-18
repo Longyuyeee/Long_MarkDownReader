@@ -1,0 +1,10 @@
+{
+  "status": "reproduced-existing-defects",
+  "observations": [
+    "Reload read failure removes staged edits and the prior document",
+    "Isolated preview checks first text, but the late receipt stages newer unchecked text",
+    "Source save leaves inputs editable, then clears later input on reread"
+  ],
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false
+}
