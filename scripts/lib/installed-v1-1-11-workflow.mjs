@@ -5,6 +5,7 @@ import crypto from 'node:crypto'
 import {nativeUserInput} from './v118-native-user-input.mjs'
 import {visibleMarkdownInput} from './visible-markdown-input.mjs'
 import {graphExplorationChecks,validateInstalledGraphExploration} from './installed-v1-1-11-evidence.mjs'
+import {renameOwnedOfflineFixture} from './rename-owned-offline-fixture.mjs'
 const q=JSON.stringify,sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 const store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`
 const normalize=value=>value.replace(/^\\\\\?\\/,'').replaceAll('/','\\').toLowerCase()
@@ -25,7 +26,9 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
  // Names also occur in other notes' wikilinks. A full path is the user's unambiguous query,
  // not an instruction to change ranking or force a particular component selection.
  const select=async()=>{await ui.fill('.graph-search input',files[17]);await ui.key('Enter','Enter',13);await ui.waitFor(`!!document.querySelector('[data-testid="graph-selected-node"]')`,'actual selected graph node');await ui.fill('.graph-search input','');await settled()}
- const restoreRoot=async()=>{if(moved){await fs.rename(offline,library);moved=false;report.offlineRootRestored=true}}
+ const markerRelative=path.relative(library,path.join(folder,'.v1111-owned'));report.offlineRenameOperations=[]
+ const renameOffline=async(source,target)=>report.offlineRenameOperations.push(await renameOwnedOfflineFixture(source,target,markerRelative))
+ const restoreRoot=async()=>{if(moved){await renameOffline(offline,library);moved=false;report.offlineRootRestored=true}}
  try{
   await fs.mkdir(folder,{recursive:false});await fs.writeFile(path.join(folder,'.v1111-owned'),crypto.randomUUID(),{flag:'wx'})
   for(let i=0;i<files.length;i++){const content=`# 图谱验收主题${String(i).padStart(3,'0')} · 项目长期研究与来源证据核对\n\n[[${path.basename(files[(i+1)%files.length],'.md')}]]\n[[${path.basename(files[(i+7)%files.length],'.md')}]]\n`;await fs.writeFile(files[i],content,{flag:'wx'});report.sourceFiles.push({path:files[i],before:sha(Buffer.from(content))})}
@@ -46,7 +49,7 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
   await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:rect.x+54,y:rect.y+30,button:'middle',buttons:0,clickCount:1})
   await ui.waitFor(`document.querySelector('[data-testid="graph-canvas"]').dataset.selectedCount==='1'`,'selection retained during true middle pan');await settled()
   const afterPan=await pose();assert.ok(Math.abs(afterPan.x-before.x)>1||Math.abs(afterPan.y-before.y)>1);await refresh();report.poses.pan={before:afterPan,after:await pose()};check(3)
-  await fs.access(path.join(folder,'.v1111-owned'));await fs.rename(library,offline);moved=true
+  await fs.access(path.join(folder,'.v1111-owned'));await renameOffline(library,offline);moved=true
   const failPose=await pose();await ui.click('[data-testid="graph-refresh"]');await ui.waitFor(`!!document.querySelector('[data-testid="graph-refresh-error"]')`,'real unavailable-library failure')
   report.failedGraphNodes=Number((await evaluate(`document.querySelector('.graph-stats').textContent`)).match(/\/\s*(\d+)\s*节点/)[1]);report.poses.failure={before:failPose,after:await pose()};await capture('installed-v1111-retained.jpg');check(4)
   await restoreRoot();await ui.clickText('[data-testid="graph-refresh-error"] button','重试');await graphReady();await settled();report.retriedGraphNodes=Number((await evaluate(`document.querySelector('.graph-stats').textContent`)).match(/\/\s*(\d+)\s*节点/)[1]);report.poses.retry={before:failPose,after:await pose()};check(5)
@@ -56,7 +59,7 @@ export async function runInstalledV1111Workflow({send,evaluate,capture,library,o
   await ui.click('.graph-theme-select');await ui.waitFor(`${visibleOptions}.length===3`,'three visible canvas theme choices');report.themes=await evaluate(visibleOptions);await ui.key('Escape','Escape',27);await ui.waitFor(`${visibleOptions}.length===0`,'theme popup closed');check(7)
   await ui.clickText('.view-switch button','思维导图');await graphReady();await frame();const mindmapPose=await pose();await refresh();report.poses.mindmap={before:mindmapPose,after:await pose()};await capture('installed-v1111-mindmap.jpg');check(8)
   await ui.clickText('.view-switch button','关系网络');await graphReady();await ui.clickText('.app-navigation a','资料库');await ui.waitFor(`!!document.querySelector('.library-mode')`,'return library before genuine initial failure')
-  await fs.rename(library,offline);moved=true;await ui.clickText('.app-navigation a','图谱');await ui.waitFor(`!!document.querySelector('[data-testid="graph-initial-error"]')&&!document.querySelector('.empty-graph-hint')`,'genuine initial failure, not empty-library tutorial');report.initialErrorObserved=true;await capture('installed-v1111-initial-error.jpg');await restoreRoot();await ui.clickText('[data-testid="graph-initial-error"] button','重新读取');await graphReady();report.initialRetryObserved=true;check(9)
+  await renameOffline(library,offline);moved=true;await ui.clickText('.app-navigation a','图谱');await ui.waitFor(`!!document.querySelector('[data-testid="graph-initial-error"]')&&!document.querySelector('.empty-graph-hint')`,'genuine initial failure, not empty-library tutorial');report.initialErrorObserved=true;await capture('installed-v1111-initial-error.jpg');await restoreRoot();await ui.clickText('[data-testid="graph-initial-error"] button','重新读取');await graphReady();report.initialRetryObserved=true;check(9)
   await select();const target=await evaluate(`(()=>{const c=document.querySelector('[data-testid="graph-canvas"]'),r=c.getBoundingClientRect(),p=JSON.parse(c.dataset.cameraPose),f=JSON.parse(c.dataset.cameraFocusDiagnostics);return {x:r.x+p.x+f.point.x*p.zoom,y:r.y+p.y+f.point.y*p.zoom}})()`)
   for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...target,button:'left',clickCount:1})
   report.singleClickStayed=await evaluate(`!!document.querySelector('[data-testid="graph-canvas"]')`)

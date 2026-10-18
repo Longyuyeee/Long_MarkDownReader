@@ -7,8 +7,17 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import {organizingChecks,validateInstalledOrganizing,assertOrganizingOutputBytes} from './lib/installed-v1-1-19-evidence.mjs'
 import {assertInstalledReleaseRuntime} from './lib/installed-release-runtime.mjs'
+import {renameOwnedOfflineFixture} from './lib/rename-owned-offline-fixture.mjs'
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),bytes=Buffer.from('synthetic-organizing-output-not-native')
 const flags=['canvasUnknownExact','canvasLocatorExact','canvasCancelExact','canvasConflictExact','groupUndoExact','groupContentsMoveExact','sourceRelinkExact','sourceOpenExact','moveReferenceExact','opmlReopenExact','opmlLocatorExact','opmlCancelExact','opmlConflictExact','lossOriginalBlocked','compatibleCopyExact','copyCollisionExact','shortcutExclusive']
+test('offline fault injection retries only real owned sharing refusals and never reports a failed setup as success',async()=>{
+ const root='C:\\LongEditR5ILibrary',offline=root+'-v1111-offline-12345678-1234-1234-1234-123456789abc',marker='graph\\.v1111-owned';let attempts=0,clock=0
+ const sharing=()=>Object.assign(Error('sharing refusal'),{code:'EPERM'}),io={access:async()=>{},rename:async(a,b)=>{assert.equal(a,root);assert.equal(b,offline);if(++attempts<3)throw sharing()},wait:async ms=>{clock+=ms},now:()=>clock}
+ const result=await renameOwnedOfflineFixture(root,offline,marker,io);assert.equal(result.attempts,3);assert.equal(result.transientErrors.length,2)
+ await assert.rejects(renameOwnedOfflineFixture('C:\\Users',offline,marker,io));await assert.rejects(renameOwnedOfflineFixture(root,offline,'..\\.v1111-owned',io))
+ attempts=0;io.rename=async()=>{attempts++;throw Object.assign(Error('unexpected missing source'),{code:'ENOENT'})};await assert.rejects(renameOwnedOfflineFixture(root,offline,marker,io),/missing source/);assert.equal(attempts,1)
+ attempts=0;clock=0;io.rename=async()=>{attempts++;throw sharing()};await assert.rejects(renameOwnedOfflineFixture(root,offline,marker,io),/sharing refusal/);assert.equal(attempts,40)
+})
 test('actual source resolver ignores stale success and failure even after reselecting the same file',async()=>{
  const source=fs.readFileSync('src/views/CanvasView.vue','utf8'),start=source.indexOf('const refreshSource = async'),end=source.indexOf('\nconst openNode =',start),body=source.slice(start,end)
  assert.ok(start>0&&end>start);const context={sourceResolutionRun:0,selectedNode:{value:{id:'f',type:'file',file:'old.md'}},sourceResolution:{value:null},captureOwner:()=>({external:false,root:'fixture'}),sameContext:()=>true,invoke:()=>{}}

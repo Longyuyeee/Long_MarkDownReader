@@ -20,7 +20,7 @@ test('current installed graph evidence binds 12 actual workflows, exact bytes, a
 })
 test('installed driver keeps the real bridge, trusted input, strict isolated root and byte comparisons',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-1-11-workflow.mjs','utf8')
- for(const token of ['RUNNER_ENVIRONMENT','github-hosted','LONGEDIT_R5I_DISPOSABLE',"assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19'].includes(appVersion))",'nativeUserInput','Input.dispatchMouseEvent','build_link_graph','fs.readFile','fs.rename','validateInstalledGraphExploration','await restoreRoot()'])assert.ok(source.includes(token),token)
+ for(const token of ['RUNNER_ENVIRONMENT','github-hosted','LONGEDIT_R5I_DISPOSABLE',"assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19'].includes(appVersion))",'nativeUserInput','Input.dispatchMouseEvent','build_link_graph','fs.readFile','renameOwnedOfflineFixture','validateInstalledGraphExploration','await restoreRoot()'])assert.ok(source.includes(token),token)
  for(const forbidden of ['dispatchEvent(', '__TAURI_INTERNALS__=', '__TAURI_INTERNALS__ =', 'force:true','force: true','isDirty=false','isDirty = false'])assert.ok(!source.includes(forbidden),forbidden)
 })
 
