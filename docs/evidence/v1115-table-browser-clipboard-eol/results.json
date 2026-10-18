@@ -1,0 +1,15 @@
+{
+  "evidenceLevel": "production-TableView-real-headless-input-simulated-native-IPC",
+  "checks": [
+    "Real trusted clipboard: two rows/three columns, exact identifiers, keyboard whole-paste undo/redo and range copy; no auto-save",
+    "Filtered paste binds visible row IDs only; sorting before undo/redo never writes hidden rows or wrong positions",
+    "Shift-click rectangle, copy and clear in one transaction; contiguous typing and header edit undo together without removing row-history features",
+    "Unfiltered append/undo/redo preserves new row IDs, formula-like text and separately added columns",
+    "Out-of-view, extra-column and clipboard-byte limits reject entire paste; no partial values or auto-save"
+  ],
+  "layouts": [],
+  "errors": [],
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'含\\r\\n换行' !== '含\\n换行'\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1115-table-browser.mjs:36:121"
+}

@@ -1,0 +1,13 @@
+{
+  "evidenceLevel": "production-TableView-real-headless-input-simulated-native-IPC",
+  "checks": [
+    "Real trusted clipboard: two rows/three columns, exact identifiers, keyboard whole-paste undo/redo and range copy; no auto-save",
+    "Filtered paste binds visible row IDs only; sorting before undo/redo never writes hidden rows or wrong positions",
+    "Shift-click rectangle, copy and clear in one transaction; contiguous typing and header edit undo together without removing row-history features"
+  ],
+  "layouts": [],
+  "errors": [],
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "failure": "locator.inputValue: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-row-id=\"row-4\"] .data-cell input').nth(2)\u001b[22m\n\n    at E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1115-table-browser.mjs:27:377"
+}

@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath,['--test','scripts/test-table-editing.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--test','scripts/test-v1114-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-content-backup-ui-state.mjs'], { stdio: 'inherit' })
 execFileSync(process.execPath, ['--test', 'scripts/test-v1112-installed-release.mjs'], { stdio: 'inherit' })

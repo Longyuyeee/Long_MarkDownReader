@@ -1,5 +1,5 @@
 // Production TableView. Native persistence is explicitly simulated, not installed evidence.
-import {createApp,h} from 'vue'
+import {createApp,h,computed,watch} from 'vue'
 import {createPinia} from 'pinia'
 import {createRouter,createWebHashHistory,RouterView} from 'vue-router'
 import {NConfigProvider,NDialogProvider,NMessageProvider,darkTheme} from 'naive-ui'
@@ -7,6 +7,9 @@ import TableView from '/src/views/TableView.vue'
 import {useAppStore} from '/src/store/app.ts'
 import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
+import '/src/styles/motion.scss'
+import {getThemeTone,isDarkTheme,resolveThemeName} from '/src/config/themePresets.ts'
+import {VISUAL_STYLE_RADII} from '/src/config/displayPreferences.ts'
 const params=new URLSearchParams(location.search),theme=params.get('theme')||'white'
 const view={filter:'',sortDirection:'asc',frozenColumns:0,columnWidths:[230,190,190],cardColumns:[],groupBy:'state',titleColumn:'task',categoryColumn:'state',valueColumn:'code',aggregation:'count',chartType:'bar',nullStrategy:'skip',showLegend:true,dashboardItems:[]}
 const rows=[['确认交付','待处理','00123'],['核对合同','隐藏','9007199254740993123'],['检查文档','待处理','2026-10-18'],['发送报告','已完成','=SUM(A1:A2)']]
@@ -25,9 +28,13 @@ window.__TAURI_INTERNALS__={invoke:async(command,args)=>{
  }
  throw Error('Unexpected isolated Table IPC: '+command)
 }}
-const pinia=createPinia(),store=useAppStore(pinia);store.activeLibraryPath='isolated';store.configReady=true;store.motionSpeed='calm'
+const pinia=createPinia(),store=useAppStore(pinia);store.activeLibraryPath='isolated';store.configReady=true;store.motionSpeed='normal';store.theme=theme;store.visualStyle='soft';audit.store=store
+const systemDark=params.get('dark')==='1'
+watch(()=>store.theme,value=>{document.body.dataset.theme=resolveThemeName(value,systemDark);document.body.classList.toggle('is-dark',isDarkTheme(value,systemDark))},{immediate:true})
+watch(()=>store.visualStyle,value=>document.body.dataset.style=value,{immediate:true})
+const overrides=computed(()=>{const tone=getThemeTone(store.theme,systemDark).ui,radius=VISUAL_STYLE_RADII[store.visualStyle];return{common:{primaryColor:tone.primary,primaryColorHover:tone.primary,primaryColorPressed:tone.primary,textColor1:tone.text,textColor2:tone.text+'c7',textColor3:tone.text+'8f',borderColor:tone.text+'26',cardColor:tone.surface,modalColor:tone.surface,popoverColor:tone.surface,bodyColor:'transparent',borderRadius:radius.normal,borderRadiusSmall:radius.small}}})
 const router=createRouter({history:createWebHashHistory(),routes:[{path:'/table',component:TableView},{path:'/library',component:{render:()=>h('button',{onClick:()=>router.push('/table?path=任务清单.csv')},'重新打开表格')}}]})
 await router.push('/table?path=任务清单.csv')
-const app=createApp({render:()=>h(NConfigProvider,{theme:params.get('dark')==='1'?darkTheme:null},{default:()=>h(NDialogProvider,{},{default:()=>h(NMessageProvider,{},{default:()=>h(RouterView)})})})})
+const app=createApp({render:()=>h(NConfigProvider,{theme:isDarkTheme(store.theme,systemDark)?darkTheme:null,themeOverrides:overrides.value},{default:()=>h(NDialogProvider,{},{default:()=>h(NMessageProvider,{},{default:()=>h(RouterView)})})})})
 app.use(pinia).use(router).mount('#app')
-document.documentElement.dataset.theme=theme;document.body.dataset.theme=theme;document.body.dataset.motion='calm';document.body.style.margin='0';document.getElementById('app').style.height='100vh';document.querySelector('.n-config-provider').style.height='100%'
+document.documentElement.dataset.theme=theme;document.body.dataset.motion='normal';document.body.style.margin='0';document.getElementById('app').style.height='100vh';document.querySelector('.n-config-provider').style.height='100%'

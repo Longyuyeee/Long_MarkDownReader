@@ -1,0 +1,17 @@
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+'含\r\n换行' !== '含\n换行'
+
+    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1115-table-browser.mjs:36:121 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '含\r\n换行',
+  expected: '含\n换行',
+  operator: 'strictEqual'
+}
+
+Node.js v22.12.0

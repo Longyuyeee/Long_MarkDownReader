@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: integer sort distinguishes adjacent long identifiers without floating-point rounding
+ok 1 - integer sort distinguishes adjacent long identifiers without floating-point rounding
+  ---
+  duration_ms: 0.5331
+  ...
+# Subtest: clipboard quotes, embedded newlines, empty tails and exact text roundtrip
+ok 2 - clipboard quotes, embedded newlines, empty tails and exact text roundtrip
+  ---
+  duration_ms: 1.7757
+  ...
+# Subtest: filtered targets are stable IDs and whole paste has one reversible patch
+ok 3 - filtered targets are stable IDs and whole paste has one reversible patch
+  ---
+  duration_ms: 0.4083
+  ...
+# Subtest: append is bounded, undo preserves later-added columns and stable original identities
+ok 4 - append is bounded, undo preserves later-added columns and stable original identities
+  ---
+  duration_ms: 0.266
+  ...
+# Subtest: out of view, columns, budgets and conflicting undo reject atomically
+ok 5 - out of view, columns, budgets and conflicting undo reject atomically
+  ---
+  duration_ms: 2.0141
+  ...
+# Subtest: zero-length and identical cells never cause spurious edits; formula-looking values stay text
+ok 6 - zero-length and identical cells never cause spurious edits; formula-looking values stay text
+  ---
+  duration_ms: 0.1875
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16.3934

@@ -15,7 +15,7 @@ try {
  await page.getByRole('button',{name:'清除筛选',exact:true}).click()
  await page.getByRole('button',{name:'＋ 行',exact:true}).click()
  assert.equal(await page.locator('.table-row').count(),3)
- await page.getByTitle('撤销行操作 (Ctrl+Z)').click()
+ await page.getByTitle('撤销数据修改 (Ctrl+Z)').click()
  assert.equal(await page.locator('.table-row').count(),2)
  await page.screenshot({path:output+'/01-grid-wide.png',animations:'disabled'})
  await page.evaluate(()=>document.querySelector('#app').style.width='480px')

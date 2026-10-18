@@ -917,6 +917,14 @@ fn export_delimited(document: &TableDocument, delimiter: u8) -> Result<Vec<u8>, 
     writer.into_inner().map_err(|error| error.to_string())
 }
 
+fn lossless_xlsx_number(value: &str) -> Option<f64> {
+    // Excel numbers have 15 significant decimal digits. Inference is a hint,
+    // not permission to remove leading zeros/signs or round an identifier.
+    if value.bytes().filter(u8::is_ascii_digit).count() > 15 { return None; }
+    let number = value.parse::<f64>().ok()?;
+    (number.is_finite() && number.to_string() == value).then_some(number)
+}
+
 fn export_xlsx(document: &TableDocument) -> Result<Vec<u8>, String> {
     let mut workbook = Workbook::new();
     let header = Format::new().set_bold();
@@ -949,8 +957,8 @@ fn export_xlsx(document: &TableDocument) -> Result<Vec<u8>, String> {
             let row_number = (row_index + 1) as u32;
             let column_number = column as u16;
             match document.column_types.get(column).map(String::as_str) {
-                Some("integer" | "number") if value.parse::<f64>().is_ok() => worksheet
-                    .write_number(row_number, column_number, value.parse::<f64>().unwrap())
+                Some("integer" | "number") if lossless_xlsx_number(value).is_some() => worksheet
+                    .write_number(row_number, column_number, lossless_xlsx_number(value).unwrap())
                     .map_err(|error| error.to_string())?,
                 Some("boolean")
                     if matches!(value.to_ascii_lowercase().as_str(), "true" | "false") =>
@@ -1395,6 +1403,47 @@ mod tests {
         assert!(xlsx.starts_with(b"PK"));
         assert!(xlsx.len() > 1_000);
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn xlsx_export_keeps_identifier_spelling_and_formula_looking_text() {
+        use std::io::{Cursor, Read};
+        let path = temp_table("csv", b"code,amount,formula\n00123,12.5,=SUM(A1:A2)\n9007199254740993123,2,+123\n");
+        let document = parse_table(&path).unwrap();
+        let bytes = export_xlsx(&document).unwrap();
+        let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let mut sheet = String::new();
+        archive.by_name("xl/worksheets/sheet1.xml").unwrap().read_to_string(&mut sheet).unwrap();
+        assert!(sheet.contains("r=\"A2\" t=\"s\""), "Leading-zero identifier must remain a string: {sheet}");
+        assert!(sheet.contains("r=\"A3\" t=\"s\""), "Long identifier must remain a string");
+        assert!(!sheet.contains("<f>"));
+        let mut strings = String::new();
+        archive.by_name("xl/sharedStrings.xml").unwrap().read_to_string(&mut strings).unwrap();
+        for expected in ["00123", "9007199254740993123", "=SUM(A1:A2)", "+123"] { assert!(strings.contains(expected)); }
+        assert!(sheet.contains("<v>12.5</v>"));
+        fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    }
+
+    #[test]
+    fn bulk_text_roundtrip_preserves_bom_crlf_quotes_tabs_and_empty_tail() {
+        for extension in ["csv", "tsv"] {
+            let initial = if extension == "csv" { b"\xef\xbb\xbfa,b,c\r\nx,y,z\r\n".as_slice() } else { b"\xef\xbb\xbfa\tb\tc\r\nx\ty\tz\r\n".as_slice() };
+            let path = temp_table(extension, initial);
+            let document = parse_table(&path).unwrap();
+            let mut next = payload(&document);
+            let rows: Vec<Vec<String>> = vec![vec!["00123".into(), "含\t制表符\r\n和\"引号\"".into(), String::new()], vec!["9007199254740993123".into(), "中文".into(), "=SUM(A1:A2)".into()]];
+            next.rows = rows.clone();
+            write_table(&path, next).unwrap();
+            let bytes = fs::read(&path).unwrap();
+            assert!(bytes.starts_with(&[0xef, 0xbb, 0xbf]));
+            assert!(bytes.ends_with(b"\r\n"));
+            let reopened = parse_table(&path).unwrap();
+            assert_eq!(reopened.rows, rows);
+            assert_eq!(reopened.encoding, document.encoding);
+            assert_eq!(reopened.has_bom, document.has_bom);
+            assert_eq!(reopened.line_ending, document.line_ending);
+            fs::remove_dir_all(path.parent().unwrap()).unwrap();
+        }
     }
 
     #[test]

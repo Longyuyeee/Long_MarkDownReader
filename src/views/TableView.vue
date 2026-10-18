@@ -8,8 +8,8 @@
         <div><strong>{{ fileName }}</strong><span v-if="table">{{ isExternal ? '外部表格 · 仅点击保存写回 · ' : '' }}{{ table.rows.length.toLocaleString() }} 行 × {{ table.headers.length }} 列 · {{ formatLabel }} · {{ table.encoding }}</span></div>
       </div>
       <div v-if="table" class="table-tools" data-command-strip data-horizontal-wheel="always">
-        <button class="history-button icon-tool" title="撤销行操作 (Ctrl+Z)" :disabled="!rowUndoStack.length || saving" @click="undoRowOperation"><UndoIcon /></button>
-        <button class="history-button icon-tool" title="重做行操作 (Ctrl+Y)" :disabled="!rowRedoStack.length || saving" @click="redoRowOperation"><RedoIcon /></button>
+        <button class="history-button icon-tool" title="撤销数据修改 (Ctrl+Z)" :disabled="!rowUndoStack.length" @click="undoRowOperation"><UndoIcon /></button>
+        <button class="history-button icon-tool" title="重做数据修改 (Ctrl+Y)" :disabled="!rowRedoStack.length" @click="redoRowOperation"><RedoIcon /></button>
         <label class="table-filter"><span>⌕</span><input v-model="filterQuery" placeholder="筛选所有字段" @input="markViewDirty" /><button v-if="filterQuery" type="button" aria-label="清除筛选" @click="clearFilter">×</button></label>
         <label v-if="activeViewKind === 'grid'" class="freeze-control" title="固定最前面的列，横向滚动时保持可见">
           <SnowflakeIcon /><span>冻结</span>
@@ -78,6 +78,13 @@
         <div v-else class="table-meta-bar">
           <span>显示 {{ filteredIndices.length.toLocaleString() }} / {{ table.rows.length.toLocaleString() }} 行</span>
           <template v-if="activeViewKind === 'grid'">
+            <span v-if="cellRange" class="cell-range-actions">
+              {{ cellRange.rows.length }} 行 × {{ cellRange.columns.length }} 列
+              <button type="button" @click="copySelectedCells">复制选区</button>
+              <button type="button" @click="clearSelectedCells">清空</button>
+              <button type="button" @click="cellRange = null">取消选区</button>
+            </span>
+            <span v-else class="cell-range-hint" title="数据撤销保留最近100次/8MiB；新增列与视图设置不在撤销范围。">Shift＋点击选多格 · 粘贴可一次撤销</span>
             <span v-if="sortColumn >= 0">按“{{ headerLabel(sortColumn) }}”{{ sortDirection === 'asc' ? '升序' : '降序' }}</span>
             <button v-if="sortColumn >= 0" @click="clearSort">清除排序</button>
             <span v-if="selectedRowIndex >= 0" class="row-selection-actions">
@@ -94,12 +101,12 @@
           </template>
           <i v-if="notice" aria-live="polite">{{ notice }}</i>
         </div>
-        <div v-if="activeViewKind === 'grid'" ref="scrollRef" class="table-scroll" data-horizontal-wheel="headers" @scroll="handleScroll">
+        <div v-if="activeViewKind === 'grid'" ref="scrollRef" class="table-scroll" data-horizontal-wheel="headers" @scroll="handleScroll" @copy="copyCellEvent" @cut="copyCellEvent($event, true)">
           <div class="table-canvas" :style="{ width: `${tableWidth}px` }">
             <div class="table-header" :style="gridStyle">
               <div class="row-number header-number">#</div>
               <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="header-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1 }" :style="frozenColumnStyle(column)">
-                <input :value="table.headers[column]" :aria-label="`第 ${column + 1} 列名称`" @input="editHeader(column, $event)" />
+                <input :value="table.headers[column]" :aria-label="`第 ${column + 1} 列名称`" @focus="editSession++" @input="editHeader(column, $event)" />
                 <button :title="`按 ${headerLabel(column)} 排序`" @click="cycleSort(column)">{{ sortColumn === column ? (sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</button>
                 <small>{{ typeLabel(table.columnTypes[column]) }}</small>
                 <span class="column-resize" title="拖动调整列宽" @pointerdown="startColumnResize(column, $event)"></span>
@@ -108,7 +115,7 @@
             <div class="virtual-body" :style="{ height: `${filteredIndices.length * rowHeight}px` }">
               <div
                 v-for="item in visibleRows"
-                :key="item.rowIndex"
+                :key="table.rowIds[item.rowIndex]"
                 class="table-row"
                 data-testid="table-data-row"
                 :data-row-id="table.rowIds[item.rowIndex]"
@@ -123,12 +130,20 @@
                   :aria-pressed="table.rowIds[item.rowIndex] === selectedRowId"
                   @click="selectRow(item.rowIndex)"
                 >{{ item.rowIndex + 1 }}</button>
-                <div v-for="(_, column) in table.headers" :key="column" class="data-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1 }" :style="frozenColumnStyle(column)">
+                <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="data-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1, 'range-selected': selectedCellRows.has(table.rowIds[item.rowIndex]) && selectedCellColumns.has(table.columnIds[column]), 'has-multiline': hasCellNewline(item.rowIndex, column) }" :style="frozenColumnStyle(column)">
                   <input
-                    :value="table.rows[item.rowIndex][column]"
+                    :value="hasCellNewline(item.rowIndex, column) ? table.rows[item.rowIndex][column].replace(/\r\n|\r|\n/g, ' ⏎ ') : table.rows[item.rowIndex][column]"
+                    :readonly="hasCellNewline(item.rowIndex, column)"
+                    :title="hasCellNewline(item.rowIndex, column) ? '含换行，双击或 Enter 编辑：' + table.rows[item.rowIndex][column] : undefined"
                     :aria-label="`${headerLabel(column)}，第 ${item.rowIndex + 1} 行`"
+                    @pointerdown="selectCell(item.rowIndex, column, $event)"
+                    @focus="focusCell(item.rowIndex, column)"
                     @input="editCell(item.rowIndex, column, $event)"
+                    @paste="pasteCells(item.rowIndex, column, $event)"
+                    @dblclick="hasCellNewline(item.rowIndex, column) && editMultilineCell(item.rowIndex, column)"
+                    @keydown.enter="hasCellNewline(item.rowIndex, column) && ( $event.preventDefault(), editMultilineCell(item.rowIndex, column) )"
                   />
+                  <button v-if="hasCellNewline(item.rowIndex, column)" class="multiline-cell-editor" type="button" title="编辑多行内容" :aria-label="`编辑${headerLabel(column)}第${item.rowIndex + 1}行多行内容`" @pointerdown.stop @click="editMultilineCell(item.rowIndex, column)">↵</button>
                 </div>
               </div>
             </div>
@@ -142,7 +157,7 @@
                 <header class="board-card-title"><GripIcon /><strong :title="cardTitle(row)">{{ cardTitle(row) }}</strong></header>
                 <label v-for="id in cardFieldIds" :key="id" class="board-card-field">
                   <span :title="headerLabel(columnIndex(id))">{{ headerLabel(columnIndex(id)) }}</span>
-                  <textarea rows="1" :value="table.rows[row][columnIndex(id)]" :title="table.rows[row][columnIndex(id)]" @input="editCell(row, columnIndex(id), $event)"></textarea>
+                  <textarea rows="1" :value="table.rows[row][columnIndex(id)]" :title="table.rows[row][columnIndex(id)]" @focus="editSession++" @input="editCell(row, columnIndex(id), $event)"></textarea>
                 </label>
                 <footer title="拖动卡片到其他分组"><span>#{{ row + 1 }}</span><GripIcon /></footer>
               </article>
@@ -205,6 +220,7 @@ import TableChartEditor from '../components/TableChartEditor.vue'
 import TableDashboard, { type DashboardItem } from '../components/TableDashboard.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { promptAppAction } from '../services/appDialog'
+import { applyTableEdit, compareTableIntegers, parseTableClipboard, planTablePaste, serializeTableClipboard, tableEditSize, TABLE_CLIPBOARD_BYTES, TABLE_EDIT_CELLS, TABLE_HISTORY_BYTES, type TableEdit } from '../utils/tableEditing'
 
 type ViewKind = 'grid' | 'board' | 'chart' | 'dashboard'
 type ChartType = 'bar' | 'line' | 'pie' | 'scatter'
@@ -252,7 +268,10 @@ interface RowHistoryEntry {
   index: number
   row: string[]
   rowId: string
+  columnIds?: string[]
 }
+interface CellHistoryEntry { kind: 'edit'; edit: TableEdit; session?: string }
+type DataHistoryEntry = RowHistoryEntry | CellHistoryEntry
 
 const route = useRoute()
 const router = useRouter()
@@ -269,8 +288,12 @@ const saving = ref(false)
 const converting = ref(false)
 const notice = ref('')
 const selectedRowId = ref('')
-const rowUndoStack = ref<RowHistoryEntry[]>([])
-const rowRedoStack = ref<RowHistoryEntry[]>([])
+const rowUndoStack = ref<DataHistoryEntry[]>([])
+const rowRedoStack = ref<DataHistoryEntry[]>([])
+const cellRange = ref<{ anchorRow: string; anchorColumn: string; rows: string[]; columns: string[] } | null>(null)
+const selectedCellRows = computed(() => new Set(cellRange.value?.rows || []))
+const selectedCellColumns = computed(() => new Set(cellRange.value?.columns || []))
+let editSession = 0
 const filterQuery = ref('')
 const sortColumn = ref(-1)
 const sortDirection = ref<'asc' | 'desc'>('asc')
@@ -339,7 +362,8 @@ const headerLabel = (column: number) => table.value?.headers[column]?.trim() || 
 
 const inferType = (column: number) => {
   if (!table.value) return 'text'
-  const values = table.value.rows.map(row => row[column]?.trim()).filter(Boolean).slice(0, 2_000) as string[]
+  const values: string[] = []
+  for (const row of table.value.rows) { const value = row[column]?.trim(); if (value) values.push(value); if (values.length >= 2_000) break }
   if (!values.length) return 'empty'
   if (values.every(value => /^[-+]?\d+$/.test(value))) return 'integer'
   if (values.every(value => Number.isFinite(Number(value)))) return 'number'
@@ -348,16 +372,20 @@ const inferType = (column: number) => {
   return 'text'
 }
 
+const pendingTypeColumns = new Set<number>()
 const scheduleTypeRefresh = (column: number) => {
+  pendingTypeColumns.add(column)
   window.clearTimeout(typeTimer)
   const document = table.value
   typeTimer = window.setTimeout(() => {
-    if (document && table.value === document) document.columnTypes[column] = inferType(column)
+    if (document && table.value === document) for (const index of pendingTypeColumns) document.columnTypes[index] = inferType(index)
+    pendingTypeColumns.clear()
   }, 180)
 }
 
 const compareValues = (left: string, right: string, type: string) => {
-  if (type === 'integer' || type === 'number') return (Number(left) || 0) - (Number(right) || 0)
+  if (type === 'integer') return compareTableIntegers(left, right)
+  if (type === 'number') return (Number(left) || 0) - (Number(right) || 0)
   if (type === 'boolean') return Number(/^true$/i.test(left)) - Number(/^true$/i.test(right))
   if (type === 'date') return Date.parse(left) - Date.parse(right)
   return left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' })
@@ -430,6 +458,123 @@ const markDirty = () => {
   const tab = store.tabs.find(item => item.path === tablePath.value)
   if (tab) tab.isDirty = true
   recordWindowDraftActivity()
+}
+const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'edit' ? entry.edit.bytes : 128 + entry.row.reduce((sum, value) => sum + value.length * 2 + 16, 0)
+const pushDataHistory = (entry: DataHistoryEntry) => {
+  rowRedoStack.value = []
+  const history = [...rowUndoStack.value, entry]
+  let bytes = history.reduce((sum, item) => sum + historyEntryBytes(item), 0), evicted = false
+  while (history.length > 100 || bytes > TABLE_HISTORY_BYTES) { bytes -= historyEntryBytes(history.shift()!); evicted = true }
+  rowUndoStack.value = history
+  return evicted
+}
+const commitCellEdit = (edit: TableEdit, session?: string) => {
+  if (!table.value || (!edit.cells.length && !edit.headers.length && !edit.appended.length)) return
+  const previous = rowUndoStack.value[rowUndoStack.value.length - 1]
+  let merged: TableEdit | undefined
+  if (session && previous?.kind === 'edit' && previous.session === session) {
+    merged = { ...previous.edit, cells: previous.edit.cells.map(cell => ({ ...cell, after: edit.cells.find(next => next.rowId === cell.rowId && next.columnId === cell.columnId)?.after ?? cell.after })), headers: previous.edit.headers.map(header => ({ ...header, after: edit.headers.find(next => next.columnId === header.columnId)?.after ?? header.after })) }
+    merged.bytes = tableEditSize(merged)
+  }
+  const retained = merged || edit
+  if (retained.bytes > TABLE_HISTORY_BYTES) throw Error('修改超过8MiB撤销预算，本次未执行')
+  applyTableEdit(table.value, edit, true)
+  if (merged) rowUndoStack.value = rowUndoStack.value.slice(0, -1)
+  const evicted = pushDataHistory({ kind: 'edit', edit: retained, session })
+  for (const column of new Set(edit.cells.map(cell => table.value!.columnIds.indexOf(cell.columnId)))) scheduleTypeRefresh(column)
+  for (const row of edit.appended) row.values.forEach((value, column) => { if (value) scheduleTypeRefresh(column) })
+  markDirty()
+  notice.value = `${edit.label}已写入草稿，可一次撤销；点击保存后才写入文件${evicted ? '（最早撤销记录已超过容量，已移出）' : ''}`
+}
+const singleCellEdit = (row: number, column: number, value: string, label: string, session?: string) => {
+  const document = table.value
+  if (!document || !document.rowIds[row] || !document.columnIds[column]) return
+  if (value.length > 1_000_000) throw Error('单元格超过100万字符，本次未修改')
+  const before = document.rows[row][column]
+  if (before === value) return
+  const edit: TableEdit = { label, cells: [{ rowId: document.rowIds[row], columnId: document.columnIds[column], before, after: value }], headers: [], appended: [], columnIds: [...document.columnIds], bytes: 0 }
+  edit.bytes = tableEditSize(edit); commitCellEdit(edit, session)
+}
+const hasCellNewline = (row: number, column: number) => /[\r\n]/.test(table.value?.rows[row]?.[column] || '')
+const editMultilineCell = async (row: number, column: number) => {
+  const document = table.value, generation = loadGeneration
+  if (!document) return
+  const rowId = document.rowIds[row], columnId = document.columnIds[column], before = document.rows[row][column]
+  const next = await promptAppAction(dialog, { title: '编辑多行单元格', content: '确认只写入当前草稿，可一次撤销；仍须点击保存才写入文件。', initialValue: before, multiline: true, positiveText: '写入草稿' })
+  if (next === null) return
+  const r = document.rowIds.indexOf(rowId), c = document.columnIds.indexOf(columnId)
+  if (table.value !== document || generation !== loadGeneration || r < 0 || c < 0 || document.rows[r][c] !== before) { message.warning('目标单元格已变化，未写入，请重新打开编辑'); return }
+  // A textarea exposes LF; retain the cell's existing uniform CRLF style on an explicit edit.
+  const value = /\r\n/.test(before) && !/[^\r]\n/.test(before) ? next.replace(/\r\n|\r|\n/g, '\r\n') : next
+  try { editSession++; singleCellEdit(r, c, value, '编辑多行单元格') }
+  catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+const selectCell = (row: number, column: number, event?: PointerEvent) => {
+  if (!table.value) return
+  const rowId = table.value.rowIds[row], columnId = table.value.columnIds[column]
+  if (event?.shiftKey && cellRange.value) {
+    event.preventDefault()
+    const ids = filteredIndices.value.map(index => table.value!.rowIds[index]), first = ids.indexOf(cellRange.value.anchorRow), last = ids.indexOf(rowId), startColumn = table.value.columnIds.indexOf(cellRange.value.anchorColumn)
+    if (first < 0 || last < 0 || startColumn < 0) { cellRange.value = null; return }
+    const rows = ids.slice(Math.min(first, last), Math.max(first, last) + 1), columns = table.value.columnIds.slice(Math.min(startColumn, column), Math.max(startColumn, column) + 1)
+    if (rows.length * columns.length > TABLE_EDIT_CELLS) { message.warning('选区最多20,000格，请缩小范围'); return }
+    cellRange.value = { ...cellRange.value, rows, columns }
+  } else cellRange.value = { anchorRow: rowId, anchorColumn: columnId, rows: [rowId], columns: [columnId] }
+  selectedRowId.value = ''
+}
+const focusCell = (row: number, column: number) => { editSession++; if (!cellRange.value || !selectedCellRows.value.has(table.value!.rowIds[row]) || !selectedCellColumns.value.has(table.value!.columnIds[column])) selectCell(row, column) }
+const selectedValues = () => {
+  if (!table.value || !cellRange.value) throw Error('请先选择单元格')
+  const rows = new Map(table.value.rowIds.map((id, index) => [id, index])), visible = new Set(filteredIndices.value.map(index => table.value!.rowIds[index]))
+  return cellRange.value.rows.map(id => {
+    const index = rows.get(id); if (index === undefined || !visible.has(id)) throw Error('选区已不可见，请重新选择')
+    return cellRange.value!.columns.map(columnId => { const column = table.value!.columnIds.indexOf(columnId); if (column < 0) throw Error('选区列已变化'); return table.value!.rows[index][column] })
+  })
+}
+const rangeClipboard = () => {
+  const values = selectedValues(), text = serializeTableClipboard(values)
+  if (new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) throw Error('复制内容超过2MiB，请缩小选区')
+  const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return { text, html: '<table>' + values.map(row => '<tr>' + row.map(value => '<td>' + escape(value).split('\n').join('<br>') + '</td>').join('') + '</tr>').join('') + '</table>' }
+}
+const copySelectedCells = async () => {
+  try { const { text, html } = rangeClipboard(); await navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }), 'text/html': new Blob([html], { type: 'text/html' }) })]); notice.value = '已复制选区；原值未修改' }
+  catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+const copyCellEvent = (event: ClipboardEvent, cut = false) => {
+  const input = event.target as HTMLInputElement
+  if (!input.closest('.data-cell') || !cellRange.value || !event.clipboardData) return
+  if (!input.readOnly && cellRange.value.rows.length * cellRange.value.columns.length === 1 && input.selectionStart !== input.selectionEnd) return
+  event.preventDefault()
+  try { const { text, html } = rangeClipboard(); event.clipboardData.setData('text/plain', text); event.clipboardData.setData('text/html', html); if (cut) clearSelectedCells() }
+  catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+const pasteCells = (row: number, column: number, event: ClipboardEvent) => {
+  if (!table.value || !event.clipboardData) return
+  const text = event.clipboardData.getData('text/plain'), structured = /<table\b/i.test(event.clipboardData.getData('text/html'))
+  if (!event.clipboardData.types.includes('text/plain')) return
+  if (new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) { event.preventDefault(); message.error('剪贴板超过2MiB，请分批粘贴；本次未修改'); return }
+  if (!structured && !/[\t\r\n]/.test(text) && !hasCellNewline(row, column) && (!cellRange.value || cellRange.value.rows.length * cellRange.value.columns.length === 1)) return
+  event.preventDefault()
+  try {
+    let values = parseTableClipboard(text, structured)
+    const range = cellRange.value
+    if (range && values.length === 1 && values[0].length === 1 && range.rows.length * range.columns.length > 1) values = range.rows.map(() => range.columns.map(() => values[0][0]))
+    const visible = filteredIndices.value.map(index => table.value!.rowIds[index]), rowId = range?.rows[0] || table.value.rowIds[row], columnId = range?.columns[0] || table.value.columnIds[column]
+    const edit = planTablePaste(table.value, visible, rowId, columnId, values, !filterQuery.value.trim() && sortColumn.value < 0, () => 'row-' + crypto.randomUUID())
+    editSession++; commitCellEdit(edit)
+    const first = visible.indexOf(rowId), startColumn = table.value.columnIds.indexOf(columnId)
+    cellRange.value = { anchorRow: rowId, anchorColumn: columnId, rows: [...visible.slice(first, first + values.length), ...edit.appended.map(item => item.id)], columns: table.value.columnIds.slice(startColumn, startColumn + values[0].length) }
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
+const clearSelectedCells = () => {
+  if (!table.value || !cellRange.value) return
+  try {
+    const values = selectedValues(), range = cellRange.value
+    const edit: TableEdit = { label: '清空选区', cells: [], headers: [], appended: [], columnIds: [...table.value.columnIds], bytes: 0 }
+    values.forEach((row, r) => row.forEach((value, c) => { if (value) edit.cells.push({ rowId: range.rows[r], columnId: range.columns[c], before: value, after: '' }) }))
+    edit.bytes = tableEditSize(edit); editSession++; commitCellEdit(edit)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const captureActiveView = () => {
   const current = activeView.value
@@ -577,12 +722,21 @@ const setFrozenColumns = (event: Event) => {
 const frozenColumnStyle = (column: number) => column < frozenColumns.value
   ? { left: `${52 + columnWidths.value.slice(0, column).reduce((sum, width) => sum + width, 0)}px` }
   : undefined
-const editHeader = (column: number, event: Event) => { if (table.value) { table.value.headers[column] = (event.target as HTMLInputElement).value; markDirty() } }
+const editHeader = (column: number, event: Event) => {
+  if (!table.value) return
+  const input = event.target as HTMLInputElement, before = table.value.headers[column]
+  if (before === input.value) return
+  try {
+    if (input.value.length > 1_000_000) throw Error('表头超过100万字符，本次未修改')
+    const edit: TableEdit = { label: '编辑表头', cells: [], headers: [{ columnId: table.value.columnIds[column], before, after: input.value }], appended: [], columnIds: [...table.value.columnIds], bytes: 0 }
+    edit.bytes = tableEditSize(edit); commitCellEdit(edit, `header-${column}-${editSession}`)
+  } catch (cause) { input.value = before; message.error(String(cause).replace(/^Error:\s*/, '')) }
+}
 const editCell = (row: number, column: number, event: Event) => {
   if (!table.value) return
-  table.value.rows[row][column] = (event.target as HTMLInputElement).value
-  markDirty()
-  scheduleTypeRefresh(column)
+  const input = event.target as HTMLInputElement
+  try { singleCellEdit(row, column, input.value, '编辑单元格', `${table.value.rowIds[row]}-${table.value.columnIds[column]}-${editSession}`) }
+  catch (cause) { input.value = table.value.rows[row][column]; message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 
 const cycleSort = (column: number) => {
@@ -596,6 +750,7 @@ const clearSort = () => { sortColumn.value = -1; sortDirection.value = 'asc'; ma
 
 const addRow = () => {
   if (!table.value) return
+  if (table.value.rows.length >= 200_000) { message.warning('已达到20万行上限，本次未新增'); return }
   const entry: RowHistoryEntry = {
     kind: 'add',
     index: table.value.rows.length,
@@ -619,11 +774,11 @@ const addColumn = () => {
   markDirty()
 }
 const pushRowHistory = (entry: RowHistoryEntry) => {
-  rowUndoStack.value = [...rowUndoStack.value.slice(-99), { ...entry, row: [...entry.row] }]
-  rowRedoStack.value = []
+  pushDataHistory({ ...entry, row: [...entry.row], columnIds: [...table.value!.columnIds] })
 }
 const selectRow = (row: number) => {
   if (!table.value) return
+  cellRange.value = null
   const rowId = table.value.rowIds[row] || ''
   selectedRowId.value = selectedRowId.value === rowId ? '' : rowId
 }
@@ -637,6 +792,7 @@ const deleteSelectedRow = () => {
     row: [...table.value.rows[index]],
     rowId: table.value.rowIds[index],
   }
+  if (historyEntryBytes(entry) > TABLE_HISTORY_BYTES) { message.warning('该行超过8MiB撤销预算，本次未删除'); return }
   table.value.rows.splice(index, 1)
   table.value.rowIds.splice(index, 1)
   pushRowHistory(entry)
@@ -659,19 +815,30 @@ const undoRowOperation = () => {
   if (!table.value) return
   const entry = rowUndoStack.value[rowUndoStack.value.length - 1]
   if (!entry) return
+  if (entry.kind === 'edit') {
+    try {
+      applyTableEdit(table.value, entry.edit, false)
+      rowUndoStack.value = rowUndoStack.value.slice(0, -1); rowRedoStack.value.push(entry)
+      for (const id of new Set(entry.edit.cells.map(cell => cell.columnId))) scheduleTypeRefresh(table.value.columnIds.indexOf(id))
+      for (const row of entry.edit.appended) row.values.forEach((value, column) => { if (value) scheduleTypeRefresh(column) })
+      editSession++; markDirty(); notice.value = `已撤销${entry.edit.label}，当前为未保存草稿`
+      cellRange.value = null
+    } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+    return
+  }
   rowUndoStack.value = rowUndoStack.value.slice(0, -1)
   let completedEntry = entry
   if (entry.kind === 'add') {
     const index = table.value.rowIds.indexOf(entry.rowId)
     if (index >= 0) {
-      completedEntry = { ...entry, index, row: [...table.value.rows[index]] }
+      completedEntry = { ...entry, index, row: [...table.value.rows[index]], columnIds: [...table.value.columnIds] }
       table.value.rows.splice(index, 1)
       table.value.rowIds.splice(index, 1)
     }
     selectedRowId.value = ''
   } else {
     const index = Math.min(entry.index, table.value.rows.length)
-    table.value.rows.splice(index, 0, [...entry.row])
+    table.value.rows.splice(index, 0, table.value.columnIds.map((id, column) => entry.row[entry.columnIds ? entry.columnIds.indexOf(id) : column] ?? ''))
     table.value.rowIds.splice(index, 0, entry.rowId)
     selectedRowId.value = entry.rowId
   }
@@ -683,17 +850,28 @@ const redoRowOperation = () => {
   if (!table.value) return
   const entry = rowRedoStack.value[rowRedoStack.value.length - 1]
   if (!entry) return
+  if (entry.kind === 'edit') {
+    try {
+      applyTableEdit(table.value, entry.edit, true)
+      rowRedoStack.value = rowRedoStack.value.slice(0, -1); rowUndoStack.value.push(entry)
+      for (const id of new Set(entry.edit.cells.map(cell => cell.columnId))) scheduleTypeRefresh(table.value.columnIds.indexOf(id))
+      for (const row of entry.edit.appended) row.values.forEach((value, column) => { if (value) scheduleTypeRefresh(column) })
+      editSession++; markDirty(); notice.value = `已重做${entry.edit.label}，当前为未保存草稿`
+      cellRange.value = null
+    } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
+    return
+  }
   rowRedoStack.value = rowRedoStack.value.slice(0, -1)
   let completedEntry = entry
   if (entry.kind === 'add') {
     const index = Math.min(entry.index, table.value.rows.length)
-    table.value.rows.splice(index, 0, [...entry.row])
+    table.value.rows.splice(index, 0, table.value.columnIds.map((id, column) => entry.row[entry.columnIds ? entry.columnIds.indexOf(id) : column] ?? ''))
     table.value.rowIds.splice(index, 0, entry.rowId)
     selectedRowId.value = entry.rowId
   } else {
     const index = table.value.rowIds.indexOf(entry.rowId)
     if (index >= 0) {
-      completedEntry = { ...entry, index, row: [...table.value.rows[index]] }
+      completedEntry = { ...entry, index, row: [...table.value.rows[index]], columnIds: [...table.value.columnIds] }
       table.value.rows.splice(index, 1)
       table.value.rowIds.splice(index, 1)
     }
@@ -712,8 +890,8 @@ const moveCard = (row: number, group: string) => {
   if (!table.value) return
   const column = columnIndex(groupBy.value)
   if (column < 0) return
-  table.value.rows[row][column] = group === '未分组' ? '' : group
-  markDirty()
+  try { editSession++; singleCellEdit(row, column, group === '未分组' ? '' : group, '移动看板卡片') }
+  catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const cardDragStart = (row: number, event: DragEvent) => event.dataTransfer?.setData('text/plain', String(row))
 const cardDrop = (group: string, event: DragEvent) => {
@@ -764,6 +942,8 @@ const loadTable = async () => {
     table.value = document
     presentedPath.value = requestedPath
     selectedRowId.value = ''
+    cellRange.value = null
+    pendingTypeColumns.clear()
     rowUndoStack.value = []
     rowRedoStack.value = []
     views.value = document.views?.length ? document.views : [{ id: 'grid', name: '表格', kind: 'grid', config: document.view }]
@@ -976,14 +1156,16 @@ const handleScroll = () => {
   })
 }
 const handleKeydown = (event: KeyboardEvent) => {
-  if (loading.value) return
+  if (loading.value || event.isComposing) return
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void saveTable() }
   const target = event.target as HTMLElement | null
   const isEditing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable
-  if (!isEditing && (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') { event.preventDefault(); undoRowOperation() }
-  if (!isEditing && (event.ctrlKey || event.metaKey) && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) { event.preventDefault(); redoRowOperation() }
+  const tableEditing = !!target?.closest('.data-cell, .header-cell, .board-card-field')
+  if ((!isEditing || tableEditing) && (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') { event.preventDefault(); undoRowOperation() }
+  if ((!isEditing || tableEditing) && (event.ctrlKey || event.metaKey) && (event.key.toLowerCase() === 'y' || (event.shiftKey && event.key.toLowerCase() === 'z'))) { event.preventDefault(); redoRowOperation() }
+  if (tableEditing && cellRange.value && cellRange.value.rows.length * cellRange.value.columns.length > 1 && (event.key === 'Delete' || event.key === 'Backspace')) { event.preventDefault(); clearSelectedCells() }
   if (!isEditing && event.key === 'Delete' && selectedRowIndex.value >= 0) { event.preventDefault(); requestDeleteSelectedRow() }
-  if (!isEditing && event.key === 'Escape') clearRowSelection()
+  if (event.key === 'Escape') { cellRange.value = null; clearRowSelection() }
 }
 const mayLeave = () => {
   if (!dirty.value) return Promise.resolve(true)
@@ -1010,6 +1192,13 @@ const beforeUnload = (event: BeforeUnloadEvent) => {
 }
 
 watch([tablePath, isExternal, () => route.query.view, () => route.query.row, () => route.query.locatorToken], loadTable)
+watch([filterQuery, sortColumn, sortDirection, activeViewId], () => { cellRange.value = null; editSession++ })
+watch(filteredIndices, indices => {
+  const range = cellRange.value
+  if (!range || !table.value) return
+  const ids = indices.map(index => table.value!.rowIds[index]), start = ids.indexOf(range.rows[0])
+  if (start < 0 || range.rows.some((id, offset) => ids[start + offset] !== id)) cellRange.value = null
+})
 watch(scrollRef, element => {
   resizeObserver?.disconnect()
   if (element) {
@@ -1037,6 +1226,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.cell-range-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--theme-primary); }
+.cell-range-hint { min-width: 0; }
+.data-cell.range-selected { background: color-mix(in srgb, var(--theme-primary) 13%, var(--theme-card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-primary) 45%, transparent); }
+.data-cell.range-selected input { background: transparent; }
+.data-cell.has-multiline { display: flex; align-items: center; }
+.multiline-cell-editor { width: 22px; height: 26px; flex: none; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--theme-primary); cursor: pointer; }
+.multiline-cell-editor:hover { background: color-mix(in srgb, var(--theme-primary) 12%, transparent); }
 .table-view { position: relative; }
 .table-switch-progress { position: absolute; top: 0; right: 0; z-index: 8; padding: 4px 10px; border-radius: 0 0 var(--theme-radius-sm) var(--theme-radius-sm); color: var(--theme-primary); background: var(--theme-surface); font-size: var(--text-compact); pointer-events: none; animation: table-switch-notice var(--motion-fast) ease 180ms both; }
 @keyframes table-switch-notice { from { opacity: 0; } to { opacity: 1; } }
