@@ -113,11 +113,14 @@ try{
      # Only the isolated app/its verified descendants are searched. No global
      # keyboard or mouse input, and no default website or DOM handler is called.
      $printUi=($controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Print','Save','打印','保存')}) -and ($controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Cancel','取消')})
-     $destinationValues=@()
+     $destinationValues=@();$pdfDestinationCombo=$null
      if($printUi){foreach($combo in @($controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ComboBox})){
-      try{$destinationValues+=@($combo.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern).GetCurrentSelection()|ForEach-Object {$_.Current.Name})}catch{}
-      try{$destinationValues+=@($combo.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)}catch{}
-      try{$destinationValues+=@($combo.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern).Current.Value)}catch{}
+      $comboValues=@()
+      try{$comboValues+=@($combo.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern).GetCurrentSelection()|ForEach-Object {$_.Current.Name})}catch{}
+      try{$comboValues+=@($combo.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)}catch{}
+      try{$comboValues+=@($combo.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern).Current.Value)}catch{}
+      $destinationValues+=@($comboValues)
+      if($comboValues|Where-Object {$_ -in @('Microsoft Print to PDF','Save as PDF')}){$pdfDestinationCombo=$combo}
      }
       $pdfName=[System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@([System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Microsoft Print to PDF'),[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Save as PDF')))
       $pdfEntry=$element.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$pdfName)
@@ -125,6 +128,21 @@ try{
       $result.destinationValues=@($destinationValues|Select-Object -Unique)
       $chosen=$destinationValues|Where-Object {$_ -in @('Microsoft Print to PDF','Save as PDF')}|Select-Object -First 1
       if($chosen){$result.selectedDestination=$chosen;$result.printUiObserved=$true}
+     }
+     if($printUi -and $pdfDestinationCombo -and $result.selectedDestination -ne 'Save as PDF' -and -not $result.destinationChoiceAttempted){
+      $result.destinationChoiceAttempted=$true;$pdfDestinationCombo.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand();$result.actions+=@('expanded-owned-PDF-destination')
+      $picked=$false;$savePdfName=[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Save as PDF')
+      for($choiceAttempt=0;$choiceAttempt -lt 25 -and -not $picked;$choiceAttempt++){
+       $choiceWindows=@([WritingPrintWindows]::Top()|Where-Object {($_.Pid -in $owned -or $_.OwnerPid -in $owned) -and [WritingPrintWindows]::IsWindowVisible([IntPtr]$_.Handle)})
+       foreach($choiceWindow in $choiceWindows){
+        $choiceRoot=[System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$choiceWindow.Handle);$choice=$choiceRoot.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$savePdfName)
+        if($choice -and -not $choice.Current.IsOffscreen){try{$choice.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select();$picked=$true}catch{try{$choice.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke();$picked=$true}catch{}}}
+        if($picked){break}
+       }
+       if(-not $picked){Start-Sleep -Milliseconds 100}
+      }
+      $result.destinationChoiceRequested=if($picked){'Save as PDF'}else{'not-selected'}
+      if($picked){$result.actions+=@('selected-browser-save-as-PDF-through-owned-native-menu')}
      }
      $destination=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ComboBox -and $_.Current.Name -match 'Destination|Printer|目标|打印机'}|Select-Object -First 1
      if($destination -and -not $printed){
@@ -135,7 +153,7 @@ try{
        if($entry){$entry.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select();$result.actions+=@('selected-PDF-destination-in-owned-print-UI')}
       }catch{$result.destinationNotice=[string]$_}
      }
-     if($printUi -and $result.selectedDestination -in @('Microsoft Print to PDF','Save as PDF')){
+     if($printUi -and $result.selectedDestination -eq 'Save as PDF'){
       $button=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Print','Save','打印','保存') -and $_.Current.IsEnabled}|Select-Object -Last 1
       if($button){$invocation=[HostedWritingPrintInvocation]::Begin($Executable,$win.Handle,[int]$win.Pid,$button.Current.Name);$result.actions+=@('queued-owned-native-print-ui-'+$button.Current.Name);$printed=$true;break}
      }

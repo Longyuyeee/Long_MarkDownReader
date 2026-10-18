@@ -18,7 +18,7 @@ const example=()=>{
  report.pdfColorPixels=200
  report.previewStructure={headings:70,tables:70};report.inputTrace.push({type:'paste',trusted:true})
  report.nativePrint.mainWindow={visibleBeforePrint:true,foregroundBeforePrint:true,clientWidth:1000,clientHeight:700,pid:1,title:'Long编辑·md助手',configuredMainTitle:'Long编辑·md助手',className:'Tauri Window'};report.printViewport={width:1000,height:700}
- Object.assign(report.nativePrint,{selectedDestination:'Microsoft Print to PDF',printUiObserved:true,companionsRestored:true})
+ Object.assign(report.nativePrint,{selectedDestination:'Save as PDF',printUiObserved:true,companionsRestored:true})
  report.nativePrint.actions=['queued-owned-native-print-ui-Print'];report.nativePrint.buttonInvocation={started:true,completed:true,error:null}
  report.templateMainText='用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}'
  return [report,manifest]

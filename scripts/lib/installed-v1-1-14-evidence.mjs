@@ -18,7 +18,7 @@ export function validateInstalledWritingDelivery(report,manifest){
  for(const field of ['imagePicker','htmlPicker','markdownPicker']){assert.equal(report[field].status,'selected-real-native-dialog');assert.equal(report[field].dialogClosed,true);assert.equal(report[field].desktopUserSession,'disposable-github-hosted');assert.ok(report[field].processId>0)}
  assert.equal(report.cancelPicker.status,'cancelled-real-native-dialog');assert.equal(report.cancelPicker.dialogClosed,true);assert.equal(report.cancelCreatedFile,false)
  assert.equal(report.nativePrint.status,'saved-real-native-print-pdf');assert.equal(report.nativePrint.desktopUserSession,'disposable-github-hosted');assert.match(report.nativePrint.sha256,/^[a-f0-9]{64}$/);assert.ok(report.nativePrint.sizeBytes>1000)
- assert.equal(report.nativePrint.printUiObserved,true);assert.ok(['Microsoft Print to PDF','Save as PDF'].includes(report.nativePrint.selectedDestination));assert.equal(report.nativePrint.companionsRestored,true)
+ assert.equal(report.nativePrint.printUiObserved,true);assert.equal(report.nativePrint.selectedDestination,'Save as PDF');assert.equal(report.nativePrint.companionsRestored,true)
  assert.ok(report.nativePrint.actions.some(action=>action.startsWith('queued-owned-native-print-ui-')||action==='confirmed-owned-native-system-print-dialog-with-PDF-default'))
  if(report.nativePrint.actions.some(action=>action.startsWith('queued-owned-native-print-ui-'))){assert.equal(report.nativePrint.buttonInvocation.started,true);assert.equal(report.nativePrint.buttonInvocation.completed,true);assert.equal(report.nativePrint.buttonInvocation.error,null)}
  assert.equal(report.nativePrint.mainWindow.visibleBeforePrint,true);assert.ok(report.nativePrint.mainWindow.pid>0)

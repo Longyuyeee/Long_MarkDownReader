@@ -26,6 +26,10 @@
 
 ## 继续到发布的门禁
 
+第五轮 `39086832096`（驱动0c9c9d99）已经真实生成并重开PDF，本版前9项通过，后续文字验收失败，整体failure。原PDF **1,309,512字节**、SHA-256 `d24f751f4491f20b8bb78a50492654e43ad69f587c166bed646b4225a53ca528`，18页；独立pypdf检查18页字体资源和提取文字均0，Poppler实看首末页图文正常、末页含第70节与第二张图。该环境选用的 **Microsoft Print to PDF** 将文字轮廓化，不是纯图片PDF，也不是空格匹配问题。原PDF、原生UIA/保存框/完成状态、应用内重开、结构检查及首末页渲染在 `evidence/v1114-failed-review-39086832096/`。不OCR补字、不修改原PDF、不放宽可搜索文字断言。
+
+原交付UI提示的“另存为PDF”对应浏览器 **Save as PDF**，不是名字相近的Windows虚拟打印机。下一驱动将通过真正原生目标下拉框选择前者，并核对选中值，仍检查实际文件、可搜索文字、图片及末段。使用说明补充两者区别和页眉页脚来源路径提示；完整结果仍待复核，不把能显示的轮廓PDF当闭环，也不改产品数据来过验收。
+
 第四轮 `39086022010`（驱动bb1177d0）已通过主窗前台与实际1000×700客户区门禁，真实打印预览出现：CDP目标 `edge://print/`、原生UIA中有Print/Cancel与两个无名称ComboBox，隔离机原桌面图可见文章/表格。因此当前证据不支持“iframe无法弹出打印”的推断，也不据此重建产品。驱动只按控件Name查找打印机，漏掉无名称下拉框的当前选中值，未点击Print，故仍无PDF、整体failure。全部原材料在 `evidence/v1114-failed-review-39086022010/`。
 
 下一驱动读取真实Selection/Value/Legacy值核对PDF目标，再按UIA操作Print；仅暂时最小化同EXE的浮动快速笔记，打印后恢复，绝不关闭或代存其他草稿。为避免Print后弹出保存框使调用者无法继续处理，按微软[UIA线程说明](https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-threading)和[Invoke说明](https://learn.microsoft.com/en-us/dotnet/framework/ui-automation/implementing-the-ui-automation-invoke-control-pattern)，在独立MTA线程发起一次真实Invoke，主驱动继续处理实际保存框，仍要求完成状态和真实输出文件。该辅助类只在托管隔离机可调用；本机仅编译、不调用UI。Windows PowerShell5首次编译漏引UIAutomationTypes的原失败保留，改为准确程序集后通过。
