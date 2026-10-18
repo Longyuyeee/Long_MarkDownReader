@@ -1,0 +1,31 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "observations": [
+    {
+      "id": "canvas-route-update",
+      "lost": true,
+      "dialog": 0
+    },
+    {
+      "id": "canvas-save-later-input",
+      "visible": "保存中又补充了内容",
+      "disk": "保存的内容",
+      "status": "已保存"
+    },
+    {
+      "id": "canvas-locator",
+      "visible": "A"
+    },
+    {
+      "id": "opml-save-later-input",
+      "visible": "保存的内容",
+      "disk": "保存的内容",
+      "status": "已与磁盘同步OPML 2.0 · 树状布局 · 1 个已选 · 仅点击保存时写入"
+    },
+    {
+      "id": "opml-locator",
+      "visible": "原始备注"
+    }
+  ]
+}
