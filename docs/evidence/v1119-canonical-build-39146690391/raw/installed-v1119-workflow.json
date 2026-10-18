@@ -1,0 +1,441 @@
+{
+  "appVersion": "1.1.19",
+  "sourceCommit": "591447cd9e3303cde9d1ebfde1df2fddb45d8c8c",
+  "installerSha256": "484b5a62f3ce9ac706d208e4bf819fa2c398319f05f22008190f00695708dfb0",
+  "harnessSourceCommit": "591447cd9e3303cde9d1ebfde1df2fddb45d8c8c",
+  "executableSha256": "2a6be60978d635e1dd5bbb4719be1bb99cbbca6c319ddceb95fc55f4538902e1",
+  "status": "failed",
+  "evidenceLevel": "installed-canvas-opml-and-independent-json-xml",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "owned-canvas-opml-originals",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-explicit-shortcut-unknown-fields",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-locator-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-leave-reload-cancel",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-source-conflict-keeps-peer",
+      "status": "passed"
+    }
+  ],
+  "outputs": [],
+  "unselectedBefore": "8c6c3dbb4a687966f8714bc92fee9be6e0503dc0c1bb8d24b75d72b94bf4bcb6",
+  "originalExtendedSha256": "45d4d329e2cbcbe86a9fc7097c264093f18478abc93d6cb7ad41c354426b8c5d",
+  "canvasUnknownExact": true,
+  "canvasLocatorExact": true,
+  "canvasCancelExact": true,
+  "canvasConflictExact": true,
+  "failure": "Error: Actual native UI did not become ready: group is genuinely visible and its drag background is unobscured after user fit\n    at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async runInstalledV1119Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-19-workflow.mjs:50:53)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:1015:5",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5Cv1119-organizing-8fe2a135-d2cc-475d-842e-3d041222d638%5Cboards%5C%E9%A1%B9%E7%9B%AE.canvas&node=f&locatorToken=v1119",
+    "dialogs": [],
+    "tools": [
+      {
+        "text": "选择",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "↶",
+        "title": "",
+        "tooltip": "撤销 Ctrl+Z",
+        "disabled": true,
+        "inert": false
+      },
+      {
+        "text": "↷",
+        "title": "",
+        "tooltip": "重做 Ctrl+Shift+Z",
+        "disabled": true,
+        "inert": false
+      },
+      {
+        "text": "＋ 文本卡片",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "＋ 文件",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "＋ 图表",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "＋ Mermaid",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "＋ 链接",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "＋ 分组",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "连线",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "删除",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "复制",
+        "title": "",
+        "tooltip": "复制节点及内部连线 Ctrl+C",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "剪切",
+        "title": "",
+        "tooltip": "剪切节点及内部连线 Ctrl+X",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "粘贴",
+        "title": "",
+        "tooltip": "粘贴到当前视口 Ctrl+V",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "吸附",
+        "title": "",
+        "tooltip": "拖拽吸附到其他节点的边缘或中心；按住 Alt 临时停用",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "整理分支",
+        "title": "",
+        "tooltip": "只整理当前节点的可见子树，根节点和画布其他区域保持不动",
+        "disabled": true,
+        "inert": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "−",
+        "title": "",
+        "tooltip": "缩小画布",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "62%",
+        "title": "",
+        "tooltip": "恢复画布视图",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "＋",
+        "title": "",
+        "tooltip": "放大画布",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "适应内容",
+        "title": "",
+        "tooltip": null,
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "↻",
+        "title": "",
+        "tooltip": "重新读取，未保存时先确认",
+        "disabled": false,
+        "inert": false
+      },
+      {
+        "text": "已保存",
+        "title": "",
+        "tooltip": null,
+        "disabled": true,
+        "inert": false
+      }
+    ],
+    "body": "t。\n第 79 行：真实阅读位置，文件 阅读01.txt。\n第 80 行：真实阅读位置，文件 阅读01.txt。\n第 81 行：真实阅读位置，文件 阅读01.txt。\n第 82 行：真实阅读位置，文件 阅读01.txt。\n第 83 行：真实阅读位置，文件 阅读01.txt。\n第 84 行：真实阅读位置，文件 阅读01.txt。\n第 85 行：真实阅读位置，文件 阅读01.txt。\n第 86 行：真实阅读位置，文件 阅读01.txt。\n第 87 行：真实阅读位置，文件 阅读01.txt。\n第 88 行：真实阅读位置，文件 阅读01.txt。\n第 89 行：真实阅读位置，文件 阅读01.txt。\n第 90 行：真实阅读位置，文件 阅读01.txt。\n第 91 行：真实阅读位置，文件 阅读01.txt。\n第 92 行：真实阅读位置，文件 阅读01.txt。\n第 93 行：真实阅读位置，文件 阅读01.txt。\n第 94 行：真实阅读位置，文件 阅读01.txt。\n第 95 行：真实阅读位置，文件 阅读01.txt。\n第 96 行：真实阅读位置，文件 阅读01.txt。\n第 97 行：真实阅读位置，文件 阅读01.txt。\n第 98 行：真实阅读位置，文件 阅读01.txt。\n第 99 行：真实阅读位置，文件 阅读01.txt。\n第 100 行：真实阅读位置，文件 阅读01.txt。\n第 101 行：真实阅读位置，文件 阅读01.txt。\n第 102 行：真实阅读位置，文件 阅读01.txt。\n第 103 行：真实阅读位置，文件 阅读01.txt。\n第 104 行：真实阅读位置，文件 阅读01.txt。\n第 105 行：真实阅读位置，文件 阅读01.txt。\n第 106 行：真实阅读位置，文件 阅读01.txt。\n第 107 行：真实阅读位置，文件 阅读01.txt。\n第 108 行：真实阅读位置，文件 阅读01.txt。\n第 109 行：真实阅读位置，文件 阅读01.txt。\n第 110 行：真实阅读位置，文件 阅读01.txt。\n第 111 行：真实阅读位置，文件 阅读01.txt。\n第 112 行：真实阅读位置，文件 阅读01.txt。\n第 113 行：真实阅读位置，文件 阅读01.txt。\n第 114 行：真实阅读位置，文件 阅读01.txt。\n第 115 行：真实阅读位置，文件 阅读01.txt。\n第 116 行：真实阅读位置，文件 阅读01.txt。\n第 117 行：真实阅读位置，文件 阅读01.txt。\n第 118 行：真实阅读位置，文件 阅读01.txt。\n第 119 行：真实阅读位置，文件 阅读01.txt。\n第 120 行：真实阅读位置，文件 阅读01.txt。\n第 121 行：真实阅读位置，文件 阅读01.txt。\n第 122 行：真实阅读位置，文件 阅读01.txt。\n第 123 行：真实阅读位置，文件 阅读01.txt。\n第 124 行：真实阅读位置，文件 阅读01.txt。\n第 125 行：真实阅读位置，文件 阅读01.txt。\n第 126 行：真实阅读位置，文件 阅读01.txt。\n第 127 行：真实阅读位置，文件 阅读01.txt。\n第 128 行：真实阅读位置，文件 阅读01.txt。\n第 129 行：真实阅读位置，文件 阅读01.txt。\n第 130 行：真实阅读位置，文件 阅读01.txt。\n第 131 行：真实阅读位置，文件 阅读01.txt。\n第 132 行：真实阅读位置，文件 阅读01.txt。\n第 133 行：真实阅读位置，文件 阅读01.txt。\n第 134 行：真实阅读位置，文件 阅读01.txt。\n第 135 行：真实阅读位置，文件 阅读01.txt。\n第 136 行：真实阅读位置，文件 阅读01.txt。\n第 137 行：真实阅读位置，文件 阅读01.txt。\n第 138 行：真实阅读位置，文件 阅读01.txt。\n第 139 行：真实阅读位置，文件 阅读01.txt。\n第 140 行：真实阅读位置，文件 阅读01.txt。\n第 141 行：真实阅读位置，文件 阅读01.txt。\n第 142 行：真实阅读位置，文件 阅读01.txt。\n第 143 行：真实阅读位置，文件 阅读01.txt。\n第 144 行：真实阅读位置，文件 阅读01.txt。\n第 145 行：真实阅读位置，文件 阅读01.txt。\n第 146 行：真实阅读位置，文件 阅读01.txt。\n第 147 行：真实阅读位置，文件 阅读01.txt。\n第 148 行：真实阅读位置，文件 阅读01.txt。\n第 149 行：真实阅读位置，文件 阅读01.txt。\n第 150 行：真实阅读位置，文件 阅读01.txt。\n第 151 行：真实阅读位置，文件 阅读01.txt。\n第 152 行：真实阅读位置，文件 阅读01.txt。\n第 153 行：真实阅读位置，文件 阅读01.txt。\n第 154 行：真实阅读位置，文件 阅读01.txt。\n第 155 行：真实阅读位置，文件 阅读01.txt。\n第 156 行：真实阅读位置，文件 阅读01.txt。\n第 157 行：真实阅读位置，文件 阅读01.txt。\n第 158 行：真实阅读位置，文件 阅读01.txt。\n第 159 行：真实阅读位置，文件 阅读01.txt。\n第 160 行：真实阅读位置，文件 阅读01.txt。\n第 161 行：真实阅读位置，文件 阅读01.txt。\n第 162 行：真实阅读位置，文件 阅读01.txt。\n第 163 行：真实阅读位置，文件 阅读01.txt。\n第 164 行：真实阅读位置，文件 阅读01.txt。\n第 165 行：真实阅读位置，文件 阅读01.txt。\n第 166 行：真实阅读位置，文件 阅读01.txt。\n第 167 行：真实阅读位置，文件 阅读01.txt。\n第 168 行：真实阅读位置，文件 阅读01.txt。\n第 169 行：真实阅读位置，文件 阅读01.txt。\n第 170 行：真实阅读位置，文件 阅读01.txt。\n第 171 行：真实阅读位置，文件 阅读01.txt。\n第 172 行：真实阅读位置，文件 阅读01.txt。\n第 173 行：真实阅读位置，文件 阅读01.txt。\n第 174 行：真实阅读位置，文件 阅读01.txt。\n第 175 行：真实阅读位置，文件 阅读01.txt。\n第 176 行：真实阅读位置，文件 阅读01.txt。\n第 177 行：真实阅读位置，文件 阅读01.txt。\n第 178 行：真实阅读位置，文件 阅读01.txt。\n第 179 行：真实阅读位置，文件 阅读01.txt。\n第 180 行：真实阅读位置，文件 阅读01.txt。\n第 181 行：真实阅读位置，文件 阅读01.txt。\n第 182 行：真实阅读位置，文件 阅读01.txt。\n第 183 行：真实阅读位置，文件 阅读01.txt。\n第 184 行：真实阅读位置，文件 阅读01.txt。\n第 185 行：真实阅读位置，文件 阅读01.txt。\n第 186 行：真实阅读位置，文件 阅读01.txt。\n第 187 行：真实阅读位置，文件 阅读01.txt。\n第 188 行：真实阅读位置，文件 阅读01.txt。\n第 189 行：真实阅读位置，文件 阅读01.txt。\n第 190 行：真实阅读位置，文件 阅读01.txt。\n第 191 行：真实阅读位置，文件 阅读01.txt。\n第 192 行：真实阅读位置，文件 阅读01.txt。\n第 193 行：真实阅读位置，文件 阅读01.txt。\n第 194 行：真实阅读位置，文件 阅读01.txt。\n第 195 行：真实阅读位置，文件 阅读01.txt。\n第 196 行：真实阅读位置，文件 阅读01.txt。\n第 197 行：真实阅读位置，文件 阅读01.txt。\n第 198 行：真实阅读位置，文件 阅读01.txt。\n第 199 行：真实阅读位置，文件 阅读01.txt。\n第 200 行：真实阅读位置，文件 阅读01.txt。\n第 201 行：真实阅读位置，文件 阅读01.txt。\n第 202 行：真实阅读位置，文件 阅读01.txt。\n第 203 行：真实阅读位置，文件 阅读01.txt。\n第 204 行：真实阅读位置，文件 阅读01.txt。\n第 205 行：真实阅读位置，文件 阅读01.txt。\n第 206 行：真实阅读位置，文件 阅读01.txt。\n第 207 行：真实阅读位置，文件 阅读01.txt。\n第 208 行：真实阅读位置，文件 阅读01.txt。\n第 209 行：真实阅读位置，文件 阅读01.txt。\n第 210 行：真实阅读位置，文件 阅读01.txt。\n第 211 行：真实阅读位置，文件 阅读01.txt。\n第 212 行：真实阅读位置，文件 阅读01.txt。\n第 213 行：真实阅读位置，文件 阅读01.txt。\n第 214 行：真实阅读位置，文件 阅读01.txt。\n第 215 行：真实阅读位置，文件 阅读01.txt。\n第 216 行：真实阅读位置，文件 阅读01.txt。\n第 217 行：真实阅读位置，文件 阅读01.txt。\n第 218 行：真实阅读位置，文件 阅读01.txt。\n第 219 行：真实阅读位置，文件 阅读01.txt。\n第 220 行：真实阅读位置，文件 阅读01.txt。\n第 221 行：真实阅读位置，文件 阅读01.txt。\n第 222 行：真实阅读位置，文件 阅读01.txt。\n第 223 行：真实阅读位置，文件 阅读01.txt。\n第 224 行：真实阅读位置，文件 阅读01.txt。\n第 225 行：真实阅读位置，文件 阅读01.txt。\n第 226 行：真实阅读位置，文件 阅读01.txt。\n第 227 行：真实阅读位置，文件 阅读01.txt。\n第 228 行：真实阅读位置，文件 阅读01.txt。\n第 229 行：真实阅读位置，文件 阅读01.txt。\n第 230 行：真实阅读位置，文件 阅读01.txt。\n第 231 行：真实阅读位置，文件 阅读01.txt。\n第 232 行：真实阅读位置，文件 阅读01.txt。\n第 233 行：真实阅读位置，文件 阅读01.txt。\n第 234 行：真实阅读位置，文件 阅读01.txt。\n第 235 行：真实阅读位置，文件 阅读01.txt。\n第 236 行：真实阅读位置，文件 阅读01.txt。\n第 237 行：真实阅读位置，文件 阅读01.txt。\n第 238 行：真实阅读位置，文件 阅读01.txt。\n第 239 行：真实阅读位置，文件 阅读01.txt。\n第 240 行：真实阅读位置，文件 阅读01.txt。\n第 241 行：真实阅读位置，文件 阅读01.txt。\n第 242 行：真实阅读位置，文件 阅读01.txt。\n第 243 行：真实阅读位置，文件 阅读01.txt。\n第 244 行：真实阅读位置，文件 阅读01.txt。\n第 245 行：真实阅读位置，文件 阅读01.txt。\n第 246 行：真实阅读位置，文件 阅读01.txt。\n第 247 行：真实阅读位置，文件 阅读01.txt。\n第 248 行：真实阅读位置，文件 阅读01.txt。\n第 249 行：真实阅读位置，文件 阅读01.txt。\n第 250 行：真实阅读位置，文件 阅读01.txt。\n第 251 行：真实阅读位置，文件 阅读01.txt。\n第 252 行：真实阅读位置，文件 阅读01.txt。\n第 253 行：真实阅读位置，文件 阅读01.txt。\n第 254 行：真实阅读位置，文件 阅读01.txt。\n第 255 行：真实阅读位置，文件 阅读01.txt。\n第 256 行：真实阅读位置，文件 阅读01.txt。\n第 257 行：真实阅读位置，文件 阅读01.txt。\n第 258 行：真实阅读位置，文件 阅读01.txt。\n第 259 行：真实阅读位置，文件 阅读01.txt。\n第 260 行：真实阅读位置，文件 阅读01.txt。\n第 261 行：真实阅读位置，文件 阅读01.txt。\n第 262 行：真实阅读位置，文件 阅读01.txt。\n第 263 行：真实阅读位置，文件 阅读01.txt。\n第 264 行：真实阅读位置，文件 阅读01.txt。\n第 265 行：真实阅读位置，文件 阅读01.txt。\n第 266 行：真实阅读位置，文件 阅读01.txt。\n第 267 行：真实阅读位置，文件 阅读01.txt。\n第 268 行：真实阅读位置，文件 阅读01.txt。\n第 269 行：真实阅读位置，文件 阅读01.txt。\n第 270 行：真实阅读位置，文件 阅读01.txt。\n第 271 行：真实阅读位置，文件 阅读01.txt。\n第 272 行：真实阅读位置，文件 阅读01.txt。\n第 273 行：真实阅读位置，文件 阅读01.txt。\n第 274 行：真实阅读位置，文件 阅读01.txt。\n第 275 行：真实阅读位置，文件 阅读01.txt。\n第 276 行：真实阅读位置，文件 阅读01.txt。\n第 277 行：真实阅读位置，文件 阅读01.txt。\n第 278 行：真实阅读位置，文件 阅读01.txt。\n第 279 行：真实阅读位置，文件 阅读01.txt。\n第 280 行：真实阅读位置，文件 阅读01.txt。\n第 281 行：真实阅读位置，文件 阅读01.txt。\n第 282 行：真实阅读位置，文件 阅读01.txt。\n第 283 行：真实阅读位置，文件 阅读01.txt。\n第 284 行：真实阅读位置，文件 阅读01.txt。\n第 285 行：真实阅读位置，文件 阅读01.txt。\n第 286 行：真实阅读位置，文件 阅读01.txt。\n第 287 行：真实阅读位置，文件 阅读01.txt。\n第 288 行：真实阅读位置，文件 阅读01.txt。\n第 289 行：真实阅读位置，文件 阅读01.txt。\n第 290 行：真实阅读位置，文\n…\n打开可编辑 Markdown 笔记后可插入\n复制选中文字及来源\n先在参考内容中选择需要摘录的文字\n参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。\n在主编辑区打开"
+  },
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "a"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "Backspace"
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "input",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "s"
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null
+    }
+  ],
+  "runtimeErrors": [],
+  "uiMessages": [
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "已可靠另存并验证 1 项修改：wps-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "DOCX 已可靠保存 1 项修改并重新读取",
+    "已可靠另存并验证 1 项修改：libreoffice-writer-copy.docx",
+    "画布未确认保存：文本文件已被其他程序修改，请重新加载后再保存"
+  ]
+}
