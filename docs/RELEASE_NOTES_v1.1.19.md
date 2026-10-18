@@ -12,3 +12,5 @@
 社区安装器未签名，Windows可能提示“未知发布者”。下载后核对SHA-256，当前通过手动下载安装升级；不宣称历史托管自动更新观察完成，也不宣称企业签名RC或Office原生应用视觉等价。
 
 操作方法见 [Canvas／OPML 用户指南](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/Canvas_OPML_User_Guide.md)；验证证据与边界见 [发布审计](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_19_Unsigned_Community_Release_Audit_2026-10-18.md) 和 [开发记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_19_Organizing_Development_2026-10-18.md)。
+
+封板验收：固定产品591447cd，独立同包39150234997及封板CI39151843035通过；本版16项与历版225项、完整安装升级和真正重启、1060项Rust功能及独立JSON/XML原文件检查通过。33项组件检查与原生证明分层保留，不把普通浏览器测试当作安装验收。下一版v1.1.20继续深化已有结构化文件编辑，预审不算交付。
