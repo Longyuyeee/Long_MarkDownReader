@@ -141,6 +141,12 @@ docs/evidence/v1113-*.log -text -diff
 docs/evidence/v1114-*.log -text -diff
 docs/evidence/v1115-*.log -text -diff
 docs/evidence/v1115-*/** -text
+docs/evidence/v1116-*/** -text
+docs/evidence/v1116-*/**/*.log -text -diff
+docs/evidence/v1116-*.log -text -diff
+docs/evidence/v1116-*/**/*.csv -text whitespace=cr-at-eol
+docs/evidence/v1-1-16-candidate-lifecycle/** -text
+docs/evidence/v1-1-16-candidate-lifecycle/installed-v1115-saved.csv -text whitespace=cr-at-eol
 docs/evidence/v1-1-15-candidate-lifecycle/installed-v1115-* -text
 docs/evidence/v1-1-15-candidate-lifecycle/** -text
 docs/evidence/v1-1-15-candidate-lifecycle/installed-v1115-saved.csv -text whitespace=cr-at-eol

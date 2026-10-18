@@ -656,9 +656,11 @@
         <button title="把当前单列包含筛选和排序状态写入 XLSX" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount) || !activeDataRegion.filterState.editable" @click="persistDataView('apply')">应用到文件</button>
         <button title="清除 XLSX 中的筛选和排序条件" :disabled="saving || updatingStructure || sheetProtected || Boolean(dirtyCount)" @click="persistDataView('clear')">清除条件</button>
         <span v-if="!activeDataRegion.filterState.editable" class="validation-hint">高级筛选条件只读</span>
-        <span>{{ dataViewLoading ? '载入数据…' : `${dataViewRows.length.toLocaleString()} 行` }}</span>
+        <span>{{ dataViewLoading ? '载入数据…' : `会话结果 ${dataViewRows.length.toLocaleString()} 行` }}</span>
+        <span class="validation-hint">{{ activeDataRegion.range.bottom - activeDataRegion.range.top > MAX_DATA_VIEW_ROWS ? `仅前 ${MAX_DATA_VIEW_ROWS.toLocaleString()} 行；` : '' }}不隐藏或改写工作表行</span>
         <button :disabled="!dataViewRows.length" @click="navigateDataResult(-1)">上一条</button>
         <button :disabled="!dataViewRows.length" @click="navigateDataResult(1)">下一条</button>
+        <button :disabled="saving || updatingStructure || dataViewLoading || !dataViewRows.length" title="按会话筛选与排序复制结果，包含表头；不改变当前选区" @click="copyDataResults">复制筛选结果</button>
       </template>
       <template v-if="validationSelection">
         <button v-if="!selectedValidation" title="为当前连续选区创建数据验证规则" :disabled="!canEditDataValidation" @click="editDataValidationRule('create')">新建验证</button>
@@ -905,6 +907,7 @@ import { useAppStore } from '../store/app'
 import { getActiveThemeTone } from '../config/themePresets'
 import { conditionalExpressionReferences, evaluateConditionalExpression, parseConditionalExpression } from '../utils/conditionalExpression'
 import TableChartEditor from '../components/TableChartEditor.vue'
+import { compareWorkbookValues, isWorkbookNumber, readWorkbookClipboard, validateWorkbookInput, workbookSeries, writeWorkbookClipboard, type ClipboardKind, type WorkbookClipboardCell } from '../utils/workbookClipboard'
 
 interface WorkbookRangeReference { sheet: string; top: number; bottom: number; left: number; right: number }
 interface WorkbookDefinedName { name: string; formula: string; scope?: string; hidden: boolean; reference?: WorkbookRangeReference }
@@ -1796,10 +1799,7 @@ const dataViewRows = computed(() => {
     rows.sort((left, right) => {
       const leftValue = cellAt(left, sortColumn.value).value
       const rightValue = cellAt(right, sortColumn.value).value
-      const leftNumber = Number(leftValue); const rightNumber = Number(rightValue)
-      const result = Number.isFinite(leftNumber) && Number.isFinite(rightNumber)
-        ? leftNumber - rightNumber
-        : leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: 'base' })
+      const result = compareWorkbookValues(leftValue, rightValue)
       return sortDirection.value === 'asc' ? result : -result
     })
   }
@@ -2394,6 +2394,7 @@ const frozenColumnStyle = (column: number, header = false): CSSProperties => col
   : {}
 
 const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit => {
+  validateWorkbookInput(input, input.startsWith('=') && input.length > 1 ? 'formula' : 'string')
   if (input.startsWith('=') && input.length > 1) return { ...selection, input, kind: 'formula' }
   if (!input) return { ...selection, input, kind: 'empty' }
   if (/^(true|false)$/i.test(input)) return { ...selection, input: input.toLowerCase(), kind: 'boolean' }
@@ -2404,7 +2405,7 @@ const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit =>
     if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(input)) return { ...selection, input: input.replace('T', ' '), kind: 'datetime' }
     if (/^\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(input)) return { ...selection, input, kind: 'time' }
   }
-  if (/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(input) && Number.isFinite(Number(input))) return { ...selection, input, kind: 'number' }
+  if (isWorkbookNumber(input)) return { ...selection, input, kind: 'number' }
   return { ...selection, input, kind: 'string' }
 }
 const setDraft = (key: string, edit?: WorkbookCellEdit) => {
@@ -3546,7 +3547,7 @@ const unmergeSelection = () => {
   setSelectionFocus(range.top, range.left)
 }
 
-const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
+const applyBatchInputs = (start: CellSelection, matrix: string[][], cells?: WorkbookClipboardCell[][]) => {
   const cellCount = matrix.reduce((count, row) => count + row.length, 0)
   const width = Math.max(0, ...matrix.map(row => row.length))
   if (!cellCount || cellCount > MAX_BATCH_CELLS || matrix.length * width > MAX_BATCH_CELLS) throw new Error(`单次区域编辑不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
@@ -3555,12 +3556,17 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][]) => {
     const selection = { sheet: start.sheet, row: start.row + rowOffset, column: start.column + columnOffset }
     if (selection.row >= 1_048_576 || selection.column >= 16_384) throw new Error('粘贴区域超出 XLSX 坐标上限')
     if (selection.column >= 256) throw new Error('当前工作面最多编辑前 256 列')
+    if (selection.row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(selection.row)) throw new Error('目标包含尚未载入的数据，请滚动到该区域后重试；本次未修改')
     if (arrayFormulaAt(selection.row, selection.column)) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 位于只读数组公式区域`)
     const key = editKey(selection.sheet, selection.row, selection.column)
     const before = drafts.value.get(key)
     const source = sourceCellAt(selection.row, selection.column)
     if (!before && ((source.kind === 'date' && !source.dateEditable) || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(selection.column)}${selection.row + 1} 当前类型暂不支持区域写入`)
-    const after = input === originalInput(source) || (!input && source.kind === 'empty') ? undefined : inferEdit(selection, input)
+    const metadata = cells?.[rowOffset]?.[columnOffset]
+    if (metadata) validateWorkbookInput(input, metadata.kind)
+    const edit = metadata ? { ...selection, input, kind: metadata.kind } : inferEdit(selection, input)
+    const sourceKind = source.formula ? 'formula' : source.kind === 'text' ? 'string' : source.kind === 'date' ? source.dateKind || 'date' : source.kind
+    const after = input === originalInput(source) && edit.kind === sourceKind ? undefined : edit
     if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
   }))
   if (!changes.length) return
@@ -3590,10 +3596,16 @@ const copySelection = async () => {
   try {
     const matrix = selectedMatrix()
     if (!matrix.length) return false
-    await navigator.clipboard.writeText(matrix.map(row => row.join('\t')).join('\r\n'))
+    const bounds = selectionBounds.value!
+    await writeWorkbookClipboard(matrix.map((row, r) => row.map((input, c) => clipboardCell(bounds.top + r, bounds.left + c, input))))
     message.success(`已复制 ${matrix.length} × ${matrix[0].length} 区域`)
     return true
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return false }
+}
+const clipboardCell = (row: number, column: number, input = originalInput(cellAt(row, column))): WorkbookClipboardCell => {
+  const cell = cellAt(row, column)
+  const kind = cell.formula ? 'formula' : cell.kind === 'text' ? 'string' : cell.kind === 'date' ? cell.dateEditable ? cell.dateKind || 'date' : 'string' : cell.kind
+  return { input, row, column, kind: kind as ClipboardKind }
 }
 // Deferred editing actions can resolve after a save, selection or route change.
 const captureEditContext = () => {
@@ -3612,14 +3624,26 @@ const pasteSelection = async () => {
   if (isExternal.value || saving.value) return
   if (!selectedCell.value) return
   const isCurrent = captureEditContext()
+  const draftSnapshot = JSON.stringify([...drafts.value])
+  const canPaste = () => isCurrent() && draftSnapshot === JSON.stringify([...drafts.value])
   try {
-    const text = await navigator.clipboard.readText()
-    if (!isCurrent()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
-    if (text.length > 10 * 1024 * 1024) throw new Error('剪贴板文本不能超过 10 MB')
-    const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n$/, '')
-    const matrix = normalized.split('\n').map(row => row.split('\t'))
+    const { matrix, cells } = await readWorkbookClipboard()
+    if (!canPaste()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
     const start = { ...selectedCell.value }
-    applyBatchInputs(start, matrix)
+    const requests: FormulaTranslation[] = []
+    const targets: Array<{ row: number; column: number }> = []
+    cells?.forEach((row, r) => row.forEach((cell, c) => {
+      if (cell.kind !== 'formula') return
+      requests.push({ formula: matrix[r][c], rowDelta: start.row + r - cell.row, columnDelta: start.column + c - cell.column })
+      targets.push({ row: r, column: c })
+    }))
+    if (requests.length) {
+      const translated = await invoke<string[]>('translate_workbook_formulas', { requests })
+      if (!canPaste()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
+      if (translated.length !== targets.length) throw new Error('公式平移结果不完整，本次未修改')
+      translated.forEach((formula, index) => { validateWorkbookInput(formula, 'formula'); matrix[targets[index].row][targets[index].column] = formula })
+    }
+    applyBatchInputs(start, matrix, cells)
     selectionAnchor.value = start
     const bottom = start.row + matrix.length - 1
     const right = start.column + Math.max(...matrix.map(row => row.length)) - 1
@@ -3679,7 +3703,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
   if (isExternal.value || saving.value || !source || !preview || JSON.stringify(source) === JSON.stringify(preview)) return
   const isCurrent = captureEditContext()
   try {
-    const destination: Array<{ row: number; column: number; sourceRow: number; sourceColumn: number; input: string }> = []
+    const destination: Array<{ row: number; column: number; sourceRow: number; sourceColumn: number; input: string; kind: ClipboardKind }> = []
     const sourceHeight = source.bottom - source.top + 1
     const sourceWidth = source.right - source.left + 1
     const vertical = preview.top !== source.top || preview.bottom !== source.bottom
@@ -3690,7 +3714,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
         const sourceColumn = patternIndex(column, source.left, sourceWidth)
         const sourceCell = cellAt(sourceRow, sourceColumn)
         if (['date', 'error'].includes(sourceCell.kind)) throw new Error('日期和错误单元格暂不支持填充')
-        destination.push({ row, column, sourceRow, sourceColumn, input: originalInput(sourceCell) })
+        destination.push({ row, column, sourceRow, sourceColumn, input: originalInput(sourceCell), kind: (sourceCell.formula ? 'formula' : sourceCell.kind === 'text' ? 'string' : sourceCell.kind) as ClipboardKind })
         if (destination.length > MAX_BATCH_CELLS) throw new Error(`单次填充不能超过 ${MAX_BATCH_CELLS.toLocaleString()} 个单元格`)
       }
     }
@@ -3700,38 +3724,42 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
       : !vertical && sourceHeight === 1 && sourceWidth >= 2
         ? Array.from({ length: sourceWidth }, (_, index) => cellAt(source.top, source.left + index))
         : []
-    const seriesValues = seriesCells.map(cell => cell.formula ? Number.NaN : Number(originalInput(cell)))
-    if (seriesValues.length >= 2 && seriesValues.every(Number.isFinite)) {
-      const step = seriesValues[seriesValues.length - 1] - seriesValues[seriesValues.length - 2]
+    if (seriesCells.length >= 2 && seriesCells.every(cell => cell.kind === 'number' && !cell.formula)) {
+      const seriesValues = seriesCells.map(originalInput)
       for (const item of destination) {
         const offset = vertical ? item.row - source.top : item.column - source.left
-        item.input = String(seriesValues[0] + step * offset)
+        item.input = workbookSeries(seriesValues, offset)
+        item.kind = 'number'
       }
     }
 
     const formulaRequests: FormulaTranslation[] = []
     const formulaDestinations: number[] = []
     destination.forEach((item, index) => {
-      if (!item.input.startsWith('=')) return
+      if (item.kind !== 'formula') return
       formulaRequests.push({ formula: item.input, rowDelta: item.row - item.sourceRow, columnDelta: item.column - item.sourceColumn })
       formulaDestinations.push(index)
     })
     if (formulaRequests.length) {
       const translated = await invoke<string[]>('translate_workbook_formulas', { requests: formulaRequests })
       if (!isCurrent()) { message.warning('编辑状态已变化，请重新填充选区'); return }
-      translated.forEach((formula, index) => { destination[formulaDestinations[index]].input = formula })
+      if (translated.length !== formulaDestinations.length) throw new Error('公式平移结果不完整，本次未修改')
+      translated.forEach((formula, index) => { validateWorkbookInput(formula, 'formula'); destination[formulaDestinations[index]].input = formula })
     }
 
     const changes: CellChange[] = []
     const styleChanges: StyleChange[] = []
     for (const item of destination) {
+      if (item.row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(item.row)) throw new Error('填充目标包含尚未载入的数据，请先载入；本次未修改')
+      validateWorkbookInput(item.input, item.kind)
       if (arrayFormulaAt(item.row, item.column)) throw new Error(`${columnLabel(item.column)}${item.row + 1} 位于只读数组公式区域`)
       const key = editKey(activeSheet.value, item.row, item.column)
       const before = drafts.value.get(key)
       const targetSource = sourceCellAt(item.row, item.column)
       if (!before && ['date', 'error'].includes(targetSource.kind)) throw new Error(`${columnLabel(item.column)}${item.row + 1} 当前类型暂不支持填充`)
       const selection = { sheet: activeSheet.value, row: item.row, column: item.column }
-      const after = item.input === originalInput(targetSource) || (!item.input && targetSource.kind === 'empty') ? undefined : inferEdit(selection, item.input)
+      const targetKind = targetSource.formula ? 'formula' : targetSource.kind === 'text' ? 'string' : targetSource.kind
+      const after = item.input === originalInput(targetSource) && item.kind === targetKind ? undefined : { ...selection, input: item.input, kind: item.kind }
       if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
 
       const styleBefore = styleDrafts.value.get(key)
@@ -3940,7 +3968,7 @@ const selectSheet = async (sheet: string) => {
 const prepareDataView = async () => {
   const region = activeDataRegion.value
   if (!region || dataViewLoading.value || !sheetInfo.value) return
-  const start = Math.floor((region.range.top + 1) / PAGE_ROWS) * PAGE_ROWS
+  const start = Math.floor(region.range.top / PAGE_ROWS) * PAGE_ROWS
   const end = Math.min(region.range.bottom + 1, region.range.top + 1 + MAX_DATA_VIEW_ROWS)
   if (region.range.bottom - region.range.top > MAX_DATA_VIEW_ROWS) message.warning(`会话筛选最多分析前 ${MAX_DATA_VIEW_ROWS.toLocaleString()} 行`)
   const current = generation
@@ -4035,6 +4063,25 @@ const navigateDataResult = async (direction: number) => {
   selectCell(row, column)
   await nextTick()
   scrollRef.value?.scrollTo({ top: Math.max(0, rowOffset(row) - 80), behavior: 'smooth' })
+}
+const copyDataResults = async () => {
+  if (saving.value || updatingStructure.value || dataViewLoading.value) return
+  const isCurrent = captureEditContext()
+  const scope = JSON.stringify([activeDataRegion.value, filterColumn.value, filterQuery.value, sortColumn.value, sortDirection.value, [...drafts.value]])
+  try {
+    await prepareDataView()
+    if (!isCurrent() || scope !== JSON.stringify([activeDataRegion.value, filterColumn.value, filterQuery.value, sortColumn.value, sortDirection.value, [...drafts.value]])) throw new Error('筛选或编辑状态已变化，请重新复制结果')
+    const region = activeDataRegion.value
+    if (!region) return
+    const end = Math.min(region.range.bottom, region.range.top + MAX_DATA_VIEW_ROWS)
+    for (let row = region.range.top; row <= end; row++) if (!loadedRows.value.has(row)) throw new Error('筛选数据未完整载入，本次未复制')
+    const rows = [region.range.top, ...dataViewRows.value]
+    const width = region.range.right - region.range.left + 1
+    if (rows.length * width > MAX_BATCH_CELLS || width > 256) throw new Error('结果连同表头超过10,000格或256列，请缩小筛选范围')
+    const cells = rows.map(row => Array.from({ length: width }, (_, c) => clipboardCell(row, region.range.left + c)))
+    await writeWorkbookClipboard(cells)
+    message.success(`已复制 ${rows.length - 1} 行会话结果和表头；原工作表与选区未改变`)
+  } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
 }
 const applyFreezePane = async (rows: number, columns: number) => {
   if (isExternal.value || !workbook.value || !sheetInfo.value || saving.value || updatingStructure.value || dirtyCount.value) return

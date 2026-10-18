@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import crypto from 'node:crypto'
+import {spawn} from 'node:child_process'
+import {nativeUserInput} from './v118-native-user-input.mjs'
+import {withDeadline} from './with-deadline.mjs'
+import {workbookEditingChecks,validateInstalledWorkbookEditing} from './installed-v1-1-16-evidence.mjs'
+const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
+export async function runInstalledV1116Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
+ for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
+ assert.equal(appVersion,'1.1.16');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(process.env.LONGEDIT_XLSX_PYTHON)
+ const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),evidenceLevel:'installed-workbook-real-clipboard-native-save-and-independent-producer',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[]}
+ const folder=path.join(library,'v1116-workbook-'+crypto.randomUUID()),source=path.join(folder,'项目 工作簿.xlsx'),before=path.join(folder,'原始 工作簿.xlsx'),unselected=path.join(folder,'不要修改.md'),clip=path.join(folder,'.native-paste-input'),ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),check=i=>report.checks.push({id:workbookEditingChecks[i],status:'passed'})
+ const run=async(executable,args,label)=>{const child=spawn(executable,args,{windowsHide:true,stdio:'inherit'});await withDeadline(()=>new Promise((r,j)=>{child.once('error',j);child.once('exit',c=>c===0?r():j(Error(label+' failed '+c)))}),60000,label)}
+ const ps=(name,args)=>run('powershell.exe',['-NoProfile','-STA','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts',name),...args],name)
+ const producer=(mode,file,result)=>run(process.env.LONGEDIT_XLSX_PYTHON,[path.join(repoRoot,'scripts/inspect-hosted-workbook-delivery.py'),mode,folder,file,result],'independent XLSX producer '+mode)
+ const target=(row,column)=>`document.querySelectorAll('.sheet-row')[${row}]?.querySelectorAll('.workbook-cell')[${column}]`
+ const value=(row,column)=>`(${target(row,column)})?.querySelector('.cell-content')?.textContent`
+ const paste=async(row,column,text)=>{await fs.writeFile(clip,text);await ps('set-hosted-writing-clipboard.ps1',['-OwnerRoot',folder,'-TextFile',clip]);await ui.clickTarget(target(row,column));await ui.key('v','KeyV',86,2)}
+ const choose=async(selector,index)=>{await ui.click(selector);await ui.key('Home','Home',36);for(let i=0;i<index;i++)await ui.key('ArrowDown','ArrowDown',40);await ui.key('Enter','Enter',13)}
+ const button=text=>ui.clickText('.workbook-view button',text)
+ let failure
+ try{
+  await fs.mkdir(folder);await fs.writeFile(path.join(folder,'.v119-installed-owner'),crypto.randomUUID(),{flag:'wx'});await fs.writeFile(unselected,'未选择的正文保持原样\n',{flag:'wx'});report.unselectedBefore=sha(await fs.readFile(unselected));await producer('create',source,before);const sourceBefore=sha(await fs.readFile(source));check(0)
+  report.sourceBefore=sourceBefore
+  await evaluate(`window.__v1116Trace=[];window.__v1116Errors=[];for(const type of ['click','keydown','input','paste','pointerdown'])addEventListener(type,e=>window.__v1116Trace.push({type,trusted:e.isTrusted}),true);addEventListener('error',e=>window.__v1116Errors.push(e.message));addEventListener('unhandledrejection',e=>window.__v1116Errors.push(String(e.reason)))`)
+  await navigate('#/library?path='+encodeURIComponent(source),'.workbook-view','actual XLSX workbook');await ui.waitFor(`${value(1,2)}==='00123'`,'native fixture rows')
+  await paste(1,0,'"会议\r\n备注"\t可见\t00124');await ui.waitFor(`${value(1,2)}==='00124'`,'quoted paste');assert.equal(await evaluate(value(2,0)),'不要修改')
+  await ui.key('z','KeyZ',90,2);await ui.waitFor(`${value(1,2)}==='00123'`,'whole paste undo');await ui.key('y','KeyY',89,2);await ui.waitFor(`${value(1,2)}==='00124'`,'whole paste redo');assert.equal(sha(await fs.readFile(source)),sourceBefore);report.pasteUndoExact=true;check(1)
+  await ui.clickTarget(target(4,0));await ui.key('c','KeyC',67,2);await ui.clickTarget(target(5,0));await ui.key('v','KeyV',86,2);await ui.waitFor(`${value(5,0)}==='=保留文本'`,'literal text copied');report.literalTextExact=true;check(2)
+  await ui.clickTarget(target(4,3));await ui.key('c','KeyC',67,2);await ui.clickTarget(target(5,3));await ui.key('v','KeyV',86,2);await ui.waitFor(`document.querySelector('.formula-bar input')?.value==='=D3+D4'`,'actual native relative formula translation');report.formulaTranslationExact=true;check(3)
+  await ui.clickTarget(target(1,3));await ui.clickTarget(target(2,3),'left',8)
+  const points=await evaluate(`(()=>{const h=document.querySelector('.fill-handle')?.getBoundingClientRect(),t=(${target(3,3)})?.getBoundingClientRect();return h&&t?{x:h.x+h.width/2,y:h.y+h.height/2,tx:t.x+t.width/2,ty:t.y+t.height/2}:null})()`);assert.ok(points)
+  await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:points.x,y:points.y});await send('Input.dispatchMouseEvent',{type:'mousePressed',x:points.x,y:points.y,button:'left',buttons:1,clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:points.tx,y:points.ty,button:'left',buttons:1});await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:points.tx,y:points.ty,button:'left',buttons:0,clickCount:1})
+  await ui.waitFor(`${value(3,3)}==='0.3'`,'decimal fill');await ui.key('z','KeyZ',90,2);await ui.waitFor(`${value(3,3)}==='3'`,'fill undo');await ui.key('y','KeyY',89,2);await ui.waitFor(`${value(3,3)}==='0.3'`,'fill redo');report.decimalFillExact=true;check(4)
+  await ui.click('.tool-panel-trigger');await ui.clickText('.n-dropdown-option-body','数据、Table 与规则');await choose('[aria-label="排序字段"]',3);report.navigationOrder=[]
+  for(let i=0;i<4;i++){await button('下一条');report.navigationOrder.push(await evaluate(`document.querySelector('.workbook-cell.selected')?.closest('.sheet-row')?.querySelectorAll('.cell-content')[2]?.textContent`))}
+  assert.deepEqual(report.navigationOrder,['00007','00124','9007199254740993123','9007199254740993124']);check(5)
+  await choose('[aria-label="筛选字段"]',2);await ui.fill('[placeholder="包含筛选"]','可见');const selected=await evaluate(`document.querySelector('.formula-bar output').textContent`);await button('复制筛选结果');await ui.waitFor(`document.body.textContent.includes('已复制 3 行会话结果和表头')`,'result copy acknowledged')
+  const copiedFile=path.join(folder,'.copied-results');await ps('read-hosted-table-clipboard.ps1',['-OwnerRoot',folder,'-Output',copiedFile]);const copied=await fs.readFile(copiedFile,'utf8');report.filteredCopyExact=copied.startsWith('任务\t状态\t编号\t数值')&&!copied.includes('不要修改')&&copied.indexOf('00007')<copied.indexOf('00124')&&await evaluate(`document.querySelector('.formula-bar output').textContent`)===selected;assert.ok(report.filteredCopyExact);assert.equal(sha(await fs.readFile(source)),sourceBefore);await capture('installed-v1116-filtered-results.jpg');check(6)
+  await ui.click('.workbook-actions .primary');await ui.waitFor(`document.querySelector('.workbook-actions .primary')?.textContent==='已保存'`,'actual native XLSX saved')
+  await navigate('#/library?path='+encodeURIComponent(unselected),'.library-mode','leave saved workbook');await navigate('#/library?path='+encodeURIComponent(source),'.workbook-view','native saved workbook reopen');await ui.waitFor(`${value(1,2)}==='00124'&&${value(5,0)}==='=保留文本'`,'native reopened types and values');report.nativeReopenExact=true;await capture('installed-v1116-native-reopened.jpg');check(7)
+  const inspected=path.join(output,'v1116-workbook-inspection.json');await producer('inspect',source,inspected);report.workbookInspection=JSON.parse(await fs.readFile(inspected,'utf8'));await fs.copyFile(source,path.join(output,'installed-v1116-saved.xlsx'),fs.constants.COPYFILE_EXCL);await fs.copyFile(before,path.join(output,'installed-v1116-before.xlsx'),fs.constants.COPYFILE_EXCL);check(8)
+  const producerFile=path.join(folder,'独立生产者 另存.xlsx');await fs.copyFile(producerFile,path.join(output,'installed-v1116-producer.xlsx'),fs.constants.COPYFILE_EXCL);await navigate('#/library?path='+encodeURIComponent(producerFile),'.workbook-view','independent producer result in native app');await ui.waitFor(`${value(1,2)}==='00124'&&${value(5,0)}==='=保留文本'`,'producer native reopen');await ui.clickTarget(target(5,3));assert.equal(await evaluate(`document.querySelector('.formula-bar input').value`),'=D3+D4');report.producerAppReopenExact=true;await capture('installed-v1116-producer-reopened.jpg');check(9)
+  report.unselectedAfter=sha(await fs.readFile(unselected));report.inputTrace=await evaluate('window.__v1116Trace');report.runtimeErrors=await evaluate('window.__v1116Errors');report.errorOverlay=await evaluate(`!!document.querySelector('.error-overlay')`);check(10);report.status='passed';validateInstalledWorkbookEditing(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]})
+ }catch(error){failure=error;report.status='failed';report.failure=String(error.stack||error);report.failureUI=await evaluate(`({buttons:Array.from(document.querySelectorAll('.workbook-view button'),e=>({text:e.textContent,aria:e.getAttribute('aria-label'),disabled:e.disabled})).slice(0,80),messages:Array.from(document.querySelectorAll('.n-message'),e=>e.textContent)})`).catch(()=>null);await capture('installed-v1116-failure.jpg').catch(()=>{})}
+ finally{await fs.writeFile(path.join(output,'installed-v1116-workflow.json'),JSON.stringify(report,null,2)+'\n')}
+ if(failure)throw failure
+}

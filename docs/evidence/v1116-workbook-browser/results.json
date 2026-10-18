@@ -1,0 +1,11 @@
+{
+  "status": "failed",
+  "evidenceLevel": "actual-WorkbookView-real-headless-clipboard-and-input-simulated-native-IPC",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [],
+  "layouts": [],
+  "errors": [],
+  "failure": "page.waitForFunction: Timeout 12000ms exceeded.\n    at E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1116-workbook-browser.mjs:19:69"
+}

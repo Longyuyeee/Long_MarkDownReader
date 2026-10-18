@@ -1,7 +1,9 @@
-import { createApp, h } from 'vue'
+import { createApp, h, computed, watch } from 'vue'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHashHistory, RouterView } from 'vue-router'
-import { NConfigProvider, NDialogProvider, NMessageProvider, NIcon, NDropdown, NModal } from 'naive-ui'
+import { NConfigProvider, NDialogProvider, NMessageProvider, NIcon, NDropdown, NModal, darkTheme } from 'naive-ui'
+import { resolveThemeName, isDarkTheme, getThemeTone } from '/src/config/themePresets.ts'
+import { VISUAL_STYLE_RADII } from '/src/config/displayPreferences.ts'
 import WorkbookView from '/src/views/WorkbookView.vue'
 import { useAppStore } from '/src/store/app.ts'
 import '/src/styles/tokens.scss'
@@ -54,6 +56,13 @@ if (new URLSearchParams(window.location.search).has('chart')) {
   ]
 }
 window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
+  if (command === 'translate_workbook_formulas') {
+    audit.translations = JSON.parse(JSON.stringify(args.requests))
+    // This component fixture supports vertical relative references only. The
+    // real native translator is verified separately on actual XLSX files.
+    if (args.requests.some(request => request.columnDelta !== 0)) throw Error('Unsupported fixture column translation')
+    return args.requests.map(request => request.formula.replace(/(\$?[A-Z]+)(\$?)(\d+)/g, (_match, column, absolute, row) => column + absolute + (Number(row) + (absolute ? 0 : request.rowDelta))))
+  }
   if (command === 'update_workbook_drawing') {
     const change = structuredClone(args.payload.change)
     audit.drawingChange = change
@@ -167,7 +176,12 @@ window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
     audit.pending = () => {
       audit.pending = null
       if (audit.failNext) { audit.failNext = false; reject('模拟磁盘失败'); return }
-      for (const edit of args.payload.edits) sheets[edit.sheet].rows[edit.row][edit.column] = { value: edit.input, formattedValue: edit.input, kind: edit.kind }
+      for (const edit of args.payload.edits) {
+        const target = sheets[edit.sheet]
+        while (target.rows.length <= edit.row) target.rows.push([])
+        target.rows[edit.row][edit.column] = { value: edit.input, formattedValue: edit.input, kind: edit.kind === 'string' ? 'text' : edit.kind, ...(edit.kind === 'formula' ? { formula: edit.input } : {}) }
+        target.totalRows = Math.max(target.totalRows, edit.row + 1)
+      }
       document.signature += '-saved'; resolve(structuredClone(document))
     }
   })
@@ -175,11 +189,16 @@ window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
 } }
 const pinia = createPinia(), store = useAppStore(pinia)
 store.activeLibraryPath = 'isolated'; store.configReady = true
+const params = new URLSearchParams(window.location.search), systemDark = params.get('dark') === '1'
+store.theme = params.get('theme') || 'white'; store.visualStyle = 'soft'; store.motionSpeed = 'normal'; audit.store = store
+watch(() => store.theme, value => { window.document.body.dataset.theme = resolveThemeName(value, systemDark); window.document.body.classList.toggle('is-dark', isDarkTheme(value, systemDark)) }, { immediate: true })
+watch(() => store.visualStyle, value => window.document.body.dataset.style = value, { immediate: true })
+const overrides = computed(() => { const tone = getThemeTone(store.theme, systemDark).ui, radius = VISUAL_STYLE_RADII[store.visualStyle]; return { common: { primaryColor: tone.primary, primaryColorHover: tone.primary, primaryColorPressed: tone.primary, textColor1: tone.text, textColor2: tone.text + 'c7', textColor3: tone.text + '8f', borderColor: tone.text + '26', cardColor: tone.surface, modalColor: tone.surface, popoverColor: tone.surface, bodyColor: 'transparent', borderRadius: radius.normal, borderRadiusSmall: radius.small } } })
 const router = createRouter({ history: createWebHashHistory(), routes: [{ path: '/workbook', component: WorkbookView }, { path: '/library', component: { render: () => h('div', '已离开工作簿') } }] })
 await router.push('/workbook?path=tasks.xlsx')
-const app = createApp({ render: () => h(NConfigProvider, {}, { default: () => h(NDialogProvider, {}, { default: () => h(NMessageProvider, {}, { default: () => h(RouterView) }) }) }) })
+const app = createApp({ render: () => h(NConfigProvider, { theme: isDarkTheme(store.theme, systemDark) ? darkTheme : null, themeOverrides: overrides.value }, { default: () => h(NDialogProvider, {}, { default: () => h(NMessageProvider, {}, { default: () => h(RouterView) }) }) }) })
 app.use(pinia).use(router).component('NIcon', NIcon).component('NDropdown', NDropdown).component('NModal', NModal).mount('#app')
 window.document.body.style.margin = '0'
-window.document.body.dataset.theme = 'white'
+window.document.body.dataset.motion = 'normal'
 window.document.getElementById('app').style.height = '100vh'
 window.document.querySelector('.n-config-provider').style.height = '100%'

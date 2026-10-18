@@ -12,12 +12,15 @@ export function compareTableIntegers(left: string, right: string): number {
 }
 export interface TableEdit { label: string; cells: CellChange[]; headers: { columnId: string; before: string; after: string }[]; appended: { id: string; values: string[] }[]; columnIds: string[]; bytes: number }
 const checkText = (value: string) => { if (value.length > 1_000_000) throw Error('单元格超过100万字符，本次操作未执行') }
-export function parseTableClipboard(text: string, structured = false): string[][] {
- if (text.length > TABLE_CLIPBOARD_BYTES || new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) throw Error('剪贴板超过2MiB，请分批粘贴；本次未修改')
- if (!structured && !/[\t\r\n]/.test(text)) { checkText(text); return [[text]] }
+export interface ClipboardLimits { bytes: number; cells: number; columns: number; cellCharacters: number }
+const tableClipboardLimits: ClipboardLimits = { bytes: TABLE_CLIPBOARD_BYTES, cells: TABLE_EDIT_CELLS, columns: 512, cellCharacters: 1_000_000 }
+export function parseTableClipboard(text: string, structured = false, limits: ClipboardLimits = tableClipboardLimits): string[][] {
+ if (text.length > limits.bytes || new TextEncoder().encode(text).length > limits.bytes) throw Error(`剪贴板超过${limits.bytes / 1024 / 1024}MiB，请分批粘贴；本次未修改`)
+ const checkCell = (value: string) => { if (value.length > limits.cellCharacters) throw Error('单元格文本超过限制，本次未修改') }
+ if (!structured && !/[\t\r\n]/.test(text)) { checkCell(text); return [[text]] }
  const rows: string[][] = []; let row: string[] = [], cell = '', quoted = false, closed = false
- const field = () => { checkText(cell); row.push(cell); cell = ''; closed = false; if (row.length > 512) throw Error('粘贴超过512列，本次未修改') }
- const record = () => { field(); rows.push(row); row = []; if (rows.length > TABLE_EDIT_CELLS) throw Error('粘贴超过20,000格，请分批操作') }
+ const field = () => { checkCell(cell); row.push(cell); cell = ''; closed = false; if (row.length > limits.columns) throw Error(`粘贴超过${limits.columns}列，本次未修改`) }
+ const record = () => { field(); rows.push(row); row = []; if (rows.length > limits.cells) throw Error(`粘贴超过${limits.cells.toLocaleString()}格，请分批操作`) }
  for (let i = 0; i < text.length; i++) {
   const c = text[i]
   if (quoted) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++ } else { quoted = false; closed = true } } else cell += c; continue }
@@ -29,14 +32,14 @@ export function parseTableClipboard(text: string, structured = false): string[][
  if (quoted) throw Error('剪贴板中有未闭合引号，本次未修改')
  if (cell || row.length || !rows.length || !/[\r\n]$/.test(text)) record()
  const width = Math.max(...rows.map(value => value.length))
- if (rows.length * width > TABLE_EDIT_CELLS) throw Error('粘贴超过20,000格，请分批操作')
+ if (rows.length * width > limits.cells) throw Error(`粘贴超过${limits.cells.toLocaleString()}格，请分批操作`)
  return rows.map(value => [...value, ...Array(width - value.length).fill('')])
 }
-export function serializeTableClipboard(rows: string[][]): string {
+export function serializeTableClipboard(rows: string[][], limits: ClipboardLimits = tableClipboardLimits): string {
  let length = 0
- for (const row of rows) for (const value of row) { length += value.length + 1; if (length > TABLE_CLIPBOARD_BYTES) throw Error('复制内容超过2MiB，请缩小选区') }
+ for (const row of rows) for (const value of row) { length += value.length + 1; if (length > limits.bytes) throw Error(`复制内容超过${limits.bytes / 1024 / 1024}MiB，请缩小选区`) }
  const text = rows.map(row => row.map(value => /[\t\r\n"]/.test(value) ? '"' + value.split('"').join('""') + '"' : value).join('\t')).join('\r\n')
- if (new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) throw Error('复制内容超过2MiB，请缩小选区')
+ if (new TextEncoder().encode(text).length > limits.bytes) throw Error(`复制内容超过${limits.bytes / 1024 / 1024}MiB，请缩小选区`)
  return text
 }
 export const tableEditSize = (edit: Pick<TableEdit, 'cells' | 'headers' | 'appended' | 'columnIds'>) => 256 + edit.columnIds.join('').length * 2

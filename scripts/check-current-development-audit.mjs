@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath,['--test','scripts/test-workbook-clipboard.mjs','scripts/test-v1116-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--test','scripts/test-table-editing.mjs','scripts/test-v1115-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--test','scripts/test-v1114-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath, ['--experimental-strip-types', '--test', 'scripts/test-content-backup-ui-state.mjs'], { stdio: 'inherit' })
@@ -197,7 +198,7 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
   const patch = Number(version.split('.')[2])
@@ -205,9 +206,11 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.
   const previous = patch === 0 ? '1.0.26' : '1.1.' + (patch - 1)
   const slices = ['v1.1.0-ui-and-workflow', 'v1.1.1-library-experience', 'v1.1.2-file-management', 'v1.1.3-foundation-workflow', 'v1.1.4-foundation-workflow', 'v1.1.5-foundation-hardening', 'v1.1.6-move-continuity', 'v1.1.7-save-history', 'v1.1.8-search-completeness', 'v1.1.9-work-session-continuity', 'v1.1.10-tags-collections', 'v1.1.11-graph-exploration', 'v1.1.12-content-backup', 'v1.1.13-pdf-reading-notes', 'v1.1.14-writing-delivery', 'v1.1.15-table-editing']
   const stage = 'M8-' + (28 + patch * 2 + Number(published)) + '-v' + version + (published ? '-published' : '-version-candidate')
+  slices.push('v1.1.16-workbook-editing')
   required[5] = ['当前开发目标：' + '\x60' + development.developmentTargetVersion + '\x60', development.developmentTargetVersion === (published ? next : version)]
   required[7] = ['当前公开版本：' + '\x60' + development.publicVersion + '\x60', development.publicVersion === (published ? version : previous) && development.publicTag === 'v' + development.publicVersion]
   const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简', '基础功能深化', '基础功能深化', '安全导入与搜索一致性', '移动、改名与链接接续', '保存与历史深化', '搜索完整性', '工作现场', '标签与集合', '图谱深化', '内容备份', 'PDF 阅读笔记', '写作与交付', '轻量表格']
+  names.push('XLSX 操作')
   required[9] = ['当前阶段：**v' + version + (published ? ' 已发布**' : ' ' + names[patch] + '候选**'), development.currentStage === stage && development.activeSlice?.id === slices[patch] && fs.existsSync(development.activeSlice.document)]
   if (version === '1.1.2' && development.activeSlice?.id === 'v1.1.3-custom-note-templates') {
     required[9] = ['当前阶段：**v1.1.3 自定义模板开发**', published && development.releaseCandidate === false
