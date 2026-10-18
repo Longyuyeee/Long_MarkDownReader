@@ -14,22 +14,23 @@ import { validateInstalledPdfReading } from './installed-v1-1-13-evidence.mjs'
 import { validateInstalledTableEditing } from './installed-v1-1-15-evidence.mjs'
 import { validateInstalledWorkbookEditing } from './installed-v1-1-16-evidence.mjs'
 import { validateInstalledWritingDelivery } from './installed-v1-1-14-evidence.mjs'
+import { validateInstalledDocxEditing, assertDocxOutputBytes } from './installed-v1-1-17-evidence.mjs'
 
 export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFileSync(file)) {
   const runtime = manifest.runtimeSmoke
   assert.equal(runtime.status, 'passed-installed-tauri-webview2')
   assert.equal(runtime.checksPassed, 18)
   assert.equal(runtime.routesPassed, 11)
-  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion))
+  assert.ok(['1.0.22', '1.0.23', '1.0.24', '1.0.25', '1.0.26', '1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion))
   const versionCandidate = manifest.appVersion !== '1.0.22'
-  const evidenceRoot = manifest.appVersion === '1.1.16' ? 'docs/evidence/v1-1-16-candidate-lifecycle/' : ['1.1.15','1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-15-candidate-lifecycle/' : ['1.1.14','1.1.15', '1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-14-candidate-lifecycle/' : ['1.1.13','1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-13-candidate-lifecycle/' : ['1.1.12','1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-12-candidate-lifecycle/' : ['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-11-candidate-lifecycle/' : ['1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-10-candidate-lifecycle/' : ['1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-9-candidate-lifecycle/' : manifest.appVersion === '1.1.8' ? 'docs/evidence/v1-1-8-candidate-lifecycle/' : manifest.appVersion === '1.1.7' ? 'docs/evidence/v1-1-7-candidate-lifecycle/' : manifest.appVersion === '1.1.6' ? 'docs/evidence/v1-1-6-candidate-lifecycle/' : manifest.appVersion === '1.1.5' ? 'docs/evidence/v1-1-5-candidate-lifecycle/' : manifest.appVersion === '1.1.4' ? 'docs/evidence/v1-1-4-candidate-lifecycle/' : manifest.appVersion === '1.1.3' ? 'docs/evidence/v1-1-3-candidate-lifecycle/' : manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
+  const evidenceRoot = manifest.appVersion === '1.1.17' ? 'docs/evidence/v1-1-17-candidate-lifecycle/' : ['1.1.16','1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-16-candidate-lifecycle/' : ['1.1.15','1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-15-candidate-lifecycle/' : ['1.1.14','1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-14-candidate-lifecycle/' : ['1.1.13','1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-13-candidate-lifecycle/' : ['1.1.12','1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-12-candidate-lifecycle/' : ['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-11-candidate-lifecycle/' : ['1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-10-candidate-lifecycle/' : ['1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion) ? 'docs/evidence/v1-1-9-candidate-lifecycle/' : manifest.appVersion === '1.1.8' ? 'docs/evidence/v1-1-8-candidate-lifecycle/' : manifest.appVersion === '1.1.7' ? 'docs/evidence/v1-1-7-candidate-lifecycle/' : manifest.appVersion === '1.1.6' ? 'docs/evidence/v1-1-6-candidate-lifecycle/' : manifest.appVersion === '1.1.5' ? 'docs/evidence/v1-1-5-candidate-lifecycle/' : manifest.appVersion === '1.1.4' ? 'docs/evidence/v1-1-4-candidate-lifecycle/' : manifest.appVersion === '1.1.3' ? 'docs/evidence/v1-1-3-candidate-lifecycle/' : manifest.appVersion === '1.1.2' ? 'docs/evidence/v1-1-2-candidate-lifecycle/' : manifest.appVersion === '1.1.1' ? 'docs/evidence/v1-1-1-candidate-lifecycle/' : manifest.appVersion === '1.1.0' ? 'docs/evidence/v1-1-0-candidate-lifecycle/' : manifest.appVersion === '1.0.26' ? 'docs/evidence/v126-candidate-lifecycle/' : manifest.appVersion === '1.0.25' ? 'docs/evidence/v125-candidate-lifecycle/' : manifest.appVersion === '1.0.24' ? 'docs/evidence/v124-candidate-lifecycle/' : versionCandidate ? 'docs/evidence/v123-installed-visual-review/' : 'docs/evidence/v122-installed-search/'
   const reports = Object.fromEntries(Object.entries(runtime.reports).map(([name, item]) => {
     assert.equal(item.path, evidenceRoot + path.posix.basename(item.path))
     const bytes = read(item.path)
     assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), item.sha256, `${name} raw evidence changed`)
     return [name, JSON.parse(bytes)]
   }))
-  if (['1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const report = reports.saveHistory
     assert.equal(report.status,'passed'); assert.equal(report.appVersion,manifest.appVersion)
     assert.equal(report.sourceCommit,manifest.sourceCommit)
@@ -37,53 +38,58 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.equal(report.evidenceLevel,'installed-tauri-ipc-and-disk');assert.equal(report.sourceUserContentIncluded,false)
     assert.deepEqual(report.checks.map(check=>[check.id,check.status]),saveHistoryChecks.map(id=>[id,'passed']))
   }
-  if(['1.1.15','1.1.16'].includes(manifest.appVersion)){
+  if(['1.1.15','1.1.16', '1.1.17'].includes(manifest.appVersion)){
     validateInstalledTableEditing(reports.tableEditing,manifest)
     assert.equal(reports.tableEditing.executableSha256,reports.searchCompleteness.executableSha256)
     assert.equal(reports.tableEditing.harnessSourceCommit,reports.searchCompleteness.harnessSourceCommit)
     for(const[field,file]of [['csvInspection','installed-v1115-saved.csv'],['xlsxInspection','installed-v1115-export.xlsx']])assert.equal(crypto.createHash('sha256').update(read(evidenceRoot+file)).digest('hex'),reports.tableEditing[field].sha256,'Actual table delivery bytes changed')
   }
-  if(manifest.appVersion==='1.1.16'){
+  if(['1.1.16','1.1.17'].includes(manifest.appVersion)){
     validateInstalledWorkbookEditing(reports.workbookEditing,manifest)
     for(const key of ['executableSha256','harnessSourceCommit'])assert.equal(reports.workbookEditing[key],reports.searchCompleteness[key])
     const inspection=reports.workbookEditing.workbookInspection
     for(const[file,hash]of [['installed-v1116-saved.xlsx',inspection.sha256],['installed-v1116-before.xlsx',inspection.beforeSha256],['installed-v1116-producer.xlsx',inspection.producerReopen.sha256]])assert.equal(crypto.createHash('sha256').update(read(evidenceRoot+file)).digest('hex'),hash,'Actual workbook bytes changed')
   }
+  if(manifest.appVersion==='1.1.17'){
+    validateInstalledDocxEditing(reports.docxEditing,manifest)
+    for(const key of ['executableSha256','harnessSourceCommit'])assert.equal(reports.docxEditing[key],reports.searchCompleteness[key])
+    assertDocxOutputBytes(reports.docxEditing,file=>read(evidenceRoot+file))
+  }
   const { workspace, routes, search, version, stability } = reports
-  if(['1.1.14','1.1.15', '1.1.16'].includes(manifest.appVersion)){
+  if(['1.1.14','1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)){
     validateInstalledWritingDelivery(reports.writingDelivery,manifest)
     assert.equal(reports.writingDelivery.executableSha256,reports.searchCompleteness.executableSha256)
     assert.equal(reports.writingDelivery.harnessSourceCommit,reports.searchCompleteness.harnessSourceCommit)
   }
-  if (['1.1.13','1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.13','1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     validateInstalledPdfReading(reports.pdfReading, manifest)
     assert.equal(reports.pdfReading.executableSha256, reports.searchCompleteness.executableSha256)
     assert.equal(reports.pdfReading.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit)
   }
-  if (['1.1.12','1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.12','1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     validateInstalledContentBackup(reports.contentBackup, manifest)
     assert.equal(reports.contentBackup.executableSha256, reports.searchCompleteness.executableSha256)
     assert.equal(reports.contentBackup.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit)
   }
-  if (['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     validateInstalledGraphExploration(reports.graphExploration, manifest)
     assert.equal(reports.graphExploration.executableSha256, reports.searchCompleteness.executableSha256)
     assert.equal(reports.graphExploration.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit)
   }
-  if (['1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     validateInstalledTagCollections(reports.tagCollections, manifest)
     assert.equal(reports.tagCollections.executableSha256, reports.searchCompleteness.executableSha256)
     assert.equal(reports.tagCollections.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit)
   }
-  if (['1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     validateInstalledWorkSession(reports.workSession, manifest)
     assert.equal(reports.workSession.executableSha256, reports.searchCompleteness.executableSha256, 'all current/historical tasks must use the same installed executable')
     assert.equal(reports.workSession.harnessSourceCommit, reports.searchCompleteness.harnessSourceCommit, 'all current/historical tasks must use the same review driver')
   }
-  if (['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     validateInstalledSearchCompleteness(reports.searchCompleteness, reports.searchBaseline, reports.searchUser, reports.searchOffice, manifest)
   }
-  if (['1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const report = reports.moveContinuity
     assert.equal(report.status, 'passed'); assert.equal(report.appVersion, manifest.appVersion)
     assert.equal(report.sourceCommit, manifest.sourceCommit)
@@ -91,7 +97,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
     assert.equal(report.evidenceLevel, 'installed-tauri-ipc-and-disk'); assert.equal(report.sourceUserContentIncluded, false)
     assert.deepEqual(report.checks.map(check => [check.id, check.status]), moveContinuityChecks.map(id => [id, 'passed']))
   }
-  if (['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const hardening = reports.foundationHardening
     assert.equal(hardening.status, 'passed'); assert.equal(hardening.appVersion, manifest.appVersion)
     assert.equal(hardening.sourceCommit, manifest.sourceCommit)
@@ -112,7 +118,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'v115-workflows-have-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const extended = reports.foundationExtended
     assert.equal(extended.status, 'passed'); assert.equal(extended.appVersion, manifest.appVersion)
     assert.equal(extended.sourceCommit, manifest.sourceCommit)
@@ -125,7 +131,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'batch-context-dialog-renames-real-files-and-retains-current-draft', 'v114-workflows-have-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const foundation = reports.foundation
     assert.equal(foundation.status, 'passed')
     assert.equal(foundation.appVersion, manifest.appVersion)
@@ -140,7 +146,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'txt-history-dialog-creates-copy-without-overwrite', 'foundation-workflow-has-no-global-error-overlay',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const files = reports.fileManagement
     assert.equal(files.status, 'passed')
     assert.equal(files.appVersion, manifest.appVersion)
@@ -160,7 +166,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'no-global-error-overlay-after-file-operations',
     ].map(id => [id, 'passed']))
   }
-  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const experience = reports.experience
     assert.equal(experience.status, 'passed')
     assert.equal(experience.appVersion, manifest.appVersion)
@@ -175,7 +181,7 @@ export function assertInstalledReleaseRuntime(manifest, read = file => fs.readFi
       'renaming-retains-file-relationship', 'removing-relation-retains-both-files',
     ].map(id=>[id,'passed']))
   }
-  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16'].includes(manifest.appVersion)) {
+  if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17'].includes(manifest.appVersion)) {
     const workflow = reports.workflow
     assert.equal(workflow.status, 'passed')
     assert.equal(workflow.appVersion, manifest.appVersion)

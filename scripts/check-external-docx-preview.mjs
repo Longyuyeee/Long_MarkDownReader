@@ -30,7 +30,9 @@ for (const token of [
 for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
   "requestedExternal ? 'read_external_docx_document' : 'read_docx_document'",
-  '...(requestedExternal ? {} : { libraryRoot: store.libraryPath })',
+  '...(requestedExternal ? {} : { libraryRoot: requestedRoot })',
+  'const requestedRoot = store.libraryPath',
+  'requestedExternal === isExternal.value && requestedRoot === store.libraryPath',
   'v-if="!isExternal"',
   'editorOpen && !isExternal',
   'editorOpen && !isExternal',

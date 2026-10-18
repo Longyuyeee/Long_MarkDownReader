@@ -573,4 +573,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.17 深化现有 DOCX 编辑，将安全验证融入显式保存，让正文/表格目标、草稿和保存反馈更自然。已有代码与页面预审，尚未实施；后续仍按17—20顺序推进，不把规划当交付。[下一版代码预审](docs/V1_1_17_DOCX_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.17 深化现有 DOCX 编辑，已实施保存内自动检查、异步草稿归属和重新读取保护，并查看实际页面；正在推进固定安装器及独立同包验收，尚未公开发布。后续仍按17—20顺序推进，不把规划当交付。[实际代码预审](docs/V1_1_17_DOCX_Preimplementation_Audit_2026-10-18.md) · [开发记录](docs/V1_1_17_DOCX_Development_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
