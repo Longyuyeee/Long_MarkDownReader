@@ -1,0 +1,708 @@
+﻿2026-10-18T02:26:45.8040841Z Current runner version: '2.337.0'
+2026-10-18T02:26:45.8063907Z ##[group]Runner Image Provisioner
+2026-10-18T02:26:45.8064462Z Hosted Compute Agent
+2026-10-18T02:26:45.8064809Z Version: 20261002.596
+2026-10-18T02:26:45.8065218Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-18T02:26:45.8065646Z Build Date: 2026-10-02T22:28:27Z
+2026-10-18T02:26:45.8066049Z Worker ID: {e91b14ed-a36a-478c-9320-3aeb5d9b0297}
+2026-10-18T02:26:45.8066467Z Region: centralus
+2026-10-18T02:26:45.8066856Z Cloud: Azure
+2026-10-18T02:26:45.8067170Z ##[endgroup]
+2026-10-18T02:26:45.8068040Z ##[group]Operating System
+2026-10-18T02:26:45.8068424Z Microsoft Windows Server 2025
+2026-10-18T02:26:45.8068787Z 10.0.26100
+2026-10-18T02:26:45.8069095Z Datacenter
+2026-10-18T02:26:45.8069460Z ##[endgroup]
+2026-10-18T02:26:45.8069774Z ##[group]Runner Image
+2026-10-18T02:26:45.8070106Z Image: windows-2025-vs2026
+2026-10-18T02:26:45.8070472Z Version: 20261007.264.1
+2026-10-18T02:26:45.8071380Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+2026-10-18T02:26:45.8072341Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+2026-10-18T02:26:45.8072901Z ##[endgroup]
+2026-10-18T02:26:45.8073621Z ##[group]GITHUB_TOKEN Permissions
+2026-10-18T02:26:45.8075182Z Contents: read
+2026-10-18T02:26:45.8075623Z Metadata: read
+2026-10-18T02:26:45.8075936Z ##[endgroup]
+2026-10-18T02:26:45.8077728Z Secret source: Actions
+2026-10-18T02:26:45.8078264Z Cache mode: write
+2026-10-18T02:26:45.8078769Z Prepare workflow directory
+2026-10-18T02:26:45.8378504Z Prepare all required actions
+2026-10-18T02:26:45.8413700Z Getting action download info
+2026-10-18T02:26:46.0500855Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-10-18T02:26:46.1447142Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-10-18T02:26:46.2454254Z Download action repository 'Swatinem/rust-cache@v2' (SHA:6323deb102c322ba6fcbdcafc7e3dddab59af2b6)
+2026-10-18T02:26:46.7831927Z Complete job name: Frontend, Rust and dependency checks
+2026-10-18T02:26:46.8845714Z ##[group]Run actions/checkout@v6
+2026-10-18T02:26:46.8846620Z with:
+2026-10-18T02:26:46.8846847Z   fetch-depth: 0
+2026-10-18T02:26:46.8847079Z   fetch-tags: true
+2026-10-18T02:26:46.8847341Z   repository: Longyuyeee/Long_MarkDownReader
+2026-10-18T02:26:46.8850318Z   token: ***
+2026-10-18T02:26:46.8850539Z   ssh-strict: true
+2026-10-18T02:26:46.8850770Z   ssh-user: git
+2026-10-18T02:26:46.8851005Z   persist-credentials: true
+2026-10-18T02:26:46.8851257Z   clean: true
+2026-10-18T02:26:46.8851494Z   sparse-checkout-cone-mode: true
+2026-10-18T02:26:46.8851769Z   show-progress: true
+2026-10-18T02:26:46.8852005Z   lfs: false
+2026-10-18T02:26:46.8852220Z   submodules: false
+2026-10-18T02:26:46.8852467Z   set-safe-directory: true
+2026-10-18T02:26:46.8852740Z   allow-unsafe-pr-checkout: false
+2026-10-18T02:26:46.8853332Z env:
+2026-10-18T02:26:46.8853721Z   CARGO_TERM_COLOR: always
+2026-10-18T02:26:46.8854054Z ##[endgroup]
+2026-10-18T02:26:47.0039524Z Syncing repository: Longyuyeee/Long_MarkDownReader
+2026-10-18T02:26:47.0041291Z ##[group]Getting Git version info
+2026-10-18T02:26:47.0041718Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+2026-10-18T02:26:47.0512641Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T02:26:47.3540202Z git version 2.56.0.windows.2
+2026-10-18T02:26:47.3586038Z ##[endgroup]
+2026-10-18T02:26:47.3605394Z Temporarily overriding HOME='D:\a\_temp\9f4e7d76-3cc5-4b79-99e9-4dce624c8c13' before making global git config changes
+2026-10-18T02:26:47.3607092Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T02:26:47.3614289Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+2026-10-18T02:26:47.4200264Z Deleting the contents of 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+2026-10-18T02:26:47.4206318Z ##[group]Determining repository object format
+2026-10-18T02:26:47.4207902Z ##[endgroup]
+2026-10-18T02:26:47.4208652Z ##[group]Initializing the repository
+2026-10-18T02:26:47.4215285Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader
+2026-10-18T02:26:47.5037117Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/
+2026-10-18T02:26:47.5081721Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+2026-10-18T02:26:47.5660319Z ##[endgroup]
+2026-10-18T02:26:47.5660925Z ##[group]Disabling automatic garbage collection
+2026-10-18T02:26:47.5668016Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-18T02:26:47.6014241Z ##[endgroup]
+2026-10-18T02:26:47.6015618Z ##[group]Setting up auth
+2026-10-18T02:26:47.6016576Z Removing SSH command configuration
+2026-10-18T02:26:47.6023954Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T02:26:47.6358049Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T02:26:48.9408466Z Removing HTTP extra header
+2026-10-18T02:26:48.9416278Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T02:26:48.9700300Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T02:26:49.4012473Z Removing includeIf entries pointing to credentials config files
+2026-10-18T02:26:49.4023083Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T02:26:49.4341413Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T02:26:49.8757246Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-18T02:26:49.9065871Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:26:49.9374624Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:26:49.9721455Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:26:50.0023286Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:26:50.0345524Z ##[endgroup]
+2026-10-18T02:26:50.0345983Z ##[group]Fetching the repository
+2026-10-18T02:26:50.0359049Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-18T02:27:00.4361236Z From https://github.com/Longyuyeee/Long_MarkDownReader
+2026-10-18T02:27:00.4361872Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+2026-10-18T02:27:00.4362365Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+2026-10-18T02:27:00.4362843Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+2026-10-18T02:27:00.4364438Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+2026-10-18T02:27:00.4365274Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+2026-10-18T02:27:00.4365856Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+2026-10-18T02:27:00.4366389Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+2026-10-18T02:27:00.4366930Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+2026-10-18T02:27:00.4367482Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+2026-10-18T02:27:00.4367904Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+2026-10-18T02:27:00.4368413Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+2026-10-18T02:27:00.4368949Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+2026-10-18T02:27:00.4369470Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+2026-10-18T02:27:00.4369961Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+2026-10-18T02:27:00.4370473Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+2026-10-18T02:27:00.4370871Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+2026-10-18T02:27:00.4371156Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+2026-10-18T02:27:00.4371435Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+2026-10-18T02:27:00.4371735Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+2026-10-18T02:27:00.4372053Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+2026-10-18T02:27:00.4373041Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+2026-10-18T02:27:00.4373378Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+2026-10-18T02:27:00.4373778Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+2026-10-18T02:27:00.4374229Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+2026-10-18T02:27:00.4374635Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+2026-10-18T02:27:00.4375189Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+2026-10-18T02:27:00.4376138Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+2026-10-18T02:27:00.4376827Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+2026-10-18T02:27:00.4377604Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+2026-10-18T02:27:00.4378119Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+2026-10-18T02:27:00.4378702Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+2026-10-18T02:27:00.4379237Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+2026-10-18T02:27:00.4379758Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+2026-10-18T02:27:00.4380359Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+2026-10-18T02:27:00.4380869Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+2026-10-18T02:27:00.4381295Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+2026-10-18T02:27:00.4382001Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+2026-10-18T02:27:00.4382497Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+2026-10-18T02:27:00.4382986Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+2026-10-18T02:27:00.4383435Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+2026-10-18T02:27:00.4383892Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+2026-10-18T02:27:00.4384430Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+2026-10-18T02:27:00.4384975Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+2026-10-18T02:27:00.4385468Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+2026-10-18T02:27:00.4386013Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+2026-10-18T02:27:00.4386564Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+2026-10-18T02:27:00.4387060Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+2026-10-18T02:27:00.4387480Z  * [new branch]        main                    -> origin/main
+2026-10-18T02:27:00.4387779Z  * [new tag]           v0.1.0                  -> v0.1.0
+2026-10-18T02:27:00.4388050Z  * [new tag]           v0.2.0                  -> v0.2.0
+2026-10-18T02:27:00.4388307Z  * [new tag]           v0.3.0                  -> v0.3.0
+2026-10-18T02:27:00.4388576Z  * [new tag]           v0.3.1                  -> v0.3.1
+2026-10-18T02:27:00.4388847Z  * [new tag]           v0.3.2                  -> v0.3.2
+2026-10-18T02:27:00.4389116Z  * [new tag]           v0.3.3                  -> v0.3.3
+2026-10-18T02:27:00.4389383Z  * [new tag]           v0.3.4                  -> v0.3.4
+2026-10-18T02:27:00.4389650Z  * [new tag]           v0.4.4                  -> v0.4.4
+2026-10-18T02:27:00.4390059Z  * [new tag]           v0.4.5                  -> v0.4.5
+2026-10-18T02:27:00.4390322Z  * [new tag]           v0.4.6                  -> v0.4.6
+2026-10-18T02:27:00.4390578Z  * [new tag]           v0.4.7                  -> v0.4.7
+2026-10-18T02:27:00.4390867Z  * [new tag]           v0.4.8                  -> v0.4.8
+2026-10-18T02:27:00.4391126Z  * [new tag]           v0.4.9                  -> v0.4.9
+2026-10-18T02:27:00.4391386Z  * [new tag]           v0.5.0                  -> v0.5.0
+2026-10-18T02:27:00.4391655Z  * [new tag]           v0.5.1                  -> v0.5.1
+2026-10-18T02:27:00.4391915Z  * [new tag]           v0.5.2                  -> v0.5.2
+2026-10-18T02:27:00.4392182Z  * [new tag]           v0.5.3                  -> v0.5.3
+2026-10-18T02:27:00.4392455Z  * [new tag]           v0.5.4                  -> v0.5.4
+2026-10-18T02:27:00.4392718Z  * [new tag]           v0.5.5                  -> v0.5.5
+2026-10-18T02:27:00.4392980Z  * [new tag]           v0.5.6                  -> v0.5.6
+2026-10-18T02:27:00.4393248Z  * [new tag]           v0.5.7                  -> v0.5.7
+2026-10-18T02:27:00.4393517Z  * [new tag]           v0.5.8                  -> v0.5.8
+2026-10-18T02:27:00.4393792Z  * [new tag]           v0.5.9                  -> v0.5.9
+2026-10-18T02:27:00.4394053Z  * [new tag]           v0.6.0                  -> v0.6.0
+2026-10-18T02:27:00.4394319Z  * [new tag]           v0.6.1                  -> v0.6.1
+2026-10-18T02:27:00.4394587Z  * [new tag]           v0.6.2                  -> v0.6.2
+2026-10-18T02:27:00.4394858Z  * [new tag]           v0.6.3                  -> v0.6.3
+2026-10-18T02:27:00.4395124Z  * [new tag]           v0.6.4                  -> v0.6.4
+2026-10-18T02:27:00.4395394Z  * [new tag]           v0.6.5                  -> v0.6.5
+2026-10-18T02:27:00.4395580Z  * [new tag]           v0.6.6                  -> v0.6.6
+2026-10-18T02:27:00.4395975Z  * [new tag]           v0.6.7                  -> v0.6.7
+2026-10-18T02:27:00.4396523Z  * [new tag]           v0.6.8                  -> v0.6.8
+2026-10-18T02:27:00.4396789Z  * [new tag]           v0.6.9                  -> v0.6.9
+2026-10-18T02:27:00.4397049Z  * [new tag]           v1.0.0                  -> v1.0.0
+2026-10-18T02:27:00.4397468Z  * [new tag]           v1.0.1                  -> v1.0.1
+2026-10-18T02:27:00.4397726Z  * [new tag]           v1.0.10                 -> v1.0.10
+2026-10-18T02:27:00.4397990Z  * [new tag]           v1.0.11                 -> v1.0.11
+2026-10-18T02:27:00.4398246Z  * [new tag]           v1.0.12                 -> v1.0.12
+2026-10-18T02:27:00.4398502Z  * [new tag]           v1.0.13                 -> v1.0.13
+2026-10-18T02:27:00.4398779Z  * [new tag]           v1.0.14                 -> v1.0.14
+2026-10-18T02:27:00.4399045Z  * [new tag]           v1.0.15                 -> v1.0.15
+2026-10-18T02:27:00.4399301Z  * [new tag]           v1.0.16                 -> v1.0.16
+2026-10-18T02:27:00.4399557Z  * [new tag]           v1.0.17                 -> v1.0.17
+2026-10-18T02:27:00.4399816Z  * [new tag]           v1.0.18                 -> v1.0.18
+2026-10-18T02:27:00.4400077Z  * [new tag]           v1.0.19                 -> v1.0.19
+2026-10-18T02:27:00.4400333Z  * [new tag]           v1.0.2                  -> v1.0.2
+2026-10-18T02:27:00.4400586Z  * [new tag]           v1.0.20                 -> v1.0.20
+2026-10-18T02:27:00.4400838Z  * [new tag]           v1.0.21                 -> v1.0.21
+2026-10-18T02:27:00.4401111Z  * [new tag]           v1.0.22                 -> v1.0.22
+2026-10-18T02:27:00.4401368Z  * [new tag]           v1.0.23                 -> v1.0.23
+2026-10-18T02:27:00.4401627Z  * [new tag]           v1.0.24                 -> v1.0.24
+2026-10-18T02:27:00.4401879Z  * [new tag]           v1.0.25                 -> v1.0.25
+2026-10-18T02:27:00.4402135Z  * [new tag]           v1.0.26                 -> v1.0.26
+2026-10-18T02:27:00.4402393Z  * [new tag]           v1.0.3                  -> v1.0.3
+2026-10-18T02:27:00.4402660Z  * [new tag]           v1.0.4                  -> v1.0.4
+2026-10-18T02:27:00.4403081Z  * [new tag]           v1.0.5                  -> v1.0.5
+2026-10-18T02:27:00.4403340Z  * [new tag]           v1.0.6                  -> v1.0.6
+2026-10-18T02:27:00.4403594Z  * [new tag]           v1.0.7                  -> v1.0.7
+2026-10-18T02:27:00.4403847Z  * [new tag]           v1.0.8                  -> v1.0.8
+2026-10-18T02:27:00.4404097Z  * [new tag]           v1.0.9                  -> v1.0.9
+2026-10-18T02:27:00.4404343Z  * [new tag]           v1.1.0                  -> v1.1.0
+2026-10-18T02:27:00.4404596Z  * [new tag]           v1.1.1                  -> v1.1.1
+2026-10-18T02:27:00.4404856Z  * [new tag]           v1.1.10                 -> v1.1.10
+2026-10-18T02:27:00.4405121Z  * [new tag]           v1.1.11                 -> v1.1.11
+2026-10-18T02:27:00.4405392Z  * [new tag]           v1.1.12                 -> v1.1.12
+2026-10-18T02:27:00.4405671Z  * [new tag]           v1.1.13                 -> v1.1.13
+2026-10-18T02:27:00.4405935Z  * [new tag]           v1.1.2                  -> v1.1.2
+2026-10-18T02:27:00.4406200Z  * [new tag]           v1.1.3                  -> v1.1.3
+2026-10-18T02:27:00.4406448Z  * [new tag]           v1.1.4                  -> v1.1.4
+2026-10-18T02:27:00.4406713Z  * [new tag]           v1.1.5                  -> v1.1.5
+2026-10-18T02:27:00.4406973Z  * [new tag]           v1.1.6                  -> v1.1.6
+2026-10-18T02:27:00.4407232Z  * [new tag]           v1.1.7                  -> v1.1.7
+2026-10-18T02:27:00.4407505Z  * [new tag]           v1.1.8                  -> v1.1.8
+2026-10-18T02:27:00.4407778Z  * [new tag]           v1.1.9                  -> v1.1.9
+2026-10-18T02:27:00.4427331Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/main
+2026-10-18T02:27:00.4798381Z   origin/main
+2026-10-18T02:27:00.4840038Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/main
+2026-10-18T02:27:00.5143833Z c8b1d9b795db6e5e21031d9743d1062eef13ee2d
+2026-10-18T02:27:00.5173306Z ##[endgroup]
+2026-10-18T02:27:00.5173626Z ##[group]Determining the checkout info
+2026-10-18T02:27:00.5232125Z ##[endgroup]
+2026-10-18T02:27:00.5232538Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-18T02:27:00.5568273Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-18T02:27:00.5852828Z ##[group]Checking out the ref
+2026-10-18T02:27:00.5860849Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B main refs/remotes/origin/main
+2026-10-18T02:27:01.6802495Z Updating files:  16% (1917/11855)
+2026-10-18T02:27:01.7626211Z Updating files:  17% (2016/11855)
+2026-10-18T02:27:01.8134658Z Updating files:  18% (2134/11855)
+2026-10-18T02:27:01.8625655Z Updating files:  19% (2253/11855)
+2026-10-18T02:27:01.9315123Z Updating files:  20% (2371/11855)
+2026-10-18T02:27:01.9977638Z Updating files:  21% (2490/11855)
+2026-10-18T02:27:02.0589243Z Updating files:  22% (2609/11855)
+2026-10-18T02:27:02.1208584Z Updating files:  23% (2727/11855)
+2026-10-18T02:27:02.1696210Z Updating files:  24% (2846/11855)
+2026-10-18T02:27:02.2164866Z Updating files:  25% (2964/11855)
+2026-10-18T02:27:02.2626471Z Updating files:  26% (3083/11855)
+2026-10-18T02:27:02.3721195Z Updating files:  27% (3201/11855)
+2026-10-18T02:27:02.4160936Z Updating files:  28% (3320/11855)
+2026-10-18T02:27:02.4406172Z Updating files:  29% (3438/11855)
+2026-10-18T02:27:02.4629418Z Updating files:  30% (3557/11855)
+2026-10-18T02:27:02.4814961Z Updating files:  31% (3676/11855)
+2026-10-18T02:27:02.5283826Z Updating files:  32% (3794/11855)
+2026-10-18T02:27:02.5794252Z Updating files:  33% (3913/11855)
+2026-10-18T02:27:02.6254772Z Updating files:  34% (4031/11855)
+2026-10-18T02:27:02.6434897Z Updating files:  35% (4150/11855)
+2026-10-18T02:27:02.6641381Z Updating files:  35% (4199/11855)
+2026-10-18T02:27:02.7223918Z Updating files:  36% (4268/11855)
+2026-10-18T02:27:02.7838288Z Updating files:  37% (4387/11855)
+2026-10-18T02:27:02.8466115Z Updating files:  38% (4505/11855)
+2026-10-18T02:27:02.9066930Z Updating files:  39% (4624/11855)
+2026-10-18T02:27:03.0545446Z Updating files:  40% (4742/11855)
+2026-10-18T02:27:03.1228152Z Updating files:  41% (4861/11855)
+2026-10-18T02:27:03.1801215Z Updating files:  42% (4980/11855)
+2026-10-18T02:27:03.2421349Z Updating files:  43% (5098/11855)
+2026-10-18T02:27:03.3243708Z Updating files:  44% (5217/11855)
+2026-10-18T02:27:03.3813991Z Updating files:  45% (5335/11855)
+2026-10-18T02:27:03.4409229Z Updating files:  46% (5454/11855)
+2026-10-18T02:27:03.4936124Z Updating files:  47% (5572/11855)
+2026-10-18T02:27:03.5496889Z Updating files:  48% (5691/11855)
+2026-10-18T02:27:03.6012002Z Updating files:  49% (5809/11855)
+2026-10-18T02:27:03.6435572Z Updating files:  50% (5928/11855)
+2026-10-18T02:27:03.6537866Z Updating files:  50% (6011/11855)
+2026-10-18T02:27:03.7768988Z Updating files:  51% (6047/11855)
+2026-10-18T02:27:03.8281178Z Updating files:  52% (6165/11855)
+2026-10-18T02:27:03.8768044Z Updating files:  53% (6284/11855)
+2026-10-18T02:27:03.9290516Z Updating files:  54% (6402/11855)
+2026-10-18T02:27:03.9766384Z Updating files:  55% (6521/11855)
+2026-10-18T02:27:04.0257018Z Updating files:  56% (6639/11855)
+2026-10-18T02:27:04.0757059Z Updating files:  57% (6758/11855)
+2026-10-18T02:27:04.1184565Z Updating files:  58% (6876/11855)
+2026-10-18T02:27:04.1603589Z Updating files:  59% (6995/11855)
+2026-10-18T02:27:04.1990859Z Updating files:  60% (7113/11855)
+2026-10-18T02:27:04.2334990Z Updating files:  61% (7232/11855)
+2026-10-18T02:27:04.2631981Z Updating files:  62% (7351/11855)
+2026-10-18T02:27:04.3182560Z Updating files:  63% (7469/11855)
+2026-10-18T02:27:04.3674697Z Updating files:  64% (7588/11855)
+2026-10-18T02:27:04.4181270Z Updating files:  65% (7706/11855)
+2026-10-18T02:27:04.4494689Z Updating files:  66% (7825/11855)
+2026-10-18T02:27:04.4738793Z Updating files:  67% (7943/11855)
+2026-10-18T02:27:04.5146167Z Updating files:  68% (8062/11855)
+2026-10-18T02:27:04.5631352Z Updating files:  69% (8180/11855)
+2026-10-18T02:27:04.6446544Z Updating files:  70% (8299/11855)
+2026-10-18T02:27:04.6480263Z Updating files:  70% (8413/11855)
+2026-10-18T02:27:04.6966430Z Updating files:  71% (8418/11855)
+2026-10-18T02:27:04.7504177Z Updating files:  72% (8536/11855)
+2026-10-18T02:27:04.8056116Z Updating files:  73% (8655/11855)
+2026-10-18T02:27:04.8539868Z Updating files:  74% (8773/11855)
+2026-10-18T02:27:04.8943733Z Updating files:  75% (8892/11855)
+2026-10-18T02:27:04.9412561Z Updating files:  76% (9010/11855)
+2026-10-18T02:27:04.9815177Z Updating files:  77% (9129/11855)
+2026-10-18T02:27:05.0300773Z Updating files:  78% (9247/11855)
+2026-10-18T02:27:05.2167541Z Updating files:  79% (9366/11855)
+2026-10-18T02:27:05.2285871Z Updating files:  80% (9484/11855)
+2026-10-18T02:27:05.2429319Z Updating files:  81% (9603/11855)
+2026-10-18T02:27:05.3139944Z Updating files:  82% (9722/11855)
+2026-10-18T02:27:05.6074859Z Updating files:  83% (9840/11855)
+2026-10-18T02:27:05.6246211Z Updating files:  84% (9959/11855)
+2026-10-18T02:27:05.6402155Z Updating files:  85% (10077/11855)
+2026-10-18T02:27:05.6459204Z Updating files:  86% (10196/11855)
+2026-10-18T02:27:05.6547824Z Updating files:  86% (10238/11855)
+2026-10-18T02:27:05.6708627Z Updating files:  87% (10314/11855)
+2026-10-18T02:27:05.6854160Z Updating files:  88% (10433/11855)
+2026-10-18T02:27:05.6988185Z Updating files:  89% (10551/11855)
+2026-10-18T02:27:05.7139774Z Updating files:  90% (10670/11855)
+2026-10-18T02:27:05.7282281Z Updating files:  91% (10789/11855)
+2026-10-18T02:27:05.7428114Z Updating files:  92% (10907/11855)
+2026-10-18T02:27:05.7580819Z Updating files:  93% (11026/11855)
+2026-10-18T02:27:05.7722245Z Updating files:  94% (11144/11855)
+2026-10-18T02:27:05.8977615Z Updating files:  95% (11263/11855)
+2026-10-18T02:27:05.9308993Z Updating files:  96% (11381/11855)
+2026-10-18T02:27:05.9565774Z Updating files:  97% (11500/11855)
+2026-10-18T02:27:05.9757811Z Updating files:  98% (11618/11855)
+2026-10-18T02:27:05.9991035Z Updating files:  99% (11737/11855)
+2026-10-18T02:27:05.9991530Z Updating files: 100% (11855/11855)
+2026-10-18T02:27:05.9991690Z Updating files: 100% (11855/11855), done.
+2026-10-18T02:27:06.0207771Z Switched to a new branch 'main'
+2026-10-18T02:27:06.0271097Z branch 'main' set up to track 'origin/main'.
+2026-10-18T02:27:06.1013236Z ##[endgroup]
+2026-10-18T02:27:06.1450802Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-18T02:27:06.1730946Z c8b1d9b795db6e5e21031d9743d1062eef13ee2d
+2026-10-18T02:27:06.2112692Z ##[group]Run actions/setup-node@v6
+2026-10-18T02:27:06.2112915Z with:
+2026-10-18T02:27:06.2113026Z   node-version: 22
+2026-10-18T02:27:06.2113137Z   cache: npm
+2026-10-18T02:27:06.2113243Z   check-latest: false
+2026-10-18T02:27:06.2114825Z   token: ***
+2026-10-18T02:27:06.2114941Z   package-manager-cache: true
+2026-10-18T02:27:06.2115070Z env:
+2026-10-18T02:27:06.2115189Z   CARGO_TERM_COLOR: always
+2026-10-18T02:27:06.2115314Z ##[endgroup]
+2026-10-18T02:27:06.3520739Z Found in cache @ C:\hostedtoolcache\windows\node\22.23.3\x64
+2026-10-18T02:27:06.3526774Z ##[group]Environment details
+2026-10-18T02:27:10.8545296Z node: v22.23.3
+2026-10-18T02:27:10.8545496Z npm: 10.9.9
+2026-10-18T02:27:10.8545616Z yarn: 1.22.22
+2026-10-18T02:27:10.8545969Z ##[endgroup]
+2026-10-18T02:27:10.8866862Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\22.23.3\x64\npm.cmd config get cache"
+2026-10-18T02:27:11.3125192Z C:\npm\cache
+2026-10-18T02:27:11.5717309Z Cache hit for: node-cache-Windows-x64-npm-1e09316c0c27b23d23909a24c3e36ccdee520ef899ab749d8c128780de382e0f
+2026-10-18T02:27:13.0023129Z Received 134217728 of 160060929 (83.9%), 100.5 MBs/sec
+2026-10-18T02:27:13.1963818Z Received 160060929 of 160060929 (100.0%), 103.8 MBs/sec
+2026-10-18T02:27:13.1966346Z Cache Size: ~153 MB (160060929 B)
+2026-10-18T02:27:13.2022682Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/e78cf0e0-6467-4635-93ca-01020724436d/cache.tzst -P -C D:/a/Long_MarkDownReader/Long_MarkDownReader --force-local --use-compress-program "zstd -d"
+2026-10-18T02:27:16.8887448Z Cache restored successfully
+2026-10-18T02:27:16.9000465Z Cache restored from key: node-cache-Windows-x64-npm-1e09316c0c27b23d23909a24c3e36ccdee520ef899ab749d8c128780de382e0f
+2026-10-18T02:27:16.9353655Z ##[group]Run npm ci
+2026-10-18T02:27:16.9353960Z [36;1mnpm ci[0m
+2026-10-18T02:27:17.0063124Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T02:27:17.0063395Z env:
+2026-10-18T02:27:17.0063544Z   CARGO_TERM_COLOR: always
+2026-10-18T02:27:17.0063712Z ##[endgroup]
+2026-10-18T02:27:30.5974179Z 
+2026-10-18T02:27:30.5982274Z added 311 packages, and audited 312 packages in 13s
+2026-10-18T02:27:30.5982529Z 
+2026-10-18T02:27:30.5982663Z 40 packages are looking for funding
+2026-10-18T02:27:30.5982913Z   run `npm fund` for details
+2026-10-18T02:27:30.5997859Z 
+2026-10-18T02:27:30.5998079Z 3 high severity vulnerabilities
+2026-10-18T02:27:30.5998240Z 
+2026-10-18T02:27:30.5998369Z To address all issues (including breaking changes), run:
+2026-10-18T02:27:30.5998591Z   npm audit fix --force
+2026-10-18T02:27:30.5998673Z 
+2026-10-18T02:27:30.5998744Z Run `npm audit` for details.
+2026-10-18T02:27:31.8820735Z ##[group]Run Swatinem/rust-cache@v2
+2026-10-18T02:27:31.8820983Z with:
+2026-10-18T02:27:31.8821128Z   workspaces: src-tauri -> target
+2026-10-18T02:27:31.8821318Z   cache-on-failure: true
+2026-10-18T02:27:31.8821471Z   prefix-key: v0-rust
+2026-10-18T02:27:31.8821601Z   add-job-id-key: true
+2026-10-18T02:27:31.8821738Z   add-rust-environment-hash-key: true
+2026-10-18T02:27:31.8821902Z   cache-targets: true
+2026-10-18T02:27:31.8822028Z   cache-all-crates: false
+2026-10-18T02:27:31.8822177Z   cache-workspace-crates: false
+2026-10-18T02:27:31.8822317Z   save-if: true
+2026-10-18T02:27:31.8822439Z   cache-provider: github
+2026-10-18T02:27:31.8822564Z   cache-bin: true
+2026-10-18T02:27:31.8822699Z   lookup-only: false
+2026-10-18T02:27:31.8822819Z   cmd-format: {0}
+2026-10-18T02:27:31.8822933Z env:
+2026-10-18T02:27:31.8823044Z   CARGO_TERM_COLOR: always
+2026-10-18T02:27:31.8823175Z ##[endgroup]
+2026-10-18T02:27:37.8342838Z ##[group]Cache Configuration
+2026-10-18T02:27:37.8343532Z Cache Provider:
+2026-10-18T02:27:37.8343740Z     github
+2026-10-18T02:27:37.8343901Z Workspaces:
+2026-10-18T02:27:37.8344377Z     D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri
+2026-10-18T02:27:37.8344711Z Cache Paths:
+2026-10-18T02:27:37.8344926Z     C:\Users\runneradmin\.cargo\bin
+2026-10-18T02:27:37.8345224Z     C:\Users\runneradmin\.cargo\.crates.toml
+2026-10-18T02:27:37.8345535Z     C:\Users\runneradmin\.cargo\.crates2.json
+2026-10-18T02:27:37.8345858Z     C:\Users\runneradmin\.cargo\registry
+2026-10-18T02:27:37.8346142Z     C:\Users\runneradmin\.cargo\git
+2026-10-18T02:27:37.8346483Z     D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri\target
+2026-10-18T02:27:37.8347084Z Restore Key:
+2026-10-18T02:27:37.8347305Z     v0-rust-check-Windows_NT-x64-385e369d
+2026-10-18T02:27:37.8347543Z Cache Key:
+2026-10-18T02:27:37.8347766Z     v0-rust-check-Windows_NT-x64-385e369d-983b7e98
+2026-10-18T02:27:37.8348026Z .. Prefix:
+2026-10-18T02:27:37.8348234Z   - v0-rust-check-Windows_NT-x64
+2026-10-18T02:27:37.8348510Z .. Environment considered:
+2026-10-18T02:27:37.8348742Z   - Rust Versions:
+2026-10-18T02:27:37.8349133Z     - 1.99.0 x86_64-pc-windows-msvc b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+2026-10-18T02:27:37.8349478Z   - CARGO_INCREMENTAL
+2026-10-18T02:27:37.8349671Z   - CARGO_TERM_COLOR
+2026-10-18T02:27:37.8349893Z .. Lockfiles considered:
+2026-10-18T02:27:37.8350200Z   - D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri\Cargo.lock
+2026-10-18T02:27:37.8350611Z   - D:\a\Long_MarkDownReader\Long_MarkDownReader\src-tauri\Cargo.toml
+2026-10-18T02:27:37.8351133Z ##[endgroup]
+2026-10-18T02:27:37.8351245Z 
+2026-10-18T02:27:37.8351338Z ... Restoring cache ...
+2026-10-18T02:27:38.0002533Z Cache hit for: v0-rust-check-Windows_NT-x64-385e369d-983b7e98
+2026-10-18T02:27:39.1627142Z Received 130023424 of 1046444169 (12.4%), 123.6 MBs/sec
+2026-10-18T02:27:40.2325053Z Received 134217728 of 1046444169 (12.8%), 61.8 MBs/sec
+2026-10-18T02:27:41.2728721Z Received 268435456 of 1046444169 (25.7%), 82.2 MBs/sec
+2026-10-18T02:27:42.3719324Z Received 402653184 of 1046444169 (38.5%), 91.2 MBs/sec
+2026-10-18T02:27:43.6716827Z Received 536870912 of 1046444169 (51.3%), 92.9 MBs/sec
+2026-10-18T02:27:44.8761702Z Received 671088640 of 1046444169 (64.1%), 95.3 MBs/sec
+2026-10-18T02:27:46.1318636Z Received 805306368 of 1046444169 (77.0%), 96.3 MBs/sec
+2026-10-18T02:27:47.4055464Z Received 939524096 of 1046444169 (89.8%), 96.9 MBs/sec
+2026-10-18T02:27:48.5271581Z Received 1046444169 of 1046444169 (100.0%), 96.3 MBs/sec
+2026-10-18T02:27:48.5275556Z Cache Size: ~998 MB (1046444169 B)
+2026-10-18T02:27:48.5344711Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/90acfa22-055a-409b-8897-867e6235695c/cache.tzst -P -C D:/a/Long_MarkDownReader/Long_MarkDownReader --force-local --use-compress-program "zstd -d"
+2026-10-18T02:28:15.3125232Z Cache restored successfully
+2026-10-18T02:28:15.3948396Z Restored from cache key "v0-rust-check-Windows_NT-x64-385e369d-983b7e98" full match: true.
+2026-10-18T02:28:15.4203615Z ##[group]Run npm run ci:patch-release
+2026-10-18T02:28:15.4203875Z [36;1mnpm run ci:patch-release[0m
+2026-10-18T02:28:15.4256436Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-18T02:28:15.4256663Z env:
+2026-10-18T02:28:15.4256793Z   CARGO_TERM_COLOR: always
+2026-10-18T02:28:15.4256941Z   CACHE_ON_FAILURE: true
+2026-10-18T02:28:15.4257074Z   CARGO_INCREMENTAL: 0
+2026-10-18T02:28:15.4257246Z ##[endgroup]
+2026-10-18T02:28:15.9652570Z 
+2026-10-18T02:28:15.9653240Z > tauri-app@1.1.14 ci:patch-release
+2026-10-18T02:28:15.9660198Z > npm run build && npm run check:theme-contract && npm run check:brand-icon-contract && npm run check:ui-consistency && npm run check:ui-typography && npm run check:ui-shared-components && npm run check:ui-management-shell && npm run check:ui4a-shell-visual-harness && npm run check:ui4a-shell-visual-evidence && npm run check:ui4c-release-fact-alignment && npm run check:ui-color-semantics && npm run check:ui-state-semantics && npm run check:dialog-acl && npm run check:settings-navigation-localization && npm run check:settings-information-architecture && npm run check:index-auto-preparation-experience && npm run check:table-row-editing-experience && npm run check:library-context-restoration && npm run check:markdown-default-mode && npm run check:markdown-code-theme-contrast && npm run check:code-editor-theme-contract && npm run check:structured-source-workspace && npm run check:workbook-workspace-experience && npm run check:json-workspace-experience && npm run check:text-workspace-layout && npm run check:external-change-identity && npm run check:managed-file-routing && npm run check:format-registry && npm run check:r1-release-capability-matrix && npm run check:r2-windows-lifecycle-contract && npm run check:d2-safe-degradation-contract && npm run check:v1-installed-hotfix && npm run check:v1-community-release && npm run check:current-development-audit && npm run check:ux33j-installed-docx-harness && cargo check --locked --manifest-path src-tauri/Cargo.toml && npm run audit:prod
+2026-10-18T02:28:15.9665606Z 
+2026-10-18T02:28:16.1945410Z 
+2026-10-18T02:28:16.1946016Z > tauri-app@1.1.14 build
+2026-10-18T02:28:16.1946324Z > vue-tsc --noEmit && vite build
+2026-10-18T02:28:16.1946454Z 
+2026-10-18T02:28:32.4557446Z [36mvite v6.4.3 [32mbuilding for production...[36m[39m
+2026-10-18T02:28:32.5571759Z transforming...
+2026-10-18T02:28:53.6797596Z [32m✓[39m 6439 modules transformed.
+2026-10-18T02:28:55.1816756Z rendering chunks...
+2026-10-18T02:28:55.9643737Z computing gzip size...
+2026-10-18T02:28:56.7070315Z [2mdist/[22m[32mindex.html                                       [39m[1m[2m    0.92 kB[22m[1m[22m[2m │ gzip:   0.51 kB[22m
+2026-10-18T02:28:56.7072496Z [2mdist/[22m[32massets/graphForceLayout.worker-BjFgAMK2.js       [39m[1m[2m    1.95 kB[22m[1m[22m
+2026-10-18T02:28:56.7073270Z [2mdist/[22m[32massets/Inter-Regular-CBuHftWl.woff2              [39m[1m[2m   98.80 kB[22m[1m[22m
+2026-10-18T02:28:56.7074028Z [2mdist/[22m[32massets/Inter-Medium-9JPFU5u1.woff2               [39m[1m[2m  105.50 kB[22m[1m[22m
+2026-10-18T02:28:56.7074743Z [2mdist/[22m[32massets/FiraCode-Regular-CRwVj4V2.woff2           [39m[1m[2m  114.46 kB[22m[1m[22m
+2026-10-18T02:28:56.7075445Z [2mdist/[22m[32massets/icon-CyZ12egh.png                         [39m[1m[2m  248.70 kB[22m[1m[22m
+2026-10-18T02:28:56.7076313Z [2mdist/[22m[32massets/pdf.worker.min-CHFwMXne.mjs               [39m[1m[2m1,262.40 kB[22m[1m[22m
+2026-10-18T02:28:56.7077053Z [2mdist/[22m[35massets/WorkspaceEmptyState-C_98vStj.css          [39m[1m[2m    0.07 kB[22m[1m[22m[2m │ gzip:   0.08 kB[22m
+2026-10-18T02:28:56.7077922Z [2mdist/[22m[35massets/WorkspaceFileIdentity-D65ZXkbw.css        [39m[1m[2m    0.11 kB[22m[1m[22m[2m │ gzip:   0.12 kB[22m
+2026-10-18T02:28:56.7078586Z [2mdist/[22m[35massets/WorkspaceStatusBar-BxMrUX8P.css           [39m[1m[2m    0.11 kB[22m[1m[22m[2m │ gzip:   0.11 kB[22m
+2026-10-18T02:28:56.7081511Z [2mdist/[22m[35massets/InboxView-BeDr8A7d.css                    [39m[1m[2m    0.21 kB[22m[1m[22m[2m │ gzip:   0.17 kB[22m
+2026-10-18T02:28:56.7082548Z [2mdist/[22m[35massets/WorkspaceSegmentedControl-BiolGMUG.css    [39m[1m[2m    0.21 kB[22m[1m[22m[2m │ gzip:   0.15 kB[22m
+2026-10-18T02:28:56.7083459Z [2mdist/[22m[35massets/WorkspaceToolbar-kiRGHJNI.css             [39m[1m[2m    0.23 kB[22m[1m[22m[2m │ gzip:   0.15 kB[22m
+2026-10-18T02:28:56.7084411Z [2mdist/[22m[35massets/WorkspaceManagementContent-CH-I_N32.css   [39m[1m[2m    0.43 kB[22m[1m[22m[2m │ gzip:   0.21 kB[22m
+2026-10-18T02:28:56.7085176Z [2mdist/[22m[35massets/workspaceReference-CxqjI8An.css           [39m[1m[2m    0.88 kB[22m[1m[22m[2m │ gzip:   0.35 kB[22m
+2026-10-18T02:28:56.7086002Z [2mdist/[22m[35massets/WorkspaceStateNotice-MiQRwCkj.css         [39m[1m[2m    1.69 kB[22m[1m[22m[2m │ gzip:   0.56 kB[22m
+2026-10-18T02:28:56.7087071Z [2mdist/[22m[35massets/TextConflictDialog-Ci6gg3I9.css           [39m[1m[2m    1.70 kB[22m[1m[22m[2m │ gzip:   0.61 kB[22m
+2026-10-18T02:28:56.7087728Z [2mdist/[22m[35massets/TableChartEmbed-OiWIaG-z.css              [39m[1m[2m    1.75 kB[22m[1m[22m[2m │ gzip:   0.60 kB[22m
+2026-10-18T02:28:56.7088667Z [2mdist/[22m[35massets/WorkspaceManagementHeader-ftASLKkN.css    [39m[1m[2m    2.02 kB[22m[1m[22m[2m │ gzip:   0.59 kB[22m
+2026-10-18T02:28:56.7089586Z [2mdist/[22m[35massets/ExternalApplicationPanel-BvXKfsVN.css     [39m[1m[2m    2.45 kB[22m[1m[22m[2m │ gzip:   0.83 kB[22m
+2026-10-18T02:28:56.7090406Z [2mdist/[22m[35massets/WorkspaceTabs-uc4hNkzk.css                [39m[1m[2m    2.75 kB[22m[1m[22m[2m │ gzip:   0.85 kB[22m
+2026-10-18T02:28:56.7091324Z [2mdist/[22m[35massets/localGraphPin-BP_cI0Vy.css                [39m[1m[2m    2.98 kB[22m[1m[22m[2m │ gzip:   0.92 kB[22m
+2026-10-18T02:28:56.7092242Z [2mdist/[22m[35massets/QuickNote-BxyYHCC8.css                    [39m[1m[2m    3.18 kB[22m[1m[22m[2m │ gzip:   0.93 kB[22m
+2026-10-18T02:28:56.7093023Z [2mdist/[22m[35massets/ExternalOfficeView-DZFjwwcT.css           [39m[1m[2m    3.20 kB[22m[1m[22m[2m │ gzip:   1.02 kB[22m
+2026-10-18T02:28:56.7093835Z [2mdist/[22m[35massets/TempMode-ByDd0VGs.css                     [39m[1m[2m    3.41 kB[22m[1m[22m[2m │ gzip:   1.02 kB[22m
+2026-10-18T02:28:56.7094556Z [2mdist/[22m[35massets/searchLocation-BSPAE2sM.css               [39m[1m[2m    3.51 kB[22m[1m[22m[2m │ gzip:   1.05 kB[22m
+2026-10-18T02:28:56.7095467Z [2mdist/[22m[35massets/TomlEditorView-D5TbX-iD.css               [39m[1m[2m    4.48 kB[22m[1m[22m[2m │ gzip:   1.14 kB[22m
+2026-10-18T02:28:56.7096472Z [2mdist/[22m[35massets/TableChartEditor-jf2Hed-f.css             [39m[1m[2m    4.70 kB[22m[1m[22m[2m │ gzip:   1.17 kB[22m
+2026-10-18T02:28:56.7097342Z [2mdist/[22m[35massets/LegacyOfficeView-BgrpIVBQ.css             [39m[1m[2m    5.28 kB[22m[1m[22m[2m │ gzip:   1.38 kB[22m
+2026-10-18T02:28:56.7098311Z [2mdist/[22m[35massets/InboxBrowser-DiPW5-Ke.css                 [39m[1m[2m    5.45 kB[22m[1m[22m[2m │ gzip:   1.43 kB[22m
+2026-10-18T02:28:56.7099256Z [2mdist/[22m[35massets/YamlEditorView-Da5oAxvD.css               [39m[1m[2m    5.47 kB[22m[1m[22m[2m │ gzip:   1.30 kB[22m
+2026-10-18T02:28:56.7100095Z [2mdist/[22m[35massets/XmlEditorView-DQYpb7aT.css                [39m[1m[2m    5.57 kB[22m[1m[22m[2m │ gzip:   1.30 kB[22m
+2026-10-18T02:28:56.7100819Z [2mdist/[22m[35massets/LogViewerView-CzG3mmss.css                [39m[1m[2m    5.59 kB[22m[1m[22m[2m │ gzip:   1.40 kB[22m
+2026-10-18T02:28:56.7101505Z [2mdist/[22m[35massets/TextEditorView-4BXTDhlm.css               [39m[1m[2m    5.96 kB[22m[1m[22m[2m │ gzip:   1.44 kB[22m
+2026-10-18T02:28:56.7102692Z [2mdist/[22m[35massets/DrawioEditorView-DRIssPpT.css             [39m[1m[2m    6.47 kB[22m[1m[22m[2m │ gzip:   1.51 kB[22m
+2026-10-18T02:28:56.7103317Z [2mdist/[22m[35massets/ReleaseCapabilitiesView-6HLdVVJo.css      [39m[1m[2m    7.68 kB[22m[1m[22m[2m │ gzip:   1.67 kB[22m
+2026-10-18T02:28:56.7103895Z [2mdist/[22m[35massets/OdtReaderView-CSe7fdI2.css                [39m[1m[2m    8.17 kB[22m[1m[22m[2m │ gzip:   1.91 kB[22m
+2026-10-18T02:28:56.7104545Z [2mdist/[22m[35massets/MediaViewerView-kEq9PB95.css              [39m[1m[2m   11.26 kB[22m[1m[22m[2m │ gzip:   2.59 kB[22m
+2026-10-18T02:28:56.7105323Z [2mdist/[22m[35massets/MindMapView-rZ1j__vm.css                  [39m[1m[2m   12.05 kB[22m[1m[22m[2m │ gzip:   2.70 kB[22m
+2026-10-18T02:28:56.7106128Z [2mdist/[22m[35massets/DiagramStudio-EvFK_Fdw.css                [39m[1m[2m   12.07 kB[22m[1m[22m[2m │ gzip:   2.26 kB[22m
+2026-10-18T02:28:56.7107322Z [2mdist/[22m[35massets/OdfContentReaderView-D3l6eWiA.css         [39m[1m[2m   12.70 kB[22m[1m[22m[2m │ gzip:   2.50 kB[22m
+2026-10-18T02:28:56.7108072Z [2mdist/[22m[35massets/CanvasView-BQtFKIou.css                   [39m[1m[2m   15.25 kB[22m[1m[22m[2m │ gzip:   3.28 kB[22m
+2026-10-18T02:28:56.7108707Z [2mdist/[22m[35massets/JsonEditorView-BCaYJR1C.css               [39m[1m[2m   15.97 kB[22m[1m[22m[2m │ gzip:   2.87 kB[22m
+2026-10-18T02:28:56.7109450Z [2mdist/[22m[35massets/PptxReaderView-BkGaRB_3.css               [39m[1m[2m   20.77 kB[22m[1m[22m[2m │ gzip:   3.69 kB[22m
+2026-10-18T02:28:56.7110009Z [2mdist/[22m[35massets/DocxReaderView-BjOHBsRN.css               [39m[1m[2m   21.01 kB[22m[1m[22m[2m │ gzip:   3.53 kB[22m
+2026-10-18T02:28:56.7110701Z [2mdist/[22m[35massets/TableView-b94ZPItp.css                    [39m[1m[2m   23.30 kB[22m[1m[22m[2m │ gzip:   3.98 kB[22m
+2026-10-18T02:28:56.7111253Z [2mdist/[22m[35massets/WorkspaceHome-DwuqOste.css                [39m[1m[2m   27.01 kB[22m[1m[22m[2m │ gzip:   4.35 kB[22m
+2026-10-18T02:28:56.7112130Z [2mdist/[22m[35massets/useAdaptiveMarkdownMotion-BLa3Bhig.css    [39m[1m[2m   35.86 kB[22m[1m[22m[2m │ gzip:   7.78 kB[22m
+2026-10-18T02:28:56.7112880Z [2mdist/[22m[35massets/SettingsView-C9i5N4iC.css                 [39m[1m[2m   37.52 kB[22m[1m[22m[2m │ gzip:   6.39 kB[22m
+2026-10-18T02:28:56.7113609Z [2mdist/[22m[35massets/PdfView-CQkfV2eR.css                      [39m[1m[2m   52.44 kB[22m[1m[22m[2m │ gzip:   7.63 kB[22m
+2026-10-18T02:28:56.7114225Z [2mdist/[22m[35massets/WorkbookView-BL624gV_.css                 [39m[1m[2m   54.27 kB[22m[1m[22m[2m │ gzip:   7.38 kB[22m
+2026-10-18T02:28:56.7114881Z [2mdist/[22m[35massets/GraphView-DL8tVtVs.css                    [39m[1m[2m   64.91 kB[22m[1m[22m[2m │ gzip:   9.26 kB[22m
+2026-10-18T02:28:56.7115979Z [2mdist/[22m[35massets/index-B-ZOU9Hj.css                        [39m[1m[2m  114.85 kB[22m[1m[22m[2m │ gzip:  20.02 kB[22m
+2026-10-18T02:28:56.7116750Z [2mdist/[22m[35massets/LibraryMode-DiZLO99Z.css                  [39m[1m[2m  121.22 kB[22m[1m[22m[2m │ gzip:  18.19 kB[22m
+2026-10-18T02:28:56.7117642Z [2mdist/[22m[36massets/structuredAnalysis-GSBgoIPk.js            [39m[1m[2m    0.07 kB[22m[1m[22m[2m │ gzip:   0.09 kB[22m
+2026-10-18T02:28:56.7118510Z [2mdist/[22m[36massets/channel-2sllRo7d.js                       [39m[1m[2m    0.11 kB[22m[1m[22m[2m │ gzip:   0.13 kB[22m
+2026-10-18T02:28:56.7119358Z [2mdist/[22m[36massets/init-Gi6I4Gst.js                          [39m[1m[2m    0.15 kB[22m[1m[22m[2m │ gzip:   0.13 kB[22m
+2026-10-18T02:28:56.7120215Z [2mdist/[22m[36massets/chunk-2Q5K7J3B-Dki_aKtB.js                [39m[1m[2m    0.19 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+2026-10-18T02:28:56.7120792Z [2mdist/[22m[36massets/chunk-XXDRQBXY-QyFKHqhN.js                [39m[1m[2m    0.24 kB[22m[1m[22m[2m │ gzip:   0.21 kB[22m
+2026-10-18T02:28:56.7121455Z [2mdist/[22m[36massets/chunk-JWPE2WC7-BxcS1ss7.js                [39m[1m[2m    0.30 kB[22m[1m[22m[2m │ gzip:   0.21 kB[22m
+2026-10-18T02:28:56.7122033Z [2mdist/[22m[36massets/WorkspaceFileIdentity-C3--FacD.js         [39m[1m[2m    0.30 kB[22m[1m[22m[2m │ gzip:   0.25 kB[22m
+2026-10-18T02:28:56.7122592Z [2mdist/[22m[36massets/inboxDirectory-DTTQF0K4.js                [39m[1m[2m    0.32 kB[22m[1m[22m[2m │ gzip:   0.24 kB[22m
+2026-10-18T02:28:56.7123299Z [2mdist/[22m[36massets/WorkspaceToolbar-B4UvZ0eI.js              [39m[1m[2m    0.33 kB[22m[1m[22m[2m │ gzip:   0.27 kB[22m
+2026-10-18T02:28:56.7123860Z [2mdist/[22m[36massets/useResponsiveInspector-C8_kyHiG.js        [39m[1m[2m    0.34 kB[22m[1m[22m[2m │ gzip:   0.25 kB[22m
+2026-10-18T02:28:56.7124458Z [2mdist/[22m[36massets/WorkspaceSegmentedControl-ChG9VnP0.js     [39m[1m[2m    0.35 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+2026-10-18T02:28:56.7125029Z [2mdist/[22m[36massets/chunk-5VM5RSS4-B5g8nl9g.js                [39m[1m[2m    0.37 kB[22m[1m[22m[2m │ gzip:   0.27 kB[22m
+2026-10-18T02:28:56.7125586Z [2mdist/[22m[36massets/WorkspaceEmptyState-CgK-SIaM.js           [39m[1m[2m    0.41 kB[22m[1m[22m[2m │ gzip:   0.31 kB[22m
+2026-10-18T02:28:56.7126166Z [2mdist/[22m[36massets/WorkspaceStatusBar-D7g3Yrtf.js            [39m[1m[2m    0.41 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+2026-10-18T02:28:56.7126989Z [2mdist/[22m[36massets/WorkspaceManagementContent-CIqrxVUO.js    [39m[1m[2m    0.47 kB[22m[1m[22m[2m │ gzip:   0.34 kB[22m
+2026-10-18T02:28:56.7127567Z [2mdist/[22m[36massets/chunk-KBJHAD2P-DakCZXPf.js                [39m[1m[2m    0.53 kB[22m[1m[22m[2m │ gzip:   0.38 kB[22m
+2026-10-18T02:28:56.7128170Z [2mdist/[22m[36massets/stateDiagram-v2-UEYNNEHI-DdoNDZMx.js      [39m[1m[2m    0.56 kB[22m[1m[22m[2m │ gzip:   0.36 kB[22m
+2026-10-18T02:28:56.7128752Z [2mdist/[22m[36massets/classDiagram-JCYQIIEL-DlVgnoLr.js         [39m[1m[2m    0.60 kB[22m[1m[22m[2m │ gzip:   0.37 kB[22m
+2026-10-18T02:28:56.7129335Z [2mdist/[22m[36massets/classDiagram-v2-OCEON4UE-DlVgnoLr.js      [39m[1m[2m    0.60 kB[22m[1m[22m[2m │ gzip:   0.37 kB[22m
+2026-10-18T02:28:56.7130032Z [2mdist/[22m[36massets/swimlanesDiagram-ULZ7WXOC-UrefZl7J.js     [39m[1m[2m    0.68 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+2026-10-18T02:28:56.7130623Z [2mdist/[22m[36massets/infoDiagram-6WML65LV-eOmxWvS_.js          [39m[1m[2m    0.72 kB[22m[1m[22m[2m │ gzip:   0.46 kB[22m
+2026-10-18T02:28:56.7131184Z [2mdist/[22m[36massets/WorkspaceStateNotice-DKkgSAZJ.js          [39m[1m[2m    1.08 kB[22m[1m[22m[2m │ gzip:   0.61 kB[22m
+2026-10-18T02:28:56.7131769Z [2mdist/[22m[36massets/sizeCapture-X5ZJPWSS-CWZJtw31.js          [39m[1m[2m    1.13 kB[22m[1m[22m[2m │ gzip:   0.61 kB[22m
+2026-10-18T02:28:56.7132395Z [2mdist/[22m[36massets/ordinal-Cboi1Yqb.js                       [39m[1m[2m    1.19 kB[22m[1m[22m[2m │ gzip:   0.57 kB[22m
+2026-10-18T02:28:56.7132937Z [2mdist/[22m[36massets/WorkspaceManagementHeader-on6WrO_o.js     [39m[1m[2m    1.19 kB[22m[1m[22m[2m │ gzip:   0.68 kB[22m
+2026-10-18T02:28:56.7133453Z [2mdist/[22m[36massets/appDialog-B-QH5X7F.js                     [39m[1m[2m    1.34 kB[22m[1m[22m[2m │ gzip:   0.68 kB[22m
+2026-10-18T02:28:56.7133988Z [2mdist/[22m[36massets/index-Bj1hsqAF.js                         [39m[1m[2m    1.71 kB[22m[1m[22m[2m │ gzip:   0.52 kB[22m
+2026-10-18T02:28:56.7134508Z [2mdist/[22m[36massets/railroadDiagram-AXF67PYL-DNmy_beo.js      [39m[1m[2m    1.74 kB[22m[1m[22m[2m │ gzip:   0.81 kB[22m
+2026-10-18T02:28:56.7135055Z [2mdist/[22m[36massets/chunk-2GRJ4B5K-52NfSyC0.js                [39m[1m[2m    1.88 kB[22m[1m[22m[2m │ gzip:   0.83 kB[22m
+2026-10-18T02:28:56.7135683Z [2mdist/[22m[36massets/abnfDiagram-N423BO3Z-CnbRaS0h.js          [39m[1m[2m    1.94 kB[22m[1m[22m[2m │ gzip:   0.95 kB[22m
+2026-10-18T02:28:56.7136314Z [2mdist/[22m[36massets/InboxView-mpEhwy2F.js                     [39m[1m[2m    2.07 kB[22m[1m[22m[2m │ gzip:   1.15 kB[22m
+2026-10-18T02:28:56.7136834Z [2mdist/[22m[36massets/pegDiagram-VL7TDLO6-BhvTl2sS.js           [39m[1m[2m    2.09 kB[22m[1m[22m[2m │ gzip:   0.98 kB[22m
+2026-10-18T02:28:56.7137415Z [2mdist/[22m[36massets/ebnfDiagram-BXEA7PRR-BLas1d5A.js          [39m[1m[2m    2.14 kB[22m[1m[22m[2m │ gzip:   0.94 kB[22m
+2026-10-18T02:28:56.7137997Z [2mdist/[22m[36massets/workspaceViewState-VNswgWOu.js            [39m[1m[2m    2.45 kB[22m[1m[22m[2m │ gzip:   1.14 kB[22m
+2026-10-18T02:28:56.7138563Z [2mdist/[22m[36massets/ExternalOfficeView-BopVgtkZ.js            [39m[1m[2m    3.20 kB[22m[1m[22m[2m │ gzip:   1.69 kB[22m
+2026-10-18T02:28:56.7139073Z [2mdist/[22m[36massets/arc-yYX1qipp.js                           [39m[1m[2m    3.43 kB[22m[1m[22m[2m │ gzip:   1.47 kB[22m
+2026-10-18T02:28:56.7139618Z [2mdist/[22m[36massets/TableChartEmbed-CJvVtLJK.js               [39m[1m[2m    3.92 kB[22m[1m[22m[2m │ gzip:   1.93 kB[22m
+2026-10-18T02:28:56.7140208Z [2mdist/[22m[36massets/ExternalApplicationPanel-AoC-XU-G.js      [39m[1m[2m    4.34 kB[22m[1m[22m[2m │ gzip:   2.15 kB[22m
+2026-10-18T02:28:56.7140774Z [2mdist/[22m[36massets/diagram-LBJQPF4R-BY7npvKo.js              [39m[1m[2m    4.38 kB[22m[1m[22m[2m │ gzip:   1.92 kB[22m
+2026-10-18T02:28:56.7141340Z [2mdist/[22m[36massets/defaultLocale-DX6XiGOO.js                 [39m[1m[2m    4.69 kB[22m[1m[22m[2m │ gzip:   2.18 kB[22m
+2026-10-18T02:28:56.7142004Z [2mdist/[22m[36massets/workspaceReference-DIhrlgfc.js            [39m[1m[2m    5.11 kB[22m[1m[22m[2m │ gzip:   2.47 kB[22m
+2026-10-18T02:28:56.7142562Z [2mdist/[22m[36massets/linear-v0bhUxWg.js                        [39m[1m[2m    5.66 kB[22m[1m[22m[2m │ gzip:   2.31 kB[22m
+2026-10-18T02:28:56.7143078Z [2mdist/[22m[36massets/graph-D7OQCmE3.js                         [39m[1m[2m    5.82 kB[22m[1m[22m[2m │ gzip:   1.81 kB[22m
+2026-10-18T02:28:56.7143637Z [2mdist/[22m[36massets/diagram-UB23O5K3-DfUHAGiw.js              [39m[1m[2m    6.36 kB[22m[1m[22m[2m │ gzip:   2.74 kB[22m
+2026-10-18T02:28:56.7144182Z [2mdist/[22m[36massets/pieDiagram-7S7Q4E2Y-B_v2O3SF.js           [39m[1m[2m    6.49 kB[22m[1m[22m[2m │ gzip:   2.71 kB[22m
+2026-10-18T02:28:56.7144745Z [2mdist/[22m[36massets/WorkspaceTabs-BaOishgn.js                 [39m[1m[2m    6.67 kB[22m[1m[22m[2m │ gzip:   3.13 kB[22m
+2026-10-18T02:28:56.7145314Z [2mdist/[22m[36massets/index-CZ29faOl.js                         [39m[1m[2m    6.92 kB[22m[1m[22m[2m │ gzip:   1.91 kB[22m
+2026-10-18T02:28:56.7145879Z [2mdist/[22m[36massets/useAdaptiveMarkdownMotion-QtCD7a38.js     [39m[1m[2m    7.04 kB[22m[1m[22m[2m │ gzip:   3.10 kB[22m
+2026-10-18T02:28:56.7146513Z [2mdist/[22m[36massets/LegacyOfficeView-D6dK5ejL.js              [39m[1m[2m    7.05 kB[22m[1m[22m[2m │ gzip:   3.24 kB[22m
+2026-10-18T02:28:56.7147286Z [2mdist/[22m[36massets/chunk-RYQCIY6F-BaJeD1HI.js                [39m[1m[2m    7.15 kB[22m[1m[22m[2m │ gzip:   2.76 kB[22m
+2026-10-18T02:28:56.7147914Z [2mdist/[22m[36massets/QuickNote-XBzpY0-E.js                     [39m[1m[2m    7.49 kB[22m[1m[22m[2m │ gzip:   3.43 kB[22m
+2026-10-18T02:28:56.7148412Z [2mdist/[22m[36massets/OdtReaderView-DGJMf77a.js                 [39m[1m[2m    8.07 kB[22m[1m[22m[2m │ gzip:   3.60 kB[22m
+2026-10-18T02:28:56.7148909Z [2mdist/[22m[36massets/InboxBrowser-McrSwkps.js                  [39m[1m[2m    8.09 kB[22m[1m[22m[2m │ gzip:   3.43 kB[22m
+2026-10-18T02:28:56.7149420Z [2mdist/[22m[36massets/TextConflictDialog-DJmm0jZn.js            [39m[1m[2m    8.25 kB[22m[1m[22m[2m │ gzip:   3.64 kB[22m
+2026-10-18T02:28:56.7149934Z [2mdist/[22m[36massets/diagram-7IWD3JNH-BiX219FX.js              [39m[1m[2m    8.61 kB[22m[1m[22m[2m │ gzip:   3.83 kB[22m
+2026-10-18T02:28:56.7150904Z [2mdist/[22m[36massets/dagre-VZM6K2ZE-Cbv6dhZN.js                [39m[1m[2m    9.01 kB[22m[1m[22m[2m │ gzip:   3.45 kB[22m
+2026-10-18T02:28:56.7151429Z [2mdist/[22m[36massets/ReleaseCapabilitiesView-Dr9dUqFJ.js       [39m[1m[2m    9.55 kB[22m[1m[22m[2m │ gzip:   4.08 kB[22m
+2026-10-18T02:28:56.7151964Z [2mdist/[22m[36massets/appVersionIdentity-n61fbf-3.js            [39m[1m[2m    9.99 kB[22m[1m[22m[2m │ gzip:   4.02 kB[22m
+2026-10-18T02:28:56.7152489Z [2mdist/[22m[36massets/cynefinDiagram-MW4NZA55-DHXZ7QXK.js       [39m[1m[2m   10.23 kB[22m[1m[22m[2m │ gzip:   3.69 kB[22m
+2026-10-18T02:28:56.7153026Z [2mdist/[22m[36massets/stateDiagram-OKZ733FA-kqb5OMCz.js         [39m[1m[2m   10.53 kB[22m[1m[22m[2m │ gzip:   3.70 kB[22m
+2026-10-18T02:28:56.7153574Z [2mdist/[22m[36massets/diagram-B4RE2ZJO-Ca_hWMat.js              [39m[1m[2m   10.95 kB[22m[1m[22m[2m │ gzip:   4.22 kB[22m
+2026-10-18T02:28:56.7154145Z [2mdist/[22m[36massets/localGraphPin-DbPcHeP2.js                 [39m[1m[2m   11.01 kB[22m[1m[22m[2m │ gzip:   4.00 kB[22m
+2026-10-18T02:28:56.7154698Z [2mdist/[22m[36massets/searchLocation-CiS5WF5I.js                [39m[1m[2m   12.33 kB[22m[1m[22m[2m │ gzip:   5.46 kB[22m
+2026-10-18T02:28:56.7155209Z [2mdist/[22m[36massets/TomlEditorView-QnewotFf.js                [39m[1m[2m   12.57 kB[22m[1m[22m[2m │ gzip:   5.47 kB[22m
+2026-10-18T02:28:56.7155700Z [2mdist/[22m[36massets/TempMode-C6kOiGnn.js                      [39m[1m[2m   13.51 kB[22m[1m[22m[2m │ gzip:   6.01 kB[22m
+2026-10-18T02:28:56.7156213Z [2mdist/[22m[36massets/LogViewerView-Clgr_AIV.js                 [39m[1m[2m   15.01 kB[22m[1m[22m[2m │ gzip:   5.93 kB[22m
+2026-10-18T02:28:56.7156752Z [2mdist/[22m[36massets/DrawioEditorView-Cswk71KI.js              [39m[1m[2m   15.15 kB[22m[1m[22m[2m │ gzip:   6.17 kB[22m
+2026-10-18T02:28:56.7157268Z [2mdist/[22m[36massets/TableChartEditor-Cs8n3xKO.js              [39m[1m[2m   15.60 kB[22m[1m[22m[2m │ gzip:   5.57 kB[22m
+2026-10-18T02:28:56.7157775Z [2mdist/[22m[36massets/chunk-6Q2QTUOP-CrfUaluY.js                [39m[1m[2m   15.76 kB[22m[1m[22m[2m │ gzip:   4.43 kB[22m
+2026-10-18T02:28:56.7158263Z [2mdist/[22m[36massets/index-qEfrVXE3.js                         [39m[1m[2m   15.83 kB[22m[1m[22m[2m │ gzip:   6.83 kB[22m
+2026-10-18T02:28:56.7158758Z [2mdist/[22m[36massets/diagram-Q27KOJAE-oJnh6M2N.js              [39m[1m[2m   16.21 kB[22m[1m[22m[2m │ gzip:   5.79 kB[22m
+2026-10-18T02:28:56.7159272Z [2mdist/[22m[36massets/ishikawaDiagram-WSZJBQD7-B54ImIkd.js      [39m[1m[2m   17.70 kB[22m[1m[22m[2m │ gzip:   6.74 kB[22m
+2026-10-18T02:28:56.7159815Z [2mdist/[22m[36massets/kanban-definition-27J2QSJJ-BOmOmpqK.js    [39m[1m[2m   20.84 kB[22m[1m[22m[2m │ gzip:   7.36 kB[22m
+2026-10-18T02:28:56.7160498Z [2mdist/[22m[36massets/DiagramStudio-CC2NY8LY.js                 [39m[1m[2m   23.16 kB[22m[1m[22m[2m │ gzip:   9.74 kB[22m
+2026-10-18T02:28:56.7161028Z [2mdist/[22m[36massets/mindmap-definition-FAOFIHXS-w06mP04b.js   [39m[1m[2m   23.50 kB[22m[1m[22m[2m │ gzip:   7.96 kB[22m
+2026-10-18T02:28:56.7161688Z [2mdist/[22m[36massets/sankeyDiagram-W5VNT64P-BFbQX_hF.js        [39m[1m[2m   23.53 kB[22m[1m[22m[2m │ gzip:   8.64 kB[22m
+2026-10-18T02:28:56.7162214Z [2mdist/[22m[36massets/OdfContentReaderView-93eMqIUL.js          [39m[1m[2m   23.69 kB[22m[1m[22m[2m │ gzip:   8.53 kB[22m
+2026-10-18T02:28:56.7162742Z [2mdist/[22m[36massets/journeyDiagram-NVQOT4AX-CyvPUNx1.js       [39m[1m[2m   23.71 kB[22m[1m[22m[2m │ gzip:   8.41 kB[22m
+2026-10-18T02:28:56.7163254Z [2mdist/[22m[36massets/YamlEditorView-B2I-JtB-.js                [39m[1m[2m   24.87 kB[22m[1m[22m[2m │ gzip:  10.87 kB[22m
+2026-10-18T02:28:56.7163766Z [2mdist/[22m[36massets/layout-CVtkHv4-.js                        [39m[1m[2m   25.22 kB[22m[1m[22m[2m │ gzip:   8.87 kB[22m
+2026-10-18T02:28:56.7164323Z [2mdist/[22m[36massets/index-Bzl79N44.js                         [39m[1m[2m   26.13 kB[22m[1m[22m[2m │ gzip:   8.71 kB[22m
+2026-10-18T02:28:56.7164829Z [2mdist/[22m[36massets/wardleyDiagram-T6FBY63Y-BzsrK-B4.js       [39m[1m[2m   26.23 kB[22m[1m[22m[2m │ gzip:   7.00 kB[22m
+2026-10-18T02:28:56.7165352Z [2mdist/[22m[36massets/erDiagram-JOGREHBK-ChqPOykz.js            [39m[1m[2m   27.35 kB[22m[1m[22m[2m │ gzip:   9.52 kB[22m
+2026-10-18T02:28:56.7165950Z [2mdist/[22m[36massets/MindMapView-BpBNtIH7.js                   [39m[1m[2m   28.36 kB[22m[1m[22m[2m │ gzip:  10.85 kB[22m
+2026-10-18T02:28:56.7166447Z [2mdist/[22m[36massets/XmlEditorView-9DYZLatH.js                 [39m[1m[2m   28.90 kB[22m[1m[22m[2m │ gzip:  11.97 kB[22m
+2026-10-18T02:28:56.7167155Z [2mdist/[22m[36massets/gitGraphDiagram-DS77QQ5N-uJeD9fbe.js      [39m[1m[2m   30.07 kB[22m[1m[22m[2m │ gzip:   8.93 kB[22m
+2026-10-18T02:28:56.7167676Z [2mdist/[22m[36massets/MediaViewerView-8gsD-JHo.js               [39m[1m[2m   30.08 kB[22m[1m[22m[2m │ gzip:  11.10 kB[22m
+2026-10-18T02:28:56.7168213Z [2mdist/[22m[36massets/requirementDiagram-LRYGKXZP-CHU8NUHP.js   [39m[1m[2m   31.34 kB[22m[1m[22m[2m │ gzip:   9.89 kB[22m
+2026-10-18T02:28:56.7168765Z [2mdist/[22m[36massets/timeline-definition-Z64GVDOM-CdFQZqr4.js  [39m[1m[2m   31.49 kB[22m[1m[22m[2m │ gzip:  10.49 kB[22m
+2026-10-18T02:28:56.7169315Z [2mdist/[22m[36massets/quadrantDiagram-CIZ2JOQS-_AYair_u.js      [39m[1m[2m   34.63 kB[22m[1m[22m[2m │ gzip:  10.19 kB[22m
+2026-10-18T02:28:56.7169820Z [2mdist/[22m[36massets/TableView-BWRdsIxi.js                     [39m[1m[2m   36.06 kB[22m[1m[22m[2m │ gzip:  13.22 kB[22m
+2026-10-18T02:28:56.7170322Z [2mdist/[22m[36massets/DocxReaderView-ByMUbwsL.js                [39m[1m[2m   36.39 kB[22m[1m[22m[2m │ gzip:  12.47 kB[22m
+2026-10-18T02:28:56.7170827Z [2mdist/[22m[36massets/chunk-5RXB4S5H-C1UCBw6V.js                [39m[1m[2m   38.63 kB[22m[1m[22m[2m │ gzip:  12.69 kB[22m
+2026-10-18T02:28:56.7171356Z [2mdist/[22m[36massets/xychartDiagram-ELKLHX3M--WMVuWWJ.js       [39m[1m[2m   42.08 kB[22m[1m[22m[2m │ gzip:  12.11 kB[22m
+2026-10-18T02:28:56.7172016Z [2mdist/[22m[36massets/vennDiagram-T6HMQDX7-TRCNubzt.js          [39m[1m[2m   42.51 kB[22m[1m[22m[2m │ gzip:  15.86 kB[22m
+2026-10-18T02:28:56.7172582Z [2mdist/[22m[36massets/JsonEditorView-Dlwc6kP4.js                [39m[1m[2m   48.14 kB[22m[1m[22m[2m │ gzip:  15.57 kB[22m
+2026-10-18T02:28:56.7173121Z [2mdist/[22m[36massets/CanvasView-BK8Z-uLx.js                    [39m[1m[2m   48.81 kB[22m[1m[22m[2m │ gzip:  17.62 kB[22m
+2026-10-18T02:28:56.7173684Z [2mdist/[22m[36massets/chunk-GF5L2VYU-B1bs3KWD.js                [39m[1m[2m   49.30 kB[22m[1m[22m[2m │ gzip:  15.78 kB[22m
+2026-10-18T02:28:56.7174303Z [2mdist/[22m[36massets/WorkspaceHome-CsJbec-S.js                 [39m[1m[2m   52.28 kB[22m[1m[22m[2m │ gzip:  18.99 kB[22m
+2026-10-18T02:28:56.7174903Z [2mdist/[22m[36massets/flowDiagram-UKHOOZJN-D7uFux3b.js          [39m[1m[2m   61.40 kB[22m[1m[22m[2m │ gzip:  19.67 kB[22m
+2026-10-18T02:28:56.7175481Z [2mdist/[22m[36massets/PptxReaderView-Bj0Eq-Qz.js                [39m[1m[2m   63.42 kB[22m[1m[22m[2m │ gzip:  18.31 kB[22m
+2026-10-18T02:28:56.7176085Z [2mdist/[22m[36massets/SettingsView-DHWf4wD9.js                  [39m[1m[2m   68.29 kB[22m[1m[22m[2m │ gzip:  22.42 kB[22m
+2026-10-18T02:28:56.7176638Z [2mdist/[22m[36massets/ganttDiagram-PKOTCBZU-Dj463ubp.js         [39m[1m[2m   69.83 kB[22m[1m[22m[2m │ gzip:  23.61 kB[22m
+2026-10-18T02:28:56.7177294Z [2mdist/[22m[36massets/c4Diagram-5PPSVZJV-SBTC6w_O.js            [39m[1m[2m   70.11 kB[22m[1m[22m[2m │ gzip:  19.71 kB[22m
+2026-10-18T02:28:56.7177916Z [2mdist/[22m[36massets/blockDiagram-VBNYF7ZC-CJe5ErC1.js         [39m[1m[2m   75.27 kB[22m[1m[22m[2m │ gzip:  21.67 kB[22m
+2026-10-18T02:28:56.7178577Z [2mdist/[22m[36massets/cose-bilkent-JH36ORCC-M3iEE3Gi.js         [39m[1m[2m   81.85 kB[22m[1m[22m[2m │ gzip:  22.54 kB[22m
+2026-10-18T02:28:56.7179138Z [2mdist/[22m[36massets/icon-vendor-BHjGtv_e.js                   [39m[1m[2m   89.47 kB[22m[1m[22m[2m │ gzip:  15.65 kB[22m
+2026-10-18T02:28:56.7179703Z [2mdist/[22m[36massets/vue-vendor-BBGGuCHS.js                    [39m[1m[2m  114.44 kB[22m[1m[22m[2m │ gzip:  44.59 kB[22m
+2026-10-18T02:28:56.7180292Z [2mdist/[22m[36massets/sequenceDiagram-SI44F4Z6-d2FhGa-M.js      [39m[1m[2m  117.59 kB[22m[1m[22m[2m │ gzip:  31.34 kB[22m
+2026-10-18T02:28:56.7180883Z [2mdist/[22m[36massets/swimlanes-SLNWSIFB-DiqQuLlZ.js            [39m[1m[2m  120.47 kB[22m[1m[22m[2m │ gzip:  44.06 kB[22m
+2026-10-18T02:28:56.7181467Z [2mdist/[22m[36massets/architectureDiagram-T3A2C74G-CZexNGUQ.js  [39m[1m[2m  152.15 kB[22m[1m[22m[2m │ gzip:  43.28 kB[22m
+2026-10-18T02:28:56.7182041Z [2mdist/[22m[36massets/TextEditorView-BS9xEqCK.js                [39m[1m[2m  164.58 kB[22m[1m[22m[2m │ gzip:  54.55 kB[22m
+2026-10-18T02:28:56.7182552Z [2mdist/[22m[36massets/WorkbookView-YW0IgJFf.js                  [39m[1m[2m  195.82 kB[22m[1m[22m[2m │ gzip:  57.98 kB[22m
+2026-10-18T02:28:56.7183216Z [2mdist/[22m[36massets/index-Czhvd9Zb.js                         [39m[1m[2m  199.62 kB[22m[1m[22m[2m │ gzip:  64.36 kB[22m
+2026-10-18T02:28:56.7183734Z [2mdist/[22m[36massets/GraphView-DFOX7s8T.js                     [39m[1m[2m  228.92 kB[22m[1m[22m[2m │ gzip:  66.62 kB[22m
+2026-10-18T02:28:56.7184274Z [2mdist/[22m[36massets/katex-BkKH-RNA.js                         [39m[1m[2m  261.00 kB[22m[1m[22m[2m │ gzip:  77.67 kB[22m
+2026-10-18T02:28:56.7184803Z [2mdist/[22m[36massets/LibraryMode-CRaqIzvi.js                   [39m[1m[2m  278.45 kB[22m[1m[22m[2m │ gzip:  92.93 kB[22m
+2026-10-18T02:28:56.7185374Z [2mdist/[22m[36massets/editor-vendor-CIbGjqDk.js                 [39m[1m[2m  293.92 kB[22m[1m[22m[2m │ gzip:  71.92 kB[22m
+2026-10-18T02:28:56.7185919Z [2mdist/[22m[36massets/codeMirrorTheme-CT06c8p4.js               [39m[1m[2m  400.75 kB[22m[1m[22m[2m │ gzip: 129.69 kB[22m
+2026-10-18T02:28:56.7186473Z [2mdist/[22m[36massets/cytoscape.esm-DTSO7Bv0.js                 [39m[1m[2m  443.72 kB[22m[1m[22m[2m │ gzip: 142.36 kB[22m
+2026-10-18T02:28:56.7186990Z [2mdist/[22m[36massets/ui-vendor-CGDSEGmS.js                     [39m[1m[2m  563.01 kB[22m[1m[22m[2m │ gzip: 156.14 kB[22m
+2026-10-18T02:28:56.7187720Z [2mdist/[22m[36massets/PdfView-CU-nffx6.js                       [39m[1m[2m  604.07 kB[22m[1m[22m[2m │ gzip: 184.00 kB[22m
+2026-10-18T02:28:56.7188244Z [2mdist/[22m[36massets/mermaid.core-D0hjQNVZ.js                  [39m[1m[2m  636.63 kB[22m[1m[22m[2m │ gzip: 152.57 kB[22m
+2026-10-18T02:28:56.7188975Z [2mdist/[22m[36massets/cynefin-VYW2F7L2-Da78QLcG.js              [39m[1m[2m  691.07 kB[22m[1m[22m[2m │ gzip: 155.13 kB[22m
+2026-10-18T02:28:57.0110044Z [36m[vite-plugin-static-copy][39m [32mCopied 7 items.[39m
+2026-10-18T02:28:57.0113273Z [32m✓ built in 24.53s[39m
+2026-10-18T02:28:57.3775745Z 
+2026-10-18T02:28:57.3776669Z > tauri-app@1.1.14 check:theme-contract
+2026-10-18T02:28:57.3777060Z > node scripts/check-theme-contract.mjs
+2026-10-18T02:28:57.3777209Z 
+2026-10-18T02:28:57.4292194Z Theme contract check passed: one registry, 3 core + 4 scenario presets, 12 Tauri visual proofs, one filtered theme library, shared editor/chart consumers.
+2026-10-18T02:28:57.6350057Z 
+2026-10-18T02:28:57.6351197Z > tauri-app@1.1.14 check:brand-icon-contract
+2026-10-18T02:28:57.6351572Z > node scripts/check-brand-icon-contract.mjs
+2026-10-18T02:28:57.6351754Z 
+2026-10-18T02:28:57.6900397Z Brand icon contract passed: solid-gold master, synchronized app assets, and platform icons are present.
+2026-10-18T02:28:57.9120576Z 
+2026-10-18T02:28:57.9121130Z > tauri-app@1.1.14 check:ui-consistency
+2026-10-18T02:28:57.9121406Z > node scripts/check-ui-consistency.mjs
+2026-10-18T02:28:57.9121533Z 
+2026-10-18T02:28:57.9671907Z UI consistency contract passed: shared branding, workspace tokens, embedded routes, and container-relative sizing are aligned.
+2026-10-18T02:28:58.1765310Z 
+2026-10-18T02:28:58.1765941Z > tauri-app@1.1.14 check:ui-typography
+2026-10-18T02:28:58.1766249Z > node scripts/check-ui-typography.mjs
+2026-10-18T02:28:58.2417506Z 
+2026-10-18T02:28:58.2418154Z UI typography contract passed: 105 style sources scanned, 0 unregistered fonts.
+2026-10-18T02:28:58.4543367Z 
+2026-10-18T02:28:58.4543919Z > tauri-app@1.1.14 check:ui-shared-components
+2026-10-18T02:28:58.4544233Z > node scripts/check-ui-shared-components.mjs
+2026-10-18T02:28:58.4544374Z 
+2026-10-18T02:28:58.5055369Z UI shared component contract passed: workspace and management primitives are used across high-risk surfaces.
+2026-10-18T02:28:58.7137363Z 
+2026-10-18T02:28:58.7137969Z > tauri-app@1.1.14 check:ui-management-shell
+2026-10-18T02:28:58.7138291Z > node scripts/check-ui-management-shell.mjs
+2026-10-18T02:28:58.7138432Z 
+2026-10-18T02:28:58.7651659Z UI management shell contract passed: management pages and the immersive graph share navigation, controls, status, and inspector dimensions.
+2026-10-18T02:28:58.9722998Z 
+2026-10-18T02:28:58.9723595Z > tauri-app@1.1.14 check:ui4a-shell-visual-harness
+2026-10-18T02:28:58.9723931Z > node scripts/check-ui4a-shell-visual-harness.mjs
+2026-10-18T02:28:58.9724085Z 
+2026-10-18T02:28:59.0205040Z UI-4A shell visual harness passed: 5 surfaces, 3 core themes, 3 Windows-equivalent scales, and Tauri-only evidence boundaries.
+2026-10-18T02:28:59.2296412Z 
+2026-10-18T02:28:59.2297086Z > tauri-app@1.1.14 check:ui4a-shell-visual-evidence
+2026-10-18T02:28:59.2297478Z > node scripts/check-ui4a-shell-visual-audit.mjs
+2026-10-18T02:28:59.2297654Z 
+2026-10-18T02:28:59.2833691Z UI-4A shell visual evidence passed: 5 surfaces, 3 core themes, 3 Windows-equivalent scales, 45 Tauri screenshots.
+2026-10-18T02:28:59.4972714Z 
+2026-10-18T02:28:59.4973441Z > tauri-app@1.1.14 check:ui4c-release-fact-alignment
+2026-10-18T02:28:59.4973846Z > node scripts/check-ui4c-release-fact-alignment.mjs
+2026-10-18T02:28:59.4974024Z 
+2026-10-18T02:28:59.5490377Z - release audit is missing releaseCandidate=false
+2026-10-18T02:28:59.5493032Z - release audit is missing 手动下载安装
+2026-10-18T02:28:59.6061859Z ##[error]Process completed with exit code 1.
+2026-10-18T02:28:59.6237214Z Post job cleanup.
+2026-10-18T02:28:59.7373557Z Cache up-to-date.
+2026-10-18T02:28:59.7636530Z Post job cleanup.
+2026-10-18T02:28:59.8752676Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-18T02:28:59.9023738Z git version 2.56.0.windows.2
+2026-10-18T02:28:59.9082942Z Temporarily overriding HOME='D:\a\_temp\7403b3d3-ec86-45cd-8167-fd2e49320cf0' before making global git config changes
+2026-10-18T02:28:59.9085059Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-18T02:28:59.9091371Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+2026-10-18T02:28:59.9465071Z Removing SSH command configuration
+2026-10-18T02:28:59.9475448Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-18T02:28:59.9857258Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-18T02:29:00.4282754Z Removing HTTP extra header
+2026-10-18T02:29:00.4290905Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-18T02:29:00.4604684Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-18T02:29:00.9052575Z Removing includeIf entries pointing to credentials config files
+2026-10-18T02:29:00.9063363Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-18T02:29:00.9330455Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+2026-10-18T02:29:00.9330899Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+2026-10-18T02:29:00.9331247Z includeif.gitdir:/github/workspace/.git.path
+2026-10-18T02:29:00.9331517Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-18T02:29:00.9367684Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+2026-10-18T02:29:00.9623788Z D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:00.9661459Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:00.9955590Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+2026-10-18T02:29:01.0220779Z D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:01.0259088Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:01.0564734Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-18T02:29:01.0820394Z /github/runner_temp/git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:01.0860332Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:01.1175188Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-18T02:29:01.1426944Z /github/runner_temp/git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:01.1464262Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config
+2026-10-18T02:29:01.1767313Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-18T02:29:01.6290318Z Removing credentials config 'D:\a\_temp\git-credentials-b5482768-1c6d-440e-ade6-ce03e2077292.config'
+2026-10-18T02:29:01.6465401Z Cleaning up orphan processes
+
