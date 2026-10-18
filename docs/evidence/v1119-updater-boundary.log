@@ -1,0 +1,125 @@
+TAP version 13
+# Subtest: graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success
+ok 1 - graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success
+  ---
+  duration_ms: 1.261
+  ...
+# Subtest: published v1.0.24 requires its exact tag and keeps the new updater pending
+ok 2 - published v1.0.24 requires its exact tag and keeps the new updater pending
+  ---
+  duration_ms: 0.1514
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=pending
+ok 3 - hosted-execution-pending: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0734
+  ...
+# Subtest: hosted-execution-pending: community=pending, receipt=passed
+ok 4 - hosted-execution-pending: community=pending, receipt=passed
+  ---
+  duration_ms: 0.2778
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=pending
+ok 5 - hosted-execution-pending: community=passed, receipt=pending
+  ---
+  duration_ms: 0.123
+  ...
+# Subtest: hosted-execution-pending: community=passed, receipt=passed
+ok 6 - hosted-execution-pending: community=passed, receipt=passed
+  ---
+  duration_ms: 0.0434
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=pending
+ok 7 - hosted-managed-update-passed: community=pending, receipt=pending
+  ---
+  duration_ms: 0.0386
+  ...
+# Subtest: hosted-managed-update-passed: community=pending, receipt=passed
+ok 8 - hosted-managed-update-passed: community=pending, receipt=passed
+  ---
+  duration_ms: 0.0392
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=pending
+ok 9 - hosted-managed-update-passed: community=passed, receipt=pending
+  ---
+  duration_ms: 0.1434
+  ...
+# Subtest: hosted-managed-update-passed: community=passed, receipt=passed
+ok 10 - hosted-managed-update-passed: community=passed, receipt=passed
+  ---
+  duration_ms: 0.1852
+  ...
+# Subtest: unknown status fails closed
+ok 11 - unknown status fails closed
+  ---
+  duration_ms: 0.1352
+  ...
+# Subtest: v1.0.23 candidate does not inherit historical updater acceptance
+ok 12 - v1.0.23 candidate does not inherit historical updater acceptance
+  ---
+  duration_ms: 0.119
+  ...
+# Subtest: published successor boundary requires its own real release identity
+ok 13 - published successor boundary requires its own real release identity
+  ---
+  duration_ms: 0.0897
+  ...
+# Subtest: v1.1.18 keeps its exact predecessor and a separate update observation in candidate and public states
+ok 14 - v1.1.18 keeps its exact predecessor and a separate update observation in candidate and public states
+  ---
+  duration_ms: 0.2461
+  ...
+# Subtest: successor keeps the historical receipt and a separate pending update path
+ok 15 - successor keeps the historical receipt and a separate pending update path
+  ---
+  duration_ms: 0.5212
+  ...
+# Subtest: successor rejects pending-predecessor
+ok 16 - successor rejects pending-predecessor
+  ---
+  duration_ms: 0.1024
+  ...
+# Subtest: successor rejects stale-successor-path
+ok 17 - successor rejects stale-successor-path
+  ---
+  duration_ms: 0.0299
+  ...
+# Subtest: successor rejects wrong-previous
+ok 18 - successor rejects wrong-previous
+  ---
+  duration_ms: 0.0227
+  ...
+# Subtest: successor rejects wrong-tag
+ok 19 - successor rejects wrong-tag
+  ---
+  duration_ms: 0.0216
+  ...
+# Subtest: successor rejects unknown-version
+ok 20 - successor rejects unknown-version
+  ---
+  duration_ms: 0.0214
+  ...
+# Subtest: successor rejects changed-receipt
+ok 21 - successor rejects changed-receipt
+  ---
+  duration_ms: 0.0225
+  ...
+# Subtest: version boundary admits only current and planned successor runtime
+ok 22 - version boundary admits only current and planned successor runtime
+  ---
+  duration_ms: 0.1055
+  ...
+# Subtest: v1.1.19 keeps its exact predecessor and a separate update observation in candidate and public states
+ok 23 - v1.1.19 keeps its exact predecessor and a separate update observation in candidate and public states
+  ---
+  duration_ms: 0.1701
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 70.0914

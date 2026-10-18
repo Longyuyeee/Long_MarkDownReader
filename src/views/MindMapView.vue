@@ -4,7 +4,7 @@
       <div class="header-main">
         <button class="icon-button" title="返回知识库" @click="router.push('/library')"><n-icon :component="ArrowLeftIcon" /></button>
         <div>
-          <input v-if="document" v-model="document.title" class="title-input" maxlength="500" @focus="beginFieldEdit" @change="endFieldEdit" />
+          <input v-if="document" v-model="document.title" class="title-input" maxlength="500" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit" />
           <strong v-else>OPML 思维导图</strong>
           <span>{{ isExternal ? '外部 OPML · 仅点击保存写回' : fileName }} · {{ nodeCount }} 个主题 · {{ maxDepth }} 层</span>
         </div>
@@ -13,11 +13,13 @@
         <button title="撤销" :disabled="!undoStack.length" @click="undo"><n-icon :component="UndoIcon" /></button>
         <button title="重做" :disabled="!redoStack.length" @click="redo"><n-icon :component="RedoIcon" /></button>
         <button v-if="!isExternal" data-testid="m4c2-project-to-canvas" title="投影到 Canvas" :disabled="saving || loading || projecting" aria-live="polite" @click="requestProjectToCanvas"><n-icon :component="NetworkIcon" />{{ projecting ? '正在创建…' : '投影到 Canvas' }}</button>
-        <button class="primary" title="保存" :disabled="!dirty || saving" @click="save"><n-icon :component="SaveIcon" />{{ saving ? '保存中…' : '保存' }}</button>
+        <button class="primary" title="保存" :disabled="!dirty || saving || loading || preservationIssues.length > 0" @click="save"><n-icon :component="SaveIcon" />{{ saving ? '保存快照中…' : '保存' }}</button>
+        <button :disabled="saving || loading || !document" @click="saveCompatibleCopy">另存副本</button>
+        <button :disabled="saving || loading" title="重新读取" @click="requestReload">↻</button>
       </div>
     </header>
 
-    <div v-if="document" class="mindmap-toolbar" data-command-strip data-horizontal-wheel="always">
+    <div v-if="document" :inert="loading" class="mindmap-toolbar" data-command-strip data-horizontal-wheel="always">
       <div class="view-switch">
         <button :class="{ active: viewMode === 'map' }" @click="viewMode = 'map'"><n-icon :component="NetworkIcon" />思维导图</button>
         <button :class="{ active: viewMode === 'outline' }" @click="viewMode = 'outline'"><n-icon :component="ListTreeIcon" />树形大纲</button>
@@ -57,9 +59,10 @@
       <label class="search-box"><n-icon :component="SearchIcon" /><input v-model="query" placeholder="搜索主题或备注" /></label>
     </div>
 
-    <main class="mindmap-main">
+    <main class="mindmap-main" :class="{ 'with-preservation': preservationIssues.length > 0 && !loading && !error }">
+      <div v-if="preservationIssues.length && !loading && !error" class="preservation-banner" role="status"><details><summary>原件包含无法无损保留的扩展，当前草稿不会覆盖原件</summary><ul><li v-for="issue in preservationIssues" :key="issue">{{ issue }}</li></ul></details><button :disabled="saving" @click="saveCompatibleCopy">另存兼容副本</button></div>
       <div v-if="loading" class="state"><div class="loader"></div><strong>正在解析 OPML</strong></div>
-      <div v-else-if="error" class="state error"><strong>无法打开思维导图</strong><p>{{ error }}</p><button @click="load">重试</button></div>
+      <div v-else-if="error" class="state error"><strong>无法打开思维导图</strong><p>{{ error }}</p><button @click="requestReload">重试</button></div>
       <template v-else-if="document">
         <section v-if="viewMode === 'outline'" class="outline-panel">
           <div class="outline-head"><span>主题</span><span>层级</span></div>
@@ -69,7 +72,7 @@
             class="outline-row"
             data-testid="opml-outline-node"
             :data-node-id="item.node.id"
-            :class="{ selected: item.node.id === selectedId, dragging: item.node.id === draggedId, match: item.matches, collapsed: item.node.collapsed }"
+            :class="{ selected: item.node.id === selectedId, dragging: item.node.id === draggedId, match: item.matches, collapsed: effectiveCollapsed(item.node) }"
             :style="{ '--depth': item.depth }"
             draggable="true"
             @dragstart="startDrag(item.node.id)"
@@ -80,7 +83,7 @@
           >
             <span class="tree-lines"></span>
             <button class="collapse" :class="{ hidden: !item.node.children.length }" @click.stop="toggleCollapsed(item.node)"><n-icon :component="ChevronRightIcon" /></button>
-            <input v-model="item.node.text" maxlength="2000" @focus="beginFieldEdit" @change="endFieldEdit" @click.stop="selectedId = item.node.id" />
+            <input v-model="item.node.text" maxlength="2000" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit" @click.stop="selectedId = item.node.id" />
             <small>{{ item.depth + 1 }}</small>
             <button class="quick-add" title="添加子主题" @click.stop="selectedId = item.node.id; addChild()">+</button>
           </div>
@@ -120,11 +123,12 @@
               @dblclick.stop="beginNodeRename(item.node.id)"
               @contextmenu.stop.prevent="openNodeContextMenu(item.node, $event)"
             >
-              <button v-if="item.node.children.length" class="map-collapse" @click.stop="toggleCollapsed(item.node)">{{ item.node.collapsed ? `+${descendantCount(item.node)}` : '−' }}</button>
+              <button v-if="item.node.children.length" class="map-collapse" @click.stop="toggleCollapsed(item.node)">{{ effectiveCollapsed(item.node) ? `+${descendantCount(item.node)}` : '−' }}</button>
               <input
                 v-if="editingId === item.node.id"
                 v-model="item.node.text"
                 class="map-title-editor"
+                @input="markFieldDirty"
                 maxlength="2000"
                 autofocus
                 @pointerdown.stop
@@ -145,9 +149,9 @@
         <aside class="inspector">
           <template v-if="selectedNode">
             <div class="inspector-head"><strong>主题属性</strong><code>{{ selectedNode.id }}</code></div>
-            <label>标题<input v-model="selectedNode.text" maxlength="2000" @focus="beginFieldEdit" @change="endFieldEdit" /></label>
-            <label>备注<textarea v-model="selectedNode.note" maxlength="20000" rows="8" placeholder="补充描述、上下文或行动说明" @focus="beginFieldEdit" @change="endFieldEdit"></textarea></label>
-            <label class="check"><input v-model="selectedNode.collapsed" type="checkbox" @focus="beginFieldEdit" @change="endFieldEdit" />默认折叠子主题</label>
+            <label>标题<input v-model="selectedNode.text" maxlength="2000" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit" /></label>
+            <label>备注<textarea v-model="selectedNode.note" maxlength="20000" rows="8" placeholder="补充描述、上下文或行动说明" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit"></textarea></label>
+            <label class="check"><input v-model="selectedNode.collapsed" type="checkbox" @focus="beginFieldEdit" @input="markFieldDirty" @change="endFieldEdit" />默认折叠子主题</label>
             <div class="inspector-actions">
               <button @click="addChild">添加子主题</button><button @click="addSibling">添加同级</button>
             </div>
@@ -170,14 +174,14 @@
     />
 
     <footer v-if="document" class="statusbar">
-      <span>{{ dirty ? '有未保存更改' : '已与磁盘同步' }}<template v-if="saveError"> · {{ saveError }}</template></span>
+      <span>{{ saving ? '正在保存快照 · 后续输入仍保留' : dirty ? '有未保存更改' : '已与磁盘同步' }}<template v-if="saveError"> · {{ saveError }}</template><template v-if="copyPath"> · 已另存 {{ copyPath }}，原件与本页草稿未变</template></span>
       <span>{{ isExternal ? '外部 OPML · 保存时规范化 XML' : 'OPML 2.0' }} · {{ layoutLabels[layoutMode] }}布局 · {{ selectedIds.length }} 个已选 · 仅点击保存时写入</span>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useWindowDraft } from '../services/windowDrafts'
+import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -186,10 +190,12 @@ import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../service
 import { useDialog, useMessage } from 'naive-ui'
 import { ArrowLeft as ArrowLeftIcon, ChevronRight as ChevronRightIcon, CornerDownRight as CornerDownRightIcon, Hand as HandIcon, ListPlus as ListPlusIcon, ListTree as ListTreeIcon, Maximize2 as MaximizeIcon, MousePointer2 as MousePointerIcon, Network as NetworkIcon, Plus as PlusIcon, Redo2 as RedoIcon, Save as SaveIcon, Search as SearchIcon, Trash2 as TrashIcon, Undo2 as UndoIcon, ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon } from 'lucide-vue-next'
 import { useAppStore } from '../store/app'
+import { confirmAppAction, promptAppAction } from '../services/appDialog'
+import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
 
 interface OpmlNode { id: string; text: string; note: string; collapsed: boolean; attributes: Record<string, string>; children: OpmlNode[] }
 interface OpmlDocument { title: string; metadata: Record<string, string>; roots: OpmlNode[] }
-interface OpmlFile { path: string; signature: string; document: OpmlDocument }
+interface OpmlFile { path: string; signature: string; document: OpmlDocument; preservationIssues?: string[] }
 interface LocatedNode { node: OpmlNode; parent: OpmlNode | null; siblings: OpmlNode[]; index: number; grandSiblings: OpmlNode[] | null; parentIndex: number }
 interface FlatItem { node: OpmlNode; parentId: string | null; depth: number; matches: boolean }
 
@@ -209,6 +215,15 @@ const projecting = ref(false)
 const dirty = ref(false)
 const error = ref('')
 const saveError = ref('')
+const preservationIssues = ref<string[]>([])
+const copyPath = ref('')
+const expandedForLocator = ref(new Set<string>())
+let contextEpoch = 0, readRun = 0, disposed = false
+let loadedOwner: ReturnType<typeof captureOwner> | null = null
+const captureOwner = () => ({epoch:contextEpoch,root:store.libraryPath,path:path.value,external:isExternal.value})
+const sameContext = (owner:ReturnType<typeof captureOwner> | null): owner is ReturnType<typeof captureOwner> => Boolean(owner && !disposed && owner.epoch === contextEpoch && owner.root === store.libraryPath && owner.path === path.value && owner.external === isExternal.value)
+const tabDirty = () => { const tab = store.tabs.find(tab => tab.path === (loadedOwner?.path || path.value)); if (tab) tab.isDirty = dirty.value || saving.value }
+const markFieldDirty = () => { if (!loading.value && sameContext(loadedOwner)) { dirty.value = true; tabDirty() } }
 const selectedId = ref('')
 const selectedIds = ref<string[]>([])
 const draggedId = ref('')
@@ -222,6 +237,18 @@ const layoutLabels: Record<LayoutMode, string> = { tree: '树状', organization:
 const mapPanel = ref<HTMLElement | null>(null)
 const mapZoom = ref(1)
 const mapPan = ref({ x: 0, y: 0 })
+let mapResizeObserver: ResizeObserver | null = null
+watch(mapPanel, panel => {
+  mapResizeObserver?.disconnect()
+  if (!panel) return
+  let width = panel.clientWidth, height = panel.clientHeight
+  mapResizeObserver = new ResizeObserver(() => {
+    const nextWidth = panel.clientWidth, nextHeight = panel.clientHeight
+    if (width && height && !loading.value) mapPan.value = {x:mapPan.value.x+(nextWidth-width)/2,y:mapPan.value.y+(nextHeight-height)/2}
+    width = nextWidth; height = nextHeight
+  })
+  mapResizeObserver.observe(panel)
+}, {flush:'post'})
 const selectionBox = ref<{ startX: number; startY: number; x: number; y: number } | null>(null)
 const contextMenu = reactive({ show: false, x: 0, y: 0, target: 'background' as 'background' | 'node', nodeId: '' })
 const editingId = ref('')
@@ -247,6 +274,7 @@ const projectionTargetPath = computed(() => {
   return parts.join('/')
 })
 
+const canonical = (value: unknown): string => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)
 const snapshot = () => JSON.stringify(document.value)
 const restore = (value: string) => { document.value = JSON.parse(value) as OpmlDocument; dirty.value = true; ensureSelection() }
 const pushUndo = (before: string) => { if (before === snapshot()) return; undoStack.value.push(before); if (undoStack.value.length > 100) undoStack.value.shift(); redoStack.value = []; dirty.value = true }
@@ -322,8 +350,9 @@ const canIndent = computed(() => { const value = locate(selectedId.value); retur
 const canOutdent = computed(() => Boolean(locate(selectedId.value)?.parent))
 const indentNode = () => { const location = locate(selectedId.value); if (!location || location.index === 0) return; mutate(() => { const [node] = location.siblings.splice(location.index, 1); const parent = location.siblings[location.index - 1]; parent.children.push(node); parent.collapsed = false }) }
 const outdentNode = () => { const location = locate(selectedId.value); if (!location?.parent || !location.grandSiblings) return; mutate(() => { const [node] = location.siblings.splice(location.index, 1); location.grandSiblings!.splice(location.parentIndex + 1, 0, node) }) }
-const toggleCollapsed = (node: OpmlNode) => mutate(() => { node.collapsed = !node.collapsed })
-const setAllCollapsed = (value: boolean) => mutate(() => visitNodes(node => { if (node.children.length) node.collapsed = value }))
+const toggleCollapsed = (node: OpmlNode) => mutate(() => { node.collapsed = !effectiveCollapsed(node); expandedForLocator.value.delete(node.id) })
+const effectiveCollapsed = (node: OpmlNode) => node.collapsed && !expandedForLocator.value.has(node.id)
+const setAllCollapsed = (value: boolean) => mutate(() => { expandedForLocator.value.clear(); visitNodes(node => { if (node.children.length) node.collapsed = value }) })
 const descendantCount = (node: OpmlNode): number => node.children.reduce((total, child) => total + 1 + descendantCount(child), 0)
 
 const startDrag = (id: string) => { draggedId.value = id }
@@ -344,7 +373,7 @@ const matchingIds = computed(() => {
 })
 const allItems = computed<FlatItem[]>(() => {
   const result: FlatItem[] = []; const needle = query.value.trim().toLocaleLowerCase()
-  const visit = (nodes: OpmlNode[], parentId: string | null, depth: number) => { for (const node of nodes) { const included = !needle || matchingIds.value.has(node.id); if (included) result.push({ node, parentId, depth, matches: Boolean(needle && matchesQuery(node, needle)) }); if ((!node.collapsed || needle) && included) visit(node.children, node.id, depth + 1) } }
+  const visit = (nodes: OpmlNode[], parentId: string | null, depth: number) => { for (const node of nodes) { const included = !needle || matchingIds.value.has(node.id); if (included) result.push({ node, parentId, depth, matches: Boolean(needle && matchesQuery(node, needle)) }); if ((!effectiveCollapsed(node) || needle) && included) visit(node.children, node.id, depth + 1) } }
   if (document.value) visit(document.value.roots, null, 0); return result
 })
 const visibleItems = computed(() => allItems.value)
@@ -590,53 +619,67 @@ const errorText = (cause: unknown) => {
   if (cause && typeof cause === 'object' && 'message' in cause) return String((cause as { message: unknown }).message)
   return String(cause).replace(/^Error:\s*/, '')
 }
+const cancelGestures = () => {
+  window.removeEventListener('pointermove', moveNodePointer); window.removeEventListener('pointerup', endNodePointer)
+  window.removeEventListener('pointermove', moveCanvasPan); window.removeEventListener('pointerup', endCanvasPointer)
+  window.removeEventListener('pointermove', moveSelectionBox); window.removeEventListener('pointerup', endSelectionBox)
+  nodeDragOrigin = null; panOrigin = null; nodeDragMoved = false; draggedId.value = ''; selectionBox.value = null
+}
 const save = async () => {
-  if (!document.value || !dirty.value || saving.value || (!isExternal.value && !store.libraryPath)) return !dirty.value
-  if (isExternal.value) {
-    const confirmed = await new Promise<boolean>(resolve => dialog.warning({
-      title: '覆盖外部 OPML 源文件？',
-      content: '保存将覆盖当前外部 .opml 文件，并按 OPML 2.0 规范化 XML 排版。受支持的头部元数据、节点属性、备注、折叠状态和布局坐标会保留。',
-      positiveText: '确认保存',
-      negativeText: '取消',
-      closable: false,
-      maskClosable: false,
-      onPositiveClick: () => resolve(true),
-      onNegativeClick: () => resolve(false),
-    }))
-    if (!confirmed) return false
-  }
+  if (!document.value || loading.value || saving.value || globalThis.document.body.inert || !sameContext(loadedOwner) || !dirty.value || (!isExternal.value && !store.libraryPath)) return false
+  const owner = captureOwner()
+  if (preservationIssues.value.length) { saveError.value = '原件含无法无损保留的扩展；请查看原因并另存兼容副本，当前草稿保留'; return false }
+  if (owner.external && !await confirmAppAction(dialog, {title:'覆盖外部 OPML 源文件？',content:'保存会覆盖当前外部OPML并规范化XML排版。只写入确认时的快照，之后输入仍保留。',positiveText:'确认保存',danger:true})) return false
+  if (!sameContext(owner) || saving.value) return false
+  endFieldEdit()
+  const sent = snapshot(), value = JSON.parse(sent) as OpmlDocument, expectedSignature = signature.value
+  if ((globalThis.document.activeElement as HTMLElement | null)?.matches('.title-input,.map-title-editor,.outline-row input,.inspector input,.inspector textarea')) fieldSnapshot = sent
+  saving.value = true; saveError.value = ''; copyPath.value = ''; tabDirty()
+  const endSave = beginWindowSave()
+  try {
+    const result = await invoke<OpmlFile>(owner.external ? 'write_external_opml_file' : 'write_opml_file', {...(owner.external ? {} : {libraryRoot:owner.root}),path:owner.path,expectedSignature,document:value})
+    if (!sameContext(owner)) return false
+    if (!result.signature || canonical(result.document) !== canonical(value)) throw Error('保存回执与提交快照不符，草稿仍保留，请核对原文件')
+    signature.value = result.signature; preservationIssues.value = result.preservationIssues || []
+    // Never replace the live document: the user may have continued typing.
+    dirty.value = snapshot() !== sent
+    return true
+  } catch (cause) {
+    if (sameContext(owner)) { dirty.value = true; saveError.value = '未确认保存，草稿仍保留：' + errorText(cause); message.error(saveError.value) }
+    return false
+  } finally { if (sameContext(owner)) {saving.value = false; tabDirty()}; endSave() }
+}
+const saveCompatibleCopy = async () => {
+  if (!document.value || loading.value || saving.value || !sameContext(loadedOwner) || !store.libraryPath) return
+  const owner = captureOwner(), issues = [...preservationIssues.value]
+  const name = (await promptAppAction(dialog, {title:issues.length ? '另存兼容 OPML 副本' : '另存 OPML 副本',content:(issues.length ? '兼容副本将不包含以下内容，原件绝不覆盖：\n' + issues.map(item => '• ' + item).join('\n') : '保留支持的主题、备注和属性，新建OPML，不覆盖原件或同名文件。') + (owner.external ? '\n保存位置：当前资料库根。' : '\n保存位置：原文件所在文件夹。'),initialValue:fileName.value+'-副本.opml',positiveText:issues.length ? '确认损失并另存副本' : '另存新副本'}))?.trim()
+  if (!name || !sameContext(owner) || saving.value) return
+  endFieldEdit()
+  const sent = snapshot(), endSave = beginWindowSave()
   saving.value = true; saveError.value = ''
   try {
-    const result = await invoke<OpmlFile>(isExternal.value ? 'write_external_opml_file' : 'write_opml_file', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: path.value,
-      expectedSignature: signature.value,
-      document: document.value,
-    })
-    signature.value = result.signature; document.value = result.document; dirty.value = false; return true
-  } catch (cause: any) {
-    saveError.value = errorText(cause)
-    if (isExternal.value && cause?.code === 'external-modified') dialog.warning({
-      title: '外部 OPML 已发生变化',
-      content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
-      positiveText: '知道了',
-    })
-    else message.error(`保存失败：${saveError.value}`)
-    return false
-  }
-  finally { saving.value = false }
+    const saved = await invoke<OpmlFile>('save_opml_compatible_copy',{libraryRoot:owner.root,path:owner.path,external:owner.external,expectedSignature:signature.value,document:JSON.parse(sent),targetFileName:name,acceptLoss:issues.length > 0})
+    if (!sameContext(owner)) return
+    if (!saved.path || !saved.signature) throw Error('副本回执无效，请核对目标文件；当前草稿仍保留')
+    copyPath.value = saved.path
+    window.dispatchEvent(new CustomEvent('longedit:library-file-created',{detail:saved.path}))
+    message.success('已另存副本；原件和本页草稿保持不变')
+  } catch (cause) { if (sameContext(owner)) saveError.value = '副本未确认完成，请核对目标；当前草稿保留：' + errorText(cause) }
+  finally { if (sameContext(owner)) saving.value = false; endSave() }
 }
 const projectToCanvas = async () => {
-  if (isExternal.value || dirty.value || projecting.value) return
+  if (isExternal.value || dirty.value || projecting.value || loading.value || saving.value || !sameContext(loadedOwner)) return
+  const owner = captureOwner()
   projecting.value = true
   try {
-    const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: store.libraryPath, path: path.value })
+    const canvas = await invoke<string>('create_canvas_from_opml', { libraryRoot: owner.root, path: owner.path })
+    if (!sameContext(owner)) return
     window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: canvas }))
     message.success(`Canvas 投影已创建：${canvas.split(/[\\/]/).pop()}，正在打开`)
     await openManagedFile(router, canvas)
   }
-  catch (cause) { message.error(`Canvas 投影失败：${String(cause)}`) }
-  finally { projecting.value = false }
+  catch (cause) { if (sameContext(owner)) message.error(`Canvas 投影失败：${String(cause)}`) }
+  finally { if (sameContext(owner)) projecting.value = false }
 }
 const requestProjectToCanvas = () => {
   if (isExternal.value) return void message.info('外部 OPML 需要先加入知识库，才能投影到 Canvas')
@@ -644,6 +687,7 @@ const requestProjectToCanvas = () => {
   if (!document.value || projecting.value) return
   // The dialog is rendered in the window overlay, not inside the mind-map pane.
   // Using the pane width makes the disclosure unreadable beside the file tree.
+  const owner = captureOwner()
   const viewportWidth = window.innerWidth
   dialog.info({
     title: '创建独立 Canvas 投影？',
@@ -664,46 +708,69 @@ const requestProjectToCanvas = () => {
     ]),
     positiveText: '创建并打开',
     negativeText: '取消',
-    onPositiveClick: projectToCanvas,
+    onPositiveClick: () => { if (sameContext(owner)) return projectToCanvas() },
   })
 }
+const applyRequestedNode = () => {
+  const id = typeof route.query.node === 'string' ? route.query.node : ''
+  if (!id || !sameContext(loadedOwner) || !document.value) return
+  const ancestors:string[] = []
+  const find = (nodes:OpmlNode[], parents:string[]):boolean => {
+    for (const node of nodes) { if (node.id === id) {ancestors.push(...parents);return true}; if (find(node.children,[...parents,node.id])) return true }
+    return false
+  }
+  if (!find(document.value.roots,[])) return
+  expandedForLocator.value = new Set([...expandedForLocator.value,...ancestors]); selectOnly(id)
+  void nextTick(() => { const point = nodePosition(id), panel = mapPanel.value; if (panel) mapPan.value = {x:panel.clientWidth/2-(point.x+105)*mapZoom.value,y:panel.clientHeight/2-(point.y+40)*mapZoom.value} })
+}
 const load = async () => {
+  const owner = captureOwner(), prior = sameContext(loadedOwner) && Boolean(document.value), run = ++readRun
+  cancelGestures(); fieldSnapshot = ''; editingId.value = ''
   loading.value = true; error.value = ''; saveError.value = ''
   try {
-    if (!/\.opml$/i.test(path.value)) throw new Error('OPML 路径无效')
-    if (!isExternal.value && !store.libraryPath) throw new Error('知识库尚未配置')
-    const result = await invoke<OpmlFile>(isExternal.value ? 'read_external_opml_file' : 'read_opml_file', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: path.value,
-    })
-    signature.value = result.signature; document.value = result.document; dirty.value = false; undoStack.value = []; redoStack.value = []
+    if (!/\.opml$/i.test(owner.path)) throw Error('OPML 路径无效')
+    if (!owner.external && !owner.root) throw Error('知识库尚未配置')
+    const result = await invoke<OpmlFile>(owner.external ? 'read_external_opml_file' : 'read_opml_file', {...(owner.external ? {} : {libraryRoot:owner.root}),path:owner.path})
+    if (!sameContext(owner) || run !== readRun) return
+    if (!result.signature || !Array.isArray(result.document?.roots)) throw Error('OPML快照或签名无效')
+    signature.value = result.signature; document.value = result.document; loadedOwner = owner
+    preservationIssues.value = result.preservationIssues || []; copyPath.value = ''; expandedForLocator.value = new Set()
+    dirty.value = false; undoStack.value = []; redoStack.value = []
     const savedLayout = result.document.metadata._longeditLayout as LayoutMode
-    if (['tree', 'organization', 'radial', 'timeline'].includes(savedLayout)) layoutMode.value = savedLayout
-    const requestedNode = typeof route.query.node === 'string' ? route.query.node : ''
-    selectedId.value = requestedNode && locate(requestedNode) ? requestedNode : ''
-    selectedIds.value = selectedId.value ? [selectedId.value] : []
-    ensureSelection()
-    const viewState = recallWorkspaceViewState(path.value)
-    if (!requestedNode && viewState) {
-      if (['tree', 'organization', 'radial', 'timeline'].includes(viewState.section || '')) layoutMode.value = viewState.section as LayoutMode
+    if (['tree','organization','radial','timeline'].includes(savedLayout)) layoutMode.value = savedLayout
+    selectedId.value = ''; selectedIds.value = []; ensureSelection()
+    const viewState = recallWorkspaceViewState(owner.path)
+    if (viewState) {
+      if (['tree','organization','radial','timeline'].includes(viewState.section || '')) layoutMode.value = viewState.section as LayoutMode
       if (viewState.mode === 'map' || viewState.mode === 'outline') viewMode.value = viewState.mode
-      if (['professional', 'colorful', 'focus'].includes(viewState.sidebarTab || '')) mapTheme.value = viewState.sidebarTab as MapTheme
-      mapZoom.value = viewState.zoom || 1
-      mapPan.value = { x: viewState.panX || 0, y: viewState.panY || 0 }
-      selectedIds.value = (viewState.selection || '').split(',').filter(id => Boolean(locate(id)))
-      selectedId.value = selectedIds.value[0] || selectedId.value
-    } else void nextTick(fitMap)
-  }
-  catch (cause) { document.value = null; error.value = errorText(cause) }
-  finally { loading.value = false }
+      if (['professional','colorful','focus'].includes(viewState.sidebarTab || '')) mapTheme.value = viewState.sidebarTab as MapTheme
+      mapZoom.value = viewState.zoom || 1; mapPan.value = {x:viewState.panX ?? 0,y:viewState.panY ?? 0}
+      selectedIds.value = (viewState.selection || '').split(',').filter(id => Boolean(locate(id))); selectedId.value = selectedIds.value[0] || selectedId.value
+    }
+    await nextTick()
+    if (!sameContext(owner) || run !== readRun) return
+    if (route.query.node) applyRequestedNode(); else if (!viewState) fitMap()
+  } catch (cause) {
+    if (sameContext(owner) && run === readRun) {
+      if (prior) saveError.value = '重新读取失败，原页面与草稿仍保留：' + errorText(cause)
+      else error.value = errorText(cause)
+    }
+  } finally { if (sameContext(owner) && run === readRun) {loading.value = false; tabDirty()} }
+}
+const requestReload = async () => { if (await mayLeave()) await load() }
+const refreshAfterFileMove = (event:Event) => {
+  const {notice,pending} = (event as CustomEvent<{notice:FileMoveNotice;pending:Promise<unknown>[]}>).detail
+  const key = (value:string) => value.replace(/\\\\/g,'/').toLowerCase()
+  if (notice && key(notice.root) === key(store.libraryPath) && !dirty.value && !saving.value && !loading.value && notice.documents.some(item => key(item) === key(path.value) || key(movedPath(item,notice)) === key(path.value))) pending.push(load())
 }
 const handleKeydown = (event: KeyboardEvent) => {
-  const target = event.target as HTMLElement | null
-  const editing = target?.matches('input, textarea, select, [contenteditable="true"]')
+  if (globalThis.document.body.inert) return
+  const target = event.target instanceof HTMLElement ? event.target : null
+  const editing = target?.closest('input, textarea, select, [contenteditable="true"],.n-dialog')
   const command = event.ctrlKey || event.metaKey
-  if (command && event.key.toLowerCase() === 's') { event.preventDefault(); void save() }
-  if (command && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo() }
-  if (editing) return
+  if (command && event.key.toLowerCase() === 's') { event.preventDefault(); event.stopImmediatePropagation(); if (!target?.closest('.n-dialog')) void save(); return }
+  if (loading.value || editing) return
+  if (command && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo(); return }
   if (event.code === 'Space') { spacePressed = true; event.preventDefault() }
   if (viewMode.value === 'map' && command && event.key.toLowerCase() === 'a') { event.preventDefault(); selectedIds.value = mapItems.value.map(item => item.node.id); selectedId.value = selectedIds.value[selectedIds.value.length - 1] || '' }
   if (viewMode.value === 'map' && event.key === 'Enter' && selectedId.value) { event.preventDefault(); beginNodeRename(selectedId.value) }
@@ -715,30 +782,28 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (viewMode.value === 'map' && event.key === 'ArrowDown') { event.preventDefault(); moveSelected(0, distance) }
 }
 const handleKeyup = (event: KeyboardEvent) => { if (event.code === 'Space') spacePressed = false }
-useWindowDraft(() => dirty.value, () => String(route.query.path || store.activeTabId || ''))
-const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value) { event.preventDefault(); event.returnValue = '' } }
-const mayLeave = () => {
-  if (!dirty.value) return Promise.resolve(true)
-  return new Promise<boolean>(resolve => dialog.warning({
-    title: '思维导图还有未保存修改',
-    content: '离开后会丢失当前草稿，源文件不会被修改。',
-    positiveText: '放弃修改并离开',
-    negativeText: '继续编辑',
-    closable: false,
-    maskClosable: false,
-    onPositiveClick: () => resolve(true),
-    onNegativeClick: () => resolve(false),
-  }))
+useWindowDraft(() => dirty.value || saving.value, () => loadedOwner?.path || path.value)
+const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty.value || saving.value) { event.preventDefault(); event.returnValue = '' } }
+const mayLeave = async () => {
+  if (saving.value || projecting.value) { message.info('正在完成保存或投影，请稍候；当前草稿保留'); return false }
+  if (!dirty.value) return true
+  return confirmAppAction(dialog,{title:'思维导图还有未保存修改',content:'离开后会丢失当前原件的内存草稿，源文件不会被修改。另存副本不会覆盖原件。',positiveText:'放弃修改并离开',negativeText:'继续编辑',danger:true})
 }
+watch(document, markFieldDirty, {deep:true,flush:'sync'})
+watch(dirty, tabDirty)
 watch(viewMode, value => localStorage.setItem('opml-view-mode', value))
 watch(layoutMode, value => localStorage.setItem('opml-layout-mode', value))
 watch(mapTheme, value => localStorage.setItem('opml-map-theme', value))
 watch([mapZoom, mapPan, layoutMode, mapTheme, viewMode, selectedIds], () => rememberMindMapViewState(), { deep: true })
-watch([path, isExternal, () => route.query.node, () => route.query.locatorToken], () => { void load() })
-onMounted(() => { window.addEventListener('keydown', handleKeydown); window.addEventListener('keyup', handleKeyup); window.addEventListener('beforeunload', beforeUnload); void load() })
+watch([path,isExternal,() => store.libraryPath], () => {contextEpoch++;cancelGestures();saving.value = false;projecting.value = false;void load()}, {flush:'sync'})
+watch([() => route.query.node,() => route.query.locatorToken], applyRequestedNode)
+onMounted(() => { window.addEventListener('longedit:file-move-completed', refreshAfterFileMove); window.addEventListener('keydown', handleKeydown, true); window.addEventListener('keyup', handleKeyup); window.addEventListener('beforeunload', beforeUnload); void load() })
 onBeforeUnmount(() => {
+  mapResizeObserver?.disconnect()
   rememberMindMapViewState()
-  window.removeEventListener('keydown', handleKeydown)
+  disposed = true; contextEpoch++; cancelGestures()
+  window.removeEventListener('longedit:file-move-completed', refreshAfterFileMove)
+  window.removeEventListener('keydown', handleKeydown, true)
   window.removeEventListener('keyup', handleKeyup)
   window.removeEventListener('beforeunload', beforeUnload)
   window.removeEventListener('pointermove', moveNodePointer)
@@ -750,6 +815,8 @@ onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query
 </script>
 
 <style scoped>
+.mindmap-main.with-preservation{grid-template-rows:auto minmax(0,1fr)}.preservation-banner{grid-column:1/-1;display:flex;gap:12px;align-items:start;padding:10px 14px;background:color-mix(in srgb,var(--theme-warning,#cc9b35) 12%,var(--theme-surface));font-size:12px;max-height:150px;overflow:auto}.preservation-banner details{min-width:0;flex:1}.preservation-banner button{flex:none;border:var(--theme-border);border-radius:7px;padding:5px 9px;background:var(--theme-card);color:var(--theme-text)}.preservation-banner ul{padding-left:18px;overflow-wrap:anywhere}.statusbar>span:first-child{white-space:normal;overflow-wrap:anywhere;min-width:0}
+
 .mindmap-page{height:100%;container-type:inline-size;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden;color:var(--theme-text);background:var(--theme-bg)}
 .mindmap-header{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:9px 16px;border-bottom:var(--theme-border);background:var(--theme-surface)}.header-main,.header-actions,.mindmap-toolbar,.view-switch,.inspector-actions{display:flex;align-items:center;gap:8px}.header-main>div{display:flex;min-width:0;flex-direction:column}.header-main span{color:var(--theme-text-secondary);font-size:11px}.title-input{width:min(420px,40vw);border:0;outline:0;color:var(--theme-text);background:transparent;font-size:17px;font-weight:750}.icon-button{width:36px}.header-actions button,.mindmap-toolbar button,.icon-button,.state button,.inspector button{height:34px;padding:0 11px;border:var(--theme-border);border-radius:8px;color:var(--theme-text);background:var(--theme-card);cursor:pointer}.header-actions button{display:flex;align-items:center;gap:5px}.header-actions .primary{color:#fff;border-color:var(--theme-primary);background:var(--theme-primary)}button:disabled{opacity:.4;cursor:default}
 .mindmap-toolbar{min-height:48px;gap:6px;padding:7px 10px;overflow-x:auto;border-bottom:var(--theme-border);background:var(--theme-surface)}.mindmap-toolbar>*{flex:none}.mindmap-toolbar button{padding-inline:9px;white-space:nowrap}.mindmap-toolbar button.active{color:#fff;border-color:var(--theme-primary);background:var(--theme-primary)}.mindmap-toolbar button.danger{color:#d64545}.mindmap-toolbar .icon-tool{width:32px;padding:0;display:grid;place-items:center}.mindmap-toolbar .zoom-readout{min-width:50px;padding-inline:4px;font-variant-numeric:tabular-nums}.divider{height:24px;border-left:var(--theme-border)}.tool-select{height:34px;display:flex;align-items:center;gap:4px;padding-left:7px;border:var(--theme-border);border-radius:8px;color:var(--theme-text-secondary);background:var(--theme-card);font-size:var(--text-compact);white-space:nowrap}.tool-select select{width:67px;height:32px;padding:0 18px 0 2px;border:0;outline:0;color:var(--theme-text);background:transparent}.search-box{min-width:168px;margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 8px;border:var(--theme-border);border-radius:8px;background:var(--theme-card)}.search-box input{width:132px;height:30px;border:0;outline:0;color:var(--theme-text);background:transparent}
@@ -759,6 +826,8 @@ onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query
 .statusbar{min-height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-top:var(--theme-border);color:var(--theme-text-secondary);background:var(--theme-surface);font-size: var(--text-compact)}@keyframes spin{to{transform:rotate(360deg)}}
 :global(.opml-canvas-projection-disclosure){max-width:580px;display:grid;gap:8px;line-height:1.55}.opml-canvas-projection-disclosure :global(p){margin:0;overflow-wrap:anywhere}.opml-canvas-projection-disclosure :global(ul){display:grid;gap:4px;margin:0;padding-left:20px}.opml-canvas-projection-disclosure :global(.opml-projection-source-safety){padding:7px 9px;border-radius:6px;color:var(--theme-primary);background:rgba(var(--theme-primary-rgb),.08);font-weight:650}
 @container(max-width:850px){
+  .mindmap-main.with-preservation{grid-template-rows:auto minmax(0,1fr) minmax(0,35%)}.preservation-banner{max-height:100px;flex-wrap:wrap}
+
   .mindmap-main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,35%)}
   .inspector{display:block;min-height:0;border-left:0;border-top:var(--theme-border);padding:10px}
   .mindmap-header{flex-wrap:wrap;gap:8px;padding:8px 10px}

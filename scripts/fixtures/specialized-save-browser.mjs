@@ -17,7 +17,6 @@ Object.defineProperty(window, '__TAURI_INTERNALS__', {
         audit.writes.push({ command, args: payload, blocked: audit.blocked })
         if (audit.blocked) throw '文档正在保存或整理，请保留修改并稍后重试'
         audit.saved = payload
-        if (command === 'write_canvas_file') return
         return { path: payload.path, content: payload.content, document: payload.document, signature: 'saved-fixture' }
       }
       return original(command, args)

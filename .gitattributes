@@ -165,6 +165,11 @@ docs/evidence/v1112-installed-closure/**/*.log -text -diff
 docs/evidence/v1112-original-build-39059203438/**/*.log -text -diff
 docs/evidence/v1117-*/** -text
 docs/evidence/v1118-*/** -text
+docs/evidence/v1119-*/** -text
+docs/evidence/v1119-*/**/*.log -text -diff
+docs/evidence/v1119*.log -text -diff whitespace=-blank-at-eol,-blank-at-eof
+docs/evidence/v1-1-19-candidate-lifecycle/** -text
+docs/evidence/v1-1-19-candidate-lifecycle/**/*.csv -text whitespace=cr-at-eol
 docs/evidence/v1118-*/**/*.log -text -diff
 docs/evidence/v1118-*/**/*.csv -text whitespace=cr-at-eol
 docs/evidence/v1-1-18-candidate-lifecycle/** -text

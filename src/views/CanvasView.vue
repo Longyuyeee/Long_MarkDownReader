@@ -6,16 +6,17 @@
         <div>
           <div class="canvas-title">{{ fileName }}</div>
           <div class="canvas-subtitle">{{ isExternal ? '外部 JSON Canvas · 仅点击保存写回' : '开放 JSON Canvas' }} · {{ visibleNodes.length }}/{{ document.nodes.length }} 个节点可见 · 当前渲染 {{ renderedNodes.length }} 节点 / {{ renderedEdges.length }} 连线<template v-if="measuredFps"> · {{ measuredFps }} FPS</template></div>
+          <p v-if="operationError" class="operation-error" role="alert">{{ operationError }}</p>
         </div>
       </div>
-      <div class="save-state" :class="saveState" aria-live="polite">
+      <div class="save-state" :class="saveState" :aria-busy="saving" aria-live="polite">
         <span class="state-dot"></span>{{ saveStateLabel }}
       </div>
     </header>
 
     <WorkspaceTabs v-if="isExternal" />
 
-    <div class="canvas-toolbar" role="toolbar" aria-label="Canvas 工具栏" data-command-strip data-horizontal-wheel="always">
+    <div class="canvas-toolbar" :inert="loading" role="toolbar" aria-label="Canvas 工具栏" data-command-strip data-horizontal-wheel="always">
       <button :class="{ active: tool === 'select' }" :aria-pressed="tool === 'select'" @click="setTool('select')">选择</button>
       <button :disabled="undoStack.length === 0" title="撤销 Ctrl+Z" @click="undo">↶</button>
       <button :disabled="redoStack.length === 0" title="重做 Ctrl+Shift+Z" @click="redo">↷</button>
@@ -69,8 +70,9 @@
       <button title="恢复画布视图" :aria-label="`恢复画布视图，当前缩放 ${Math.round(zoom * 100)}%`" @click="resetView">{{ Math.round(zoom * 100) }}%</button>
       <button title="放大画布" aria-label="放大画布" @click="changeZoom(0.1)">＋</button>
       <button @click="fitToContent">适应内容</button>
-      <button class="primary" :disabled="saveState === 'saving' || saveState === 'saved'" aria-live="polite" @click="saveCanvas">
-        {{ saveState === 'saving' ? '保存中' : saveState === 'saved' ? '已保存' : '保存' }}
+      <button :disabled="saving || loading" title="重新读取，未保存时先确认" @click="requestReload">↻</button>
+      <button class="primary" :disabled="loading || saving || saveState === 'saved'" aria-live="polite" @click="saveCanvas">
+        {{ saving ? '保存快照中' : saveState === 'saved' ? '已保存' : '保存' }}
       </button>
     </div>
 
@@ -84,7 +86,7 @@
       @dblclick="handleBackgroundDoubleClick"
     >
       <div class="canvas-grid" :style="gridStyle"></div>
-      <div class="canvas-world" :style="worldStyle">
+      <div class="canvas-world" :inert="loading || Boolean(loadError)" :style="worldStyle">
         <svg class="edge-layer" aria-label="Canvas 连线">
           <defs>
             <marker id="canvas-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -151,7 +153,7 @@
               v-if="!isExternal && isChartNode(node)"
               compact
               :library-root="store.libraryPath"
-              :source="node.file!"
+              :source="resolveFilePath(node.file!)"
               :view-id="chartViewId(node)"
               :host-path="canvasPath"
               @open="openEmbeddedChart"
@@ -160,7 +162,7 @@
               v-else-if="!isExternal && isMermaidNode(node)"
               compact
               :library-root="store.libraryPath"
-              :source="node.file!"
+              :source="resolveFilePath(node.file!)"
               :host-path="canvasPath"
               :dark="isActiveThemeDark(store.theme)"
               @open="openEmbeddedDiagram"
@@ -169,7 +171,7 @@
               <div class="node-kind">{{ isExternal ? '文件引用' : '知识库文件' }}</div>
               <div class="node-icon">▤</div>
               <div class="node-label">{{ node.file || '未指定文件' }}</div>
-              <div class="node-hint">{{ isExternal ? '外部画布不会自动读取引用文件' : '双击打开原文档' }}</div>
+              <div class="node-hint">{{ isExternal ? '外部画布不会自动读取引用文件' : '双击或来源面板打开 · 单击选择' }}</div>
             </template>
           </template>
           <template v-else-if="node.type === 'link'">
@@ -267,12 +269,19 @@
           </div>
         </div>
       </aside>
+      <aside v-else-if="selectedNode?.type === 'file'" class="edge-inspector source-inspector" aria-label="文件来源" @mousedown.stop @dblclick.stop @wheel.stop>
+        <div class="inspector-header"><strong>文件来源</strong><button aria-label="关闭文件来源" @click="clearSelection">×</button></div>
+        <code>{{ selectedNode.file || '尚未指定来源' }}</code>
+        <p role="status">{{ sourceResolution?.message || '正在核对来源…' }}</p>
+        <div class="source-actions"><button :disabled="sourceResolution?.status !== 'available'" @click="openNode(selectedNode!, true)">打开来源</button><button v-if="!isExternal" @click="relinkSource">重新指定</button></div>
+        <small>路径相对资料库根；不按同名文件猜测。重新指定只修改草稿，点击保存后才写入画布。</small>
+      </aside>
 
       <div v-if="loading" class="canvas-overlay">正在读取画布…</div>
       <div v-else-if="loadError" class="canvas-overlay error">
         <strong>无法打开画布</strong>
         <span>{{ loadError }}</span>
-        <button @click="loadCanvas">重试</button>
+        <button @click="requestReload">重试</button>
       </div>
       <div v-else-if="document.nodes.length === 0" class="empty-canvas">
         <div class="empty-icon">◇</div>
@@ -301,9 +310,9 @@
 </template>
 
 <script setup lang="ts">
-import { useWindowDraft } from '../services/windowDrafts'
+import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useDialog, useMessage } from 'naive-ui'
@@ -316,6 +325,7 @@ import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
 
 type CanvasNodeType = 'text' | 'file' | 'link' | 'group'
 type Tool = 'select' | 'connect'
@@ -374,6 +384,12 @@ const viewportRef = ref<HTMLElement | null>(null)
 const document = reactive<CanvasDocument>({ nodes: [], edges: [] })
 const loading = ref(true)
 const loadError = ref('')
+const operationError = ref('')
+const saving = ref(false)
+let contextEpoch = 0, disposed = false
+let loadedOwner: ReturnType<typeof captureOwner> | null = null
+let stopGesture: (() => void) | null = null
+let suppressOpenUntil = 0
 const saveState = ref<'saved' | 'dirty' | 'saving' | 'error'>('saved')
 const measuredFps = ref<number | null>(null)
 const tool = ref<Tool>('select')
@@ -403,6 +419,7 @@ let isPasting = false
 let viewportResizeObserver: ResizeObserver | null = null
 let viewportResizeFrame = 0
 let pendingViewportSize: { width: number; height: number } | null = null
+let viewportInitialized = false
 const edgeGeometryCache = new Map<string, CachedEdgeGeometry>()
 let performanceFrameId = 0
 let performanceFrameCount = 0
@@ -413,6 +430,9 @@ const isExternal = computed(() => route.query.external === '1')
 const fileName = computed(() => canvasPath.value.split(/[\\/]/).pop()?.replace(/\.canvas$/i, '') || '未命名画布')
 const tabTitle = computed(() => canvasPath.value.split(/[\\/]/).pop() || '未命名画布.canvas')
 const sourceSignature = ref('')
+const captureOwner = () => ({ epoch: contextEpoch, root: store.libraryPath, path: canvasPath.value, external: isExternal.value })
+const sameContext = (owner: ReturnType<typeof captureOwner> | null): owner is ReturnType<typeof captureOwner> => Boolean(owner && !disposed && owner.epoch === contextEpoch && owner.path === canvasPath.value && owner.root === store.libraryPath && owner.external === isExternal.value)
+const sourceResolution = ref<{status: string; path?: string; message: string} | null>(null)
 const currentTab = computed(() => store.tabs.find(tab => tab.path === canvasPath.value))
 const nodeById = computed(() => new Map(document.nodes.map(node => [node.id, node])))
 const selectedNode = computed(() => nodeById.value.get(selectedNodeId.value || '') || null)
@@ -445,7 +465,7 @@ const contextMenuOptions = computed(() => {
     { label: '恢复 100% 视图', key: 'reset-view' },
   ]
 })
-const saveStateLabel = computed(() => ({ saved: '已保存', dirty: '有未保存修改', saving: '正在保存', error: '保存失败' })[saveState.value])
+const saveStateLabel = computed(() => saving.value ? '正在保存快照 · 后续输入仍保留' : ({ saved: '已保存', dirty: '有未保存修改', saving: '正在保存', error: '保存失败' })[saveState.value])
 const colors = [
   { value: '1', label: '红色', css: '#ef4444' }, { value: '2', label: '橙色', css: '#f59e0b' },
   { value: '3', label: '黄色', css: '#eab308' }, { value: '4', label: '绿色', css: '#22c55e' },
@@ -711,31 +731,15 @@ const parseClipboardPayload = (raw: string): CanvasClipboardPayload => {
   if (candidate.sourceCanvas !== undefined && (typeof candidate.sourceCanvas !== 'string' || candidate.sourceCanvas.length > 1000 || /^[A-Za-z]:[\\/]/.test(candidate.sourceCanvas) || candidate.sourceCanvas.startsWith('/') || candidate.sourceCanvas.replace(/\\/g, '/').split('/').includes('..'))) throw new Error('剪贴板来源画布路径无效')
   return cloneJson({ nodes: candidate.nodes, edges, sourceCanvas: candidate.sourceCanvas })
 }
-const normalizeRelativePath = (path: string) => {
-  const parts: string[] = []
-  for (const part of path.replace(/\\/g, '/').split('/')) {
-    if (!part || part === '.') continue
-    if (part === '..') { if (parts.length && parts[parts.length - 1] !== '..') parts.pop(); else parts.push(part) }
-    else parts.push(part)
-  }
-  return parts.join('/')
-}
 const libraryRelativePath = (path: string) => {
-  const normalizedPath = path.replace(/\\/g, '/')
-  const normalizedRoot = store.libraryPath.replace(/\\/g, '/').replace(/\/$/, '')
+  const normalizedPath = path.replace(/\\/g, '/').replace(/^\/\/\?\//, '')
+  const normalizedRoot = store.libraryPath.replace(/\\/g, '/').replace(/^\/\/\?\//, '').replace(/\/$/, '')
   return normalizedPath.toLowerCase().startsWith(`${normalizedRoot.toLowerCase()}/`)
     ? normalizedPath.slice(normalizedRoot.length + 1)
     : normalizedPath.split('/').pop() || normalizedPath
 }
-const rebaseFileReference = (file: string, sourceCanvas: string | undefined) => {
-  if (!sourceCanvas || sourceCanvas === libraryRelativePath(canvasPath.value) || /^[A-Za-z]:[\\/]/.test(file) || file.startsWith('/')) return file
-  const sourceDir = sourceCanvas.replace(/\\/g, '/').split('/').slice(0, -1)
-  const targetDir = libraryRelativePath(canvasPath.value).replace(/\\/g, '/').split('/').slice(0, -1)
-  const targetParts = normalizeRelativePath([...sourceDir, ...file.replace(/\\/g, '/').split('/')].join('/')).split('/').filter(Boolean)
-  let common = 0
-  while (common < targetDir.length && common < targetParts.length && targetDir[common].toLowerCase() === targetParts[common].toLowerCase()) common += 1
-  return [...targetDir.slice(common).map(() => '..'), ...targetParts.slice(common)].join('/') || file
-}
+// JSON Canvas file references are library-root-relative across directories.
+const rebaseFileReference = (file: string, _sourceCanvas: string | undefined) => file
 const writeClipboardPayload = async (payload: CanvasClipboardPayload) => {
   const raw = JSON.stringify(payload)
   if (raw.length > MAX_CLIPBOARD_CHARS) throw new Error('所选内容超过 5 MB，无法复制')
@@ -745,6 +749,7 @@ const writeClipboardPayload = async (payload: CanvasClipboardPayload) => {
   return systemClipboard
 }
 const copySelection = async (notify = true) => {
+  const owner = captureOwner()
   const selectedIds = new Set(selectedNodeIds.value.filter(id => visibleNodeIdSet.value.has(id)))
   if (!selectedIds.size) { if (notify) message.info('请先选择要复制的节点'); return null }
   if (selectedIds.size > 1000) { if (notify) message.error('单次最多复制 1,000 个节点'); return null }
@@ -756,17 +761,19 @@ const copySelection = async (notify = true) => {
   if (payload.edges.length > 5000) { if (notify) message.error('单次最多复制 5,000 条内部连线'); return null }
   try {
     const systemClipboard = await writeClipboardPayload(payload)
+    if (!sameContext(owner)) return null
     pasteSequence = 0
     if (notify) message.success(`已复制 ${payload.nodes.length} 个节点和 ${payload.edges.length} 条内部连线${systemClipboard ? '' : '（应用内）'}`)
     return payload
   } catch (error) {
-    if (notify) message.error(`复制失败：${String(error)}`)
+    if (sameContext(owner) && notify) message.error(`复制失败：${String(error)}`)
     return null
   }
 }
 const cutSelection = async () => {
+  const owner = captureOwner()
   const payload = await copySelection(false)
-  if (!payload) return
+  if (!payload || !sameContext(owner)) return
   const copiedIds = new Set(payload.nodes.map(node => node.id))
   selectedNodeIds.value = document.nodes.filter(node => copiedIds.has(node.id)).map(node => node.id)
   selectedEdgeId.value = null
@@ -780,10 +787,12 @@ const readClipboardPayload = async () => {
   return parseClipboardPayload(raw || '')
 }
 const pasteSelection = async (pasteTarget?: { x: number; y: number }) => {
+  const owner = captureOwner()
   if (isPasting) return
   isPasting = true
   try {
     const payload = await readClipboardPayload()
+    if (!sameContext(owner)) return
     const minX = Math.min(...payload.nodes.map(node => node.x))
     const minY = Math.min(...payload.nodes.map(node => node.y))
     const maxX = Math.max(...payload.nodes.map(node => node.x + node.width))
@@ -810,8 +819,8 @@ const pasteSelection = async (pasteTarget?: { x: number; y: number }) => {
     pasteSequence += 1
     markDirty()
     message.success(`已粘贴 ${nodes.length} 个节点和 ${edges.length} 条内部连线`)
-  } catch (error) { message.error(`粘贴失败：${String(error)}`) }
-  finally { isPasting = false }
+  } catch (error) { if (sameContext(owner)) message.error(`粘贴失败：${String(error)}`) }
+  finally { if (sameContext(owner)) isPasting = false }
 }
 const screenToWorld = (clientX: number, clientY: number) => {
   const rect = viewportRef.value?.getBoundingClientRect() || { left: 0, top: 0, width: 800, height: 600 }
@@ -904,12 +913,14 @@ const restoreSnapshot = (snapshot: string) => {
   selectedNodeIds.value = []; selectedEdgeId.value = null; markDirty()
 }
 const undo = () => {
+  endTextEdit(); endEdgeEdit()
   const snapshot = undoStack.value.pop()
   if (!snapshot) return
   redoStack.value.push(serializeDocument())
   restoreSnapshot(snapshot)
 }
 const redo = () => {
+  endTextEdit(); endEdgeEdit()
   const snapshot = redoStack.value.pop()
   if (!snapshot) return
   undoStack.value.push(serializeDocument())
@@ -926,26 +937,29 @@ const addNode = (node: NewCanvasNode, position = viewportCenter()) => {
 }
 const addTextNode = () => addNode({ type: 'text', text: '# 新想法\n\n开始记录…', width: 280, height: 180 })
 const addFileNode = async () => {
+  const owner = captureOwner()
   const file = await promptAppAction(dialog, {
     title: '添加知识库文件',
     content: '输入相对知识库的路径，也可以输入绝对路径。',
     initialValue: '笔记.md',
     positiveText: '添加文件节点',
   })
-  if (file?.trim()) addNode({ type: 'file', file: file.trim(), width: 280, height: 150 })
+  if (sameContext(owner) && file?.trim()) addNode({ type: 'file', file: file.trim(), width: 280, height: 150 })
 }
 interface ChartSourceDocument { views: { id: string; name: string; kind: string }[] }
 const addChartNode = async () => {
+  const owner = captureOwner()
   const source = (await promptAppAction(dialog, {
     title: '添加 Table 图表',
-    content: '输入相对当前 Canvas 的 .table.json 路径，也可以输入绝对路径。',
+    content: '输入相对资料库根的 .table.json 路径，也可以输入库内绝对路径。',
     initialValue: 'data.table.json',
     positiveText: '读取图表源',
   }))?.trim()
-  if (!source) return
+  if (!source || !sameContext(owner)) return
   if (!source.toLocaleLowerCase().endsWith('.table.json')) { message.error('图表源必须是 .table.json 文件'); return }
   try {
     const table = await invoke<ChartSourceDocument>('read_table_file', { libraryRoot: store.libraryPath, path: resolveFilePath(source) })
+    if (!sameContext(owner)) return
     const charts = table.views.filter(view => view.kind === 'chart')
     if (!charts.length) { message.warning('该 Table 尚未创建图表视图'); return }
     const suggested = charts[0].id
@@ -955,33 +969,36 @@ const addChartNode = async () => {
       initialValue: suggested,
       positiveText: '添加图表节点',
     }))?.trim()
-    if (!viewId) return
+    if (!viewId || !sameContext(owner)) return
     if (!charts.some(view => view.id === viewId)) { message.error('输入的 chart 视图不存在'); return }
     addNode({ type: 'file', file: source, longeditViewId: viewId, width: 660, height: 430 })
-  } catch (cause) { message.error(`无法读取图表源：${String(cause).replace(/^Error:\s*/, '')}`) }
+  } catch (cause) { if (sameContext(owner)) message.error(`无法读取图表源：${String(cause).replace(/^Error:\s*/, '')}`) }
 }
 const addMermaidNode = async () => {
+  const owner = captureOwner()
   const source = (await promptAppAction(dialog, {
     title: '添加 Mermaid 图表',
-    content: '输入相对当前 Canvas 的 .mmd 或 .mermaid 路径，也可以输入绝对路径。',
+    content: '输入相对资料库根的 .mmd 或 .mermaid 路径，也可以输入库内绝对路径。',
     initialValue: '流程图.mmd',
     positiveText: '添加图表节点',
   }))?.trim()
-  if (!source) return
+  if (!source || !sameContext(owner)) return
   if (!/\.(?:mmd|mermaid)$/i.test(source)) { message.error('Mermaid 源必须是 .mmd 或 .mermaid 文件'); return }
   try {
     await invoke('read_diagram_file', { libraryRoot: store.libraryPath, path: resolveFilePath(source) })
+    if (!sameContext(owner)) return
     addNode({ type: 'file', file: source, width: 660, height: 430 })
-  } catch (cause) { message.error(`无法读取 Mermaid 源：${String(cause).replace(/^Error:\s*/, '')}`) }
+  } catch (cause) { if (sameContext(owner)) message.error(`无法读取 Mermaid 源：${String(cause).replace(/^Error:\s*/, '')}`) }
 }
 const addLinkNode = async () => {
+  const owner = captureOwner()
   const url = await promptAppAction(dialog, {
     title: '添加网页链接',
     content: '输入要关联到画布的完整网页地址。',
     initialValue: 'https://',
     positiveText: '添加链接节点',
   })
-  if (url?.trim()) addNode({ type: 'link', url: url.trim(), width: 300, height: 150 })
+  if (sameContext(owner) && url?.trim()) addNode({ type: 'link', url: url.trim(), width: 300, height: 150 })
 }
 const addGroupNode = () => addNode({ type: 'group', label: '主题分组', width: 560, height: 360 })
 
@@ -1067,6 +1084,15 @@ const endTextEdit = () => {
   textEditSnapshot = null
 }
 
+const installGesture = (move: (event: MouseEvent) => void, up: () => void) => {
+  stopGesture?.()
+  const owner = captureOwner()
+  const cleanup = () => { window.removeEventListener('mousemove', moveOwned); window.removeEventListener('mouseup', upOwned); alignmentGuides.value = []; isPanning.value = false; if (stopGesture === cleanup) stopGesture = null }
+  const moveOwned = (event: MouseEvent) => { if (sameContext(owner)) move(event); else cleanup() }
+  const upOwned = () => { cleanup(); if (sameContext(owner)) up() }
+  stopGesture = cleanup
+  window.addEventListener('mousemove', moveOwned); window.addEventListener('mouseup', upOwned)
+}
 const startNodeDrag = (node: CanvasNode, event: MouseEvent) => {
   if (event.button !== 0) return
   if ((event.target as HTMLElement).matches('textarea,input,button')) return
@@ -1075,6 +1101,9 @@ const startNodeDrag = (node: CanvasNode, event: MouseEvent) => {
   if (!selectedNodeIds.value.includes(node.id)) return
   const before = serializeDocument()
   const selectedIds = new Set(selectedNodeIds.value)
+  for (const group of document.nodes.filter(item => selectedIds.has(item.id) && item.type === 'group')) {
+    for (const item of document.nodes) if (item.x >= group.x && item.y >= group.y && item.x + item.width <= group.x + group.width && item.y + item.height <= group.y + group.height) selectedIds.add(item.id)
+  }
   const movingNodes = document.nodes.filter(item => selectedIds.has(item.id))
   const stationaryNodes = visibleNodes.value.filter(item => !selectedIds.has(item.id))
   const origins = new Map(movingNodes.map(item => [item.id, { x: item.x, y: item.y }]))
@@ -1084,7 +1113,8 @@ const startNodeDrag = (node: CanvasNode, event: MouseEvent) => {
   const move = (e: MouseEvent) => {
     const rawDx = Math.round((e.clientX - start.x) / zoom.value)
     const rawDy = Math.round((e.clientY - start.y) / zoom.value)
-    if (Math.abs(rawDx) + Math.abs(rawDy) > 1) moved = true
+    if (!moved && Math.hypot(e.clientX - start.x, e.clientY - start.y) < 3) return
+    moved = true; suppressOpenUntil = performance.now() + 350; markDirty()
     const snap = snapEnabled.value && !e.altKey
       ? calculateAlignmentSnap(shiftedBounds(originalBounds, rawDx, rawDy), stationaryNodes, 7 / zoom.value)
       : { dx: 0, dy: 0, guides: [] }
@@ -1102,19 +1132,19 @@ const startNodeDrag = (node: CanvasNode, event: MouseEvent) => {
     window.removeEventListener('mouseup', up)
     if (moved) { pushUndoSnapshot(before); markDirty() }
   }
-  window.addEventListener('mousemove', move); window.addEventListener('mouseup', up)
+  installGesture(move, up)
 }
 const startResize = (node: CanvasNode, event: MouseEvent) => {
   const before = serializeDocument()
   const start = { x: event.clientX, y: event.clientY, width: node.width, height: node.height }
   let resized = false
   const move = (e: MouseEvent) => {
-    resized = true
+    resized = true; markDirty()
     node.width = Math.max(node.type === 'group' ? 240 : 160, Math.round(start.width + (e.clientX - start.x) / zoom.value))
     node.height = Math.max(node.type === 'group' ? 180 : 100, Math.round(start.height + (e.clientY - start.y) / zoom.value))
   }
   const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); if (resized) { pushUndoSnapshot(before); markDirty() } }
-  window.addEventListener('mousemove', move); window.addEventListener('mouseup', up)
+  installGesture(move, up)
 }
 const startPan = (event: MouseEvent) => {
   if (event.button !== 0 || (event.target as HTMLElement).closest('.canvas-node,.canvas-edge,.empty-canvas')) return
@@ -1136,14 +1166,14 @@ const startPan = (event: MouseEvent) => {
       }
       selectionBox.value = null; window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up)
     }
-    window.addEventListener('mousemove', move); window.addEventListener('mouseup', up)
+    installGesture(move, up)
     return
   }
   clearSelection(); isPanning.value = true
   const start = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y }
   const move = (e: MouseEvent) => { pan.x = start.panX + e.clientX - start.x; pan.y = start.panY + e.clientY - start.y }
   const up = () => { isPanning.value = false; window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
-  window.addEventListener('mousemove', move); window.addEventListener('mouseup', up)
+  installGesture(move, up)
 }
 
 const selectedNodes = () => document.nodes.filter(node => selectedNodeIds.value.includes(node.id))
@@ -1291,10 +1321,8 @@ const handleBackgroundDoubleClick = (event: MouseEvent) => {
 }
 
 const resolveFilePath = (file: string) => {
-  if (/^[A-Za-z]:[\\/]/.test(file) || file.startsWith('/')) return file
-  const separator = canvasPath.value.includes('\\') ? '\\' : '/'
-  const parent = canvasPath.value.substring(0, Math.max(canvasPath.value.lastIndexOf('/'), canvasPath.value.lastIndexOf('\\')))
-  return `${parent}${separator}${file.replace(/[\\/]/g, separator)}`
+  if (/^[A-Za-z]:[\\\\/]/.test(file) || file.startsWith('/')) return file
+  return store.libraryPath.replace(/[\\/]$/, '') + '/' + file.replace(/\\/g, '/')
 }
 const isChartNode = (node: CanvasNode) => node.type === 'file'
   && typeof node.file === 'string'
@@ -1305,21 +1333,48 @@ const chartViewId = (node: CanvasNode) => typeof node.longeditViewId === 'string
 const isMermaidNode = (node: CanvasNode) => node.type === 'file' && typeof node.file === 'string' && /\.(?:mmd|mermaid)$/i.test(node.file)
 const openEmbeddedChart = (path: string) => openManagedFile(router, path)
 const openEmbeddedDiagram = (path: string) => openManagedFile(router, path)
-const openNode = async (node: CanvasNode) => {
-  if (node.type === 'file' && node.file) {
-    if (isExternal.value) {
-      message.info('外部 Canvas 不会自动读取引用文件，请通过“打开外部文件”单独授权')
-      return
-    }
-    const path = resolveFilePath(node.file)
-    const target = routeForFile(path)
-    if (opensInLibraryShell(findFileFormat(path))) {
-      openManagedFile(router, path)
-    } else if (target) router.push(target)
-    else message.warning('该文件格式尚未注册工作面')
+const refreshSource = async () => {
+  const node = selectedNode.value, owner = captureOwner(), file = node?.file
+  sourceResolution.value = null
+  if (node?.type !== 'file') return
+  if (owner.external) { sourceResolution.value = { status: 'unavailable', message: '外部画布不会自动读取引用，请单独授权打开来源' }; return }
+  const id = node.id
+  try {
+    const result = await invoke<{status: string; path?: string; message: string}>('resolve_canvas_reference', {libraryRoot: owner.root, reference: file || ''})
+    if (sameContext(owner) && selectedNode.value?.id === id && selectedNode.value.file === file) sourceResolution.value = result
+  } catch (error) { if (sameContext(owner) && selectedNode.value?.id === id) sourceResolution.value = {status:'unavailable',message:String(error)} }
+}
+const openNode = async (node: CanvasNode, explicit = false) => {
+  if ((!explicit && performance.now() < suppressOpenUntil) || loading.value || !sameContext(loadedOwner)) return
+  const owner = captureOwner(), file = node.file, id = node.id
+  if (node.type === 'file' && file) {
+    if (owner.external) { message.info('外部 Canvas 不会自动读取引用文件，请通过“打开外部文件”单独授权'); return }
+    try {
+      const result = await invoke<{status:string;path?:string;message:string}>('resolve_canvas_reference', {libraryRoot:owner.root,reference:file})
+      if (!sameContext(owner) || nodeById.value.get(id)?.file !== file) return
+      if (result.status !== 'available' || !result.path) { operationError.value = result.message; await refreshSource(); return }
+      const target = routeForFile(result.path)
+      if (opensInLibraryShell(findFileFormat(result.path))) await openManagedFile(router, result.path)
+      else if (target) await router.push(target)
+      else operationError.value = '该文件格式尚未注册工作面'
+    } catch (error) { if (sameContext(owner)) operationError.value = '无法打开来源：' + String(error) }
   } else if (node.type === 'link' && node.url) {
-    try { await openUrl(node.url) } catch { message.error('无法打开该链接') }
+    try { await openUrl(node.url) } catch { if (sameContext(owner)) message.error('无法打开该链接') }
   }
+}
+const relinkSource = async () => {
+  const node = selectedNode.value, owner = captureOwner()
+  if (!node || node.type !== 'file' || owner.external) return
+  const id = node.id, previous = node.file
+  const reference = (await promptAppAction(dialog, {title:'重新指定文件来源',content:'相对资料库根的精确路径，或库内绝对路径。不会按同名文件猜测。',initialValue:previous || '',positiveText:'使用此来源'}))?.trim()
+  if (!reference || !sameContext(owner) || selectedNode.value?.id !== id || selectedNode.value.file !== previous) return
+  try {
+    const result = await invoke<{status:string;path?:string;message:string}>('resolve_canvas_reference',{libraryRoot:owner.root,reference})
+    if (!sameContext(owner) || selectedNode.value?.id !== id || selectedNode.value.file !== previous) return
+    if (result.status !== 'available' || !result.path) { operationError.value = result.message; return }
+    endTextEdit(); endEdgeEdit(); pushUndoSnapshot()
+    node.file = libraryRelativePath(result.path); markDirty(); operationError.value = ''; await refreshSource()
+  } catch (error) { if (sameContext(owner)) operationError.value = String(error) }
 }
 
 const markDirty = () => {
@@ -1401,83 +1456,96 @@ const queueViewportSize = (entry?: ResizeObserverEntry) => {
     const size = pendingViewportSize
     pendingViewportSize = null
     if (!size || (size.width === viewportSize.width && size.height === viewportSize.height)) return
+    if (viewportInitialized && !loading.value && sameContext(loadedOwner)) { pan.x += (size.width-viewportSize.width)/2; pan.y += (size.height-viewportSize.height)/2 }
     viewportSize.width = size.width
     viewportSize.height = size.height
+    viewportInitialized = true
   })
 }
 const saveCanvas = async () => {
-  if (!canvasPath.value || (!isExternal.value && !store.libraryPath) || !['dirty', 'error'].includes(saveState.value)) return
-  if (isExternal.value && !await confirmAppAction(dialog, {
-    title: '覆盖外部 Canvas？',
-    content: '保存会直接覆盖当前外部 Canvas 源文件。',
-    positiveText: '覆盖并保存',
-    danger: true,
-  })) return
-  saveState.value = 'saving'
+  if (saving.value || loading.value || globalThis.document.body.inert || !sameContext(loadedOwner) || !canvasPath.value || (!isExternal.value && !store.libraryPath) || !['dirty', 'error'].includes(saveState.value)) return false
+  const owner = captureOwner()
+  if (owner.external && !await confirmAppAction(dialog, {title:'覆盖外部 Canvas？',content:'只写入本次确认的画布快照，后续输入仍保留为草稿。',positiveText:'覆盖并保存',danger:true})) return false
+  if (!sameContext(owner) || saving.value) return false
+  endTextEdit(); endEdgeEdit()
+  const snapshot = serializeDocument(), content = JSON.stringify(document, null, 2) + '\n'
+  const focused = globalThis.document.activeElement as HTMLElement | null
+  if (focused?.matches('.node-text textarea,.node-group input')) textEditSnapshot = snapshot
+  if (focused?.closest('.edge-inspector')) edgeEditSnapshot = snapshot
+  const expectedSignature = sourceSignature.value
+  const endSave = beginWindowSave()
+  saving.value = true; operationError.value = ''
   try {
-    const content = JSON.stringify(document, null, 2) + '\n'
-    if (isExternal.value) {
-      const saved = await invoke<CanvasSnapshot>('write_external_canvas_file', {
-        path: canvasPath.value,
-        content,
-        expectedSignature: sourceSignature.value,
-      })
-      sourceSignature.value = saved.signature
-    } else {
-      await invoke('write_canvas_file', { libraryRoot: store.libraryPath, path: canvasPath.value, content })
-    }
-    saveState.value = 'saved'
-    if (currentTab.value) currentTab.value.isDirty = false
+    const saved = await invoke<CanvasSnapshot>(owner.external ? 'write_external_canvas_file' : 'write_canvas_file', { ...(owner.external ? {} : {libraryRoot:owner.root}),path:owner.path,content,expectedSignature })
+    if (!sameContext(owner)) return false
+    if (!saved.signature || saved.content !== content) throw Error('保存回执与本次快照不一致，请核对磁盘；当前草稿仍保留')
+    sourceSignature.value = saved.signature
+    saveState.value = serializeDocument() === snapshot ? 'saved' : 'dirty'
+    const tab = store.tabs.find(tab => tab.path === owner.path); if (tab) tab.isDirty = saveState.value !== 'saved'
+    return true
   } catch (error: any) {
-    saveState.value = 'error'
-    if (error?.code === 'external-modified') {
-      dialog.warning({
-        title: '外部 Canvas 已发生变化',
-        content: '源文件在编辑期间被其他程序修改。Long编辑没有覆盖这些变化，请重新打开后再编辑。',
-        positiveText: '知道了',
-      })
-    } else message.error(`Canvas 保存失败：${error?.message || String(error)}`)
-  }
+    if (sameContext(owner)) { saveState.value = 'error'; operationError.value = '画布未确认保存：' + (error?.message || String(error)); message.error(operationError.value) }
+    return false
+  } finally { if (sameContext(owner)) saving.value = false; endSave() }
+}
+const applyRequestedNode = () => {
+  const id = typeof route.query.node === 'string' ? route.query.node : ''
+  if (!id || !nodeById.value.has(id) || !sameContext(loadedOwner)) return
+  collapsedNodeIds.value = collapsedNodeIds.value.filter(parent => !collectBranchDescendants(parent).has(id))
+  selectedNodeIds.value = [id]; selectedEdgeId.value = null
+  const node = nodeById.value.get(id)!
+  pan.x = viewportSize.width / 2 - (node.x + node.width / 2) * zoom.value
+  pan.y = viewportSize.height / 2 - (node.y + node.height / 2) * zoom.value
 }
 const loadCanvas = async () => {
-  loading.value = true; loadError.value = ''; selectedNodeIds.value = []; selectedEdgeId.value = null
+  const owner = captureOwner(), hasPrior = sameContext(loadedOwner)
+  if (hasPrior) rememberCanvasViewState(owner.path)
+  stopGesture?.(); textEditSnapshot = null; edgeEditSnapshot = null
+  loading.value = true; loadError.value = ''; operationError.value = ''
+  const run = ++readRun
   try {
-    const result = await invoke<CanvasSnapshot>(isExternal.value ? 'read_external_canvas_file' : 'read_canvas_file', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: canvasPath.value,
-    })
-    sourceSignature.value = result.signature || ''
+    const result = await invoke<CanvasSnapshot>(isExternal.value ? 'read_external_canvas_file' : 'read_canvas_file', {...(owner.external ? {} : {libraryRoot:owner.root}),path:owner.path})
+    if (!sameContext(owner) || run !== readRun) return
     const parsed = JSON.parse(result.content) as CanvasDocument
-    document.nodes = parsed.nodes || []; document.edges = parsed.edges || []
-    edgeGeometryCache.clear()
-    for (const key of Object.keys(document)) if (!['nodes', 'edges'].includes(key)) delete document[key]
-    for (const [key, value] of Object.entries(parsed)) if (!['nodes', 'edges'].includes(key)) document[key] = value
-    undoStack.value = []; redoStack.value = []
-    loadCollapsedState()
-    loadLayoutBackup()
-    saveState.value = 'saved'
-    store.addTab({ id: canvasPath.value, title: tabTitle.value, path: canvasPath.value, isDirty: false, external: isExternal.value })
-    const requestedNode = typeof route.query.node === 'string' ? route.query.node : ''
-    const viewState = recallWorkspaceViewState(canvasPath.value)
-    if (requestedNode && document.nodes.some(node => node.id === requestedNode)) {
-      selectedNodeIds.value = [requestedNode]
-      setTimeout(fitToContent, 0)
-    } else if (viewState) {
-      zoom.value = viewState.zoom || 1
-      pan.x = viewState.panX ?? 72
-      pan.y = viewState.panY ?? 72
-      selectedNodeIds.value = (viewState.selection || '').split(',').filter(id => document.nodes.some(node => node.id === id))
+    if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges) || !result.signature) throw Error('画布快照或签名无效')
+    for (const key of Object.keys(document)) delete document[key]
+    Object.assign(document, parsed)
+    sourceSignature.value = result.signature; loadedOwner = owner
+    selectedNodeIds.value = []; selectedEdgeId.value = null; undoStack.value = []; redoStack.value = []
+    edgeGeometryCache.clear(); loadCollapsedState(); loadLayoutBackup(); saveState.value = 'saved'
+    store.addTab({id:owner.path,title:tabTitle.value,path:owner.path,isDirty:false,external:owner.external})
+    const viewState = recallWorkspaceViewState(owner.path)
+    if (viewState) {
+      zoom.value = viewState.zoom || 1; pan.x = viewState.panX ?? 72; pan.y = viewState.panY ?? 72
+      selectedNodeIds.value = (viewState.selection || '').split(',').filter(id => nodeById.value.has(id))
       if (viewState.mode === 'select' || viewState.mode === 'connect') tool.value = viewState.mode
-    } else setTimeout(fitToContent, 0)
-  } catch (error) { loadError.value = String(error) }
-  finally { loading.value = false }
+    }
+    await nextTick()
+    if (!sameContext(owner) || run !== readRun) return
+    if (route.query.node) applyRequestedNode(); else if (!viewState) fitToContent()
+  } catch (error: any) {
+    if (sameContext(owner) && run === readRun) {
+      if (hasPrior) operationError.value = '重新读取失败，原画布与草稿仍保留：' + (error?.message || String(error))
+      else loadError.value = error?.message || String(error)
+    }
+  } finally { if (sameContext(owner) && run === readRun) loading.value = false }
+}
+let readRun = 0
+const requestReload = async () => { if (saving.value) return; if (await mayLeave()) await loadCanvas() }
+const refreshAfterFileMove = (event: Event) => {
+  const {notice,pending} = (event as CustomEvent<{notice:FileMoveNotice;pending:Promise<unknown>[]}>).detail
+  if (!notice || notice.root.replace(/\\\\/g,'/').toLowerCase() !== store.libraryPath.replace(/\\\\/g,'/').toLowerCase()) return
+  const key = (value:string) => value.replace(/\\\\/g,'/').toLowerCase()
+  if (notice.documents.some(path => key(path) === key(canvasPath.value) || key(movedPath(path,notice)) === key(canvasPath.value)) && saveState.value === 'saved' && !saving.value && !loading.value) pending.push(loadCanvas())
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if ((event.target as HTMLElement).matches('textarea,input,select,[contenteditable="true"]')) return
+  if (globalThis.document.body.inert) return
+  const target = event.target instanceof HTMLElement ? event.target : null
   const command = event.ctrlKey || event.metaKey
-  if (command && event.key.toLowerCase() === 's') { event.preventDefault(); saveCanvas() }
-  else if (command && event.key.toLowerCase() === 'z' && event.shiftKey) { event.preventDefault(); redo() }
+  if (command && event.key.toLowerCase() === 's') { event.preventDefault(); event.stopImmediatePropagation(); if (!target?.closest('.n-dialog')) void saveCanvas(); return }
+  if (loading.value || target?.closest('textarea,input,select,[contenteditable="true"],.n-dialog')) return
+  if (command && event.key.toLowerCase() === 'z' && event.shiftKey) { event.preventDefault(); redo() }
   else if (command && event.key.toLowerCase() === 'z') { event.preventDefault(); undo() }
   else if (command && event.key.toLowerCase() === 'y') { event.preventDefault(); redo() }
   else if (command && event.key.toLowerCase() === 'c') { event.preventDefault(); void copySelection() }
@@ -1494,28 +1562,31 @@ const handleKeydown = (event: KeyboardEvent) => {
   else if (event.key === 'Delete' || event.key === 'Backspace') removeSelection()
   else if (event.key === 'Escape') { setTool('select'); clearSelection() }
 }
-const mayLeave = async () => !['dirty', 'error'].includes(saveState.value)
+const mayLeave = async () => { if (saving.value) { message.info('正在保存快照，请稍候；后续输入仍保留'); return false }; return !['dirty', 'error'].includes(saveState.value)
   || await confirmAppAction(dialog, {
     title: '离开 Canvas？',
     content: '当前画布还有未保存修改，离开后将无法恢复。',
     positiveText: '放弃修改并离开',
     danger: true,
-  })
-useWindowDraft(() => ['dirty', 'saving', 'error'].includes(saveState.value), () => String(route.query.path || store.activeTabId || ''))
+  }) }
+useWindowDraft(() => saving.value || ['dirty', 'error'].includes(saveState.value), () => loadedOwner?.path || canvasPath.value)
 const beforeUnload = (event: BeforeUnloadEvent) => {
-  if (!['dirty', 'error'].includes(saveState.value)) return
+  if (!saving.value && !['dirty', 'error'].includes(saveState.value)) return
   event.preventDefault()
   event.returnValue = ''
 }
 
-watch([canvasPath, isExternal, () => route.query.node], loadCanvas)
+watch([canvasPath, isExternal, () => store.libraryPath], () => { contextEpoch++; stopGesture?.(); saving.value = false; void loadCanvas() }, {flush:'sync'})
+watch([() => route.query.node, () => route.query.locatorToken], applyRequestedNode)
+watch([() => selectedNode.value?.id, () => selectedNode.value?.file], refreshSource)
 watch([zoom, () => pan.x, () => pan.y, selectedNodeIds, tool], () => rememberCanvasViewState(), { deep: true })
 watch(snapEnabled, enabled => {
   localStorage.setItem('canvas-snap-enabled', String(enabled))
   if (!enabled) alignmentGuides.value = []
 })
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('keydown', handleKeydown, true)
+  window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
   window.addEventListener('beforeunload', beforeUnload)
   if (viewportRef.value) {
     viewportResizeObserver = new ResizeObserver(entries => queueViewportSize(entries[entries.length - 1]))
@@ -1527,7 +1598,9 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   rememberCanvasViewState()
-  window.removeEventListener('keydown', handleKeydown)
+  disposed = true; contextEpoch++; stopGesture?.()
+  window.removeEventListener('keydown', handleKeydown, true)
+  window.removeEventListener('longedit:file-move-completed', refreshAfterFileMove)
   window.removeEventListener('beforeunload', beforeUnload)
   viewportResizeObserver?.disconnect()
   viewportResizeObserver = null
@@ -1538,9 +1611,13 @@ onBeforeUnmount(() => {
   edgeGeometryCache.clear()
 })
 onBeforeRouteLeave(() => mayLeave())
+onBeforeRouteUpdate((to,from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
 </script>
 
 <style scoped>
+.operation-error{margin:4px 0 0;color:var(--theme-error,#c43a43);font-size:12px;overflow-wrap:anywhere;max-width:75vw}
+.source-inspector code{display:block;overflow-wrap:anywhere;white-space:normal;font-size:12px}.source-inspector p,.source-inspector small{font-size:12px;color:var(--theme-text-secondary)}.source-actions{display:flex;gap:8px;margin:10px 0}.source-actions button{padding:7px 10px;border:var(--theme-border);border-radius:8px;background:var(--theme-card);color:var(--theme-text);cursor:pointer}
+
 .canvas-page { width: 100%; height: 100%; min-width: 0; min-height: 0; container-type: inline-size; display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; color: var(--theme-text); background: var(--theme-bg); }
 .canvas-page.with-tabs { grid-template-rows: auto auto auto minmax(0, 1fr) auto; }
 .canvas-page { grid-template-rows: auto auto minmax(0, 1fr) auto; }

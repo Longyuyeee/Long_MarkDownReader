@@ -107,3 +107,16 @@ test('version boundary admits only current and planned successor runtime', () =>
     assert.throws(() => assertV121DevelopmentBoundary({ ...development, ...change }, { appVersion: '1.0.21' }), /boundary drift/)
   }
 })
+
+test('v1.1.19 keeps its exact predecessor and a separate update observation in candidate and public states', () => {
+  const development = { publicVersion:'1.1.18',publicTag:'v1.1.18',publicTagCommit:'9b621511807e4233147a5a6d4265a2be97f53b0f',runtimeBaseVersion:'1.1.19',developmentTargetVersion:'1.1.19',releaseCandidate:false }
+  const community = { appVersion:'1.1.19',targetRelease:{tag:'v1.1.19'},gates:{githubReleasePublished:false},release:null,patchValidation:{previousPublicVersion:'1.1.18',managedUpdaterUpgradePath:'1.1.18-to-1.1.19-pending'} }
+  const before = JSON.stringify([development,community,closed,receipt])
+  assert.doesNotThrow(()=>assertV121DevelopmentBoundary(development,community));assert.doesNotThrow(()=>assertV121UpdaterStatus(closed,community,receipt))
+  assert.equal(JSON.stringify([development,community,closed,receipt]),before)
+  for(const change of [{publicTagCommit:'0'.repeat(40)},{publicTagCommit:'a'.repeat(40)},{developmentTargetVersion:'1.1.20'},{runtimeBaseVersion:'1.1.18'},{releaseCandidate:true}])assert.throws(()=>assertV121DevelopmentBoundary({...development,...change},community))
+  const publicDevelopment={...development,publicVersion:'1.1.19',publicTag:'v1.1.19',publicTagCommit:'a'.repeat(40),developmentTargetVersion:'1.1.20'},publicCommunity={...community,gates:{githubReleasePublished:true},release:{tag:'v1.1.19',taggedCommit:'a'.repeat(40)}}
+  assert.doesNotThrow(()=>assertV121DevelopmentBoundary(publicDevelopment,publicCommunity));assert.throws(()=>assertV121DevelopmentBoundary(publicDevelopment,{...publicCommunity,release:{...publicCommunity.release,taggedCommit:'b'.repeat(40)}}))
+  for(const change of [{previousPublicVersion:'1.1.17'},{managedUpdaterUpgradePath:'1.0.20-to-1.0.21-passed'}])assert.throws(()=>assertV121UpdaterStatus(closed,{...community,patchValidation:{...community.patchValidation,...change}},receipt))
+  assert.throws(()=>assertV121UpdaterStatus(closed,community,{managedUpdaterObservation:'1.0.20-to-1.0.21-pending'}))
+})

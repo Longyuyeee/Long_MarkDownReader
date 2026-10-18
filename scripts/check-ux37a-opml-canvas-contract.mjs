@@ -43,8 +43,8 @@ for (const forbidden of [
 ]) if (source.includes(forbidden)) fail(`implicit write path returned: ${forbidden}`)
 
 for (const token of [
-  "title: '思维导图还有未保存修改'",
-  "content: '离开后会丢失当前草稿，源文件不会被修改。'",
+  "title:'思维导图还有未保存修改'",
+  "content:'离开后会丢失当前原件的内存草稿，源文件不会被修改。另存副本不会覆盖原件。'",
   'onBeforeRouteLeave(() => mayLeave())',
   'onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())',
   "document.value.metadata._longeditLayout = layoutMode.value",

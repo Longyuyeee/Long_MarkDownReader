@@ -578,3 +578,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
 下一版本：v1.1.19 深化现有画布与脑图。先核对并处理切换/连续输入时的草稿与保存保护，再推进跨目录来源、改名移动后的引用接续及已有选择/分组操作；保留开放 JSON Canvas/OPML、全部工具和正常动效。v1.1.18 已完成原包、独立同包、封板CI和公开附件回下载，路线已有11/13版公开，19—20两版尚待开发；预审不算交付。[19实际代码预审](docs/V1_1_19_Canvas_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+
+### v1.1.19 开发中 · 画布与思维导图整理
+
+本版候选补强保存快照、定位与草稿保护、精确文件来源和改名移动接续、OPML兼容副本。尚未公开，当前下载仍为v1.1.18；实际安装器与独立复核通过后才发布，见[开发记录](docs/V1_1_19_Organizing_Development_2026-10-18.md)。

@@ -61,16 +61,19 @@ for (const token of ['| "log"\n            | "drawio"\n            | "diagram"\n
 }
 for (const token of [
   "const isExternal = computed(() => route.query.external === '1')",
-  "isExternal.value ? 'read_external_opml_file' : 'read_opml_file'",
-  "isExternal.value ? 'write_external_opml_file' : 'write_opml_file'",
+  "owner.external ? 'read_external_opml_file' : 'read_opml_file'",
+  "owner.external ? 'write_external_opml_file' : 'write_opml_file'",
   '覆盖外部 OPML 源文件？',
   '外部 OPML · 仅点击保存写回',
-  "cause?.code === 'external-modified'",
+  'errorText(cause)',
   'v-if="!isExternal"',
   'title="投影到 Canvas"',
-  'watch([path, isExternal, () => route.query.node, () => route.query.locatorToken]',
+  'watch([path,isExternal,() => store.libraryPath]',
   '@pointerdown.stop="startNodePointer($event, item.node.id)"',
   '@wheel.prevent="onMapWheel"',
+  "watch([() => route.query.node,() => route.query.locatorToken], applyRequestedNode)",
+  'if (!sameContext(owner)) return false',
+  'dirty.value = snapshot() !== sent',
   'const undo =',
   'const redo =',
 ]) requireText(view, token, `external OPML workspace is missing ${token}`)

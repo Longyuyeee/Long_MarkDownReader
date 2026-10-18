@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
+export const organizingChecks=['owned-canvas-opml-originals','canvas-explicit-shortcut-unknown-fields','canvas-locator-keeps-draft','canvas-leave-reload-cancel','canvas-source-conflict-keeps-peer','canvas-group-drag-undo','canvas-exact-source-and-relink','canvas-native-move-reference-transaction','opml-explicit-shortcut-and-native-reopen','opml-locator-keeps-note','opml-leave-reload-cancel','opml-source-conflict-keeps-peer','opml-loss-disclosure-blocks-original','opml-compatible-copy-collision-keeps-source-and-draft','independent-json-xml-output-inspection','trusted-input-and-unselected-preserved']
+export function validateInstalledOrganizing(report,manifest){
+ assert.equal(manifest.appVersion,'1.1.19');assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
+ assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-canvas-opml-and-independent-json-xml')
+ for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)
+ assert.deepEqual(report.checks.map(c=>[c.id,c.status]),organizingChecks.map(id=>[id,'passed']))
+ for(const key of ['canvasUnknownExact','canvasLocatorExact','canvasCancelExact','canvasConflictExact','groupUndoExact','sourceRelinkExact','moveReferenceExact','opmlReopenExact','opmlLocatorExact','opmlCancelExact','opmlConflictExact','lossOriginalBlocked','compatibleCopyExact','copyCollisionExact','shortcutExclusive'])assert.equal(report[key],true,key)
+ assert.equal(report.unselectedBefore,report.unselectedAfter);assert.match(report.unselectedBefore,/^[a-f0-9]{64}$/);assert.deepEqual(report.runtimeErrors,[])
+ for(const type of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted),type)
+ assert.ok(report.inputTrace.every(e=>e.trusted));assert.ok(!report.uiMessages.some(t=>t.includes('当前文件没有文本写入适配器')))
+ assert.equal(report.inspection.status,'passed');assert.equal(report.inspection.reader,'stdlib-json-and-defusedxml-0.7.1');assert.equal(report.inspection.nativeBridgeMocked,false)
+ assert.equal(report.outputs.length,5);assert.equal(new Set(report.outputs.map(f=>f.fileName)).size,5)
+ assert.equal(report.inspection.outputs.length,5)
+ for(const output of report.outputs){assert.match(output.fileName,/^installed-v1119-(?:canvas-saved\.canvas|opml-saved\.opml|opml-original\.opml|opml-copy\.opml|unselected\.md)$/);assert.match(output.sha256,/^[a-f0-9]{64}$/);assert.ok(output.sizeBytes>0);const inspected=report.inspection.outputs.find(o=>o.fileName===output.fileName);assert.equal(inspected?.sha256,output.sha256);assert.equal(inspected?.sizeBytes,output.sizeBytes)}
+}
+export function assertOrganizingOutputBytes(report,read){for(const item of report.outputs){const b=read(item.fileName);assert.equal(b.length,item.sizeBytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),item.sha256,'Original organizing output bytes changed')}}

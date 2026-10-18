@@ -1,0 +1,84 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "canvas-route-cancel-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-locator-does-not-read-or-discard",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-save-immutable-snapshot-and-retain-later-input",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-second-shortcut-save-closes-draft",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-source-conflict-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-reload-cancel-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-write-failure-safe-retry",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-failed-reload-retains-previous-model",
+      "status": "passed"
+    },
+    {
+      "id": "opml-route-cancel-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "opml-locator-does-not-read-or-discard",
+      "status": "passed"
+    },
+    {
+      "id": "opml-save-immutable-snapshot-and-retain-later-input",
+      "status": "passed"
+    },
+    {
+      "id": "opml-second-shortcut-save-closes-draft",
+      "status": "passed"
+    },
+    {
+      "id": "opml-source-conflict-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "opml-reload-cancel-retains-draft",
+      "status": "passed"
+    },
+    {
+      "id": "opml-write-failure-safe-retry",
+      "status": "passed"
+    },
+    {
+      "id": "opml-failed-reload-retains-previous-model",
+      "status": "passed"
+    },
+    {
+      "id": "canvas-missing-source-explicit-relink-root-relative",
+      "status": "passed"
+    },
+    {
+      "id": "opml-compatible-copy-explicit-loss-original-and-draft-retained",
+      "status": "passed"
+    },
+    {
+      "id": "normal-motion-theme-and-narrow-pages-inspected",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

@@ -264,6 +264,7 @@ pub(crate) fn plan(root: &str, source: &Path, target: &Path) -> Result<MoveLinkP
             changed_references: changes.len(),
         });
     }
+    documents.extend(super::canvas_move_links::plan(guard.root(), &source, &target)?);
     blockers.sort();
     blockers.dedup();
     // A syntactically valid plan is not permission to change other open drafts,
@@ -274,7 +275,7 @@ pub(crate) fn plan(root: &str, source: &Path, target: &Path) -> Result<MoveLinkP
         can_execute: false,
         limitations: [
             "visible-utf8-markdown-only-2mib-per-file-32mib-total",
-            "non-markdown-incoming-references-not-scanned",
+            "canvas-root-file-references-20mib-per-file-64mib-total-other-formats-not-scanned",
             "draft-freeze-and-durable-recovery-required-before-execution",
             "single-move-projection-not-batch-success-evidence",
         ],

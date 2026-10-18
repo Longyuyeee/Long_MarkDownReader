@@ -54,7 +54,10 @@ for (const [file, selector] of [
   ['src/views/SettingsView.vue', 'class="theme-library-toolbar" aria-label="主题类型筛选" data-horizontal-wheel="always"'],
   ['src/views/TextEditorView.vue', 'class="format-bar" aria-label="文本保存策略" data-horizontal-wheel="always"'],
 ]) {
-  if (!read(file).includes(selector)) fail(`${file} must expose its dual-axis header scrolling contract`)
+  // Attribute order and added inert/read guards do not change the scroll surface.
+  // Require every original attribute on the same actual opening tag.
+  const attributes = selector.match(/[\w:-]+(?:="[^"]*")?/g)
+  if (![...read(file).matchAll(/<[^>]+>/g)].some(([tag]) => attributes.every(attribute => tag.includes(attribute)))) fail(`${file} must expose its dual-axis header scrolling contract`)
 }
 
 for (const file of ['src/views/MindMapView.vue', 'src/components/GraphView.vue', 'src/views/WorkbookView.vue']) {

@@ -202,11 +202,13 @@ fn specialized_canvas_save_respects_directory_move() {
     let directory = fixture.directory();
     let path = directory.join("map.canvas");
     fs::write(&path, CANVAS).unwrap();
+    let signature = tauri::async_runtime::block_on(canvas::read_canvas_file(fixture.root(), path.to_string_lossy().into_owned())).unwrap().signature;
     let moving = acquire(&[&directory]).unwrap();
     let result = tauri::async_runtime::block_on(canvas::write_canvas_file(
         fixture.root(),
         path.to_string_lossy().into_owned(),
         "{\"nodes\": [], \"edges\": []}".into(),
+        Some(signature.clone()),
     ));
     assert!(result.is_err(), "Canvas saved during directory move");
     assert_eq!(fs::read_to_string(&path).unwrap(), CANVAS);
@@ -215,6 +217,7 @@ fn specialized_canvas_save_respects_directory_move() {
         fixture.root(),
         path.to_string_lossy().into_owned(),
         CANVAS.into(),
+        Some(signature),
     ))
     .unwrap();
 }
@@ -258,6 +261,7 @@ fn specialized_canvas_late_read_and_save_do_not_resurrect_old_path() {
         fixture.root(),
         path.to_string_lossy().into_owned(),
         CANVAS.into(),
+        Some("stale-before-move".into()),
     ));
     assert!(
         read.is_err() && write.is_err(),

@@ -905,6 +905,20 @@ mod tests {
         assert_eq!(fs::read(f.0.join("new.png")).unwrap(), b"image");
     }
     #[test]
+    fn v1119_canvas_incoming_references_join_durable_move_and_reverse_move() {
+        let f = TestWorkspace::new(); f.dir("boards"); f.dir("notes");
+        fs::write(f.0.join("source.md"),"user source").unwrap();
+        let original = "{\"nodes\":[{\"id\":\"f\",\"type\":\"file\",\"file\":\"source.md\",\"x\":0,\"y\":0,\"width\":200,\"height\":100}],\"edges\":[],\"vendor\":1.00}\r\n";
+        fs::write(f.0.join("boards/map.canvas"),original).unwrap();
+        run(&f,"source.md","notes/source.md").unwrap();
+        assert_eq!(fs::read_to_string(f.0.join("boards/map.canvas")).unwrap(),original.replace("source.md","notes/source.md"));
+        assert_eq!(fs::read_to_string(f.0.join("notes/source.md")).unwrap(),"user source");
+        run(&f,"notes/source.md","source.md").unwrap();
+        assert_eq!(fs::read_to_string(f.0.join("boards/map.canvas")).unwrap(),original);
+        run(&f,"boards","notes/boards").unwrap();
+        assert_eq!(fs::read_to_string(f.0.join("notes/boards/map.canvas")).unwrap(),original,"moving the board does not rebase root-relative files");
+    }
+    #[test]
     fn directory_moves_keep_internal_links_and_update_outside_references() {
         let f = TestWorkspace::new();
         f.dir("project");

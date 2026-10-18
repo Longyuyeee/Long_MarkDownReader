@@ -10,7 +10,7 @@ use commands::backup::{
 use commands::batch_rename::{preview_library_renames, rename_library_items};
 use commands::canvas::{
     create_canvas_file, create_canvas_from_graph, create_canvas_from_markdown,
-    create_project_note_from_graph, read_canvas_file, read_external_canvas_file, write_canvas_file,
+    create_project_note_from_graph, read_canvas_file, read_external_canvas_file, resolve_canvas_reference, write_canvas_file,
     write_external_canvas_file,
 };
 use commands::config::{
@@ -52,7 +52,7 @@ use commands::files::{
     write_markdown_file,
 };
 use commands::writing_delivery::{prepare_writing_delivery, save_writing_delivery, insert_writing_image, import_writing_image};
-pub(crate) use commands::files::{sanitize_filename, FileContent, FileEntry};
+pub(crate) use commands::files::{sanitize_filename, FileEntry};
 use commands::formats::{
     create_format_file, get_file_format_registry, get_text_document_identity,
     read_external_text_document, read_external_text_document_range, read_text_document,
@@ -97,7 +97,7 @@ use commands::media::{
 };
 use commands::mindmap::{
     create_canvas_from_opml, read_external_opml_file, read_opml_file, write_external_opml_file,
-    write_opml_file,
+    write_opml_file, save_opml_compatible_copy,
 };
 use commands::note_templates::{
     create_note_from_template, export_note_template_bundle, read_note_template_bundle,
@@ -418,6 +418,7 @@ pub fn run() {
             read_opml_file,
             read_external_opml_file,
             write_opml_file,
+            save_opml_compatible_copy,
             write_external_opml_file,
             create_canvas_from_opml,
             read_external_markdown_file,
@@ -426,6 +427,7 @@ pub fn run() {
             export_markdown_file,
             export_external_to_html,
             read_canvas_file,
+            resolve_canvas_reference,
             read_external_canvas_file,
             write_canvas_file,
             write_external_canvas_file,

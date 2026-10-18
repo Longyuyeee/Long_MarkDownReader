@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: reload probe waits through absent app/Pinia/reader, without hiding real script exceptions
+ok 1 - reload probe waits through absent app/Pinia/reader, without hiding real script exceptions
+  ---
+  duration_ms: 4.0156
+  ...
+# Subtest: secondary permission checks must wait for an actual callable bridge
+ok 2 - secondary permission checks must wait for an actual callable bridge
+  ---
+  duration_ms: 1.1436
+  ...
+# Subtest: installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+ok 3 - installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity
+  ---
+  duration_ms: 13.0468
+  ...
+# Subtest: v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+ok 4 - v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash
+  ---
+  duration_ms: 71.2941
+  ...
+# Subtest: v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+ok 5 - v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker
+  ---
+  duration_ms: 12.2554
+  ...
+# Subtest: historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions
+ok 6 - historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions
+  ---
+  duration_ms: 0.2139
+  ...
+# Subtest: v119 candidate and publication retain precise predecessor and independent updater observation
+ok 7 - v119 candidate and publication retain precise predecessor and independent updater observation
+  ---
+  duration_ms: 0.6614
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 202.7612

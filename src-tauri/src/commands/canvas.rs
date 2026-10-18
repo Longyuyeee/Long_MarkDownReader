@@ -7,7 +7,8 @@ use crate::formats::text::{
 use crate::services::external_file_access::ExternalFileAccess;
 use crate::services::reliable_write::{recover_interrupted_write, write_new_bytes, write_utf8};
 use crate::services::workspace_guard::WorkspaceGuard;
-use crate::{build_local_graph, read_markdown_file, sanitize_filename, FileContent, GraphData};
+use crate::{build_local_graph, read_markdown_file, sanitize_filename, GraphData};
+use serde::Serialize;
 use std::fs;
 use std::path::Path;
 use tauri::State;
@@ -53,22 +54,10 @@ pub async fn create_canvas_file(
 }
 
 #[tauri::command]
-pub async fn read_canvas_file(library_root: String, path: String) -> Result<FileContent, String> {
+pub async fn read_canvas_file(library_root: String, path: String) -> Result<TextDocumentSnapshot, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let file_path = guard.resolve_file_for_write(path, &["canvas"])?;
-    let _document = crate::services::document_coordination::acquire_existing_file(&file_path)?;
-    recover_interrupted_write(&file_path)?;
-    if !file_path.is_file() {
-        return Err("Canvas 文件不存在".into());
-    }
-    let content =
-        fs::read_to_string(&file_path).map_err(|error| format!("读取 Canvas 失败: {}", error))?;
-    validate_canvas_json(&content)?;
-    Ok(FileContent {
-        content,
-        encoding: "UTF-8".into(),
-        path: file_path.to_string_lossy().into_owned(),
-    })
+    read_canvas_snapshot(&file_path).map_err(|error| error.message)
 }
 
 #[tauri::command]
@@ -76,12 +65,52 @@ pub async fn write_canvas_file(
     library_root: String,
     path: String,
     content: String,
-) -> Result<(), String> {
+    expected_signature: Option<String>,
+) -> Result<TextDocumentSnapshot, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let file_path = guard.resolve_file_for_write(path, &["canvas"])?;
     validate_canvas_json(&content)?;
     let _document = crate::services::document_coordination::acquire_existing_file(&file_path)?;
-    write_utf8(file_path, &content)
+    recover_interrupted_write(&file_path)?;
+    let signature = expected_signature.filter(|value| !value.is_empty())
+        .ok_or("缺少画布读取签名，请重新打开后保存；未覆盖文件")?;
+    verify_current_signature(&file_path, Some(&signature)).map_err(|error| error.message)?;
+    write_utf8(&file_path, &content)?;
+    read_canvas_snapshot_under_lease(&file_path).map_err(|error| error.message)
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CanvasReference {
+    pub status: &'static str,
+    pub path: Option<String>,
+    pub message: String,
+}
+
+/// JSON Canvas file paths are vault-relative, not relative to the canvas folder.
+/// Resolves an exact source only; never searches by basename or opens outside it.
+#[tauri::command]
+pub async fn resolve_canvas_reference(library_root: String, reference: String) -> Result<CanvasReference, String> {
+    let guard = WorkspaceGuard::new(library_root)?;
+    let result = |status, path, message: &str| CanvasReference { status, path, message: message.into() };
+    if reference.trim().is_empty() || reference.len() > 4096 {
+        return Ok(result("missing", None, "尚未指定来源"));
+    }
+    let supplied = std::path::PathBuf::from(reference.replace('/', std::path::MAIN_SEPARATOR_STR));
+    let candidate = if supplied.is_absolute() { supplied } else { guard.root().join(supplied) };
+    let candidate = match guard.resolve_for_write(candidate) {
+        Ok(path) => path,
+        Err(_) => return Ok(result("unavailable", None, "来源不在可访问的资料库内，未读取")),
+    };
+    if candidate.strip_prefix(guard.root()).map_err(|e|e.to_string())?.components().any(|part| {
+        let value = part.as_os_str().to_string_lossy(); value.eq_ignore_ascii_case(".longedit") || value.eq_ignore_ascii_case(".git")
+    }) {
+        return Ok(result("unavailable", None, "内部记录不能作为资料来源"));
+    }
+    if !candidate.is_file() { return Ok(result("missing", None, "来源已不存在或已在其他程序中移动，请重新指定")); }
+    let source = guard.resolve_existing(candidate)?;
+    if file_format_for_path(&source).is_err() { return Ok(result("unsupported", None, "来源格式尚未注册，未自动打开")); }
+    Ok(result("available", Some(source.to_string_lossy().into_owned()), "来源可用"))
 }
 
 fn canvas_boundary_error(code: &str, message: impl Into<String>) -> TextDocumentError {
@@ -276,10 +305,12 @@ pub async fn create_canvas_from_graph(
     )
     .await?;
     let canvas = graph_to_canvas_json(&graph, guard.root(), &canonical_center);
+    let original = read_canvas_file(canonical_root.clone(), path.clone()).await?;
     write_canvas_file(
         canonical_root,
         path.clone(),
         serde_json::to_string_pretty(&canvas).map_err(|error| error.to_string())?,
+        Some(original.signature),
     )
     .await?;
     Ok(path)
@@ -432,10 +463,12 @@ pub async fn create_canvas_from_markdown(
         Some(format!("{} 内容脑图", title)),
     )
     .await?;
+    let original = read_canvas_file(canonical_root.clone(), path.clone()).await?;
     write_canvas_file(
         canonical_root,
         path.clone(),
         serde_json::to_string_pretty(&canvas).map_err(|error| error.to_string())?,
+        Some(original.signature),
     )
     .await?;
     Ok(path)
@@ -444,6 +477,35 @@ pub async fn create_canvas_from_markdown(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn v1119_canvas_managed_save_requires_fresh_signature_and_preserves_unknown_fields() {
+        let fixture = crate::services::test_workspace::TestWorkspace::new();
+        let path = fixture.0.join("项目.canvas");
+        let original = "{\"nodes\":[],\"edges\":[],\"vendor\":{\"nested\":true,\"number\":1.00}}\r\n";
+        fs::write(&path,original).unwrap();
+        let opened = tauri::async_runtime::block_on(read_canvas_file(fixture.root(),path.to_string_lossy().into_owned())).unwrap();
+        let save = |signature| tauri::async_runtime::block_on(write_canvas_file(fixture.root(),opened.path.clone(),original.into(),signature));
+        assert!(save(None).is_err()); assert_eq!(fs::read_to_string(&path).unwrap(),original);
+        let saved = save(Some(opened.signature.clone())).unwrap(); assert_eq!(saved.content,original);
+        let peer = original.replace("true","false"); fs::write(&path,&peer).unwrap();
+        assert!(save(Some(saved.signature)).is_err()); assert_eq!(fs::read_to_string(&path).unwrap(),peer);
+        fs::rename(&path,fixture.0.join("moved.canvas")).unwrap();
+        assert!(save(Some(opened.signature)).is_err()); assert!(!path.exists());
+    }
+
+    #[test]
+    fn v1119_canvas_exact_root_source_resolution_never_guesses_or_escapes() {
+        let fixture = crate::services::test_workspace::TestWorkspace::new();
+        fs::create_dir(fixture.0.join("notes")).unwrap(); fs::create_dir(fixture.0.join(".longedit")).unwrap();
+        fs::write(fixture.0.join("notes/资料.md"),"real source").unwrap();
+        fs::write(fixture.0.join("资料.md"),"same name but different").unwrap();
+        fs::write(fixture.0.join(".longedit/hidden.md"),"hidden").unwrap();
+        let resolve = |reference:&str| tauri::async_runtime::block_on(resolve_canvas_reference(fixture.root(),reference.into())).unwrap();
+        let actual = resolve("notes/资料.md"); assert_eq!(actual.status,"available"); assert_eq!(Path::new(&actual.path.unwrap()),fixture.0.join("notes/资料.md"));
+        for reference in ["missing/资料.md","notes/no.md"] { let result = resolve(reference); assert_eq!(result.status,"missing");assert!(result.path.is_none()); }
+        for reference in ["../资料.md",".longedit/hidden.md"] { assert_eq!(resolve(reference).status,"unavailable"); }
+    }
     use crate::formats::canvas::MAX_CANVAS_BYTES;
     use crate::{GraphEdge, GraphNode};
     use std::path::PathBuf;
@@ -560,6 +622,7 @@ mod tests {
             workspace.root_string(),
             path.to_string_lossy().into_owned(),
             VALID_CANVAS.to_string(),
+            Some(read_canvas_snapshot(&path).unwrap().signature),
         ))
         .unwrap();
 
@@ -648,6 +711,7 @@ mod tests {
             workspace.root_string(),
             oversized_path.to_string_lossy().into_owned(),
             oversized,
+            None,
         ))
         .unwrap_err();
         assert!(error.contains("20 MB"));

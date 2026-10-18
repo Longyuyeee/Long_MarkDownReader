@@ -158,6 +158,17 @@ pub fn parse_opml(content: &str) -> Result<OpmlDocument, String> {
                     .map_err(|error| format!("还原 OPML 实体失败: {error}"))?;
                 head_text.push_str(&unescaped);
             }
+            Event::CData(ref event) if head_field.is_some() => {
+                head_text.push_str(&event.decode().map_err(|e| e.to_string())?);
+            }
+            Event::GeneralRef(ref event) if head_field.is_some() => {
+                let entity = format!("&{};", event.decode().map_err(|e| e.to_string())?);
+                head_text.push_str(&quick_xml::escape::unescape(&entity).map_err(|e| e.to_string())?);
+            }
+            Event::Empty(ref event) if in_head => {
+                let key = String::from_utf8_lossy(event.local_name().as_ref()).into_owned();
+                if key != "title" { metadata.insert(key, String::new()); }
+            }
             Event::End(ref event)
                 if in_head
                     && head_field
@@ -165,11 +176,10 @@ pub fn parse_opml(content: &str) -> Result<OpmlDocument, String> {
                         .is_some_and(|name| name.as_bytes() == event.local_name().as_ref()) =>
             {
                 let field = head_field.take().unwrap();
-                let value = head_text.trim().to_string();
+                let value = head_text.clone();
                 if field == "title" {
                     title = value;
-                } else if !value.is_empty()
-                    && field.chars().count() <= 80
+                } else if field.chars().count() <= 80
                     && value.chars().count() <= 4_000
                 {
                     metadata.insert(field, value);
@@ -195,6 +205,74 @@ pub fn parse_opml(content: &str) -> Result<OpmlDocument, String> {
     };
     validate_opml(&document)?;
     Ok(document)
+}
+
+/// Report source features the normalized editor model cannot round-trip.
+/// Viewing remains available; callers must reject destructive original writes.
+pub fn opml_preservation_issues(content: &str) -> Result<Vec<String>, String> {
+    if content.len() > MAX_OPML_BYTES { return Err("OPML 文件不能超过 8 MB".into()); }
+    let mut reader = Reader::from_str(content.trim_start_matches('\u{feff}'));
+    let mut stack: Vec<String> = Vec::new();
+    let mut issues = std::collections::BTreeSet::new();
+    let mut head_fields = HashSet::new();
+    let mut structure = HashSet::new();
+    let mut head_characters = 0usize;
+    loop {
+        let event = reader.read_event().map_err(|e|e.to_string())?;
+        match &event {
+            Event::Start(tag) | Event::Empty(tag) => {
+                let name = String::from_utf8_lossy(tag.name().as_ref()).into_owned();
+                let parent = stack.last().map(String::as_str).unwrap_or("");
+                let known = match parent {
+                    "" => name == "opml", "opml" => name == "head" || name == "body",
+                    "head" => !name.contains(':') && name.chars().count() <= 80,
+                    "body" | "outline" => name == "outline", _ => false,
+                };
+                if !known { issues.insert(format!("扩展元素 <{name}> 的原始XML不会进入兼容副本")); }
+                if (parent.is_empty() || parent == "opml") && !structure.insert(name.clone()) { issues.insert(format!("重复结构 <{name}> 不能无损合并")); }
+                if parent == "head" && !head_fields.insert(name.clone()) { issues.insert(format!("重复头部字段 <{name}> 只能保留一个值")); }
+                if parent == "head" { head_characters = 0; }
+                for attr in tag.attributes() {
+                    let attr = attr.map_err(|e|e.to_string())?;
+                    let key = String::from_utf8_lossy(attr.key.as_ref());
+                    let value = attr.decoded_and_normalized_value(XmlVersion::Implicit1_0, reader.decoder()).map_err(|e|e.to_string())?;
+                    let preserved = match name.as_str() {
+                        "opml" => key == "version",
+                        "outline" => !key.contains(':') && key != "title" && key.chars().count() <= 80 && value.chars().count() <= 2000,
+                        _ => false,
+                    };
+                    // The editor's note is intentionally allowed up to 20,000 characters.
+                    let preserved = preserved || (name == "outline" && key == "_note" && value.chars().count() <= MAX_NOTE_TEXT);
+                    if !preserved { issues.insert(format!("<{name}> 的属性 {key} 不会保留")); }
+                    if name == "outline" && key == "_collapsed" && !matches!(value.as_ref(), "true" | "false" | "1" | "0") { issues.insert("非标准折叠状态不能无损还原".into()); }
+                }
+                if matches!(event, Event::Start(_)) { stack.push(name); }
+            }
+            Event::End(_) => { stack.pop(); }
+            Event::Comment(_) => { issues.insert("XML注释不会保留".into()); }
+            Event::PI(_) => { issues.insert("XML处理指令不会保留".into()); }
+            Event::DocType(_) => return Err("OPML 不允许包含 DTD".into()),
+            Event::Text(text) => {
+                let value = text.decode().map_err(|e|e.to_string())?;
+                let in_field = stack.len() == 3 && stack.get(1).map(String::as_str) == Some("head");
+                if !in_field && !value.trim().is_empty() { issues.insert("主题属性之外的内嵌文字不会保留".into()); }
+                if in_field { head_characters += value.chars().count(); }
+            }
+            Event::CData(value) => {
+                if stack.len() == 3 && stack.get(1).map(String::as_str) == Some("head") { head_characters += value.decode().map_err(|e|e.to_string())?.chars().count(); }
+                else { issues.insert("主题中的内嵌XML文字不会保留".into()); }
+            }
+            Event::GeneralRef(_) => {
+                if stack.len() == 3 && stack.get(1).map(String::as_str) == Some("head") { head_characters += 1; }
+                else { issues.insert("主题中的内嵌XML文字不会保留".into()); }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+        if head_characters > 4000 { issues.insert("超过编辑预算的头部文字不会完整保留".into()); }
+        if issues.len() > 32 { return Ok(vec!["文件含超过32种不支持的XML扩展；原件不能无损写回，兼容副本只保留支持的主题、备注和普通属性".into()]); }
+    }
+    Ok(issues.into_iter().collect())
 }
 
 fn validate_node(
