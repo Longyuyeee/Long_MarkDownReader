@@ -6,6 +6,7 @@ import * as naive from 'naive-ui'
 import CanvasView from '/src/views/CanvasView.vue'
 import MindMapView from '/src/views/MindMapView.vue'
 import {useAppStore} from '/src/store/app.ts'
+import {installHorizontalWheelNavigation} from '/src/services/horizontalWheel.ts'
 import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
 const clone=v=>JSON.parse(JSON.stringify(v)),pinia=createPinia(),store=useAppStore(pinia),files={},calls=[],pending=[]
@@ -52,3 +53,4 @@ document.body.dataset.theme='white';document.body.style.margin='0';document.body
 const app=createApp({render:()=>h(naive.NDialogProvider,{},()=>h(naive.NMessageProvider,{},()=>h(RouterView)))})
 const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts');registerNaiveComponents(app)
 app.use(pinia).use(router).mount('#app')
+installHorizontalWheelNavigation()
