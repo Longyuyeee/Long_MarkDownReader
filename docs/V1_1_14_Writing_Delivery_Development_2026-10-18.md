@@ -26,6 +26,10 @@
 
 ## 继续到发布的门禁
 
+第二轮同包 `39084798459`（驱动3a4cc12a）仍在打印失败，原8项均通过；报告实证真正主窗体 `wasVisible=false`、显示后 `visibleBeforePrint=true`，因此显示主窗体并未独自解决问题。原诊断/HTML/截图/API/日志在 `evidence/v1114-failed-review-39084798459/`。后续驱动只在托管隔离机将确切主窗体置于前台，模拟用户真正激活编辑窗口；另保留各窗体控件、全局窗体/进程只读诊断、打印期CDP目标，以及失败时隔离虚拟机桌面图，区分系统窗口漏识别和WebView打印阻塞。不操作本机桌面，不用后台源文件或静默渲染替代真实打印输出。
+
+微软[打印说明](https://learn.microsoft.com/en-us/microsoft-edge/webview2/how-to/print)的ShowPrintUI/PrintToPdf面向顶层文档，不能当本iframe流程已受验证。Tauri[iframe打印问题](https://github.com/tauri-apps/tauri/issues/13451)报告的是macOS，不据此认定本Windows故障；继续以当前安装器实际诊断判定。未完成真实输出前仍不可封板。
+
 独立同包首轮 `39084277022`（驱动67aa98a8）整体failure，仍在打印超时；真正模板新建主编辑区、剪贴板长文70章节/70表和独立HTML等前8项已通过。诊断明确显示可见性检查误选同进程“快速笔记”窗口，不代表被验收的主窗体已可见；配置主窗体标题为“Long编辑·md助手”，隔离生命周期以 Hidden 启动。原报告/截图/HTML/API/日志在 `evidence/v1114-failed-review-39084277022/`。修正驱动先只读核对当前WebView的main角色，再按固定产品配置的标题、窗口类和确切EXE进程要求唯一主窗体，显示该窗体后才打印；协议拒绝以快速笔记窗代替。未修改产品或重建包，继续同包真实PDF复核。
 
 修正候选 B 的原构建 `39081167437` 已完成：质量、1048项功能回归、1项性能、MSI/NSIS生成与原始收据均通过；原任务整体 **failure**，停在原生打印的 CDP 点击命令60秒超时，不能称首轮安装全部通过。原写作报告前8项通过，打印报告仅 `ready-for-native-print`，无实际PDF。原日志、API、全部原截图/报告在 `evidence/v1114-fixed-b-original-build-39081167437/`；产品仍固定e4650640，下一步独立同包复核，不能将已有包丢掉重建来掩盖失败。

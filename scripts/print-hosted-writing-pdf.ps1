@@ -19,6 +19,8 @@ public static class WritingPrintWindows {
  [DllImport("user32.dll")]public static extern bool IsWindowEnabled(IntPtr h);
  [DllImport("user32.dll")]public static extern bool IsWindowVisible(IntPtr h);
  [DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int command);
+ [DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);
+ [DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();
  [DllImport("user32.dll",EntryPoint="SendMessageW")]public static extern IntPtr Send(IntPtr h,uint m,IntPtr w,IntPtr l);
  [DllImport("user32.dll")]public static extern bool PostMessage(IntPtr h,uint m,IntPtr w,IntPtr l);
  public class Item{public long Handle;public uint Pid;public uint OwnerPid;public string Title;public string ClassName;public int Id;}
@@ -37,13 +39,17 @@ try{
  if(-not $result.mainWindow.wasVisible){$null=[WritingPrintWindows]::ShowWindow([IntPtr]$mainWindow.Handle,4)}
  $result.mainWindow['visibleBeforePrint']=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)
  if(-not $result.mainWindow.visibleBeforePrint){throw 'The owned test window cannot become visible; do not claim print acceptance'}
+ $result.mainWindow['foregroundBefore']=[WritingPrintWindows]::GetForegroundWindow().ToInt64()
+ $null=[WritingPrintWindows]::SetForegroundWindow([IntPtr]$mainWindow.Handle)
+ $result.mainWindow['foregroundBeforePrint']=[WritingPrintWindows]::GetForegroundWindow().ToInt64() -eq $mainWindow.Handle
+ if(-not $result.mainWindow.foregroundBeforePrint){throw 'The actual user print scenario requires the exact main window in the foreground'}
  try { $spooler=Get-Service Spooler -ErrorAction Stop;if($spooler.Status -ne 'Running'){Start-Service Spooler -ErrorAction Stop} } catch { $result.spoolerNotice=[string]$_ }
  $printers=@(Get-CimInstance Win32_Printer -ErrorAction SilentlyContinue);$result.printers=@($printers|Select-Object Name,Default,DriverName)
  $pdfPrinter=$printers|Where-Object Name -eq 'Microsoft Print to PDF'|Select-Object -First 1
  if($pdfPrinter){$null=(New-Object -ComObject WScript.Network).SetDefaultPrinter('Microsoft Print to PDF');$result.defaultPrinter='Microsoft Print to PDF'}
  $result.status='ready-for-native-print'
  [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
- $deadline=[DateTime]::UtcNow.AddSeconds(45);$printed=$false;$saved=$false
+ $deadline=[DateTime]::UtcNow.AddSeconds(45);$printed=$false;$saved=$false;$result.controlWindows=[ordered]@{}
  $interactiveTypes=[System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@(
   [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::Button),
   [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::ComboBox),
@@ -53,7 +59,9 @@ try{
   $all=@(Get-CimInstance Win32_Process);$rootProcesses=@($all|Where-Object {$_.ExecutablePath -eq $Executable});$owned=@($rootProcesses.ProcessId)
   for($i=0;$i -lt 8;$i++){$next=@($all|Where-Object {$_.ParentProcessId -in $owned}|ForEach-Object ProcessId);$owned=@($owned+$next|Select-Object -Unique)}
   if(-not $rootProcesses){throw 'The exact installed application is no longer running'}
-  $windows=@([WritingPrintWindows]::Top()|Where-Object {$_.Pid -in $owned -or $_.OwnerPid -in $owned});$result.windows=@($windows)
+  $topWindows=@([WritingPrintWindows]::Top());$result.diagnosticTopWindows=@($topWindows|Where-Object {$_.Title -or [WritingPrintWindows]::IsWindowVisible([IntPtr]$_.Handle)})
+  $result.diagnosticProcesses=@($all|Where-Object {$_.ProcessId -in $result.diagnosticTopWindows.Pid}|Select-Object ProcessId,ParentProcessId,Name,ExecutablePath)
+  $windows=@($topWindows|Where-Object {($_.Pid -in $owned -or $_.OwnerPid -in $owned) -and [WritingPrintWindows]::IsWindowVisible([IntPtr]$_.Handle) -and $_.ClassName -notmatch 'IME|tooltips|tray_icon' -and ($_.ClassName -ne 'Tauri Window' -or $_.Handle -eq $mainWindow.Handle)});$result.windows=@($windows)
   $result.stage='enumerated-owned-windows';[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
   foreach($win in $windows){
    if($printed -and $win.Title -match '^(Save Print Output As|Save As|将打印输出另存为|另存为)$'){
@@ -82,6 +90,7 @@ try{
      $result.stage='reading-owned-print-controls';$result.observingWindow=$win.Title;[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
      $controls=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,$interactiveTypes))
      $names=@($controls|ForEach-Object {$_.Current.Name});$result.controls=@($controls|Select-Object -First 300|ForEach-Object {[ordered]@{name=$_.Current.Name;type=$_.Current.ControlType.ProgrammaticName;id=$_.Current.AutomationId}})
+     $result.controlWindows[[string]$win.Handle]=[ordered]@{title=$win.Title;className=$win.ClassName;controls=$result.controls}
      $result.stage='read-owned-print-controls';[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
      # Only the isolated app/its verified descendants are searched. No global
      # keyboard or mouse input, and no default website or DOM handler is called.
@@ -120,4 +129,15 @@ try{
  if(-not $complete){throw 'The native print output is empty, still open for writing, or lacks its PDF end marker'}
  $result.status='saved-real-native-print-pdf';$result.sizeBytes=$length;$result.sha256=(Get-FileHash -LiteralPath $targetFile -Algorithm SHA256).Hash.ToLowerInvariant();$result.executable=$Executable
 }catch{$result.status='failed';$result.failure=[string]$_;throw}
-finally{[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))}
+finally{
+ if($result.status -eq 'failed'){
+  try{
+   Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing
+   $screenBounds=[Windows.Forms.SystemInformation]::VirtualScreen
+   if($screenBounds.Width -le 0 -or $screenBounds.Height -le 0 -or [long]$screenBounds.Width*$screenBounds.Height -gt 16000000){throw 'Hosted diagnostic desktop has invalid bounds'}
+   $bitmap=[Drawing.Bitmap]::new($screenBounds.Width,$screenBounds.Height)
+   try{$graphics=[Drawing.Graphics]::FromImage($bitmap);try{$graphics.CopyFromScreen($screenBounds.Location,[Drawing.Point]::Empty,$screenBounds.Size)}finally{$graphics.Dispose()};$screenshot=Join-Path ([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Report))) 'installed-v1114-native-print-desktop.png';$bitmap.Save($screenshot,[Drawing.Imaging.ImageFormat]::Png);$result.diagnosticDesktopFile=[IO.Path]::GetFileName($screenshot)}finally{$bitmap.Dispose()}
+  }catch{$result.diagnosticDesktopNotice=[string]$_}
+ }
+ [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
+}

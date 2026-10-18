@@ -17,7 +17,7 @@ const example=()=>{
  for(const field of ['imagePicker','htmlPicker','markdownPicker'])report[field]={status:'selected-real-native-dialog',dialogClosed:true,desktopUserSession:'disposable-github-hosted',processId:1}
  report.pdfColorPixels=200
  report.previewStructure={headings:70,tables:70};report.inputTrace.push({type:'paste',trusted:true})
- report.nativePrint.mainWindow={visibleBeforePrint:true,pid:1,title:'Long编辑·md助手',configuredMainTitle:'Long编辑·md助手',className:'Tauri Window'}
+ report.nativePrint.mainWindow={visibleBeforePrint:true,foregroundBeforePrint:true,pid:1,title:'Long编辑·md助手',configuredMainTitle:'Long编辑·md助手',className:'Tauri Window'}
  report.templateMainText='用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}'
  return [report,manifest]
 }
