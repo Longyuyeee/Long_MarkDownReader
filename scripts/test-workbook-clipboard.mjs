@@ -53,3 +53,8 @@ test('actual filtered copy refuses unloaded pages and changed conditions without
   const ctx=extract('copyDataResults','applyFreezePane',bindings,'globalThis.copy=copyDataResults');await ctx.copy();assert.equal(writes,0);assert.equal(errors.length,1)
  }
 })
+test('cut cannot clear a later edit while awaiting the clipboard receipt',async()=>{
+ let finish,cleared=false;const warnings=[],drafts=box(new Map()),ctx=extract('cutSelection','styleAsPatch',{isExternal:box(false),saving:box(false),drafts,captureEditContext:()=>()=>true,copySelection:()=>new Promise(resolve=>finish=resolve),clearSelection:()=>{cleared=true},message:{warning:text=>warnings.push(text)}},'globalThis.cut=cutSelection')
+ const pending=ctx.cut();drafts.value.set('current',{input:'复制等待期间的新草稿'});finish(true);await pending
+ assert.equal(cleared,false);assert.equal(warnings.length,1);assert.equal(drafts.value.get('current').input,'复制等待期间的新草稿')
+})

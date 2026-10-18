@@ -3684,8 +3684,9 @@ const clearSelection = () => {
 const cutSelection = async () => {
   if (isExternal.value || saving.value) return
   const isCurrent = captureEditContext()
+  const draftSnapshot = JSON.stringify([...drafts.value])
   if (!await copySelection('cut')) return
-  if (!isCurrent()) { message.warning('编辑状态已变化，已复制内容但未清除单元格'); return }
+  if (!isCurrent() || draftSnapshot !== JSON.stringify([...drafts.value])) { message.warning('编辑状态已变化，已复制内容但未清除单元格'); return }
   clearSelection()
 }
 
