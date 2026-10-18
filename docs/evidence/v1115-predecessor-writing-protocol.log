@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input
+ok 1 - writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input
+  ---
+  duration_ms: 18.0546
+  ...
+# Subtest: real installed driver never replaces bridge, calls a component handler or synthesizes DOM input
+ok 2 - real installed driver never replaces bridge, calls a component handler or synthesizes DOM input
+  ---
+  duration_ms: 0.6878
+  ...
+# Subtest: v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver
+ok 3 - v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver
+  ---
+  duration_ms: 99.3046
+  ...
+# Subtest: the real review importer includes writing report, exact raw hashes and its summary in a disposable synthetic workspace
+ok 4 - the real review importer includes writing report, exact raw hashes and its summary in a disposable synthetic workspace
+  ---
+  duration_ms: 186.9999
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 310.9163

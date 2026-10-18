@@ -468,6 +468,12 @@ const pushDataHistory = (entry: DataHistoryEntry) => {
   rowUndoStack.value = history
   return evicted
 }
+const refreshEditedTypes = (edit: TableEdit) => {
+  if (!table.value) return
+  const ids = new Set(edit.cells.map(cell => cell.columnId))
+  for (const row of edit.appended) row.values.forEach((value, column) => { if (value) ids.add(edit.columnIds[column]) })
+  for (const id of ids) { const column = table.value.columnIds.indexOf(id); if (column >= 0) scheduleTypeRefresh(column) }
+}
 const commitCellEdit = (edit: TableEdit, session?: string) => {
   if (!table.value || (!edit.cells.length && !edit.headers.length && !edit.appended.length)) return
   const previous = rowUndoStack.value[rowUndoStack.value.length - 1]
@@ -481,8 +487,7 @@ const commitCellEdit = (edit: TableEdit, session?: string) => {
   applyTableEdit(table.value, edit, true)
   if (merged) rowUndoStack.value = rowUndoStack.value.slice(0, -1)
   const evicted = pushDataHistory({ kind: 'edit', edit: retained, session })
-  for (const column of new Set(edit.cells.map(cell => table.value!.columnIds.indexOf(cell.columnId)))) scheduleTypeRefresh(column)
-  for (const row of edit.appended) row.values.forEach((value, column) => { if (value) scheduleTypeRefresh(column) })
+  refreshEditedTypes(edit)
   markDirty()
   notice.value = `${edit.label}已写入草稿，可一次撤销；点击保存后才写入文件${evicted ? '（最早撤销记录已超过容量，已移出）' : ''}`
 }
@@ -553,7 +558,7 @@ const pasteCells = (row: number, column: number, event: ClipboardEvent) => {
   if (!table.value || !event.clipboardData) return
   const text = event.clipboardData.getData('text/plain'), structured = /<table\b/i.test(event.clipboardData.getData('text/html'))
   if (!event.clipboardData.types.includes('text/plain')) return
-  if (new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) { event.preventDefault(); message.error('剪贴板超过2MiB，请分批粘贴；本次未修改'); return }
+  if (text.length > TABLE_CLIPBOARD_BYTES || new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) { event.preventDefault(); message.error('剪贴板超过2MiB，请分批粘贴；本次未修改'); return }
   if (!structured && !/[\t\r\n]/.test(text) && !hasCellNewline(row, column) && (!cellRange.value || cellRange.value.rows.length * cellRange.value.columns.length === 1)) return
   event.preventDefault()
   try {
@@ -819,8 +824,7 @@ const undoRowOperation = () => {
     try {
       applyTableEdit(table.value, entry.edit, false)
       rowUndoStack.value = rowUndoStack.value.slice(0, -1); rowRedoStack.value.push(entry)
-      for (const id of new Set(entry.edit.cells.map(cell => cell.columnId))) scheduleTypeRefresh(table.value.columnIds.indexOf(id))
-      for (const row of entry.edit.appended) row.values.forEach((value, column) => { if (value) scheduleTypeRefresh(column) })
+      refreshEditedTypes(entry.edit)
       editSession++; markDirty(); notice.value = `已撤销${entry.edit.label}，当前为未保存草稿`
       cellRange.value = null
     } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }
@@ -854,8 +858,7 @@ const redoRowOperation = () => {
     try {
       applyTableEdit(table.value, entry.edit, true)
       rowRedoStack.value = rowRedoStack.value.slice(0, -1); rowUndoStack.value.push(entry)
-      for (const id of new Set(entry.edit.cells.map(cell => cell.columnId))) scheduleTypeRefresh(table.value.columnIds.indexOf(id))
-      for (const row of entry.edit.appended) row.values.forEach((value, column) => { if (value) scheduleTypeRefresh(column) })
+      refreshEditedTypes(entry.edit)
       editSession++; markDirty(); notice.value = `已重做${entry.edit.label}，当前为未保存草稿`
       cellRange.value = null
     } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')) }

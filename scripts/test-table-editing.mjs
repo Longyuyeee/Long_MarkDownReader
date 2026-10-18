@@ -5,6 +5,7 @@ import ts from 'typescript'
 const source=fs.readFileSync('src/utils/tableEditing.ts','utf8'),module=await import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText).toString('base64'))
 const{parseTableClipboard:parse,serializeTableClipboard:serialize,planTablePaste:plan,applyTableEdit:apply}=module
 const fixture=()=>({headers:['任务','状态','编号'],columnIds:['task','state','code'],rowIds:['a','b','c'],rows:[['A','可见','00123'],['B','隐藏','9007199254740993123'],['C','可见','=SUM(A1:A2)']]})
+test('copy budget is checked before assembling oversized retained cells',()=>assert.throws(()=>serialize([['x'.repeat(module.TABLE_CLIPBOARD_BYTES+1)]])))
 test('integer sort distinguishes adjacent long identifiers without floating-point rounding',()=>{const compare=module.compareTableIntegers;assert.ok(compare('9007199254740993123','9007199254740993124')<0);assert.ok(compare('-9007199254740993124','-9007199254740993123')<0);assert.equal(compare('00123','123'),0);assert.equal(compare('-0',''),0);assert.ok(compare('9'.repeat(1000),'1'.repeat(1001))<0)})
 test('clipboard quotes, embedded newlines, empty tails and exact text roundtrip',()=>{
  const rows=[['中文','含"引号','00123',''],['a\tb','多行\r\n备注','9007199254740993123','=SUM(A1:A2)']]

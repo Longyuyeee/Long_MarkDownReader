@@ -13,7 +13,7 @@ export function compareTableIntegers(left: string, right: string): number {
 export interface TableEdit { label: string; cells: CellChange[]; headers: { columnId: string; before: string; after: string }[]; appended: { id: string; values: string[] }[]; columnIds: string[]; bytes: number }
 const checkText = (value: string) => { if (value.length > 1_000_000) throw Error('单元格超过100万字符，本次操作未执行') }
 export function parseTableClipboard(text: string, structured = false): string[][] {
- if (new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) throw Error('剪贴板超过2MiB，请分批粘贴；本次未修改')
+ if (text.length > TABLE_CLIPBOARD_BYTES || new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) throw Error('剪贴板超过2MiB，请分批粘贴；本次未修改')
  if (!structured && !/[\t\r\n]/.test(text)) { checkText(text); return [[text]] }
  const rows: string[][] = []; let row: string[] = [], cell = '', quoted = false, closed = false
  const field = () => { checkText(cell); row.push(cell); cell = ''; closed = false; if (row.length > 512) throw Error('粘贴超过512列，本次未修改') }
@@ -32,7 +32,13 @@ export function parseTableClipboard(text: string, structured = false): string[][
  if (rows.length * width > TABLE_EDIT_CELLS) throw Error('粘贴超过20,000格，请分批操作')
  return rows.map(value => [...value, ...Array(width - value.length).fill('')])
 }
-export const serializeTableClipboard = (rows: string[][]) => rows.map(row => row.map(value => /[\t\r\n"]/.test(value) ? '"' + value.split('"').join('""') + '"' : value).join('\t')).join('\r\n')
+export function serializeTableClipboard(rows: string[][]): string {
+ let length = 0
+ for (const row of rows) for (const value of row) { length += value.length + 1; if (length > TABLE_CLIPBOARD_BYTES) throw Error('复制内容超过2MiB，请缩小选区') }
+ const text = rows.map(row => row.map(value => /[\t\r\n"]/.test(value) ? '"' + value.split('"').join('""') + '"' : value).join('\t')).join('\r\n')
+ if (new TextEncoder().encode(text).length > TABLE_CLIPBOARD_BYTES) throw Error('复制内容超过2MiB，请缩小选区')
+ return text
+}
 export const tableEditSize = (edit: Pick<TableEdit, 'cells' | 'headers' | 'appended' | 'columnIds'>) => 256 + edit.columnIds.join('').length * 2
  + edit.cells.reduce((sum, cell) => sum + 96 + (cell.rowId.length + cell.columnId.length + cell.before.length + cell.after.length) * 2, 0)
  + edit.headers.reduce((sum, cell) => sum + 64 + (cell.columnId.length + cell.before.length + cell.after.length) * 2, 0)

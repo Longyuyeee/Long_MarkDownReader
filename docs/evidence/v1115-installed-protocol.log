@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: table evidence rejects partial/fake checks, changed hidden rows, flattened values, precision loss and scripted input
+ok 1 - table evidence rejects partial/fake checks, changed hidden rows, flattened values, precision loss and scripted input
+  ---
+  duration_ms: 11.657
+  ...
+# Subtest: real table driver uses native clipboard and public input without mutating a handler or bridge
+ok 2 - real table driver uses native clipboard and public input without mutating a handler or bridge
+  ---
+  duration_ms: 0.3292
+  ...
+# Subtest: v1.1.15 requires all 176 predecessor checks and same-source same-executable same-driver table checks and bytes
+ok 3 - v1.1.15 requires all 176 predecessor checks and same-source same-executable same-driver table checks and bytes
+  ---
+  duration_ms: 29.1414
+  ...
+# Subtest: actual importer retains exact table delivery bytes and refuses an acknowledged re-import
+ok 4 - actual importer retains exact table delivery bytes and refuses an acknowledged re-import
+  ---
+  duration_ms: 298.1517
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 345.4932

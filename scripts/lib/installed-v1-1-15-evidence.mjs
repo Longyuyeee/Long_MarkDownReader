@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict'
+export const tableEditingChecks=['owned-fixture-and-installed-identity','real-filtered-paste-no-hidden-row-write','stable-sort-undo-redo','real-range-copy-and-atomic-clear','append-undo-and-column-continuity','native-multiline-draft-editor','native-csv-save-and-reopen-exact-values','native-table-copy-original-preserved','native-xlsx-identifier-and-formula-text','trusted-input-no-errors-and-unselected-preserved']
+export function validateInstalledTableEditing(report,manifest){
+ assert.equal(manifest.appVersion,'1.1.15');assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/);assert.match(report.executableSha256,/^[a-f0-9]{64}$/)
+ assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-table-real-clipboard-native-save-export-and-independent-disk')
+ for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)
+ assert.deepEqual(report.checks.map(c=>[c.id,c.status]),tableEditingChecks.map(id=>[id,'passed']))
+ for(const key of ['filteredPasteExact','hiddenRowProtected','sortUndoRedoExact','rangeCopyExact','clearUndoExact','appendUndoExact','columnSurvivesUndo','multilineDraftOnly','csvReopenExact','tableCopyPreservesSource'])assert.equal(report[key],true,key)
+ assert.equal(report.unselectedBefore,report.unselectedAfter);assert.match(report.unselectedBefore,/^[a-f0-9]{64}$/)
+ assert.equal(report.csvInspection.status,'passed');assert.equal(report.csvInspection.hasBom,true);assert.equal(report.csvInspection.endsCrlf,true);assert.equal(report.csvInspection.nativeBridgeMocked,false)
+ assert.deepEqual(report.csvInspection.rows,[['会议\r\n备注','可见','00123',''],['保持原样','隐藏','9007199254740993123',''],['核对文档','可见','9007199254740993124',''],['=SUM(A1:A2)','已完成','42','']])
+ const x=report.xlsxInspection;assert.equal(x.status,'passed');assert.equal(x.nativeBridgeMocked,false);assert.equal(x.hasFormula,false);for(const[cell,value]of Object.entries({C2:'00123',C3:'9007199254740993123',C4:'9007199254740993124',A5:'=SUM(A1:A2)'})){assert.equal(x.cells[cell],value);assert.equal(x.types[cell],'s')};assert.equal(x.cells.C5,'42');assert.equal(x.types.C5,'n')
+ assert.match(report.csvInspection.sha256,/^[a-f0-9]{64}$/);assert.match(x.sha256,/^[a-f0-9]{64}$/)
+ assert.deepEqual(report.runtimeErrors,[]);assert.ok(report.inputTrace.some(e=>e.type==='paste'&&e.trusted));assert.ok(report.inputTrace.some(e=>e.type==='click'&&e.trusted));assert.ok(report.inputTrace.every(e=>e.trusted))
+}

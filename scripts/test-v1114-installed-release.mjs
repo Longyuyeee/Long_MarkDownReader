@@ -57,7 +57,8 @@ test('the real review importer includes writing report, exact raw hashes and its
   fs.writeFileSync(path.join(root,'.owned-writing-import-protocol'),'synthetic protocol workspace\n',{flag:'wx'})
   fs.mkdirSync(input);write(path.join(root,'package.json'),{version:'1.1.14'})
   for(const file of ['shared/v1-community-release-policy.json','shared/development-version-policy.json']){
-   const policy=json(file);if(file.includes('community')){policy.gates.githubReleasePublished=false;policy.release=null;policy.candidate=null;policy.releaseCandidate=false;policy.currentStatus='v1.1.14-community-release-quality-gate-pending'}write(path.join(root,file),policy)
+   // This is a v1.1.14 synthetic fixture even when main develops its successor.
+   const policy=json(file);if(file.includes('community')){policy.appVersion='1.1.14';policy.patchValidation.previousPublicVersion='1.1.13';policy.gates.githubReleasePublished=false;policy.release=null;policy.candidate=null;policy.releaseCandidate=false;policy.currentStatus='v1.1.14-community-release-quality-gate-pending'}else{policy.runtimeBaseVersion='1.1.14';policy.publicVersion='1.1.13';policy.developmentTargetVersion='1.1.14'}write(path.join(root,file),policy)
   }
   const old=json('docs/evidence/v1.1.13-release/artifact-manifest.json'),receipt=json('docs/evidence/v1-1-13-candidate-lifecycle/installer-build-receipt.json');receipt.appVersion='1.1.14';receipt.previousVersion='1.1.13'
   write(path.join(input,'installer-build-receipt.json'),receipt)
