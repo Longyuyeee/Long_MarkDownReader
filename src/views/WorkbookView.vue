@@ -3592,12 +3592,12 @@ const selectedMatrix = () => {
   return Array.from({ length: bounds.bottom - bounds.top + 1 }, (_, rowOffset) =>
     Array.from({ length: bounds.right - bounds.left + 1 }, (_, columnOffset) => originalInput(cellAt(bounds.top + rowOffset, bounds.left + columnOffset))))
 }
-const copySelection = async () => {
+const copySelection = async (mode: 'copy' | 'cut' = 'copy') => {
   try {
     const matrix = selectedMatrix()
     if (!matrix.length) return false
     const bounds = selectionBounds.value!
-    await writeWorkbookClipboard(matrix.map((row, r) => row.map((input, c) => clipboardCell(bounds.top + r, bounds.left + c, input))))
+    await writeWorkbookClipboard(matrix.map((row, r) => row.map((input, c) => clipboardCell(bounds.top + r, bounds.left + c, input))), mode)
     message.success(`已复制 ${matrix.length} × ${matrix[0].length} 区域`)
     return true
   } catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return false }
@@ -3627,13 +3627,13 @@ const pasteSelection = async () => {
   const draftSnapshot = JSON.stringify([...drafts.value])
   const canPaste = () => isCurrent() && draftSnapshot === JSON.stringify([...drafts.value])
   try {
-    const { matrix, cells } = await readWorkbookClipboard()
+    const { matrix, cells, mode } = await readWorkbookClipboard()
     if (!canPaste()) { message.warning('编辑状态已变化，请在目标选区重新粘贴'); return }
     const start = { ...selectedCell.value }
     const requests: FormulaTranslation[] = []
     const targets: Array<{ row: number; column: number }> = []
     cells?.forEach((row, r) => row.forEach((cell, c) => {
-      if (cell.kind !== 'formula') return
+      if (cell.kind !== 'formula' || mode === 'cut') return
       requests.push({ formula: matrix[r][c], rowDelta: start.row + r - cell.row, columnDelta: start.column + c - cell.column })
       targets.push({ row: r, column: c })
     }))
@@ -3684,7 +3684,7 @@ const clearSelection = () => {
 const cutSelection = async () => {
   if (isExternal.value || saving.value) return
   const isCurrent = captureEditContext()
-  if (!await copySelection()) return
+  if (!await copySelection('cut')) return
   if (!isCurrent()) { message.warning('编辑状态已变化，已复制内容但未清除单元格'); return }
   clearSelection()
 }

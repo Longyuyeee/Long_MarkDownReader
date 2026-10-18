@@ -38,17 +38,17 @@ export function workbookSeries(values: string[], offset: number): string {
 }
 const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const checkBytes = (text: string) => { if (text.length > WORKBOOK_CLIPBOARD_LIMITS.bytes || new TextEncoder().encode(text).length > WORKBOOK_CLIPBOARD_LIMITS.bytes) throw Error('剪贴板超过10MiB，请缩小范围；本次未修改') }
-export function encodeWorkbookClipboard(cells: WorkbookClipboardCell[][]): { text: string; html: string } {
+export function encodeWorkbookClipboard(cells: WorkbookClipboardCell[][], mode: 'copy' | 'cut' = 'copy'): { text: string; html: string } {
   if (!cells.length || !cells[0].length || cells.length * cells[0].length > WORKBOOK_CLIPBOARD_LIMITS.cells || cells.some(row => row.length !== cells[0].length || row.length > 256)) throw Error('复制范围超过工作簿预算')
   for (const row of cells) for (const cell of row) validateWorkbookInput(cell.input, cell.kind)
   const matrix = cells.map(row => row.map(cell => cell.input))
   // A scalar without delimiters must not acquire literal surrounding quotes.
   const text = cells.length === 1 && cells[0].length === 1 && !/[\t\r\n]/.test(matrix[0][0]) ? matrix[0][0] : serializeTableClipboard(matrix, WORKBOOK_CLIPBOARD_LIMITS)
-  const html = '<table data-longedit-workbook="1">' + cells.map(row => '<tr>' + row.map(cell => `<td data-kind="${cell.kind}" data-row="${cell.row}" data-column="${cell.column}">${escape(cell.input)}</td>`).join('') + '</tr>').join('') + '</table>'
+  const html = `<table data-longedit-workbook="1" data-operation="${mode === 'cut' ? 'cut' : 'copy'}">` + cells.map(row => '<tr>' + row.map(cell => `<td data-kind="${cell.kind}" data-row="${cell.row}" data-column="${cell.column}">${escape(cell.input)}</td>`).join('') + '</tr>').join('') + '</table>'
   checkBytes(text); checkBytes(html)
   return { text, html }
 }
-export function decodeWorkbookClipboard(text: string, html = ''): { matrix: string[][]; cells?: WorkbookClipboardCell[][] } {
+export function decodeWorkbookClipboard(text: string, html = ''): { matrix: string[][]; cells?: WorkbookClipboardCell[][]; mode?: 'copy' | 'cut' } {
   const matrix = parseTableClipboard(text, false, WORKBOOK_CLIPBOARD_LIMITS)
   // External HTML is not interpreted. Only our bounded typed envelope is read;
   // it is never inserted into the live DOM, and plain text remains authoritative.
@@ -69,7 +69,7 @@ export function decodeWorkbookClipboard(text: string, html = ''): { matrix: stri
       return { input: matrix[r][c], kind, row: sourceRow, column }
     })
   })
-  return { matrix, cells }
+  return { matrix, cells, mode: table?.getAttribute('data-operation') === 'cut' ? 'cut' : 'copy' }
 }
 export async function readWorkbookClipboard() {
   if (!navigator.clipboard.read) return decodeWorkbookClipboard(await navigator.clipboard.readText())
@@ -83,8 +83,8 @@ export async function readWorkbookClipboard() {
   if (item.types.includes('text/html')) { const value = await item.getType('text/html'); if (value.size > WORKBOOK_CLIPBOARD_LIMITS.bytes) throw Error('剪贴板超过10MiB，本次未修改'); html = await value.text() }
   return decodeWorkbookClipboard(text, html)
 }
-export async function writeWorkbookClipboard(cells: WorkbookClipboardCell[][]) {
-  const { text, html } = encodeWorkbookClipboard(cells)
+export async function writeWorkbookClipboard(cells: WorkbookClipboardCell[][], mode: 'copy' | 'cut' = 'copy') {
+  const { text, html } = encodeWorkbookClipboard(cells, mode)
   if (navigator.clipboard.write && typeof ClipboardItem !== 'undefined') await navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }), 'text/html': new Blob([html], { type: 'text/html' }) })])
   else await navigator.clipboard.writeText(text)
 }
