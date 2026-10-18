@@ -5,7 +5,7 @@
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-18",
-  "currentStatus": "v1.1.14-community-release-ready-to-publish",
+  "currentStatus": "v1.1.14-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -33,7 +33,7 @@
     "localRuntimeSmokePassed": true,
     "installedLifecyclePassed": true,
     "qualityGatePassed": true,
-    "githubReleasePublished": false
+    "githubReleasePublished": true
   },
   "patchValidation": {
     "previousPublicVersion": "1.1.13",
@@ -74,7 +74,15 @@
       }
     ]
   },
-  "release": null,
+  "release": {
+    "tag": "v1.1.14",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14",
+    "databaseId": 416194763,
+    "isDraft": false,
+    "isPrerelease": false,
+    "taggedCommit": "e4650640145d94e0c115b0e3993ae0358b355412",
+    "publishedAt": "2026-10-18T02:41:04Z"
+  },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -92,5 +100,5 @@
     "1.1.12-to-1.1.13-managed-update-observation-pending",
     "1.1.13-to-1.1.14-managed-update-observation-pending"
   ],
-  "nextAction": "publish-verified-v1.1.14"
+  "nextAction": "audit-v1.1.15-approved-foundation-roadmap"
 }

@@ -2,7 +2,9 @@
 
 ## 当前结论
 
-独立同包复核 **39089429186 success**，安装验收闭环。固定产品 `e4650640145d94e0c115b0e3993ae0358b355412`，原安装包来自构建 **39081167437**；复核驱动 `005941935733bb3f0bf8541d4f41cd3711db9bff`。本次继续最终main CI、封板标签、原包公开发布与回下载；此刻公开仍1.1.13，不提前修改README公开下载。发布后补充实际运行与公开收据。
+**v1.1.14 已封板并正式发布。** 北京时间2026-10-18 **10:41:04**（UTC 02:41:04），[正式Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14)，Release ID 416194763。固定产品/标签 `e4650640145d94e0c115b0e3993ae0358b355412`，原包构建 **39081167437**；驱动 `005941935733bb3f0bf8541d4f41cd3711db9bff` 独立同包 **39089429186 success**，封板main CI **39090394053 success**（文档头6ca1c83f），发布/公开回下载 **39090908220 success**。两个安装器及校验文件的大小、SHA-256、GitHub digest一致，没有重新构建；Release正文与仓库说明一致，公开版非草稿、非预发布。[公开收据](evidence/v1.1.14-release/release-receipt.json)、[公开API](evidence/v1.1.14-release/publication/published-api.json)、[回下载核验](evidence/v1.1.14-release/publication/public-download-verification.json)。README开头图标/产品介绍及历史行不改，更新摘要仍在末尾；本次发布后文档提交继续受最终main CI核验，不制造自引用运行号。
+
+当前公开/运行时1.1.14，下一开发目标1.1.15；十三版路线7/13已发布，1.1.15—1.1.20六版待开发。
 
 ## 功能与数据保护
 
@@ -38,6 +40,6 @@
 
 渠道community-unsigned；开发身份 releaseCandidate=false，企业签名RC仍为false，社区安装验收就绪不代表企业签名晋级。Windows可能提示未知发布者，用户应核对同页SHA-256。正式公开后可手动下载安装；手动覆盖安装与1.1.13→1.1.14应用内更新观察分别记录，后者仍pending。HTML字体取阅读电脑已安装字体并后备，不另行打包字体文件；PDF选择浏览器“另存为PDF”，不同虚拟打印机可能保留不同文字层。原生打印页眉页脚可能带来源路径，不需要时在更多设置关闭，见[用户说明](Writing_Delivery_User_Guide.md)。
 
-封板前main CI 39090097990因重整文档遗漏上述两项渠道说明失败，原日志保留为 `evidence/v1114-freeze-main-39090097990-failure.log`。补全文档事实后重新执行门禁，不修改产品或检查条件，旧失败不改称成功。
+封板前main CI 39090097990因重整文档遗漏上述两项渠道说明失败，原日志保留为 `evidence/v1114-freeze-main-39090097990-failure.log`。补全文档事实后重新执行门禁，不修改产品或检查条件，旧失败不改称成功。发布后本机身份检查还要求对齐文档中的具名开发/运行时/公开版本；补全为1.1.15/1.1.14/1.1.14，不改身份断言，原失败保留在 `evidence/v1114-current-audit-published-identity-failure.log`，再执行完整当前审计。
 
 下一版按[1.1.15轻量表格代码预审](V1_1_15_Table_Preimplementation_Audit_2026-10-18.md)先复现矩形粘贴、筛选稳定定位和事务撤销，保留编码/换行/前导零等值；1.1.15—1.1.20六版仍未实施。本次两份用户排序文件不改不提交，不接管本机桌面。

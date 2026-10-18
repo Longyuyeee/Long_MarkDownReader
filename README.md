@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13"><img src="https://img.shields.io/badge/Stable-v1.1.13-cca43b" alt="v1.1.13 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14"><img src="https://img.shields.io/badge/Stable-v1.1.14-cca43b" alt="v1.1.14 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.13**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.14**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.13_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.13/LongEdit_1.1.13_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.13_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.13/LongEdit_1.1.13_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.13](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.14_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.14/LongEdit_1.1.14_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.14_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.14/LongEdit_1.1.14_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.14](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.13/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.14/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.13_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.14_x64-setup.exe
 ```
 
 ```text
-6718f8bb300eeeaa4020fc05440143cf6bd245fafe2da581d911abb75590bcac  LongEdit_1.1.13_x64_zh-CN.msi
-3142d613db486a22ff0a6bb1bac52fa36af44a7036b2169cb9553fbb7852aacd  LongEdit_1.1.13_x64-setup.exe
+ab703789807f95ea68bdc5b5c089f0541038e882bd09f42c77f21a808114744e  LongEdit_1.1.14_x64_zh-CN.msi
+cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6  LongEdit_1.1.14_x64-setup.exe
 ```
 
 </details>
@@ -184,6 +184,10 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 在“新建 → 笔记模板 → 管理模板”新增或修改模板，也可从当前 Markdown 的“文档操作 → 保存为模板…”保存当前草稿。支持标题、日期、时间变量；默认模板按资料库选择，快速笔记可复用。模板保存在本机，管理备份不包含模板正文。
 
 需要换电脑或分享模板时，在模板管理的“更多操作”导出当前模板或全部已保存模板；导入时勾选、预览正文，同名项可保留两份或跳过。模板文件保留变量，不携带本机目录和资料库默认设置；原有模板及未保存编辑保持不变。
+
+需要填写作者、项目等字段时，选“填写模板后新建…”，核对资料库、目录和预览后创建；模板可写 `{{param:作者}}`，未知变量保留，字段内容不会再次展开成变量。原有一键创建和快速笔记流程不增加必填步骤。
+
+文章写好后，从 Markdown 的“导出”先预览当前草稿：**独立 HTML** 携带授权本地位图，换目录也能阅读；**Markdown 仅正文** 保留原图片引用依赖；**打印 / PDF** 在原生打印页选择浏览器“另存为 PDF”，保存后核对文件。不同虚拟打印机的文字层可能不同，页眉页脚可能包含来源路径，可在更多设置关闭。图片可通过“更多格式 → 本地图片…”、粘贴或拖入编辑区，按相对路径复制到文档旁的资源目录；不搬走共享图片，不自动下载在线图片，不代存原稿，也不覆盖已有交付文件。[操作说明与资源边界](docs/Writing_Delivery_User_Guide.md)。
 
 标签右键可固定、关闭其他/右侧未固定标签或恢复关闭；可拖动排序，使用 Ctrl+Shift+T 恢复最近关闭的文档入口。Markdown 和文本保留阅读位置；已明确放弃的未保存内容不会随关闭入口恢复。文内标签可右键固定常用项，智能集合支持顺序调整和多个标签同时筛选。
 
@@ -512,7 +516,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_13_Unsigned_Community_Release_Audit_2026-10-18.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_14_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
 欢迎围绕真实使用任务提出问题、补充最小复现或贡献改进。开发 UI 时先查看相关实际页面，保留现有能力；修改后验证草稿保护、保存复开与错误反馈，不能仅为了通过验收而降低要求。
@@ -527,6 +531,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.14 | 模板字段按需填写；相对图片插入、草稿交付预览、自包含 HTML 与真实 PDF 输出，失败和取消明确区分，不代存原稿 | [发布说明](docs/RELEASE_NOTES_v1.1.14.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14) · [发布审计](docs/V1_1_14_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.13 | PDF 批注筛选、多选与阅读笔记；只追加草稿、显式新建保存，摘要核验来源与移动重关联，长列表提示可见 | [发布说明](docs/RELEASE_NOTES_v1.1.13.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13) · [发布审计](docs/V1_1_13_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.12 | 本地资料内容备份与新目录恢复；逐文件摘要、相对图片/PDF批注/可选历史接续，源变化拒绝与草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.12.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.12) · [发布审计](docs/V1_1_12_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.11 | 图谱刷新保留视角与选择、失败保留和重试、密集长名避让、局部返回与思维导图接续；修复加载期主题定位和实际路由加载 | [发布说明](docs/RELEASE_NOTES_v1.1.11.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.11) · [发布审计](docs/V1_1_11_Unsigned_Community_Release_Audit_2026-10-17.md) |
@@ -544,4 +549,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.14 深化模板写作与文章交付：先实测和修复 PDF/HTML/Markdown 导出，再完善模板参数、保存位置与本地图片依赖，保留现有编辑器和共享资源。[实际代码接续审计](docs/V1_1_14_Writing_Delivery_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.15 深化现有轻量表格：多单元格粘贴、筛选后的稳定定位与整批撤销，核对编码、换行、空值和前导零，保留原有视图及可靠保存；当前仅完成代码预审，尚未交付。[实际代码接续审计](docs/V1_1_15_Table_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
