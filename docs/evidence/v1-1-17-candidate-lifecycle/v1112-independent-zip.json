@@ -1,0 +1,145 @@
+﻿{
+    "status":  "passed",
+    "reader":  "dotnet-system-io-compression-independent-no-extraction",
+    "archive":  "C:\\LongEditV1112Backup-7fe92fed-d5f8-4024-94c6-59a9179fea57\\资料内容.longedit-backup.zip",
+    "sha256":  "6eb5e1b79de0f9c11e9b98eb6b585da30a1a6f3642bd9146e0d16c70098c6907",
+    "manifest":  {
+                     "kind":  "longedit-library-content",
+                     "schemaVersion":  1,
+                     "appVersion":  "1.1.17",
+                     "libraryName":  "LongEditR5ILibrary",
+                     "createdAt":  1792322021,
+                     "options":  {
+                                     "directory":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57",
+                                     "documents":  true,
+                                     "attachments":  true,
+                                     "annotations":  true,
+                                     "history":  true
+                                 },
+                     "entries":  [
+                                     {
+                                         "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf",
+                                         "relativePath":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf",
+                                         "category":  "documents",
+                                         "bytes":  1650,
+                                         "sha256":  "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+                                         "modifiedNanos":  1792321777019408300,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf.annotations.json",
+                                         "relativePath":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf.annotations.json",
+                                         "category":  "annotations",
+                                         "bytes":  389,
+                                         "sha256":  "43f2ff11371ae4d204e8ffc84755faf4a57c766d0819ae179ea8dd81e68ac68b",
+                                         "modifiedNanos":  1792322018163266100,
+                                         "sourceRelative":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf"
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/备份方案.md",
+                                         "relativePath":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/备份方案.md",
+                                         "category":  "documents",
+                                         "bytes":  79,
+                                         "sha256":  "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+                                         "modifiedNanos":  1792322018151260100,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/示意.png",
+                                         "relativePath":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/示意.png",
+                                         "category":  "attachments",
+                                         "bytes":  248699,
+                                         "sha256":  "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+                                         "modifiedNanos":  1792321776029637500,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/项目数据.json",
+                                         "relativePath":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/项目数据.json",
+                                         "category":  "documents",
+                                         "bytes":  50,
+                                         "sha256":  "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+                                         "modifiedNanos":  1792322020041992400,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "history/87d7e182644cac9e1557a21ece22ec4b0b6c592e2606951bfec4352431552aed/1792322018.md",
+                                         "relativePath":  "1792322018.md",
+                                         "category":  "history",
+                                         "bytes":  27,
+                                         "sha256":  "ecdfaf9512909dc5d40ca7fdc4aff436ac30a9fafb108e36edf05bc60cd3b120",
+                                         "modifiedNanos":  1792322018177259900,
+                                         "sourceRelative":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/备份方案.md"
+                                     },
+                                     {
+                                         "path":  "history/87d7e182644cac9e1557a21ece22ec4b0b6c592e2606951bfec4352431552aed/metadata.json",
+                                         "relativePath":  "metadata.json",
+                                         "category":  "history",
+                                         "bytes":  67,
+                                         "sha256":  "d5fc4e6bffc5049d2cab50cd57638f73b4d7f0c11020c7b355e5ce670bfb49d0",
+                                         "modifiedNanos":  1792322018191261700,
+                                         "sourceRelative":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/备份方案.md"
+                                     }
+                                 ],
+                     "directories":  [
+                                         "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57"
+                                     ],
+                     "excluded":  [
+                                      {
+                                          "path":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/.env",
+                                          "reason":  "隐藏、依赖目录或敏感配置，未包含"
+                                      },
+                                      {
+                                          "path":  "v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/.v1112-owned",
+                                          "reason":  "隐藏、依赖目录或敏感配置，未包含"
+                                      }
+                                  ],
+                     "boundary":  [
+                                      "未保存草稿",
+                                      "应用配置与系统凭据",
+                                      "所选范围外链接目标（不会自动跟随）",
+                                      "隐藏和依赖目录",
+                                      "已知敏感配置文件",
+                                      "自定义模板（使用模板导入导出）"
+                                  ]
+                 },
+    "entries":  [
+                    {
+                        "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf",
+                        "sha256":  "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+                        "bytes":  1650
+                    },
+                    {
+                        "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/参考.pdf.annotations.json",
+                        "sha256":  "43f2ff11371ae4d204e8ffc84755faf4a57c766d0819ae179ea8dd81e68ac68b",
+                        "bytes":  389
+                    },
+                    {
+                        "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/备份方案.md",
+                        "sha256":  "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+                        "bytes":  79
+                    },
+                    {
+                        "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/示意.png",
+                        "sha256":  "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+                        "bytes":  248699
+                    },
+                    {
+                        "path":  "files/v1112-content-7fe92fed-d5f8-4024-94c6-59a9179fea57/项目数据.json",
+                        "sha256":  "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+                        "bytes":  50
+                    },
+                    {
+                        "path":  "history/87d7e182644cac9e1557a21ece22ec4b0b6c592e2606951bfec4352431552aed/1792322018.md",
+                        "sha256":  "ecdfaf9512909dc5d40ca7fdc4aff436ac30a9fafb108e36edf05bc60cd3b120",
+                        "bytes":  27
+                    },
+                    {
+                        "path":  "history/87d7e182644cac9e1557a21ece22ec4b0b6c592e2606951bfec4352431552aed/metadata.json",
+                        "sha256":  "d5fc4e6bffc5049d2cab50cd57638f73b4d7f0c11020c7b355e5ce670bfb49d0",
+                        "bytes":  67
+                    }
+                ],
+    "nativeBridgeMocked":  false,
+    "sourceUserContentIncluded":  false
+}

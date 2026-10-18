@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-62-v1.1.17-version-candidate",
-  "binaryVersionTransition": "v1.1.17-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.17-release-ready",
   "displayLabel": "v1.1.17 DOCX 编辑候选 · 当前公开 v1.1.16",
   "activeSlice": {
     "id": "v1.1.17-docx-editing",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_17_DOCX_Development_2026-10-18.md"
   }
 }
