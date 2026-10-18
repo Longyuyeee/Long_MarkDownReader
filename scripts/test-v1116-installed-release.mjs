@@ -12,6 +12,7 @@ function example(){
  for(const key of ['pasteUndoExact','literalTextExact','formulaTranslationExact','decimalFillExact','filteredCopyExact','nativeReopenExact','producerAppReopenExact'])report[key]=true
  report.sourceBefore=sha(nativeBytes);report.workbookInspection.beforeSha256=report.sourceBefore
  report.cutFormulaExact=true
+ report.editControlsProtected=true
  report.foregroundBeforePaste=[true]
  return [report,manifest]
 }

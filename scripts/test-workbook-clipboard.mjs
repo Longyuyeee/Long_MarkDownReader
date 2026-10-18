@@ -58,3 +58,11 @@ test('cut cannot clear a later edit while awaiting the clipboard receipt',async(
  const pending=ctx.cut();drafts.value.set('current',{input:'复制等待期间的新草稿'});finish(true);await pending
  assert.equal(cleared,false);assert.equal(warnings.length,1);assert.equal(drafts.value.get('current').input,'复制等待期间的新草稿')
 })
+test('editing controls retain ordinary keys while an explicit save stays available',()=>{
+ const calls=[],target={closest:()=>({})},bindings={formulaInputRef:box(null),saving:box(false),isExternal:box(false)}
+ for(const name of ['copySelection','pasteSelection','cutSelection','clearSelection','undo','redo','selectCell','saveWorkbook'])bindings[name]=()=>calls.push(name)
+ const ctx=extract('handleShortcut','warnBeforeUnload',{...bindings,useWindowDraft(){}},'globalThis.key=handleShortcut')
+ for(const key of ['Delete','ArrowDown','ArrowRight','c','v','x','z','y'])ctx.key({key,target,ctrlKey:key.length===1,preventDefault(){assert.fail('Do not consume a control-owned key')}})
+ assert.deepEqual(calls,[])
+ ctx.key({key:'s',target,ctrlKey:true,preventDefault(){}});assert.deepEqual(calls,['saveWorkbook'])
+})

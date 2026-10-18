@@ -1,0 +1,240 @@
+TAP version 13
+# Subtest: copy budget is checked before assembling oversized retained cells
+ok 1 - copy budget is checked before assembling oversized retained cells
+  ---
+  duration_ms: 0.525
+  ...
+# Subtest: integer sort distinguishes adjacent long identifiers without floating-point rounding
+ok 2 - integer sort distinguishes adjacent long identifiers without floating-point rounding
+  ---
+  duration_ms: 0.2241
+  ...
+# Subtest: clipboard quotes, embedded newlines, empty tails and exact text roundtrip
+ok 3 - clipboard quotes, embedded newlines, empty tails and exact text roundtrip
+  ---
+  duration_ms: 0.8107
+  ...
+# Subtest: filtered targets are stable IDs and whole paste has one reversible patch
+ok 4 - filtered targets are stable IDs and whole paste has one reversible patch
+  ---
+  duration_ms: 0.4475
+  ...
+# Subtest: append is bounded, undo preserves later-added columns and stable original identities
+ok 5 - append is bounded, undo preserves later-added columns and stable original identities
+  ---
+  duration_ms: 0.2813
+  ...
+# Subtest: out of view, columns, budgets and conflicting undo reject atomically
+ok 6 - out of view, columns, budgets and conflicting undo reject atomically
+  ---
+  duration_ms: 1.2576
+  ...
+# Subtest: zero-length and identical cells never cause spurious edits; formula-looking values stay text
+ok 7 - zero-length and identical cells never cause spurious edits; formula-looking values stay text
+  ---
+  duration_ms: 0.2778
+  ...
+# Subtest: workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input
+ok 8 - workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input
+  ---
+  duration_ms: 4.6105
+  ...
+# Subtest: v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes
+ok 9 - v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes
+  ---
+  duration_ms: 25.8493
+  ...
+# Subtest: driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement
+ok 10 - driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement
+  ---
+  duration_ms: 0.6046
+  ...
+# Subtest: XLSX identifiers remain exact text while ordinary numbers stay numeric
+ok 11 - XLSX identifiers remain exact text while ordinary numbers stay numeric
+  ---
+  duration_ms: 0.9025
+  ...
+# Subtest: XLSX integer sorting distinguishes long adjacent IDs, empty and zero
+ok 12 - XLSX integer sorting distinguishes long adjacent IDs, empty and zero
+  ---
+  duration_ms: 0.209
+  ...
+# Subtest: decimal fill is exact and refuses unreliable results before mutation
+ok 13 - decimal fill is exact and refuses unreliable results before mutation
+  ---
+  duration_ms: 0.3591
+  ...
+# Subtest: quoted multiline/tab/quotes/empty tails and scalar literal quotes roundtrip
+ok 14 - quoted multiline/tab/quotes/empty tails and scalar literal quotes roundtrip
+  ---
+  duration_ms: 1.0201
+  ...
+# Subtest: native length, coordinate shape and batch budgets refuse whole clipboard
+ok 15 - native length, coordinate shape and batch budgets refuse whole clipboard
+  ---
+  duration_ms: 12.5012
+  ...
+# Subtest: actual batch validates all targets and types before changing drafts or history
+ok 16 - actual batch validates all targets and types before changing drafts or history
+  ---
+  duration_ms: 91.9372
+  ...
+# Subtest: actual filtered copy refuses unloaded pages and changed conditions without a clipboard write
+ok 17 - actual filtered copy refuses unloaded pages and changed conditions without a clipboard write
+  ---
+  duration_ms: 19.1931
+  ...
+# Subtest: cut cannot clear a later edit while awaiting the clipboard receipt
+ok 18 - cut cannot clear a later edit while awaiting the clipboard receipt
+  ---
+  duration_ms: 1.7057
+  ...
+# Subtest: editing controls retain ordinary keys while an explicit save stays available
+ok 19 - editing controls retain ordinary keys while an explicit save stays available
+  ---
+  duration_ms: 5.2755
+  ...
+# Subtest: drawing context checks document, object, series and editability
+ok 20 - drawing context checks document, object, series and editability
+  ---
+  duration_ms: 27.1471
+  ...
+# Subtest: every drawing prompt rejects changed targets at each await and preserves cancellation
+ok 21 - every drawing prompt rejects changed targets at each await and preserves cancellation
+  ---
+  duration_ms: 77.3501
+  ...
+# Subtest: drawing delete and move confirmations reject changed contexts
+ok 22 - drawing delete and move confirmations reject changed contexts
+  ---
+  duration_ms: 10.9909
+  ...
+# Subtest: chart creation rejects a stale prompt without changing chart creation requirements
+ok 23 - chart creation rejects a stale prompt without changing chart creation requirements
+  ---
+  duration_ms: 6.2117
+  ...
+# Subtest: drawing writes preserve switched sheets and isolate replaced documents
+ok 24 - drawing writes preserve switched sheets and isolate replaced documents
+  ---
+  duration_ms: 24.9584
+  ...
+# Subtest: defined name writes isolate receipts and release save locks
+ok 25 - defined name writes isolate receipts and release save locks
+  ---
+  duration_ms: 11.532
+  ...
+# Subtest: defined name prompts and deletion reject stale targets
+ok 26 - defined name prompts and deletion reject stale targets
+  ---
+  duration_ms: 21.5242
+  ...
+# Subtest: filter clear confirmation rejects changed context or region
+ok 27 - filter clear confirmation rejects changed context or region
+  ---
+  duration_ms: 4.9074
+  ...
+# Subtest: filter save isolates stale receipts and retains failure input
+ok 28 - filter save isolates stale receipts and retains failure input
+  ---
+  duration_ms: 10.7905
+  ...
+# Subtest: outline writes guard ownership, locking and row/column payloads
+ok 29 - outline writes guard ownership, locking and row/column payloads
+  ---
+  duration_ms: 27.8629
+  ...
+# Subtest: structure receipts isolate stale documents and preserve a switched sheet
+ok 30 - structure receipts isolate stale documents and preserve a switched sheet
+  ---
+  duration_ms: 21.9864
+  ...
+# Subtest: row/column deletion confirmation cannot follow a changed target
+ok 31 - row/column deletion confirmation cannot follow a changed target
+  ---
+  duration_ms: 6.1291
+  ...
+# Subtest: structure commit rechecks dirty and protected state after confirmation
+ok 32 - structure commit rechecks dirty and protected state after confirmation
+  ---
+  duration_ms: 10.3518
+  ...
+# Subtest: clear confirmations reject changed targets, drafts and busy state
+ok 33 - clear confirmations reject changed targets, drafts and busy state
+  ---
+  duration_ms: 10.2278
+  ...
+# Subtest: page setting writes snapshot parameters and isolate stale receipts
+ok 34 - page setting writes snapshot parameters and isolate stale receipts
+  ---
+  duration_ms: 5.5486
+  ...
+# Subtest: freeze writes lock editing, retain current sheet and reject old receipts
+ok 35 - freeze writes lock editing, retain current sheet and reject old receipts
+  ---
+  duration_ms: 15.2769
+  ...
+# Subtest: saving blocks direct draft mutation entry points
+ok 36 - saving blocks direct draft mutation entry points
+  ---
+  duration_ms: 13.3611
+  ...
+# Subtest: selection restoration stops when another view wins either read
+ok 37 - selection restoration stops when another view wins either read
+  ---
+  duration_ms: 11.898
+  ...
+# Subtest: validation write receipts respect document ownership and release window save guards
+ok 38 - validation write receipts respect document ownership and release window save guards
+  ---
+  duration_ms: 13.3705
+  ...
+# Subtest: formula flush preserves existing values but validates actual edits
+ok 39 - formula flush preserves existing values but validates actual edits
+  ---
+  duration_ms: 2.6247
+  ...
+# Subtest: data validation single form preserves cancellation, stale-context and metadata guards
+ok 40 - data validation single form preserves cancellation, stale-context and metadata guards
+  ---
+  duration_ms: 19.2268
+  ...
+# Subtest: data validation edit and delete cannot commit to a changed sheet
+ok 41 - data validation edit and delete cannot commit to a changed sheet
+  ---
+  duration_ms: 4.948
+  ...
+# Subtest: saving blocks editing shortcuts but preserves copying and navigation
+ok 42 - saving blocks editing shortcuts but preserves copying and navigation
+  ---
+  duration_ms: 2.6493
+  ...
+# Subtest: clipboard context is invalidated by save, document, sheet and selection changes
+ok 43 - clipboard context is invalidated by save, document, sheet and selection changes
+  ---
+  duration_ms: 1.5546
+  ...
+# Subtest: format dialogs ignore confirmations from a stale editing context
+ok 44 - format dialogs ignore confirmations from a stale editing context
+  ---
+  duration_ms: 8.6029
+  ...
+# Subtest: custom format still applies when context is unchanged
+ok 45 - custom format still applies when context is unchanged
+  ---
+  duration_ms: 1.5041
+  ...
+# Subtest: formula fill stops before applying edits when translation returns to a stale context
+ok 46 - formula fill stops before applying edits when translation returns to a stale context
+  ---
+  duration_ms: 6.152
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 46
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 680.9323

@@ -2451,9 +2451,11 @@ const selectCell = (row: number, column: number, extend = false, additive = fals
   }
   setSelectionFocus(row, column)
 }
+const focusWorkbookForPointer = (event: PointerEvent) => (event.currentTarget as HTMLElement | null)?.closest<HTMLElement>('.workbook-view')?.focus({ preventScroll: true })
 const startCellSelection = (row: number, column: number, event: PointerEvent) => {
   if (event.button !== 0) return
   event.preventDefault()
+  focusWorkbookForPointer(event)
   dragSelecting = true
   selectCell(row, column, event.shiftKey, event.ctrlKey || event.metaKey)
 }
@@ -2475,6 +2477,7 @@ const extendCellSelection = (row: number, column: number) => {
 const startFill = (event: PointerEvent) => {
   if (isExternal.value || event.button !== 0 || selectionAreas.value.length !== 1 || !selectionBounds.value) return
   event.preventDefault()
+  focusWorkbookForPointer(event)
   dragSelecting = false
   filling = true
   fillSource = { ...selectionBounds.value }
@@ -2483,6 +2486,7 @@ const startFill = (event: PointerEvent) => {
 const selectRow = (row: number, event: PointerEvent) => {
   if (event.button !== 0) return
   event.preventDefault()
+  focusWorkbookForPointer(event)
   const additive = event.ctrlKey || event.metaKey
   const anchorRow = event.shiftKey && selectionAnchor.value?.sheet === activeSheet.value ? selectionAnchor.value.row : row
   const area = { top: Math.min(anchorRow, row), bottom: Math.max(anchorRow, row), left: 0, right: canvasColumnCount.value - 1 }
@@ -2494,6 +2498,7 @@ const selectRow = (row: number, event: PointerEvent) => {
 const selectColumn = (column: number, event: PointerEvent) => {
   if (event.button !== 0) return
   event.preventDefault()
+  focusWorkbookForPointer(event)
   const additive = event.ctrlKey || event.metaKey
   const anchorColumn = event.shiftKey && selectionAnchor.value?.sheet === activeSheet.value ? selectionAnchor.value.column : column
   const area = { top: 0, bottom: canvasRowCount.value - 1, left: Math.min(anchorColumn, column), right: Math.max(anchorColumn, column) }
@@ -4958,6 +4963,8 @@ const handleScroll = () => {
 const handleShortcut = (event: KeyboardEvent) => {
   const formulaFocused = event.target === formulaInputRef.value
   const modified = event.ctrlKey || event.metaKey
+  const controlFocused = Boolean((event.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]'))
+  if (controlFocused && !formulaFocused && !(modified && event.key.toLowerCase() === 's')) return
   if (saving.value && ((!modified && event.key === 'Delete')
     || (modified && ['s', 'v', 'x', 'z', 'y'].includes(event.key.toLowerCase())))) {
     event.preventDefault()
