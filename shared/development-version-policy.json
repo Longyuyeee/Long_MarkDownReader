@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.18",
+  "developmentTargetVersion": "1.1.19",
   "runtimeBaseVersion": "1.1.18",
-  "publicVersion": "1.1.17",
-  "publicTag": "v1.1.17",
-  "publicTagCommit": "bcbb9265f66faae396fd5f43cb3354562c89fcab",
+  "publicVersion": "1.1.18",
+  "publicTag": "v1.1.18",
+  "publicTagCommit": "9b621511807e4233147a5a6d4265a2be97f53b0f",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-64-v1.1.18-version-candidate",
-  "binaryVersionTransition": "v1.1.18-release-ready",
-  "displayLabel": "v1.1.18 PPTX 编辑候选 · 当前公开 v1.1.17",
+  "currentStage": "M8-65-v1.1.18-published",
+  "binaryVersionTransition": "v1.1.18-public-release-published",
+  "displayLabel": "v1.1.18 已发布 · 下一版本 v1.1.19",
   "activeSlice": {
     "id": "v1.1.18-pptx-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
-    "document": "docs/V1_1_18_PPTX_Development_2026-10-18.md"
+    "status": "published-remote-assets-verified",
+    "document": "docs/V1_1_18_Unsigned_Community_Release_Audit_2026-10-18.md"
   }
 }
