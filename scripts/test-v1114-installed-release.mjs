@@ -20,7 +20,7 @@ const example=()=>{
  report.nativePrint.mainWindow={visibleBeforePrint:true,foregroundBeforePrint:true,clientWidth:1000,clientHeight:700,pid:1,title:'Long编辑·md助手',configuredMainTitle:'Long编辑·md助手',className:'Tauri Window'};report.printViewport={width:1000,height:700}
  Object.assign(report.nativePrint,{selectedDestination:'Save as PDF',printUiObserved:true,companionsRestored:true})
  report.nativePrint.actions=['queued-owned-native-print-ui-Print'];report.nativePrint.buttonInvocation={started:true,completed:true,error:null}
- report.browserPrintSelection={status:'passed',evidenceLevel:'real-WebView2-print-UI-trusted-keyboard',sourceCommit:report.sourceCommit,harnessSourceCommit:report.harnessSourceCommit,targetUrl:'edge://print/',initialLabel:'Microsoft Print to PDF',selectedLabel:'Save as PDF',nativeBridgeMocked:false,sourceUserContentIncluded:false,inputTrace:[{type:'keydown',trusted:true},{type:'change',trusted:true}]}
+ report.browserPrintSelection={status:'passed',evidenceLevel:'real-WebView2-print-UI-trusted-pointer',sourceCommit:report.sourceCommit,harnessSourceCommit:report.harnessSourceCommit,targetUrl:'edge://print/',initialLabel:'Microsoft Print to PDF',selectedLabel:'Save as PDF',nativeBridgeMocked:false,sourceUserContentIncluded:false,inputTrace:[{type:'mousedown',trusted:true},{type:'click',trusted:true},{type:'mousedown',trusted:true},{type:'click',trusted:true}]}
  report.templateMainText='用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}'
  return [report,manifest]
 }
@@ -35,7 +35,8 @@ test('real installed driver never replaces bridge, calls a component handler or 
  const source=fs.readFileSync('scripts/lib/installed-v1-1-14-workflow.mjs','utf8')
  for(const token of ['dispatchEvent(','__TAURI_INTERNALS__=','__TAURI_INTERNALS__ =','isDirty=false','isDirty = false','force:true','force: true'])assert.ok(!source.includes(token),token)
  for(const token of ['nativeUserInput','set-hosted-writing-clipboard.ps1','select-hosted-session-file.ps1','print-hosted-writing-pdf.ps1','inspectStandaloneDelivery','validateInstalledWritingDelivery'])assert.ok(source.includes(token),token)
- const printUi=fs.readFileSync('scripts/lib/hosted-writing-print-selection.mjs','utf8');for(const token of ['dispatchEvent(','__TAURI_INTERNALS__','Input.insertText'])assert.ok(!printUi.includes(token));assert.ok(!/\.value\s*=/.test(printUi));assert.ok(printUi.includes('Input.dispatchKeyEvent'))
+ const printUi=fs.readFileSync('scripts/lib/hosted-writing-print-selection.mjs','utf8');for(const token of ['dispatchEvent(','__TAURI_INTERNALS__','Input.insertText'])assert.ok(!printUi.includes(token))
+ const assignment=/\.(?:value|selectedIndex)\s*=(?!=)/;for(const sample of ['s.value = "x"','s.selectedIndex=1'])assert.ok(assignment.test(sample));for(const sample of ['s.value === "x"','s.value == "x"'])assert.ok(!assignment.test(sample));assert.ok(!assignment.test(printUi));assert.ok(printUi.includes('Input.dispatchMouseEvent'))
 })
 test('v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver',()=>{
  const manifest=JSON.parse(fs.readFileSync('docs/evidence/v1.1.13-release/artifact-manifest.json','utf8'));manifest.appVersion=manifest.sourceVersion='1.1.14'

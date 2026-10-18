@@ -1,0 +1,181 @@
+{
+  "status": "failed",
+  "evidenceLevel": "real-WebView2-print-UI-trusted-keyboard",
+  "sourceCommit": "e4650640145d94e0c115b0e3993ae0358b355412",
+  "harnessSourceCommit": "05a7aed94db3fc6c3fbf907f5f1196ee7f90731c",
+  "nativeBridgeMocked": false,
+  "sourceUserContentIncluded": false,
+  "actions": [],
+  "targetUrl": "edge://print/",
+  "targetId": "7CF284032185086451D6B552B3B7FD42",
+  "controlNodes": [
+    {
+      "tag": "button",
+      "attributes": [
+        "aria-haspopup",
+        "listbox",
+        "role",
+        "combobox",
+        "type",
+        "button",
+        "slot",
+        "control",
+        "aria-controls",
+        "listbox-2",
+        "id",
+        "input-39"
+      ]
+    },
+    {
+      "tag": "input",
+      "attributes": [
+        "class",
+        "control",
+        "part",
+        "control",
+        "id",
+        "control",
+        "autocomplete",
+        "off",
+        "type",
+        "number",
+        "step",
+        "1",
+        "min",
+        "1",
+        "max",
+        "999"
+      ]
+    },
+    {
+      "tag": "input",
+      "attributes": [
+        "class",
+        "control",
+        "part",
+        "control",
+        "id",
+        "control",
+        "autocomplete",
+        "off",
+        "placeholder",
+        "e.g. 1-5, 8, 11-13",
+        "type",
+        "text"
+      ]
+    },
+    {
+      "tag": "button",
+      "attributes": [
+        "aria-haspopup",
+        "listbox",
+        "role",
+        "combobox",
+        "type",
+        "button",
+        "slot",
+        "control",
+        "aria-controls",
+        "listbox-6",
+        "id",
+        "input-54"
+      ]
+    },
+    {
+      "tag": "button",
+      "attributes": [
+        "aria-haspopup",
+        "listbox",
+        "role",
+        "combobox",
+        "type",
+        "button",
+        "slot",
+        "control",
+        "aria-controls",
+        "listbox-10",
+        "id",
+        "input-55"
+      ]
+    },
+    {
+      "tag": "input",
+      "attributes": [
+        "class",
+        "control",
+        "part",
+        "control",
+        "id",
+        "control",
+        "autocomplete",
+        "off",
+        "placeholder",
+        "",
+        "type",
+        "number",
+        "step",
+        "1",
+        "min",
+        "10",
+        "max",
+        "200"
+      ]
+    },
+    {
+      "tag": "button",
+      "attributes": [
+        "aria-haspopup",
+        "listbox",
+        "role",
+        "combobox",
+        "type",
+        "button",
+        "slot",
+        "control",
+        "aria-controls",
+        "listbox-18",
+        "id",
+        "input-43"
+      ]
+    },
+    {
+      "tag": "button",
+      "attributes": [
+        "aria-haspopup",
+        "listbox",
+        "role",
+        "combobox",
+        "type",
+        "button",
+        "slot",
+        "control",
+        "aria-controls",
+        "listbox-26",
+        "id",
+        "input-45"
+      ]
+    },
+    {
+      "tag": "input",
+      "attributes": [
+        "data-element-focusable",
+        "true",
+        "id",
+        "pageselector",
+        "class",
+        "c0197 c0195",
+        "type",
+        "text",
+        "value",
+        "1",
+        "title",
+        "Go to any page between 1 and 18. (Ctrl+Alt+G)",
+        "aria-label",
+        "Page number"
+      ]
+    }
+  ],
+  "observedSelects": [],
+  "documentReadyState": "complete",
+  "failure": "Error: The real print UI did not expose an enabled Save as PDF option within its readiness budget\n    at readySelect (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/hosted-writing-print-selection.mjs:30:301)\n    at async selectHostedBrowserPdf (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/hosted-writing-print-selection.mjs:32:13)"
+}

@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input
+ok 1 - writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input
+  ---
+  duration_ms: 16.3256
+  ...
+# Subtest: real installed driver never replaces bridge, calls a component handler or synthesizes DOM input
+not ok 2 - real installed driver never replaces bridge, calls a component handler or synthesizes DOM input
+  ---
+  duration_ms: 2.7441
+  location: 'E:\\ProjectSave\\GeminiProject\\MarkDownReader\\scripts\\test-v1114-installed-release.mjs:34:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(!/\.value\s*=/.test(printUi))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1114-installed-release.mjs:38:211)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:934:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:633:18)
+    Test.postRun (node:internal/test_runner/test:1045:19)
+    Test.run (node:internal/test_runner/test:973:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver
+ok 3 - v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver
+  ---
+  duration_ms: 114.9791
+  ...
+# Subtest: the real review importer includes writing report, exact raw hashes and its summary in a disposable synthetic workspace
+ok 4 - the real review importer includes writing report, exact raw hashes and its summary in a disposable synthetic workspace
+  ---
+  duration_ms: 189.7734
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 403.7702

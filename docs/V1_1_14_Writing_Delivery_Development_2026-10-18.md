@@ -26,6 +26,10 @@
 
 ## 继续到发布的门禁
 
+第七轮 `39088601140`（驱动05a7aed9）没有执行目标选择：原始DOM确认打印目标是 `button[role=combobox]` 控制的自定义listbox，没有原生select；前驱动的select假设错误，不能将其读空解释成Save as PDF不可用。原DOM控件、状态、桌面及API/日志在 `evidence/v1114-failed-review-39088601140/`。下一通过公开AX角色/名称/当前值识别真实下拉，实际鼠标点击展开和选项，再由AX与原生UIA共同确认；不直接赋值或调用组件处理器。保留全部事件，真实鼠标mousedown/click必须可信；自定义组件脚本派生的change不冒充用户输入，参见[DOM事件规范](https://dom.spec.whatwg.org/#dom-event-istrusted)。原生全文、图片与末段断言不变。
+
+辅助静态禁赋值检查曾误把只读 `value === ...` 当赋值，原失败保留；修正为精确识别单等号，并新增样例证明仍拒绝value/selectedIndex赋值而允许相等比较。协议4项通过，不删禁赋值/禁事件伪造门禁。
+
 第六轮 `39087568705`（驱动02e5267a）未生成新PDF，整体failure。UIA选择调用返回，但控件实际值仍为Microsoft Print to PDF；原生驱动正确拒绝继续，不能将 `destinationChoiceRequested` 当 `selectedDestination`。原状态、桌面图、API/日志在 `evidence/v1114-failed-review-39087568705/`。下一在实际 `edge://print/` 目标中只读检查真实select选项及可用状态，使用可信Tab/Home/方向键、Tab提交，再由原生UIA独立核对当前值；两份观察均通过才点击保存。不直接设置value、不dispatchEvent、不调用产品私有处理器。不可用会明确失败并正常取消打印界面，而不是偷偷换回不可检索的输出。
 
 第五轮 `39086832096`（驱动0c9c9d99）已经真实生成并重开PDF，本版前9项通过，后续文字验收失败，整体failure。原PDF **1,309,512字节**、SHA-256 `d24f751f4491f20b8bb78a50492654e43ad69f587c166bed646b4225a53ca528`，18页；独立pypdf检查18页字体资源和提取文字均0，Poppler实看首末页图文正常、末页含第70节与第二张图。该环境选用的 **Microsoft Print to PDF** 将文字轮廓化，不是纯图片PDF，也不是空格匹配问题。原PDF、原生UIA/保存框/完成状态、应用内重开、结构检查及首末页渲染在 `evidence/v1114-failed-review-39086832096/`。不OCR补字、不修改原PDF、不放宽可搜索文字断言。
