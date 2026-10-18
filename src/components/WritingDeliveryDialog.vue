@@ -5,7 +5,7 @@
     <p v-if="loading" role="status">正在准备正文与图片…</p>
     <details v-if="warnings.length" class="delivery-warnings" open><summary>交付注意事项（{{warnings.length}}）</summary><ul><li v-for="warning in warnings" :key="warning">{{warning}}</li></ul></details>
     <iframe v-if="documentHtml" ref="preview" title="实际交付预览" sandbox="allow-same-origin allow-modals" :srcdoc="documentHtml" @load="frameReady=true" />
-    <template #footer><p v-if="error" role="alert" class="delivery-error">{{error}} <n-button v-if="!busy&&!documentHtml" size="small" @click="prepare">重新准备</n-button></p><p v-if="result" role="status" class="delivery-result">{{result}}</p><div class="delivery-actions"><n-button :disabled="busy" @click="emit('close')">关闭</n-button><n-button :disabled="busy" @click="save('md')">Markdown 仅正文…</n-button><n-button :disabled="busy||!frameReady||!documentHtml" @click="save('html')">独立 HTML…</n-button><n-button type="primary" :disabled="busy||!frameReady||!documentHtml" @click="print">打印 / PDF…</n-button></div><p class="delivery-footnote">Markdown 图片仍依赖原引用；需要换目录阅读时建议使用独立 HTML。已有文件不直接覆盖。</p></template>
+    <template #footer><p v-if="error||prepareError" role="alert" class="delivery-error">{{prepareError}} {{error}} <n-button v-if="!busy&&!documentHtml" size="small" @click="prepare">重新准备</n-button></p><p v-if="result" role="status" class="delivery-result">{{result}}</p><div class="delivery-actions"><n-button :disabled="busy" @click="emit('close')">关闭</n-button><n-button :disabled="busy" @click="save('md')">Markdown 仅正文…</n-button><n-button :disabled="busy||!frameReady||!documentHtml" @click="save('html')">独立 HTML…</n-button><n-button type="primary" :disabled="busy||!frameReady||!documentHtml" @click="print">打印 / PDF…</n-button></div><p class="delivery-footnote">Markdown 图片仍依赖原引用；需要换目录阅读时建议使用独立 HTML。已有文件不直接覆盖。</p></template>
   </n-modal>
 </template>
 <script setup lang="ts">
@@ -18,16 +18,17 @@ import {beginWindowSave} from '../services/windowDrafts'
 const props=defineProps<{root:string;path:string;title:string;markdown:string;html:string;preferences:DisplayPreferences}>()
 const emit=defineEmits<{close:[]}>()
 const loading=ref(false),busy=ref(false),error=ref(''),result=ref(''),warnings=ref<string[]>([]),documentHtml=ref(''),frameReady=ref(false),preview=ref<HTMLIFrameElement>()
+const prepareError=ref('')
 let generation=0,live=true
 onUnmounted(()=>{live=false;++generation})
 async function prepare(){
  if(busy.value)return
- const token=++generation;loading.value=true;error.value='';documentHtml.value='';frameReady.value=false;result.value=''
+ const token=++generation;loading.value=true;error.value='';prepareError.value='';documentHtml.value='';frameReady.value=false;result.value=''
  try{
   const resources=await invoke<DeliveryResources>('prepare_writing_delivery',{libraryRoot:props.root,documentPath:props.path,markdown:props.markdown})
   if(!live||token!==generation)return
   const ready=deliveryDocument(props.title,props.html,resources,props.preferences);documentHtml.value=ready.document;warnings.value=ready.warnings
- }catch(cause){if(live&&token===generation)error.value=`交付预览未完成：${String(cause)}。原稿未改动，可修复图片后重新准备。`}
+ }catch(cause){if(live&&token===generation)prepareError.value=`交付预览未完成：${String(cause)}。原稿未改动，可修复图片后重新准备。`}
  finally{if(live&&token===generation)loading.value=false}
 }
 async function save(format:'md'|'html'){

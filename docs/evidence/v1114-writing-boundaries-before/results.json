@@ -1,0 +1,10 @@
+{
+  "evidenceLevel": "real-LibraryMode-Vditor-simulated-IPC-not-installed",
+  "checks": [
+    "Both real Vditor local image destinations survive portable export in sv",
+    "Both real Vditor local image destinations survive portable export in wysiwyg",
+    "Both real Vditor local image destinations survive portable export in ir"
+  ],
+  "status": "failed",
+  "failure": "AssertionError [ERR_ASSERTION]: body-only Markdown must not erase the independent HTML resource error/retry action\n\n0 !== 1\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1114-writing-boundaries.mjs:22:9"
+}

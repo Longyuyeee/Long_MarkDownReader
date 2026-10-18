@@ -35,7 +35,7 @@ window.__TAURI_INTERNALS__ = {
     if (command === 'get_knowledge_index_status') return { state: 'ready', schemaVersion: 1, sourceCount: 2, objectCount: 2, relationCount: 0, progress: 100, cacheBytes: 0, recoveryAvailable: false }
     if (command === 'read_text_document') { if (!disk.has(args.path)) throw Error('文件不存在'); return snapshot(args.path) }
     if (command === 'write_text_document') { if (window.shellAudit.failSave) throw Error('保存失败，请重试'); disk.set(args.path,args.content); return snapshot(args.path) }
-    if (command === 'prepare_writing_delivery') { if(window.shellAudit.failDelivery)throw Error('图片缺失，未完成');return {images:[],warnings:[]} }
+    if (command === 'prepare_writing_delivery') { if(window.shellAudit.failDelivery)throw Error('图片缺失，未完成');return window.shellAudit.deliveryResources||{images:[],warnings:[]} }
     if (command === 'save_writing_delivery') { if(window.shellAudit.failExport)throw Error('目录不可写');if(window.shellAudit.cancelExport)return null;return 'C:/另一个 目录/交付.'+args.format }
     if (command === 'create_note_from_template') {if(window.shellAudit.failCreate)throw Error('目录正在移动');const {renderNoteTemplate}=await import('/src/config/noteTemplates.ts');let name=args.name,index=0;while(disk.has(args.targetDir+'/'+name+'.md'))name=args.name+' '+ ++index;const path=args.targetDir+'/'+name+'.md';disk.set(path,renderNoteTemplate(args.content,name,new Date(),args.parameters));return path}
     if (command === 'import_writing_image' || command==='insert_writing_image') return '.assets/fixture-image.png'

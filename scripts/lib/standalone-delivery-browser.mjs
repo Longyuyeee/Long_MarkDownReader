@@ -10,7 +10,8 @@ export async function inspectStandaloneDelivery(file,ownerRoot,output){
  assert.equal(process.env.GITHUB_ACTIONS,'true');assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1')
  assert.ok(path.resolve(file).toLowerCase().startsWith(path.resolve(ownerRoot).toLowerCase()+path.sep))
  await fs.access(path.join(ownerRoot,'.v119-installed-owner'))
- const edge=path.join(process.env['PROGRAMFILES(X86)']||'C:/Program Files (x86)','Microsoft/Edge/Application/msedge.exe'),profile=path.join(ownerRoot,'html-reopen-'+crypto.randomUUID())
+ assert.ok(process.env.RUNNER_TEMP,'the independent browser profile must stay outside the watched library')
+ const edge=path.join(process.env['PROGRAMFILES(X86)']||'C:/Program Files (x86)','Microsoft/Edge/Application/msedge.exe'),profile=await fs.mkdtemp(path.join(process.env.RUNNER_TEMP,'longedit-html-'+crypto.randomUUID()+'-'))
  const child=spawn(edge,['--headless=new','--no-first-run','--no-default-browser-check','--disable-gpu','--remote-debugging-port=0','--user-data-dir='+profile,pathToFileURL(file).href],{windowsHide:true,stdio:'ignore'})
  let socket;const pending=new Map();let id=0
  try{

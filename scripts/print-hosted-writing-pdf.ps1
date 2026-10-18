@@ -52,6 +52,14 @@ try{
     }
    }
    if(-not $printed){
+    if($win.Title -match '^(Print|打印)$' -and $result.defaultPrinter -eq 'Microsoft Print to PDF'){
+     $children=@([WritingPrintWindows]::Children($win.Handle));$result.nativePrintControls=$children
+     $printOk=$children|Where-Object {$_.ClassName -eq 'Button' -and $_.Id -eq 1}|Select-Object -First 1
+     if($printOk){
+      if(-not [WritingPrintWindows]::PostMessage([IntPtr]$win.Handle,273,[IntPtr]1,[IntPtr]$printOk.Handle)){throw 'Could not confirm the exact owned native Print dialog'}
+      $result.actions+=@('confirmed-owned-native-system-print-dialog-with-PDF-default');$printed=$true;break
+     }
+    }
     try{
      $element=[System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$win.Handle)
      $controls=@($element.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition))

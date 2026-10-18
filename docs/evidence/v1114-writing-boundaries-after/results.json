@@ -1,0 +1,10 @@
+{
+  "evidenceLevel": "real-LibraryMode-Vditor-simulated-IPC-not-installed",
+  "checks": [
+    "Both real Vditor local image destinations survive portable export in sv",
+    "Both real Vditor local image destinations survive portable export in wysiwyg",
+    "Both real Vditor local image destinations survive portable export in ir",
+    "Body-only Markdown success cannot erase failed HTML preparation or its retry action"
+  ],
+  "status": "passed"
+}

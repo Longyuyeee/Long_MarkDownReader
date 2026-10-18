@@ -46,6 +46,13 @@ export async function runInstalledV1114Workflow({send,evaluate,navigate,capture,
   report.imagePicker=await picker('插入本地图片',shared,()=>ui.clickText('#vditor-lib .vditor-toolbar-label','本地图片…'),'image')
   await ui.waitFor(`${tab()}?.content.includes('.assets/')`,'image relative reference actually inserted');const liveDraft=await evaluate(`${tab()}.content`)
   report.relativeImageInserted=liveDraft.includes('.assets/')&&!liveDraft.includes('data:image/');assert.ok(report.relativeImageInserted);check(2);check(3)
+  // Owned fault injection: a missing shared resource must remain actionable
+  // even if the user first cancels a body-only export. Restore exact bytes.
+  await fs.rename(shared,shared+'.missing')
+  await ui.clickText('.document-shortcut-host button','导出');await ui.clickText('.n-dropdown-option-body__label','导出 HTML');await ui.waitFor(`document.querySelector('.writing-delivery-dialog [role=alert]')?.textContent.includes('图片')`,'honest missing-image preparation error')
+  report.resourceCancelPicker=await picker('导出新文档（不覆盖已有文件）',cancel,()=>button('Markdown 仅正文…'),'resource-recovery-cancel',true)
+  report.resourceErrorRetainedAfterMarkdown=await evaluate(`document.querySelector('.writing-delivery-dialog [role=alert]')?.textContent.includes('图片')&&[...document.querySelectorAll('.writing-delivery-dialog button')].some(b=>b.textContent.trim()==='重新准备')`);assert.equal(report.resourceErrorRetainedAfterMarkdown,true)
+  await capture('installed-v1114-resource-error-after-markdown.jpg');await fs.rename(shared+'.missing',shared);await button('重新准备');await ui.waitFor(`document.querySelector('.writing-delivery-dialog iframe')?.contentDocument?.images.length===2&&[...document.querySelector('.writing-delivery-dialog iframe').contentDocument.images].every(i=>i.complete&&i.naturalWidth>0)`,'exact restored resource prepares successfully');await button('关闭')
   await openExport();report.previewIncludesUnsavedDraft=await evaluate(`document.querySelector('.writing-delivery-dialog iframe').contentDocument.body.innerText.includes('这篇交付方案仍未保存')`);report.previewSha256=sha(Buffer.from(await evaluate(`document.querySelector('.writing-delivery-dialog iframe').srcdoc`)));await capture('installed-v1114-delivery-preview.jpg')
   report.htmlPicker=await picker('导出新文档（不覆盖已有文件）',html,()=>button('独立 HTML…'),'html');await ui.waitFor(`document.querySelector('.writing-delivery-dialog')?.textContent.includes('已导出：')`,'actual HTML write acknowledged')
   const htmlBytes=await fs.readFile(html);report.htmlSha256=sha(htmlBytes);report.htmlCarriesLocalImages=(htmlBytes.toString().match(/src="data:image\/png;base64,/g)||[]).length>=2&&!htmlBytes.toString().includes('blob:');assert.ok(report.htmlCarriesLocalImages);check(4)
