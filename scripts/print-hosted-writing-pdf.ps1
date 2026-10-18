@@ -1,10 +1,11 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Target,[Parameter(Mandatory=$true)][string]$Report)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$QuickNoteWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Target,[Parameter(Mandatory=$true)][string]$Report)
 $ErrorActionPreference='Stop'
 if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows' -or $env:LONGEDIT_R5I_DISPOSABLE -ne '1'){throw 'Only the disposable hosted Windows test may print'}
 $root=[IO.Path]::GetFullPath($OwnerRoot).TrimEnd('\')+'\';$targetFile=[IO.Path]::GetFullPath($Target)
 if(-not $targetFile.StartsWith($root,[StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetExtension($targetFile) -ne '.pdf' -or (Test-Path -LiteralPath $targetFile) -or -not(Test-Path -LiteralPath (Join-Path $OwnerRoot '.v119-installed-owner'))){throw 'A new generated PDF inside the owned fixture is required'}
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
+Add-Type -Path (Join-Path $PSScriptRoot 'lib/hosted-writing-print-invoke.cs') -ReferencedAssemblies @([System.Windows.Automation.AutomationElement].Assembly.Location,[System.Windows.Automation.AutomationProperty].Assembly.Location,'System.dll')
 Add-Type -TypeDefinition @'
 using System;using System.Text;using System.Collections.Generic;using System.Runtime.InteropServices;
 public static class WritingPrintWindows {
@@ -18,6 +19,7 @@ public static class WritingPrintWindows {
  [DllImport("user32.dll")]static extern IntPtr GetWindow(IntPtr h,uint f);
  [DllImport("user32.dll")]public static extern bool IsWindowEnabled(IntPtr h);
  [DllImport("user32.dll")]public static extern bool IsWindowVisible(IntPtr h);
+ [DllImport("user32.dll")]public static extern bool IsIconic(IntPtr h);
  [DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int command);
  [DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);
  [DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();
@@ -36,12 +38,13 @@ public static class WritingPrintWindows {
  public static Item[] Children(long n){var a=new List<Item>();EnumChildWindows(new IntPtr(n),(h,p)=>{a.Add(Read(h));return true;},IntPtr.Zero);return a.ToArray();}
 }
 '@
-$result=[ordered]@{status='running';desktopUserSession='disposable-github-hosted';target=$targetFile;actions=@();windows=@();controls=@()}
+$result=[ordered]@{status='running';desktopUserSession='disposable-github-hosted';target=$targetFile;actions=@();windows=@();controls=@();temporarilyMinimizedWindows=@()}
 try{
  $appRoots=@(Get-Process|Where-Object {try{$_.Path -eq $Executable}catch{$false}}|ForEach-Object Id)
  $mainWindows=@([WritingPrintWindows]::Top()|Where-Object {$_.Pid -in $appRoots -and $_.OwnerPid -eq 0 -and $_.Title -ceq $MainWindowTitle -and $_.ClassName -eq 'Tauri Window'})
  if($mainWindows.Count -ne 1){throw 'Exactly one configured main window of the installed executable is required; a quick-note or external document window is not equivalent'}
  $mainWindow=$mainWindows[0]
+ foreach($companion in @([WritingPrintWindows]::Top()|Where-Object {$_.Pid -eq $mainWindow.Pid -and $_.Handle -ne $mainWindow.Handle -and $_.ClassName -eq 'Tauri Window' -and $_.Title -ceq $QuickNoteWindowTitle -and [WritingPrintWindows]::IsWindowVisible([IntPtr]$_.Handle) -and -not[WritingPrintWindows]::IsIconic([IntPtr]$_.Handle)})){$result.temporarilyMinimizedWindows+=@($companion);$null=[WritingPrintWindows]::ShowWindow([IntPtr]$companion.Handle,6)}
  $result.mainWindow=[ordered]@{handle=$mainWindow.Handle;pid=$mainWindow.Pid;title=$mainWindow.Title;configuredMainTitle=$MainWindowTitle;className=$mainWindow.ClassName;wasVisible=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)}
  if(-not $result.mainWindow.wasVisible){$null=[WritingPrintWindows]::ShowWindow([IntPtr]$mainWindow.Handle,4)}
  $result.mainWindow['visibleBeforePrint']=[WritingPrintWindows]::IsWindowVisible([IntPtr]$mainWindow.Handle)
@@ -63,13 +66,14 @@ try{
  if($pdfPrinter){$null=(New-Object -ComObject WScript.Network).SetDefaultPrinter('Microsoft Print to PDF');$result.defaultPrinter='Microsoft Print to PDF'}
  $result.status='ready-for-native-print'
  [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
- $deadline=[DateTime]::UtcNow.AddSeconds(45);$printed=$false;$saved=$false;$result.controlWindows=[ordered]@{}
+ $deadline=[DateTime]::UtcNow.AddSeconds(45);$printed=$false;$saved=$false;$invocation=$null;$result.controlWindows=[ordered]@{}
  $interactiveTypes=[System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@(
   [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::Button),
   [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::ComboBox),
   [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::ListItem)
  ))
  do{
+  if($invocation -and $invocation.Completed -and $invocation.Error){throw $invocation.Error}
   $all=@(Get-CimInstance Win32_Process);$rootProcesses=@($all|Where-Object {$_.ExecutablePath -eq $Executable});$owned=@($rootProcesses.ProcessId)
   for($i=0;$i -lt 8;$i++){$next=@($all|Where-Object {$_.ParentProcessId -in $owned}|ForEach-Object ProcessId);$owned=@($owned+$next|Select-Object -Unique)}
   if(-not $rootProcesses){throw 'The exact installed application is no longer running'}
@@ -96,7 +100,7 @@ try{
      $printOk=$children|Where-Object {$_.ClassName -eq 'Button' -and $_.Id -eq 1}|Select-Object -First 1
      if($printOk -and [WritingPrintWindows]::IsWindowEnabled([IntPtr]$printOk.Handle)){
       if(-not [WritingPrintWindows]::PostMessage([IntPtr]$win.Handle,273,[IntPtr]1,[IntPtr]$printOk.Handle)){throw 'Could not confirm the exact owned native Print dialog'}
-      $result.actions+=@('confirmed-owned-native-system-print-dialog-with-PDF-default');$printed=$true;break
+      $result.actions+=@('confirmed-owned-native-system-print-dialog-with-PDF-default');$result.selectedDestination=$result.defaultPrinter;$result.printUiObserved=$true;$printed=$true;break
      }
     }
     try{
@@ -108,6 +112,20 @@ try{
      $result.stage='read-owned-print-controls';[IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
      # Only the isolated app/its verified descendants are searched. No global
      # keyboard or mouse input, and no default website or DOM handler is called.
+     $printUi=($controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Print','Save','打印','保存')}) -and ($controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Cancel','取消')})
+     $destinationValues=@()
+     if($printUi){foreach($combo in @($controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ComboBox})){
+      try{$destinationValues+=@($combo.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern).GetCurrentSelection()|ForEach-Object {$_.Current.Name})}catch{}
+      try{$destinationValues+=@($combo.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)}catch{}
+      try{$destinationValues+=@($combo.GetCurrentPattern([System.Windows.Automation.LegacyIAccessiblePattern]::Pattern).Current.Value)}catch{}
+     }
+      $pdfName=[System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@([System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Microsoft Print to PDF'),[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty,'Save as PDF')))
+      $pdfEntry=$element.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$pdfName)
+      if($pdfEntry -and -not $pdfEntry.Current.IsOffscreen -and $pdfEntry.Current.ControlType -in @([System.Windows.Automation.ControlType]::Text,[System.Windows.Automation.ControlType]::ComboBox)){$destinationValues+=@($pdfEntry.Current.Name)}
+      $result.destinationValues=@($destinationValues|Select-Object -Unique)
+      $chosen=$destinationValues|Where-Object {$_ -in @('Microsoft Print to PDF','Save as PDF')}|Select-Object -First 1
+      if($chosen){$result.selectedDestination=$chosen;$result.printUiObserved=$true}
+     }
      $destination=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::ComboBox -and $_.Current.Name -match 'Destination|Printer|目标|打印机'}|Select-Object -First 1
      if($destination -and -not $printed){
       try{
@@ -117,9 +135,9 @@ try{
        if($entry){$entry.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select();$result.actions+=@('selected-PDF-destination-in-owned-print-UI')}
       }catch{$result.destinationNotice=[string]$_}
      }
-     if(($names -join ' ') -match 'Microsoft Print to PDF|Save as PDF'){
-      $button=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Print','Save','打印','保存')}|Select-Object -Last 1
-      if($button){$button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke();$result.actions+=@('invoked-owned-native-print-ui-'+$button.Current.Name);$printed=$true;break}
+     if($printUi -and $result.selectedDestination -in @('Microsoft Print to PDF','Save as PDF')){
+      $button=$controls|Where-Object {$_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $_.Current.Name -in @('Print','Save','打印','保存') -and $_.Current.IsEnabled}|Select-Object -Last 1
+      if($button){$invocation=[HostedWritingPrintInvocation]::Begin($Executable,$win.Handle,[int]$win.Pid,$button.Current.Name);$result.actions+=@('queued-owned-native-print-ui-'+$button.Current.Name);$printed=$true;break}
      }
     }catch{$result.lastUiaError=[string]$_}
    }
@@ -141,9 +159,11 @@ try{
   if($complete){break};Start-Sleep -Milliseconds 100
  }while([DateTime]::UtcNow -lt $wait)
  if(-not $complete){throw 'The native print output is empty, still open for writing, or lacks its PDF end marker'}
+ if($invocation){for($attempt=0;$attempt -lt 50 -and -not $invocation.Completed;$attempt++){Start-Sleep -Milliseconds 100};if(-not $invocation.Completed -or $invocation.Error){throw 'The real print invocation did not finish cleanly'}}
  $result.status='saved-real-native-print-pdf';$result.sizeBytes=$length;$result.sha256=(Get-FileHash -LiteralPath $targetFile -Algorithm SHA256).Hash.ToLowerInvariant();$result.executable=$Executable
 }catch{$result.status='failed';$result.failure=[string]$_;throw}
 finally{
+ if($invocation){$result.buttonInvocation=[ordered]@{started=$invocation.Started;completed=$invocation.Completed;error=$invocation.Error}}
  if($result.status -eq 'failed'){
   try{
    Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing
@@ -153,5 +173,7 @@ finally{
    try{$graphics=[Drawing.Graphics]::FromImage($bitmap);try{$graphics.CopyFromScreen($screenBounds.Location,[Drawing.Point]::Empty,$screenBounds.Size)}finally{$graphics.Dispose()};$screenshot=Join-Path ([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Report))) 'installed-v1114-native-print-desktop.png';$bitmap.Save($screenshot,[Drawing.Imaging.ImageFormat]::Png);$result.diagnosticDesktopFile=[IO.Path]::GetFileName($screenshot)}finally{$bitmap.Dispose()}
   }catch{$result.diagnosticDesktopNotice=[string]$_}
  }
+ $result.companionsRestored=$true
+ foreach($companion in @($result.temporarilyMinimizedWindows)){$null=[WritingPrintWindows]::ShowWindow([IntPtr]$companion.Handle,4);if([WritingPrintWindows]::IsIconic([IntPtr]$companion.Handle) -or -not[WritingPrintWindows]::IsWindowVisible([IntPtr]$companion.Handle)){$result.companionsRestored=$false}}
  [IO.File]::WriteAllText([IO.Path]::GetFullPath($Report),($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
 }

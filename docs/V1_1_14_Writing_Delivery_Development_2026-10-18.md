@@ -26,6 +26,10 @@
 
 ## 继续到发布的门禁
 
+第四轮 `39086022010`（驱动bb1177d0）已通过主窗前台与实际1000×700客户区门禁，真实打印预览出现：CDP目标 `edge://print/`、原生UIA中有Print/Cancel与两个无名称ComboBox，隔离机原桌面图可见文章/表格。因此当前证据不支持“iframe无法弹出打印”的推断，也不据此重建产品。驱动只按控件Name查找打印机，漏掉无名称下拉框的当前选中值，未点击Print，故仍无PDF、整体failure。全部原材料在 `evidence/v1114-failed-review-39086022010/`。
+
+下一驱动读取真实Selection/Value/Legacy值核对PDF目标，再按UIA操作Print；仅暂时最小化同EXE的浮动快速笔记，打印后恢复，绝不关闭或代存其他草稿。为避免Print后弹出保存框使调用者无法继续处理，按微软[UIA线程说明](https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-threading)和[Invoke说明](https://learn.microsoft.com/en-us/dotnet/framework/ui-automation/implementing-the-ui-automation-invoke-control-pattern)，在独立MTA线程发起一次真实Invoke，主驱动继续处理实际保存框，仍要求完成状态和真实输出文件。该辅助类只在托管隔离机可调用；本机仅编译、不调用UI。Windows PowerShell5首次编译漏引UIAutomationTypes的原失败保留，改为准确程序集后通过。
+
 第三轮 `39085461000`（驱动1a1c020d）在打印前的主窗前台门禁失败，**没有执行本轮打印点击**，不可记成新的产品打印失败。隔离机原桌面图显示快速笔记仍在上方，实际主窗客户区与1280×820的旧CDP视口也不同；原材料在 `evidence/v1114-failed-review-39085461000/`。后续驱动等待激活并尝试标准UIA焦点；必要时只在当前前台窗口也属于同一被验收EXE时临时连接这两个线程的输入队列、激活确切主窗，再立即解绑，不对其他程序窗口操作。参见微软[前台限制](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow)及[输入队列说明](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-attachthreadinput)。不关闭、代存或清空其他测试草稿；CDP视口改为实际客户区，确保按钮位置对应真实可见窗口。仍严格要求真实PDF、图像、末段和原始数据保护，不修改固定产品。
 
 第二轮同包 `39084798459`（驱动3a4cc12a）仍在打印失败，原8项均通过；报告实证真正主窗体 `wasVisible=false`、显示后 `visibleBeforePrint=true`，因此显示主窗体并未独自解决问题。原诊断/HTML/截图/API/日志在 `evidence/v1114-failed-review-39084798459/`。后续驱动只在托管隔离机将确切主窗体置于前台，模拟用户真正激活编辑窗口；另保留各窗体控件、全局窗体/进程只读诊断、打印期CDP目标，以及失败时隔离虚拟机桌面图，区分系统窗口漏识别和WebView打印阻塞。不操作本机桌面，不用后台源文件或静默渲染替代真实打印输出。

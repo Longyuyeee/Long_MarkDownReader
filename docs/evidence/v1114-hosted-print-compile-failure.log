@@ -1,0 +1,40 @@
+Add-Type : e:\ProjectSave\GeminiProject\MarkDownReader\scripts\lib\hosted-writing-print-invoke.cs(20) : 类型“System.Windo
+
+ws.Automation.AutomationProperty”在未被引用的程序集中定义。必须添加对程序集“UIAutomationTypes, Version=4.0.0.0, Culture=neutral, PublicKeyTo
+
+ken=31bf3856ad364e35”的引用。
+
+e:\ProjectSave\GeminiProject\MarkDownReader\scripts\lib\hosted-writing-print-invoke.cs(19) :    var root=AutomationElem
+
+ent.FromHandle(new IntPtr(handle));
+
+e:\ProjectSave\GeminiProject\MarkDownReader\scripts\lib\hosted-writing-print-invoke.cs(20) : >>>    var buttons=root.Fi
+
+ndAll(TreeScope.Descendants,new AndCondition(new PropertyCondition(AutomationElement.ControlTypeProperty,ControlType.Bu
+
+tton),new PropertyCondition(AutomationElement.NameProperty,buttonName),new PropertyCondition(AutomationElement.IsEnable
+
+dProperty,true)));
+
+e:\ProjectSave\GeminiProject\MarkDownReader\scripts\lib\hosted-writing-print-invoke.cs(21) :    var cancel=root.FindFir
+
+st(TreeScope.Descendants,new AndCondition(new PropertyCondition(AutomationElement.ControlTypeProperty,ControlType.Butto
+
+n),new OrCondition(new PropertyCondition(AutomationElement.NameProperty,"Cancel"),new PropertyCondition(AutomationEleme
+
+nt.NameProperty,"取消"))));
+
+At line:1 char:117
+
++ ... ationTypes; Add-Type -Path (Join-Path (Get-Location) "scripts/lib/hos ...
+
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    + CategoryInfo          : InvalidData: (Microsoft.Power...peCompilerError:AddTypeCompilerError) [Add-Type], Except 
+
+   ion
+
+    + FullyQualifiedErrorId : SOURCE_CODE_ERROR,Microsoft.PowerShell.Commands.AddTypeCommand
+
+ 
+
