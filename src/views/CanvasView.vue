@@ -433,6 +433,7 @@ const sourceSignature = ref('')
 const captureOwner = () => ({ epoch: contextEpoch, root: store.libraryPath, path: canvasPath.value, external: isExternal.value })
 const sameContext = (owner: ReturnType<typeof captureOwner> | null): owner is ReturnType<typeof captureOwner> => Boolean(owner && !disposed && owner.epoch === contextEpoch && owner.path === canvasPath.value && owner.root === store.libraryPath && owner.external === isExternal.value)
 const sourceResolution = ref<{status: string; path?: string; message: string} | null>(null)
+let sourceResolutionRun = 0
 const currentTab = computed(() => store.tabs.find(tab => tab.path === canvasPath.value))
 const nodeById = computed(() => new Map(document.nodes.map(node => [node.id, node])))
 const selectedNode = computed(() => nodeById.value.get(selectedNodeId.value || '') || null)
@@ -1334,6 +1335,7 @@ const isMermaidNode = (node: CanvasNode) => node.type === 'file' && typeof node.
 const openEmbeddedChart = (path: string) => openManagedFile(router, path)
 const openEmbeddedDiagram = (path: string) => openManagedFile(router, path)
 const refreshSource = async () => {
+  const run = ++sourceResolutionRun
   const node = selectedNode.value, owner = captureOwner(), file = node?.file
   sourceResolution.value = null
   if (node?.type !== 'file') return
@@ -1341,8 +1343,8 @@ const refreshSource = async () => {
   const id = node.id
   try {
     const result = await invoke<{status: string; path?: string; message: string}>('resolve_canvas_reference', {libraryRoot: owner.root, reference: file || ''})
-    if (sameContext(owner) && selectedNode.value?.id === id && selectedNode.value.file === file) sourceResolution.value = result
-  } catch (error) { if (sameContext(owner) && selectedNode.value?.id === id) sourceResolution.value = {status:'unavailable',message:String(error)} }
+    if (run === sourceResolutionRun && sameContext(owner) && selectedNode.value?.id === id && selectedNode.value.file === file) sourceResolution.value = result
+  } catch (error) { if (run === sourceResolutionRun && sameContext(owner) && selectedNode.value?.id === id && selectedNode.value.file === file) sourceResolution.value = {status:'unavailable',message:String(error)} }
 }
 const openNode = async (node: CanvasNode, explicit = false) => {
   if ((!explicit && performance.now() < suppressOpenUntil) || loading.value || !sameContext(loadedOwner)) return

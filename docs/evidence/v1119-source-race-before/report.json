@@ -1,0 +1,8 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "status": "failed",
+  "visible": "文件来源\n×\nB.opml\n\nError: 旧来源读取失败\n\n打开来源\n重新指定\n路径相对资料库根；不按同名文件猜测。重新指定只修改草稿，点击保存后才写入画布。",
+  "openDisabled": true,
+  "failure": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /来源可用/. Input:\n\n'文件来源\\n' +\n  '×\\n' +\n  'B.opml\\n' +\n  '\\n' +\n  'Error: 旧来源读取失败\\n' +\n  '\\n' +\n  '打开来源\\n' +\n  '重新指定\\n' +\n  '路径相对资料库根；不按同名文件猜测。重新指定只修改草稿，点击保存后才写入画布。'\n\n    at file:///E:/ProjectSave/GeminiProject/MarkDownReader/scripts/test-v1119-source-race.mjs:11:221"
+}

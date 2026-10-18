@@ -27,7 +27,10 @@ window.__TAURI_INTERNALS__={transformCallback:()=>1,metadata:{currentWindow:{lab
   const saved={signature:before.signature+'-saved',...(args.content?{content:args.content}:{document:clone(args.document),preservationIssues:[]})}
   await pause('holdWrite');files[args.path]=clone(saved);return {path:args.path,encoding:'UTF-8',...saved}
  }
- if(command==='resolve_canvas_reference')return files['C:/ui/'+args.reference]?{status:'available',path:'C:/ui/'+args.reference,message:'来源可用'}:{status:'missing',message:'来源已不存在，请重新指定'}
+ if(command==='resolve_canvas_reference'){
+  const delayed=state.holdResolver;await pause('holdResolver');if(delayed)throw Error('旧来源读取失败')
+  return files['C:/ui/'+args.reference]?{status:'available',path:'C:/ui/'+args.reference,message:'来源可用'}:{status:'missing',message:'来源已不存在，请重新指定'}
+ }
  if(command==='save_opml_compatible_copy'){
   if(files[args.path].signature!==args.expectedSignature)throw Error('原件已被其他程序修改，未创建副本')
   const target='C:/ui/'+args.targetFileName;if(files[target])throw Error('文件已存在，未覆盖')

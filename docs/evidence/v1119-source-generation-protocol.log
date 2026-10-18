@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: actual source resolver ignores stale success and failure even after reselecting the same file
+ok 1 - actual source resolver ignores stale success and failure even after reselecting the same file
+  ---
+  duration_ms: 31.2122
+  ...
+# Subtest: organizing intake requires every task, original preservation and exact raw output identities
+ok 2 - organizing intake requires every task, original preservation and exact raw output identities
+  ---
+  duration_ms: 12.0543
+  ...
+# Subtest: all predecessor receipts and organizing bind to the same executable, driver and original bytes
+ok 3 - all predecessor receipts and organizing bind to the same executable, driver and original bytes
+  ---
+  duration_ms: 36.5881
+  ...
+# Subtest: actual native acceptance and independent output readers remain mandatory at all release gates
+ok 4 - actual native acceptance and independent output readers remain mandatory at all release gates
+  ---
+  duration_ms: 12.226
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 394.7322
