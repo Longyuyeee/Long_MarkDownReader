@@ -89,7 +89,7 @@ const activateTarget = async target => {
   }
   evaluate = async expression => {
     const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
-    if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'WebView evaluation failed')
+    if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text || 'WebView evaluation failed')
     return result.result.value
   }
   await send('Page.enable')

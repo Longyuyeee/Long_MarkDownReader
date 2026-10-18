@@ -1,0 +1,96 @@
+{
+  "appVersion": "1.1.17",
+  "sourceCommit": "bcbb9265f66faae396fd5f43cb3354562c89fcab",
+  "installerSha256": "1ad07e5e6ac30351cfeb85f452696799f6706b00850a8a12558eb5ae86d112ca",
+  "harnessSourceCommit": "16c096e97aea4af8313ffa4c98f89a07a5c615b1",
+  "executableSha256": "df03ab46e0074f117ee2c479056a95220bb010b1bf07a60480fb79fd6aa7c195",
+  "status": "failed",
+  "evidenceLevel": "installed-docx-native-save-and-independent-zip-xml",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "owned-three-producer-fixtures",
+      "status": "passed"
+    }
+  ],
+  "outputs": [],
+  "unselectedBefore": "7d817c42b055425992dc3a5639a1857b64dce9007ef13fb2c29b6f2202780c82",
+  "conflictBeforeSha256": "cae776e43d5cf54cd48f849969430d44d1daed14de9f02c2a6cec2fa96e03176",
+  "failure": "Error: Uncaught\n    at evaluate (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:92:40)\n    at async open (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-17-workflow.mjs:16:204)\n    at async runInstalledV1117Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-17-workflow.mjs:25:216)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:1011:5",
+  "failureUI": {
+    "path": "#/library?path=C%3A%5CLongEditR5ILibrary%5Cv1117-docx-b5efe08c-a2ad-4522-af16-5bc512bdac3a%5C%E5%90%8C%E4%BA%8B%E6%9B%B4%E6%96%B0.docx",
+    "buttons": [
+      {
+        "text": "",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": "目录与详情",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": "",
+        "title": "",
+        "disabled": true
+      },
+      {
+        "text": "",
+        "title": "",
+        "disabled": true
+      },
+      {
+        "text": "",
+        "title": "",
+        "disabled": true
+      },
+      {
+        "text": "",
+        "title": "",
+        "disabled": true
+      },
+      {
+        "text": "",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": "页面编辑",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": "保存",
+        "title": "",
+        "disabled": true
+      },
+      {
+        "text": "×",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": "H1 Microsoft Word Producer Fixture",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": " 批注 0",
+        "title": "",
+        "disabled": false
+      },
+      {
+        "text": " 正文引用 1",
+        "title": "",
+        "disabled": false
+      }
+    ],
+    "messages": []
+  },
+  "inputTrace": [],
+  "runtimeErrors": [],
+  "uiMessages": []
+}
