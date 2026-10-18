@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "scope": "actual-production-TableView-real-headless-clipboard-simulated-native-IPC",
+  "clipboard": "会议纪要\t待处理\t00123\r\n交付检查\t已完成\t9007199254740993123\r\n",
+  "actual": [
+    "确认交付会议纪要\t待处理\t00123 交付检查\t已完成\t9007199254740993123",
+    "待处理",
+    "00123",
+    "核对合同",
+    "隐藏",
+    "9007199254740993123",
+    "检查文档",
+    "待处理",
+    "2026-10-18",
+    "发送报告",
+    "已完成",
+    "=SUM(A1:A2)"
+  ],
+  "trace": [
+    {
+      "type": "paste",
+      "trusted": true
+    }
+  ],
+  "defect": "Multiple rows/columns collapse into the focused single-line input; other cells are unchanged.",
+  "sourceUserContentIncluded": false
+}
