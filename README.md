@@ -66,19 +66,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14"><img src="https://img.shields.io/badge/Stable-v1.1.14-cca43b" alt="v1.1.14 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.15"><img src="https://img.shields.io/badge/Stable-v1.1.15-cca43b" alt="v1.1.15 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.14**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.15**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.14_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.14/LongEdit_1.1.14_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.14_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.14/LongEdit_1.1.14_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.14](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.15_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.15/LongEdit_1.1.15_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.15_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.15/LongEdit_1.1.15_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.15](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.15) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.14/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.15/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +86,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.14_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.15_x64-setup.exe
 ```
 
 ```text
-ab703789807f95ea68bdc5b5c089f0541038e882bd09f42c77f21a808114744e  LongEdit_1.1.14_x64_zh-CN.msi
-cf922954ef0443db5666a8e558654b8e66acc7b6927e701e096b2143dfbf53a6  LongEdit_1.1.14_x64-setup.exe
+81d19ac5073e5cfdb95f021aa788e645aa871805bf0424518dcf8efdc255abe1  LongEdit_1.1.15_x64_zh-CN.msi
+c2c2b3ca35ab9bf47368fad2bd9d4f8bafe42809af8cac164b1ed82d28a49ff0  LongEdit_1.1.15_x64-setup.exe
 ```
 
 </details>
@@ -199,6 +199,14 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 在 Long编辑 中点击笔记来源，先核对内容摘要再返回原页/批注；同名替换不会被当成原来源。文件移动后可明确验证新相对路径、只重新关联草稿，仍需手动保存。旧链接和已删批注会在侧栏顶部说明情况。[完整用法](docs/PDF_Reading_Notes_User_Guide.md)。
 
+### ⑩ 从复制一片表格，到放心保存
+
+在 CSV、TSV 或开放 Table 中，单击照常编辑；**Shift＋点击**选择可见多格，直接粘贴多行多列，或复制、清空选区。筛选后的隐藏行保持不变；贴错了，用 **Ctrl+Z** 一次撤销整批，再用 Ctrl+Y 重做，排序后仍定位到原来的行。
+
+多行单元格显示换行标记，点旁边的 **↵** 打开文本区，确认后只是写入草稿，仍由你点击保存。保存、重开和导出时保留中文、空尾格、前导零与长编号；XLSX 导出的公式外观文本保持文本。CSV 本身没有列类型，其他软件可能自行解释，请核对导入方式。
+
+单次剪贴板最多 2 MiB／20,000 格，历史最多 100 次／8 MiB；新增列与视图配置不属于数据撤销。范围或容量超限会整次拒绝，不留下贴了一半的结果。[完整操作与边界](docs/Lightweight_Table_User_Guide.md)。
+
 ## 真实界面
 
 主图、模板、TXT 恢复、文件整理与下方图谱来自 **v1.1.4 真实安装版**。JSON、工作簿和外观截图保留历史安装验收场景，展示对应功能，不代表新版布局；测试库名称、示例文件及原始证据文件名中的旧版本文字也不代表当前软件版本。
@@ -230,6 +238,12 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 JSON、YAML、XML、TOML 与代码文件使用专业源码编辑体验。JSON 还提供虚拟化树形查看、结构诊断、字段路径定位和明确的安全编辑提示。
 
 ### 表格与工作簿
+
+<p align="center">
+  <img src="docs/evidence/v1-1-15-candidate-lifecycle/installed-v1115-csv-reopened.jpg" width="100%" alt="Long编辑 v1.1.15 真实安装版，CSV 保存重开后保留多行内容、前导零和长编号">
+</p>
+
+<p align="center"><sub>v1.1.15 真实安装版 · 多行按需编辑，CSV 重开与编号保留；原有 XLSX 工作区继续保留。</sub></p>
 
 <p align="center">
   <img src="docs/images/readme/xlsx-workbook-dark.png" width="100%" alt="Long编辑 XLSX 工作簿编辑界面，包含多工作表、公式栏、页面工具和网格编辑区">
@@ -516,7 +530,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_14_Unsigned_Community_Release_Audit_2026-10-18.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_15_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
 欢迎围绕真实使用任务提出问题、补充最小复现或贡献改进。开发 UI 时先查看相关实际页面，保留现有能力；修改后验证草稿保护、保存复开与错误反馈，不能仅为了通过验收而降低要求。
@@ -531,6 +545,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.15 | 可见多格选择与跨格粘贴、稳定身份整批撤销、多行单元格按需编辑；修复 XLSX 导出前导零与长编号精度，保留原四视图和可靠保存 | [发布说明](docs/RELEASE_NOTES_v1.1.15.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.15) · [发布审计](docs/V1_1_15_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.14 | 模板字段按需填写；相对图片插入、草稿交付预览、自包含 HTML 与真实 PDF 输出，失败和取消明确区分，不代存原稿 | [发布说明](docs/RELEASE_NOTES_v1.1.14.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.14) · [发布审计](docs/V1_1_14_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.13 | PDF 批注筛选、多选与阅读笔记；只追加草稿、显式新建保存，摘要核验来源与移动重关联，长列表提示可见 | [发布说明](docs/RELEASE_NOTES_v1.1.13.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.13) · [发布审计](docs/V1_1_13_Unsigned_Community_Release_Audit_2026-10-18.md) |
 | v1.1.12 | 本地资料内容备份与新目录恢复；逐文件摘要、相对图片/PDF批注/可选历史接续，源变化拒绝与草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.12.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.12) · [发布审计](docs/V1_1_12_Unsigned_Community_Release_Audit_2026-10-18.md) |
@@ -549,4 +564,4 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.15 深化现有轻量表格：多单元格粘贴、筛选后的稳定定位与整批撤销，核对编码、换行、空值和前导零，保留原有视图及可靠保存；当前仅完成代码预审，尚未交付。[实际代码接续审计](docs/V1_1_15_Table_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.16 深化现有 XLSX 高频工作：先修已实际复现的带引号换行字段粘贴，再核对筛选复制、长编号排序、引用填充、样式与保存连贯。当前仅完成实际代码预审和原失败基线，未实施、不提前计为交付。[实际代码与页面接续审计](docs/V1_1_16_XLSX_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
