@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "checks": [
+    "Explicit Save is available before manual verification; cancel never writes or clears the draft",
+    "Source Save automatically verifies its immutable snapshot and rereads the saved document",
+    "A stale preview cannot be reused; direct Save validates the newer draft instead",
+    "Reload requires a deliberate discard; cancellation and read failure retain the draft, successful reload clears it",
+    "During native writing, target selection, edit, undo, reload and navigation cannot alter the saving document; editing resumes after completion",
+    "Validation and write failures preserve the exact draft; explicit retry succeeds without weakening native gates",
+    "A successful write followed by a read failure is reported honestly and retains the draft",
+    "Body/list/table multi-target copy saves automatically, collision retains all edits, source remains unchanged, complex content is preserved",
+    "Ctrl+S uses the same explicit confirmation and safe save workflow",
+    "Save-and-leave checks and saves before navigation without requiring a separate verification step",
+    "A confirmation from another library cannot authorize a stale save",
+    "All six visual styles, light/dark, normal motion and 760/480/360px preserve readable controls and drafts without page overflow",
+    "External documents remain read-only with no write entry point"
+  ],
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "releaseCandidate": false
+}

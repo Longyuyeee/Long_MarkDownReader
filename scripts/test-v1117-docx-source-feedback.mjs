@@ -1,0 +1,13 @@
+// Real view/trusted actions, simulated native failures; no installation acceptance claim.
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import {createRequire} from 'node:module'
+const {chromium}=createRequire(import.meta.url)(process.env.LONGEDIT_PLAYWRIGHT_MODULE||'playwright'),output=process.env.LONGEDIT_BROWSER_EVIDENCE_DIRECTORY
+assert.ok(output);await fs.mkdir(output);const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1280,height:900}});let status='failed'
+const confirm=async()=>{await page.getByTitle('保存到原文件').click();await page.getByRole('dialog').getByRole('button',{name:'保存到原文件',exact:true}).click()}
+try{
+ await page.goto((process.env.LONGEDIT_TEST_BASE_URL||'http://127.0.0.1:9022')+'/scripts/fixtures/v1117-docx-browser.html');await page.locator('.docx-page').waitFor();await page.getByTitle('打开 DOCX 页面编辑').click();await page.locator('.docx-editor textarea').fill('关掉面板后，保存失败也必须让我知道');await page.getByTitle('关闭编辑面板').click();await page.evaluate(()=>docxAudit.failPreview=true);await confirm();await page.locator('.n-message').filter({hasText:'检查未通过'}).waitFor({timeout:2500});assert.equal(await page.evaluate(()=>docxAudit.writes.length),0)
+ await page.evaluate(()=>{docxAudit.failPreview=false;docxAudit.failSave=true});await confirm();await page.locator('.n-message').filter({hasText:'目录不可写'}).waitFor({timeout:2500});assert.equal(await page.evaluate(()=>docxAudit.writes.length),0)
+ await page.evaluate(()=>{void docxAudit.router.push('/other')});await page.getByRole('dialog').getByRole('button',{name:'保存并离开',exact:true}).click();await page.locator('.n-message').filter({hasText:'目录不可写'}).first().waitFor();assert.equal(await page.getByRole('dialog').count(),1);await page.getByRole('dialog').getByRole('button',{name:'继续编辑',exact:true}).click()
+ await page.evaluate(()=>{docxAudit.failSave=false;docxAudit.failRead=true});await confirm();await page.locator('.n-message').filter({hasText:'文件已写入，但页面重新读取失败'}).waitFor({timeout:2500});assert.equal(await page.evaluate(()=>docxAudit.writes.length),1);await page.getByTitle('打开 DOCX 页面编辑').click();assert.equal(await page.locator('.docx-editor textarea').inputValue(),'关掉面板后，保存失败也必须让我知道');assert.equal(await page.locator('.draft-list article').count(),1);status='passed'
+}finally{await page.screenshot({path:output+'/source-save-feedback.png'});await fs.writeFile(output+'/results.json',JSON.stringify({status,nativeBridgeMocked:true,desktopInputUsed:false,scope:'Closed editor and leave dialog must still show validation/write/readback failure honestly'},null,2)+'\n');await browser.close()}

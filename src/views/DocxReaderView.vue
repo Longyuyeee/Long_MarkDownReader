@@ -1381,7 +1381,10 @@ const saveSource = async (context = captureEditContext()): Promise<boolean> => {
   saveError.value = ''
   try {
     const preview = previewReport.value || await previewEdit()
-    if (!preview || !context.current()) return false
+    if (!preview || !context.current()) {
+      if (context.current() && editError.value) message.error(`未保存 DOCX：${editError.value}`, { duration: 6000 })
+      return false
+    }
     savePhase.value = 'writing'
     const base = {
       ...context.base,
@@ -1401,13 +1404,19 @@ const saveSource = async (context = captureEditContext()): Promise<boolean> => {
     if (!context.current()) return false
     savePhase.value = 'reloading'
     if (!await load(true)) {
-      if (context.current()) saveError.value = '文件已写入，但页面重新读取失败。草稿已保留，请核对原件后重新读取；不要重复另存。'
+      if (context.current()) {
+        saveError.value = '文件已写入，但页面重新读取失败。草稿已保留，请核对原件后重新读取；不要重复另存。'
+        message.warning(saveError.value, { duration: 6000 })
+      }
       return false
     }
     message.success(`DOCX 已可靠保存 ${operations.length} 项修改并重新读取`)
     return true
   } catch (cause) {
-    if (context.current()) saveError.value = String(cause).replace(/^Error:\s*/, '')
+    if (context.current()) {
+      saveError.value = String(cause).replace(/^Error:\s*/, '')
+      message.error(`未保存 DOCX：${saveError.value}`, { duration: 6000 })
+    }
     return false
   } finally {
     savingSource.value = false

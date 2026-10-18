@@ -44,7 +44,7 @@ try {
   assert.equal(await text().inputValue(), '检查失败也不能丢'); await page.evaluate(() => docxAudit.failSave = false); await confirm(); await noDrafts()
   checks.push('Validation and write failures preserve the exact draft; explicit retry succeeds without weakening native gates')
   await text().fill('写入成功但读取失败'); await page.evaluate(() => docxAudit.failRead = true); await confirm(); await page.locator('.docx-read-error').waitFor(); assert.equal(await drafts().count(), 1)
-  await page.getByText('文件已写入，但页面重新读取失败。', { exact: false }).waitFor(); assert.equal(await text().inputValue(), '写入成功但读取失败')
+  await page.locator('.copy-save [role="alert"]').filter({ hasText: '文件已写入，但页面重新读取失败。' }).waitFor(); assert.equal(await text().inputValue(), '写入成功但读取失败')
   checks.push('A successful write followed by a read failure is reported honestly and retains the draft')
   await open(); await page.locator('#b1').click(); await text().fill('会议先安排用户试用'); await page.locator('#b2').click(); await text().fill('核对交付日期'); await page.locator('#table td').first().click(); await text().fill('下一步事项')
   assert.equal(await drafts().count(), 3); await page.locator('.copy-save input').fill('项目计划.docx'); await page.locator('.copy-save button').last().click(); await page.getByRole('alert').filter({ hasText: '目标文件已存在' }).waitFor(); assert.equal(await drafts().count(), 3)

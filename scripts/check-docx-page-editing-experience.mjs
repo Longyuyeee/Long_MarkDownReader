@@ -93,6 +93,9 @@ requireTokens(view, 'DOCX automatic checks and receipt ownership', [
   "window.addEventListener('keydown', saveShortcut, true)",
   "window.removeEventListener('keydown', saveShortcut, true)",
   'event.stopImmediatePropagation()',
+  'message.error(`未保存 DOCX：${editError.value}`',
+  'message.error(`未保存 DOCX：${saveError.value}`',
+  'message.warning(saveError.value, { duration: 6000 })',
 ])
 if (view.includes('原件始终只读')) fail('The obsolete DOCX source-read-only claim returned.')
 

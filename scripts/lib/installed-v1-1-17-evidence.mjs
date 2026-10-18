@@ -15,6 +15,7 @@ export function validateInstalledDocxEditing(report, manifest) {
   assert.ok(report.inputTrace.every(event=>event.trusted))
   const inspection=report.inspection;assert.equal(inspection.status,'passed');assert.equal(inspection.nativeBridgeMocked,false);assert.equal(inspection.officeVisualAcceptance,false);assert.equal(inspection.reader,'defusedxml-0.7.1-and-stdlib-zipfile')
   assert.deepEqual(inspection.cases.map(item=>item.producerId),['microsoft-word-16','wps-writer','libreoffice-writer'])
+  assert.equal(report.sourceConflictPreserved,true);assert.equal(report.conflictBeforeSha256,inspection.cases[0].beforeSha256);assert.equal(report.externalConflictSha256,inspection.cases[1].beforeSha256);assert.equal(report.conflictAfterSha256,report.externalConflictSha256);assert.notEqual(report.conflictBeforeSha256,report.conflictAfterSha256)
   for(const item of inspection.cases){assert.match(item.beforeSha256,/^[a-f0-9]{64}$/);for(const key of ['source','copy']){assert.equal(item[key].expectedTextVerified,true);assert.match(item[key].sha256,/^[a-f0-9]{64}$/);assert.notEqual(item[key].sha256,item.beforeSha256);assert.ok(item[key].preservedParts.length>=3);for(const part of item[key].preservedParts)assert.match(part.sha256,/^[a-f0-9]{64}$/)}}
   assert.equal(report.outputs.length,9)
   for(const file of report.outputs){assert.match(file.fileName,/^installed-v1117-(?:microsoft-word-16|wps-writer|libreoffice-writer)-(?:before|source|copy)\.docx$/);assert.match(file.sha256,/^[a-f0-9]{64}$/);assert.ok(file.sizeBytes>0)}

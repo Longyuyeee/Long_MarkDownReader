@@ -14,6 +14,8 @@ function example(){
   const outcome={expectedTextVerified:true,sha256:sha,preservedParts:['[Content_Types].xml','word/styles.xml','docProps/core.xml'].map(part=>({part,sha256:'f'.repeat(64)}))};report.inspection.cases.push({producerId,beforeSha256:'0'.repeat(64),source:structuredClone(outcome),copy:structuredClone(outcome)})
   for(const key of ['before','source','copy'])report.outputs.push({fileName:`installed-v1117-${producerId}-${key}.docx`,sizeBytes:bytes.length,sha256:key==='before'?'0'.repeat(64):sha})
  }
+ report.inspection.cases[1].beforeSha256='1'.repeat(64);report.outputs.find(item=>item.fileName==='installed-v1117-wps-writer-before.docx').sha256='1'.repeat(64)
+ Object.assign(report,{sourceConflictPreserved:true,conflictBeforeSha256:'0'.repeat(64),externalConflictSha256:'1'.repeat(64),conflictAfterSha256:'1'.repeat(64)})
  return [report,manifest]
 }
 test('DOCX receipt refuses partial checks, wrong identities, data loss, scripted input and overstated Office acceptance',()=>{
@@ -28,9 +30,9 @@ test('v1.1.17 retains every prior installed report and binds all nine DOCX outpu
  const root='docs/evidence/v1-1-17-candidate-lifecycle/',files=new Map(),reports={}
  for(const[key,item]of Object.entries(manifest.runtimeSmoke.reports)){const raw=fs.readFileSync(item.path);reports[key]=JSON.parse(raw.toString('utf8').replaceAll('1.1.16','1.1.17'))}
  for(const file of ['installed-v1115-saved.csv','installed-v1115-export.xlsx','installed-v1116-before.xlsx','installed-v1116-saved.xlsx','installed-v1116-producer.xlsx'])files.set(root+file,fs.readFileSync('docs/evidence/v1-1-16-candidate-lifecycle/'+file))
- const docx=example()[0],before=Buffer.from('synthetic-before-not-native'),beforeHash=crypto.createHash('sha256').update(before).digest('hex');Object.assign(docx,{sourceCommit:manifest.sourceCommit,installerSha256:manifest.artifacts.find(item=>item.target==='nsis').sha256,executableSha256:reports.searchCompleteness.executableSha256,harnessSourceCommit:reports.searchCompleteness.harnessSourceCommit})
- for(const item of docx.inspection.cases)item.beforeSha256=beforeHash
- for(const item of docx.outputs){const original=item.fileName.endsWith('-before.docx');item.sha256=original?beforeHash:sha;item.sizeBytes=(original?before:bytes).length;files.set(root+item.fileName,original?before:bytes)}
+ const docx=example()[0],before=Buffer.from('synthetic-before-not-native'),externalBefore=Buffer.from('synthetic-external-not-native'),beforeHash=crypto.createHash('sha256').update(before).digest('hex'),externalHash=crypto.createHash('sha256').update(externalBefore).digest('hex');Object.assign(docx,{sourceCommit:manifest.sourceCommit,installerSha256:manifest.artifacts.find(item=>item.target==='nsis').sha256,executableSha256:reports.searchCompleteness.executableSha256,harnessSourceCommit:reports.searchCompleteness.harnessSourceCommit,conflictBeforeSha256:beforeHash,externalConflictSha256:externalHash,conflictAfterSha256:externalHash})
+ for(const item of docx.inspection.cases)item.beforeSha256=item.producerId==='wps-writer'?externalHash:beforeHash
+ for(const item of docx.outputs){const original=item.fileName.endsWith('-before.docx'),value=original?(item.fileName.includes('wps-writer')?externalBefore:before):bytes;item.sha256=crypto.createHash('sha256').update(value).digest('hex');item.sizeBytes=value.length;files.set(root+item.fileName,value)}
  reports.docxEditing=docx
  const update=()=>{for(const[key,value]of Object.entries(reports)){const file=root+key+'.json',raw=Buffer.from(JSON.stringify(value));files.set(file,raw);manifest.runtimeSmoke.reports[key]={path:file,sha256:crypto.createHash('sha256').update(raw).digest('hex')}}};update()
  assert.doesNotThrow(()=>assertInstalledReleaseRuntime(manifest,file=>files.get(file)))
