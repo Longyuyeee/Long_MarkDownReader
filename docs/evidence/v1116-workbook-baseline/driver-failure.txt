@@ -1,0 +1,5 @@
+Initial baseline driver stopped at workbookAudit.writes.length===1 with a 30-second timeout.
+Only the quoted-paste split screenshot was produced before the failure.
+The fixture attempted structuredClone(args.payload), which rejects Vue reactive proxies before recording the simulated native request.
+The real Tauri boundary serializes JSON. Fixture recording now mirrors JSON serialization; production code and assertions were not changed.
+The rerun uses a separate output directory and does not overwrite this original observation.

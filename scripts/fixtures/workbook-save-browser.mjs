@@ -27,7 +27,20 @@ if (new URLSearchParams(window.location.search).has('filter')) {
   sheet.autoFilterState = { editable: true, columns: [], sortConditions: [] }
   sheet.rows.push([{ value: '客户交付', formattedValue: '客户交付', kind: 'string' }]); sheet.totalRows = 2
 }
-const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [] }
+if (new URLSearchParams(window.location.search).has('v1116')) {
+  const text=value=>({value,kind:'text',dateEditable:false})
+  const number=value=>({value,kind:'number',dateEditable:false})
+  sheet.rows=[
+    ['任务','状态','编号','数值'].map(text),
+    [text('会议\r\n旧备注'),text('可见'),text('00123'),number('0.1')],
+    [text('不要修改'),text('隐藏'),text('9007199254740993124'),number('0.2')],
+    [text('核对文档'),text('可见'),text('9007199254740993123'),number('3')],
+    [text('=保留文本'),text('可见'),text('00007'),{...number('0.3'),formula:'=D2+D3'}],
+  ]
+  sheet.totalRows=5;sheet.totalColumns=sheet.returnedColumns=4
+  sheet.autoFilter={top:0,bottom:4,left:0,right:3};sheet.autoFilterState={editable:true,columns:[],sortConditions:[]}
+}
+const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [], writes: [] }
 if (new URLSearchParams(window.location.search).has('drawingEdit')) {
   sheet.drawings.push({ id: 'editable-chart', kind: 'chart', editable: true, name: '客户交付', drawingPart: 'drawing1.xml', objectId: '1', anchorIndex: 0,
     from: { row: 0, column: 0 }, to: { row: 1, column: 1 },
@@ -149,6 +162,8 @@ window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
     return snapshot
   }
   if (command === 'write_workbook_draft') return new Promise((resolve, reject) => {
+    // Tauri serializes a reactive payload to JSON before the native command.
+    audit.writes.push(JSON.parse(JSON.stringify(args.payload)))
     audit.pending = () => {
       audit.pending = null
       if (audit.failNext) { audit.failNext = false; reject('模拟磁盘失败'); return }

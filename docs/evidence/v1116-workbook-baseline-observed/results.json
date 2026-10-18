@@ -1,0 +1,37 @@
+{
+  "status": "reproduced-not-fixed",
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "received": "\"会议\r\n备注\"\t可见\t00123",
+  "pasted": [
+    [
+      "\"会议",
+      "可见",
+      "00123"
+    ],
+    [
+      "备注\"",
+      "可见",
+      "00123"
+    ]
+  ],
+  "requestedWrite": [
+    {
+      "sheet": "Sheet1",
+      "row": 1,
+      "column": 2,
+      "input": "00124",
+      "kind": "number"
+    }
+  ],
+  "copiedMultiline": "会议\r\n旧备注",
+  "navigationOrder": [
+    "00007",
+    "00123",
+    "9007199254740993124",
+    "9007199254740993123"
+  ],
+  "errors": [],
+  "scope": "Production WorkbookView; actual headless clipboard and user input; existing native IPC simulated. No XLSX disk save or producer acceptance."
+}
