@@ -43,3 +43,5 @@ Git字节核对发现早期本机日志被autocrlf规范化（仅CRLF/LF差异�
 39145910944依旧在本版第4项前停止。对此前“遮挡/Tab顺序”的判断进一步纠正：实际全局`appTooltipPolicy`会将`title`迁移成`data-app-tooltip`，原驱动只查title，因而根本没有匹配到按钮；不能据之前截图推断按钮本身不可操作。已兼容迁移前后属性，并让运行时组件场景启用生产浮窗策略与滚轮服务，验证title确已消失后实际滚动/点击通过（`v1119-toolbar-runtime-browser/`）。这里改的是驱动定位，不是取消界面策略或绕过点击；后续失败报告同时记录真实按钮属性、disabled/inert，避免仅凭截图猜原因。
 
 独立驱动另补两项操作精确性：缩放后的分组拖动点根据实际标题框边界选择留白，并保留elementFromPoint无遮挡及组内卡片同增量断言；`v1119-toolbar-group-runtime-browser/`在555px实际浮窗/滚轮页面通过3项（含新增分组），组件合计33项。固定12px不能代表不同缩放下的背景位置。另在本机Windows实际复现Node `path.relative`对普通/`\\?\`输入混用返回绝对路径，现先用toNamespacedPath统一两端再严格比较根相对引用，6项协议单测通过。均为驱动纠正，不改591447cd产品或重新生成包。
+
+最新驱动c6c897d4的main质量及完整Rust功能CI39147758550已success，原API/jobs/完整日志保存在`v1119-native-driver-main-ci-39147758550/`。新原构建39146690391亦已通过冻结质量与完整Rust，现处于MSI/NSIS打包阶段；尚无本次安装态完整通过结论。
