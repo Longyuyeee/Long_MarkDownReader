@@ -1,0 +1,150 @@
+{
+  "appVersion": "1.1.16",
+  "sourceCommit": "9de08810ad3ac9277b3ebd93d98c5ae9d19ca38f",
+  "installerSha256": "b79bbd705a551663284aa0a6bd9f3b14d8b55444672442f7e0236bbc8785284a",
+  "harnessSourceCommit": "2ca346bff802f28c6a9dcf008bcc9d88eb4a0672",
+  "executableSha256": "ce1f8bb2e493a30d136e919c9132e03362d9dcb9ff05a754b8629179426904aa",
+  "evidenceLevel": "installed-workbook-real-clipboard-native-save-and-independent-producer",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "owned-independent-producer-fixture",
+      "status": "passed"
+    }
+  ],
+  "unselectedBefore": "e4cc9aa743710d91bb17da5b085a778fd621d9f2c9753f8e691fac52bd7b3c0b",
+  "sourceBefore": "ac7bd3f7f81aeeaef5b03d4fc2c757ead5ce0f5035560468996eeed178c0db58",
+  "receivedClipboardText": [
+    "\"会议\r\n备注\"\t可见\t00124"
+  ],
+  "foregroundBeforePaste": [
+    true
+  ],
+  "failure": "Error: Actual native UI did not become ready: quoted paste\n    at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async runInstalledV1116Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-16-workflow.mjs:32:44)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:1005:5",
+  "failureUI": {
+    "buttons": [
+      {
+        "text": "",
+        "aria": "返回知识库",
+        "disabled": false
+      },
+      {
+        "text": "",
+        "aria": "撤销",
+        "disabled": true
+      },
+      {
+        "text": "",
+        "aria": "重做",
+        "disabled": true
+      },
+      {
+        "text": "",
+        "aria": "显示公式",
+        "disabled": false
+      },
+      {
+        "text": "工具",
+        "aria": "展开专业工具",
+        "disabled": false
+      },
+      {
+        "text": "",
+        "aria": "更多工作簿操作",
+        "disabled": false
+      },
+      {
+        "text": "已保存",
+        "aria": null,
+        "disabled": true
+      },
+      {
+        "text": "任务",
+        "aria": null,
+        "disabled": false
+      },
+      {
+        "text": "不要修改",
+        "aria": null,
+        "disabled": false
+      },
+      {
+        "text": "设为打印区域",
+        "aria": "把当前连续选区设为打印区域",
+        "disabled": false
+      },
+      {
+        "text": "清除打印区域",
+        "aria": "清除当前 Sheet 的打印区域",
+        "disabled": true
+      },
+      {
+        "text": "页面设置",
+        "aria": "编辑方向、纸张、缩放和页边距",
+        "disabled": false
+      },
+      {
+        "text": "打印选项",
+        "aria": "编辑网格线、标题、居中和输出选项",
+        "disabled": false
+      },
+      {
+        "text": "页眉页脚",
+        "aria": "编辑当前 Sheet 的页眉和页脚",
+        "disabled": false
+      },
+      {
+        "text": "",
+        "aria": "管理命名区域",
+        "disabled": false
+      }
+    ],
+    "messages": []
+  },
+  "uiMessages": [
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx",
+    "Table 副本已创建：任务清单.table.json，正在打开",
+    "已导出：任务清单.xlsx"
+  ],
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "key": null,
+      "ctrlKey": false,
+      "target": "SPAN"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "key": "v",
+      "ctrlKey": true,
+      "target": "BODY"
+    }
+  ],
+  "runtimeErrors": [],
+  "clipboardCapabilities": {
+    "secure": true,
+    "read": "function",
+    "write": "function",
+    "readText": "function",
+    "focused": false
+  }
+}

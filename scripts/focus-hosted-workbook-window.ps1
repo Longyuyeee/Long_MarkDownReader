@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Report)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$MainWindowTitle,[Parameter(Mandatory=$true)][string]$OwnerRoot,[Parameter(Mandatory=$true)][string]$Report,[switch]$ObserveOnly)
 $ErrorActionPreference='Stop'
 if($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted' -or $env:RUNNER_OS -ne 'Windows' -or $env:LONGEDIT_R5I_DISPOSABLE -ne '1'){throw 'Disposable hosted window activation only'}
 $owner=[IO.Path]::GetFullPath($OwnerRoot);$reportFile=[IO.Path]::GetFullPath($Report);$workspace=[IO.Path]::GetFullPath($env:GITHUB_WORKSPACE).TrimEnd('\')+'\'
@@ -32,6 +32,12 @@ $windows=@([WorkbookFocusWindows]::Top() | Where-Object {$_.Pid -in $pids -and $
 if($windows.Count -ne 1){throw 'Exactly one configured main window of the installed executable is required'}
 $window=$windows[0];$handle=[IntPtr]$window.Handle
 $result=[ordered]@{status='running';desktopUserSession='disposable-github-hosted';mainWindow=$window;foregroundBefore=[WorkbookFocusWindows]::GetForegroundWindow().ToInt64();nativeBridgeMocked=$false;sourceUserContentIncluded=$false}
+if($ObserveOnly){
+ $result.status='observed-no-input';$result.foregroundWindow=@([WorkbookFocusWindows]::Top() | Where-Object {$_.Handle -eq $result.foregroundBefore})
+ $buttons=[System.Windows.Automation.AutomationElement]::FromHandle($handle).FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty,[System.Windows.Automation.ControlType]::Button))
+ $result.mainWindowButtons=@(for($index=0;$index -lt [Math]::Min(100,$buttons.Count);$index++){$node=$buttons.Item($index);[ordered]@{name=$node.Current.Name;className=$node.Current.ClassName;enabled=$node.Current.IsEnabled}})
+ [IO.File]::WriteAllText($reportFile,($result|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false));return
+}
 try{
  if([WorkbookFocusWindows]::IsIconic($handle)){$null=[WorkbookFocusWindows]::ShowWindow($handle,9)}
  if(-not [WorkbookFocusWindows]::IsWindowVisible($handle)){$null=[WorkbookFocusWindows]::ShowWindow($handle,5)}
