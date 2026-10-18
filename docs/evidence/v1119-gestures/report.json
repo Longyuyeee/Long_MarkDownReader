@@ -1,0 +1,12 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    "one-css-pixel-jitter-does-not-dirty",
+    "contained-card-moves-with-group",
+    "group-undo-redo-restores-all-coordinates",
+    "canvas-resize-keeps-content-in-view"
+  ],
+  "errors": []
+}
