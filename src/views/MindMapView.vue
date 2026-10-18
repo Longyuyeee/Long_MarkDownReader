@@ -192,6 +192,7 @@ import { ArrowLeft as ArrowLeftIcon, ChevronRight as ChevronRightIcon, CornerDow
 import { useAppStore } from '../store/app'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
+import { fileStylePathKey } from '../utils/fileDisplayStyles'
 
 interface OpmlNode { id: string; text: string; note: string; collapsed: boolean; attributes: Record<string, string>; children: OpmlNode[] }
 interface OpmlDocument { title: string; metadata: Record<string, string>; roots: OpmlNode[] }
@@ -760,7 +761,7 @@ const load = async () => {
 const requestReload = async () => { if (await mayLeave()) await load() }
 const refreshAfterFileMove = (event:Event) => {
   const {notice,pending} = (event as CustomEvent<{notice:FileMoveNotice;pending:Promise<unknown>[]}>).detail
-  const key = (value:string) => value.replace(/\\\\/g,'/').toLowerCase()
+  const key = fileStylePathKey
   if (notice && key(notice.root) === key(store.libraryPath) && !dirty.value && !saving.value && !loading.value && notice.documents.some(item => key(item) === key(path.value) || key(movedPath(item,notice)) === key(path.value))) pending.push(load())
 }
 const handleKeydown = (event: KeyboardEvent) => {

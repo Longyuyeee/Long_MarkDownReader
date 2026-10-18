@@ -326,6 +326,7 @@ import TableChartEmbed from '../components/TableChartEmbed.vue'
 import MermaidDiagramEmbed from '../components/MermaidDiagramEmbed.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { movedPath, type FileMoveNotice } from '../services/fileMoveProtection'
+import { fileStylePathKey } from '../utils/fileDisplayStyles'
 
 type CanvasNodeType = 'text' | 'file' | 'link' | 'group'
 type Tool = 'select' | 'connect'
@@ -1536,8 +1537,8 @@ let readRun = 0
 const requestReload = async () => { if (saving.value) return; if (await mayLeave()) await loadCanvas() }
 const refreshAfterFileMove = (event: Event) => {
   const {notice,pending} = (event as CustomEvent<{notice:FileMoveNotice;pending:Promise<unknown>[]}>).detail
-  if (!notice || notice.root.replace(/\\\\/g,'/').toLowerCase() !== store.libraryPath.replace(/\\\\/g,'/').toLowerCase()) return
-  const key = (value:string) => value.replace(/\\\\/g,'/').toLowerCase()
+  if (!notice || fileStylePathKey(notice.root) !== fileStylePathKey(store.libraryPath)) return
+  const key = fileStylePathKey
   if (notice.documents.some(path => key(path) === key(canvasPath.value) || key(movedPath(path,notice)) === key(canvasPath.value)) && saveState.value === 'saved' && !saving.value && !loading.value) pending.push(loadCanvas())
 }
 

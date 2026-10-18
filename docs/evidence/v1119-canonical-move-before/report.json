@@ -1,0 +1,37 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "mode": "canvas",
+      "dirty": false,
+      "actual": "A",
+      "expected": "整理后重新读取",
+      "passed": false
+    },
+    {
+      "mode": "canvas",
+      "dirty": true,
+      "actual": "不能覆盖的草稿",
+      "expected": "不能覆盖的草稿",
+      "passed": true
+    },
+    {
+      "mode": "opml",
+      "dirty": false,
+      "actual": "原始备注",
+      "expected": "整理后重新读取",
+      "passed": false
+    },
+    {
+      "mode": "opml",
+      "dirty": true,
+      "actual": "不能覆盖的草稿",
+      "expected": "不能覆盖的草稿",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "status": "failed"
+}

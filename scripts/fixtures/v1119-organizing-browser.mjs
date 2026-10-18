@@ -7,6 +7,7 @@ import CanvasView from '/src/views/CanvasView.vue'
 import MindMapView from '/src/views/MindMapView.vue'
 import {useAppStore} from '/src/store/app.ts'
 import {installHorizontalWheelNavigation} from '/src/services/horizontalWheel.ts'
+import {installAppTooltipPolicy} from '/src/services/appTooltipPolicy.ts'
 import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
 const clone=v=>JSON.parse(JSON.stringify(v)),pinia=createPinia(),store=useAppStore(pinia),files={},calls=[],pending=[]
@@ -54,3 +55,4 @@ const app=createApp({render:()=>h(naive.NDialogProvider,{},()=>h(naive.NMessageP
 const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts');registerNaiveComponents(app)
 app.use(pinia).use(router).mount('#app')
 installHorizontalWheelNavigation()
+if(new URLSearchParams(location.search).get('runtime')==='1')installAppTooltipPolicy()
