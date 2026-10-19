@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.1.20",
-  "runtimeBaseVersion": "1.1.19",
+  "runtimeBaseVersion": "1.1.20",
   "publicVersion": "1.1.19",
   "publicTag": "v1.1.19",
   "publicTagCommit": "591447cd9e3303cde9d1ebfde1df2fddb45d8c8c",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-67-v1.1.19-published",
-  "binaryVersionTransition": "v1.1.19-public-release-published",
-  "displayLabel": "v1.1.19 已发布 · 下一版本 v1.1.20",
+  "currentStage": "M8-68-v1.1.20-version-candidate",
+  "binaryVersionTransition": "v1.1.20-release-ready",
+  "displayLabel": "v1.1.20 结构化编辑候选 · 当前公开 v1.1.19",
   "activeSlice": {
-    "id": "v1.1.19-organizing",
-    "status": "published-remote-assets-verified",
-    "document": "docs/V1_1_19_Unsigned_Community_Release_Audit_2026-10-18.md"
+    "id": "v1.1.20-structured-editing",
+    "status": "installed-workflows-passed-ready-to-publish",
+    "document": "docs/V1_1_20_Structured_Development_2026-10-19.md"
   }
 }

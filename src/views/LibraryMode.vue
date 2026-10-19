@@ -3708,6 +3708,7 @@ const normalizeTextSaveOptions = (options: unknown): TextSaveOptions => {
 }
 
 const saveCurrentFile = async (options: unknown = {}) => {
+  if (activeEmbeddedEditor.value) return
   if (currentFileReloadBusy.value) { message.warning('正在重新读取文件，请稍后再保存'); return }
   const saveOptions = normalizeTextSaveOptions(options)
   if (!vditor || !activeTabId.value) return; const t = tabs.value.find(item => item.id === activeTabId.value)

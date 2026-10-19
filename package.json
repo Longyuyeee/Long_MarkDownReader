@@ -1,7 +1,7 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "1.1.19",
+  "version": "1.1.20",
   "type": "module",
   "displayName": "Long编辑",
   "scripts": {
@@ -579,7 +579,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test:batch-rename-browser": "node scripts/test-batch-rename-browser.mjs",
-    "test:save-history-browser": "node scripts/test-save-history-v117-browser.mjs && node scripts/test-external-conflict-v117-browser.mjs"
+    "test:save-history-browser": "node scripts/test-save-history-v117-browser.mjs && node scripts/test-external-conflict-v117-browser.mjs",
+    "test:structured-browser": "node scripts/test-v1120-structured-browser.mjs",
+    "test:structured-session": "node --experimental-strip-types --test scripts/test-v1120-session.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.3",

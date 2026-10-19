@@ -1,0 +1,77 @@
+{
+  "nativeBridgeMocked": true,
+  "cases": [
+    {
+      "mode": "json",
+      "writes": [],
+      "otherContent": "{\"value\":\"另一份资料\"}",
+      "cached": {
+        "id": "C:/ui/A.json",
+        "title": "A.json",
+        "path": "C:/ui/A.json",
+        "external": false,
+        "isDirty": true,
+        "content": "{\"value\":\"我的新草稿\",\"a/b~c\":[1]}",
+        "textSignature": "A-1",
+        "textEncoding": "utf-8",
+        "textSize": 30,
+        "textModified": 1,
+        "textReadOnlyReason": ""
+      }
+    },
+    {
+      "mode": "yaml",
+      "writes": [],
+      "otherContent": "value: 另一份资料\n",
+      "cached": {
+        "id": "C:/ui/A.yaml",
+        "title": "A.yaml",
+        "path": "C:/ui/A.yaml",
+        "external": false,
+        "isDirty": true,
+        "content": "value: 我的新草稿\n\n",
+        "textSignature": "A-1",
+        "textEncoding": "utf-8",
+        "textSize": 14,
+        "textModified": 1,
+        "textReadOnlyReason": ""
+      }
+    },
+    {
+      "mode": "xml",
+      "writes": [],
+      "otherContent": "<root><value>另一份资料</value></root>\n",
+      "cached": {
+        "id": "C:/ui/A.xml",
+        "title": "A.xml",
+        "path": "C:/ui/A.xml",
+        "external": false,
+        "isDirty": true,
+        "content": "<root><value>我的新草稿</value></root>\n\n",
+        "textSignature": "A-1",
+        "textEncoding": "utf-8",
+        "textSize": 35,
+        "textModified": 1,
+        "textReadOnlyReason": ""
+      }
+    },
+    {
+      "mode": "toml",
+      "writes": [],
+      "otherContent": "value = \"另一份资料\"\n",
+      "cached": {
+        "id": "C:/ui/A.toml",
+        "title": "A.toml",
+        "path": "C:/ui/A.toml",
+        "external": false,
+        "isDirty": true,
+        "content": "value = \"我的新草稿\"\n\n",
+        "textSignature": "A-1",
+        "textEncoding": "utf-8",
+        "textSize": 17,
+        "textModified": 1,
+        "textReadOnlyReason": ""
+      }
+    }
+  ]
+}

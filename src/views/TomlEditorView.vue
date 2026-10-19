@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace toml-workspace">
+  <div class="workspace toml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header>
       <div class="identity">
@@ -15,7 +15,7 @@
         <n-button quaternary circle size="small" title="展开全部" @click="editor && unfoldAll(editor)"><template #icon><n-icon :component="UnfoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload"><template #icon><n-icon :component="RefreshIcon" /></template></n-button>
         <n-button quaternary size="small" :title="inspectorVisible ? '隐藏配置分区与问题' : '显示配置分区与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template>分区与问题</n-button>
-        <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</n-button>
+        <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty || !session.hasDocument()" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</n-button>
       </div>
     </header>
     <main :class="{ 'inspector-hidden': !inspectorVisible }">
@@ -40,9 +40,9 @@
           <n-icon :component="AlertIcon" /><span><strong>语法错误</strong><small>第 {{ item.line }} 行，第 {{ item.column }} 列</small><small>{{ item.message }}</small></span>
         </button>
         <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效，注释、顺序与字面量由源码保留</span></div>
-        <n-input v-model:value="query" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
+        <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
         <div class="outline">
-          <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)">
+          <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)">
             <n-icon :component="item.kind === 'value' ? KeyIcon : TableIcon" />
             <span><strong>{{ item.label }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
           </button>
@@ -52,13 +52,16 @@
       </aside>
     </main>
     <footer><span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span><span>{{ encoding.toUpperCase() }}</span><span>{{ lines }} 行</span><span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span></footer>
-  </div>
+
+    <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
+    <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
+</div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '../services/tauriRuntime'
 import { basicSetup } from 'codemirror'
 import { StreamLanguage } from '@codemirror/language'
 import { toml } from '@codemirror/legacy-modes/mode/toml'
@@ -70,12 +73,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDialog, useMessage } from 'naive-ui'
 import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as ValidIcon, FileCode2 as FileCodeIcon, FoldVertical as FoldIcon, KeyRound as KeyIcon, PanelRight as InspectorIcon, RefreshCw as RefreshIcon, Save as SaveIcon, Search as SearchIcon, TableProperties as TableIcon, UnfoldVertical as UnfoldIcon } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import TextConflictDialog from '../components/TextConflictDialog.vue'
+import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import SourceNodeMenu from '../components/SourceNodeMenu.vue'
+import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
+import { useStructuredSession } from '../composables/useStructuredSession'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
 import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
-import { confirmAppAction } from '../services/appDialog'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string }
 interface Range { start: number; end: number }
@@ -93,11 +100,20 @@ const content = ref(''), signature = ref(''), encoding = ref('utf-8'), readOnlyR
 const analysis = ref<Analysis | null>(null), readOnly = computed(() => Boolean(readOnlyReason.value))
 const filteredOutline = computed(() => { const q = query.value.trim().toLowerCase(), entries = analysis.value?.outline || []; return (q ? entries.filter(e => `${e.path} ${e.preview}`.toLowerCase().includes(q)) : entries).slice(0, 500) })
 let editor: EditorView | null = null, applying = false, loadId = 0, analysisId = 0, timer: ReturnType<typeof setTimeout> | null = null
-let offSave: (() => void) | null = null, offRefresh: (() => void) | null = null
 const errorText = (cause: unknown) => { const e = cause as { message?: string; suggestion?: string }; const text = e?.message || String(cause).replace(/^Error:\s*/, ''); return e?.suggestion ? `${text} · ${e.suggestion}` : text }
 const clearTimer = () => { if (timer) clearTimeout(timer); timer = null }
-const syncTab = (isDirty = dirty.value) => { const tab = store.tabs.find(t => t.path === path.value); if (!editor || !tab) return; tab.content = editor.state.doc.toString(); tab.isDirty = isDirty; tab.textSignature = signature.value; tab.textEncoding = encoding.value; tab.textReadOnlyReason = readOnlyReason.value; tab.textSize = fileSize.value; tab.textModified = modified.value }
-const analyze = async (source: string) => { const id = ++analysisId; analysisPending.value = true; try { const result = await invoke<Analysis>('analyze_toml_source', { content: source }); if (id === analysisId && content.value === source) analysis.value = result; return result } finally { if (id === analysisId) analysisPending.value = false } }
+const analyzedSource = ref('')
+const session = useStructuredSession({
+  path: () => path.value, external: () => isExternal.value, format: () => format.value?.id || '',
+  generation: () => loadId, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
+  analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => schedule(),
+  applySnapshot: snapshot => apply(snapshot), load: discard => load(discard),
+})
+const nodeMenu = useSourceNodeMenu<NonNullable<typeof analysis.value>['outline'][number]>(session, { fresh: () => analyzedSource.value === content.value, reveal: entry => reveal(entry) })
+const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
+const registerTab = () => session.bind()
+
+const analyze = async (source: string) => { const analysisOwner = session.capture(); const id = ++analysisId; analysisPending.value = true; try { const result = await invoke<Analysis>('analyze_toml_source', { content: source }); if (session.owns(analysisOwner) && id === analysisId && content.value === source) { analysis.value = result; analyzedSource.value = source }; return result } finally { if (id === analysisId) analysisPending.value = false } }
 const schedule = () => {
   clearTimer()
   timer = setTimeout(() => {
@@ -113,25 +129,46 @@ const schedule = () => {
 const extensions = (locked: boolean) => [basicSetup, StreamLanguage.define(toml), EditorState.readOnly.of(locked), EditorView.editable.of(!locked), EditorView.lineWrapping,
   EditorView.updateListener.of(update => { if (update.docChanged) { content.value = update.state.doc.toString(); lines.value = update.state.doc.lines; if (!applying) { dirty.value = true; syncTab(true); schedule() } } if (update.docChanged || update.selectionSet) { const p = update.state.selection.main.head, line = update.state.doc.lineAt(p); cursorLine.value = line.number; cursorColumn.value = p - line.from + 1 } }),
   ...codeMirrorThemeExtensions]
-const replace = (source: string, locked: boolean) => { if (!editor) return; applying = true; editor.setState(EditorState.create({ doc: source, extensions: extensions(locked) })); applying = false; content.value = source; lines.value = editor.state.doc.lines }
-const apply = async (s: Snapshot) => { signature.value = s.signature; encoding.value = s.encoding; fileSize.value = s.size; modified.value = s.modified; readOnlyReason.value = s.readOnlyReason || ''; dirty.value = false; replace(s.content, Boolean(s.readOnlyReason)); store.addTab({ id: path.value, title: fileName.value, path: path.value, isDirty: false, external: isExternal.value }); syncTab(false); await analyze(s.content) }
-const restore = async (tab: TabInfo) => { signature.value = tab.textSignature || ''; encoding.value = tab.textEncoding || 'utf-8'; fileSize.value = tab.textSize || 0; modified.value = tab.textModified || 0; readOnlyReason.value = tab.textReadOnlyReason || ''; dirty.value = true; replace(tab.content || '', Boolean(tab.textReadOnlyReason)); store.activateTab(tab.id); await analyze(tab.content || '') }
-const load = async (discard = false) => { const id = ++loadId; analysisId++; clearTimer(); loading.value = true; loadError.value = ''; analysis.value = null; try { if (!path.value || format.value?.id !== 'toml') throw new Error('当前路径不是已注册的 TOML 文件'); const draft = currentTab.value; if (!discard && draft?.isDirty && draft.content !== undefined) { await restore(draft); return } const s = await invoke<Snapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', { ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: path.value, formatId: 'toml', readOptions: undefined }); if (id === loadId) await apply(s) } catch (e) { if (id === loadId) loadError.value = errorText(e) } finally { if (id === loadId) loading.value = false } }
-const reveal = (range: Range) => { if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder().decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
-const save = async (allowInvalid = false) => { if (!editor || readOnly.value || !dirty.value || saving.value) return; clearTimer(); const source = editor.state.doc.toString(); saving.value = true; try { const result = await analyze(source); if (!result.valid && !allowInvalid) { dialog.warning({ title: 'TOML 存在语法错误', content: '默认不会覆盖磁盘文件。可以继续修复，或明确按当前源码保存。', positiveText: '按源码保存', negativeText: '继续编辑', onPositiveClick: () => { void save(true) } }); return } const s = await invoke<Snapshot>(isExternal.value ? 'write_external_toml_source_document' : 'write_toml_source_document', { ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: path.value, content: source, expectedSignature: signature.value, allowInvalid }); if (editor.state.doc.toString() === source) await apply(s); else { signature.value = s.signature; dirty.value = true; syncTab(true); schedule() } message.success(result.valid ? 'TOML 已安全保存' : 'TOML 已按源码保存') } catch (cause) { const e = cause as { code?: string }; if (e?.code === 'external-modified') dialog.warning({ title: '文件已在外部修改', content: errorText(cause), positiveText: '重新加载', negativeText: '保留编辑内容', onPositiveClick: () => { void load(true) } }); else message.error(`保存失败：${errorText(cause)}`) } finally { saving.value = false } }
-const reload = async () => {
-  if (dirty.value && !await confirmAppAction(dialog, {
-    title: '重新读取 TOML？',
-    content: '磁盘源码将覆盖当前未保存的 TOML 修改。',
-    positiveText: '放弃修改并重新读取',
-    danger: true,
-  })) return
-  await load(true)
+const replace = (source: string, locked: boolean) => { if (!editor) return; applying = true; editor.setState(EditorState.create({ doc: source, extensions: extensions(locked) })); applying = false; content.value = editor.state.doc.toString(); lines.value = editor.state.doc.lines }
+const apply = async (s: Snapshot) => { signature.value = s.signature; encoding.value = s.encoding; fileSize.value = s.size; modified.value = s.modified; readOnlyReason.value = s.readOnlyReason || ''; dirty.value = false; replace(s.content, Boolean(s.readOnlyReason)); registerTab(); await analyze(editor?.state.doc.toString() || '') }
+const restore = async (tab: TabInfo) => { signature.value = tab.textSignature || ''; encoding.value = tab.textEncoding || 'utf-8'; fileSize.value = tab.textSize || 0; modified.value = tab.textModified || 0; readOnlyReason.value = tab.textReadOnlyReason || ''; dirty.value = true; replace(tab.content || '', Boolean(tab.textReadOnlyReason)); session.bind(); store.activateTab(tab.id); await analyze(tab.content || '') }
+const load = async (discardDraft = false) => {
+  const hadPrior = session.hasDocument()
+  loadId++; analysisId++; clearTimer()
+  const owner = session.capture()
+  if (!owner) return
+  session.cancelChange(); session.closeConflict()
+  loading.value = true; loadError.value = ''
+  if (!hadPrior) analysis.value = null
+
+  try {
+    if (!owner.path || !['toml'].includes(owner.format)) throw new Error('当前路径不是已注册的结构化文件')
+    await session.waitForWrite(owner)
+    if (!session.unchanged(owner)) return
+    const draft = currentTab.value
+    if (!discardDraft && draft?.isDirty && draft.content !== undefined) { await restore(draft); return }
+    const snapshot = await invoke<Snapshot>(owner.external ? 'read_external_text_document' : 'read_text_document', {
+      ...(owner.external ? {} : {libraryRoot:owner.root}), path:owner.path, formatId:owner.format })
+    if (!session.unchanged(owner)) return
+    await apply(snapshot)
+  } catch (error) {
+    if (session.owns(owner)) {
+      const detail = (error as {message?:string})?.message || String(error)
+      if (hadPrior) message.error('重新读取失败，原内容与草稿仍保留：' + detail)
+      else loadError.value = detail
+    }
+  } finally { if (session.owns(owner)) loading.value = false }
 }
-const keydown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); void save() } }
-watch([path, isExternal], (_current, [previous]) => { if (previous) syncTab(); void load() })
-onMounted(async () => { await nextTick(); if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value }); await load(); window.addEventListener('keydown', keydown); offSave = await listen('command-save', () => { void save() }); offRefresh = await listen('command-refresh', () => { void reload() }) })
-onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = null; window.removeEventListener('keydown', keydown); offSave?.(); offRefresh?.() })
+
+const reveal = (range: Range) => {
+  if (analyzedSource.value !== content.value) { message.info('正在更新定位，请稍候再试'); return } if (!editor) return; const bytes = new TextEncoder().encode(content.value), point = (n: number) => new TextDecoder().decode(bytes.slice(0, Math.min(n, bytes.length))).length, from = point(range.start), to = Math.max(from, point(range.end)); editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus() }
+const save = () => session.save()
+
+const reload = () => session.reload()
+
+watch([path, isExternal, () => store.libraryPath], () => { syncTab(); saving.value = false; void load() }, {flush:'sync'})
+onMounted(async () => { await nextTick(); if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value }); await load();    })
+onBeforeUnmount(() => { clearTimer(); syncTab(); editor?.destroy(); editor = null;    })
 </script>
 
 <style scoped>

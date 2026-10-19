@@ -31,10 +31,7 @@ for (const token of [
 for (const file of [
   'src/components/WorkspaceTabs.vue',
   'src/views/TextEditorView.vue',
-  'src/views/JsonEditorView.vue',
-  'src/views/YamlEditorView.vue',
-  'src/views/XmlEditorView.vue',
-  'src/views/TomlEditorView.vue',
+  'src/composables/useStructuredSession.ts',
   'src/views/DrawioEditorView.vue',
   'src/views/DiagramStudio.vue',
   'src/views/CanvasView.vue',
@@ -42,5 +39,10 @@ for (const file of [
   'src/views/WorkbookView.vue',
   'src/views/TempMode.vue',
 ]) if (!fs.readFileSync(file, 'utf8').includes('confirmAppAction')) fail(`application confirmation missing: ${file}`)
+
+for (const name of ['Json', 'Yaml', 'Xml', 'Toml']) {
+  const file = `src/views/${name}EditorView.vue`, source = fs.readFileSync(file, 'utf8')
+  if (!source.includes('useStructuredSession({') || !source.includes('session.reload()') || !source.includes('session.save()')) fail(`shared application confirmation not connected: ${file}`)
+}
 
 console.log('v1.0.15 app-dialog policy passed: native confirm, alert, and prompt counts are all 0; application dialogs own confirmations and parameter input.')

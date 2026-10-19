@@ -1,0 +1,20 @@
+✔ structured native evidence binds all tasks, source, installer, inputs and original output bytes (6.4808ms)
+✔ installed structured workflow uses actual input and parses its literal browser expressions (31.4176ms)
+✔ save analysis cannot submit old source to a replacement path/root (169.5838ms)
+✔ save captures immutable source and keeps later input dirty without resetting editor (50.0196ms)
+✔ pending native save protects window until it settles after unmount (46.4729ms)
+✔ ordinary and Windows canonical UNC spellings wait for the same pending write (43.2003ms)
+✔ invalid-source confirmation cannot save newly entered content under an old decision (40.9943ms)
+✔ reload confirmation belongs to captured file and source (31.9838ms)
+✔ late transformation and preview confirmation retain newer source (36.2886ms)
+✔ native failure keeps dirty source and clears pending save protection (35.2774ms)
+✔ JSON Pointer covers Unicode, escaped separators, quotes, empty keys and arrays (0.7248ms)
+✔ CRLF receipt matches the editor line model and does not leave a false dirty state (33.8711ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 896.6092

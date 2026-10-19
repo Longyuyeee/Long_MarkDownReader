@@ -36,13 +36,14 @@ pub async fn write_svg_source_document(
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
     validate_save(&content)?;
 
+    let source_policy = super::formats::structured_source_save_policy(&content);
     write_registered_text_document(
         library_root,
         path,
         "svg".into(),
         content,
         expected_signature,
-        None,
+        Some(source_policy),
     )
     .await
 }
@@ -55,12 +56,13 @@ pub async fn write_external_svg_source_document(
     access: State<'_, ExternalFileAccess>,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
     validate_save(&content)?;
+    let source_policy = super::formats::structured_source_save_policy(&content);
     write_external_registered_text_document(
         path,
         "svg".into(),
         content,
         expected_signature,
-        None,
+        Some(source_policy),
         &access,
     )
     .await

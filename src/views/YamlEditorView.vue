@@ -1,5 +1,5 @@
 <template>
-  <div class="yaml-workspace">
+  <div class="yaml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
     <header class="yaml-toolbar">
@@ -36,7 +36,7 @@
           type="primary"
           size="small"
           :loading="saving"
-          :disabled="loading || readOnly || !dirty"
+          :disabled="loading || readOnly || !dirty || !session.hasDocument()"
           @click="save()"
         >
           <template #icon><n-icon :component="SaveIcon" /></template>
@@ -115,7 +115,7 @@
           clearable
           size="small"
           placeholder="筛选路径或内容"
-          aria-label="筛选 YAML 结构提纲"
+          aria-label="筛选 YAML 结构提纲" @keydown.enter.prevent="filteredOutline[0] && revealRange(filteredOutline[0])"
         >
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>
@@ -126,7 +126,7 @@
             :key="`${entry.documentIndex}:${entry.start}:${entry.path}`"
             type="button"
             :style="{ paddingLeft: `${12 + Math.min(entry.depth, 8) * 14}px` }"
-            @click="revealRange(entry)"
+            @click="revealRange(entry)" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
           >
             <n-icon :component="kindIcon(entry.kind)" />
             <span class="outline-copy">
@@ -156,13 +156,16 @@
       <span>{{ formatBytes(sourceSize) }}</span>
       <span v-if="readOnlyReason" :title="readOnlyReason">{{ readOnlyReason }}</span>
     </footer>
-  </div>
+
+    <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
+    <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
+</div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '../services/tauriRuntime'
 import { basicSetup } from 'codemirror'
 import { yaml } from '@codemirror/lang-yaml'
 import { foldAll, unfoldAll } from '@codemirror/language'
@@ -188,11 +191,15 @@ import {
   UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import TextConflictDialog from '../components/TextConflictDialog.vue'
+import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import SourceNodeMenu from '../components/SourceNodeMenu.vue'
+import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
+import { useStructuredSession } from '../composables/useStructuredSession'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { type TabInfo, useAppStore } from '../store/app'
 import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
-import { confirmAppAction } from '../services/appDialog'
 
 interface TextDocumentSnapshot {
   content: string
@@ -297,8 +304,6 @@ let loadGeneration = 0
 let analysisGeneration = 0
 let analysisTimer: ReturnType<typeof setTimeout> | null = null
 let applyingDocument = false
-let unlistenSave: (() => void) | null = null
-let unlistenRefresh: (() => void) | null = null
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`
@@ -324,42 +329,29 @@ const kindIcon = (kind: string) => {
   return ScalarIcon
 }
 
-const syncCurrentTab = (isDirty = dirty.value) => {
-  if (!editor || !yamlPath.value) return
-  const tab = store.tabs.find(item => item.path === yamlPath.value)
-  if (!tab) return
-  tab.content = editor.state.doc.toString()
-  tab.isDirty = isDirty
-  tab.textSignature = signature.value
-  tab.textEncoding = encoding.value
-  tab.textReadOnlyReason = readOnlyReason.value
-  tab.textSize = fileSize.value
-  tab.textModified = modified.value
-}
-
-const registerCurrentTab = () => {
-  store.addTab({
-    id: yamlPath.value,
-    title: fileName.value,
-    path: yamlPath.value,
-    isDirty: dirty.value,
-    external: isExternal.value,
-  })
-  syncCurrentTab(dirty.value)
-}
+const analyzedSource = ref('')
+const session = useStructuredSession({
+  path: () => yamlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
+  generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
+  analyze: source => analyzeContent(source), clearAnalysis: () => clearAnalysisTimer(), scheduleAnalysis: () => scheduleAnalysis(),
+  applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
+})
+const nodeMenu = useSourceNodeMenu<NonNullable<typeof analysis.value>['outline'][number]>(session, { fresh: () => analyzedSource.value === sourceContent.value, reveal: entry => revealRange(entry) })
+const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
+const registerCurrentTab = () => session.bind()
 
 const clearAnalysisTimer = () => {
   if (analysisTimer) clearTimeout(analysisTimer)
   analysisTimer = null
 }
 
-const analyzeContent = async (content: string) => {
+const analyzeContent = async (content: string) => { const analysisOwner = session.capture();
   const generation = ++analysisGeneration
   analysisPending.value = true
   sourceSize.value = new TextEncoder().encode(content).length
   try {
     const result = await invoke<YamlSourceAnalysis>('analyze_yaml_source', { content })
-    if (generation === analysisGeneration && sourceContent.value === content) analysis.value = result
+    if (session.owns(analysisOwner) && generation === analysisGeneration && sourceContent.value === content) { analysis.value = result; analyzedSource.value = content }
     return result
   } finally {
     if (generation === analysisGeneration) analysisPending.value = false
@@ -419,7 +411,7 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
   applyingDocument = true
   editor.setState(EditorState.create({ doc: content, extensions: editorExtensions(isReadOnly) }))
   applyingDocument = false
-  sourceContent.value = content
+  sourceContent.value = editor.state.doc.toString()
   sourceSize.value = new TextEncoder().encode(content).length
   lineCount.value = editor.state.doc.lines
   cursorLine.value = 1
@@ -435,7 +427,7 @@ const applySnapshot = async (snapshot: TextDocumentSnapshot) => {
   dirty.value = false
   replaceDocument(snapshot.content, Boolean(snapshot.readOnlyReason))
   registerCurrentTab()
-  await analyzeContent(snapshot.content)
+  await analyzeContent(editor?.state.doc.toString() || '')
 }
 
 const restoreTabDraft = async (tab: TabInfo) => {
@@ -446,38 +438,36 @@ const restoreTabDraft = async (tab: TabInfo) => {
   readOnlyReason.value = tab.textReadOnlyReason || ''
   dirty.value = true
   replaceDocument(tab.content || '', Boolean(tab.textReadOnlyReason))
-  store.activateTab(tab.id)
+  session.bind(); store.activateTab(tab.id)
   await analyzeContent(tab.content || '')
 }
 
 const load = async (discardDraft = false) => {
-  const generation = ++loadGeneration
-  analysisGeneration += 1
-  analysisPending.value = false
-  clearAnalysisTimer()
-  loading.value = true
-  loadError.value = ''
-  analysis.value = null
+  const hadPrior = session.hasDocument()
+  loadGeneration++; analysisGeneration++; clearAnalysisTimer()
+  const owner = session.capture()
+  if (!owner) return
+  session.cancelChange(); session.closeConflict()
+  loading.value = true; loadError.value = ''
+  if (!hadPrior) analysis.value = null
+
   try {
-    if (!yamlPath.value || format.value?.id !== 'yaml') throw new Error('当前路径不是已注册的 YAML 文件')
+    if (!owner.path || !['yaml'].includes(owner.format)) throw new Error('当前路径不是已注册的结构化文件')
+    await session.waitForWrite(owner)
+    if (!session.unchanged(owner)) return
     const draft = currentTab.value
-    if (!discardDraft && draft?.isDirty && draft.content !== undefined) {
-      await restoreTabDraft(draft)
-      return
-    }
-    const snapshot = await invoke<TextDocumentSnapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: yamlPath.value,
-      formatId: 'yaml',
-      readOptions: undefined,
-    })
-    if (generation !== loadGeneration) return
+    if (!discardDraft && draft?.isDirty && draft.content !== undefined) { await restoreTabDraft(draft); return }
+    const snapshot = await invoke<TextDocumentSnapshot>(owner.external ? 'read_external_text_document' : 'read_text_document', {
+      ...(owner.external ? {} : {libraryRoot:owner.root}), path:owner.path, formatId:owner.format })
+    if (!session.unchanged(owner)) return
     await applySnapshot(snapshot)
-  } catch (cause) {
-    if (generation === loadGeneration) loadError.value = errorMessage(cause)
-  } finally {
-    if (generation === loadGeneration) loading.value = false
-  }
+  } catch (error) {
+    if (session.owns(owner)) {
+      const detail = (error as {message?:string})?.message || String(error)
+      if (hadPrior) message.error('重新读取失败，原内容与草稿仍保留：' + detail)
+      else loadError.value = detail
+    }
+  } finally { if (session.owns(owner)) loading.value = false }
 }
 
 const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
@@ -486,6 +476,7 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
 }
 
 const revealRange = (range: Pick<YamlDiagnostic, 'start' | 'end'>) => {
+  if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
   const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
   const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, range.end))
@@ -500,90 +491,17 @@ const openSourceSearch = () => editor && openSearchPanel(editor)
 const foldSource = () => editor && foldAll(editor)
 const unfoldSource = () => editor && unfoldAll(editor)
 
-const save = async (allowInvalid = false) => {
-  if (!editor || readOnly.value || !dirty.value || saving.value) return
-  clearAnalysisTimer()
-  const content = editor.state.doc.toString()
-  saving.value = true
-  try {
-    const currentAnalysis = await analyzeContent(content)
-    if (!currentAnalysis.valid && !allowInvalid) {
-      dialog.warning({
-        title: '源码存在 YAML 语法错误',
-        content: '覆盖保存会让磁盘文件保持非法状态。可以继续编辑修复，或明确按当前源码保存。',
-        positiveText: '按源码保存',
-        negativeText: '继续编辑',
-        onPositiveClick: () => { void save(true) },
-      })
-      return
-    }
-    const snapshot = await invoke<TextDocumentSnapshot>(isExternal.value ? 'write_external_yaml_source_document' : 'write_yaml_source_document', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: yamlPath.value,
-      content,
-      expectedSignature: signature.value,
-      allowInvalid,
-    })
-    if (editor.state.doc.toString() === content) {
-      await applySnapshot(snapshot)
-    } else {
-      signature.value = snapshot.signature
-      encoding.value = snapshot.encoding
-      fileSize.value = snapshot.size
-      modified.value = snapshot.modified
-      dirty.value = true
-      syncCurrentTab(true)
-      scheduleAnalysis()
-    }
-    message.success(currentAnalysis.valid ? 'YAML 源码已安全保存' : '非法 YAML 已按源码保存')
-  } catch (cause) {
-    const error = cause as { code?: string }
-    if (error?.code === 'external-modified') {
-      dialog.warning({
-        title: '文件已在外部修改',
-        content: errorMessage(cause),
-        positiveText: '重新加载',
-        negativeText: '保留编辑内容',
-        onPositiveClick: () => { void load(true) },
-      })
-    } else {
-      message.error(`保存失败：${errorMessage(cause)}`)
-    }
-  } finally {
-    saving.value = false
-  }
-}
+const save = () => session.save()
 
-const reloadFromDisk = async () => {
-  if (dirty.value && !await confirmAppAction(dialog, {
-    title: '重新读取 YAML？',
-    content: '磁盘源码将覆盖当前未保存的 YAML 修改。',
-    positiveText: '放弃修改并重新读取',
-    danger: true,
-  })) return
-  await load(true)
-}
+const reloadFromDisk = () => session.reload()
 
 const leaveEditor = () => router.push({ name: 'LibraryMode' })
-const handleKeydown = (event: KeyboardEvent) => {
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-    event.preventDefault()
-    void save()
-  }
-}
-
-watch([yamlPath, isExternal], (_current, [previousPath]) => {
-  if (previousPath) syncCurrentTab(dirty.value)
-  void load()
-})
-
+watch([yamlPath, isExternal, () => store.libraryPath], () => { syncCurrentTab(); saving.value = false; void load() }, {flush:'sync'})
 onMounted(async () => {
   await nextTick()
   createEditor()
   await load()
-  window.addEventListener('keydown', handleKeydown)
-  unlistenSave = await listen('command-save', () => { void save() })
-  unlistenRefresh = await listen('command-refresh', () => { void reloadFromDisk() })
+
 })
 
 onBeforeUnmount(() => {
@@ -591,9 +509,7 @@ onBeforeUnmount(() => {
   syncCurrentTab(dirty.value)
   editor?.destroy()
   editor = null
-  window.removeEventListener('keydown', handleKeydown)
-  unlistenSave?.()
-  unlistenRefresh?.()
+
 })
 </script>
 

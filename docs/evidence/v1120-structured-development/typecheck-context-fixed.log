@@ -1,0 +1,5 @@
+src/components/SourceNodeMenu.vue(1,87): error TS2322: Type '() => { onMousedown: (event: MouseEvent) => void; }' is not assignable to type 'MenuNodeProps'.
+  Type '{ onMousedown: (event: MouseEvent) => void; }' is not assignable to type 'HTMLAttributes & Record<string, string | number | undefined>'.
+    Type '{ onMousedown: (event: MouseEvent) => void; }' is not assignable to type 'Record<string, string | number | undefined>'.
+      Property 'onMousedown' is incompatible with index signature.
+        Type '(event: MouseEvent) => void' is not assignable to type 'string | number | undefined'.

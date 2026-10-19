@@ -1,5 +1,5 @@
 <template>
-  <div class="json-workspace" data-testid="json-workspace">
+  <div class="json-workspace" data-testid="json-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
     <header class="json-toolbar">
@@ -76,7 +76,7 @@
           <template #icon><n-icon :component="InspectorIcon" /></template>
           结构与诊断
         </n-button>
-        <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
+        <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty || !session.hasDocument()" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
         </n-button>
@@ -110,7 +110,7 @@
       </div>
     </section>
 
-    <main v-if="!loadError" class="json-main" :class="{ 'inspector-hidden': !inspectorVisible && !rangeMode }">
+    <main v-show="!loadError" class="json-main" :class="{ 'inspector-hidden': !inspectorVisible && !rangeMode }">
       <section class="source-pane" :aria-label="viewMode === 'source' ? 'JSON 源码' : 'JSON 树形预览'">
         <div v-if="loading" class="loading-state">
           <n-spin size="small" />
@@ -144,7 +144,7 @@
                 <div
                   v-for="entry in visibleTreePaths"
                   :key="`${entry.path}-${entry.start}`"
-                  class="tree-row"
+                  class="tree-row" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
                   :class="{ selected: selectedTreeStart === entry.start }"
                   :style="{ '--tree-depth': Math.min(entry.depth - 1, 16) }"
                   :data-kind="entry.kind"
@@ -422,8 +422,8 @@
             v-model:value="pathQuery"
             size="small"
             clearable
-            placeholder="输入字段名、路径或值"
-            aria-label="筛选字段路径"
+            placeholder="字段、JSON Path 或 /JSON/Pointer；Enter 定位"
+            aria-label="筛选字段路径" :input-props="{ 'aria-label': '筛选字段路径' }" @keydown.enter.prevent="locatePathQuery"
           >
             <template #prefix><SearchIcon :size="14" /></template>
           </n-input>
@@ -431,7 +431,7 @@
             <div
               v-for="entry in filteredPaths"
               :key="`${entry.path}-${entry.start}`"
-              class="path-item"
+              class="path-item" @contextmenu.prevent.stop="nodeMenu.open($event, entry)"
             >
               <button type="button" @click="showSourceRange(entry)">
                 <code>{{ entry.path }}</code>
@@ -509,7 +509,7 @@
             :disabled="!scalarEditValue.trim()"
             @click="applyScalarEdit"
           >
-            应用到草稿
+            预览修改
           </n-button>
         </div>
       </template>
@@ -546,7 +546,7 @@
             :disabled="keyRenameValue.length > 4096"
             @click="applyKeyRename"
           >
-            应用到草稿
+            预览修改
           </n-button>
         </div>
       </template>
@@ -592,7 +592,7 @@
             :disabled="propertyAppendKey.length > 4096 || !propertyAppendValue.trim()"
             @click="applyPropertyAppend"
           >
-            添加到草稿
+            预览修改
           </n-button>
         </div>
       </template>
@@ -628,7 +628,7 @@
             :disabled="!arrayAppendValue.trim()"
             @click="applyArrayAppend"
           >
-            添加到草稿
+            预览修改
           </n-button>
         </div>
       </template>
@@ -644,13 +644,16 @@
       </template>
       <span v-if="format?.id === 'jsonc'">允许注释与尾随逗号</span>
     </footer>
-  </div>
+
+    <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
+    <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
+</div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '../services/tauriRuntime'
 import { basicSetup } from 'codemirror'
 import { json } from '@codemirror/lang-json'
 import { foldAll, unfoldAll } from '@codemirror/language'
@@ -692,9 +695,14 @@ import {
 } from 'lucide-vue-next'
 import { findFileFormat } from '../config/fileFormats'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import TextConflictDialog from '../components/TextConflictDialog.vue'
+import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import SourceNodeMenu from '../components/SourceNodeMenu.vue'
+import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
+import { jsonPathToPointer } from '../utils/structuredPaths'
+import { useStructuredSession } from '../composables/useStructuredSession'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { type TabInfo, useAppStore } from '../store/app'
-import { confirmAppAction } from '../services/appDialog'
 
 interface TextDocumentSnapshot {
   content: string
@@ -894,6 +902,7 @@ const scalarEditDisabled = computed(() => (
   || saving.value
   || transformPending.value
   || scalarEditPending.value
+  || analyzedSource.value !== sourceContent.value
   || !analysis.value?.structureEditCandidate
 ))
 const keyRenameDisabled = computed(() => (
@@ -950,8 +959,6 @@ let analysisTimer: ReturnType<typeof setTimeout> | null = null
 let pathQueryTimer: ReturnType<typeof setTimeout> | null = null
 let schemaPollTimer: ReturnType<typeof setInterval> | null = null
 let applyingDocument = false
-let unlistenSave: (() => void) | null = null
-let unlistenRefresh: (() => void) | null = null
 const LARGE_JSON_RANGE_THRESHOLD_BYTES = 4 * 1024 * 1024
 const JSON_RANGE_BYTES = 512 * 1024
 const JSON_SEARCH_RANGE_BYTES = 1024 * 1024
@@ -995,6 +1002,7 @@ const filteredPaths = computed(() => {
   for (const entry of paths) {
     if (
       entry.path.toLocaleLowerCase().includes(query)
+      || (jsonPathToPointer(entry.path) || '').toLocaleLowerCase().includes(query)
       || entry.preview.toLocaleLowerCase().includes(query)
     ) {
       matches.push(entry)
@@ -1049,29 +1057,28 @@ const visibleTreePaths = computed(() => treeWindow.value.entries)
 const treeWindowOffset = computed(() => treeWindow.value.start * TREE_ROW_HEIGHT)
 const treeVirtualHeight = computed(() => expandedTreePaths.value.length * TREE_ROW_HEIGHT)
 
-const syncCurrentTab = (isDirty = dirty.value) => {
-  if (!editor || !jsonPath.value) return
-  const tab = store.tabs.find(item => item.path === jsonPath.value)
-  if (!tab) return
-  tab.content = editor.state.doc.toString()
-  tab.isDirty = isDirty
-  tab.textSignature = signature.value
-  tab.textEncoding = encoding.value
-  tab.textReadOnlyReason = readOnlyReason.value
-  tab.textSize = fileSize.value
-  tab.textModified = modified.value
-}
-
-const registerCurrentTab = () => {
-  store.addTab({
-    id: jsonPath.value,
-    title: fileName.value,
-    path: jsonPath.value,
-    isDirty: dirty.value,
-    external: isExternal.value,
-  })
-  syncCurrentTab(dirty.value)
-}
+const analyzedSource = ref('')
+const session = useStructuredSession({
+  path: () => jsonPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
+  generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
+  analyze: source => analyzeContent(source), clearAnalysis: () => clearAnalysisTimer(), scheduleAnalysis: () => scheduleAnalysis(),
+  applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
+})
+const nodeMenu = useSourceNodeMenu<JsonPathEntry>(session, { fresh: () => analyzedSource.value === sourceContent.value, reveal: entry => showSourceRange(entry), extra: entry => [
+    {key:'pointer',label:'复制 JSON Pointer',disabled:jsonPathToPointer(entry.path)===undefined},
+    {key:'edit',label:'修改字段值…',disabled:!isScalarKind(entry.kind)||scalarEditDisabled.value},
+    {key:'rename',label:'重命名字段…',disabled:entry.keyStart===undefined||keyRenameDisabled.value},
+    {key:'append-property',label:'添加字段…',disabled:entry.kind!=='object'||propertyAppendDisabled.value},
+    {key:'append-item',label:'追加数组项…',disabled:entry.kind!=='array'||arrayAppendDisabled.value},
+    {key:'remove-property',label:'删除字段…',disabled:entry.keyStart===undefined||propertyRemoveDisabled.value},
+    {key:'remove-item',label:'删除数组项…',disabled:entry.arrayIndex===undefined||arrayRemoveDisabled.value},
+  ], action: (key,entry) => {
+    if(key==='pointer')void copyPath(jsonPathToPointer(entry.path) || ''); else if(key==='edit')openScalarEditor(entry); else if(key==='rename')openKeyRename(entry);
+    else if(key==='append-property')openPropertyAppend(entry); else if(key==='append-item')openArrayAppend(entry);
+    else if(key==='remove-property')requestPropertyRemove(entry); else if(key==='remove-item')requestArrayRemove(entry)
+  } })
+const syncCurrentTab = (isDirty = dirty.value) => session.sync(isDirty)
+const registerCurrentTab = () => session.bind()
 
 const clearAnalysisTimer = () => {
   if (analysisTimer) clearTimeout(analysisTimer)
@@ -1096,6 +1103,7 @@ const resetTreeForAnalysis = (result: JsonSourceAnalysis) => {
 }
 
 const validateSchemaContent = async (content: string, syntaxValid = analysis.value?.valid === true) => {
+  const owner = session.capture()
   const generation = ++schemaGeneration
   if (isExternal.value) {
     schemaValidation.value = { status: 'external-unavailable', schemaApplied: false, diagnostics: [], diagnosticsTruncated: false }
@@ -1120,7 +1128,7 @@ const validateSchemaContent = async (content: string, syntaxValid = analysis.val
       content,
       jsonc: format.value?.id === 'jsonc',
     })
-    if (generation === schemaGeneration && sourceContent.value === content) schemaValidation.value = result
+    if (session.owns(owner) && generation === schemaGeneration && sourceContent.value === content) schemaValidation.value = result
   } catch (cause) {
     if (generation === schemaGeneration) {
       schemaValidation.value = {
@@ -1136,7 +1144,7 @@ const validateSchemaContent = async (content: string, syntaxValid = analysis.val
   }
 }
 
-const analyzeContent = async (content: string) => {
+const analyzeContent = async (content: string) => { const analysisOwner = session.capture();
   const generation = ++analysisGeneration
   analysisPending.value = true
   sourceSize.value = new TextEncoder().encode(content).length
@@ -1145,8 +1153,8 @@ const analyzeContent = async (content: string) => {
       content,
       jsonc: format.value?.id === 'jsonc',
     })
-    if (generation === analysisGeneration && sourceContent.value === content) {
-      analysis.value = result
+    if (session.owns(analysisOwner) && generation === analysisGeneration && sourceContent.value === content) {
+      analysis.value = result; analyzedSource.value = content
       resetTreeForAnalysis(result)
       if (!result.valid) viewMode.value = 'source'
       await validateSchemaContent(content, result.valid)
@@ -1208,7 +1216,7 @@ const replaceDocument = (content: string, isReadOnly: boolean) => {
   applyingDocument = true
   editor.setState(EditorState.create({ doc: content, extensions: editorExtensions(isReadOnly) }))
   applyingDocument = false
-  sourceContent.value = content
+  sourceContent.value = editor.state.doc.toString()
   sourceSize.value = new TextEncoder().encode(content).length
   lineCount.value = editor.state.doc.lines
   cursorLine.value = 1
@@ -1235,7 +1243,7 @@ const applySnapshot = async (loaded: TextDocumentSnapshot) => {
   dirty.value = false
   replaceDocument(loaded.content, Boolean(loaded.readOnlyReason))
   registerCurrentTab()
-  await analyzeContent(loaded.content)
+  await analyzeContent(editor?.state.doc.toString() || '')
 }
 
 const readRange = (offset: number, selectedEncoding?: string, length = JSON_RANGE_BYTES) => invoke<TextDocumentRangeSnapshot>(
@@ -1295,7 +1303,7 @@ const restoreTabDraft = async (tab: TabInfo) => {
   readOnlyReason.value = tab.textReadOnlyReason || ''
   dirty.value = true
   replaceDocument(tab.content || '', Boolean(tab.textReadOnlyReason))
-  store.activateTab(tab.id)
+  session.bind(); store.activateTab(tab.id)
   await analyzeContent(tab.content || '')
 }
 
@@ -1306,65 +1314,40 @@ const errorMessage = (cause: unknown) => {
 }
 
 const load = async (discardDraft = false) => {
-  const generation = ++loadGeneration
-  rangeSearchGeneration += 1
-  rangeSearchPending.value = false
-  rangeSearchProgress.value = 0
-  rangeSearchCompleted.value = false
-  rangeSearchTruncated.value = false
-  rangeSearchResults.value = []
-  scalarEditVisible.value = false
-  scalarEditEntry.value = null
-  scalarEditSource.value = ''
-  keyRenameVisible.value = false
-  keyRenameEntry.value = null
-  keyRenameSource.value = ''
-  propertyAppendVisible.value = false
-  propertyAppendEntry.value = null
-  propertyAppendSource.value = ''
-  arrayAppendVisible.value = false
-  arrayAppendEntry.value = null
-  arrayAppendSource.value = ''
-  propertyRemovePendingStart.value = null
-  arrayRemovePendingStart.value = null
-  analysisGeneration += 1
-  schemaGeneration += 1
-  analysisPending.value = false
-  schemaPending.value = false
-  schemaValidation.value = null
-  clearAnalysisTimer()
-  loading.value = true
-  loadError.value = ''
-  analysis.value = null
+  const hadPrior = session.hasDocument()
+  loadGeneration++; analysisGeneration++; clearAnalysisTimer()
+  const owner = session.capture()
+  if (!owner) return
+  session.cancelChange(); session.closeConflict()
+  loading.value = true; loadError.value = ''
+  if (!hadPrior) analysis.value = null
+
+  rangeSearchGeneration++; rangeSearchPending.value = false
+  scalarEditVisible.value = false; keyRenameVisible.value = false; propertyAppendVisible.value = false; arrayAppendVisible.value = false
+  schemaGeneration++; schemaPending.value = false
+  scalarEditPending.value = false; keyRenamePending.value = false; propertyAppendPending.value = false; arrayAppendPending.value = false; transformPending.value = false; propertyRemovePendingStart.value = null; arrayRemovePendingStart.value = null
+
   try {
-    if (!jsonPath.value || !['json', 'jsonc'].includes(format.value?.id || '')) {
-      throw new Error('当前路径不是已注册的 JSON 或 JSONC 文件')
-    }
+    if (!owner.path || !['json','jsonc'].includes(owner.format)) throw new Error('当前路径不是已注册的结构化文件')
+    await session.waitForWrite(owner)
+    if (!session.unchanged(owner)) return
     const draft = currentTab.value
-    if (!discardDraft && draft?.isDirty && draft.content !== undefined) {
-      await restoreTabDraft(draft)
-      return
+    if (!discardDraft && draft?.isDirty && draft.content !== undefined) { await restoreTabDraft(draft); return }
+    const first = await invoke<TextDocumentRangeSnapshot>(owner.external ? 'read_external_text_document_range' : 'read_text_document_range', {
+      ...(owner.external ? {} : {libraryRoot:owner.root}), path:owner.path, formatId:owner.format, offset:0, length:JSON_RANGE_BYTES })
+    if (!session.unchanged(owner)) return
+    if (first.size > LARGE_JSON_RANGE_THRESHOLD_BYTES) { applyRangeSnapshot(first, 'reset'); return }
+    const snapshot = await invoke<TextDocumentSnapshot>(owner.external ? 'read_external_text_document' : 'read_text_document', {
+      ...(owner.external ? {} : {libraryRoot:owner.root}), path:owner.path, formatId:owner.format })
+    if (!session.unchanged(owner)) return
+    await applySnapshot(snapshot)
+  } catch (error) {
+    if (session.owns(owner)) {
+      const detail = (error as {message?:string})?.message || String(error)
+      if (hadPrior) message.error('重新读取失败，原内容与草稿仍保留：' + detail)
+      else loadError.value = detail
     }
-    const firstRange = await readRange(0)
-    if (generation !== loadGeneration) return
-    if (firstRange.size > LARGE_JSON_RANGE_THRESHOLD_BYTES) {
-      applyRangeSnapshot(firstRange, 'reset')
-      message.info('文件超过 4 MiB，已进入渐进只读模式')
-      return
-    }
-    const loaded = await invoke<TextDocumentSnapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: jsonPath.value,
-      formatId: format.value!.id,
-      readOptions: undefined,
-    })
-    if (generation !== loadGeneration) return
-    await applySnapshot(loaded)
-  } catch (cause) {
-    if (generation === loadGeneration) loadError.value = errorMessage(cause)
-  } finally {
-    if (generation === loadGeneration) loading.value = false
-  }
+  } finally { if (session.owns(owner)) loading.value = false }
 }
 
 const loadRangeAt = async (
@@ -1373,14 +1356,17 @@ const loadRangeAt = async (
   length = JSON_RANGE_BYTES,
 ) => {
   if (!rangeMode.value || loadingRange.value) return
+  const owner = session.capture()
+  if (!owner) return
   loadingRange.value = true
   try {
     const loaded = await readRange(offset, encoding.value, length)
+    if (!session.unchanged(owner)) return
     applyRangeSnapshot(loaded, history)
   } catch (cause) {
-    message.error(`分段读取失败：${errorMessage(cause)}`)
+    if (session.owns(owner)) message.error(`分段读取失败：${errorMessage(cause)}`)
   } finally {
-    loadingRange.value = false
+    if (session.owns(owner)) loadingRange.value = false
   }
 }
 
@@ -1456,7 +1442,10 @@ const searchRangeDocument = async () => {
 }
 
 const jumpToRangeResult = async (result: RangeSearchResult) => {
+  const owner = session.capture()
+  if (!owner) return
   await loadRangeAt(result.segmentOffset, 'reset', JSON_SEARCH_RANGE_BYTES)
+  if (!session.owns(owner)) return
   await nextTick()
   if (!editor) return
   const match = editor.state.doc.toString().toLocaleLowerCase().indexOf(rangeSearchQuery.value.trim().toLocaleLowerCase())
@@ -1474,6 +1463,7 @@ const byteOffsetToCodeUnit = (content: string, byteOffset: number) => {
 }
 
 const revealSourceRange = (range: Pick<JsonDiagnostic, 'start' | 'end'>) => {
+  if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
   const from = byteOffsetToCodeUnit(sourceContent.value, range.start)
   const to = Math.max(from, byteOffsetToCodeUnit(sourceContent.value, range.end))
@@ -1534,6 +1524,8 @@ const openScalarEditor = (entry: JsonPathEntry) => {
 }
 
 const applyScalarEdit = async () => {
+  const owner = session.capture()
+  if (!owner) return
   if (!editor || !scalarEditEntry.value || scalarEditPending.value) return
   const current = editor.state.doc.toString()
   if (current !== scalarEditSource.value) {
@@ -1547,23 +1539,20 @@ const applyScalarEdit = async () => {
     const entry = scalarEditEntry.value
     const replaced = await invoke<string>('replace_json_scalar_source', {
       content: current,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       start: entry.start,
       end: entry.end,
       replacement: scalarEditValue.value.trim(),
     })
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: replaced },
-      selection: { anchor: byteOffsetToCodeUnit(replaced, entry.start) },
-    })
+    if (!session.owns(owner)) return
+    session.offerChange(owner, '修改字段值', replaced, byteOffsetToCodeUnit(replaced, entry.start))
     clearAnalysisTimer()
     scalarEditVisible.value = false
-    await analyzeContent(replaced)
-    message.success('标量值已更新，可撤销或保存')
+
   } catch (cause) {
     message.error(`标量修改失败：${errorMessage(cause)}`)
   } finally {
-    scalarEditPending.value = false
+    if (session.owns(owner)) scalarEditPending.value = false
   }
 }
 
@@ -1584,6 +1573,8 @@ const openKeyRename = (entry: JsonPathEntry) => {
 }
 
 const applyKeyRename = async () => {
+  const owner = session.capture()
+  if (!owner) return
   if (!editor || !keyRenameEntry.value || keyRenamePending.value) return
   const current = editor.state.doc.toString()
   if (current !== keyRenameSource.value) {
@@ -1598,23 +1589,19 @@ const applyKeyRename = async () => {
   try {
     const renamed = await invoke<string>('rename_json_object_key_source', {
       content: current,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       keyStart: entry.keyStart,
       keyEnd: entry.keyEnd,
       newKey: keyRenameValue.value,
     })
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: renamed },
-      selection: { anchor: byteOffsetToCodeUnit(renamed, entry.keyStart) },
-    })
+    session.offerChange(owner, '重命名字段', renamed, byteOffsetToCodeUnit(renamed, entry.start))
     clearAnalysisTimer()
     keyRenameVisible.value = false
-    await analyzeContent(renamed)
-    message.success('对象键已重命名，可撤销或保存')
+
   } catch (cause) {
     message.error(`对象键重命名失败：${errorMessage(cause)}`)
   } finally {
-    keyRenamePending.value = false
+    if (session.owns(owner)) keyRenamePending.value = false
   }
 }
 
@@ -1631,6 +1618,8 @@ const openPropertyAppend = (entry: JsonPathEntry) => {
 }
 
 const applyPropertyAppend = async () => {
+  const owner = session.capture()
+  if (!owner) return
   if (!editor || !propertyAppendEntry.value || propertyAppendPending.value) return
   const current = editor.state.doc.toString()
   if (current !== propertyAppendSource.value) {
@@ -1644,24 +1633,20 @@ const applyPropertyAppend = async () => {
   try {
     const appended = await invoke<string>('append_json_object_property_source', {
       content: current,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       start: entry.start,
       end: entry.end,
       key: propertyAppendKey.value,
       value: propertyAppendValue.value,
     })
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: appended },
-      selection: { anchor: byteOffsetToCodeUnit(appended, entry.start) },
-    })
+    session.offerChange(owner, '添加对象属性', appended, byteOffsetToCodeUnit(appended, entry.start))
     clearAnalysisTimer()
     propertyAppendVisible.value = false
-    await analyzeContent(appended)
-    message.success('对象属性已添加，可撤销或保存')
+
   } catch (cause) {
     message.error(`新增对象属性失败：${errorMessage(cause)}`)
   } finally {
-    propertyAppendPending.value = false
+    if (session.owns(owner)) propertyAppendPending.value = false
   }
 }
 
@@ -1677,6 +1662,8 @@ const openArrayAppend = (entry: JsonPathEntry) => {
 }
 
 const applyArrayAppend = async () => {
+  const owner = session.capture()
+  if (!owner) return
   if (!editor || !arrayAppendEntry.value || arrayAppendPending.value) return
   const current = editor.state.doc.toString()
   if (current !== arrayAppendSource.value) {
@@ -1690,23 +1677,19 @@ const applyArrayAppend = async () => {
   try {
     const appended = await invoke<string>('append_json_array_item_source', {
       content: current,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       start: entry.start,
       end: entry.end,
       value: arrayAppendValue.value,
     })
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: appended },
-      selection: { anchor: byteOffsetToCodeUnit(appended, entry.start) },
-    })
+    session.offerChange(owner, '追加数组项', appended, byteOffsetToCodeUnit(appended, entry.start))
     clearAnalysisTimer()
     arrayAppendVisible.value = false
-    await analyzeContent(appended)
-    message.success('数组项已追加，可撤销或保存')
+
   } catch (cause) {
     message.error(`追加数组项失败：${errorMessage(cause)}`)
   } finally {
-    arrayAppendPending.value = false
+    if (session.owns(owner)) arrayAppendPending.value = false
   }
 }
 
@@ -1718,16 +1701,12 @@ const requestPropertyRemove = (entry: JsonPathEntry) => {
     || propertyRemoveDisabled.value
   ) return
   const source = editor.state.doc.toString()
-  dialog.warning({
-    title: '删除对象属性',
-    content: `将从草稿中删除 ${entry.path} 及其完整值。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: () => applyPropertyRemove(entry, source),
-  })
+  void applyPropertyRemove(entry, source)
 }
 
 const applyPropertyRemove = async (entry: JsonPathEntry, source: string) => {
+  const owner = session.capture()
+  if (!owner) return
   if (
     !editor
     || entry.keyStart === undefined
@@ -1744,39 +1723,31 @@ const applyPropertyRemove = async (entry: JsonPathEntry, source: string) => {
   try {
     const removed = await invoke<string>('remove_json_object_property_source', {
       content: current,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       keyStart: entry.keyStart,
       keyEnd: entry.keyEnd,
       start: entry.start,
       end: entry.end,
     })
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: removed },
-      selection: { anchor: byteOffsetToCodeUnit(removed, entry.start) },
-    })
+    session.offerChange(owner, '删除对象属性', removed, byteOffsetToCodeUnit(removed, entry.start))
     clearAnalysisTimer()
-    await analyzeContent(removed)
-    message.success('对象属性已删除，可撤销或保存')
+
   } catch (cause) {
     message.error(`删除对象属性失败：${errorMessage(cause)}`)
   } finally {
-    propertyRemovePendingStart.value = null
+    if (session.owns(owner)) propertyRemovePendingStart.value = null
   }
 }
 
 const requestArrayRemove = (entry: JsonPathEntry) => {
   if (!editor || entry.arrayIndex === undefined || arrayRemoveDisabled.value) return
   const source = editor.state.doc.toString()
-  dialog.warning({
-    title: '删除数组项',
-    content: `将从草稿中删除 ${entry.path} 及其完整值，后续索引会自动前移。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: () => applyArrayRemove(entry, source),
-  })
+  void applyArrayRemove(entry, source)
 }
 
 const applyArrayRemove = async (entry: JsonPathEntry, source: string) => {
+  const owner = session.capture()
+  if (!owner) return
   if (!editor || entry.arrayIndex === undefined || arrayRemovePendingStart.value !== null) return
   const current = editor.state.doc.toString()
   if (current !== source) {
@@ -1788,28 +1759,28 @@ const applyArrayRemove = async (entry: JsonPathEntry, source: string) => {
   try {
     const removed = await invoke<string>('remove_json_array_item_source', {
       content: current,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       start: entry.start,
       end: entry.end,
     })
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: removed },
-      selection: { anchor: byteOffsetToCodeUnit(removed, entry.start) },
-    })
+    session.offerChange(owner, '删除数组项', removed, byteOffsetToCodeUnit(removed, entry.start))
     clearAnalysisTimer()
-    await analyzeContent(removed)
-    message.success('数组项已删除，可撤销或保存')
+
   } catch (cause) {
     message.error(`删除数组项失败：${errorMessage(cause)}`)
   } finally {
-    arrayRemovePendingStart.value = null
+    if (session.owns(owner)) arrayRemovePendingStart.value = null
   }
 }
 
+const locatePathQuery = () => { deferredPathQuery.value = pathQuery.value; const entry = filteredPaths.value[0]; if (entry) void showSourceRange(entry) }
+
 const showSourceRange = async (entry: JsonPathEntry) => {
+  const owner = session.capture()
+  if (!owner) return
   viewMode.value = 'source'
   await nextTick()
-  revealSourceRange(entry)
+  if (session.owns(owner)) revealSourceRange(entry)
 }
 
 const toggleTreeNode = (start: number) => {
@@ -1842,29 +1813,26 @@ const kindLabel = (kind: string) => ({
 }[kind] || kind)
 
 const transformSource = async (mode: 'pretty' | 'minify') => {
+  const owner = session.capture()
+  if (!owner) return
   if (!editor || transformDisabled.value) return
   transformPending.value = true
   try {
     const content = editor.state.doc.toString()
     const transformed = await invoke<string>('transform_json_source', {
       content,
-      jsonc: format.value?.id === 'jsonc',
+      jsonc: owner.format === 'jsonc',
       mode,
     })
     if (transformed === content) {
       message.info(mode === 'pretty' ? '源码已经是格式化状态' : '源码已经是压缩状态')
       return
     }
-    editor.dispatch({
-      changes: { from: 0, to: editor.state.doc.length, insert: transformed },
-      selection: { anchor: 0 },
-      effects: EditorView.scrollIntoView(0),
-    })
-    message.success(mode === 'pretty' ? '源码已格式化，可撤销或保存' : '源码已压缩，可撤销或保存')
+    session.offerChange(owner, '格式化 / 压缩预览', transformed)
   } catch (cause) {
     message.error(`源码变换失败：${errorMessage(cause)}`)
   } finally {
-    transformPending.value = false
+    if (session.owns(owner)) transformPending.value = false
   }
 }
 
@@ -1893,83 +1861,12 @@ const formatBytes = (value: number) => {
   return `${(value / 1024 / 1024).toFixed(1)} MiB`
 }
 
-const save = async (allowInvalid = false) => {
-  if (!editor || readOnly.value || !dirty.value || saving.value || !format.value) return
-  clearAnalysisTimer()
-  const content = editor.state.doc.toString()
-  saving.value = true
-  try {
-    const currentAnalysis = await analyzeContent(content)
-    if (!currentAnalysis.valid && !allowInvalid) {
-      dialog.warning({
-        title: '源码存在语法错误',
-        content: '覆盖保存会让磁盘上的 JSON 保持非法状态。可以继续编辑修复，或明确按当前源码保存。',
-        positiveText: '按源码保存',
-        negativeText: '继续编辑',
-        onPositiveClick: () => { void save(true) },
-      })
-      return
-    }
-    const saved = await invoke<TextDocumentSnapshot>(isExternal.value ? 'write_external_json_source_document' : 'write_json_source_document', {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
-      path: jsonPath.value,
-      formatId: format.value.id,
-      content,
-      expectedSignature: signature.value,
-      allowInvalid,
-    })
-    if (editor.state.doc.toString() === content) {
-      await applySnapshot(saved)
-    } else {
-      signature.value = saved.signature
-      encoding.value = saved.encoding
-      fileSize.value = saved.size
-      modified.value = saved.modified
-      dirty.value = true
-      syncCurrentTab(true)
-      scheduleAnalysis()
-    }
-    message.success(currentAnalysis.valid ? 'JSON 源码已安全保存' : '非法 JSON 已按源码保存')
-  } catch (cause) {
-    const error = cause as { code?: string }
-    if (error?.code === 'external-modified') {
-      dialog.warning({
-        title: '文件已在外部修改',
-        content: errorMessage(cause),
-        positiveText: '重新加载',
-        negativeText: '保留编辑内容',
-        onPositiveClick: () => { void load(true) },
-      })
-    } else {
-      message.error(`保存失败：${errorMessage(cause)}`)
-    }
-  } finally {
-    saving.value = false
-  }
-}
+const save = () => session.save()
 
-const reloadFromDisk = async () => {
-  if (dirty.value && !await confirmAppAction(dialog, {
-    title: '重新读取 JSON？',
-    content: '磁盘源码将覆盖当前未保存的 JSON 修改。',
-    positiveText: '放弃修改并重新读取',
-    danger: true,
-  })) return
-  await load(true)
-}
+const reloadFromDisk = () => session.reload()
 
 const leaveEditor = () => router.push({ name: 'LibraryMode' })
-const handleKeydown = (event: KeyboardEvent) => {
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-    event.preventDefault()
-    void save()
-  }
-}
-
-watch([jsonPath, isExternal], (_current, [previousPath]) => {
-  if (previousPath) syncCurrentTab(dirty.value)
-  void load()
-})
+watch([jsonPath, isExternal, () => store.libraryPath], () => { syncCurrentTab(); saving.value = false; void load() }, {flush:'sync'})
 watch(pathQuery, query => {
   if (pathQueryTimer) clearTimeout(pathQueryTimer)
   pathQueryTimer = setTimeout(() => {
@@ -1985,10 +1882,10 @@ onMounted(async () => {
   await nextTick()
   createEditor()
   await load()
-  window.addEventListener('keydown', handleKeydown)
+  if (!session.capture() || !session.owns(session.capture())) return
+
   window.addEventListener('resize', measureTreeViewport)
-  unlistenSave = await listen('command-save', () => { void save() })
-  unlistenRefresh = await listen('command-refresh', () => { void reloadFromDisk() })
+
   schemaPollTimer = setInterval(() => {
     if (!loading.value && !schemaPending.value && !rangeMode.value && !isExternal.value && analysis.value?.valid && sourceContent.value) {
       void validateSchemaContent(sourceContent.value, true)
@@ -2002,10 +1899,9 @@ onBeforeUnmount(() => {
   syncCurrentTab(dirty.value)
   editor?.destroy()
   editor = null
-  window.removeEventListener('keydown', handleKeydown)
+
   window.removeEventListener('resize', measureTreeViewport)
-  unlistenSave?.()
-  unlistenRefresh?.()
+
 })
 </script>
 
@@ -2022,6 +1918,8 @@ onBeforeUnmount(() => {
   color: var(--theme-text);
   background: var(--theme-bg);
 }
+
+.json-workspace > :deep(.workspace-tabs) { flex: 0 0 var(--workspace-tabs-height, 34px); }
 
 .json-toolbar {
   flex: 0 0 48px;

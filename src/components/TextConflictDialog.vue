@@ -5,7 +5,7 @@
     <TextDiff v-else-if="snapshot" :current="draft" :target="snapshot.content" current-label="当前编辑内容" target-label="磁盘最新内容" :busy="busy" />
     <p v-if="error" role="alert">{{ error }}</p>
     <div class="conflict-actions"><n-button v-if="!snapshot || error" :disabled="busy" :loading="loading" @click="read">重新比较</n-button><n-button :disabled="busy || loading || !snapshot" :loading="busy && action === 'reload'" @click="resolve('reload')">使用磁盘版本</n-button><n-button :disabled="busy || loading || !snapshot" :loading="busy && action === 'copy'" @click="resolve('copy')">另存当前副本</n-button><n-button type="primary" :disabled="busy" @click="$emit('close')">继续编辑</n-button></div>
-    <p class="conflict-hint">{{ libraryRoot ? '使用磁盘版本前先将当前草稿保留在历史中。' : '使用磁盘版本前，先将当前草稿保留为同目录副本。' }}另存副本保留两份文件。</p>
+    <p class="conflict-hint">{{ libraryRoot && ['markdown','plain-text'].includes(formatId) ? '使用磁盘版本前先将当前草稿保留在历史中。' : '使用磁盘版本前，先将当前草稿保留为同目录副本。' }}另存副本保留两份文件。</p>
   </n-modal>
 </template>
 <script setup lang="ts">

@@ -1,0 +1,47 @@
+{
+  "error": "TimeoutError: page.waitForFunction: Timeout 30000ms exceeded.",
+  "checks": [
+    {
+      "id": "json-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "json-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "json-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "json-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "json-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "json-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "json-enter-navigates-without-replacing-source",
+      "status": "passed"
+    }
+  ],
+  "defects": [],
+  "errors": []
+}

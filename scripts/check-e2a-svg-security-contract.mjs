@@ -13,6 +13,7 @@ const packageJson = json("package.json");
 const backend = read("src-tauri/src/formats/svg.rs");
 const command = read("src-tauri/src/commands/svg.rs");
 const editor = read("src/views/XmlEditorView.vue");
+const session = read("src/composables/useStructuredSession.ts");
 const audit = read("docs/E2A_SVG_Security_and_Basic_Source_Editor_Audit_2026-07-31.md");
 const failures = [];
 const fail = (message) => failures.push(message);
@@ -77,7 +78,8 @@ if (
 for (const [label, source, markers] of [
   ["backend", backend, ["MAX_SVG_SOURCE_BYTES", "MAX_SVG_ELEMENTS", "exceeds_viewbox_limit", "is_allowed_element", "svg-attribute-blocked", "sanitized_svg"]],
   ["command", command, ["write_registered_text_document", "expected_signature", "unsafe-svg-save-blocked"]],
-  ["editor", editor, ["analyze_svg_source", "write_svg_source_document", "image/svg+xml", "previewAvailable"]],
+  ["editor", editor, ["analyze_svg_source", "useStructuredSession({", "session.save()", "image/svg+xml", "previewAvailable"]],
+  ["source session", session, ["owner.format === 'svg'", "SVG 尚有阻断项", "write_${owner.external ? 'external_' : ''}${kind}_source_document", "expectedSignature: owner.signature", "...(kind === 'svg' ? {} : { allowInvalid })"]],
   ["audit", audit, ["E2A 已完成", "安全白名单", "E2B", "releaseCandidate=false"]],
 ]) {
   for (const marker of markers) {

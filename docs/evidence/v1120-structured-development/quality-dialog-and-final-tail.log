@@ -1,0 +1,70 @@
+RUN node scripts/check-v115-app-dialog-policy.mjs
+v1.0.15 app-dialog policy passed: native confirm, alert, and prompt counts are all 0; application dialogs own confirmations and parameter input.
+RUN node scripts/check-canvas-pointer-interactions.mjs
+Canvas pointer interaction passed: knowledge graph, OPML mind map, and JSON Canvas use cursor-anchored wheel zoom with node and background context actions.
+RUN node scripts/check-table-board-experience.mjs
+Table board experience passed: real 13-field data creates 11 readable cards across desktop and narrow layouts without mutation or runtime errors.
+RUN node scripts/check-media-workspace.mjs
+Media workspace contract passed: 8 image and 9 video extensions use guarded, range-streamed previews with bounded decoding.
+RUN node scripts/check-image-transform-copy.mjs
+P1-A2 image editor contract passed: the right-side workspace exposes bounded library-only copy editing over the verified PNG/JPEG/WebP/BMP transform engine.
+RUN node scripts/check-p1a2-image-editor-audit.mjs
+P1-A2 desktop audit passed: the image editor remains inside the right workspace, is responsive, saves a verified WebP copy, reopens it, and preserves the source.
+RUN node scripts/check-sidebar-tabs-responsive.mjs
+Sidebar tabs passed: seven icons keep one navigation row, accessible names, purpose explanations and reduced motion.
+RUN node scripts/check-file-tree-appearance.mjs
+File tree appearance passed: 43 registered formats retain extensions, use mapped visuals, and support bounded local markers.
+RUN node scripts/check-ui4c-release-fact-alignment.mjs
+UI-4C release facts passed: v1.1.20 is being prepared and enterprise RC remains separate.
+RUN node scripts/check-ux39-unsigned-package.mjs
+UX-39A historical unsigned package passed: v1.0.4 MSI/NSIS hashes remain bound to 2b5d4d7.
+RUN node scripts/check-post-v115-m2a1-workspace-task.mjs
+M2A1 accepted: a real Markdown task can be confirmed, written with signature protection, and byte-restored from the workspace.
+RUN node scripts/check-post-v115-m2a2-workspace-governance.mjs
+M2A2 accepted: real M0 workspace actions render before secondary analysis, issues appear once, graph details remain available, and source bytes stay unchanged.
+RUN node scripts/check-post-v115-m2a3-workspace-navigation.mjs
+M2A3 accepted: continue-work entries are globally deduplicated, task filters use real metadata, completion/restore persists byte-exactly, and the workspace is responsive.
+RUN node scripts/check-post-v115-m2-closure.mjs
+M2 closure accepted: real quick create/open, line-level task location, explicit states and 1011-file workspace ready in 801ms.
+RUN node scripts/check-post-v115-explicit-save-alignment.mjs
+Explicit-save alignment accepted: the real pre-fix source write is reproduced, current drafts remain byte-unchanged, and only Save persists content.
+RUN node scripts/check-post-v115-m1b2a-docx-object-selection.mjs
+M1B2A DOCX object selection evidence verified: 6 real fixtures, paragraph style assignment selected, writeback remains closed.
+RUN node scripts/check-post-v115-m1b2b-docx-paragraph-styles.mjs
+M1B2B DOCX paragraph style evidence verified: three producers, draft history, isolated preview, explicit save, reopen and responsive UI.
+RUN node scripts/check-post-v115-m1b2c-docx-closure.mjs
+M1B2C DOCX closure evidence verified: 3 native producers, 9 independent roundtrips, 9 LongEdit reverse reads, source hashes unchanged.
+RUN node scripts/check-post-v115-m1ca-odf-feasibility.mjs
+M1C-A ODF feasibility verified: real ODS/ODP, valid formula, exact part baseline, LibreOffice reopen, WPS blocker recorded.
+RUN node scripts/check-post-v115-m1cb-ods-cell-edit.mjs
+M1C-B ODS bounded cell edit verified: real desktop draft, undo/redo, reliable copy, source preservation and LibreOffice reopen.
+RUN node scripts/check-post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke.mjs
+M4F-2 accepted: candidate 757d54309ddb35f445344d909fa4c7ba2567bc58 passed the full quality gate, R5F 11/11 and R5G 6/6 + 11/11; later release stages remain consistent.
+RUN node scripts/check-post-v115-m4f3a-v1016-hosted-installer-lifecycle-handoff.mjs
+M4F-3 closure accepted: run 33322246630 built both unsigned installers and passed R5I 22/22, R5J 18/18 + 11/11 routes, and R5L 7/7; later release stages remain consistent.
+RUN node scripts/check-post-v116-m5-6-v1017-hosted-installer-lifecycle.mjs
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+RUN npm run check:ux33j-installed-docx-harness
+
+> tauri-app@1.1.20 check:ux33j-installed-docx-harness
+> node scripts/check-ux33j-installed-docx-harness.mjs
+
+UX-33J installed DOCX harness passed: dynamic 1.0.x build binding and three-producer installed WebView smoke are ready.
+RUN cargo check --locked --manifest-path src-tauri/Cargo.toml
+   Compiling tauri-app v1.1.20 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 05s
+RUN npm run audit:prod
+
+> tauri-app@1.1.20 audit:prod
+> npm audit --omit=dev --registry=https://registry.npmjs.org
+
+found 0 vulnerabilities

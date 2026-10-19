@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const pptxEditingChecks=['owned-three-producer-fixtures','canvas-target-and-notes','unapplied-buffer-and-leave-protection','multi-target-undo-redo','copy-collision-preserves-draft','three-producer-batch-copy-source-unchanged','explicit-source-cancel-never-writes','ctrl-s-exclusive-confirmation','reload-cancel-preserves-draft','visible-source-conflict-keeps-peer-bytes','three-producer-native-reopen','independent-zip-xml-untouched-parts','external-read-only','trusted-input-and-unselected-preserved']
 export function validateInstalledPptxEditing(report,manifest){
- assert.ok(['1.1.18','1.1.19'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.18','1.1.19', '1.1.20'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-pptx-native-save-and-independent-zip-xml')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)
