@@ -76,7 +76,7 @@
           <template #icon><n-icon :component="InspectorIcon" /></template>
           结构与诊断
         </n-button>
-        <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty" @click="save()">
+        <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty || !session.hasDocument()" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
         </n-button>
@@ -110,7 +110,7 @@
       </div>
     </section>
 
-    <main v-if="!loadError" class="json-main" :class="{ 'inspector-hidden': !inspectorVisible && !rangeMode }">
+    <main v-show="!loadError" class="json-main" :class="{ 'inspector-hidden': !inspectorVisible && !rangeMode }">
       <section class="source-pane" :aria-label="viewMode === 'source' ? 'JSON 源码' : 'JSON 树形预览'">
         <div v-if="loading" class="loading-state">
           <n-spin size="small" />

@@ -36,7 +36,7 @@
           type="primary"
           size="small"
           :loading="saving"
-          :disabled="loading || readOnly || !dirty"
+          :disabled="loading || readOnly || !dirty || !session.hasDocument()"
           @click="save()"
         >
           <template #icon><n-icon :component="SaveIcon" /></template>

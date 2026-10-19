@@ -74,13 +74,14 @@ export function useStructuredSession(options: Options) {
   }
   const waitForWrite = async (owner: Owner) => { await writes.get(key(owner)) }
   const hasDocument = () => Boolean(bound && bound.editor === options.editor() && bound.path === options.path()
-    && bound.root === options.store.libraryPath && bound.external === options.external())
+    && bound.root === options.store.libraryPath && bound.external === options.external() && bound.format === options.format())
   const metadata = (snapshot: Snapshot) => {
     options.signature.value = snapshot.signature; options.encoding.value = snapshot.encoding
     options.fileSize.value = snapshot.size; options.modified.value = snapshot.modified
   }
   const save = async () => {
     if (disposed || options.loading.value || options.saving.value || options.readOnlyReason.value || !options.dirty.value) return
+    if (!hasDocument()) { options.message.info('当前文件尚未载入，原文件的未保存内容仍保留'); return }
     const owner = capture()
     if (!owner || !owner.signature || !owner.format) return
     if (writes.has(key(owner))) { options.message.info('这份文件正在保存，请稍候'); return }
@@ -135,6 +136,7 @@ export function useStructuredSession(options: Options) {
   }
   const reload = async () => {
     if (disposed || options.saving.value || options.loading.value) return
+    if (!hasDocument()) { await options.load(false); return }
     const owner = capture()
     if (!owner) return
     if (options.dirty.value && !await confirmAppAction(options.dialog, {
@@ -153,14 +155,14 @@ export function useStructuredSession(options: Options) {
   const closeConflict = () => { conflict.value = undefined }
   const finishCopy = (path: string) => { closeConflict(); options.message.success(`副本已保存：${path.split(/[\\/]/).pop()}；原件与当前草稿未变`) }
   const offerChange = (owner: Owner, title: string, target: string, anchor = 0) => {
-    if (!unchanged(owner)) { options.message.info('文件或内容已变化，未应用旧结果；当前修改仍保留'); return }
+    if (!hasDocument() || !unchanged(owner)) { options.message.info('文件或内容已变化，未应用旧结果；当前修改仍保留'); return }
     if (target === owner.source) { options.message.info('内容无需修改'); return }
     previewError.value = ''; preview.value = { owner, title, target, anchor }
   }
   const applyChange = () => {
     const change = preview.value
     if (!change) return
-    if (!unchanged(change.owner)) { previewError.value = '已继续编辑或切换文件，未应用旧修改。请关闭后重新操作。'; return }
+    if (!hasDocument() || !unchanged(change.owner)) { previewError.value = '已继续编辑或切换文件，未应用旧修改。请关闭后重新操作。'; return }
     change.owner.editor.dispatch({ changes: { from: 0, to: change.owner.source.length, insert: change.target },
       selection: { anchor: Math.min(change.anchor, change.target.length) } })
     preview.value = undefined

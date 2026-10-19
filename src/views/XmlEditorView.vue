@@ -30,7 +30,7 @@
           <template #icon><n-icon :component="InspectorIcon" /></template>
           元素与问题
         </n-button>
-        <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty" @click="save()">
+        <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty || !session.hasDocument()" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
         </n-button>
