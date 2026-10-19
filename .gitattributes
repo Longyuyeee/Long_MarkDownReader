@@ -189,3 +189,6 @@ docs/evidence/v1120-build-*/**/*.log -text -diff
 docs/evidence/v1120-review-*/** -text whitespace=cr-at-eol
 docs/evidence/v1120-review-*/**/*.log -text -diff
 docs/evidence/v1-1-20-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.20-release/** -text whitespace=cr-at-eol
+docs/evidence/v1120-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1120-publication-*/**/*.log -text -diff
