@@ -579,8 +579,8 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-下一版本：v1.1.20 深化现有 JSON/JSONC、YAML、XML、TOML 编辑。先核实并修正异步操作的文件／快照归属、继续输入和切换草稿保护，再补强已有路径／诊断联动与可取消的修改差异；保留原文字面量、注释和格式边界，不新增格式或另一套编辑器。当前路线已有12/13版公开，1.1.20 已实现并进入安装验证；完成本路线后再规划至少十个后续版本，继续深化现有能力。预审不算交付。[20实际代码预审](docs/V1_1_20_Structured_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
+下一版本：v1.1.20 深化现有 JSON/JSONC、YAML、XML、TOML 编辑。先核实并修正异步操作的文件／快照归属、继续输入和切换草稿保护，再补强已有路径／诊断联动与可取消的修改差异；保留原文字面量、注释和格式边界，不新增格式或另一套编辑器。当前路线已有12/13版公开，1.1.20 已完成开发和安装验证，达到可发布状态，尚未公开；完成本路线后再规划至少十个后续版本，继续深化现有能力。预审不算交付。[20实际代码预审](docs/V1_1_20_Structured_Preimplementation_Audit_2026-10-18.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md)。
 
-### v1.1.20 候选开发
+### v1.1.20 发布准备完成
 
-结构化编辑已补齐保存归属、继续输入和读取失败保护，并深化右键定位、JSON Pointer 与可取消修改预览；当前进入最终安装验证，尚未发布。公开下载仍为 v1.1.19。[使用方法](docs/Structured_Editing_User_Guide.md) · [开发记录](docs/V1_1_20_Structured_Development_2026-10-19.md) · [发布准备](docs/V1_1_20_Unsigned_Community_Release_Audit_2026-10-19.md)。
+结构化编辑已补齐保存归属、继续输入和读取失败保护，并深化右键定位、JSON Pointer 与可取消修改预览；已完成固定安装包和独立同包验证，达到可发布状态，尚未正式公开。公开下载仍为 v1.1.19。[使用方法](docs/Structured_Editing_User_Guide.md) · [开发记录](docs/V1_1_20_Structured_Development_2026-10-19.md) · [发布准备](docs/V1_1_20_Unsigned_Community_Release_Audit_2026-10-19.md)。

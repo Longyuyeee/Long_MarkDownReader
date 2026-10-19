@@ -1,6 +1,6 @@
 # v1.1.20 结构化编辑：发布准备
 
-community-unsigned 开发候选，`releaseCandidate=false`；运行时 1.1.20、公开 1.1.19。固定安装包、本版真实安装任务和独立同包未完成，**尚未给出可发布结论**。
+当前开发目标：`1.1.20`；当前运行时版本：`1.1.20`；当前公开版本：`1.1.19`。本版已达到未签名社区版（community-unsigned）可发布状态：保存与未保存内容保护、提纲右键、路径定位和修改差异预览已完成，固定安装包及独立同包验证通过，尚未创建正式 Tag/Release。 社区发布候选已通过；企业 RC 的 `releaseCandidate=false` 保留。
 
 当前正式版支持从官方 Release 手动下载安装升级；1.1.20 在最终验证完成前不提供正式公开下载。社区包未签名，Windows 可能提示未知发布者；不据此宣称企业签名 RC 或应用内更新观察通过。
 
@@ -37,3 +37,12 @@ JSON 重试后的空白另因错误页卸载编辑器容器，现保持容器并
 39198205782 已成功完成完整质量、1064 项原生功能、独立性能和 MSI/NSIS；安装态确认 Enter 定位与正文保留通过，但右键定位后选区被浏览器菜单的默认选择重置到文档开头，运行 failure。**4687d580 与其安装包不发布**。原 API/jobs/完整日志、13 份本版原始输出和安装器回执见 `docs/evidence/v1120-build-39198205782/`。
 
 修正仅阻止命令菜单 mousedown 默认文本选择，保留原事件处理，并补齐 XML/TOML 提纲右键绑定。最终 55 项实际组件（模拟 IPC）与 13 项会话/报告约束通过，类型检查通过；新原构建与真实安装流程仍须完成。安装驱动加强为先移离目标，再验证菜单导航、源码焦点和正文原样保留，不放宽原断言。
+
+当前产品固定 `2a7eac5eb56791e6c7e6c56b36fee2393805827c`，新原构建 [39203747532](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39203747532)。最终组件报告为 `final-pages-context-props-fixed/report.json`，当前仍在新包验证阶段，公开版本保持 1.1.19。
+
+
+## 最终发布结论
+
+固定产品源码 `2a7eac5eb56791e6c7e6c56b36fee2393805827c`；[原构建 39203747532](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39203747532) 与 [独立同包 39207908392](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39207908392) 通过。本版 13 项和历版 241 项版本任务、安装/覆盖升级/卸载重装、真实重启、保存与副本原始文件核对通过；本机实际组件 55 项、生产会话/报告约束 13 项，原生功能 1064 项及独立性能 1 项通过。组件使用模拟 IPC，安装态使用真实程序和磁盘文件。
+
+已导入 [本版原始证据](evidence/v1-1-20-candidate-lifecycle/installed-v1120-workflow.json)、[原文件与安装器摘要](evidence/v1.1.20-release/artifact-manifest.json) 和 [SHA256SUMS](evidence/v1.1.20-release/SHA256SUMS.txt)。提供安装器为该固定构建原字节，不重新编译替换。全部撤回候选不可发布。正式公开与应用内更新观察独立，当前均未宣称完成；README 公开下载仍指向 1.1.19。前文各轮“尚未完成”为当时记录。

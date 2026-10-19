@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-68-v1.1.20-version-candidate",
-  "binaryVersionTransition": "v1.1.20-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.20-release-ready",
   "displayLabel": "v1.1.20 结构化编辑候选 · 当前公开 v1.1.19",
   "activeSlice": {
     "id": "v1.1.20-structured-editing",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_20_Structured_Development_2026-10-19.md"
   }
 }
