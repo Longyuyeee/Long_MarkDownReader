@@ -7,6 +7,7 @@ import { confirmAppAction } from '../services/appDialog'
 import { beginWindowSave, recordWindowDraftActivity, useWindowDraft, useWindowDraftSnapshot } from '../services/windowDrafts'
 import type { TabInfo, useAppStore } from '../store/app'
 import type { ConflictSnapshot } from '../components/TextConflictDialog.vue'
+import { fileStylePathKey } from '../utils/fileDisplayStyles'
 
 interface Snapshot {
   content: string; signature: string; encoding: string; size: number; modified: number
@@ -30,7 +31,7 @@ interface Options {
 // A write may outlive its component. A newly mounted editor must wait for it
 // before reading the same file; the owner is released only on a settled IPC.
 const writes = new Map<string, Promise<void>>()
-const key = (owner: Pick<Owner, 'path'>) => owner.path.replace(/\\/g, '/').replace(/^\/\/\?\//, '').toLocaleLowerCase()
+const key = (owner: Pick<Owner, 'path'>) => fileStylePathKey(owner.path)
 const editorText = (source: string) => source.replace(/\r\n?/g, '\n')
 
 export function useStructuredSession(options: Options) {
