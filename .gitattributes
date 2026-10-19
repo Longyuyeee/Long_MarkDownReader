@@ -192,3 +192,13 @@ docs/evidence/v1-1-20-candidate-lifecycle/** -text whitespace=cr-at-eol
 docs/evidence/v1.1.20-release/** -text whitespace=cr-at-eol
 docs/evidence/v1120-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1120-publication-*/**/*.log -text -diff
+docs/evidence/v1121-copy-development/** -text
+docs/evidence/v1121-copy-development/**/*.log -text -diff
+docs/evidence/v1-1-21-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1121-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1121-build-*/**/*.log -text -diff
+docs/evidence/v1121-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1121-review-*/**/*.log -text -diff
+docs/evidence/v1.1.21-release/** -text whitespace=cr-at-eol
+docs/evidence/v1121-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1121-publication-*/**/*.log -text -diff

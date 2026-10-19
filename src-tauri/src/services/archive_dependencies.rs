@@ -68,7 +68,7 @@ pub(crate) struct DependencyResolution {
 }
 
 /// Resolve only ordinary relative file destinations. This is evidence, not permission.
-pub(super) fn resolve_relative(root: &Path, evidence: &DependencyEvidence) -> DependencyResolution {
+pub(crate) fn resolve_relative(root: &Path, evidence: &DependencyEvidence) -> DependencyResolution {
     let result = |status, path: Option<PathBuf>| DependencyResolution {
         status,
         path: path.map(|p| p.to_string_lossy().into_owned()),
@@ -171,7 +171,7 @@ fn local(value: &str) -> bool {
 pub(super) fn mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
     mentions_impl(document, text, false)
 }
-pub(super) fn move_mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
+pub(crate) fn move_mentions(document: &str, text: &str) -> Vec<DependencyEvidence> {
     mentions_impl(document, text, true)
 }
 fn literal_destination(

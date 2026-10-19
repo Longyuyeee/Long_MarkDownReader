@@ -1,0 +1,40 @@
+{
+  "error": "Error: page.evaluate: TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9031/src/config/themePresets.ts:89:61)\n    at Object.appearance (http://127.0.0.1:9031/scripts/fixtures/v1121-copy-browser.mjs:14:618)\n    at eval (eval at evaluate (:311:30), <anonymous>:1:28)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+  "checks": [
+    {
+      "id": "same-library-copy-keeps-original-flow",
+      "status": "passed"
+    },
+    {
+      "id": "copy-target-preview-and-completion-keep-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-cannot-replace-another-target-library",
+      "status": "passed"
+    },
+    {
+      "id": "unsupported-reference-is-visible-and-requires-explicit-choice",
+      "status": "passed"
+    },
+    {
+      "id": "partial-failure-reviews-only-unfinished-items",
+      "status": "passed"
+    },
+    {
+      "id": "lost-reply-uses-same-plan-receipt-instead-of-new-copy",
+      "status": "passed"
+    },
+    {
+      "id": "route-change-retains-write-close-barrier-without-stale-ui-callback",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-preview-performs-no-copy",
+      "status": "passed"
+    }
+  ],
+  "errors": [
+    "TypeError: Cannot read properties of undefined (reading 'mode')"
+  ]
+}

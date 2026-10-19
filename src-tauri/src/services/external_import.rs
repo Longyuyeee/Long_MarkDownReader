@@ -21,10 +21,10 @@ const MAX_MARKDOWN_BYTES: u64 = 20 * 1024 * 1024;
 const MAX_IMAGES: usize = 512;
 
 #[derive(Debug)]
-struct Image {
-    range: Range<usize>,
-    target: String,
-    html: bool,
+pub(crate) struct Image {
+    pub(crate) range: Range<usize>,
+    pub(crate) target: String,
+    pub(crate) html: bool,
 }
 
 // Called only inside parser-established image syntax/definitions, never code text.
@@ -63,7 +63,7 @@ fn destination_range(text: &str, start: usize, end: usize) -> Result<Range<usize
     Ok(begin..at)
 }
 
-fn images(text: &str) -> Result<Vec<Image>, String> {
+pub(crate) fn images(text: &str) -> Result<Vec<Image>, String> {
     let parser = Parser::new(text);
     let definitions: Vec<_> = parser
         .reference_definitions()

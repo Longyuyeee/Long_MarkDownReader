@@ -1,0 +1,43 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "same-library-copy-keeps-original-flow",
+      "status": "passed"
+    },
+    {
+      "id": "copy-target-preview-and-completion-keep-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-cannot-replace-another-target-library",
+      "status": "passed"
+    },
+    {
+      "id": "unsupported-reference-is-visible-and-requires-explicit-choice",
+      "status": "passed"
+    },
+    {
+      "id": "partial-failure-reviews-only-unfinished-items",
+      "status": "passed"
+    },
+    {
+      "id": "lost-reply-uses-same-plan-receipt-instead-of-new-copy",
+      "status": "passed"
+    },
+    {
+      "id": "route-change-retains-write-close-barrier-without-stale-ui-callback",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-preview-performs-no-copy",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-with-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

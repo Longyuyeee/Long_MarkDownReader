@@ -477,6 +477,8 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
+1.1.21 正在完成跨资料库复制：在文件右键“复制到…”中选择目标库，自动预览重名与关联资源，保留源文件和未保存草稿，部分失败只接续未完成项。当前公开下载仍为 1.1.20；[开发记录](docs/V1_1_21_Cross_Library_Copy_Development_2026-10-19.md) 与 [后续路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 区分已实现和计划内容。
+
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
   <img src="https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white" alt="TypeScript">

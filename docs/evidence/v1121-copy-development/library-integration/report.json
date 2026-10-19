@@ -1,0 +1,9 @@
+{
+  "nativeBridgeMocked": true,
+  "checks": [
+    "actual LibraryMode right-click opens cross-library copy",
+    "saved source bytes copied without clearing original dirty state",
+    "source library and copied display style preserved"
+  ],
+  "errors": []
+}

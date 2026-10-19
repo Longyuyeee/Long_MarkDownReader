@@ -39,6 +39,7 @@ use commands::file_management::{
     list_library_trash, purge_library_trash, restore_library_trash, transfer_library_items,
     trash_library_items, undo_library_moves,
 };
+use commands::cross_library_copy::{preview_cross_library_copy, execute_cross_library_copy};
 use commands::file_relations::update_file_relation;
 use commands::file_relations::{
     list_file_relations, list_relation_files, remove_file_relation, save_file_relation,
@@ -604,6 +605,8 @@ pub fn run() {
             move_item,
             move_items,
             transfer_library_items,
+            preview_cross_library_copy,
+            execute_cross_library_copy,
             preview_library_renames,
             rename_library_items,
             undo_library_moves,
