@@ -8,7 +8,7 @@ export function validateInstalledCrossCopy(report,manifest){
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-cross-library-copy-native-input-and-output-bytes')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)
  assert.deepEqual(report.checks.map(c=>[c.id,c.status]),crossCopyChecks.map(id=>[id,'passed']))
- for(const key of ['previewReadOnly','collisionExact','sourceDraftExact','sourceOriginalExact','dependenciesExact','folderExact','partialExact','retryExact','warningCancelExact','warningChoiceExact','receiptRepeatExact','explicitCleanupSave'])assert.equal(report[key],true,key)
+ for(const key of ['previewReadOnly','collisionExact','sourceDraftExact','sourceOriginalExact','dependenciesExact','folderExact','partialExact','retryExact','warningCancelExact','warningChoiceExact','receiptRepeatExact','explicitCleanupSave','predecessorDraftsPreserved'])assert.equal(report[key],true,key)
  assert.equal(report.unselectedBefore,report.unselectedAfter);assert.match(report.unselectedBefore,/^[a-f0-9]{64}$/);assert.deepEqual(report.runtimeErrors,[])
  for(const type of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted),type)
  assert.ok(report.inputTrace.every(e=>e.trusted));assert.ok(report.outputs.length>=7);assert.equal(new Set(report.outputs.map(f=>f.fileName)).size,report.outputs.length)
