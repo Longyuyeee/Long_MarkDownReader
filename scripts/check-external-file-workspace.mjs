@@ -124,7 +124,7 @@ for (const [name, source] of Object.entries(structuredViews)) {
   for (const token of [
     "const isExternal = computed(() => route.query.external === '1')",
     "'read_external_text_document'",
-    'external: isExternal.value',
+    'external: () => isExternal.value',
     '外部文件 · ',
     '仅点击保存写回',
   ]) requireText(source, token, `${name} external workspace is missing ${token}`)

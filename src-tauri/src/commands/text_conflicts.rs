@@ -103,11 +103,20 @@ pub async fn resolve_text_conflict(
 ) -> Result<ConflictResult, String> {
     let external = library_root.is_none();
     let path = if let Some(root) = library_root {
-        WorkspaceGuard::new(root)?.resolve_existing_file(path, &["md", "markdown", "txt"])?
+        WorkspaceGuard::new(root)?.resolve_existing_file(path, &["md", "markdown", "txt", "json", "jsonc", "yaml", "yml", "xml", "svg", "toml"])?
     } else {
         access.resolve_editable(path)?
     };
     let format = crate::formats::file_registry::file_format_for_path(&path)?;
+    if matches!(format.id.as_str(), "json" | "jsonc" | "yaml" | "xml" | "svg" | "toml") {
+        let parent = path.parent().ok_or("文件目录不可用")?;
+        let _document = crate::services::document_coordination::acquire(&[parent])?;
+        let result = resolve_structured(&path, &expected_signature, &current_draft, &action, read_options)?;
+        if external {
+            if let Some(ref copy) = result.copy_path { access.authorize_editable(copy)?; }
+        }
+        return Ok(result);
+    }
     if !matches!(format.id.as_str(), "markdown" | "plain-text") {
         return Err("此冲突处理适用于 Markdown 和 TXT".into());
     }
@@ -141,6 +150,20 @@ pub async fn resolve_text_conflict(
     Ok(result)
 }
 
+// Structured editors have no text-history browser. Preserve the exact draft
+// characters in a discoverable UTF-8 sibling, including invalid/empty drafts.
+fn resolve_structured(path: &Path, expected: &str, draft: &str, action: &str, options: Option<TextReadOptions>) -> Result<ConflictResult, String> {
+    if !matches!(action, "copy" | "reload") { return Err("未知冲突操作，文件未修改".into()); }
+    if draft.len() > 20 * 1024 * 1024 || fs::metadata(path).map_err(|e| e.to_string())?.len() > 20 * 1024 * 1024 {
+        return Err("内容较大，未替换或保存任何内容；请先保留草稿".into());
+    }
+    let snapshot = read_text_snapshot_with_options(path, options).map_err(|e| e.message)?;
+    if snapshot.signature != expected { return Err("磁盘内容再次变化，请重新比较。当前草稿仍保留。".into()); }
+    let copy = create_copy(path, draft.as_bytes())?;
+    verify_current_signature(path, Some(expected)).map_err(|e| e.message)?;
+    Ok(ConflictResult { snapshot, copy_path: Some(copy.to_string_lossy().into_owned()) })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,6 +189,47 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
+    }
+    #[test]
+    fn structured_conflicts_keep_exact_drafts_and_never_overwrite_the_source() {
+        let fixture = Fixture::new();
+        for extension in ["json", "jsonc", "yaml", "xml", "toml", "svg"] {
+            let path = fixture.path().join(format!("配置.{extension}"));
+            let disk = "原件\r\n保持不变";
+            fs::write(&path, disk).unwrap();
+            let signature = read_text_snapshot_with_options(&path, None).unwrap().signature;
+            for (draft, action) in [("未保存😀\nINVALID\n", "copy"), ("", "reload")] {
+                let result = resolve_structured(&path, &signature, draft, action, None).unwrap();
+                assert_eq!(result.snapshot.content, disk);
+                assert_eq!(fs::read_to_string(result.copy_path.unwrap()).unwrap(), draft);
+                assert_eq!(fs::read_to_string(&path).unwrap(), disk);
+            }
+        }
+    }
+    #[test]
+    fn structured_conflicts_reject_stale_disk_and_unknown_actions_before_creating_a_copy() {
+        let fixture = Fixture::new();
+        let path = fixture.path().join("config.json");
+        fs::write(&path, "{}").unwrap();
+        let signature = read_text_snapshot_with_options(&path, None).unwrap().signature;
+        fs::write(&path, "{\"peer\":true}").unwrap();
+        assert!(resolve_structured(&path, &signature, "draft", "reload", None).is_err());
+        assert!(resolve_structured(&path, &signature, "draft", "overwrite", None).is_err());
+        assert_eq!(fs::read_dir(fixture.path()).unwrap().count(), 1);
+        assert_eq!(fs::read_to_string(&path).unwrap(), "{\"peer\":true}");
+    }
+    #[test]
+    fn structured_conflict_copy_keeps_existing_sibling_and_rejects_oversize_draft() {
+        let fixture = Fixture::new();
+        let path = fixture.path().join("config.toml");
+        fs::write(&path, "value = 1").unwrap();
+        fs::write(fixture.path().join("config-当前副本1.toml"), "keep").unwrap();
+        let signature = read_text_snapshot_with_options(&path, None).unwrap().signature;
+        let result = resolve_structured(&path, &signature, "value = 2", "copy", None).unwrap();
+        assert!(result.copy_path.unwrap().ends_with("config-当前副本2.toml"));
+        assert_eq!(fs::read_to_string(fixture.path().join("config-当前副本1.toml")).unwrap(), "keep");
+        assert!(resolve_structured(&path, &signature, &"x".repeat(20 * 1024 * 1024 + 1), "copy", None).is_err());
+        assert_eq!(fs::read_dir(fixture.path()).unwrap().count(), 3);
     }
     #[test]
     fn conflict_reload_protects_empty_and_unsaved_drafts_and_rejects_stale_disk() {

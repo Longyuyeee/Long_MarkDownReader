@@ -1,0 +1,122 @@
+RUN npm run check:ui4c-release-fact-alignment
+
+> tauri-app@1.1.20 check:ui4c-release-fact-alignment
+> node scripts/check-ui4c-release-fact-alignment.mjs
+
+UI-4C release facts passed: v1.1.20 is being prepared and enterprise RC remains separate.
+RUN npm run check:ui-color-semantics
+
+> tauri-app@1.1.20 check:ui-color-semantics
+> node scripts/check-ui-color-semantics.mjs
+
+UI color semantics contract passed: workspace chrome uses theme-aware surface and status tokens.
+RUN npm run check:ui-state-semantics
+
+> tauri-app@1.1.20 check:ui-state-semantics
+> node scripts/check-ui-state-semantics.mjs
+
+UI state semantics contract passed: seven states are represented across the shared workspace primitives.
+RUN npm run check:dialog-acl
+
+> tauri-app@1.1.20 check:dialog-acl
+> node scripts/check-dialog-acl.mjs
+
+Dialog ACL check passed (214 source files scanned).
+RUN npm run check:settings-navigation-localization
+
+> tauri-app@1.1.20 check:settings-navigation-localization
+> node scripts/check-settings-navigation-localization.mjs
+
+Settings navigation and privacy diagnostic localization check passed.
+RUN npm run check:settings-information-architecture
+
+> tauri-app@1.1.20 check:settings-information-architecture
+> node scripts/check-settings-information-architecture.mjs
+
+Settings information architecture check passed: 8 categories, user-facing knowledge tools, and one filtered theme library.
+RUN npm run check:index-auto-preparation-experience
+
+> tauri-app@1.1.20 check:index-auto-preparation-experience
+> node scripts/check-index-auto-preparation-experience.mjs
+
+Index automatic preparation experience contract passed.
+RUN npm run check:table-row-editing-experience
+
+> tauri-app@1.1.20 check:table-row-editing-experience
+> node scripts/check-table-row-editing-experience.mjs
+
+Table row selection, explicit deletion, undo/redo, and save-boundary contract passed.
+RUN npm run check:library-context-restoration
+
+> tauri-app@1.1.20 check:library-context-restoration
+> node scripts/check-library-context-restoration.mjs
+
+Library configuration, graph return, active file, and bounded restart context restoration contract passed (3 behavioral checks).
+RUN npm run check:markdown-default-mode
+
+> tauri-app@1.1.20 check:markdown-default-mode
+> node scripts/check-markdown-default-mode.mjs
+
+Markdown WYSIWYG default, legacy migration, explicit preference, and backup contract passed.
+RUN npm run check:markdown-code-theme-contrast
+
+> tauri-app@1.1.20 check:markdown-code-theme-contrast
+> node scripts/check-markdown-code-theme-contrast.mjs
+
+Markdown code palettes cover 9 themes; syntax text meets 4.5:1 and cursors meet 3:1 contrast.
+RUN npm run check:code-editor-theme-contract
+
+> tauri-app@1.1.20 check:code-editor-theme-contract
+> node scripts/check-code-editor-theme-contract.mjs
+
+Six CodeMirror workspaces share one rich semantic theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.
+RUN npm run check:structured-source-workspace
+
+> tauri-app@1.1.20 check:structured-source-workspace
+> node scripts/check-structured-source-workspace.mjs
+
+Structured source workspace contract passed: task-oriented panels, adaptive serialized analysis, navigation, diagnostics, and shared themes.
+RUN npm run check:workbook-workspace-experience
+
+> tauri-app@1.1.20 check:workbook-workspace-experience
+> node scripts/check-workbook-workspace-experience.mjs
+
+Workbook workspace contract passed: progressive tools, compact formula controls, responsive reachability, and opaque frozen grid surfaces.
+RUN npm run check:json-workspace-experience
+
+> tauri-app@1.1.20 check:json-workspace-experience
+> node scripts/check-json-workspace-experience.mjs
+
+JSON workspace contract passed: guided paths, collapsible diagnostics, indexed expansion, and virtual tree rows.
+RUN npm run check:text-workspace-layout
+
+> tauri-app@1.1.20 check:text-workspace-layout
+> node scripts/check-text-workspace-layout.mjs
+
+TXT and LOG use stable named grid areas; editor/viewer keeps remaining height and status stays compact.
+RUN npm run check:external-change-identity
+
+> tauri-app@1.1.20 check:external-change-identity
+> node scripts/check-external-change-identity.mjs
+
+External text changes use exact content identity, save receipts, one-signature dedupe, and compare/reload/keep actions.
+RUN npm run check:managed-file-routing
+
+> tauri-app@1.1.20 check:managed-file-routing
+> node scripts/check-managed-file-routing.mjs
+
+Managed file routing contract passed: 11 ingress surfaces preserve the library shell.
+RUN npm run check:format-registry
+
+> tauri-app@1.1.20 check:format-registry
+> node scripts/check-format-contract.mjs
+
+File format contract check failed:
+- A3 JSON workspace must use the dedicated validated writer
+- A3 invalid source overwrite must require explicit confirmation
+- A3 JSON saves must surface external signature conflicts
+- A3 JSON workspace must consume the global save command
+- A3 JSON workspace must consume the global refresh command
+- A4 YAML workspace must use the guarded save command
+- A4 XML workspace must use the guarded save command
+- A4 TOML workspace must use guarded saving

@@ -180,3 +180,7 @@ docs/evidence/v1117-*/**/*.csv -text whitespace=cr-at-eol
 docs/evidence/v1-1-17-candidate-lifecycle/** -text
 docs/evidence/v1-1-17-candidate-lifecycle/**/*.csv -text whitespace=cr-at-eol
 docs/evidence/v1112-corrected-build-39063418440/**/*.log -text -diff
+
+# Preserve v1.1.20 owned raw evidence bytes.
+docs/evidence/v1120-structured-development/** -text
+docs/evidence/v1120-structured-development/**/*.log -text -diff

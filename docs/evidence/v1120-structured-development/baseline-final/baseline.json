@@ -1,0 +1,27 @@
+{
+  "baselineCommit": "09954670",
+  "nativeBridgeMocked": true,
+  "defects": [
+    {
+      "id": "json-old-source-new-path",
+      "reproduced": true
+    },
+    {
+      "id": "yaml-old-source-new-path",
+      "reproduced": true
+    },
+    {
+      "id": "xml-old-source-new-path",
+      "reproduced": true
+    },
+    {
+      "id": "toml-old-source-new-path",
+      "reproduced": true
+    },
+    {
+      "id": "json-formatting-drops-later-input",
+      "reproduced": true
+    }
+  ],
+  "errors": []
+}

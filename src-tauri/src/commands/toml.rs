@@ -37,13 +37,14 @@ pub async fn write_toml_source_document(
     allow_invalid: bool,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
     validate_save(&content, allow_invalid)?;
+    let source_policy = super::formats::structured_source_save_policy(&content);
     write_registered_text_document(
         library_root,
         path,
         "toml".into(),
         content,
         expected_signature,
-        None,
+        Some(source_policy),
     )
     .await
 }
@@ -57,12 +58,13 @@ pub async fn write_external_toml_source_document(
     access: State<'_, ExternalFileAccess>,
 ) -> Result<TextDocumentSnapshot, TextDocumentError> {
     validate_save(&content, allow_invalid)?;
+    let source_policy = super::formats::structured_source_save_policy(&content);
     write_external_registered_text_document(
         path,
         "toml".into(),
         content,
         expected_signature,
-        None,
+        Some(source_policy),
         &access,
     )
     .await

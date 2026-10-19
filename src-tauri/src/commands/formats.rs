@@ -339,6 +339,15 @@ pub async fn read_text_document_range(
     read_resolved_text_document_range(&path, offset, length, read_options)
 }
 
+// Source editors preserve the original encoding/BOM/newline convention while
+// respecting the user's explicit addition or removal of the final newline.
+pub(crate) fn structured_source_save_policy(content: &str) -> TextSavePolicy {
+    TextSavePolicy {
+        expected_signature: None, encoding: None, bom: None, line_ending: None,
+        has_final_newline: Some(content.ends_with(['\n', '\r'])),
+    }
+}
+
 pub(crate) async fn write_registered_text_document(
     library_root: String,
     path: String,
@@ -776,6 +785,37 @@ pub async fn create_format_file(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn structured_source_save_keeps_bom_crlf_and_respects_final_newline_edits() {
+        let root = move_save_fixture();
+        for (id, content) in [
+            ("json", "{\n  \"value\": \"原稿\", \"big\": 9007199254740993\n}\n"),
+            ("jsonc", "{\n  // 保留注释\n  \"value\": \"原稿\"\n}\n"),
+            ("yaml", "# 保留注释\nvalue: 原稿\n"),
+            ("xml", "<root>\n<!--保留注释--><value>原稿</value>\n</root>\n"),
+            ("toml", "# 保留注释\nvalue = \"原稿\"\n"),
+            ("svg", "<svg xmlns=\"http://www.w3.org/2000/svg\">\n<title>原稿</title>\n</svg>\n"),
+        ] {
+            let path = root.join(format!("配置.{id}"));
+            let original = format!("\u{feff}{}", content.replace('\n', "\r\n"));
+            fs::write(&path, original.as_bytes()).unwrap();
+            let before = read_text_snapshot(&path).unwrap();
+            let changed = content.replace("原稿", "修改😀").trim_end_matches('\n').to_string();
+            let result = tauri::async_runtime::block_on(write_registered_text_document(
+                root.to_string_lossy().into_owned(), path.to_string_lossy().into_owned(), id.into(),
+                changed.clone(), Some(before.signature), Some(structured_source_save_policy(&changed)),
+            )).unwrap();
+            let expected = format!("\u{feff}{}", changed.replace('\n', "\r\n"));
+            assert_eq!(fs::read(&path).unwrap(), expected.as_bytes(), "{id}");
+            let with_newline = format!("{changed}\n");
+            tauri::async_runtime::block_on(write_registered_text_document(
+                root.to_string_lossy().into_owned(), path.to_string_lossy().into_owned(), id.into(),
+                with_newline.clone(), Some(result.signature), Some(structured_source_save_policy(&with_newline)),
+            )).unwrap();
+            assert_eq!(fs::read(&path).unwrap(), format!("{expected}\r\n").as_bytes(), "{id}");
+        }
+        fs::remove_dir_all(root).unwrap();
+    }
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]

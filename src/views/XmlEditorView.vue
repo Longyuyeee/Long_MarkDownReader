@@ -1,5 +1,5 @@
 <template>
-  <div class="xml-workspace">
+  <div class="xml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
     <header class="toolbar">
       <div class="identity">
@@ -86,7 +86,7 @@
           </div>
         </section>
 
-        <n-input v-model:value="query" clearable size="small" placeholder="筛选元素、路径或属性">
+        <n-input v-model:value="query" @keydown.enter="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选元素、路径或属性">
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>
         <div class="outline">
@@ -110,13 +110,16 @@
       <span>{{ readOnly ? '只读' : dirty ? '源码已修改' : '源码编辑' }}</span><span>{{ encoding.toUpperCase() }}</span>
       <span>{{ lineCount.toLocaleString() }} 行</span><span>行 {{ cursorLine }}，列 {{ cursorColumn }}</span><span>{{ formatBytes(sourceSize) }}</span>
     </footer>
-  </div>
+
+    <SourceNodeMenu v-if="nodeMenu.menu.value" :x="nodeMenu.menu.value.x" :y="nodeMenu.menu.value.y" :options="nodeMenu.items.value" @select="nodeMenu.select" @close="nodeMenu.close" />
+    <TextConflictDialog v-if="session.conflict.value" :path="session.conflict.value.path" :library-root="session.conflict.value.external ? undefined : session.conflict.value.root" :draft="session.conflict.value.source" :format-id="session.conflict.value.format" :is-current="() => session.unchanged(session.conflict.value)" @close="session.closeConflict" @reload="session.applyConflict" @copy="session.finishCopy" />
+    <StructuredChangeDialog v-if="session.preview.value" :title="session.preview.value.title" :current="session.preview.value.owner.source" :target="session.preview.value.target" :error="session.previewError.value" @apply="session.applyChange" @cancel="session.cancelChange" />
+</div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { listen } from '../services/tauriRuntime'
 import { basicSetup } from 'codemirror'
 import { xml } from '@codemirror/lang-xml'
 import { foldAll, unfoldAll } from '@codemirror/language'
@@ -131,12 +134,16 @@ import {
   Save as SaveIcon, Search as SearchIcon, ShieldOff as ShieldOffIcon, Tags as TagIcon, UnfoldVertical as UnfoldIcon,
 } from 'lucide-vue-next'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
+import TextConflictDialog from '../components/TextConflictDialog.vue'
+import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import SourceNodeMenu from '../components/SourceNodeMenu.vue'
+import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
+import { useStructuredSession } from '../composables/useStructuredSession'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import { type TabInfo, useAppStore } from '../store/app'
 import { STRUCTURED_ANALYSIS_BUSY_RETRY_MS, structuredAnalysisDelay } from '../utils/structuredAnalysis'
-import { confirmAppAction } from '../services/appDialog'
 
 interface Snapshot { content: string; encoding: string; signature: string; size: number; modified: number; readOnlyReason?: string; path: string }
 interface Diagnostic { severity: string; code: string; message: string; start: number; end: number; line: number; column: number; path?: string }
@@ -176,7 +183,6 @@ const filteredOutline = computed(() => {
 let editor: EditorView | null = null
 let loadGeneration = 0, analysisGeneration = 0, applying = false
 let timer: ReturnType<typeof setTimeout> | null = null
-let unlistenSave: (() => void) | null = null, unlistenRefresh: (() => void) | null = null
 
 const errorText = (cause: unknown) => {
   const error = cause as { message?: string; suggestion?: string }
@@ -198,23 +204,24 @@ const updatePreview = (source?: string) => {
   previewUrl.value = source ? URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' })) : ''
 }
 
-const syncTab = (isDirty = dirty.value) => {
-  const tab = store.tabs.find(item => item.path === xmlPath.value)
-  if (!editor || !tab) return
-  tab.content = editor.state.doc.toString(); tab.isDirty = isDirty; tab.textSignature = signature.value
-  tab.textEncoding = encoding.value; tab.textReadOnlyReason = readOnlyReason.value; tab.textSize = fileSize.value; tab.textModified = modified.value
-}
-const registerTab = () => {
-  store.addTab({ id: xmlPath.value, title: fileName.value, path: xmlPath.value, isDirty: dirty.value, external: isExternal.value })
-  syncTab()
-}
-const analyze = async (content: string) => {
+const analyzedSource = ref('')
+const session = useStructuredSession({
+  path: () => xmlPath.value, external: () => isExternal.value, format: () => format.value?.id || '',
+  generation: () => loadGeneration, editor: () => editor, store, dialog, message, loading, saving, dirty, signature, encoding, fileSize, modified, readOnlyReason,
+  analyze: source => analyze(source), clearAnalysis: () => clearTimer(), scheduleAnalysis: () => scheduleAnalysis(),
+  applySnapshot: snapshot => applySnapshot(snapshot), load: discard => load(discard),
+})
+const nodeMenu = useSourceNodeMenu<NonNullable<typeof analysis.value>['outline'][number]>(session, { fresh: () => analyzedSource.value === sourceContent.value, reveal: entry => reveal(entry) })
+const syncTab = (isDirty = dirty.value) => session.sync(isDirty)
+const registerTab = () => session.bind()
+
+const analyze = async (content: string) => { const analysisOwner = session.capture();
   const generation = ++analysisGeneration
   analysisPending.value = true; sourceSize.value = new TextEncoder().encode(content).length
   try {
     const result = await invoke<Analysis>(isSvg.value ? 'analyze_svg_source' : 'analyze_xml_source', { content })
-    if (generation === analysisGeneration && sourceContent.value === content) {
-      analysis.value = result
+    if (session.owns(analysisOwner) && generation === analysisGeneration && sourceContent.value === content) {
+      analysis.value = result; analyzedSource.value = content
       updatePreview(isSvg.value && result.previewAvailable ? result.sanitizedSvg : undefined)
     }
     return result
@@ -249,96 +256,67 @@ const extensions = (locked: boolean) => [
 const replaceDocument = (content: string, locked: boolean) => {
   if (!editor) return
   applying = true; editor.setState(EditorState.create({ doc: content, extensions: extensions(locked) })); applying = false
-  sourceContent.value = content; sourceSize.value = new TextEncoder().encode(content).length; lineCount.value = editor.state.doc.lines
+  sourceContent.value = editor.state.doc.toString(); sourceSize.value = new TextEncoder().encode(content).length; lineCount.value = editor.state.doc.lines
 }
 const applySnapshot = async (value: Snapshot) => {
   signature.value = value.signature; encoding.value = value.encoding; fileSize.value = value.size; modified.value = value.modified
   readOnlyReason.value = value.readOnlyReason || ''; dirty.value = false; replaceDocument(value.content, Boolean(value.readOnlyReason)); registerTab()
-  await analyze(value.content)
+  await analyze(editor?.state.doc.toString() || '')
 }
 const restoreDraft = async (tab: TabInfo) => {
   signature.value = tab.textSignature || ''; encoding.value = tab.textEncoding || 'utf-8'; fileSize.value = tab.textSize || 0
   modified.value = tab.textModified || 0; readOnlyReason.value = tab.textReadOnlyReason || ''; dirty.value = true
-  replaceDocument(tab.content || '', Boolean(tab.textReadOnlyReason)); store.activateTab(tab.id); await analyze(tab.content || '')
+  replaceDocument(tab.content || '', Boolean(tab.textReadOnlyReason)); session.bind(); store.activateTab(tab.id); await analyze(tab.content || '')
 }
 const load = async (discardDraft = false) => {
-  const generation = ++loadGeneration
-  analysisGeneration++; clearTimer(); loading.value = true; loadError.value = ''; analysis.value = null
+  const hadPrior = session.hasDocument()
+  loadGeneration++; analysisGeneration++; clearTimer()
+  const owner = session.capture()
+  if (!owner) return
+  session.cancelChange(); session.closeConflict()
+  loading.value = true; loadError.value = ''
+  if (!hadPrior) analysis.value = null
+
   try {
-    if (!xmlPath.value || !['xml', 'svg'].includes(format.value?.id || '')) throw new Error('当前路径不是已注册的 XML 或 SVG 文件')
+    if (!owner.path || !['xml','svg'].includes(owner.format)) throw new Error('当前路径不是已注册的结构化文件')
+    await session.waitForWrite(owner)
+    if (!session.unchanged(owner)) return
     const draft = currentTab.value
     if (!discardDraft && draft?.isDirty && draft.content !== undefined) { await restoreDraft(draft); return }
-    const value = await invoke<Snapshot>(isExternal.value ? 'read_external_text_document' : 'read_text_document', { ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: xmlPath.value, formatId: format.value?.id, readOptions: undefined })
-    if (generation === loadGeneration) await applySnapshot(value)
-  } catch (error) { if (generation === loadGeneration) loadError.value = errorText(error) }
-  finally { if (generation === loadGeneration) loading.value = false }
+    const snapshot = await invoke<Snapshot>(owner.external ? 'read_external_text_document' : 'read_text_document', {
+      ...(owner.external ? {} : {libraryRoot:owner.root}), path:owner.path, formatId:owner.format })
+    if (!session.unchanged(owner)) return
+    await applySnapshot(snapshot)
+  } catch (error) {
+    if (session.owns(owner)) {
+      const detail = (error as {message?:string})?.message || String(error)
+      if (hadPrior) message.error('重新读取失败，原内容与草稿仍保留：' + detail)
+      else loadError.value = detail
+    }
+  } finally { if (session.owns(owner)) loading.value = false }
 }
+
 const reveal = (range: Pick<Diagnostic, 'start' | 'end'>) => {
+  if (analyzedSource.value !== sourceContent.value) { message.info('正在更新定位，请稍候再试'); return }
   if (!editor) return
   const bytes = new TextEncoder().encode(sourceContent.value)
   const point = (offset: number) => new TextDecoder().decode(bytes.slice(0, Math.min(offset, bytes.length))).length
   const from = point(range.start), to = Math.max(from, point(range.end))
   editor.dispatch({ selection: { anchor: from, head: to }, effects: EditorView.scrollIntoView(from, { y: 'center' }) }); editor.focus()
 }
-const save = async (allowInvalid = false) => {
-  if (!editor || readOnly.value || !dirty.value || saving.value) return
-  clearTimer(); const content = editor.state.doc.toString(); saving.value = true
-  try {
-    const result = await analyze(content)
-    if (!result.valid && !allowInvalid) {
-      if (isSvg.value) {
-        dialog.warning({
-          title: 'SVG 不满足安全合同', content: '脚本、事件属性、外部引用或不受控元素不会写入磁盘。请根据诊断修复后再保存。',
-          positiveText: '继续编辑',
-        })
-      } else {
-        dialog.warning({
-          title: 'XML 不满足安全有效性要求', content: '默认不会覆盖磁盘文件。可以继续修复，或明确按当前源码保存。',
-          positiveText: '按源码保存', negativeText: '继续编辑', onPositiveClick: () => { void save(true) },
-        })
-      }
-      return
-    }
-    const writeCommand = isExternal.value
-      ? (isSvg.value ? 'write_external_svg_source_document' : 'write_external_xml_source_document')
-      : (isSvg.value ? 'write_svg_source_document' : 'write_xml_source_document')
-    const value = await invoke<Snapshot>(writeCommand, {
-      ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }), path: xmlPath.value, content, expectedSignature: signature.value,
-      ...(isSvg.value ? {} : { allowInvalid }),
-    })
-    if (editor.state.doc.toString() === content) await applySnapshot(value)
-    else { signature.value = value.signature; encoding.value = value.encoding; fileSize.value = value.size; modified.value = value.modified; dirty.value = true; syncTab(true); scheduleAnalysis() }
-    message.success(result.valid ? `${formatLabel.value} 源码已安全保存` : 'XML 已按源码保存')
-  } catch (cause) {
-    const error = cause as { code?: string }
-    if (error?.code === 'external-modified') dialog.warning({
-      title: '文件已在外部修改', content: errorText(cause), positiveText: '重新加载', negativeText: '保留编辑内容',
-      onPositiveClick: () => { void load(true) },
-    })
-    else message.error(`保存失败：${errorText(cause)}`)
-  } finally { saving.value = false }
-}
-const reload = async () => {
-  if (dirty.value && !await confirmAppAction(dialog, {
-    title: `重新读取 ${formatLabel.value}？`,
-    content: `磁盘源码将覆盖当前未保存的 ${formatLabel.value} 修改。`,
-    positiveText: '放弃修改并重新读取',
-    danger: true,
-  })) return
-  await load(true)
-}
-const keydown = (event: KeyboardEvent) => {
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void save() }
-}
-watch([xmlPath, isExternal], (_current, [previous]) => { if (previous) syncTab(); void load() })
+const save = () => session.save()
+
+const reload = () => session.reload()
+
+watch([xmlPath, isExternal, () => store.libraryPath], () => { syncTab(); saving.value = false; void load() }, {flush:'sync'})
 onMounted(async () => {
   await nextTick()
   if (editorHost.value) editor = new EditorView({ state: EditorState.create({ doc: '', extensions: extensions(true) }), parent: editorHost.value })
-  await load(); window.addEventListener('keydown', keydown)
-  unlistenSave = await listen('command-save', () => { void save() }); unlistenRefresh = await listen('command-refresh', () => { void reload() })
+  await load();
+
 })
 onBeforeUnmount(() => {
-  clearTimer(); updatePreview(); syncTab(); editor?.destroy(); editor = null; window.removeEventListener('keydown', keydown); unlistenSave?.(); unlistenRefresh?.()
+  clearTimer(); updatePreview(); syncTab(); editor?.destroy(); editor = null;
 })
 </script>
 
