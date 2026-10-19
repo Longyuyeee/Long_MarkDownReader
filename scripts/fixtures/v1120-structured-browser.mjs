@@ -23,8 +23,9 @@ const pause=async kind=>{if(state[kind]){state[kind]=false;await new Promise(res
 const analysis=content=>{
  const valid=!content.includes('INVALID'),bytes=new TextEncoder().encode(content),word=content.indexOf('原稿'),start=word<0?0:new TextEncoder().encode(content.slice(0,word)).length-(mode==='json'?1:0),end=word<0?bytes.length:start+(mode==='json'?8:6)
  const node={path:mode==='json'?'$.value':'/value',label:'value',name:'value',kind:'string',depth:1,childCount:0,start,end,line:1,column:1,preview:'原稿',documentIndex:0,attributeCount:0}
+ const arrayIndex=content.indexOf('[1]'),numberStart=arrayIndex<0?0:new TextEncoder().encode(content.slice(0,arrayIndex+1)).length
  return{valid,mode,rootKind:'object',nodeCount:3,propertyCount:2,maxDepth:2,commentCount:0,duplicateKeyCount:0,precisionSensitiveNumberCount:0,structureEditCandidate:valid,
- paths:[{...node,path:'$',label:'根',kind:'object',depth:0,start:0,end:bytes.length,childCount:2},node,{...node,path:'$["a/b~c"][0]',label:'[0]',kind:'number',arrayIndex:0}],pathsTruncated:false,
+ paths:[{...node,path:'$',label:'根',kind:'object',depth:0,start:0,end:bytes.length,childCount:2},node,...(arrayIndex<0?[]:[{...node,path:'$["a/b~c"][0]',label:'[0]',kind:'number',arrayIndex:0,start:numberStart,end:numberStart+1}])],pathsTruncated:false,
  diagnostics:valid?[]:[{severity:'error',code:'syntax-error',message:'源码存在错误',start:0,end:1,line:1,column:1}],outline:[node],outlineTruncated:false,
  documentCount:1,mappingCount:1,sequenceCount:0,scalarCount:1,aliasCount:0,anchorCount:0,rootName:'root',elementCount:2,attributeCount:0,namespaceCount:0,cdataCount:0,processingInstructionCount:0,doctypeCount:0,tableCount:1,keyCount:1,arrayCount:0}
 }

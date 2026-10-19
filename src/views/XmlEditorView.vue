@@ -86,7 +86,7 @@
           </div>
         </section>
 
-        <n-input v-model:value="query" @keydown.enter="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选元素、路径或属性">
+        <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选元素、路径或属性">
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>
         <div class="outline">

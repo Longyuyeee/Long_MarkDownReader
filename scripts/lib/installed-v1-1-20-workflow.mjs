@@ -61,7 +61,7 @@ export async function runInstalledV1120Workflow({send,evaluate,navigate,capture,
   if (!await evaluate(`!!document.querySelector(${q(pathFilter)})`)) await ui.clickText('header button','结构与诊断')
   await ui.waitFor(`!!document.querySelector(${q(pathFilter)})`,'open existing inspector')
   await ui.fill(pathFilter,'/a~1b~0c/0');await ui.waitFor(`document.querySelectorAll('.path-item').length===1`,'native escaped pointer search');await ui.key('Enter','Enter',13)
-  await ui.waitFor(`document.activeElement?.closest('.cm-editor')&&getSelection().toString().includes('保留路径')`,'pointer Enter actually selects native source');report.pointerNavigationExact=true
+  await ui.waitFor(`document.activeElement?.closest('.cm-editor')`,'pointer Enter focuses source');assert.equal(await content(),prior,'Enter navigation must not replace source');report.navigationSourceExact=true;await ui.waitFor(`getSelection().toString().includes('保留路径')`,'pointer Enter actually selects native source');report.pointerNavigationExact=true
   await ui.clickTarget(`document.querySelector('.path-item > button')`,'right');await ui.clickText('.n-dropdown-option-body','定位到源码');await ui.waitFor(`getSelection().toString().includes('保留路径')`,'real context menu source navigation');report.contextNavigationExact=true;mark(9);mark(10);await capture('installed-v1120-source-navigation.jpg')
   await reload();await ui.clickText('.n-dialog button','放弃修改并重新读取');await gone()
   await take(p('不要修改.md'),'unselected.md')

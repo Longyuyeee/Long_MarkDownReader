@@ -423,7 +423,7 @@
             size="small"
             clearable
             placeholder="字段、JSON Path 或 /JSON/Pointer；Enter 定位"
-            aria-label="筛选字段路径" :input-props="{ 'aria-label': '筛选字段路径' }" @keydown.enter="locatePathQuery"
+            aria-label="筛选字段路径" :input-props="{ 'aria-label': '筛选字段路径' }" @keydown.enter.prevent="locatePathQuery"
           >
             <template #prefix><SearchIcon :size="14" /></template>
           </n-input>

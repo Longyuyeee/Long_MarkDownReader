@@ -115,7 +115,7 @@
           clearable
           size="small"
           placeholder="筛选路径或内容"
-          aria-label="筛选 YAML 结构提纲" @keydown.enter="filteredOutline[0] && revealRange(filteredOutline[0])"
+          aria-label="筛选 YAML 结构提纲" @keydown.enter.prevent="filteredOutline[0] && revealRange(filteredOutline[0])"
         >
           <template #prefix><n-icon :component="SearchIcon" /></template>
         </n-input>

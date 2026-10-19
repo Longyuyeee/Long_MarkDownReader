@@ -184,3 +184,5 @@ docs/evidence/v1112-corrected-build-39063418440/**/*.log -text -diff
 # Preserve v1.1.20 owned raw evidence bytes.
 docs/evidence/v1120-structured-development/** -text
 docs/evidence/v1120-structured-development/**/*.log -text -diff
+docs/evidence/v1120-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1120-build-*/**/*.log -text -diff

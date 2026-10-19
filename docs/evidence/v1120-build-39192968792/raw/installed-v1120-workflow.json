@@ -1,0 +1,134 @@
+{
+  "appVersion": "1.1.20",
+  "sourceCommit": "60528dea6c59aec109e5bdb7dbb3651ad0a10e1d",
+  "installerSha256": "989c8a9d415b2b1ea3c33b29fc55c771b17b9880a0776f9250ea782042080c4c",
+  "harnessSourceCommit": "60528dea6c59aec109e5bdb7dbb3651ad0a10e1d",
+  "executableSha256": "6040c6159ae5da8ef38f61dd34ae550f345df4f9b2ca2935845c814686a7a30d",
+  "status": "failed",
+  "evidenceLevel": "installed-structured-editors-and-original-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "json-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "json-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "xml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-source-save-reopen",
+      "status": "passed"
+    },
+    {
+      "id": "toml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-format-preview-cancel-apply-undo",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1120-json-saved.jsonc",
+      "sizeBytes": 94,
+      "sha256": "70016a0ed978d4bdacdaccd52442c628364bf08453802af87e45df606423dba0"
+    },
+    {
+      "fileName": "installed-v1120-json-copy.jsonc",
+      "sizeBytes": 95,
+      "sha256": "b5d17159412be378e34bb74b1504de3646d06539388512e0756e15e34d0b8b07"
+    },
+    {
+      "fileName": "installed-v1120-yaml-saved.yaml",
+      "sizeBytes": 80,
+      "sha256": "8755518287c7d05c83eb9afa8b784752c689eea956cc9ea0c8805b4a51f28d81"
+    },
+    {
+      "fileName": "installed-v1120-yaml-copy.yaml",
+      "sizeBytes": 79,
+      "sha256": "2697a9e00323b97b2ec2ac596d29cc805b150a40c29786e16dab01e4d2305917"
+    },
+    {
+      "fileName": "installed-v1120-xml-saved.xml",
+      "sizeBytes": 88,
+      "sha256": "1bad2f605f0636c9870f7203c3f2c0063243df47427cff4100e9d70f853eba7d"
+    },
+    {
+      "fileName": "installed-v1120-xml-copy.xml",
+      "sizeBytes": 88,
+      "sha256": "aa26e08b26a91ea3fa43fcceff5f9e271461ebc98de93212c94a6127a1ad2568"
+    },
+    {
+      "fileName": "installed-v1120-toml-saved.toml",
+      "sizeBytes": 67,
+      "sha256": "eeb324d85d09b572f93c9383a01212662a9f9331733a30ff70e5da981199ddb5"
+    },
+    {
+      "fileName": "installed-v1120-toml-copy.toml",
+      "sizeBytes": 67,
+      "sha256": "db9172a546ab40823ea103f71bc2178292e4f7f307afcba13b0518ad3f171856"
+    }
+  ],
+  "saveExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "reopenExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "conflictOriginalExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "conflictDraftExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "copyExact": {
+    "json": true,
+    "yaml": true,
+    "xml": true,
+    "toml": true
+  },
+  "unselectedBefore": "da1e814cc968e54f338acce5be69503e10420454fb8b4223e10df5eb1f85af56",
+  "reloadCancelExact": true,
+  "reloadFailureExact": true,
+  "formatCancelExact": true,
+  "formatApplyExact": true,
+  "formatUndoExact": true,
+  "failure": "Error: Actual native UI did not become ready: pointer Enter actually selects native source\n    at Object.waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async runInstalledV1120Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/lib/installed-v1-1-20-workflow.mjs:64:3)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/scripts/capture-r5j-installed-artifact-smoke.mjs:1015:5",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5Cv1120-structured-afc03ef6-85e5-45d0-826d-425c3ee504ca%5Cjson.jsonc",
+    "body": "t。\n第 79 行：真实阅读位置，文件 阅读01.txt。\n第 80 行：真实阅读位置，文件 阅读01.txt。\n第 81 行：真实阅读位置，文件 阅读01.txt。\n第 82 行：真实阅读位置，文件 阅读01.txt。\n第 83 行：真实阅读位置，文件 阅读01.txt。\n第 84 行：真实阅读位置，文件 阅读01.txt。\n第 85 行：真实阅读位置，文件 阅读01.txt。\n第 86 行：真实阅读位置，文件 阅读01.txt。\n第 87 行：真实阅读位置，文件 阅读01.txt。\n第 88 行：真实阅读位置，文件 阅读01.txt。\n第 89 行：真实阅读位置，文件 阅读01.txt。\n第 90 行：真实阅读位置，文件 阅读01.txt。\n第 91 行：真实阅读位置，文件 阅读01.txt。\n第 92 行：真实阅读位置，文件 阅读01.txt。\n第 93 行：真实阅读位置，文件 阅读01.txt。\n第 94 行：真实阅读位置，文件 阅读01.txt。\n第 95 行：真实阅读位置，文件 阅读01.txt。\n第 96 行：真实阅读位置，文件 阅读01.txt。\n第 97 行：真实阅读位置，文件 阅读01.txt。\n第 98 行：真实阅读位置，文件 阅读01.txt。\n第 99 行：真实阅读位置，文件 阅读01.txt。\n第 100 行：真实阅读位置，文件 阅读01.txt。\n第 101 行：真实阅读位置，文件 阅读01.txt。\n第 102 行：真实阅读位置，文件 阅读01.txt。\n第 103 行：真实阅读位置，文件 阅读01.txt。\n第 104 行：真实阅读位置，文件 阅读01.txt。\n第 105 行：真实阅读位置，文件 阅读01.txt。\n第 106 行：真实阅读位置，文件 阅读01.txt。\n第 107 行：真实阅读位置，文件 阅读01.txt。\n第 108 行：真实阅读位置，文件 阅读01.txt。\n第 109 行：真实阅读位置，文件 阅读01.txt。\n第 110 行：真实阅读位置，文件 阅读01.txt。\n第 111 行：真实阅读位置，文件 阅读01.txt。\n第 112 行：真实阅读位置，文件 阅读01.txt。\n第 113 行：真实阅读位置，文件 阅读01.txt。\n第 114 行：真实阅读位置，文件 阅读01.txt。\n第 115 行：真实阅读位置，文件 阅读01.txt。\n第 116 行：真实阅读位置，文件 阅读01.txt。\n第 117 行：真实阅读位置，文件 阅读01.txt。\n第 118 行：真实阅读位置，文件 阅读01.txt。\n第 119 行：真实阅读位置，文件 阅读01.txt。\n第 120 行：真实阅读位置，文件 阅读01.txt。\n第 121 行：真实阅读位置，文件 阅读01.txt。\n第 122 行：真实阅读位置，文件 阅读01.txt。\n第 123 行：真实阅读位置，文件 阅读01.txt。\n第 124 行：真实阅读位置，文件 阅读01.txt。\n第 125 行：真实阅读位置，文件 阅读01.txt。\n第 126 行：真实阅读位置，文件 阅读01.txt。\n第 127 行：真实阅读位置，文件 阅读01.txt。\n第 128 行：真实阅读位置，文件 阅读01.txt。\n第 129 行：真实阅读位置，文件 阅读01.txt。\n第 130 行：真实阅读位置，文件 阅读01.txt。\n第 131 行：真实阅读位置，文件 阅读01.txt。\n第 132 行：真实阅读位置，文件 阅读01.txt。\n第 133 行：真实阅读位置，文件 阅读01.txt。\n第 134 行：真实阅读位置，文件 阅读01.txt。\n第 135 行：真实阅读位置，文件 阅读01.txt。\n第 136 行：真实阅读位置，文件 阅读01.txt。\n第 137 行：真实阅读位置，文件 阅读01.txt。\n第 138 行：真实阅读位置，文件 阅读01.txt。\n第 139 行：真实阅读位置，文件 阅读01.txt。\n第 140 行：真实阅读位置，文件 阅读01.txt。\n第 141 行：真实阅读位置，文件 阅读01.txt。\n第 142 行：真实阅读位置，文件 阅读01.txt。\n第 143 行：真实阅读位置，文件 阅读01.txt。\n第 144 行：真实阅读位置，文件 阅读01.txt。\n第 145 行：真实阅读位置，文件 阅读01.txt。\n第 146 行：真实阅读位置，文件 阅读01.txt。\n第 147 行：真实阅读位置，文件 阅读01.txt。\n第 148 行：真实阅读位置，文件 阅读01.txt。\n第 149 行：真实阅读位置，文件 阅读01.txt。\n第 150 行：真实阅读位置，文件 阅读01.txt。\n第 151 行：真实阅读位置，文件 阅读01.txt。\n第 152 行：真实阅读位置，文件 阅读01.txt。\n第 153 行：真实阅读位置，文件 阅读01.txt。\n第 154 行：真实阅读位置，文件 阅读01.txt。\n第 155 行：真实阅读位置，文件 阅读01.txt。\n第 156 行：真实阅读位置，文件 阅读01.txt。\n第 157 行：真实阅读位置，文件 阅读01.txt。\n第 158 行：真实阅读位置，文件 阅读01.txt。\n第 159 行：真实阅读位置，文件 阅读01.txt。\n第 160 行：真实阅读位置，文件 阅读01.txt。\n第 161 行：真实阅读位置，文件 阅读01.txt。\n第 162 行：真实阅读位置，文件 阅读01.txt。\n第 163 行：真实阅读位置，文件 阅读01.txt。\n第 164 行：真实阅读位置，文件 阅读01.txt。\n第 165 行：真实阅读位置，文件 阅读01.txt。\n第 166 行：真实阅读位置，文件 阅读01.txt。\n第 167 行：真实阅读位置，文件 阅读01.txt。\n第 168 行：真实阅读位置，文件 阅读01.txt。\n第 169 行：真实阅读位置，文件 阅读01.txt。\n第 170 行：真实阅读位置，文件 阅读01.txt。\n第 171 行：真实阅读位置，文件 阅读01.txt。\n第 172 行：真实阅读位置，文件 阅读01.txt。\n第 173 行：真实阅读位置，文件 阅读01.txt。\n第 174 行：真实阅读位置，文件 阅读01.txt。\n第 175 行：真实阅读位置，文件 阅读01.txt。\n第 176 行：真实阅读位置，文件 阅读01.txt。\n第 177 行：真实阅读位置，文件 阅读01.txt。\n第 178 行：真实阅读位置，文件 阅读01.txt。\n第 179 行：真实阅读位置，文件 阅读01.txt。\n第 180 行：真实阅读位置，文件 阅读01.txt。\n第 181 行：真实阅读位置，文件 阅读01.txt。\n第 182 行：真实阅读位置，文件 阅读01.txt。\n第 183 行：真实阅读位置，文件 阅读01.txt。\n第 184 行：真实阅读位置，文件 阅读01.txt。\n第 185 行：真实阅读位置，文件 阅读01.txt。\n第 186 行：真实阅读位置，文件 阅读01.txt。\n第 187 行：真实阅读位置，文件 阅读01.txt。\n第 188 行：真实阅读位置，文件 阅读01.txt。\n第 189 行：真实阅读位置，文件 阅读01.txt。\n第 190 行：真实阅读位置，文件 阅读01.txt。\n第 191 行：真实阅读位置，文件 阅读01.txt。\n第 192 行：真实阅读位置，文件 阅读01.txt。\n第 193 行：真实阅读位置，文件 阅读01.txt。\n第 194 行：真实阅读位置，文件 阅读01.txt。\n第 195 行：真实阅读位置，文件 阅读01.txt。\n第 196 行：真实阅读位置，文件 阅读01.txt。\n第 197 行：真实阅读位置，文件 阅读01.txt。\n第 198 行：真实阅读位置，文件 阅读01.txt。\n第 199 行：真实阅读位置，文件 阅读01.txt。\n第 200 行：真实阅读位置，文件 阅读01.txt。\n第 201 行：真实阅读位置，文件 阅读01.txt。\n第 202 行：真实阅读位置，文件 阅读01.txt。\n第 203 行：真实阅读位置，文件 阅读01.txt。\n第 204 行：真实阅读位置，文件 阅读01.txt。\n第 205 行：真实阅读位置，文件 阅读01.txt。\n第 206 行：真实阅读位置，文件 阅读01.txt。\n第 207 行：真实阅读位置，文件 阅读01.txt。\n第 208 行：真实阅读位置，文件 阅读01.txt。\n第 209 行：真实阅读位置，文件 阅读01.txt。\n第 210 行：真实阅读位置，文件 阅读01.txt。\n第 211 行：真实阅读位置，文件 阅读01.txt。\n第 212 行：真实阅读位置，文件 阅读01.txt。\n第 213 行：真实阅读位置，文件 阅读01.txt。\n第 214 行：真实阅读位置，文件 阅读01.txt。\n第 215 行：真实阅读位置，文件 阅读01.txt。\n第 216 行：真实阅读位置，文件 阅读01.txt。\n第 217 行：真实阅读位置，文件 阅读01.txt。\n第 218 行：真实阅读位置，文件 阅读01.txt。\n第 219 行：真实阅读位置，文件 阅读01.txt。\n第 220 行：真实阅读位置，文件 阅读01.txt。\n第 221 行：真实阅读位置，文件 阅读01.txt。\n第 222 行：真实阅读位置，文件 阅读01.txt。\n第 223 行：真实阅读位置，文件 阅读01.txt。\n第 224 行：真实阅读位置，文件 阅读01.txt。\n第 225 行：真实阅读位置，文件 阅读01.txt。\n第 226 行：真实阅读位置，文件 阅读01.txt。\n第 227 行：真实阅读位置，文件 阅读01.txt。\n第 228 行：真实阅读位置，文件 阅读01.txt。\n第 229 行：真实阅读位置，文件 阅读01.txt。\n第 230 行：真实阅读位置，文件 阅读01.txt。\n第 231 行：真实阅读位置，文件 阅读01.txt。\n第 232 行：真实阅读位置，文件 阅读01.txt。\n第 233 行：真实阅读位置，文件 阅读01.txt。\n第 234 行：真实阅读位置，文件 阅读01.txt。\n第 235 行：真实阅读位置，文件 阅读01.txt。\n第 236 行：真实阅读位置，文件 阅读01.txt。\n第 237 行：真实阅读位置，文件 阅读01.txt。\n第 238 行：真实阅读位置，文件 阅读01.txt。\n第 239 行：真实阅读位置，文件 阅读01.txt。\n第 240 行：真实阅读位置，文件 阅读01.txt。\n第 241 行：真实阅读位置，文件 阅读01.txt。\n第 242 行：真实阅读位置，文件 阅读01.txt。\n第 243 行：真实阅读位置，文件 阅读01.txt。\n第 244 行：真实阅读位置，文件 阅读01.txt。\n第 245 行：真实阅读位置，文件 阅读01.txt。\n第 246 行：真实阅读位置，文件 阅读01.txt。\n第 247 行：真实阅读位置，文件 阅读01.txt。\n第 248 行：真实阅读位置，文件 阅读01.txt。\n第 249 行：真实阅读位置，文件 阅读01.txt。\n第 250 行：真实阅读位置，文件 阅读01.txt。\n第 251 行：真实阅读位置，文件 阅读01.txt。\n第 252 行：真实阅读位置，文件 阅读01.txt。\n第 253 行：真实阅读位置，文件 阅读01.txt。\n第 254 行：真实阅读位置，文件 阅读01.txt。\n第 255 行：真实阅读位置，文件 阅读01.txt。\n第 256 行：真实阅读位置，文件 阅读01.txt。\n第 257 行：真实阅读位置，文件 阅读01.txt。\n第 258 行：真实阅读位置，文件 阅读01.txt。\n第 259 行：真实阅读位置，文件 阅读01.txt。\n第 260 行：真实阅读位置，文件 阅读01.txt。\n第 261 行：真实阅读位置，文件 阅读01.txt。\n第 262 行：真实阅读位置，文件 阅读01.txt。\n第 263 行：真实阅读位置，文件 阅读01.txt。\n第 264 行：真实阅读位置，文件 阅读01.txt。\n第 265 行：真实阅读位置，文件 阅读01.txt。\n第 266 行：真实阅读位置，文件 阅读01.txt。\n第 267 行：真实阅读位置，文件 阅读01.txt。\n第 268 行：真实阅读位置，文件 阅读01.txt。\n第 269 行：真实阅读位置，文件 阅读01.txt。\n第 270 行：真实阅读位置，文件 阅读01.txt。\n第 271 行：真实阅读位置，文件 阅读01.txt。\n第 272 行：真实阅读位置，文件 阅读01.txt。\n第 273 行：真实阅读位置，文件 阅读01.txt。\n第 274 行：真实阅读位置，文件 阅读01.txt。\n第 275 行：真实阅读位置，文件 阅读01.txt。\n第 276 行：真实阅读位置，文件 阅读01.txt。\n第 277 行：真实阅读位置，文件 阅读01.txt。\n第 278 行：真实阅读位置，文件 阅读01.txt。\n第 279 行：真实阅读位置，文件 阅读01.txt。\n第 280 行：真实阅读位置，文件 阅读01.txt。\n第 281 行：真实阅读位置，文件 阅读01.txt。\n第 282 行：真实阅读位置，文件 阅读01.txt。\n第 283 行：真实阅读位置，文件 阅读01.txt。\n第 284 行：真实阅读位置，文件 阅读01.txt。\n第 285 行：真实阅读位置，文件 阅读01.txt。\n第 286 行：真实阅读位置，文件 阅读01.txt。\n第 287 行：真实阅读位置，文件 阅读01.txt。\n第 288 行：真实阅读位置，文件 阅读01.txt。\n第 289 行：真实阅读位置，文件 阅读01.txt。\n第 290 行：真实阅读位置，文\n…\n打开可编辑 Markdown 笔记后可插入\n复制选中文字及来源\n先在参考内容中选择需要摘录的文字\n参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。\n在主编辑区打开"
+  },
+  "runtimeErrors": []
+}

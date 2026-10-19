@@ -40,7 +40,7 @@
           <n-icon :component="AlertIcon" /><span><strong>语法错误</strong><small>第 {{ item.line }} 行，第 {{ item.column }} 列</small><small>{{ item.message }}</small></span>
         </button>
         <div v-if="analysis?.valid" class="valid"><n-icon :component="ValidIcon" /><span>语法有效，注释、顺序与字面量由源码保留</span></div>
-        <n-input v-model:value="query" @keydown.enter="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
+        <n-input v-model:value="query" @keydown.enter.prevent="filteredOutline[0] && reveal(filteredOutline[0])" clearable size="small" placeholder="筛选键路径或值"><template #prefix><n-icon :component="SearchIcon" /></template></n-input>
         <div class="outline">
           <button v-for="item in filteredOutline" :key="`${item.start}:${item.path}`" :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }" @click="reveal(item)">
             <n-icon :component="item.kind === 'value' ? KeyIcon : TableIcon" />
