@@ -1,0 +1,228 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "reducedMotion": "no-preference",
+  "checks": [
+    {
+      "id": "json-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "json-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "json-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "json-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "json-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "json-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "json-enter-navigates-without-replacing-source",
+      "status": "passed"
+    },
+    {
+      "id": "json-context-locate-preserves-source-selection-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "json-failed-new-target-save-blocked-and-retry-keeps-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-enter-navigates-without-replacing-source",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-context-locate-preserves-source-selection-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "yaml-failed-new-target-save-blocked-and-retry-keeps-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "xml-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "xml-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "xml-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "xml-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "xml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "xml-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "xml-enter-navigates-without-replacing-source",
+      "status": "passed"
+    },
+    {
+      "id": "xml-context-locate-preserves-source-selection-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "xml-failed-new-target-save-blocked-and-retry-keeps-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-analysis-route-switch-never-writes-other-file",
+      "status": "passed"
+    },
+    {
+      "id": "toml-save-retains-later-input-and-pending-close-protection",
+      "status": "passed"
+    },
+    {
+      "id": "toml-second-shortcut-saves-later-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-reload-cancel-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-reload-read-failure-keeps-draft-and-outline",
+      "status": "passed"
+    },
+    {
+      "id": "toml-late-read-never-overwrites-newer-document",
+      "status": "passed"
+    },
+    {
+      "id": "toml-stale-invalid-confirmation-never-saves-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "toml-conflict-copy-keeps-original-and-draft",
+      "status": "passed"
+    },
+    {
+      "id": "toml-conflict-reload-protects-draft-in-sibling-copy",
+      "status": "passed"
+    },
+    {
+      "id": "toml-enter-navigates-without-replacing-source",
+      "status": "passed"
+    },
+    {
+      "id": "toml-context-locate-preserves-source-selection-and-focus",
+      "status": "passed"
+    },
+    {
+      "id": "toml-failed-new-target-save-blocked-and-retry-keeps-original-draft",
+      "status": "passed"
+    },
+    {
+      "id": "json-formatting-late-result-keeps-input",
+      "status": "passed"
+    },
+    {
+      "id": "json-preview-cancel-keeps-original",
+      "status": "passed"
+    },
+    {
+      "id": "json-preview-one-step-undo",
+      "status": "passed"
+    },
+    {
+      "id": "json-real-context-edit-preview-and-undo",
+      "status": "passed"
+    },
+    {
+      "id": "json-pointer-search-and-enter-source-navigation",
+      "status": "passed"
+    },
+    {
+      "id": "json-pointer-context-locate-preserves-source-selection",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-wide-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

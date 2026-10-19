@@ -7,6 +7,7 @@ import {useAppStore} from '/src/store/app.ts'
 import {pendingDocumentSaves} from '/src/services/windowDrafts.ts'
 import {installAppTooltipPolicy} from '/src/services/appTooltipPolicy.ts'
 import {installHorizontalWheelNavigation} from '/src/services/horizontalWheel.ts'
+import {installContextMenuPolicy} from '/src/services/contextMenuPolicy.ts'
 import '/src/styles/tokens.scss'
 import '/src/styles/themes.scss'
 const params=new URLSearchParams(location.search),mode=params.get('mode')||'json',baseline=params.has('baseline')
@@ -63,4 +64,4 @@ await router.push('/editor?path=C:/ui/A.'+mode)
 document.body.dataset.theme='white';document.body.dataset.style='soft';document.body.style.cssText='margin:0;font:14px "Segoe UI","Microsoft YaHei",sans-serif';document.querySelector('#app').style.height='100vh'
 const app=createApp({render:()=>h(NDialogProvider,{},()=>h(NMessageProvider,{},()=>h(RouterView)))})
 const {registerNaiveComponents}=await import('/src/services/naiveComponents.ts');registerNaiveComponents(app)
-app.use(pinia).use(router).mount('#app');installAppTooltipPolicy();installHorizontalWheelNavigation()
+app.use(pinia).use(router).mount('#app');installAppTooltipPolicy();installHorizontalWheelNavigation();installContextMenuPolicy()

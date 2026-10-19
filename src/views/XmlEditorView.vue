@@ -95,7 +95,7 @@
             :key="`${item.start}:${item.path}`"
             type="button"
             :style="{ paddingLeft: `${10 + Math.min(item.depth, 8) * 14}px` }"
-            @click="reveal(item)"
+            @click="reveal(item)" @contextmenu.prevent.stop="nodeMenu.open($event, item)"
           >
             <n-icon :component="TagIcon" />
             <span><strong>{{ item.name }}</strong><small>{{ item.path }}</small><small v-if="item.preview">{{ item.preview }}</small></span>
