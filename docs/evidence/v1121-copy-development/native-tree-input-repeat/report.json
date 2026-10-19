@@ -1,0 +1,12 @@
+{
+  "nativeBridgeMocked": true,
+  "trustedCdpInput": true,
+  "desktopInputUsed": false,
+  "checks": [
+    "collapsed ancestors expanded using real switcher input",
+    "repeated reveal preserves expanded ancestors",
+    "nested file copied through actual context menu",
+    "previous typed draft retained"
+  ],
+  "errors": []
+}

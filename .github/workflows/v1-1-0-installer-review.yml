@@ -9,11 +9,11 @@ name: Community Release Same Installer Review
       current_version:
         description: Current package version
         required: true
-        default: "1.1.20"
+        default: "1.1.21"
       previous_version:
         description: Previous official version
         required: true
-        default: "1.1.19"
+        default: "1.1.20"
       candidate_commit:
         description: Exact source commit from the original installer build receipt
         required: true
@@ -44,6 +44,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - name: Check real unauthenticated official update API before installer work
+        run: node scripts/check-installed-review-network.mjs
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
@@ -81,12 +83,12 @@ jobs:
           "PREVIOUS_INSTALLER_DIRECTORY=$($old.Directory.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CURRENT_INSTALLER_SHA256=$(@($receipt.artifacts | Where-Object { $_.target -eq 'nsis' })[0].sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Set up independent XLSX producer Python
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20"]'), inputs.current_version)
+        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21"]'), inputs.current_version)
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install hash-pinned independent XLSX producer
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20"]'), inputs.current_version)
+        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21"]'), inputs.current_version)
         shell: powershell
         run: scripts/setup-hosted-xlsx-producer.ps1
       - name: Test directory identity without changing the filesystem
@@ -117,6 +119,14 @@ jobs:
             -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'same-installer-review') `
             -ConfirmDisposableMachine -AllowInstallerMutation
           if ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }
+      - name: Retain runner network observation
+        if: always()
+        shell: powershell
+        run: |
+          if (Test-Path -LiteralPath installer-network-preflight.json) {
+            New-Item -ItemType Directory -Path same-installer-review -Force | Out-Null
+            Copy-Item -LiteralPath installer-network-preflight.json -Destination same-installer-review/installer-network-preflight.json
+          }
       - name: Retain original build receipt with review reports
         if: always()
         shell: powershell

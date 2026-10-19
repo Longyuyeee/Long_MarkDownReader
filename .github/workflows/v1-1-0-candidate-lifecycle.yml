@@ -9,11 +9,11 @@ name: Community Release Installer Lifecycle
       current_version:
         description: Current package version
         required: true
-        default: "1.1.20"
+        default: "1.1.21"
       previous_version:
         description: Previous official public version
         required: true
-        default: "1.1.19"
+        default: "1.1.20"
 
 permissions:
   contents: read
@@ -157,13 +157,13 @@ jobs:
           "M8_21_OUTPUT=$output" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Set up independent XLSX producer Python
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20"]'), inputs.current_version)
+        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21"]'), inputs.current_version)
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Install hash-pinned independent XLSX producer
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20"]'), inputs.current_version)
+        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21"]'), inputs.current_version)
         shell: powershell
         run: orchestration/scripts/setup-hosted-xlsx-producer.ps1
 

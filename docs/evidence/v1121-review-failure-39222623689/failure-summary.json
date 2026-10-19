@@ -1,0 +1,31 @@
+{
+  "status": "failed-not-accepted-for-release",
+  "runId": 39222623689,
+  "productSourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+  "harnessSourceCommit": "f40b40ace552aea4103f1b3703b477c25cc89143",
+  "failure": "owned source loaded and typed; parent folder remained collapsed, so the fixture could not find its nested file row; no new copy task executed",
+  "productRebuilt": false,
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "installed-v1121-workflow.json",
+      "sizeBytes": 16431,
+      "sha256": "eeda1e3dc79953ceaba8ee2817331fbe0911934869d3ad3054962e8c1378d2c8"
+    },
+    {
+      "path": "installed-v1121-failure.jpg",
+      "sizeBytes": 132369,
+      "sha256": "8f1c61d8f16369c92d6190f1d493c2381adaf1d7374fd52d09750cae2a3a4b04"
+    },
+    {
+      "path": "installed-version-identity.json",
+      "sizeBytes": 4979,
+      "sha256": "9900f8a1b4879e732c7fc6f3c5a5b6e9d5a92ea6e55aa5824681ac484d6d0766"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1405,
+      "sha256": "64f98fba62f3c9a03d676ec21491026541fc7f6dd2cd5ddc012d20325442a3f1"
+    }
+  ]
+}

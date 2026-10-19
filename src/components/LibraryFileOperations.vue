@@ -4,11 +4,15 @@
   <n-modal :show="showTransfer" preset="card" :title="operation === 'move' ? '移动到' : '复制到'" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTransfer = show }">
     <form class="file-operation-form" @submit.prevent="executeTransfer">
       <p class="file-operation-selection">{{ errors.length ? `待重试 ${paths.length} 项` : paths.length === 1 ? filename(paths[0]) : `已选择 ${paths.length} 项` }}</p>
-      <label>目标文件夹<div class="directory-field"><n-input v-model:value="target" :disabled="busy" :input-props="{ 'aria-label': '目标文件夹' }" placeholder="资料库内的路径，例如：项目/会议" /><n-button :disabled="busy" @click="chooseDirectory"><FolderOpen :size="16" />选择</n-button></div></label>
+      <label v-if="operation === 'copy' && libraryOptions.length > 1">目标资料库<n-select :value="targetRoot" :options="libraryOptions" :disabled="busy || crossLocked" :consistent-menu-width="false" :aria-label="'目标资料库'" @update:value="chooseLibrary" /></label>
+      <label>目标文件夹<div class="directory-field"><n-input v-model:value="target" :disabled="busy || crossLocked" :input-props="{ 'aria-label': '目标文件夹' }" placeholder="资料库内的路径，例如：项目/会议" /><n-button :disabled="busy || crossLocked" @click="chooseDirectory"><FolderOpen :size="16" />选择</n-button></div></label>
       <small>不存在的目录会自动创建；重名时保留两份。</small>
       <p v-if="inputError" class="operation-errors" role="alert">{{ inputError }}</p>
+      <CrossLibraryCopyPanel v-if="crossLibrary" :active="showTransfer && isCurrent(root)" :source-root="root" :target-root="targetRoot" :paths="paths" :target-dir="target" :before-copy="beforeCrossCopy" :after-copy="afterCrossCopy" @close="showTransfer = false" @lock="crossLocked = $event" />
+      <template v-else>
       <FileOperationOutcome v-if="errors.length" :completed="completedItems" :errors="errors" :operation="operation" @review="id => recoveryId = id" />
       <div class="dialog-actions"><n-button :disabled="busy" @click="showTransfer = false">{{ errors.length ? '关闭' : '取消' }}</n-button><n-button v-if="!errors.length || paths.length" type="primary" attr-type="submit" :loading="busy">{{ errors.length && operation === 'move' ? `重试未执行的 ${paths.length} 项` : `${operation === 'move' ? '移动' : '复制'}${errors.length ? '未完成的项目' : ''}` }}</n-button></div>
+      </template>
     </form>
   </n-modal>
   <n-modal :show="showTrash" preset="card" title="资料库回收站" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTrash = show }">
@@ -25,11 +29,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BatchRenameDialog from './BatchRenameDialog.vue'
 import FileOperationOutcome from './FileOperationOutcome.vue'
 import FileMoveRecoveryDialog from './FileMoveRecoveryDialog.vue'
-import { NModal, NInput, NButton, useDialog, useMessage } from 'naive-ui'
+import CrossLibraryCopyPanel from './CrossLibraryCopyPanel.vue'
+import { NModal, NInput, NSelect, NButton, useDialog, useMessage } from 'naive-ui'
 import { FolderOpen, Folder, FileText, RefreshCw } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
 import { invoke } from '../services/tauriRuntime'
@@ -37,7 +42,7 @@ import { confirmAppAction } from '../services/appDialog'
 import { fileOperationBusy as busy, libraryFileClipboard, lastLibraryMove, sameLibrary, topLevelPaths, canRetryFileError, mergeFileErrors, type FileOperation, type FileOperationResult, type TrashEntry, type PathChange } from '../services/libraryFileOperations'
 import { searchResultPath } from '../utils/searchResultPath'
 import { beginWindowSave } from '../services/windowDrafts'
-const props = defineProps<{ libraryRoot: string; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void> }>()
+const props = defineProps<{ libraryRoot: string; libraries?: {name:string;path:string}[]; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void>; afterCrossCopy?: (result:FileOperationResult,targetRoot:string)=>Promise<void> }>()
 const dialog = useDialog(), message = useMessage()
 const renameDialog = ref<InstanceType<typeof BatchRenameDialog> | null>(null)
 const recoveryId = ref('')
@@ -52,6 +57,12 @@ const showFeedback = ref(false), retryUndo = ref(false)
 const root = ref(''), paths = ref<string[]>([]), target = ref(''), errors = ref<FileOperationResult['errors']>([]), trash = ref<TrashEntry[]>([]), selectedTrash = ref<string[]>([])
 const completedItems = ref<PathChange[]>([])
 const inputError = ref('')
+const targetRoot=ref(''),crossLocked=ref(false)
+const crossLibrary=computed(()=>operation.value==='copy'&&!sameLibrary(root.value,targetRoot.value))
+const libraryOptions=computed(()=>[...(props.libraries||[]).map(library=>({label:library.name+(sameLibrary(library.path,root.value)?'（当前）':''),value:library.path})),...((props.libraries||[]).some(library=>sameLibrary(library.path,root.value))?[]:[{label:'当前资料库',value:root.value}])])
+const chooseLibrary=(value:string)=>{if(busy.value||crossLocked.value)return;targetRoot.value=value;target.value='.';inputError.value=''}
+const beforeCrossCopy=()=>props.beforeOperate([...paths.value],'copy-saved')
+const afterCrossCopy=(result:FileOperationResult,library:string)=>props.afterCrossCopy?.(result,library)||Promise.resolve()
 const filename = (path = '') => path.split(/[\\/]/).pop() || path
 const isCurrent = (library: string) => sameLibrary(library, props.libraryRoot)
 const refreshClipboard = (items: FileOperationResult['items']) => {
@@ -72,18 +83,20 @@ const publish = async (result: FileOperationResult, kind: FileOperation) => {
 const openTransfer = (selection: string[], kind: 'move' | 'copy', directory: string) => {
   if (busy.value) return
   root.value = props.libraryRoot; paths.value = topLevelPaths(selection); operation.value = kind; errors.value = []; completedItems.value = []; inputError.value = ''
+  targetRoot.value=root.value;crossLocked.value=false
   target.value = searchResultPath(directory, root.value) === directory && sameLibrary(directory, root.value) ? '.' : searchResultPath(directory, root.value)
   showTransfer.value = true
 }
 const chooseDirectory = async () => {
-  const library = root.value
+  const library = targetRoot.value, source=root.value
   inputError.value = ''
   try {
     const selected = await open({ directory: true, multiple: false, defaultPath: library, title: '选择资料库内的文件夹' })
-    if (typeof selected === 'string' && isCurrent(library) && sameLibrary(library, root.value)) target.value = sameLibrary(selected, library) ? '.' : searchResultPath(selected, library)
+    if (typeof selected === 'string' && isCurrent(source) && sameLibrary(library, targetRoot.value)) target.value = sameLibrary(selected, library) ? '.' : searchResultPath(selected, library)
   } catch (cause) { inputError.value = `选择文件夹失败，尚未执行文件操作：${String(cause)}` }
 }
 const executeTransfer = async () => {
+  if(crossLibrary.value)return
   if (busy.value || !paths.value.length || !isCurrent(root.value) || !await props.beforeOperate(paths.value, operation.value)) return
   if (busy.value || !showTransfer.value || !isCurrent(root.value)) return
   const retained = errors.value.filter(error => !canRetryFileError(error, operation.value))

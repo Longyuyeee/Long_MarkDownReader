@@ -4,7 +4,7 @@ export interface PathChange { oldPath: string; newPath: string }
 export interface FileOperationError { path: string; message: string; disposition?: 'notExecuted' | 'needsReview'; recoveryId?: string }
 export interface FileOperationResult { items: PathChange[]; errors: FileOperationError[] }
 export interface TrashEntry { id: string; originalPath: string; name: string; deletedAt: number; isDir: boolean }
-export type FileOperation = 'move' | 'copy' | 'trash' | 'restore' | 'undo' | 'rename'
+export type FileOperation = 'move' | 'copy' | 'copy-saved' | 'trash' | 'restore' | 'undo' | 'rename'
 export const fileOperationBusy = ref(false)
 export const libraryFileClipboard = ref<{ root: string; paths: string[]; operation: 'move' | 'copy' } | null>(null)
 export const lastLibraryMove = ref<{ root: string; items: PathChange[] } | null>(null)

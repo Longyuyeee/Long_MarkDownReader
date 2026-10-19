@@ -682,7 +682,7 @@
       </template>
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
-    <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" />
+    <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :libraries="store.libraries" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" :after-cross-copy="applyCrossLibraryCopy" />
     <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
     <WritingDeliveryDialog v-if="writingDelivery" v-bind="writingDelivery" @close="writingDelivery=null" />
@@ -756,6 +756,7 @@ import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke, isTauriRuntime, listen } from '../services/tauriRuntime'
+import { emit } from '@tauri-apps/api/event'
 import { initializeUpdater, updaterState } from '../services/appUpdater'
 import { appVersionIdentity } from '../services/appVersionIdentity'
 import {
@@ -1787,6 +1788,10 @@ const beforeFileOperation = async (paths: string[], operation: FileOperation) =>
   if (targets.some(tab => hasPendingMainTextSave(tab.path))) { message.info('文件正在保存，请稍后再操作'); return false }
   if (targets.some(tab => tab.isDirty) && (operation === 'trash' || operation === 'copy')) { message.info('请先保存所选文件的修改，再操作文件'); return false }
   return true
+}
+const applyCrossLibraryCopy = async (result:FileOperationResult,_targetRoot:string) => {
+  for(const item of result.items) {try{await store.copyFileDisplayStyles(item.oldPath,item.newPath)}catch{message.warning('副本已创建；显示样式保存未完成，可稍后重试')}}
+  await emit('refresh-library')
 }
 const applyFileOperation = async (result: FileOperationResult, operation: FileOperation) => {
   const library = store.libraryPath

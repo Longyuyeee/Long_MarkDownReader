@@ -9,7 +9,7 @@ import {organizingChecks,validateInstalledOrganizing} from './installed-v1-1-19-
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1119Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.ok(['1.1.19','1.1.20'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(process.env.LONGEDIT_XLSX_PYTHON)
+ assert.ok(['1.1.19','1.1.20', '1.1.21'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(process.env.LONGEDIT_XLSX_PYTHON)
  const folder=path.join(library,'v1119-organizing-'+crypto.randomUUID()),ui=nativeUserInput({send,evaluate},{timeoutMs:35000}),relative=file=>path.relative(path.toNamespacedPath(library),path.toNamespacedPath(file)).replaceAll('\\','/'),p=file=>path.join(folder,file)
  const canvas=p('boards/项目.canvas'),opml=p('项目.opml'),extended=p('保留扩展.opml'),unselected=p('不要修改.md')
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-canvas-opml-and-independent-json-xml',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}
