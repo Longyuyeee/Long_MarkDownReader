@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import {nativeUserInput} from './v118-native-user-input.mjs'
+import {installedSessionBootProbe} from './installed-session-boot.mjs'
 import {crossCopyChecks,validateInstalledCrossCopy,assertCrossCopyOutputBytes} from './installed-v1-1-21-evidence.mjs'
 const q=JSON.stringify,sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex'),key=value=>String(value||'').replaceAll('\\','/').replace('//?/','').toLowerCase()
 export async function runInstalledV1121Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
@@ -25,7 +26,10 @@ export async function runInstalledV1121Workflow({send,evaluate,navigate,capture,
   await fs.writeFile(p('saved.md'),saved);await fs.writeFile(p('notes/linked.md'),'[返回](../saved.md)\r\n');await fs.writeFile(p('images/a.png'),png);await fs.writeFile(p('images/.longedit/private.json'),'private');await fs.writeFile(p('images/.misty_order.json'),'private order');await fs.writeFile(p('记录.txt'),'原始版本\r\n');await fs.writeFile(p('warning.md'),'![缺失](missing.png)\r\n');await fs.writeFile(p('unselected.txt'),'不要改动的文件\r\n');await fs.writeFile(path.join(destination,'saved.md'),'目标原有内容')
   report.imageSha256=sha(png);report.unselectedBefore=sha(await fs.readFile(p('unselected.txt')))
   const config=await invoke('get_config');originalLibraries=config.libraries;await invoke('save_config',{config:{...config,libraries:[...config.libraries,{name:label,path:targetRoot,inboxDirectory:''}]}})
-  await send('Page.reload',{ignoreCache:true});await ui.waitFor(`${store}?.configReady&&document.querySelector('.library-mode')`,'real reloaded library configuration')
+  const origin=await evaluate('performance.timeOrigin');await send('Page.reload',{ignoreCache:true});let reloaded=false
+  for(let n=0;n<600;n++){try{if(await evaluate(installedSessionBootProbe(origin))){reloaded=true;break}}catch(error){if(!/context|navigat/i.test(String(error)))throw error}await new Promise(resolve=>setTimeout(resolve,100))}
+  assert.equal(reloaded,true,'the actual new document and Pinia must finish initialization after reload')
+  await ui.waitFor(`${store}?.configReady&&${store}.libraries.some(l=>window.__TAURI_INTERNALS__&&l.name===${q(label)})&&document.querySelector('.library-mode')`,'real reloaded library configuration')
   await evaluate(`window.__v1121Key=${key.toString()};window.__v1121Trace=[];window.__v1121Errors=[];for(const type of ['click','pointerdown','keydown','input'])document.addEventListener(type,e=>window.__v1121Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1121Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1121Errors.push(String(e.reason)));`)
   await navigate('#/library?path='+encodeURIComponent(p('saved.md')),'#vditor-lib','source saved Markdown')
   const editor=`[...document.querySelectorAll('#vditor-lib [contenteditable="true"]')].find(e=>e.getClientRects().length)`
