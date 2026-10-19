@@ -1,0 +1,58 @@
+{
+  "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+  "nativeBridgeMocked": false,
+  "userDesktopUsed": false,
+  "frontendQuality": "passed",
+  "rustFunctional": {
+    "passed": 1073,
+    "failed": 0,
+    "existingIgnored": 5,
+    "filteredPerformance": 1,
+    "command": "cargo test --locked --manifest-path src-tauri/Cargo.toml -- --skip complex_workbook_performance_stays_within_release_budget --test-threads=1"
+  },
+  "rustPerformance": {
+    "passed": 1,
+    "failed": 0
+  },
+  "newNativeCopyChecks": 9,
+  "firstFullRun": {
+    "passed": 1072,
+    "failed": 1,
+    "test": "v118_pages_fixed_fixture_timing_reports_first_page_and_continuation_separately",
+    "isolatedRecheck": "passed",
+    "laterFullSerialRecheck": "passed",
+    "assertionsWeakened": false
+  },
+  "files": [
+    {
+      "path": "patch-quality.log",
+      "sizeBytes": 118271,
+      "sha256": "99af57a0ba92554eeea811b7a2879a1d1ad9bb753ce0c0adb678e89f623c189f"
+    },
+    {
+      "path": "rust-parallel-failure.log",
+      "sizeBytes": 113317,
+      "sha256": "88df439f0a6e73c180adb7ef12442ce35b0e43cf9043a6311d3b5322c07b484e"
+    },
+    {
+      "path": "rust-serial.log",
+      "sizeBytes": 113528,
+      "sha256": "7ddccab9ee87fdce100c09f1cf471d4f8aa5cc1ecaf813289adc1fa6b3da2b35"
+    },
+    {
+      "path": "rust-performance.log",
+      "sizeBytes": 2060,
+      "sha256": "d6382fa39258d7269c977bd4f45761cfb0c8e5f0b9905a4a7864d120bb4580c2"
+    },
+    {
+      "path": "native-copy-final.log",
+      "sizeBytes": 2890,
+      "sha256": "e4e53f53fc46563f4f31c1eb0ab09323a4f7b3978ca2e7c0b43030326668a44c"
+    },
+    {
+      "path": "search-timing-recheck.log",
+      "sizeBytes": 2282,
+      "sha256": "94e5c153b20453941874ea63542f5ea3190cc46abdc532499cad1f95e8a7a72d"
+    }
+  ]
+}
