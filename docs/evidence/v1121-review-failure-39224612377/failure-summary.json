@@ -1,0 +1,49 @@
+{
+  "status": "failed-not-accepted-for-release",
+  "runId": 39224612377,
+  "productSourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+  "harnessSourceCommit": "f0247132133b7e3b0b3a6e123362a93040e13b7e",
+  "checksPassed": [
+    {
+      "id": "automatic-preview-is-read-only",
+      "status": "passed"
+    },
+    {
+      "id": "new-directory-and-no-overwrite-collision",
+      "status": "passed"
+    },
+    {
+      "id": "saved-source-copy-keeps-live-draft",
+      "status": "passed"
+    },
+    {
+      "id": "markdown-image-and-cycle-dependencies",
+      "status": "passed"
+    }
+  ],
+  "failure": "first saved Markdown copy, collision handling, image/cycle links, unchanged live draft and repeated native receipt passed; next fixture selected images, which the production directory scan deliberately hides; folder test now uses a visible ordinary folder",
+  "productRebuilt": false,
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "installed-v1121-workflow.json",
+      "sizeBytes": 18413,
+      "sha256": "28310b62ff9af22408ca180d7cd99401d615975bb970a6ae900e3d75c3991cc9"
+    },
+    {
+      "path": "installed-v1121-failure.jpg",
+      "sizeBytes": 125278,
+      "sha256": "b76843ffaf69182469c5a9b5b2799a2b0f56d44df507a8ba8b4d5bf2f4c86ccd"
+    },
+    {
+      "path": "installed-version-identity.json",
+      "sizeBytes": 4979,
+      "sha256": "9900f8a1b4879e732c7fc6f3c5a5b6e9d5a92ea6e55aa5824681ac484d6d0766"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1405,
+      "sha256": "64f98fba62f3c9a03d676ec21491026541fc7f6dd2cd5ddc012d20325442a3f1"
+    }
+  ]
+}

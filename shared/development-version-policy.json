@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-70-v1.1.21-version-candidate",
-  "binaryVersionTransition": "v1.1.21-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.21-release-ready",
   "displayLabel": "v1.1.21 跨库复制候选 · 当前公开 v1.1.20",
   "activeSlice": {
     "id": "v1.1.21-cross-library-copy",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_21_Cross_Library_Copy_Development_2026-10-19.md"
   }
 }

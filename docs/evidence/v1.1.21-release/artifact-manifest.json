@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "stage": "V1.1.21",
+  "status": "hosted-lifecycle-and-installed-workflows-passed-ready-to-publish",
+  "appVersion": "1.1.21",
+  "sourceVersion": "1.1.21",
+  "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+  "hostedRunId": 39227582947,
+  "artifactBuildRunId": 39215635202,
+  "artifacts": [
+    {
+      "target": "msi",
+      "fileName": "LongEdit_1.1.21_x64_zh-CN.msi",
+      "sizeBytes": 77623296,
+      "sha256": "46fb293b78eb520be9d7891aac8cb03e551af5214c856b841aacd5faa9cb8ad7",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.21_x64_zh-CN.msi"
+    },
+    {
+      "target": "nsis",
+      "fileName": "LongEdit_1.1.21_x64-setup.exe",
+      "sizeBytes": 68397154,
+      "sha256": "d3a4bfd5455dee78e3cc9ec162aad8760d8e6bc1d39865f1853bdd9fea9cfa89",
+      "authenticodeStatus": "NotSigned",
+      "sourceFileName": "Long编辑_1.1.21_x64-setup.exe"
+    }
+  ],
+  "checksumFile": {
+    "fileName": "SHA256SUMS.txt",
+    "sizeBytes": 192,
+    "sha256": "5a88771151bcc2c70f2b4467c6fb3915831cc271acc1dd9dafe31ca016ff8eab"
+  },
+  "qualityGate": {
+    "status": "passed",
+    "command": "npm run ci:patch-release",
+    "runId": 39215635202
+  },
+  "runtimeSmoke": {
+    "status": "passed-installed-tauri-webview2",
+    "checksPassed": 18,
+    "routesPassed": 11,
+    "reports": {
+      "crossLibraryCopy": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1121-workflow.json",
+        "sha256": "ceffa5757da9da9f34148fdf8ead77be0c5aca09f6f68020f2430bc3aeb10673"
+      },
+      "structuredEditing": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1120-workflow.json",
+        "sha256": "914ad613e08cd39f7ed9ef89d5399c1e1c190f16ce622753df1a05a579a2ee36"
+      },
+      "organizing": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1119-workflow.json",
+        "sha256": "ca875cc566a33f2b36c0f5a926387606ce90f84c747e257edd5eba2c2ce4d19a"
+      },
+      "pptxEditing": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1118-workflow.json",
+        "sha256": "1a0b8825265ccaf82101c62a6f2f078d81d652f80ffd3a1cdbf5f886bb8f932d"
+      },
+      "docxEditing": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1117-workflow.json",
+        "sha256": "8853cb98bac32ea702e3ac6470759ad9e7130d1e17069314185d66fe92e6ec61"
+      },
+      "workbookEditing": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1116-workflow.json",
+        "sha256": "5afff790731a68e2d824bbf66bf764bfb945e466baf3a7633130be91b7cf79c3"
+      },
+      "tableEditing": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1115-workflow.json",
+        "sha256": "bfde1396730f7082aa80db91447c6ede157e1ee0dad2045cda3e38b4b9c4122b"
+      },
+      "writingDelivery": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1114-workflow.json",
+        "sha256": "8a0b9362efacf44073a6aeb88dae1b6d2d5b2666e5d1d909a4c0a416a901bc39"
+      },
+      "pdfReading": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1113-workflow.json",
+        "sha256": "9f51f16e122d252b87d6c62b40df92824b61412566834a6e0e8c3012c5c3d93d"
+      },
+      "contentBackup": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1112-workflow.json",
+        "sha256": "f17836cc283005c5ece5f0d02bd7af9c88e4d2bdf5abb11a160d4de202f07ff8"
+      },
+      "graphExploration": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1111-workflow.json",
+        "sha256": "69c9da2c844b513b2a9dcb86acf6a55694cbfbc224eccd79cde451be4efaecfc"
+      },
+      "tagCollections": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v1110-workflow.json",
+        "sha256": "e07b142533b5dc39ba8b985838931a15c0fd7eccc825c78fd7af67ec280a7346"
+      },
+      "workSession": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v119-workflow.json",
+        "sha256": "74f495ad4132b3ee96d9821c98edcb4b659cd140684a8faea5247788348f9146"
+      },
+      "workspace": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-artifact-smoke.json",
+        "sha256": "4e624d0dc3d658e08d40be4984325ff6006b7aeef10511d208495d77e5e5ca2e"
+      },
+      "version": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-version-identity.json",
+        "sha256": "9900f8a1b4879e732c7fc6f3c5a5b6e9d5a92ea6e55aa5824681ac484d6d0766"
+      },
+      "workflow": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v110-workflow.json",
+        "sha256": "91de3052a375a29277bc4f78bea16a0810ac109046c4735f0d0cf7349953035e"
+      },
+      "experience": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v111-workflow.json",
+        "sha256": "a52e1178118a3166333fedf977f1759d742abffa88be7023a26683bc47445a9f"
+      },
+      "fileManagement": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v112-workflow.json",
+        "sha256": "13f5a2f3ee55147a27b502cb868f9f8336062590b2146274ce1b869dcd34b8ba"
+      },
+      "foundation": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v113-workflow.json",
+        "sha256": "633174477459f7c059f93e2cdb171e16332c268792e64ff95bce8d6884a497f8"
+      },
+      "foundationExtended": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v114-workflow.json",
+        "sha256": "8572505f63388141e9c7f7df97b8727d8cdc6e7277b2da0dec6dfbda11084195"
+      },
+      "foundationHardening": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v115-workflow.json",
+        "sha256": "99aee9e603ebbc5f5169a694dc4154f613ecfde419db4154060466a213d437ce"
+      },
+      "moveContinuity": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v116-workflow.json",
+        "sha256": "e309407ea2fd8a77de5bd18080084c690801b42822992b656763d73e20bf5daa"
+      },
+      "saveHistory": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v117-workflow.json",
+        "sha256": "4f749c78855fe0dcc7db389c66cc8758616da76a24d39a14ec2fb96819bfbcdf"
+      },
+      "routes": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-route-mount-evidence.json",
+        "sha256": "d1cfffbfef1812597728802ccc29da50ff6754550ab20651a1f50b571326db2b"
+      },
+      "searchCompleteness": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v118-workflow.json",
+        "sha256": "79443e0b5f179558001f32d054d8849775fe0e06a28ce0df473919fc26aaa417"
+      },
+      "searchBaseline": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v118-baseline.json",
+        "sha256": "be02178690e39b44c58f8cb0e12ba5e724d3f7055e22b523eada282c082a7bb1"
+      },
+      "searchUser": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v118-user.json",
+        "sha256": "f99649629573fd0a97601fbcffb2317a159fff7d15fd0ce7433177328fecf415"
+      },
+      "searchOffice": {
+        "path": "docs/evidence/v1-1-21-candidate-lifecycle/installed-v118-office.json",
+        "sha256": "baec1bd486951de8b17d21d49d07a7dbaee04181859fa346eaa71ba354ef4a0f"
+      }
+    }
+  },
+  "hostedInstalledLifecycle": {
+    "crossCopyChecksPassed": 10,
+    "structuredEditingPassed": 13,
+    "organizingPassed": 16,
+    "pptxEditingChecksPassed": 14,
+    "docxEditingChecksPassed": 12,
+    "workbookEditingChecksPassed": 13,
+    "tableEditingChecksPassed": 10,
+    "writingDeliveryChecksPassed": 12,
+    "status": "passed",
+    "runId": 39227582947,
+    "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+    "evidenceRoot": "docs/evidence/v1-1-21-candidate-lifecycle",
+    "evidenceManifest": "docs/evidence/v1.1.21-release/import-manifest.json",
+    "lifecycleChecksPassed": 22,
+    "installedWorkspaceChecksPassed": 18,
+    "installedRoutesPassed": 11,
+    "managementRollbackChecksPassed": 7,
+    "workflowChecksPassed": 8,
+    "experienceChecksPassed": 8,
+    "fileManagementChecksPassed": 9,
+    "foundationChecksPassed": 8,
+    "foundationExtendedChecksPassed": 8,
+    "foundationHardeningChecksPassed": 11,
+    "harnessSourceCommit": "1b37d5af70746062a4a409d4b62fd7dc52c07e39",
+    "moveContinuityChecksPassed": 13,
+    "saveHistoryChecksPassed": 12,
+    "searchCompletenessChecksPassed": 20,
+    "versionChecksPassed": 4,
+    "failedChecks": 0,
+    "sourceUserContentIncluded": false,
+    "pdfReadingChecksPassed": 14,
+    "contentBackupChecksPassed": 16,
+    "graphExplorationChecksPassed": 12,
+    "tagCollectionChecksPassed": 13,
+    "workSessionChecksPassed": 12
+  },
+  "boundaries": {
+    "communityUnsigned": true,
+    "enterprisePromotionEligible": false,
+    "releaseAssetsPublished": false,
+    "managedUpdaterReleaseAssetsPresent": false,
+    "legacyTauriUpdaterArtifactsPresent": false
+  },
+  "sourceUserContentIncluded": false,
+  "releasePublished": false
+}
