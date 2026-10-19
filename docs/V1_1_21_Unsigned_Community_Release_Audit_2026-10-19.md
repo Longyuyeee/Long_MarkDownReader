@@ -1,3 +1,17 @@
+# v1.1.21 已完成并正式发布
+
+可从 [官方 Release](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21) 手动下载安装升级。EXE、MSI 与 SHA256SUMS 均已公开回下载核对；20→21 应用内更新的端到端观察仍单独 pending，公开附件验证不代替该项观察。
+
+当前开发目标：`1.1.22`；当前运行时版本：`1.1.21`；当前公开版本：`1.1.21`。当前阶段：**v1.1.21 已发布**。
+
+[v1.1.21](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21) 已正式发布，发布时间 2026-10-19T09:22:39Z。固定产品/标签 `ab85459975e304a4f5d6cc777bcc80185fd5a4b2`；原构建 [39215635202](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39215635202) 的质量、完整原生、双安装器与固定包回执四项通过，首次安装检查受 GitHub 更新接口共享 IP 403 限流阻断，原失败记录保留。完整安装结果以独立同包 [39227582947](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39227582947) 为准，独立复核与原字节发布、公开回下载 [39229424834](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39229424834) 均 success。
+
+社区为 community-unsigned；企业 RC 的 `releaseCandidate=false` 保留。NSIS 安装/覆盖升级/卸载重装及本版 10 项、历版 254 项任务通过；MSI 完成构建与摘要核对，不宣称单独完成 MSI 全生命周期。20→21 应用内更新观察仍 pending，和正式附件发布分别记录。原安装器不重建，用户日常程序与文件未操作。
+
+后续 [1.1.21—1.1.32 十二版路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 中，1.1.21 已发布，余下 11 版为计划；下一版 1.1.22 深化文件整理记录与重启接续，沿用右键和弹窗，保护源文件与未保存内容。
+
+[永久发布回执](evidence/v1.1.21-release/release-receipt.json) 保留准确身份。下面是实现和候选期间的历史记录，不再作为待发布清单。
+
 # v1.1.21 跨库复制：安装验证完成，待正式发布
 
 当前开发目标：`1.1.21`；当前运行时版本：`1.1.21`；当前公开版本：`1.1.20`。当前阶段：**v1.1.21 跨库复制候选**。社区渠道 community-unsigned 已达到发布条件；企业 RC 的 `releaseCandidate=false` 保留。
