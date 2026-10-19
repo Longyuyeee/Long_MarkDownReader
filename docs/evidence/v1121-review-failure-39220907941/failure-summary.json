@@ -1,0 +1,215 @@
+{
+  "status": "failed-not-accepted-for-release",
+  "runId": 39220907941,
+  "productSourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+  "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+  "failure": "new fixture setup tried to save an older OPML draft using a generic Save locator; no new copy task executed",
+  "productRebuilt": false,
+  "sourceUserContentIncluded": false,
+  "files": [
+    {
+      "path": "installed-v1121-workflow.json",
+      "sizeBytes": 16463,
+      "sha256": "7a8ad60a2ae23be081729d4c9dc3907d725c6eacad8b3221fdd2ccfc855df89e"
+    },
+    {
+      "path": "installed-v1121-failure.jpg",
+      "sizeBytes": 143522,
+      "sha256": "0334d0045624558b14b33a05d0f1111743bb29c81ed5e4eaad28f99174033cb8"
+    },
+    {
+      "path": "installed-version-identity.json",
+      "sizeBytes": 4979,
+      "sha256": "9900f8a1b4879e732c7fc6f3c5a5b6e9d5a92ea6e55aa5824681ac484d6d0766"
+    },
+    {
+      "path": "installer-build-receipt.json",
+      "sizeBytes": 1405,
+      "sha256": "64f98fba62f3c9a03d676ec21491026541fc7f6dd2cd5ddc012d20325442a3f1"
+    }
+  ],
+  "historicalReports": [
+    {
+      "path": "installed-v110-workflow.json",
+      "status": "passed",
+      "checks": 8,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "91de3052a375a29277bc4f78bea16a0810ac109046c4735f0d0cf7349953035e"
+    },
+    {
+      "path": "installed-v111-workflow.json",
+      "status": "passed",
+      "checks": 8,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "a52e1178118a3166333fedf977f1759d742abffa88be7023a26683bc47445a9f"
+    },
+    {
+      "path": "installed-v1110-workflow.json",
+      "status": "passed",
+      "checks": 13,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "0382a4aaca91595a70141f1aa2f781ec98088ef3b3f6f5806478f1a8df938258"
+    },
+    {
+      "path": "installed-v1111-workflow.json",
+      "status": "passed",
+      "checks": 12,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "6f3ea3a2033e498de4968044f377d438f94669781e412e2660dcf4c3b299bed9"
+    },
+    {
+      "path": "installed-v1112-workflow.json",
+      "status": "passed",
+      "checks": 16,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "d61e0b0f8dfd5b2ed58f43566585b85c37778f72fb8b3e142d3135806e911485"
+    },
+    {
+      "path": "installed-v1113-workflow.json",
+      "status": "passed",
+      "checks": 14,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "36864fad5f55ed487000fd5cc404e2f72d6fa5680921b1a9b38770e9b807b8df"
+    },
+    {
+      "path": "installed-v1114-workflow.json",
+      "status": "passed",
+      "checks": 12,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "900f3008f1afc6d79496e9fd4ba3fa6c9668d2ff77914f880f24159489c14d18"
+    },
+    {
+      "path": "installed-v1115-workflow.json",
+      "status": "passed",
+      "checks": 10,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "7145816dbb6d05cae09dc2a191bf9c57b0c7929783939796dbd3682abce69d6c"
+    },
+    {
+      "path": "installed-v1116-workflow.json",
+      "status": "passed",
+      "checks": 13,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "375fdc40d38f71f2372e83194686a235b2e599307111a1c1e8d9b7e1ec006af2"
+    },
+    {
+      "path": "installed-v1117-workflow.json",
+      "status": "passed",
+      "checks": 12,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "d2da217e176c105bdcf55fac7cdb42da42cfd93c98c874c3d5e7459708559340"
+    },
+    {
+      "path": "installed-v1118-workflow.json",
+      "status": "passed",
+      "checks": 14,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "140af7562ce0972afd5615a8a5bb4346168141f138b58750de74a57a941ce831"
+    },
+    {
+      "path": "installed-v1119-workflow.json",
+      "status": "passed",
+      "checks": 16,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "3e4a2d698458333098e147223a88c22d7b0335ee6b57bb765b03c86e1893850b"
+    },
+    {
+      "path": "installed-v112-workflow.json",
+      "status": "passed",
+      "checks": 9,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "13f5a2f3ee55147a27b502cb868f9f8336062590b2146274ce1b869dcd34b8ba"
+    },
+    {
+      "path": "installed-v1120-workflow.json",
+      "status": "passed",
+      "checks": 13,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "24c6c1d0b4a443eda6afed0f9ea7044c6543585eda9c6f294a8ab008a39193c9"
+    },
+    {
+      "path": "installed-v113-workflow.json",
+      "status": "passed",
+      "checks": 8,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "633174477459f7c059f93e2cdb171e16332c268792e64ff95bce8d6884a497f8"
+    },
+    {
+      "path": "installed-v114-workflow.json",
+      "status": "passed",
+      "checks": 8,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "8572505f63388141e9c7f7df97b8727d8cdc6e7277b2da0dec6dfbda11084195"
+    },
+    {
+      "path": "installed-v115-workflow.json",
+      "status": "passed",
+      "checks": 11,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "d88db15327854f3efd4158ddb0a401a5079b4428b6f051d07acb56f502fb05d1"
+    },
+    {
+      "path": "installed-v116-workflow.json",
+      "status": "passed",
+      "checks": 13,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "e309407ea2fd8a77de5bd18080084c690801b42822992b656763d73e20bf5daa"
+    },
+    {
+      "path": "installed-v117-workflow.json",
+      "status": "passed",
+      "checks": 12,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "sha256": "4f749c78855fe0dcc7db389c66cc8758616da76a24d39a14ec2fb96819bfbcdf"
+    },
+    {
+      "path": "installed-v118-workflow.json",
+      "status": "passed",
+      "checks": 20,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "0a4e425d8c20a5b5ba281b4e005de2eb1fc1c589228330a42711fbca69ff043d"
+    },
+    {
+      "path": "installed-v119-workflow.json",
+      "status": "passed",
+      "checks": 12,
+      "allChecksPassed": true,
+      "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+      "harnessSourceCommit": "37c8fe6435d6bda81519d8ad8211f35d8b3abbd8",
+      "sha256": "3cc80e5cec479a52de4dffea59a01858e8e5a6325cac9ed456495cf7f2c80804"
+    }
+  ]
+}

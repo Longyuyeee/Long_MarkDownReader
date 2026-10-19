@@ -1,0 +1,34 @@
+{
+  "sourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+  "installerSha256": "d3a4bfd5455dee78e3cc9ec162aad8760d8e6bc1d39865f1853bdd9fea9cfa89",
+  "appVersion": "1.1.21",
+  "evidenceLevel": "installed-webview-input-events",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "observations": {
+    "nativeVersion": "1.1.21",
+    "badge": " v1.1.21",
+    "badgeLabel": "当前软件版本 v1.1.21，更新检查失败，最新版本未知，点击查看更新",
+    "settingsRoute": "#/settings?category=system&focus=software-update",
+    "settings": "软件更新\n当前版本 v1.1.21 · 每 24 小时自动检查，也可随时手动检查\n更新失败：GitHub 更新检查失败：HTTP status client error (403 rate limit exceeded) for url (https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest)\n检查更新",
+    "failureSurface": {
+      "route": "#/settings?category=system&focus=software-update",
+      "settings": "软件更新\n当前版本 v1.1.21 · 每 24 小时自动检查，也可随时手动检查\n更新失败：GitHub 更新检查失败：HTTP status client error (403 rate limit exceeded) for url (https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest)\n检查更新",
+      "status": "<div data-v-754328e2=\"\" class=\"update-status error\">更新失败：GitHub 更新检查失败：HTTP status client error (403 rate limit exceeded) for url (https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest)</div>",
+      "buttons": [
+        {
+          "text": " 检查更新 ",
+          "disabled": false,
+          "loading": false
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "loading": false
+        }
+      ]
+    }
+  },
+  "checks": [],
+  "error": "Error: Timed out waiting for completed real official update check with enabled control"
+}
