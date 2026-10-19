@@ -1,3 +1,13 @@
+# v1.1.20 已发布，接续十二版基础能力路线（2026-10-19，最新）
+
+当前开发目标：`1.1.21`；当前运行时版本：`1.1.20`；当前公开版本：`1.1.20`。当前阶段：**v1.1.20 已发布**。
+
+[v1.1.20](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.20) 已正式发布，发布时间 2026-10-19T06:37:09Z（香港时间 2026-10-19 14:37:09）。固定产品/标签 `2a7eac5eb56791e6c7e6c56b36fee2393805827c`；原构建 [39203747532](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39203747532)、独立同包 [39207908392](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39207908392)、原字节发布/公开回下载 [39210864604](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39210864604) 均 success。
+
+原十三版路线 **13/13 已发布**；后续 [1.1.21—1.1.32 十二版路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已登记，均未实施，下一从跨库复制的实际代码审计开始。本轮只完成发布与规划，不提前改变运行时版本。
+
+社区为 community-unsigned；企业 RC 的 `releaseCandidate=false` 保留。NSIS 安装/覆盖升级/卸载重装及本版 13 项、历版 241 项任务通过；MSI 完成构建与摘要核对，不宣称单独完成 MSI 全生命周期。19→20 应用内更新观察仍 pending，和正式附件发布分别记录。原安装器不重建；用户原有文件和日常程序未操作。 [正式发布审计](V1_1_20_Unsigned_Community_Release_Audit_2026-10-19.md)。以下全部为历史记录，不覆盖当前事实。
+
 # v1.1.20 已完成发布准备（2026-10-19，最新）
 
 当前阶段：**v1.1.20 结构化编辑候选**，固定安装包与独立同包均已通过，已完成发布准备。

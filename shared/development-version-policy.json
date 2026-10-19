@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.20",
+  "developmentTargetVersion": "1.1.21",
   "runtimeBaseVersion": "1.1.20",
-  "publicVersion": "1.1.19",
-  "publicTag": "v1.1.19",
-  "publicTagCommit": "591447cd9e3303cde9d1ebfde1df2fddb45d8c8c",
+  "publicVersion": "1.1.20",
+  "publicTag": "v1.1.20",
+  "publicTagCommit": "2a7eac5eb56791e6c7e6c56b36fee2393805827c",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-68-v1.1.20-version-candidate",
-  "binaryVersionTransition": "v1.1.20-release-ready",
-  "displayLabel": "v1.1.20 结构化编辑候选 · 当前公开 v1.1.19",
+  "currentStage": "M8-69-v1.1.20-published",
+  "binaryVersionTransition": "v1.1.20-public-release-published",
+  "displayLabel": "v1.1.20 已发布 · 下一目标 v1.1.21（跨库复制）",
   "activeSlice": {
     "id": "v1.1.20-structured-editing",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-with-installed-workflows-and-public-assets-verified",
     "document": "docs/V1_1_20_Structured_Development_2026-10-19.md"
   }
 }

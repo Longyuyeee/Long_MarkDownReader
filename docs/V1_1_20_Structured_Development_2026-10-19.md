@@ -1,3 +1,13 @@
+# v1.1.20 已完成并发布（2026-10-19）
+
+当前开发目标：`1.1.21`；当前运行时版本：`1.1.20`；当前公开版本：`1.1.20`。当前阶段：**v1.1.20 已发布**。
+
+[v1.1.20](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.20) 已正式发布，发布时间 2026-10-19T06:37:09Z（香港时间 2026-10-19 14:37:09）。固定产品/标签 `2a7eac5eb56791e6c7e6c56b36fee2393805827c`；原构建 [39203747532](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39203747532)、独立同包 [39207908392](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39207908392)、原字节发布/公开回下载 [39210864604](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39210864604) 均 success。 [正式发布审计](V1_1_20_Unsigned_Community_Release_Audit_2026-10-19.md)。
+
+原十三版路线 **13/13 已发布**；后续 [1.1.21—1.1.32 十二版路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已登记，均未实施，下一从跨库复制的实际代码审计开始。本轮只完成发布与规划，不提前改变运行时版本。
+
+以下实现与失败记录保留历史事实，不再作为待发布清单。
+
 # v1.1.20 结构化编辑深化
 
 当前阶段：**v1.1.20 结构化编辑候选**，固定安装包与独立同包均已通过，已完成发布准备。

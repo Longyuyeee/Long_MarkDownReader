@@ -1,3 +1,19 @@
+# v1.1.20 已正式发布
+
+发布准备主分支 [CI 39210215347](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39210215347) 已通过，提交 `8afd5a6ea97e8de5690c9b7d0c62de5b0069e9c0`；安装器继续绑定下述准确产品标签，不以文档提交替代安装包来源。
+
+[v1.1.20](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.20) 已正式发布，发布时间 2026-10-19T06:37:09Z（香港时间 2026-10-19 14:37:09）。固定产品/标签 `2a7eac5eb56791e6c7e6c56b36fee2393805827c`；原构建 [39203747532](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39203747532)、独立同包 [39207908392](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39207908392)、原字节发布/公开回下载 [39210864604](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39210864604) 均 success。
+
+当前开发目标：`1.1.21`；当前运行时版本：`1.1.20`；当前公开版本：`1.1.20`。当前阶段：**v1.1.20 已发布**。
+
+EXE、MSI、SHA256SUMS 三个公开附件已回下载，大小、SHA256 和 GitHub digest 均与固定安装包一致。原 API、完整发布日志和回执见 `evidence/v1120-publication-39210864604/`；[永久发布回执](evidence/v1.1.20-release/release-receipt.json) 与 [固定安装器清单](evidence/v1.1.20-release/artifact-manifest.json) 保留准确源码和运行身份。README 下载、校验值和末尾更新摘要已同步。
+
+社区为 community-unsigned；企业 RC 的 `releaseCandidate=false` 保留。NSIS 安装/覆盖升级/卸载重装及本版 13 项、历版 241 项任务通过；MSI 完成构建与摘要核对，不宣称单独完成 MSI 全生命周期。19→20 应用内更新观察仍 pending，和正式附件发布分别记录。原安装器不重建；用户原有文件和日常程序未操作。
+
+原十三版路线 **13/13 已发布**；后续 [1.1.21—1.1.32 十二版路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已登记，均未实施，下一从跨库复制的实际代码审计开始。本轮只完成发布与规划，不提前改变运行时版本。
+
+以下是候选与验证期间的历史记录，撤回候选仍不可发布。
+
 # v1.1.20 结构化编辑：发布准备
 
 当前开发目标：`1.1.20`；当前运行时版本：`1.1.20`；当前公开版本：`1.1.19`。本版已达到未签名社区版（community-unsigned）可发布状态：保存与未保存内容保护、提纲右键、路径定位和修改差异预览已完成，固定安装包及独立同包验证通过，尚未创建正式 Tag/Release。 社区发布候选已通过；企业 RC 的 `releaseCandidate=false` 保留。
