@@ -19,6 +19,7 @@ test('find/replace evidence binds exact modes, draft ownership, undo and saved o
 })
 test('find/replace tasks connect real install, strict import, runtime and publication with valid expressions',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-1-25-workflow.mjs','utf8');for(const forbidden of ['dispatchEvent(','__TAURI_INTERNALS__=','force:true','force: true'])assert.ok(!source.includes(forbidden))
+ assert.ok(source.includes("ui.key('ArrowRight','ArrowRight',39,8)"));assert.ok(!source.includes("ui.key('ArrowRight','ArrowRight',39,1)"));
  const tree=ts.createSourceFile('driver.mjs',source,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS);let expressions=0
  const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ui\.waitFor)$/.test(node.expression.getText(tree))){const value=node.arguments[0];if(value&&(ts.isStringLiteral(value)||ts.isNoSubstitutionTemplateLiteral(value)||ts.isTemplateExpression(value))){const script=ts.isTemplateExpression(value)?value.head.text+value.templateSpans.map(span=>'__fixture__'+span.literal.text).join(''):value.text;assert.doesNotThrow(()=>new vm.Script(script),script);expressions++}}ts.forEachChild(node,visit)};visit(tree);assert.ok(expressions>=10)
  for(const file of ['scripts/import-community-release-review.mjs','scripts/lib/installed-release-runtime.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('assertFindReplaceOutputBytes'),file)
