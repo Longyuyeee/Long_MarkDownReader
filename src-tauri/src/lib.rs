@@ -42,7 +42,8 @@ use commands::file_management::{
 };
 use commands::cross_library_copy::{preview_cross_library_copy, execute_cross_library_copy};
 use commands::file_operation_history::{list_library_file_operations, restore_library_file_operation, clear_library_file_operations, locate_library_file_operation};
-use commands::file_relations::update_file_relation;
+use commands::file_relations::{update_file_relation, repair_file_relation};
+use commands::reference_repair::{inspect_reference_source, preview_source_link_repair};
 use commands::file_relations::{
     list_file_relations, list_relation_files, remove_file_relation, save_file_relation,
 };
@@ -693,6 +694,9 @@ pub fn run() {
             find_backlinks,
             list_relation_files,
             list_file_relations,
+            repair_file_relation,
+            inspect_reference_source,
+            preview_source_link_repair,
             save_file_relation,
             remove_file_relation,
             get_all_tags,

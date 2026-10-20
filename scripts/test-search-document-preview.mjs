@@ -89,7 +89,7 @@ test('explicit side reference docks immediately, survives searches and clears on
     return exports
   }
   const reference = moduleAt('src/services/workspaceReference.ts', { '../utils/workSessions': moduleAt('src/utils/workSessions.ts') })
-  const context = { searchQueryNeedle, ref: Vue.ref, computed: Vue.computed, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
+  const context = { searchQueryNeedle, ref: Vue.ref, shallowRef: Vue.shallowRef, computed: Vue.computed, watch: Vue.watch, searchQuery: Vue.ref('预算'), searchObjectTypes: Vue.ref([]),
     activeSidebarTab: Vue.ref('files'), searchPreviewResult: Vue.ref(null), store: Vue.reactive({ libraryPath: '/a' }),
     findFileFormat: () => ({ id: 'markdown' }), ...reference }
   scope.run(() => vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.state = { referencePinned, searchPreviewQuery, showSearchPreview }', { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context))

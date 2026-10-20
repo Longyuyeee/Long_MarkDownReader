@@ -2,6 +2,8 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
+> v1.1.28 正在进行发布前开发与检查：引用来源与关系核对；当前下载保持 v1.1.27。
+
 > **v1.1.27 已正式发布**：文内标签整理与集合条件跨项目复用。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.27) · [发布说明](docs/RELEASE_NOTES_v1.1.27.md)。
 
 

@@ -1,0 +1,29 @@
+✔ switching results never displays late content from the previous file (79.4799ms)
+✔ failed preview can retry; closing discards pending responses (31.9418ms)
+✔ excerpt uses selected text and resets on a different source (31.0915ms)
+✔ clipboard failure keeps the selection for retry (26.1123ms)
+✔ explicit side reference docks immediately, survives searches and clears on library change (142.0243ms)
+✔ normal result opens use main document navigation and never replace the reference (23.4021ms)
+✔ main open and side reference remain distinct accessible actions (4.6998ms)
+✔ arrow keys move between main-open actions without opening files or swallowing Enter (17.2946ms)
+✔ explicit return hides the reference, retains its source and focuses a visible writable editor after rendering (11.6785ms)
+✔ direct excerpt insertion requires a live bookmark in the current writable Markdown note (15.6943ms)
+✔ manual reference refresh clears selection and ignores an older read (38.2287ms)
+✔ excerpt quotes every line and source round-trips special paths and PDF position (9.4812ms)
+✔ Windows reference keeps native path identity and library-bound source (2.2032ms)
+✔ actual Markdown source click opens the library file with PDF position (60.8639ms)
+✔ text excerpts carry a bounded anchor, old links remain readable (1.4776ms)
+✔ native canonical Windows and UNC source paths resolve within the library (0.7051ms)
+✔ source repair waits for explicit confirmation, records undo and changes draft only (45.2308ms)
+✔ cancel, invalid path, readonly note and changed target never rewrite a source (170.8722ms)
+✔ generic source links retain a verified PDF digest and reject malformed digests (4.0666ms)
+✔ installed repair requires full tasks, exact original/draft bytes and all relationship metadata (40.584ms)
+✔ native reference driver expressions parse and publication requires its actual outputs (75.4765ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1436.5735

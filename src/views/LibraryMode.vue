@@ -479,9 +479,10 @@
     </div>
 
     <SearchDocumentPreview v-if="searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" :result="searchPreviewResult" :library-root="store.libraryPath" :query="searchPreviewQuery"
-      :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
+      :repair-source="repairPinnedReference" :insert-target="activeIsMarkdown && activeFormatCanEdit ? activeTabId?.split(/[\\/]/).pop() : undefined" @insert-excerpt="insertReferenceExcerpt"
       @close="referenceVisible = false" @clear-source="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
-    <aside v-else-if="referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
+    <ReferenceRepairDialog v-if="referenceRepairRequest" :library-root="referenceRepairRequest.root" :source="referenceRepairRequest.source" :effect="referenceRepairRequest.effect" :commit="referenceRepairRequest.commit" @close="referenceRepairRequest = null" @open="openRepairedSource" />
+    <aside v-if="!searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
       <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button></header>
       <p>选择一份资料作为参考，边看边写。</p>
       <p>在搜索结果旁点击“在侧边参考”即可打开。参考内容不会替换当前草稿。</p>
@@ -706,6 +707,9 @@ import { createSearchPages, type SearchSort, type SearchMatch as KnowledgeSearch
 import { belongsToLibrary } from '../utils/workSessions'
 import SearchDocumentPreview from '../components/SearchDocumentPreview.vue'
 import { useSearchReturn } from '../composables/useSearchReturn'
+import ReferenceRepairDialog from '../components/ReferenceRepairDialog.vue'
+import { type ReferenceTarget } from '../services/referenceRepair'
+import { searchResultPath } from '../utils/searchResultPath'
 import { readWorkspaceReference, writeWorkspaceReference } from '../services/workspaceReference'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { groupSearchResults, searchMatchKey } from '../utils/searchResultGroups'
@@ -1327,6 +1331,12 @@ let restoreSearchFiles = 0
 const searchPreviewResult = ref<KnowledgeSearchResult | null>(null)
 const referencePinned = computed(() => searchPreviewResult.value !== null)
 const referenceVisible = ref(false)
+const referenceRepairRequest = shallowRef<{ source: ReferenceTarget; root: string; effect: string; commit: (next: ReferenceTarget) => Promise<void> } | null>(null)
+const repairPinnedReference = async (expectedPath: string, next: ReferenceTarget) => {
+  if (!searchPreviewResult.value || !sameWorkspacePath(searchPreviewResult.value.path, expectedPath)) throw Error('参考来源已变化，请重新核对')
+  searchPreviewResult.value = { ...searchPreviewResult.value, path: next.path, title: next.path.split(/[\\/]/).pop() || next.path, page: next.page, annotationId: next.annotationId }
+}
+
 const searchPreviewQuery = ref('')
 const rememberReference = (root: string) => {
   try { writeWorkspaceReference(root, searchPreviewResult.value ? { ...searchPreviewResult.value, query: searchPreviewQuery.value } : undefined) }
@@ -4215,6 +4225,35 @@ const cleanupEditorListeners = () => {
   currentViewport = null
 }
 
+const openRepairedSource = async (next: ReferenceTarget) => {
+  referenceRepairRequest.value = null; snapshotWindowDrafts()
+  await openManagedFile(router, next.path, { ...(next.page ? { page: String(next.page) } : {}), ...(next.annotationId ? { annotation: next.annotationId } : {}), ...(next.sourceDigest ? { sourceDigest: next.sourceDigest } : {}), ...(next.quote ? { searchNeedle: next.quote, searchLocator: `${Date.now()}-${++searchNavigationSequence}` } : {}) })
+}
+const beginSourceLinkRepair = async (href: string, source: ReferenceTarget, root: string, notePath: string | null, editor: any, original: string | undefined) => {
+  if (!notePath || !editor || original === undefined || !activeIsMarkdown.value || !activeFormatCanEdit.value) { message.warning('请在可编辑笔记中核对来源，当前内容保持不变'); return }
+  const current = () => store.libraryPath === root && activeTabId.value === notePath && vditor === editor && editor.getValue() === original && activeFormatCanEdit.value
+  try {
+    const preview = await invoke<{ content: string; count: number }>('preview_source_link_repair', { content: original, originalUri: href, replacementUri: href })
+    if (!current()) { message.warning('笔记已变化，请重新点击来源链接后核对'); return }
+    referenceRepairRequest.value = { root, source, effect: `只修改当前笔记中 ${preview.count} 处相同来源链接，可撤销；请手动保存。代码和其他内容保持不变。`, commit: async next => {
+      if (!current()) throw Error('笔记或资料库已变化，请重新打开核对窗口')
+      const relative = searchResultPath(next.path, root)
+      if (/^(?:[a-z]:|\/)/i.test(relative) || relative.split('/').some(part => !part || part === '..' || part === '.')) throw Error('请选择当前资料库中的来源')
+      const uri = new URL(href), pdf = uri.hostname === 'pdf' && next.page && next.annotationId
+      uri.hostname = pdf ? 'pdf' : 'source'; uri.search = ''; uri.searchParams.set('path', relative)
+      if (next.page) uri.searchParams.set('page', String(next.page))
+      if (next.annotationId) uri.searchParams.set('annotation', next.annotationId)
+      if (next.quote) uri.searchParams.set('quote', next.quote)
+      if (next.sourceDigest) uri.searchParams.set('sha256', next.sourceDigest)
+      const applied = await invoke<{ content: string; count: number }>('preview_source_link_repair', { content: original, originalUri: href, replacementUri: uri.toString() })
+      if (!current() || applied.count !== preview.count) throw Error('笔记已变化，未修改来源链接')
+      editor.vditor.undo.addToUndoStack(editor.vditor); editor.setValue(applied.content); editor.vditor.undo.addToUndoStack(editor.vditor)
+      store.updateTabContent(notePath, applied.content)
+      const tab = tabs.value.find(t => t.path === notePath); if (tab) tab.isDirty = true
+    } }
+  } catch (cause) { message.warning('未修改笔记：' + String(cause)) }
+}
+
 const openSourceReference = async (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
@@ -4244,39 +4283,14 @@ const openSourceReference = async (event: MouseEvent) => {
     const originalContent = editor?.getValue()
     try {
       await invoke('get_file_stats', { libraryRoot, path: source.path })
+      if (source.sourceDigest) await invoke('verify_pdf_reference', { libraryRoot, pdfPath: source.path, sourceDigest: source.sourceDigest })
     } catch {
       if (store.libraryPath !== libraryRoot || activeTabId.value !== notePath) return
-      if (!activeIsMarkdown.value || !activeFormatCanEdit.value || !editor) {
-        message.warning('来源已移动或不可访问，请在资料库中查找原文件。')
-        return
-      }
-      const replacement = (await promptAppAction(dialog, {
-        title: '重新关联来源',
-        content: '原文件已移动或无法访问。输入当前知识库内的新相对路径；确认后只修改当前笔记中这个来源的链接，可撤销，需手动保存。取消不会修改笔记。',
-        initialValue: '', positiveText: '验证并重新关联',
-      }))?.trim()
-      if (!replacement) return
-      const url = new URL(href); url.searchParams.set('path', replacement)
-      const nextSource = parseSourceReference(url.toString(), libraryRoot)
-      if (!nextSource || !findFileFormat(nextSource.path)) { message.warning('请输入当前知识库内的有效相对路径。'); return }
-      try { await invoke('get_file_stats', { libraryRoot, path: nextSource.path }) }
-      catch { message.warning('新来源仍无法访问，未修改笔记。'); return }
-      if (store.libraryPath !== libraryRoot || activeTabId.value !== notePath || vditor !== editor || editor.getValue() !== originalContent || !activeFormatCanEdit.value) {
-        message.warning('笔记或知识库已变化，请重新点击来源链接后再关联。'); return
-      }
-      if (!originalContent?.includes(href)) { message.warning('当前链接内容已变化，未修改笔记。'); return }
-      const updated = originalContent.split(href).join(url.toString())
-      editor.vditor.undo.addToUndoStack(editor.vditor)
-      editor.setValue(updated)
-      editor.vditor.undo.addToUndoStack(editor.vditor)
-      store.updateTabContent(notePath!, updated)
-      const tab = tabs.value.find(item => item.path === notePath)
-      if (tab) tab.isDirty = true
-      message.success('来源已重新关联，可撤销；请手动保存。再次点击链接可打开新来源。')
+      await beginSourceLinkRepair(href, { path: source.path, page: source.page ? Number(source.page) : undefined, annotationId: source.annotation, quote: source.quote, sourceDigest: source.sourceDigest }, libraryRoot, notePath, editor, originalContent)
       return
     }
     if (store.libraryPath !== libraryRoot || activeTabId.value !== notePath) return
-    void openManagedFile(router, source.path, { page: source.page, annotation: source.annotation,
+    void openManagedFile(router, source.path, { page: source.page, annotation: source.annotation, ...(source.sourceDigest ? { sourceDigest: source.sourceDigest } : {}),
       ...(source.quote ? { searchNeedle: source.quote, searchLocator: `${Date.now()}-${++searchNavigationSequence}` } : {}) })
     return
   }
@@ -4304,23 +4318,13 @@ const openPdfReference = async (event: MouseEvent) => {
     catch (cause) {
       verification.destroy()
       if (!current()) return
-      if (!editor || !activeIsMarkdown.value || !activeFormatCanEdit.value) { message.warning(`PDF 来源不可用：${String(cause)}`); return }
-      const replacement = (await promptAppAction(dialog, {title:'核对 PDF 来源',content:`原来源无法校验，未跳转：${String(cause)}。如果原 PDF 已移动，请输入库内新相对路径。只有内容摘要一致才会重新关联；只改草稿，可撤销，需手动保存。`,initialValue:'',positiveText:'验证并重新关联'}))?.trim()
-      if (!replacement || !current()) return
-      const uri = new URL(href); uri.searchParams.set('path',replacement)
-      const next = parsePdfReferenceUri(uri.toString()), nextPath = next && resolveLibraryPdfPath(root,next.relativePath)
-      if (!next || !nextPath) { message.warning('请输入库内有效的 PDF 相对路径'); return }
-      try { await invoke('verify_pdf_reference',{libraryRoot:root,pdfPath:nextPath,sourceDigest:target.sourceDigest}) }
-      catch (error) { if(current()) message.warning(`未重新关联：${String(error)}`); return }
-      if (!current() || !editor || editor.getValue() !== original || !original?.includes(href) || !activeFormatCanEdit.value) { message.warning('笔记已变化，未修改来源链接'); return }
-      editor.vditor.undo.addToUndoStack(editor.vditor)
-      const updated = original.split(href).join(uri.toString()); editor.setValue(updated)
-      editor.vditor.undo.addToUndoStack(editor.vditor); store.updateTabContent(notePath!,updated)
-      const tab = tabs.value.find(t=>t.path===notePath); if(tab)tab.isDirty=true
-      message.success('已验证并重新关联相同来源，可撤销；请手动保存后再次点击来源。')
+      await beginSourceLinkRepair(href, { path, page: target.page, annotationId: target.annotationId, sourceDigest: target.sourceDigest }, root, notePath, editor, original)
       return
     }
     verification.destroy()
+  } else {
+    try { await invoke('get_file_stats', { libraryRoot: root, path }) }
+    catch { if (current()) await beginSourceLinkRepair(href, { path, page: target.page, annotationId: target.annotationId }, root, notePath, editor, original); return }
   }
   if(current()) void openManagedFile(router, path, { page: String(target.page), annotation: target.annotationId, ...(target.sourceDigest ? {sourceDigest:target.sourceDigest} : {}) })
 }

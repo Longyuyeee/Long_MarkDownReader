@@ -42,7 +42,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
-          cache-on-failure: true
+          prefix-key: v1-foundations-compiled-ci-rust
+          cache-on-failure: false
 
       - name: Run the v1 patch release quality gate
         run: npm run ci:patch-release

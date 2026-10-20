@@ -11,7 +11,7 @@ const store=`document.querySelector('#app').__vue_app__.config.globalProperties.
 const normalize=value=>value.replace(/^\\\\\?\\/,'').replaceAll('/','\\').toLowerCase()
 export async function runInstalledV1111Workflow({send,evaluate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  assert.equal(process.env.GITHUB_ACTIONS,'true');assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE,'1')
- assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),evidenceLevel:'installed-webview-input-native-graph-ipc-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[],poses:{},sourceFiles:[],inputTrace:[],runtimeErrors:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:90000}),check=i=>report.checks.push({id:graphExplorationChecks[i],status:'passed'})
  const invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`)

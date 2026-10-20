@@ -25,7 +25,7 @@ const TYPES: &[&str] = &[
 ];
 static RELATION_LOCK: Mutex<()> = Mutex::new(());
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileRelation {
     pub id: String,
@@ -306,6 +306,30 @@ pub async fn update_file_relation(
     .await
     .map_err(|error| error.to_string())?
 }
+
+fn repair(root: &str, expected: &FileRelation, endpoint: &str, replacement: &str, expected_signature: &str) -> Result<FileRelation, String> {
+    let _lock = RELATION_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let guard = WorkspaceGuard::new(root)?;
+    let mut file = read(guard.root())?;
+    let index = file.relations.iter().position(|entry| entry.id == expected.id).ok_or("关系已移除，请重新打开核对窗口")?;
+    if view(guard.root(), file.relations[index].clone()) != *expected { return Err("关系已被其他操作修改，请重新核对；未覆盖原说明".into()); }
+    let path = guard.resolve_existing_file(replacement, &[])?;
+    let relative = relative(guard.root(), &path)?;
+    if relative.split('/').any(|part| part.starts_with('.')) { return Err("请选择资料文件".into()); }
+    if super::reference_repair::signature(&path)? != expected_signature { return Err("替代文件已变化，请重新核对".into()); }
+    let mut next = file.relations[index].clone();
+    match endpoint { "source" => next.source_path = relative, "target" => next.target_path = relative, _ => return Err("请选择要修复的关系端点".into()) }
+    if next.source_path == next.target_path { return Err("不能将关系两端关联到同一文件".into()); }
+    let next_key = key(&next.source_path, &next.target_path, &next.relation_type);
+    if file.relations.iter().any(|entry| entry.id != next.id && key(&entry.source_path, &entry.target_path, &entry.relation_type) == next_key) { return Err("这个目标已有同类型关系，原有两条关系均已保留".into()); }
+    file.relations[index] = next.clone(); write(guard.root(), &file)?;
+    Ok(view(guard.root(), next))
+}
+#[tauri::command]
+pub async fn repair_file_relation(library_root: String, expected: FileRelation, endpoint: String, replacement_path: String, expected_signature: String) -> Result<FileRelation, String> {
+    let _activity = crate::services::file_activity::read_write(&[Path::new(&library_root)])?;
+    tauri::async_runtime::spawn_blocking(move || repair(&library_root, &expected, &endpoint, &replacement_path, &expected_signature)).await.map_err(|e| e.to_string())?
+}
 #[tauri::command]
 pub async fn list_file_relations(
     library_root: String,
@@ -505,6 +529,35 @@ mod tests {
         ));
         fs::create_dir_all(&root).unwrap();
         root.canonicalize().unwrap()
+    }
+    #[test]
+    fn repairing_missing_peer_preserves_identity_direction_note_and_original_files() {
+        let root = fixture("repair");
+        fs::write(root.join("note.md"), "unsaved content stays in its editor").unwrap();
+        fs::write(root.join("old.txt"), "old").unwrap();
+        fs::write(root.join("new.txt"), "replacement").unwrap();
+        let original = save(root.to_str().unwrap(), "note.md", "old.txt", "cites", "原始说明").unwrap();
+        fs::remove_file(root.join("old.txt")).unwrap();
+        let sig = super::super::reference_repair::signature(&root.join("new.txt")).unwrap();
+        let next = repair(root.to_str().unwrap(), &original, "target", "new.txt", &sig).unwrap();
+        assert_eq!(next.id, original.id); assert_eq!(next.relation_type, "cites"); assert_eq!(next.note, "原始说明");
+        assert_eq!(next.source_path, original.source_path); assert!(next.target_path.ends_with("new.txt"));
+        assert_eq!(fs::read_to_string(root.join("note.md")).unwrap(), "unsaved content stays in its editor");
+        assert!(repair(root.to_str().unwrap(), &original, "target", "new.txt", &sig).is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn repair_refuses_changed_replacement_and_duplicate_relation_without_overwrite() {
+        let root = fixture("repair-conflict");
+        for name in ["a.txt", "b.txt", "c.txt"] { fs::write(root.join(name), name).unwrap(); }
+        let first = save(root.to_str().unwrap(), "a.txt", "b.txt", "related", "keep first").unwrap();
+        save(root.to_str().unwrap(), "c.txt", "a.txt", "related", "keep duplicate").unwrap();
+        let sig = super::super::reference_repair::signature(&root.join("c.txt")).unwrap();
+        assert!(repair(root.to_str().unwrap(), &first, "target", "c.txt", &sig).is_err());
+        assert!(repair(root.to_str().unwrap(), &first, "target", "b.txt", "changed-signature").is_err());
+        assert_eq!(read(&root).unwrap().relations.len(), 2);
+        assert_eq!(view(&root, read(&root).unwrap().relations[0].clone()), first);
+        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn arbitrary_formats_persist_and_merge_into_graph_without_touching_content() {

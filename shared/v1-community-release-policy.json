@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.27",
-  "releaseCandidate": true,
+  "appVersion": "1.1.28",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-21",
-  "currentStatus": "v1.1.27-community-release-published",
+  "currentStatus": "v1.1.28-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.26",
+    "previousPublicVersion": "1.1.27",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.26-to-1.1.27-pending",
-    "scope": "tags-and-portable-collection-conditions"
+    "managedUpdaterUpgradePath": "1.1.27-to-1.1.28-pending",
+    "scope": "reference-sources-and-relationship-repair"
   },
   "targetRelease": {
-    "tag": "v1.1.27",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.27",
+    "tag": "v1.1.28",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.28",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "9def6c7a7e8b96be61fd48d41f925085eb8036f1",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39467642808,
-    "hostedInstalledLifecycleRunId": 39478199994,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.27_x64_zh-CN.msi",
-        "sizeBytes": 77758464,
-        "sha256": "0792f0ac8e1b7f1aa292e37c6f1d3ae982e89ffe2b42f7e0455446254770b6e8",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.27_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.27_x64-setup.exe",
-        "sizeBytes": 68488846,
-        "sha256": "ac6da0ac607093a963e5ddff6dfc081cb9c9fa7e4b8b96a1972aa1018d2014d1",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.27_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.27",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.27",
-    "databaseId": 418762846,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "9def6c7a7e8b96be61fd48d41f925085eb8036f1",
-    "publishedAt": "2026-10-20T19:06:12Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -111,7 +80,8 @@
     "1.1.23-to-1.1.24-managed-update-observation-pending",
     "1.1.24-to-1.1.25-managed-update-observation-pending",
     "1.1.25-to-1.1.26-managed-update-observation-pending",
-    "v1.1.26-to-v1.1.27-managed-update-observation-pending"
+    "v1.1.26-to-v1.1.27-managed-update-observation-pending",
+    "v1.1.27-to-v1.1.28-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.28-reference-repair-planned"
+  "nextAction": "validate-and-build-v1.1.28-installers"
 }

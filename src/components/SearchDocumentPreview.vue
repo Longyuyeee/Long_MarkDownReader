@@ -3,7 +3,7 @@
     <header>
       <div class="reference-source"><small>参考 · 只读</small><strong>{{ result.title }}</strong><small :title="result.path">{{ relativePath }}<template v-if="result.page"> · 第 {{ result.page }} 页</template></small></div>
       <button type="button" class="reference-close" aria-label="关闭参考" @click="$emit('close')">×</button>
-      <div class="reference-toolbar"><button type="button" :disabled="loading" @click="load">刷新参考</button><button type="button" class="reference-return" @click="$emit('returnToEditor')">返回编辑</button><button type="button" aria-label="取消参考来源" @click="$emit('clearSource')">取消来源</button></div>
+      <div class="reference-toolbar"><button type="button" :disabled="loading" @click="load">刷新参考</button><button type="button" class="reference-return" @click="$emit('returnToEditor')">返回编辑</button><n-dropdown v-if="repairSource" trigger="click" :options="[{ label: '核对来源…', key: 'check' }]" @select="repairing = { path: result.path, page: result.page, annotationId: result.annotationId }"><button type="button" aria-label="参考来源操作">•••</button></n-dropdown><button type="button" aria-label="取消参考来源" @click="$emit('clearSource')">取消来源</button></div>
     </header>
     <div class="preview-state" aria-live="polite">
       <span v-if="loading">正在读取内容…</span>
@@ -16,6 +16,7 @@
       <button type="button" :disabled="!selectedText || copying" @pointerdown.prevent @click="copyExcerpt">复制选中文字及来源</button>
       <small role="status">{{ copyStatus || (selectedText ? `已选 ${selectedText.length} 字` : insertTarget ? '先在笔记中点击插入位置，再选择参考文字；也可直接复制摘录。' : '先在参考内容中选择需要摘录的文字') }}</small>
     </div>
+    <ReferenceRepairDialog v-if="repairing && repairSource" :library-root="libraryRoot" :source="repairing" effect="只更新这份只读参考的来源，不改动笔记、原文件和其他引用。" :commit="repairPinned" @close="repairing = null" @open="repairing = null; $emit('open')" />
     <footer><small>参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。</small><button type="button" class="preview-open" @click="$emit('open')">在主编辑区打开</button></footer>
   </aside>
 </template>
@@ -23,12 +24,17 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { NDropdown } from 'naive-ui'
+import ReferenceRepairDialog from './ReferenceRepairDialog.vue'
+import type { ReferenceTarget } from '../services/referenceRepair'
 import { sourceExcerpt } from '../utils/sourceExcerpt'
 import SearchHighlight from './SearchHighlight.vue'
 import { searchResultPath } from '../utils/searchResultPath'
-const props = defineProps<{ libraryRoot: string; query: string; insertTarget?: string; result: { path: string; title: string; page?: number; annotationId?: string; matchKind: string } }>()
+const props = defineProps<{ libraryRoot: string; query: string; insertTarget?: string; repairSource?: (expectedPath: string, next: ReferenceTarget) => Promise<void>; result: { path: string; title: string; page?: number; annotationId?: string; matchKind: string } }>()
 defineEmits<{ close: []; clearSource: []; open: []; returnToEditor: []; insertExcerpt: [text: string] }>()
 interface Preview { text: string; label: string; truncated: boolean; matchFound: boolean }
+const repairing = ref<ReferenceTarget | null>(null)
+const repairPinned = async (next: ReferenceTarget) => { if (!repairing.value || !props.repairSource) throw Error('参考已变化，请重新核对'); await props.repairSource(repairing.value.path, next) }
 const panel = ref<HTMLElement | null>(null)
 const preview = ref<Preview | null>(null)
 const loading = ref(false)

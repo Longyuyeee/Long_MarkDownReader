@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 // Current release evidence is checked alongside every retained predecessor.
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath,['--test','scripts/test-v1128-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--experimental-strip-types','--test','scripts/test-v1127-collection-transfer.mjs','scripts/test-v1127-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--test','scripts/test-v1126-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--experimental-strip-types','--test','scripts/test-v1125-find-replace.mjs','scripts/test-v1125-find-adapter.mjs','scripts/test-v1125-shortcut-lifecycle.mjs','scripts/test-v1125-installed-release.mjs'],{stdio:'inherit'})
@@ -212,7 +213,7 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
   const patch = Number(version.split('.')[2])
@@ -232,6 +233,7 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.
   slices.push('v1.1.25-document-find-replace')
   slices.push('v1.1.26-structured-history')
   slices.push('v1.1.27-tags-collections')
+  slices.push('v1.1.28-reference-repair')
   required[5] = ['当前开发目标：' + '\x60' + development.developmentTargetVersion + '\x60', development.developmentTargetVersion === (published ? next : version)]
   required[7] = ['当前公开版本：' + '\x60' + development.publicVersion + '\x60', development.publicVersion === (published ? version : previous) && development.publicTag === 'v' + development.publicVersion]
   const names = ['界面与工作流升级', '资料库体验升级', '文件整理与侧栏精简', '基础功能深化', '基础功能深化', '安全导入与搜索一致性', '移动、改名与链接接续', '保存与历史深化', '搜索完整性', '工作现场', '标签与集合', '图谱深化', '内容备份', 'PDF 阅读笔记', '写作与交付', '轻量表格']
@@ -247,6 +249,7 @@ if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.
   names.push('当前文档查找替换')
   names.push('结构化源码历史与恢复')
   names.push('标签整理与集合复用')
+  names.push('引用来源与关系核对')
   required[9] = ['当前阶段：**v' + version + (published ? ' 已发布**' : ' ' + names[patch] + '候选**'), development.currentStage === stage && development.activeSlice?.id === slices[patch] && fs.existsSync(development.activeSlice.document)]
   if (version === '1.1.2' && development.activeSlice?.id === 'v1.1.3-custom-note-templates') {
     required[9] = ['当前阶段：**v1.1.3 自定义模板开发**', published && development.releaseCandidate === false

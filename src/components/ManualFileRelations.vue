@@ -6,8 +6,9 @@
     <p v-else-if="!relations.length" class="manual-empty">暂无手动关系</p>
     <article v-for="entry in relations" :key="entry.id">
       <button class="manual-peer" @click="$emit('open', peer(entry))"><File :size="16" /><span><strong>{{ peer(entry).split(/[\\/]/).pop() }}</strong><small>{{ label(entry.relationType) }} · {{ entry.relationType === 'related' ? '相互关联' : sameWorkspacePath(path, entry.sourcePath) ? '从当前文件出发' : '指向当前文件' }}</small><small v-if="entry.note">{{ entry.note }}</small></span></button>
-      <n-dropdown trigger="click" :options="[{ label: '编辑类型和说明…', key: 'edit' }, { label: '移除关系', key: 'remove' }]" @select="key => action(String(key), entry)"><button :aria-label="'关系操作 ' + peer(entry).split(/[\\/]/).pop()" :disabled="busy"><MoreHorizontal :size="16" /></button></n-dropdown>
+      <n-dropdown trigger="click" :options="[{ label: '编辑类型和说明…', key: 'edit' }, { label: '核对来源…', key: 'repair' }, { label: '移除关系', key: 'remove' }]" @select="key => action(String(key), entry)"><button :aria-label="'关系操作 ' + peer(entry).split(/[\\/]/).pop()" :disabled="busy"><MoreHorizontal :size="16" /></button></n-dropdown>
     </article>
+    <ReferenceRepairDialog v-if="repairing" :library-root="libraryRoot" :source="{ path: peer(repairing) }" effect="只更新这一条关系的端点；方向、类型、说明和文件正文保持不变。" :relation-label="`${label(repairing.relationType)} · ${repairing.relationType === 'related' ? '相互关联' : sameWorkspacePath(path, repairing.sourcePath) ? '从当前文件出发' : '指向当前文件'}${repairing.note ? ' · 说明：' + repairing.note : ''}`" :commit="repair" @close="repairing = null" @open="target => { repairing = null; $emit('open', target.path) }" />
     <n-modal :show="Boolean(editing)" preset="card" title="编辑资料关系" :style="{ width: 'min(480px, 94vw)' }" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="value => { if (!value && !busy) editing = null }">
       <form class="manual-edit-form" @submit.prevent="save"><label>关系类型<select v-model="kind" aria-label="编辑关系类型" :disabled="busy"><option v-for="item in fileRelationTypes" :key="item.value" :value="item.value">{{ item.label }}</option></select></label><label>说明<textarea v-model="note" aria-label="编辑关系说明" maxlength="2000" rows="4" :disabled="busy" /></label><p v-if="editError" role="alert">{{ editError }}</p><div><n-button :disabled="busy" @click="editing = null">取消</n-button><n-button type="primary" attr-type="submit" :loading="busy">保存修改</n-button></div></form>
     </n-modal>
@@ -16,6 +17,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { NButton, NDropdown, NModal } from 'naive-ui'
+import ReferenceRepairDialog from './ReferenceRepairDialog.vue'
+import type { ReferenceTarget } from '../services/referenceRepair'
 import { File, MoreHorizontal, RefreshCw } from 'lucide-vue-next'
 import { invoke } from '../services/tauriRuntime'
 import { announceFileRelationsChanged, onFileRelationsChanged, fileRelationTypes, type FileRelation } from '../services/fileRelations'
@@ -24,6 +27,7 @@ import { beginWindowSave } from '../services/windowDrafts'
 const props = defineProps<{ path: string; libraryRoot: string }>()
 defineEmits<{ open: [path: string] }>()
 const relations = ref<FileRelation[]>([]), loading = ref(false), busy = ref(false), error = ref(''), editError = ref('')
+const repairing = ref<FileRelation | null>(null)
 const editing = ref<FileRelation | null>(null), kind = ref('related'), note = ref('')
 const peer = (entry: FileRelation) => sameWorkspacePath(props.path, entry.sourcePath) ? entry.targetPath : entry.sourcePath
 const label = (kind: string) => fileRelationTypes.find(item => item.value === kind)?.label || kind
@@ -39,11 +43,18 @@ async function load() {
 }
 const action = async (key: string, entry: FileRelation) => {
   if (busy.value) return
+  if (key === 'repair') { repairing.value = { ...entry }; return }
   if (key === 'edit') { editing.value = entry; kind.value = entry.relationType; note.value = entry.note; editError.value = ''; return }
   busy.value = true; const end = beginWindowSave(), root = props.libraryRoot
   try { await invoke('remove_file_relation', { libraryRoot: root, relationId: entry.id }); announceFileRelationsChanged(root) }
   catch (cause) { error.value = '关系未移除，请重试：' + String(cause) }
   finally { busy.value = false; end() }
+}
+const repair = async (next: ReferenceTarget, signature: string) => {
+  const entry = repairing.value, root = props.libraryRoot
+  if (!entry) throw Error('关系已变化，请重新打开核对窗口')
+  await invoke('repair_file_relation', { libraryRoot: root, expected: entry, endpoint: sameWorkspacePath(props.path, entry.sourcePath) ? 'target' : 'source', replacementPath: next.path, expectedSignature: signature })
+  announceFileRelationsChanged(root)
 }
 const save = async () => {
   if (!editing.value || busy.value) return
@@ -53,7 +64,7 @@ const save = async () => {
   finally { busy.value = false; end() }
 }
 const stop = onFileRelationsChanged(root => { if (root === props.libraryRoot) void load() })
-watch(() => [props.path, props.libraryRoot], () => { editing.value = null; void load() }, { immediate: true })
+watch(() => [props.path, props.libraryRoot], () => { editing.value = null; repairing.value = null; void load() }, { immediate: true })
 onBeforeUnmount(() => { ++generation; stop() })
 </script>
 <style scoped>
