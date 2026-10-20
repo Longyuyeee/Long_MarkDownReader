@@ -1,0 +1,15 @@
+{
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n... Skipped lines\n\n  '# 查找测试\\n' +\n    '\\n' +\n    '第一段 用户 保留。\\n' +\n    '\\n' +\n    '第二段 访客 之外 用户。\\n' +\n...\n    '\\n' +\n+   '结尾保留。\\n' +\n+   '\\n'\n-   '结尾保留。\\n'\n\n    at file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-v1125-find-external-browser.mjs:13:685",
+  "body": "外部 Markdown\n记录.md\n仅在点击保存时写回源文件\n大纲\n存入知识库\n保存\n# 查找测试\n\n第一段 用户 保留。\n\n第二段 访客 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n\n\nDesktopTabletMobile/Wechat\n查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\ncode stays\n\n​\n\n结尾保留。\n\n已替换，可撤销\n已替换，可撤销\n已保存",
+  "checks": [
+    {
+      "id": "wysiwyg-external-menu-selection-unsaved-undo-and-explicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "ir-external-menu-selection-unsaved-undo-and-explicit-save",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

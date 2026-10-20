@@ -137,6 +137,7 @@
     </main>
 
     <TextConflictDialog v-if="conflict" :path="conflict.path" :library-root="conflict.root" :draft="conflict.draft" :format-id="conflict.format" :read-encoding="conflict.encoding" :save-policy="conflict.policy" :is-current="conflict.current" @close="conflict = null" @reload="useConflictDisk" @copy="finishTextConflictCopy" />
+    <DocumentFindReplace ref="documentFind" :context-key="store.libraryPath+':'+textPath+':'+isExternal+':'+viewMode" :revision="store.tabs.find(t=>t.path===textPath)?.content" :capture="captureFindDocument" :is-current="isFindCurrent" :apply-change="applyFindChange" :reveal="revealFindMatch" />
     <TextHistoryDialog v-if="showHistory" :key="textPath" :library-root="store.libraryPath" :path="textPath" :draft="historyDraft" :max-count="store.maxHistoryCount" @close="showHistory = false" @replace="applyHistoryDraft" @copy="openHistoryCopy" />
     <footer class="status-bar">
       <div v-if="viewMode === 'source'">
@@ -168,11 +169,11 @@ import { runTextSave, waitForTextSave } from '../utils/pendingTextSaves'
 import { beginWindowSave, recordWindowDraftActivity } from '../services/windowDrafts'
 import { basicSetup } from 'codemirror'
 import { autocompletion } from '@codemirror/autocomplete'
-import { undo, redo } from '@codemirror/commands'
+import { undo, redo, isolateHistory } from '@codemirror/commands'
 import { lintGutter, linter } from '@codemirror/lint'
 import { openSearchPanel, gotoLine } from '@codemirror/search'
-import { Compartment, EditorState } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import { Compartment, EditorState, Transaction } from '@codemirror/state'
+import { EditorView, keymap } from '@codemirror/view'
 import { StreamLanguage, type StreamParser } from '@codemirror/language'
 import { javascript, typescript } from '@codemirror/legacy-modes/mode/javascript'
 import { python } from '@codemirror/legacy-modes/mode/python'
@@ -201,6 +202,8 @@ import { findFileFormat } from '../config/fileFormats'
 import { codeMirrorThemeExtensions } from '../config/codeMirrorTheme'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextHistoryDialog from '../components/TextHistoryDialog.vue'
+import DocumentFindReplace from '../components/DocumentFindReplace.vue'
+import type {FindDocumentSnapshot,Replacement,TextSpan} from '../utils/documentFindReplace'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { type TabInfo, useAppStore } from '../store/app'
@@ -415,6 +418,7 @@ const codeLanguage = (): StreamParser<unknown> | null => {
 }
 
 const editorExtensions = (isReadOnly: boolean) => [
+  keymap.of([{key:'Mod-f',run:view=>openSearchPanel(view)}]),
   basicSetup,
   ...(codeLanguage() ? [StreamLanguage.define(codeLanguage()!)] : []),
   readOnlyCompartment.of([
@@ -762,7 +766,24 @@ const markPolicyDirty = () => {
 
 const runUndo = () => { if (editor) undo(editor) }
 const runRedo = () => { if (editor) redo(editor) }
-const openFind = () => { if (editor) { openSearchPanel(editor); editor.focus() } }
+const documentFind=ref<InstanceType<typeof DocumentFindReplace>|null>(null)
+type FindOwner={editor:EditorView;doc:unknown;path:string;root:string;generation:number;external:boolean;tab?:TabInfo;revision?:string}
+const captureFindDocument=():FindDocumentSnapshot=>{
+ if(!editor||loading.value||saving.value||loadingRange.value||loadError.value||viewMode.value!=='source')throw Error('正文正在读取或保存，请稍后再查找。')
+ const selection=editor.state.selection.main,tab=store.tabs.find(t=>t.path===textPath.value)
+ return {path:textPath.value,content:editor.state.doc.toString(),owner:{editor,doc:editor.state.doc,path:textPath.value,root:store.libraryPath,generation:loadGeneration,external:isExternal.value,tab,revision:tab?.content} satisfies FindOwner,
+ selection:selection.empty?undefined:{from:selection.from,to:selection.to},label:rangeMode.value?'已加载文本（只读）':'当前文本',readOnlyReason:readOnly.value?'当前文本为只读，仍可查找；请解除只读后再替换。':undefined}
+}
+const isFindCurrent=(snapshot:FindDocumentSnapshot)=>{const owner=snapshot.owner as FindOwner;return editor===owner.editor&&editor.state.doc===owner.doc&&textPath.value===owner.path&&store.libraryPath===owner.root&&isExternal.value===owner.external&&loadGeneration===owner.generation&&!loading.value&&!saving.value&&!loadingRange.value&&!loadError.value&&viewMode.value==='source'&&(!owner.tab||store.tabs.includes(owner.tab)&&(owner.tab.content===owner.revision||owner.tab.content===snapshot.content))}
+const applyFindChange=(snapshot:FindDocumentSnapshot,change:Replacement)=>{
+ if(!isFindCurrent(snapshot)||readOnly.value||!editor)throw Error('文档或正文已有变化，当前草稿已保留。')
+ if(change.content===snapshot.content)throw Error('替换内容与原文相同，没有修改。')
+ recordWindowDraftActivity();editor.dispatch({changes:change.changes,selection:{anchor:change.last.from,head:change.last.to},annotations:[isolateHistory.of('full'),Transaction.userEvent.of('input.replace')]})
+ return captureFindDocument()
+}
+const revealFindMatch=(snapshot:FindDocumentSnapshot,span:TextSpan)=>{if(isFindCurrent(snapshot)&&editor)editor.dispatch({selection:{anchor:span.from,head:span.to},effects:EditorView.scrollIntoView(span.from,{y:'center'})})}
+const openFind=()=>documentFind.value?.open()
+
 const openGoToLine = () => { if (editor) { gotoLine(editor); editor.focus() } }
 const openSafePreview = () => {
   if (!editor || !isHtmlDocument.value) return
@@ -791,6 +812,7 @@ const hideSensitiveValues = () => {
 }
 const leaveEditor = () => { void router.push('/library') }
 const handleKeydown = (event: KeyboardEvent) => {
+  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'&&viewMode.value==='source'){event.preventDefault();event.stopImmediatePropagation();if(!document.querySelector('.n-modal'))openFind();return}
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
     event.preventDefault()
     void save()
@@ -816,14 +838,14 @@ onMounted(async () => {
   createEditor()
   await nextTick()
   await load()
-  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('keydown', handleKeydown,true)
 })
 onBeforeUnmount(() => {
   ++loadGeneration
   clearTimeout(viewTimer); rememberTextPosition()
   editor?.destroy()
   editor = null
-  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('keydown', handleKeydown,true)
 })
 </script>
 

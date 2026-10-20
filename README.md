@@ -2,7 +2,7 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
-> **v1.1.24 已正式发布**：三种编辑模式的大纲与重复标题定位，大纲右键移动整节、调整层级和复制章节链接，保留草稿与撤销。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.24) · [发布说明](docs/RELEASE_NOTES_v1.1.24.md)。
+> v1.1.25 正在进行发布前检查：当前文档查找替换，选区或整篇、批量预览与一次撤销，保留未保存内容。[当前公开 v1.1.24](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.24) · [开发接续](docs/V1_1_25_Find_Replace_Development_2026-10-20.md)。
 
 
 <h1 align="center">Long编辑</h1>
