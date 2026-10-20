@@ -1,0 +1,9 @@
+{
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'value: 我的草稿\\n\\n'\n- 'value: 我的草稿\\n'\n                ^\n\n    at file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-v1126-history-browser.mjs:15:233",
+  "checks": [
+    "json compare/cancel/full restore only to owned draft and one undo",
+    "json late restore preserves subsequent input",
+    "json explicit save retains before and after snapshots"
+  ],
+  "errors": []
+}

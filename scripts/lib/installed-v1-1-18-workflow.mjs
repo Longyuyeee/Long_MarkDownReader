@@ -9,7 +9,7 @@ import {pptxEditingChecks,validateInstalledPptxEditing} from './installed-v1-1-1
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1118Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.ok(['1.1.18','1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(process.env.LONGEDIT_XLSX_PYTHON)
+ assert.ok(['1.1.18','1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary');assert.ok(process.env.LONGEDIT_XLSX_PYTHON)
  const folder=path.join(library,'v1118-pptx-'+crypto.randomUUID()),unselected=path.join(folder,'不要修改.md'),ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),cases=[]
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-pptx-native-save-and-independent-zip-xml',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}
  const mark=i=>report.checks.push({id:pptxEditingChecks[i],status:'passed'}),body='document.querySelector("[data-testid=c4b-text-value]")',count='document.querySelectorAll(".draft-labels li").length'

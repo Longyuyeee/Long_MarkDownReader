@@ -1,5 +1,6 @@
 // Real Vue editors and CodeMirror. IPC/disk are simulated; never native proof.
 import {createApp,h} from 'vue'
+import {EditorView} from '@codemirror/view'
 import {createPinia} from 'pinia'
 import {createRouter,createMemoryHistory,RouterView} from 'vue-router'
 import {NDialogProvider,NMessageProvider} from 'naive-ui'
@@ -18,7 +19,9 @@ const other={json:'{"value":"另一份资料"}',yaml:'value: 另一份资料\n',
 const files={},calls=[],pending=[],listeners={};let counter=0
 const snapshot=(path,content,signature)=>({path,content,signature,encoding:'utf-8',size:new TextEncoder().encode(content).length,modified:1,readOnlyReason:undefined})
 for(const [label,source]of [['A',sources[mode]],['B',other[mode]]])files[`C:/ui/${label}.${mode}`]=snapshot(`C:/ui/${label}.${mode}`,source,label+'-1')
-const state=window.structuredAudit={mode,files,calls,pending,sources,other,holdAnalysis:false,holdRead:false,holdWrite:false,holdTransform:false,failRead:false,failWrite:false,failCopy:false,
+const histories={}
+for(const path of Object.keys(files))histories[path]=[[10,files[path].content.replaceAll('原稿','初稿')]]
+const state=window.structuredAudit={mode,files,histories,calls,pending,sources,other,sourceText(){return EditorView.findFromDOM(document.querySelector('.cm-editor')).state.doc.toString()},replaceSource(text){const view=EditorView.findFromDOM(document.querySelector('.cm-editor'));view.dispatch({changes:{from:0,to:view.state.doc.length,insert:text}})},holdHistoryCompare:false,holdHistoryRestore:false,holdAnalysis:false,holdRead:false,holdWrite:false,holdTransform:false,failRead:false,failWrite:false,failCopy:false,
  release(kind){for(const item of pending.filter(item=>!kind||item.kind===kind)){pending.splice(pending.indexOf(item),1);item.resolve()}},get pendingSaves(){return pendingDocumentSaves.value}}
 const pause=async kind=>{if(state[kind]){state[kind]=false;await new Promise(resolve=>pending.push({kind,resolve}))}}
 const analysis=content=>{
@@ -49,6 +52,17 @@ window.__TAURI_INTERNALS__={transformCallback:()=>++counter,metadata:{currentWin
   if(state.failCopy){state.failCopy=false;throw Error('模拟草稿副本保留失败')}
   const prior=files[args.path];if(prior.signature!==args.expectedSignature)throw Error('磁盘内容再次变化，请重新比较')
   const path=args.path.replace(/\.[^.]+$/, '-当前副本'+(++counter)+'.'+mode);files[path]=snapshot(path,args.currentDraft,'copy-'+counter);return{snapshot:prior,copyPath:path}
+ }
+ if(command==='save_history_version'){const list=histories[args.path]||=[];if(list[0]?.[1]!==args.content)list.unshift([11+(++counter),args.content]);return}
+ if(command==='list_history')return JSON.parse(JSON.stringify(histories[args.path]||[]))
+ if(command==='get_history_metadata')return {}
+ if(command==='set_history_metadata'||command==='delete_history_version')return
+ if(command==='compare_history_version'){const result={content:histories[args.path].find(e=>e[0]===args.timestamp)[1],disk:files[args.path].content,diskSignature:files[args.path].signature,historySignature:'history-'+args.timestamp};await pause('holdHistoryCompare');return result}
+ if(command==='prepare_history_restore'||command==='restore_history_copy'){
+  await pause('holdHistoryRestore');if(files[args.path].signature!==args.diskSignature)throw Error('磁盘已变化，请重新比较')
+  const content=histories[args.path].find(e=>e[0]===args.timestamp)[1]
+  if(command==='prepare_history_restore'){histories[args.path].unshift([11+(++counter),args.currentDraft]);return content}
+  const path=args.path.replace(/\.[^.]+$/, '-恢复-'+(++counter)+'.'+mode);files[path]=snapshot(path,content,'copy-'+counter);return path
  }
  if(command==='save_config'||command==='report_window_draft_session')return
  if(command==='register_window_draft_session')return 'v1120-owned-fixture'

@@ -32,6 +32,7 @@
           <template #icon><n-icon :component="InspectorIcon" /></template>
           结构与问题
         </n-button>
+        <StructuredHistoryMenu :session="session" :available="!isExternal" :read-only="readOnly" :busy="loading || saving || !session.hasDocument()" />
         <n-button
           type="primary"
           size="small"
@@ -193,6 +194,7 @@ import {
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'
 import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
 import { useStructuredSession } from '../composables/useStructuredSession'

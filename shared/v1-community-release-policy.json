@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.25",
-  "releaseCandidate": true,
+  "appVersion": "1.1.26",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-20",
-  "currentStatus": "v1.1.25-community-release-published",
+  "currentStatus": "v1.1.26-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.24",
+    "previousPublicVersion": "1.1.25",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.24-to-1.1.25-pending",
-    "scope": "current-document-scoped-find-and-replace"
+    "managedUpdaterUpgradePath": "1.1.25-to-1.1.26-pending",
+    "scope": "structured-source-history-and-file-context-submenus"
   },
   "targetRelease": {
-    "tag": "v1.1.25",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.25",
+    "tag": "v1.1.26",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "a3bbfd4cc591d4989b14fc14f9daac0c6c90e1d7",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39419437013,
-    "hostedInstalledLifecycleRunId": 39426101193,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.25_x64_zh-CN.msi",
-        "sizeBytes": 77729792,
-        "sha256": "08e07648c694279d165852ca0ae0f88705a831047c9276b80872faf44ecd417a",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.25_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.25_x64-setup.exe",
-        "sizeBytes": 68429305,
-        "sha256": "5cadd078d740ddb35c845b090aa853b62bc33130bcc993a6ce953147220bcc8f",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.25_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.25",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.25",
-    "databaseId": 418414633,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "a3bbfd4cc591d4989b14fc14f9daac0c6c90e1d7",
-    "publishedAt": "2026-10-20T13:11:50Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -109,7 +78,8 @@
     "1.1.21-to-1.1.22-managed-update-observation-pending",
     "1.1.22-to-1.1.23-managed-update-observation-pending",
     "1.1.23-to-1.1.24-managed-update-observation-pending",
-    "1.1.24-to-1.1.25-managed-update-observation-pending"
+    "1.1.24-to-1.1.25-managed-update-observation-pending",
+    "1.1.25-to-1.1.26-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.26-structured-history-planned"
+  "nextAction": "v1.1.26-candidate-quality-and-installed-workflows"
 }

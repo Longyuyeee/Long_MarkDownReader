@@ -254,3 +254,21 @@ docs/evidence/v1125-build-failure-*/** -text whitespace=cr-at-eol
 docs/evidence/v1125-build-failure-*/**/*.log -text -diff
 docs/evidence/v1125-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1125-publication-*/**/*.log -text -diff
+
+docs/evidence/v1126-structured-history-development/** -text whitespace=cr-at-eol
+docs/evidence/v1126-structured-history-development/**/*.log -text -diff
+
+docs/evidence/v1-1-26-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1-1-26-candidate-lifecycle/**/*.log -text -diff
+
+docs/evidence/v1.1.26-release/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.26-release/**/*.log -text -diff
+
+docs/evidence/v1126-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1126-build-*/**/*.log -text -diff
+
+docs/evidence/v1126-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1126-review-*/**/*.log -text -diff
+
+docs/evidence/v1126-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1126-publication-*/**/*.log -text -diff

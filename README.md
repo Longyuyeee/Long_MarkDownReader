@@ -2,7 +2,7 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
-> **v1.1.25 已正式发布**：当前文档查找替换，精确选区或整篇、逐项核对、批量预览与一次撤销，保留未保存内容。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.25) · [发布说明](docs/RELEASE_NOTES_v1.1.25.md)。
+> v1.1.26 正在进行发布前检查：修复文件右键子菜单，深化结构化源码历史、差异和草稿恢复。[当前公开 v1.1.25](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.25) · [开发接续](docs/V1_1_26_Structured_History_Development_2026-10-20.md)。
 
 
 <h1 align="center">Long编辑</h1>

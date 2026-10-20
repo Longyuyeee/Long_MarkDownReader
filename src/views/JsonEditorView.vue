@@ -76,6 +76,7 @@
           <template #icon><n-icon :component="InspectorIcon" /></template>
           结构与诊断
         </n-button>
+        <StructuredHistoryMenu :session="session" :available="!isExternal" :read-only="readOnly" :busy="loading || saving || !session.hasDocument()" />
         <n-button data-testid="json-save" type="primary" size="small" :disabled="loading || saving || readOnly || !dirty || !session.hasDocument()" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
@@ -697,6 +698,7 @@ import { findFileFormat } from '../config/fileFormats'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'
 import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
 import { jsonPathToPointer } from '../utils/structuredPaths'

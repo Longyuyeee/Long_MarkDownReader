@@ -12,7 +12,7 @@ import { installedSearchTemporaryParent } from './installed-search-fixture-path.
 
 export async function runInstalledV118Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot, mainTargetId }) {
   assertHostedSearchAudit()
-  assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE, '1'); assert.ok(['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25'].includes(appVersion))
+  assert.equal(process.env.LONGEDIT_R5I_DISPOSABLE, '1'); assert.ok(['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26'].includes(appVersion))
   assert.equal(path.resolve(library).toLowerCase(), 'c:\\longeditr5ilibrary')
   assert.equal(installedExecutable, path.resolve(process.env.LONGEDIT_R5J_EXECUTABLE))
   assert.match(mainTargetId, /^[a-zA-Z0-9_-]+$/)

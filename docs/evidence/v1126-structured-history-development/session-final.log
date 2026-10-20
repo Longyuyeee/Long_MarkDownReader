@@ -1,0 +1,34 @@
+✔ diff preserves changed Unicode lines without treating text as HTML (2.2126ms)
+✔ large diff is bounded and reports shortened preview honestly (22.4772ms)
+✔ restore one paragraph keeps other edits, Unicode and mixed separators byte-exact (1.0375ms)
+✔ partial insertion and deletion preserve EOF and final-newline behavior (2.5623ms)
+✔ repeated lines do not make a local restore replace other changes (2.1151ms)
+✔ late history of A cannot populate B, even when timestamps collide (152.4115ms)
+✔ closed file and late failures cannot change the new context (61.6491ms)
+✔ restore rejects stale entries, loading editors, read-only and pending writes (39.4348ms)
+✔ delete is bound to its source and cannot refresh a different document (13.3939ms)
+✔ draft changes during protection and protection errors never replace the editor (23.7817ms)
+✔ both UI history reads use shared coordination before resolving the document (2.0925ms)
+✔ history mutations and signature-checked recovery retain exclusive coordination (0.4882ms)
+✔ save analysis cannot submit old source to a replacement path/root (246.4718ms)
+✔ save captures immutable source and keeps later input dirty without resetting editor (97.103ms)
+✔ pending native save protects window until it settles after unmount (68.7274ms)
+✔ ordinary and Windows canonical UNC spellings wait for the same pending write (62.2688ms)
+✔ an unloaded replacement path cannot inherit the prior draft and signature (67.3998ms)
+✔ invalid-source confirmation cannot save newly entered content under an old decision (66.5515ms)
+✔ reload confirmation belongs to captured file and source (44.0884ms)
+✔ late transformation and preview confirmation retain newer source (48.9689ms)
+✔ native failure keeps dirty source and clears pending save protection (53.4157ms)
+✔ JSON Pointer covers Unicode, escaped separators, quotes, empty keys and arrays (0.9245ms)
+✔ CRLF receipt matches the editor line model and does not leave a false dirty state (53.3648ms)
+✔ history restore is one isolated draft transaction and rejects stale editor, draft and read-only state (38.1926ms)
+✔ structured save records original before write and saved snapshot after write, retaining later input (36.0201ms)
+✔ failed original history protection prevents write; changed disk opens existing conflict (75.6118ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1976.7176

@@ -1,4 +1,5 @@
-import { onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
+import { isolateHistory } from '@codemirror/commands'
 import type { EditorView } from '@codemirror/view'
 import type { DialogApi, MessageApi } from 'naive-ui'
 import { invoke } from '../services/tauriRuntime'
@@ -37,6 +38,8 @@ const editorText = (source: string) => source.replace(/\r\n?/g, '\n')
 export function useStructuredSession(options: Options) {
   let disposed = false, bound: Owner | undefined
   const conflict = shallowRef<Owner>()
+  const history = shallowRef<Owner>()
+  const historyDraft = computed(() => history.value?.tab?.content ?? history.value?.source ?? '')
   const preview = shallowRef<{ owner: Owner; title: string; target: string; anchor: number }>()
   const previewError = shallowRef('')
   const capture = (): Owner | undefined => {
@@ -105,11 +108,25 @@ export function useStructuredSession(options: Options) {
       }
       if (!owns(owner)) return
       const kind = owner.format === 'jsonc' ? 'json' : owner.format
+      const keepHistory = !owner.external && ['json', 'jsonc', 'yaml', 'xml', 'toml'].includes(owner.format)
+        && typeof options.store.maxHistoryCount === 'number'
+      const historyArgs = { libraryRoot: owner.root, path: owner.path, maxCount: options.store.maxHistoryCount }
+      if (keepHistory) {
+        const previous = await invoke<Snapshot>('read_text_document', { libraryRoot: owner.root, path: owner.path, formatId: owner.format, readOptions: { encoding: options.encoding.value } })
+        if (!owns(owner)) return
+        if (previous.signature !== owner.signature) throw { code: 'external-modified' }
+        await invoke('save_history_version', { ...historyArgs, content: previous.content })
+        if (!owns(owner)) return
+      }
       const snapshot = await invoke<Snapshot>(`write_${owner.external ? 'external_' : ''}${kind}_source_document`, {
         ...(owner.external ? {} : { libraryRoot: owner.root }), path: owner.path, content: owner.source,
         expectedSignature: owner.signature, ...(kind === 'json' ? { formatId: owner.format } : {}),
         ...(kind === 'svg' ? {} : { allowInvalid }),
       })
+      if (keepHistory) {
+        try { await invoke('save_history_version', { ...historyArgs, content: snapshot.content }) }
+        catch { if (owns(owner)) options.message.warning('文件已保存，本次历史未能创建，可稍后重试保存') }
+      }
       if (!owns(owner)) {
         // Do not update the replacement editor. Its pending read waits for this
         // receipt; the old cached draft keeps any input made after submission.
@@ -169,11 +186,33 @@ export function useStructuredSession(options: Options) {
     options.message.success('已应用到草稿，可撤销；保存后才写入文件')
   }
   const cancelChange = () => { preview.value = undefined; previewError.value = '' }
+  const openHistory = () => {
+    if (!hasDocument() || options.loading.value || options.saving.value || options.external()) return
+    history.value = capture()
+  }
+  const closeHistory = () => { history.value = undefined }
+  const historyCurrent = () => owns(history.value) && history.value?.signature === options.signature.value
+  const applyHistoryDraft = (content: string, _partial = false, expectedDraft?: string) => {
+    const owner = history.value
+    if (!owner || !historyCurrent() || !hasDocument() || options.readOnlyReason.value || options.loading.value || options.saving.value
+      || expectedDraft === undefined || owner.editor.state.doc.toString() !== expectedDraft || historyDraft.value !== expectedDraft) {
+      options.message.info('文件或内容已变化，未应用旧恢复；当前修改仍保留'); return
+    }
+    const target = editorText(content), before = owner.editor.state.doc.toString()
+    if (target === before) return
+    let from = 0, suffix = 0
+    while (from < before.length && from < target.length && before[from] === target[from]) from++
+    while (suffix < before.length - from && suffix < target.length - from && before[before.length - suffix - 1] === target[target.length - suffix - 1]) suffix++
+    owner.editor.dispatch({ changes: { from, to: before.length - suffix, insert: target.slice(from, target.length - suffix) }, annotations: isolateHistory.of('full') })
+    options.dirty.value = true; sync(true)
+    closeHistory()
+    options.message.success('已恢复到草稿，可一次撤销；保存后才写入文件')
+  }
   const keydown = (event: KeyboardEvent) => {
     if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's' || document.body.inert) return
     event.preventDefault(); event.stopImmediatePropagation()
     const target = event.target instanceof Element ? event.target : null
-    if (!target?.closest('.n-dialog,.structured-change-dialog,.text-conflict-dialog')) void save()
+    if (!target?.closest('.n-dialog,.structured-change-dialog,.text-conflict-dialog,.text-history-dialog,.history-diff-dialog')) void save()
   }
   const beforeUnload = (event: BeforeUnloadEvent) => {
     if (!options.dirty.value && !options.saving.value) return
@@ -188,8 +227,8 @@ export function useStructuredSession(options: Options) {
       void listen(command, () => { void action() }).then(stop => { if (disposed) stop(); else subscriptions.push(stop) })
     }
   })
-  onBeforeUnmount(() => { sync(); disposed = true; cancelChange(); closeConflict(); subscriptions.forEach(stop => stop()); window.removeEventListener('keydown', keydown, true); window.removeEventListener('beforeunload', beforeUnload) })
+  onBeforeUnmount(() => { sync(); disposed = true; cancelChange(); closeConflict(); closeHistory(); subscriptions.forEach(stop => stop()); window.removeEventListener('keydown', keydown, true); window.removeEventListener('beforeunload', beforeUnload) })
   return { capture, owns, unchanged, bind, sync, hasDocument, waitForWrite, save, reload, conflict, applyConflict, closeConflict, finishCopy,
-    preview, previewError, offerChange, applyChange, cancelChange }
+    preview, previewError, offerChange, applyChange, cancelChange, history, historyDraft, historyCurrent, openHistory, closeHistory, applyHistoryDraft }
 }
 const errorText = (error: unknown) => (error as { message?: string })?.message || String(error)

@@ -1,12 +1,12 @@
 <template>
-  <n-modal :show="!comparison" preset="card" title="文本历史与差异" :style="{ width: 'min(600px, 94vw)' }" @update:show="value => { if (!value) $emit('close') }">
+  <n-modal :show="!comparison" preset="card" :title="title" class="text-history-dialog" :style="{ width: 'min(600px, 94vw)' }" @update:show="value => { if (!value) $emit('close') }">
     <HistoryVersionList :entries="entries.map(([timestamp,content]) => ({timestamp,content}))" :path="path" :library-root="libraryRoot" :loading="loading" :error="error" class="text-history-list" @compare="compare" @refresh="load" />
     <template #footer><n-button @click="$emit('close')">关闭</n-button></template>
   </n-modal>
-  <HistoryDiffDialog v-if="comparison" :path="path" :timestamp="comparison.timestamp" :draft="comparison.draft" :disk="comparison.disk" :historical="comparison.content" :busy="busy" :error="actionError" @close="comparison = null" @copy="recover('copy')" @replace="recover('replace')" @partial="id => recover('partial', id)" />
+  <HistoryDiffDialog v-if="comparison" :path="path" :timestamp="comparison.timestamp" :draft="comparison.draft" :disk="comparison.disk" :historical="comparison.content" :busy="busy" :read-only="readOnly" :error="actionError" @close="comparison = null" @copy="recover('copy')" @replace="recover('replace')" @partial="id => recover('partial', id)" />
 </template>
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { NButton, NModal, useDialog } from 'naive-ui'
 import HistoryVersionList from './HistoryVersionList.vue'
 import { invoke } from '../services/tauriRuntime'
@@ -14,17 +14,18 @@ import { confirmAppAction } from '../services/appDialog'
 import { beginWindowSave } from '../services/windowDrafts'
 import HistoryDiffDialog from './HistoryDiffDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
-const props = defineProps<{ libraryRoot: string; path: string; draft: string; maxCount: number }>()
-const emit = defineEmits<{ close: []; replace: [content: string, partial?: boolean]; copy: [path: string] }>()
+const props = withDefaults(defineProps<{ libraryRoot: string; path: string; draft: string; maxCount: number; readOnly?: boolean; title?: string }>(), { readOnly: false, title: '文本历史与差异' })
+const emit = defineEmits<{ close: []; replace: [content: string, partial?: boolean, expectedDraft?: string]; copy: [path: string] }>()
 const entries = ref<[number, string][]>([]), loading = ref(false), error = ref(''), actionError = ref(''), busy = ref(false)
 const comparison = ref<{ timestamp: number; draft: string; disk: string; content: string; diskSignature: string; historySignature: string } | null>(null)
 const dialog = useDialog()
 let disposed = false, generation = 0
 async function load() {
+  const token = ++generation, path = props.path, libraryRoot = props.libraryRoot
   loading.value = true; error.value = ''
-  try { const result = await invoke<[number, string][]>('list_history', { libraryRoot: props.libraryRoot, path: props.path }); if (!disposed) entries.value = result }
-  catch (cause) { if (!disposed) error.value = '历史暂时无法读取：' + String(cause) }
-  finally { loading.value = false }
+  try { const result = await invoke<[number, string][]>('list_history', { libraryRoot, path }); if (!disposed && token === generation) entries.value = result }
+  catch (cause) { if (!disposed && token === generation) error.value = '历史暂时无法读取：' + String(cause) }
+  finally { if (!disposed && token === generation) loading.value = false }
 }
 const compare = async (timestamp: number) => {
   const token = ++generation, draft = props.draft
@@ -33,8 +34,8 @@ const compare = async (timestamp: number) => {
 }
 const recover = async (mode: 'copy' | 'replace' | 'partial', changeId?: number) => {
   const selected = comparison.value
-  if (!selected || busy.value) return
-  const current = () => !disposed && comparison.value === selected && props.draft === selected.draft
+  if (!selected || busy.value || props.readOnly) return
+  const current = () => !disposed && !props.readOnly && comparison.value === selected && props.draft === selected.draft
   if (!current()) { actionError.value = '当前内容已变化，请重新比较'; return }
   busy.value = true; actionError.value = ''; const finish = beginWindowSave()
   try {
@@ -42,12 +43,16 @@ const recover = async (mode: 'copy' | 'replace' | 'partial', changeId?: number) 
     if (!current()) throw new Error('内容已变化，请重新比较')
     const args = { libraryRoot: props.libraryRoot, path: props.path, timestamp: selected.timestamp, diskSignature: selected.diskSignature, historySignature: selected.historySignature }
     if (mode === 'copy') { const path = await invoke<string>('restore_history_copy', args); if (current()) emit('copy', path) }
-    else { const content = await invoke<string>('prepare_history_restore', { ...args, currentDraft: selected.draft, maxCount: props.maxCount }); if (current()) emit('replace', mode === 'partial' ? restoreHistoryChange(selected.draft, content, changeId!) : content, mode === 'partial') }
+    else {
+      const content = await invoke<string>('prepare_history_restore', { ...args, currentDraft: selected.draft, maxCount: props.maxCount })
+      if (!current()) throw new Error('当前内容已变化，未应用旧恢复；请重新比较')
+      emit('replace', mode === 'partial' ? restoreHistoryChange(selected.draft, content, changeId!) : content, mode === 'partial', selected.draft)
+    }
     if (current()) emit('close')
   } catch (cause) { if (!disposed) actionError.value = '恢复未完成：' + String(cause) }
   finally { busy.value = false; finish() }
 }
-onMounted(load)
+watch([() => props.path, () => props.libraryRoot], () => { comparison.value = null; entries.value = []; void load() }, { immediate: true })
 onBeforeUnmount(() => { disposed = true; ++generation })
 </script>
 <style scoped>

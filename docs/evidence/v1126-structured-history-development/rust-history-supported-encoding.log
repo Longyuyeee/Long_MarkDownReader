@@ -1,0 +1,63 @@
+   Compiling tauri-app v1.1.25 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+warning: `tauri-app` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 43.43s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-91ee764ebf5af797.exe)
+
+running 21 tests
+test commands::history::tests::comparison_rejects_changed_disk_and_history ... ok
+test commands::history::tests::coordinated_metadata_read_recovers_with_exclusive_lease_and_revalidates_path ... ok
+test commands::history::tests::damaged_current_metadata_preserves_valid_backup_and_all_snapshots ... ok
+test commands::history::tests::damaged_metadata_backup_never_becomes_empty_success_or_prunes_versions ... ok
+test commands::history::tests::damaged_metadata_does_not_prune_history ... ok
+test commands::history::tests::global_clear_recovers_interrupted_metadata_before_deleting_versions ... ok
+test commands::history::tests::history_dedup_and_retention_still_work_with_collisions ... ok
+test commands::history::tests::history_deduplication_normalizes_line_endings ... ok
+test commands::history::tests::history_list_distinguishes_no_history_from_unreadable_or_damaged_history ... ok
+test commands::history::tests::history_list_returns_complete_snapshots_newest_first_and_ignores_sidecars ... ok
+test commands::history::tests::history_same_second_preserves_distinct_versions_and_clock_rollback ... ok
+test commands::history::tests::history_save_recovers_interrupted_metadata_before_retention ... ok
+test commands::history::tests::history_timestamp_overflow_preserves_existing_snapshot ... ok
+test commands::history::tests::interrupted_metadata_read_is_not_an_empty_unpinned_success ... ok
+test commands::history::tests::metadata_recovery_never_upgrades_while_another_reader_is_active ... ok
+test commands::history::tests::metadata_recovery_rejects_changed_path_without_touching_backup ... ok
+test commands::history::tests::recovery_copy_never_overwrites_original_or_existing_copy ... ok
+test commands::history::tests::retention_and_global_cleanup_preserve_pinned_versions_and_notes ... ok
+test commands::history::tests::returning_to_an_older_state_is_recorded_but_adjacent_duplicates_are_not ... ok
+test commands::history::tests::structured_history_copy_preserves_encoding_comments_and_source_extension ... ok
+test commands::history::tests::text_history_decodes_utf16_and_recovery_keeps_txt_extension ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 1076 filtered out; finished in 0.44s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\tauri_app-6db8b5fc259776a5.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-array-audit.rs (src-tauri\target\debug\deps\xlsx_array_audit-cb7e6c4c01c83eb0.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-m1a2-fixture.rs (src-tauri\target\debug\deps\xlsx_m1a2_fixture-48f4548dd4385ede.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\xlsx-pivot-audit-copy.rs (src-tauri\target\debug\deps\xlsx_pivot_audit_copy-876a74d1b4c43e27.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

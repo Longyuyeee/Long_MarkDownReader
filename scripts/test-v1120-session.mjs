@@ -7,11 +7,12 @@ import {jsonPathToPointer} from '../src/utils/structuredPaths.ts'
 const box=value=>({value}),deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no});return{promise,resolve,reject}}
 function harness(){
  const analysis=deferred(),write=deferred(),confirmation=deferred(),calls=[],disposers=[],errors=[];let doc='{"value":"保存的内容"}',pending=0,loads=0
- const editor={state:{doc:{toString:()=>doc}},dispatch:change=>{doc=change.changes.insert}}
+ const editor={state:{doc:{toString:()=>doc}},dispatch:change=>{const c=change.changes;doc=doc.slice(0,c.from)+c.insert+doc.slice(c.to);editor.lastChange=change}}
  const opts={path:()=>opts.file,external:()=>false,format:()=> 'json',generation:()=>opts.epoch,editor:()=>editor,file:'C:/ui/A.json',epoch:1,store:{libraryPath:'C:/ui',tabs:[],addTab(tab){if(!this.tabs.some(t=>t.path===tab.path))this.tabs.push(tab)}},loading:box(false),saving:box(false),dirty:box(true),signature:box('A-1'),encoding:box('utf-8'),fileSize:box(1),modified:box(1),readOnlyReason:box(''),dialog:{},message:{info(){},success(){},warning(){},error:e=>errors.push(e)},analyze:()=>analysis.promise,clearAnalysis(){},scheduleAnalysis(){},applySnapshot:async()=>{},load:async()=>{loads++}}
  const ctx=vm.createContext({exports:{},Promise,document:{body:{inert:false}},window:{addEventListener(){},removeEventListener(){}},Element:class{},require:name=>{
-  if(name==='vue')return{shallowRef:box,onMounted(){},onBeforeUnmount:fn=>disposers.push(fn)}
-  if(name.includes('tauriRuntime'))return{invoke:(command,args)=>{calls.push({command,args});return write.promise},listen:async()=>()=>{}}
+  if(name==='vue')return{shallowRef:box,computed:fn=>({get value(){return fn()}}),onMounted(){},onBeforeUnmount:fn=>disposers.push(fn)}
+  if(name==='@codemirror/commands')return{isolateHistory:{of:value=>({isolateHistory:value})}}
+  if(name.includes('tauriRuntime'))return{invoke:(command,args)=>{calls.push({command,args});return opts.mockInvoke?opts.mockInvoke(command,args):write.promise},listen:async()=>()=>{}}
   if(name.includes('appDialog'))return{confirmAppAction:()=>confirmation.promise}
   if(name.includes('windowDrafts'))return{beginWindowSave:()=>{pending++;return()=>pending--},recordWindowDraftActivity(){},useWindowDraft(){},useWindowDraftSnapshot(){}}
   if(name.includes('fileDisplayStyles')){const scope={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/fileDisplayStyles.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,scope);return scope.exports}
@@ -35,3 +36,19 @@ test('native failure keeps dirty source and clears pending save protection',asyn
 test('JSON Pointer covers Unicode, escaped separators, quotes, empty keys and arrays',()=>{assert.equal(jsonPathToPointer('$["中文"]["a/b~c"][0]'),'/中文/a~1b~0c/0');assert.equal(jsonPathToPointer('$["a\\\"b"][""]'),'/a"b/');assert.equal(jsonPathToPointer('$'),'');assert.equal(jsonPathToPointer('$.items[12].name'),'/items/12/name');assert.equal(jsonPathToPointer('$[broken]'),undefined)})
 
 test('CRLF receipt matches the editor line model and does not leave a false dirty state',async()=>{const h=harness();h.edit('{\n"value":"保存的内容"\n}');const run=h.session.save();h.analysis.resolve({valid:true});await new Promise(resolve=>setImmediate(resolve));h.write.resolve({content:'{\r\n"value":"保存的内容"\r\n}',signature:'A-2',encoding:'utf-8',size:30,modified:2});await run;assert.equal(h.opts.dirty.value,false)})
+
+test('history restore is one isolated draft transaction and rejects stale editor, draft and read-only state',()=>{
+ const h=harness();h.session.openHistory();const before=h.text();h.session.applyHistoryDraft('{"value":"历史"}',false,before);assert.equal(h.text(),'{"value":"历史"}');assert.equal(h.opts.store.tabs[0].content,h.text());assert.equal(h.opts.dirty.value,true)
+ h.session.openHistory();const prior=h.text();h.edit('{"value":"后续输入"}');h.session.applyHistoryDraft('{}',false,prior);assert.equal(h.text(),'{"value":"后续输入"}')
+ h.opts.readOnlyReason.value='locked';h.session.applyHistoryDraft('{}',false,h.text());assert.equal(h.text(),'{"value":"后续输入"}')
+ h.opts.readOnlyReason.value='';h.opts.epoch++;h.session.applyHistoryDraft('{}',false,h.text());assert.equal(h.text(),'{"value":"后续输入"}')
+})
+test('structured save records original before write and saved snapshot after write, retaining later input',async()=>{
+ const h=harness(),snap={content:'原稿',signature:'A-1'};h.opts.store.maxHistoryCount=10
+ h.opts.mockInvoke=async command=>{if(command==='read_text_document')return snap;if(command==='save_history_version')return;if(command==='write_json_source_document')return h.write.promise;throw Error(command)}
+ const before=h.text(),run=h.session.save();h.analysis.resolve({valid:true});await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(h.calls.map(c=>c.command),['read_text_document','save_history_version','write_json_source_document']);assert.equal(h.calls[1].args.content,'原稿')
+ h.edit('后续输入');h.write.resolve({content:before,signature:'A-2'});await run;assert.equal(h.calls.at(-1).command,'save_history_version');assert.equal(h.calls.at(-1).args.content,before);assert.equal(h.text(),'后续输入');assert.equal(h.opts.dirty.value,true)
+})
+test('failed original history protection prevents write; changed disk opens existing conflict',async()=>{
+ for(const changed of [false,true]){const h=harness();h.opts.store.maxHistoryCount=10;h.opts.mockInvoke=async command=>{if(command==='read_text_document')return{content:'磁盘',signature:changed?'other':'A-1'};throw Error('history unavailable')};const run=h.session.save();h.analysis.resolve({valid:true});await run;assert.equal(h.calls.some(c=>c.command==='write_json_source_document'),false);assert.equal(h.opts.dirty.value,true);assert.equal(Boolean(h.session.conflict.value),changed)}
+})
