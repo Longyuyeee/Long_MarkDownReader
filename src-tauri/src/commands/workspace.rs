@@ -953,10 +953,11 @@ mod tests {
         assert_eq!(overview.total_files, 4);
         assert_eq!(overview.tasks.len(), 3);
         assert!(overview.tasks.iter().any(|task|task.text=="附件待办"));
-        assert_eq!(overview.tasks[0].line, 2);
-        assert_eq!(overview.tasks[0].priority, "high");
-        assert_eq!(overview.tasks[0].due_date.as_deref(), Some("2026-08-26"));
-        assert!(!overview.tasks[0].completed);
+        let plan_task=overview.tasks.iter().find(|task|task.text.starts_with("Ship dashboard")).unwrap();
+        assert_eq!(plan_task.line, 2);
+        assert_eq!(plan_task.priority, "high");
+        assert_eq!(plan_task.due_date.as_deref(), Some("2026-08-26"));
+        assert!(!plan_task.completed);
         assert_eq!(overview.completed_tasks.len(), 1);
         assert!(overview.completed_tasks[0].completed);
         assert_eq!(overview.completed_tasks[0].priority, "low");
