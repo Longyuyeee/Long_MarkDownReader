@@ -18,6 +18,8 @@ export function applyVditorSourceRepair(editor: any, original: string, href: str
     markers.forEach(node => { node.textContent = nextHref })
     if (editor.getValue() !== content) throw Error('当前模式未能准确保留其他内容，原稿和撤销记录已恢复')
     undo.addToUndoStack(editor.vditor)
+    // Refresh a visible read-only preview without re-rendering the editable DOM.
+    editor.vditor.preview?.render(editor.vditor)
   } catch (cause) {
     anchors.forEach(node => node.setAttribute('href', href))
     previous.forEach(({ node, html }) => { node.innerHTML = html })

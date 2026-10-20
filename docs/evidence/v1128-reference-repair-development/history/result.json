@@ -3,6 +3,7 @@
   "nativeBridgeMocked": true,
   "sourceUserContentIncluded": false,
   "checks": [
+    "Repair from read-only preview updates its actual visible source link",
     "After returning from another file, delayed single Undo/Redo preserves all unsaved text and the code example",
     "Real wysiwyg link mutation preserves code and text, rolls back failed application and has one delayed Undo",
     "Real ir link mutation preserves code and text, rolls back failed application and has one delayed Undo",
