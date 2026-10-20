@@ -405,6 +405,11 @@ pub(crate) fn execute_recorded(
     }
     if let Some(id) = &undo_of {
         super::file_operation_history::check_restore(guard.root(), id)?;
+        // Keep validation and parent preparation inside this transaction's IO
+        // lease. Its lease drops before Protection emits the completion event.
+        // An outer relocation lease would block the receiving editor's reload.
+        let parent = guard.resolve_directory(new.parent().ok_or("原目录不可用")?, true)?;
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
     let stage = Stage::begin(
         &cache,

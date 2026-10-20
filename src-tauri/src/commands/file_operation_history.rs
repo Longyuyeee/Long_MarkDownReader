@@ -49,10 +49,7 @@ pub(super) fn restore(
     guard: &WorkspaceGuard,
     id: &str,
 ) -> Result<PathChange, MoveFailure> {
-    let _activity = crate::services::file_activity::relocate(guard.root())?;
     let record = history::check_restore(guard.root(), id)?;
-    std::fs::create_dir_all(record.old_path.parent().ok_or("原目录不可用")?)
-        .map_err(|e| e.to_string())?;
     crate::services::file_move_transaction::execute_recorded(
         app,
         guard,
@@ -339,5 +336,18 @@ mod tests {
             fs::read_to_string(f.0.join("new-folder/later.txt")).unwrap(),
             "later bytes"
         );
+    }
+    #[test]
+    fn restore_recreates_missing_original_parent_without_extra_user_steps() {
+        let f = TestWorkspace::new(); let guard = WorkspaceGuard::new(&f.0).unwrap();
+        fs::create_dir(f.0.join("before")).unwrap();
+        fs::create_dir(f.0.join("after")).unwrap();
+        fs::write(f.0.join("before/note.txt"), "preserved bytes").unwrap();
+        file_move_transaction::execute(None, &guard, &f.0.join("before/note.txt"), &f.0.join("after/note.txt")).unwrap();
+        let id = history::list(guard.root()).unwrap()[0].id.clone();
+        fs::remove_dir(f.0.join("before")).unwrap();
+        restore(None, &guard, &id).unwrap();
+        assert_eq!(fs::read_to_string(f.0.join("before/note.txt")).unwrap(), "preserved bytes");
+        assert!(!f.0.join("after/note.txt").exists());
     }
 }
