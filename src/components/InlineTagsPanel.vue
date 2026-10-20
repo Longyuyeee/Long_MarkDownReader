@@ -30,13 +30,13 @@
 
     <template v-else>
       <button class="back-button" @click="back"><ArrowLeft />全部标签</button>
-      <div class="selected-heading"><span class="tag-symbol">#</span><div><h3>{{ selectedTag }}</h3></div><button class="icon-button" aria-label="刷新标签笔记" :disabled="loading || running" @click="refresh"><RefreshCw :class="{ spinning: running }" /></button></div>
+      <div class="selected-heading"><span class="tag-symbol">#</span><div><h3>{{ selectedTag }}</h3></div><button class="icon-button" aria-label="刷新标签笔记" :disabled="loading || running" @click="refresh"><RefreshCw :class="{ spinning: running }" /></button><button class="icon-button" aria-label="文内标签操作" @click="openTagMenu($event, selectedTag)"><Ellipsis /></button></div>
       <div v-if="resultError" class="tag-error" role="alert"><p>{{ resultError }}</p><button :disabled="running" @click="selectTag(selectedTag)"><RefreshCw />重试</button></div>
       <p v-if="running" class="loading-state" role="status"><RefreshCw class="spinning" />正在查找笔记…</p>
       <div class="tag-result-body">
         <div class="section-label"><strong>相关笔记</strong><small>已加载 {{ results.length }}<template v-if="pageState?.totalFiles != null && !retaining"> / {{ pageState.totalFiles }}</template> 篇</small></div>
         <p v-if="retaining">仍显示上次笔记，本次尚未更新。</p><p v-else-if="pageState && !pageState.scanComplete">尚未查全。{{ pageState.warnings?.join('；') }}</p>
-        <div class="note-actions"><button :disabled="!results.length || running" @click="selecting = !selecting; selectedPaths = []">{{ selecting ? '取消选择' : '选择笔记整理标签' }}</button><button v-if="selecting" :disabled="!selectedPaths.length" @click="editingTags = true">整理 {{ selectedPaths.length }} 份笔记</button></div>
+        <div class="note-actions"><button :disabled="!results.length || running" @click="selecting = !selecting; selectedPaths = []">{{ selecting ? '取消选择' : '选择笔记整理标签' }}</button><button v-if="selecting" :disabled="!selectedPaths.length" @click="chooseTagScope = false; editingTags = true">整理 {{ selectedPaths.length }} 份笔记</button></div>
         <p v-if="selecting">最多选择 64 篇；仅处理明确选择的已加载笔记，不会代存草稿。</p>
         <div v-if="!results.length && pageState?.scanComplete && !resultError" class="empty-tags"><strong>还没有保存的匹配笔记</strong><p>刚添加的标签需保存笔记后刷新。旧标签的固定记录仍保留，可右键取消固定。</p></div>
         <div v-else class="tag-results"><div v-for="file in results" :key="file.path" class="tag-file-row"><input v-if="selecting" v-model="selectedPaths" type="checkbox" :value="file.path" :aria-label="`选择 ${file.title}`" :disabled="selectedPaths.length >= 64 && !selectedPaths.includes(file.path)" /><button class="tag-note" @click="$emit('open', file.path)"><NotebookPen :style="{ color: noteIconColor }" /><span><strong>{{ file.title }}</strong><small>{{ resultPath(file.path) }}</small></span><ChevronRight /></button></div></div>
@@ -46,7 +46,7 @@
     </template>
 
     <n-dropdown :show="tagMenu.show" :x="tagMenu.x" :y="tagMenu.y" trigger="manual" placement="bottom-start" :options="tagMenuOptions" @select="tagMenuAction" @clickoutside="tagMenu.show = false" />
-    <TagEditDialog v-if="editingTags" :tag="selectedTag" :paths="selectedPaths" @close="editingTags = false" @completed="refresh" />
+    <TagEditDialog v-if="editingTags" :tag="selectedTag" :paths="chooseTagScope ? results.slice(0, 64).map(file => file.path) : selectedPaths" :choose-paths="chooseTagScope" @close="editingTags = false" @completed="refresh" />
   </section>
 </template>
 
@@ -54,7 +54,7 @@
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { NDropdown } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
-import { ArrowLeft, Check, ChevronRight, NotebookPen, Plus, RefreshCw, Save, Search, X, Pin } from 'lucide-vue-next'
+import { ArrowLeft, Check, ChevronRight, NotebookPen, Plus, RefreshCw, Save, Search, X, Pin, Ellipsis } from 'lucide-vue-next'
 import { libraryNavigationPreferences, updateLibraryNavigation } from '../services/libraryNavigationPreferences'
 import { useAppStore } from '../store/app'
 import { inlineTags, normalizeInlineTag } from '../utils/inlineTags'
@@ -71,19 +71,25 @@ const store = useAppStore()
 const preferences = computed(() => libraryNavigationPreferences(store.libraryPath))
 const tagMenu = reactive({ show: false, x: 0, y: 0, tag: '' })
 const tagMenuOptions = computed(() => [
+  { label: '整理这个文内标签…', key: 'organize' },
   { label: preferences.value.pinnedTags.includes(tagMenu.tag) ? '取消固定标签' : '固定常用标签', key: 'pin' },
   { label: '按名称排序', key: 'name' }, { label: '按笔记数量排序', key: 'count' },
 ])
 const openTagMenu = (event: MouseEvent, tag: string) => Object.assign(tagMenu, { show: true, x: event.clientX, y: event.clientY, tag })
-const tagMenuAction = (key: string) => {
+const tagMenuAction = async (key: string) => {
   tagMenu.show = false
-  if (key === 'pin') {
+  if (key === 'organize') {
+    const tag = tagMenu.tag, root = store.libraryPath
+    await selectTag(tag)
+    if (!disposed && root === store.libraryPath && selectedTag.value === tag && !resultError.value) { chooseTagScope.value = true; editingTags.value = true }
+  } else if (key === 'pin') {
     const tags = preferences.value.pinnedTags
     updateLibraryNavigation(store.libraryPath, { pinnedTags: tags.includes(tagMenu.tag) ? tags.filter(tag => tag !== tagMenu.tag) : [...tags, tagMenu.tag] })
   } else if (key === 'name' || key === 'count') updateLibraryNavigation(store.libraryPath, { tagSort: key })
 }
 const filter = ref(''), selectedTag = ref(''), newTag = ref(''), addingOpen = ref(false), adding = ref(false)
 const addError = ref(''), notice = ref(''), selecting = ref(false), selectedPaths = ref<string[]>([]), editingTags = ref(false)
+const chooseTagScope = ref(false)
 const lookup = createSearchPages(invoke)
 const { files: results, busy: running, error: resultError, status: pageState, retainingView: retaining, nextPage, canContinue } = lookup
 const tagInput = ref<HTMLInputElement>()

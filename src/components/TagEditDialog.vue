@@ -1,10 +1,11 @@
 <template>
-  <n-modal :show="true" preset="card" title="整理所选笔记的标签" class="tag-edit-dialog" :style="{ width: 'min(700px, 94vw)' }" :mask-closable="!writing" :closable="!writing" :close-on-esc="!writing" @close="close" @update:show="value => { if (!value) close() }">
+  <n-modal :show="true" preset="card" title="整理文内标签" class="tag-edit-dialog" :style="{ width: 'min(700px, 94vw)' }" :mask-closable="!writing" :closable="!writing" :close-on-esc="!writing" @close="close" @update:show="value => { if (!value) close() }">
     <div class="tag-edit-body">
-      <div class="tag-edit-fields"><label>整理方式<select v-model="kind" :disabled="writing || attempted"><option value="rename">重命名标签</option><option value="add">添加标签</option><option value="remove">移除标签</option></select></label><label v-if="kind !== 'remove'">{{ kind === 'rename' ? '新的标签名称' : '标签名称' }}<input v-model="target" aria-label="新的标签名称" :disabled="writing || attempted" maxlength="80" placeholder="例如：客户项目" /></label></div>
+      <div class="tag-edit-fields"><label>整理方式<select v-model="kind" :disabled="writing || attempted"><option value="rename">改名或合并到标签</option><option value="add">添加标签</option><option value="remove">移除标签</option></select></label><label v-if="kind !== 'remove'">{{ kind === 'rename' ? '目标标签名称' : '标签名称' }}<input v-model="target" aria-label="新的标签名称" :disabled="writing || attempted" maxlength="80" placeholder="例如：客户项目" /></label></div>
+      <fieldset v-if="choosePaths" :disabled="writing || attempted" class="tag-scope"><legend>选择要整理的笔记</legend><p class="tag-edit-explanation">仅列出当前已加载的 {{ candidates.length }} 篇（最多 64 篇），不会自动扩展为全库。管理标签不受影响。</p><n-button size="small" @click="scopePaths = candidates.slice()">选择以上笔记</n-button><label v-for="path in candidates" :key="path" class="tag-edit-row"><input v-model="scopePaths" type="checkbox" :value="path" :aria-label="`整理笔记 ${relative(path)}`" /><span>{{ relative(path) }}</span></label></fieldset>
       <p class="tag-edit-explanation">{{ kind === 'rename' ? `将 #${tag} 改为 #${target || '新标签'}` : kind === 'remove' ? `移除 #${tag}` : `添加 #${target || '新标签'}` }}。这会修改所选已保存 Markdown 的正文，不移动文件，不自动保存草稿；原文保留在历史中。</p>
       <p class="tag-edit-explanation">沿用文内标签的识别规则（包括代码块中的同名标签）。请先预览范围，再明确确认。</p>
-      <n-button v-if="!attempted" :loading="checking" :disabled="writing" @click="preview">{{ planId ? '重新预览' : '预览影响' }}</n-button>
+      <n-button v-if="!attempted" :loading="checking" :disabled="writing || !scopePaths.length" @click="preview">{{ planId ? '重新预览' : '预览影响' }}</n-button>
       <div v-if="items.length" class="tag-edit-list" aria-label="标签修改预览">
         <label v-for="item in items" :key="item.index" class="tag-edit-row"><input v-model="selected" type="checkbox" :value="item.index" :disabled="writing || attempted || item.state !== 'ready'" /><span><strong>{{ relative(item.path) }}</strong><small>{{ result(item.index)?.message || item.message }}</small><small v-if="item.changes">{{ item.changes }} 处标签变化</small></span><span class="tag-edit-state">{{ result(item.index) ? outcomeLabel(result(item.index)!.outcome) : previewLabel(item.state) }}</span></label>
       </div>
@@ -27,9 +28,9 @@ import { sameWorkspacePath } from '../utils/savedCollections'
 interface Item { index: number; path: string; state: 'ready' | 'unchanged' | 'excluded' | 'unavailable'; changes: number; message: string }
 interface Result { index: number; path: string; outcome: 'completed' | 'notExecuted' | 'needsReview'; message: string }
 interface Report { items: Result[] }
-const props = defineProps<{ tag: string; paths: string[] }>()
+const props = withDefaults(defineProps<{ tag: string; paths: string[]; choosePaths?: boolean }>(), { choosePaths: false })
 const emit = defineEmits<{ close: []; completed: [] }>(), store = useAppStore(), root = store.libraryPath
-const paths = [...props.paths], kind = ref<'rename' | 'add' | 'remove'>('rename'), target = ref('')
+const candidates = [...props.paths], scopePaths = ref(props.choosePaths ? [] as string[] : [...props.paths]), kind = ref<'rename' | 'add' | 'remove'>('rename'), target = ref('')
 const planId = ref(''), items = ref<Item[]>([]), selected = ref<number[]>([]), report = ref<Report | null>(null)
 const checking = ref(false), writing = ref(false), attempted = ref(false), error = ref('')
 let generation = 0, disposed = false
@@ -40,10 +41,11 @@ const result = (index: number) => report.value?.items.find(item => item.index ==
 const affected = computed(() => kind.value === 'add' ? [] : store.savedSearches.filter(entry => entry.libraryPath === root && [entry.filters?.tag, ...(entry.filters?.tags || [])].includes(props.tag)).map(entry => entry.name))
 const retire = () => { const id = planId.value; planId.value = ''; if (id) void invoke('close_tag_edit', { planId: id }).catch(() => {}) }
 const close = () => { if (writing.value) return; ++generation; retire(); emit('close') }
-watch([kind, target], () => { if (!attempted.value) { ++generation; retire(); items.value = []; selected.value = []; error.value = ''; checking.value = false } })
+watch([kind, target, scopePaths], () => { if (!attempted.value) { ++generation; retire(); items.value = []; selected.value = []; error.value = ''; checking.value = false } }, { deep: true })
 watch(() => store.libraryPath, () => { if (!writing.value) close() })
 async function preview() {
-  if (checking.value || writing.value || attempted.value) return
+  if (checking.value || writing.value || attempted.value || !scopePaths.value.length) return
+  const paths = [...scopePaths.value]
   const token = ++generation; retire(); checking.value = true; error.value = ''; items.value = []; selected.value = []
   snapshotWindowDrafts()
   const excludedPaths = [...new Set([...store.tabs.filter(tab => tab.isDirty).map(tab => tab.path), ...dirtyDocumentPaths()])]
@@ -57,6 +59,7 @@ async function preview() {
 }
 async function apply() {
   if (writing.value || !planId.value || !selected.value.length || root !== store.libraryPath) return
+  snapshotWindowDrafts()
   attempted.value = true; writing.value = true; error.value = ''
   const finish = beginWindowSave('relocation')
   try { report.value = await invoke<Report>('apply_tag_edit', { request: { planId: planId.value, selected: [...selected.value], confirmed: true } }); emit('completed') }
@@ -66,5 +69,6 @@ async function apply() {
 onBeforeUnmount(() => { disposed = true; ++generation; retire() })
 </script>
 <style scoped>
+.tag-scope { margin: 14px 0; border: var(--theme-border); border-radius: var(--theme-radius-sm); max-height: 26vh; overflow: auto; }.tag-scope legend { font-size: var(--text-compact); }.tag-scope .tag-edit-row { font-size: var(--text-compact); }
 .tag-edit-body { max-height: min(65vh, 650px); overflow: auto; padding-right: 4px; color: var(--theme-text); }.tag-edit-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.tag-edit-fields label { display: grid; gap: 7px; }.tag-edit-fields input, select { width: 100%; min-width: 0; min-height: 34px; border: var(--theme-border); border-radius: var(--theme-radius-sm); padding: 6px 9px; font: inherit; background: var(--theme-surface); color: var(--theme-text); }.tag-edit-explanation { font-size: var(--text-compact); line-height: 1.65; color: var(--theme-text-secondary); overflow-wrap: anywhere; }.tag-edit-list { margin: 14px 0; border-top: var(--theme-border); }.tag-edit-row { display: flex; gap: 10px; align-items: start; padding: 12px 0; border-bottom: var(--theme-border); }.tag-edit-row > span:first-of-type { flex: 1; min-width: 0; display: grid; gap: 5px; }.tag-edit-row strong { font-size: var(--text-sm); overflow-wrap: anywhere; }.tag-edit-row small { font-size: var(--text-compact); color: var(--theme-text-secondary); overflow-wrap: anywhere; }.tag-edit-state { font-size: var(--text-compact); flex-shrink: 0; }.tag-edit-error { color: var(--workspace-danger-text, var(--theme-text)); overflow-wrap: anywhere; }.tag-edit-footer { display: flex; flex-wrap: wrap; justify-content: end; align-items: center; gap: 9px; }.tag-edit-footer > span { margin-right: auto; font-size: var(--text-compact); color: var(--theme-text-secondary); }@media (max-width: 520px) { .tag-edit-fields { grid-template-columns: 1fr; }.tag-edit-state { max-width: 4em; }.tag-edit-footer > span { width: 100%; } }
 </style>

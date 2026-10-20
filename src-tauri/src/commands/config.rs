@@ -194,7 +194,7 @@ fn normalize_editor_mode(config: &mut AppConfig) -> bool {
     changed
 }
 
-fn validate_saved_searches(
+pub(crate) fn validate_saved_searches(
     searches: &[SavedSearchConfig],
     libraries: &[LibraryConfig],
 ) -> Result<(), String> {

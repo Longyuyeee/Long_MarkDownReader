@@ -1,0 +1,9 @@
+{
+  "failure": "locator.selectOption: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.collection-transfer-dialog').getByLabel('导入到', { exact: true })\u001b[22m\n\n    at E:\\Project\\AIProject\\GeminiProject\\MDReader\\scripts\\test-v1127-tags-collections-browser.mjs:16:69",
+  "checks": [
+    "Tag context menu opens scoped dialog; selection is explicit, dirty note excluded and preview cancellation writes nothing",
+    "Scoped tag rename modifies only the selected saved note, protects original history and leaves dirty content intact",
+    "Collection file opens per-row preview with unique import names; cancellation leaves configuration unchanged"
+  ],
+  "errors": []
+}

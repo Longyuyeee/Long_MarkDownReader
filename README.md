@@ -2,7 +2,7 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
-> **v1.1.26 已正式发布**：修复文件右键子菜单，深化结构化源码历史、差异与草稿恢复。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26) · [发布说明](docs/RELEASE_NOTES_v1.1.26.md)。
+> v1.1.27 正在进行发布前检查：文内标签整理入口与集合条件跨项目复用。[当前公开 v1.1.26](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26) · [开发接续](docs/V1_1_27_Tags_Collections_Development_2026-10-21.md)。
 
 
 <h1 align="center">Long编辑</h1>

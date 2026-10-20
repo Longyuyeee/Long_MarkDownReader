@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.26",
-  "releaseCandidate": true,
+  "appVersion": "1.1.27",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-10-20",
-  "currentStatus": "v1.1.26-community-release-published",
+  "generatedAt": "2026-10-21",
+  "currentStatus": "v1.1.27-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.25",
+    "previousPublicVersion": "1.1.26",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.25-to-1.1.26-pending",
-    "scope": "structured-source-history-and-file-context-submenus"
+    "managedUpdaterUpgradePath": "1.1.26-to-1.1.27-pending",
+    "scope": "tags-and-portable-collection-conditions"
   },
   "targetRelease": {
-    "tag": "v1.1.26",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26",
+    "tag": "v1.1.27",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.27",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "0e61db532ba2e060612fb1e176f5c2554bb06c6f",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39444053484,
-    "hostedInstalledLifecycleRunId": 39454287229,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.26_x64_zh-CN.msi",
-        "sizeBytes": 77737984,
-        "sha256": "a395ab1152c3e0c89864eb8ac0730096be2f427baff8b1919286eee5c190f61e",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.26_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.26_x64-setup.exe",
-        "sizeBytes": 68465777,
-        "sha256": "e9824dcee9f3f39122ec40b8313cf64910e11f654fc8ed3fd3eda67ead68fa65",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.26_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.26",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26",
-    "databaseId": 418612045,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "0e61db532ba2e060612fb1e176f5c2554bb06c6f",
-    "publishedAt": "2026-10-20T16:20:14Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -110,7 +79,8 @@
     "1.1.22-to-1.1.23-managed-update-observation-pending",
     "1.1.23-to-1.1.24-managed-update-observation-pending",
     "1.1.24-to-1.1.25-managed-update-observation-pending",
-    "1.1.25-to-1.1.26-managed-update-observation-pending"
+    "1.1.25-to-1.1.26-managed-update-observation-pending",
+    "v1.1.26-to-v1.1.27-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.27-tags-collections-planned"
+  "nextAction": "validate-and-build-v1.1.27-installers"
 }
