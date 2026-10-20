@@ -1,0 +1,911 @@
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	﻿2026-10-20T14:37:07.5778408Z Current runner version: '2.337.0'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5803696Z ##[group]Runner Image Provisioner
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5804525Z Hosted Compute Agent
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5805476Z Version: 20261002.596
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5806165Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5806883Z Build Date: 2026-10-02T22:28:27Z
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5807563Z Worker ID: {53e38d3f-5f89-4aad-9bd3-987f6fb5c495}
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5808261Z Region: eastus
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5808756Z Cloud: Azure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5809321Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5810820Z ##[group]Operating System
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5811452Z Microsoft Windows Server 2025
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5812034Z 10.0.26100
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5812533Z Datacenter
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5813074Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5813623Z ##[group]Runner Image
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5814230Z Image: windows-2025-vs2026
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5814817Z Version: 20261007.264.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5816297Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5817931Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5818925Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5820006Z ##[group]GITHUB_TOKEN Permissions
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5821785Z Contents: read
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5822368Z Metadata: read
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5822908Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5824891Z Secret source: Actions
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5826257Z Cache mode: write
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.5826958Z Prepare workflow directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.6369489Z Prepare all required actions
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.6423214Z Getting action download info
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.8047475Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:07.9744359Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:08.1499204Z Download action repository 'Swatinem/rust-cache@v2' (SHA:d1527c8f67ef9af357290475d4af4b0fab8f12e0)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:08.3580728Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:08.5449633Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:08.9167572Z Complete job name: Build MSI/NSIS and exercise official upgrade
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0859827Z ##[group]Run actions/checkout@v6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0861035Z with:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0861522Z   fetch-depth: 0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0862054Z   path: orchestration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0862659Z   repository: Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0868926Z   token: ***
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0869464Z   ssh-strict: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0869994Z   ssh-user: git
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0870512Z   persist-credentials: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0871087Z   clean: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0871621Z   sparse-checkout-cone-mode: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0872288Z   fetch-tags: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0872816Z   show-progress: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0873359Z   lfs: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0873849Z   submodules: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0874373Z   set-safe-directory: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0874980Z   allow-unsafe-pr-checkout: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0875860Z env:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0876340Z   CARGO_TERM_COLOR: always
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0876992Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0877674Z   LONGEDIT_R5I_DISPOSABLE: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0878277Z   PREVIOUS_VERSION: 1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0878852Z   RELEASE_VERSION: 1.1.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0879569Z   CANDIDATE_COMMIT: da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.0880423Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.2497776Z Syncing repository: Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.2500765Z ##[group]Getting Git version info
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.2502190Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.3688646Z [command]"C:\Program Files\Git\bin\git.exe" version
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.7477168Z git version 2.56.0.windows.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.7526767Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.7548968Z Temporarily overriding HOME='D:\a\_temp\b889eb1e-8a2e-40af-ac5c-7018685cb768' before making global git config changes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.7551075Z Adding repository directory to the temporary git global config as a safe directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.7566446Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.8277682Z ##[group]Determining repository object format
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.8280875Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.8282626Z ##[group]Initializing the repository
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.8292307Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.9331123Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git/
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:09.9390467Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0159282Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0161266Z ##[group]Disabling automatic garbage collection
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0170775Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0589003Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0590957Z ##[group]Setting up auth
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0592553Z Removing SSH command configuration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.0604388Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:10.1152944Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:11.7433367Z Removing HTTP extra header
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:11.7446491Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:11.7906488Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:12.4109371Z Removing includeIf entries pointing to credentials config files
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:12.4119919Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:12.4528756Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.0639463Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.1086475Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git.path D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.1504105Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git/worktrees/*.path D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.2098504Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/orchestration/.git.path /github/runner_temp/git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.2524277Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/orchestration/.git/worktrees/*.path /github/runner_temp/git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.2932882Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.2933949Z ##[group]Fetching the repository
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:13.2948231Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9877450Z From https://github.com/Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9878667Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9879632Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9880497Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9881418Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9882548Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9883742Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9884982Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9886113Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9887346Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9888687Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9890170Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9891547Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9893361Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9894787Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9895950Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9896956Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9897553Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9901907Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9903407Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9904863Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9906151Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9907079Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9907982Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9908809Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9909760Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9910964Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9912000Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9912864Z  * [new branch]        codex/v1120-release-roadmap -> origin/codex/v1120-release-roadmap
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9913704Z  * [new branch]        codex/v1120-structured-editing -> origin/codex/v1120-structured-editing
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9914582Z  * [new branch]        codex/v1121-cross-library-copy -> origin/codex/v1121-cross-library-copy
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9915759Z  * [new branch]        codex/v1122-file-operation-history -> origin/codex/v1122-file-operation-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9916565Z  * [new branch]        codex/v1123-attachment-management -> origin/codex/v1123-attachment-management
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9917333Z  * [new branch]        codex/v1124-long-markdown -> origin/codex/v1124-long-markdown
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9918026Z  * [new branch]        codex/v1125-find-replace -> origin/codex/v1125-find-replace
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9918719Z  * [new branch]        codex/v1126-structured-history -> origin/codex/v1126-structured-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9919462Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9920133Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9920840Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9921928Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9922697Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9923377Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9924173Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9925849Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9926736Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9927581Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9928453Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9929362Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9930297Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9931184Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9932188Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9933548Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9934580Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9935606Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9936713Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9938007Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9938871Z  * [new branch]        main                    -> origin/main
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9939493Z  * [new tag]           v0.1.0                  -> v0.1.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9940068Z  * [new tag]           v0.2.0                  -> v0.2.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9940649Z  * [new tag]           v0.3.0                  -> v0.3.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9941180Z  * [new tag]           v0.3.1                  -> v0.3.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9941828Z  * [new tag]           v0.3.2                  -> v0.3.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9942448Z  * [new tag]           v0.3.3                  -> v0.3.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9943024Z  * [new tag]           v0.3.4                  -> v0.3.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9943550Z  * [new tag]           v0.4.4                  -> v0.4.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9944041Z  * [new tag]           v0.4.5                  -> v0.4.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9944629Z  * [new tag]           v0.4.6                  -> v0.4.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9945201Z  * [new tag]           v0.4.7                  -> v0.4.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9946078Z  * [new tag]           v0.4.8                  -> v0.4.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9946607Z  * [new tag]           v0.4.9                  -> v0.4.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9947160Z  * [new tag]           v0.5.0                  -> v0.5.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9947669Z  * [new tag]           v0.5.1                  -> v0.5.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9948187Z  * [new tag]           v0.5.2                  -> v0.5.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9948710Z  * [new tag]           v0.5.3                  -> v0.5.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9949217Z  * [new tag]           v0.5.4                  -> v0.5.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9949745Z  * [new tag]           v0.5.5                  -> v0.5.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9950237Z  * [new tag]           v0.5.6                  -> v0.5.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9950733Z  * [new tag]           v0.5.7                  -> v0.5.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9951262Z  * [new tag]           v0.5.8                  -> v0.5.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9951740Z  * [new tag]           v0.5.9                  -> v0.5.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9952236Z  * [new tag]           v0.6.0                  -> v0.6.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9952751Z  * [new tag]           v0.6.1                  -> v0.6.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9953272Z  * [new tag]           v0.6.2                  -> v0.6.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9953783Z  * [new tag]           v0.6.3                  -> v0.6.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9954333Z  * [new tag]           v0.6.4                  -> v0.6.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9954791Z  * [new tag]           v0.6.5                  -> v0.6.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9955131Z  * [new tag]           v0.6.6                  -> v0.6.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9955452Z  * [new tag]           v0.6.7                  -> v0.6.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9955772Z  * [new tag]           v0.6.8                  -> v0.6.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9956086Z  * [new tag]           v0.6.9                  -> v0.6.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9956409Z  * [new tag]           v1.0.0                  -> v1.0.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9956750Z  * [new tag]           v1.0.1                  -> v1.0.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9957181Z  * [new tag]           v1.0.10                 -> v1.0.10
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9958016Z  * [new tag]           v1.0.11                 -> v1.0.11
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9958501Z  * [new tag]           v1.0.12                 -> v1.0.12
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9958866Z  * [new tag]           v1.0.13                 -> v1.0.13
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9959442Z  * [new tag]           v1.0.14                 -> v1.0.14
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9959857Z  * [new tag]           v1.0.15                 -> v1.0.15
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9960196Z  * [new tag]           v1.0.16                 -> v1.0.16
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9960527Z  * [new tag]           v1.0.17                 -> v1.0.17
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9960867Z  * [new tag]           v1.0.18                 -> v1.0.18
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9961203Z  * [new tag]           v1.0.19                 -> v1.0.19
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9961528Z  * [new tag]           v1.0.2                  -> v1.0.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9961875Z  * [new tag]           v1.0.20                 -> v1.0.20
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9962217Z  * [new tag]           v1.0.21                 -> v1.0.21
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9962545Z  * [new tag]           v1.0.22                 -> v1.0.22
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9962870Z  * [new tag]           v1.0.23                 -> v1.0.23
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9963185Z  * [new tag]           v1.0.24                 -> v1.0.24
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9963529Z  * [new tag]           v1.0.25                 -> v1.0.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9963852Z  * [new tag]           v1.0.26                 -> v1.0.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9964173Z  * [new tag]           v1.0.3                  -> v1.0.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9964489Z  * [new tag]           v1.0.4                  -> v1.0.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9964816Z  * [new tag]           v1.0.5                  -> v1.0.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9965134Z  * [new tag]           v1.0.6                  -> v1.0.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9965449Z  * [new tag]           v1.0.7                  -> v1.0.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9966845Z  * [new tag]           v1.0.8                  -> v1.0.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9967180Z  * [new tag]           v1.0.9                  -> v1.0.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9967518Z  * [new tag]           v1.1.0                  -> v1.1.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9967845Z  * [new tag]           v1.1.1                  -> v1.1.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9968170Z  * [new tag]           v1.1.10                 -> v1.1.10
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9968515Z  * [new tag]           v1.1.11                 -> v1.1.11
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9968851Z  * [new tag]           v1.1.12                 -> v1.1.12
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9969181Z  * [new tag]           v1.1.13                 -> v1.1.13
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9969505Z  * [new tag]           v1.1.14                 -> v1.1.14
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9969831Z  * [new tag]           v1.1.15                 -> v1.1.15
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9970168Z  * [new tag]           v1.1.16                 -> v1.1.16
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9970485Z  * [new tag]           v1.1.17                 -> v1.1.17
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9970811Z  * [new tag]           v1.1.18                 -> v1.1.18
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9971128Z  * [new tag]           v1.1.19                 -> v1.1.19
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9971448Z  * [new tag]           v1.1.2                  -> v1.1.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9971770Z  * [new tag]           v1.1.20                 -> v1.1.20
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9972094Z  * [new tag]           v1.1.21                 -> v1.1.21
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9972414Z  * [new tag]           v1.1.22                 -> v1.1.22
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9972730Z  * [new tag]           v1.1.23                 -> v1.1.23
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9973064Z  * [new tag]           v1.1.24                 -> v1.1.24
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9973382Z  * [new tag]           v1.1.25                 -> v1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9973699Z  * [new tag]           v1.1.3                  -> v1.1.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9974018Z  * [new tag]           v1.1.4                  -> v1.1.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9974336Z  * [new tag]           v1.1.5                  -> v1.1.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9974785Z  * [new tag]           v1.1.6                  -> v1.1.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9975294Z  * [new tag]           v1.1.7                  -> v1.1.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9975653Z  * [new tag]           v1.1.8                  -> v1.1.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9975972Z  * [new tag]           v1.1.9                  -> v1.1.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:27.9978353Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/codex/v1126-structured-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.0627012Z   origin/codex/v1126-structured-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.0690852Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/codex/v1126-structured-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.1143871Z da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.1187864Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.1188470Z ##[group]Determining the checkout info
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.1190350Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.1203320Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.1751635Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.2192999Z ##[group]Checking out the ref
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:28.2203472Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B codex/v1126-structured-history refs/remotes/origin/codex/v1126-structured-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:29.4450723Z Updating files:   7% (1325/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:29.6026585Z Updating files:   8% (1493/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:29.7274305Z Updating files:   9% (1679/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:29.8784780Z Updating files:  10% (1866/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.1381092Z Updating files:  11% (2053/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.2598746Z Updating files:  12% (2239/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.3063086Z Updating files:  13% (2426/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.4188951Z Updating files:  13% (2479/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.5766964Z Updating files:  14% (2612/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.7206147Z Updating files:  15% (2799/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.8511312Z Updating files:  16% (2985/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:30.9795483Z Updating files:  17% (3172/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.1123077Z Updating files:  18% (3358/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.2279402Z Updating files:  19% (3545/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.3060200Z Updating files:  20% (3731/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.4252871Z Updating files:  20% (3847/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.5505592Z Updating files:  21% (3918/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.6758100Z Updating files:  22% (4105/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.7983148Z Updating files:  23% (4291/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:31.9026203Z Updating files:  24% (4478/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.0112159Z Updating files:  25% (4664/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.1429026Z Updating files:  26% (4851/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.3137054Z Updating files:  27% (5037/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.3388410Z Updating files:  27% (5187/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.4356371Z Updating files:  28% (5224/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.5535360Z Updating files:  29% (5410/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.7059606Z Updating files:  30% (5597/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.7804921Z Updating files:  31% (5784/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:32.9668984Z Updating files:  32% (5970/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.0420388Z Updating files:  33% (6157/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.1703667Z Updating files:  34% (6343/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.2926060Z Updating files:  35% (6530/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.3150031Z Updating files:  36% (6716/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.4176408Z Updating files:  36% (6762/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.5634169Z Updating files:  37% (6903/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.7351065Z Updating files:  38% (7089/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:33.9915214Z Updating files:  39% (7276/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.1481678Z Updating files:  40% (7462/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.3689622Z Updating files:  41% (7649/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.3844971Z Updating files:  41% (7814/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.5202673Z Updating files:  42% (7836/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.6529203Z Updating files:  43% (8022/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.7927208Z Updating files:  44% (8209/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:34.9245237Z Updating files:  45% (8395/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.0541586Z Updating files:  46% (8582/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.1686505Z Updating files:  47% (8768/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.2966191Z Updating files:  48% (8955/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.3190381Z Updating files:  49% (9141/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.4036928Z Updating files:  49% (9175/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.5243048Z Updating files:  50% (9328/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.6453352Z Updating files:  51% (9515/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.7658077Z Updating files:  52% (9701/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:35.8814608Z Updating files:  53% (9888/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.0032819Z Updating files:  54% (10074/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.1398102Z Updating files:  55% (10261/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.2451454Z Updating files:  56% (10447/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.3340017Z Updating files:  57% (10634/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.3565724Z Updating files:  57% (10787/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.4747855Z Updating files:  58% (10820/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.6037454Z Updating files:  59% (11007/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.7247976Z Updating files:  60% (11193/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.8444035Z Updating files:  61% (11380/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:36.9676498Z Updating files:  62% (11567/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.1212222Z Updating files:  63% (11753/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.2575244Z Updating files:  64% (11940/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.3344686Z Updating files:  65% (12126/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.3638724Z Updating files:  65% (12241/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.5322167Z Updating files:  66% (12313/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.7711360Z Updating files:  67% (12499/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:37.9392576Z Updating files:  68% (12686/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.0389979Z Updating files:  69% (12872/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.1746649Z Updating files:  70% (13059/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.2780791Z Updating files:  71% (13246/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.3362689Z Updating files:  72% (13432/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.3691343Z Updating files:  72% (13544/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.4708900Z Updating files:  73% (13619/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.5674625Z Updating files:  74% (13805/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.6792549Z Updating files:  75% (13992/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.8213248Z Updating files:  76% (14178/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:38.9536811Z Updating files:  77% (14365/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.0561540Z Updating files:  78% (14551/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.1746485Z Updating files:  79% (14738/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.3388725Z Updating files:  80% (14924/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.3568817Z Updating files:  80% (15071/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.4914772Z Updating files:  81% (15111/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.6267645Z Updating files:  82% (15298/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.7734992Z Updating files:  83% (15484/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:39.8969535Z Updating files:  84% (15671/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.0107250Z Updating files:  85% (15857/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.0906282Z Updating files:  86% (16044/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.1971570Z Updating files:  87% (16230/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.3522285Z Updating files:  88% (16417/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.6707681Z Updating files:  88% (16566/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.7287682Z Updating files:  89% (16603/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.7781240Z Updating files:  90% (16790/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.8302779Z Updating files:  91% (16977/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.8994836Z Updating files:  92% (17163/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:40.9920295Z Updating files:  93% (17350/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.0601402Z Updating files:  94% (17536/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.1216202Z Updating files:  95% (17723/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.1698104Z Updating files:  96% (17909/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.3588762Z Updating files:  97% (18096/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.3881750Z Updating files:  97% (18206/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.4570942Z Updating files:  98% (18282/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.5167962Z Updating files:  99% (18469/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.5168832Z Updating files: 100% (18655/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.5169367Z Updating files: 100% (18655/18655), done.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.5557001Z Switched to a new branch 'codex/v1126-structured-history'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.5574566Z branch 'codex/v1126-structured-history' set up to track 'origin/codex/v1126-structured-history'.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.6857740Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.7382395Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.7787686Z da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8332939Z ##[group]Run if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid frozen candidate commit or release versions' }
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8335918Z ^[[36;1mif ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid frozen candidate commit or release versions' }^[[0m
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8337968Z ^[[36;1m"CANDIDATE_COMMIT=$env:CANDIDATE_COMMIT" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8970538Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8971471Z env:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8971865Z   CARGO_TERM_COLOR: always
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8972371Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8972940Z   LONGEDIT_R5I_DISPOSABLE: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8973539Z   PREVIOUS_VERSION: 1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8974028Z   RELEASE_VERSION: 1.1.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8974653Z   CANDIDATE_COMMIT: da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:41.8975337Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0340023Z ##[group]Run actions/checkout@v6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0340442Z with:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0340763Z   ref: da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0341203Z   fetch-depth: 0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0341812Z   path: current-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0342155Z   repository: Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0346530Z   token: ***
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0346817Z   ssh-strict: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0347091Z   ssh-user: git
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0347404Z   persist-credentials: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0347726Z   clean: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0348012Z   sparse-checkout-cone-mode: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0348364Z   fetch-tags: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0348645Z   show-progress: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0348936Z   lfs: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0349203Z   submodules: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0349492Z   set-safe-directory: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0349832Z   allow-unsafe-pr-checkout: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0350168Z env:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0350514Z   CARGO_TERM_COLOR: always
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0350841Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0351214Z   LONGEDIT_R5I_DISPOSABLE: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0351527Z   PREVIOUS_VERSION: 1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0351837Z   RELEASE_VERSION: 1.1.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0352243Z   CANDIDATE_COMMIT: da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.0352693Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.1787746Z Syncing repository: Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.1797514Z ##[group]Getting Git version info
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.1798895Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader\current-product'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.2833215Z [command]"C:\Program Files\Git\bin\git.exe" version
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3235849Z git version 2.56.0.windows.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3294300Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3322501Z Temporarily overriding HOME='D:\a\_temp\fca681a6-21af-4f8b-891b-e7f4d9067752' before making global git config changes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3324228Z Adding repository directory to the temporary git global config as a safe directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3337360Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader\current-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3922485Z ##[group]Determining repository object format
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3926223Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3926876Z ##[group]Initializing the repository
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.3938505Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader\current-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.4600012Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git/
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.4662014Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5108717Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5109267Z ##[group]Disabling automatic garbage collection
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5120031Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5530869Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5531291Z ##[group]Setting up auth
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5533433Z Removing SSH command configuration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5546814Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:45.5966219Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:46.2167090Z Removing HTTP extra header
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:46.2181022Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:46.2651375Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:46.8968553Z Removing includeIf entries pointing to credentials config files
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:46.8986266Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:46.9420260Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.5790538Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.6230517Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git.path D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.6690747Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git/worktrees/*.path D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.7190092Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/current-product/.git.path /github/runner_temp/git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.7631918Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/current-product/.git/worktrees/*.path /github/runner_temp/git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.8033205Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.8033759Z ##[group]Fetching the repository
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:37:47.8052997Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5347689Z From https://github.com/Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5348650Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5349443Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5350279Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5351163Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5352459Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5353619Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5354576Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5355611Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5356625Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5357406Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5358432Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5359229Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5359903Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5360627Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5361292Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5361843Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5363797Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5364489Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5365188Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5366887Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5368257Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5369627Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5370928Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5372209Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5373631Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5375195Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5376756Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5378117Z  * [new branch]        codex/v1120-release-roadmap -> origin/codex/v1120-release-roadmap
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5379433Z  * [new branch]        codex/v1120-structured-editing -> origin/codex/v1120-structured-editing
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5380699Z  * [new branch]        codex/v1121-cross-library-copy -> origin/codex/v1121-cross-library-copy
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5381842Z  * [new branch]        codex/v1122-file-operation-history -> origin/codex/v1122-file-operation-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5383344Z  * [new branch]        codex/v1123-attachment-management -> origin/codex/v1123-attachment-management
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5384419Z  * [new branch]        codex/v1124-long-markdown -> origin/codex/v1124-long-markdown
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5385330Z  * [new branch]        codex/v1125-find-replace -> origin/codex/v1125-find-replace
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5386320Z  * [new branch]        codex/v1126-structured-history -> origin/codex/v1126-structured-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5387372Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5388321Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5389313Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5390328Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5391239Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5392109Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5393066Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5393960Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5394721Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5395506Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5396366Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5397284Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5398088Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5398922Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5400239Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5401287Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5402209Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5403663Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5404741Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5406188Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5407210Z  * [new branch]        main                    -> origin/main
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5407873Z  * [new tag]           v0.1.0                  -> v0.1.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5408480Z  * [new tag]           v0.2.0                  -> v0.2.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5409077Z  * [new tag]           v0.3.0                  -> v0.3.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5409672Z  * [new tag]           v0.3.1                  -> v0.3.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5410204Z  * [new tag]           v0.3.2                  -> v0.3.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5410681Z  * [new tag]           v0.3.3                  -> v0.3.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5411176Z  * [new tag]           v0.3.4                  -> v0.3.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5411638Z  * [new tag]           v0.4.4                  -> v0.4.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5412126Z  * [new tag]           v0.4.5                  -> v0.4.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5412626Z  * [new tag]           v0.4.6                  -> v0.4.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5413100Z  * [new tag]           v0.4.7                  -> v0.4.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5413607Z  * [new tag]           v0.4.8                  -> v0.4.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5414109Z  * [new tag]           v0.4.9                  -> v0.4.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5414626Z  * [new tag]           v0.5.0                  -> v0.5.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5415158Z  * [new tag]           v0.5.1                  -> v0.5.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5415646Z  * [new tag]           v0.5.2                  -> v0.5.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5416128Z  * [new tag]           v0.5.3                  -> v0.5.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5416612Z  * [new tag]           v0.5.4                  -> v0.5.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5417067Z  * [new tag]           v0.5.5                  -> v0.5.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5417571Z  * [new tag]           v0.5.6                  -> v0.5.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5418085Z  * [new tag]           v0.5.7                  -> v0.5.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5418590Z  * [new tag]           v0.5.8                  -> v0.5.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5419089Z  * [new tag]           v0.5.9                  -> v0.5.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5419655Z  * [new tag]           v0.6.0                  -> v0.6.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5420209Z  * [new tag]           v0.6.1                  -> v0.6.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5420714Z  * [new tag]           v0.6.2                  -> v0.6.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5421193Z  * [new tag]           v0.6.3                  -> v0.6.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5421693Z  * [new tag]           v0.6.4                  -> v0.6.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5422199Z  * [new tag]           v0.6.5                  -> v0.6.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5422701Z  * [new tag]           v0.6.6                  -> v0.6.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5423514Z  * [new tag]           v0.6.7                  -> v0.6.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5424048Z  * [new tag]           v0.6.8                  -> v0.6.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5424568Z  * [new tag]           v0.6.9                  -> v0.6.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5425081Z  * [new tag]           v1.0.0                  -> v1.0.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5425591Z  * [new tag]           v1.0.1                  -> v1.0.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5426100Z  * [new tag]           v1.0.10                 -> v1.0.10
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5426603Z  * [new tag]           v1.0.11                 -> v1.0.11
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5427126Z  * [new tag]           v1.0.12                 -> v1.0.12
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5427821Z  * [new tag]           v1.0.13                 -> v1.0.13
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5428329Z  * [new tag]           v1.0.14                 -> v1.0.14
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5428883Z  * [new tag]           v1.0.15                 -> v1.0.15
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5429407Z  * [new tag]           v1.0.16                 -> v1.0.16
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5430156Z  * [new tag]           v1.0.17                 -> v1.0.17
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5430488Z  * [new tag]           v1.0.18                 -> v1.0.18
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5430809Z  * [new tag]           v1.0.19                 -> v1.0.19
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5431121Z  * [new tag]           v1.0.2                  -> v1.0.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5431415Z  * [new tag]           v1.0.20                 -> v1.0.20
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5431701Z  * [new tag]           v1.0.21                 -> v1.0.21
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5431988Z  * [new tag]           v1.0.22                 -> v1.0.22
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5432276Z  * [new tag]           v1.0.23                 -> v1.0.23
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5432683Z  * [new tag]           v1.0.24                 -> v1.0.24
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5433177Z  * [new tag]           v1.0.25                 -> v1.0.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5433639Z  * [new tag]           v1.0.26                 -> v1.0.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5433964Z  * [new tag]           v1.0.3                  -> v1.0.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5434260Z  * [new tag]           v1.0.4                  -> v1.0.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5434544Z  * [new tag]           v1.0.5                  -> v1.0.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5434829Z  * [new tag]           v1.0.6                  -> v1.0.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5435110Z  * [new tag]           v1.0.7                  -> v1.0.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5435391Z  * [new tag]           v1.0.8                  -> v1.0.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5435675Z  * [new tag]           v1.0.9                  -> v1.0.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5435960Z  * [new tag]           v1.1.0                  -> v1.1.0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5436245Z  * [new tag]           v1.1.1                  -> v1.1.1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5436544Z  * [new tag]           v1.1.10                 -> v1.1.10
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5436834Z  * [new tag]           v1.1.11                 -> v1.1.11
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5437124Z  * [new tag]           v1.1.12                 -> v1.1.12
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5437419Z  * [new tag]           v1.1.13                 -> v1.1.13
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5437710Z  * [new tag]           v1.1.14                 -> v1.1.14
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5437989Z  * [new tag]           v1.1.15                 -> v1.1.15
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5438268Z  * [new tag]           v1.1.16                 -> v1.1.16
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5438546Z  * [new tag]           v1.1.17                 -> v1.1.17
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5438826Z  * [new tag]           v1.1.18                 -> v1.1.18
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5439115Z  * [new tag]           v1.1.19                 -> v1.1.19
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5439494Z  * [new tag]           v1.1.2                  -> v1.1.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5439786Z  * [new tag]           v1.1.20                 -> v1.1.20
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5440084Z  * [new tag]           v1.1.21                 -> v1.1.21
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5440384Z  * [new tag]           v1.1.22                 -> v1.1.22
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5440675Z  * [new tag]           v1.1.23                 -> v1.1.23
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5440967Z  * [new tag]           v1.1.24                 -> v1.1.24
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5441267Z  * [new tag]           v1.1.25                 -> v1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5441565Z  * [new tag]           v1.1.3                  -> v1.1.3
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5441867Z  * [new tag]           v1.1.4                  -> v1.1.4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5442164Z  * [new tag]           v1.1.5                  -> v1.1.5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5442459Z  * [new tag]           v1.1.6                  -> v1.1.6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5442752Z  * [new tag]           v1.1.7                  -> v1.1.7
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5443335Z  * [new tag]           v1.1.8                  -> v1.1.8
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5444528Z  * [new tag]           v1.1.9                  -> v1.1.9
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5448484Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse --verify --quiet da289b3d72863ae01bad6cb6ad4ebf9d59175dc5^{object}
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5832861Z da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5877077Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5877538Z ##[group]Determining the checkout info
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5879738Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.5890859Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.6374038Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.6833812Z ##[group]Checking out the ref
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:04.6848559Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:05.8088612Z Updating files:   6% (1302/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:05.9693389Z Updating files:   7% (1306/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:06.1301799Z Updating files:   8% (1493/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:06.2555042Z Updating files:   9% (1679/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:06.4053723Z Updating files:  10% (1866/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:06.6354538Z Updating files:  11% (2053/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:06.7718695Z Updating files:  12% (2239/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:06.8433967Z Updating files:  12% (2327/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.0138874Z Updating files:  13% (2426/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.2522258Z Updating files:  14% (2612/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.3981485Z Updating files:  15% (2799/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.5231286Z Updating files:  16% (2985/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.6450305Z Updating files:  17% (3172/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.7739440Z Updating files:  18% (3358/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.7852842Z Updating files:  19% (3545/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:07.8982348Z Updating files:  19% (3561/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.0157639Z Updating files:  20% (3731/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.1407725Z Updating files:  21% (3918/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.2550921Z Updating files:  22% (4105/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.3742857Z Updating files:  23% (4291/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.6469704Z Updating files:  24% (4478/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.7570394Z Updating files:  25% (4664/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.8030142Z Updating files:  26% (4851/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:08.8990278Z Updating files:  26% (4891/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.0237129Z Updating files:  27% (5037/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.1207847Z Updating files:  28% (5224/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.2908279Z Updating files:  29% (5410/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.4653386Z Updating files:  30% (5597/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.5362661Z Updating files:  31% (5784/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.5987159Z Updating files:  32% (5970/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.6691292Z Updating files:  33% (6157/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.7975208Z Updating files:  34% (6343/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:09.8109885Z Updating files:  35% (6530/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.0690742Z Updating files:  35% (6549/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.1994557Z Updating files:  36% (6716/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.3483208Z Updating files:  37% (6903/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.5138618Z Updating files:  38% (7089/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.7596502Z Updating files:  39% (7276/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.8127214Z Updating files:  40% (7462/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:10.9090745Z Updating files:  40% (7542/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.0497286Z Updating files:  41% (7649/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.2996877Z Updating files:  42% (7836/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.4333788Z Updating files:  43% (8022/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.5644926Z Updating files:  44% (8209/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.6876719Z Updating files:  45% (8395/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.8118571Z Updating files:  46% (8582/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.8180698Z Updating files:  46% (8760/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:11.9254743Z Updating files:  47% (8768/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.0589019Z Updating files:  48% (8955/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.1725846Z Updating files:  49% (9141/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.2914006Z Updating files:  50% (9328/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.4048764Z Updating files:  51% (9515/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.5140338Z Updating files:  52% (9701/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.6299478Z Updating files:  53% (9888/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.7438293Z Updating files:  54% (10074/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.8213359Z Updating files:  55% (10261/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.8808456Z Updating files:  55% (10372/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:12.9840747Z Updating files:  56% (10447/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.0926454Z Updating files:  57% (10634/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.2175308Z Updating files:  58% (10820/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.3383402Z Updating files:  59% (11007/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.4520541Z Updating files:  60% (11193/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.5683446Z Updating files:  61% (11380/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.6921212Z Updating files:  62% (11567/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.8227573Z Updating files:  63% (11753/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.8261713Z Updating files:  63% (11936/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:13.9712345Z Updating files:  64% (11940/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.0959707Z Updating files:  65% (12126/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.2158930Z Updating files:  66% (12313/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.3351038Z Updating files:  67% (12499/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.4380904Z Updating files:  68% (12686/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.5368686Z Updating files:  69% (12872/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.6637872Z Updating files:  70% (13059/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.7707728Z Updating files:  71% (13246/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.8245207Z Updating files:  72% (13432/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.8715492Z Updating files:  72% (13531/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:14.9761723Z Updating files:  73% (13619/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.0865538Z Updating files:  74% (13805/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.1988288Z Updating files:  75% (13992/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.3305283Z Updating files:  76% (14178/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.4646223Z Updating files:  77% (14365/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.5492139Z Updating files:  78% (14551/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.6628749Z Updating files:  79% (14738/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.8281889Z Updating files:  80% (14924/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.8519396Z Updating files:  80% (15069/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:15.9863290Z Updating files:  81% (15111/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.1535573Z Updating files:  82% (15298/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.2646448Z Updating files:  83% (15484/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.3800451Z Updating files:  84% (15671/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.4874130Z Updating files:  85% (15857/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.5644365Z Updating files:  86% (16044/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.6491077Z Updating files:  87% (16230/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:16.8624466Z Updating files:  88% (16417/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.1549910Z Updating files:  88% (16568/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.2107369Z Updating files:  89% (16603/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.2588415Z Updating files:  90% (16790/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.3057086Z Updating files:  91% (16977/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.3476603Z Updating files:  92% (17163/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.3948545Z Updating files:  93% (17350/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.4421808Z Updating files:  94% (17536/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.4905475Z Updating files:  95% (17723/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.5356355Z Updating files:  96% (17909/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.7552777Z Updating files:  97% (18096/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.8263588Z Updating files:  98% (18282/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.8425347Z Updating files:  99% (18469/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.8898066Z Updating files:  99% (18526/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.8898938Z Updating files: 100% (18655/18655)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.8899556Z Updating files: 100% (18655/18655), done.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9286572Z Note: switching to 'da289b3d72863ae01bad6cb6ad4ebf9d59175dc5'.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9287267Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9287778Z You are in 'detached HEAD' state. You can look around, make experimental
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9288924Z changes and commit them, and you can discard any commits you make in this
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9290472Z state without impacting any branches by switching back to a branch.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9291216Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9291641Z If you want to create a new branch to retain commits you create, you may
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9292661Z do so (now or later) by using -c with the switch command. Example:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9293576Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9293788Z   git switch -c <new-branch-name>
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9294150Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9294363Z Or undo this operation with:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9294708Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9294904Z   git switch -
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9295144Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9295608Z Turn off this advice by setting config variable advice.detachedHead to false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9296259Z 
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:17.9297053Z HEAD is now at da289b3d fix: keep context actions inside short windows and separate fixed builds from installation
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.0415262Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.0921484Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.1340643Z da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.1995023Z ##[group]Run actions/checkout@v6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.1995413Z with:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.1995645Z   ref: v1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.1995898Z   path: previous-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.1996235Z   repository: Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2000045Z   token: ***
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2000283Z   ssh-strict: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2000530Z   ssh-user: git
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2000773Z   persist-credentials: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2001154Z   clean: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2001513Z   sparse-checkout-cone-mode: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2001829Z   fetch-depth: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2002083Z   fetch-tags: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2002353Z   show-progress: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2002611Z   lfs: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2002836Z   submodules: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2003082Z   set-safe-directory: true
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2003375Z   allow-unsafe-pr-checkout: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2003677Z env:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2003943Z   CARGO_TERM_COLOR: always
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2004233Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2004563Z   LONGEDIT_R5I_DISPOSABLE: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2004844Z   PREVIOUS_VERSION: 1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2005123Z   RELEASE_VERSION: 1.1.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2005484Z   CANDIDATE_COMMIT: da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.2005889Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.3343727Z Syncing repository: Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.3353790Z ##[group]Getting Git version info
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.3354642Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader\previous-product'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.4322998Z [command]"C:\Program Files\Git\bin\git.exe" version
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.4716716Z git version 2.56.0.windows.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.4771993Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.4793927Z Temporarily overriding HOME='D:\a\_temp\e295b8b5-459d-4b94-b701-aaade9ad0d80' before making global git config changes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.4795147Z Adding repository directory to the temporary git global config as a safe directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.4806355Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader\previous-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.5235934Z ##[group]Determining repository object format
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.8462640Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.8464031Z ##[group]Initializing the repository
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.8476047Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader\previous-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.9109438Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git/
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.9172345Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.9625693Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.9626291Z ##[group]Disabling automatic garbage collection
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:18.9640833Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.0083812Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.0084386Z ##[group]Setting up auth
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.0086788Z Removing SSH command configuration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.0102336Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.0557464Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.6877718Z Removing HTTP extra header
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.6894291Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:19.7352757Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:20.4012380Z Removing includeIf entries pointing to credentials config files
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:20.4027186Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:20.4464573Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.1046370Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.1595111Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git.path D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.2111688Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git/worktrees/*.path D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.2648860Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/previous-product/.git.path /github/runner_temp/git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.3185111Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/previous-product/.git/worktrees/*.path /github/runner_temp/git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.3716401Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.3717098Z ##[group]Fetching the repository
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:38:21.3739771Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +refs/heads/v1.1.25*:refs/remotes/origin/v1.1.25* +refs/tags/v1.1.25*:refs/tags/v1.1.25*
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.3856689Z ##[error]The operation was canceled.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5703120Z ##[group]Run actions/upload-artifact@v4
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5705231Z with:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5705743Z   name: community-release-candidate-lifecycle-39440857476
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5706745Z   if-no-files-found: error
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5707657Z   retention-days: 14
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5709286Z   path: community-release-output
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	current-product/src-tauri/target/release/bundle/msi/*_1.1.26_x64_zh-CN.msi
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	current-product/src-tauri/target/release/bundle/nsis/*_1.1.26_x64-setup.exe
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	previous-official/*_1.1.25_x64-setup.exe
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5711513Z   compression-level: 6
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5711959Z   overwrite: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5712388Z   include-hidden-files: false
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5712843Z env:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5713191Z   CARGO_TERM_COLOR: always
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5713653Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5714188Z   LONGEDIT_R5I_DISPOSABLE: 1
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5714650Z   PREVIOUS_VERSION: 1.1.25
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5715572Z   RELEASE_VERSION: 1.1.26
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5716114Z   CANDIDATE_COMMIT: da289b3d72863ae01bad6cb6ad4ebf9d59175dc5
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:49:59.5716746Z ##[endgroup]
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.0291332Z (node:7108) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.0292183Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.0360158Z Multiple search paths detected. Calculating the least common ancestor of all paths
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.0365028Z The least common ancestor is D:\a\Long_MarkDownReader\Long_MarkDownReader. This will be the root directory of the artifact
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.0378363Z ##[error]No files were found with the provided path: community-release-output
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	current-product/src-tauri/target/release/bundle/msi/*_1.1.26_x64_zh-CN.msi
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	current-product/src-tauri/target/release/bundle/nsis/*_1.1.26_x64-setup.exe
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	previous-official/*_1.1.25_x64-setup.exe. No artifacts will be uploaded.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.2728565Z Post job cleanup.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7048548Z [command]"C:\Program Files\Git\bin\git.exe" version
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7406984Z git version 2.56.0.windows.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7474095Z Temporarily overriding HOME='D:\a\_temp\249c044a-862d-4d94-a119-74b8bf1f59e9' before making global git config changes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7475214Z Adding repository directory to the temporary git global config as a safe directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7484744Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader\previous-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7869442Z Removing SSH command configuration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.7880697Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:00.8275741Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:01.3790843Z Removing HTTP extra header
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:01.3801559Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:01.4186254Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:01.9721215Z Removing includeIf entries pointing to credentials config files
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:01.9733939Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0072229Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0074670Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0075585Z includeif.gitdir:/github/workspace/previous-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0076331Z includeif.gitdir:/github/workspace/previous-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0114747Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0448099Z D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0493322Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git.path D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.0875072Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.1211765Z D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.1254303Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/previous-product/.git/worktrees/*.path D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.1631117Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/previous-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.2012972Z /github/runner_temp/git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.2054120Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/previous-product/.git.path /github/runner_temp/git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.2428440Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/previous-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.2764887Z /github/runner_temp/git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.2802575Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/previous-product/.git/worktrees/*.path /github/runner_temp/git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.3178713Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:02.8581842Z Removing credentials config 'D:\a\_temp\git-credentials-549f2b4f-27be-4022-912e-f0ecb1063691.config'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.0513805Z Post job cleanup.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5015803Z [command]"C:\Program Files\Git\bin\git.exe" version
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5369901Z git version 2.56.0.windows.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5438457Z Temporarily overriding HOME='D:\a\_temp\eabcc987-a608-4177-a0a6-1028eb6dd611' before making global git config changes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5439670Z Adding repository directory to the temporary git global config as a safe directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5449403Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader\current-product
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5827665Z Removing SSH command configuration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.5838420Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:03.6228871Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.1751863Z Removing HTTP extra header
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.1764045Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.2154149Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.7826742Z Removing includeIf entries pointing to credentials config files
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.7839459Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8179840Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8181315Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8182584Z includeif.gitdir:/github/workspace/current-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8183556Z includeif.gitdir:/github/workspace/current-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8224265Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8561105Z D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8605909Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git.path D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.8988366Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.9326022Z D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.9366309Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/current-product/.git/worktrees/*.path D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:04.9795346Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/current-product/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.0139263Z /github/runner_temp/git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.0178345Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/current-product/.git.path /github/runner_temp/git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.0555966Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/current-product/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.0888351Z /github/runner_temp/git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.0924292Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/current-product/.git/worktrees/*.path /github/runner_temp/git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.1314714Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.7111458Z Removing credentials config 'D:\a\_temp\git-credentials-d09aafac-80e5-440d-ac31-ec4091410fc2.config'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:05.9209569Z Post job cleanup.
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.3639838Z [command]"C:\Program Files\Git\bin\git.exe" version
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.3994881Z git version 2.56.0.windows.2
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.4063629Z Temporarily overriding HOME='D:\a\_temp\d5255fdb-3aa9-4c11-bb55-d9e2863109d3' before making global git config changes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.4065143Z Adding repository directory to the temporary git global config as a safe directory
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.4074007Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader\orchestration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.4456798Z Removing SSH command configuration
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.4468794Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:06.4879860Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.0660951Z Removing HTTP extra header
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.0671084Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.1052399Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.6651815Z Removing includeIf entries pointing to credentials config files
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.6664197Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7007480Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7008881Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7010439Z includeif.gitdir:/github/workspace/orchestration/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7011176Z includeif.gitdir:/github/workspace/orchestration/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7048420Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7378439Z D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7423896Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git.path D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.7807744Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.8153222Z D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.8200601Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/orchestration/.git/worktrees/*.path D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.8629783Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/orchestration/.git.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.8970484Z /github/runner_temp/git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.9011876Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/orchestration/.git.path /github/runner_temp/git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.9389513Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/orchestration/.git/worktrees/*.path
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.9726283Z /github/runner_temp/git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:07.9762463Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/orchestration/.git/worktrees/*.path /github/runner_temp/git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:08.0145467Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:08.6167879Z Removing credentials config 'D:\a\_temp\git-credentials-f8a40f86-6bee-4b1c-b603-113a1b9e236c.config'
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:08.6541252Z Cleaning up orphan processes
+Build MSI/NSIS and exercise official upgrade	UNKNOWN STEP	2026-10-20T14:50:08.7360189Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

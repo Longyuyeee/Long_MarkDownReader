@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 // Current release evidence is checked alongside every retained predecessor.
-import './test-v1126-installed-release.mjs'
 import { execFileSync } from 'node:child_process'
+execFileSync(process.execPath,['--test','scripts/test-v1126-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--experimental-strip-types','--test','scripts/test-v1125-find-replace.mjs','scripts/test-v1125-find-adapter.mjs','scripts/test-v1125-shortcut-lifecycle.mjs','scripts/test-v1125-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--experimental-strip-types','--test','scripts/test-v1124-markdown-sections.mjs','scripts/test-v1124-installed-release.mjs'],{stdio:'inherit'})
 execFileSync(process.execPath,['--test','scripts/test-v1123-installed-release.mjs'],{stdio:'inherit'})
