@@ -885,8 +885,7 @@ fn search_sources(
         budget.check_time()?;
         let path = root.join(source.path.replace('/', std::path::MAIN_SEPARATOR_STR));
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.')
-            || name.ends_with(".assets")
+        if crate::services::library_visibility::hidden_name(&name)
             || name.ends_with(".annotations.json")
             || name.ends_with(".ocr.json")
             || is_sensitive_path(&path)

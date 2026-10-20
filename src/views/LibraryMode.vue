@@ -350,9 +350,10 @@
           <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template>AI 辅助</n-button>
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
           <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit || currentFileReloadBusy" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
-          <n-popover trigger="click" placement="bottom-end" class="document-actions-popover">
+          <n-popover v-model:show="documentActionsVisible" trigger="click" placement="bottom-end" class="document-actions-popover">
             <template #trigger><n-button data-testid="library-document-menu" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
             <div class="document-menu-content" aria-label="文档操作菜单">
+        <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
         <n-button v-if="activeIsMarkdown" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="saveCurrentAsTemplate"><template #icon><n-icon :component="FileIcon" /></template>保存为模板…</n-button>
         <n-dropdown
           v-if="activeTabId"
@@ -683,6 +684,7 @@
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :libraries="store.libraries" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" :after-cross-copy="applyCrossLibraryCopy" />
+    <AttachmentManagerDialog ref="attachmentManager" :library-root="store.libraryPath" :context-key="store.libraryPath + ':' + activeTabId" :capture-draft="captureAttachmentDraft" :apply-draft="applyAttachmentDraft" @open="path => handleNodeSelect([path])" />
     <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
     <WritingDeliveryDialog v-if="writingDelivery" v-bind="writingDelivery" @close="writingDelivery=null" />
@@ -731,6 +733,8 @@ import HistoryVersionList from '../components/HistoryVersionList.vue'
 import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
+import AttachmentManagerDialog from '../components/AttachmentManagerDialog.vue'
+import { Paperclip as AttachmentIcon } from 'lucide-vue-next'
 import ExternalImportDialog from '../components/ExternalImportDialog.vue'
 import { searchQueryNeedle } from '../utils/searchQuery'
 import NoteTemplateManager from '../components/NoteTemplateManager.vue'
@@ -1109,6 +1113,8 @@ const searchReferencedNote = (target: string) => {
   activeSidebarTab.value = 'files'
 }
 const editorLoading = ref(false)
+const editorModeChangeBusy = ref(false)
+const documentActionsVisible = ref(false)
 const wordCount = ref(0)
 const cursorLine = ref(1)
 const cursorCol = ref(1)
@@ -2603,6 +2609,53 @@ const refreshNode = async (path: string) => {
 
 const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
+const attachmentManager = ref<InstanceType<typeof AttachmentManagerDialog> | null>(null)
+let attachmentOwner: { root:string; path:string; editor:any; tab:TabInfo; generation:number } | null = null
+const pendingAttachment = ref<{root:string;path:string}|null>(null)
+const captureAttachmentDraft = (path:string):string|null => {
+  if (!/\.(md|markdown)$/i.test(path)) return null
+  const owner=attachmentOwner
+  if (!owner || owner.root!==store.libraryPath || !sameLibrary(owner.path,path) || activeTabId.value!==owner.path
+    || owner.editor!==vditor || owner.generation!==editorLoadGeneration || !tabs.value.includes(owner.tab)
+    || !isVditorReady || lastLoadedPath!==owner.path || editorLoading.value || editorModeChangeBusy.value
+    || suppressEditorInput || document.body.inert || fileOperationBusy.value || currentFileReloadBusy.value || hasPendingMainTextSave(owner.path) || owner.tab.textReadOnlyReason)
+    throw Error('文档正在变化或保存，请等加载完成后重新打开附件管理；草稿已保留。')
+  return owner.editor.getValue()
+}
+const applyAttachmentDraft = (path:string,expected:string,content:string) => {
+  if(captureAttachmentDraft(path)!==expected) throw Error('正文已有新的修改，请刷新附件列表后再更换引用。')
+  const owner=attachmentOwner!
+  const scroller=editorScroller(),position=scroller?{top:scroller.scrollTop,left:scroller.scrollLeft}:null
+  recordWindowDraftActivity()
+  owner.editor.vditor.undo.addToUndoStack(owner.editor.vditor)
+  owner.editor.setValue(content)
+  owner.editor.vditor.undo.addToUndoStack(owner.editor.vditor)
+  store.updateTabContent(owner.path,owner.editor.getValue());owner.tab.isDirty=true
+  if(position)void nextTick(()=>{if(attachmentOwner===owner&&vditor===owner.editor&&activeTabId.value===owner.path)editorScroller()?.scrollTo({...position,behavior:'auto'})})
+  wordCount.value=content.length
+  void fixEditorImages()
+}
+const revealPendingAttachments = () => {
+  const pending=pendingAttachment.value
+  if(!pending)return
+  if(pending.root!==store.libraryPath){pendingAttachment.value=null;return}
+  if(!activeTabId.value || !sameLibrary(activeTabId.value,pending.path) || editorLoading.value || editorModeChangeBusy.value || !isVditorReady || lastLoadedPath!==activeTabId.value)return
+  const tab=tabs.value.find(t=>t.path===activeTabId.value)
+  if(!tab)return
+  pendingAttachment.value=null
+  attachmentOwner={root:pending.root,path:tab.path,editor:vditor,tab,generation:editorLoadGeneration}
+  void attachmentManager.value?.open(tab.path)
+}
+const openAttachments = (path:string|null) => {
+  if(!path || fileOperationBusy.value)return
+  documentActionsVisible.value=false
+  snapshotWindowDrafts()
+  if(!/\.(md|markdown)$/i.test(path)){attachmentOwner=null;void attachmentManager.value?.open(path);return}
+  pendingAttachment.value={root:store.libraryPath,path}
+  if(!activeTabId.value || !sameLibrary(activeTabId.value,path))handleNodeSelect([path])
+  void nextTick(revealPendingAttachments)
+}
+watch([activeTabId,editorLoading,editorModeChangeBusy,()=>store.libraryPath],revealPendingAttachments,{flush:'post'})
 let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
 const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
 const captureEditorPosition = () => {
@@ -3368,6 +3421,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
         { label: '更多操作', key: 'file-more', children: [
           ...destinationMenuOptions().slice(1),
           ...(!contextMenu.isDir && !isMulti ? [
+            { label: '管理附件…', key: 'manage-attachments', disabled: fileOperationBusy.value, icon: fileMenuIcon(AttachmentIcon) },
             { label: '编辑显示样式', key: 'edit-display-style', icon: fileMenuIcon(PaletteIcon) },
             { label: '使用外部应用打开', key: 'external-open-menu', icon: fileMenuIcon(ExternalOpenIcon), children: buildExternalOpenOptions(contextMenu.targetPath) },
           ] : []),
@@ -3384,6 +3438,7 @@ const nodeProps = ({ option }: { option: TreeOption }) => {
 const onMenuAction = async (key: string) => {
   contextMenu.show = false; const path = contextMenu.targetPath
   const selection = contextPaths()
+  if (key === 'manage-attachments') { openAttachments(path); return }
   const directory = contextMenu.isDir ? path : fileParent(path)
   if (key === 'file-move' || key === 'file-copy-to') { fileOperations.value?.openTransfer(selection, key === 'file-move' ? 'move' : 'copy', directory); return }
   if (key === 'file-duplicate') { await fileOperations.value?.duplicate(selection); return }
@@ -3796,7 +3851,6 @@ const syncUserSelectedVditorMode = () => {
     void store.updateConfig({ editorMode: currentMode as any, editorModeExplicit: true })
   }
 }
-const editorModeChangeBusy = ref(false)
 const switchEditorMode = async (mode: string) => {
   if (editorModeChangeBusy.value) return
   if (!vditor || (store.editorMode === mode && store.editorModeExplicit)) return

@@ -70,8 +70,7 @@ fn candidates(directory: &Path, paths: &mut Vec<std::path::PathBuf>) -> Result<(
             .map_err(|e| format!("无法读取文件类型：{e}"))?;
         let name = entry.file_name().to_string_lossy().into_owned();
         if kind.is_symlink()
-            || name.starts_with('.')
-            || name.ends_with(".assets")
+            || crate::services::library_visibility::hidden_name(&name)
             || is_sensitive_path(&path)
         {
             continue;

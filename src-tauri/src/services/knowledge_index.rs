@@ -192,9 +192,8 @@ pub(crate) fn relevant_search_path(workspace: &Path, path: &Path) -> bool {
     let management_path = if cfg!(windows) { normalized.to_lowercase() } else { normalized.clone() };
     if management_path.is_empty() || management_path == ".longedit" || management_path == ".longedit/file-relations.json" { return true; }
     if is_sensitive_path(path) { return false; }
-    // Match collect_index_sources / SourceScan exactly: .assets is an exact
-    // suffix there, including on Windows. Don't hide changes in .Assets trees.
-    !normalized.split('/').any(|component| component.starts_with('.') || component.ends_with(".assets"))
+    // Keep cursor invalidation aligned with the visible source inventory.
+    !normalized.split('/').any(|component| crate::services::library_visibility::hidden_name(component))
 }
 
 #[derive(Default)]
@@ -467,7 +466,7 @@ pub fn collect_index_sources(workspace: &Path) -> Vec<IndexedSource> {
             continue;
         }
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") || is_sensitive_path(&path) {
+        if crate::services::library_visibility::hidden_name(&name) || is_sensitive_path(&path) {
             continue;
         }
         if path.is_dir() {
@@ -518,7 +517,7 @@ fn collect_sources_recursive(workspace: &Path, directory: &Path, sources: &mut V
         }
         let path = entry.path();
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") || is_sensitive_path(&path) {
+        if crate::services::library_visibility::hidden_name(&name) || is_sensitive_path(&path) {
             continue;
         }
         if path.is_dir() {

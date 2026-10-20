@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import crypto from 'node:crypto'
+import {spawn} from 'node:child_process'
+import {nativeUserInput} from './v118-native-user-input.mjs'
+import {visibleMarkdownInput} from './visible-markdown-input.mjs'
+import {withDeadline} from './with-deadline.mjs'
+import {writingImageFixture} from './writing-delivery-fixture.mjs'
+import {expandCopySourceParents} from './installed-v1-1-21-workflow.mjs'
+import {attachmentChecks,validateInstalledAttachments,assertAttachmentOutputBytes} from './installed-v1-1-23-evidence.mjs'
+const q=JSON.stringify,key=v=>String(v||'').replaceAll('\\','/').replace('//?/','').toLowerCase(),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
+export async function runInstalledV1123Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
+ for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
+ assert.equal(appVersion,'1.1.23');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),folder=path.join(library,'000-v1123-attachments-'+crypto.randomUUID()),external=path.join('C:/LongEditR5IExternal','v1123-'+crypto.randomUUID()),p=name=>path.join(folder,name),repoRoot=process.cwd()
+ const store=`document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app')`,invoke=(c,a={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(c)},${q(a)})`),editor=visibleMarkdownInput('#vditor-lib'),draft=()=>evaluate(`${store}.tabs.find(t=>window.__v1123Key(t.path)===${q(key(p('笔记.md')))}).content`)
+ const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-attachments-native-picker-draft-and-output-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}
+ const mark=n=>report.checks.push({id:attachmentChecks[n],status:'passed'}),row=file=>`[...document.querySelectorAll('[data-drop-path]')].find(e=>window.__v1123Key(e.dataset.dropPath)===${q(key(file))})`,expand=file=>expandCopySourceParents({ui,evaluate,library,file,row})
+ const context=async(file,text)=>{await expand(file);await ui.clickTarget(row(file),'right');if(['管理附件…','最近操作…'].includes(text))await ui.hoverTarget(`[...document.querySelectorAll('.n-dropdown-option-body')].find(e=>e.textContent.trim()==='更多操作')`);await ui.clickText('.n-dropdown-option-body',text)}
+ const openManager=async()=>{await ui.click('[data-testid="library-document-menu"]');await ui.clickText('.document-menu-content button','管理附件…');await ui.waitFor('document.querySelectorAll(".attachment-manager .attachment-row").length>=2','live attachments')},closeManager=async()=>{await ui.clickText('.attachment-manager button','关闭');await ui.waitFor('!document.querySelector(".attachment-manager")','attachment manager closed')}
+ const choose=target=>ui.click(`[data-attachment-target=${q(target)}]`)
+ const picker=async(target,tag,cancel=false)=>{
+  const record=path.join(output,`v1123-${tag}-picker.json`),owner=key(target).startsWith(key(external)+'/')?external:folder
+  const child=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts/select-hosted-session-file.ps1'),'-Executable',installedExecutable,'-Title','选择替换文件（库外文件将保留原件并复制到附件目录）','-SelectedPath',target,'-OwnerRoot',owner,'-Report',record,...(cancel?['-Cancel']:[])],{windowsHide:true,stdio:'inherit'})
+  const done=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error(tag+' attachment picker failed '+code)))})
+  await ui.clickText('.attachment-manager button','更换引用…');await withDeadline(()=>done,70000,'actual attachment file picker');return JSON.parse((await fs.readFile(record,'utf8')).replace(/^\uFEFF/,''))
+ }
+ const apply=async()=>{await ui.waitFor('!!document.querySelector(".attachment-replacement")','reference preview');await ui.clickText('.attachment-replacement button','应用到草稿');await ui.waitFor('!document.querySelector(".attachment-replacement")','draft replacement receipt')}
+ const take=async(file,fileName)=>{const bytes=await fs.readFile(file);await fs.writeFile(path.join(output,fileName),bytes,{flag:'wx'});report.outputs.push({fileName,sizeBytes:bytes.length,sha256:sha(bytes)})}
+ let failure
+ try{
+  await navigate('#/library','.library-mode','attachment workspace');await ui.fill('.search-control-row input','')
+  await evaluate(`window.__v1123Key=${key.toString()};window.__v1123Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}));window.__v1123Trace=[];window.__v1123Errors=[];for(const type of ['click','pointerdown','keydown','input'])document.addEventListener(type,e=>window.__v1123Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1123Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1123Errors.push(String(e.reason)));`)
+  for(const directory of ['images','.assets','assets','img','public','static','note.assets','.longedit'])await fs.mkdir(p(directory),{recursive:true})
+  await fs.mkdir(external,{recursive:true});for(const owner of [folder,external])await fs.writeFile(path.join(owner,'.v119-installed-owner'),'owned disposable attachment fixture')
+  const original='# 附件笔记\r\n![共享](.assets/a.png)\r\n![失效](images/missing.png)\r\n',shared=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64'),png=writingImageFixture()
+  await fs.writeFile(p('笔记.md'),original);await fs.writeFile(p('.assets/a.png'),shared);await fs.writeFile(p('images/new.png'),png);await fs.writeFile(path.join(external,'a.png'),png)
+  await fs.writeFile(p('引用笔记.md'),'![共享](.assets/a.png)\r\n![新图](images/new.png)\r\n');await fs.writeFile(p('.assets/reading.md'),'![新图](../images/new.png)\r\n');await fs.writeFile(p('.longedit/private.md'),'internal')
+  report.sourceImageSha256=sha(shared);report.externalImageSha256=sha(png)
+  await navigate('#/settings?category=library','.add-library-form','refresh owned fixture tree');await navigate('#/library?path='+encodeURIComponent(p('笔记.md')),'#vditor-lib','Markdown attachment owner')
+  await ui.waitFor(`(${editor})?.textContent.includes('附件笔记')`,'actual Markdown loaded');await expand(p('images'));await expand(p('.assets'));await expand(p('note.assets'))
+  for(const name of ['images','.assets','assets','img','public','static','note.assets'])assert.equal(await evaluate(`!!(${row(p(name))})`),true,name)
+  assert.equal(await evaluate(`!!(${row(p('.longedit'))})`),false);mark(0)
+  await ui.clickTarget(editor);await ui.key('End','End',35,2);await ui.key('Enter','Enter',13);await send('Input.insertText',{text:'需要保留的附件草稿'});await ui.waitFor(`${store}.tabs.some(t=>window.__v1123Key(t.path)===${q(key(p('笔记.md')))}&&t.isDirty&&t.content.includes('需要保留的附件草稿'))`,'live unsaved attachment draft')
+  const before=await draft();await openManager();assert.equal(await fs.readFile(p('笔记.md'),'utf8'),original);report.queryReadOnly=true;report.draftPreserved=(await draft())===before;assert.equal(report.draftPreserved,true);mark(1)
+  await ui.fill('.attachment-manager input[aria-label="查找附件"]','missing');await ui.waitFor('document.querySelector(".attachment-detail")?.textContent.includes("找不到")','missing reference explanation');assert.match(await evaluate('document.querySelector(".attachment-manager").innerText'),/已失效/);await ui.fill('.attachment-manager input[aria-label="查找附件"]','');await choose('.assets/a.png');mark(2)
+  report.cancelPicker=await picker(p('images/new.png'),'cancel',true);report.cancelExact=(await draft())===before&&await fs.readFile(p('笔记.md'),'utf8')===original;assert.equal(report.cancelExact,true);mark(3)
+  report.internalPicker=await picker(p('images/new.png'),'internal');await apply();await closeManager();await ui.waitFor(`${store}.tabs.some(t=>window.__v1123Key(t.path)===${q(key(p('笔记.md')))}&&t.content.includes('images/new.png'))`,'replacement in live editor');assert.equal(await fs.readFile(p('笔记.md'),'utf8'),original)
+  await ui.clickTarget(editor);await ui.key('z','KeyZ',90,2);await ui.waitFor(`${store}.tabs.some(t=>window.__v1123Key(t.path)===${q(key(p('笔记.md')))}&&t.content.includes('.assets/a.png')&&!t.content.includes('images/new.png'))`,'actual undo of reference replacement');report.undoExact=(await draft()).includes('需要保留的附件草稿');assert.equal(report.undoExact,true);mark(4)
+  await openManager();await choose('images/missing.png');await picker(p('images/new.png'),'repair');await apply();await closeManager();report.missingRepaired=!(await draft()).includes('images/missing.png')&&(await draft()).includes('images/new.png');assert.equal(report.missingRepaired,true);assert.equal(await fs.readFile(p('笔记.md'),'utf8'),original);mark(5)
+  await openManager();await choose('.assets/a.png');report.externalPicker=await picker(path.join(external,'a.png'),'external');await apply();await closeManager();report.sourcePreserved=sha(await fs.readFile(path.join(external,'a.png')))===report.externalImageSha256;report.collisionPreserved=sha(await fs.readFile(p('.assets/a.png')))===report.sourceImageSha256;assert.equal(report.sourcePreserved,true);assert.equal(report.collisionPreserved,true)
+  const references=await invoke('inspect_library_attachments',{libraryRoot:library,documentPath:p('笔记.md'),draft:await draft()});const imported=references.references.find(r=>key(r.path).startsWith(key(p('.assets'))+'/')&&!key(r.path).endsWith('/a.png'));assert.ok(imported);assert.equal(sha(await fs.readFile(imported.path)),report.externalImageSha256);mark(6)
+  await ui.clickTarget(editor);await ui.key('s','KeyS',83,2);await ui.waitFor(`${store}.tabs.some(t=>window.__v1123Key(t.path)===${q(key(p('笔记.md')))}&&!t.isDirty)`,'explicit Markdown save')
+  await context(p('.assets/a.png'),'管理附件…');await ui.waitFor('!!document.querySelector(".attachment-uses .attachment-row")','actual incoming reference list');await ui.clickTarget(`[...document.querySelectorAll('.attachment-uses .attachment-row')].find(e=>e.querySelector('strong')?.textContent==='引用笔记.md')`);await ui.waitFor(`${store}.activeTabId&&window.__v1123Key(${store}.activeTabId)===${q(key(p('引用笔记.md')))}`,'reference note opened');report.referenceOpened=true;mark(7)
+  await context(p('images'),'重命名 (F2)');await ui.fill('#library-rename-input input, input#library-rename-input','photos');await ui.clickText('.n-dialog button','更新名称');await ui.waitFor('!document.querySelector(".rename-editor")','attachment folder renamed')
+  assert.ok((await fs.readFile(p('笔记.md'),'utf8')).includes('photos/new.png'));assert.ok((await fs.readFile(p('.assets/reading.md'),'utf8')).includes('../photos/new.png'))
+  const entries=await invoke('list_library_file_operations',{libraryRoot:library}),record=entries.find(r=>key(r.newPath)===key(p('photos'))&&r.status==='completed');assert.ok(record)
+  await context(p('photos'),'最近操作…');await ui.click(`[data-operation-id="${record.id}"]`);await ui.clickText('.file-history-dialog button','还原此项');await ui.waitFor(`document.querySelector('[data-operation-id="${record.id}"]')?.textContent.includes('已还原')`,'attachment folder history restore');await ui.click('.file-history-dialog .n-base-close');await ui.waitFor('!document.querySelector(".file-history-dialog")','history closed')
+  report.renameRestoreExact=(await fs.readFile(p('笔记.md'),'utf8')).includes('images/new.png')&&(await fs.readFile(p('.assets/reading.md'),'utf8')).includes('../images/new.png');assert.equal(report.renameRestoreExact,true);mark(8)
+  report.otherDraftsPreserved=await evaluate(`window.__v1123Prior.every(prior=>${store}.tabs.some(t=>t.id===prior.id&&t.path===prior.path&&t.isDirty&&t.content===prior.content))`);assert.equal(report.otherDraftsPreserved,true)
+  await take(p('笔记.md'),'installed-v1123-saved.md');await take(p('.assets/a.png'),'installed-v1123-shared.png');await take(imported.path,'installed-v1123-imported.png');mark(9)
+  await navigate('#/library?path='+encodeURIComponent(p('笔记.md')),'#vditor-lib','saved attachment result');await capture('installed-v1123-attachments-final.jpg')
+  report.inputTrace=await evaluate('window.__v1123Trace');report.runtimeErrors=await evaluate('window.__v1123Errors');report.errorOverlay=await evaluate('!!document.querySelector(".error-overlay")');report.status='passed';validateInstalledAttachments(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]});const outputs=new Map(await Promise.all(report.outputs.map(async o=>[o.fileName,await fs.readFile(path.join(output,o.fileName))])));assertAttachmentOutputBytes(report,file=>outputs.get(file))
+ }catch(error){failure=error;report.status='failed';report.failure=String(error.stack||error);report.failureUI=await evaluate('({hash:location.hash,body:document.body.innerText.slice(-7000)})').catch(()=>null);await capture('installed-v1123-failure.jpg').catch(()=>{})}
+ finally{await fs.writeFile(path.join(output,'installed-v1123-workflow.json'),JSON.stringify(report,null,2)+'\n')}
+ if(failure)throw failure
+}

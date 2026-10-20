@@ -2,7 +2,7 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
-> **v1.1.22 已正式发布**：文件栏右键“最近操作…”可查整理记录、接续查看位置并按项还原，保留后续修改与未保存草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) · [发布说明](docs/RELEASE_NOTES_v1.1.22.md)。
+> v1.1.23 正在进行发布前检查：附件目录可见，右键或文档操作菜单集中管理引用、查看位置和修复路径，保留原附件与未保存草稿。[开发进展](docs/V1_1_23_Attachment_Management_Development_2026-10-20.md)。当前公开下载仍为 v1.1.22。
 
 
 <h1 align="center">Long编辑</h1>

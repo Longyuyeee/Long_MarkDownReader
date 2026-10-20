@@ -215,7 +215,7 @@ impl SourceScan {
             let path: PathBuf = entry.path();
             let name = entry.file_name();
             let name = name.to_string_lossy();
-            if name.starts_with('.') || name.ends_with(".assets") || is_sensitive_path(&path) {
+            if crate::services::library_visibility::hidden_name(&name) || is_sensitive_path(&path) {
                 continue;
             }
             if kind.is_dir() {

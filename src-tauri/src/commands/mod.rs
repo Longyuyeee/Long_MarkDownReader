@@ -1,4 +1,5 @@
 pub mod ai;
+pub mod attachments;
 pub mod archive;
 pub mod backup;
 pub mod content_backup;

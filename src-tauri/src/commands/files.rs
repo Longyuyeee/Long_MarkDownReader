@@ -579,13 +579,7 @@ pub async fn scan_directory(library_root: String, path: String) -> Result<Vec<Fi
                 .unwrap_or_default()
                 .to_string_lossy()
                 .into_owned();
-            let hidden_resource_directory = item_path.is_dir()
-                && matches!(
-                    name.as_str(),
-                    "public" | "assets" | "img" | "images" | "static"
-                )
-                || item_path.is_dir() && (name.starts_with('.') || name.ends_with(".assets"));
-            if hidden_resource_directory {
+            if item_path.is_dir() && crate::services::library_visibility::hidden_name(&name) {
                 continue;
             }
             if item_path.is_dir() || is_workspace_file(&name) {

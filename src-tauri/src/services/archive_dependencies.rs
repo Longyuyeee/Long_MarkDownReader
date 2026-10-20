@@ -555,7 +555,7 @@ fn scan_impl(root: &str, visible_only: bool, for_move: bool) -> Result<Inventory
             let name = entry.file_name();
             let name = name.to_string_lossy();
             if name == ".git"
-                || (visible_only && (name.starts_with('.') || name.ends_with(".assets")))
+                || (visible_only && super::library_visibility::hidden_name(&name))
             {
                 continue;
             }

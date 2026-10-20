@@ -104,10 +104,8 @@ fn v118_scan_budget_counts_unsupported_entries_and_preserves_privacy_filters() {
         Err(SearchStop::Entries)
     );
     assert_eq!(tiny.sources, 0);
-    for name in [".private", "image.assets"] {
-        let directory = fixture.dir(name);
-        fs::write(directory.join("不能读取.md"), "预算秘密").unwrap();
-    }
+    fs::write(fixture.dir(".private").join("不能读取.md"), "预算秘密").unwrap();
+    fs::write(fixture.dir("image.assets").join("可见附件.md"), "用户附件正文").unwrap();
     for name in [".env", "credentials.json"] {
         fs::write(fixture.0.join(name), "预算秘密").unwrap();
     }
@@ -118,7 +116,7 @@ fn v118_scan_budget_counts_unsupported_entries_and_preserves_privacy_filters() {
             .iter()
             .map(|source| source.path.as_str())
             .collect::<Vec<_>>(),
-        vec!["可见.md"]
+        vec!["image.assets/可见附件.md", "可见.md"]
     );
 }
 

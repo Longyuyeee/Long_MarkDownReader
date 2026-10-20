@@ -1250,13 +1250,12 @@ fn v118_pages_real_filesystem_watcher_revision_does_not_reset_when_changes_are_c
 }
 
 #[test]
-fn v118_pages_ui_order_history_and_assets_do_not_invalidate_search_but_relations_do() {
+fn v123_pages_user_attachment_changes_invalidate_but_private_history_does_not() {
     use crate::services::knowledge_index::relevant_search_path;
     let fixture = Fixture::new(0);
     for path in [
         ".misty_order.json",
         ".longedit/history/note.json",
-        "picture.assets/origin.png",
         ".private/a.md",
         "credentials.json",
     ] {
@@ -1267,6 +1266,8 @@ fn v118_pages_ui_order_history_and_assets_do_not_invalidate_search_but_relations
     }
     for path in [
         ".longedit/file-relations.json",
+        "picture.assets/origin.png",
+        ".assets/attachment.md",
         ".longedit",
         "目录/资料.md",
         "资料.pdf.annotations.json",
