@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import crypto from 'node:crypto'
 import ts from 'typescript'
+import YAML from 'yaml'
 import {structuredHistoryFixtures,structuredHistoryBytes} from './lib/structured-history-fixture.mjs'
 import {structuredHistoryChecks,validateInstalledStructuredHistory,assertStructuredHistoryOutputBytes} from './lib/installed-v1-1-26-evidence.mjs'
 test('installed structured history rejects missing tasks, stale identity, fake input and altered source bytes',()=>{
@@ -20,4 +21,9 @@ test('native workflow uses valid UI expressions and remains required in import, 
  const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ui\.waitFor)$/.test(node.expression.getText(tree))){const value=node.arguments[0];if(value&&(ts.isStringLiteral(value)||ts.isNoSubstitutionTemplateLiteral(value)||ts.isTemplateExpression(value))){const script=ts.isTemplateExpression(value)?value.head.text+value.templateSpans.map(span=>'__fixture__'+span.literal.text).join(''):value.text;assert.doesNotThrow(()=>new vm.Script(script),script);count++}}ts.forEachChild(node,visit)};visit(tree);assert.ok(count>=10)
  for(const file of ['scripts/import-community-release-review.mjs','scripts/lib/installed-release-runtime.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('assertStructuredHistoryOutputBytes'),file)
  assert.ok(fs.readFileSync('scripts/capture-r5j-installed-artifact-smoke.mjs','utf8').includes('runInstalledV1126Workflow'))
+ const workflow=YAML.parse(fs.readFileSync('.github/workflows/v1-1-0-candidate-lifecycle.yml','utf8'))
+ assert.equal(workflow.on.workflow_dispatch.inputs.build_only.type,'boolean')
+ for(const name of ['Run frozen candidate release quality gate','Run complete Rust regression suite','Build frozen candidate MSI and NSIS','Capture immutable installer receipt']){const step=workflow.jobs['candidate-lifecycle'].steps.find(s=>s.name===name);assert.ok(step);assert.equal(step.if,undefined,'build-only must never skip '+name)}
+ assert.ok(fs.readFileSync('.github/workflows/community-release-publish.yml','utf8').includes("$review.conclusion -ne 'success'"),'A successful same-package review remains mandatory')
+
 })

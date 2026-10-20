@@ -15,6 +15,11 @@ try{
   await folder.click({button:'right'});await item('新建').hover();await item('文件夹').waitFor();await reachable(item('文件夹'));await page.mouse.click(1100,780)
   checks.push(style+' file More, nested external apps, folder New are visible and pointer reachable')
  }
- await page.setViewportSize({width:1280,height:500});await file.click({button:'right'});await item('更多操作').hover();await reachable(item('编辑显示样式'));await page.screenshot({path:output+'/short-window.png'});checks.push('short window scrolling and submenu remain reachable')
+ for(const height of [700,500]){
+  await page.setViewportSize({width:1280,height});await file.click({button:'right'})
+  const copy=item('复制到…'),box=await copy.boundingBox();assert.ok(box&&box.y>=0&&box.y+box.height<=height,'top copy action stays within viewport')
+  await reachable(copy);await copy.click();await page.locator('.file-operation-dialog').waitFor();await page.locator('.file-operation-dialog').getByRole('button',{name:'取消',exact:true}).click()
+  await file.click({button:'right'});await item('更多操作').hover();await reachable(item('编辑显示样式'));await page.screenshot({path:output+'/short-window-'+height+'.png'});checks.push(height+'px window top copy action, scrolling and flyout remain reachable');await page.mouse.click(1200,height-8)
+ }
  assert.deepEqual(errors,[]);await fs.writeFile(output+'/result.json',JSON.stringify({status:'passed',nativeBridgeMocked:true,desktopInputUsed:false,checks,errors},null,2));console.log('File submenu checks passed: '+checks.length)
 }catch(error){await page.screenshot({path:output+'/failure.png'}).catch(()=>{});await fs.writeFile(output+'/failure.json',JSON.stringify({failure:String(error.stack||error),checks,errors},null,2));throw error}finally{await browser.close()}

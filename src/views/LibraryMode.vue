@@ -1796,7 +1796,7 @@ const clipboardAvailable = computed(() => Boolean(libraryFileClipboard.value?.pa
 const undoMoveAvailable = computed(() => Boolean(store.libraryPath))
 const fileMenuIcon = (icon: typeof CopyFileIcon) => () => h(NIcon, null, { default: () => h(icon) })
 // Native scrollable menus keep each flyout outside the scrolling content.
-const contextMenuProps = () => ({ style: 'max-height: min(520px, calc(100vh - 24px));' })
+const contextMenuProps = () => ({ style: 'max-height: min(480px, calc((100vh - 80px) / 2));' })
 const destinationMenuOptions = () => [
   { label: '粘贴 (Ctrl+V)', key: 'file-paste', disabled: !clipboardAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(PasteFileIcon) },
   { label: '撤销上次移动', key: 'file-undo-move', disabled: !undoMoveAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(UndoFileIcon) },
