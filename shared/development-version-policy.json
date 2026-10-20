@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-80-v1.1.26-version-candidate",
-  "binaryVersionTransition": "v1.1.26-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.26-release-ready",
   "displayLabel": "v1.1.26 结构化源码历史与恢复候选 · 当前公开 v1.1.25",
   "activeSlice": {
     "id": "v1.1.26-structured-history",
-    "status": "implementation-complete-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_26_Structured_History_Development_2026-10-20.md"
   }
 }

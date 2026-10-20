@@ -1,0 +1,42 @@
+{
+  "appVersion": "1.1.26",
+  "sourceCommit": "0e61db532ba2e060612fb1e176f5c2554bb06c6f",
+  "installerSha256": "e9824dcee9f3f39122ec40b8313cf64910e11f654fc8ed3fd3eda67ead68fa65",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "portable-template-roundtrip-retains-variables",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-template-export-preserves-file-and-defaults",
+      "status": "passed"
+    },
+    {
+      "id": "native-rename-preview-preserves-format-and-reports-invalid-names",
+      "status": "passed"
+    },
+    {
+      "id": "txt-partial-restore-retains-other-change-and-disk",
+      "status": "passed"
+    },
+    {
+      "id": "txt-partial-restore-can-be-undone",
+      "status": "passed"
+    },
+    {
+      "id": "markdown-partial-restore-retains-other-change-and-disk",
+      "status": "passed"
+    },
+    {
+      "id": "batch-context-dialog-renames-real-files-and-retains-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "v114-workflows-have-no-global-error-overlay",
+      "status": "passed"
+    }
+  ]
+}
