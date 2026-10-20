@@ -1,0 +1,49 @@
+✔ switching results never displays late content from the previous file (48.8067ms)
+✔ failed preview can retry; closing discards pending responses (20.8542ms)
+✔ excerpt uses selected text and resets on a different source (21.0358ms)
+✔ clipboard failure keeps the selection for retry (20.8592ms)
+✔ explicit side reference docks immediately, survives searches and clears on library change (71.6437ms)
+✔ normal result opens use main document navigation and never replace the reference (11.5996ms)
+✔ main open and side reference remain distinct accessible actions (1.7941ms)
+✔ arrow keys move between main-open actions without opening files or swallowing Enter (6.9299ms)
+✔ explicit return hides the reference, retains its source and focuses a visible writable editor after rendering (5.4019ms)
+✔ direct excerpt insertion requires a live bookmark in the current writable Markdown note (8.5341ms)
+✔ manual reference refresh clears selection and ignores an older read (10.8692ms)
+✔ excerpt quotes every line and source round-trips special paths and PDF position (3.8342ms)
+✔ Windows reference keeps native path identity and library-bound source (1.4609ms)
+✔ actual Markdown source click opens the library file with PDF position (30.102ms)
+✔ text excerpts carry a bounded anchor, old links remain readable (0.7437ms)
+✔ native canonical Windows and UNC source paths resolve within the library (0.4961ms)
+✖ source repair waits for explicit confirmation, records undo and changes draft only (25.1657ms)
+✖ cancel, invalid path, readonly note and changed target never rewrite a source (20.8838ms)
+✔ generic source links retain a verified PDF digest and reject malformed digests (0.5114ms)
+✔ installed repair requires full tasks, exact original/draft bytes and all relationship metadata (11.0376ms)
+✔ native reference driver expressions parse and publication requires its actual outputs (48.0873ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 19
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 886.5047
+
+✖ failing tests:
+
+test at scripts\test-source-excerpt.mjs:72:1
+✖ source repair waits for explicit confirmation, records undo and changes draft only (25.1657ms)
+  TypeError: editor.getCurrentMode is not a function
+      at beginSourceLinkRepair (evalmachine.<anonymous>:11:25)
+      at Object.openSourceReference [as open] (evalmachine.<anonymous>:100:19)
+      at async TestContext.<anonymous> (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:73:26)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at scripts\test-source-excerpt.mjs:75:1
+✖ cancel, invalid path, readonly note and changed target never rewrite a source (20.8838ms)
+  TypeError: editor.getCurrentMode is not a function
+      at beginSourceLinkRepair (evalmachine.<anonymous>:11:25)
+      at Object.openSourceReference [as open] (evalmachine.<anonymous>:100:19)
+      at async TestContext.<anonymous> (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:76:31)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)

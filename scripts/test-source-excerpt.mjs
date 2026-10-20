@@ -62,20 +62,21 @@ test('native canonical Windows and UNC source paths resolve within the library',
 function repairHarness() {
  const source=fs.readFileSync('src/views/LibraryMode.vue','utf8'),handler=source.slice(source.indexOf('const openRepairedSource ='),source.indexOf('const openPdfReference ='))
  const href='longedit://source?path=old.md&quote=hello';let content=`[source](${href})`;const calls=[],tab={path:'/库/note.md',isDirty:false}
- const editor={getValue:()=>content,setValue:next=>{content=next;calls.push('edit')},vditor:{undo:{addToUndoStack:()=>calls.push('undo')}}}
- const context={URL,localMarkdownLink,parseSourceReference,store:{libraryPath:'/库',updateTabContent:()=>calls.push('draft')},router:{},activeTabId:{value:tab.path},activeIsMarkdown:{value:true},activeFormatCanEdit:{value:true},vditor:editor,tabs:{value:[tab]},referenceRepairRequest:{value:null},searchNavigationSequence:0,findFileFormat:()=>({}),searchResultPath:(path,root)=>path.startsWith(root+'/')?path.slice(root.length+1):path,message:{warning:text=>calls.push(text),success(){}},snapshotWindowDrafts(){},
+ const editor={getCurrentMode:()=> 'wysiwyg',getValue:()=>content,setValue:next=>{content=next;calls.push('edit')},vditor:{undo:{addToUndoStack:()=>calls.push('undo')}}}
+ const context={URL,localMarkdownLink,parseSourceReference,editorModeChangeBusy:{value:false},editorLoading:{value:false},suppressEditorInput:false,recordWindowDraftActivity(){},updateWordCount(){},syncOutlineManual(){},applyVditorSourceRepair:(editor,original,href,next,expected,count)=>{assert.equal(editor.getValue(),original);assert.equal(count,1);assert.equal(expected,original.replace(href,next));content=expected;calls.push('edit','apply')},store:{libraryPath:'/库',updateTabContent:()=>calls.push('draft')},router:{},activeTabId:{value:tab.path},activeIsMarkdown:{value:true},activeFormatCanEdit:{value:true},vditor:editor,tabs:{value:[tab]},referenceRepairRequest:{value:null},searchNavigationSequence:0,findFileFormat:()=>({}),searchResultPath:(path,root)=>path.startsWith(root+'/')?path.slice(root.length+1):path,message:{warning:text=>calls.push(text),success(){}},snapshotWindowDrafts(){},
  invoke:async(command,args)=>{if(command==='preview_source_link_repair'){calls.push('preview');return {content:args.content.replace(args.originalUri,args.replacementUri),count:1}}if(args.path==='/库/old.md')throw Error('missing');return{}},openManagedFile:(_router,path)=>calls.push('open:'+path)}
  vm.runInNewContext(ts.transpileModule(handler+'\nglobalThis.open = openSourceReference',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context)
  return {context,calls,tab,content:()=>content,run:()=>context.open({target:{closest:()=>({getAttribute:()=>href})},preventDefault(){},stopPropagation(){}}),apply:path=>context.referenceRepairRequest.value.commit({...context.referenceRepairRequest.value.source,path})}
 }
 
-test('source repair waits for explicit confirmation, records undo and changes draft only',async()=>{
- const h=repairHarness();await h.run();assert.equal(h.tab.isDirty,false);assert.equal(h.calls.includes('edit'),false);await h.apply('/库/new.md');assert.match(h.content(),/path=new.md&quote=hello/);assert.equal(h.tab.isDirty,true);assert.equal(h.calls.filter(x=>x==='undo').length,2);assert.ok(h.calls.includes('draft'))
+test('source repair waits for explicit confirmation and applies the verified link to the current draft only',async()=>{
+ const h=repairHarness();await h.run();assert.equal(h.tab.isDirty,false);assert.equal(h.calls.includes('edit'),false);await h.apply('/库/new.md');assert.match(h.content(),/path=new.md&quote=hello/);assert.equal(h.tab.isDirty,true);assert.equal(h.calls.filter(x=>x==='apply').length,1);assert.ok(h.calls.includes('draft'))
 })
 test('cancel, invalid path, readonly note and changed target never rewrite a source',async()=>{
  const cancel=repairHarness();await cancel.run();assert.equal(cancel.calls.includes('edit'),false)
  for(const path of ['/库/../escape.md','E:/outside.md']){const h=repairHarness();await h.run();await assert.rejects(()=>h.apply(path));assert.equal(h.calls.includes('edit'),false)}
  const readonly=repairHarness();readonly.context.activeFormatCanEdit.value=false;await readonly.run();assert.equal(readonly.context.referenceRepairRequest.value,null)
+ const mode=repairHarness();await mode.run();mode.context.vditor.getCurrentMode=()=> 'sv';await assert.rejects(()=>mode.apply('/库/new.md'));assert.equal(mode.calls.includes('edit'),false)
  const changed=repairHarness();await changed.run();changed.context.activeTabId.value='/库/other.md';await assert.rejects(()=>changed.apply('/库/new.md'));assert.equal(changed.calls.includes('edit'),false)
 })
 test('generic source links retain a verified PDF digest and reject malformed digests',()=>{

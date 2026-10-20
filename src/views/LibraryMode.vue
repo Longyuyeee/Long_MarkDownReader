@@ -782,6 +782,7 @@ import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMot
 import { useImageFix } from '../composables/useImageFix'
 import DocumentFindReplace from '../components/DocumentFindReplace.vue'
 import {createVditorFindAdapter} from '../composables/createVditorFindAdapter'
+import { applyVditorSourceRepair } from '../utils/vditorSourceRepair'
 import { localMarkdownLink, markdownAnchorTarget } from '../utils/localMarkdownLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
@@ -4231,7 +4232,8 @@ const openRepairedSource = async (next: ReferenceTarget) => {
 }
 const beginSourceLinkRepair = async (href: string, source: ReferenceTarget, root: string, notePath: string | null, editor: any, original: string | undefined) => {
   if (!notePath || !editor || original === undefined || !activeIsMarkdown.value || !activeFormatCanEdit.value) { message.warning('请在可编辑笔记中核对来源，当前内容保持不变'); return }
-  const current = () => store.libraryPath === root && activeTabId.value === notePath && vditor === editor && editor.getValue() === original && activeFormatCanEdit.value
+  const mode = editor.getCurrentMode()
+  const current = () => store.libraryPath === root && activeTabId.value === notePath && vditor === editor && editor.getCurrentMode() === mode && editor.getValue() === original && activeFormatCanEdit.value && !editorModeChangeBusy.value && !editorLoading.value && !suppressEditorInput
   try {
     const preview = await invoke<{ content: string; count: number }>('preview_source_link_repair', { content: original, originalUri: href, replacementUri: href })
     if (!current()) { message.warning('笔记已变化，请重新点击来源链接后核对'); return }
@@ -4247,9 +4249,12 @@ const beginSourceLinkRepair = async (href: string, source: ReferenceTarget, root
       if (next.sourceDigest) uri.searchParams.set('sha256', next.sourceDigest)
       const applied = await invoke<{ content: string; count: number }>('preview_source_link_repair', { content: original, originalUri: href, replacementUri: uri.toString() })
       if (!current() || applied.count !== preview.count) throw Error('笔记已变化，未修改来源链接')
-      editor.vditor.undo.addToUndoStack(editor.vditor); editor.setValue(applied.content); editor.vditor.undo.addToUndoStack(editor.vditor)
+      applyVditorSourceRepair(editor, original, href, uri.toString(), applied.content, applied.count)
+      recordWindowDraftActivity()
       store.updateTabContent(notePath, applied.content)
       const tab = tabs.value.find(t => t.path === notePath); if (tab) tab.isDirty = true
+      updateWordCount()
+      syncOutlineManual(true)
     } }
   } catch (cause) { message.warning('未修改笔记：' + String(cause)) }
 }

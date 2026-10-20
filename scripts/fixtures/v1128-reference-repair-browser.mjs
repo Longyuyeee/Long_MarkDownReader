@@ -1,10 +1,14 @@
 import './workflow-redesign-browser.mjs'
+import {referenceRepairFixture,repairQuote,repairText} from '../lib/reference-repair-fixture.mjs'
 const a=window.workflowAudit,root=a.store.libraryPath,original=window.__TAURI_INTERNALS__.invoke
 Object.assign(a,{oldSource:root+'/旧目录/资料.txt',newSource:root+'/新目录/资料.txt',decoy:root+'/同名/资料.txt',repairCalls:[],repairWrites:0})
 a.directories.push(root+'/新目录',root+'/同名');a.disk.set(a.newSource,'唯一正文位置\n新来源仍是原资料');a.disk.set(a.decoy,'另一份同名文件')
 a.sourceUri='longedit://source?'+new URLSearchParams({path:'旧目录/资料.txt',quote:'唯一正文位置'})
 a.note='# 来源修复\n\n[修复来源]('+a.sourceUri+')\n\n```md\n[示例]('+a.sourceUri+')\n```\n'
 a.disk.set(a.store.tabs[0].path,a.note);a.store.tabs[0].content=a.note
+if(new URLSearchParams(location.search).has('native')){
+ const fixture=referenceRepairFixture('000-v1128-reference-5527b00c-ddb5-4728-9f50-83c06160d12b');a.oldSource=root+'/'+fixture.oldPath;a.newSource=root+'/'+fixture.newPath;a.sourceUri=fixture.uri;a.note=fixture.note;a.disk.set(a.newSource,repairText);a.disk.set(a.store.tabs[0].path,a.note);a.store.tabs[0].content=a.note
+}
 a.relations=[{id:'a'.repeat(32),sourcePath:a.store.tabs[0].path,targetPath:a.oldSource,relationType:'cites',note:'必须保留的说明'}]
 localStorage.setItem('longedit.reference.v1:'+encodeURIComponent(root.toLowerCase()),JSON.stringify({path:a.oldSource,title:'资料.txt',query:'唯一正文位置'}))
 if(new URLSearchParams(location.search).has('location')){

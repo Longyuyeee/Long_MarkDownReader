@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "After returning from another file, delayed single Undo/Redo preserves all unsaved text and the code example",
+    "Real wysiwyg link mutation preserves code and text, rolls back failed application and has one delayed Undo",
+    "Real ir link mutation preserves code and text, rolls back failed application and has one delayed Undo",
+    "Real sv link mutation preserves code and text, rolls back failed application and has one delayed Undo"
+  ],
+  "errors": []
+}
