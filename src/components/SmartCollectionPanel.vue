@@ -1,7 +1,7 @@
 <template>
   <section ref="panel" class="smart-collection" aria-label="智能集合条件">
     <template v-if="mode === 'home'">
-      <button class="primary" @click="beginNew"><Plus />新建集合</button>
+      <div class="collection-home-actions"><button class="primary" @click="beginNew"><Plus />新建集合</button><n-dropdown trigger="click" :options="transferOptions" @select="action => openTransfer(String(action))"><button class="icon-button" aria-label="集合管理"><Ellipsis /></button></n-dropdown></div>
       <div v-if="currentQuery" class="current-search"><span>当前搜索：{{ currentQuery }}</span><button @click="$emit('save-search')"><BookmarkPlus />保存这个搜索</button></div>
       <button v-if="hasDraft" class="resume-draft" @click="mode = 'editor'"><PencilLine /><span>继续设置 {{ name || '未命名集合' }}</span></button>
       <div class="section-label"><strong>我的集合</strong><small>{{ collections.length }}</small></div>
@@ -31,7 +31,7 @@
             <label>文件夹<div class="directory-field"><input v-model="directory" aria-label="文件夹" maxlength="4096" placeholder="整个资料库" /><button type="button" :disabled="choosing" aria-label="选择文件夹" @click="chooseDirectory"><FolderOpen /></button></div></label>
             <label>文件类型<n-select v-model:value="objectTypes" multiple clearable :max-tag-count="1" :disabled="saving" :options="formatOptions" placeholder="不限类型" size="small" /></label>
             <label>笔记标签<div class="tag-field"><span>#</span><input ref="tagInput" v-model="tag" aria-label="笔记标签" maxlength="640" placeholder="多个标签用空格分隔，同时满足" /></div></label>
-            <label>修改时间<select v-model="days" aria-label="修改时间"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option></select></label>
+            <label>修改时间<select v-model="days" aria-label="修改时间"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option><option v-if="days && ![7, 30, 90].includes(days)" :value="days">最近 {{ days }} 天</option></select></label>
           </fieldset>
         </details>
         <div class="actions"><button class="primary" type="submit" :disabled="running || saving"><Search />{{ running ? '正在查找…' : '查看资料' }}</button><button type="button" :disabled="saving || running || !name.trim()" @click="save"><BookmarkPlus />{{ saving ? '正在保存…' : editingId ? '保存修改' : '保存集合' }}</button></div>
@@ -60,12 +60,13 @@
         </template>
       </div>
     </template>
+    <CollectionTransferDialog v-if="transferMode" :mode="transferMode" :entries="transferEntries" :formats="formats" @close="transferMode = null" @completed="transferCompleted" />
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, onBeforeUnmount, onMounted } from 'vue'
-import { NDropdown, NSelect } from 'naive-ui'
+import { NDropdown, NSelect, useMessage } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
 import { ArrowLeft, BookmarkPlus, Check, ChevronDown, ChevronRight, Clock, Ellipsis, FolderOpen, FolderSearch, Network, NotebookPen, PencilLine, Plus, RefreshCw, Search, SlidersHorizontal, Tag } from 'lucide-vue-next'
@@ -76,6 +77,7 @@ import { searchResultPath } from '../utils/searchResultPath'
 import { libraryNavigationPreferences, updateLibraryNavigation, splitFilterTags } from '../services/libraryNavigationPreferences'
 import { createSearchPages, type CollectionSort } from '../services/searchPages'
 import { rememberCollectionDraft, readCollectionDraft, type CollectionDraft } from '../services/collectionDrafts'
+import CollectionTransferDialog from './CollectionTransferDialog.vue'
 interface Result {
   title: string; path: string; objectType: string; matchKind: 'title' | 'body' | 'ocr' | 'annotation' | 'related' | 'tag' | 'slide-title' | 'object' | 'notes'
   context: string; page?: number; annotationId?: string; locatorKind?: string; locatorObjectId?: string; locationLabel?: string; score: number; extractionFailed: boolean
@@ -83,6 +85,10 @@ interface Result {
 const props = withDefaults(defineProps<{ selected: SavedSearchConfig | null; editing?: boolean; formats: { label: string; value: string }[]; collections: SavedSearchConfig[]; currentQuery?: string; summaryFor: (entry: SavedSearchConfig) => string }>(), { editing: false, currentQuery: '' })
 const emit = defineEmits<{ open: [result: Result]; select: [entry: SavedSearchConfig]; edit: [entry: SavedSearchConfig]; remove: [entry: SavedSearchConfig]; saved: [entry: SavedSearchConfig]; reset: []; 'save-search': [] }>()
 const store = useAppStore()
+const message = useMessage(), transferMode = ref<'import' | 'export' | null>(null), transferEntries = ref<SavedSearchConfig[]>([])
+const transferOptions = computed(() => [{ label: '导入集合条件…', key: 'import' }, { label: '导出本资料库集合…', key: 'export', disabled: !props.collections.length }])
+const openTransfer = (mode: string, entry?: SavedSearchConfig) => { if (mode !== 'import' && mode !== 'export') return; transferEntries.value = entry ? [entry] : [...props.collections]; transferMode.value = mode }
+const transferCompleted = (notice: string) => { transferMode.value = null; message.success(notice) }
 const panel = ref<HTMLElement>(), resultSort = ref<CollectionSort>('name'), dragCollection = ref('')
 const lookup = createSearchPages(invoke)
 const { files, busy: running, status: pageState, error: lookupError, retainingView: retaining, nextPage, canContinue } = lookup
@@ -125,8 +131,8 @@ const formatLabel = (type: string) => type === 'markdown' ? '笔记' : props.for
 const formatOptions = computed(() => props.formats.map(format => ({ ...format, disabled: objectTypes.value.length >= 8 && !objectTypes.value.includes(format.value) })))
 const relativeResultPath = (result: Result) => searchResultPath(result.path, store.libraryPath)
 const resultVisual = (result: Result) => { const visual = resolveFileTreeVisual(result.objectType); return { ...visual, color: store.displayPreferences.fileIconStyle === 'muted' ? 'var(--theme-text-secondary)' : visual.color } }
-const entryOptions = (entry: SavedSearchConfig) => [{ label: '打开集合', key: 'open' }, ...(!entry.graphRoot ? [{ label: '修改条件', key: 'edit' }] : []), { label: '移到最前', key: 'first' }, { label: '删除集合', key: 'remove' }]
-const collectionAction = (action: string, entry: SavedSearchConfig) => { if (action === 'open') emit('select', entry); else if (action === 'edit') emit('edit', entry); else if (action === 'remove') emit('remove', entry); else if (action === 'first') moveCollection(entry.id, orderedCollections.value[0]?.id) }
+const entryOptions = (entry: SavedSearchConfig) => [{ label: '打开集合', key: 'open' }, ...(!entry.graphRoot ? [{ label: '修改条件', key: 'edit' }] : []), { label: '导出这个集合…', key: 'export' }, { label: '移到最前', key: 'first' }, { label: '删除集合', key: 'remove' }]
+const collectionAction = (action: string, entry: SavedSearchConfig) => { if (action === 'open') emit('select', entry); else if (action === 'edit') emit('edit', entry); else if (action === 'remove') emit('remove', entry); else if (action === 'first') moveCollection(entry.id, orderedCollections.value[0]?.id); else if (action === 'export') openTransfer('export', entry) }
 let generation = 0, previousRoot = '', disposed = false, resultKey = ''
 const preserveDraft = (root = previousRoot || store.libraryPath) => rememberCollectionDraft(root, hasDraft.value ? { id: editingId.value, name: name.value, query: query.value, directory: directory.value, tag: tag.value, days: days.value, objectTypes: [...objectTypes.value], baseline: baseline.value, advanced: advanced.value } : null, editingId.value)
 const restoreDraft = (draft: CollectionDraft) => { editingId.value = draft.id; name.value = draft.name; query.value = draft.query; directory.value = draft.directory; tag.value = draft.tag; days.value = draft.days; objectTypes.value = draft.objectTypes; baseline.value = draft.baseline; advanced.value = draft.advanced }
@@ -208,6 +214,7 @@ onBeforeUnmount(() => { clearTimeout(viewTimer); rememberView(); preserveDraft()
 
 <style scoped>
 .smart-collection { padding: 14px 12px 20px; min-width: 0; box-sizing: border-box; color: var(--theme-text); font-size: var(--text-sm); }
+.collection-home-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .detail-heading { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
 
 h2 { font-size: 15px; margin: 0; line-height: 1.4; overflow-wrap: anywhere; }

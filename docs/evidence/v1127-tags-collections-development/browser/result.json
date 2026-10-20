@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "Tag context menu opens scoped dialog; selection is explicit, dirty note excluded and preview cancellation writes nothing",
+    "Scoped tag rename modifies only the selected saved note, protects original history and leaves dirty content intact",
+    "Collection file opens per-row preview with unique import names; cancellation leaves configuration unchanged",
+    "Failed text or file reads retain the prior preview with a visible error and retire its old import confirmation",
+    "Cross-project conditions remap directories; unsupported row is deselected; failed save preserves originals and retry adds only selected collections without switching or changing drafts",
+    "soft themed compact transfer dialog settles with the matching surface and stays within bounds",
+    "neo themed compact transfer dialog settles with the matching surface and stays within bounds",
+    "glass themed compact transfer dialog settles with the matching surface and stays within bounds",
+    "airy themed compact transfer dialog settles with the matching surface and stays within bounds",
+    "minimal themed compact transfer dialog settles with the matching surface and stays within bounds",
+    "sharp themed compact transfer dialog settles with the matching surface and stays within bounds",
+    "Export retains ordinary and graph conditions without library roots, document bodies or saved IDs",
+    "Import commits against the queued latest collection list and preserves a collection saved while the import was waiting"
+  ],
+  "errors": []
+}

@@ -6,7 +6,7 @@ import { searchFeedbackContract, paletteFileOpenExpression } from './search-feed
 
 // Real packaged IPC, synthetic files and UI input; never grant test-only permissions.
 export async function runInstalledV115Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion }) {
-  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
+  if (process.env.LONGEDIT_R5I_DISPOSABLE !== '1' || !['1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27'].includes(appVersion)) throw Error('Disposable 1.1.5 or later supported installation required')
   if (path.resolve(library).toLowerCase() !== 'c:\\longeditr5ilibrary') throw Error('Only the disposable installer fixture library may be changed')
   const harnessSourceCommit = process.env.GITHUB_SHA || process.env.LONGEDIT_INSTALLED_HARNESS_COMMIT || ''
   assert.match(harnessSourceCommit, /^[a-f0-9]{40}$/, 'record the exact installer verification harness revision')
@@ -47,6 +47,18 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
   const selectScope = async label => { await mouse(`document.querySelector('${palette} .palette-scope')`); await mouse(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.textContent.trim()===${JSON.stringify(label)})`) }
   const scopeAll = () => selectScope('全部资料库')
   const result = name => paletteFileOpenExpression(name, palette)
+  // Paged searches preserve the visible order until the user accepts a new
+  // snapshot. Follow that visible action when more libraries complete.
+  const resultReady = async (name, label) => {
+    const refresh = `document.querySelector('${palette} .search-page-update button:not([disabled])')`
+    for (let step = 0; step < 8; step++) {
+      await waitFor(`!!(${result(name)})||!!(${refresh})`, label+' or explicit refresh')
+      if (await evaluate(`!!(${result(name)})`)) return
+      await mouse(refresh)
+    }
+    throw Error('Expected search file absent after explicit refresh: '+name)
+  }
+
   const normalize = p => { const value = p.replaceAll('\\', '/'); return (value.startsWith('//?/') ? value.slice(4) : value).toLowerCase() }
   const visibleSaveState = `(()=>{const s=document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app');return {state:document.querySelector('.document-save-state')?.textContent.trim(),tabs:[...document.querySelectorAll('.workspace-tab')].map(e=>e.getAttribute('aria-label')),error:document.querySelector('${palette} [role="alert"]')?.textContent,dirtyModels:s?.tabs.filter(t=>t.isDirty).map(t=>({path:t.path,content:t.content?.slice(0,300)})),tempDirty:s?.isTempDirty}})()`
   const contains = (results, file) => results.some(r => normalize(r.path) === normalize(file))
@@ -124,7 +136,7 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 actual command panel')
     await waitFor(`(${editor})?.textContent.includes('安装态草稿')`, 'v115 draft ready')
     await open(); await query(expression); await waitFor(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})`, 'v115 TXT and JSON results')
-    await scopeAll(); await waitFor(`!!(${result(path.basename(remote))})`, 'v115 all-library result visible')
+    await scopeAll(); await resultReady(path.basename(remote), 'v115 all-library result visible')
     check('palette-scope-dropdown-is-clickable-and-shows-real-native-results', await evaluate(`!!(${result(path.basename(main))})&&!!(${result(path.basename(data))})&&!!(${result(path.basename(remote))})`))
     await snap('installed-v115-search.jpg')
     // This shared fixture retains earlier format/failure examples. The paged
@@ -144,14 +156,14 @@ export async function runInstalledV115Workflow({ send, evaluate, navigate, waitF
     await query('v115-不存在-410974'); await waitFor(feedback.emptyExpression, 'genuine empty result')
     check('invalid-query-and-genuine-empty-state-are-distinct', invalidDistinct && !await evaluate(`!!document.querySelector('${palette} [role="alert"]')`))
     await snap('installed-v115-genuine-empty.jpg')
-    await scopeAll(); await query(expression); await waitFor(`!!(${result(path.basename(main))})`, 'v115 main text result'); await mouse(result(path.basename(main)))
+    await scopeAll(); await query(expression); await resultReady(path.basename(main), 'v115 main text result'); await mouse(result(path.basename(main)))
     await waitFor(`!document.querySelector('${palette}')&&document.querySelector('.library-embedded-editor .cm-content')?.textContent.includes('预算已确认')`, 'v115 result opened in main editor')
     check('search-result-opens-in-main-editor-without-replacing-reference', await evaluate(`!!document.querySelector('.library-embedded-editor .text-workspace')&&!document.querySelector('.reference-workspace .text-workspace')`))
     await navigate('#/library?path=' + encodeURIComponent(draft), '.library-mode', 'v115 draft protection')
     await waitFor(`(${editor})?.textContent.includes('安装态草稿')`, 'draft loaded again')
     report.markdownInputMode = await evaluate(`(${editor}).closest('.vditor-wysiwyg,.vditor-ir,.vditor-sv')?.className`)
     await mouse(editor); await key('a', 'KeyA', 65, 2); await send('Input.insertText', { text: '用户刚输入的未保存预算草稿' })
-    await open(); await scopeAll(); await query(expression); await waitFor(`!!(${result(path.basename(remote))})`, 'cross-library result ready'); await mouse(result(path.basename(remote)))
+    await open(); await scopeAll(); await query(expression); await resultReady(path.basename(remote), 'cross-library result ready'); await mouse(result(path.basename(remote)))
     await waitFor(`document.querySelector('${palette} [role="alert"]')?.textContent.includes('未保存')`, 'unsaved draft blocks library switch')
     const protectedDraft = await fs.readFile(draft, 'utf8') === '# 安装态草稿\n\n尚未修改\n' && normalize((await invoke('get_config')).activeLibraryPath) === normalize(library)
     await key('Escape', 'Escape', 27); await waitFor(`!document.querySelector('${palette}')`, 'palette closed'); await mouse(button('保存'))

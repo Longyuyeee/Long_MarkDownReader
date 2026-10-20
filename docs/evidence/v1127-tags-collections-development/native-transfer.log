@@ -1,0 +1,19 @@
+   Compiling tauri-app v1.1.27 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 33s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-2032ecd2c7ff9d98.exe)
+
+running 2 tests
+test commands::collection_transfer::tests::collection_preview_is_per_item_read_only_and_directory_can_be_remapped ... ok
+test commands::collection_transfer::tests::collection_bundle_keeps_only_conditions_and_round_trips_graph_and_search ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1097 filtered out; finished in 0.02s
+

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.26",
+  "appVersion": "1.1.27",
   "releaseCandidate": true,
   "channel": "community-unsigned",
-  "generatedAt": "2026-10-20",
-  "currentStatus": "v1.1.26-community-release-published",
+  "generatedAt": "2026-10-21",
+  "currentStatus": "v1.1.27-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -36,52 +36,52 @@
     "githubReleasePublished": true
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.25",
+    "previousPublicVersion": "1.1.26",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.25-to-1.1.26-pending",
-    "scope": "structured-source-history-and-file-context-submenus"
+    "managedUpdaterUpgradePath": "1.1.26-to-1.1.27-pending",
+    "scope": "tags-and-portable-collection-conditions"
   },
   "targetRelease": {
-    "tag": "v1.1.26",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26",
+    "tag": "v1.1.27",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.27",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "0e61db532ba2e060612fb1e176f5c2554bb06c6f",
+    "artifactSourceCommit": "9def6c7a7e8b96be61fd48d41f925085eb8036f1",
     "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39444053484,
-    "hostedInstalledLifecycleRunId": 39454287229,
+    "artifactBuildRunId": 39467642808,
+    "hostedInstalledLifecycleRunId": 39478199994,
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "LongEdit_1.1.26_x64_zh-CN.msi",
-        "sizeBytes": 77737984,
-        "sha256": "a395ab1152c3e0c89864eb8ac0730096be2f427baff8b1919286eee5c190f61e",
+        "fileName": "LongEdit_1.1.27_x64_zh-CN.msi",
+        "sizeBytes": 77758464,
+        "sha256": "0792f0ac8e1b7f1aa292e37c6f1d3ae982e89ffe2b42f7e0455446254770b6e8",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.26_x64_zh-CN.msi"
+        "sourceFileName": "Long编辑_1.1.27_x64_zh-CN.msi"
       },
       {
         "target": "nsis",
-        "fileName": "LongEdit_1.1.26_x64-setup.exe",
-        "sizeBytes": 68465777,
-        "sha256": "e9824dcee9f3f39122ec40b8313cf64910e11f654fc8ed3fd3eda67ead68fa65",
+        "fileName": "LongEdit_1.1.27_x64-setup.exe",
+        "sizeBytes": 68488846,
+        "sha256": "ac6da0ac607093a963e5ddff6dfc081cb9c9fa7e4b8b96a1972aa1018d2014d1",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.26_x64-setup.exe"
+        "sourceFileName": "Long编辑_1.1.27_x64-setup.exe"
       }
     ]
   },
   "release": {
-    "tag": "v1.1.26",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.26",
-    "databaseId": 418612045,
+    "tag": "v1.1.27",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.27",
+    "databaseId": 418762846,
     "isDraft": false,
     "isPrerelease": false,
-    "taggedCommit": "0e61db532ba2e060612fb1e176f5c2554bb06c6f",
-    "publishedAt": "2026-10-20T16:20:14Z"
+    "taggedCommit": "9def6c7a7e8b96be61fd48d41f925085eb8036f1",
+    "publishedAt": "2026-10-20T19:06:12Z"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -110,7 +110,8 @@
     "1.1.22-to-1.1.23-managed-update-observation-pending",
     "1.1.23-to-1.1.24-managed-update-observation-pending",
     "1.1.24-to-1.1.25-managed-update-observation-pending",
-    "1.1.25-to-1.1.26-managed-update-observation-pending"
+    "1.1.25-to-1.1.26-managed-update-observation-pending",
+    "v1.1.26-to-v1.1.27-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.27-tags-collections-planned"
+  "nextAction": "v1.1.28-reference-repair-planned"
 }

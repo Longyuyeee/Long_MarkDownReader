@@ -9,7 +9,8 @@ import {
   type ThemeName,
   type VisualStyle,
 } from '../config/themePresets'
-import { toCollectionRelativePath } from '../utils/savedCollections'
+import { sameWorkspacePath, toCollectionRelativePath } from '../utils/savedCollections'
+import { portableCollection, type PortableCollection } from '../utils/collectionTransfer'
 import type { FileDisplayStyle } from '../config/fileTreeAppearance'
 import { fileStylePathKey, normalizeFileDisplayStyles, moveFileDisplayStyleEntries, copyFileDisplayStyleEntries } from '../utils/fileDisplayStyles'
 import { normalizeDisplayPreferences } from '../config/displayPreferences'
@@ -212,8 +213,9 @@ export const useAppStore = defineStore('app', {
     },
     async updateConfig(patch: any) {
       // Queue immutable snapshots; failed persistence must not discard open work.
-      const snapshot = JSON.parse(JSON.stringify(patch))
+      const queuedPatch = typeof patch === 'function' ? patch : JSON.parse(JSON.stringify(patch))
       const task = configWritePromise.then(async () => {
+        const snapshot = typeof queuedPatch === 'function' ? JSON.parse(JSON.stringify(queuedPatch(this.$state))) : queuedPatch
         const switchesLibrary = snapshot.activeLibraryPath !== undefined && snapshot.activeLibraryPath !== this.activeLibraryPath
         const previousAutostart = this.isAutostart
         let autostartChanged = false
@@ -374,6 +376,25 @@ export const useAppStore = defineStore('app', {
         ? this.savedSearches.map(item => item.id === existing.id ? entry : item)
         : [entry, ...this.savedSearches] })
       return entry
+    },
+    async importSmartCollections(root: string, entries: PortableCollection[], expectedActiveRoot: string) {
+      const inputs = entries.map(portableCollection)
+      let added: SavedSearchConfig[] = []
+      await this.updateConfig((state: typeof this.$state) => {
+        if (!sameWorkspacePath(state.activeLibraryPath, expectedActiveRoot)
+          || !state.libraries.some(library => library.path === root)) throw new Error('资料库已变化，请重新打开导入预览')
+        if (!inputs.length || inputs.length > 64 || state.savedSearches.length + inputs.length > 64) throw new Error('集合总数不能超过 64 个，请减少选择')
+        const used = new Set(state.savedSearches.filter(entry => sameWorkspacePath(entry.libraryPath, root)).map(entry => entry.name.toLocaleLowerCase()))
+        added = inputs.map(input => {
+          const name = input.name.trim()
+          if (!name || Array.from(name).length > 80) throw new Error('集合名称需为 1 至 80 字')
+          if (used.has(name.toLocaleLowerCase())) throw new Error(`集合「${name}」已存在，请修改名称后导入；原集合已保留`)
+          used.add(name.toLocaleLowerCase())
+          return { ...input, name, id: `collection-${crypto.randomUUID()}`, libraryPath: root, createdAt: Date.now() }
+        })
+        return { savedSearches: [...added, ...state.savedSearches] }
+      })
+      return added
     },
     async setFileDisplayStyle(path: string, style: FileDisplayStyle) {
       const previous = this.fileDisplayStyles

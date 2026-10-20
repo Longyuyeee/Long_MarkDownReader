@@ -272,3 +272,21 @@ docs/evidence/v1126-review-*/**/*.log -text -diff
 
 docs/evidence/v1126-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1126-publication-*/**/*.log -text -diff
+
+docs/evidence/v1127-tags-collections-development/** -text whitespace=cr-at-eol
+docs/evidence/v1127-tags-collections-development/**/*.log -text -diff
+
+docs/evidence/v1-1-27-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1-1-27-candidate-lifecycle/**/*.log -text -diff
+
+docs/evidence/v1.1.27-release/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.27-release/**/*.log -text -diff
+
+docs/evidence/v1127-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1127-build-*/**/*.log -text -diff
+
+docs/evidence/v1127-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1127-review-*/**/*.log -text -diff
+
+docs/evidence/v1127-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1127-publication-*/**/*.log -text -diff

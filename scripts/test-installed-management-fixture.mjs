@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
-import {managementMainTarget,assertPreparedManagementFixture,assertRestoredManagementFixture} from './lib/installed-management-fixture.mjs'
+import crypto from 'node:crypto'
+import {managementMainTarget,assertPreparedManagementFixture,assertRestoredManagementFixture,managementLibraryMappings} from './lib/installed-management-fixture.mjs'
 const library='C:\\LongEditR5ILibrary'
 const marker={id:'r5l-saved-search',name:'R5L Restore Marker',query:'R5L',libraryPath:library,objectTypes:['plain-text','json'],filters:null,createdAt:1}
 const added={id:'new-collection',name:'本版标签集合验收',query:'',libraryPath:library,objectTypes:[],filters:{directory:'v1110-tags-12345678-abcd-abcd-abcd-123456789012',tag:'验收一零',tags:[],modifiedWithinDays:null},createdAt:100}
@@ -21,4 +22,14 @@ test('management uses the real main Tauri target even when external/quick-note p
  const target=url=>({type:'page',url,webSocketDebuggerUrl:'ws://owned'}),main=target('http://tauri.localhost/#/release-capabilities')
  assert.equal(managementMainTarget([target('http://tauri.localhost/#/temp?external=1'),target('http://tauri.localhost/?quick-note=1'),main]),main)
  assert.throws(()=>managementMainTarget([target('https://tauri.localhost.evil.invalid/'),target('http://tauri.localhost/#/temp?external=1')]))
+})
+
+const crossConfig=()=>{const c=config('1.1.10'),target=library+'\\000-v1127-reuse-12345678-abcd-abcd-abcd-123456789012\\目标项目';c.libraries.push({path:target});c.savedSearches.push({id:'collection-abcd-01',name:'二七复用',query:'预算',libraryPath:target,objectTypes:['markdown'],filters:{directory:'项目',tag:'工作',modifiedWithinDays:7},createdAt:200},{id:'collection-abcd-02',name:'二七复用（导入 1）',query:'__longedit_graph_collection__',libraryPath:target,objectTypes:[],graphRoot:'中心.md',graphDepth:2,createdAt:200});return c}
+test('v1.1.27 management preserves both libraries and every imported condition exactly',()=>{
+ const c=crossConfig(),paths=c.libraries.map(entry=>entry.path),snapshot=assertPreparedManagementFixture(c,library,'1.1.27');assert.equal(snapshot.length,4);assertRestoredManagementFixture(c,library,snapshot,paths)
+ for(const mutate of [c=>c.savedSearches.pop(),c=>c.savedSearches[2].filters.directory='wrong',c=>c.savedSearches[3].graphRoot='wrong.md',c=>c.libraries.pop(),c=>c.libraries.push({path:'D:/foreign'}),c=>c.savedSearches[3].id='regenerated']){const changed=crossConfig();mutate(changed);assert.throws(()=>assertRestoredManagementFixture(changed,library,snapshot,paths))}
+ assert.throws(()=>assertPreparedManagementFixture(config('1.1.10'),library,'1.1.27'))
+})
+test('management restore maps every fingerprint only to its matching owned project',()=>{
+ const paths=crossConfig().libraries.map(entry=>entry.path),required=paths.map(path=>({pathFingerprint:crypto.createHash('sha256').update(path).digest('hex')}));assert.deepEqual(managementLibraryMappings([...required].reverse(),paths).map(item=>item.path),[...paths].reverse());assert.throws(()=>managementLibraryMappings(required.slice(1),paths));assert.throws(()=>managementLibraryMappings([required[0],required[0]],paths));assert.throws(()=>managementLibraryMappings([{pathFingerprint:'foreign'},required[1]],paths))
 })
