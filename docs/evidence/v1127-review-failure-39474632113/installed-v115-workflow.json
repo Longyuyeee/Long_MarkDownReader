@@ -1,0 +1,187 @@
+{
+  "appVersion": "1.1.27",
+  "sourceCommit": "9def6c7a7e8b96be61fd48d41f925085eb8036f1",
+  "harnessSourceCommit": "eb5e08d7fb4a6b8f06198b080eef538a9687d590",
+  "installerSha256": "ac6da0ac607093a963e5ddff6dfc081cb9c9fa7e4b8b96a1972aa1018d2014d1",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "unauthorized-import-is-rejected-without-changing-library",
+      "status": "passed"
+    },
+    {
+      "id": "external-window-commands-return-without-blocking-native-ipc",
+      "status": "passed"
+    },
+    {
+      "id": "same-name-document-and-local-images-never-overwrite-existing-content",
+      "status": "passed"
+    },
+    {
+      "id": "batch-import-reports-partial-failure-without-publishing-missing-image-note",
+      "status": "passed"
+    },
+    {
+      "id": "retrying-only-failed-source-retains-completed-file-identities",
+      "status": "passed"
+    },
+    {
+      "id": "shared-native-search-matches-txt-json-and-configured-library-scope",
+      "status": "passed"
+    }
+  ],
+  "commandTrace": [
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-20T18:30:32.389Z",
+      "completedAt": "2026-10-20T18:30:32.400Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-20T18:30:32.401Z",
+      "completedAt": "2026-10-20T18:30:32.477Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-20T18:30:32.478Z",
+      "completedAt": "2026-10-20T18:30:32.549Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-20T18:30:32.549Z",
+      "completedAt": "2026-10-20T18:30:32.657Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-20T18:30:32.657Z",
+      "completedAt": "2026-10-20T18:30:32.757Z",
+      "status": "completed"
+    },
+    {
+      "command": "open_external_file_window",
+      "startedAt": "2026-10-20T18:30:32.757Z",
+      "completedAt": "2026-10-20T18:30:32.902Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|close",
+      "startedAt": "2026-10-20T18:30:32.902Z",
+      "completedAt": "2026-10-20T18:30:33.075Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:window|set_focus",
+      "startedAt": "2026-10-20T18:30:33.079Z",
+      "completedAt": "2026-10-20T18:30:33.256Z",
+      "status": "completed"
+    },
+    {
+      "command": "plugin:app|version",
+      "startedAt": "2026-10-20T18:30:33.256Z",
+      "completedAt": "2026-10-20T18:30:33.329Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-20T18:30:33.329Z",
+      "completedAt": "2026-10-20T18:30:33.528Z",
+      "status": "completed"
+    },
+    {
+      "command": "import_library_files",
+      "startedAt": "2026-10-20T18:30:33.534Z",
+      "completedAt": "2026-10-20T18:30:33.658Z",
+      "status": "completed"
+    },
+    {
+      "command": "get_config",
+      "startedAt": "2026-10-20T18:30:33.669Z",
+      "completedAt": "2026-10-20T18:30:33.676Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-20T18:30:33.676Z",
+      "completedAt": "2026-10-20T18:30:33.697Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-20T18:30:33.946Z",
+      "completedAt": "2026-10-20T18:30:34.255Z",
+      "status": "completed"
+    },
+    {
+      "command": "rebuild_knowledge_index",
+      "startedAt": "2026-10-20T18:30:34.255Z",
+      "completedAt": "2026-10-20T18:30:34.294Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-20T18:30:34.295Z",
+      "completedAt": "2026-10-20T18:30:34.349Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge_libraries",
+      "startedAt": "2026-10-20T18:30:34.349Z",
+      "completedAt": "2026-10-20T18:30:34.385Z",
+      "status": "completed"
+    },
+    {
+      "command": "search_knowledge",
+      "startedAt": "2026-10-20T18:30:34.385Z",
+      "completedAt": "2026-10-20T18:30:34.401Z",
+      "status": "completed"
+    },
+    {
+      "command": "save_config",
+      "startedAt": "2026-10-20T18:31:05.699Z",
+      "completedAt": "2026-10-20T18:31:05.712Z",
+      "status": "completed"
+    }
+  ],
+  "indexPreparationBusyResponses": 0,
+  "error": "Error: Timed out waiting for v115 all-library result visible",
+  "failureUiState": {
+    "state": "已保存",
+    "tabs": [
+      "整理-release-v114-A",
+      "v115-草稿"
+    ],
+    "dirtyModels": [],
+    "tempDirty": false
+  },
+  "failureNavigation": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5Cv115-%E8%8D%89%E7%A8%BF.md",
+    "visibility": "visible",
+    "focused": true,
+    "root": "C:\\LongEditR5ILibrary",
+    "tabs": [
+      {
+        "id": "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-A.md",
+        "path": "\\\\?\\C:\\LongEditR5ILibrary\\整理-release-v114-A.md"
+      },
+      {
+        "id": "C:\\LongEditR5ILibrary\\v115-草稿.md",
+        "path": "C:\\LongEditR5ILibrary\\v115-草稿.md"
+      }
+    ],
+    "components": [
+      {
+        "name": "LibraryMode",
+        "uid": 33,
+        "unmounted": false
+      }
+    ],
+    "visibleTreePaths": []
+  },
+  "cleanupUiReload": "not-attempted-after-failed-user-workflow"
+}

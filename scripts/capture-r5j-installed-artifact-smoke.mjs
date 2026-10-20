@@ -940,10 +940,6 @@ if (process.env.LONGEDIT_INSTALLED_V124_STABILITY === '1') {
   await runInstalledStabilityScenario({ send, evaluate, waitFor, navigate, capture, library, output, sourceCommit, installerSha256, appVersion })
 }
 if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
-  if(appVersion==='1.1.27'){
-    const {runInstalledV1127Workflow}=await import('./lib/installed-v1-1-27-workflow.mjs')
-    await runInstalledV1127Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
-  }
   if (['1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27'].includes(appVersion)) {
     const { runInstalledV119Workflow } = await import('./lib/installed-v1-1-9-workflow.mjs')
     await runInstalledV119Workflow({ send, evaluate, navigate, waitFor, capture, library, output, sourceCommit, installerSha256, appVersion, installedExecutable, repoRoot })
@@ -1054,6 +1050,13 @@ if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
     const {runInstalledV1124Workflow}=await import('./lib/installed-v1-1-24-workflow.mjs')
     await runInstalledV1124Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
   }
+  // Run cross-project collection fixtures after existing workflows, so their
+  // extra registered project does not alter earlier all-library search tasks.
+  if(appVersion==='1.1.27'){
+    const {runInstalledV1127Workflow}=await import('./lib/installed-v1-1-27-workflow.mjs')
+    await runInstalledV1127Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
+  }
+
 }
 await fs.writeFile(path.join(output, 'installed-knowledge-network-evidence.json'), `${JSON.stringify({
   schemaVersion: 1,
