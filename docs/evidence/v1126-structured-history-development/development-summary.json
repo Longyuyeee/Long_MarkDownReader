@@ -1,0 +1,23 @@
+{
+  "status": "development-checks-passed-native-install-pending",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": {
+    "submenuBrowser": 7,
+    "structuredHistoryBrowser": 12,
+    "priorStructuredEditingBrowser": 55,
+    "sessionAndHistoryUnit": 26,
+    "nativeHistoryUnit": 21,
+    "installedEvidenceContracts": 2,
+    "typeCheck": "passed"
+  },
+  "observations": [
+    "Initial source-column text assertions used DOM innerText; switched to the actual CodeMirror document without trimming.",
+    "A delayed restore was correctly ignored but lacked a local explanation; the dialog now reports that newer content was retained.",
+    "Existing UTF-16/NUL reading boundaries remain; supported UTF-8 BOM/CRLF recovery is verified.",
+    "Initial candidate checks rejected stale active version metadata and missing channel wording. These were corrected before packaging; cancelled and failed raw runs are retained."
+  ],
+  "productSourceCommit": "a086e2b8cbf4186bce7f9603e68cefc2dc60a85b",
+  "nativeBuildRunId": 39433301301
+}
