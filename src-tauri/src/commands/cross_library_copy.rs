@@ -786,15 +786,13 @@ fn execute(owner: &str, key: &str, acknowledge_warnings: bool) -> Result<CopyRec
             continue;
         }
         let operation_id = crate::services::file_operation_history::id();
-        if let Err(error) = crate::services::file_operation_history::begin(&source_root, &operation_id, &unit.source, &unit.target, &target_root, None, None) {
-            unit.error = Some(format!("操作记录未能保存，尚未复制：{error}"));
-            continue;
-        }
         if let Err(error) = crate::services::file_operation_history::begin(&target_root, &operation_id, &unit.source, &unit.target, &target_root, None, None) {
-            let _ = crate::services::file_operation_history::finish(&source_root, &operation_id, false, &[]);
             unit.error = Some(format!("目标资料库的操作记录未能保存，尚未复制：{error}"));
             continue;
         }
+        // A read-only source remains copyable. The writable destination owns the
+        // durable receipt; mirror it to the source only when that is possible.
+        let _ = crate::services::file_operation_history::begin(&source_root, &operation_id, &unit.source, &unit.target, &target_root, None, None);
         match execute_unit(&source_root, &target_root, &directory, unit) {
             Ok(()) => { unit.completed = true; },
             Err(error) => unit.error = Some(error),
@@ -1134,5 +1132,25 @@ mod tests {
         )
         .is_err());
         assert!(!f.b.join("a.txt").exists());
+    }
+    #[test]
+    fn source_history_unavailable_still_copies_and_records_the_writable_destination() {
+        let f = Fixture::new();
+        fs::write(f.a.join("a.txt"), b"source stays unchanged").unwrap();
+        // Simulate an unavailable source metadata directory without requiring
+        // platform-specific privilege changes on the host running this test.
+        fs::write(f.a.join(".longedit"), b"unwritable metadata location").unwrap();
+        let p = f.preview(&["a.txt"], ".");
+        let result = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(result.result.errors.is_empty());
+        assert_eq!(fs::read(f.b.join("a.txt")).unwrap(), b"source stays unchanged");
+        assert_eq!(fs::read(f.a.join("a.txt")).unwrap(), b"source stays unchanged");
+        assert_eq!(fs::read(f.a.join(".longedit")).unwrap(), b"unwritable metadata location");
+        let records = crate::services::file_operation_history::list(&f.b).unwrap();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].action, "copy");
+        assert_eq!(records[0].status, "completed");
+        assert!(!crate::services::file_operation_history::restorable(&records[0]));
+        assert_eq!(crate::services::file_operation_history::locate(&f.b, &records[0].id).unwrap(), f.b.join("a.txt").canonicalize().unwrap());
     }
 }
