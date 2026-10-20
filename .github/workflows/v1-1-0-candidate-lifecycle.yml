@@ -101,7 +101,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: current-product/src-tauri -> target
-          cache-on-failure: true
+          # Retire the old partial cache; only a completed build seeds this key.
+          prefix-key: v1-foundations-compiled-rust
+          cache-on-failure: false
 
       - name: Install frozen candidate dependencies
         working-directory: current-product
