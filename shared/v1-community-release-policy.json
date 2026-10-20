@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.21",
-  "releaseCandidate": true,
+  "appVersion": "1.1.22",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
-  "generatedAt": "2026-10-19",
-  "currentStatus": "v1.1.21-community-release-published",
+  "generatedAt": "2026-10-20",
+  "currentStatus": "v1.1.22-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.20",
+    "previousPublicVersion": "1.1.21",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.20-to-1.1.21-pending",
-    "scope": "cross-library-saved-file-copy-preview-dependencies-and-repeatable-receipts"
+    "managedUpdaterUpgradePath": "1.1.21-to-1.1.22-pending",
+    "scope": "durable-file-operations-per-item-restore-and-draft-protection"
   },
   "targetRelease": {
-    "tag": "v1.1.21",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21",
+    "tag": "v1.1.22",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39215635202,
-    "hostedInstalledLifecycleRunId": 39227582947,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.21_x64_zh-CN.msi",
-        "sizeBytes": 77623296,
-        "sha256": "46fb293b78eb520be9d7891aac8cb03e551af5214c856b841aacd5faa9cb8ad7",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.21_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.21_x64-setup.exe",
-        "sizeBytes": 68397154,
-        "sha256": "d3a4bfd5455dee78e3cc9ec162aad8760d8e6bc1d39865f1853bdd9fea9cfa89",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.21_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.21",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21",
-    "databaseId": 417106958,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
-    "publishedAt": "2026-10-19T09:22:39Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -105,7 +74,8 @@
     "1.1.17-to-1.1.18-managed-update-observation-pending",
     "1.1.18-to-1.1.19-managed-update-observation-pending",
     "1.1.19-to-1.1.20-managed-update-observation-pending",
-    "1.1.20-to-1.1.21-managed-update-observation-pending"
+    "1.1.20-to-1.1.21-managed-update-observation-pending",
+    "1.1.21-to-1.1.22-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.22-persistent-file-operation-history-planned"
+  "nextAction": "validate-and-build-v1.1.22-installers"
 }

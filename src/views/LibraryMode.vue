@@ -1773,7 +1773,7 @@ const applyExternalImport = async (result: FileOperationResult, directory: strin
 }
 const contextPaths = () => topLevelPaths(selectedKeys.value.includes(contextMenu.targetPath) ? selectedKeys.value : [contextMenu.targetPath])
 const clipboardAvailable = computed(() => Boolean(libraryFileClipboard.value?.paths.length && sameLibrary(libraryFileClipboard.value.root, store.libraryPath)))
-const undoMoveAvailable = computed(() => Boolean(lastLibraryMove.value?.items.length && sameLibrary(lastLibraryMove.value.root, store.libraryPath)))
+const undoMoveAvailable = computed(() => Boolean(store.libraryPath))
 const fileMenuIcon = (icon: typeof CopyFileIcon) => () => h(NIcon, null, { default: () => h(icon) })
 const contextMenuProps = () => ({ style: 'max-height: min(480px, calc((100vh - 80px) / 2)); overflow-y: auto;' })
 const destinationMenuOptions = () => [
@@ -1781,6 +1781,7 @@ const destinationMenuOptions = () => [
   { label: '撤销上次移动', key: 'file-undo-move', disabled: !undoMoveAvailable.value || fileOperationBusy.value, icon: fileMenuIcon(UndoFileIcon) },
   { label: '资料库回收站…', key: 'file-trash', disabled: fileOperationBusy.value, icon: fileMenuIcon(TrashIcon) },
   { label: '核对未完成的移动…', key: 'file-move-review', disabled: fileOperationBusy.value, icon: fileMenuIcon(RefreshIcon) },
+  { label: '最近操作…', key: 'file-operation-history', disabled: fileOperationBusy.value, icon: fileMenuIcon(UndoFileIcon) },
 ]
 const beforeFileOperation = async (paths: string[], operation: FileOperation) => {
   if (fileDropBusy.value) { message.info('文件正在移动，请稍后再操作'); return false }
@@ -3394,6 +3395,7 @@ const onMenuAction = async (key: string) => {
   if (key === 'file-undo-move') { await fileOperations.value?.undoMove(); return }
   if (key === 'file-trash') { fileOperations.value?.openTrash(); return }
   if (key === 'file-move-review') { fileOperations.value?.openRecovery(); return }
+  if (key === 'file-operation-history') { void fileOperations.value?.openHistory(); return }
   if (key === 'file-recycle') { await fileOperations.value?.recycle(selection); return }
   if (key.startsWith('create-format:')) {
     const [formatId, extension] = key.slice('create-format:'.length).split(':')

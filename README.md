@@ -2,6 +2,9 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
+> v1.1.22 正在进行发布前检查：文件栏右键“最近操作…”可查整理记录、查看位置并按项还原，保护后续修改与未保存草稿。[开发进展](docs/V1_1_22_File_Operation_History_Development_2026-10-20.md)。当前公开下载仍为 v1.1.21。
+
+
 <h1 align="center">Long编辑</h1>
 
 <p align="center">

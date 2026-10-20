@@ -12,6 +12,8 @@ fn staged(f: &TestWorkspace) -> (PathBuf, Stage) {
     let stage = Stage::begin(
         &cache,
         Record {
+            operation_id: None,
+            undo_of: None,
             version: 1,
             root: f.0.clone(),
             source: f.0.join("a.md"),

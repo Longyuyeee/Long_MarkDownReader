@@ -785,9 +785,24 @@ fn execute(owner: &str, key: &str, acknowledge_warnings: bool) -> Result<CopyRec
         if unit.completed || unit.error.is_some() {
             continue;
         }
+        let operation_id = crate::services::file_operation_history::id();
+        if let Err(error) = crate::services::file_operation_history::begin(&source_root, &operation_id, &unit.source, &unit.target, &target_root, None, None) {
+            unit.error = Some(format!("操作记录未能保存，尚未复制：{error}"));
+            continue;
+        }
+        if let Err(error) = crate::services::file_operation_history::begin(&target_root, &operation_id, &unit.source, &unit.target, &target_root, None, None) {
+            let _ = crate::services::file_operation_history::finish(&source_root, &operation_id, false, &[]);
+            unit.error = Some(format!("目标资料库的操作记录未能保存，尚未复制：{error}"));
+            continue;
+        }
         match execute_unit(&source_root, &target_root, &directory, unit) {
-            Ok(()) => unit.completed = true,
+            Ok(()) => { unit.completed = true; },
             Err(error) => unit.error = Some(error),
+        }
+        if !unit.review_required {
+            // Publishing succeeded independently of receipt persistence. Never invite duplicate copies.
+            let _ = crate::services::file_operation_history::finish(&source_root, &operation_id, unit.completed, &[]);
+            let _ = crate::services::file_operation_history::finish(&target_root, &operation_id, unit.completed, &[]);
         }
         for file in &mut unit.files {
             file.original = None;

@@ -12,6 +12,7 @@ pub mod external_apps;
 pub mod files;
 pub mod file_relations;
 pub mod file_management;
+pub mod file_operation_history;
 pub mod cross_library_copy;
 pub mod formats;
 pub mod quick_note;
