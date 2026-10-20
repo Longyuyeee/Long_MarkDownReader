@@ -1,0 +1,1 @@
+export const sectionFixture = '# 长文方案\n\n前言保留。\n\n## 重复\n\n第一节唯一内容。\n\n### 子节\n\n![保留图片](images/shared.png)\n\n```md\n## 代码里的假标题\n```\n\n- 列表一\n  - 嵌套项\n\n## 重复\n\n第二节唯一内容。\n\n| 列一 | 列二 |\n| --- | --- |\n| 原值 | 保留 |\n\n## 尾章\n\n终章内容。\n'

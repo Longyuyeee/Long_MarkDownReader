@@ -211,6 +211,7 @@
                     :data="outlineTreeData"
                     :selected-keys="activeHeadingKey ? [activeHeadingKey] : []"
                     :on-update:selected-keys="handleOutlineSelect"
+                    :node-props="outlineNodeProps"
                     class="compact-outline-tree"
                     default-expand-all
                   />
@@ -685,6 +686,7 @@
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :libraries="store.libraries" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" :after-cross-copy="applyCrossLibraryCopy" />
     <AttachmentManagerDialog ref="attachmentManager" :library-root="store.libraryPath" :context-key="store.libraryPath + ':' + activeTabId" :capture-draft="captureAttachmentDraft" :apply-draft="applyAttachmentDraft" @open="path => handleNodeSelect([path])" />
+    <MarkdownSectionActions ref="sectionActions" :context-key="store.libraryPath + ':' + activeTabId + ':' + store.editorMode + ':' + documentPreviewActive" :capture="captureSectionContext" :apply-change="applySectionChange" />
     <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
     <WritingDeliveryDialog v-if="writingDelivery" v-bind="writingDelivery" @close="writingDelivery=null" />
@@ -734,6 +736,9 @@ import TextConflictDialog, { type ConflictSnapshot } from '../components/TextCon
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import AttachmentManagerDialog from '../components/AttachmentManagerDialog.vue'
+import MarkdownSectionActions from '../components/MarkdownSectionActions.vue'
+import type { MarkdownSectionContext } from '../utils/markdownSectionContext'
+import type { SectionChange } from '../utils/markdownSections'
 import { Paperclip as AttachmentIcon } from 'lucide-vue-next'
 import ExternalImportDialog from '../components/ExternalImportDialog.vue'
 import { searchQueryNeedle } from '../utils/searchQuery'
@@ -1619,24 +1624,29 @@ const contentDigestFromSignature = (signature: string) => signature.match(/:([a-
 const EDITOR_MODE_SYNC_DELAY_MS = 300
 const IMAGE_FIX_DELAY_MS = 300
 
-const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
+const { outlineItems, outlineTreeData, sectionModel, mapped: outlineMapped, activeHeadingKey, headingNode, syncOutlineManual, scrollToHeading, scrollToFragment, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => activeIsMarkdown.value && isVditorReady && lastLoadedPath===activeTabId.value ? vditor : null,()=>activeTabId.value||'')
 const { startAdaptiveMotion } = useAdaptiveMarkdownMotion(() => vditor)
 const refreshVisibleOutline = () => {
   destroyOutlineObserver()
-  if (activeSidebarTab.value !== 'outline' || isSidebarCollapsed.value || store.isZen || !vditor) return
+  if (activeSidebarTab.value !== 'outline' || isSidebarCollapsed.value || store.isZen) return
   syncOutlineManual()
   setupOutlineObserver()
 }
-watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen], refreshVisibleOutline)
+watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen, documentPreviewActive],()=>{void nextTick(refreshVisibleOutline)})
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath, draft:()=>vditor?.getValue()||'' })
-const activeHeadingKey = ref<string | null>(null)
 const revealLinkedHeading = () => {
   const fragment = typeof route.query.markdownAnchor === 'string' ? route.query.markdownAnchor : ''
   if (!fragment || !isVditorReady || lastLoadedPath !== activeTabId.value) return
   const root = vditor?.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
-  if (root) markdownAnchorTarget(root, fragment)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  if (root && !scrollToFragment(fragment)) markdownAnchorTarget(root, fragment)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 const handleOutlineSelect = (keys: string[]) => { if (keys.length > 0) scrollToHeading(keys[0] as string) }
+const sectionActions = ref<InstanceType<typeof MarkdownSectionActions>|null>(null)
+const outlineNodeProps = ({option}:{option:{key?:string|number}}) => ({
+  'data-section-key':String(option.key),
+  onContextmenu:(event:MouseEvent)=>{event.preventDefault();sectionActions.value?.open(event,String(option.key))},
+  onKeydown:(event:KeyboardEvent)=>{if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10')){event.preventDefault();sectionActions.value?.open({clientX:0,clientY:0,currentTarget:event.currentTarget} as MouseEvent,String(option.key))}},
+})
 const searchMatchIndex = ref(0)
 const searchMatchCount = ref<number | null>(null)
 const searchNavigationClosed = ref(false)
@@ -2656,6 +2666,53 @@ const openAttachments = (path:string|null) => {
   void nextTick(revealPendingAttachments)
 }
 watch([activeTabId,editorLoading,editorModeChangeBusy,()=>store.libraryPath],revealPendingAttachments,{flush:'post'})
+type SectionOwner={root:string;path:string;editor:any;tab:TabInfo;generation:number;mode:string;tabContent:string|undefined}
+const sectionOwnerValid=(owner:SectionOwner)=>owner.root===store.libraryPath&&owner.path===activeTabId.value&&owner.editor===vditor&&tabs.value.includes(owner.tab)
+  &&owner.generation===editorLoadGeneration&&owner.mode===vditor?.getCurrentMode()&&isVditorReady&&lastLoadedPath===owner.path
+  &&!editorLoading.value&&!editorModeChangeBusy.value&&!suppressEditorInput&&!document.body.inert&&!fileOperationBusy.value&&!currentFileReloadBusy.value
+  &&!hasPendingMainTextSave(owner.path)&&!owner.tab.textReadOnlyReason
+const captureSectionContext=(id:string):MarkdownSectionContext=>{
+  const tab=tabs.value.find(item=>item.path===activeTabId.value)
+  if(!tab||!vditor||!activeIsMarkdown.value)throw Error('请先打开可编辑的 Markdown 笔记。')
+  const owner:SectionOwner={root:store.libraryPath,path:tab.path,editor:vditor,tab,generation:editorLoadGeneration,mode:vditor.getCurrentMode(),tabContent:tab.content}
+  if(!sectionOwnerValid(owner))throw Error('正文正在加载、保存或整理，请完成后再操作；草稿已保留。')
+  syncOutlineManual()
+  const selectedNode=headingNode(id)
+  syncOutlineManual(true)
+  const selectedId=selectedNode?.dataset.longeditSection
+  const heading=outlineItems.value.find(item=>item.id===selectedId)
+  if(!selectedId||!heading)throw Error('标题已经变化，请重新选择。')
+  const sourceSection=sectionModel.value.sections.find(item=>item.id===selectedId)
+  const readOnlyReason=documentPreviewActive.value?'返回编辑后可整理章节':!outlineMapped.value?(sectionModel.value.reason||'当前模式可定位和复制链接；切换模式后再整理章节'):!sourceSection?'引用或列表内标题可定位和复制链接':undefined
+  return {path:owner.path,model:sectionModel.value,id:selectedId,owner,readOnlyReason,heading:sourceSection?undefined:heading}
+}
+const applySectionChange=(context:MarkdownSectionContext,change:SectionChange)=>{
+  const owner=context.owner as SectionOwner
+  if(context.readOnlyReason||documentPreviewActive.value||!sectionOwnerValid(owner)||owner.editor.getValue()!==context.model.content||(owner.tab.content!==owner.tabContent&&owner.tab.content!==context.model.content))throw Error('文档或正文已有变化，请关闭预览后重新选择章节；当前草稿已保留。')
+  const oldNode=headingNode(context.id),scroller=editorScroller(),oldTop=oldNode?.getBoundingClientRect().top
+  const root=owner.editor.vditor[owner.mode].element as HTMLElement,selection=window.getSelection()
+  const oldBlock=selection?.anchorNode?.parentElement?.closest('p,li,[data-type="text"]') as HTMLElement|null
+  const section=context.model.sections.find(item=>item.id===context.id)!,endSection=context.model.sections.find(item=>item.start===section.end),endNode=endSection?headingNode(endSection.id):undefined
+  const inSection=(node:Node,start:HTMLElement,end?:HTMLElement)=>start===node||Boolean(start.compareDocumentPosition(node)&Node.DOCUMENT_POSITION_FOLLOWING)&&(!end||Boolean(node.compareDocumentPosition(end)&Node.DOCUMENT_POSITION_FOLLOWING))
+  let bookmark:{text:string;tag:string;offset:number}|null=null
+  if(oldBlock&&oldNode&&root.contains(oldBlock)&&inSection(oldBlock,oldNode,endNode)&&selection?.isCollapsed){const range=document.createRange();range.selectNodeContents(oldBlock);range.setEnd(selection.anchorNode!,selection.anchorOffset);bookmark={text:oldBlock.textContent||'',tag:oldBlock.tagName,offset:range.toString().length}}
+  recordWindowDraftActivity();owner.editor.vditor.undo.addToUndoStack(owner.editor.vditor);owner.editor.setValue(change.content);owner.editor.vditor.undo.addToUndoStack(owner.editor.vditor)
+  const applied=owner.editor.getValue();store.updateTabContent(owner.path,applied);owner.tab.isDirty=true;wordCount.value=applied.length
+  syncOutlineManual(true);const moved=sectionModel.value.sections.find(item=>item.start===change.start),target=moved?headingNode(moved.id):undefined
+  if(moved)activeHeadingKey.value=moved.id
+  void nextTick(()=>{
+    if(!sectionOwnerValid(owner)||owner.editor.getValue()!==applied||!target?.isConnected)return
+    if(scroller&&oldTop!==undefined&&oldTop>=scroller.getBoundingClientRect().top&&oldTop<=scroller.getBoundingClientRect().bottom)scroller.scrollTop+=target.getBoundingClientRect().top-oldTop
+    else if(moved)scrollToHeading(moved.id,'auto')
+    if(bookmark){const nextBoundary=sectionModel.value.sections.find(item=>item.start===moved?.end),nextNode=nextBoundary?headingNode(nextBoundary.id):undefined
+      const matches=Array.from(root.querySelectorAll<HTMLElement>('p,li,[data-type="text"]')).filter(node=>node.tagName===bookmark!.tag&&node.textContent===bookmark!.text&&inSection(node,target,nextNode))
+      if(matches.length===1){const walker=document.createTreeWalker(matches[0],NodeFilter.SHOW_TEXT);let remaining=bookmark.offset,node:Node|null
+        while((node=walker.nextNode())){if(remaining<=(node.textContent?.length||0)){const range=document.createRange();range.setStart(node,remaining);range.collapse(true);root.focus({preventScroll:true});selection?.removeAllRanges();selection?.addRange(range);break}remaining-=node.textContent?.length||0}}
+    }
+    captureEditorPosition()
+  })
+  void fixEditorImages()
+}
 let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
 const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
 const captureEditorPosition = () => {
@@ -3869,6 +3926,7 @@ const switchEditorMode = async (mode: string) => {
     tab.isDirty = true
   }
   searchMatchCount.value = null
+  clearTimeout(readingPositionTimer); captureEditorPosition(); lastLoadedPath = ''
   editorLoading.value = true
   const generation = ++editorLoadGeneration
   cleanupEditorListeners()
@@ -3888,6 +3946,7 @@ const ensureVditorModeForFile = (path: string) => {
   if (!vditor || !isVditorReady) return true
   const desiredMode = desiredVditorMode(path)
   if (vditor.getCurrentMode() === desiredMode) return false
+  clearTimeout(readingPositionTimer); captureEditorPosition(); lastLoadedPath = ''
   editorLoading.value = true
   cleanupEditorListeners()
   documentShortcutHost.value = null
@@ -4072,7 +4131,7 @@ const initVditor = () => {
               let closestId = null as string | null
               headings.forEach((h: HTMLElement) => {
                 const rect = h.getBoundingClientRect()
-                if (rect.top <= 160) closestId = h.getAttribute('data-id') || h.id
+                if (rect.top <= 160) closestId = h.dataset.longeditSection || h.getAttribute('data-id') || h.id
               })
               activeHeadingKey.value = closestId
             }

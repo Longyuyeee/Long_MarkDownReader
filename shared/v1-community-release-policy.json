@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.23",
-  "releaseCandidate": true,
+  "appVersion": "1.1.24",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-20",
-  "currentStatus": "v1.1.23-community-release-published",
+  "currentStatus": "v1.1.24-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.22",
+    "previousPublicVersion": "1.1.23",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.22-to-1.1.23-pending",
-    "scope": "attachment-visibility-reference-management-and-draft-protection"
+    "managedUpdaterUpgradePath": "1.1.23-to-1.1.24-pending",
+    "scope": "long-markdown-outline-and-section-operations"
   },
   "targetRelease": {
-    "tag": "v1.1.23",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23",
+    "tag": "v1.1.24",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.24",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39372018521,
-    "hostedInstalledLifecycleRunId": 39378576559,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.23_x64_zh-CN.msi",
-        "sizeBytes": 77709312,
-        "sha256": "aa9f534c8d690e8aa0bfe0959cc8d2b5936b5ae767c4aff7292cebecda939a75",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.23_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.23_x64-setup.exe",
-        "sizeBytes": 68450976,
-        "sha256": "69e2b840de06ab6b5d878b31a1348328b4fa53d016bd893e07aed71328dd8bd6",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.23_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.23",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23",
-    "databaseId": 418070008,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
-    "publishedAt": "2026-10-20T06:22:18Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -107,7 +76,8 @@
     "1.1.19-to-1.1.20-managed-update-observation-pending",
     "1.1.20-to-1.1.21-managed-update-observation-pending",
     "1.1.21-to-1.1.22-managed-update-observation-pending",
-    "1.1.22-to-1.1.23-managed-update-observation-pending"
+    "1.1.22-to-1.1.23-managed-update-observation-pending",
+    "1.1.23-to-1.1.24-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.24-long-markdown-planned"
+  "nextAction": "validate-and-build-v1.1.24-installers"
 }

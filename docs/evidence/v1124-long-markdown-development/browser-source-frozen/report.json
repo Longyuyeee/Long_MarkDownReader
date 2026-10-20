@@ -1,0 +1,67 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "wysiwyg-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "ir-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "ir-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "sv-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "sv-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "move-keeps-body-and-unsaved-disk",
+      "status": "passed"
+    },
+    {
+      "id": "single-toolbar-undo-restores-complete-draft",
+      "status": "passed"
+    },
+    {
+      "id": "hierarchy-change-and-undo-keep-children",
+      "status": "passed"
+    },
+    {
+      "id": "real-clipboard-link-targets-second-duplicate",
+      "status": "passed"
+    },
+    {
+      "id": "reading-preview-uses-visible-heading-target",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-normal-motion",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refuses-newer-tab-content",
+      "status": "passed"
+    },
+    {
+      "id": "document-switch-closes-preview-with-old-draft-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "nested-heading-navigation-and-copy-retained-without-destructive-actions",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

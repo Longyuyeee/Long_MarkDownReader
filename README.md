@@ -2,7 +2,7 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
-> **v1.1.23 已正式发布**：附件目录可见，右键与文档操作菜单集中管理引用、查看位置和修复失效路径，保留原附件与未保存草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23) · [发布说明](docs/RELEASE_NOTES_v1.1.23.md)。
+> v1.1.24 正在进行发布前检查：大纲右键整理整节、调整标题层级、复制章节链接，保留草稿与撤销。当前公开下载仍为 v1.1.23。[开发进度](docs/V1_1_24_Long_Markdown_Development_2026-10-20.md)。
 
 
 <h1 align="center">Long编辑</h1>

@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.1.24",
-  "runtimeBaseVersion": "1.1.23",
+  "runtimeBaseVersion": "1.1.24",
   "publicVersion": "1.1.23",
   "publicTag": "v1.1.23",
   "publicTagCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-75-v1.1.23-published",
-  "binaryVersionTransition": "v1.1.23-public-release-published",
-  "displayLabel": "v1.1.23 已发布 · 下一目标 v1.1.24（长 Markdown 组织）",
+  "currentStage": "M8-76-v1.1.24-version-candidate",
+  "binaryVersionTransition": "v1.1.24-quality-gate-pending",
+  "displayLabel": "v1.1.24 长 Markdown 组织候选 · 当前公开 v1.1.23",
   "activeSlice": {
-    "id": "v1.1.23-attachment-management",
-    "status": "published-with-installed-workflows-and-public-assets-verified",
-    "document": "docs/V1_1_23_Attachment_Management_Development_2026-10-20.md"
+    "id": "v1.1.24-long-markdown-organization",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_1_24_Long_Markdown_Development_2026-10-20.md"
   }
 }

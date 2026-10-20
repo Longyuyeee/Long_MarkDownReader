@@ -1,0 +1,70 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "wysiwyg-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "ir-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "ir-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "sv-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "sv-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "move-keeps-body-and-unsaved-disk",
+      "status": "passed"
+    },
+    {
+      "id": "single-toolbar-undo-restores-complete-draft",
+      "status": "passed"
+    },
+    {
+      "id": "hierarchy-change-and-undo-keep-children",
+      "status": "passed"
+    },
+    {
+      "id": "real-clipboard-link-targets-second-duplicate",
+      "status": "passed"
+    },
+    {
+      "id": "reading-preview-uses-visible-heading-target",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-normal-motion",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refuses-newer-tab-content",
+      "status": "passed"
+    },
+    {
+      "id": "document-switch-closes-preview-with-old-draft-preserved",
+      "status": "passed"
+    }
+  ],
+  "errors": [
+    "TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9034/src/config/themePresets.ts:89:61)\n    at ComputedRefImpl.fn (http://127.0.0.1:9034/src/App.vue?t=1792479115388:71:35)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:804:29)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:793:94)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at ReactiveEffect.runIfDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:687:9)\n    at callWithErrorHandling (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2497:33)\n    at flushJobs (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2709:9)",
+    "TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9034/src/config/themePresets.ts:89:61)\n    at ComputedRefImpl.fn (http://127.0.0.1:9034/src/App.vue?t=1792479115388:71:35)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:804:29)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:793:94)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at ReactiveEffect.runIfDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:687:9)\n    at callWithErrorHandling (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2497:33)\n    at flushJobs (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2709:9)",
+    "TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9034/src/config/themePresets.ts:89:61)\n    at ComputedRefImpl.fn (http://127.0.0.1:9034/src/App.vue?t=1792479115388:71:35)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:804:29)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:793:94)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at ReactiveEffect.runIfDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:687:9)\n    at callWithErrorHandling (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2497:33)\n    at flushJobs (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2709:9)",
+    "TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9034/src/config/themePresets.ts:89:61)\n    at ComputedRefImpl.fn (http://127.0.0.1:9034/src/App.vue?t=1792479115388:71:35)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:804:29)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:793:94)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at ReactiveEffect.runIfDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:687:9)\n    at callWithErrorHandling (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2497:33)\n    at flushJobs (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2709:9)",
+    "TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9034/src/config/themePresets.ts:89:61)\n    at ComputedRefImpl.fn (http://127.0.0.1:9034/src/App.vue?t=1792479115388:71:35)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:804:29)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:793:94)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at ReactiveEffect.runIfDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:687:9)\n    at callWithErrorHandling (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2497:33)\n    at flushJobs (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2709:9)",
+    "TypeError: Cannot read properties of undefined (reading 'mode')\n    at isDarkTheme (http://127.0.0.1:9034/src/config/themePresets.ts:89:61)\n    at ComputedRefImpl.fn (http://127.0.0.1:9034/src/App.vue?t=1792479115388:71:35)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:804:29)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at refreshComputed (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:793:94)\n    at isDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:775:68)\n    at ReactiveEffect.runIfDirty (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:687:9)\n    at callWithErrorHandling (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2497:33)\n    at flushJobs (http://127.0.0.1:9034/node_modules/.vite/deps/chunk-LD5L2YUO.js?v=5095aae3:2709:9)"
+  ]
+}

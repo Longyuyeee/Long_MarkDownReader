@@ -11,7 +11,7 @@ export function searchRuntimeIdentity(env = process.env) {
       endpoint: 'http://127.0.0.1:9458', urlPrefix: 'http://127.0.0.1:14200/' }
   }
   assert.equal(env.LONGEDIT_R5I_DISPOSABLE, '1')
-  assert.ok(['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23'].includes(env.LONGEDIT_R5J_APP_VERSION))
+  assert.ok(['1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24'].includes(env.LONGEDIT_R5J_APP_VERSION))
   assert.match(env.LONGEDIT_R5J_SOURCE_COMMIT || '', /^[a-f0-9]{40}$/)
   assert.match(env.LONGEDIT_R5J_INSTALLER_SHA256 || '', /^[a-f0-9]{64}$/)
   assert.match(env.GITHUB_SHA || '', /^[a-f0-9]{40}$/)
