@@ -8,7 +8,7 @@ export function validateInstalledFindReplace(report,manifest){
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)
  assert.deepEqual(report.checks.map(c=>[c.id,c.status]),findReplaceChecks.map(id=>[id,'passed']));assert.deepEqual(report.runtimeErrors,[])
  assert.deepEqual(report.modes.map(m=>m.mode),['wysiwyg','ir','sv']);for(const m of report.modes)for(const key of ['selectionExact','replaceExact','undoExact'])assert.equal(m[key],true,m.mode+' '+key)
- for(const key of ['caseWordExact','navigationExact','cancelExact','allReplaceExact','allUndoExact','diskUnchanged','textSelectionExact','textUndoExact','nativeFindRetained','switchExact','otherDraftsPreserved','savedExact','reopenedExact','externalOriginalKept','conflictDraftKept','conflictCopyExact','imageUnchanged'])assert.equal(report[key],true,key)
+ for(const key of ['caseWordExact','navigationExact','cancelExact','allReplaceExact','allUndoExact','diskUnchanged','textSelectionExact','textUndoExact','nativeFindRetained','switchExact','otherDraftsPreserved','savedExact','savedFindAvailable','reopenedExact','externalOriginalKept','conflictDraftKept','conflictCopyExact','imageUnchanged'])assert.equal(report[key],true,key)
  for(const type of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type&&e.trusted),type)
  assert.ok(report.inputTrace.every(e=>e.trusted));assert.equal(report.outputs.length,5)
  for(const o of report.outputs){assert.match(o.fileName,/^installed-v1125-(?:saved\.md|saved\.txt|conflict-copy\.md|external-original\.md|shared\.png)$/);assert.ok(o.sizeBytes>0);assert.match(o.sha256,/^[a-f0-9]{64}$/)}

@@ -2718,7 +2718,7 @@ const applySectionChange=(context:MarkdownSectionContext,change:SectionChange)=>
   void fixEditorImages()
 }
 const documentFind=ref<InstanceType<typeof DocumentFindReplace>|null>(null)
-const documentFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:store.libraryPath+':'+activeTabId.value,path:activeTabId.value||'',generation:editorLoadGeneration,revision:activeTextTab.value?.content,
+const documentFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:store.libraryPath+':'+activeTabId.value,path:activeTabId.value||'',generation:editorLoadGeneration,revision:activeTextTab.value?.content,signature:activeTextTab.value?.textSignature,
  ready:Boolean(activeIsMarkdown.value&&!activeEmbeddedEditor.value&&isVditorReady&&lastLoadedPath===activeTabId.value&&!editorLoading.value&&!editorModeChangeBusy.value&&!suppressEditorInput&&!fileOperationBusy.value&&!currentFileReloadBusy.value&&!hasPendingMainTextSave(activeTabId.value||'')),
  readOnlyReason:activeTextTab.value?.textReadOnlyReason||(documentPreviewActive.value?'返回编辑后可替换':'')
 }), (content,path)=>{recordWindowDraftActivity();store.updateTabContent(path,content);const tab=tabs.value.find(item=>item.path===path);if(tab)tab.isDirty=true;updateWordCount();syncOutlineManual(true);void fixEditorImages()})

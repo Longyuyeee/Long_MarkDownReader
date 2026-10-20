@@ -148,7 +148,7 @@ const showOutline = ref(false)
 let vditor: Vditor | null = null
 
 const externalFind=ref<InstanceType<typeof DocumentFindReplace>|null>(null),externalFindRevision=ref('')
-const externalFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:filePath.value,path:filePath.value,generation:externalLoadGeneration,revision:externalFindRevision.value,
+const externalFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:filePath.value,path:filePath.value,generation:externalLoadGeneration,revision:externalFindRevision.value,signature:externalSignature,
  ready:Boolean(vditor?.vditor?.[vditor.getCurrentMode()]?.element&&loadedExternalPath===filePath.value&&externalSignature&&!externalSaving.value&&!conflict.value),readOnlyReason:''
 }),content=>{recordWindowDraftActivity();externalFindRevision.value=content;isDirty.value=content!==originalExternalContent;store.isTempDirty=isDirty.value;refreshVisibleOutline();void fixEditorImages()})
 const externalFindShortcut=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'){event.preventDefault();event.stopImmediatePropagation();if(!document.querySelector('.n-modal'))externalFind.value?.open()}}
