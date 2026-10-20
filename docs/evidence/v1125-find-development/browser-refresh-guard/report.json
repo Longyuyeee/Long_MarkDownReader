@@ -1,0 +1,51 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "ir-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "sv-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "unmapped-selection-never-defaults-to-whole-document",
+      "status": "passed"
+    },
+    {
+      "id": "replace-all-preview-cancel-and-case-word-count",
+      "status": "passed"
+    },
+    {
+      "id": "literal-dollar-all-replace-unsaved-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-normal-motion",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refresh-and-reopen-cannot-overwrite-new-store-draft",
+      "status": "passed"
+    },
+    {
+      "id": "text-selection-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "native-code-search-retained",
+      "status": "passed"
+    },
+    {
+      "id": "document-switch-closes-modal-and-keeps-other-draft",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

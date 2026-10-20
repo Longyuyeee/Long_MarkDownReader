@@ -13,7 +13,7 @@ export function findDocumentMatches(content:string,options:FindOptions):FindResu
  if(!Number.isInteger(scope.from)||!Number.isInteger(scope.to)||scope.from<0||scope.to>content.length||scope.from>scope.to)return {matches:[],reason:'选区已变化，请重新打开查找替换。'}
  const escaped=options.query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),regex=new RegExp(escaped,options.caseSensitive?'gu':'giu'),matches:TextSpan[]=[]
  regex.lastIndex=scope.from
- for(let match;(match=regex.exec(content));){const from=match.index,to=from+match[0].length;if(from>=scope.to||to>scope.to)break
+ for(let match;(match=regex.exec(content));){const from=match.index,to=from+match[0].length;if(from<scope.from)continue;if(from>=scope.to||to>scope.to)break
   if(options.wholeWord&&(word.test(before(content,from))||word.test(after(content,to))))continue
   matches.push({from,to});if(matches.length>10000)return {matches:[],reason:'命中超过 10000 处，请缩小选区或补充关键词；不会部分替换。'}
  }

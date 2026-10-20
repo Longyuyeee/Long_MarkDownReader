@@ -4,9 +4,12 @@ interface DocumentIdentity {key:string;path:string;generation:number;ready:boole
 interface Owner {editor:any;identity:DocumentIdentity;mode:string;scrollTop:number;scrollLeft:number}
 export function createVditorFindAdapter(getEditor:()=>any,documentIdentity:()=>DocumentIdentity,onChange:(content:string,path:string)=>void){
  let remembered:{key:string;generation:number;editor:any;mode:string;content:string;span?:TextSpan}|undefined
+ let captured:{key:string;generation:number;editor:any;mode:string;revision?:string}|undefined
  const rememberSelection=()=>{const editor=getEditor(),id=documentIdentity();if(!editor||!id.ready)return;remembered={key:id.key,generation:id.generation,editor,mode:editor.getCurrentMode(),content:editor.getValue(),span:vditorSourceSelection(editor)}}
  const capture=():FindDocumentSnapshot=>{const editor=getEditor(),id=documentIdentity();if(!editor||!id.path||!id.ready)throw Error('正文正在读取、保存或整理，请稍后再打开查找替换。')
   const mode=editor.getCurrentMode(),root=editor.vditor[mode].element as HTMLElement,content=editor.getValue(),selection=vditorSourceSelection(editor)||(remembered?.key===id.key&&remembered.generation===id.generation&&remembered.editor===editor&&remembered.mode===mode&&remembered.content===content?remembered.span:undefined)
+  if(captured&&captured.editor===editor&&captured.key===id.key&&captured.generation===id.generation&&captured.mode===mode&&id.revision!==captured.revision&&id.revision!==content)throw Error('正文尚未同步到编辑器，新草稿已保留；请重新打开文档后再查找。')
+  captured={editor,key:id.key,generation:id.generation,mode,revision:id.revision}
   const selected=window.getSelection();remembered=undefined
   return {path:id.path,content,owner:{editor,identity:id,mode,scrollTop:root.scrollTop,scrollLeft:root.scrollLeft} satisfies Owner,selection,label:'Markdown 源码',readOnlyReason:id.readOnlyReason,selectionReason:!selection&&!selected?.isCollapsed?'当前选区无法准确对应源码，可在源码模式重新选择范围。':undefined}}
  const isCurrent=(snapshot:FindDocumentSnapshot)=>{const owner=snapshot.owner as Owner,id=documentIdentity();return id.ready&&owner.editor===getEditor()&&owner.identity.key===id.key&&owner.identity.generation===id.generation&&owner.mode===owner.editor.getCurrentMode()&&snapshot.content===owner.editor.getValue()&&(id.revision===owner.identity.revision||id.revision===snapshot.content)}
