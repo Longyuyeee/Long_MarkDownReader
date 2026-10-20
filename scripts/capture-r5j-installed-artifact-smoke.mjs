@@ -1036,7 +1036,7 @@ if (process.env.LONGEDIT_INSTALLED_VERSION_SCENARIO === '1') {
   }
   if(appVersion==='1.1.23'){
     const {runInstalledV1123Workflow}=await import('./lib/installed-v1-1-23-workflow.mjs')
-    await runInstalledV1123Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable})
+    await runInstalledV1123Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot})
   }
 }
 await fs.writeFile(path.join(output, 'installed-knowledge-network-evidence.json'), `${JSON.stringify({

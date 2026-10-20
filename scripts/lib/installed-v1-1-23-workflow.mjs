@@ -10,10 +10,10 @@ import {writingImageFixture} from './writing-delivery-fixture.mjs'
 import {expandCopySourceParents} from './installed-v1-1-21-workflow.mjs'
 import {attachmentChecks,validateInstalledAttachments,assertAttachmentOutputBytes} from './installed-v1-1-23-evidence.mjs'
 const q=JSON.stringify,key=v=>String(v||'').replaceAll('\\','/').replace('//?/','').toLowerCase(),sha=b=>crypto.createHash('sha256').update(b).digest('hex')
-export async function runInstalledV1123Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
+export async function runInstalledV1123Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
  assert.equal(appVersion,'1.1.23');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
- const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),folder=path.join(library,'000-v1123-attachments-'+crypto.randomUUID()),external=path.join('C:/LongEditR5IExternal','v1123-'+crypto.randomUUID()),p=name=>path.join(folder,name),repoRoot=process.cwd()
+ const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),folder=path.join(library,'000-v1123-attachments-'+crypto.randomUUID()),external=path.join('C:/LongEditR5IExternal','v1123-'+crypto.randomUUID()),p=name=>path.join(folder,name)
  const store=`document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app')`,invoke=(c,a={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(c)},${q(a)})`),editor=visibleMarkdownInput('#vditor-lib'),draft=()=>evaluate(`${store}.tabs.find(t=>window.__v1123Key(t.path)===${q(key(p('笔记.md')))}).content`)
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-attachments-native-picker-draft-and-output-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}
  const mark=n=>report.checks.push({id:attachmentChecks[n],status:'passed'}),row=file=>`[...document.querySelectorAll('[data-drop-path]')].find(e=>window.__v1123Key(e.dataset.dropPath)===${q(key(file))})`,expand=file=>expandCopySourceParents({ui,evaluate,library,file,row})
@@ -22,9 +22,10 @@ export async function runInstalledV1123Workflow({send,evaluate,navigate,capture,
  const choose=target=>ui.click(`[data-attachment-target=${q(target)}]`)
  const picker=async(target,tag,cancel=false)=>{
   const record=path.join(output,`v1123-${tag}-picker.json`),owner=key(target).startsWith(key(external)+'/')?external:folder
+  await fs.access(path.join(repoRoot,'scripts/select-hosted-session-file.ps1'))
   const child=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts/select-hosted-session-file.ps1'),'-Executable',installedExecutable,'-Title','选择替换文件（库外文件将保留原件并复制到附件目录）','-SelectedPath',target,'-OwnerRoot',owner,'-Report',record,...(cancel?['-Cancel']:[])],{windowsHide:true,stdio:'inherit'})
-  const done=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error(tag+' attachment picker failed '+code)))})
-  await ui.clickText('.attachment-manager button','更换引用…');await withDeadline(()=>done,70000,'actual attachment file picker');return JSON.parse((await fs.readFile(record,'utf8')).replace(/^\uFEFF/,''))
+  const done=new Promise(resolve=>{child.once('error',error=>resolve({error}));child.once('exit',code=>resolve({code}))})
+  await ui.clickText('.attachment-manager button','更换引用…');const result=await withDeadline(()=>done,70000,'actual attachment file picker');if(result.error)throw result.error;assert.equal(result.code,0,tag+' attachment picker exit status');return JSON.parse((await fs.readFile(record,'utf8')).replace(/^\uFEFF/,''))
  }
  const apply=async()=>{await ui.waitFor('!!document.querySelector(".attachment-replacement")','reference preview');await ui.clickText('.attachment-replacement button','应用到草稿');await ui.waitFor('!document.querySelector(".attachment-replacement")','draft replacement receipt')}
  const take=async(file,fileName)=>{const bytes=await fs.readFile(file);await fs.writeFile(path.join(output,fileName),bytes,{flag:'wx'});report.outputs.push({fileName,sizeBytes:bytes.length,sha256:sha(bytes)})}
