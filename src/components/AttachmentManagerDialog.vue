@@ -15,12 +15,13 @@
           <strong>{{ referenceName(selected.target) }}</strong><p class="attachment-path">{{ selected.path || selected.target }}</p>
           <small>第 {{ selected.line }} 行 · {{ selected.count }} 处引用</small>
           <div class="attachment-actions">
-            <n-button size="small" :disabled="selected.status !== 'resolved_file' || working" @click="openFile(selected.path)">打开</n-button>
+            <n-button size="small" :disabled="selected.status !== 'resolved_file' || working || !canOpen(selected.path)" @click="openFile(selected.path)">打开</n-button>
             <n-button size="small" :disabled="selected.status !== 'resolved_file' || working" @click="locate(selected.path)">查看位置</n-button>
             <n-button size="small" :disabled="selected.status !== 'resolved_file' || working" @click="showUses(selected.path)">查看引用</n-button>
             <n-button v-if="selected.canReplace" type="primary" size="small" :loading="working" @click="prepareReplacement">更换引用…</n-button>
           </div>
           <p v-if="selected.status === 'missing'" class="attachment-note">文件已找不到。可选择现有文件修复这篇笔记的引用。</p>
+          <p v-else-if="selected.status === 'resolved_file' && !canOpen(selected.path)" class="attachment-note">此类型暂无内置编辑器，可查看文件位置。</p>
           <p v-else-if="!selected.canReplace && selected.status !== 'resolved_file'" class="attachment-note">这类路径需要在正文中核对，原文保持不变。</p>
         </div>
       </div>
@@ -46,6 +47,7 @@ import { NModal, NInput, NButton, useMessage } from 'naive-ui'
 import { Paperclip, FileText, RefreshCw } from 'lucide-vue-next'
 import { invoke } from '@tauri-apps/api/core'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
+import { findFileFormat } from '../config/fileFormats'
 interface Attachment { target:string; path:string|null; status:string; line:number; count:number; canReplace:boolean }
 interface Report { document:string; markdown:boolean; references:Attachment[] }
 interface Use { document:string; line:number; count:number }
@@ -56,6 +58,7 @@ const visible=ref(false), path=ref(''), report=ref<Report|null>(null), query=ref
 const usesVisible=ref(false), usesLoading=ref(false), usesError=ref(''), usesPath=ref(''), uses=ref<Use[]>([]), replacement=ref<Replacement|null>(null), replacementError=ref('')
 let generation=0, useGeneration=0
 const filename=(value:string)=>value.split(/[\\/]/).pop()||value
+const canOpen=(value?:string|null)=>!!value && !!findFileFormat(value)
 const referenceName=(value:string)=>{try{return filename(decodeURIComponent(value.split(/[?#]/)[0]||value))}catch{return filename(value)}}
 const relative=(value:string)=>value.replace(props.libraryRoot,'').replace(/^[\\/]/,'')
 const status=(value:string)=>({resolved_file:'可用',missing:'已失效',unreadable:'无法读取',outside_library:'库外路径',internal:'内部记录'}[value]||'需核对')
