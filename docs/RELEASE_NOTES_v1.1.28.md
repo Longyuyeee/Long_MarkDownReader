@@ -7,6 +7,6 @@
 - 笔记中的失效来源链接支持在当前草稿内修复；保留未保存内容和代码中的示例链接，可撤销、重做，再手动保存。核对期间笔记或来源变化会中止旧操作。
 - 延续六种界面风格，修复入口集中在菜单与弹窗，完成后可直接打开来源。
 
-使用方法见 [来源修复说明](Reference_Repair_User_Guide.md)。实际安装验证和安装器摘要见 [发布记录](V1_1_28_Unsigned_Community_Release_Audit_2026-10-21.md)。
+使用方法见 [来源修复说明](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/Reference_Repair_User_Guide.md)。实际安装验证和安装器摘要见 [发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_28_Unsigned_Community_Release_Audit_2026-10-21.md)。
 
 社区版采用现有未签名安装方式。支持手动下载安装；应用内自动更新观察独立记录。大文件或不能准确识别的位置会保留原记录并提供只关联文件的选择。正文链接修复限当前 2 MiB 内可准确识别的内联来源链接；不批量改写资料库，不自动保存笔记。
