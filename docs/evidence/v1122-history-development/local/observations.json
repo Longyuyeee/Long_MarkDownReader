@@ -1,0 +1,41 @@
+{
+  "observedAt": "2026-10-20T02:02:38.726Z",
+  "releaseReceipt": false,
+  "sourceAtExport": "e24506718286d8a8d914574ea2fb519c8362ee3d",
+  "finalAffectedNative": {
+    "status": "passed",
+    "fileHistoryChecks": 9,
+    "crossLibraryCopyChecks": 9,
+    "productTreeUnchangedSinceSource": true
+  },
+  "developmentFunctional": {
+    "passed": 1082,
+    "ignored": 5,
+    "sourceFrozenForWholeRun": false
+  },
+  "componentIPC": "explicitly-mocked-see-components-report",
+  "localWorkbookPerformance": {
+    "status": "failed-threshold",
+    "repeatedByExistingTestAttempts": 2,
+    "cloudConfirmation": "pending",
+    "thresholdUnchanged": true
+  },
+  "logs": [
+    {
+      "fileName": "v1122-rust-functional.log",
+      "sha256": "5dbfc1389c21ce7c10724978bc1e14f86ae2f8eb9442aa8cab07d3068f928f21"
+    },
+    {
+      "fileName": "v1122-final-targeted.log",
+      "sha256": "34c7f60ab1f05dbfa5eefe4c1cb891d6d92d4241c2695a1ca9e2dd292581f314"
+    },
+    {
+      "fileName": "v1122-rust-performance.log",
+      "sha256": "7d3c9bb0702cd31202ddbc25e416f95e38dd83d300dc1b4ba236143252985de9"
+    },
+    {
+      "fileName": "v1122-quality-development.log",
+      "sha256": "dcfd48c745c4e40f052e7efe84070390e03c58d3b2b53acd570f4ee05f573465"
+    }
+  ]
+}
