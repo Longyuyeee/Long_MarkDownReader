@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.26",
+  "developmentTargetVersion": "1.1.27",
   "runtimeBaseVersion": "1.1.26",
-  "publicVersion": "1.1.25",
-  "publicTag": "v1.1.25",
-  "publicTagCommit": "a3bbfd4cc591d4989b14fc14f9daac0c6c90e1d7",
+  "publicVersion": "1.1.26",
+  "publicTag": "v1.1.26",
+  "publicTagCommit": "0e61db532ba2e060612fb1e176f5c2554bb06c6f",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-80-v1.1.26-version-candidate",
-  "binaryVersionTransition": "v1.1.26-release-ready",
-  "displayLabel": "v1.1.26 结构化源码历史与恢复候选 · 当前公开 v1.1.25",
+  "currentStage": "M8-81-v1.1.26-published",
+  "binaryVersionTransition": "v1.1.26-public-release-published",
+  "displayLabel": "v1.1.26 已发布 · 下一目标 v1.1.27（标签整理与集合复用）",
   "activeSlice": {
     "id": "v1.1.26-structured-history",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-with-installed-workflows-and-public-assets-verified",
     "document": "docs/V1_1_26_Structured_History_Development_2026-10-20.md"
   }
 }
