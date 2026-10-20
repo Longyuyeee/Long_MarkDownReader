@@ -17,7 +17,7 @@ export function validateInstalledChapters(report,manifest){
 export function assertChapterOutputBytes(report,read){
  for(const output of report.outputs){const bytes=read(output.fileName);assert.equal(bytes.length,output.sizeBytes);assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),output.sha256)}
  const saved=read('installed-v1124-saved.md').toString('utf8'),copy=read('installed-v1124-conflict-copy.md').toString('utf8'),original=read('installed-v1124-external-original.md').toString('utf8')
- assert.equal(crypto.createHash('sha256').update(saved).digest('hex'),report.savedSha256);assert.equal(original,report.externalContent);assert.equal(copy,report.conflictDraft)
+ assert.equal(crypto.createHash('sha256').update(saved).digest('hex'),report.savedSha256);assert.equal(original,report.externalContent);assert.deepEqual(report.saveConvention,{lineEnding:'lf',hasFinalNewline:true});assert.equal(saved,report.submittedDraft.replace(/\n+$/,'')+'\n');assert.equal(copy,report.conflictDraft.replace(/\n+$/,'')+(report.conflictDraft.endsWith('\n')?'\n':''))
  for(const text of [saved,copy]){for(const mode of ['wysiwyg','ir','sv'])assert.ok(text.includes('需要保留的章节草稿 '+mode));for(const marker of ['第一节唯一','第二节唯一','代码里的假标题','images/shared.png','原值'])assert.ok(text.includes(marker))}
  assert.ok(copy.includes('冲突后的章节草稿'));assert.ok(original.includes('外部修改必须保留'));assert.equal(read('installed-v1124-shared.png').subarray(0,8).toString('hex'),'89504e470d0a1a0a')
 }
