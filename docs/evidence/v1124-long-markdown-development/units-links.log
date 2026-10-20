@@ -1,0 +1,25 @@
+✔ chapter evidence binds three modes, drafts, clipboard and actual saved bytes (18.1701ms)
+✔ chapter tasks are connected to real install, import, runtime and publication with valid browser expressions (96.4279ms)
+✔ duplicate headings have exact source ranges and unique standard fragments (57.284ms)
+✔ code fences, HTML, nested lists and quotes never become editable top-level sections (6.3346ms)
+✔ a definition containing an identical heading cannot steal its source position (4.4111ms)
+✔ front matter and CRLF offsets remain byte-for-byte stable outside moved sections (1.3859ms)
+✔ moving a chapter preserves children, tables, pictures, lists and code text (1.8281ms)
+✔ move up followed by move down restores a document with a final newline exactly (2.7649ms)
+✔ EOF without a newline gains a necessary separator rather than joining headings (0.5101ms)
+✔ moves stop at parent boundaries and do not silently reparent a chapter (0.9281ms)
+✔ level changes update child headings while preserving all other source bytes (0.9077ms)
+✔ out-of-range child levels reject the whole operation (0.5733ms)
+✔ Setext headings keep body and inline syntax when moving or changing level (15.5293ms)
+✔ slug collisions and punctuation-only headings still have distinct targets (0.4865ms)
+✔ a stale section identifier is rejected instead of editing a different range (0.4006ms)
+✔ long documents use bounded source mapping with a clear large-document fallback (59.465ms)
+✔ chapter links remove canonical Windows prefixes and preserve escaped local destinations (0.6877ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1170.2583
