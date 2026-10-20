@@ -1,0 +1,20 @@
+✔ literal text, whitespace, newlines and regex punctuation use exact UTF-16 spans (1.3608ms)
+✔ case and Unicode whole words share the same matching spans used by replacement (1.3151ms)
+✔ a duplicate inside the selected scope never changes other equal text (0.8715ms)
+✔ whole-word boundaries use the complete document at selection edges (0.2035ms)
+✔ replacement dollar syntax stays literal and the changed scope adjusts once (0.2532ms)
+✔ deletion and multiline replacement preserve all text outside the scope (0.254ms)
+✔ empty searches, stale or overlapping spans cannot produce unintended edits (0.411ms)
+✔ limits never return a partial replace-all candidate (5.7095ms)
+✔ oversized queries and replacement expansion fail before creating output (2.8749ms)
+✔ Unicode regex cannot rewind before a scope beginning inside a surrogate pair (0.405ms)
+✔ find/replace evidence binds exact modes, draft ownership, undo and saved output bytes (12.2824ms)
+✔ find/replace tasks connect real install, strict import, runtime and publication with valid expressions (199.8276ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 624.3843

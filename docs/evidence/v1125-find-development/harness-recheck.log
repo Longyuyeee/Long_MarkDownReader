@@ -1,0 +1,29 @@
+✔ an identical delayed Markdown notification cannot dirty a completed save (3.61ms)
+✔ real subsequent edits stay dirty and duplicate notifications never clear drafts (3.3514ms)
+✔ the display newline produced by setValue does not become a new unsaved edit (2.4919ms)
+✔ external Markdown repeated saved-content notifications do not block storing the saved file (2.4935ms)
+✔ external Markdown genuine edits during a save remain dirty against its acknowledged baseline (2.9776ms)
+✔ failure and retry preserve query: 项目 (19.292ms)
+✔ failure and retry preserve query: #项目 (9.2873ms)
+✔ successful empty response is not failure (7.2219ms)
+✔ stale resolve cannot overwrite newer results (9.5432ms)
+✔ stale reject cannot overwrite newer results (6.8817ms)
+✔ clear invalidates pending response and clears busy state (9.36ms)
+✔ library change rejects old response (9.046ms)
+✔ new query immediately removes old result; missing library does not spin (12.0454ms)
+✔ component keeps errors distinct and offers accessible retry (5.1292ms)
+✔ real Vue watchers debounce changes and retry retains format filter (16.5482ms)
+✔ real library watcher clears query, collection and busy state before late response (7.48ms)
+✔ real Vue clear cancels debounce without invoking backend (7.9407ms)
+✔ real Vue unmount cancels scheduled search (15.3667ms)
+✔ real Vue unmount invalidates a late response (17.5744ms)
+✔ find/replace evidence binds exact modes, draft ownership, undo and saved output bytes (16.8022ms)
+✔ find/replace tasks connect real install, strict import, runtime and publication with valid expressions (63.1028ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1126.3071

@@ -1,0 +1,34 @@
+Library configuration, graph return, active file, and bounded restart context restoration contract passed (3 behavioral checks).
+TXT and LOG use stable named grid areas; editor/viewer keeps remaining height and status stays compact.
+✔ failure and retry preserve query: 项目 (16.0816ms)
+✔ failure and retry preserve query: #项目 (11.3699ms)
+✔ successful empty response is not failure (16.1885ms)
+✔ stale resolve cannot overwrite newer results (16.5247ms)
+✔ stale reject cannot overwrite newer results (17.9737ms)
+✔ clear invalidates pending response and clears busy state (51.7633ms)
+✔ library change rejects old response (14.8247ms)
+✔ new query immediately removes old result; missing library does not spin (9.0296ms)
+✔ component keeps errors distinct and offers accessible retry (2.707ms)
+✔ real Vue watchers debounce changes and retry retains format filter (12.7535ms)
+✔ real library watcher clears query, collection and busy state before late response (8.8674ms)
+✔ real Vue clear cancels debounce without invoking backend (6.148ms)
+✔ real Vue unmount cancels scheduled search (20.3712ms)
+✔ real Vue unmount invalidates a late response (42.9933ms)
+✔ original frozen candidate reproduces null-state save error after navigation (665.6951ms)
+✔ save then immediately leave: original tab becomes saved without touching destroyed view (92.611ms)
+✔ immediately reopening waits for native save and reconciled tab (34.9661ms)
+✔ switching to a different file cannot apply the old reply there (47.0611ms)
+✔ new edits after save remain dirty and retain the new disk signature (41.9494ms)
+✔ changed save policy must remain dirty even if text is unchanged (64.301ms)
+✔ real save failure is still reported and dirty draft survives (196.1307ms)
+✔ load waits before draft restoration and unmount invalidates pending loads (0.9788ms)
+✔ window save guard spans queued write and survives destroyed editor until receipt (20.9871ms)
+✔ failed native write releases window save guard without discarding dirty draft (119.7657ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3501.9467

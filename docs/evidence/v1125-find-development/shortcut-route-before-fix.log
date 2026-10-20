@@ -1,0 +1,14 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Timeout 3000ms exceeded.
+Call log:
+  - waiting for locator('.document-find-dialog') to be visible
+
+    at E:\Project\AIProject\GeminiProject\MDReader\scripts\test-v1125-shortcut-lifecycle-browser.mjs:10:183 {
+  log: [ "  - waiting for locator('.document-find-dialog') to be visible" ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.14.0

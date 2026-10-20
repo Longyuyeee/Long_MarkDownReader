@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-78-v1.1.25-version-candidate",
-  "binaryVersionTransition": "v1.1.25-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.25-release-ready",
   "displayLabel": "v1.1.25 当前文档查找替换候选 · 当前公开 v1.1.24",
   "activeSlice": {
     "id": "v1.1.25-document-find-replace",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_25_Find_Replace_Development_2026-10-20.md"
   }
 }
