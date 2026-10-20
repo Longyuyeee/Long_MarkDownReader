@@ -20,7 +20,7 @@ export async function runInstalledV1126Workflow({send,evaluate,navigate,capture,
   await navigate('#/library?path='+encodeURIComponent(menuFile),'#vditor-lib','history file management')
   // These owned fixtures were created outside the app after the last listing.
   // Refresh through the ordinary toolbar before looking for their tree rows.
-  await ui.click('#tab-files');await ui.click('.files-pane button[title="刷新列表"]')
+  await ui.click('#tab-files');await ui.click('.files-pane button[aria-label="刷新列表"]')
   await expandCopySourceParents({ui,evaluate,library,file:menuFile,row})
   await ui.clickTarget(row(menuFile),'right');await ui.hoverTarget(option('更多操作'));await ui.hoverTarget(option('编辑显示样式'));await ui.hoverTarget(option('使用外部应用打开'));await ui.waitFor('document.querySelectorAll(".n-dropdown-menu").length>=3','nested native flyout');report.fileFlyoutExact=true;mark(0);await ui.key('Escape','Escape',27);await ui.click('.lib-stats-bar > span:first-child');await ui.waitFor('![...document.querySelectorAll(".n-dropdown-menu")].some(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden")','file menu dismissed by outside click')
   await ui.clickTarget(row(folder),'right');await ui.hoverTarget(option('新建'));await ui.hoverTarget(option('文件夹'));report.folderFlyoutExact=true;mark(1);await ui.key('Escape','Escape',27);await ui.click('.lib-stats-bar > span:first-child');await ui.waitFor('![...document.querySelectorAll(".n-dropdown-menu")].some(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden")','file menu dismissed by outside click')
