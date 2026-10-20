@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-76-v1.1.24-version-candidate",
-  "binaryVersionTransition": "v1.1.24-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.24-release-ready",
   "displayLabel": "v1.1.24 长 Markdown 组织候选 · 当前公开 v1.1.23",
   "activeSlice": {
     "id": "v1.1.24-long-markdown-organization",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_24_Long_Markdown_Development_2026-10-20.md"
   }
 }
