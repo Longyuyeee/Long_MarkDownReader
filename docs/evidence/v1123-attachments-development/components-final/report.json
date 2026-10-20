@@ -1,0 +1,39 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "read-search-and-missing-state-without-disk-write",
+      "status": "passed"
+    },
+    {
+      "id": "replacement-applies-to-draft-and-keeps-disk",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refused-with-newer-draft",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-picker-keeps-original",
+      "status": "passed"
+    },
+    {
+      "id": "locate-and-open-reference-target",
+      "status": "passed"
+    },
+    {
+      "id": "context-switch-discards-late-query",
+      "status": "passed"
+    },
+    {
+      "id": "read-error-local-with-working-close",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

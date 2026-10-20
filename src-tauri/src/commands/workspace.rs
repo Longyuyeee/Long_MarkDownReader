@@ -639,7 +639,7 @@ fn scan_directory(root: &Path, directory: &Path, scan: &mut WorkspaceScan) {
         }
         let path = entry.path();
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        if name.starts_with('.') || name.ends_with(".assets") {
+        if crate::services::library_visibility::hidden_name(&name) {
             continue;
         }
         if path.is_dir() {
@@ -945,17 +945,19 @@ mod tests {
         .unwrap();
         fs::write(root.join("Board.canvas"), r#"{"nodes":[],"edges":[]}"#).unwrap();
         fs::write(root.join("Data.csv"), "name,value\nA,1\n").unwrap();
-        fs::write(root.join("notes.assets").join("ignored.md"), "- [ ] hidden").unwrap();
+        fs::write(root.join("notes.assets").join("attachment.md"), "- [ ] 附件待办").unwrap();
         fs::write(root.join(".hidden").join("ignored.canvas"), "{}").unwrap();
         fs::write(root.join("unsupported.bin"), b"ignored").unwrap();
 
         let overview = build_workspace_overview(&root);
-        assert_eq!(overview.total_files, 3);
-        assert_eq!(overview.tasks.len(), 2);
-        assert_eq!(overview.tasks[0].line, 2);
-        assert_eq!(overview.tasks[0].priority, "high");
-        assert_eq!(overview.tasks[0].due_date.as_deref(), Some("2026-08-26"));
-        assert!(!overview.tasks[0].completed);
+        assert_eq!(overview.total_files, 4);
+        assert_eq!(overview.tasks.len(), 3);
+        assert!(overview.tasks.iter().any(|task|task.text=="附件待办"));
+        let plan_task=overview.tasks.iter().find(|task|task.text.starts_with("Ship dashboard")).unwrap();
+        assert_eq!(plan_task.line, 2);
+        assert_eq!(plan_task.priority, "high");
+        assert_eq!(plan_task.due_date.as_deref(), Some("2026-08-26"));
+        assert!(!plan_task.completed);
         assert_eq!(overview.completed_tasks.len(), 1);
         assert!(overview.completed_tasks[0].completed);
         assert_eq!(overview.completed_tasks[0].priority, "low");
@@ -964,7 +966,7 @@ mod tests {
         assert!(overview
             .format_counts
             .iter()
-            .any(|item| item.object_type == "markdown" && item.count == 1));
+            .any(|item| item.object_type == "markdown" && item.count == 2));
         fs::remove_dir_all(root).unwrap();
     }
 

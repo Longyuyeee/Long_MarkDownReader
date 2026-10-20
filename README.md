@@ -2,7 +2,7 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
-> **v1.1.22 已正式发布**：文件栏右键“最近操作…”可查整理记录、接续查看位置并按项还原，保留后续修改与未保存草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) · [发布说明](docs/RELEASE_NOTES_v1.1.22.md)。
+> **v1.1.23 已正式发布**：附件目录可见，右键与文档操作菜单集中管理引用、查看位置和修复失效路径，保留原附件与未保存草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23) · [发布说明](docs/RELEASE_NOTES_v1.1.23.md)。
 
 
 <h1 align="center">Long编辑</h1>
@@ -69,19 +69,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22"><img src="https://img.shields.io/badge/Stable-v1.1.22-cca43b" alt="v1.1.22 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23"><img src="https://img.shields.io/badge/Stable-v1.1.23-cca43b" alt="v1.1.23 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.22**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.23**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.22_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.22/LongEdit_1.1.22_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.22_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.22/LongEdit_1.1.22_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.22](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.23_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.23/LongEdit_1.1.23_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.23_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.23/LongEdit_1.1.23_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.23](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.22/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.23/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -89,12 +89,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.22_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.23_x64-setup.exe
 ```
 
 ```text
-cc75b5dc1500ddd300c9793747c9fb84ce1da623faf87d31c092d7307eb71fed  LongEdit_1.1.22_x64_zh-CN.msi
-4aaf428cdddd839950bb7a1194996be25eac19c159074e069331ccc3f525cf95  LongEdit_1.1.22_x64-setup.exe
+aa9f534c8d690e8aa0bfe0959cc8d2b5936b5ae767c4aff7292cebecda939a75  LongEdit_1.1.23_x64_zh-CN.msi
+69e2b840de06ab6b5d878b31a1348328b4fa53d016bd893e07aed71328dd8bd6  LongEdit_1.1.23_x64-setup.exe
 ```
 
 </details>
@@ -175,6 +175,8 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 在文件栏右键选择“移动到”“复制到”或“创建副本”；按住 Ctrl/Shift 多选后可一次处理多项。目录选择使用弹窗，输入新目录会自动创建，重名时保留两份。移动后，打开的文档、收藏、关系和显示样式继续跟随。
 
 多选文件后右键选择“批量重命名…”，可添加前后缀、查找替换或添加序号。先预览原名称、新名称和冲突，再执行；保留 `.table.json` 等复合扩展名，失败时只重试未完成项目。改名、移动和回收恢复在系统执行时仍拒绝覆盖其他程序刚创建的同名内容。
+
+文件右键“更多操作 → 管理附件…”或文档操作菜单，可查看当前 Markdown 草稿的引用、位置和失效状态，按文档修复引用；原附件与库外原件保留，仍需保存笔记。[附件管理用法](docs/Attachment_Management_User_Guide.md)。
 
 文件栏空白处右键“最近操作…”可查移动、改名和复制记录，文件右键位于“更多操作”中；重启后继续查看位置、按项还原。“撤销上次移动”保留当前会话的批次撤销，重启后进入持久记录选择还原项。后续编辑或同名冲突会保留现状；复制只查看，清除记录不删除文件。
 
@@ -482,7 +484,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.1.22 已发布：文件栏右键“最近操作…”可查移动、改名和复制结果，重启后继续定位、按项还原；保护后续修改和未保存内容。[发布说明](docs/RELEASE_NOTES_v1.1.22.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。
+1.1.23 已发布：普通附件目录可见，按需查看当前草稿引用、定位文件及修复失效路径，保留原件、共享附件与未保存内容。[发布说明](docs/RELEASE_NOTES_v1.1.23.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -495,7 +497,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 基础功能深化路线
 
-现有基础能力持续围绕实际使用任务深化，入口放在右键、新建菜单和按需弹窗中。跨资料库复制和持久文件整理记录已交付；跨库剪贴板及其他格式的历史恢复仍为后续方向。下一版先深化附件定位、引用和整理，保护未保存内容。[已交付基础能力](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md) · [十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) · [1.1.23 具体计划](docs/V1_1_23_Attachment_Management_Plan_2026-10-20.md)。计划不代表已交付。
+现有基础能力持续围绕实际使用任务深化，入口放在右键、新建菜单和按需弹窗中。跨资料库复制、持久整理记录和按文档管理附件引用已交付；下一版深化长 Markdown 的章节定位、层级与移动，保留草稿、阅读位置和正常动效。[已交付基础能力](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md) · [十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) · [1.1.24 具体计划](docs/V1_1_24_Long_Markdown_Plan_2026-10-20.md)。计划不代表已交付。
 
 ### 从源码启动
 
@@ -545,9 +547,10 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_22_Unsigned_Community_Release_Audit_2026-10-20.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_23_Unsigned_Community_Release_Audit_2026-10-20.md) |
 | DOCX 日常编辑与保存 | [原件、副本及草稿保护](docs/DOCX_Editing_User_Guide.md) |
 | PPTX 编辑与副本交付 | [目标、备注、多项更改与保存接续](docs/PPTX_Editing_User_Guide.md) |
+| 图片与本地附件引用 | [定位、失效修复与草稿保护](docs/Attachment_Management_User_Guide.md) |
 | Canvas 与 OPML 整理 | [来源、保存冲突与兼容副本](docs/Canvas_OPML_User_Guide.md) |
 | 格式与写回能力事实 | [格式注册表](shared/file-formats.json) · [发布能力矩阵](shared/release-capability-matrix.json) |
 
@@ -563,6 +566,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.23 | 普通附件目录可见、草稿引用管理与失效修复；原件、共享附件与后续输入保护 | [发布说明](docs/RELEASE_NOTES_v1.1.23.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23) · [发布审计](docs/V1_1_23_Unsigned_Community_Release_Audit_2026-10-20.md) |
 | v1.1.22 | 整理记录跨重启保存、接续定位与按项还原；保护后续修改和未保存草稿 | [发布说明](docs/RELEASE_NOTES_v1.1.22.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) · [发布审计](docs/V1_1_22_Unsigned_Community_Release_Audit_2026-10-20.md) |
 | v1.1.21 | 跨资料库复制、重名预览、图片与关联笔记接续；源文件和未保存草稿保留；部分失败接续 | [发布说明](docs/RELEASE_NOTES_v1.1.21.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21) · [发布审计](docs/V1_1_21_Unsigned_Community_Release_Audit_2026-10-19.md) |
 | v1.1.20 | 结构化源码保存与草稿保护；冲突副本、提纲右键与路径定位；JSON 可取消差异预览与撤销 | [发布说明](docs/RELEASE_NOTES_v1.1.20.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.20) · [发布审计](docs/V1_1_20_Unsigned_Community_Release_Audit_2026-10-19.md) |
@@ -589,9 +593,13 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**。[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并发布 2/12 版，余下 10 版为计划；下一版按顺序深化附件整理，先解决普通附件目录被隐藏、图片和附件难以定位的问题。[1.1.23 具体计划](docs/V1_1_23_Attachment_Management_Plan_2026-10-20.md) 已登记，尚未实施。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**。[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并发布 **3/12 版**，余下 9 版为计划；下一版按顺序深化长 Markdown 组织。[1.1.24 具体计划](docs/V1_1_24_Long_Markdown_Plan_2026-10-20.md) 已登记，尚未实施。
 
-### v1.1.22 本次更新
+### v1.1.23 本次更新
+
+附件目录、搜索与整理引用采用一致规则。“管理附件…”显示当前 Markdown 草稿引用及失效状态，修复路径仅应用到草稿，可撤销、仍需保存；库外来源防覆盖复制，原附件保留。[使用方法](docs/Attachment_Management_User_Guide.md) · [发布说明](docs/RELEASE_NOTES_v1.1.23.md)。
+
+### v1.1.22 文件整理记录
 
 文件栏右键“最近操作…”集中查询整理记录、查看位置和按项还原。原有批次撤销保留；后续编辑、同名冲突与草稿保护沿用现有文件事务。复制只查看，清除记录不会删除文件。[发布说明](docs/RELEASE_NOTES_v1.1.22.md)。
 

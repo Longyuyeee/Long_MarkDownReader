@@ -1,0 +1,58 @@
+{
+  "appVersion": "1.1.23",
+  "sourceCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
+  "installerSha256": "69e2b840de06ab6b5d878b31a1348328b4fa53d016bd893e07aed71328dd8bd6",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "markdown-conflict-copy-keeps-disk-and-unsaved-editor",
+      "status": "passed"
+    },
+    {
+      "id": "markdown-conflict-reload-protects-draft-in-history",
+      "status": "passed"
+    },
+    {
+      "id": "text-conflict-rejects-stale-comparison-and-keeps-draft",
+      "status": "passed"
+    },
+    {
+      "id": "text-conflict-reload-protects-draft-before-replacement",
+      "status": "passed"
+    },
+    {
+      "id": "history-records-return-to-older-content",
+      "status": "passed"
+    },
+    {
+      "id": "history-search-finds-body-and-note",
+      "status": "passed"
+    },
+    {
+      "id": "context-menu-pin-and-note-persist",
+      "status": "passed"
+    },
+    {
+      "id": "retention-and-move-keep-important-version-metadata",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-markdown-save-keeps-before-and-after-versions",
+      "status": "passed"
+    },
+    {
+      "id": "history-list-and-metadata-load-in-parallel-without-busy-errors",
+      "status": "passed"
+    },
+    {
+      "id": "interrupted-version-metadata-recovers-without-losing-important-history",
+      "status": "passed"
+    },
+    {
+      "id": "save-history-workflows-have-no-global-error-overlay",
+      "status": "passed"
+    }
+  ]
+}

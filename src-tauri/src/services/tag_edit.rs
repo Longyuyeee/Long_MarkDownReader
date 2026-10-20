@@ -195,10 +195,10 @@ fn checked_path(guard: &WorkspaceGuard, input: &Path) -> Result<PathBuf, String>
         .map_err(|_| "文件不在当前资料库")?;
     if relative.components().any(|part| {
         let part = part.as_os_str().to_string_lossy();
-        part.starts_with('.') || part.ends_with(".assets")
+        super::library_visibility::hidden_name(&part)
     }) || crate::formats::file_registry::is_sensitive_path(&resolved)
     {
-        return Err("私有文件或附件不能批量改写".into());
+        return Err("内部记录或敏感文件不能批量改写".into());
     }
     if crate::formats::file_registry::file_format_for_path(&resolved)?.id != "markdown" {
         return Err("仅支持已保存的 Markdown 笔记".into());

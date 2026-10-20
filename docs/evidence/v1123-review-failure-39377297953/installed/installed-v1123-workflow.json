@@ -1,0 +1,780 @@
+{
+  "appVersion": "1.1.23",
+  "sourceCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
+  "installerSha256": "69e2b840de06ab6b5d878b31a1348328b4fa53d016bd893e07aed71328dd8bd6",
+  "harnessSourceCommit": "ace5578778f2a8655df47ad49f64eb19dd286a11",
+  "executableSha256": "941e42648f1bac574e9022bd0505ea897192d6bbba28ea8b6d1d2f27ad849166",
+  "status": "failed",
+  "evidenceLevel": "installed-attachments-native-picker-draft-and-output-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "attachment-folders-visible-with-private-metadata-hidden",
+      "status": "passed"
+    },
+    {
+      "id": "menu-inspects-live-draft-without-saving",
+      "status": "passed"
+    },
+    {
+      "id": "missing-file-search-and-local-status",
+      "status": "passed"
+    },
+    {
+      "id": "native-picker-cancellation-keeps-original",
+      "status": "passed"
+    },
+    {
+      "id": "replace-and-undo-preserve-current-draft",
+      "status": "passed"
+    },
+    {
+      "id": "repair-missing-reference-in-draft",
+      "status": "passed"
+    },
+    {
+      "id": "external-copy-keeps-shared-source-and-collision",
+      "status": "passed"
+    },
+    {
+      "id": "incoming-reference-opens-real-note",
+      "status": "passed"
+    },
+    {
+      "id": "attachment-folder-rename-and-history-restore",
+      "status": "passed"
+    },
+    {
+      "id": "exact-output-bytes-and-other-drafts-preserved",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1123-saved.md",
+      "sizeBytes": 127,
+      "sha256": "fc6ce0a7d503d48f2b88a439e8a785a9a06e32f0dc2b5d63fb2bbf98e58a34a7"
+    },
+    {
+      "fileName": "installed-v1123-shared.png",
+      "sizeBytes": 70,
+      "sha256": "2640059609118b695c139804676372eca75c30d30e5906775902d13e44f5356c"
+    },
+    {
+      "fileName": "installed-v1123-imported.png",
+      "sizeBytes": 462,
+      "sha256": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396"
+    }
+  ],
+  "sourceImageSha256": "2640059609118b695c139804676372eca75c30d30e5906775902d13e44f5356c",
+  "externalImageSha256": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396",
+  "queryReadOnly": true,
+  "draftPreserved": true,
+  "cancelPicker": {
+    "status": "cancelled-real-native-dialog",
+    "processId": 6752,
+    "dialogProcessId": 6752,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "选择替换文件（库外文件将保留原件并复制到附件目录）",
+    "desktopUserSession": "disposable-github-hosted",
+    "method": "Windows-Win32-owned-cancel-button",
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "cancelExact": true,
+  "internalPicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 6752,
+    "dialogProcessId": 6752,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "选择替换文件（库外文件将保留原件并复制到附件目录）",
+    "fileNameAutomationId": "1148",
+    "selectedPath": "C:\\LongEditR5ILibrary\\000-v1123-attachments-25b8cf31-ae1e-45ea-a9bf-98c6d08c525e\\images\\new.png",
+    "inputCharacters": 95,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 1310840,
+        "ParentHandle": 1376764,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 1376980,
+        "ParentHandle": 1376928,
+        "ControlId": 1090,
+        "ClassName": "Static",
+        "Title": "File &name:"
+      },
+      {
+        "Handle": 918318,
+        "ParentHandle": 1376928,
+        "ControlId": 1148,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1049438,
+        "ParentHandle": 918318,
+        "ControlId": 1148,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1442436,
+        "ParentHandle": 1049438,
+        "ControlId": 1148,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 1442552,
+        "ParentHandle": 1376928,
+        "ControlId": 1089,
+        "ClassName": "Static",
+        "Title": "Files of &type:"
+      },
+      {
+        "Handle": 1246024,
+        "ParentHandle": 1376928,
+        "ControlId": 1136,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 2424942,
+        "ParentHandle": 1376928,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1639112,
+        "ParentHandle": 1376928,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 983898,
+        "ParentHandle": 1376928,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 656168,
+        "ParentHandle": 1376928,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1639050,
+        "ParentHandle": 1376944,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 983808,
+        "ParentHandle": 1639050,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 3342472,
+        "ParentHandle": 983808,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 787282,
+        "ParentHandle": 1245818,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 1049446,
+        "ParentHandle": 787282,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 1311402,
+        "ParentHandle": 1049446,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "undoExact": true,
+  "missingRepaired": true,
+  "externalPicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 6752,
+    "dialogProcessId": 6752,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "选择替换文件（库外文件将保留原件并复制到附件目录）",
+    "fileNameAutomationId": "1148",
+    "selectedPath": "C:\\LongEditR5IExternal\\v1123-a9f0638c-db23-462b-a3f1-9b2d45f98821\\a.png",
+    "inputCharacters": 71,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 1311532,
+        "ParentHandle": 1114916,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 1049432,
+        "ParentHandle": 1966852,
+        "ControlId": 1090,
+        "ClassName": "Static",
+        "Title": "File &name:"
+      },
+      {
+        "Handle": 1573566,
+        "ParentHandle": 1966852,
+        "ControlId": 1148,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1704720,
+        "ParentHandle": 1573566,
+        "ControlId": 1148,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1180510,
+        "ParentHandle": 1704720,
+        "ControlId": 1148,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 1770036,
+        "ParentHandle": 1966852,
+        "ControlId": 1089,
+        "ClassName": "Static",
+        "Title": "Files of &type:"
+      },
+      {
+        "Handle": 1573624,
+        "ParentHandle": 1966852,
+        "ControlId": 1136,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1770110,
+        "ParentHandle": 1966852,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1376876,
+        "ParentHandle": 1966852,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 2949774,
+        "ParentHandle": 1966852,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1901168,
+        "ParentHandle": 1966852,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1508126,
+        "ParentHandle": 1901278,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1508068,
+        "ParentHandle": 1508126,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1639170,
+        "ParentHandle": 1508068,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 918354,
+        "ParentHandle": 1376984,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 1180518,
+        "ParentHandle": 918354,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 1442474,
+        "ParentHandle": 1180518,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "sourcePreserved": true,
+  "collisionPreserved": true,
+  "referenceOpened": true,
+  "renameRestoreExact": true,
+  "otherDraftsPreserved": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false,
+  "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(report.inputTrace.every(e=>e.trusted))\n\n    at validateInstalledAttachments (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-23-evidence.mjs:12:9)\n    at runInstalledV1123Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-23-workflow.mjs:65:223)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:1039:5",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1123-attachments-25b8cf31-ae1e-45ea-a9bf-98c6d08c525e%5C%E7%AC%94%E8%AE%B0.md",
+    "body": "读位置，文件 阅读01.txt。\n第 43 行：真实阅读位置，文件 阅读01.txt。\n第 44 行：真实阅读位置，文件 阅读01.txt。\n第 45 行：真实阅读位置，文件 阅读01.txt。\n第 46 行：真实阅读位置，文件 阅读01.txt。\n第 47 行：真实阅读位置，文件 阅读01.txt。\n第 48 行：真实阅读位置，文件 阅读01.txt。\n第 49 行：真实阅读位置，文件 阅读01.txt。\n第 50 行：真实阅读位置，文件 阅读01.txt。\n第 51 行：真实阅读位置，文件 阅读01.txt。\n第 52 行：真实阅读位置，文件 阅读01.txt。\n第 53 行：真实阅读位置，文件 阅读01.txt。\n第 54 行：真实阅读位置，文件 阅读01.txt。\n第 55 行：真实阅读位置，文件 阅读01.txt。\n第 56 行：真实阅读位置，文件 阅读01.txt。\n第 57 行：真实阅读位置，文件 阅读01.txt。\n第 58 行：真实阅读位置，文件 阅读01.txt。\n第 59 行：真实阅读位置，文件 阅读01.txt。\n第 60 行：真实阅读位置，文件 阅读01.txt。\n第 61 行：真实阅读位置，文件 阅读01.txt。\n第 62 行：真实阅读位置，文件 阅读01.txt。\n第 63 行：真实阅读位置，文件 阅读01.txt。\n第 64 行：真实阅读位置，文件 阅读01.txt。\n第 65 行：真实阅读位置，文件 阅读01.txt。\n第 66 行：真实阅读位置，文件 阅读01.txt。\n第 67 行：真实阅读位置，文件 阅读01.txt。\n第 68 行：真实阅读位置，文件 阅读01.txt。\n第 69 行：真实阅读位置，文件 阅读01.txt。\n第 70 行：真实阅读位置，文件 阅读01.txt。\n第 71 行：真实阅读位置，文件 阅读01.txt。\n第 72 行：真实阅读位置，文件 阅读01.txt。\n第 73 行：真实阅读位置，文件 阅读01.txt。\n第 74 行：真实阅读位置，文件 阅读01.txt。\n第 75 行：真实阅读位置，文件 阅读01.txt。\n第 76 行：真实阅读位置，文件 阅读01.txt。\n第 77 行：真实阅读位置，文件 阅读01.txt。\n第 78 行：真实阅读位置，文件 阅读01.txt。\n第 79 行：真实阅读位置，文件 阅读01.txt。\n第 80 行：真实阅读位置，文件 阅读01.txt。\n第 81 行：真实阅读位置，文件 阅读01.txt。\n第 82 行：真实阅读位置，文件 阅读01.txt。\n第 83 行：真实阅读位置，文件 阅读01.txt。\n第 84 行：真实阅读位置，文件 阅读01.txt。\n第 85 行：真实阅读位置，文件 阅读01.txt。\n第 86 行：真实阅读位置，文件 阅读01.txt。\n第 87 行：真实阅读位置，文件 阅读01.txt。\n第 88 行：真实阅读位置，文件 阅读01.txt。\n第 89 行：真实阅读位置，文件 阅读01.txt。\n第 90 行：真实阅读位置，文件 阅读01.txt。\n第 91 行：真实阅读位置，文件 阅读01.txt。\n第 92 行：真实阅读位置，文件 阅读01.txt。\n第 93 行：真实阅读位置，文件 阅读01.txt。\n第 94 行：真实阅读位置，文件 阅读01.txt。\n第 95 行：真实阅读位置，文件 阅读01.txt。\n第 96 行：真实阅读位置，文件 阅读01.txt。\n第 97 行：真实阅读位置，文件 阅读01.txt。\n第 98 行：真实阅读位置，文件 阅读01.txt。\n第 99 行：真实阅读位置，文件 阅读01.txt。\n第 100 行：真实阅读位置，文件 阅读01.txt。\n第 101 行：真实阅读位置，文件 阅读01.txt。\n第 102 行：真实阅读位置，文件 阅读01.txt。\n第 103 行：真实阅读位置，文件 阅读01.txt。\n第 104 行：真实阅读位置，文件 阅读01.txt。\n第 105 行：真实阅读位置，文件 阅读01.txt。\n第 106 行：真实阅读位置，文件 阅读01.txt。\n第 107 行：真实阅读位置，文件 阅读01.txt。\n第 108 行：真实阅读位置，文件 阅读01.txt。\n第 109 行：真实阅读位置，文件 阅读01.txt。\n第 110 行：真实阅读位置，文件 阅读01.txt。\n第 111 行：真实阅读位置，文件 阅读01.txt。\n第 112 行：真实阅读位置，文件 阅读01.txt。\n第 113 行：真实阅读位置，文件 阅读01.txt。\n第 114 行：真实阅读位置，文件 阅读01.txt。\n第 115 行：真实阅读位置，文件 阅读01.txt。\n第 116 行：真实阅读位置，文件 阅读01.txt。\n第 117 行：真实阅读位置，文件 阅读01.txt。\n第 118 行：真实阅读位置，文件 阅读01.txt。\n第 119 行：真实阅读位置，文件 阅读01.txt。\n第 120 行：真实阅读位置，文件 阅读01.txt。\n第 121 行：真实阅读位置，文件 阅读01.txt。\n第 122 行：真实阅读位置，文件 阅读01.txt。\n第 123 行：真实阅读位置，文件 阅读01.txt。\n第 124 行：真实阅读位置，文件 阅读01.txt。\n第 125 行：真实阅读位置，文件 阅读01.txt。\n第 126 行：真实阅读位置，文件 阅读01.txt。\n第 127 行：真实阅读位置，文件 阅读01.txt。\n第 128 行：真实阅读位置，文件 阅读01.txt。\n第 129 行：真实阅读位置，文件 阅读01.txt。\n第 130 行：真实阅读位置，文件 阅读01.txt。\n第 131 行：真实阅读位置，文件 阅读01.txt。\n第 132 行：真实阅读位置，文件 阅读01.txt。\n第 133 行：真实阅读位置，文件 阅读01.txt。\n第 134 行：真实阅读位置，文件 阅读01.txt。\n第 135 行：真实阅读位置，文件 阅读01.txt。\n第 136 行：真实阅读位置，文件 阅读01.txt。\n第 137 行：真实阅读位置，文件 阅读01.txt。\n第 138 行：真实阅读位置，文件 阅读01.txt。\n第 139 行：真实阅读位置，文件 阅读01.txt。\n第 140 行：真实阅读位置，文件 阅读01.txt。\n第 141 行：真实阅读位置，文件 阅读01.txt。\n第 142 行：真实阅读位置，文件 阅读01.txt。\n第 143 行：真实阅读位置，文件 阅读01.txt。\n第 144 行：真实阅读位置，文件 阅读01.txt。\n第 145 行：真实阅读位置，文件 阅读01.txt。\n第 146 行：真实阅读位置，文件 阅读01.txt。\n第 147 行：真实阅读位置，文件 阅读01.txt。\n第 148 行：真实阅读位置，文件 阅读01.txt。\n第 149 行：真实阅读位置，文件 阅读01.txt。\n第 150 行：真实阅读位置，文件 阅读01.txt。\n第 151 行：真实阅读位置，文件 阅读01.txt。\n第 152 行：真实阅读位置，文件 阅读01.txt。\n第 153 行：真实阅读位置，文件 阅读01.txt。\n第 154 行：真实阅读位置，文件 阅读01.txt。\n第 155 行：真实阅读位置，文件 阅读01.txt。\n第 156 行：真实阅读位置，文件 阅读01.txt。\n第 157 行：真实阅读位置，文件 阅读01.txt。\n第 158 行：真实阅读位置，文件 阅读01.txt。\n第 159 行：真实阅读位置，文件 阅读01.txt。\n第 160 行：真实阅读位置，文件 阅读01.txt。\n第 161 行：真实阅读位置，文件 阅读01.txt。\n第 162 行：真实阅读位置，文件 阅读01.txt。\n第 163 行：真实阅读位置，文件 阅读01.txt。\n第 164 行：真实阅读位置，文件 阅读01.txt。\n第 165 行：真实阅读位置，文件 阅读01.txt。\n第 166 行：真实阅读位置，文件 阅读01.txt。\n第 167 行：真实阅读位置，文件 阅读01.txt。\n第 168 行：真实阅读位置，文件 阅读01.txt。\n第 169 行：真实阅读位置，文件 阅读01.txt。\n第 170 行：真实阅读位置，文件 阅读01.txt。\n第 171 行：真实阅读位置，文件 阅读01.txt。\n第 172 行：真实阅读位置，文件 阅读01.txt。\n第 173 行：真实阅读位置，文件 阅读01.txt。\n第 174 行：真实阅读位置，文件 阅读01.txt。\n第 175 行：真实阅读位置，文件 阅读01.txt。\n第 176 行：真实阅读位置，文件 阅读01.txt。\n第 177 行：真实阅读位置，文件 阅读01.txt。\n第 178 行：真实阅读位置，文件 阅读01.txt。\n第 179 行：真实阅读位置，文件 阅读01.txt。\n第 180 行：真实阅读位置，文件 阅读01.txt。\n第 181 行：真实阅读位置，文件 阅读01.txt。\n第 182 行：真实阅读位置，文件 阅读01.txt。\n第 183 行：真实阅读位置，文件 阅读01.txt。\n第 184 行：真实阅读位置，文件 阅读01.txt。\n第 185 行：真实阅读位置，文件 阅读01.txt。\n第 186 行：真实阅读位置，文件 阅读01.txt。\n第 187 行：真实阅读位置，文件 阅读01.txt。\n第 188 行：真实阅读位置，文件 阅读01.txt。\n第 189 行：真实阅读位置，文件 阅读01.txt。\n第 190 行：真实阅读位置，文件 阅读01.txt。\n第 191 行：真实阅读位置，文件 阅读01.txt。\n第 192 行：真实阅读位置，文件 阅读01.txt。\n第 193 行：真实阅读位置，文件 阅读01.txt。\n第 194 行：真实阅读位置，文件 阅读01.txt。\n第 195 行：真实阅读位置，文件 阅读01.txt。\n第 196 行：真实阅读位置，文件 阅读01.txt。\n第 197 行：真实阅读位置，文件 阅读01.txt。\n第 198 行：真实阅读位置，文件 阅读01.txt。\n第 199 行：真实阅读位置，文件 阅读01.txt。\n第 200 行：真实阅读位置，文件 阅读01.txt。\n第 201 行：真实阅读位置，文件 阅读01.txt。\n第 202 行：真实阅读位置，文件 阅读01.txt。\n第 203 行：真实阅读位置，文件 阅读01.txt。\n第 204 行：真实阅读位置，文件 阅读01.txt。\n第 205 行：真实阅读位置，文件 阅读01.txt。\n第 206 行：真实阅读位置，文件 阅读01.txt。\n第 207 行：真实阅读位置，文件 阅读01.txt。\n第 208 行：真实阅读位置，文件 阅读01.txt。\n第 209 行：真实阅读位置，文件 阅读01.txt。\n第 210 行：真实阅读位置，文件 阅读01.txt。\n第 211 行：真实阅读位置，文件 阅读01.txt。\n第 212 行：真实阅读位置，文件 阅读01.txt。\n第 213 行：真实阅读位置，文件 阅读01.txt。\n第 214 行：真实阅读位置，文件 阅读01.txt。\n第 215 行：真实阅读位置，文件 阅读01.txt。\n第 216 行：真实阅读位置，文件 阅读01.txt。\n第 217 行：真实阅读位置，文件 阅读01.txt。\n第 218 行：真实阅读位置，文件 阅读01.txt。\n第 219 行：真实阅读位置，文件 阅读01.txt。\n第 220 行：真实阅读位置，文件 阅读01.txt。\n第 221 行：真实阅读位置，文件 阅读01.txt。\n第 222 行：真实阅读位置，文件 阅读01.txt。\n第 223 行：真实阅读位置，文件 阅读01.txt。\n第 224 行：真实阅读位置，文件 阅读01.txt。\n第 225 行：真实阅读位置，文件 阅读01.txt。\n第 226 行：真实阅读位置，文件 阅读01.txt。\n第 227 行：真实阅读位置，文件 阅读01.txt。\n第 228 行：真实阅读位置，文件 阅读01.txt。\n第 229 行：真实阅读位置，文件 阅读01.txt。\n第 230 行：真实阅读位置，文件 阅读01.txt。\n第 231 行：真实阅读位置，文件 阅读01.txt。\n第 232 行：真实阅读位置，文件 阅读01.txt。\n第 233 行：真实阅读位置，文件 阅读01.txt。\n第 234 行：真实阅读位置，文件 阅读01.txt。\n第 235 行：真实阅读位置，文件 阅读01.txt。\n第 236 行：真实阅读位置，文件 阅读01.txt。\n第 237 行：真实阅读位置，文件 阅读01.txt。\n第 238 行：真实阅读位置，文件 阅读01.txt。\n第 239 行：真实阅读位置，文件 阅读01.txt。\n第 240 行：真实阅读位置，文件 阅读01.txt。\n第 241 行：真实阅读位置，文件 阅读01.txt。\n第 242 行：真实阅读位置，文件 阅读01.txt。\n第 243 行：真实阅读位置，文件 阅读01.txt。\n第 244 行：真实阅读位置，文件 阅读01.txt。\n第 245 行：真实阅读位置，文件 阅读01.txt。\n第 246 行：真实阅读位置，文件 阅读01.txt。\n第 247 行：真实阅读位置，文件 阅读01.txt。\n第 248 行：真实阅读位置，文件 阅读01.txt。\n第 249 行：真实阅读位置，文件 阅读01.txt。\n第 250 行：真实阅读位置，文件 阅读01.txt。\n第 251 行：真实阅读位置，文件 阅读01.txt。\n第 252 行：真实阅读位置，文件 阅读01.txt。\n第 253 行：真实阅读位置，文件 阅读01.txt。\n第 254 行：真实阅读位置，文件 阅读01.txt。\n第 255 行：真实阅读位置，文件 阅读01.txt。\n第 256 行：真实阅读位置，文件 阅读01.txt。\n第 257 行：真实阅读位置，文件 阅读01.txt。\n第 258 行：真实阅读位置，文件 阅读01.txt。\n第 259 行：真实阅读位置，文件 阅读01.txt。\n第 260 行：真实阅读位置，文件 阅读01.txt。\n第 261 行：真实阅读位置，文件 阅读01.txt。\n第 262 行：真实阅读位置，文件 阅读01.txt。\n第 263 行：真实阅读位置，文件 阅读01.txt。\n第 264 行：真实阅读位置，文件 阅读01.txt。\n第 265 行：真实阅读位置，文件 阅读01.txt。\n第 266 行：真实阅读位置，文件 阅读01.txt。\n第 267 行：真实阅读位置，文件 阅读01.txt。\n第 268 行：真实阅读位置，文件 阅读01.txt。\n第 269 行：真实阅读位置，文件 阅读01.txt。\n第 270 行：真实阅读位置，文件 阅读01.txt。\n第 271 行：真实阅读位置，文件 阅读01.txt。\n第 272 行：真实阅读位置，文件 阅读01.txt。\n第 273 行：真实阅读位置，文件 阅读01.txt。\n第 274 行：真实阅读位置，文件 阅读01.txt。\n第 275 行：真实阅读位置，文件 阅读01.txt。\n第 276 行：真实阅读位置，文件 阅读01.txt。\n第 277 行：真实阅读位置，文件 阅读01.txt。\n第 278 行：真实阅读位置，文件 阅读01.txt。\n第 279 行：真实阅读位置，文件 阅读01.txt。\n第 280 行：真实阅读位置，文件 阅读01.txt。\n第 281 行：真实阅读位置，文件 阅读01.txt。\n第 282 行：真实阅读位置，文件 阅读01.txt。\n第 283 行：真实阅读位置，文件 阅读01.txt。\n第 284 行：真实阅读位置，文件 阅读01.txt。\n第 285 行：真实阅读位置，文件 阅读01.txt。\n第 286 行：真实阅读位置，文件 阅读01.txt。\n第 287 行：真实阅读位置，文件 阅读01.txt。\n第 288 行：真实阅读位置，文件 阅读01.txt。\n第 289 行：真实阅读位置，文件 阅读01.txt。\n第 290 行：真实阅读位置，文\n…\n插入到 笔记.md\n复制选中文字及来源\n先在笔记中点击插入位置，再选择参考文字；也可直接复制摘录。\n参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。\n在主编辑区打开\n已还原此项，其他记录保留"
+  }
+}

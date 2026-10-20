@@ -1,0 +1,479 @@
+review	Set up job	﻿2026-10-20T06:07:05.9447747Z Current runner version: '2.337.0'
+review	Set up job	2026-10-20T06:07:05.9491896Z ##[group]Runner Image Provisioner
+review	Set up job	2026-10-20T06:07:05.9492792Z Hosted Compute Agent
+review	Set up job	2026-10-20T06:07:05.9493368Z Version: 20261002.596
+review	Set up job	2026-10-20T06:07:05.9493971Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+review	Set up job	2026-10-20T06:07:05.9494693Z Build Date: 2026-10-02T22:28:27Z
+review	Set up job	2026-10-20T06:07:05.9495347Z Worker ID: {4b95f155-67f9-4b69-a99b-b521a3a0004b}
+review	Set up job	2026-10-20T06:07:05.9496074Z Region: westus2
+review	Set up job	2026-10-20T06:07:05.9496613Z Cloud: Azure
+review	Set up job	2026-10-20T06:07:05.9497114Z ##[endgroup]
+review	Set up job	2026-10-20T06:07:05.9498566Z ##[group]Operating System
+review	Set up job	2026-10-20T06:07:05.9499233Z Microsoft Windows Server 2025
+review	Set up job	2026-10-20T06:07:05.9499851Z 10.0.26100
+review	Set up job	2026-10-20T06:07:05.9500371Z Datacenter
+review	Set up job	2026-10-20T06:07:05.9500871Z ##[endgroup]
+review	Set up job	2026-10-20T06:07:05.9501412Z ##[group]Runner Image
+review	Set up job	2026-10-20T06:07:05.9501987Z Image: windows-2025-vs2026
+review	Set up job	2026-10-20T06:07:05.9502606Z Version: 20261007.264.1
+review	Set up job	2026-10-20T06:07:05.9503752Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+review	Set up job	2026-10-20T06:07:05.9505775Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+review	Set up job	2026-10-20T06:07:05.9506951Z ##[endgroup]
+review	Set up job	2026-10-20T06:07:05.9508226Z ##[group]GITHUB_TOKEN Permissions
+review	Set up job	2026-10-20T06:07:05.9510360Z Actions: read
+review	Set up job	2026-10-20T06:07:05.9510993Z Contents: read
+review	Set up job	2026-10-20T06:07:05.9511547Z Metadata: read
+review	Set up job	2026-10-20T06:07:05.9512073Z ##[endgroup]
+review	Set up job	2026-10-20T06:07:05.9514241Z Secret source: Actions
+review	Set up job	2026-10-20T06:07:05.9515189Z Cache mode: write
+review	Set up job	2026-10-20T06:07:05.9515922Z Prepare workflow directory
+review	Set up job	2026-10-20T06:07:06.0104576Z Prepare all required actions
+review	Set up job	2026-10-20T06:07:06.0156118Z Getting action download info
+review	Set up job	2026-10-20T06:07:06.4150816Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+review	Set up job	2026-10-20T06:07:06.5552322Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+review	Set up job	2026-10-20T06:07:06.7108752Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+review	Set up job	2026-10-20T06:07:07.0497615Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+review	Set up job	2026-10-20T06:07:07.1937499Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+review	Set up job	2026-10-20T06:07:07.5455439Z Complete job name: review
+review	Run actions/checkout@v6	﻿2026-10-20T06:07:07.7060818Z ##[group]Run actions/checkout@v6
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7062189Z with:
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7062777Z   fetch-depth: 0
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7063471Z   repository: Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7070875Z   token: ***
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7071486Z   ssh-strict: true
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7072359Z   ssh-user: git
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7073010Z   persist-credentials: true
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7073722Z   clean: true
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7074362Z   sparse-checkout-cone-mode: true
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7075170Z   fetch-tags: false
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7075809Z   show-progress: true
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7076455Z   lfs: false
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7077271Z   submodules: false
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7077916Z   set-safe-directory: true
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7078668Z   allow-unsafe-pr-checkout: false
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7079713Z env:
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7080328Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7081161Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7081888Z   RELEASE_VERSION: 1.1.23
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7082634Z   PREVIOUS_VERSION: 1.1.22
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7083477Z   CANDIDATE_COMMIT: 0f21f009982d5445e7e64067cabff3060e0805
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7084440Z   INSTALLER_RUN_ID: 39372018521
+review	Run actions/checkout@v6	2026-10-20T06:07:07.7085150Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:07.8609498Z Syncing repository: Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-20T06:07:07.8612223Z ##[group]Getting Git version info
+review	Run actions/checkout@v6	2026-10-20T06:07:07.8614116Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+review	Run actions/checkout@v6	2026-10-20T06:07:07.9579287Z [command]"C:\Program Files\Git\bin\git.exe" version
+review	Run actions/checkout@v6	2026-10-20T06:07:08.2338681Z git version 2.56.0.windows.2
+review	Run actions/checkout@v6	2026-10-20T06:07:08.2401975Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:08.2428195Z Temporarily overriding HOME='D:\a\_temp\538d6a27-9879-403c-87d2-c393f4d56b94' before making global git config changes
+review	Run actions/checkout@v6	2026-10-20T06:07:08.2432055Z Adding repository directory to the temporary git global config as a safe directory
+review	Run actions/checkout@v6	2026-10-20T06:07:08.2439852Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-20T06:07:08.3123145Z Deleting the contents of 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+review	Run actions/checkout@v6	2026-10-20T06:07:08.3129857Z ##[group]Determining repository object format
+review	Run actions/checkout@v6	2026-10-20T06:07:08.3132845Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:08.3134438Z ##[group]Initializing the repository
+review	Run actions/checkout@v6	2026-10-20T06:07:08.3143051Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-20T06:07:08.4000645Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/
+review	Run actions/checkout@v6	2026-10-20T06:07:08.4056737Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-20T06:07:08.4748681Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:08.4751155Z ##[group]Disabling automatic garbage collection
+review	Run actions/checkout@v6	2026-10-20T06:07:08.4759868Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+review	Run actions/checkout@v6	2026-10-20T06:07:08.5189899Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:08.5191538Z ##[group]Setting up auth
+review	Run actions/checkout@v6	2026-10-20T06:07:08.5192648Z Removing SSH command configuration
+review	Run actions/checkout@v6	2026-10-20T06:07:08.5198480Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+review	Run actions/checkout@v6	2026-10-20T06:07:08.5638220Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+review	Run actions/checkout@v6	2026-10-20T06:07:09.9378045Z Removing HTTP extra header
+review	Run actions/checkout@v6	2026-10-20T06:07:09.9386676Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+review	Run actions/checkout@v6	2026-10-20T06:07:09.9789354Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+review	Run actions/checkout@v6	2026-10-20T06:07:10.5692247Z Removing includeIf entries pointing to credentials config files
+review	Run actions/checkout@v6	2026-10-20T06:07:10.5709073Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+review	Run actions/checkout@v6	2026-10-20T06:07:10.6138681Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+review	Run actions/checkout@v6	2026-10-20T06:07:11.2128305Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+review	Run actions/checkout@v6	2026-10-20T06:07:11.2538381Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Run actions/checkout@v6	2026-10-20T06:07:11.2956617Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Run actions/checkout@v6	2026-10-20T06:07:11.3376733Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Run actions/checkout@v6	2026-10-20T06:07:11.3797795Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Run actions/checkout@v6	2026-10-20T06:07:11.4213847Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:11.4215454Z ##[group]Fetching the repository
+review	Run actions/checkout@v6	2026-10-20T06:07:11.4228360Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2614191Z From https://github.com/Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2615630Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2617014Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2617931Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2618865Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2620063Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2621181Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2622680Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2623586Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2624229Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2624720Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2625315Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2626106Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2626701Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2627260Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2627846Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2628442Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2628967Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2629790Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2631712Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2632424Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2634185Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2634826Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2635367Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2635915Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2636491Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2637138Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2637768Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2638444Z  * [new branch]        codex/v1120-release-roadmap -> origin/codex/v1120-release-roadmap
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2638977Z  * [new branch]        codex/v1120-structured-editing -> origin/codex/v1120-structured-editing
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2639525Z  * [new branch]        codex/v1121-cross-library-copy -> origin/codex/v1121-cross-library-copy
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2640099Z  * [new branch]        codex/v1122-file-operation-history -> origin/codex/v1122-file-operation-history
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2640930Z  * [new branch]        codex/v1123-attachment-management -> origin/codex/v1123-attachment-management
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2641501Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2642123Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2642639Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2643231Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2643793Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2644314Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2644873Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2645392Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2645828Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2646294Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2646798Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2647324Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2647814Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2648305Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2648879Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2649906Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2650455Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2651016Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2651593Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2652126Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2653025Z  * [new branch]        main                    -> origin/main
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2654258Z  * [new tag]           v0.1.0                  -> v0.1.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2654810Z  * [new tag]           v0.2.0                  -> v0.2.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2655289Z  * [new tag]           v0.3.0                  -> v0.3.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2655753Z  * [new tag]           v0.3.1                  -> v0.3.1
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2656226Z  * [new tag]           v0.3.2                  -> v0.3.2
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2656675Z  * [new tag]           v0.3.3                  -> v0.3.3
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2657133Z  * [new tag]           v0.3.4                  -> v0.3.4
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2657582Z  * [new tag]           v0.4.4                  -> v0.4.4
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2658025Z  * [new tag]           v0.4.5                  -> v0.4.5
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2658483Z  * [new tag]           v0.4.6                  -> v0.4.6
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2658936Z  * [new tag]           v0.4.7                  -> v0.4.7
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2659430Z  * [new tag]           v0.4.8                  -> v0.4.8
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2659889Z  * [new tag]           v0.4.9                  -> v0.4.9
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2660365Z  * [new tag]           v0.5.0                  -> v0.5.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2660862Z  * [new tag]           v0.5.1                  -> v0.5.1
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2661402Z  * [new tag]           v0.5.2                  -> v0.5.2
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2662194Z  * [new tag]           v0.5.3                  -> v0.5.3
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2662668Z  * [new tag]           v0.5.4                  -> v0.5.4
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2663141Z  * [new tag]           v0.5.5                  -> v0.5.5
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2663631Z  * [new tag]           v0.5.6                  -> v0.5.6
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2664120Z  * [new tag]           v0.5.7                  -> v0.5.7
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2664604Z  * [new tag]           v0.5.8                  -> v0.5.8
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2665086Z  * [new tag]           v0.5.9                  -> v0.5.9
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2665576Z  * [new tag]           v0.6.0                  -> v0.6.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2666075Z  * [new tag]           v0.6.1                  -> v0.6.1
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2666576Z  * [new tag]           v0.6.2                  -> v0.6.2
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2667082Z  * [new tag]           v0.6.3                  -> v0.6.3
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2667568Z  * [new tag]           v0.6.4                  -> v0.6.4
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2668061Z  * [new tag]           v0.6.5                  -> v0.6.5
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2668537Z  * [new tag]           v0.6.6                  -> v0.6.6
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2669021Z  * [new tag]           v0.6.7                  -> v0.6.7
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2669480Z  * [new tag]           v0.6.8                  -> v0.6.8
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2669929Z  * [new tag]           v0.6.9                  -> v0.6.9
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2670405Z  * [new tag]           v1.0.0                  -> v1.0.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2671216Z  * [new tag]           v1.0.1                  -> v1.0.1
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2671722Z  * [new tag]           v1.0.10                 -> v1.0.10
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2672242Z  * [new tag]           v1.0.11                 -> v1.0.11
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2672715Z  * [new tag]           v1.0.12                 -> v1.0.12
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2673207Z  * [new tag]           v1.0.13                 -> v1.0.13
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2673687Z  * [new tag]           v1.0.14                 -> v1.0.14
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2674151Z  * [new tag]           v1.0.15                 -> v1.0.15
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2674611Z  * [new tag]           v1.0.16                 -> v1.0.16
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2675071Z  * [new tag]           v1.0.17                 -> v1.0.17
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2675548Z  * [new tag]           v1.0.18                 -> v1.0.18
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2676025Z  * [new tag]           v1.0.19                 -> v1.0.19
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2676731Z  * [new tag]           v1.0.2                  -> v1.0.2
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2677240Z  * [new tag]           v1.0.20                 -> v1.0.20
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2677720Z  * [new tag]           v1.0.21                 -> v1.0.21
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2678241Z  * [new tag]           v1.0.22                 -> v1.0.22
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2678668Z  * [new tag]           v1.0.23                 -> v1.0.23
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2678960Z  * [new tag]           v1.0.24                 -> v1.0.24
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2679249Z  * [new tag]           v1.0.25                 -> v1.0.25
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2679531Z  * [new tag]           v1.0.26                 -> v1.0.26
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2679826Z  * [new tag]           v1.0.3                  -> v1.0.3
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2680111Z  * [new tag]           v1.0.4                  -> v1.0.4
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2680396Z  * [new tag]           v1.0.5                  -> v1.0.5
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2680672Z  * [new tag]           v1.0.6                  -> v1.0.6
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2681024Z  * [new tag]           v1.0.7                  -> v1.0.7
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2681538Z  * [new tag]           v1.0.8                  -> v1.0.8
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2682000Z  * [new tag]           v1.0.9                  -> v1.0.9
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2682461Z  * [new tag]           v1.1.0                  -> v1.1.0
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2682761Z  * [new tag]           v1.1.1                  -> v1.1.1
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2683048Z  * [new tag]           v1.1.10                 -> v1.1.10
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2684133Z  * [new tag]           v1.1.11                 -> v1.1.11
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2684436Z  * [new tag]           v1.1.12                 -> v1.1.12
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2684717Z  * [new tag]           v1.1.13                 -> v1.1.13
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2684997Z  * [new tag]           v1.1.14                 -> v1.1.14
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2685276Z  * [new tag]           v1.1.15                 -> v1.1.15
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2685557Z  * [new tag]           v1.1.16                 -> v1.1.16
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2685836Z  * [new tag]           v1.1.17                 -> v1.1.17
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2686113Z  * [new tag]           v1.1.18                 -> v1.1.18
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2686395Z  * [new tag]           v1.1.19                 -> v1.1.19
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2686683Z  * [new tag]           v1.1.2                  -> v1.1.2
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2686963Z  * [new tag]           v1.1.20                 -> v1.1.20
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2687251Z  * [new tag]           v1.1.21                 -> v1.1.21
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2687529Z  * [new tag]           v1.1.22                 -> v1.1.22
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2687808Z  * [new tag]           v1.1.3                  -> v1.1.3
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2688086Z  * [new tag]           v1.1.4                  -> v1.1.4
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2688363Z  * [new tag]           v1.1.5                  -> v1.1.5
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2688638Z  * [new tag]           v1.1.6                  -> v1.1.6
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2688925Z  * [new tag]           v1.1.7                  -> v1.1.7
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2689209Z  * [new tag]           v1.1.8                  -> v1.1.8
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2689485Z  * [new tag]           v1.1.9                  -> v1.1.9
+review	Run actions/checkout@v6	2026-10-20T06:07:33.2694836Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/codex/v1123-attachment-management
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3079060Z   origin/codex/v1123-attachment-management
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3131445Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/codex/v1123-attachment-management
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3495380Z 386a602cf65eb9976c9bd38276f281a6feb1eff5
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3535947Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3536545Z ##[group]Determining the checkout info
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3538479Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:33.3549012Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+review	Run actions/checkout@v6	2026-10-20T06:07:33.4058172Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+review	Run actions/checkout@v6	2026-10-20T06:07:33.4556333Z ##[group]Checking out the ref
+review	Run actions/checkout@v6	2026-10-20T06:07:33.4570497Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B codex/v1123-attachment-management refs/remotes/origin/codex/v1123-attachment-management
+review	Run actions/checkout@v6	2026-10-20T06:07:34.5546297Z Updating files:   7% (1379/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:34.6915920Z Updating files:   8% (1405/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:34.8261206Z Updating files:   9% (1581/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:34.9234937Z Updating files:  10% (1756/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.1451566Z Updating files:  11% (1932/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.2923803Z Updating files:  12% (2108/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.4105645Z Updating files:  13% (2283/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.5440977Z Updating files:  14% (2459/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.6832646Z Updating files:  15% (2634/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.8030969Z Updating files:  16% (2810/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:35.9209975Z Updating files:  17% (2986/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.0324156Z Updating files:  18% (3161/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.1409138Z Updating files:  19% (3337/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.2474583Z Updating files:  20% (3512/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.3520054Z Updating files:  21% (3688/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.5460612Z Updating files:  22% (3864/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.6168390Z Updating files:  22% (3930/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.7223500Z Updating files:  23% (4039/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.8200877Z Updating files:  24% (4215/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:36.9246430Z Updating files:  25% (4390/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.0221981Z Updating files:  26% (4566/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.1248307Z Updating files:  27% (4742/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.2222464Z Updating files:  28% (4917/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.2862906Z Updating files:  29% (5093/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.3400063Z Updating files:  30% (5268/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.4252862Z Updating files:  31% (5444/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.5302509Z Updating files:  32% (5620/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.5556441Z Updating files:  33% (5795/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.6237003Z Updating files:  33% (5835/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:37.7558762Z Updating files:  34% (5971/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.0036950Z Updating files:  35% (6146/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.1603915Z Updating files:  36% (6322/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.3699906Z Updating files:  37% (6498/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.4989648Z Updating files:  38% (6673/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.5571782Z Updating files:  39% (6849/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.6218713Z Updating files:  39% (6929/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.7383489Z Updating files:  40% (7024/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.8583733Z Updating files:  41% (7200/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:38.9763505Z Updating files:  42% (7376/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.0949605Z Updating files:  43% (7551/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.1964007Z Updating files:  44% (7727/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.3081446Z Updating files:  45% (7902/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.4166469Z Updating files:  46% (8078/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.5227005Z Updating files:  47% (8254/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.5663874Z Updating files:  48% (8429/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.6373054Z Updating files:  48% (8490/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.7342286Z Updating files:  49% (8605/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.8465849Z Updating files:  50% (8780/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:39.9468319Z Updating files:  51% (8956/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.0460708Z Updating files:  52% (9132/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.1507177Z Updating files:  53% (9307/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.2698024Z Updating files:  54% (9483/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.3592274Z Updating files:  55% (9658/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.4524497Z Updating files:  56% (9834/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.5671262Z Updating files:  57% (10010/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.5739495Z Updating files:  57% (10174/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.6766455Z Updating files:  58% (10185/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.7778218Z Updating files:  59% (10361/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.8866799Z Updating files:  60% (10536/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:40.9776160Z Updating files:  61% (10712/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.0900965Z Updating files:  62% (10888/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.2047451Z Updating files:  63% (11063/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.3166067Z Updating files:  64% (11239/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.4077603Z Updating files:  65% (11414/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.5139484Z Updating files:  66% (11590/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.5677479Z Updating files:  67% (11766/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.6106333Z Updating files:  67% (11876/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.6935792Z Updating files:  68% (11941/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.7800249Z Updating files:  69% (12117/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:41.9174470Z Updating files:  70% (12292/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.0051068Z Updating files:  71% (12468/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.0912374Z Updating files:  72% (12644/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.1740314Z Updating files:  73% (12819/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.2857846Z Updating files:  74% (12995/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.3970909Z Updating files:  75% (13170/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.4855961Z Updating files:  76% (13346/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.5646607Z Updating files:  77% (13522/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.5766608Z Updating files:  78% (13697/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.6744091Z Updating files:  78% (13726/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.8319359Z Updating files:  79% (13873/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:42.9402672Z Updating files:  80% (14048/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.0617716Z Updating files:  81% (14224/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.1570620Z Updating files:  82% (14400/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.2743868Z Updating files:  83% (14575/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.3833814Z Updating files:  84% (14751/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.4599929Z Updating files:  85% (14926/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.4985716Z Updating files:  86% (15102/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.5941742Z Updating files:  87% (15278/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:43.6102906Z Updating files:  87% (15394/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.0029222Z Updating files:  88% (15453/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.0507079Z Updating files:  89% (15629/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.0939549Z Updating files:  90% (15804/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.1353521Z Updating files:  91% (15980/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.1755388Z Updating files:  92% (16156/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.2194861Z Updating files:  93% (16331/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.2625670Z Updating files:  94% (16507/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.3073473Z Updating files:  95% (16682/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.3508808Z Updating files:  96% (16858/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.5558951Z Updating files:  97% (17034/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.6039081Z Updating files:  98% (17209/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.6477676Z Updating files:  98% (17242/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.7026588Z Updating files:  99% (17385/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.7027204Z Updating files: 100% (17560/17560)
+review	Run actions/checkout@v6	2026-10-20T06:07:44.7027617Z Updating files: 100% (17560/17560), done.
+review	Run actions/checkout@v6	2026-10-20T06:07:44.7395740Z Switched to a new branch 'codex/v1123-attachment-management'
+review	Run actions/checkout@v6	2026-10-20T06:07:44.7413391Z branch 'codex/v1123-attachment-management' set up to track 'origin/codex/v1123-attachment-management'.
+review	Run actions/checkout@v6	2026-10-20T06:07:44.8416600Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-20T06:07:44.8865971Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+review	Run actions/checkout@v6	2026-10-20T06:07:44.9234763Z 386a602cf65eb9976c9bd38276f281a6feb1eff5
+review	Validate immutable review inputs	﻿2026-10-20T06:07:44.9680534Z ##[group]Run if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }
+review	Validate immutable review inputs	2026-10-20T06:07:44.9683859Z ^[[36;1mif ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }^[[0m
+review	Validate immutable review inputs	2026-10-20T06:07:45.0234347Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Validate immutable review inputs	2026-10-20T06:07:45.0234914Z env:
+review	Validate immutable review inputs	2026-10-20T06:07:45.0235167Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Validate immutable review inputs	2026-10-20T06:07:45.0235509Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Validate immutable review inputs	2026-10-20T06:07:45.0235795Z   RELEASE_VERSION: 1.1.23
+review	Validate immutable review inputs	2026-10-20T06:07:45.0236066Z   PREVIOUS_VERSION: 1.1.22
+review	Validate immutable review inputs	2026-10-20T06:07:45.0236408Z   CANDIDATE_COMMIT: 0f21f009982d5445e7e64067cabff3060e0805
+review	Validate immutable review inputs	2026-10-20T06:07:45.0236879Z   INSTALLER_RUN_ID: 39372018521
+review	Validate immutable review inputs	2026-10-20T06:07:45.0237170Z ##[endgroup]
+review	Validate immutable review inputs	2026-10-20T06:07:46.9205387Z Invalid immutable review inputs
+review	Validate immutable review inputs	2026-10-20T06:07:46.9206110Z At D:\a\_temp\d67be1ca-6378-4d37-ad6d-b766ae036a02.ps1:2 char:212
+review	Validate immutable review inputs	2026-10-20T06:07:46.9206875Z + ... notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }
+review	Validate immutable review inputs	2026-10-20T06:07:46.9207476Z +                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Validate immutable review inputs	2026-10-20T06:07:46.9208124Z     + CategoryInfo          : OperationStopped: (Invalid immutable review inputs:String) [], RuntimeException
+review	Validate immutable review inputs	2026-10-20T06:07:46.9208657Z     + FullyQualifiedErrorId : Invalid immutable review inputs
+review	Validate immutable review inputs	2026-10-20T06:07:46.9208961Z  
+review	Validate immutable review inputs	2026-10-20T06:07:46.9684727Z ##[error]Process completed with exit code 1.
+review	Retain original build reports separately from installer bytes	﻿2026-10-20T06:07:46.9951717Z ##[group]Run actions/upload-artifact@v4
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9952067Z with:
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9952346Z   name: community-release-original-build-reports-39378554736
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9952731Z   path: immutable-build/community-release-output
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9953024Z   if-no-files-found: error
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9953228Z   retention-days: 14
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9953434Z   compression-level: 6
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9953869Z   overwrite: false
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9954057Z   include-hidden-files: false
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9954263Z env:
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9954441Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9954691Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9954898Z   RELEASE_VERSION: 1.1.23
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9955098Z   PREVIOUS_VERSION: 1.1.22
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9955347Z   CANDIDATE_COMMIT: 0f21f009982d5445e7e64067cabff3060e0805
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9955637Z   INSTALLER_RUN_ID: 39372018521
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:46.9955838Z ##[endgroup]
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:47.1995542Z (node:7160) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:47.1996350Z (Use `node --trace-deprecation ...` to show where the warning was created)
+review	Retain original build reports separately from installer bytes	2026-10-20T06:07:47.2055311Z ##[error]No files were found with the provided path: immutable-build/community-release-output. No artifacts will be uploaded.
+review	Retain runner network observation	﻿2026-10-20T06:07:47.2341439Z ##[group]Run if (Test-Path -LiteralPath installer-network-preflight.json) {
+review	Retain runner network observation	2026-10-20T06:07:47.2342112Z ^[[36;1mif (Test-Path -LiteralPath installer-network-preflight.json) {^[[0m
+review	Retain runner network observation	2026-10-20T06:07:47.2342661Z ^[[36;1m  New-Item -ItemType Directory -Path same-installer-review -Force | Out-Null^[[0m
+review	Retain runner network observation	2026-10-20T06:07:47.2343417Z ^[[36;1m  Copy-Item -LiteralPath installer-network-preflight.json -Destination same-installer-review/installer-network-preflight.json^[[0m
+review	Retain runner network observation	2026-10-20T06:07:47.2343997Z ^[[36;1m}^[[0m
+review	Retain runner network observation	2026-10-20T06:07:47.2412007Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Retain runner network observation	2026-10-20T06:07:47.2412420Z env:
+review	Retain runner network observation	2026-10-20T06:07:47.2412615Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Retain runner network observation	2026-10-20T06:07:47.2412882Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Retain runner network observation	2026-10-20T06:07:47.2413109Z   RELEASE_VERSION: 1.1.23
+review	Retain runner network observation	2026-10-20T06:07:47.2413323Z   PREVIOUS_VERSION: 1.1.22
+review	Retain runner network observation	2026-10-20T06:07:47.2413599Z   CANDIDATE_COMMIT: 0f21f009982d5445e7e64067cabff3060e0805
+review	Retain runner network observation	2026-10-20T06:07:47.2413911Z   INSTALLER_RUN_ID: 39372018521
+review	Retain runner network observation	2026-10-20T06:07:47.2414168Z ##[endgroup]
+review	Retain original build receipt with review reports	﻿2026-10-20T06:07:47.7905511Z ##[group]Run $source = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\installer-build-receipt.json'
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7906531Z ^[[36;1m$source = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\installer-build-receipt.json'^[[0m
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7907227Z ^[[36;1m$destination = Join-Path $env:GITHUB_WORKSPACE 'same-installer-review'^[[0m
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7907651Z ^[[36;1mif (Test-Path -LiteralPath $source) {^[[0m
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7908055Z ^[[36;1m  New-Item -ItemType Directory -Path $destination -Force | Out-Null^[[0m
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7908655Z ^[[36;1m  Copy-Item -LiteralPath $source -Destination (Join-Path $destination 'installer-build-receipt.json')^[[0m
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7909125Z ^[[36;1m}^[[0m
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7976091Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7976525Z env:
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7976774Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7977036Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7977305Z   RELEASE_VERSION: 1.1.23
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7977513Z   PREVIOUS_VERSION: 1.1.22
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7977775Z   CANDIDATE_COMMIT: 0f21f009982d5445e7e64067cabff3060e0805
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7978081Z   INSTALLER_RUN_ID: 39372018521
+review	Retain original build receipt with review reports	2026-10-20T06:07:47.7978293Z ##[endgroup]
+review	Run actions/upload-artifact@v4	﻿2026-10-20T06:07:48.1379074Z ##[group]Run actions/upload-artifact@v4
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1379430Z with:
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1379679Z   name: community-release-installer-review-39378554736
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1379998Z   retention-days: 14
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1380198Z   if-no-files-found: error
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1380416Z   path: same-installer-review
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1380859Z   compression-level: 6
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1381180Z   overwrite: false
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1381622Z   include-hidden-files: false
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1381838Z env:
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1382816Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1383083Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1383306Z   RELEASE_VERSION: 1.1.23
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1383520Z   PREVIOUS_VERSION: 1.1.22
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1383784Z   CANDIDATE_COMMIT: 0f21f009982d5445e7e64067cabff3060e0805
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1384092Z   INSTALLER_RUN_ID: 39372018521
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.1384303Z ##[endgroup]
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.3595042Z (node:7024) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.3596191Z (Use `node --trace-deprecation ...` to show where the warning was created)
+review	Run actions/upload-artifact@v4	2026-10-20T06:07:48.3648690Z ##[error]No files were found with the provided path: same-installer-review. No artifacts will be uploaded.
+review	Post Run actions/checkout@v6	﻿2026-10-20T06:07:48.4017563Z Post job cleanup.
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.5972482Z [command]"C:\Program Files\Git\bin\git.exe" version
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.6336831Z git version 2.56.0.windows.2
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.6414205Z Temporarily overriding HOME='D:\a\_temp\ebe1d960-884a-4b8d-b41d-08e0c3fc2813' before making global git config changes
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.6415289Z Adding repository directory to the temporary git global config as a safe directory
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.6427448Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.6830673Z Removing SSH command configuration
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.6844555Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+review	Post Run actions/checkout@v6	2026-10-20T06:07:48.7445621Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+review	Post Run actions/checkout@v6	2026-10-20T06:07:49.4019726Z Removing HTTP extra header
+review	Post Run actions/checkout@v6	2026-10-20T06:07:49.4030990Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+review	Post Run actions/checkout@v6	2026-10-20T06:07:49.4454013Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.0575412Z Removing includeIf entries pointing to credentials config files
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.0588935Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.0956529Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.0958183Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.0958796Z includeif.gitdir:/github/workspace/.git.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.0959182Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.1009428Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.1443092Z D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.1521421Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.1934731Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.2294314Z D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.2344598Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.2753516Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.3123495Z /github/runner_temp/git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.3172244Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.3594771Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.3962480Z /github/runner_temp/git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.4017298Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config
+review	Post Run actions/checkout@v6	2026-10-20T06:07:50.4453584Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+review	Post Run actions/checkout@v6	2026-10-20T06:07:51.0399019Z Removing credentials config 'D:\a\_temp\git-credentials-7e40eb2d-6465-4202-b320-188458d67a80.config'
+review	Complete job	﻿2026-10-20T06:07:51.0608033Z Cleaning up orphan processes
+review	Complete job	2026-10-20T06:07:51.0638938Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

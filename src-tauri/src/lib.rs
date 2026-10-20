@@ -3,6 +3,7 @@ mod formats;
 mod services;
 
 use commands::ai::ai_chat_completion;
+use commands::attachments::{inspect_library_attachments, list_library_attachment_uses, preview_attachment_reference, pick_library_attachment};
 use commands::archive::preflight_archive;
 use commands::backup::{
     export_management_backup, preflight_management_backup_import, restore_management_backup,
@@ -550,6 +551,10 @@ pub fn run() {
             update_graph_relation_decision,
             open_external_file_window,
             scan_directory,
+            inspect_library_attachments,
+            list_library_attachment_uses,
+            preview_attachment_reference,
+            pick_library_attachment,
             read_inbox_directory,
             create_inbox_directory,
             get_folder_order,

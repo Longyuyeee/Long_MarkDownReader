@@ -1,0 +1,22 @@
+{
+  "error": "Error: locator.click: Error: strict mode violation: getByText('引用笔记.md', { exact: true }) resolved to 2 elements:\n    1) <strong data-v-2a0f08d2=\"\">引用笔记.md</strong> aka getByRole('button', { name: '引用笔记.md 引用笔记.md 第 9 行' })\n    2) <small data-v-2a0f08d2=\"\">引用笔记.md</small> aka getByRole('button', { name: '引用笔记.md 引用笔记.md 第 9 行' })\n\nCall log:\n\u001b[2m  - waiting for getByText('引用笔记.md', { exact: true })\u001b[22m\n",
+  "checks": [
+    {
+      "id": "read-search-and-missing-state-without-disk-write",
+      "status": "passed"
+    },
+    {
+      "id": "replacement-applies-to-draft-and-keeps-disk",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refused-with-newer-draft",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-picker-keeps-original",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

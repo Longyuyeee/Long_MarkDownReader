@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import {nativeUserInput} from './v118-native-user-input.mjs'
 
 export const saveHistoryChecks = [
   'markdown-conflict-copy-keeps-disk-and-unsaved-editor',
@@ -19,7 +20,7 @@ export const saveHistoryChecks = [
 ]
 
 export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,capture,library,output,sourceCommit,installerSha256,appVersion}) {
-  assert.ok(['1.1.7','1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22'].includes(appVersion))
+  assert.ok(['1.1.7','1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23'].includes(appVersion))
   if(process.env.LONGEDIT_R5I_DISPOSABLE!=='1'||path.resolve(library).toLowerCase()!=='c:\\longeditr5ilibrary')throw Error('Disposable installer fixture required')
   const report={appVersion,sourceCommit,installerSha256,evidenceLevel:'installed-tauri-ipc-and-disk',sourceUserContentIncluded:false,status:'running',checks:[]}
   const check=id=>report.checks.push({id,status:'passed'})
@@ -28,13 +29,7 @@ export async function runInstalledV117Workflow({send,evaluate,navigate,waitFor,c
     if(!result.ok)throw Error(result.error);return result.value
   }
   const press=async(key,code,windowsVirtualKeyCode,modifiers=0)=>{for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key,code,windowsVirtualKeyCode,modifiers})}
-  const click=async expression=>{
-    await waitFor(`!!(${expression})`,'v117 control exists')
-    await evaluate(`(${expression}).scrollIntoView({block:'nearest'})`)
-    const rectangle=`(()=>{const e=${expression};if(!e||e.disabled)return null;const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return r.width&&r.height&&e.contains(document.elementFromPoint(x,y))?{x,y}:null})()`
-    await waitFor(rectangle,'v117 control ready');const point=await evaluate(rectangle)
-    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...point,button:'left',clickCount:1})
-  }
+  const {clickTarget:click}=nativeUserInput({send,evaluate})
   const button=(scope,label)=>`[...document.querySelectorAll(${JSON.stringify(scope+' button')})].find(e=>e.textContent.trim()===${JSON.stringify(label)})`
   const fill=async(selector,value)=>{await click(`document.querySelector(${JSON.stringify(selector)})`);await press('a','KeyA',65,2);await send('Input.insertText',{text:value})}
   const store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`

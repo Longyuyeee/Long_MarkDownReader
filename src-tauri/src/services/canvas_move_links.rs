@@ -29,7 +29,7 @@ pub(crate) fn plan(root: &Path, source: &Path, target: &Path) -> Result<Vec<Docu
         if meta.is_dir() {
             for entry in fs::read_dir(path).map_err(|e|e.to_string())? {
                 let entry = entry.map_err(|e|e.to_string())?;
-                if entry.file_name().to_string_lossy().starts_with('.') { continue; }
+                if super::library_visibility::hidden_name(&entry.file_name().to_string_lossy()) { continue; }
                 if entries + pending.len() >= 20_000 { return Err("Canvas 引用检查超过 20000 项预算，未移动文件".into()); }
                 pending.push(entry.path());
             }

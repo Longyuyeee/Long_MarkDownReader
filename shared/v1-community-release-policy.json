@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.22",
+  "appVersion": "1.1.23",
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-20",
-  "currentStatus": "v1.1.22-community-release-published",
+  "currentStatus": "v1.1.23-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -36,52 +36,52 @@
     "githubReleasePublished": true
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.21",
+    "previousPublicVersion": "1.1.22",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.21-to-1.1.22-pending",
-    "scope": "durable-file-operations-per-item-restore-and-draft-protection"
+    "managedUpdaterUpgradePath": "1.1.22-to-1.1.23-pending",
+    "scope": "attachment-visibility-reference-management-and-draft-protection"
   },
   "targetRelease": {
-    "tag": "v1.1.22",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22",
+    "tag": "v1.1.23",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "7036d23e3d46d0c3758592744e5e93dd70528429",
+    "artifactSourceCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
     "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39361442050,
-    "hostedInstalledLifecycleRunId": 39365961514,
+    "artifactBuildRunId": 39372018521,
+    "hostedInstalledLifecycleRunId": 39378576559,
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "LongEdit_1.1.22_x64_zh-CN.msi",
-        "sizeBytes": 77660160,
-        "sha256": "cc75b5dc1500ddd300c9793747c9fb84ce1da623faf87d31c092d7307eb71fed",
+        "fileName": "LongEdit_1.1.23_x64_zh-CN.msi",
+        "sizeBytes": 77709312,
+        "sha256": "aa9f534c8d690e8aa0bfe0959cc8d2b5936b5ae767c4aff7292cebecda939a75",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.22_x64_zh-CN.msi"
+        "sourceFileName": "Long编辑_1.1.23_x64_zh-CN.msi"
       },
       {
         "target": "nsis",
-        "fileName": "LongEdit_1.1.22_x64-setup.exe",
-        "sizeBytes": 68416205,
-        "sha256": "4aaf428cdddd839950bb7a1194996be25eac19c159074e069331ccc3f525cf95",
+        "fileName": "LongEdit_1.1.23_x64-setup.exe",
+        "sizeBytes": 68450976,
+        "sha256": "69e2b840de06ab6b5d878b31a1348328b4fa53d016bd893e07aed71328dd8bd6",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.22_x64-setup.exe"
+        "sourceFileName": "Long编辑_1.1.23_x64-setup.exe"
       }
     ]
   },
   "release": {
-    "tag": "v1.1.22",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22",
-    "databaseId": 417985004,
+    "tag": "v1.1.23",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.23",
+    "databaseId": 418070008,
     "isDraft": false,
     "isPrerelease": false,
-    "taggedCommit": "7036d23e3d46d0c3758592744e5e93dd70528429",
-    "publishedAt": "2026-10-20T04:01:13Z"
+    "taggedCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
+    "publishedAt": "2026-10-20T06:22:18Z"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -106,7 +106,8 @@
     "1.1.18-to-1.1.19-managed-update-observation-pending",
     "1.1.19-to-1.1.20-managed-update-observation-pending",
     "1.1.20-to-1.1.21-managed-update-observation-pending",
-    "1.1.21-to-1.1.22-managed-update-observation-pending"
+    "1.1.21-to-1.1.22-managed-update-observation-pending",
+    "1.1.22-to-1.1.23-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.23-attachment-management-planned"
+  "nextAction": "v1.1.24-long-markdown-planned"
 }

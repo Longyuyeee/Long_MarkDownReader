@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const structuredChecks=['json-source-save-reopen','json-conflict-copy-keeps-original-and-draft','yaml-source-save-reopen','yaml-conflict-copy-keeps-original-and-draft','xml-source-save-reopen','xml-conflict-copy-keeps-original-and-draft','toml-source-save-reopen','toml-conflict-copy-keeps-original-and-draft','json-format-preview-cancel-apply-undo','json-pointer-context-source-navigation','reload-cancel-and-native-failure-keeps-draft','independent-structured-output-inspection','trusted-input-unselected-and-shortcut-preserved']
 export function validateInstalledStructured(report,manifest){
- assert.ok(['1.1.20','1.1.21', '1.1.22'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.20','1.1.21', '1.1.22', '1.1.23'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-structured-editors-and-original-output-bytes')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)

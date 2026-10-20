@@ -213,3 +213,14 @@ docs/evidence/v1122-review-*/**/*.log -text -diff
 docs/evidence/v1.1.22-release/** -text whitespace=cr-at-eol
 docs/evidence/v1122-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1122-publication-*/**/*.log -text -diff
+
+docs/evidence/v1123-attachments-development/** -text whitespace=cr-at-eol
+docs/evidence/v1123-attachments-development/**/*.log -text -diff
+docs/evidence/v1-1-23-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.23-release/** -text whitespace=cr-at-eol
+docs/evidence/v1123-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1123-build-*/**/*.log -text -diff
+docs/evidence/v1123-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1123-review-*/**/*.log -text -diff
+docs/evidence/v1123-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1123-publication-*/**/*.log -text -diff

@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.23",
-  "runtimeBaseVersion": "1.1.22",
-  "publicVersion": "1.1.22",
-  "publicTag": "v1.1.22",
-  "publicTagCommit": "7036d23e3d46d0c3758592744e5e93dd70528429",
+  "developmentTargetVersion": "1.1.24",
+  "runtimeBaseVersion": "1.1.23",
+  "publicVersion": "1.1.23",
+  "publicTag": "v1.1.23",
+  "publicTagCommit": "0f21f009982d5445e7e64067cabff306bf0e0805",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-73-v1.1.22-published",
-  "binaryVersionTransition": "v1.1.22-public-release-published",
-  "displayLabel": "v1.1.22 已发布 · 下一目标 v1.1.23（附件管理）",
+  "currentStage": "M8-75-v1.1.23-published",
+  "binaryVersionTransition": "v1.1.23-public-release-published",
+  "displayLabel": "v1.1.23 已发布 · 下一目标 v1.1.24（长 Markdown 组织）",
   "activeSlice": {
-    "id": "v1.1.22-file-operation-history",
+    "id": "v1.1.23-attachment-management",
     "status": "published-with-installed-workflows-and-public-assets-verified",
-    "document": "docs/V1_1_22_File_Operation_History_Development_2026-10-20.md"
+    "document": "docs/V1_1_23_Attachment_Management_Development_2026-10-20.md"
   }
 }
