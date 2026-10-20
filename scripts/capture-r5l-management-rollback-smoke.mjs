@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {managementMainTarget,assertPreparedManagementFixture,assertRestoredManagementFixture} from './lib/installed-management-fixture.mjs'
+import {managementMainTarget,assertPreparedManagementFixture,assertRestoredManagementFixture,managementLibraryMappings} from './lib/installed-management-fixture.mjs'
 
 const endpoint = process.env.LONGEDIT_CDP_ENDPOINT || 'http://127.0.0.1:9343'
 const libraryInput = process.env.LONGEDIT_R5L_LIBRARY || ''
@@ -98,12 +98,13 @@ try {
     const config = await invoke('get_config')
     await fs.writeFile(path.join(output,'management-config-observation.json'),JSON.stringify({sourceUserContentIncluded:false,activeLibraryPath:config.activeLibraryPath,libraryPaths:config.libraries?.map(entry=>entry.path),collections:config.savedSearches},null,2)+'\n')
     const collectionSnapshot=assertPreparedManagementFixture(config,library,await invoke('plugin:app|version'))
+    const libraryPaths=config.libraries.map(entry=>entry.path)
 
     const receipt = await invoke('export_management_backup', { targetPath: backupPath })
     const preflight = await invoke('preflight_management_backup_import', { backupPath })
     const requiredExclusions = ['document-body', 'api-key', 'system-credential', 'absolute-user-path']
     if (!preflight.valid || preflight.savedSearchCount !== collectionSnapshot.length || !preflight.requiresLibraryMapping ||
-        preflight.requiredLibraryMappings?.length !== 1 ||
+        preflight.requiredLibraryMappings?.length !== libraryPaths.length ||
         !requiredExclusions.every(item => preflight.excluded?.includes(item))) {
       throw new Error(`Management backup privacy preflight failed: ${JSON.stringify(preflight)}`)
     }
@@ -141,6 +142,7 @@ try {
       },
       preflight: sanitizedPreflight(preflight),
       collectionSnapshot,
+      libraryPaths,
       indexBeforeRollback: {
         state: rebuilt.state,
         schemaVersion: rebuilt.schemaVersion,
@@ -157,19 +159,20 @@ try {
       throw new Error('R5L prepare evidence is missing before restore')
     }
     const preflight = await invoke('preflight_management_backup_import', { backupPath })
-    if (!preflight.valid || preflight.requiredLibraryMappings?.length !== 1) {
-      throw new Error('R5L restore preflight did not retain one library mapping')
+    const libraryPaths=prior.libraryPaths||[library]
+    if (!preflight.valid || preflight.requiredLibraryMappings?.length !== libraryPaths.length) {
+      throw new Error('R5L restore preflight did not retain every owned library mapping')
     }
-    const pathFingerprint = preflight.requiredLibraryMappings[0].pathFingerprint
+    const libraryMappings=managementLibraryMappings(preflight.requiredLibraryMappings,libraryPaths)
     const restored = await invoke('restore_management_backup', {
       backupPath,
-      libraryMappings: [{ pathFingerprint, path: library }],
+      libraryMappings,
     })
-    if (restored.libraryCount !== 1 || restored.savedSearchCount !== prior.collectionSnapshot.length) {
+    if (restored.libraryCount !== libraryPaths.length || restored.savedSearchCount !== prior.collectionSnapshot.length) {
       throw new Error(`Management restore receipt is incomplete: ${JSON.stringify(restored)}`)
     }
     const config = await invoke('get_config')
-    assertRestoredManagementFixture(config,library,prior.collectionSnapshot)
+    assertRestoredManagementFixture(config,library,prior.collectionSnapshot,libraryPaths)
     const rebuilt = await invoke('rebuild_knowledge_index', { libraryRoot: library })
     assertReadyIndex(rebuilt)
 
@@ -182,7 +185,7 @@ try {
     if (reloadedConfig.activeLibraryPath !== library || reloadedConfig.libraries?.[0]?.path !== library) {
       throw new Error('Reloaded application did not adopt the restored library mapping')
     }
-    assertRestoredManagementFixture(reloadedConfig,library,prior.collectionSnapshot)
+    assertRestoredManagementFixture(reloadedConfig,library,prior.collectionSnapshot,libraryPaths)
 
     const textFile = path.join(library, 'r5j-notes.txt')
     const jsonFile = path.join(library, 'r5j-config.json')
