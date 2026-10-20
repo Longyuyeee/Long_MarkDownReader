@@ -61,24 +61,27 @@ const setDirectory = (row: Row, directory: string) => { row.entry.filters = { di
 const installBundle = (bundle: CollectionBundle) => { rows.value = planCollectionNames(bundle.collections, store.savedSearches.filter(entry => sameWorkspacePath(entry.libraryPath, targetRoot.value)).map(entry => entry.name)).map(makeRow) }
 async function readPasted() {
   if (busy.value || !current()) return
-  busy.value = true; error.value = ''; notice.value = ''
-  try { const bundle = await invoke<CollectionBundle>('parse_collection_bundle', { content: pasted.value }); if (current()) { installBundle(bundle); pasted.value = ''; pasting.value = false } }
-  catch (cause) { if (current()) error.value = String(cause) }
+  busy.value = true; error.value = ''; notice.value = ''; checked.value = ''; clearTimeout(checkTimer)
+  let loaded = false
+  try { const bundle = await invoke<CollectionBundle>('parse_collection_bundle', { content: pasted.value }); if (current()) { installBundle(bundle); pasted.value = ''; pasting.value = false; loaded = true } }
+  catch (cause) { if (current()) error.value = `未读入新条件，仍保留上一次预览：${String(cause)}` }
   finally { busy.value = false }
-  if (rows.value.length && current()) await check()
+  if (loaded && current()) await check()
 }
 async function chooseFile() {
   if (busy.value) return
   busy.value = true; error.value = ''; notice.value = ''; const token = ++generation
+  let loaded = false
   try {
     const source = await open({ title: '选择集合条件文件', multiple: false, directory: false, filters: [{ name: 'Long编辑集合条件', extensions: ['json'] }] })
     if (typeof source !== 'string' || !current() || token !== generation) return
+    checked.value = ''; clearTimeout(checkTimer)
     const bundle = await invoke<CollectionBundle>('read_collection_bundle', { sourcePath: source })
     if (!current() || token !== generation) return
-    installBundle(bundle)
-  } catch (cause) { if (current()) error.value = String(cause) }
+    installBundle(bundle); loaded = true
+  } catch (cause) { if (current()) error.value = `未读入新条件，仍保留上一次预览：${String(cause)}` }
   finally { busy.value = false }
-  if (rows.value.length && current()) await check()
+  if (loaded && current()) await check()
 }
 async function choosePath(row: Row, file: boolean) {
   if (busy.value) return

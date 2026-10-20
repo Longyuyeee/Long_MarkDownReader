@@ -8,7 +8,7 @@ window.__TAURI_INTERNALS__.invoke=async(command,args={})=>{
  if(['read_collection_bundle','export_collection_bundle','preview_collection_import'].includes(command))a.calls.push({command,args})
  if(command==='plugin:dialog|open')return args.options?.directory?(a.directoryChoice||target+'/重映射'):'C:/owned/collections.json'
  if(command==='plugin:dialog|save')return 'C:/owned/exported-collections.json'
- if(command==='read_collection_bundle')return structuredClone(a.bundle)
+ if(command==='read_collection_bundle'){if(a.failBundle)throw Error('模拟条件文件不可读');return structuredClone(a.bundle)}
  if(command==='parse_collection_bundle')return JSON.parse(args.content)
  if(command==='export_collection_bundle'){a.exports.push(structuredClone(args));return}
  if(command==='preview_collection_import')return args.collections.map((entry,index)=>{const invalid=entry.objectTypes.includes('unavailable-format')||entry.filters?.directory&&!a.directories.includes(args.libraryRoot+'/'+entry.filters.directory)||a.invalidateImport;return {index,valid:!invalid,message:invalid?'目录或文件类型不可用，请调整条件':'条件可用'}})
