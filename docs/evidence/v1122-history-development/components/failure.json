@@ -1,30 +1,5 @@
 {
-  "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(bounds.x>=-1&&bounds.x+bounds.width<=width+1)\n",
-  "checks": [
-    {
-      "id": "read-and-search-never-write-or-offer-copy-deletion",
-      "status": "passed"
-    },
-    {
-      "id": "per-item-restore-retains-draft-and-prevents-repeat",
-      "status": "passed"
-    },
-    {
-      "id": "restore-failure-stays-inside-dialog-and-retains-operations",
-      "status": "passed"
-    },
-    {
-      "id": "pending-item-opens-existing-recovery",
-      "status": "passed"
-    },
-    {
-      "id": "clear-retains-pending-records",
-      "status": "passed"
-    },
-    {
-      "id": "late-read-cannot-reopen-previous-library",
-      "status": "passed"
-    }
-  ],
+  "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:9032/scripts/fixtures/v1122-history-browser.html\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:9032/scripts/fixtures/v1122-history-browser.html\", waiting until \"load\"\u001b[22m\n",
+  "checks": [],
   "errors": []
 }

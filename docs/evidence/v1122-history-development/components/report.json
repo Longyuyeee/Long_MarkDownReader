@@ -3,6 +3,10 @@
   "desktopInputUsed": false,
   "checks": [
     {
+      "id": "locate-button-reveals-resolved-file-through-existing-opener",
+      "status": "passed"
+    },
+    {
       "id": "read-and-search-never-write-or-offer-copy-deletion",
       "status": "passed"
     },

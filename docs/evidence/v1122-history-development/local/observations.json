@@ -1,7 +1,6 @@
 {
   "observedAt": "2026-10-20T02:02:38.726Z",
   "releaseReceipt": false,
-  "sourceAtExport": "e24506718286d8a8d914574ea2fb519c8362ee3d",
   "finalAffectedNative": {
     "status": "passed",
     "fileHistoryChecks": 9,
@@ -37,5 +36,7 @@
       "fileName": "v1122-quality-development.log",
       "sha256": "dcfd48c745c4e40f052e7efe84070390e03c58d3b2b53acd570f4ee05f573465"
     }
-  ]
+  ],
+  "productSourceCommit": "e24506718286d8a8d914574ea2fb519c8362ee3d",
+  "orchestrationCommitAtExport": "dd34ac1de05ede2b9f9d10db6cdd1ee5b433636a"
 }
