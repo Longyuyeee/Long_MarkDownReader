@@ -26,10 +26,12 @@ export function parseSourceReference(href: string, libraryRoot: string) {
     if (!relative || relative.startsWith('/') || relative.includes(':') || relative.split('/').some(part => !part || part === '.' || part === '..')) return null
     const root = normalize(libraryRoot)
     if (!root) return null
+    const sourceDigest = url.searchParams.get('sha256') || undefined
+    if (sourceDigest && !/^[a-f0-9]{64}$/i.test(sourceDigest)) return null
     const page = url.searchParams.get('page') || undefined
     if (page && (!/^\d+$/.test(page) || Number(page) < 1)) return null
     const separator = libraryRoot.includes('\\') ? '\\' : '/'
     const quote = url.searchParams.get('quote')?.slice(0, 160)
-    return { path: `${libraryRoot.replace(/[\\/]+$/, '')}${separator}${relative.replace(/\//g, separator)}`, page, annotation: url.searchParams.get('annotation') || undefined, ...(quote ? { quote } : {}) }
+    return { path: `${libraryRoot.replace(/[\\/]+$/, '')}${separator}${relative.replace(/\//g, separator)}`, page, annotation: url.searchParams.get('annotation') || undefined, ...(quote ? { quote } : {}), ...(sourceDigest ? { sourceDigest } : {}) }
   } catch { return null }
 }

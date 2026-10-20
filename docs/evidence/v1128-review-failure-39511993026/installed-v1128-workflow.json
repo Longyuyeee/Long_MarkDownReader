@@ -1,0 +1,582 @@
+{
+  "appVersion": "1.1.28",
+  "sourceCommit": "eba705bce78744fa20d30a7acad422d7297f0ef1",
+  "installerSha256": "a8ea21db8c280594788ea0fbda958bd90a17a143dfd84f429e07bec2d74120b7",
+  "harnessSourceCommit": "eba705bce78744fa20d30a7acad422d7297f0ef1",
+  "executableSha256": "3f8d87e73684e9a68bc494b0e0096a1c29723de1a64a2c2750927d21eb9b495a",
+  "fixtureDirectory": "000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080",
+  "status": "failed",
+  "evidenceLevel": "installed-trusted-input-native-reference-and-relationship-repair",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "native-source-and-locator-status",
+      "status": "passed"
+    },
+    {
+      "id": "relationship-preview-cancel",
+      "status": "passed"
+    },
+    {
+      "id": "stale-relationship-retains-new-note",
+      "status": "passed"
+    },
+    {
+      "id": "repair-only-selected-endpoint",
+      "status": "passed"
+    },
+    {
+      "id": "pinned-reference-recovers-through-menu",
+      "status": "passed"
+    },
+    {
+      "id": "inline-source-draft-undo-redo",
+      "status": "passed"
+    },
+    {
+      "id": "trusted-input-and-no-runtime-errors",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1128-relations-before.json",
+      "sizeBytes": 602,
+      "sha256": "11195419d3e62b5b62cea1527fee42a51e0627f07c621e5c1da893aeeb9f4295"
+    },
+    {
+      "fileName": "installed-v1128-relations-after.json",
+      "sizeBytes": 602,
+      "sha256": "1ecdc77b7e975c67f197fce246e73c4fd83c02f3736d89c46ea512878141a1d9"
+    },
+    {
+      "fileName": "installed-v1128-draft-before.md",
+      "sizeBytes": 531,
+      "sha256": "54c6cdbb17ab6b890e5301ffc8f928f3c3610cb18b52e47ea48f333f4512a6cf"
+    },
+    {
+      "fileName": "installed-v1128-draft-after.md",
+      "sizeBytes": 531,
+      "sha256": "97565fdb63b425f9e1d1b005a445791f755adfb43009760795c39b88a5e8bbfe"
+    },
+    {
+      "fileName": "installed-v1128-note.md",
+      "sizeBytes": 493,
+      "sha256": "a52a743f41388d9c334923bb5b1927d833baf333b9e4898058d1984967275cc5"
+    },
+    {
+      "fileName": "installed-v1128-source.txt",
+      "sizeBytes": 62,
+      "sha256": "2c3f32ccdd0160e8392df61b0e09d6a5b950a938237af6dd093fba9400ffdd5b"
+    }
+  ],
+  "locatorChecksExact": true,
+  "relationId": "ad205278771066cdf2f90bd8e293e53e",
+  "cancelExact": true,
+  "staleRejected": true,
+  "relationExact": true,
+  "pinnedExact": true,
+  "draftOnly": true,
+  "undoExact": true,
+  "redoExact": true,
+  "modeRestored": true,
+  "otherDraftsPreserved": true,
+  "inputTrace": [
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": false
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": false
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "pointerdown",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false,
+  "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(report.inputTrace.every(e=>e.trusted))\n\n    at validateInstalledReferenceRepair (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-28-evidence.mjs:12:132)\n    at runInstalledV1128Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-28-workflow.mjs:37:577)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:1062:5",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080%5C%E5%BC%95%E7%94%A8%E4%BF%AE%E5%A4%8D%E4%BA%8C%E5%85%AB.md",
+    "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\nR5L Disposable Vault\n▾\nrenamed.md\nreference-final.txt\nincoming\ndraft\nplain-new.md\n接续草稿.txt\n方案.md\n记录\n标签笔记000\n图谱验收主题017 - 项目长期研究与来源证据核对\n项目写作\n研究 来源\n研究 来源\n阅读成果\n研究 来源\n研究 来源\n任务清单\n不要修改\n任务清单\n项目 工作簿\n不要修改\n独立生产者 另存\n同事更新\nmicrosoft-word-16-source\n不要修改\nmicrosoft-word-16-copy\nwps-writer-source\nwps-writer-copy\nlibreoffice-writer-source\nlibreoffice-writer-copy\njson\n不要修改\nyaml\nxml\ntoml\n项目\n接续来源\n项目\n保留扩展\n不要修改\n同事更新\nmicrosoft-powerpoint-16-source\n不要修改\nmicrosoft-powerpoint-16-copy\nwps-presentation-source\nwps-presentation-copy\nlibreoffice-impress-source\nlibreoffice-impress-copy\n交付 草稿\n用户填写的文章\n真实 打印\nsaved\nwarning\n草稿.md\n笔记\n引用笔记\n菜单检查\njson\njson-恢复-1792537757-1\nyaml\nyaml-恢复-1792537767-1\nxml\nxml-恢复-1792537775-1\ntoml\ntoml-恢复-1792537785-1\n查找文本-v1125\n对照-v1125\n查找长文-v1125\n对照-v1124\n章节长文-v1124\n二草稿\n引用修复二八\n资料\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n添加资料关系\n资料关系\n1\n资料.txt\n参考依据 · 从当前文件出发\n另一个窗口的说明\n引用修复二八.md\n未保存\n我提到的\n0\n提到我的\n0\n还没提到其他笔记\n\n在正文中写上 [[笔记名]]。\n\n查找一篇笔记\n查看关系图\n486 篇笔记\n5,191 词\n当前资料库\nv1.1.28\nR5L Disposable Vault\n引用修复二八.md\n预览\n专注\n添加关系\nAI 辅助\n参考\n保存\n文档操作\n更多格式\n源码 ▾\n中栏 ▾\n导出\n历史\n# 引用修复二八\n\n二八未保存补充，必须保留\n\n[来源修复二八](longedit://source?path=000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080%2F%E6%96%B0%E7%9B%AE%E5%BD%95%2F%E8%B5%84%E6%96%99.txt&quote=%E4%BA%8C%E5%85%AB%E7%8B%AC%E7%89%B9%E6%9D%A5%E6%BA%90%E6%96%87%E5%AD%97)\n\n```md\n[示例](longedit://source?path=000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080%2F%E6%97%A7%E7%9B%AE%E5%BD%95%2F%E8%B5%84%E6%96%99.txt&quote=%E4%BA%8C%E5%85%AB%E7%8B%AC%E7%89%B9%E6%9D%A5%E6%BA%90%E6%96%87%E5%AD%97)\n```\n\n\nDesktopTabletMobile/Wechat\n● 未保存 · Ctrl+S\nMarkdown · 完整编辑\nUTF-8 · LF\n480 字 · 约 2 分钟 · 行 1:19\n参考 · 只读\n资料.txt\n000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080/新目录/资料.txt\n×\n刷新参考\n返回编辑\n•••\n取消来源\n文本内容 · 只读\n二八独特来源文字\n预算资料，原文件必须保持\n\n插入到 引用修复二八.md\n复制选中文字及来源\n先在笔记中点击插入位置，再选择参考文字；也可直接复制摘录。\n参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。\n在主编辑区打开"
+  },
+  "failureDraft": {
+    "tab": {
+      "id": "C:\\LongEditR5ILibrary\\000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080\\引用修复二八.md",
+      "title": "引用修复二八",
+      "path": "C:\\LongEditR5ILibrary\\000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080\\引用修复二八.md",
+      "isDirty": true,
+      "content": "# 引用修复二八\n\n二八未保存补充，必须保留\n\n[来源修复二八](longedit://source?path=000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080%2F%E6%96%B0%E7%9B%AE%E5%BD%95%2F%E8%B5%84%E6%96%99.txt&quote=%E4%BA%8C%E5%85%AB%E7%8B%AC%E7%89%B9%E6%9D%A5%E6%BA%90%E6%96%87%E5%AD%97)\n\n```md\n[示例](longedit://source?path=000-v1128-reference-036cb513-caad-4ff0-98bd-f2ab5a63c080%2F%E6%97%A7%E7%9B%AE%E5%BD%95%2F%E8%B5%84%E6%96%99.txt&quote=%E4%BA%8C%E5%85%AB%E7%8B%AC%E7%89%B9%E6%9D%A5%E6%BA%90%E6%96%87%E5%AD%97)\n```\n",
+      "textSignature": "493:1792537869879902200:c3f4f3df341306e6cec2826bb85f093f",
+      "textContentDigest": "c3f4f3df341306e6cec2826bb85f093f",
+      "textEncoding": "UTF-8",
+      "textBom": "none",
+      "textLineEnding": "lf",
+      "textHasFinalNewline": true,
+      "textSize": 493,
+      "textModified": 1792537869879902200
+    },
+    "mode": "sv",
+    "focus": ""
+  }
+}

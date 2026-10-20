@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 import path from 'node:path'
 export const crossCopyChecks=['automatic-preview-is-read-only','new-directory-and-no-overwrite-collision','saved-source-copy-keeps-live-draft','markdown-image-and-cycle-dependencies','folder-copy-excludes-internal-metadata','changed-source-partial-result','retry-only-unfinished-items','warning-preview-cancel-and-explicit-choice','same-native-plan-receipt-is-idempotent','trusted-input-source-and-unselected-preserved']
 export function validateInstalledCrossCopy(report,manifest){
- assert.ok(['1.1.21','1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.21','1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-cross-library-copy-native-input-and-output-bytes')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)

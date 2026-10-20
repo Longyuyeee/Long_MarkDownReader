@@ -462,14 +462,14 @@ try {
     $startedProcess = $null
     Wait-ForPort -Port 9343 -Listening $false
 
-    if ($CurrentVersion -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27')) {
+    if ($CurrentVersion -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28')) {
         # Same installed image/profile, after every inherited smoke workflow.
         # The new scene must still be recoverable after an actual process exit.
         $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
         Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase 'v119-scene-process-restart'
         & $NodeExecutable (Join-Path (Split-Path -Parent $InstalledSmokeScript) 'capture-v119-installed-restart.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'v119 same-installed-image scene process restart failed' }
-        if ($CurrentVersion -in @('1.1.22','1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27')) {
+        if ($CurrentVersion -in @('1.1.22','1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28')) {
             & $NodeExecutable (Join-Path (Split-Path -Parent $InstalledSmokeScript) 'capture-v1122-installed-restart.mjs')
             if ($LASTEXITCODE -ne 0) { throw 'v1122 same-installed-image file history process restart failed' }
         }

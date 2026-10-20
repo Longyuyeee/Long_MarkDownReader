@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "Missing pinned reference stays local and cancellation changes neither files nor relationships",
+    "Source repair uses all six existing visual styles without horizontal overflow",
+    "Explicit candidate selection distinguishes same names and persists only the pinned reference",
+    "Relationship changed after preview is refused and the new note is retained",
+    "Targeted relationship repair retains identity, direction, type, description and original documents",
+    "Typing while the source preview is pending retires its old draft snapshot",
+    "Inline source repair edits the current draft only, preserving typed text and fenced examples",
+    "Source repair is one undoable draft change and redo retains all unsaved text",
+    "Invalid PDF position cannot be confirmed as repaired; explicit file-only choice clears the old locator"
+  ],
+  "errors": []
+}

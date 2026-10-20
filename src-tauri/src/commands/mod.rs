@@ -51,3 +51,5 @@ pub mod inbox;
 pub mod batch_rename;
 pub(crate) mod tag_edit;
 pub(crate) mod collection_transfer;
+
+pub(crate) mod reference_repair;

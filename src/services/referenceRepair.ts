@@ -1,0 +1,3 @@
+export interface ReferenceTarget { path: string; page?: number; annotationId?: string; quote?: string; sourceDigest?: string }
+export interface SourceCheck { path: string; parent: string; status: 'available' | 'missing' | 'unreadable'; message: string; signature: string; locationStatus: 'none' | 'verified' | 'unavailable' | 'unverified'; locationMessage: string }
+export function sourceCheckArgs(root: string, target: ReferenceTarget) { return { libraryRoot: root, path: target.path, page: target.page ?? null, annotationId: target.annotationId ?? null, quote: target.quote ?? null, sourceDigest: target.sourceDigest ?? null } }

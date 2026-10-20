@@ -290,3 +290,21 @@ docs/evidence/v1127-review-*/**/*.log -text -diff
 
 docs/evidence/v1127-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1127-publication-*/**/*.log -text -diff
+
+docs/evidence/v1128-reference-repair-development/** -text whitespace=cr-at-eol
+docs/evidence/v1128-reference-repair-development/**/*.log -text -diff
+
+docs/evidence/v1-1-28-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1-1-28-candidate-lifecycle/**/*.log -text -diff
+
+docs/evidence/v1.1.28-release/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.28-release/**/*.log -text -diff
+
+docs/evidence/v1128-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1128-build-*/**/*.log -text -diff
+
+docs/evidence/v1128-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1128-review-*/**/*.log -text -diff
+
+docs/evidence/v1128-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1128-publication-*/**/*.log -text -diff
