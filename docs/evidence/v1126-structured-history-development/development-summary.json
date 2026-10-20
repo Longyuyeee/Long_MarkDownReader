@@ -1,0 +1,25 @@
+{
+  "status": "menu-height-regression-fixed-new-installers-pending",
+  "sourceUserContentIncluded": false,
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": {
+    "submenuBrowser": 8,
+    "structuredHistoryBrowser": 12,
+    "priorStructuredEditingBrowser": 55,
+    "sessionAndHistoryUnit": 26,
+    "nativeHistoryUnit": 21,
+    "installedEvidenceContracts": 2,
+    "typeCheck": "passed"
+  },
+  "observations": [
+    "Initial source-column text assertions used DOM innerText; switched to the actual CodeMirror document without trimming.",
+    "A delayed restore was correctly ignored but lacked a local explanation; the dialog now reports that newer content was retained.",
+    "Existing UTF-16/NUL reading boundaries remain; supported UTF-8 BOM/CRLF recovery is verified.",
+    "Initial candidate checks rejected stale active version metadata and missing channel wording. These were corrected before packaging; cancelled and failed raw runs are retained.",
+    "Installed copy workflow exposed an above-viewport menu in a short window. Restored half-viewport height while retaining native scrolling and independently placed flyouts; 700/500px copy and cancel now pass."
+  ],
+  "supersededProductSourceCommit": "a086e2b8cbf4186bce7f9603e68cefc2dc60a85b",
+  "supersededBuildRunId": 39433301301,
+  "failedReviewRunId": 39438175989
+}

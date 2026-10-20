@@ -9,11 +9,15 @@ name: Community Release Installer Lifecycle
       current_version:
         description: Current package version
         required: true
-        default: "1.1.25"
+        default: "1.1.26"
       previous_version:
         description: Previous official public version
         required: true
-        default: "1.1.24"
+        default: "1.1.25"
+      build_only:
+        description: Build fixed installers; complete installation runs in the mandatory same-installer review
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -52,10 +56,22 @@ jobs:
           path: current-product
 
       - name: Check out previous public release
-        uses: actions/checkout@v6
-        with:
-          ref: v${{ env.PREVIOUS_VERSION }}
-          path: previous-product
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $env:GITHUB_WORKSPACE 'orchestration'
+          $previous = Join-Path $env:GITHUB_WORKSPACE 'previous-product'
+          # The full orchestration clone already contains the immutable tag.
+          # This baseline checkout is used only for identity/package metadata;
+          # the previous installer is downloaded and hashed separately below.
+          $expected = (& git -C $source rev-list -n 1 "v$env:PREVIOUS_VERSION").Trim()
+          if ($LASTEXITCODE -ne 0 -or $expected -notmatch '^[0-9a-f]{40}$') { throw 'Previous public tag is unavailable' }
+          & git clone --shared --no-checkout $source $previous
+          if ($LASTEXITCODE -ne 0) { throw 'Local previous-source clone failed' }
+          & git -C $previous sparse-checkout set --no-cone /package.json /package-lock.json
+          if ($LASTEXITCODE -ne 0) { throw 'Previous metadata checkout could not be prepared' }
+          & git -C $previous checkout --detach $expected
+          if ($LASTEXITCODE -ne 0) { throw 'Previous public tag could not be checked out' }
 
       - name: Resolve and verify source identities
         shell: powershell
@@ -157,17 +173,18 @@ jobs:
           "M8_21_OUTPUT=$output" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Set up independent XLSX producer Python
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25"]'), inputs.current_version)
+        if: ${{ !inputs.build_only && contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25", "1.1.26"]'), inputs.current_version) }}
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Install hash-pinned independent XLSX producer
-        if: contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25"]'), inputs.current_version)
+        if: ${{ !inputs.build_only && contains(fromJSON('["1.1.16","1.1.17", "1.1.18", "1.1.19", "1.1.20", "1.1.21", "1.1.22", "1.1.23", "1.1.24", "1.1.25", "1.1.26"]'), inputs.current_version) }}
         shell: powershell
         run: orchestration/scripts/setup-hosted-xlsx-producer.ps1
 
       - name: Execute disposable install and installed-workspace lifecycle
+        if: ${{ !inputs.build_only }}
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'

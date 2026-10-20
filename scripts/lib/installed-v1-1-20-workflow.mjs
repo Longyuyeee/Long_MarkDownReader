@@ -9,7 +9,7 @@ import {structuredChecks,validateInstalledStructured} from './installed-v1-1-20-
 const q=JSON.stringify,sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 export async function runInstalledV1120Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable,repoRoot}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.ok(['1.1.20','1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.20','1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const folder=path.join(library,'v1120-structured-'+crypto.randomUUID()),ui=nativeUserInput({send,evaluate},{timeoutMs:35000}),p=file=>path.join(folder,file)
  const specs=[
   ['json','jsonc','// 保留注释\r\n{"value":"原始内容","big":9007199254740993,"a/b~c":["保留路径"]}\r\n'],

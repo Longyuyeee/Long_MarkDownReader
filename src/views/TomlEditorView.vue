@@ -15,6 +15,7 @@
         <n-button quaternary circle size="small" title="展开全部" @click="editor && unfoldAll(editor)"><template #icon><n-icon :component="UnfoldIcon" /></template></n-button>
         <n-button quaternary circle size="small" title="重新读取" :disabled="loading" @click="reload"><template #icon><n-icon :component="RefreshIcon" /></template></n-button>
         <n-button quaternary size="small" :title="inspectorVisible ? '隐藏配置分区与问题' : '显示配置分区与问题'" :aria-pressed="inspectorVisible" @click="toggleInspector"><template #icon><n-icon :component="InspectorIcon" /></template>分区与问题</n-button>
+        <StructuredHistoryMenu :session="session" :available="!isExternal" :read-only="readOnly" :busy="loading || saving || !session.hasDocument()" />
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty || !session.hasDocument()" @click="save()"><template #icon><n-icon :component="SaveIcon" /></template>{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</n-button>
       </div>
     </header>
@@ -75,6 +76,7 @@ import { AlertTriangle as AlertIcon, ArrowLeft as ArrowLeftIcon, CheckCircle2 as
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'
 import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
 import { useStructuredSession } from '../composables/useStructuredSession'

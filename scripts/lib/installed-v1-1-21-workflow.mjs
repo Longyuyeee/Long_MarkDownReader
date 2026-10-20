@@ -14,7 +14,7 @@ export async function expandCopySourceParents({ui,evaluate,library,file,row}){
 }
 export async function runInstalledV1121Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.ok(['1.1.21','1.1.22', '1.1.23', '1.1.24', '1.1.25'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.21','1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),folder=path.join(library,'000-v1121-copy-'+crypto.randomUUID()),targetRoot=path.join(folder,'目标资料库'),source=path.join(folder,'来源'),p=name=>path.join(source,name),destination=path.join(targetRoot,'接收'),label='本版复制目标 '+path.basename(folder).slice(-8)
  const store=`document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app')`,invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`)
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-cross-library-copy-native-input-and-output-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}

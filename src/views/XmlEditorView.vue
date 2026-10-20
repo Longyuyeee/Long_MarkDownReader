@@ -30,6 +30,7 @@
           <template #icon><n-icon :component="InspectorIcon" /></template>
           元素与问题
         </n-button>
+        <StructuredHistoryMenu :session="session" :available="!isExternal && !isSvg" :read-only="readOnly" :busy="loading || saving || !session.hasDocument()" />
         <n-button type="primary" size="small" :loading="saving" :disabled="loading || readOnly || !dirty || !session.hasDocument()" @click="save()">
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : dirty ? '保存' : '已保存' }}
@@ -136,6 +137,7 @@ import {
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import TextConflictDialog from '../components/TextConflictDialog.vue'
 import StructuredChangeDialog from '../components/StructuredChangeDialog.vue'
+import StructuredHistoryMenu from '../components/StructuredHistoryMenu.vue'
 import SourceNodeMenu from '../components/SourceNodeMenu.vue'
 import { useSourceNodeMenu } from '../composables/useSourceNodeMenu'
 import { useStructuredSession } from '../composables/useStructuredSession'

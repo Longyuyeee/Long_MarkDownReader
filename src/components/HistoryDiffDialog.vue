@@ -4,17 +4,18 @@
     <label>对比来源 <select v-model="source" :disabled="busy"><option value="draft">当前编辑区草稿</option><option value="disk">磁盘已保存内容</option></select></label>
     <p>− 当前来源中将移除的内容；+ 历史版本中将恢复的内容。未改动区域已折叠。</p>
     <p v-if="source === 'disk'" class="partial-hint">局部恢复应用到当前草稿，请先切换为“当前编辑区草稿”。</p>
-    <TextDiff :current="comparisonText" :target="historical" :current-label="source === 'draft' ? '当前草稿' : '磁盘内容'" :busy="busy" partial :partial-enabled="source === 'draft'" @partial="id => $emit('partial', id)" />
+    <TextDiff :current="comparisonText" :target="historical" :current-label="source === 'draft' ? '当前草稿' : '磁盘内容'" :busy="busy" partial :partial-enabled="source === 'draft' && !readOnly" @partial="id => $emit('partial', id)" />
+    <p v-if="readOnly" role="status">当前文件只读或正在处理，可以比较历史，暂不能恢复。</p>
     <p v-if="error" role="alert">{{ error }}</p>
     <p>恢复副本不会覆盖原文件。替换编辑区会先保护当前草稿，完成后仍需手动保存。</p>
-    <div class="actions"><n-button type="primary" :loading="busy" :disabled="busy" @click="$emit('copy')">恢复为副本</n-button><n-button :disabled="busy" @click="$emit('replace')">替换编辑区…</n-button><n-button :disabled="busy" @click="$emit('close')">取消</n-button></div>
+    <div class="actions"><n-button type="primary" :loading="busy" :disabled="busy || readOnly" @click="$emit('copy')">恢复为副本</n-button><n-button :disabled="busy || readOnly" @click="$emit('replace')">替换编辑区…</n-button><n-button :disabled="busy" @click="$emit('close')">取消</n-button></div>
   </n-modal>
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { NModal, NButton } from 'naive-ui'
 import TextDiff from './TextDiff.vue'
-const props = defineProps<{ path: string; timestamp: number; draft: string; disk: string; historical: string; busy: boolean; error: string }>()
+const props = defineProps<{ path: string; timestamp: number; draft: string; disk: string; historical: string; busy: boolean; error: string; readOnly?: boolean }>()
 defineEmits<{ copy: []; replace: []; partial: [changeId: number]; close: [] }>()
 const source = ref('draft')
 const comparisonText = computed(() => source.value === 'draft' ? props.draft : props.disk)

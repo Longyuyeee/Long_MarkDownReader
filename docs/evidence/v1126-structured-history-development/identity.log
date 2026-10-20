@@ -1,0 +1,31 @@
+{
+  "expected": {
+    "developmentTargetVersion": "1.1.26",
+    "runtimeBaseVersion": "1.1.26",
+    "publicTag": "v1.1.25",
+    "headAheadOfPublicTag": true,
+    "binaryVersionTransition": "v1.1.26-quality-gate-pending"
+  },
+  "actual": {
+    "headCommit": "6adb1630f5fa7f2dd7a0461c75664dcfadfea5f3",
+    "tagCommit": "a3bbfd4cc591d4989b14fc14f9daac0c6c90e1d7",
+    "commitsAhead": 6,
+    "tagIsAncestor": true,
+    "checks": {
+      "policySchema": true,
+      "nextPatchTarget": true,
+      "runtimeFactsFrozen": true,
+      "candidateMetadataFacts": true,
+      "publicFactsFrozen": true,
+      "publicTagImmutable": true,
+      "developmentAhead": true,
+      "enterpriseNotReleaseCandidate": true,
+      "binaryTransitionComplete": true,
+      "currentStageAligned": true,
+      "configConsumesPolicy": true,
+      "mainUiIdentifiesDevelopment": true,
+      "capabilityUiIdentifiesDevelopment": true,
+      "auditDocumentsIdentity": true
+    }
+  }
+}

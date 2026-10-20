@@ -7,6 +7,10 @@ use std::path::PathBuf;
 use tauri::Manager;
 use tauri::State;
 
+const HISTORY_EXTENSIONS: &[&str] = &[
+    "md", "markdown", "txt", "json", "jsonc", "yaml", "yml", "xml", "toml",
+];
+
 pub(crate) fn history_cache_root(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(app_handle
         .path()
@@ -43,8 +47,8 @@ pub async fn save_history_version(
     max_count: u32,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     save_history(
         &app_handle,
         path.to_string_lossy().as_ref(),
@@ -222,8 +226,8 @@ pub async fn get_history_metadata(
     path: String,
 ) -> Result<BTreeMap<u64, HistoryMetadata>, String> {
     read_coordinated_metadata(&history_cache_root(&app_handle)?, || {
-        let path = WorkspaceGuard::new(&library_root)?
-            .resolve_existing_file(&path, &["md", "markdown", "txt"])?;
+        let path =
+            WorkspaceGuard::new(&library_root)?.resolve_existing_file(&path, HISTORY_EXTENSIONS)?;
         history_dir(&app_handle, &path.to_string_lossy())
     })
 }
@@ -238,8 +242,8 @@ pub async fn set_history_metadata(
     note: String,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     let directory = history_dir(&app_handle, &path.to_string_lossy())?;
     if !directory.join(format!("{timestamp}.md")).is_file() {
         return Err("此历史版本已不存在，请刷新列表".into());
@@ -289,7 +293,7 @@ fn read_comparison(
         if bytes.len() > 20 * 1024 * 1024 {
             return Err("文件超过 20 MiB，暂不支持完整历史对比".into());
         }
-        String::from_utf8(bytes).map_err(|_| "历史对比暂仅支持 UTF-8 Markdown".into())
+        String::from_utf8(bytes).map_err(|_| "历史快照不是 UTF-8 文本，原文件与历史均已保留".into())
     }
     let snapshot = crate::formats::text::read_text_snapshot(path).map_err(|error| error.message)?;
     let disk = snapshot.content;
@@ -326,8 +330,8 @@ pub async fn compare_history_version(
     timestamp: u64,
 ) -> Result<HistoryComparison, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     read_comparison(
         &path,
         &history_dir(&app_handle, &path.to_string_lossy())?,
@@ -340,6 +344,26 @@ fn create_recovery_copy(
     content: &str,
     timestamp: u64,
 ) -> Result<PathBuf, String> {
+    let bytes = if path
+        .extension()
+        .and_then(|v| v.to_str())
+        .is_some_and(|ext| {
+            matches!(
+                ext.to_ascii_lowercase().as_str(),
+                "json" | "jsonc" | "yaml" | "yml" | "xml" | "toml"
+            )
+        }) {
+        let snapshot = crate::formats::text::read_text_snapshot(path).map_err(|e| e.message)?;
+        crate::formats::text::encode_text_for_save(
+            &snapshot,
+            content,
+            super::formats::structured_source_save_policy(content),
+        )
+        .map_err(|e| e.message)?
+        .bytes
+    } else {
+        content.as_bytes().to_vec()
+    };
     let parent = path.parent().ok_or("文件没有父目录")?;
     let stem = path.file_stem().unwrap_or_default().to_string_lossy();
     for suffix in 1..=1000 {
@@ -351,7 +375,7 @@ fn create_recovery_copy(
         if target.exists() {
             continue;
         }
-        match crate::services::reliable_write::write_new_bytes(&target, content.as_bytes()) {
+        match crate::services::reliable_write::write_new_bytes(&target, &bytes) {
             Ok(()) => return Ok(target),
             Err(error) => {
                 return Err(format!(
@@ -373,8 +397,8 @@ pub async fn restore_history_copy(
     history_signature: String,
 ) -> Result<String, String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     let comparison = checked_comparison(
         &path,
         &history_dir(&app_handle, &path.to_string_lossy())?,
@@ -402,8 +426,8 @@ pub async fn prepare_history_restore(
         return Err("当前草稿过大，未替换任何内容".into());
     }
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     let history = history_dir(&app_handle, &path.to_string_lossy())?;
     let comparison = checked_comparison(
         &path,
@@ -436,8 +460,8 @@ pub async fn list_history(
     // Restore actions retain exclusive coordination and signature checks.
     let _read =
         crate::services::history_coordination::acquire_read(&history_cache_root(&app_handle)?)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     list_history_for_path(&app_handle, path.to_string_lossy().as_ref())
 }
 
@@ -485,8 +509,8 @@ pub async fn delete_history_version(
     timestamp: u64,
 ) -> Result<(), String> {
     let _lease = history_lease(&app_handle)?;
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     let file_path =
         history_dir(&app_handle, path.to_string_lossy().as_ref())?.join(format!("{timestamp}.md"));
     if read_metadata_for_update(file_path.parent().ok_or("历史目录不可用")?)?
@@ -563,8 +587,8 @@ pub async fn save_shadow_copy(
     path: String,
     content: String,
 ) -> Result<(), String> {
-    let path = WorkspaceGuard::new(library_root)?
-        .resolve_existing_file(path, &["md", "markdown", "txt"])?;
+    let path =
+        WorkspaceGuard::new(library_root)?.resolve_existing_file(path, HISTORY_EXTENSIONS)?;
     let shadow_dir = app_handle
         .path()
         .app_cache_dir()
@@ -930,5 +954,26 @@ mod tests {
         assert!(save_history_in_dir(&f.0, "new", 20, 100).is_err());
         assert_eq!(fs::read_to_string(existing).unwrap(), "keep");
         assert_eq!(fs::read_dir(&f.0).unwrap().count(), 1);
+    }
+    #[test]
+    fn structured_history_copy_preserves_encoding_comments_and_source_extension() {
+        for ext in ["json", "jsonc", "yaml", "yml", "xml", "toml"] {
+            let f = HistoryFixture::new();
+            let path = f.0.join(format!("配置.{ext}"));
+            let original = [
+                b"\xef\xbb\xbf".as_slice(),
+                "# 原格式\r\nvalue = \"磁盘\"".as_bytes(),
+            ]
+            .concat();
+            fs::write(&path, &original).unwrap();
+            let content = "# 历史注释\nvalue = \"历史\"";
+            let copy = create_recovery_copy(&path, content, 20).unwrap();
+            let snapshot = crate::formats::text::read_text_snapshot(&copy).unwrap();
+            assert_eq!(copy.extension().unwrap(), ext);
+            assert_eq!(snapshot.encoding, "UTF-8");
+            assert_eq!(snapshot.bom, "utf-8");
+            assert_eq!(snapshot.content, content.replace('\n', "\r\n"));
+            assert_eq!(fs::read(&path).unwrap(), original);
+        }
     }
 }
