@@ -50,7 +50,7 @@ const harness = (vueWatchers = false) => {
     // harness supplies that separate dependency; search assertions stay intact.
     resetFileDrag: noop,
     onPaletteSearchReference:noop,
-    revealLibraryFile: noop, refreshCreatedLibraryFile: noop, handleKeyDown: noop,
+    revealLibraryFile: noop, refreshCreatedLibraryFile: noop, handleKeyDown: noop, handleFindShortcut: noop,
     shadowSaveTimer: null, gitStatusTimer: null, cleanupEditorListeners: noop, destroyOutlineObserver: noop,
     unlistenRefresh: null, unlistenExport: null, unlistenRefreshCmd: null, unlistenSaveCmd: null,
     unlistenDailyNote: null, unlistenFocus: null, unlistenDrop: null, vditor: null,

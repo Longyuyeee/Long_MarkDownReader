@@ -1,5 +1,5 @@
 <template>
- <n-modal v-model:show="visible" preset="card" title="查找与替换" class="document-find-dialog" :style="{width:'min(620px,94vw)'}">
+ <n-modal v-model:show="visible" preset="card" title="查找与替换" class="document-find-dialog" :style="{width:'min(620px,94vw)',maxHeight:'calc(100dvh - 96px)',margin:'64px auto 32px'}" :content-style="{overflowY:'auto',minHeight:'0'}">
   <template v-if="snapshot">
    <div class="find-identity"><strong>{{ filename }}</strong><span>{{ snapshot.label }}</span></div>
    <div class="find-fields">
