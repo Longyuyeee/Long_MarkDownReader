@@ -1,0 +1,23 @@
+{
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 1\n\n    at file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-v1124-outline-browser.mjs:19:107",
+  "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\n项目资料库\n▾\n项目方案.md\n会议记录.md\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n长文方案\n重复\n子节\n重复\n尾章\n4 篇笔记\n100 词\n当前资料库\nv1.0.26\nDEV\n项目资料库\n项目方案.md\n预览\n专注\n添加关系\nAI 辅助\n参考\n保存\n文档操作\n更多格式\n源码 ▾\n中栏 ▾\n导出\n历史\n# 长文方案\n\n\n前言保留。\n\n\n## 重复\n\n\n第一节唯一内容。\n\n\n### 子节\n\n\n![保留图片](images/shared.png)\n\n\n```md\n## 代码里的假标题\n```\n\n\n- 列表一\n  - 嵌套项\n\n\n## 重复\n\n\n第二节唯一内容。\n\n\n| 列一 | 列二 |\n| ---- | ---- |\n| 原值 | 保留 |\n\n\n## 尾章\n\n\n终章内容。\n\n\n模式草稿-wysiwyg\n\n\n模式草稿-ir\n\n\n模式草稿-sv\n\n\nDesktopTabletMobile/Wechat\n● 未保存 · Ctrl+S\nMarkdown · 完整编辑\n209 字 · 约 1 分钟 · 行 3:33\n章节已移动，可撤销",
+  "checks": [
+    {
+      "id": "wysiwyg-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "ir-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "ir-real-move-and-single-undo",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

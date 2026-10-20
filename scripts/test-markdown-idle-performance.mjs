@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import ts from 'typescript'
-import { ref, computed } from 'vue'
+import { ref, shallowRef, computed } from 'vue'
+import {createRequire} from 'node:module'
+const sectionContext=vm.createContext({exports:{},require:createRequire(import.meta.url)})
+vm.runInContext(ts.transpileModule(fs.readFileSync('src/utils/markdownSections.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,sectionContext)
+const {markdownSections,headingSlug}=sectionContext.exports
 import { test } from 'node:test'
 import * as sass from 'sass'
 
@@ -11,10 +15,12 @@ function outline() {
   const timers = new Map()
   const observers = []
   let nextTimer = 0
-  const headings = [{ id: 'first', tagName: 'H2', textContent: 'Title', getAttribute: () => null,
+  const headings = [{ id: 'first', tagName: 'H2', textContent: 'Title', dataset:{}, parentElement:null,
+    getBoundingClientRect:()=>({top:10}),cloneNode(){return {textContent:this.textContent,querySelectorAll:()=>[]}},
     get innerText() { throw Error('Outline must not force layout') } }]
-  const editor = { vditor: { wysiwyg: { element: { querySelectorAll: () => headings } } } }
-  const context = vm.createContext({ ref, computed, exports: {},
+  const element={querySelectorAll:()=>headings,getClientRects:()=>[{}],getBoundingClientRect:()=>({top:0}),addEventListener(){},removeEventListener(){}}
+  const editor = {getCurrentMode:()=> 'wysiwyg',getValue:()=> '## '+headings[0].textContent+'\n',vditor:{wysiwyg:{element},preview:{element:{getClientRects:()=>[]}}}}
+  const context = vm.createContext({ ref, shallowRef, computed, markdownSections, headingSlug, exports: {},
     setTimeout: callback => { timers.set(++nextTimer, callback); return nextTimer },
     clearTimeout: id => timers.delete(id),
     MutationObserver: class {

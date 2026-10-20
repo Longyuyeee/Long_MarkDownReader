@@ -1,0 +1,43 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "wysiwyg-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "ir-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "sv-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "move-keeps-body-and-unsaved-disk",
+      "status": "passed"
+    },
+    {
+      "id": "single-toolbar-undo-restores-complete-draft",
+      "status": "passed"
+    },
+    {
+      "id": "hierarchy-change-and-undo-keep-children",
+      "status": "passed"
+    },
+    {
+      "id": "real-clipboard-link-targets-second-duplicate",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refuses-newer-tab-content",
+      "status": "passed"
+    },
+    {
+      "id": "document-switch-closes-preview-with-old-draft-preserved",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

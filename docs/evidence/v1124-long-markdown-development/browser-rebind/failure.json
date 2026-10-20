@@ -1,0 +1,70 @@
+{
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   \"Cannot read properties of undefined (reading 'mode')\",\n+   \"Cannot read properties of undefined (reading 'mode')\",\n+   \"Cannot read properties of undefined (reading 'mode')\",\n+   \"Cannot read properties of undefined (reading 'mode')\",\n+   \"Cannot read properties of undefined (reading 'mode')\",\n+   \"Cannot read properties of undefined (reading 'mode')\"\n+ ]\n- []\n\n    at file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-v1124-outline-browser.mjs:33:59",
+  "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\n项目资料库\n▾\n项目方案.md\n会议记录.md\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n会议记录\n4 篇笔记\n100 词\n当前资料库\nv1.0.26\nDEV\n项目资料库\n会议记录.md\n预览\n专注\n添加关系\nAI 辅助\n参考\n保存\n文档操作\n更多格式\n源码 ▾\n中栏 ▾\n导出\n历史\n# 会议记录\n\n先确定保存的位置，再开始记录。\n\n\nDesktopTabletMobile/Wechat\n长文方案\n\n前言保留。\n\n重复\n\n第一节唯一内容。\n\n子节\n\n## 代码里的假标题\n\n​\n列表一\n嵌套项\n重复\n\n第二节唯一内容。\n\n列一\t列二\n原值\t保留\n尾章\n\n终章内容。\n\n模式草稿-wysiwyg\n\n模式草稿-ir\n\n模式草稿-sv\n\n保留草稿24\n\n已保存\nMarkdown · 完整编辑\n25 字 · 约 1 分钟 · 行 3:33",
+  "checks": [
+    {
+      "id": "wysiwyg-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "ir-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "ir-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "sv-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "sv-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "move-keeps-body-and-unsaved-disk",
+      "status": "passed"
+    },
+    {
+      "id": "single-toolbar-undo-restores-complete-draft",
+      "status": "passed"
+    },
+    {
+      "id": "hierarchy-change-and-undo-keep-children",
+      "status": "passed"
+    },
+    {
+      "id": "real-clipboard-link-targets-second-duplicate",
+      "status": "passed"
+    },
+    {
+      "id": "reading-preview-uses-visible-heading-target",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-normal-motion",
+      "status": "passed"
+    },
+    {
+      "id": "late-preview-refuses-newer-tab-content",
+      "status": "passed"
+    },
+    {
+      "id": "document-switch-closes-preview-with-old-draft-preserved",
+      "status": "passed"
+    }
+  ],
+  "errors": [
+    "Cannot read properties of undefined (reading 'mode')",
+    "Cannot read properties of undefined (reading 'mode')",
+    "Cannot read properties of undefined (reading 'mode')",
+    "Cannot read properties of undefined (reading 'mode')",
+    "Cannot read properties of undefined (reading 'mode')",
+    "Cannot read properties of undefined (reading 'mode')"
+  ]
+}

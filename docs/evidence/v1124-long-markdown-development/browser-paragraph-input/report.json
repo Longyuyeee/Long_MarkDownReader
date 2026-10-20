@@ -1,0 +1,23 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "wysiwyg-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-real-move-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "ir-exact-outline-and-cancellable-move",
+      "status": "passed"
+    },
+    {
+      "id": "ir-real-move-and-single-undo",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

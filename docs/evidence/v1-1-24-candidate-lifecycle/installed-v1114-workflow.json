@@ -1,0 +1,2006 @@
+{
+  "appVersion": "1.1.24",
+  "sourceCommit": "d5b9f978e83ddc1d0a29037e9dfea965f3cb0d7d",
+  "installerSha256": "99b070f5e0175a2febfd61e64a06332db0b23652418887a0ea13c6d89a206252",
+  "harnessSourceCommit": "ed43deb996014c622adf6fbc304d98309d827535",
+  "executableSha256": "32bb569fe50244005487abc623f94150d059b62b89f0a41978d64d628afda64b",
+  "evidenceLevel": "installed-writing-native-pickers-print-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "installed-identity-and-owned-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "native-template-title-fields-and-target",
+      "status": "passed"
+    },
+    {
+      "id": "unsaved-draft-preview-not-disk",
+      "status": "passed"
+    },
+    {
+      "id": "native-bitmap-picker-relative-reference",
+      "status": "passed"
+    },
+    {
+      "id": "native-html-picker-and-embedded-resources",
+      "status": "passed"
+    },
+    {
+      "id": "standalone-html-reopens-without-original-folder",
+      "status": "passed"
+    },
+    {
+      "id": "native-cancel-remains-cancel-not-failure",
+      "status": "passed"
+    },
+    {
+      "id": "native-markdown-body-only-output",
+      "status": "passed"
+    },
+    {
+      "id": "native-print-creates-real-pdf",
+      "status": "passed"
+    },
+    {
+      "id": "printed-pdf-reopens-with-text-pages-and-ink",
+      "status": "passed"
+    },
+    {
+      "id": "draft-source-shared-and-unselected-bytes-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "real-input-no-errors-and-original-mode-restored",
+      "status": "passed"
+    }
+  ],
+  "sourceBefore": "0788566ba47a6099a21dea8b242fa0afd5849a536ce4e3d598486070bf4fae6e",
+  "sharedBefore": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396",
+  "unselectedBefore": "7c4c7e5638b7b0c0a5f4b162d12f6f89ca392a1ec9bce9425debf76c35228895",
+  "modeBefore": "sv",
+  "templateMainText": "# 用户填写的文章\n\n作者：小林 {{time}}\n未知：{{keep}}\n\n",
+  "templateBody": "# 用户填写的文章\n作者：小林 {{time}}\n未知：{{keep}}\n",
+  "templateCreatedWithParameters": true,
+  "imagePicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 9940,
+    "dialogProcessId": 9940,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "插入本地图片",
+    "fileNameAutomationId": "1148",
+    "selectedPath": "C:\\LongEditR5ILibrary\\v1114-writing-c6183f8d-5776-445c-b15f-bdbe3af87bbe\\共享 图片.png",
+    "inputCharacters": 82,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 459594,
+        "ParentHandle": 590668,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 656194,
+        "ParentHandle": 2556490,
+        "ControlId": 1090,
+        "ClassName": "Static",
+        "Title": "File &name:"
+      },
+      {
+        "Handle": 787262,
+        "ParentHandle": 2556490,
+        "ControlId": 1148,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 852788,
+        "ParentHandle": 787262,
+        "ControlId": 1148,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 525160,
+        "ParentHandle": 852788,
+        "ControlId": 1148,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 394124,
+        "ParentHandle": 2556490,
+        "ControlId": 1089,
+        "ClassName": "Static",
+        "Title": "Files of &type:"
+      },
+      {
+        "Handle": 852748,
+        "ParentHandle": 2556490,
+        "ControlId": 1136,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 2884262,
+        "ParentHandle": 2556490,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 983878,
+        "ParentHandle": 2556490,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1901248,
+        "ParentHandle": 2556490,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 590674,
+        "ParentHandle": 2556490,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 656240,
+        "ParentHandle": 918274,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 459658,
+        "ParentHandle": 656240,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1114934,
+        "ParentHandle": 459658,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 394084,
+        "ParentHandle": 590702,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 394112,
+        "ParentHandle": 394084,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 1049358,
+        "ParentHandle": 394112,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "relativeImageInserted": true,
+  "resourceCancelPicker": {
+    "status": "cancelled-real-native-dialog",
+    "processId": 9940,
+    "dialogProcessId": 9940,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "导出新文档（不覆盖已有文件）",
+    "desktopUserSession": "disposable-github-hosted",
+    "method": "Windows-Win32-owned-cancel-button",
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "resourceErrorRetainedAfterMarkdown": true,
+  "previewIncludesUnsavedDraft": true,
+  "previewStructure": {
+    "headings": 70,
+    "tables": 70
+  },
+  "previewSha256": "e90b89ac87bb5dda4e264930e87a85d173ac3562438d136c8069ab1162d4f1b0",
+  "htmlPicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 9940,
+    "dialogProcessId": 9940,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "导出新文档（不覆盖已有文件）",
+    "fileNameAutomationId": "1001",
+    "selectedPath": "C:\\LongEditR5ILibrary\\v1114-writing-c6183f8d-5776-445c-b15f-bdbe3af87bbe\\文章 交付.html",
+    "inputCharacters": 83,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 1049278,
+        "ParentHandle": 459640,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1049272,
+        "ParentHandle": 1049278,
+        "ControlId": 1001,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 787266,
+        "ParentHandle": 656232,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 656242,
+        "ParentHandle": 590670,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 852690,
+        "ParentHandle": 1245778,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 983860,
+        "ParentHandle": 1245778,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 721746,
+        "ParentHandle": 1245778,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 2687562,
+        "ParentHandle": 1245778,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 721762,
+        "ParentHandle": 1180362,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1180376,
+        "ParentHandle": 721762,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1049284,
+        "ParentHandle": 1180376,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 918156,
+        "ParentHandle": 983870,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 983694,
+        "ParentHandle": 918156,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 1049356,
+        "ParentHandle": 983694,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "htmlSha256": "e90b89ac87bb5dda4e264930e87a85d173ac3562438d136c8069ab1162d4f1b0",
+  "htmlCarriesLocalImages": true,
+  "movedHtmlSha256": "e90b89ac87bb5dda4e264930e87a85d173ac3562438d136c8069ab1162d4f1b0",
+  "standalone": {
+    "url": "file:///C:/LongEditR5ILibrary/v1114-writing-c6183f8d-5776-445c-b15f-bdbe3af87bbe/%E6%8D%A2%E4%B8%AA%E7%9B%AE%E5%BD%95%E9%98%85%E8%AF%BB/%E7%8B%AC%E7%AB%8B%E6%96%87%E7%AB%A0.html",
+    "title": "交付 草稿",
+    "text": "这篇交付方案仍未保存\n\n章节 1\n\n这是中文文章第 1 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 2\n\n这是中文文章第 2 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 3\n\n这是中文文章第 3 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 4\n\n这是中文文章第 4 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 5\n\n这是中文文章第 5 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 6\n\n这是中文文章第 6 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 7\n\n这是中文文章第 7 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 8\n\n这是中文文章第 8 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 9\n\n这是中文文章第 9 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 10\n\n这是中文文章第 10 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 11\n\n这是中文文章第 11 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 12\n\n这是中文文章第 12 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 13\n\n这是中文文章第 13 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 14\n\n这是中文文章第 14 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 15\n\n这是中文文章第 15 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 16\n\n这是中文文章第 16 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 17\n\n这是中文文章第 17 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 18\n\n这是中文文章第 18 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 19\n\n这是中文文章第 19 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 20\n\n这是中文文章第 20 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 21\n\n这是中文文章第 21 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 22\n\n这是中文文章第 22 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 23\n\n这是中文文章第 23 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 24\n\n这是中文文章第 24 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 25\n\n这是中文文章第 25 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 26\n\n这是中文文章第 26 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 27\n\n这是中文文章第 27 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 28\n\n这是中文文章第 28 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 29\n\n这是中文文章第 29 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 30\n\n这是中文文章第 30 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 31\n\n这是中文文章第 31 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 32\n\n这是中文文章第 32 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 33\n\n这是中文文章第 33 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 34\n\n这是中文文章第 34 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 35\n\n这是中文文章第 35 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 36\n\n这是中文文章第 36 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 37\n\n这是中文文章第 37 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 38\n\n这是中文文章第 38 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 39\n\n这是中文文章第 39 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 40\n\n这是中文文章第 40 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 41\n\n这是中文文章第 41 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 42\n\n这是中文文章第 42 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 43\n\n这是中文文章第 43 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 44\n\n这是中文文章第 44 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 45\n\n这是中文文章第 45 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 46\n\n这是中文文章第 46 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 47\n\n这是中文文章第 47 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 48\n\n这是中文文章第 48 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 49\n\n这是中文文章第 49 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 50\n\n这是中文文章第 50 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 51\n\n这是中文文章第 51 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 52\n\n这是中文文章第 52 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 53\n\n这是中文文章第 53 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 54\n\n这是中文文章第 54 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 55\n\n这是中文文章第 55 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 56\n\n这是中文文章第 56 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 57\n\n这是中文文章第 57 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 58\n\n这是中文文章第 58 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 59\n\n这是中文文章第 59 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 60\n\n这是中文文章第 60 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 61\n\n这是中文文章第 61 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 62\n\n这是中文文章第 62 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 63\n\n这是中文文章第 63 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 64\n\n这是中文文章第 64 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 65\n\n这是中文文章第 65 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 66\n\n这是中文文章第 66 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 67\n\n这是中文文章第 67 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 68\n\n这是中文文章第 68 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 69\n\n这是中文文章第 69 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n章节 70\n\n这是中文文章第 70 段，保留读者可读的内容、表格与本地图片。\n\n任务\t状态\n资料整理\t继续推进\n\t",
+    "images": [
+      {
+        "width": 240,
+        "height": 100,
+        "embedded": true
+      },
+      {
+        "width": 240,
+        "height": 100,
+        "embedded": true
+      }
+    ],
+    "scripts": 0,
+    "temporarySources": 0,
+    "evidenceLevel": "separate-installed-Edge-headless-file-url-no-app-IPC",
+    "nativeBridgeMocked": false
+  },
+  "cancelPicker": {
+    "status": "cancelled-real-native-dialog",
+    "processId": 9940,
+    "dialogProcessId": 9940,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "导出新文档（不覆盖已有文件）",
+    "desktopUserSession": "disposable-github-hosted",
+    "method": "Windows-Win32-owned-cancel-button",
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "cancelCreatedFile": false,
+  "markdownPicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 9940,
+    "dialogProcessId": 9940,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "导出新文档（不覆盖已有文件）",
+    "fileNameAutomationId": "1001",
+    "selectedPath": "C:\\LongEditR5ILibrary\\v1114-writing-c6183f8d-5776-445c-b15f-bdbe3af87bbe\\仅正文.md",
+    "inputCharacters": 79,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 1311376,
+        "ParentHandle": 656256,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 918356,
+        "ParentHandle": 1311376,
+        "ControlId": 1001,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 1049266,
+        "ParentHandle": 1245930,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 1311540,
+        "ParentHandle": 1180398,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1245894,
+        "ParentHandle": 1049334,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1049360,
+        "ParentHandle": 1049334,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1442386,
+        "ParentHandle": 1049334,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 918374,
+        "ParentHandle": 1049334,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 1049338,
+        "ParentHandle": 1180428,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 1377032,
+        "ParentHandle": 1049338,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 1049452,
+        "ParentHandle": 1377032,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 721804,
+        "ParentHandle": 721754,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 918348,
+        "ParentHandle": 721804,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 983894,
+        "ParentHandle": 918348,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "markdownMatchesDraft": true,
+  "printViewport": {
+    "width": 1000,
+    "height": 700
+  },
+  "browserPrintSelection": {
+    "status": "passed",
+    "evidenceLevel": "real-WebView2-print-UI-trusted-pointer",
+    "sourceCommit": "d5b9f978e83ddc1d0a29037e9dfea965f3cb0d7d",
+    "harnessSourceCommit": "ed43deb996014c622adf6fbc304d98309d827535",
+    "nativeBridgeMocked": false,
+    "sourceUserContentIncluded": false,
+    "actions": [
+      {
+        "action": "open-real-printer-combobox",
+        "role": "combobox",
+        "name": "",
+        "point": {
+          "connected": true,
+          "x": 138,
+          "y": 149,
+          "width": 212,
+          "height": 20,
+          "viewportWidth": 950,
+          "viewportHeight": 678
+        }
+      },
+      {
+        "action": "choose-real-Save-as-PDF-option",
+        "role": "option",
+        "name": "Save as PDF",
+        "point": {
+          "connected": true,
+          "x": 150,
+          "y": 185,
+          "width": 244,
+          "height": 32,
+          "viewportWidth": 950,
+          "viewportHeight": 678
+        }
+      }
+    ],
+    "targetUrl": "edge://print/",
+    "targetId": "63EF217C08B7D88D98B8D89E74B39264",
+    "observedComboboxes": [
+      {
+        "nodeId": "629",
+        "backendDOMNodeId": 629,
+        "role": "combobox",
+        "name": "",
+        "value": "Save as PDF",
+        "ignored": false,
+        "properties": [
+          {
+            "name": "invalid",
+            "value": {
+              "type": "token",
+              "value": "false"
+            }
+          },
+          {
+            "name": "focusable",
+            "value": {
+              "type": "booleanOrUndefined",
+              "value": true
+            }
+          },
+          {
+            "name": "focused",
+            "value": {
+              "type": "booleanOrUndefined",
+              "value": true
+            }
+          },
+          {
+            "name": "hasPopup",
+            "value": {
+              "type": "token",
+              "value": "listbox"
+            }
+          },
+          {
+            "name": "required",
+            "value": {
+              "type": "boolean",
+              "value": false
+            }
+          },
+          {
+            "name": "expanded",
+            "value": {
+              "type": "booleanOrUndefined",
+              "value": false
+            }
+          }
+        ]
+      }
+    ],
+    "observedOptions": [],
+    "initialLabel": "Microsoft Print to PDF",
+    "selectedLabel": "Save as PDF",
+    "inputTrace": [
+      {
+        "type": "mousedown",
+        "trusted": true
+      },
+      {
+        "type": "click",
+        "trusted": true
+      },
+      {
+        "type": "mousedown",
+        "trusted": true
+      },
+      {
+        "type": "click",
+        "trusted": true
+      },
+      {
+        "type": "change",
+        "trusted": false
+      }
+    ]
+  },
+  "nativePrint": {
+    "status": "saved-real-native-print-pdf",
+    "desktopUserSession": "disposable-github-hosted",
+    "target": "C:\\LongEditR5ILibrary\\v1114-writing-c6183f8d-5776-445c-b15f-bdbe3af87bbe\\真实 打印.pdf",
+    "actions": [
+      "queued-owned-native-print-ui-Save",
+      "typed-owned-native-print-output-path-and-confirmed"
+    ],
+    "windows": [
+      {
+        "Handle": 1442574,
+        "Pid": 9184,
+        "OwnerPid": 9940,
+        "Title": "",
+        "ClassName": "Chrome_WidgetWin_2",
+        "Id": 0
+      },
+      {
+        "Handle": 131460,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Long编辑·md助手",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 197016,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "com.longyuye.mdreader-siw",
+        "ClassName": "com.longyuye.mdreader-sic",
+        "Id": 0
+      },
+      {
+        "Handle": 589986,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Tao Thread Event Target",
+        "Id": 0
+      }
+    ],
+    "controls": [
+      {
+        "name": "",
+        "type": "ControlType.Button",
+        "id": ""
+      },
+      {
+        "name": "",
+        "type": "ControlType.ComboBox",
+        "id": "input-39"
+      },
+      {
+        "name": "More settings",
+        "type": "ControlType.Button",
+        "id": "more-settings-toggle"
+      },
+      {
+        "name": "Save",
+        "type": "ControlType.Button",
+        "id": ""
+      },
+      {
+        "name": "Cancel",
+        "type": "ControlType.Button",
+        "id": ""
+      }
+    ],
+    "temporarilyMinimizedWindows": [
+      {
+        "Handle": 524926,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "快速笔记",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      }
+    ],
+    "mainWindow": {
+      "handle": 131460,
+      "pid": 9940,
+      "title": "Long编辑·md助手",
+      "configuredMainTitle": "Long编辑·md助手",
+      "className": "Tauri Window",
+      "wasVisible": false,
+      "visibleBeforePrint": true,
+      "foregroundBefore": 459418,
+      "foregroundRequestAccepted": true,
+      "foregroundBeforePrint": true,
+      "clientWidth": 1000,
+      "clientHeight": 700
+    },
+    "printers": [
+      {
+        "Name": "Microsoft Print to PDF",
+        "Default": true,
+        "DriverName": "Microsoft Print To PDF"
+      }
+    ],
+    "defaultPrinter": "Microsoft Print to PDF",
+    "controlWindows": {
+      "131460": {
+        "title": "Long编辑·md助手",
+        "className": "Tauri Window",
+        "controls": [
+          {
+            "name": "",
+            "type": "ControlType.Button",
+            "id": ""
+          },
+          {
+            "name": "",
+            "type": "ControlType.ComboBox",
+            "id": "input-39"
+          },
+          {
+            "name": "More settings",
+            "type": "ControlType.Button",
+            "id": "more-settings-toggle"
+          },
+          {
+            "name": "Save",
+            "type": "ControlType.Button",
+            "id": ""
+          },
+          {
+            "name": "Cancel",
+            "type": "ControlType.Button",
+            "id": ""
+          }
+        ]
+      },
+      "197016": {
+        "title": "com.longyuye.mdreader-siw",
+        "className": "com.longyuye.mdreader-sic",
+        "controls": []
+      },
+      "589986": {
+        "title": "",
+        "className": "Tao Thread Event Target",
+        "controls": []
+      }
+    },
+    "diagnosticTopWindows": [
+      {
+        "Handle": 131270,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Shell_TrayWnd",
+        "Id": 0
+      },
+      {
+        "Handle": 524926,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "快速笔记",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 1442574,
+        "Pid": 9184,
+        "OwnerPid": 9940,
+        "Title": "",
+        "ClassName": "Chrome_WidgetWin_2",
+        "Id": 0
+      },
+      {
+        "Handle": 131460,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Long编辑·md助手",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 459418,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "标签笔记003.md · Long编辑",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 393928,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "附带.txt · Long编辑",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 459158,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "缺图.md · Long编辑",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 327726,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "资料.md · Long编辑",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 66152,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "secondary 中文 notes.txt · Long编辑",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 66116,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "cold launch 中文 mindmap.opml · Long编辑",
+        "ClassName": "Tauri Window",
+        "Id": 0
+      },
+      {
+        "Handle": 197016,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "com.longyuye.mdreader-siw",
+        "ClassName": "com.longyuye.mdreader-sic",
+        "Id": 0
+      },
+      {
+        "Handle": 589986,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Tao Thread Event Target",
+        "Id": 0
+      },
+      {
+        "Handle": 262488,
+        "Pid": 7776,
+        "OwnerPid": 0,
+        "Title": "GDI+ Window (ServiceFabricLocalClusterManager.exe)",
+        "ClassName": "GDI+ Hook Window Class",
+        "Id": 0
+      },
+      {
+        "Handle": 131432,
+        "Pid": 7776,
+        "OwnerPid": 0,
+        "Title": ".NET-BroadcastEventWindow.4.0.0.0.141b42a.0",
+        "ClassName": ".NET-BroadcastEventWindow.4.0.0.0.141b42a.0",
+        "Id": 0
+      },
+      {
+        "Handle": 131444,
+        "Pid": 9984,
+        "OwnerPid": 0,
+        "Title": "DDE Server Window",
+        "ClassName": "OleDdeWndClass",
+        "Id": 0
+      },
+      {
+        "Handle": 131442,
+        "Pid": 9984,
+        "OwnerPid": 0,
+        "Title": "C:\\ProgramData\\GitHub\\HostedComputeAgent\\hosted-compute-agent",
+        "ClassName": "CASCADIA_HOSTING_WINDOW_CLASS",
+        "Id": 0
+      },
+      {
+        "Handle": 196972,
+        "Pid": 9952,
+        "OwnerPid": 9984,
+        "Title": "",
+        "ClassName": "PseudoConsoleWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 66066,
+        "Pid": 5420,
+        "OwnerPid": 0,
+        "Title": "Azure Arc system tray",
+        "ClassName": "ATL:00007FF75F4F90D0",
+        "Id": 0
+      },
+      {
+        "Handle": 65998,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "BluetoothNotificationAreaIconWindowClass",
+        "ClassName": "BluetoothNotificationAreaIconWindowClass",
+        "Id": 0
+      },
+      {
+        "Handle": 65992,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "MS_WebcheckMonitor",
+        "ClassName": "MS_WebcheckMonitor",
+        "Id": 0
+      },
+      {
+        "Handle": 65950,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "Battery Meter",
+        "ClassName": "SystemTray_Main",
+        "Id": 0
+      },
+      {
+        "Handle": 196710,
+        "Pid": 7724,
+        "OwnerPid": 0,
+        "Title": "DesktopWindowXamlSource",
+        "ClassName": "Windows.UI.Core.CoreWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 65682,
+        "Pid": 7760,
+        "OwnerPid": 7760,
+        "Title": "System Properties",
+        "ClassName": "#32770",
+        "Id": 0
+      },
+      {
+        "Handle": 131176,
+        "Pid": 7760,
+        "OwnerPid": 7760,
+        "Title": "Performance Options",
+        "ClassName": "#32770",
+        "Id": 0
+      },
+      {
+        "Handle": 131124,
+        "Pid": 7176,
+        "OwnerPid": 0,
+        "Title": "Windows Push Notifications Platform",
+        "ClassName": "PushNotificationsPowerManagement",
+        "Id": 0
+      },
+      {
+        "Handle": 131152,
+        "Pid": 7552,
+        "OwnerPid": 0,
+        "Title": "Task Host Window",
+        "ClassName": "COMTASKSWINDOWCLASS",
+        "Id": 0
+      },
+      {
+        "Handle": 131144,
+        "Pid": 948,
+        "OwnerPid": 0,
+        "Title": "Task Host Window",
+        "ClassName": "COMTASKSWINDOWCLASS",
+        "Id": 0
+      },
+      {
+        "Handle": 65592,
+        "Pid": 3556,
+        "OwnerPid": 0,
+        "Title": "DWM Notification Window",
+        "ClassName": "Dwm",
+        "Id": 0
+      },
+      {
+        "Handle": 131232,
+        "Pid": 9984,
+        "OwnerPid": 0,
+        "Title": "Windows Terminal",
+        "ClassName": "Windows Terminal Admin 69f0f29849978085",
+        "Id": 0
+      },
+      {
+        "Handle": 65994,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "MiracastConnectionWindow",
+        "ClassName": "MiracastConnectionWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 131326,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DummyDWMListenerWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 65842,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "EdgeUiInputTopWndClass",
+        "Id": 0
+      },
+      {
+        "Handle": 65828,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DummyDWMListenerWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 65826,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DummyDWMListenerWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 65824,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DummyDWMListenerWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 65822,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DummyDWMListenerWindow",
+        "Id": 0
+      },
+      {
+        "Handle": 65758,
+        "Pid": 7688,
+        "OwnerPid": 0,
+        "Title": "Program Manager",
+        "ClassName": "Progman",
+        "Id": 0
+      },
+      {
+        "Handle": 65850,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65754,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "MSCTFIME UI",
+        "ClassName": "MSCTFIME UI",
+        "Id": 0
+      },
+      {
+        "Handle": 131272,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 66104,
+        "Pid": 9184,
+        "OwnerPid": 9184,
+        "Title": "MSCTFIME UI",
+        "ClassName": "MSCTFIME UI",
+        "Id": 0
+      },
+      {
+        "Handle": 66072,
+        "Pid": 9184,
+        "OwnerPid": 9184,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 66100,
+        "Pid": 9940,
+        "OwnerPid": 9940,
+        "Title": "MSCTFIME UI",
+        "ClassName": "MSCTFIME UI",
+        "Id": 0
+      },
+      {
+        "Handle": 262548,
+        "Pid": 9940,
+        "OwnerPid": 9940,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 66280,
+        "Pid": 9940,
+        "OwnerPid": 9940,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 66364,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 66090,
+        "Pid": 4620,
+        "OwnerPid": 4620,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 327864,
+        "Pid": 9164,
+        "OwnerPid": 9164,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 131418,
+        "Pid": 7776,
+        "OwnerPid": 7776,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 131426,
+        "Pid": 7776,
+        "OwnerPid": 7776,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 197136,
+        "Pid": 9984,
+        "OwnerPid": 9984,
+        "Title": "MSCTFIME UI",
+        "ClassName": "MSCTFIME UI",
+        "Id": 0
+      },
+      {
+        "Handle": 131258,
+        "Pid": 9984,
+        "OwnerPid": 9984,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 66068,
+        "Pid": 5420,
+        "OwnerPid": 5420,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65982,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65976,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65946,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65714,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 131094,
+        "Pid": 7760,
+        "OwnerPid": 7760,
+        "Title": "MSCTFIME UI",
+        "ClassName": "MSCTFIME UI",
+        "Id": 0
+      },
+      {
+        "Handle": 131126,
+        "Pid": 7760,
+        "OwnerPid": 7760,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65786,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 196686,
+        "Pid": 7176,
+        "OwnerPid": 7176,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 458770,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "MSCTFIME UI",
+        "ClassName": "MSCTFIME UI",
+        "Id": 0
+      },
+      {
+        "Handle": 131158,
+        "Pid": 7688,
+        "OwnerPid": 7688,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      },
+      {
+        "Handle": 65954,
+        "Pid": 8216,
+        "OwnerPid": 8216,
+        "Title": "Default IME",
+        "ClassName": "IME",
+        "Id": 0
+      }
+    ],
+    "diagnosticProcesses": [
+      {
+        "ProcessId": 3556,
+        "ParentProcessId": 1288,
+        "Name": "dwm.exe",
+        "ExecutablePath": "C:\\Windows\\system32\\dwm.exe"
+      },
+      {
+        "ProcessId": 948,
+        "ParentProcessId": 2716,
+        "Name": "taskhostw.exe",
+        "ExecutablePath": "C:\\Windows\\system32\\taskhostw.exe"
+      },
+      {
+        "ProcessId": 7176,
+        "ParentProcessId": 968,
+        "Name": "svchost.exe",
+        "ExecutablePath": "C:\\Windows\\system32\\svchost.exe"
+      },
+      {
+        "ProcessId": 7552,
+        "ParentProcessId": 2716,
+        "Name": "taskhostw.exe",
+        "ExecutablePath": "C:\\Windows\\system32\\taskhostw.exe"
+      },
+      {
+        "ProcessId": 7688,
+        "ParentProcessId": 7664,
+        "Name": "explorer.exe",
+        "ExecutablePath": "C:\\Windows\\Explorer.EXE"
+      },
+      {
+        "ProcessId": 7724,
+        "ParentProcessId": 7188,
+        "Name": "ShellHost.exe",
+        "ExecutablePath": "C:\\Windows\\System32\\ShellHost.exe"
+      },
+      {
+        "ProcessId": 7760,
+        "ParentProcessId": 7664,
+        "Name": "SystemPropertiesPerformance.exe",
+        "ExecutablePath": "C:\\Windows\\System32\\SystemPropertiesPerformance.exe"
+      },
+      {
+        "ProcessId": 8216,
+        "ParentProcessId": 496,
+        "Name": "RuntimeBroker.exe",
+        "ExecutablePath": "C:\\Windows\\System32\\RuntimeBroker.exe"
+      },
+      {
+        "ProcessId": 5420,
+        "ParentProcessId": 7688,
+        "Name": "AzureArcSysTray.exe",
+        "ExecutablePath": "C:\\Windows\\AzureArcSetup\\Systray\\AzureArcSysTray.exe"
+      },
+      {
+        "ProcessId": 9952,
+        "ParentProcessId": 496,
+        "Name": "OpenConsole.exe",
+        "ExecutablePath": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.23.20211.0_x64__8wekyb3d8bbwe\\OpenConsole.exe"
+      },
+      {
+        "ProcessId": 9984,
+        "ParentProcessId": 496,
+        "Name": "WindowsTerminal.exe",
+        "ExecutablePath": "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.23.20211.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+      },
+      {
+        "ProcessId": 7776,
+        "ParentProcessId": 7688,
+        "Name": "ServiceFabricLocalClusterManager.exe",
+        "ExecutablePath": "C:\\Program Files\\Microsoft SDKs\\Service Fabric\\Tools\\ServiceFabricLocalClusterManager\\ServiceFabricLocalClusterManager.exe"
+      },
+      {
+        "ProcessId": 9940,
+        "ParentProcessId": 7788,
+        "Name": "tauri-app.exe",
+        "ExecutablePath": "C:\\LongEditR5I\\tauri-app.exe"
+      },
+      {
+        "ProcessId": 9184,
+        "ParentProcessId": 9940,
+        "Name": "msedgewebview2.exe",
+        "ExecutablePath": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe"
+      },
+      {
+        "ProcessId": 9164,
+        "ParentProcessId": 9184,
+        "Name": "msedgewebview2.exe",
+        "ExecutablePath": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe"
+      },
+      {
+        "ProcessId": 4620,
+        "ParentProcessId": 9184,
+        "Name": "msedgewebview2.exe",
+        "ExecutablePath": "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\154.0.4258.62\\msedgewebview2.exe"
+      }
+    ],
+    "stage": "enumerated-owned-windows",
+    "observingWindow": "Long编辑·md助手",
+    "destinationValues": [
+      "Save as PDF"
+    ],
+    "selectedDestination": "Save as PDF",
+    "printUiObserved": true,
+    "saveControls": [
+      {
+        "Handle": 1180346,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DUIViewWndClassName",
+        "Id": 0
+      },
+      {
+        "Handle": 983892,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DirectUIHWND",
+        "Id": 0
+      },
+      {
+        "Handle": 983938,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "FloatNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 1114988,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ComboBox",
+        "Id": 0
+      },
+      {
+        "Handle": 1245892,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Edit",
+        "Id": 1001
+      },
+      {
+        "Handle": 918352,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "CtrlNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 1311412,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Namespace Tree Control",
+        "ClassName": "NamespaceTreeControl",
+        "Id": 0
+      },
+      {
+        "Handle": 787300,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Namespace Tree Control",
+        "ClassName": "Static",
+        "Id": 0
+      },
+      {
+        "Handle": 1180302,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Navigation Pane",
+        "ClassName": "SysTreeView32",
+        "Id": 100
+      },
+      {
+        "Handle": 1442568,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "CtrlNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 852850,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "ShellView",
+        "ClassName": "SHELLDLL_DefView",
+        "Id": 1121
+      },
+      {
+        "Handle": 1311466,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DirectUIHWND",
+        "Id": 0
+      },
+      {
+        "Handle": 787342,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "CtrlNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 1246014,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ScrollBar",
+        "Id": 0
+      },
+      {
+        "Handle": 1376906,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "CtrlNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 787340,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ScrollBar",
+        "Id": 0
+      },
+      {
+        "Handle": 787278,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "FloatNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 983154,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Button",
+        "Id": 0
+      },
+      {
+        "Handle": 721786,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "FloatNotifySink",
+        "Id": 0
+      },
+      {
+        "Handle": 1180370,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ComboBox",
+        "Id": 0
+      },
+      {
+        "Handle": 983946,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ToolbarWindow32",
+        "Id": 0
+      },
+      {
+        "Handle": 3408550,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "&Save",
+        "ClassName": "Button",
+        "Id": 1
+      },
+      {
+        "Handle": 1376970,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Cancel",
+        "ClassName": "Button",
+        "Id": 2
+      },
+      {
+        "Handle": 1442472,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ScrollBar",
+        "Id": -1
+      },
+      {
+        "Handle": 1835724,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Static",
+        "Id": 1092
+      },
+      {
+        "Handle": 1114870,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Static",
+        "Id": 1091
+      },
+      {
+        "Handle": 1245996,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Static",
+        "Id": 1093
+      },
+      {
+        "Handle": 983910,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ListBox",
+        "Id": 1120
+      },
+      {
+        "Handle": 2949706,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Static",
+        "Id": 1095
+      },
+      {
+        "Handle": 918370,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "&Help",
+        "ClassName": "Button",
+        "Id": 1038
+      },
+      {
+        "Handle": 1180432,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "WorkerW",
+        "Id": 0
+      },
+      {
+        "Handle": 1376966,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "ReBarWindow32",
+        "Id": 40965
+      },
+      {
+        "Handle": 1049410,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "TravelBand",
+        "Id": 0
+      },
+      {
+        "Handle": 1376958,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Navigation buttons",
+        "ClassName": "ToolbarWindow32",
+        "Id": 0
+      },
+      {
+        "Handle": 1704734,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "UpBand",
+        "Id": 0
+      },
+      {
+        "Handle": 1245880,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Up band",
+        "ClassName": "ToolbarWindow32",
+        "Id": 0
+      },
+      {
+        "Handle": 1180464,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Address Band Root",
+        "Id": 41477
+      },
+      {
+        "Handle": 983942,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "msctls_progress32",
+        "Id": 0
+      },
+      {
+        "Handle": 918388,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Breadcrumb Parent",
+        "Id": 0
+      },
+      {
+        "Handle": 1311530,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Address: Downloads",
+        "ClassName": "ToolbarWindow32",
+        "Id": 1001
+      },
+      {
+        "Handle": 1835912,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "Address band",
+        "ClassName": "ToolbarWindow32",
+        "Id": 0
+      },
+      {
+        "Handle": 1245934,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "SeparatorBand",
+        "Id": 0
+      },
+      {
+        "Handle": 1377076,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "UniversalSearchBand",
+        "Id": 0
+      },
+      {
+        "Handle": 1049426,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "Search Box",
+        "Id": 0
+      },
+      {
+        "Handle": 1376890,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Id": 0
+      },
+      {
+        "Handle": 1311426,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "DirectUIHWND",
+        "Id": 0
+      },
+      {
+        "Handle": 1376912,
+        "Pid": 9940,
+        "OwnerPid": 0,
+        "Title": "",
+        "ClassName": "SeparatorBand",
+        "Id": 0
+      }
+    ],
+    "sizeBytes": 245303,
+    "sha256": "0b9941f46ce79e38c63993d42a0f6c690beda1e3bfffb89742b90ce964e82c7f",
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "buttonInvocation": {
+      "started": true,
+      "completed": true,
+      "error": null
+    },
+    "companionsRestored": true
+  },
+  "pdfText": "这篇交付方案仍未保存章节 1这是中文文章第 1 段，保留读者可读的内容、表格与本地图片。任务 状态资料整理 继续推进章节 2这是中文文章第 2 段，保留读者可读的内容、表格与本地图片。任务 状态资料整理 继续推进章节 3这是中文文章第 3 段，保留读者可读的内容、表格与本地图片。任务 状态资料整理 继续推进10/20/26, 8:38 AM Long编辑tauri.localhost/#/library?path=C%3A%5CLongEditR5ILibrary%5Cv1114-writing-c6183f8d-5776-445c-b15f-bdbe3af87bbe%5C交付 草稿.md 1/18",
+  "pdfPages": 18,
+  "pdfInk": 2835,
+  "nativePdfHasOnlyArticle": true,
+  "pdfColorPixels": 1017,
+  "pdfLastSectionVisible": true,
+  "sourceAfter": "0788566ba47a6099a21dea8b242fa0afd5849a536ce4e3d598486070bf4fae6e",
+  "sharedAfter": "88da038f717679ff1e5f523e39dd37f4be222f1890d2dea8f8780fe5c86e9396",
+  "unselectedAfter": "7c4c7e5638b7b0c0a5f4b162d12f6f89ca392a1ec9bce9425debf76c35228895",
+  "draftStillDirty": true,
+  "originalModeRestored": true,
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "paste",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

@@ -1,0 +1,36 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 20000ms exceeded.
+Call log:
+  - waiting for locator('.markdown-section-preview').getByRole('button', { name: '取消', exact: true })
+    - locator resolved to <button tabindex="0" type="button" data-v-0eed961e="" class="n-button n-button--default-type n-button--medium-type">…</button>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+    - element is not visible
+  - retrying click action
+    - waiting for element to be visible, enabled and stable
+  - element was detached from the DOM, retrying
+
+    at E:\Project\AIProject\GeminiProject\MDReader\scripts\test-v1124-outline-browser.mjs:31:540 {
+  log: [
+    "  - waiting for locator('.markdown-section-preview').getByRole('button', { name: '取消', exact: true })",
+    '    - locator resolved to <button tabindex="0" type="button" data-v-0eed961e="" class="n-button n-button--default-type n-button--medium-type">…</button>',
+    '  - attempting click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '    - element is visible, enabled and stable',
+    '    - scrolling into view if needed',
+    '    - done scrolling',
+    '    - element is not visible',
+    '  - retrying click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '  - element was detached from the DOM, retrying'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.14.0
