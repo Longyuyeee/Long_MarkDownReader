@@ -15,3 +15,5 @@
 下一版按 [十二版路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 推进 [1.1.26 结构化源码历史与恢复](V1_1_26_Structured_History_Plan_2026-10-20.md)。
 
 发布检查接续：旧保存通知与卸载测试的精简上下文补齐新增查找状态/快捷键依赖，保留实际保存与卸载断言。旧指针测试一次 150ms 调度超时，单项复查通过，未放宽断言。首次构建 39402014035 在编译前取消，原记录保留。窄窗预览发现弹窗可能超出视口，已限制正文滚动并保持标题、关闭和应用按钮可见；六风格明暗宽窄的水平及垂直边界检查通过。
+
+固定产品 `4fd35b2400dd36ab0cc022d45f766dab351c810b` 已推送至 PR #78。[构建 39402725085](https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39402725085) 已启动。本地完整 `ci:patch-release` 通过，生产依赖 0 漏洞；原失败与最终日志见 `evidence/v1125-find-development/local-checks.json`。实际安装结果仍待回执，不能提前宣称发布完成。

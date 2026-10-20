@@ -11,3 +11,12 @@
 历史读取、比较和恢复固定文件/库/加载代际，旧请求不能落到新文档。继续输入、切换文件、外部改动时保护新稿与磁盘原件；冲突使用已有比较及副本操作。只读文件允许查看历史，恢复明确不可用。
 
 完成标准：上述格式中实际输入后可比较、取消、局部/整体恢复、单次撤销；切换与迟到请求保留原稿；保存关闭重开及外部冲突可用。所有风格与正常动效保留。质量与实际安装通过后再发布，本计划不代表已交付。
+
+## 已核对的实现起点
+
+- `src/views/TextEditorView.vue` 目前只对资料库内 `plain-text` 显示 TextHistoryDialog；不能仅去掉入口条件就认为结构化格式已经支持。
+- `src/views/JsonEditorView.vue`、`YamlEditorView.vue`、`XmlEditorView.vue`、`TomlEditorView.vue` 使用 `src/composables/useStructuredSession.ts` 固定所属文件、编辑器和保存代际。历史恢复应接入这套归属与单次 CodeMirror 事务，保留原保存校验、冲突与异步分析，不回退到旧的无归属整段写回。
+- `src/components/TextHistoryDialog.vue`、`HistoryVersionList.vue`、`HistoryDiffDialog.vue` 已有历史列表、比较、局部恢复和新稿核对；复用这些入口与明确动作，避免重复弹窗和第二套历史存储。
+- `src-tauri/src/commands/history.rs` 的 compare/prepare/copy 等入口目前按 Markdown/TXT 扩展名限制，历史快照内部为 UTF-8 文本，比较有 20 MiB 限制。需逐个核对与扩展允许格式、内容签名、编码/换行和恢复副本后缀，不能只增加前端按钮；旧历史及内部存储兼容性必须保留。
+
+首批限定资料库内上述结构化源码，与当前文本历史的可达范围一致。外部文件的独立授权、历史位置与恢复入口需另行明确，不随扩展名放开而隐式开放。已有只读、大文件、环境文件敏感值保护继续保持。

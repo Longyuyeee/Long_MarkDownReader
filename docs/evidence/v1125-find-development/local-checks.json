@@ -1,0 +1,67 @@
+{
+  "productSourceCommit": "4fd35b2400dd36ab0cc022d45f766dab351c810b",
+  "status": "local-checks-passed-installed-evidence-pending",
+  "fullQualityGate": {
+    "command": "npm run ci:patch-release",
+    "status": "passed",
+    "log": "quality-source-frozen.log"
+  },
+  "unitChecks": 9,
+  "installedContractChecks": 2,
+  "pageChecks": 10,
+  "externalPageChecks": 3,
+  "nativeBridgeMockedForPageChecks": true,
+  "desktopInputUsed": false,
+  "runtimeErrors": [],
+  "productionAudit": {
+    "vulnerabilities": 0
+  },
+  "earlierFailures": {
+    "pointer": "150ms old timing test, single retry passed without assertion changes",
+    "save": "isolated notification context lacked externalFindRevision; fixed harness only",
+    "unmount": "isolated scheduler context lacked handleFindShortcut; fixed harness only"
+  },
+  "next": "immutable-build-and-same-installer-review",
+  "logs": [
+    {
+      "path": "harness-recheck.log",
+      "sha256": "85ba8d2c4a2cc70a1ce6cd5708218f644541e00db2e06ac9f8979c540f4d31ff",
+      "sizeBytes": 1792
+    },
+    {
+      "path": "pointer-recheck.log",
+      "sha256": "f2b23fe97fc19b50380ef32c858ec82f3e1b080279301c074d8d21844bb263dd",
+      "sizeBytes": 934
+    },
+    {
+      "path": "quality-resume.log",
+      "sha256": "2806cb6bf9318ef43a9855cca2b2e5a7469a3d4bb53cb27aceedc06798ab269f",
+      "sizeBytes": 48161
+    },
+    {
+      "path": "quality-resume2.log",
+      "sha256": "a4ae4729a13e1e6e4badc2bf2624e15cade853327b5fcd3416f61ab9ff04c6c0",
+      "sizeBytes": 75700
+    },
+    {
+      "path": "quality-source-frozen.log",
+      "sha256": "183ae87b6ed131a9cef5bf05de31a0b8b1ad0f79207f6b5e88e1db35082214f2",
+      "sizeBytes": 122060
+    },
+    {
+      "path": "quality.log",
+      "sha256": "28607627aca64858f71c1e0e0c6a2e3b2bad3076cf302a66647fb5ba293e5732",
+      "sizeBytes": 59080
+    },
+    {
+      "path": "targeted.log",
+      "sha256": "9d512bc0aafc926dc567386986300b670d6c694b772ba3efc93742f777747e64",
+      "sizeBytes": 1131
+    },
+    {
+      "path": "types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sizeBytes": 0
+    }
+  ]
+}
