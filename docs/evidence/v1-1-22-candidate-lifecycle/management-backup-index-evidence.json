@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "stage": "R5L",
+  "capturedAt": "2026-10-20T03:54:04.043Z",
+  "environment": "disposable-windows-installed-current-artifact",
+  "status": "passed",
+  "releaseCandidate": false,
+  "promotionEligible": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "installed-release-formal-config-load",
+      "status": "passed"
+    },
+    {
+      "id": "management-backup-export",
+      "status": "passed"
+    },
+    {
+      "id": "management-backup-privacy-preflight",
+      "status": "passed"
+    },
+    {
+      "id": "knowledge-index-delete-rebuild",
+      "status": "passed"
+    },
+    {
+      "id": "post-rollback-management-backup-restore",
+      "status": "passed"
+    },
+    {
+      "id": "post-restore-knowledge-index-rebuild",
+      "status": "passed"
+    },
+    {
+      "id": "post-restore-representative-file-reopen",
+      "status": "passed"
+    }
+  ],
+  "backup": {
+    "bytes": 14369,
+    "sha256": "a315e389efde1b79c0adb9be1369594d7ac8b47069ffc0409f75377d285cfa68",
+    "entryCount": 5,
+    "redactedLibraryCount": 1,
+    "excluded": [
+      "document-body",
+      "api-key",
+      "system-credential",
+      "absolute-user-path",
+      "recoverable-cache-body",
+      "external-library-content"
+    ]
+  },
+  "preflight": {
+    "valid": true,
+    "schemaVersion": 1,
+    "stage": "R3B",
+    "entryCount": 5,
+    "redactedLibraryCount": 1,
+    "savedSearchCount": 2,
+    "requiresLibraryMapping": true,
+    "mappingCount": 1,
+    "excluded": [
+      "document-body",
+      "api-key",
+      "system-credential",
+      "absolute-user-path",
+      "recoverable-cache-body",
+      "external-library-content"
+    ],
+    "blockedReasons": []
+  },
+  "collectionSnapshot": [
+    {
+      "id": "collection-b41a1110-44fc-4cd7-85d3-707d9311fe0d",
+      "name": "本版标签集合验收",
+      "query": "",
+      "libraryPath": "C:\\LongEditR5ILibrary",
+      "objectTypes": [],
+      "filters": {
+        "directory": "v1110-tags-5e4aceb4-00f8-4550-8b40-262e61d0a276",
+        "tag": "验收一零",
+        "modifiedWithinDays": null
+      },
+      "graphRoot": null,
+      "graphDepth": null,
+      "createdAt": 1792468180482
+    },
+    {
+      "id": "r5l-saved-search",
+      "name": "R5L Restore Marker",
+      "query": "R5L",
+      "libraryPath": "C:\\LongEditR5ILibrary",
+      "objectTypes": [
+        "plain-text",
+        "json"
+      ],
+      "filters": null,
+      "graphRoot": null,
+      "graphDepth": null,
+      "createdAt": 1
+    }
+  ],
+  "indexBeforeRollback": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "sourceCount": 598,
+    "objectCount": 1371,
+    "relationCount": 1146,
+    "cacheBytes": 4598652
+  },
+  "completedAt": "2026-10-20T03:55:16.965Z",
+  "restore": {
+    "libraryCount": 1,
+    "savedSearchCount": 2,
+    "warningCount": 3
+  },
+  "indexAfterRestore": {
+    "state": "ready",
+    "schemaVersion": 2,
+    "sourceCount": 598,
+    "objectCount": 1371,
+    "relationCount": 1146,
+    "cacheBytes": 4598603
+  }
+}

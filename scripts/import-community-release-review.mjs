@@ -98,6 +98,7 @@ const files = fs.readdirSync(directory).filter(file => (/\.(?:json|jpg|png)$/i.t
 for (const file of files) fs.copyFileSync(path.join(directory, file), path.join(evidenceRoot, file))
 const entries = files.map(file => { const bytes = fs.readFileSync(path.join(evidenceRoot, file)); return { path: file, sizeBytes: bytes.length, sha256: digest(bytes) } })
 const runtimeReports = Object.fromEntries([
+  ...(version==='1.1.22' ? [['fileOperationHistory',reports.fileOperationHistory.file]] : []),
   ...(['1.1.21','1.1.22'].includes(version) ? [['crossLibraryCopy',reports.crossLibraryCopy.file]] : []),
   ...(['1.1.20','1.1.21', '1.1.22'].includes(version) ? [['structuredEditing',reports.structuredEditing.file]] : []),
   ...(['1.1.19','1.1.20', '1.1.21', '1.1.22'].includes(version) ? [['organizing',reports.organizing.file]] : []),
