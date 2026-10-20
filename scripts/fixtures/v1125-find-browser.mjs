@@ -6,6 +6,7 @@ a.disk.set(a.store.libraryPath+'/项目方案.md',findFixture);a.disk.set(a.stor
 
 const originalInvoke=window.__TAURI_INTERNALS__.invoke
 window.__TAURI_INTERNALS__.invoke=async(command,args={})=>{
+ if(command==='read_text_document'&&args.path===a.delayedTextPath){await new Promise(resolve=>{a.releaseTextRead=resolve});a.delayedTextSettled=true}
  const request=command==='write_text_document'?{...args,content:args.content.replace(/\n+$/,'')+'\n'}:args
  return originalInvoke(command,request)
 }

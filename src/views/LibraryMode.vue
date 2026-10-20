@@ -2723,7 +2723,7 @@ const documentFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:store.lib
  readOnlyReason:activeTextTab.value?.textReadOnlyReason||(documentPreviewActive.value?'返回编辑后可替换':'')
 }), (content,path)=>{recordWindowDraftActivity();store.updateTabContent(path,content);const tab=tabs.value.find(item=>item.path===path);if(tab)tab.isDirty=true;updateWordCount();syncOutlineManual(true);void fixEditorImages()})
 const openDocumentFind=()=>{documentActionsVisible.value=false;documentFind.value?.open()}
-const handleFindShortcut=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'&&activeIsMarkdown.value&&!activeEmbeddedEditor.value&&!document.querySelector('.n-modal')){event.preventDefault();event.stopImmediatePropagation();openDocumentFind()}}
+const handleFindShortcut=(event:KeyboardEvent)=>{if(!isVditorReady||!vditor?.vditor?.[vditor.getCurrentMode()]?.element?.isConnected)return;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'&&activeIsMarkdown.value&&!activeEmbeddedEditor.value&&!document.querySelector('.n-modal')){event.preventDefault();event.stopImmediatePropagation();openDocumentFind()}}
 let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
 const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
 const captureEditorPosition = () => {
@@ -4330,6 +4330,8 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keydown',handleFindShortcut,true)
   window.addEventListener('longedit:search-reference', onPaletteSearchReference)
   window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
   document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
@@ -4347,8 +4349,6 @@ onMounted(async () => {
   if (activeTabId.value && !opensInLibraryShell(findFileFormat(activeTabId.value))) {
     store.activateTab(tabs.value[0]?.id || null)
   }
-  window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('keydown',handleFindShortcut,true)
   if (!route.query.search && !route.query.collection) searchReturn.restore()
   applyRouteSearch()
   if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }

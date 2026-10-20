@@ -812,6 +812,7 @@ const hideSensitiveValues = () => {
 }
 const leaveEditor = () => { void router.push('/library') }
 const handleKeydown = (event: KeyboardEvent) => {
+  if (!editor?.dom.isConnected) return
   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'&&viewMode.value==='source'){event.preventDefault();event.stopImmediatePropagation();if(!document.querySelector('.n-modal'))openFind();return}
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
     event.preventDefault()
@@ -836,9 +837,9 @@ watch([textPath, isExternal], () => {
 })
 onMounted(async () => {
   createEditor()
+  window.addEventListener('keydown', handleKeydown,true)
   await nextTick()
   await load()
-  window.addEventListener('keydown', handleKeydown,true)
 })
 onBeforeUnmount(() => {
   ++loadGeneration
