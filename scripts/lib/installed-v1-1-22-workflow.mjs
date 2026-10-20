@@ -24,6 +24,8 @@ export async function runInstalledV1122Workflow({send,evaluate,navigate,capture,
   if(!restart){
    await evaluate(`window.__v1122Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}))`)
    await fs.mkdir(report.fixture,{recursive:false});await fs.writeFile(p('草稿.md'),'# 已保存的正文\r\n');await fs.writeFile(p('整理.txt'),'整理前的内容\r\n')
+   // Re-enter through ordinary settings so externally seeded fixture files are in a fresh tree scan.
+   await navigate('#/settings?category=library','.add-library-form','return through ordinary settings without changing or saving drafts')
    await navigate('#/library?path='+encodeURIComponent(p('草稿.md')),'#vditor-lib','source draft editor')
    const editor=`[...document.querySelectorAll('#vditor-lib [contenteditable="true"]')].find(e=>e.getClientRects().length)`
    await ui.waitFor(`(${editor})?.textContent.includes('已保存的正文')`,'actual Markdown ready');await ui.clickTarget(editor);await ui.key('a','KeyA',65,2);await ui.key('Backspace','Backspace',8);await send('Input.insertText',{text:'需要保留的整理草稿'})
