@@ -151,7 +151,12 @@ fn incoming(root: &str, target: &str) -> Result<Vec<AttachmentUse>, String> {
     for evidence in inventory.evidence() {
         let resolution = evidence.resolution.as_ref().ok_or("引用检查未完成")?;
         if resolution.status != "resolved_file"
-            || resolution.path.as_deref().map(Path::new) != Some(&target)
+            || resolution
+                .path
+                .as_deref()
+                .and_then(|p| Path::new(p).canonicalize().ok())
+                .as_deref()
+                != Some(target.as_path())
         {
             continue;
         }
@@ -413,6 +418,18 @@ mod tests {
             "disk original\r\n"
         );
         assert_eq!(fs::read(f.0.join(".assets/a.png")).unwrap(), b"shared");
+    }
+    #[test]
+    #[cfg(windows)]
+    fn incoming_uses_actual_windows_file_identity_for_case_variant_paths() {
+        let f = TestWorkspace::new();
+        fs::create_dir(f.0.join(".assets")).unwrap();
+        fs::write(f.0.join(".assets/图.png"), b"shared").unwrap();
+        fs::write(f.0.join("note.md"), "![图片](.ASSETS/图.PNG)\n").unwrap();
+        let uses = incoming(f.0.to_str().unwrap(), ".assets/图.png").unwrap();
+        assert_eq!(uses.len(), 1);
+        assert_eq!(uses[0].line, 1);
+        assert_eq!(fs::read(f.0.join(".assets/图.png")).unwrap(), b"shared");
     }
     #[test]
     fn missing_link_is_repairable_but_private_and_ambiguous_links_are_not_opened() {

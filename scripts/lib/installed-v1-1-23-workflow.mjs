@@ -36,7 +36,7 @@ export async function runInstalledV1123Workflow({send,evaluate,navigate,capture,
   await fs.mkdir(external,{recursive:true});for(const owner of [folder,external])await fs.writeFile(path.join(owner,'.v119-installed-owner'),'owned disposable attachment fixture')
   const original='# 附件笔记\r\n![共享](.assets/a.png)\r\n![失效](images/missing.png)\r\n',shared=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64'),png=writingImageFixture()
   await fs.writeFile(p('笔记.md'),original);await fs.writeFile(p('.assets/a.png'),shared);await fs.writeFile(p('images/new.png'),png);await fs.writeFile(path.join(external,'a.png'),png)
-  await fs.writeFile(p('引用笔记.md'),'![共享](.assets/a.png)\r\n![新图](images/new.png)\r\n');await fs.writeFile(p('.assets/reading.md'),'![新图](../images/new.png)\r\n');await fs.writeFile(p('.longedit/private.md'),'internal')
+  await fs.writeFile(p('引用笔记.md'),'![共享](.ASSETS/A.PNG)\r\n![新图](images/new.png)\r\n');await fs.writeFile(p('.assets/reading.md'),'![新图](../images/new.png)\r\n');await fs.writeFile(p('.longedit/private.md'),'internal')
   report.sourceImageSha256=sha(shared);report.externalImageSha256=sha(png)
   await navigate('#/settings?category=library','.add-library-form','refresh owned fixture tree');await navigate('#/library?path='+encodeURIComponent(p('笔记.md')),'#vditor-lib','Markdown attachment owner')
   await ui.waitFor(`(${editor})?.textContent.includes('附件笔记')`,'actual Markdown loaded');await expand(p('images'));await expand(p('.assets'));await expand(p('note.assets'))
