@@ -1,0 +1,24 @@
+✔ refresh/reopen cannot adopt an unsynchronized newer draft as an editable baseline (3.0352ms)
+✔ a real new save receipt permits its declared newline normalization without reopening (3.5072ms)
+✔ pending editor input remains valid when its normal store notification catches up (0.7812ms)
+✔ document/mode/ready ownership and read-only boundaries stay local (0.8696ms)
+✔ literal text, whitespace, newlines and regex punctuation use exact UTF-16 spans (1.4416ms)
+✔ case and Unicode whole words share the same matching spans used by replacement (1.8011ms)
+✔ a duplicate inside the selected scope never changes other equal text (1.0273ms)
+✔ whole-word boundaries use the complete document at selection edges (0.2197ms)
+✔ replacement dollar syntax stays literal and the changed scope adjusts once (0.2248ms)
+✔ deletion and multiline replacement preserve all text outside the scope (0.2004ms)
+✔ empty searches, stale or overlapping spans cannot produce unintended edits (0.3578ms)
+✔ limits never return a partial replace-all candidate (4.9493ms)
+✔ oversized queries and replacement expansion fail before creating output (2.2524ms)
+✔ Unicode regex cannot rewind before a scope beginning inside a surrogate pair (0.2801ms)
+✔ find/replace evidence binds exact modes, draft ownership, undo and saved output bytes (8.2067ms)
+✔ find/replace tasks connect real install, strict import, runtime and publication with valid expressions (59.9116ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 454.7827

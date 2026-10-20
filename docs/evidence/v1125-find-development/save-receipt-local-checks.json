@@ -1,0 +1,36 @@
+{
+  "productSourceCommit": "ef3e87bc39246ef1d2c2dcd360e3ac718503c300",
+  "status": "targeted-checks-passed-frozen-ci-pending",
+  "matchChecks": 10,
+  "adapterChecks": 4,
+  "installedContractChecks": 2,
+  "libraryPageChecks": 12,
+  "externalPageChecks": 3,
+  "typeCheck": "passed",
+  "nativeBridgeMockedForPageChecks": true,
+  "desktopInputUsed": false,
+  "runtimeErrors": [],
+  "currentBuildRunId": 39410130741,
+  "logs": [
+    {
+      "path": "save-adapter.log",
+      "sizeBytes": 1600,
+      "sha256": "581b4ec0c6b24fda52bb1a0c094ea16a1ab71da0b17018cb38fb455b4f53659a"
+    },
+    {
+      "path": "browser-save-receipt.log",
+      "sizeBytes": 59,
+      "sha256": "1d400ff5b932a57c93f613da797115fd978893c7277bcbeea84dad37907a469f"
+    },
+    {
+      "path": "external-save-receipt.log",
+      "sizeBytes": 58,
+      "sha256": "6f582a5e0b579252f13869a2956576d770cce5706c254564b8341cab05ca6066"
+    },
+    {
+      "path": "types-save-receipt.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

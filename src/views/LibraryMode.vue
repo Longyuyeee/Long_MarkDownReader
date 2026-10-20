@@ -352,8 +352,9 @@
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
           <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit || currentFileReloadBusy" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
           <n-popover v-model:show="documentActionsVisible" trigger="click" placement="bottom-end" class="document-actions-popover">
-            <template #trigger><n-button data-testid="library-document-menu" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
+            <template #trigger><n-button data-testid="library-document-menu" @mousedown="documentFindAdapter.rememberSelection" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
             <div class="document-menu-content" aria-label="文档操作菜单">
+        <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" quaternary size="small" @mousedown.prevent @click="openDocumentFind">查找替换… · Ctrl+H</n-button>
         <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
         <n-button v-if="activeIsMarkdown" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="saveCurrentAsTemplate"><template #icon><n-icon :component="FileIcon" /></template>保存为模板…</n-button>
         <n-dropdown
@@ -686,6 +687,7 @@
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :libraries="store.libraries" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" :after-cross-copy="applyCrossLibraryCopy" />
     <AttachmentManagerDialog ref="attachmentManager" :library-root="store.libraryPath" :context-key="store.libraryPath + ':' + activeTabId" :capture-draft="captureAttachmentDraft" :apply-draft="applyAttachmentDraft" @open="path => handleNodeSelect([path])" />
+    <DocumentFindReplace ref="documentFind" :context-key="store.libraryPath+':'+activeTabId+':'+store.editorMode+':'+documentPreviewActive" :revision="activeTextTab?.content" v-bind="documentFindAdapter" />
     <MarkdownSectionActions ref="sectionActions" :context-key="store.libraryPath + ':' + activeTabId + ':' + store.editorMode + ':' + documentPreviewActive" :capture="captureSectionContext" :apply-change="applySectionChange" />
     <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
     <NoteTemplateManager v-if="templateManager" :library-root="store.libraryPath" :initial-note="templateManager.initialNote" @close="templateManager = null" />
@@ -774,6 +776,8 @@ import {
 import { useOutline } from '../composables/useOutline'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
 import { useImageFix } from '../composables/useImageFix'
+import DocumentFindReplace from '../components/DocumentFindReplace.vue'
+import {createVditorFindAdapter} from '../composables/createVditorFindAdapter'
 import { localMarkdownLink, markdownAnchorTarget } from '../utils/localMarkdownLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
@@ -2713,6 +2717,13 @@ const applySectionChange=(context:MarkdownSectionContext,change:SectionChange)=>
   })
   void fixEditorImages()
 }
+const documentFind=ref<InstanceType<typeof DocumentFindReplace>|null>(null)
+const documentFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:store.libraryPath+':'+activeTabId.value,path:activeTabId.value||'',generation:editorLoadGeneration,revision:activeTextTab.value?.content,signature:activeTextTab.value?.textSignature,
+ ready:Boolean(activeIsMarkdown.value&&!activeEmbeddedEditor.value&&isVditorReady&&lastLoadedPath===activeTabId.value&&!editorLoading.value&&!editorModeChangeBusy.value&&!suppressEditorInput&&!fileOperationBusy.value&&!currentFileReloadBusy.value&&!hasPendingMainTextSave(activeTabId.value||'')),
+ readOnlyReason:activeTextTab.value?.textReadOnlyReason||(documentPreviewActive.value?'返回编辑后可替换':'')
+}), (content,path)=>{recordWindowDraftActivity();store.updateTabContent(path,content);const tab=tabs.value.find(item=>item.path===path);if(tab)tab.isDirty=true;updateWordCount();syncOutlineManual(true);void fixEditorImages()})
+const openDocumentFind=()=>{documentActionsVisible.value=false;documentFind.value?.open()}
+const handleFindShortcut=(event:KeyboardEvent)=>{if(!isVditorReady||!vditor?.vditor?.[vditor.getCurrentMode()]?.element?.isConnected)return;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'&&activeIsMarkdown.value&&!activeEmbeddedEditor.value&&!document.querySelector('.n-modal')){event.preventDefault();event.stopImmediatePropagation();openDocumentFind()}}
 let readingPositionTimer: ReturnType<typeof setTimeout> | undefined
 const editorScroller = () => Array.from(document.querySelectorAll<HTMLElement>('.editor-main .vditor-content .vditor-reset, .editor-main .vditor-sv')).find(element => element.getClientRects().length > 0 && ['auto', 'scroll'].includes(getComputedStyle(element).overflowY))
 const captureEditorPosition = () => {
@@ -4319,6 +4330,8 @@ const handleExportHtml = async () => {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keydown',handleFindShortcut,true)
   window.addEventListener('longedit:search-reference', onPaletteSearchReference)
   window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
   document.addEventListener('selectionchange', rememberReferenceInsertionPoint)
@@ -4336,7 +4349,6 @@ onMounted(async () => {
   if (activeTabId.value && !opensInLibraryShell(findFileFormat(activeTabId.value))) {
     store.activateTab(tabs.value[0]?.id || null)
   }
-  window.addEventListener('keydown', handleKeyDown)
   if (!route.query.search && !route.query.collection) searchReturn.restore()
   applyRouteSearch()
   if (store.libraryPath) { await refreshLibrary(); fetchLibStats(); fetchAllTags(); void refreshKnowledgeIndexStatus() }
@@ -4408,6 +4420,7 @@ onUnmounted(() => {
   window.removeEventListener('longedit:reveal-library-file', revealLibraryFile)
   window.removeEventListener('longedit:library-file-created', refreshCreatedLibraryFile)
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keydown',handleFindShortcut,true)
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)
   if (gitStatusTimer) clearTimeout(gitStatusTimer)
   if (searchTimer) clearTimeout(searchTimer)

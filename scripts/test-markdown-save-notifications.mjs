@@ -46,7 +46,7 @@ function externalHarness() {
   const start = source.indexOf('    input:')
   const end = source.indexOf('\n    after:', start)
   assert.ok(start >= 0 && end > start)
-  const context = vm.createContext({ isDirty: { value: false }, originalExternalContent: '# 已保存\n' })
+  const context = vm.createContext({ externalFindRevision: { value: '' }, isDirty: { value: false }, originalExternalContent: '# 已保存\n' })
   vm.runInContext('globalThis.notify = ' + source.slice(start, end).trim().replace(/^input:\s*/, '').replace(/,\s*$/, ''), context)
   return context
 }

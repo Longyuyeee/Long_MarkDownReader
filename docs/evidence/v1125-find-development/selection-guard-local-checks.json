@@ -1,0 +1,42 @@
+{
+  "productSourceCommit": "096e9c853277ea88e3c94d2647326d1c39b6cb3d",
+  "status": "targeted-checks-passed-frozen-ci-pending",
+  "unitChecks": 10,
+  "installedContractChecks": 2,
+  "libraryPageChecks": 11,
+  "externalPageChecks": 3,
+  "typeCheck": "passed",
+  "nativeBridgeMockedForPageChecks": true,
+  "desktopInputUsed": false,
+  "runtimeErrors": [],
+  "previousFullQualitySource": "4fd35b2400dd36ab0cc022d45f766dab351c810b",
+  "previousFullQualityPassed": true,
+  "currentFullQualityAndInstalledEvidence": "pending-build-39407040164",
+  "logs": [
+    {
+      "path": "browser-refresh-guard.log",
+      "sizeBytes": 59,
+      "sha256": "1f09e775f141ca59daf645de4d8fc9a2fd47b17527995f49a19c97b446f7e99f"
+    },
+    {
+      "path": "external-refresh-guard.log",
+      "sizeBytes": 58,
+      "sha256": "6f582a5e0b579252f13869a2956576d770cce5706c254564b8341cab05ca6066"
+    },
+    {
+      "path": "targeted-selection-guard.log",
+      "sizeBytes": 1221,
+      "sha256": "5106cbfc21fd0fd7d27999d126f737444b0284bff415015bee0532fdfc8c6474"
+    },
+    {
+      "path": "types-refresh-guard.log",
+      "sizeBytes": 413,
+      "sha256": "9b1894aaf68195ae1e64d76838390d9bbc47497841d60a44f1021777a540f724"
+    },
+    {
+      "path": "types-refresh-final.log",
+      "sizeBytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

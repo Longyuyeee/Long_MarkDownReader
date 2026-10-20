@@ -1,0 +1,16 @@
+✔ literal browser expressions compile independently, including quoted attribute selectors (36.9123ms)
+✔ CDP input waits for an unobscured target and never calls a DOM handler (49.3701ms)
+✔ Ctrl multi-select modifiers survive stable native pointer input and invalid flags send nothing (1.2597ms)
+✔ typing and Enter use real WebView input phases without setting DOM values (186.0163ms)
+✔ right-click and hover wait through disappearing moving rows and send finite coordinates only once (124.0109ms)
+✔ native user driver is hosted-only, real-bridge and actionability based (2.7442ms)
+✔ user validator keeps new program identity and input evidence separate from IPC-only proof (1.5022ms)
+✔ user validator rejects unfinished runs, fake input, missing tasks, locator and source drift (4.9226ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 844.5435

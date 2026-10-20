@@ -1,0 +1,1848 @@
+
+> tauri-app@1.1.25 ci:patch-release
+> npm run build && npm run check:theme-contract && npm run check:brand-icon-contract && npm run check:ui-consistency && npm run check:ui-typography && npm run check:ui-shared-components && npm run check:ui-management-shell && npm run check:ui4a-shell-visual-harness && npm run check:ui4a-shell-visual-evidence && npm run check:ui4c-release-fact-alignment && npm run check:ui-color-semantics && npm run check:ui-state-semantics && npm run check:dialog-acl && npm run check:settings-navigation-localization && npm run check:settings-information-architecture && npm run check:index-auto-preparation-experience && npm run check:table-row-editing-experience && npm run check:library-context-restoration && npm run check:markdown-default-mode && npm run check:markdown-code-theme-contrast && npm run check:code-editor-theme-contract && npm run check:structured-source-workspace && npm run check:workbook-workspace-experience && npm run check:json-workspace-experience && npm run check:text-workspace-layout && npm run check:external-change-identity && npm run check:managed-file-routing && npm run check:format-registry && npm run check:r1-release-capability-matrix && npm run check:r2-windows-lifecycle-contract && npm run check:d2-safe-degradation-contract && npm run check:v1-installed-hotfix && npm run check:v1-community-release && npm run check:current-development-audit && npm run check:ux33j-installed-docx-harness && cargo check --locked --manifest-path src-tauri/Cargo.toml && npm run audit:prod
+
+
+> tauri-app@1.1.25 build
+> vue-tsc --noEmit && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 6469 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                           0.92 kB │ gzip:   0.51 kB
+dist/assets/graphForceLayout.worker-BjFgAMK2.js           1.95 kB
+dist/assets/Inter-Regular-CBuHftWl.woff2                 98.80 kB
+dist/assets/Inter-Medium-9JPFU5u1.woff2                 105.50 kB
+dist/assets/FiraCode-Regular-CRwVj4V2.woff2             114.46 kB
+dist/assets/icon-CyZ12egh.png                           248.70 kB
+dist/assets/pdf.worker.min-CHFwMXne.mjs               1,262.40 kB
+dist/assets/WorkspaceEmptyState-BB1bntQb.css              0.07 kB │ gzip:   0.08 kB
+dist/assets/WorkspaceFileIdentity-BqIrIo17.css            0.11 kB │ gzip:   0.11 kB
+dist/assets/WorkspaceStatusBar-C0zUiQlA.css               0.11 kB │ gzip:   0.11 kB
+dist/assets/InboxView-BeDr8A7d.css                        0.21 kB │ gzip:   0.17 kB
+dist/assets/WorkspaceSegmentedControl-B-xXr-wb.css        0.21 kB │ gzip:   0.15 kB
+dist/assets/WorkspaceToolbar-98BGLIV4.css                 0.23 kB │ gzip:   0.15 kB
+dist/assets/useResponsiveInspector-Ds88dkXn.css           0.30 kB │ gzip:   0.21 kB
+dist/assets/WorkspaceManagementContent-DuU0lSV4.css       0.43 kB │ gzip:   0.21 kB
+dist/assets/workspaceReference-CxqjI8An.css               0.88 kB │ gzip:   0.35 kB
+dist/assets/searchLocation-BicFkCZN.css                   1.67 kB │ gzip:   0.56 kB
+dist/assets/WorkspaceStateNotice-CzIHLOdE.css             1.69 kB │ gzip:   0.55 kB
+dist/assets/TextConflictDialog-BW5pzYL1.css               1.70 kB │ gzip:   0.61 kB
+dist/assets/TableChartEmbed-OiWIaG-z.css                  1.75 kB │ gzip:   0.60 kB
+dist/assets/WorkspaceManagementHeader-ftASLKkN.css        2.02 kB │ gzip:   0.59 kB
+dist/assets/ExternalApplicationPanel-Bxz9rU3F.css         2.45 kB │ gzip:   0.83 kB
+dist/assets/WorkspaceTabs-uc4hNkzk.css                    2.75 kB │ gzip:   0.85 kB
+dist/assets/localGraphPin-BfPKRT00.css                    2.98 kB │ gzip:   0.92 kB
+dist/assets/QuickNote-BxyYHCC8.css                        3.18 kB │ gzip:   0.93 kB
+dist/assets/ExternalOfficeView-DZFjwwcT.css               3.20 kB │ gzip:   1.02 kB
+dist/assets/TempMode-BOB6IbZf.css                         3.41 kB │ gzip:   1.02 kB
+dist/assets/SearchMatchNavigation-BSPAE2sM.css            3.51 kB │ gzip:   1.05 kB
+dist/assets/TomlEditorView-BhrqsyVL.css                   4.48 kB │ gzip:   1.14 kB
+dist/assets/TableChartEditor-jf2Hed-f.css                 4.70 kB │ gzip:   1.17 kB
+dist/assets/LegacyOfficeView-BgrpIVBQ.css                 5.28 kB │ gzip:   1.38 kB
+dist/assets/InboxBrowser-DiPW5-Ke.css                     5.45 kB │ gzip:   1.43 kB
+dist/assets/YamlEditorView-7g1Zw-ej.css                   5.47 kB │ gzip:   1.30 kB
+dist/assets/XmlEditorView-DYFOHE_k.css                    5.57 kB │ gzip:   1.30 kB
+dist/assets/LogViewerView-CzG3mmss.css                    5.59 kB │ gzip:   1.40 kB
+dist/assets/TextEditorView-BdtkJCh5.css                   5.96 kB │ gzip:   1.43 kB
+dist/assets/DrawioEditorView-DRIssPpT.css                 6.47 kB │ gzip:   1.51 kB
+dist/assets/ReleaseCapabilitiesView-6HLdVVJo.css          7.68 kB │ gzip:   1.67 kB
+dist/assets/OdtReaderView-CSe7fdI2.css                    8.17 kB │ gzip:   1.91 kB
+dist/assets/MediaViewerView-kEq9PB95.css                 11.26 kB │ gzip:   2.59 kB
+dist/assets/DiagramStudio-CCp-4X7K.css                   12.07 kB │ gzip:   2.26 kB
+dist/assets/OdfContentReaderView-D3l6eWiA.css            12.70 kB │ gzip:   2.50 kB
+dist/assets/MindMapView-uCIsdpM6.css                     12.96 kB │ gzip:   2.87 kB
+dist/assets/CanvasView-B2wtCddb.css                      15.86 kB │ gzip:   3.41 kB
+dist/assets/JsonEditorView-D9PG0PEW.css                  16.07 kB │ gzip:   2.89 kB
+dist/assets/DocxReaderView-CH-H5bqF.css                  21.64 kB │ gzip:   3.63 kB
+dist/assets/PptxReaderView-EBlAiMn6.css                  22.73 kB │ gzip:   4.00 kB
+dist/assets/TableView-DmoDzfD7.css                       24.10 kB │ gzip:   4.13 kB
+dist/assets/WorkspaceHome-C3VK0Fm0.css                   27.01 kB │ gzip:   4.35 kB
+dist/assets/createVditorFindAdapter-BLa3Bhig.css         35.86 kB │ gzip:   7.78 kB
+dist/assets/SettingsView-C9i5N4iC.css                    37.52 kB │ gzip:   6.39 kB
+dist/assets/PdfView-CQkfV2eR.css                         52.44 kB │ gzip:   7.63 kB
+dist/assets/WorkbookView-DbFctw5t.css                    54.27 kB │ gzip:   7.37 kB
+dist/assets/GraphView-DL8tVtVs.css                       64.91 kB │ gzip:   9.26 kB
+dist/assets/index-B-ZOU9Hj.css                          114.85 kB │ gzip:  20.02 kB
+dist/assets/LibraryMode-CAgNt3My.css                    127.81 kB │ gzip:  19.08 kB
+dist/assets/structuredAnalysis-GSBgoIPk.js                0.07 kB │ gzip:   0.09 kB
+dist/assets/channel-ne1TEPdQ.js                           0.11 kB │ gzip:   0.13 kB
+dist/assets/init-Gi6I4Gst.js                              0.15 kB │ gzip:   0.13 kB
+dist/assets/chunk-2Q5K7J3B-CCEFVdCi.js                    0.19 kB │ gzip:   0.16 kB
+dist/assets/chunk-XXDRQBXY-DutwliTZ.js                    0.24 kB │ gzip:   0.21 kB
+dist/assets/chunk-JWPE2WC7-CqbJv2Sv.js                    0.30 kB │ gzip:   0.21 kB
+dist/assets/WorkspaceFileIdentity-DWvOuMd6.js             0.30 kB │ gzip:   0.25 kB
+dist/assets/inboxDirectory-Dv5Am1MV.js                    0.32 kB │ gzip:   0.24 kB
+dist/assets/WorkspaceToolbar-CBZ_QjJx.js                  0.33 kB │ gzip:   0.27 kB
+dist/assets/WorkspaceSegmentedControl-Cu3P-QCL.js         0.35 kB │ gzip:   0.28 kB
+dist/assets/chunk-5VM5RSS4-DNI2k9ft.js                    0.37 kB │ gzip:   0.27 kB
+dist/assets/WorkspaceEmptyState-DvMSy4UT.js               0.41 kB │ gzip:   0.31 kB
+dist/assets/WorkspaceStatusBar-B9ixx_LN.js                0.41 kB │ gzip:   0.32 kB
+dist/assets/WorkspaceManagementContent-Dc_cKSTK.js        0.47 kB │ gzip:   0.34 kB
+dist/assets/chunk-KBJHAD2P-CTYXvGEv.js                    0.53 kB │ gzip:   0.38 kB
+dist/assets/stateDiagram-v2-UEYNNEHI-DZE9_rCP.js          0.60 kB │ gzip:   0.37 kB
+dist/assets/classDiagram-JCYQIIEL-oaM75DhZ.js             0.64 kB │ gzip:   0.39 kB
+dist/assets/classDiagram-v2-OCEON4UE-oaM75DhZ.js          0.64 kB │ gzip:   0.39 kB
+dist/assets/swimlanesDiagram-ULZ7WXOC-CSr1GU4I.js         0.72 kB │ gzip:   0.44 kB
+dist/assets/infoDiagram-6WML65LV-mE4pvqOO.js              0.75 kB │ gzip:   0.48 kB
+dist/assets/WorkspaceStateNotice-o9zq-cqz.js              1.08 kB │ gzip:   0.61 kB
+dist/assets/sizeCapture-X5ZJPWSS-BPH4DZVX.js              1.17 kB │ gzip:   0.64 kB
+dist/assets/ordinal-Cboi1Yqb.js                           1.19 kB │ gzip:   0.57 kB
+dist/assets/WorkspaceManagementHeader-CO9hs9RV.js         1.19 kB │ gzip:   0.68 kB
+dist/assets/appDialog-BkpNvWYN.js                         1.34 kB │ gzip:   0.68 kB
+dist/assets/index-D1M8wD5P.js                             1.71 kB │ gzip:   0.52 kB
+dist/assets/railroadDiagram-AXF67PYL-B3hUR7SI.js          1.77 kB │ gzip:   0.83 kB
+dist/assets/chunk-2GRJ4B5K-t9PQYJSj.js                    1.88 kB │ gzip:   0.83 kB
+dist/assets/abnfDiagram-N423BO3Z-DdZIZRoQ.js              1.98 kB │ gzip:   0.97 kB
+dist/assets/InboxView-B0fb8VH-.js                         2.07 kB │ gzip:   1.15 kB
+dist/assets/pegDiagram-VL7TDLO6-BRo-ZJUT.js               2.12 kB │ gzip:   1.00 kB
+dist/assets/ebnfDiagram-BXEA7PRR-5q0nnGx5.js              2.17 kB │ gzip:   0.95 kB
+dist/assets/workspaceViewState-VNswgWOu.js                2.45 kB │ gzip:   1.14 kB
+dist/assets/ExternalOfficeView-jYqUPWcE.js                3.20 kB │ gzip:   1.69 kB
+dist/assets/arc-EN9JUgMo.js                               3.43 kB │ gzip:   1.47 kB
+dist/assets/TableChartEmbed-C3YoPomv.js                   3.92 kB │ gzip:   1.93 kB
+dist/assets/ExternalApplicationPanel-CDkHU_tA.js          4.34 kB │ gzip:   2.15 kB
+dist/assets/diagram-LBJQPF4R-BLyjRjjI.js                  4.41 kB │ gzip:   1.93 kB
+dist/assets/defaultLocale-DX6XiGOO.js                     4.69 kB │ gzip:   2.18 kB
+dist/assets/workspaceReference-pa4k6Oid.js                5.11 kB │ gzip:   2.47 kB
+dist/assets/tableEditing-BUzLrV5D.js                      5.32 kB │ gzip:   2.28 kB
+dist/assets/linear-DkccRXhq.js                            5.66 kB │ gzip:   2.31 kB
+dist/assets/graph-zLuqAGYa.js                             5.82 kB │ gzip:   1.81 kB
+dist/assets/diagram-UB23O5K3-DFQViMk7.js                  6.40 kB │ gzip:   2.76 kB
+dist/assets/pieDiagram-7S7Q4E2Y-C9nQ1p3n.js               6.52 kB │ gzip:   2.73 kB
+dist/assets/WorkspaceTabs-CEqC8oK0.js                     6.67 kB │ gzip:   3.13 kB
+dist/assets/index-DJipkZDW.js                             6.92 kB │ gzip:   1.91 kB
+dist/assets/LegacyOfficeView-Bi9bqEyr.js                  7.05 kB │ gzip:   3.24 kB
+dist/assets/chunk-RYQCIY6F-DkeycLCD.js                    7.15 kB │ gzip:   2.77 kB
+dist/assets/QuickNote-5S7X_eUY.js                         7.49 kB │ gzip:   3.43 kB
+dist/assets/OdtReaderView-e9McZuvO.js                     8.07 kB │ gzip:   3.60 kB
+dist/assets/InboxBrowser-Dz-eMF7z.js                      8.09 kB │ gzip:   3.43 kB
+dist/assets/TextConflictDialog-BBN6WO1X.js                8.30 kB │ gzip:   3.67 kB
+dist/assets/diagram-7IWD3JNH-CXJynMHv.js                  8.64 kB │ gzip:   3.84 kB
+dist/assets/useResponsiveInspector-BrxpCjR4.js            8.99 kB │ gzip:   4.13 kB
+dist/assets/dagre-VZM6K2ZE-BkNsDVX3.js                    9.05 kB │ gzip:   3.46 kB
+dist/assets/ReleaseCapabilitiesView-CAi3WzTq.js           9.55 kB │ gzip:   4.09 kB
+dist/assets/appVersionIdentity-C086uKT-.js                9.99 kB │ gzip:   4.02 kB
+dist/assets/cynefinDiagram-MW4NZA55-CDasaEKi.js          10.27 kB │ gzip:   3.71 kB
+dist/assets/stateDiagram-OKZ733FA-B13l5jc1.js            10.57 kB │ gzip:   3.72 kB
+dist/assets/SearchMatchNavigation-KO2by2Ti.js            10.72 kB │ gzip:   4.68 kB
+dist/assets/diagram-B4RE2ZJO-CzQ1KuCn.js                 10.99 kB │ gzip:   4.24 kB
+dist/assets/localGraphPin-C-xnuSeU.js                    11.01 kB │ gzip:   4.00 kB
+dist/assets/searchLocation-CdSuT19E.js                   11.46 kB │ gzip:   4.80 kB
+dist/assets/TomlEditorView-NS_D0RM-.js                   13.03 kB │ gzip:   5.69 kB
+dist/assets/TempMode-CXcnAXnU.js                         14.73 kB │ gzip:   6.52 kB
+dist/assets/LogViewerView-BD8xKnpG.js                    15.01 kB │ gzip:   5.93 kB
+dist/assets/DrawioEditorView-Dc96T2HF.js                 15.15 kB │ gzip:   6.17 kB
+dist/assets/TableChartEditor-BfzMm2Dt.js                 15.60 kB │ gzip:   5.57 kB
+dist/assets/chunk-6Q2QTUOP-xMKbZ7n9.js                   15.76 kB │ gzip:   4.43 kB
+dist/assets/index-qEfrVXE3.js                            15.83 kB │ gzip:   6.83 kB
+dist/assets/diagram-Q27KOJAE-4NuxtQHP.js                 16.24 kB │ gzip:   5.81 kB
+dist/assets/createVditorFindAdapter-CRuLsjmc.js          17.62 kB │ gzip:   7.97 kB
+dist/assets/ishikawaDiagram-WSZJBQD7-DndOBbea.js         17.74 kB │ gzip:   6.75 kB
+dist/assets/kanban-definition-27J2QSJJ-twlYj-h5.js       20.87 kB │ gzip:   7.37 kB
+dist/assets/DiagramStudio-9CKGW195.js                    23.19 kB │ gzip:   9.76 kB
+dist/assets/mindmap-definition-FAOFIHXS-Ctm4ZA28.js      23.53 kB │ gzip:   7.97 kB
+dist/assets/sankeyDiagram-W5VNT64P-CGpcDTO9.js           23.56 kB │ gzip:   8.66 kB
+dist/assets/OdfContentReaderView-BJxAYZud.js             23.69 kB │ gzip:   8.53 kB
+dist/assets/journeyDiagram-NVQOT4AX-BZRfkU_f.js          23.74 kB │ gzip:   8.43 kB
+dist/assets/YamlEditorView-CB_9E_7k.js                   25.17 kB │ gzip:  11.02 kB
+dist/assets/layout-BiWpb4dm.js                           25.22 kB │ gzip:   8.86 kB
+dist/assets/index-B_GAi9lu.js                            26.13 kB │ gzip:   8.71 kB
+dist/assets/wardleyDiagram-T6FBY63Y-UxL8BG81.js          26.26 kB │ gzip:   7.01 kB
+dist/assets/erDiagram-JOGREHBK-CNrVOsnk.js               27.38 kB │ gzip:   9.53 kB
+dist/assets/XmlEditorView-18BRs20B.js                    28.91 kB │ gzip:  11.96 kB
+dist/assets/MediaViewerView-BfDNCf5d.js                  30.08 kB │ gzip:  11.10 kB
+dist/assets/gitGraphDiagram-DS77QQ5N-B5kCXgM0.js         30.10 kB │ gzip:   8.95 kB
+dist/assets/requirementDiagram-LRYGKXZP-CnRBbyle.js      31.38 kB │ gzip:   9.90 kB
+dist/assets/timeline-definition-Z64GVDOM-CrrvW1ed.js     31.52 kB │ gzip:  10.51 kB
+dist/assets/MindMapView-CbliZc54.js                      33.64 kB │ gzip:  12.71 kB
+dist/assets/quadrantDiagram-CIZ2JOQS-YR67zGkU.js         34.66 kB │ gzip:  10.21 kB
+dist/assets/chunk-5RXB4S5H-RBzr9FEs.js                   38.63 kB │ gzip:  12.69 kB
+dist/assets/DocxReaderView-CXIVMCRz.js                   39.05 kB │ gzip:  13.44 kB
+dist/assets/marked.esm-Bu0hvPc_.js                       40.47 kB │ gzip:  12.45 kB
+dist/assets/xychartDiagram-ELKLHX3M-Gx9it5bL.js          42.11 kB │ gzip:  12.12 kB
+dist/assets/vennDiagram-T6HMQDX7-BOFjs4hh.js             42.54 kB │ gzip:  15.88 kB
+dist/assets/TableView-DqOflfx1.js                        46.04 kB │ gzip:  16.68 kB
+dist/assets/JsonEditorView-BtIAxIBy.js                   49.06 kB │ gzip:  16.24 kB
+dist/assets/chunk-GF5L2VYU-gDbMo7XT.js                   49.30 kB │ gzip:  15.78 kB
+dist/assets/WorkspaceHome-DRSrg4ss.js                    52.28 kB │ gzip:  19.00 kB
+dist/assets/CanvasView-DphaT1_5.js                       53.94 kB │ gzip:  19.53 kB
+dist/assets/flowDiagram-UKHOOZJN-DN8Clata.js             61.40 kB │ gzip:  19.67 kB
+dist/assets/SettingsView-DDUPwu2s.js                     68.29 kB │ gzip:  22.42 kB
+dist/assets/ganttDiagram-PKOTCBZU-CZTSpxrW.js            69.86 kB │ gzip:  23.63 kB
+dist/assets/c4Diagram-5PPSVZJV-C3m1y_sf.js               70.14 kB │ gzip:  19.73 kB
+dist/assets/blockDiagram-VBNYF7ZC-DIza3-sG.js            75.30 kB │ gzip:  21.69 kB
+dist/assets/PptxReaderView-CreW2OrC.js                   75.38 kB │ gzip:  22.21 kB
+dist/assets/cose-bilkent-JH36ORCC-BwA0ztpI.js            81.89 kB │ gzip:  22.56 kB
+dist/assets/icon-vendor-BovRD6-t.js                      89.83 kB │ gzip:  15.72 kB
+dist/assets/vue-vendor-C6xo2Ojt.js                      114.45 kB │ gzip:  44.59 kB
+dist/assets/sequenceDiagram-SI44F4Z6-Bg4XR6-O.js        117.62 kB │ gzip:  31.36 kB
+dist/assets/swimlanes-SLNWSIFB-0Hh5Olz8.js              120.53 kB │ gzip:  44.08 kB
+dist/assets/architectureDiagram-T3A2C74G-C6KawjzN.js    152.19 kB │ gzip:  43.31 kB
+dist/assets/TextEditorView-KK0KzQfM.js                  166.50 kB │ gzip:  55.26 kB
+dist/assets/index-CNEMM-hA.js                           199.87 kB │ gzip:  64.46 kB
+dist/assets/WorkbookView-B90ZYZZa.js                    203.57 kB │ gzip:  60.88 kB
+dist/assets/GraphView-vxx2Bysj.js                       228.92 kB │ gzip:  66.62 kB
+dist/assets/katex-BkKH-RNA.js                           261.00 kB │ gzip:  77.67 kB
+dist/assets/editor-vendor-CIbGjqDk.js                   293.92 kB │ gzip:  71.92 kB
+dist/assets/LibraryMode-BnIRYz0u.js                     315.13 kB │ gzip: 103.94 kB
+dist/assets/codeMirrorTheme-yGMzMKDL.js                 400.78 kB │ gzip: 129.70 kB
+dist/assets/cytoscape.esm-DTSO7Bv0.js                   443.72 kB │ gzip: 142.36 kB
+dist/assets/ui-vendor-q_Iy5CN1.js                       563.01 kB │ gzip: 156.14 kB
+dist/assets/mermaid.core-klJxJVqY.js                    596.14 kB │ gzip: 140.30 kB
+dist/assets/PdfView-BbPF6nqb.js                         604.07 kB │ gzip: 184.00 kB
+dist/assets/cynefin-VYW2F7L2-DTjvgNl1.js                691.07 kB │ gzip: 155.13 kB
+[vite-plugin-static-copy] Copied 7 items.
+✓ built in 1m 5s
+
+> tauri-app@1.1.25 check:theme-contract
+> node scripts/check-theme-contract.mjs
+
+Theme contract check passed: one registry, 3 core + 4 scenario presets, 12 Tauri visual proofs, one filtered theme library, shared editor/chart consumers.
+
+> tauri-app@1.1.25 check:brand-icon-contract
+> node scripts/check-brand-icon-contract.mjs
+
+Brand icon contract passed: solid-gold master, synchronized app assets, and platform icons are present.
+
+> tauri-app@1.1.25 check:ui-consistency
+> node scripts/check-ui-consistency.mjs
+
+UI consistency contract passed: shared branding, workspace tokens, embedded routes, and container-relative sizing are aligned.
+
+> tauri-app@1.1.25 check:ui-typography
+> node scripts/check-ui-typography.mjs
+
+UI typography contract passed: 112 style sources scanned, 0 unregistered fonts.
+
+> tauri-app@1.1.25 check:ui-shared-components
+> node scripts/check-ui-shared-components.mjs
+
+UI shared component contract passed: workspace and management primitives are used across high-risk surfaces.
+
+> tauri-app@1.1.25 check:ui-management-shell
+> node scripts/check-ui-management-shell.mjs
+
+UI management shell contract passed: management pages and the immersive graph share navigation, controls, status, and inspector dimensions.
+
+> tauri-app@1.1.25 check:ui4a-shell-visual-harness
+> node scripts/check-ui4a-shell-visual-harness.mjs
+
+UI-4A shell visual harness passed: 5 surfaces, 3 core themes, 3 Windows-equivalent scales, and Tauri-only evidence boundaries.
+
+> tauri-app@1.1.25 check:ui4a-shell-visual-evidence
+> node scripts/check-ui4a-shell-visual-audit.mjs
+
+UI-4A shell visual evidence passed: 5 surfaces, 3 core themes, 3 Windows-equivalent scales, 45 Tauri screenshots.
+
+> tauri-app@1.1.25 check:ui4c-release-fact-alignment
+> node scripts/check-ui4c-release-fact-alignment.mjs
+
+UI-4C release facts passed: v1.1.25 is being prepared and enterprise RC remains separate.
+
+> tauri-app@1.1.25 check:ui-color-semantics
+> node scripts/check-ui-color-semantics.mjs
+
+UI color semantics contract passed: workspace chrome uses theme-aware surface and status tokens.
+
+> tauri-app@1.1.25 check:ui-state-semantics
+> node scripts/check-ui-state-semantics.mjs
+
+UI state semantics contract passed: seven states are represented across the shared workspace primitives.
+
+> tauri-app@1.1.25 check:dialog-acl
+> node scripts/check-dialog-acl.mjs
+
+Dialog ACL check passed (224 source files scanned).
+
+> tauri-app@1.1.25 check:settings-navigation-localization
+> node scripts/check-settings-navigation-localization.mjs
+
+Settings navigation and privacy diagnostic localization check passed.
+
+> tauri-app@1.1.25 check:settings-information-architecture
+> node scripts/check-settings-information-architecture.mjs
+
+Settings information architecture check passed: 8 categories, user-facing knowledge tools, and one filtered theme library.
+
+> tauri-app@1.1.25 check:index-auto-preparation-experience
+> node scripts/check-index-auto-preparation-experience.mjs
+
+Index automatic preparation experience contract passed.
+
+> tauri-app@1.1.25 check:table-row-editing-experience
+> node scripts/check-table-row-editing-experience.mjs
+
+Table row selection, explicit deletion, undo/redo, and save-boundary contract passed.
+
+> tauri-app@1.1.25 check:library-context-restoration
+> node scripts/check-library-context-restoration.mjs
+
+Library configuration, graph return, active file, and bounded restart context restoration contract passed (3 behavioral checks).
+
+> tauri-app@1.1.25 check:markdown-default-mode
+> node scripts/check-markdown-default-mode.mjs
+
+Markdown WYSIWYG default, legacy migration, explicit preference, and backup contract passed.
+
+> tauri-app@1.1.25 check:markdown-code-theme-contrast
+> node scripts/check-markdown-code-theme-contrast.mjs
+
+Markdown code palettes cover 9 themes; syntax text meets 4.5:1 and cursors meet 3:1 contrast.
+
+> tauri-app@1.1.25 check:code-editor-theme-contract
+> node scripts/check-code-editor-theme-contract.mjs
+
+Six CodeMirror workspaces share one rich semantic theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.
+
+> tauri-app@1.1.25 check:structured-source-workspace
+> node scripts/check-structured-source-workspace.mjs
+
+Structured source workspace contract passed: task-oriented panels, adaptive serialized analysis, navigation, diagnostics, and shared themes.
+
+> tauri-app@1.1.25 check:workbook-workspace-experience
+> node scripts/check-workbook-workspace-experience.mjs
+
+Workbook workspace contract passed: progressive tools, compact formula controls, responsive reachability, and opaque frozen grid surfaces.
+
+> tauri-app@1.1.25 check:json-workspace-experience
+> node scripts/check-json-workspace-experience.mjs
+
+JSON workspace contract passed: guided paths, collapsible diagnostics, indexed expansion, and virtual tree rows.
+
+> tauri-app@1.1.25 check:text-workspace-layout
+> node scripts/check-text-workspace-layout.mjs
+
+TXT and LOG use stable named grid areas; editor/viewer keeps remaining height and status stays compact.
+
+> tauri-app@1.1.25 check:external-change-identity
+> node scripts/check-external-change-identity.mjs
+
+External text changes use exact content identity, save receipts, one-signature dedupe, and compare/reload/keep actions.
+
+> tauri-app@1.1.25 check:managed-file-routing
+> node scripts/check-managed-file-routing.mjs
+
+Managed file routing contract passed: 11 ingress surfaces preserve the library shell.
+
+> tauri-app@1.1.25 check:format-registry
+> node scripts/check-format-contract.mjs
+
+File format contract check passed: schema v2, 43 formats, 91 extensions, user capability tiers, longest-extension routing.
+
+> tauri-app@1.1.25 check:r1-release-capability-matrix
+> node scripts/check-r1-release-capability-matrix.mjs
+
+R1 release capability matrix passed: 43 formats, 11 profiles, {"verified":30,"verified-with-limitations":7,"external-dependency":6}
+
+> tauri-app@1.1.25 check:r2-windows-lifecycle-contract
+> node scripts/check-r2-windows-lifecycle-contract.mjs
+
+R2 Windows lifecycle contract passed: msi/nsis installers, 2 associated extensions, stable upgrade 7bf71eea-e39f-54b9-a7e6-4922e93094a6
+
+> tauri-app@1.1.25 check:d2-safe-degradation-contract
+> node scripts/check-d2-safe-degradation-contract.mjs
+
+D2 safe degradation contract passed: 43 formats across 8 lanes with source, conflict, failure, and recovery evidence.
+
+> tauri-app@1.1.25 check:v1-installed-hotfix
+> node scripts/check-v1-installed-hotfix.mjs
+
+V1.0.3 installed hotfix passed: packaged UI restored and reg.exe-free startup verified at 200% Windows scaling.
+
+> tauri-app@1.1.25 check:v1-community-release
+> node scripts/check-v1-community-release.mjs
+
+V1 community release contract passed: v1.1.25 is awaiting quality gate and package evidence with managed SHA-256 updates.
+
+> tauri-app@1.1.25 check:current-development-audit
+> node scripts/check-current-development-audit.mjs && node scripts/check-ux34-drawio-canvas-stability.mjs && node scripts/check-ux35-file-tree-preview.mjs && node scripts/check-ux36-file-tree-actions.mjs && node scripts/check-ux37a-opml-canvas-contract.mjs && node scripts/check-ux37b-knowledge-graph-canvas-contract.mjs && node scripts/check-ux38-format-experience-matrix.mjs && node scripts/check-ux38b-workspace-tabs-contract.mjs && node scripts/check-ux38c-table-grid-experience.mjs && node scripts/check-workbook-workspace-experience.mjs && node scripts/check-ux38c2-workbook-context.mjs && node scripts/check-ux38d1-pdf-workspace.mjs && node scripts/check-ux38d2-document-workspace.mjs && node scripts/check-ux38d3-presentation-workspace.mjs && node scripts/check-ux38e-canvas-explicit-save.mjs && node scripts/check-ux38e-diagram-history.mjs && node scripts/check-ux38e-graphics-workspace.mjs && node scripts/check-ux38f-external-office-workspace.mjs && node scripts/check-ux38-final-closure.mjs && node scripts/check-ux39-packaging-preflight.mjs && node scripts/check-route-loading-fallback.mjs && node scripts/check-navigation-liveness.mjs && node scripts/check-external-file-workspace.mjs && node scripts/check-external-media-preview.mjs && node scripts/check-external-pdf-preview.mjs && node scripts/check-external-odf-preview.mjs && node scripts/check-external-odt-gate.mjs && node scripts/check-external-docx-preview.mjs && node scripts/check-external-pptx-preview.mjs && node scripts/check-external-xlsx-preview.mjs && node scripts/check-external-log-workspace.mjs && node scripts/check-external-canvas-workspace.mjs && node scripts/check-external-table-workspace.mjs && node scripts/check-external-drawio-workspace.mjs && node scripts/check-markdown-default-mode.mjs && node scripts/check-code-editor-theme-contract.mjs && node scripts/check-select-control-contract.mjs && node scripts/check-horizontal-wheel-navigation.mjs && node scripts/check-v115-context-menu-policy.mjs && node scripts/check-v115-app-dialog-policy.mjs && node scripts/check-canvas-pointer-interactions.mjs && node scripts/check-table-board-experience.mjs && node scripts/check-media-workspace.mjs && node scripts/check-image-transform-copy.mjs && node scripts/check-p1a2-image-editor-audit.mjs && node scripts/check-sidebar-tabs-responsive.mjs && node scripts/check-file-tree-appearance.mjs && node scripts/check-ui4c-release-fact-alignment.mjs && node scripts/check-ux39-unsigned-package.mjs && node scripts/check-post-v115-m2a1-workspace-task.mjs && node scripts/check-post-v115-m2a2-workspace-governance.mjs && node scripts/check-post-v115-m2a3-workspace-navigation.mjs && node scripts/check-post-v115-m2-closure.mjs && node scripts/check-post-v115-explicit-save-alignment.mjs && node scripts/check-post-v115-m1b2a-docx-object-selection.mjs && node scripts/check-post-v115-m1b2b-docx-paragraph-styles.mjs && node scripts/check-post-v115-m1b2c-docx-closure.mjs && node scripts/check-post-v115-m1ca-odf-feasibility.mjs && node scripts/check-post-v115-m1cb-ods-cell-edit.mjs && node scripts/check-post-v115-m4f2-v1016-candidate-quality-gate-and-runtime-smoke.mjs && node scripts/check-post-v115-m4f3a-v1016-hosted-installer-lifecycle-handoff.mjs && node scripts/check-post-v116-m5-6-v1017-hosted-installer-lifecycle.mjs
+
+Verified 5 native fault/recovery observations and original hashes; external responses were simulated, no installer acceptance claimed.
+Community updater contract passed: fixed GitHub source, SHA-256 verification, hidden install and automatic relaunch are aligned.
+Official v1.0.21 to v1.0.22 update accepted: 12 checks and nine immutable reviewed evidence files.
+Official v1.0.22 to v1.0.23 update accepted: 12 checks and nine immutable reviewed evidence files.
+Command strip layout passed: 11 workspaces keep controls readable, scrollable and reachable.
+V1.0.6 managed updater lifecycle contract passed: hosted 1.0.5 -> 1.0.6 evidence accepted.
+V1.0.7 managed updater lifecycle passed: hosted 1.0.6 -> 1.0.7 evidence accepted.
+V1.0.8 managed updater lifecycle contract passed: automatic relaunch failure is recorded for v1.0.9 recovery.
+V1.0.9 managed updater lifecycle contract passed: hosted 1.0.8 -> 1.0.9 evidence accepted.
+V1.0.10 managed updater lifecycle contract passed: hosted 1.0.9 -> 1.0.10 evidence accepted.
+V1.0.11 managed updater lifecycle contract passed: hosted 1.0.10 -> 1.0.11 evidence accepted.
+V1.0.12 managed updater lifecycle contract passed: hosted 1.0.11 -> 1.0.12 evidence accepted.
+V1.0.13 managed updater lifecycle contract passed: hosted 1.0.12 -> 1.0.13 evidence accepted.
+V1.0.14 managed updater lifecycle contract passed: hosted 1.0.13 -> 1.0.14 evidence accepted.
+V1.0.16 managed updater lifecycle contract passed: hosted 1.0.15 -> 1.0.16 evidence accepted.
+M5-0 accepted: v1.0.17 selects only M5-1 ODP slide-body producer fidelity and object selection; ODP remains preview-only.
+M5-1 accepted: only direct text-frame paragraphs on simple ODP slides advance to M5-2; notes and complex-object slides remain blocked.
+M5-2 accepted: bounded simple-slide ODP reliable copies pass real LibreOffice/PowerPoint reopen; UI and version promotion remain M5-3+ work.
+M5-3 accepted: real LibreOffice/PowerPoint ODP workspace copies, draft protection, responsive UI and whole-slide blockers are verified; M5-4 owns release readiness.
+M5-4 accepted: 548 Rust tests pass with zero failures, the complete patch release gate passes, and M5-5 owns atomic v1.0.17 packaging.
+M5-5 accepted: v1.0.17 candidate identity and historical local package receipts remain valid after publication.
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+M5-7 accepted: hosted lifecycle artifacts, SHA256SUMS and release boundaries remain valid after M5-8 publication.
+M5-8 accepted: v1.0.17 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+V1.0.17 managed updater lifecycle contract passed: hosted 1.0.16 -> 1.0.17 evidence accepted.
+V1.0.18 managed updater lifecycle contract passed: hosted 1.0.17 -> 1.0.18 evidence accepted.
+V1.0.19 managed updater lifecycle contract passed: hosted 1.0.18 -> 1.0.19 evidence accepted.
+V1.0.21 managed updater lifecycle contract passed: hosted 1.0.20 -> 1.0.21 evidence accepted.
+M8-5 graph visual/performance polish passed: settled auto-fit, dense priority-only arrows, restrained status rings, non-duplicated tooltip and bounded reduced-motion-safe selection feedback are present.
+M8-5 real desktop evidence accepted: all 180 nodes auto-fit, dense middle arrows are priority-only, 12 status rings remain, bounded selection settles idle, Canvas draw peaks at 5.1 ms and runtime errors are zero.
+M6-0 accepted: v1.0.18 selects only M6-1 graph-scoped bounded fullscreen lifecycle; cluster proxies, governance rings, structured schemas and ODP note editing remain deferred.
+M6-1 accepted: 6/6 real Tauri fullscreen cycles preserve graph state, Escape and route cleanup exit safely, runtime errors remain zero and source files remain unchanged.
+M6-2 accepted: stop feature expansion and run M6-3 complete Rust plus patch-release readiness gates before any v1.0.18 version transition.
+M6-3 accepted: 548 Rust tests, the corrected complete patch-release gate, 6,275 frontend modules and zero production vulnerabilities permit M6-4 candidate packaging.
+M6-4 accepted: v1.0.18 candidate identity, real local package receipts, and WebView2 evidence are valid while public v1.0.17 remains frozen.
+M6-5 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.18 candidate and v1.0.17 upgrade baseline remain frozen.
+M6-6 accepted: hosted lifecycle artifacts, public names, SHA256SUMS and unsigned community release boundaries are ready for M6-7 publication.
+M6-7 accepted: v1.0.18 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+M7-0 accepted: v1.0.19 selects only local JSON/JSONC Schema sidecar provider and mapping feasibility; remote providers, YAML/TOML projection, XSD, graph proxies, governance rings and ODP notes remain deferred.
+M7-1 accepted: bounded offline JSON/JSONC Schema sidecar validation and source mapping are feasible; product UI and real Tauri acceptance remain M7-2 work.
+M7-2 accepted: bounded local JSON/JSONC Schema validation is integrated and passed real Tauri wide/narrow read-only acceptance; M7-3 quality readiness is next.
+M7-3 accepted: 559 Rust tests, complete patch-release CI, 6,275 frontend modules and zero production vulnerabilities permit M7-4 candidate packaging.
+M7-4 accepted: v1.0.19 runtime identity is atomic while public v1.0.18 remains frozen.
+CF-1 code creation passed: 10 format families and 32 registered extensions use guarded atomic templates.
+CF-1 desktop creation audit passed: 10 format families, explicit save, close/reopen and no-overwrite evidence are accepted.
+UX-51 lifecycle passed: updater relaunch and independent external windows are implementation- and desktop-verified.
+v1.0.15 interaction-polish audit passed: modern tab tooltip, contextual right-click policy, and accepted clean desktop evidence are aligned.
+v1.0.15 global-tooltip policy passed: static and dynamic native titles use one theme-aware, keyboard-accessible and viewport-bounded application surface.
+v1.0.15 overlay-bounds contract passed: the long create menu is scrollable, uniquely measurable and viewport bounded.
+M1C-C ODS formula/style evidence contract passed.
+M1C-D ODS existing named style contract passed.
+M1D selection accepted: 10 MiB JSON timeout and 50 MiB boundary select progressive large-JSON reading before media frame tools.
+M1D-A large JSON accepted: progressive read, segment navigation, streaming search and small-file editing are real-desktop verified.
+M1D-B video tools accepted: real 1080p/4K frame stepping, PNG capture, position restore and source safety are verified.
+M1D-C selection accepted: real sidecars and semantic-invalid structured files select bounded external subtitle playback as M1D-C1.
+M1D-C1 accepted: real VTT/SRT active cues, selection, off state, reopen, malformed rejection and source safety are verified.
+M1 total exit criteria accepted: M1A-M1D real evidence, producer matrix, source safety, boundaries and user documentation are aligned.
+{
+  "expected": {
+    "developmentTargetVersion": "1.1.25",
+    "runtimeBaseVersion": "1.1.25",
+    "publicTag": "v1.1.24",
+    "headAheadOfPublicTag": true,
+    "binaryVersionTransition": "v1.1.25-quality-gate-pending"
+  },
+  "actual": {
+    "headCommit": "4fd35b2400dd36ab0cc022d45f766dab351c810b",
+    "tagCommit": "d5b9f978e83ddc1d0a29037e9dfea965f3cb0d7d",
+    "commitsAhead": 10,
+    "tagIsAncestor": true,
+    "checks": {
+      "policySchema": true,
+      "nextPatchTarget": true,
+      "runtimeFactsFrozen": true,
+      "candidateMetadataFacts": true,
+      "publicFactsFrozen": true,
+      "publicTagImmutable": true,
+      "developmentAhead": true,
+      "enterpriseNotReleaseCandidate": true,
+      "binaryTransitionComplete": true,
+      "currentStageAligned": true,
+      "configConsumesPolicy": true,
+      "mainUiIdentifiesDevelopment": true,
+      "capabilityUiIdentifiesDevelopment": true,
+      "auditDocumentsIdentity": true
+    }
+  }
+}
+M3C-1 dirty-frame loop accepted: 100=680/2305ms, idle 0/s, resume 0; 1000=3236/17317ms, idle 0/s, resume 0; 5000=23562/186338ms, idle 0/s, resume 0; original 5000-node layout/interaction limits remain independently visible.
+M3C-2 phase profile accepted: 100=1285/3393ms; 1000=3558/29861ms; 5000=39105/140049ms bounded; 5000-node dominant=layout-simulation 133038ms; layout=133038ms, draw-exclusive=0ms, semantic=1269ms.
+M3C-3 worker layout accepted: 100=2511/4777ms, main-layout-max=7.2ms, worker-max=13.4ms; 1000=2466/3542ms, main-layout-max=6.9ms, worker-max=5.9ms; 5000=7229/10964ms, main-layout-max=26.7ms, worker-max=17.6ms.
+M3C-4 performance exit accepted: 100=2376ms stable, idle-longtasks=0, remaining-max=29.6ms; 1000=4037ms stable, idle-longtasks=0, remaining-max=59.2ms; 5000=10631ms stable, idle-longtasks=0, remaining-max=421.8ms.
+M4F-4 accepted: two real unsigned installers, public-name mapping, SHA256SUMS, passed Tauri smoke, hosted lifecycle and cross-platform evidence are preserved after publication.
+M4F-5 accepted: v1.0.16 is published, the tag binds the real candidate, and all three remotely downloaded assets match the frozen manifest.
+M3B-10 remaining professional visual selection accepted: restrained recency and relation-strength rings selected from real Tauri three-viewport, filesystem timestamp and health/pulse evidence; governance rings, cluster collapse/expand, fullscreen and M3C remain deferred.
+M3B-6 navigation selection accepted: fit-all and community filtering remain reliable, and the selected fit-selection/bounded-focus successor is implemented with historical real Tauri three-viewport evidence.
+M3B-8 remaining navigation selection accepted: bounded semantic minimap selected from real 100/1000/5000-node evidence and real Tauri three-viewport evidence; cluster collapse/expand, fullscreen and M3C remain deferred.
+M3C-0 large-graph baseline accepted: 100=1407/3724ms, 132 settled draws/s, longest 537ms; 1000=2189/15050ms, 132 settled draws/s, longest 616ms; 5000=24722/185195ms, 132 settled draws/s, longest 17237ms; 5000-node interaction and long-task budget failures remain explicit, and M3C-1 closes settled dirty-frame and lifecycle-loop control.
+M3B professional visual system exit accepted: M3B-1 through M3B-11 remain safe and the combined semantic hierarchy, path, camera, minimap, status and responsive flow passes in 4 real Tauri sessions; cluster collapse, fullscreen and M3C remain outside M3B.
+✔ literal text, whitespace, newlines and regex punctuation use exact UTF-16 spans (4.0697ms)
+✔ case and Unicode whole words share the same matching spans used by replacement (2.0465ms)
+✔ a duplicate inside the selected scope never changes other equal text (1.1342ms)
+✔ whole-word boundaries use the complete document at selection edges (0.4251ms)
+✔ replacement dollar syntax stays literal and the changed scope adjusts once (0.7377ms)
+✔ deletion and multiline replacement preserve all text outside the scope (0.358ms)
+✔ empty searches, stale or overlapping spans cannot produce unintended edits (0.6423ms)
+✔ limits never return a partial replace-all candidate (9.4512ms)
+✔ oversized queries and replacement expansion fail before creating output (4.1177ms)
+✔ find/replace evidence binds exact modes, draft ownership, undo and saved output bytes (13.3588ms)
+✔ find/replace tasks connect real install, strict import, runtime and publication with valid expressions (51.3476ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 716.4989
+✔ chapter evidence binds three modes, drafts, clipboard and actual saved bytes (12.2257ms)
+✔ chapter tasks are connected to real install, import, runtime and publication with valid browser expressions (65.8716ms)
+✔ duplicate headings have exact source ranges and unique standard fragments (28.241ms)
+✔ code fences, HTML, nested lists and quotes never become editable top-level sections (4.1761ms)
+✔ a definition containing an identical heading cannot steal its source position (2.4214ms)
+✔ front matter and CRLF offsets remain byte-for-byte stable outside moved sections (0.8741ms)
+✔ moving a chapter preserves children, tables, pictures, lists and code text (0.7882ms)
+✔ move up followed by move down restores a document with a final newline exactly (0.9582ms)
+✔ EOF without a newline gains a necessary separator rather than joining headings (0.4649ms)
+✔ moves stop at parent boundaries and do not silently reparent a chapter (1.3869ms)
+✔ level changes update child headings while preserving all other source bytes (0.9284ms)
+✔ out-of-range child levels reject the whole operation (0.4161ms)
+✔ Setext headings keep body and inline syntax when moving or changing level (7.519ms)
+✔ slug collisions and punctuation-only headings still have distinct targets (0.6212ms)
+✔ a stale section identifier is rejected instead of editing a different range (1.1733ms)
+✔ long documents use bounded source mapping with a clear large-document fallback (36.2906ms)
+✔ chapter links remove canonical Windows prefixes and preserve escaped local destinations (1.6895ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 582.3551
+✔ attachment evidence requires all native tasks, draft protection, actual picker and original output bytes (15.0848ms)
+✔ attachment tasks are connected to real install, import, runtime and publication with valid browser expressions (68.2847ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 677.4679
+✔ file history evidence binds actual restart, every task and protected output bytes (10.1135ms)
+✔ native history tasks use production input and literal browser expressions parse (47.9378ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 616.2319
+✔ structured native evidence binds all tasks, source, installer, inputs and original output bytes (7.1315ms)
+✔ installed structured workflow uses actual input and parses its literal browser expressions (42.0361ms)
+✔ save analysis cannot submit old source to a replacement path/root (164.2105ms)
+✔ save captures immutable source and keeps later input dirty without resetting editor (56.2732ms)
+✔ pending native save protects window until it settles after unmount (44.3808ms)
+✔ ordinary and Windows canonical UNC spellings wait for the same pending write (47.1316ms)
+✔ an unloaded replacement path cannot inherit the prior draft and signature (52.1392ms)
+✔ invalid-source confirmation cannot save newly entered content under an old decision (41.4ms)
+✔ reload confirmation belongs to captured file and source (31.3212ms)
+✔ late transformation and preview confirmation retain newer source (36.4182ms)
+✔ native failure keeps dirty source and clears pending save protection (39.9976ms)
+✔ JSON Pointer covers Unicode, escaped separators, quotes, empty keys and arrays (1.3022ms)
+✔ CRLF receipt matches the editor line model and does not leave a false dirty state (39.8361ms)
+✔ copy evidence rejects changed source, missing tasks, untrusted input and changed dependency bytes (19.245ms)
+✔ copy native driver uses actual input, parses browser expressions and retains predecessor reports (56.2854ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1229.9575
+✔ actual native fixture derives identical root-relative references from normal and canonical Windows paths (3.7393ms)
+✔ offline fault injection retries only real owned sharing refusals and never reports a failed setup as success (3.238ms)
+✔ actual source resolver ignores stale success and failure even after reselecting the same file (95.3142ms)
+✔ organizing intake requires every task, original preservation and exact raw output identities (29.3372ms)
+✔ all predecessor receipts and organizing bind to the same executable, driver and original bytes (101.1382ms)
+✔ actual native acceptance and independent output readers remain mandatory at all release gates (27.3514ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 847.9548
+✔ PPTX intake requires every actual task, producer, preservation and immutable file identity (37.2231ms)
+✔ all predecessor runtime reports plus PPTX bind to the same installer executable, driver and raw output files (181.2984ms)
+✔ native PPTX acceptance uses real trusted controls, original producers and independent readback at every release gate (70.3287ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 877.6339
+✔ DOCX receipt refuses partial checks, wrong identities, data loss, scripted input and overstated Office acceptance (33.9589ms)
+✔ DOCX raw output bytes cannot be substituted after validation (0.9793ms)
+✔ v1.1.17 retains every prior installed report and binds all nine DOCX outputs to the same package and driver (96.993ms)
+✔ native DOCX driver uses trusted input, real producer files and independent ZIP XML; all publication stages bind outputs (5.558ms)
+✔ literal WebView observations remain valid JavaScript after string decoding (45.2404ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1049.314
+✔ workbook evidence rejects partial checks, precision/type/reference loss, changed bytes and scripted input (11.9918ms)
+✔ v1.1.16 retains all predecessor reports and requires same package, executable, driver and original workbook bytes (111.2291ms)
+✔ driver uses real input/native disk and a hash-pinned owned producer without bridge or handler replacement (7.7407ms)
+✔ XLSX identifiers remain exact text while ordinary numbers stay numeric (1.4077ms)
+✔ XLSX integer sorting distinguishes long adjacent IDs, empty and zero (1.3208ms)
+✔ decimal fill is exact and refuses unreliable results before mutation (0.8207ms)
+✔ quoted multiline/tab/quotes/empty tails and scalar literal quotes roundtrip (1.9853ms)
+✔ native length, coordinate shape and batch budgets refuse whole clipboard (26.4675ms)
+✔ actual batch validates all targets and types before changing drafts or history (176.0003ms)
+✔ actual filtered copy refuses unloaded pages and changed conditions without a clipboard write (33.8254ms)
+✔ cut cannot clear a later edit while awaiting the clipboard receipt (4.0005ms)
+✔ editing controls retain ordinary keys while an explicit save stays available (11.9283ms)
+✔ trusted paste event data is forwarded without reading async clipboard permissions (5.1701ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1003.8592
+✔ copy budget is checked before assembling oversized retained cells (2.5618ms)
+✔ integer sort distinguishes adjacent long identifiers without floating-point rounding (2.4796ms)
+✔ clipboard quotes, embedded newlines, empty tails and exact text roundtrip (4.1161ms)
+✔ filtered targets are stable IDs and whole paste has one reversible patch (3.5372ms)
+✔ append is bounded, undo preserves later-added columns and stable original identities (0.7798ms)
+✔ out of view, columns, budgets and conflicting undo reject atomically (6.1313ms)
+✔ zero-length and identical cells never cause spurious edits; formula-looking values stay text (0.5664ms)
+✔ table evidence rejects partial/fake checks, changed hidden rows, flattened values, precision loss and scripted input (24.8793ms)
+✔ real table driver uses native clipboard and public input without mutating a handler or bridge (1.5182ms)
+✔ v1.1.15 requires all 176 predecessor checks and same-source same-executable same-driver table checks and bytes (96.9297ms)
+✔ actual importer retains exact table delivery bytes and refuses an acknowledged re-import (3236.8094ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3647.2544
+✔ writing evidence rejects missing checks, fake print, stale snapshots, data changes and scripted input (69.4235ms)
+✔ real installed driver never replaces bridge, calls a component handler or synthesizes DOM input (1.9679ms)
+✔ v1.1.14 requires all predecessor reports plus writing with the same source, executable and driver (461.6413ms)
+✔ the real review importer includes writing report, exact raw hashes and its summary in a disposable synthetic workspace (1233.1474ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2041.3646
+✔ scope picker accepts only boundary-matched configured library descendants (1.6852ms)
+✔ restore paths are explicitly named new folders; malformed names cannot enable restore (0.4813ms)
+✔ native path keys handle canonical Windows prefixes without prefix collisions (0.2697ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 212.0829
+✔ content backup schema rejects missing workflows, source changes, incomplete restores and false native input (18.9529ms)
+✔ new installed driver uses actual IPC, owned native selectors and independent disk hashes without altering drafts (1.1635ms)
+✔ inherited relation selection uses stable trusted input and retains native relationship assertions (1.4767ms)
+✔ native preflight and export reject libraries overlapping application data before reading content (1.1953ms)
+✔ current runtime requires the current report plus every inherited report, same installed EXE and driver (244.1743ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 487.663
+✔ current installed graph evidence binds 12 actual workflows, exact bytes, all sources and native user input (24.6669ms)
+✔ installed driver keeps the real bridge, trusted input, strict isolated root and byte comparisons (0.772ms)
+✔ governance loading repair has real-component early-click proof and preserves the native topic assertion (4.0227ms)
+✔ real router omitted visibility defaults to true without removing explicit hidden-response isolation (1.8206ms)
+✔ v1.1.11 manifest requires graph evidence and every inherited report with the same executable and driver (292.6566ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 628.5523
+✔ measured truncation fits width and never splits a Unicode surrogate pair (3.0266ms)
+✔ active name gets a longer first placement even if it occurs last in native order (6.6304ms)
+✔ dense labels remain in viewport, avoid each other and honor a strict render budget (81.2242ms)
+✔ alternate anchors allow two near nodes to retain labels without forced overlap (0.4773ms)
+✔ latest same-root request wins, including late failures and switch-away/switch-back (1.8192ms)
+✔ hidden, unmounted, rootless and invalidated work cannot commit (0.6519ms)
+✔ refresh copies latest dragged coordinates but updates metadata and rebinds selection (2.5882ms)
+✔ deleted IDs and reused identities cannot retain an old selection or coordinates (0.7159ms)
+✔ new nodes and non-finite old coordinates are not mistaken for settled restored nodes (0.389ms)
+✔ one topology preserves directed counts, duplicate relation degree and undirected unique neighbors (3.8135ms)
+✔ all 1200 adjacency queries match the original edge traversal exactly (144.4777ms)
+✔ empty and dangling topology does not fabricate nodes or lose an edge count (0.489ms)
+✔ linked native-shaped notes legitimately match a short name more than once; full path uniquely identifies the target (9.8354ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 745.1477
+✔ legacy one-marker invariant remains strict; current version requires both actual collections (19.5499ms)
+✔ current preparation rejects missing markers, foreign roots, changed conditions and unrelated additions (3.7726ms)
+✔ restore and reload preserve both complete metadata records, not merely an increased count (3.0411ms)
+✔ management uses the real main Tauri target even when external/quick-note pages appear first (0.458ms)
+✔ observed native command preserves successful native values and quoted arguments (2.4698ms)
+✔ observed native command retains raw string rejection, not generic CDP promise text (1.0483ms)
+✔ observed native command retains structured rejection code and original message (0.3884ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 256.0589
+✔ reload probe waits through absent app/Pinia/reader, without hiding real script exceptions (7.131ms)
+✔ secondary permission checks must wait for an actual callable bridge (2.8088ms)
+✔ installed scene verifier requires real picker/input, forty consumed positions, unchanged pre-save sources and exact draft identity (18.4179ms)
+✔ v119 inherits all exact-installer historical reports and refuses any missing generation or mismatched hash (235.074ms)
+✔ v119 orchestration keeps every old workflow, exact driver publication guard and disposable-only real native picker (25.5966ms)
+✔ historical file operations explicitly leave preserved search through native input, retaining real tree and disk assertions (0.7034ms)
+✔ v119 candidate and publication retain precise predecessor and independent updater observation (2.6258ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 576.4865
+✔ current installed evidence requires all 13 real scenarios, fixed bytes, dirty/external preservation and actual trusted input (23.8808ms)
+✔ current installer driver retains actual user input, all historical tasks and no synthetic native bridge (1.3077ms)
+✔ v1.1.10 requires current report plus every historical generation with the same installed bytes and driver (144.2446ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 361.2167
+✔ grouped palette targets the exact filename open button, never its row, substring or reference (5.8589ms)
+✔ legacy palette accepts exact stem or full filename while rejecting a near-duplicate title (3.6151ms)
+✔ new completed zero is distinct from preparation, failure and a local format-filter zero (5.1457ms)
+✔ legacy installed packages retain their original empty/error contract (2.2865ms)
+✔ installed scenarios count file cards, retain trusted keyboard retry and never use a broad empty union (1.4938ms)
+✔ real runtime audit refuses local and self-hosted machines before any fixture IO (4.0661ms)
+✔ fixture paths reject broad or arbitrary user roots (1.1355ms)
+✔ generated real files include late strong hit, same names, exact tags and owned PDF sidecar, never overwrite (11335.1058ms)
+✔ owned enumeration pressure is explicit, bounded and cannot silently replace the requested count (5921.4764ms)
+✔ workflow pins the product separately from its harness and cannot publish or install (34.7204ms)
+✔ native driver never substitutes IPC or simulates a desktop click (0.8121ms)
+✔ native driver waits for the actual page and rejects current runtime and route failure surfaces (9.1168ms)
+✔ debugger policy is app-scoped, refuses user machines and restores only its own unchanged values (0.9499ms)
+✔ in-memory registry provider preserves all six debugger entries and unrelated values (2119.5163ms)
+✔ new runner and workflow PowerShell parse without launching anything (6279.2539ms)
+✔ validator accepts the complete separated native evidence schema, not an installed assertion (4.2406ms)
+✔ unfinished or failed remote runs cannot be closed as passing evidence (8.7849ms)
+✔ source, harness, executable and evidence-level substitutions are rejected (2.0794ms)
+✔ missing tasks, duplicate groups and lost PDF annotation identity are rejected (2.4908ms)
+✔ fake cold completion, missing cache use and missing native window proof are rejected (9.6696ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 26101.3442
+✔ literal browser expressions compile independently, including quoted attribute selectors (56.7984ms)
+✔ CDP input waits for an unobscured target and never calls a DOM handler (65.2197ms)
+✔ Ctrl multi-select modifiers survive stable native pointer input and invalid flags send nothing (1.5098ms)
+✔ typing and Enter use real WebView input phases without setting DOM values (184.4453ms)
+✔ right-click and hover wait through disappearing moving rows and send finite coordinates only once (107.9671ms)
+✔ native user driver is hosted-only, real-bridge and actionability based (3.4136ms)
+✔ user validator keeps new program identity and input evidence separate from IPC-only proof (1.3585ms)
+✔ user validator rejects unfinished runs, fake input, missing tasks, locator and source drift (5.9692ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 989.8382
+✔ Office uses three immutable real-format files and exclusive owned copies, not simulated parse reports (125.7846ms)
+✔ Office target selectors parse the actual public search key and never substitute a document open (13.5681ms)
+✔ all literal and interpolated native user/browser expressions are syntactically valid (63.0937ms)
+✔ Office driver is hosted-only trusted input with genuine page/draft/byte and footer observations (4.4416ms)
+✔ Office evidence keeps the new product, four actual input tasks, three immutable sources and original draft together (1.3358ms)
+✔ Office evidence rejects missing native identity, trusted input, source bytes, visible footer and exact locations (13.5223ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 717.4637
+✔ v118 must retain every predecessor workflow and its own hash-bound installed report (202.8696ms)
+✔ installed v118 rejects reused Debug identity, source/installer drift and weakened user tasks (152.1561ms)
+✔ installed runtime identity refuses local, self-hosted, wrong version and missing provenance (2.8435ms)
+✔ all historical installed entry guards accept v118 without removing their tasks (27.5198ms)
+✔ v118 candidate/public handoff never inherits an official update observation (2.4215ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 689.6588
+✔ publication intake accepts the exact successful remote download and installer receipts (4.8798ms)
+✔ publication intake rejects unfinished runs, wrong tags, sources, installer bytes and missing assets (25.9189ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 215.6726
+✔ 8.3 spelling is resolved through the filesystem before making any search fixture path (4.6009ms)
+✔ unknown or different physical parents fail closed without a string fallback (4.5169ms)
+✔ a real owned directory alias resolves correctly and all original bytes remain unchanged (37.7043ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 237.7011
+✔ fresh snapshots reject affected drafts but allow unrelated unsaved work and path aliases (78.7ms)
+✔ content-only tag edits never retain affected drafts as movable and never remap file identity (53.8002ms)
+✔ specialized drafts participate by current path and dispose without keeping a stale block (44.0708ms)
+✔ a save in flight refuses execution while the originating move still counts for close protection (48.1779ms)
+✔ composition and keyboard actions cannot add an unobserved edit after the acknowledgement (55.8117ms)
+✔ refresh finishes before native release acknowledgement and the next batch item (46.3851ms)
+✔ lost release events use the native receipt to refresh once and restore interaction (52.4431ms)
+✔ path continuation retains filename case and excludes similarly named siblings (39.6728ms)
+✔ a cached Markdown draft follows a move when the native operation never rewrites its body (39.3575ms)
+✔ a dirty cached target from a deleted file is never mistaken for the moving draft (32.5638ms)
+✔ fresh reference drafts include unsaved-only incoming links and exclude another library (25.2399ms)
+✔ cached text drafts follow a move in the same editor while editor-type changes still require saving (22.4828ms)
+✔ fresh protection passes the source and target to the cached text-draft retention decision (31.666ms)
+✔ selecting a Windows spelling of an open dirty document reuses its tab and route (13.7623ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1548.2946
+✔ moved local images resolve parent segments, encoded names, suffixes and Windows device paths (8.2775ms)
+✔ local image display leaves the Markdown destination intact and releases rendered resources (76.724ms)
+✔ a late native image response never paints a different document (30.8177ms)
+✔ a failed replacement removes the old picture without changing the new source text (26.2798ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 908.6719
+✔ relative document links resolve against their moved note and keep the decoded heading (1.8199ms)
+✔ heading navigation handles generated IDs, Chinese, punctuation, duplicate headings and source mode (2.9146ms)
+✔ a real local-link click snapshots current unsaved content and reuses a target draft (38.0754ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 766.5813
+✔ link and image titles in document content remain serializable without UI decoration (2.0073ms)
+✔ normal application controls retain themed tooltips and accessible labels (0.2858ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 949.1203
+✔ current v115 metadata keeps new and unresolved predecessor update observations explicit (9.1142ms)
+✔ v115 installer workflow retains eleven explicit user-task checks and production authorization (2.9386ms)
+✔ v115 rejects missing or altered new installed evidence (24.7981ms)
+✔ v115 accepts complete correctly bound evidence without inheriting predecessor version (6.1313ms)
+✔ v115 retains predecessor workflow evidence requirements (7.1157ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 356.231
+✔ v116 requires its own complete installed move evidence in addition to retained workflows (23.8169ms)
+✔ v116 rejects a missing task, wrong installer or different product source (22.6095ms)
+✔ v116 still requires actual predecessor workflow reports (7.6269ms)
+✔ installed draft observation handles Windows device paths and emits valid page JavaScript (77.4002ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 891.2749
+✔ both UI history reads use shared coordination before resolving the document (1.4435ms)
+✔ history mutations and signature-checked recovery retain exclusive coordination (0.4893ms)
+✔ check-post-v117-m6-0-v1018-scope-selection.mjs retains historical facts and accepts only the real next target (3345.2708ms)
+✔ check-post-v117-m6-1-graph-fullscreen.mjs retains historical facts and accepts only the real next target (111.8019ms)
+✔ check-post-v117-m6-2-v1018-next-slice-selection.mjs retains historical facts and accepts only the real next target (71.7911ms)
+✔ check-post-v117-m6-3-v1018-release-readiness.mjs retains historical facts and accepts only the real next target (43.2321ms)
+✔ v117 requires its own complete installed save/history evidence in addition to retained workflows (13.5374ms)
+✔ v117 rejects a missing task, wrong installer or different product source (15.9941ms)
+✔ v117 still requires actual predecessor workflow reports (4.0549ms)
+✔ v117 final safety checks are mandatory and publishing requires the current check count (12.9839ms)
+✔ installed final check detects the current runtime and route error notices (7.9515ms)
+✔ installed v117 navigation supplies the real three-argument driver contract (40.2245ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3901.93
+✔ only an explicit busy precondition is awaited before a real ready rebuild (1.8464ms)
+✔ a genuine native rebuild error is never retried (0.8248ms)
+✔ a non-ready native result is a failure, not an invitation to retry (0.2828ms)
+✔ the existing wait budget is bounded and transport errors are not retried (1.7339ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 249.8989
+✔ native Windows canonical search paths belong to their configured drive or UNC library (1.1477ms)
+✔ canonical Windows membership still rejects adjacent roots, traversal and device paths (0.2535ms)
+✔ session capture excludes text, external files, traversal, duplicate and adjacent libraries (1.1134ms)
+✔ dirty tabs survive switching including a matching file with different casing (0.3403ms)
+✔ roundtrip isolates roots, preserves invalid records, and reports failed saves (1.3807ms)
+✔ actual store restores scoped tabs and safely filters legacy mixed-library state (16.8828ms)
+✔ rename/delete preserve files and reject stale management dialogs (0.6166ms)
+✔ named scenes whitelist search metadata and never copy result snippets into storage (0.5435ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 635.681
+✔ legacy local scenes beyond 128 tabs still continue completely; the migration envelope alone is limited (16.8411ms)
+✔ portable whitelist keeps order, view, pin and search depth without old paths, body, snippets, tools or secrets (4.0836ms)
+✔ relative paths reject Windows traversal, aliases, private metadata and device names (1.0162ms)
+✔ strict import rejects unknown fields, invalid schemas, duplicate paths and invalid ranges, never normalizing away hostile input (10.1733ms)
+✔ relocation preserves active file, pin and reference without silently merging two existing targets (2.4722ms)
+✔ preflight partitions real available files and missing reference without losing the original repairable record (4.4016ms)
+✔ canonical alias merging preserves the exact dirty model and the existing storage namespace (0.8964ms)
+✔ preflight rejects substituted reference identities and unexpected or incomplete checks (1.6637ms)
+✔ internal page identifiers may contain separators without being mistaken for an absolute disk path (2.1662ms)
+[Vue warn]: onBeforeUnmount is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+✔ reading position survives restart without draft or selection contents (288.3484ms)
+✔ search filters survive restart and remain scoped to their library (188.2911ms)
+✔ reference persists only identity and never stale excerpt text (87.1532ms)
+✔ real search remember persists a locator without serializing the result excerpt (139.8034ms)
+✔ staged reading metadata survives more than 24 files and restart without expanding the live draft cache (48.9707ms)
+✔ staging respects protected models, aliases and rollback; quota failure cannot replace the current view (18.9193ms)
+✔ same portable file in the same vault is idempotent without renaming or overwriting unrelated records (16.3152ms)
+✔ import failure retains corrupt records and storage quota failure retains every original byte (1.414ms)
+✔ repair is compare-and-swap metadata only, keeps origin identity and rejects stale dialogs (2.119ms)
+✔ restore keeps exact text and specialized dirty models active and skips their incoming view (0.7692ms)
+✔ suggested names are unique and bounded even with full-width emoji names (0.5358ms)
+✔ invalid names and conflicting record identities cannot poison the existing scene list (2.1866ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1663.4583
+✔ native session driver refuses a user or self-hosted machine (10.7085ms)
+✔ evidence requires every real native check, exact source/runtime and secondary-window denial (26.2055ms)
+✔ workflow and runner use fixed product and isolated hosted-only process lifecycle (4.8708ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 353.9946
+✔ actual hosted session reports bind 13 checks to exact source, driver, program and complete successful jobs (6.874ms)
+✔ missing or stale native evidence, mismatched programs and failed/pending jobs never count as success (116.7057ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 551.0424
+✔ an identical delayed Markdown notification cannot dirty a completed save (2.4669ms)
+✔ real subsequent edits stay dirty and duplicate notifications never clear drafts (3.3589ms)
+✔ the display newline produced by setValue does not become a new unsaved edit (1.4346ms)
+✔ external Markdown repeated saved-content notifications do not block storing the saved file (3.7982ms)
+✔ external Markdown genuine edits during a save remain dirty against its acknowledged baseline (1.3889ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 238.5328
+✔ library roots and drive prefixes are never expanded as if they were folders (3.0185ms)
+✔ only real in-library parent paths are retained, outermost first (0.6355ms)
+✔ UNC native spellings stop at the same configured root (0.3816ms)
+✔ outside, adjacent, traversal and unset-library paths add no expansion state (0.3755ms)
+✔ shared root comparison treats extended UNC paths as equivalent, not another library (13.4605ms)
+✔ ordinary nested routes expand real canonical keys and load each actual ancestor (0.5941ms)
+✔ missing directories and leaf rows never create synthetic expansion keys (0.2726ms)
+✔ stale or failed ancestor reads cannot publish expansion state (0.3247ms)
+✔ explicit directory reveal includes only real descendants, never the root (1.8622ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 964.2107
+✔ query grammar: "预算" (2.8363ms)
+✔ query grammar: " 项目  预算 -旧版 " (0.735ms)
+✔ query grammar: "\"项目 预算\" -\"旧版 文件\"" (0.3211ms)
+✔ query grammar: "Alpha alpha JSON" (0.2063ms)
+✔ query grammar: "项目预算　-旧版" (0.1928ms)
+✔ query grammar: "-旧版" (0.2869ms)
+✔ query grammar: "foo-bar -" (0.1254ms)
+✔ query grammar: "\"a\\\"b\"" (0.2428ms)
+✔ query grammar: "" (0.5315ms)
+✔ query grammar: "\"未完成" (0.8643ms)
+✔ query grammar: "\"\"" (0.3036ms)
+✔ highlight preserves Unicode and HTML as text, ignores exclusions and joins overlaps (1.6269ms)
+✔ query limits and editor needles do not include operators or excluded words (0.6046ms)
+✔ cross-library preflight captures pending input without writing and disposes snapshot hooks (109.2209ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 727.7882
+✔ diff preserves changed Unicode lines without treating text as HTML (1.7785ms)
+✔ large diff is bounded and reports shortened preview honestly (15.7978ms)
+✔ restore one paragraph keeps other edits, Unicode and mixed separators byte-exact (1.268ms)
+✔ partial insertion and deletion preserve EOF and final-newline behavior (0.8511ms)
+✔ repeated lines do not make a local restore replace other changes (1.4008ms)
+✔ bundle retains authored Unicode, variables and empty templates without machine identities (1.5378ms)
+✔ imports reserve builtins and local names, rename file duplicates, and honor selection/skip (2.2363ms)
+✔ long names remain valid after collision suffix; malformed/unsupported/oversized data is rejected (9.0912ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 687.2554
+✔ dry run validates without writes (4.6435ms)
+✔ apply changes all 44 identities while preserving public and historical fields (4.6895ms)
+✔ late-contract-drift fails before any write (3.3175ms)
+✔ unclosed-predecessor fails before any write (1.532ms)
+✔ wrong-baseline fails before any write (2.2485ms)
+✔ unknown-argument fails before any write (2.1452ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 207.4402
+✔ save directly to library by default, preserve chosen destinations and explicit inbox preference (1.9064ms)
+✔ the collection folder uses the same Windows library identity as file styles (0.7127ms)
+✔ Draft tags preserve native boundaries, unique labels and case (1.7344ms)
+✔ Typing a leading hash is accepted without introducing a second hash (0.7764ms)
+✔ Adding appends a separate line and keeps the existing note intact (0.6312ms)
+✔ Links find nested notes without depending on expanded tree nodes (3.8062ms)
+✔ Same-folder names win; ambiguous names remain selectable (0.6063ms)
+✔ Windows prefixes, separators and extension case share an identity (0.7419ms)
+✔ Only current-library Markdown files are offered, with POSIX case preserved (0.4766ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 729.9611
+✔ a WebView promise that never returns fails with its phase instead of hanging CI (33.5311ms)
+✔ completed work preserves its result (0.8094ms)
+✔ underlying failures are retained (0.7669ms)
+✔ retained infinite decoration does not make an unobscured Markdown heading unclickable (5.0509ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 314.9289
+✔ outline reads text without layout and preserves unchanged tree identity (47.2793ms)
+✔ rapid mutations coalesce and destroy cancels stale refresh work (26.6866ms)
+✔ replacing an outline observer disconnects the previous document (20.2746ms)
+✔ LibraryMode stops observation while the outline is hidden (3.9208ms)
+✔ TempMode stops observation while the outline is hidden (1.7239ms)
+✔ compiled shared Markdown styles preserve effects unless adaptive reduction is active (346.8606ms)
+✔ smooth frames keep normal effects even for a long-running document (15.2907ms)
+✔ startup and isolated stalls do not reduce effects (7.4837ms)
+✔ persistent slow frames reduce once, including severe one-FPS stalls (13.1351ms)
+✔ foreground resume discards background time and rewarms (6.7951ms)
+✔ adaptive lifecycle preserves normal motion, degrades, resets per document and cleans up (22.6146ms)
+✔ default media opener covers supported extensions, mixed case and external windows (40.8294ms)
+✔ file manager action uses the existing reveal permission and handles failures (0.6498ms)
+✔ a failed system open remains a recoverable media notice (3.7794ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1634.1751
+✔ same titles retain distinct directory identity (1.1787ms)
+✔ native Windows extended and UNC paths remain readable (0.3149ms)
+✔ sibling roots and case-sensitive Unix paths are not shortened incorrectly (0.3892ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 539.1594
+[Vue warn]: Property undefined was accessed during render but is not defined on instance. 
+  at <App>
+✔ literal highlight preserves content: 预算确认与预算修订 / 预算 (2.9087ms)
+✔ literal highlight preserves content: Needle needle NEEDLE /  needle  (0.4695ms)
+✔ literal highlight preserves content: a.b axb [x] / a.b (0.2027ms)
+✔ literal highlight preserves content: İ🙂预算 / 预算 (0.1603ms)
+✔ literal highlight preserves content: İstanbul / i (0.1672ms)
+✔ literal highlight preserves content: 🙂🙂 / 🙂 (0.313ms)
+✔ literal highlight preserves content: 正常文字 /  (0.2071ms)
+✔ literal highlight preserves content: 没有结果 / 预算 (0.1918ms)
+✔ actual highlight template escapes file content instead of rendering HTML (21.36ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 775.4648
+[Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+  at <App>
+[Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+  at <App>
+✔ same file pages group together without merging same-named files or losing ranking (2.0274ms)
+✔ separate annotations and match kinds on one page remain independently accessible (0.7149ms)
+✔ unlocated contexts and case-sensitive paths are preserved (0.642ms)
+✔ actual result click forwards each PDF page and annotation to the existing router (53.2905ms)
+✔ actual grouped results template exposes separate page actions and bounded-count wording (200.663ms)
+✔ restored fifth annotation expands the actual lazy position disclosure (67.2312ms)
+✔ body results carry a fresh location intent on repeated opens (9.7548ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1131.0363
+✔ switching results never displays late content from the previous file (49.3901ms)
+✔ failed preview can retry; closing discards pending responses (18.6253ms)
+✔ excerpt uses selected text and resets on a different source (17.5186ms)
+✔ clipboard failure keeps the selection for retry (15.0622ms)
+✔ explicit side reference docks immediately, survives searches and clears on library change (62.2247ms)
+✔ normal result opens use main document navigation and never replace the reference (7.8555ms)
+✔ main open and side reference remain distinct accessible actions (1.969ms)
+✔ arrow keys move between main-open actions without opening files or swallowing Enter (7.247ms)
+✔ explicit return hides the reference, retains its source and focuses a visible writable editor after rendering (7.7493ms)
+✔ direct excerpt insertion requires a live bookmark in the current writable Markdown note (11.4219ms)
+✔ manual reference refresh clears selection and ignores an older read (9.4026ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 777.4548
+✔ leaving and reopening restores query, filters, selected result and scroll after fresh results (11.0087ms)
+✔ paged return restores sort and depth, retaining a not-yet-loaded selection (2.9193ms)
+✔ named work-session restore retains bounded sort and page depth without old selection (0.9981ms)
+✔ missing result is explained; a failed refresh does not discard the saved selection (1.1623ms)
+✔ changing query or library clears selection and libraries never inherit one another (1.2501ms)
+✔ named restore resolves fresh result identity after an excerpt changes, while retaining scroll and depth (1.1713ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 842.8495
+✔ editor offsets: 🙂İ预算预算/预算 (1.9478ms)
+✔ editor offsets: İstanbul/i (0.1835ms)
+✔ editor offsets: a.b axb/a.b (0.1436ms)
+✔ editor offsets: A needle/ NEEDLE  (0.1148ms)
+✔ editor offsets: 预算/ (0.1012ms)
+✔ editor offsets: 已修改/预算 (0.1294ms)
+✔ text editor locates in current draft without replacing it; repeated intent only runs once (21.4778ms)
+✔ Markdown waits for the requested document and selects without changing editor mode or content (11.3856ms)
+✔ navigation keeps adjacent matches separate and uses literal Unicode offsets (0.5463ms)
+✔ DOM matching spans inline formatting but never joins separate paragraphs (1.0534ms)
+✔ long paragraph scroll uses match geometry rather than paragraph geometry (0.4678ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 636.0785
+✔ excerpt quotes every line and source round-trips special paths and PDF position (3.0669ms)
+✔ Windows reference keeps native path identity and library-bound source (1.272ms)
+✔ actual Markdown source click opens the library file with PDF position (39.2115ms)
+✔ text excerpts carry a bounded anchor, old links remain readable (0.623ms)
+✔ native canonical Windows and UNC source paths resolve within the library (0.4135ms)
+✔ source repair validates replacement, records undo and changes draft only (18.6357ms)
+✔ cancel, invalid path, readonly note and changed target never rewrite a source (68.2341ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 655.3665
+✔ minimize preserves temporary draft and never asks to discard (65.5962ms)
+✔ ask choice precedes discard; cancellation preserves the editor (11.6028ms)
+✔ repeated system close requests yield one confirmation and one exit (10.9011ms)
+✔ secondary windows close after confirmation without re-entering native CloseRequested (6.683ms)
+✔ failure to exit remains recoverable and permits retry (8.9667ms)
+✔ local editor drafts join the close guard and disappear on unmount (28.9405ms)
+✔ an Office or canvas draft prevents exit even when text tabs are clean (7.0844ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 602.7479
+✔ unavailable root is handled locally; retry restores the file tree (58.8026ms)
+✔ a late failure from the old library cannot replace the new library (15.3248ms)
+✔ explicit creation failure stays recoverable and does not escape to global errors (13.7433ms)
+✔ unavailable child folder is not cached as empty and expanding after recovery retries (4.5979ms)
+✔ late child directory results do not mutate the tree after switching or refreshing a library (6.1134ms)
+✔ directory preparation completes before a library is registered or persisted (6.9638ms)
+✔ creation or persistence failures preserve the input and do not register a phantom library (10.9588ms)
+✔ repeated clicks cannot create two copies while preparation is pending (4.9134ms)
+✔ global error notice leaves the workspace intact, renders errors as text, and can be dismissed (10.7656ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 451.8302
+✔ original frozen candidate reproduces null-state save error after navigation (137.1229ms)
+✔ save then immediately leave: original tab becomes saved without touching destroyed view (26.6149ms)
+✔ immediately reopening waits for native save and reconciled tab (12.0715ms)
+✔ switching to a different file cannot apply the old reply there (10.4505ms)
+✔ new edits after save remain dirty and retain the new disk signature (11.7257ms)
+✔ changed save policy must remain dirty even if text is unchanged (7.3563ms)
+✔ real save failure is still reported and dirty draft survives (8.7792ms)
+✔ load waits before draft restoration and unmount invalidates pending loads (0.3545ms)
+✔ window save guard spans queued write and survives destroyed editor until receipt (7.6716ms)
+✔ failed native write releases window save guard without discarding dirty draft (14.3385ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 570.6973
+✔ dry run validates without writes (2.9438ms)
+✔ apply changes all 44 identities while preserving public and historical fields (1.1489ms)
+✔ late-contract-drift fails before any write (1.0685ms)
+✔ unclosed-predecessor fails before any write (1.4728ms)
+✔ wrong-baseline fails before any write (2.0462ms)
+✔ unknown-argument fails before any write (0.7711ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 118.5513
+✔ verified bytes do not promote lifecycle or version identity gates (1.716ms)
+✔ reject wrong-candidate (0.3521ms)
+✔ reject rebuilt-previous (0.1456ms)
+✔ reject wrong-previous-hash (0.1124ms)
+✔ reject duplicate-target (0.1271ms)
+✔ reject path-traversal (0.1411ms)
+✔ reject wrong-version (0.1693ms)
+✔ reject missing-privacy (0.1232ms)
+✔ reject changed-bytes (0.3738ms)
+✔ reject wrong-size (0.2793ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116.8348
+✔ dry run validates without writes (2.8858ms)
+✔ apply changes all 44 identities while preserving public and historical fields (1.1314ms)
+✔ late-contract-drift fails before any write (1.1215ms)
+✔ unclosed-predecessor fails before any write (0.8411ms)
+✔ wrong-baseline fails before any write (1.881ms)
+✔ unknown-argument fails before any write (0.7189ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.1124
+✔ dry run validates without writes (2.8638ms)
+✔ apply changes all 44 identities while preserving public and historical fields (1.3896ms)
+✔ late-contract-drift fails before any write (1.2711ms)
+✔ unclosed-predecessor fails before any write (0.8722ms)
+✔ wrong-baseline fails before any write (1.4438ms)
+✔ unknown-argument fails before any write (0.6269ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121.0356
+✔ visible settings gate rejects transparent ancestors, motion, clipping and occlusion (1.7969ms)
+✔ visual follow-up reuses exact candidate and preserves failures without rebuilding (3.3084ms)
+✔ fixed product, official predecessor and disposable install boundaries (85.4448ms)
+✔ installed observations validate the actual three version surfaces (0.4317ms)
+✔ reject wrong installed observation: nativeVersion (1.1638ms)
+✔ reject wrong installed observation: badge (0.3349ms)
+✔ reject wrong installed observation: badgeLabel (3.7324ms)
+✔ reject wrong installed observation: settingsRoute (0.2639ms)
+✔ reject wrong installed observation: settings (0.3879ms)
+✔ reject wrong installed observation: checkedSettings (0.3714ms)
+✔ reject wrong installed observation: capabilities (0.2459ms)
+✔ PowerShell steps parse without installing locally (2662.3748ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2933.3191
+✔ verified bytes do not promote lifecycle or version identity gates (1.5633ms)
+✔ reject wrong-candidate (0.3267ms)
+✔ reject rebuilt-previous (0.1328ms)
+✔ reject wrong-previous-hash (0.1134ms)
+✔ reject duplicate-target (0.1366ms)
+✔ reject path-traversal (0.1473ms)
+✔ reject wrong-version (0.1569ms)
+✔ reject missing-privacy (0.117ms)
+✔ reject changed-bytes (0.1719ms)
+✔ reject wrong-size (0.4667ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116.6435
+✔ workflow uses fixed candidate identity, disposable Windows and no publication rights (82.7686ms)
+✔ upgrade baseline is the hash-checked official previous installer, never a rebuild (0.5771ms)
+✔ quality gate precedes build; installed search has exact independent evidence and publication stays closed (1.4965ms)
+✔ all embedded PowerShell steps parse without executing installers (2672.5161ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2918.2256
+✔ v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture (7.5964ms)
+✔ release uses real immutable installed reports, not invented debug counts (1.4002ms)
+✔ installed release rejects bytes (0.9999ms)
+✔ installed release rejects version (4.0669ms)
+✔ installed release rejects installer (2.8315ms)
+✔ installed release rejects source (1.4751ms)
+✔ installed release rejects failed-check (1.6582ms)
+✔ installed release rejects missing-save (1.8894ms)
+✔ installed release rejects crashed-route (1.6872ms)
+✔ v1.0.23 synthetic validator requires installed reports, not debug evidence (1.3384ms)
+✔ v1.0.23 rejects old-native-version (1.2769ms)
+✔ v1.0.23 rejects dev-marker (1.5615ms)
+✔ v1.0.23 rejects wrong-source (1.1857ms)
+✔ v1.0.23 rejects wrong-installer (1.0016ms)
+✔ v1.0.23 rejects failed-check (1.7332ms)
+✔ v1.0.23 rejects missing-version-report (2.5844ms)
+✔ v1.0.23 rejects changed-bytes (1.6166ms)
+✔ v1.0.23 rejects debug-status (1.0851ms)
+✔ v1.0.24 requires its own stability observations (1.4492ms)
+✔ v1.0.24 accepts retained animations when the adaptive observer reports normal motion (1.1474ms)
+✔ v1.0.24 rejects unconditional motion removal disguised as adaptive reduction (1.2268ms)
+✔ v1.0.24 rejects missing-stability (1.4495ms)
+✔ v1.0.24 rejects wrong-source (1.042ms)
+✔ v1.0.24 rejects legend-overlap (1.9472ms)
+✔ v1.0.24 rejects tutorial-overflow (1.5665ms)
+✔ v1.0.24 rejects tutorial-obscured (1.2059ms)
+✔ v1.0.24 rejects missing-viewport (1.8683ms)
+✔ v1.0.24 rejects missing-close (1.6522ms)
+✔ v1.0.24 rejects animated-markdown (1.138ms)
+✔ v1.0.24 rejects missing-markdown-input (1.0054ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 203.0628
+✔ opening release notes preserves current, failed and available update observations (96.2273ms)
+✔ slow release-page opening cannot overwrite a completed concurrent update check (12.9893ms)
+✔ release-page opening is blocked during installation and reports opener failure (11.9386ms)
+✔ late browser failure cannot dismiss an available update or interrupt installation state (52.5325ms)
+✔ retrying browser opening clears only browser error and both user surfaces expose it (10.0519ms)
+✔ installed version never becomes the future development target (0.3891ms)
+✔ development mode identifies the actual runtime separately from the planned version (0.1979ms)
+✔ runtime wins over build fallback, including a genuine 1.0.0 runtime (0.1959ms)
+✔ available update is not represented as already installed (0.2115ms)
+✔ failed or pending checks do not advertise stale latest data (0.2499ms)
+✔ only successful update observation presents a verified remote version (0.1387ms)
+✔ all identity surfaces consume the common reactive runtime source (2.1873ms)
+✔ actual shared computed identity updates when initialization and network results arrive (4.1172ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 607.1961
+✔ fixture refuses production mode and the real user application (71.2088ms)
+✔ fixture cannot install under any scenario, including invalid config (37.3783ms)
+✔ only external results are injected; available update retains actual runtime version (5.7991ms)
+✔ offline and opener failures remain errors rather than empty successes (7.5845ms)
+✔ invalid or missing scenario fails closed (16.6931ms)
+✔ current and opener retry success are explicitly controllable (6.7979ms)
+✔ unrelated native calls retain their arguments and use the actual backend (5.7834ms)
+✔ normal product configuration never imports the opt-in fixture (1.0701ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 501.4327
+✔ verified bytes do not promote lifecycle or search gates (1.6108ms)
+✔ reject wrong-candidate (0.3476ms)
+✔ reject rebuilt-previous (0.1344ms)
+✔ reject wrong-previous-hash (0.1237ms)
+✔ reject duplicate-target (0.1253ms)
+✔ reject path-traversal (0.1422ms)
+✔ reject wrong-version (0.1639ms)
+✔ reject missing-privacy (0.1139ms)
+✔ reject changed-bytes (0.1727ms)
+✔ reject wrong-size (0.2212ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 122.5248
+✔ file pages append only the issued same-snapshot end and preserve locator payloads (3.5122ms)
+✔ a failed next page retains loaded files and retries exactly the same cursor (2.39ms)
+✔ expired re-search preserves old files while waiting and preserves conditions (0.627ms)
+✔ expired restart retains all loaded cards across preparation and resumes the saved depth (696.3289ms)
+✔ a failed replacement keeps the old cards and offers a fresh search, not stale paging (0.6576ms)
+✔ explicit cross-library refresh marks retained cards before IPC returns and retires old paging (0.4853ms)
+✔ partial replacement with no usable files is not a successful empty search (0.3388ms)
+✔ only a confirmed complete empty replacement removes the retained cards (0.2525ms)
+✔ an inconsistent completion flag cannot turn a failed or partial replacement into empty success (0.4887ms)
+✔ changing the query retires a pending replacement and cannot resurrect the old cards (0.4619ms)
+✔ a newly ranked view waits for explicit refresh and never appends into the old list (0.3743ms)
+✔ same-view progress cannot rewind the already-loaded page cursor (0.3588ms)
+✔ late query reply cannot replace new results or close the newer native session (0.2443ms)
+✔ clear retires a late initial session (0.1898ms)
+✔ unmount retires a late initial session (0.1071ms)
+✔ preparation is bounded and resumable, never reported as a completed empty result (0.197ms)
+✔ automatic preparation stops when a usable first page is ready (2.9803ms)
+✔ restoring previously loaded depth reads only the necessary pages (0.2713ms)
+✔ invalid phrase never invokes IPC, unknown native error never exposes raw paths (0.4325ms)
+✔ explicit tag mode uses the page protocol and keeps exact tag case (0.1665ms)
+✔ duplicate or cross-snapshot next pages fail without touching the old list (0.4847ms)
+✔ a malformed protocol response cannot become successful no-results (0.1949ms)
+✔ a malformed reply retires its allocated native session and invalid input retry stays local (0.3099ms)
+✔ all failures, partial success with zero files and complete zero remain distinct (0.2663ms)
+✔ failure and retry preserve query: 项目 (7.3876ms)
+✔ failure and retry preserve query: #项目 (3.5703ms)
+✔ successful empty response is not failure (3.7467ms)
+✔ stale resolve cannot overwrite newer results (3.3093ms)
+✔ stale reject cannot overwrite newer results (3.6571ms)
+✔ clear invalidates pending response and clears busy state (5.8693ms)
+✔ library change rejects old response (3.5119ms)
+✔ new query immediately removes old result; missing library does not spin (2.6518ms)
+✔ component keeps errors distinct and offers accessible retry (0.6422ms)
+✔ real Vue watchers debounce changes and retry retains format filter (4.7196ms)
+✔ real library watcher clears query, collection and busy state before late response (3.5869ms)
+✔ real Vue clear cancels debounce without invoking backend (2.5364ms)
+✔ real Vue unmount cancels scheduled search (6.8704ms)
+✔ real Vue unmount invalidates a late response (5.8361ms)
+✔ empty-keyword collections call their real scoped command and page beyond 200 files without losing file-group locators (4.2407ms)
+✔ refresh failure retains file cards but retires old cursors; a complete empty refresh alone clears them (0.6628ms)
+✔ a new collection cannot absorb a late old response or sort another query locally (1.3639ms)
+✔ 600-note catalog advances by issued cursors, never treats partial counts as totals and closes its own channel (3.1828ms)
+✔ failed or incomplete refresh keeps prior tags explicitly stale, only complete empty statistics clears them (0.6399ms)
+✔ same-cursor retry cannot duplicate counts and stale library responses cannot replace the active library (0.6114ms)
+✔ unknown or contradictory totals and malformed rows are not accepted as complete (0.5564ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 942.2185
+✔ file card has one full-width column; relation badge follows its title and locations (0.92ms)
+✔ title and metadata stack; long titles wrap and snippets remain bounded (0.1452ms)
+✔ full title and separate file/graph actions remain available (0.2074ms)
+✔ actual file card stacks narrow actions and retains all lazy internal positions (0.158ms)
+✔ actual status identifies old cards immediately, without presenting an old total as fresh results (6.6452ms)
+✔ actual status retains a paused or failed replacement label and returns to normal after acceptance (1.3588ms)
+✔ a loaded page failure exposes recovery in the actual footer instead of a disabled dead end (1.2932ms)
+✔ footer keeps precise restart/refresh semantics and normal paging returns after recovery (1.7248ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 576.0146
+✔ route query preserves the question mark in Windows extended-length paths (0.9148ms)
+✔ scenario targets accessible names retained by the actual tooltip adoption policy (42.3083ms)
+✔ installed search reuses verified artifact and cannot publish (0.6418ms)
+✔ search scenario refuses arbitrary user library before performing any IO (0.7858ms)
+✔ Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor (1.6517ms)
+✔ workflow PowerShell parses without installing (1084.8399ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1490.2771
+✔ installed runner rejects the original visible save error even when disk content exists (2.4105ms)
+✔ installed runner rejects dirty, missing and contradictory save identities (3.0929ms)
+✔ installed runner accepts synchronized identity only without visible save failure (1.1646ms)
+✔ installed runner preserves the screenshot before feedback rejection and records pass afterward (0.2745ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 119.4691
+✔ graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success (2.2234ms)
+✔ published v1.0.24 requires its exact tag and keeps the new updater pending (0.3129ms)
+✔ hosted-execution-pending: community=pending, receipt=pending (0.1748ms)
+✔ hosted-execution-pending: community=pending, receipt=passed (0.2684ms)
+✔ hosted-execution-pending: community=passed, receipt=pending (0.1477ms)
+✔ hosted-execution-pending: community=passed, receipt=passed (0.1475ms)
+✔ hosted-managed-update-passed: community=pending, receipt=pending (0.1296ms)
+✔ hosted-managed-update-passed: community=pending, receipt=passed (0.0933ms)
+✔ hosted-managed-update-passed: community=passed, receipt=pending (0.1167ms)
+✔ hosted-managed-update-passed: community=passed, receipt=passed (0.1801ms)
+✔ unknown status fails closed (0.1635ms)
+✔ v1.0.23 candidate does not inherit historical updater acceptance (0.2291ms)
+✔ published successor boundary requires its own real release identity (0.2911ms)
+✔ v1.1.18 keeps its exact predecessor and a separate update observation in candidate and public states (0.471ms)
+✔ successor keeps the historical receipt and a separate pending update path (0.1339ms)
+✔ successor rejects pending-predecessor (0.1433ms)
+✔ successor rejects stale-successor-path (0.0831ms)
+✔ successor rejects wrong-previous (0.0604ms)
+✔ successor rejects wrong-tag (0.0859ms)
+✔ successor rejects unknown-version (0.0596ms)
+✔ successor rejects changed-receipt (0.0536ms)
+✔ version boundary admits only current and planned successor runtime (0.1979ms)
+✔ v1.1.19 keeps its exact predecessor and a separate update observation in candidate and public states (0.3179ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 123.769
+✔ minor-version policy names never borrow 1.0.x update evidence (2.2242ms)
+✔ installed candidate remains pending without an official observation (0.3184ms)
+✔ publication alone can remain pending (0.1463ms)
+✔ only a separately successful published update can pass (0.1606ms)
+✔ reject false update success: unpublished (0.1738ms)
+✔ reject false update success: missing-evidence (0.1336ms)
+✔ reject false update success: wrong-version (0.1024ms)
+✔ reject false update success: wrong-previous (0.0898ms)
+✔ reject false update success: failed-run (0.1053ms)
+✔ reject false update success: missing-run (0.1531ms)
+✔ reject false update success: pending-evidence (0.1182ms)
+✔ reject false update success: stale-path (0.1135ms)
+✔ production checker uses independent observation and pending candidate state (0.632ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.8765
+✔ import: accepted (333.3672ms)
+✔ import: missing-review (148.3756ms)
+✔ import: wrong-hash (151.3681ms)
+✔ import: failed-lifecycle (166.6345ms)
+✔ import: wrong-version (184.2443ms)
+✔ import: missing-privacy (178.4771ms)
+✔ import: malformed-json (172.3936ms)
+✔ import: unexpected-file (150.9069ms)
+✔ import: invalid-run (143.5237ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1747.6507
+Post-v1.0.20 graph interaction polish passed: ordinary zoom floors are 0.580/0.645, large overview remains bounded, details are card-sized, and themed popup controls replace native selects.
+M3B-4 curved relation routes accepted: deterministic parallel/reciprocal separation, tangent arrows, selected-path labels and shared SVG routing, with three-theme real Tauri evidence.
+M3B-5 path motion accepted: selected traversal flow, independent fact arrows, static labels, reduced-motion shutdown and inactive lifecycle cleanup, with three-theme calm/reduced real Tauri evidence.
+M3B-7 camera navigation accepted: fit-selection, bounded cancellable focus, reduced-motion immediacy and narrow command reachability with real calm/reduced Tauri evidence.
+M3B-9 semantic minimap accepted: bounded sampling, label-free semantic overview, viewport frame, click/drag/keyboard navigation and responsive overlay safety with four real Tauri sessions.
+M3B-11 restrained node status rings accepted: fixed recency boundaries, visible-graph strength normalization, uniform-graph safety, priority suppression and no governance scan with 4 real Tauri sessions.
+✔ PDF notes page range works for one page, disjoint ranges and rejects invalid/outside ranges (1.7825ms)
+✔ PDF reading note retains quote and optional comment, escapes Markdown and only includes snapshot items (0.5112ms)
+✔ Draft insertion never writes and appends to latest content while keeping save identity (2.9445ms)
+✔ PDF reference validates digest, keeps legacy compatibility and rejects traversal (0.5886ms)
+✔ Same-named draft targets show their actual folder including Windows extended aliases (0.3101ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 390.3966
+✔ PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts (11.1181ms)
+✔ PDF workflow uses real input, owned native chooser and independent disk checks (1.1076ms)
+✔ a tab label or blank/wrong canvas cannot stand in for an actual source page (1.7936ms)
+✔ v1.1.13 requires its PDF report and every predecessor, with the same executable and driver (140.0483ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 291.8127
+Current development audit passed: v1.1.24 is public and v1.1.25 is the next bounded development target.
+EA-4D2 external Mermaid workspace passed: strict preview, bounded source, guarded explicit save, export isolation and unchanged Windows associations are aligned.
+EA-4D3 external OPML workspace passed: bounded XML semantics, professional canvas editing, guarded explicit save and unchanged Windows associations are aligned.
+EA-5A default-app candidate workflow passed: 37 format profiles are user-triggered, Windows-confirmed, independently windowed, and installer-safe.
+EA-5B1 uninstall recovery passed: 37 candidate formats and 85 extensions clean only LongEdit-owned HKCU registrations.
+EA-5B2A installed lifecycle harness passed: user-triggered candidates, independent Unicode launch windows, Windows ownership, uninstall recovery, and disposable evidence export are locked.
+EA-5C closure passed: 43 formats, 29 edit, 8 preview, 6 import, 37 user-selected default-app profiles, 41 completed UX requirements, and verified installed evidence.
+P1-A3B image editor controls passed: precise crop, JPEG quality and mandatory privacy cleanup stay inside the library-only right workspace.
+P1-A3B desktop audit passed: crop-aware sizing, JPEG quality, privacy cleanup, reliable reopen and responsive right-workspace layout are accepted.
+P1-B1 PDF safety audit passed: copy/sidecar capabilities are reconciled while mandatory blockers and the B2A-B5 sequence remain frozen.
+P1-B2A1 PDF form inspector passed: canonical fields and page widgets are read-only inspected with bounded ambiguity and active-content diagnostics.
+P1-B2A2 PDF form panel passed: historical read-only evidence remains accepted while the original workspace has progressed to bounded reliable copies.
+P1-B2B0 PDF registry reconciliation passed: library-only copy boundaries remain intact and the public form state is advanced-but-bounded.
+P1-B2B1 PDF text form copy passed: digest-locked isolated preview, new-target save, canonical value and non-empty widget appearance verification are present.
+P1-B2B2 PDF form workspace passed: original right workspace, preview-before-save, reliable new copy and wide/narrow desktop evidence are accepted.
+P1-B2B3 PDF Unicode form copy passed: licensed subset font, UTF-16 field value, live desktop workflow, reopen and rendered glyph evidence are accepted.
+P1-B2B4 PDF checkbox copy passed: bounded export state, canonical field value, widget appearance state, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B2B5 PDF radio copy passed: unique widget exports, mutually exclusive appearance states, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B2B6 PDF Choice copy passed: bounded export/display options, canonical value/index, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B3A PDF permanent redaction safety audit passed: overlay and heuristic removal are rejected, fresh full-document raster reconstruction is frozen, and no writer is prematurely exposed.
+P1-B3B PDF permanent redaction backend passed: bounded opaque PNG input, burned-pixel verification, fresh image-only PDF construction, no-overwrite save, reopen checks and no premature UI are aligned.
+P1-B3C PDF permanent redaction workspace passed: original right workspace selection, full-page opaque PDF.js rasterization, bounded Base64 IPC, digest-locked reliable save and explicit image-only tradeoff are aligned.
+P1-B3D PDF permanent redaction evidence passed: real Tauri workflow, source preservation, saved reopen, empty text structure and independent opaque Poppler render are accepted.
+P1-B4A PDF watermark safety audit passed: visible-attribution semantics, isolated vector overlay, embedded Unicode subset font, resource/page geometry preservation and no premature writer are frozen.
+P1-B4B PDF watermark backend passed: bounded embedded Unicode vector overlays, private resources, digest-locked new-copy save, preservation inventory and reopen verification are aligned without premature UI.
+P1-B4C PDF watermark workspace passed: original PdfView integration, bounded controls, digest-invalidating preview, explicit tradeoff, reliable save/open and draft protection are aligned.
+P1-B4D PDF watermark evidence passed: real Tauri workflow, source preservation, saved reopen, Unicode extraction, structure preservation and unclipped Poppler renders are accepted.
+P1-B5A PDF metadata safety audit passed: four descriptive fields, Info/XMP consistency blockers, full-rewrite copy semantics and explicit non-anonymization boundaries are frozen without a premature writer.
+P1-B5B PDF metadata backend passed: Unicode allowlisted Info edits, true deletion, preserved keys, reachable-object equivalence, digest-locked new-copy save and fail-closed blockers are implemented without premature UI.
+P1-B5C PDF metadata workspace passed: the original right workspace exposes four bounded fields, explicit non-anonymization scope, draft protection, preview-locked reliable save and aligned responsive styling; desktop evidence remains pending.
+P1-B5D PDF metadata evidence passed: original-workspace editing, draft protection, reliable copy, source preservation, metadata semantics and pixel-identical renders are accepted.
+P1 final capability closure passed: 43 formats/91 extensions are tiered truthfully; bounded daily management and basic editing remain ready for the v1.1.25 unsigned patch release flow.
+P2-A PDF capability alignment passed: implemented copy workflows and bounded limitations are public and source overwrite remains forbidden.
+P2-B image color adjustment contract passed: UI preview, bounded backend pixels, saved report and reset path are connected.
+P2-B real evidence passed: desktop wide/narrow UI, source preservation, target reopen and independent grayscale pixels match expectations.
+P2-C image navigation contract passed: cursor-anchored wheel zoom, pointer-captured pan, double-click toggle and keyboard fallback are connected.
+P2-C real evidence passed: cursor anchor, wheel scale, two-axis drag pan, double-click toggle and responsive layout match expectations.
+✔ v117 requires its own complete installed save/history evidence in addition to retained workflows (9.5917ms)
+✔ v117 rejects a missing task, wrong installer or different product source (11.241ms)
+✔ v117 still requires actual predecessor workflow reports (3.6635ms)
+✔ v117 final safety checks are mandatory and publishing requires the current check count (6.8189ms)
+✔ installed final check detects the current runtime and route error notices (8.0941ms)
+✔ installed v117 navigation supplies the real three-argument driver contract (25.8791ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 407.7956
+✔ both UI history reads use shared coordination before resolving the document (0.9196ms)
+✔ history mutations and signature-checked recovery retain exclusive coordination (0.2114ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112.7917
+UX-34 Drawio/Canvas stability passed: recoverable layout notifications stay non-blocking while unrelated errors remain visible across six Tauri WebView route cycles.
+UX-35 file-tree preview passed: mouse and keyboard share one accessible detail tooltip, native titles are absent, and Escape dismisses cleanly in Tauri WebView2.
+UX-36 file-tree actions passed: historical 18-format evidence remains immutable while the current registry exposes 28 grouped formats; rename safety stays aligned.
+UX-37A OPML canvas contract passed: four layouts, three themes, pan/zoom, box and multi-selection, free dragging, keyboard movement, direct rename, undo/redo, and explicit-save-only behavior are present.
+UX-37B knowledge graph canvas contract passed: five layouts, three themes, pan/zoom, box and multi-selection, grouped drag, keyboard movement, undo/redo, fit-to-window, local layout persistence, and source-read-only behavior are present.
+UX-38 format experience matrix passed: 41 formats and 12 dimensions are accepted with explicit capability boundaries.
+UX-38B workspace tabs contract passed: product behavior and accepted Tauri evidence cover readable tabs, hidden native tracks, wheel/touchpad scrolling, edge controls, active reveal, narrow layout, and keyboard navigation.
+UX-38C table grid contract passed: current product behavior and accepted historical Tauri evidence cover variable frozen columns, opaque layers, safe row selection, disclosed conversion, automatic target opening, and narrow layout.
+Workbook workspace contract passed: progressive tools, compact formula controls, responsive reachability, and opaque frozen grid surfaces.
+UX-38C2 workbook/ODS context contract passed with accepted real desktop evidence.
+UX-38D1 PDF workspace contract passed with accepted real Tauri context, narrow-layout, runtime, and source-integrity evidence.
+UX-38D2 document workspace contract passed: DOCX is accepted with bounded explicit save and restored context; ODT remains an accepted direct preview behind its 2/3 registration gate.
+UX-38D3 presentation workspace contract passed: historical evidence remains immutable while PPTX and later library-only ODP capability progression stay aligned.
+UX-38E Canvas explicit-save contract passed: edits stay in memory until Save or Ctrl+S, and unsaved navigation is guarded.
+UX-38E diagram history contract passed: Draw.io and Mermaid expose guarded, explicit-save document history with container-responsive layouts.
+UX-38E graphics workspace contract passed: four graphics formats use explicit saves, document history, restored context, and stable narrow layouts.
+UX-38F external Office workspace passed: six formats expose direct, guarded desktop-app handoff with explicit unavailable states and restored user choices.
+UX-38 final closure passed: 41 formats, 10 bounded profiles, 75 accepted dimensions, and no pending entries.
+UX-39 packaging preflight passed: v1.1.25 builds unsigned MSI/NSIS artifacts and suppresses known Windows helper consoles.
+Route loading fallback passed: no blocking overlay exists and route failures remain recoverable.
+Navigation liveness passed: shell, IPC, route recovery, stale-load protection, and 12-format Tauri switching are aligned.
+External workspace passed: 29 editable profiles include structured-source, LOG, Canvas, Table, Draw.io, Mermaid and OPML dedicated routes with explicit authorization, specialized save gates, and unchanged Windows associations.
+EA-3A external media preview contract passed: images keep library-only copy editing, while both external media routes remain preview-only with zero external writers or installer associations.
+EA-3B external PDF preview passed: authorized range reading, library-only sidecars and page operations, zero PDF association takeover.
+EA-3C external ODF preview passed: external ODS/ODP remain read-only while library-only bounded editors preserve source and add no file associations.
+EA-3D external ODT gate passed: source preservation is hardened and WPS 2/3 keeps ODT unregistered, unassociated, and unavailable externally.
+EA-3E external DOCX preview passed: external reads expose no edit targets or save UI, and library editing remains intact.
+EA-3F external PPTX preview passed: external reading has no edit or save UI, while library bounded source-save and copy fallback remain intact.
+EA-3G external XLSX preview passed: authorized source-preserving pagination is isolated from library editing, calculation, conversion, pivot rebuild and save commands.
+EA-4A external LOG workspace passed: bounded viewer, explicit guarded save, authorization and source-conflict protection are aligned.
+EA-4B external Canvas workspace passed: validated explicit saves, source signatures, reference isolation and unchanged Windows associations are aligned.
+EA-4C external Table workspace passed: native formats, explicit overwrite, source identity and unchanged Windows associations are aligned.
+EA-4D1 external Draw.io workspace passed: bounded local projection, guarded explicit save, resource isolation and unchanged Windows associations are aligned.
+Markdown WYSIWYG default, legacy migration, explicit preference, and backup contract passed.
+Six CodeMirror workspaces share one rich semantic theme; 9 palettes meet syntax, gutter, and cursor contrast contracts.
+Select control contract passed: 93 native selects across 30 files and Naive popup menus share themed interaction states.
+Horizontal wheel navigation passed: global delegation covers 70 files, compact control strips hide native tracks, and accepted browser evidence moves 155px in both directions.
+v1.0.15 context-menu policy passed: ordinary desktop surfaces suppress WebView menus while editable controls and explicit opt-ins retain native text actions.
+v1.0.15 app-dialog policy passed: native confirm, alert, and prompt counts are all 0; application dialogs own confirmations and parameter input.
+Canvas pointer interaction passed: knowledge graph, OPML mind map, and JSON Canvas use cursor-anchored wheel zoom with node and background context actions.
+Table board experience passed: real 13-field data creates 11 readable cards across desktop and narrow layouts without mutation or runtime errors.
+Media workspace contract passed: 8 image and 9 video extensions use guarded, range-streamed previews with bounded decoding.
+P1-A2 image editor contract passed: the right-side workspace exposes bounded library-only copy editing over the verified PNG/JPEG/WebP/BMP transform engine.
+P1-A2 desktop audit passed: the image editor remains inside the right workspace, is responsive, saves a verified WebP copy, reopens it, and preserves the source.
+Sidebar tabs passed: seven icons keep one navigation row, accessible names, purpose explanations and reduced motion.
+File tree appearance passed: 43 registered formats retain extensions, use mapped visuals, and support bounded local markers.
+UI-4C release facts passed: v1.1.25 is being prepared and enterprise RC remains separate.
+UX-39A historical unsigned package passed: v1.0.4 MSI/NSIS hashes remain bound to 2b5d4d7.
+M2A1 accepted: a real Markdown task can be confirmed, written with signature protection, and byte-restored from the workspace.
+M2A2 accepted: real M0 workspace actions render before secondary analysis, issues appear once, graph details remain available, and source bytes stay unchanged.
+M2A3 accepted: continue-work entries are globally deduplicated, task filters use real metadata, completion/restore persists byte-exactly, and the workspace is responsive.
+M2 closure accepted: real quick create/open, line-level task location, explicit states and 1011-file workspace ready in 801ms.
+Explicit-save alignment accepted: the real pre-fix source write is reproduced, current drafts remain byte-unchanged, and only Save persists content.
+M1B2A DOCX object selection evidence verified: 6 real fixtures, paragraph style assignment selected, writeback remains closed.
+M1B2B DOCX paragraph style evidence verified: three producers, draft history, isolated preview, explicit save, reopen and responsive UI.
+M1B2C DOCX closure evidence verified: 3 native producers, 9 independent roundtrips, 9 LongEdit reverse reads, source hashes unchanged.
+M1C-A ODF feasibility verified: real ODS/ODP, valid formula, exact part baseline, LibreOffice reopen, WPS blocker recorded.
+M1C-B ODS bounded cell edit verified: real desktop draft, undo/redo, reliable copy, source preservation and LibreOffice reopen.
+M4F-2 accepted: candidate 757d54309ddb35f445344d909fa4c7ba2567bc58 passed the full quality gate, R5F 11/11 and R5G 6/6 + 11/11; later release stages remain consistent.
+M4F-3 closure accepted: run 33322246630 built both unsigned installers and passed R5I 22/22, R5J 18/18 + 11/11 routes, and R5L 7/7; later release stages remain consistent.
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+
+> tauri-app@1.1.25 check:ux33j-installed-docx-harness
+> node scripts/check-ux33j-installed-docx-harness.mjs
+
+UX-33J installed DOCX harness passed: dynamic 1.0.x build binding and three-producer installed WebView smoke are ready.
+   Compiling tauri-app v1.1.25 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 16s
+
+> tauri-app@1.1.25 audit:prod
+> npm audit --omit=dev --registry=https://registry.npmjs.org
+
+found 0 vulnerabilities

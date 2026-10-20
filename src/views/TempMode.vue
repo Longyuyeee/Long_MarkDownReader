@@ -20,6 +20,7 @@
             <template #icon><n-icon :component="BookPlusIcon" /></template>
             存入知识库
           </n-button>
+          <n-dropdown trigger="click" :options="[{label:'查找替换… · Ctrl+H',key:'find'}]" @select="externalFind?.open()"><n-button secondary circle @mousedown="externalFindAdapter.rememberSelection" title="文档操作"><n-icon :component="MoreIcon" /></n-button></n-dropdown>
           <n-button secondary type="success" :loading="externalSaving" :disabled="externalSaving" @click="saveFile">保存</n-button>
         </n-button-group>
       </div>
@@ -55,6 +56,7 @@
       </div>
     </div>
 
+    <DocumentFindReplace ref="externalFind" :context-key="filePath+':'+store.editorMode" :revision="externalFindRevision" v-bind="externalFindAdapter" />
     <TextConflictDialog v-if="conflict" :path="conflict.path" :draft="conflict.draft" format-id="markdown" :is-current="conflict.current" @close="conflict = null" @reload="useConflictDisk" @copy="path => { conflict = null; message.success('副本已保存：' + path.split(/[\\/]/).pop()) }" />
     <!-- AI 操作选择弹窗 -->
     <n-modal v-model:show="aiState.showActionModal" preset="dialog" title="AI 辅助" positive-text="" negative-text="取消" @negative-click="aiState.showActionModal = false">
@@ -86,8 +88,8 @@ import { onMounted, ref, computed, onUnmounted, watch, nextTick, reactive } from
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '../services/tauriRuntime'
-import { useDialog, useMessage, NIcon } from 'naive-ui'
-import { ArrowLeft as ArrowLeftIcon, BookPlus as BookPlusIcon, List as ListIcon, PanelLeftClose as PanelLeftCloseIcon, PanelLeftOpen as PanelLeftOpenIcon } from 'lucide-vue-next'
+import { useDialog, useMessage, NIcon, NDropdown } from 'naive-ui'
+import { MoreHorizontal as MoreIcon, ArrowLeft as ArrowLeftIcon, BookPlus as BookPlusIcon, List as ListIcon, PanelLeftClose as PanelLeftCloseIcon, PanelLeftOpen as PanelLeftOpenIcon } from 'lucide-vue-next'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 import { useAppStore } from '../store/app'
@@ -99,8 +101,10 @@ import { useOutline } from '../composables/useOutline'
 import { useImageFix } from '../composables/useImageFix'
 import { useVditorTheme } from '../composables/useVditorTheme'
 import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMotion'
-import { beginWindowSave } from '../services/windowDrafts'
+import { beginWindowSave, recordWindowDraftActivity } from '../services/windowDrafts'
 import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
+import DocumentFindReplace from '../components/DocumentFindReplace.vue'
+import {createVditorFindAdapter} from '../composables/createVditorFindAdapter'
 import { confirmAppAction } from '../services/appDialog'
 
 const route = useRoute()
@@ -143,6 +147,11 @@ const sidebarWidth = ref(240)
 const showOutline = ref(false)
 let vditor: Vditor | null = null
 
+const externalFind=ref<InstanceType<typeof DocumentFindReplace>|null>(null),externalFindRevision=ref('')
+const externalFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:filePath.value,path:filePath.value,generation:externalLoadGeneration,revision:externalFindRevision.value,signature:externalSignature,
+ ready:Boolean(vditor?.vditor?.[vditor.getCurrentMode()]?.element&&loadedExternalPath===filePath.value&&externalSignature&&!externalSaving.value&&!conflict.value),readOnlyReason:''
+}),content=>{recordWindowDraftActivity();externalFindRevision.value=content;isDirty.value=content!==originalExternalContent;store.isTempDirty=isDirty.value;refreshVisibleOutline();void fixEditorImages()})
+const externalFindShortcut=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='h'){event.preventDefault();event.stopImmediatePropagation();if(!document.querySelector('.n-modal'))externalFind.value?.open()}}
 const leaveExternalEditor = () => router.push({ name: 'LibraryMode' })
 
 const { outlineTreeData, syncOutlineManual, scrollToHeading, setupOutlineObserver, destroyOutlineObserver } = useOutline(() => vditor)
@@ -324,6 +333,7 @@ const startShadowSaveTimer = () => {
 
 onMounted(async () => {
   window.addEventListener('longedit:file-move-completed', refreshAfterFileMove)
+  window.addEventListener('keydown',externalFindShortcut,true)
   let initialContent = ''
   if (filePath.value) {
     try {
@@ -368,6 +378,7 @@ onMounted(async () => {
       { name: 'both', tip: '双栏预览' }, { name: 'preview', tip: '预览' }, { name: 'edit-mode', tip: '切换编辑模式' }
     ],
     input: (value) => {
+      externalFindRevision.value=value
       isDirty.value = value !== originalExternalContent
     },
     after: () => {
@@ -389,6 +400,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('longedit:file-move-completed', refreshAfterFileMove)
+  window.removeEventListener('keydown',externalFindShortcut,true)
   destroyImageFix()
   destroyOutlineObserver()
   if (shadowSaveTimer) clearInterval(shadowSaveTimer)

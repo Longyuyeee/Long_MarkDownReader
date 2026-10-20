@@ -237,3 +237,20 @@ docs/evidence/v1124-review-*/** -text whitespace=cr-at-eol
 docs/evidence/v1124-review-*/**/*.log -text -diff
 docs/evidence/v1124-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1124-publication-*/**/*.log -text -diff
+
+docs/evidence/v1125-find-development/** -text whitespace=cr-at-eol
+docs/evidence/v1125-find-development/**/*.log -text -diff
+docs/evidence/v1-1-25-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1-1-25-candidate-lifecycle/**/*.log -text -diff
+docs/evidence/v1.1.25-release/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.25-release/**/*.log -text -diff
+docs/evidence/v1125-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1125-build-*/**/*.log -text -diff
+docs/evidence/v1125-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1125-review-*/**/*.log -text -diff
+docs/evidence/v1125-review-failure-*/** -text whitespace=cr-at-eol
+docs/evidence/v1125-review-failure-*/**/*.log -text -diff
+docs/evidence/v1125-build-failure-*/** -text whitespace=cr-at-eol
+docs/evidence/v1125-build-failure-*/**/*.log -text -diff
+docs/evidence/v1125-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1125-publication-*/**/*.log -text -diff
