@@ -81,7 +81,7 @@ const tagMenuAction = async (key: string) => {
   if (key === 'organize') {
     const tag = tagMenu.tag, root = store.libraryPath
     await selectTag(tag)
-    if (!disposed && root === store.libraryPath && selectedTag.value === tag && !resultError.value) { chooseTagScope.value = true; editingTags.value = true }
+    if (!disposed && root === store.libraryPath && selectedTag.value === tag && !resultError.value && results.value.length) { chooseTagScope.value = true; editingTags.value = true }
   } else if (key === 'pin') {
     const tags = preferences.value.pinnedTags
     updateLibraryNavigation(store.libraryPath, { pinnedTags: tags.includes(tagMenu.tag) ? tags.filter(tag => tag !== tagMenu.tag) : [...tags, tagMenu.tag] })
