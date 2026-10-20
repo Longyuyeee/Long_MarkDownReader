@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.21",
+  "appVersion": "1.1.22",
   "releaseCandidate": true,
   "channel": "community-unsigned",
-  "generatedAt": "2026-10-19",
-  "currentStatus": "v1.1.21-community-release-published",
+  "generatedAt": "2026-10-20",
+  "currentStatus": "v1.1.22-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -36,52 +36,52 @@
     "githubReleasePublished": true
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.20",
+    "previousPublicVersion": "1.1.21",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.20-to-1.1.21-pending",
-    "scope": "cross-library-saved-file-copy-preview-dependencies-and-repeatable-receipts"
+    "managedUpdaterUpgradePath": "1.1.21-to-1.1.22-pending",
+    "scope": "durable-file-operations-per-item-restore-and-draft-protection"
   },
   "targetRelease": {
-    "tag": "v1.1.21",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21",
+    "tag": "v1.1.22",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
+    "artifactSourceCommit": "7036d23e3d46d0c3758592744e5e93dd70528429",
     "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39215635202,
-    "hostedInstalledLifecycleRunId": 39227582947,
+    "artifactBuildRunId": 39361442050,
+    "hostedInstalledLifecycleRunId": 39365961514,
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "LongEdit_1.1.21_x64_zh-CN.msi",
-        "sizeBytes": 77623296,
-        "sha256": "46fb293b78eb520be9d7891aac8cb03e551af5214c856b841aacd5faa9cb8ad7",
+        "fileName": "LongEdit_1.1.22_x64_zh-CN.msi",
+        "sizeBytes": 77660160,
+        "sha256": "cc75b5dc1500ddd300c9793747c9fb84ce1da623faf87d31c092d7307eb71fed",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.21_x64_zh-CN.msi"
+        "sourceFileName": "Long编辑_1.1.22_x64_zh-CN.msi"
       },
       {
         "target": "nsis",
-        "fileName": "LongEdit_1.1.21_x64-setup.exe",
-        "sizeBytes": 68397154,
-        "sha256": "d3a4bfd5455dee78e3cc9ec162aad8760d8e6bc1d39865f1853bdd9fea9cfa89",
+        "fileName": "LongEdit_1.1.22_x64-setup.exe",
+        "sizeBytes": 68416205,
+        "sha256": "4aaf428cdddd839950bb7a1194996be25eac19c159074e069331ccc3f525cf95",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.21_x64-setup.exe"
+        "sourceFileName": "Long编辑_1.1.22_x64-setup.exe"
       }
     ]
   },
   "release": {
-    "tag": "v1.1.21",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21",
-    "databaseId": 417106958,
+    "tag": "v1.1.22",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22",
+    "databaseId": 417985004,
     "isDraft": false,
     "isPrerelease": false,
-    "taggedCommit": "ab85459975e304a4f5d6cc777bcc80185fd5a4b2",
-    "publishedAt": "2026-10-19T09:22:39Z"
+    "taggedCommit": "7036d23e3d46d0c3758592744e5e93dd70528429",
+    "publishedAt": "2026-10-20T04:01:13Z"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -105,7 +105,8 @@
     "1.1.17-to-1.1.18-managed-update-observation-pending",
     "1.1.18-to-1.1.19-managed-update-observation-pending",
     "1.1.19-to-1.1.20-managed-update-observation-pending",
-    "1.1.20-to-1.1.21-managed-update-observation-pending"
+    "1.1.20-to-1.1.21-managed-update-observation-pending",
+    "1.1.21-to-1.1.22-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.22-persistent-file-operation-history-planned"
+  "nextAction": "v1.1.23-attachment-management-planned"
 }

@@ -28,6 +28,10 @@ pub(crate) struct Record {
     documents: Vec<Edit>,
     #[serde(default)]
     companions: Vec<(PathBuf, PathBuf)>,
+    #[serde(default)]
+    operation_id: Option<String>,
+    #[serde(default)]
+    undo_of: Option<String>,
 }
 pub(crate) struct Stage {
     path: PathBuf,
@@ -44,11 +48,7 @@ fn hash(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 impl Stage {
-    fn begin(cache: &Path, record: Record) -> Result<Self, MoveFailure> {
-        let bytes = serde_json::to_vec(&record).map_err(|e| e.to_string())?;
-        if bytes.len() > 72 * 1024 * 1024 {
-            return Err("本次引用更新的原文记录超过 72 MiB，请分批整理；文件尚未移动".into());
-        }
+    fn begin(cache: &Path, mut record: Record) -> Result<Self, MoveFailure> {
         let directory = cache.join(".link-moves");
         fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
         static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -62,6 +62,11 @@ impl Stage {
             NEXT.fetch_add(1, Ordering::Relaxed)
         );
         let path = directory.join(name);
+        record.operation_id = path.file_name().map(|s| s.to_string_lossy().into_owned());
+        let bytes = serde_json::to_vec(&record).map_err(|e| e.to_string())?;
+        if bytes.len() > 72 * 1024 * 1024 {
+            return Err("本次引用更新的原文记录超过 72 MiB，请分批整理；文件尚未移动".into());
+        }
         fs::create_dir(&path).map_err(|e| e.to_string())?;
         write_new_bytes(path.join("record.json"), &bytes).map_err(|e| {
             review(
@@ -69,7 +74,11 @@ impl Stage {
                 path.file_name().map(|s| s.to_string_lossy().into_owned()),
             )
         })?;
-        Ok(Self { path, record })
+        let stage = Self { path, record };
+        if let Err(error) = super::file_operation_history::begin(&stage.record.root, &stage.id(), &stage.record.source, &stage.record.target, &stage.record.root, Some(stage.id()), stage.record.undo_of.clone()) {
+            return Err(stage.failure(format!("文件尚未移动，最近操作记录未能保存：{error}")));
+        }
+        Ok(stage)
     }
     fn id(&self) -> String {
         self.path
@@ -94,6 +103,10 @@ impl Stage {
             .is_some_and(|p| p.ends_with(".file-moves"))
         {
             return Ok(());
+        }
+        if let Some(id) = &self.record.operation_id {
+            super::file_operation_history::ensure_record(&self.record.root, id, &self.record.source, &self.record.target, self.record.undo_of.clone()).map_err(|e| self.failure(e))?;
+            super::file_operation_history::finish(&self.record.root, id, outcome == "completed", &self.record.documents.iter().map(|e| e.target.clone()).collect::<Vec<_>>()).map_err(|e| self.failure(format!("操作结果已保留，最近操作记录需要核对：{e}")))?;
         }
         let bytes =
             fs::read(self.path.join("record.json")).map_err(|e| self.failure(e.to_string()))?;
@@ -307,6 +320,15 @@ pub(crate) fn execute(
     old: &Path,
     new: &Path,
 ) -> Result<(), MoveFailure> {
+    execute_recorded(app, guard, old, new, None)
+}
+pub(crate) fn execute_recorded(
+    app: Option<&tauri::AppHandle>,
+    guard: &WorkspaceGuard,
+    old: &Path,
+    new: &Path,
+    undo_of: Option<String>,
+) -> Result<(), MoveFailure> {
     // Declaration order matters: IO leases drop before the window release event.
     let mut protection = None;
     let _activity = super::file_activity::relocate(guard.root())?;
@@ -381,6 +403,14 @@ pub(crate) fn execute(
             return Err("引用文档在检查期间有新修改，未移动，请重试".into());
         }
     }
+    if let Some(id) = &undo_of {
+        super::file_operation_history::check_restore(guard.root(), id)?;
+        // Keep validation and parent preparation inside this transaction's IO
+        // lease. Its lease drops before Protection emits the completion event.
+        // An outer relocation lease would block the receiving editor's reload.
+        let parent = guard.resolve_directory(new.parent().ok_or("原目录不可用")?, true)?;
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
     let stage = Stage::begin(
         &cache,
         Record {
@@ -390,6 +420,8 @@ pub(crate) fn execute(
             target: new.to_owned(),
             documents: edits,
             companions,
+            operation_id: None,
+            undo_of,
         },
     )?;
     let rewrite = (|| -> Result<(), String> {
@@ -500,6 +532,8 @@ fn recovery_stage(cache: &Path, root: &Path, id: &str) -> Result<Stage, String> 
                 target: intent.target,
                 documents: vec![],
                 companions: vec![],
+                operation_id: None,
+                undo_of: None,
             },
         });
     }

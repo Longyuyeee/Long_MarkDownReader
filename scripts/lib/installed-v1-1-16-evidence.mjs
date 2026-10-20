@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 export const workbookEditingChecks=['owned-independent-producer-fixture','quoted-paste-and-whole-undo-redo','literal-text-copy-retains-type','formula-copy-translates-relative-reference','numeric-pointer-fill-and-undo','precise-long-id-sort','filtered-results-only-no-grid-mutation','explicit-native-save-and-reopen','independent-disk-types-and-untouched-parts','independent-producer-reopen-and-app-reopen','formula-cut-preserves-references-and-undo','editing-controls-own-delete-copy-paste-and-return-to-grid','trusted-input-no-overlay-unselected-preserved']
 export function validateInstalledWorkbookEditing(report,manifest){
- assert.ok(['1.1.16','1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.16','1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/);assert.match(report.executableSha256,/^[a-f0-9]{64}$/)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-workbook-real-clipboard-native-save-and-independent-producer')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)

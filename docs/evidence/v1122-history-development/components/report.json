@@ -1,0 +1,39 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "locate-button-reveals-resolved-file-through-existing-opener",
+      "status": "passed"
+    },
+    {
+      "id": "read-and-search-never-write-or-offer-copy-deletion",
+      "status": "passed"
+    },
+    {
+      "id": "per-item-restore-retains-draft-and-prevents-repeat",
+      "status": "passed"
+    },
+    {
+      "id": "restore-failure-stays-inside-dialog-and-retains-operations",
+      "status": "passed"
+    },
+    {
+      "id": "pending-item-opens-existing-recovery",
+      "status": "passed"
+    },
+    {
+      "id": "clear-retains-pending-records",
+      "status": "passed"
+    },
+    {
+      "id": "late-read-cannot-reopen-previous-library",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-with-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

@@ -2,6 +2,9 @@
   <img src="design/brand/longedit-icon-v1.0.2.png" width="144" alt="Long编辑图标">
 </p>
 
+> **v1.1.22 已正式发布**：文件栏右键“最近操作…”可查整理记录、接续查看位置并按项还原，保留后续修改与未保存草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) · [发布说明](docs/RELEASE_NOTES_v1.1.22.md)。
+
+
 <h1 align="center">Long编辑</h1>
 
 <p align="center">
@@ -66,19 +69,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21"><img src="https://img.shields.io/badge/Stable-v1.1.21-cca43b" alt="v1.1.21 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22"><img src="https://img.shields.io/badge/Stable-v1.1.22-cca43b" alt="v1.1.22 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.21**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.22**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.21_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.21/LongEdit_1.1.21_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.21_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.21/LongEdit_1.1.21_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.21](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.22_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.22/LongEdit_1.1.22_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.22_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.22/LongEdit_1.1.22_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.22](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.21/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.22/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -86,12 +89,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.21_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.22_x64-setup.exe
 ```
 
 ```text
-46fb293b78eb520be9d7891aac8cb03e551af5214c856b841aacd5faa9cb8ad7  LongEdit_1.1.21_x64_zh-CN.msi
-d3a4bfd5455dee78e3cc9ec162aad8760d8e6bc1d39865f1853bdd9fea9cfa89  LongEdit_1.1.21_x64-setup.exe
+cc75b5dc1500ddd300c9793747c9fb84ce1da623faf87d31c092d7307eb71fed  LongEdit_1.1.22_x64_zh-CN.msi
+4aaf428cdddd839950bb7a1194996be25eac19c159074e069331ccc3f525cf95  LongEdit_1.1.22_x64-setup.exe
 ```
 
 </details>
@@ -173,7 +176,9 @@ Markdown 和资料库内 TXT 的历史提供差异预览，区分当前来源与
 
 多选文件后右键选择“批量重命名…”，可添加前后缀、查找替换或添加序号。先预览原名称、新名称和冲突，再执行；保留 `.table.json` 等复合扩展名，失败时只重试未完成项目。改名、移动和回收恢复在系统执行时仍拒绝覆盖其他程序刚创建的同名内容。
 
-普通删除进入资料库回收站，可从文件栏空白处右键或“更多操作”打开回收站恢复；“撤销上次移动”可撤销本次应用会话最近一次成功移动。剪切、复制和粘贴使用应用内当前资料库的文件剪贴板。回收内容保存在资料库的 `.longedit/trash`，整体搬迁资料库时请一并保留。
+文件栏空白处右键“最近操作…”可查移动、改名和复制记录，文件右键位于“更多操作”中；重启后继续查看位置、按项还原。“撤销上次移动”保留当前会话的批次撤销，重启后进入持久记录选择还原项。后续编辑或同名冲突会保留现状；复制只查看，清除记录不删除文件。
+
+普通删除进入资料库回收站，可从文件栏空白处右键或“更多操作”打开回收站恢复。剪切、复制和粘贴使用应用内当前资料库的文件剪贴板。回收内容保存在资料库的 `.longedit/trash`，整理记录保存在 `.longedit/file-operations`；整体搬迁资料库时请一并保留 `.longedit`。
 
 外部文件拖入资料库时，同名正文和图片保留两份，不覆盖已有资料。Markdown 的普通本地图片复制到独立 `.assets` 目录，原文和原图不变；多文件导入逐项反馈，只重试未完成项。若文件已经导入、只是目录刷新失败，刷新列表即可，不需要重新导入整批文件。外部笔记有未保存修改时须先保存，再存入资料库。
 
@@ -477,7 +482,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.1.21 已发布：文件右键“复制到…”可选择另一个资料库，自动预览重名与关联资源，保留源文件和未保存草稿，部分失败只接续未完成项。[发布说明](docs/RELEASE_NOTES_v1.1.21.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。
+1.1.22 已发布：文件栏右键“最近操作…”可查移动、改名和复制结果，重启后继续定位、按项还原；保护后续修改和未保存内容。[发布说明](docs/RELEASE_NOTES_v1.1.22.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -490,7 +495,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 基础功能深化路线
 
-现有基础能力持续围绕实际使用任务深化，入口按使用频率放在右键、新建菜单和按需弹窗中，不为新功能挤占主编辑区。后续优先依据真实反馈改进文件整理、模板、历史、关系和查找体验；跨库剪贴板、持久化文件操作历史及其他格式的历史恢复尚未交付。已完成内容见 [基础功能路线](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md)，后续按 [v1.1.8—v1.1.20 深化规划](docs/Foundation_Deepening_Roadmap_1_1_8_to_1_1_20_2026-10-17.md) 逐版审计与推进，计划不代表已交付。
+现有基础能力持续围绕实际使用任务深化，入口放在右键、新建菜单和按需弹窗中。跨资料库复制和持久文件整理记录已交付；跨库剪贴板及其他格式的历史恢复仍为后续方向。下一版先深化附件定位、引用和整理，保护未保存内容。[已交付基础能力](docs/Foundation_Features_Upgrade_Plan_2026-10-14.md) · [十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) · [1.1.23 具体计划](docs/V1_1_23_Attachment_Management_Plan_2026-10-20.md)。计划不代表已交付。
 
 ### 从源码启动
 
@@ -540,7 +545,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_21_Unsigned_Community_Release_Audit_2026-10-19.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_22_Unsigned_Community_Release_Audit_2026-10-20.md) |
 | DOCX 日常编辑与保存 | [原件、副本及草稿保护](docs/DOCX_Editing_User_Guide.md) |
 | PPTX 编辑与副本交付 | [目标、备注、多项更改与保存接续](docs/PPTX_Editing_User_Guide.md) |
 | Canvas 与 OPML 整理 | [来源、保存冲突与兼容副本](docs/Canvas_OPML_User_Guide.md) |
@@ -558,6 +563,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.22 | 整理记录跨重启保存、接续定位与按项还原；保护后续修改和未保存草稿 | [发布说明](docs/RELEASE_NOTES_v1.1.22.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.22) · [发布审计](docs/V1_1_22_Unsigned_Community_Release_Audit_2026-10-20.md) |
 | v1.1.21 | 跨资料库复制、重名预览、图片与关联笔记接续；源文件和未保存草稿保留；部分失败接续 | [发布说明](docs/RELEASE_NOTES_v1.1.21.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.21) · [发布审计](docs/V1_1_21_Unsigned_Community_Release_Audit_2026-10-19.md) |
 | v1.1.20 | 结构化源码保存与草稿保护；冲突副本、提纲右键与路径定位；JSON 可取消差异预览与撤销 | [发布说明](docs/RELEASE_NOTES_v1.1.20.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.20) · [发布审计](docs/V1_1_20_Unsigned_Community_Release_Audit_2026-10-19.md) |
 | v1.1.19 | 画布／脑图快照保存与定位草稿保护；精确来源与改名移动接续、分组拖动撤销；OPML 原件保留与防覆盖兼容副本 | [发布说明](docs/RELEASE_NOTES_v1.1.19.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.19) · [发布审计](docs/V1_1_19_Unsigned_Community_Release_Audit_2026-10-18.md) |
@@ -583,9 +589,13 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**。后续 [1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 中，1.1.21 已发布，余下 11 版为计划；下一版 1.1.22 深化文件整理记录与重启接续，沿用右键和弹窗，保护源文件与未保存内容。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**。[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并发布 2/12 版，余下 10 版为计划；下一版按顺序深化附件整理，先解决普通附件目录被隐藏、图片和附件难以定位的问题。[1.1.23 具体计划](docs/V1_1_23_Attachment_Management_Plan_2026-10-20.md) 已登记，尚未实施。
 
-### v1.1.21 本次更新
+### v1.1.22 本次更新
+
+文件栏右键“最近操作…”集中查询整理记录、查看位置和按项还原。原有批次撤销保留；后续编辑、同名冲突与草稿保护沿用现有文件事务。复制只查看，清除记录不会删除文件。[发布说明](docs/RELEASE_NOTES_v1.1.22.md)。
+
+### v1.1.21 跨资料库复制
 
 文件右键“复制到…”可以选择另一个资料库，自动预览目标和关联资源，保留源文件与未保存草稿；重名保留两份，未完成项可接着处理。正式安装包、使用范围和完整说明见 [发布说明](docs/RELEASE_NOTES_v1.1.21.md)。
 

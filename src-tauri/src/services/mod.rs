@@ -14,6 +14,7 @@ pub mod external_file_access;
 pub(crate) mod external_import;
 pub mod external_windows;
 pub(crate) mod file_activity;
+pub(crate) mod file_operation_history;
 pub(crate) mod file_move_history;
 pub(crate) mod file_move_journal;
 pub(crate) mod file_move_links;

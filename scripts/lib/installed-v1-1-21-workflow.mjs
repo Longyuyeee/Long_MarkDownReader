@@ -14,7 +14,7 @@ export async function expandCopySourceParents({ui,evaluate,library,file,row}){
 }
 export async function runInstalledV1121Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.equal(appVersion,'1.1.21');assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.21','1.1.22'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const ui=nativeUserInput({send,evaluate},{timeoutMs:45000}),folder=path.join(library,'000-v1121-copy-'+crypto.randomUUID()),targetRoot=path.join(folder,'目标资料库'),source=path.join(folder,'来源'),p=name=>path.join(source,name),destination=path.join(targetRoot,'接收'),label='本版复制目标 '+path.basename(folder).slice(-8)
  const store=`document.querySelector('#app')?.__vue_app__?.config.globalProperties.$pinia?._s.get('app')`,invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`)
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-cross-library-copy-native-input-and-output-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}
@@ -64,6 +64,25 @@ export async function runInstalledV1121Workflow({send,evaluate,navigate,capture,
   await navigate('#/library?path='+encodeURIComponent(p('saved.md')),'#vditor-lib','retained original draft');await ui.clickTarget(editor);await ui.key('s','KeyS',83,2);await ui.waitFor('window.__v1121SourceTab.isDirty===false','ordinary explicit cleanup save');assert.ok((await fs.readFile(p('saved.md'),'utf8')).includes('必须保留的未保存草稿'));report.explicitCleanupSave=true
   report.status='passed';validateInstalledCrossCopy(report,{appVersion,sourceCommit,artifacts:[{target:'nsis',sha256:installerSha256}]});const exported=new Map(await Promise.all(report.outputs.map(async item=>[item.fileName,await fs.readFile(path.join(output,item.fileName))])));assertCrossCopyOutputBytes(report,name=>exported.get(name))
  }catch(error){failure=error;report.status='failed';report.failure=String(error.stack||error);report.failureUI=await evaluate(`({hash:location.hash,body:document.body.innerText.slice(-7000),preview:document.querySelector('.copy-preview')?.outerHTML})`).catch(()=>null);await capture('installed-v1121-failure.jpg').catch(()=>{})}
- finally{if(originalLibraries){const config=await invoke('get_config').catch(()=>null);if(config)await invoke('save_config',{config:{...config,libraries:originalLibraries}}).catch(()=>{})}report.runtimeErrors=await evaluate('window.__v1121Errors||[]').catch(()=>[]);await fs.writeFile(path.join(output,'installed-v1121-workflow.json'),JSON.stringify(report,null,2)+'\n')}
+ finally{
+  try{
+   if(originalLibraries&&!failure){
+    // Remove the owned inactive profile through Settings, so both live state
+    // and persisted config agree before later workflows save display styles.
+    await navigate('#/settings?category=library','.add-library-form','remove only the owned temporary copy profile')
+    const card=`[...document.querySelectorAll('.library-item')].find(e=>e.querySelector('.lib-name')?.textContent.trim()===${q(label)})`
+    await ui.waitFor(`!!(${card})`,'owned target profile remains registered')
+    await ui.clickTarget(`(${card}).querySelector('.lib-actions button:last-of-type')`)
+    await ui.clickText('.n-dialog button','确认移除')
+    await ui.waitFor(`!${store}.libraries.some(l=>window.__v1121Key(l.path)===${q(key(targetRoot))})`,'live target profile removed')
+    const expected=originalLibraries.map(l=>key(l.path)).sort()
+    await ui.waitFor(`window.__TAURI_INTERNALS__.invoke('get_config').then(c=>JSON.stringify(c.libraries.map(l=>window.__v1121Key(l.path)).sort())===${q(JSON.stringify(expected))})`,'profile removal persisted')
+    assert.equal(key((await invoke('get_config')).activeLibraryPath),key(library))
+    assert.equal(await evaluate(`window.__v1121PriorDrafts.every(prior=>${store}.tabs.some(t=>t.id===prior.id&&t.path===prior.path&&t.isDirty&&t.content===prior.content))`),true)
+    await navigate('#/library','.library-mode','return with all original profiles and drafts')
+   }else if(originalLibraries){const config=await invoke('get_config').catch(()=>null);if(config)await invoke('save_config',{config:{...config,libraries:originalLibraries}}).catch(()=>{})}
+  }catch(error){failure ||= error;report.status='failed';report.cleanupFailure=String(error.stack||error);await capture('installed-v1121-cleanup-failure.jpg').catch(()=>{})}
+  report.runtimeErrors=await evaluate('window.__v1121Errors||[]').catch(()=>[]);await fs.writeFile(path.join(output,'installed-v1121-workflow.json'),JSON.stringify(report,null,2)+'\n')
+ }
  if(failure)throw failure
 }

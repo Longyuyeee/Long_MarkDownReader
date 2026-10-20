@@ -1,4 +1,5 @@
 <template>
+  <FileOperationHistoryDialog ref="historyDialog" :library-root="libraryRoot" :before-operate="beforeOperate" :after-operate="afterOperate" @review="id => recoveryId = id" />
   <FileMoveRecoveryDialog :library-root="libraryRoot" :recovery-id="recoveryId" @close="recoveryId = ''" @resolved="finishReview" />
   <BatchRenameDialog ref="renameDialog" :library-root="libraryRoot" :before-operate="beforeOperate" :after-operate="afterOperate" />
   <n-modal :show="showTransfer" preset="card" :title="operation === 'move' ? '移动到' : '复制到'" class="file-operation-dialog" :style="modalStyle" :mask-closable="!busy" :closable="!busy" :close-on-esc="!busy" @update:show="show => { if (!busy) showTransfer = show }">
@@ -34,6 +35,7 @@ import BatchRenameDialog from './BatchRenameDialog.vue'
 import FileOperationOutcome from './FileOperationOutcome.vue'
 import FileMoveRecoveryDialog from './FileMoveRecoveryDialog.vue'
 import CrossLibraryCopyPanel from './CrossLibraryCopyPanel.vue'
+import FileOperationHistoryDialog from './FileOperationHistoryDialog.vue'
 import { NModal, NInput, NSelect, NButton, useDialog, useMessage } from 'naive-ui'
 import { FolderOpen, Folder, FileText, RefreshCw } from 'lucide-vue-next'
 import { open } from '@tauri-apps/plugin-dialog'
@@ -45,11 +47,13 @@ import { beginWindowSave } from '../services/windowDrafts'
 const props = defineProps<{ libraryRoot: string; libraries?: {name:string;path:string}[]; beforeOperate: (paths: string[], operation: FileOperation) => Promise<boolean>; afterOperate: (result: FileOperationResult, operation: FileOperation) => Promise<void>; afterCrossCopy?: (result:FileOperationResult,targetRoot:string)=>Promise<void> }>()
 const dialog = useDialog(), message = useMessage()
 const renameDialog = ref<InstanceType<typeof BatchRenameDialog> | null>(null)
+const historyDialog = ref<InstanceType<typeof FileOperationHistoryDialog> | null>(null)
+const openHistory = () => historyDialog.value?.open()
 const recoveryId = ref('')
 const feedbackOperation = ref<FileOperation>('copy')
 const showMoveOutcome = (result: FileOperationResult) => { root.value = props.libraryRoot; completedItems.value = [...result.items]; errors.value = result.errors; feedbackOperation.value = 'move'; retryUndo.value = false; showFeedback.value = true }
 const openRecovery = () => { if (!busy.value) recoveryId.value = 'pending' }
-const finishReview = (id: string) => { errors.value = errors.value.filter(error => error.recoveryId !== id); recoveryId.value = ''; message.success('已完成文件位置核对') }
+const finishReview = (id: string) => { errors.value = errors.value.filter(error => error.recoveryId !== id); recoveryId.value = ''; void historyDialog.value?.refresh(); message.success('已完成文件位置核对') }
 const openRename = (paths: string[]) => renameDialog.value?.open(paths)
 const modalStyle = { width: 'min(560px, calc(100vw - 28px))' }
 const showTransfer = ref(false), showTrash = ref(false), loadingTrash = ref(false), operation = ref<'move' | 'copy'>('move')
@@ -170,6 +174,7 @@ const purgeSelected = async () => {
   finally { busy.value = false; finish() }
 }
 const undoMove = async () => {
+  if (!lastLibraryMove.value || !sameLibrary(lastLibraryMove.value.root, props.libraryRoot)) { await historyDialog.value?.open(true); return }
   feedbackOperation.value = 'undo'
   const last = lastLibraryMove.value
   if (!last || busy.value || !sameLibrary(last.root, props.libraryRoot) || !await props.beforeOperate(last.items.map(item => item.newPath), 'undo')) return
@@ -193,7 +198,7 @@ const undoMove = async () => {
   finally { busy.value = false; finish() }
 }
 watch(() => props.libraryRoot, () => { showTransfer.value = false; showTrash.value = false; showFeedback.value = false })
-defineExpose({ openTransfer, openTrash, duplicate, recycle, undoMove, openRename, openRecovery, showMoveOutcome })
+defineExpose({ openTransfer, openTrash, duplicate, recycle, undoMove, openRename, openRecovery, openHistory, showMoveOutcome })
 </script>
 
 <style scoped>

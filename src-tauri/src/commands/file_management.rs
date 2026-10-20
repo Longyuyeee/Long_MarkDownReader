@@ -247,6 +247,8 @@ fn transfer(
             if operation == "copy" {
                 let _documents =
                     crate::services::document_coordination::acquire(&[&source, &destination])?;
+                let operation_id = crate::services::file_operation_history::id();
+                crate::services::file_operation_history::begin(guard.root(), &operation_id, &source, &destination, guard.root(), None, None)?;
                 let mut created = false;
                 if let Err(error) = copy_tree(&source, &destination, &mut created) {
                     // Remove only the newly created candidate, never an existing user item.
@@ -257,8 +259,12 @@ fn transfer(
                             let _ = fs::remove_file(&destination);
                         }
                     }
+                    if !destination.exists() {
+                        let _ = crate::services::file_operation_history::finish(guard.root(), &operation_id, false, &[]);
+                    }
                     return Err(error.into());
                 }
+                let _ = crate::services::file_operation_history::finish(guard.root(), &operation_id, true, &[]);
             } else {
                 move_to_checked(app, &guard, &source, &destination)?;
             }
@@ -317,15 +323,11 @@ pub async fn undo_library_moves(
         let mut result = OperationResult::default();
         for item in items.into_iter().rev() {
             let attempt = (|| {
+                let records = crate::services::file_operation_history::list(guard.root())?;
                 let current = visible_item(&guard, &item.new_path, true)?;
                 let original = visible_item(&guard, &item.old_path, false)?;
-                fs::create_dir_all(original.parent().ok_or("原目录不可用")?)
-                    .map_err(|e| e.to_string())?;
-                move_to_checked(Some(&app_handle), &guard, &current, &original)?;
-                Ok(PathChange {
-                    old_path: item.new_path.clone(),
-                    new_path: item.old_path.clone(),
-                })
+                let record = records.iter().find(|r| r.old_path == original && r.new_path == current && crate::services::file_operation_history::restorable(r)).ok_or("此项没有可还原的记录，请在最近操作中查看当前位置")?;
+                super::file_operation_history::restore(Some(&app_handle), &guard, &record.id)
             })();
             match attempt {
                 Ok(change) => result.items.push(change),
