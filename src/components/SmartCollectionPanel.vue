@@ -31,7 +31,7 @@
             <label>文件夹<div class="directory-field"><input v-model="directory" aria-label="文件夹" maxlength="4096" placeholder="整个资料库" /><button type="button" :disabled="choosing" aria-label="选择文件夹" @click="chooseDirectory"><FolderOpen /></button></div></label>
             <label>文件类型<n-select v-model:value="objectTypes" multiple clearable :max-tag-count="1" :disabled="saving" :options="formatOptions" placeholder="不限类型" size="small" /></label>
             <label>笔记标签<div class="tag-field"><span>#</span><input ref="tagInput" v-model="tag" aria-label="笔记标签" maxlength="640" placeholder="多个标签用空格分隔，同时满足" /></div></label>
-            <label>修改时间<select v-model="days" aria-label="修改时间"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option></select></label>
+            <label>修改时间<select v-model="days" aria-label="修改时间"><option :value="null">不限</option><option :value="7">最近 7 天</option><option :value="30">最近 30 天</option><option :value="90">最近 90 天</option><option v-if="days && ![7, 30, 90].includes(days)" :value="days">最近 {{ days }} 天</option></select></label>
           </fieldset>
         </details>
         <div class="actions"><button class="primary" type="submit" :disabled="running || saving"><Search />{{ running ? '正在查找…' : '查看资料' }}</button><button type="button" :disabled="saving || running || !name.trim()" @click="save"><BookmarkPlus />{{ saving ? '正在保存…' : editingId ? '保存修改' : '保存集合' }}</button></div>
