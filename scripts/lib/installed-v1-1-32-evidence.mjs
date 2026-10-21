@@ -8,6 +8,7 @@ export function validateInstalledRestoreContinuity(report,manifest){
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-content-package-and-restored-work-session');assert.match(report.harnessSourceCommit,/^[a-f0-9]{40}$/);assert.match(report.executableSha256,/^[a-f0-9]{64}$/)
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)
  for(const k of ['exportSceneExact','restoreBytesExact','cancelledExact','mappingExact','continuedExact','saveReopenExact','deferredDirtyExact'])assert.equal(report[k],true,k)
+ assert.equal(report.fixtureRegistrationsRemovedOnly,true);assert.deepEqual(report.finalLibraryPaths,report.originalLibraryPaths)
  assert.deepEqual(report.checks.map(c=>[c.id,c.status]),restoreContinuityChecks.map(id=>[id,'passed']));assert.deepEqual(report.runtimeErrors,[]);assert.ok(report.inputTrace.length>10&&report.inputTrace.every(e=>e.trusted));for(const t of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===t))
 }
 // Independently read the small owned ZIP's central directory and actual bytes.
