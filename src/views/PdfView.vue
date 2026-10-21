@@ -95,20 +95,22 @@
           <p v-if="annotations.length && !filteredAnnotations.length && !annotationFilterError" class="sidebar-empty">没有匹配的批注，请调整筛选。</p>
           <div v-for="annotation in visibleReadingAnnotations" :key="annotation.id" class="reading-row">
           <input type="checkbox" :aria-label="`选择批注 ${annotation.id}`" :checked="readingSelection.includes(annotation.id)" @change="toggleReadingSelection(annotation.id)" />
-          <button :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @click="selectAnnotation(annotation.id)">
+          <button :class="['annotation-card', { active: selectedAnnotationId === annotation.id }]" @contextmenu.prevent="openAnnotationContext($event,annotation.id)" @click="selectAnnotation(annotation.id)">
             <span class="annotation-card-head"><strong>第 {{ annotation.page }} 页 · {{ annotationKindLabel(annotation.kind) }}</strong><i :class="`dot-${annotation.color}`"></i></span>
             <span>{{ annotation.quote || annotation.comment || '未填写评论' }}</span>
           </button>
+          <NDropdown trigger="click" :options="annotationActions" @select="key => handleAnnotationAction(String(key),annotation.id)"><button class="annotation-menu" :aria-label="`批注操作 ${annotation.id}`">···</button></NDropdown>
           </div>
           <div v-if="filteredAnnotations.length > 50" class="reading-pagination"><button :disabled="readingListPage === 0" @click="readingListPage--">上一组</button><span>{{ readingListPage + 1 }} / {{ Math.ceil(filteredAnnotations.length / 50) }}</span><button :disabled="(readingListPage + 1) * 50 >= filteredAnnotations.length" @click="readingListPage++">下一组</button></div>
+          <NDropdown trigger="manual" :show="annotationContext.show" :x="annotationContext.x" :y="annotationContext.y" :options="annotationActions" @clickoutside="annotationContext.show=false" @select="key => { annotationContext.show=false; handleAnnotationAction(String(key),annotationContext.id) }" />
           <div v-if="selectedAnnotation" class="annotation-editor">
-            <label>评论<textarea v-model="selectedAnnotation.comment" :disabled="!annotationWritable" maxlength="20000" placeholder="为这条批注补充评论…" @change="touchSelectedAnnotation"></textarea></label>
+            <label>评论<textarea v-model="selectedAnnotation.comment" :disabled="!annotationWritable" maxlength="20000" placeholder="为这条批注补充评论…" @input="touchSelectedAnnotation"></textarea></label>
             <div class="annotation-colors"><button v-for="color in annotationColors" :key="color" :disabled="!annotationWritable" :class="[`color-${color}`, { active: selectedAnnotation.color === color }]" :aria-label="`${annotationColorLabel(color)}批注`" :aria-pressed="selectedAnnotation.color === color" @click="setSelectedAnnotationColor(color)"></button></div>
             <div class="annotation-reference-actions">
               <button :disabled="referenceWorking || !annotationWritable" @click="copySelectedAnnotationReference">复制引用</button>
               <button :disabled="referenceWorking || !annotationWritable" @click="insertSelectedAnnotationReference">插入笔记…</button>
             </div>
-            <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation">删除批注</button>
+            <button class="delete-annotation" :disabled="!annotationWritable" @click="deleteSelectedAnnotation()">删除批注</button>
           </div>
           <WorkspaceStateNotice v-if="annotationDocument" class="annotation-save-state" :kind="annotationSaveError ? 'error' : annotationSaving ? 'loading' : annotationDirty ? 'limited' : 'saved'" :tone="annotationSaveError ? 'danger' : annotationDirty ? 'warning' : annotationSaving ? 'info' : 'success'" compact>{{ annotationSaveError || (annotationSaving ? '正在保存批注' : annotationDirty ? '等待保存' : '批注已保存到 sidecar') }}</WorkspaceStateNotice>
         </div>
@@ -528,8 +530,8 @@
         <p class="reading-preview-summary" aria-live="polite">{{ referenceWorking ? '正在核对来源和所选批注…' : `${fileName}.pdf · 已选 ${readingSnapshot?.items.length || 0} 条` }}</p>
         <div v-if="readingSnapshot" class="reading-note-options"><label>组织方式 <select v-model="readingGrouping" :disabled="readingNoteSaving" aria-label="笔记组织方式"><option value="page">按页码</option><option value="color">按颜色</option></select></label><label><input v-model="readingComments" :disabled="readingNoteSaving" type="checkbox" /> 包含评论</label></div>
         <div v-if="readingSnapshot" class="reading-note-preview" aria-label="阅读笔记预览"><h3>{{ fileName }} · 阅读笔记</h3><article v-for="item in orderedReadingItems" :key="item.annotation.id"><h4>第 {{ item.annotation.page }} 页 · {{ annotationKindLabel(item.annotation.kind) }} · {{ annotationColorLabel(item.annotation.color) }}</h4><blockquote v-if="item.annotation.quote">{{ item.annotation.quote }}</blockquote><p v-if="readingComments && item.annotation.comment">评论：{{ item.annotation.comment }}</p><span class="reading-source-label">来源：{{ item.label }}</span></article></div>
-        <p v-if="readingNoteError" class="reading-note-error" role="alert">{{ readingNoteError }}</p>
-        <template #footer><div class="reading-note-footer"><label>插入目标 <select v-model="readingTargetId" :disabled="referenceWorking || readingNoteSaving" aria-label="阅读笔记插入目标"><option value="">请选择已打开的 Markdown</option><option v-for="tab in readingTargets" :key="tab.id" :value="tab.id">{{ tab.title }} · {{ readingTargetDirectory(store.libraryPath, tab.path) }}{{ tab.isDirty ? '（未保存草稿）' : '' }}</option></select></label><p>插入仅追加到所选草稿，需手动保存。新笔记选择库内位置后保存；不覆盖已有文件或原 PDF。</p><div><button :disabled="readingNoteSaving" @click="closeReadingPreview">取消</button><button :disabled="referenceWorking || readingNoteSaving || !readingSnapshot" @click="copyReadingNote">复制笔记</button><button :disabled="referenceWorking || readingNoteSaving || !readingSnapshot || !readingTargetId" @click="insertReadingNote">插入草稿</button><button class="primary" :disabled="referenceWorking || readingNoteSaving || !readingSnapshot" @click="saveReadingNote">新建并保存笔记</button></div></div></template>
+        <p v-if="readingNoteError || readingGenerated.error" class="reading-note-error" role="alert">{{ readingNoteError || readingGenerated.error }}</p>
+        <template #footer><div class="reading-note-footer"><label>插入目标 <select v-model="readingTargetId" :disabled="referenceWorking || readingNoteSaving" aria-label="阅读笔记插入目标"><option value="">请选择已打开的 Markdown</option><option v-for="tab in readingTargets" :key="tab.id" :value="tab.id">{{ tab.title }} · {{ readingTargetDirectory(store.libraryPath, tab.path) }}{{ tab.isDirty ? '（未保存草稿）' : '' }}</option></select></label><p>插入仅追加到所选草稿，需手动保存。新笔记选择库内位置后保存；不覆盖已有文件或原 PDF。</p><div><button :disabled="readingNoteSaving" @click="closeReadingPreview">取消</button><button :disabled="referenceWorking || readingNoteSaving || !readingMarkdown" @click="copyReadingNote">复制笔记</button><button :disabled="referenceWorking || readingNoteSaving || !readingMarkdown || !readingTargetId" @click="insertReadingNote">插入草稿</button><button :disabled="referenceWorking || readingNoteSaving || !readingTargetId" @click="openExistingReadingUpdate">更新已有笔记…</button><button class="primary" :disabled="referenceWorking || readingNoteSaving || !readingMarkdown" @click="saveReadingNote">新建并保存笔记</button></div></div></template>
       </NCard>
     </NModal>
   </div>
@@ -539,7 +541,7 @@
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { NCard, NModal, useDialog, useMessage } from 'naive-ui'
+import { NCard, NModal, NDropdown, useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
@@ -571,7 +573,8 @@ import PdfPage from '../components/PdfPage.vue'
 import { useAppStore } from '../store/app'
 import { buildPdfPageText, findPdfPageMatches, type PdfSearchMatch } from '../utils/pdfText'
 import type { PdfAnnotationReference } from '../utils/pdfReference'
-import { annotationPageFilter, appendReadingDraft, MAX_READING_SELECTION, readingItemMarkdown, readingNoteMarkdown, readingTargetDirectory, type PdfReadingSnapshot } from '../utils/pdfReadingNote'
+import { managedReadingMarkdown } from '../utils/pdfReadingContinuity'
+import { annotationPageFilter, appendReadingDraft, MAX_READING_SELECTION, readingItemMarkdown, readingTargetDirectory, type PdfReadingSnapshot } from '../utils/pdfReadingNote'
 import { belongsToLibrary } from '../utils/workSessions'
 import type { PdfAnnotation, PdfAnnotationColor, PdfAnnotationDocument, PdfAnnotationKind, PdfAnnotationRect } from '../types/pdfAnnotations'
 import type { PdfOcrDocument, PdfOcrPage, PdfOcrTaskState } from '../types/pdfOcr'
@@ -765,6 +768,7 @@ const annotationQuery = ref(''), annotationPages = ref(''), annotationKindFilter
 const readingSelection = ref<string[]>([]), readingListPage = ref(0)
 const readingPreviewOpen = ref(false), readingSnapshot = ref<PdfReadingSnapshot | null>(null)
 const readingGrouping = ref<'page'|'color'>('page'), readingComments = ref(true), readingTargetId = ref('')
+const readingBlockId = ref(crypto.randomUUID())
 const readingNoteSaving = ref(false), readingNoteError = ref('')
 let referenceGeneration = 0
 const annotationColor = ref<PdfAnnotationColor>('yellow')
@@ -910,7 +914,11 @@ const visibleReadingAnnotations = computed(() => filteredAnnotations.value.slice
 const hiddenReadingSelection = computed(() => readingSelection.value.filter(id => !filteredAnnotations.value.some(a => a.id === id)).length)
 const readingTargets = computed(() => store.tabs.filter(tab => !tab.external && tab.path.toLowerCase().endsWith('.md') && belongsToLibrary(store.libraryPath, tab.path) && !tab.textReadOnlyReason && !tab.textLoadError))
 const orderedReadingItems = computed(() => [...(readingSnapshot.value?.items || [])].sort((a,b) => (readingGrouping.value === 'color' ? a.annotation.color.localeCompare(b.annotation.color) : 0) || a.annotation.page - b.annotation.page || a.annotation.createdAt - b.annotation.createdAt))
-const readingMarkdown = computed(() => readingSnapshot.value ? readingNoteMarkdown(readingSnapshot.value, readingGrouping.value, readingComments.value) : '')
+const readingGenerated = computed(() => {
+  try { return {content:readingSnapshot.value ? managedReadingMarkdown({...readingSnapshot.value,knownAnnotationIds:readingSnapshot.value.knownAnnotationIds||annotations.value.map(a=>a.id)},readingGrouping.value,readingComments.value,readingBlockId.value) : '',error:''} }
+  catch(cause) { return {content:'',error:String(cause).replace(/^Error:\s*/,'')} }
+})
+const readingMarkdown = computed(() => readingGenerated.value.content)
 watch([annotationQuery, annotationPages, annotationKindFilter, annotationColorFilter], () => { readingListPage.value = 0 })
 watch(annotations, value => { const ids = new Set(value.map(a => a.id)); readingSelection.value = readingSelection.value.filter(id => ids.has(id)) })
 const selectedAnnotation = computed(() => annotations.value.find(annotation => annotation.id === selectedAnnotationId.value))
@@ -1017,6 +1025,7 @@ const rememberPdfViewState = (path = pdfPath.value) => {
     fitWidth: fitWidth.value,
     sidebarOpen: sidebarOpen.value,
     sidebarTab: sidebarTab.value,
+    pdfAnnotations: {signature:pdfSourceSignature.value,id:selectedAnnotationId.value,query:annotationQuery.value,pages:annotationPages.value,kind:annotationKindFilter.value,color:annotationColorFilter.value,listPage:readingListPage.value,selection:[...readingSelection.value],scrollTop:window.document.querySelector('.annotation-panel')?.scrollTop||0},
   })
 }
 
@@ -1091,6 +1100,17 @@ const loadAnnotations = async (document: PDFDocumentProxy) => {
     annotationDocument.value = loaded
     annotationSourcePath = sourcePath
     annotationLibraryRoot = libraryRoot
+    const saved = recallWorkspaceViewState(sourcePath)?.pdfAnnotations
+    if (saved && saved.signature === pdfSourceSignature.value && !requestedAnnotationId()) {
+      annotationQuery.value = saved.query; annotationPages.value = saved.pages
+      annotationKindFilter.value = saved.kind; annotationColorFilter.value = saved.color
+      readingSelection.value = saved.selection.filter(id => loaded.annotations.some(a => a.id === id))
+      selectedAnnotationId.value = loaded.annotations.some(a => a.id === saved.id) ? saved.id : ''
+      await nextTick()
+      readingListPage.value = Math.min(saved.listPage, Math.max(0, Math.ceil(filteredAnnotations.value.length/50)-1))
+      await nextTick()
+      window.document.querySelector('.annotation-panel')?.scrollTo({top:saved.scrollTop,behavior:'instant'})
+    }
     await nextTick()
     focusRequestedReference()
   } catch (cause) {
@@ -2098,10 +2118,12 @@ const persistAnnotations = async () => {
   annotationSaveChain = annotationSaveChain.catch(() => undefined).then(async () => {
     try {
       await invoke('write_pdf_annotations', { libraryRoot, pdfPath: sourcePath, document: snapshot })
-      if (revision === annotationRevision) annotationDirty.value = false
+      if (annotationSourcePath === sourcePath && annotationLibraryRoot === libraryRoot && revision === annotationRevision) annotationDirty.value = false
     } catch (cause) {
-      annotationDirty.value = true
-      annotationSaveError.value = `批注保存失败：${String(cause)}`
+      if (annotationSourcePath === sourcePath && annotationLibraryRoot === libraryRoot) {
+        annotationDirty.value = true
+        annotationSaveError.value = `批注保存失败：${String(cause)}`
+      }
     } finally {
       annotationSaving.value = false
     }
@@ -2218,8 +2240,10 @@ const selectAnnotation = (id: string) => {
   const annotation = annotations.value.find(item => item.id === id)
   if (!annotation) return
   selectedAnnotationId.value = id
+  if (!filteredAnnotations.value.some(a=>a.id===id)) { annotationQuery.value='';annotationPages.value='';annotationKindFilter.value='';annotationColorFilter.value='' }
   sidebarOpen.value = true
   sidebarTab.value = 'annotations'
+  void nextTick(()=>{readingListPage.value=Math.max(0,Math.floor(filteredAnnotations.value.findIndex(a=>a.id===id)/50))})
   goToPage(annotation.page, 'auto')
   nextTick(() => scrollToAnnotation(id))
 }
@@ -2228,6 +2252,19 @@ const touchSelectedAnnotation = () => {
   if (!selectedAnnotation.value) return
   selectedAnnotation.value.updatedAt = Date.now()
   scheduleAnnotationSave()
+}
+const annotationContext = ref({show:false,x:0,y:0,id:''})
+const openAnnotationContext = (event:MouseEvent,id:string) => {annotationContext.value={show:true,x:event.clientX,y:event.clientY,id}}
+const annotationActions = [{key:'edit',label:'编辑评论…'},{key:'locate',label:'定位到原文'},{key:'delete',label:'删除批注…'}]
+const handleAnnotationAction = async (action:string,id:string) => {
+  if(action==='locate'){selectAnnotation(id);return}
+  if(action==='delete'){await deleteSelectedAnnotation(id);return}
+  const document=annotationDocument.value,annotation=annotations.value.find(a=>a.id===id)
+  if(!document||!annotation||!annotationWritable.value)return
+  const before=JSON.stringify(annotation),comment=await promptAppAction(dialog,{title:'编辑批注评论',initialValue:annotation.comment,multiline:true,positiveText:'保存评论'})
+  if(comment===null)return
+  if(annotationDocument.value!==document||!annotationWritable.value||JSON.stringify(annotation)!==before){message.warning('这条批注已有变化，请重新打开；原评论已保留');return}
+  annotation.comment=comment.slice(0,20000);annotation.updatedAt=Date.now();scheduleAnnotationSave()
 }
 const setSelectedAnnotationColor = (color: PdfAnnotationColor) => {
   if (!selectedAnnotation.value) return
@@ -2274,7 +2311,7 @@ const buildReadingSnapshot = async (ids: string[]): Promise<PdfReadingSnapshot> 
 const openReadingPreview = async (ids: string[]) => {
   if (referenceWorking.value || !ids.length) return
   const generation = ++referenceGeneration
-  readingSnapshot.value = null; readingNoteError.value = ''; readingPreviewOpen.value = true; referenceWorking.value = true
+  readingBlockId.value = crypto.randomUUID(); readingSnapshot.value = null; readingNoteError.value = ''; readingPreviewOpen.value = true; referenceWorking.value = true
   readingTargetId.value = readingTargets.value.find(tab => tab.id === store.activeTabId)?.id || readingTargets.value[0]?.id || ''
   try { const snapshot = await buildReadingSnapshot([...ids]); if (generation === referenceGeneration) readingSnapshot.value = snapshot }
   catch (cause) { if (generation === referenceGeneration) readingNoteError.value = `整理失败，原资料未更改：${String(cause)}` }
@@ -2336,6 +2373,14 @@ const insertReadingNote = async () => {
     if (generation === referenceGeneration) referenceWorking.value = false
   }
 }
+const openExistingReadingUpdate = async () => {
+  const target = readingTargets.value.find(tab => tab.id === readingTargetId.value)
+  if (!target || referenceWorking.value || readingNoteSaving.value) return
+  window.clearTimeout(annotationSaveTimer); await persistAnnotations()
+  if (annotationDirty.value || annotationSaveError.value) { readingNoteError.value = annotationSaveError.value || '批注尚未保存，请稍后重试'; return }
+  rememberPdfViewState(); closeReadingPreview(); store.activateTab(target.id)
+  await router.push({name:'LibraryMode',query:{path:target.path,pdfReadingUpdate:'1'}})
+}
 const saveReadingNote = async () => {
   if (!readingSnapshot.value || readingNoteSaving.value || referenceWorking.value) return
   const snapshot = readingSnapshot.value, markdown = readingMarkdown.value, root = store.libraryPath, path = pdfPath.value, generation = referenceGeneration
@@ -2357,16 +2402,17 @@ const saveReadingNote = async () => {
   } catch (cause) { if (generation === referenceGeneration) readingNoteError.value = saved ? `文件已保存，无需重存；打开失败：${String(cause)}。${saved}` : `保存失败，预览仍保留：${String(cause)}` }
   finally { readingNoteSaving.value = false; release() }
 }
-const deleteSelectedAnnotation = async () => {
-  if (!annotationDocument.value || !selectedAnnotation.value || !await confirmAppAction(dialog, {
+const deleteSelectedAnnotation = async (id = selectedAnnotationId.value) => {
+  const document=annotationDocument.value,annotation=annotations.value.find(a=>a.id===id)
+  if (!document || !annotation || !annotationWritable.value || !await confirmAppAction(dialog, {
     title: '删除 PDF 批注？',
     content: '这条批注将从当前批注文档中删除。',
     positiveText: '删除批注',
     danger: true,
   })) return
-  const id = selectedAnnotation.value.id
+  if(annotationDocument.value!==document||!annotationWritable.value){message.warning('PDF 已切换，未删除批注');return}
   annotationDocument.value.annotations = annotationDocument.value.annotations.filter(annotation => annotation.id !== id)
-  selectedAnnotationId.value = ''
+  if(selectedAnnotationId.value===id)selectedAnnotationId.value = ''
   scheduleAnnotationSave()
 }
 
@@ -2832,12 +2878,13 @@ onMounted(() => {
   window.addEventListener('beforeunload', warnPagePlanBeforeUnload)
 })
 onBeforeUnmount(async () => {
+  // Capture live panel/reading positions before the first await removes its DOM.
+  savePosition()
+  rememberPdfViewState()
   pdfLoadGeneration++
   referenceGeneration++
   await cancelOcr()
   pdfFormInspectionGeneration++
-  savePosition()
-  rememberPdfViewState()
   window.clearTimeout(positionTimer)
   window.clearTimeout(searchTimer)
   window.clearTimeout(annotationSaveTimer)
@@ -2908,6 +2955,7 @@ onBeforeUnmount(async () => {
 .reading-selection .reading-organize { width: 100%; border-color: var(--theme-primary); color: var(--theme-primary); }
 .reading-row { display: flex; align-items: flex-start; gap: 5px; }
 .reading-row > input { margin: 14px 0 0; flex: none; accent-color: var(--theme-primary); }
+.annotation-menu { flex:none; border:0; color:var(--theme-text-secondary); background:transparent; cursor:pointer; margin-top:8px; padding:4px; border-radius:var(--theme-radius-sm,6px); }
 .reading-row .annotation-card { flex: 1; min-width: 0; }
 .reading-pagination { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 8px 0; font-size: var(--text-compact); }
 .annotation-alert { margin-bottom: 8px; padding: 8px; border: 1px solid rgba(220,76,62,.24); border-radius: 7px; color: var(--status-danger); background: rgba(220,76,62,.08); font-size: var(--text-compact); line-height: 1.45; }

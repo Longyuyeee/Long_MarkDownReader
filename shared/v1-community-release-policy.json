@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.28",
-  "releaseCandidate": true,
+  "appVersion": "1.1.29",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-21",
-  "currentStatus": "v1.1.28-community-release-published",
+  "currentStatus": "v1.1.29-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.27",
+    "previousPublicVersion": "1.1.28",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.27-to-1.1.28-pending",
-    "scope": "reference-sources-and-relationship-repair"
+    "managedUpdaterUpgradePath": "1.1.28-to-1.1.29-pending",
+    "scope": "pdf-annotation-and-reading-note-continuity"
   },
   "targetRelease": {
-    "tag": "v1.1.28",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.28",
+    "tag": "v1.1.29",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.29",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "eba705bce78744fa20d30a7acad422d7297f0ef1",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39506887897,
-    "hostedInstalledLifecycleRunId": 39513702892,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.28_x64_zh-CN.msi",
-        "sizeBytes": 77770752,
-        "sha256": "c1f213c15b3a4d7784bc1a07d858210557a30a6450e02dfec7aa4ecbaaead088",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.28_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.28_x64-setup.exe",
-        "sizeBytes": 68474255,
-        "sha256": "a8ea21db8c280594788ea0fbda958bd90a17a143dfd84f429e07bec2d74120b7",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.28_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.28",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.28",
-    "databaseId": 418981282,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "eba705bce78744fa20d30a7acad422d7297f0ef1",
-    "publishedAt": "2026-10-20T23:30:02Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -112,7 +81,8 @@
     "1.1.24-to-1.1.25-managed-update-observation-pending",
     "1.1.25-to-1.1.26-managed-update-observation-pending",
     "v1.1.26-to-v1.1.27-managed-update-observation-pending",
-    "v1.1.27-to-v1.1.28-managed-update-observation-pending"
+    "v1.1.27-to-v1.1.28-managed-update-observation-pending",
+    "v1.1.28-to-v1.1.29-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.29-pdf-reading-continuity-planned"
+  "nextAction": "validate-and-build-v1.1.29-installers"
 }

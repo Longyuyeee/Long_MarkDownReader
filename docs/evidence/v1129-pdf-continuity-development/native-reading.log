@@ -1,0 +1,25 @@
+   Compiling tauri-app v1.1.28 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 55.67s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-19d4da9102c8cc64.exe)
+
+running 8 tests
+test commands::pdf_reading::tests::reading_snapshot_has_selected_original_quotes_comments_pages_and_strong_relative_links ... ok
+test commands::pdf_reading::tests::reading_source_digest_detects_same_size_replacement_even_when_timestamp_restored ... ok
+test commands::pdf_reading::tests::reading_snapshot_rejects_missing_duplicate_empty_over_limit_and_stale_source ... ok
+test commands::pdf_reading::tests::reading_source_survives_copy_and_relative_library_restore_but_not_wrong_file ... ok
+test commands::pdf_reading::tests::reading_rejects_damaged_or_mismatched_sidecar_and_window_identity ... ok
+test commands::pdf_reading::tests::reading_refresh_handles_all_deleted_and_rejects_a_changed_pdf_without_writing ... ok
+test commands::pdf_reading::tests::reading_refresh_distinguishes_new_deleted_and_previously_unselected_annotations ... ok
+test commands::pdf_reading::tests::reading_new_note_is_explicit_non_overwriting_and_keeps_pdf_and_other_drafts ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 1098 filtered out; finished in 0.06s
+

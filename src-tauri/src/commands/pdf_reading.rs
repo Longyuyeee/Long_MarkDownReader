@@ -25,6 +25,8 @@ pub struct ReadingSnapshot {
     pub source_signature: String,
     pub relative_path: String,
     pub items: Vec<ReadingItem>,
+    pub known_annotation_ids: Vec<String>,
+    pub missing_ids: Vec<String>,
 }
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -121,7 +123,10 @@ pub(crate) fn snapshot(
     expected_signature: &str,
     ids: &[String],
 ) -> Result<ReadingSnapshot, String> {
-    if ids.is_empty()
+    snapshot_impl(root, path, expected_signature, ids, None)
+}
+fn snapshot_impl(root: &str, path: &str, expected_signature: &str, ids: &[String], update: Option<(&[String], bool)>) -> Result<ReadingSnapshot, String> {
+    if (ids.is_empty() && update.is_none())
         || ids.len() > MAX_READING_ANNOTATIONS
         || ids.iter().collect::<HashSet<_>>().len() != ids.len()
     {
@@ -161,14 +166,22 @@ pub(crate) fn snapshot(
         .map_err(|_| "PDF 不在当前资料库")?
         .to_string_lossy()
         .replace('\\', "/");
+    let known_annotation_ids: Vec<String> = document.annotations.iter().map(|a| a.id.clone()).collect();
+    let mut wanted = ids.to_vec();
+    if let Some((known, include_new)) = update {
+        if known.len() > 10000 || known.iter().any(|id| id.len() > 128) { return Err("原阅读笔记的批注记录无效".into()); }
+        if include_new { for id in &known_annotation_ids { if !known.contains(id) && !wanted.contains(id) { wanted.push(id.clone()); } } }
+    }
+    if wanted.len() > MAX_READING_ANNOTATIONS { return Err("更新超过 200 条，请保留原笔记并从 PDF 分批整理".into()); }
+    let mut missing_ids = Vec::new();
     let mut items = Vec::new();
     let mut text_bytes = 0;
-    for id in ids {
-        let a = document
-            .annotations
-            .iter()
-            .find(|a| &a.id == id)
-            .ok_or("所选批注已被删除，请刷新列表")?;
+    for id in &wanted {
+        let a = match document.annotations.iter().find(|a| &a.id == id) {
+            Some(a) => a,
+            None if update.is_some() => { missing_ids.push(id.clone()); continue; },
+            None => return Err("所选批注已被删除，请刷新列表".into()),
+        };
         text_bytes += a.quote.len() + a.comment.len();
         if text_bytes > MAX_NOTE_BYTES / 2 {
             return Err("所选摘录和评论过大，请分批整理".into());
@@ -206,6 +219,8 @@ pub(crate) fn snapshot(
         source_signature: after.source_signature,
         relative_path: relative,
         items,
+        known_annotation_ids,
+        missing_ids,
     })
 }
 pub(crate) fn save_new(
@@ -282,6 +297,18 @@ pub async fn verify_pdf_reference(
     .await
     .map_err(|e| e.to_string())?
 }
+#[tauri::command]
+pub async fn refresh_pdf_reading_note(window: tauri::WebviewWindow, library_root: String, pdf_path: String, source_digest: String, annotation_ids: Vec<String>, known_annotation_ids: Vec<String>, include_new: bool) -> Result<ReadingSnapshot, String> {
+    main_only(window.label())?;
+    tauri::async_runtime::spawn_blocking(move || refresh_snapshot(&library_root, &pdf_path, &source_digest, &annotation_ids, &known_annotation_ids, include_new)).await.map_err(|e| e.to_string())?
+}
+fn refresh_snapshot(root: &str, path: &str, expected_digest: &str, ids: &[String], known: &[String], include_new: bool) -> Result<ReadingSnapshot, String> {
+    let verified = verify(root, path, expected_digest, None)?;
+    let result = snapshot_impl(root, path, &verified.source_signature, ids, Some((known, include_new)))?;
+    if result.source_digest != verified.source_digest { return Err("PDF 在核对期间变化，请重新打开".into()); }
+    Ok(result)
+}
+
 #[tauri::command]
 pub async fn save_pdf_reading_note(
     window: tauri::WebviewWindow,

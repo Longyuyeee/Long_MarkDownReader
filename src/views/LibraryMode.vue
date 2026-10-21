@@ -356,6 +356,7 @@
             <div class="document-menu-content" aria-label="文档操作菜单">
         <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" quaternary size="small" @mousedown.prevent @click="openDocumentFind">查找替换… · Ctrl+H</n-button>
         <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
+        <n-button v-if="activeIsMarkdown && activeTextTab?.content?.includes('longedit:')" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="openPdfReadingUpdate">更新 PDF 阅读笔记…</n-button>
         <n-button v-if="activeIsMarkdown" quaternary size="small" :disabled="editorLoading || editorModeChangeBusy" @click="saveCurrentAsTemplate"><template #icon><n-icon :component="FileIcon" /></template>保存为模板…</n-button>
         <n-dropdown
           v-if="activeTabId"
@@ -688,6 +689,7 @@
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :libraries="store.libraries" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" :after-cross-copy="applyCrossLibraryCopy" />
     <AttachmentManagerDialog ref="attachmentManager" :library-root="store.libraryPath" :context-key="store.libraryPath + ':' + activeTabId" :capture-draft="captureAttachmentDraft" :apply-draft="applyAttachmentDraft" @open="path => handleNodeSelect([path])" />
+    <PdfReadingUpdateDialog ref="pdfReadingUpdate" :context="pdfReadingContext" :apply="applyPdfReadingUpdate" />
     <DocumentFindReplace ref="documentFind" :context-key="store.libraryPath+':'+activeTabId+':'+store.editorMode+':'+documentPreviewActive" :revision="activeTextTab?.content" v-bind="documentFindAdapter" />
     <MarkdownSectionActions ref="sectionActions" :context-key="store.libraryPath + ':' + activeTabId + ':' + store.editorMode + ':' + documentPreviewActive" :capture="captureSectionContext" :apply-change="applySectionChange" />
     <ExternalImportDialog ref="externalImport" :library-root="store.libraryPath" :after-import="applyExternalImport" />
@@ -782,6 +784,8 @@ import { useAdaptiveMarkdownMotion } from '../composables/useAdaptiveMarkdownMot
 import { useImageFix } from '../composables/useImageFix'
 import DocumentFindReplace from '../components/DocumentFindReplace.vue'
 import {createVditorFindAdapter} from '../composables/createVditorFindAdapter'
+import PdfReadingUpdateDialog from '../components/PdfReadingUpdateDialog.vue'
+import { applyVditorDraftUpdate } from '../utils/vditorDraftUpdate'
 import { applyVditorSourceRepair } from '../utils/vditorSourceRepair'
 import { localMarkdownLink, markdownAnchorTarget } from '../utils/localMarkdownLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
@@ -2729,6 +2733,20 @@ const applySectionChange=(context:MarkdownSectionContext,change:SectionChange)=>
   })
   void fixEditorImages()
 }
+const pdfReadingUpdate = ref<InstanceType<typeof PdfReadingUpdateDialog>|null>(null)
+const pdfReadingContext = () => ({key:store.libraryPath+':'+activeTabId.value+':'+editorLoadGeneration+':'+(vditor?.vditor?.currentMode||''),content:vditor?.vditor?vditor.getValue():'',revision:activeTextTab.value?.content,ready:Boolean(vditor?.vditor&&activeIsMarkdown.value&&!activeEmbeddedEditor.value&&isVditorReady&&lastLoadedPath===activeTabId.value&&!editorLoading.value&&!editorModeChangeBusy.value&&!suppressEditorInput&&!fileOperationBusy.value&&!currentFileReloadBusy.value&&!documentPreviewActive.value&&!hasPendingMainTextSave(activeTabId.value||'')&&!activeTextTab.value?.textReadOnlyReason)})
+const openPdfReadingUpdate = () => { documentActionsVisible.value=false; pdfReadingUpdate.value?.open() }
+const applyPdfReadingUpdate = (before:string,after:string,key:string) => {
+  const live=pdfReadingContext(),tab=activeTextTab.value
+  if(!live.ready||live.key!==key||live.content!==before||!tab)throw Error('笔记或编辑模式已有变化，未修改草稿')
+  applyVditorDraftUpdate(vditor,before,after);recordWindowDraftActivity();store.updateTabContent(tab.path,after);tab.isDirty=true;updateWordCount();syncOutlineManual(true);void fixEditorImages()
+}
+const openRequestedReadingUpdate = async () => {
+  if(route.query.pdfReadingUpdate!=='1'||!pdfReadingContext().ready)return
+  await nextTick();if(route.query.pdfReadingUpdate!=='1'||!pdfReadingContext().ready)return
+  openPdfReadingUpdate();const query={...route.query};delete query.pdfReadingUpdate;void router.replace({query})
+}
+watch([()=>route.query.pdfReadingUpdate,activeTabId,editorLoading,editorModeChangeBusy],openRequestedReadingUpdate,{flush:'post'})
 const documentFind=ref<InstanceType<typeof DocumentFindReplace>|null>(null)
 const documentFindAdapter=createVditorFindAdapter(()=>vditor,()=>({key:store.libraryPath+':'+activeTabId.value,path:activeTabId.value||'',generation:editorLoadGeneration,revision:activeTextTab.value?.content,signature:activeTextTab.value?.textSignature,
  ready:Boolean(activeIsMarkdown.value&&!activeEmbeddedEditor.value&&isVditorReady&&lastLoadedPath===activeTabId.value&&!editorLoading.value&&!editorModeChangeBusy.value&&!suppressEditorInput&&!fileOperationBusy.value&&!currentFileReloadBusy.value&&!hasPendingMainTextSave(activeTabId.value||'')),
@@ -2815,6 +2833,7 @@ const loadFileToEditor = async (path: string, forceRead = false) => {
         revealSearchMatch();
         scheduleWorkspaceTaskReveal();
         scheduleRelationEvidenceReveal();
+        void openRequestedReadingUpdate();
       }, 50) 
     })
   }

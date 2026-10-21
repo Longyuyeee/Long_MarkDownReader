@@ -1,0 +1,8 @@
+{
+  "error": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=draft-target]') to be visible\u001b[22m\n\u001b[2m    43 × locator resolved to hidden <main data-testid=\"draft-target\"></main>\u001b[22m\n\n    at E:\\Project\\AIProject\\GeminiProject\\MDReader\\scripts\\test-v1129-pdf-annotation-browser.mjs:10:121",
+  "checks": [
+    "Right-click comment editing keeps the current PDF page, filter and selected annotation"
+  ],
+  "errors": [],
+  "body": ""
+}
