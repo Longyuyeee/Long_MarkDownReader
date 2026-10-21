@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> v1.1.31 正在进行发布前复核：XLSX 连续录入、规则检查与可撤销修正；当前公开下载仍为 v1.1.30。
+
 > **v1.1.30 已正式发布**：Table 录入规则与批量纠错。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.30) · [发布说明](docs/RELEASE_NOTES_v1.1.30.md)。
 
 

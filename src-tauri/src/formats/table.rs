@@ -50,7 +50,7 @@ pub struct TableRule {
     pub options: Option<Vec<String>>,
 }
 
-fn decimal_parts(value: &str) -> Option<(bool, String, i32)> {
+pub(crate) fn decimal_parts(value: &str) -> Option<(bool, String, i32)> {
     if value.len() > 128 || value.trim() != value || !value.parse::<f64>().ok()?.is_finite() {
         return None;
     }

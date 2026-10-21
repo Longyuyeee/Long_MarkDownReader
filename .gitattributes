@@ -341,3 +341,19 @@ docs/evidence/v1130-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1130-publication-*/**/*.log -text -diff
 docs/evidence/v1130-table-development/** -text whitespace=cr-at-eol
 docs/evidence/v1130-table-development/**/*.log -text -diff
+
+# Raw v1.1.31 development and installed output bytes.
+docs/evidence/v1131-reference-repair-development/** -text whitespace=cr-at-eol
+docs/evidence/v1131-reference-repair-development/**/*.log -text -diff
+docs/evidence/v1-1-31-candidate-lifecycle/** -text whitespace=cr-at-eol
+docs/evidence/v1-1-31-candidate-lifecycle/**/*.log -text -diff
+docs/evidence/v1.1.31-release/** -text whitespace=cr-at-eol
+docs/evidence/v1.1.31-release/**/*.log -text -diff
+docs/evidence/v1131-build-*/** -text whitespace=cr-at-eol
+docs/evidence/v1131-build-*/**/*.log -text -diff
+docs/evidence/v1131-review-*/** -text whitespace=cr-at-eol
+docs/evidence/v1131-review-*/**/*.log -text -diff
+docs/evidence/v1131-publication-*/** -text whitespace=cr-at-eol
+docs/evidence/v1131-publication-*/**/*.log -text -diff
+docs/evidence/v1131-workbook-development/** -text whitespace=cr-at-eol
+docs/evidence/v1131-workbook-development/**/*.log -text -diff

@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "Direct integer entry rejects fractions and retains unrelated draft",
+    "Invalid mixed batch changes no target",
+    "Valid mixed paste is one Undo with other draft retained",
+    "Correction preview cancel leaves draft untouched",
+    "Stable coordinate correction is a reversible draft",
+    "Filtered check skips hidden rows and distinguishes unsupported list/formula",
+    "Check dialog available under all six styles",
+    "Date rules infer typed dates and reject invalid calendar values",
+    "Unicode correction uses character count",
+    "Explicit multi-cell selection retains its exact scope",
+    "Late read after library change cannot apply stale results or discard drafts"
+  ],
+  "errors": []
+}

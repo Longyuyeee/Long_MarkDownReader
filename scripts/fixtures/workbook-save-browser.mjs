@@ -42,7 +42,19 @@ if (new URLSearchParams(window.location.search).has('v1116')) {
   sheet.totalRows=5;sheet.totalColumns=sheet.returnedColumns=4
   sheet.autoFilter={top:0,bottom:4,left:0,right:3};sheet.autoFilterState={editable:true,columns:[],sortConditions:[]}
 }
-const audit = window.workbookAudit = { pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [], writes: [] }
+if (new URLSearchParams(window.location.search).has('v1131')) {
+  const cell=(value,kind='number')=>({value,kind,dateEditable:false})
+  sheet.rows=[['项目','数量','单价','日期','备注','区域列表'].map(v=>cell(v,'text')),
+    [cell('可见一','text'),cell('1.5'),cell('0.1'),{value:'2026-10-21',editValue:'2026-10-21',kind:'date',dateKind:'date',dateEditable:true},cell('太长的备注','text'),cell('甲','text')],
+    [cell('隐藏记录','text'),cell('99'),cell('99'),cell('0'),cell('隐藏原文','text'),cell('乙','text')],
+    [cell('可见二','text'),cell('2'),cell('0.2'),{value:'2026-10-22',editValue:'2026-10-22',kind:'date',dateKind:'date',dateEditable:true},cell('好','text'),{...cell('1'),formula:'=B4'}]]
+  sheet.totalRows=4;sheet.totalColumns=sheet.returnedColumns=6
+  sheet.autoFilter={top:0,bottom:3,left:0,right:5};sheet.autoFilterState={editable:true,columns:[],sortConditions:[]}
+  sheet.rowStates=[{row:2,hidden:true,outlineLevel:0,collapsed:false}]
+  const rule=(column,kind,formula1,formula2,operator='between')=>({ranges:[{top:1,bottom:3,left:column,right:column}],kind,formula1,formula2,operator,allowBlank:false,showErrorMessage:true})
+  sheet.dataValidations=[rule(1,'whole','1','10'),rule(2,'decimal','0.1','1'),rule(3,'date','46316','46319'),rule(4,'textLength','0','3'),rule(5,'list','Options!$A$1:$A$3')]
+}
+const audit = window.workbookAudit = { holdInspect:false,inspectQueue:[], pending: null, failNext: false, holdReads: false, readQueue: [], validationWrites: [], writes: [] }
 audit.inputTrace = []
 window.document.addEventListener('paste', event => audit.inputTrace.push({ type: event.type, trusted: event.isTrusted, types: [...(event.clipboardData?.types || [])] }), true)
 if (new URLSearchParams(window.location.search).has('drawingEdit')) {
@@ -164,7 +176,7 @@ window.__TAURI_INTERNALS__ = { invoke: async (command, args) => {
     document.signature += '-validation'
     return structuredClone(document)
   }
-  if (command === 'read_workbook_file') return structuredClone(document)
+  if (command === 'read_workbook_file') { const snapshot=structuredClone(document); if(audit.holdInspect) return new Promise(resolve=>audit.inspectQueue.push(()=>resolve(snapshot))); return snapshot }
   if (command === 'read_workbook_sheet') {
     const snapshot = structuredClone(sheets[args.sheet])
     if (audit.holdReads) return new Promise((resolve, reject) => {

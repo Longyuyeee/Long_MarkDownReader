@@ -9,7 +9,7 @@ import {chapterChecks,validateInstalledChapters,assertChapterOutputBytes} from '
 const q=JSON.stringify,key=value=>String(value||'').replaceAll('\\','/').replace('//?/','').toLowerCase(),sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex')
 export async function runInstalledV1124Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
  for(const[k,v]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'Windows',LONGEDIT_R5I_DISPOSABLE:'1'}))assert.equal(process.env[k],v)
- assert.ok(['1.1.24','1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
+ assert.ok(['1.1.24','1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31'].includes(appVersion));assert.equal(path.resolve(library).toLowerCase(),'c:\\longeditr5ilibrary')
  const folder=path.join(library,'000-v1124-chapters-'+crypto.randomUUID()),file=path.join(folder,'章节长文-v1124.md'),other=path.join(folder,'对照-v1124.md'),image=path.join(folder,'images/shared.png'),ui=nativeUserInput({send,evaluate},{timeoutMs:60000})
  const store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,tab=`${store}.tabs.find(t=>window.__v1124Key(t.path)===${q(key(file))})`,draft=()=>evaluate(`${tab}.content`)
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-markdown-chapters-trusted-ui-and-output-bytes',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],modes:[],outputs:[]}
