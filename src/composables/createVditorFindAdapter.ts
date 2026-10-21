@@ -1,5 +1,6 @@
 import type {FindDocumentSnapshot,Replacement,TextSpan} from '../utils/documentFindReplace'
 import {vditorSourceSelection,revealVditorSourceMatch,clearFindHighlight} from '../utils/vditorFindReplace'
+import {applyVditorDraftUpdate} from '../utils/vditorDraftUpdate'
 interface DocumentIdentity {key:string;path:string;generation:number;ready:boolean;revision?:string;signature?:string;readOnlyReason?:string}
 interface Owner {editor:any;identity:DocumentIdentity;mode:string;scrollTop:number;scrollLeft:number}
 export function createVditorFindAdapter(getEditor:()=>any,documentIdentity:()=>DocumentIdentity,onChange:(content:string,path:string)=>void){
@@ -18,10 +19,8 @@ export function createVditorFindAdapter(getEditor:()=>any,documentIdentity:()=>D
   let canonical:string
   if(mode==='sv'){const clone=document.createElement('div');clone.innerHTML=lute.SpinVditorSVDOM(change.content);canonical=`${clone.textContent}\n`.replace(/\n\n$/,'\n').replace(/\u00a0/g,' ')}else canonical=mode==='ir'?lute.VditorIRDOM2Md(lute.Md2VditorIRDOM(change.content)):lute.VditorDOM2Md(lute.Md2VditorDOM(change.content))
   if(canonical!==change.content)throw Error('此替换会改变 Markdown 的排版，请在源码模式调整后再试；当前原稿未改动。')
-  const undo=editor.vditor.undo,prior=undo[mode],history={...prior,undoStack:[...prior.undoStack],redoStack:[...prior.redoStack]}
-  clearFindHighlight();undo.addToUndoStack(editor.vditor);editor.setValue(change.content)
-  const applied=editor.getValue();if(applied!==change.content){editor.setValue(snapshot.content);Object.assign(undo[mode],history);undo.resetIcon(editor.vditor);throw Error('当前模式未能准确保留替换范围，原稿和撤销记录已恢复。')}
-  undo.addToUndoStack(editor.vditor);const root=editor.vditor[mode].element as HTMLElement;root.scrollTop=owner.scrollTop;root.scrollLeft=owner.scrollLeft;onChange(applied,snapshot.path)
+  clearFindHighlight();applyVditorDraftUpdate(editor,snapshot.content,change.content)
+  const root=editor.vditor[mode].element as HTMLElement;root.scrollTop=owner.scrollTop;root.scrollLeft=owner.scrollLeft;onChange(change.content,snapshot.path)
   return capture()
  }
  const reveal=(snapshot:FindDocumentSnapshot,span:TextSpan)=>{if(isCurrent(snapshot))revealVditorSourceMatch((snapshot.owner as Owner).editor,span)}

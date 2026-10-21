@@ -1,0 +1,16 @@
+{
+  "error": "page.waitForFunction: Timeout 20000ms exceeded.\n    at E:\\Project\\AIProject\\GeminiProject\\MDReader\\scripts\\test-v1134-find-undo-browser.mjs:18:525",
+  "draft": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 访客 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n未保存的输入 sv\n\n未保存的输入 ir\n\n未保存的输入 wysiwyg\n\n",
+  "before": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n未保存的输入 sv\n\n未保存的输入 ir\n\n未保存的输入 wysiwyg\n\n",
+  "checks": [
+    {
+      "id": "0-wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "0-ir-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
