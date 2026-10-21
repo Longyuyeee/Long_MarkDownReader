@@ -543,6 +543,10 @@ fn prepare_unit(
         let mut file = load_file(sidecar.clone(), next_sidecar)?;
         file.annotation_for = Some(next_pdf);
         file.replacement = Some(annotation_json(&document)?);
+        text_bytes = text_bytes.saturating_add(file.replacement.as_ref().map_or(0, String::len));
+        if text_bytes > MAX_TEXT {
+            return Err("批注与笔记正文合计超过 64 MiB，请分批复制或取消携带阅读成果".into());
+        }
         files.retain(|f| f.source != sidecar);
         files.push(file);
     }
@@ -719,7 +723,12 @@ fn prepare_with_reading(
             let bytes = unit
                 .files
                 .iter()
-                .map(|f| f.original.as_ref().map_or(0, String::len))
+                .map(|f| {
+                    f.original
+                        .as_ref()
+                        .map_or(0, String::len)
+                        .max(f.replacement.as_ref().map_or(0, String::len))
+                })
                 .sum::<usize>();
             if total_text.saturating_add(bytes) > MAX_TEXT
                 || total_files.saturating_add(unit.files.len()) > MAX_FILES
