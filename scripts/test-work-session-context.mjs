@@ -20,6 +20,16 @@ test('reading position survives restart without draft or selection contents', ()
   assert.equal(second.recallWorkspaceViewState('C:/notes/a.pdf').section, '8')
   assert.equal(second.recallWorkspaceViewState('C:/notes/a.pdf').draft, undefined)
 })
+
+test('restoring selected files retains queued reading positions for unrelated documents',()=>{
+ entries.clear()
+ const views=moduleAt('src/services/workspaceViewState.ts')
+ views.stageWorkspaceViewStates({'C:/old/keep.pdf':{scrollTop:450,scrollLeft:0}},['C:/old/keep.pdf'])
+ views.stageWorkspaceViewStates({'C:/new/read.pdf':{scrollTop:200,scrollLeft:0}},['C:/new/read.pdf'])
+ const restarted=moduleAt('src/services/workspaceViewState.ts')
+ assert.equal(restarted.recallWorkspaceViewState('C:/old/keep.pdf').scrollTop,450)
+ assert.equal(restarted.recallWorkspaceViewState('C:/new/read.pdf').scrollTop,200)
+})
 test('search filters survive restart and remain scoped to their library', () => {
   entries.clear()
   const first = moduleAt('src/composables/useSearchReturn.ts')

@@ -1,0 +1,864 @@
+review	Set up job	﻿2026-10-21T10:51:51.0850633Z Current runner version: '2.338.0'
+review	Set up job	2026-10-21T10:51:51.0894914Z ##[group]Runner Image Provisioner
+review	Set up job	2026-10-21T10:51:51.0895881Z Hosted Compute Agent
+review	Set up job	2026-10-21T10:51:51.0896429Z Version: 20261002.596
+review	Set up job	2026-10-21T10:51:51.0897004Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+review	Set up job	2026-10-21T10:51:51.0897728Z Build Date: 2026-10-02T22:28:27Z
+review	Set up job	2026-10-21T10:51:51.0898362Z Worker ID: {8c6504d9-9139-4912-a3de-17bf43c2a767}
+review	Set up job	2026-10-21T10:51:51.0899060Z Region: centralus
+review	Set up job	2026-10-21T10:51:51.0899646Z Cloud: Azure
+review	Set up job	2026-10-21T10:51:51.0900130Z ##[endgroup]
+review	Set up job	2026-10-21T10:51:51.0901353Z ##[group]Operating System
+review	Set up job	2026-10-21T10:51:51.0902516Z Microsoft Windows Server 2025
+review	Set up job	2026-10-21T10:51:51.0903132Z 10.0.26100
+review	Set up job	2026-10-21T10:51:51.0903702Z Datacenter
+review	Set up job	2026-10-21T10:51:51.0904195Z ##[endgroup]
+review	Set up job	2026-10-21T10:51:51.0904713Z ##[group]Runner Image
+review	Set up job	2026-10-21T10:51:51.0905282Z Image: windows-2025-vs2026
+review	Set up job	2026-10-21T10:51:51.0905881Z Version: 20261007.264.1
+review	Set up job	2026-10-21T10:51:51.0906984Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+review	Set up job	2026-10-21T10:51:51.0908992Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+review	Set up job	2026-10-21T10:51:51.0909936Z ##[endgroup]
+review	Set up job	2026-10-21T10:51:51.0911115Z ##[group]GITHUB_TOKEN Permissions
+review	Set up job	2026-10-21T10:51:51.0913234Z Actions: read
+review	Set up job	2026-10-21T10:51:51.0913755Z Contents: read
+review	Set up job	2026-10-21T10:51:51.0914346Z Metadata: read
+review	Set up job	2026-10-21T10:51:51.0914852Z ##[endgroup]
+review	Set up job	2026-10-21T10:51:51.0916845Z Secret source: Actions
+review	Set up job	2026-10-21T10:51:51.0917703Z Cache mode: write
+review	Set up job	2026-10-21T10:51:51.0918359Z Prepare workflow directory
+review	Set up job	2026-10-21T10:51:51.1409205Z Prepare all required actions
+review	Set up job	2026-10-21T10:51:51.1458781Z Getting action download info
+review	Set up job	2026-10-21T10:51:51.4190946Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+review	Set up job	2026-10-21T10:51:51.5426053Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+review	Set up job	2026-10-21T10:51:51.6778687Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+review	Set up job	2026-10-21T10:51:52.1235712Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+review	Set up job	2026-10-21T10:51:52.2550625Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+review	Set up job	2026-10-21T10:51:52.5807196Z Complete job name: review
+review	Run actions/checkout@v6	﻿2026-10-21T10:51:52.7081732Z ##[group]Run actions/checkout@v6
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7083239Z with:
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7084236Z   fetch-depth: 0
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7085108Z   repository: Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7089289Z   token: ***
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7089879Z   ssh-strict: true
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7090495Z   ssh-user: git
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7091059Z   persist-credentials: true
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7091675Z   clean: true
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7092247Z   sparse-checkout-cone-mode: true
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7093051Z   fetch-tags: false
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7093880Z   show-progress: true
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7094581Z   lfs: false
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7095208Z   submodules: false
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7095824Z   set-safe-directory: true
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7096339Z   allow-unsafe-pr-checkout: false
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7097360Z env:
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7097913Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7098582Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7099127Z   RELEASE_VERSION: 1.1.32
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7099878Z   PREVIOUS_VERSION: 1.1.31
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7100544Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7101317Z   INSTALLER_RUN_ID: 39580620295
+review	Run actions/checkout@v6	2026-10-21T10:51:52.7101862Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:51:52.8562665Z Syncing repository: Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-21T10:51:52.8565713Z ##[group]Getting Git version info
+review	Run actions/checkout@v6	2026-10-21T10:51:52.8566931Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+review	Run actions/checkout@v6	2026-10-21T10:51:52.9290591Z [command]"C:\Program Files\Git\bin\git.exe" version
+review	Run actions/checkout@v6	2026-10-21T10:51:53.2641652Z git version 2.56.0.windows.2
+review	Run actions/checkout@v6	2026-10-21T10:51:53.2697130Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:51:53.2719468Z Temporarily overriding HOME='D:\a\_temp\28f9e97a-6d82-4074-b840-89fa15ff60f9' before making global git config changes
+review	Run actions/checkout@v6	2026-10-21T10:51:53.2722741Z Adding repository directory to the temporary git global config as a safe directory
+review	Run actions/checkout@v6	2026-10-21T10:51:53.2731032Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-21T10:51:53.3519508Z Deleting the contents of 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+review	Run actions/checkout@v6	2026-10-21T10:51:53.3526979Z ##[group]Determining repository object format
+review	Run actions/checkout@v6	2026-10-21T10:51:53.3530086Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:51:53.3531805Z ##[group]Initializing the repository
+review	Run actions/checkout@v6	2026-10-21T10:51:53.3540059Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-21T10:51:53.4464818Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/
+review	Run actions/checkout@v6	2026-10-21T10:51:53.4519549Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5238236Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5240289Z ##[group]Disabling automatic garbage collection
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5246896Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5636877Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5639198Z ##[group]Setting up auth
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5640624Z Removing SSH command configuration
+review	Run actions/checkout@v6	2026-10-21T10:51:53.5647373Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+review	Run actions/checkout@v6	2026-10-21T10:51:53.6090903Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+review	Run actions/checkout@v6	2026-10-21T10:51:55.1498338Z Removing HTTP extra header
+review	Run actions/checkout@v6	2026-10-21T10:51:55.1511269Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+review	Run actions/checkout@v6	2026-10-21T10:51:55.1904256Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+review	Run actions/checkout@v6	2026-10-21T10:51:55.7773084Z Removing includeIf entries pointing to credentials config files
+review	Run actions/checkout@v6	2026-10-21T10:51:55.7786393Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+review	Run actions/checkout@v6	2026-10-21T10:51:55.8167544Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+review	Run actions/checkout@v6	2026-10-21T10:51:56.3593123Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+review	Run actions/checkout@v6	2026-10-21T10:51:56.3982692Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Run actions/checkout@v6	2026-10-21T10:51:56.4358109Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Run actions/checkout@v6	2026-10-21T10:51:56.4786918Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Run actions/checkout@v6	2026-10-21T10:51:56.5171012Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Run actions/checkout@v6	2026-10-21T10:51:56.5564874Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:51:56.5567219Z ##[group]Fetching the repository
+review	Run actions/checkout@v6	2026-10-21T10:51:56.5580127Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4468518Z From https://github.com/Longyuyeee/Long_MarkDownReader
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4471322Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4472266Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4473067Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4473863Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4474788Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4475752Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4476627Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4477513Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4478381Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4479077Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4479989Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4480880Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4481825Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4482706Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4483714Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4484634Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4485412Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4486189Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4489970Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4491143Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4492106Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4493152Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4494115Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4495095Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4496119Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4497225Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4498334Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4499711Z  * [new branch]        codex/v1120-release-roadmap -> origin/codex/v1120-release-roadmap
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4500661Z  * [new branch]        codex/v1120-structured-editing -> origin/codex/v1120-structured-editing
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4501638Z  * [new branch]        codex/v1121-cross-library-copy -> origin/codex/v1121-cross-library-copy
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4502657Z  * [new branch]        codex/v1122-file-operation-history -> origin/codex/v1122-file-operation-history
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4504143Z  * [new branch]        codex/v1123-attachment-management -> origin/codex/v1123-attachment-management
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4505190Z  * [new branch]        codex/v1124-long-markdown -> origin/codex/v1124-long-markdown
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4506139Z  * [new branch]        codex/v1125-find-replace -> origin/codex/v1125-find-replace
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4507057Z  * [new branch]        codex/v1126-structured-history -> origin/codex/v1126-structured-history
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4507971Z  * [new branch]        codex/v1127-tags-collections -> origin/codex/v1127-tags-collections
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4508873Z  * [new branch]        codex/v1128-reference-repair -> origin/codex/v1128-reference-repair
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4509772Z  * [new branch]        codex/v1129-pdf-continuity -> origin/codex/v1129-pdf-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4510609Z  * [new branch]        codex/v1130-table-validation -> origin/codex/v1130-table-validation
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4511636Z  * [new branch]        codex/v1131-workbook-validation -> origin/codex/v1131-workbook-validation
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4512624Z  * [new branch]        codex/v1132-restore-continuity -> origin/codex/v1132-restore-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4513600Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4514513Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4515423Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4516491Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4518211Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4519353Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4520373Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4521222Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4523052Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4523939Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4524525Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4525457Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4526183Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4526815Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4527601Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4528254Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4528899Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4529496Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4530147Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4530930Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4531895Z  * [new branch]        main                    -> origin/main
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4533038Z  * [new tag]           v0.1.0                  -> v0.1.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4533687Z  * [new tag]           v0.2.0                  -> v0.2.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4534337Z  * [new tag]           v0.3.0                  -> v0.3.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4535181Z  * [new tag]           v0.3.1                  -> v0.3.1
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4535688Z  * [new tag]           v0.3.2                  -> v0.3.2
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4536872Z  * [new tag]           v0.3.3                  -> v0.3.3
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4537441Z  * [new tag]           v0.3.4                  -> v0.3.4
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4538017Z  * [new tag]           v0.4.4                  -> v0.4.4
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4538566Z  * [new tag]           v0.4.5                  -> v0.4.5
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4539428Z  * [new tag]           v0.4.6                  -> v0.4.6
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4540109Z  * [new tag]           v0.4.7                  -> v0.4.7
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4540603Z  * [new tag]           v0.4.8                  -> v0.4.8
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4541103Z  * [new tag]           v0.4.9                  -> v0.4.9
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4541630Z  * [new tag]           v0.5.0                  -> v0.5.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4542164Z  * [new tag]           v0.5.1                  -> v0.5.1
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4542756Z  * [new tag]           v0.5.2                  -> v0.5.2
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4543305Z  * [new tag]           v0.5.3                  -> v0.5.3
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4543851Z  * [new tag]           v0.5.4                  -> v0.5.4
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4544497Z  * [new tag]           v0.5.5                  -> v0.5.5
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4545041Z  * [new tag]           v0.5.6                  -> v0.5.6
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4545613Z  * [new tag]           v0.5.7                  -> v0.5.7
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4546184Z  * [new tag]           v0.5.8                  -> v0.5.8
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4546759Z  * [new tag]           v0.5.9                  -> v0.5.9
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4547348Z  * [new tag]           v0.6.0                  -> v0.6.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4547921Z  * [new tag]           v0.6.1                  -> v0.6.1
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4548510Z  * [new tag]           v0.6.2                  -> v0.6.2
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4549147Z  * [new tag]           v0.6.3                  -> v0.6.3
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4549727Z  * [new tag]           v0.6.4                  -> v0.6.4
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4550248Z  * [new tag]           v0.6.5                  -> v0.6.5
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4550759Z  * [new tag]           v0.6.6                  -> v0.6.6
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4551269Z  * [new tag]           v0.6.7                  -> v0.6.7
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4551806Z  * [new tag]           v0.6.8                  -> v0.6.8
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4552773Z  * [new tag]           v0.6.9                  -> v0.6.9
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4553616Z  * [new tag]           v1.0.0                  -> v1.0.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4554208Z  * [new tag]           v1.0.1                  -> v1.0.1
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4554754Z  * [new tag]           v1.0.10                 -> v1.0.10
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4555304Z  * [new tag]           v1.0.11                 -> v1.0.11
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4555905Z  * [new tag]           v1.0.12                 -> v1.0.12
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4556477Z  * [new tag]           v1.0.13                 -> v1.0.13
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4557094Z  * [new tag]           v1.0.14                 -> v1.0.14
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4557649Z  * [new tag]           v1.0.15                 -> v1.0.15
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4558197Z  * [new tag]           v1.0.16                 -> v1.0.16
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4558709Z  * [new tag]           v1.0.17                 -> v1.0.17
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4559568Z  * [new tag]           v1.0.18                 -> v1.0.18
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4560153Z  * [new tag]           v1.0.19                 -> v1.0.19
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4560714Z  * [new tag]           v1.0.2                  -> v1.0.2
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4561293Z  * [new tag]           v1.0.20                 -> v1.0.20
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4561860Z  * [new tag]           v1.0.21                 -> v1.0.21
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4562457Z  * [new tag]           v1.0.22                 -> v1.0.22
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4563023Z  * [new tag]           v1.0.23                 -> v1.0.23
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4564780Z  * [new tag]           v1.0.24                 -> v1.0.24
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4565325Z  * [new tag]           v1.0.25                 -> v1.0.25
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4565855Z  * [new tag]           v1.0.26                 -> v1.0.26
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4566408Z  * [new tag]           v1.0.3                  -> v1.0.3
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4566948Z  * [new tag]           v1.0.4                  -> v1.0.4
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4567472Z  * [new tag]           v1.0.5                  -> v1.0.5
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4568017Z  * [new tag]           v1.0.6                  -> v1.0.6
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4568572Z  * [new tag]           v1.0.7                  -> v1.0.7
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4569128Z  * [new tag]           v1.0.8                  -> v1.0.8
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4569661Z  * [new tag]           v1.0.9                  -> v1.0.9
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4570178Z  * [new tag]           v1.1.0                  -> v1.1.0
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4570719Z  * [new tag]           v1.1.1                  -> v1.1.1
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4571235Z  * [new tag]           v1.1.10                 -> v1.1.10
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4571776Z  * [new tag]           v1.1.11                 -> v1.1.11
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4572257Z  * [new tag]           v1.1.12                 -> v1.1.12
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4572758Z  * [new tag]           v1.1.13                 -> v1.1.13
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4573288Z  * [new tag]           v1.1.14                 -> v1.1.14
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4573784Z  * [new tag]           v1.1.15                 -> v1.1.15
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4574311Z  * [new tag]           v1.1.16                 -> v1.1.16
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4574851Z  * [new tag]           v1.1.17                 -> v1.1.17
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4575362Z  * [new tag]           v1.1.18                 -> v1.1.18
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4575980Z  * [new tag]           v1.1.19                 -> v1.1.19
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4576517Z  * [new tag]           v1.1.2                  -> v1.1.2
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4577089Z  * [new tag]           v1.1.20                 -> v1.1.20
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4577745Z  * [new tag]           v1.1.21                 -> v1.1.21
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4578309Z  * [new tag]           v1.1.22                 -> v1.1.22
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4578868Z  * [new tag]           v1.1.23                 -> v1.1.23
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4579781Z  * [new tag]           v1.1.24                 -> v1.1.24
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4580294Z  * [new tag]           v1.1.25                 -> v1.1.25
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4581868Z  * [new tag]           v1.1.26                 -> v1.1.26
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4582438Z  * [new tag]           v1.1.27                 -> v1.1.27
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4583001Z  * [new tag]           v1.1.28                 -> v1.1.28
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4583582Z  * [new tag]           v1.1.29                 -> v1.1.29
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4584781Z  * [new tag]           v1.1.3                  -> v1.1.3
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4585387Z  * [new tag]           v1.1.30                 -> v1.1.30
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4585940Z  * [new tag]           v1.1.31                 -> v1.1.31
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4586430Z  * [new tag]           v1.1.4                  -> v1.1.4
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4587030Z  * [new tag]           v1.1.5                  -> v1.1.5
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4587542Z  * [new tag]           v1.1.6                  -> v1.1.6
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4588125Z  * [new tag]           v1.1.7                  -> v1.1.7
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4588643Z  * [new tag]           v1.1.8                  -> v1.1.8
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4589251Z  * [new tag]           v1.1.9                  -> v1.1.9
+review	Run actions/checkout@v6	2026-10-21T10:52:13.4590617Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/codex/v1132-restore-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5059219Z   origin/codex/v1132-restore-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5110297Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/codex/v1132-restore-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5541946Z e7c2644028c1fa7e774ee16629948c967f4043c6
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5580769Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5581363Z ##[group]Determining the checkout info
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5582006Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:52:13.5592060Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+review	Run actions/checkout@v6	2026-10-21T10:52:13.6076103Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+review	Run actions/checkout@v6	2026-10-21T10:52:13.6455480Z ##[group]Checking out the ref
+review	Run actions/checkout@v6	2026-10-21T10:52:13.6464513Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B codex/v1132-restore-continuity refs/remotes/origin/codex/v1132-restore-continuity
+review	Run actions/checkout@v6	2026-10-21T10:52:15.1722317Z Updating files:   6% (1304/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:15.3783323Z Updating files:   7% (1480/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:15.5246270Z Updating files:   8% (1692/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:15.6954228Z Updating files:   9% (1903/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:15.7331769Z Updating files:  10% (2114/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:15.9041557Z Updating files:  10% (2156/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:16.0700134Z Updating files:  11% (2326/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:16.6435178Z Updating files:  12% (2537/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:16.7463653Z Updating files:  13% (2748/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:16.8355642Z Updating files:  13% (2861/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:16.9864637Z Updating files:  14% (2960/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:17.1311395Z Updating files:  15% (3171/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:17.2894094Z Updating files:  16% (3383/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:17.4294918Z Updating files:  17% (3594/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:17.9639062Z Updating files:  18% (3805/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:17.9845090Z Updating files:  18% (3992/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.1143930Z Updating files:  19% (4017/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.2393780Z Updating files:  20% (4228/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.3659773Z Updating files:  21% (4439/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.5050442Z Updating files:  22% (4651/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.6308437Z Updating files:  23% (4862/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.7536750Z Updating files:  24% (5074/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.7561720Z Updating files:  25% (5285/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:18.8686782Z Updating files:  25% (5294/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:19.4387391Z Updating files:  26% (5496/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:19.5658384Z Updating files:  27% (5708/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:19.6843951Z Updating files:  28% (5919/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:19.7664741Z Updating files:  29% (6131/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:19.8083373Z Updating files:  29% (6296/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:19.9113994Z Updating files:  30% (6342/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:20.0513574Z Updating files:  31% (6553/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:20.1585192Z Updating files:  32% (6765/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:20.2666761Z Updating files:  33% (6976/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:20.7665412Z Updating files:  34% (7187/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:20.7913639Z Updating files:  34% (7364/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:20.9493249Z Updating files:  35% (7399/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.0251498Z Updating files:  36% (7610/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.0791569Z Updating files:  37% (7822/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.1592075Z Updating files:  38% (8033/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.3034375Z Updating files:  39% (8244/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.4233267Z Updating files:  40% (8456/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.6099149Z Updating files:  41% (8667/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:21.9747645Z Updating files:  42% (8878/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:22.1062824Z Updating files:  42% (8930/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:22.4395736Z Updating files:  43% (9090/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:22.6304809Z Updating files:  44% (9301/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:22.7902059Z Updating files:  45% (9513/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:22.8019504Z Updating files:  45% (9713/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:22.9656796Z Updating files:  46% (9724/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:23.5426112Z Updating files:  47% (9935/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:23.7039484Z Updating files:  48% (10147/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:23.7888751Z Updating files:  49% (10358/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:23.8350857Z Updating files:  49% (10486/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:23.9710688Z Updating files:  50% (10569/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:24.1108465Z Updating files:  51% (10781/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:24.2364597Z Updating files:  52% (10992/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:24.8298627Z Updating files:  53% (11204/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:24.8424015Z Updating files:  53% (11397/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:24.9797172Z Updating files:  54% (11415/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:25.0926259Z Updating files:  55% (11626/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:25.2256812Z Updating files:  56% (11838/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:25.3574367Z Updating files:  57% (12049/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:25.4805028Z Updating files:  58% (12261/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:25.5995250Z Updating files:  59% (12472/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:25.7332197Z Updating files:  60% (12683/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.2058637Z Updating files:  61% (12895/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.3454592Z Updating files:  61% (12898/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.4740244Z Updating files:  62% (13106/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.5944146Z Updating files:  63% (13317/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.7312998Z Updating files:  64% (13529/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.8112697Z Updating files:  65% (13740/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:26.9000702Z Updating files:  65% (13847/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:27.0251831Z Updating files:  66% (13952/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:27.6360811Z Updating files:  67% (14163/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:27.7670323Z Updating files:  68% (14374/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:27.8135385Z Updating files:  69% (14586/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:27.8693923Z Updating files:  69% (14675/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:27.9691909Z Updating files:  70% (14797/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.1145956Z Updating files:  71% (15008/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.2053028Z Updating files:  72% (15220/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.2929409Z Updating files:  73% (15431/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.3972948Z Updating files:  74% (15643/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.5163059Z Updating files:  75% (15854/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.6303620Z Updating files:  76% (16065/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.7247483Z Updating files:  77% (16277/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:28.8459867Z Updating files:  78% (16488/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:29.4846184Z Updating files:  78% (16543/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:29.6259305Z Updating files:  79% (16700/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:29.7094112Z Updating files:  80% (16911/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:29.8152149Z Updating files:  81% (17122/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:29.8341259Z Updating files:  81% (17278/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.0410619Z Updating files:  82% (17334/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.4959477Z Updating files:  83% (17545/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.6460868Z Updating files:  84% (17756/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.7750371Z Updating files:  85% (17968/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.8161356Z Updating files:  86% (18179/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.9124570Z Updating files:  86% (18249/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:30.9962501Z Updating files:  87% (18391/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:31.0694856Z Updating files:  88% (18602/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.0101166Z Updating files:  89% (18813/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.0164854Z Updating files:  89% (18986/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.0607626Z Updating files:  90% (19025/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.1007386Z Updating files:  91% (19236/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.1366282Z Updating files:  92% (19447/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.1733196Z Updating files:  93% (19659/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.2099185Z Updating files:  94% (19870/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.2489270Z Updating files:  95% (20082/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.2867843Z Updating files:  96% (20293/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.5349400Z Updating files:  97% (20504/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.6068417Z Updating files:  98% (20716/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.6629102Z Updating files:  99% (20927/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.6629699Z Updating files: 100% (21138/21138)
+review	Run actions/checkout@v6	2026-10-21T10:52:32.6630079Z Updating files: 100% (21138/21138), done.
+review	Run actions/checkout@v6	2026-10-21T10:52:32.7023005Z Switched to a new branch 'codex/v1132-restore-continuity'
+review	Run actions/checkout@v6	2026-10-21T10:52:32.7036819Z branch 'codex/v1132-restore-continuity' set up to track 'origin/codex/v1132-restore-continuity'.
+review	Run actions/checkout@v6	2026-10-21T10:52:32.8406966Z ##[endgroup]
+review	Run actions/checkout@v6	2026-10-21T10:52:32.8891778Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+review	Run actions/checkout@v6	2026-10-21T10:52:32.9265380Z e7c2644028c1fa7e774ee16629948c967f4043c6
+review	Validate immutable review inputs	﻿2026-10-21T10:52:32.9875616Z ##[group]Run if ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }
+review	Validate immutable review inputs	2026-10-21T10:52:32.9882328Z ^[[36;1mif ($env:CANDIDATE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $env:INSTALLER_RUN_ID -notmatch '^[1-9][0-9]+$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:PREVIOUS_VERSION -notmatch '^1\.\d+\.\d+$') { throw 'Invalid immutable review inputs' }^[[0m
+review	Validate immutable review inputs	2026-10-21T10:52:33.0580206Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Validate immutable review inputs	2026-10-21T10:52:33.0580820Z env:
+review	Validate immutable review inputs	2026-10-21T10:52:33.0581155Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Validate immutable review inputs	2026-10-21T10:52:33.0581507Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Validate immutable review inputs	2026-10-21T10:52:33.0581883Z   RELEASE_VERSION: 1.1.32
+review	Validate immutable review inputs	2026-10-21T10:52:33.0582205Z   PREVIOUS_VERSION: 1.1.31
+review	Validate immutable review inputs	2026-10-21T10:52:33.0582575Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Validate immutable review inputs	2026-10-21T10:52:33.0583139Z   INSTALLER_RUN_ID: 39580620295
+review	Validate immutable review inputs	2026-10-21T10:52:33.0583434Z ##[endgroup]
+review	Run actions/setup-node@v6	﻿2026-10-21T10:52:35.3469654Z ##[group]Run actions/setup-node@v6
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3470185Z with:
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3470483Z   node-version: 22
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3470785Z   check-latest: false
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3473805Z   token: ***
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3474115Z   package-manager-cache: true
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3474468Z env:
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3474765Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3475113Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3475450Z   RELEASE_VERSION: 1.1.32
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3475797Z   PREVIOUS_VERSION: 1.1.31
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3476187Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3476584Z   INSTALLER_RUN_ID: 39580620295
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.3476901Z ##[endgroup]
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.5456449Z Found in cache @ C:\hostedtoolcache\windows\node\22.23.3\x64
+review	Run actions/setup-node@v6	2026-10-21T10:52:35.5468068Z ##[group]Environment details
+review	Run actions/setup-node@v6	2026-10-21T10:52:40.0752631Z node: v22.23.3
+review	Run actions/setup-node@v6	2026-10-21T10:52:40.0753165Z npm: 10.9.9
+review	Run actions/setup-node@v6	2026-10-21T10:52:40.0753457Z yarn: 1.22.22
+review	Run actions/setup-node@v6	2026-10-21T10:52:40.0754287Z ##[endgroup]
+review	Check real unauthenticated official update API before installer work	﻿2026-10-21T10:52:40.1074116Z ##[group]Run node scripts/check-installed-review-network.mjs
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1074864Z ^[[36;1mnode scripts/check-installed-review-network.mjs^[[0m
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1298243Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1298894Z env:
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1299213Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1299684Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1300053Z   RELEASE_VERSION: 1.1.32
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1300407Z   PREVIOUS_VERSION: 1.1.31
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1300862Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1301365Z   INSTALLER_RUN_ID: 39580620295
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:40.1301735Z ##[endgroup]
+review	Check real unauthenticated official update API before installer work	2026-10-21T10:52:41.2409996Z {"status":"passed-network-preflight","sourceUserContentIncluded":false,"authenticated":false,"officialApi":"https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest","productSourceCommit":"5a696d5479579d7bb87eef49e461f351954acaf4","harnessSourceCommit":"e7c2644028c1fa7e774ee16629948c967f4043c6","httpStatus":200,"remaining":59,"resetAt":"1792583561","observedTag":"v1.1.31"}
+review	Run actions/download-artifact@v4	﻿2026-10-21T10:52:41.4342467Z ##[group]Run actions/download-artifact@v4
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4343109Z with:
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4345886Z   github-token: ***
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4346278Z   run-id: 39580620295
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4346817Z   name: community-release-candidate-lifecycle-39580620295
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4347300Z   path: immutable-build
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4347694Z   merge-multiple: false
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4348295Z   repository: Longyuyeee/Long_MarkDownReader
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4349782Z env:
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4350148Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4350574Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4350980Z   RELEASE_VERSION: 1.1.32
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4351326Z   PREVIOUS_VERSION: 1.1.31
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4351822Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4352289Z   INSTALLER_RUN_ID: 39580620295
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.4352641Z ##[endgroup]
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.6156991Z Downloading single artifact
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.6231443Z (node:3888) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.6232930Z (Use `node --trace-deprecation ...` to show where the warning was created)
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.6730381Z (node:3888) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.8853791Z Preparing to download the following artifacts:
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.8855405Z - community-release-candidate-lifecycle-39580620295 (ID: 12338768924, Size: 214643688, Expected Digest: sha256:6cec49adf4e1f719f5fd2efe1fb388872fc6d68ca546d0c882f3b0deb0decca5)
+review	Run actions/download-artifact@v4	2026-10-21T10:52:41.8893674Z Downloading artifact '12338768924' from 'Longyuyeee/Long_MarkDownReader'
+review	Run actions/download-artifact@v4	2026-10-21T10:52:42.0597955Z Redirecting to blob download url: https://productionresultssa4.blob.core.windows.net/actions-results/90e86fd0-a312-4489-9c5f-6be4be6ba841/workflow-job-run-bcb74090-8852-5b6a-9a05-d9d918c2c2df/artifacts/fc31969d79cbab32e720974da72ad9cb41698210e80911129aa25dc21f92befc.zip
+review	Run actions/download-artifact@v4	2026-10-21T10:52:42.0599590Z Starting download of artifact to: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build
+review	Run actions/download-artifact@v4	2026-10-21T10:52:42.2558282Z (node:3888) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+review	Run actions/download-artifact@v4	2026-10-21T10:52:50.0899020Z SHA256 digest of downloaded artifact is 6cec49adf4e1f719f5fd2efe1fb388872fc6d68ca546d0c882f3b0deb0decca5
+review	Run actions/download-artifact@v4	2026-10-21T10:52:50.0899857Z Artifact download completed successfully.
+review	Run actions/download-artifact@v4	2026-10-21T10:52:50.0900360Z Total of 1 artifact(s) downloaded
+review	Run actions/download-artifact@v4	2026-10-21T10:52:50.0910066Z Download artifact has finished successfully
+review	Verify same installers and successful original build gates	﻿2026-10-21T10:52:50.1261325Z ##[group]Run $ErrorActionPreference = 'Stop'
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1262093Z ^[[36;1m$ErrorActionPreference = 'Stop'^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1262656Z ^[[36;1m$run = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID" | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1263409Z ^[[36;1mif ($LASTEXITCODE -ne 0 -or $run.head_sha -ne $env:CANDIDATE_COMMIT) { throw 'Original build source identity drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1264197Z ^[[36;1m$jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:INSTALLER_RUN_ID/jobs" | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1264892Z ^[[36;1mif ($LASTEXITCODE -ne 0) { throw 'Original build job receipt unavailable' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1265808Z ^[[36;1mforeach ($name in @('Run frozen candidate release quality gate', 'Run complete Rust regression suite', 'Build frozen candidate MSI and NSIS', 'Capture immutable installer receipt')) {^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1266669Z ^[[36;1m  $step = @($jobs.jobs.steps | Where-Object { $_.name -eq $name })^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1267466Z ^[[36;1m  if ($step.Count -ne 1 -or $step[0].conclusion -ne 'success') { throw "Original gate did not pass: $name" }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1268668Z ^[[36;1m}^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1269050Z ^[[36;1m$root = Join-Path $env:GITHUB_WORKSPACE 'immutable-build'^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1269876Z ^[[36;1m$receipt = Get-Content -Encoding UTF8 -LiteralPath (Join-Path $root 'community-release-output\installer-build-receipt.json') -Raw | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1270994Z ^[[36;1m$previous = Get-Content -Encoding UTF8 -LiteralPath "docs/evidence/v$($env:PREVIOUS_VERSION)-release/release-receipt.json" -Raw | ConvertFrom-Json^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1273165Z ^[[36;1mif ($receipt.candidateSourceCommit -ne $env:CANDIDATE_COMMIT -or $receipt.appVersion -ne $env:RELEASE_VERSION -or $receipt.previousVersion -ne $env:PREVIOUS_VERSION -or $receipt.previousSourceCommit -ne $previous.release.taggedCommit -or $receipt.previousInstallerSource -ne 'official-github-release' -or $receipt.sourceUserContentIncluded -ne $false -or $receipt.artifacts.Count -ne 2) { throw 'Installer receipt identity or boundary drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1274834Z ^[[36;1mforeach ($artifact in $receipt.artifacts) {^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1275547Z ^[[36;1m  if ($artifact.target -notin @('msi','nsis') -or $artifact.authenticodeStatus -ne 'NotSigned') { throw 'Unexpected installer target or signing status' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1276462Z ^[[36;1m  $folder = Join-Path $root "current-product\src-tauri\target\release\bundle\$($artifact.target)"^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1277119Z ^[[36;1m  $file = Get-Item -LiteralPath (Join-Path $folder $artifact.fileName)^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1278072Z ^[[36;1m  if ($file.Length -ne $artifact.sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName).Hash.ToLowerInvariant() -ne $artifact.sha256) { throw 'Current installer size/hash drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1278881Z ^[[36;1m}^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1279383Z ^[[36;1m$old = Get-Item -LiteralPath (Join-Path $root "previous-official\LongEdit_$($env:PREVIOUS_VERSION)_x64-setup.exe")^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1280190Z ^[[36;1m$oldAsset = @($previous.assets | Where-Object { $_.name -eq $old.Name })^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1281406Z ^[[36;1mif ($oldAsset.Count -ne 1 -or $old.Length -ne $oldAsset[0].sizeBytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $old.FullName).Hash.ToLowerInvariant() -ne $oldAsset[0].sha256 -or $receipt.previousInstallerSha256 -ne $oldAsset[0].sha256) { throw 'Previous official installer drifted' }^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1282813Z ^[[36;1m"CURRENT_INSTALLER_DIRECTORY=$(Join-Path $root 'current-product\src-tauri\target\release\bundle\nsis')" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1283721Z ^[[36;1m"PREVIOUS_INSTALLER_DIRECTORY=$($old.Directory.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1284616Z ^[[36;1m"CURRENT_INSTALLER_SHA256=$(@($receipt.artifacts | Where-Object { $_.target -eq 'nsis' })[0].sha256)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append^[[0m
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1356247Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1356809Z env:
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1357119Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1357463Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1357819Z   RELEASE_VERSION: 1.1.32
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1358132Z   PREVIOUS_VERSION: 1.1.31
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1358495Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1358916Z   INSTALLER_RUN_ID: 39580620295
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1361563Z   GH_TOKEN: ***
+review	Verify same installers and successful original build gates	2026-10-21T10:52:50.1361887Z ##[endgroup]
+review	Set up independent XLSX producer Python	﻿2026-10-21T10:52:56.3490965Z ##[group]Run actions/setup-python@v6
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3491491Z with:
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3491784Z   python-version: 3.12
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3492076Z   check-latest: false
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3494402Z   token: ***
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3494693Z   update-environment: true
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3495055Z   allow-prereleases: false
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3495356Z   freethreaded: false
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3495622Z env:
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3496226Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3496657Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3497216Z   RELEASE_VERSION: 1.1.32
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3497526Z   PREVIOUS_VERSION: 1.1.31
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3497865Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3498277Z   INSTALLER_RUN_ID: 39580620295
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3498897Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3500016Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3500831Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.3501322Z ##[endgroup]
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.5063579Z ##[group]Installed versions
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.5245947Z Successfully set up CPython (3.12.10)
+review	Set up independent XLSX producer Python	2026-10-21T10:52:56.5246893Z ##[endgroup]
+review	Install hash-pinned independent XLSX producer	﻿2026-10-21T10:52:56.5536105Z ##[group]Run scripts/setup-hosted-xlsx-producer.ps1
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5536868Z ^[[36;1mscripts/setup-hosted-xlsx-producer.ps1^[[0m
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5605719Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5606249Z env:
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5606560Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5606925Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5607317Z   RELEASE_VERSION: 1.1.32
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5607676Z   PREVIOUS_VERSION: 1.1.31
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5608028Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5608438Z   INSTALLER_RUN_ID: 39580620295
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5609064Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5609921Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5610632Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5611315Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5611814Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5612336Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5612825Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5613284Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:52:56.5613674Z ##[endgroup]
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.5226154Z Collecting openpyxl==3.1.5 (from -r D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\fixtures\v1116-producer-requirements.txt (line 1))
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.5725452Z   Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.6571423Z Collecting et-xmlfile==2.0.0 (from -r D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\fixtures\v1116-producer-requirements.txt (line 2))
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.6679863Z   Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.7232486Z Collecting defusedxml==0.7.1 (from -r D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\fixtures\v1116-producer-requirements.txt (line 3))
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.7346971Z   Downloading defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:04.7715682Z Installing collected packages: et-xmlfile, defusedxml, openpyxl
+review	Install hash-pinned independent XLSX producer	2026-10-21T10:53:05.1517020Z Successfully installed defusedxml-0.7.1 et-xmlfile-2.0.0 openpyxl-3.1.5
+review	Test directory identity without changing the filesystem	﻿2026-10-21T10:53:05.3275966Z ##[group]Run node --test scripts/test-release-directory-identity.mjs
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3276974Z ^[[36;1mnode --test scripts/test-release-directory-identity.mjs^[[0m
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3349622Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3350120Z env:
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3350403Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3350784Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3351115Z   RELEASE_VERSION: 1.1.32
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3351481Z   PREVIOUS_VERSION: 1.1.31
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3351854Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3352235Z   INSTALLER_RUN_ID: 39580620295
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3352904Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3353764Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3354802Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3355385Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3355894Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3356464Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3356919Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3357396Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3358018Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.3358552Z ##[endgroup]
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.7480417Z TAP version 13
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8111712Z # Subtest: extended Windows spelling still addresses the exact same physical directory
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8119234Z ok 1 - extended Windows spelling still addresses the exact same physical directory
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8120482Z   ---
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8121240Z   duration_ms: 5.1886
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8121676Z   type: 'test'
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8122347Z   ...
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8126883Z # Subtest: a different existing directory never qualifies as the chosen destination
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8128991Z ok 2 - a different existing directory never qualifies as the chosen destination
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8130479Z   ---
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8131871Z   duration_ms: 1.133
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8132428Z   type: 'test'
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8132831Z   ...
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8134936Z # Subtest: files and missing directories cannot pass a destination check
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8142314Z ok 3 - files and missing directories cannot pass a destination check
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8143242Z   ---
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8143748Z   duration_ms: 1.2986
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8144213Z   type: 'test'
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8144705Z   ...
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8253340Z 1..3
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8253830Z # tests 3
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8254720Z # suites 0
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8255613Z # pass 3
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8256454Z # fail 0
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8257199Z # cancelled 0
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8257593Z # skipped 0
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8257987Z # todo 0
+review	Test directory identity without changing the filesystem	2026-10-21T10:53:05.8258370Z # duration_ms 115.7216
+review	Retain original build reports separately from installer bytes	﻿2026-10-21T10:53:05.9492804Z ##[group]Run actions/upload-artifact@v4
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9493400Z with:
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9493775Z   name: community-release-original-build-reports-39587674276
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9494305Z   path: immutable-build/community-release-output
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9494708Z   if-no-files-found: error
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9495029Z   retention-days: 14
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9495360Z   compression-level: 6
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9495727Z   overwrite: false
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9496047Z   include-hidden-files: false
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9496377Z env:
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9496732Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9497116Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9497456Z   RELEASE_VERSION: 1.1.32
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9497793Z   PREVIOUS_VERSION: 1.1.31
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9498188Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9498583Z   INSTALLER_RUN_ID: 39580620295
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9499296Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9500301Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9501086Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9501742Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9502271Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9503011Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9503481Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9503980Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9504622Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:05.9505251Z ##[endgroup]
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.1568097Z (node:3692) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.1569056Z (Use `node --trace-deprecation ...` to show where the warning was created)
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.1639565Z With the provided path, there will be 1 file uploaded
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.1645446Z Artifact name is valid!
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.1647384Z Root directory input is valid!
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.4406017Z Beginning upload of artifact content to blob storage
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.4584669Z (node:3692) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.6241344Z Uploaded bytes 716
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.6713311Z Finished uploading artifact content to blob storage!
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.6714681Z SHA256 digest of uploaded artifact zip is b80a88feb317d0da406b3f69beac5d1daa24a84ebea98b8663d024b86d6e7703
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.6716562Z Finalizing artifact upload
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.9456019Z Artifact community-release-original-build-reports-39587674276.zip successfully finalized. Artifact ID 12339797603
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.9458017Z Artifact community-release-original-build-reports-39587674276 has been successfully uploaded! Final size is 716 bytes. Artifact ID is 12339797603
+review	Retain original build reports separately from installer bytes	2026-10-21T10:53:06.9468551Z Artifact download URL: https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39587674276/artifacts/12339797603
+review	Test canonical search fixture parents with owned temporary directories	﻿2026-10-21T10:53:06.9936943Z ##[group]Run node --test scripts/test-installed-search-fixture-path.mjs
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:06.9937483Z ^[[36;1mnode --test scripts/test-installed-search-fixture-path.mjs^[[0m
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0006948Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0007273Z env:
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0007471Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0007727Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0007948Z   RELEASE_VERSION: 1.1.32
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0008164Z   PREVIOUS_VERSION: 1.1.31
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0008415Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0008710Z   INSTALLER_RUN_ID: 39580620295
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0009217Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0009930Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0010548Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0010998Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0011391Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0011792Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0012164Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0012519Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0013321Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.0013777Z ##[endgroup]
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.3378339Z TAP version 13
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4140637Z # Subtest: 8.3 spelling is resolved through the filesystem before making any search fixture path
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4151807Z ok 1 - 8.3 spelling is resolved through the filesystem before making any search fixture path
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4155462Z   ---
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4155933Z   duration_ms: 3.5783
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4157390Z   type: 'test'
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4157909Z   ...
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4162009Z # Subtest: unknown or different physical parents fail closed without a string fallback
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4163928Z ok 2 - unknown or different physical parents fail closed without a string fallback
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4165644Z   ---
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4166320Z   duration_ms: 6.3635
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4166938Z   type: 'test'
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4167336Z   ...
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4248848Z # Subtest: a real owned directory alias resolves correctly and all original bytes remain unchanged
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4252263Z ok 3 - a real owned directory alias resolves correctly and all original bytes remain unchanged
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4253111Z   ---
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4253553Z   duration_ms: 15.1587
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4254256Z   type: 'test'
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4254724Z   ...
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4366232Z 1..3
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4366543Z # tests 3
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4366808Z # suites 0
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4367125Z # pass 3
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4367605Z # fail 0
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4368233Z # cancelled 0
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4368535Z # skipped 0
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4369109Z # todo 0
+review	Test canonical search fixture parents with owned temporary directories	2026-10-21T10:53:07.4369513Z # duration_ms 116.5613
+review	Run complete same-installer lifecycle and installed workflow	﻿2026-10-21T10:53:07.5527795Z ##[group]Run & powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5528792Z ^[[36;1m& powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/run-r5i-isolated-install-lifecycle.ps1 `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5529364Z ^[[36;1m  -InstallerDirectory $env:CURRENT_INSTALLER_DIRECTORY `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5529796Z ^[[36;1m  -PreviousInstallerDirectory $env:PREVIOUS_INSTALLER_DIRECTORY `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5530277Z ^[[36;1m  -CurrentVersion $env:RELEASE_VERSION -PreviousVersion $env:PREVIOUS_VERSION `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5530745Z ^[[36;1m  -ExpectedCurrentSha256 $env:CURRENT_INSTALLER_SHA256 `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5531108Z ^[[36;1m  -NodeExecutable (Get-Command node.exe).Source `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5531655Z ^[[36;1m  -InstalledSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5j-installed-artifact-smoke.mjs') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5532430Z ^[[36;1m  -ManagementRollbackSmokeScript (Join-Path $env:GITHUB_WORKSPACE 'scripts/capture-r5l-management-rollback-smoke.mjs') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5533246Z ^[[36;1m  -EvidenceExporter (Join-Path $env:GITHUB_WORKSPACE 'scripts/export-r5k-windows-evidence-bundle.ps1') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5533773Z ^[[36;1m  -ExpectedSourceCommit $env:CANDIDATE_COMMIT `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5534201Z ^[[36;1m  -OutputDirectory (Join-Path $env:GITHUB_WORKSPACE 'same-installer-review') `^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5534642Z ^[[36;1m  -ConfirmDisposableMachine -AllowInstallerMutation^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5535067Z ^[[36;1mif ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }^[[0m
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5604717Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5605109Z env:
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5605307Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5605578Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5605811Z   RELEASE_VERSION: 1.1.32
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5606014Z   PREVIOUS_VERSION: 1.1.31
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5606293Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5606606Z   INSTALLER_RUN_ID: 39580620295
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5607120Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5607866Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5608453Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5609138Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5609546Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5609955Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5610354Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5610728Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5611250Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:53:07.5611699Z ##[endgroup]
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3862686Z File selection must stay in the owned generated fixture
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3863670Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\select-hosted-session-file.ps1:6 char:172
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3864425Z + ... owner'))) { throw 'File selection must stay in the owned generated fi ...
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3865112Z +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3865882Z     + CategoryInfo          : OperationStopped: (File selection ...nerated fixture:String) [], RuntimeException
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3866709Z     + FullyQualifiedErrorId : File selection must stay in the owned generated fixture
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.3867309Z  
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5948212Z node:internal/modules/run_main:123
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5951460Z     triggerUncaughtException(
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5951741Z     ^
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5951845Z 
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5952006Z Error: Owned native picker failed 1
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5952691Z     at ChildProcess.<anonymous> (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-32-workflow.mjs:18:471)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5953304Z     at Object.onceWrapper (node:events:634:26)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5953637Z     at ChildProcess.emit (node:events:519:28)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5954030Z     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5954318Z 
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.5954410Z Node.js v22.23.3
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8680171Z R5J installed-artifact route and I/O smoke failed.
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8682532Z At D:\a\Long_MarkDownReader\Long_MarkDownReader\scripts\run-r5i-isolated-install-lifecycle.ps1:428 char:9
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8683889Z +         throw "R5J installed-artifact route and I/O smoke failed."
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8684577Z +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8685325Z     + CategoryInfo          : OperationStopped: (R5J installed-a...O smoke failed.:String) [], RuntimeException
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8686241Z     + FullyQualifiedErrorId : R5J installed-artifact route and I/O smoke failed.
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:17.8686797Z  
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9255550Z Same-installer lifecycle failed
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9256296Z At D:\a\_temp\29258a28-2fc8-4c86-b43c-2c0c1f7d0d03.ps1:14 char:28
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9257011Z + if ($LASTEXITCODE -ne 0) { throw 'Same-installer lifecycle failed' }
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9257575Z +                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9258344Z     + CategoryInfo          : OperationStopped: (Same-installer lifecycle failed:String) [], RuntimeException
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9259048Z     + FullyQualifiedErrorId : Same-installer lifecycle failed
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9259442Z  
+review	Run complete same-installer lifecycle and installed workflow	2026-10-21T10:54:19.9490032Z ##[error]Process completed with exit code 1.
+review	Retain runner network observation	﻿2026-10-21T10:54:19.9663222Z ##[group]Run if (Test-Path -LiteralPath installer-network-preflight.json) {
+review	Retain runner network observation	2026-10-21T10:54:19.9663878Z ^[[36;1mif (Test-Path -LiteralPath installer-network-preflight.json) {^[[0m
+review	Retain runner network observation	2026-10-21T10:54:19.9664373Z ^[[36;1m  New-Item -ItemType Directory -Path same-installer-review -Force | Out-Null^[[0m
+review	Retain runner network observation	2026-10-21T10:54:19.9665060Z ^[[36;1m  Copy-Item -LiteralPath installer-network-preflight.json -Destination same-installer-review/installer-network-preflight.json^[[0m
+review	Retain runner network observation	2026-10-21T10:54:19.9665853Z ^[[36;1m}^[[0m
+review	Retain runner network observation	2026-10-21T10:54:19.9734388Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Retain runner network observation	2026-10-21T10:54:19.9734814Z env:
+review	Retain runner network observation	2026-10-21T10:54:19.9735099Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Retain runner network observation	2026-10-21T10:54:19.9735376Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Retain runner network observation	2026-10-21T10:54:19.9735615Z   RELEASE_VERSION: 1.1.32
+review	Retain runner network observation	2026-10-21T10:54:19.9735860Z   PREVIOUS_VERSION: 1.1.31
+review	Retain runner network observation	2026-10-21T10:54:19.9736148Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Retain runner network observation	2026-10-21T10:54:19.9736461Z   INSTALLER_RUN_ID: 39580620295
+review	Retain runner network observation	2026-10-21T10:54:19.9737071Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Retain runner network observation	2026-10-21T10:54:19.9737857Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Retain runner network observation	2026-10-21T10:54:19.9738485Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Retain runner network observation	2026-10-21T10:54:19.9738977Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain runner network observation	2026-10-21T10:54:19.9739399Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Retain runner network observation	2026-10-21T10:54:19.9739843Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain runner network observation	2026-10-21T10:54:19.9740224Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain runner network observation	2026-10-21T10:54:19.9740611Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain runner network observation	2026-10-21T10:54:19.9741136Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Retain runner network observation	2026-10-21T10:54:19.9741620Z ##[endgroup]
+review	Retain original build receipt with review reports	﻿2026-10-21T10:54:20.2756600Z ##[group]Run $source = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\installer-build-receipt.json'
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2757579Z ^[[36;1m$source = Join-Path $env:GITHUB_WORKSPACE 'immutable-build\community-release-output\installer-build-receipt.json'^[[0m
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2758481Z ^[[36;1m$destination = Join-Path $env:GITHUB_WORKSPACE 'same-installer-review'^[[0m
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2759162Z ^[[36;1mif (Test-Path -LiteralPath $source) {^[[0m
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2759876Z ^[[36;1m  New-Item -ItemType Directory -Path $destination -Force | Out-Null^[[0m
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2760636Z ^[[36;1m  Copy-Item -LiteralPath $source -Destination (Join-Path $destination 'installer-build-receipt.json')^[[0m
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2761076Z ^[[36;1m}^[[0m
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2829664Z shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2830083Z env:
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2830301Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2830577Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2830891Z   RELEASE_VERSION: 1.1.32
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2831123Z   PREVIOUS_VERSION: 1.1.31
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2831408Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2832086Z   INSTALLER_RUN_ID: 39580620295
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2832869Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2833671Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2834311Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2834798Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2835226Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2835654Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2836064Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2836443Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2837001Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Retain original build receipt with review reports	2026-10-21T10:54:20.2838254Z ##[endgroup]
+review	Run actions/upload-artifact@v4	﻿2026-10-21T10:54:20.5859446Z ##[group]Run actions/upload-artifact@v4
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5859840Z with:
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5860119Z   name: community-release-installer-review-39587674276
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5860441Z   retention-days: 14
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5860669Z   if-no-files-found: error
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5860934Z   path: same-installer-review
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5861185Z   compression-level: 6
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5861402Z   overwrite: false
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5861618Z   include-hidden-files: false
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5861957Z env:
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5862165Z   LONGEDIT_INSTALLED_VERSION_SCENARIO: 1
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5862440Z   LONGEDIT_R5I_DISPOSABLE: 1
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5862680Z   RELEASE_VERSION: 1.1.32
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5862930Z   PREVIOUS_VERSION: 1.1.31
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5863222Z   CANDIDATE_COMMIT: 5a696d5479579d7bb87eef49e461f351954acaf4
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5863545Z   INSTALLER_RUN_ID: 39580620295
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5864106Z   CURRENT_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\current-product\src-tauri\target\release\bundle\nsis
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5864969Z   PREVIOUS_INSTALLER_DIRECTORY: D:\a\Long_MarkDownReader\Long_MarkDownReader\immutable-build\previous-official
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5865602Z   CURRENT_INSTALLER_SHA256: 07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5866115Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5866555Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5866986Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5867383Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5868390Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5868954Z   LONGEDIT_XLSX_PYTHON: D:\a\_temp\longedit-v1116-producer-d0becc9f82ba421ba3a39ee10cc6c218\Scripts\python.exe
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.5869434Z ##[endgroup]
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.7822507Z (node:5156) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.7823286Z (Use `node --trace-deprecation ...` to show where the warning was created)
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.7988599Z With the provided path, there will be 38 files uploaded
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.7994193Z Artifact name is valid!
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:20.7995472Z Root directory input is valid!
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.0835792Z Beginning upload of artifact content to blob storage
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.2127121Z (node:5156) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.6697864Z Uploaded bytes 1877101
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.7119352Z Finished uploading artifact content to blob storage!
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.7120372Z SHA256 digest of uploaded artifact zip is e9f2df37ee7fe5f46e5a0ec610c2b98fe9f9988b8a4b45a5ec7fe7d723f2e659
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.7122886Z Finalizing artifact upload
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.9565698Z Artifact community-release-installer-review-39587674276.zip successfully finalized. Artifact ID 12340312490
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.9567887Z Artifact community-release-installer-review-39587674276 has been successfully uploaded! Final size is 1877101 bytes. Artifact ID is 12340312490
+review	Run actions/upload-artifact@v4	2026-10-21T10:54:21.9578139Z Artifact download URL: https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39587674276/artifacts/12340312490
+review	Post Run actions/checkout@v6	﻿2026-10-21T10:54:21.9973059Z Post job cleanup.
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.1770449Z [command]"C:\Program Files\Git\bin\git.exe" version
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.2136279Z git version 2.56.0.windows.2
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.2229340Z Temporarily overriding HOME='D:\a\_temp\08948780-c318-49bc-bebc-d2a94c17304f' before making global git config changes
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.2230567Z Adding repository directory to the temporary git global config as a safe directory
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.2242970Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.2698372Z Removing SSH command configuration
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.2710385Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.3129129Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.8932323Z Removing HTTP extra header
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.8943657Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+review	Post Run actions/checkout@v6	2026-10-21T10:54:22.9342809Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.4993124Z Removing includeIf entries pointing to credentials config files
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5006770Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5355735Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5356797Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5357484Z includeif.gitdir:/github/workspace/.git.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5358066Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5407727Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5759661Z D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.5815356Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.6218756Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.6567629Z D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.6618586Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.7020302Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.7381885Z /github/runner_temp/git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.7431580Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.7833580Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.8174131Z /github/runner_temp/git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.8225198Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config
+review	Post Run actions/checkout@v6	2026-10-21T10:54:23.8614916Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+review	Post Run actions/checkout@v6	2026-10-21T10:54:24.4551995Z Removing credentials config 'D:\a\_temp\git-credentials-543969ef-452e-44dc-8503-20b3437de2ae.config'
+review	Complete job	﻿2026-10-21T10:54:24.4777966Z Cleaning up orphan processes
+review	Complete job	2026-10-21T10:54:24.5551360Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/download-artifact@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

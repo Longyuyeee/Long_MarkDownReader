@@ -82,10 +82,13 @@ pub struct Manifest {
     pub directories: Vec<String>,
     pub excluded: Vec<Exclusion>,
     pub boundary: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub work_session: Option<serde_json::Value>,
 }
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Summary {
+    pub work_session: Option<serde_json::Value>,
     pub plan_id: String,
     pub library_name: String,
     pub created_at: u64,
@@ -109,6 +112,7 @@ impl Manifest {
             *counts.entry(e.category.clone()).or_insert(0) += 1;
         }
         Summary {
+            work_session: self.work_session.clone(),
             plan_id: id,
             library_name: self.library_name.clone(),
             created_at: self.created_at,
@@ -143,6 +147,7 @@ pub struct RestorePlan {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Receipt {
+    pub work_session: Option<serde_json::Value>,
     pub path: String,
     pub sha256: String,
     pub bytes: u64,
@@ -483,6 +488,7 @@ pub fn preview(
             directories: vec![],
             excluded: vec![],
             boundary: EXCLUDED.iter().map(|s| s.to_string()).collect(),
+            work_session: None,
         },
         sources: vec![],
     };
@@ -667,7 +673,17 @@ fn validate_history_name(name: &str) -> Result<(), String> {
     }
 }
 
-fn validate_manifest(m: &Manifest) -> Result<(), String> {
+pub(crate) fn validate_manifest(m: &Manifest) -> Result<(), String> {
+    if let Some(value) = &m.work_session {
+        if serde_json::to_vec(value).map_err(|e| e.to_string())?.len() > 256 * 1024 {
+            return Err("工作现场超过 256 KiB，请缩小范围".into());
+        }
+        let bundle = serde_json::from_value::<crate::commands::work_sessions::PortableWorkSession>(
+            value.clone(),
+        )
+        .map_err(|e| format!("内容包内的工作现场无效：{e}"))?;
+        crate::commands::work_sessions::validate(&bundle)?;
+    }
     if !m.options.directory.is_empty() {
         relative(&m.options.directory)?;
     }
@@ -1285,6 +1301,7 @@ pub fn export(plan: &ExportPlan, input: &Path, control: &Control) -> Result<Rece
         control.commit()?;
         rename_no_replace(&path, &target).map_err(|e| format!("发布备份失败，未覆盖目标：{e}"))?;
         Ok(Receipt {
+            work_session: plan.manifest.work_session.clone(),
             path: target.to_string_lossy().into_owned(),
             sha256: verified.sha256,
             bytes,
@@ -1526,6 +1543,7 @@ pub fn restore(
             return Err(error);
         }
         Ok(Receipt {
+            work_session: plan.manifest.work_session.clone(),
             path: target.to_string_lossy().into_owned(),
             sha256: plan.sha256.clone(),
             bytes: plan.manifest.entries.iter().map(|e| e.bytes).sum(),

@@ -70,6 +70,54 @@ fn source_entries(plan: &ExportPlan) -> Vec<(String, Vec<u8>)> {
 }
 
 #[test]
+fn content_session_roundtrip_is_optional_metadata_and_never_a_restored_file() {
+    let (f, root, cache) = fixture();
+    let mut plan = preview(&root, &cache, all(), &Control::default()).unwrap();
+    let legacy = serde_json::to_value(&plan.manifest).unwrap();
+    assert!(legacy.get("workSession").is_none());
+    assert!(serde_json::from_value::<Manifest>(legacy)
+        .unwrap()
+        .work_session
+        .is_none());
+    let scene = serde_json::json!({"kind":"longedit-work-session","schemaVersion":1,"name":"备份现场","savedAt":123,"files":[{"relativePath":"方案.md","pinned":true,"view":{"scrollTop":120,"scrollLeft":0}},{"relativePath":"后来移动的文件.md"}],"activePath":"方案.md","reference":{"relativePath":"阅读.pdf","query":"文献","page":2}});
+    plan.manifest.work_session = Some(scene.clone());
+    let archive = f.0.join("带现场.zip");
+    let receipt = export(&plan, &archive, &Control::default()).unwrap();
+    assert_eq!(receipt.work_session.as_ref(), Some(&scene));
+    let parsed = inspect_archive(&archive, &Control::default()).unwrap();
+    let target = f.0.join("新目录");
+    let restored = restore(&parsed, &cache, &target, &Control::default()).unwrap();
+    assert_eq!(restored.work_session, Some(scene));
+    assert_eq!(restored.entry_count, plan.manifest.entries.len());
+    assert!(!target.join("后来移动的文件.md").exists());
+    assert!(!target.join("manifest.json").exists());
+    assert_eq!(
+        fs::read(target.join("方案.md")).unwrap(),
+        fs::read(root.join("方案.md")).unwrap()
+    );
+}
+
+#[test]
+fn content_session_invalid_metadata_rejects_the_package_before_restoration() {
+    let (f, root, cache) = fixture();
+    let plan = preview(&root, &cache, all(), &Control::default()).unwrap();
+    for (index, session) in [
+        serde_json::json!({"kind":"longedit-work-session","schemaVersion":1,"name":"现场","savedAt":1,"files":[{"relativePath":"../other.md"}]}),
+        serde_json::json!({"kind":"longedit-work-session","schemaVersion":1,"name":"现场","savedAt":1,"files":[{"relativePath":"方案.md","content":"不能伪装成现场正文"}]}),
+    ].into_iter().enumerate() {
+        let mut manifest = plan.manifest.clone();
+        manifest.work_session = Some(session);
+        let archive = f.0.join(format!("无效现场{index}.zip"));
+        write_archive(&archive, &manifest, source_entries(&plan));
+        assert!(inspect_archive(&archive, &Control::default()).is_err());
+    }
+    assert_eq!(
+        fs::read(root.join("配置.json")).unwrap(),
+        "{\"标题\":\"保留实际内容\"}".as_bytes()
+    );
+}
+
+#[test]
 fn content_package_roundtrip_preserves_files_pdf_identity_and_rebound_history() {
     let (f, root, cache) = fixture();
     let (path, plan) = valid_package(&f, &root, &cache);

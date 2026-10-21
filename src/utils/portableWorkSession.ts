@@ -136,6 +136,23 @@ export function remapPortableFile(bundle: PortableWorkSession, from: string, to:
     ...(bundle.reference ? {reference:{...bundle.reference,relativePath:key(bundle.reference.relativePath)===key(from)?to:bundle.reference.relativePath}}:{})})
 }
 
+// Apply a directory mapping as one validated change, including reference and
+// active-file identities. A collision leaves the original bundle untouched.
+export function remapPortableDirectory(bundle: PortableWorkSession, from: string, to: string): PortableWorkSession {
+  sessionRelativePath(from)
+  if (to) sessionRelativePath(to)
+  const map = (path: string) => key(path).startsWith(key(from) + '/') ? (to ? to + '/' : '') + path.slice(from.length + 1) : path
+  return validatePortableWorkSession({ ...bundle, files: bundle.files.map(file => ({...file,relativePath:map(file.relativePath)})),
+    ...(bundle.activePath ? {activePath:map(bundle.activePath)} : {}),
+    ...(bundle.reference ? {reference:{...bundle.reference,relativePath:map(bundle.reference.relativePath)}} : {}) })
+}
+
+export function selectedPortableSession(bundle: PortableWorkSession, paths: readonly string[], includeContext: boolean): PortableWorkSession {
+  const chosen = new Set(paths.map(key)), files = bundle.files.filter(file=>chosen.has(key(file.relativePath)))
+  return validatePortableWorkSession({...bundle,files,activePath:files.some(file=>file.relativePath===bundle.activePath)?bundle.activePath:files[0]?.relativePath,
+    search:includeContext?bundle.search:undefined,reference:includeContext&&bundle.reference&&chosen.has(key(bundle.reference.relativePath))?bundle.reference:undefined})
+}
+
 export function availableWorkSession(session: WorkSession, preflight: SessionPreflight): { session: WorkSession; missing: SessionFileCheck[] } {
   if (key(absolute(preflight.libraryRoot)) !== key(absolute(session.libraryRoot))) throw Error('资料库已变化，请重新核对现场')
   const requested = localSessionPaths(session), checks = new Map(preflight.files.map(file=>[key(sessionRelativePath(file.relativePath)),file]))

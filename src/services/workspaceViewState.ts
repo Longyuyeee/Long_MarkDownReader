@@ -57,11 +57,14 @@ export const stageWorkspaceViewStates = (views: Record<string, WorkspaceViewStat
   if (paths.length > 128) throw Error('一次最多恢复 128 份文件的阅读位置')
   const previous = new Map(stagedViews()), live = new Map(states)
   const oldRaw = localStorage.getItem(SESSION_VIEW_KEY)
-  const entries = Object.entries(views), next = new Map<string, WorkspaceViewState>()
+  const entries = Object.entries(views), next = new Map(stagedViews())
   for (const path of paths) {
     const value = views[path] || entries.find(([key]) => viewIdentity(key) === viewIdentity(path))?.[1]
-    if (value && Number.isFinite(value.scrollTop) && Number.isFinite(value.scrollLeft)) next.set(viewIdentity(path), safeView(value))
+    if (value && Number.isFinite(value.scrollTop) && Number.isFinite(value.scrollLeft)) {
+      next.delete(viewIdentity(path)); next.set(viewIdentity(path), safeView(value))
+    }
   }
+  while (next.size > 128) next.delete(next.keys().next().value!)
   // Fail before touching live models/cache when storage is unavailable.
   localStorage.setItem(SESSION_VIEW_KEY, JSON.stringify(Object.fromEntries(next)))
   staged = next

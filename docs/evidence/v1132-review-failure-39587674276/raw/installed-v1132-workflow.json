@@ -1,0 +1,345 @@
+{
+  "appVersion": "1.1.32",
+  "sourceCommit": "5a696d5479579d7bb87eef49e461f351954acaf4",
+  "installerSha256": "07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc",
+  "harnessSourceCommit": "e7c2644028c1fa7e774ee16629948c967f4043c6",
+  "executableSha256": "3cdbf9cadb82d1110a8caabab170d7961280a729717bc53667d43367d834c6b1",
+  "status": "failed",
+  "evidenceLevel": "installed-content-package-and-restored-work-session",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "backup-with-real-reading-context",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1132-source.txt",
+      "sizeBytes": 34691,
+      "sha256": "7777b2814ebd8764ae36b842c077a328dd356ab8804ea9707ff02431f5fcfb23"
+    },
+    {
+      "fileName": "installed-v1132-archive.zip",
+      "sizeBytes": 79099,
+      "sha256": "13064b2873c60a16f1a3e4276cbda80da758c8a92fd5a1a681370263be7c2e63"
+    }
+  ],
+  "expectedScroll": 457,
+  "sourceRelative": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读39.txt",
+  "restoredRoot": "C:\\LongEdit-v1132-970621cc-d2da-4f3c-921d-bfc7b56ad2c9\\恢复资料",
+  "packedSession": {
+    "activePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读39.txt",
+    "files": [
+      {
+        "pinned": true,
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读00.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 340
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读01.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 343
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读02.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 346
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读03.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 349
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读04.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 352
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读05.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 355
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读06.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 358
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读07.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 361
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读08.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 364
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读09.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 367
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读10.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 370
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读11.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 373
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读12.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 376
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读13.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 379
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读14.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 382
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读15.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 385
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读16.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 388
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读17.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 391
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读18.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 394
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读19.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 397
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读20.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 400
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读21.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 403
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读22.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 406
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读23.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 409
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读24.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 412
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读25.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 415
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读26.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 418
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读27.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 421
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读28.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 424
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读29.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 427
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读30.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 430
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读31.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 433
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读32.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 436
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读33.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 439
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读34.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 442
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读35.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 445
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读36.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 448
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读37.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 451
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读38.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 454
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读39.txt",
+        "view": {
+          "scrollLeft": 0,
+          "scrollTop": 457
+        }
+      },
+      {
+        "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/重新找到.txt"
+      }
+    ],
+    "kind": "longedit-work-session",
+    "name": "备份时的工作现场",
+    "reference": {
+      "query": "私人参考词",
+      "relativePath": "v119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读01.txt"
+    },
+    "savedAt": 1792580050219,
+    "schemaVersion": 1,
+    "search": {
+      "loadedFiles": 2,
+      "query": "私人搜索词",
+      "scroll": 0,
+      "sort": "relevance",
+      "types": [
+        "text"
+      ]
+    }
+  },
+  "exportSceneExact": true,
+  "failure": "Error: Owned native picker failed 1\n    at ChildProcess.<anonymous> (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-32-workflow.mjs:18:471)\n    at Object.onceWrapper (node:events:634:26)\n    at ChildProcess.emit (node:events:519:28)\n    at ChildProcess._handle.onexit (node:internal/child_process:293:12)",
+  "failureUI": {
+    "hash": "#/settings?category=privacy",
+    "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n设置\n资料库、编辑器与应用偏好\n资料库\n编辑与保存\n外观\n格式与文件\n知识能力\n系统与更新\n隐私与诊断\nAI\n隐私与诊断\n\n导出管理备份或不含正文与凭据的诊断包。\n\n隐私与诊断\n管理备份\n导出脱敏配置、库清单摘要和能力合同，不包含文档正文或凭据；自定义模板单独保留在本机\n导出\n导入恢复\n资料内容备份\n选择整个资料库或子目录的文档、附件、PDF 批注和历史；只恢复到新目录，不覆盖原库。内容包未加密，请妥善保管。\n备份资料\n从备份恢复\n隐私诊断包\n导出脱敏诊断信息，不包含文档正文、完整路径、API 密钥、缓存正文或凭据。\n导出诊断包\n从内容备份恢复\n\n先完整校验，再恢复到一个全新的目录。不会覆盖原库、当前草稿或现有文件。\n\nC:\\LongEdit-v1132-970621cc-d2da-4f3c-921d-bfc7b56ad2c9\\现场.zip\n重新选择\n清单和文件摘要校验通过\n45 个条目 · 1.3 MiB\n文档 45\n附件 0\nPDF 批注 0\n历史条目 0\n\n含 41 份文件的工作现场，仅记录位置，不包含未保存正文。\n\n包内范围：v119-session-a692d733-d6f2-4ffe-a918-bd22889603db；恢复时保留这段相对目录。\n\n内容预览\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/已导出.longedit-session.json\n文档 · 7.3 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/损坏.longedit-session.json\n文档 · 5.2 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/接续.longedit-session.json\n文档 · 5.2 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/草稿.md\n文档 · 73 B\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/重新找到.txt\n文档 · 58 B\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读00.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读01.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读02.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读03.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读04.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读05.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读06.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读07.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读08.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读09.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读10.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读11.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读12.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读13.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读14.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读15.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读16.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读17.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读18.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读19.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读20.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读21.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读22.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读23.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读24.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读25.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读26.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读27.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读28.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读29.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读30.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读31.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读32.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读33.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读34.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读35.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读36.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读37.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读38.txt\n文档 · 33.9 KiB\nv119-session-a692d733-d6f2-4ffe-a918-bd22889603db/阅读39.txt\n文档 · 33.9 KiB\n未包含的内容（1 项）\n新文件夹名称\n选择父目录\n\n请选择父目录并填写新的文件夹名称\n\n不合并已有目录，不覆盖任何文件；恢复成功后可自行添加为资料库，不自动切库。\n\n损坏或不安全的内容包不会执行恢复\n取消\n恢复到新目录"
+  }
+}

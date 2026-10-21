@@ -181,6 +181,7 @@ pub async fn preview_content_backup(
     app: tauri::AppHandle,
     library_root: String,
     options: Options,
+    work_session: Option<serde_json::Value>,
     operation_id: String,
 ) -> Result<Summary, String> {
     main_only(window.label())?;
@@ -188,7 +189,9 @@ pub async fn preview_content_backup(
     let cache = super::history::history_cache_root(&app)?;
     let operation = Operation::new(operation_id)?;
     tauri::async_runtime::spawn_blocking(move || {
-        let plan = service::preview(&root, &cache, options, &operation.control)?;
+        let mut plan = service::preview(&root, &cache, options, &operation.control)?;
+        plan.manifest.work_session = work_session;
+        service::validate_manifest(&plan.manifest)?;
         let id = reserve(Plan::Export(plan.clone()))?;
         Ok(plan.manifest.summary(id, None))
     })

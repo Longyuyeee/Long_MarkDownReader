@@ -1,5 +1,5 @@
 <template>
-  <n-modal :show="true" preset="card" :title="mode === 'export' ? '备份资料内容' : '从内容备份恢复'" class="content-backup-dialog" :style="{ width: 'min(760px, calc(100vw - 24px))' }" :mask-closable="!busy && !adding" :closable="!busy && !adding" :close-on-esc="!busy && !adding" @close="close" @update:show="show => { if (!show) close() }">
+  <n-modal v-if="!continuing" :show="true" preset="card" :title="mode === 'export' ? '备份资料内容' : '从内容备份恢复'" class="content-backup-dialog" :style="{ width: 'min(760px, calc(100vw - 24px))' }" :mask-closable="!busy && !adding" :closable="!busy && !adding" :close-on-esc="!busy && !adding" @close="close" @update:show="show => { if (!show) close() }">
     <div class="content-backup-body" :aria-busy="busy">
       <p class="content-backup-explanation">{{ mode === 'export' ? '只读取磁盘上已经保存的文件，不代存当前草稿。内容包可能包含私人资料，请妥善保管。' : '先完整校验，再恢复到一个全新的目录。不会覆盖原库、当前草稿或现有文件。' }}</p>
       <template v-if="mode === 'export' && !completed">
@@ -9,6 +9,7 @@
           <n-checkbox v-model:checked="options.documents" :disabled="busy">文档与数据文件</n-checkbox>
           <n-checkbox v-model:checked="options.attachments" :disabled="busy">图片及其他附件</n-checkbox>
           <n-checkbox v-model:checked="options.annotations" :disabled="busy || !options.documents">PDF 批注（含源 PDF）</n-checkbox>
+          <n-checkbox v-model:checked="includeSession" :disabled="busy">包含工作现场（文件、阅读位置与参考）</n-checkbox>
           <n-checkbox v-model:checked="options.history" :disabled="busy || !options.documents">Markdown / TXT 历史</n-checkbox>
         </div>
         <p class="content-backup-explanation">整包最多 512 MiB、单文件 128 MiB、10000 个文件条目。大资料库可选择子目录；不会自动跟随范围外链接或图片。历史默认不选，自定义模板仍使用原有模板导入/导出。</p>
@@ -24,6 +25,7 @@
       <template v-if="summary && !completed">
         <div class="content-summary" role="status"><strong>{{ mode === 'export' ? '预检完成' : '清单和文件摘要校验通过' }}</strong><span>{{ summary.entryCount }} 个条目 · {{ contentBytes(summary.totalBytes) }}</span><n-button v-if="mode === 'export'" size="small" :disabled="busy" @click="preview">重新预检</n-button></div>
         <div class="content-counts"><span v-for="[key,label] in contentCategories" :key="key">{{ label }} <b>{{ summary.counts[key] || 0 }}</b></span></div>
+        <p v-if="summary.workSession" class="content-backup-explanation">含 {{ summary.workSession.files.length }} 份文件的工作现场，仅记录位置，不包含未保存正文。</p>
         <p v-if="summary.scopeDirectory" class="content-backup-explanation">包内范围：{{ summary.scopeDirectory }}；恢复时保留这段相对目录。</p>
         <details :open="mode === 'restore'"><summary>内容预览<span v-if="summary.previewTruncated">（前 200 项，共 {{ summary.entryCount }} 项）</span></summary><div class="content-files" aria-label="内容包文件预览"><div v-for="entry in summary.entries" :key="entry.path" class="content-file"><span>{{ entry.sourceRelative && entry.category === 'history' ? `${entry.sourceRelative} · ${entry.relativePath}` : entry.relativePath }}</span><small>{{ categoryLabel(entry.category) }} · {{ contentBytes(entry.bytes) }}</small></div></div></details>
         <details><summary>未包含的内容（{{ summary.excludedCount }} 项）</summary><p class="content-backup-explanation">{{ summary.boundary.join('；') }}。不读取应用凭据；选中资料本身并不脱敏，内容包未加密。</p><div class="content-files"><div v-for="entry in summary.excluded" :key="entry.path" class="content-file"><span>{{ entry.path }}</span><small>{{ entry.reason }}</small></div></div><p v-if="summary.excludedCount > summary.excluded.length">这里只展示前 {{ summary.excluded.length }} 项，完整清单保存在包内。</p></details>
@@ -40,13 +42,18 @@
         <p v-else-if="targetCheck" class="content-target-ok">新目录可用 · 可用 {{ contentBytes(targetCheck.availableBytes) }} · 至少需要 {{ contentBytes(targetCheck.requiredBytes) }}</p>
       </template>
     </div>
-    <template #footer><div class="content-actions"><span>{{ completed ? '原资料和未保存内容均未改变' : mode === 'export' ? '更改范围后需要重新预检' : '损坏或不安全的内容包不会执行恢复' }}</span><n-button v-if="busy" :disabled="cancelling" @click="cancel">{{ cancelling ? '正在取消…' : '取消当前任务' }}</n-button><n-button v-else :disabled="adding" @click="close">{{ completed ? '完成' : '取消' }}</n-button><n-button v-if="completed && mode === 'restore'" type="primary" :loading="adding" :disabled="added" @click="registerRestored">{{ added ? '已添加到资料库' : '添加到资料库' }}</n-button><n-button v-else-if="!completed" type="primary" :loading="busy" :disabled="primaryDisabled" @click="apply">{{ mode === 'export' ? summary ? targetPath ? '导出内容包' : '选择位置并导出' : '预检所选内容' : '恢复到新目录' }}</n-button></div></template>
+    <template #footer><div class="content-actions"><span>{{ completed ? '原资料和未保存内容均未改变' : mode === 'export' ? '更改范围后需要重新预检' : '损坏或不安全的内容包不会执行恢复' }}</span><n-button v-if="busy" :disabled="cancelling" @click="cancel">{{ cancelling ? '正在取消…' : '取消当前任务' }}</n-button><n-button v-else :disabled="adding" @click="close">{{ completed ? '完成' : '取消' }}</n-button><n-button v-if="completed?.workSession && mode === 'restore'" type="primary" :loading="adding" @click="openContinuation">接续工作现场…</n-button><n-button v-if="completed && mode === 'restore'" :type="completed.workSession ? 'default' : 'primary'" :loading="adding" :disabled="added" @click="registerRestored">{{ added ? '已添加到资料库' : '添加到资料库' }}</n-button><n-button v-else-if="!completed" type="primary" :loading="busy" :disabled="primaryDisabled" @click="apply">{{ mode === 'export' ? summary ? targetPath ? '导出内容包' : '选择位置并导出' : '预检所选内容' : '恢复到新目录' }}</n-button></div></template>
   </n-modal>
+  <WorkSessionTransferDialog v-if="continuing && completed?.workSession" mode="resume" :bundle="completed.workSession" :root="completed.path" :source-root="sourceRoot" :resume="resumeSession" @close="continuing = false" />
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { NButton, NCheckbox, NInput, NModal, NSelect, useMessage } from 'naive-ui'
+import { useRouter } from 'vue-router'
+import WorkSessionTransferDialog from './WorkSessionTransferDialog.vue'
+import { captureContentWorkSession, continueContentWorkSession } from '../services/contentRestoreContinuity'
+import type { PortableWorkSession, SessionPreflight } from '../utils/portableWorkSession'
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { invoke } from '../services/tauriRuntime'
 import { beginWindowSave } from '../services/windowDrafts'
@@ -54,7 +61,8 @@ import { useAppStore } from '../store/app'
 import WorkspaceStateNotice from './workspace/WorkspaceStateNotice.vue'
 import { contentBytes, contentCategories, contentRestorePath, contentScopeRelative, type ContentBackupOptions, type ContentBackupSummary, type ContentBackupReceipt, type ContentRestoreTarget } from '../utils/contentBackup'
 const props=defineProps<{ mode:'export'|'restore'; addLibrary:(path:string,name:string)=>Promise<void> }>()
-const emit=defineEmits<{close:[]}>(),store=useAppStore(),message=useMessage(),mode=props.mode
+const emit=defineEmits<{close:[]}>(),store=useAppStore(),message=useMessage(),router=useRouter(),mode=props.mode
+const sourceRoot=store.libraryPath,includeSession=ref(true),continuing=ref(false)
 const libraryRoot=ref(store.activeLibraryPath || store.libraries[0]?.path || ''),libraries=computed(()=>store.libraries.map(item=>({label:item.name,value:item.path})))
 const options=reactive<ContentBackupOptions>({directory:'',documents:true,attachments:true,annotations:true,history:false})
 const summary=ref<ContentBackupSummary|null>(null),completed=ref<ContentBackupReceipt|null>(null),busy=ref(false),adding=ref(false),added=ref(false),error=ref(''),operationLabel=ref(''),cancelMessage=ref(''),cancelling=ref(false)
@@ -67,6 +75,7 @@ const discard=(id:string)=>invoke('discard_content_backup_plan',{planId:id}).cat
 const invalidate=()=>{generation++;if(summary.value)void discard(summary.value.planId);summary.value=null;completed.value=null;error.value='';targetCheck.value=null;targetError.value=''}
 watch(()=>options.documents,value=>{if(!value){options.annotations=false;options.history=false}},{flush:'sync'})
 watch(libraryRoot,()=>{options.directory='';invalidate()},{flush:'sync'})
+watch(includeSession,invalidate,{flush:'sync'})
 watch(()=>JSON.stringify(options),invalidate,{flush:'sync'})
 async function run<T>(label:string,work:(id:string)=>Promise<T>,writing=false):Promise<T|undefined>{
   if(busy.value)return;const epoch=++generation,id='content-'+crypto.randomUUID();activeOperation=id;busy.value=true;error.value='';cancelMessage.value='';cancelling.value=false;operationLabel.value=label
@@ -75,7 +84,7 @@ async function run<T>(label:string,work:(id:string)=>Promise<T>,writing=false):P
   catch(cause){if(!disposed&&generation===epoch)error.value=String(cause);else if(writing)message.error('内容任务未完成：'+String(cause));return}
   finally{release();if(activeOperation===id){activeOperation='';busy.value=false;cancelling.value=false}}
 }
-async function preview(){if(!libraryRoot.value||busy.value)return;invalidate();const result=await run<ContentBackupSummary>('正在预检所选资料',id=>invoke('preview_content_backup',{libraryRoot:libraryRoot.value,options:{...options},operationId:id}));if(result)summary.value=result}
+async function preview(){if(!libraryRoot.value||busy.value)return;invalidate();const result=await run<ContentBackupSummary>('正在预检所选资料',id=>invoke('preview_content_backup',{libraryRoot:libraryRoot.value,options:{...options},workSession:includeSession.value?captureContentWorkSession(libraryRoot.value):null,operationId:id}));if(result)summary.value=result}
 async function chooseScope(){try{const selected=await open({directory:true,multiple:false,title:'选择当前资料库内的备份子目录',defaultPath:libraryRoot.value});if(!disposed&&typeof selected==='string')options.directory=contentScopeRelative(libraryRoot.value,selected)}catch(cause){error.value=String(cause)}}
 async function chooseSave(){try{const selected=await save({title:'导出资料内容包（不覆盖同名文件）',defaultPath:`${summary.value?.libraryName || '资料内容'}-${new Date().toISOString().slice(0,10)}.longedit-backup.zip`,filters:[{name:'Long编辑资料内容包',extensions:['zip']}]});if(!disposed&&typeof selected==='string')targetPath.value=selected}catch(cause){error.value=String(cause)}}
 async function chooseArchive(){try{const selected=await open({directory:false,multiple:false,title:'选择资料内容备份包（不是管理备份）',filters:[{name:'Long编辑资料内容包',extensions:['zip']}]});if(disposed||typeof selected!=='string')return;invalidate();backupPath.value=selected;const result=await run<ContentBackupSummary>('正在校验清单与每个文件摘要',id=>invoke('preflight_content_restore',{backupPath:selected,operationId:id}));if(result){summary.value=result;restoreName.value=(result.libraryName+'-恢复').slice(0,80);scheduleTarget()}}catch(cause){error.value=String(cause)}}
@@ -91,6 +100,16 @@ async function apply(){
   if(result){completed.value=result;void discard(plan.planId);summary.value=null}
 }
 async function cancel(){if(!activeOperation||cancelling.value)return;cancelling.value=true;try{const accepted=await invoke<boolean>('cancel_content_backup',{operationId:activeOperation});cancelMessage.value=accepted?'已请求取消，正在清理本次暂存；请等待结果。':'已经进入完成提交阶段，取消未被接受；请等待最终结果。'}catch(cause){error.value='取消请求未确认：'+String(cause);cancelling.value=false}}
+async function openContinuation(){
+  if(!completed.value?.workSession||adding.value)return
+  await registerRestored()
+  if(added.value&&!disposed)continuing.value=true
+}
+async function resumeSession(bundle:PortableWorkSession,frame:SessionPreflight,paths:string[],includeContext:boolean){
+  const result=await continueContentWorkSession(bundle,frame,paths,includeContext,sourceRoot,()=>!disposed&&continuing.value)
+  if(result.continued){await router.push({name:'LibraryMode',query:store.activeTabId?{path:store.activeTabId}:{}});emit('close')}
+  else message.success('已记住恢复后的工作现场。当前有未保存内容，先留在这里；稍后切换到恢复的资料库，从工作台继续。',{duration:7000})
+}
 async function registerRestored(){if(!completed.value||adding.value||added.value)return;adding.value=true;error.value='';try{await props.addLibrary(completed.value.path,restoreName.value);added.value=true}catch(cause){error.value='资料已经恢复，但添加资料库未完成；恢复目录仍保留，可在资料库设置中手动添加。'+String(cause)}finally{adding.value=false}}
 function close(){if(busy.value||adding.value)return;emit('close')}
 onBeforeUnmount(()=>{disposed=true;generation++;targetGeneration++;if(targetTimer)clearTimeout(targetTimer);if(activeOperation)void invoke('cancel_content_backup',{operationId:activeOperation}).catch(()=>{});if(summary.value)void discard(summary.value.planId)})

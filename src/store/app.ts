@@ -211,10 +211,11 @@ export const useAppStore = defineStore('app', {
       await this.updateConfig({ libraries: this.libraries.map(item => item.path === root ? { ...item, inboxDirectory: relative } : item) })
       return relative
     },
-    async updateConfig(patch: any) {
+    async updateConfig(patch: any, guard?: () => void) {
       // Queue immutable snapshots; failed persistence must not discard open work.
       const queuedPatch = typeof patch === 'function' ? patch : JSON.parse(JSON.stringify(patch))
       const task = configWritePromise.then(async () => {
+        guard?.()
         const snapshot = typeof queuedPatch === 'function' ? JSON.parse(JSON.stringify(queuedPatch(this.$state))) : queuedPatch
         const switchesLibrary = snapshot.activeLibraryPath !== undefined && snapshot.activeLibraryPath !== this.activeLibraryPath
         const previousAutostart = this.isAutostart
@@ -266,6 +267,19 @@ export const useAppStore = defineStore('app', {
           throw error
         }
         const applied = { ...snapshot }
+        try { guard?.() } catch (error) {
+          // A delayed native save must not clear a newer draft. The queue keeps
+          // this rollback ahead of subsequent settings writes.
+          if (switchesLibrary && isTauriRuntime()) {
+            try {
+              const persisted = await invoke<Record<string, unknown>>('get_config')
+              await invoke('save_config', { config: { ...persisted, activeLibraryPath: this.activeLibraryPath } })
+            } catch (rollbackError) {
+              throw new Error(`当前文稿已保留，但切库设置未能还原：${String(rollbackError)}；${String(error)}`)
+            }
+          }
+          throw error
+        }
         if (snapshot.displayPreferences !== undefined) applied.displayPreferences = normalizeDisplayPreferences(snapshot.displayPreferences)
         if (snapshot.libraries !== undefined) applied.savedSearches = next.savedSearches
         if (switchesLibrary) {

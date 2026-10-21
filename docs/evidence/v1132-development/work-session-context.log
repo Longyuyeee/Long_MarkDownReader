@@ -1,0 +1,16 @@
+[Vue warn]: onBeforeUnmount is called when there is no active component instance to be associated with. Lifecycle injection APIs can only be used during execution of setup(). If you are using async setup(), make sure to register lifecycle hooks before the first await statement.
+✔ reading position survives restart without draft or selection contents (112.0412ms)
+✔ restoring selected files retains queued reading positions for unrelated documents (33.8308ms)
+✔ search filters survive restart and remain scoped to their library (95.4936ms)
+✔ reference persists only identity and never stale excerpt text (20.7294ms)
+✔ real search remember persists a locator without serializing the result excerpt (58.2445ms)
+✔ staged reading metadata survives more than 24 files and restart without expanding the live draft cache (29.8917ms)
+✔ staging respects protected models, aliases and rollback; quota failure cannot replace the current view (11.5109ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 777.955

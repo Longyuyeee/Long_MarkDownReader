@@ -1,7 +1,8 @@
+import type { PortableWorkSession } from './portableWorkSession'
 export interface ContentBackupOptions { directory: string; documents: boolean; attachments: boolean; annotations: boolean; history: boolean }
 export interface ContentBackupEntry { path: string; relativePath: string; category: string; bytes: number; sha256: string; modifiedNanos: number; sourceRelative: string | null }
-export interface ContentBackupSummary { planId: string; libraryName: string; createdAt: number; totalBytes: number; entryCount: number; counts: Record<string, number>; entries: ContentBackupEntry[]; previewTruncated: boolean; excludedCount: number; excluded: { path: string; reason: string }[]; boundary: string[]; sha256: string | null; maxTotalBytes: number; maxFileBytes: number; scopeDirectory: string }
-export interface ContentBackupReceipt { path: string; sha256: string; bytes: number; entryCount: number; historyCount: number; status: 'completed'; sourceUnchanged: boolean }
+export interface ContentBackupSummary { workSession?: PortableWorkSession | null; planId: string; libraryName: string; createdAt: number; totalBytes: number; entryCount: number; counts: Record<string, number>; entries: ContentBackupEntry[]; previewTruncated: boolean; excludedCount: number; excluded: { path: string; reason: string }[]; boundary: string[]; sha256: string | null; maxTotalBytes: number; maxFileBytes: number; scopeDirectory: string }
+export interface ContentBackupReceipt { workSession?: PortableWorkSession | null; path: string; sha256: string; bytes: number; entryCount: number; historyCount: number; status: 'completed'; sourceUnchanged: boolean }
 export interface ContentRestoreTarget { path: string; availableBytes: number; requiredBytes: number; historyCount: number }
 export const contentCategories = [ ['documents','文档'], ['attachments','附件'], ['annotations','PDF 批注'], ['history','历史条目'] ] as const
 export function contentBytes(value: number): string { return value < 1024 ? `${value} B` : value < 1024 ** 2 ? `${(value / 1024).toFixed(1)} KiB` : `${(value / 1024 ** 2).toFixed(1)} MiB` }
