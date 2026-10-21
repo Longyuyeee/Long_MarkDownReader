@@ -1,0 +1,31 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "default-reading-results-visible-in-existing-copy-preview",
+      "status": "passed"
+    },
+    {
+      "id": "choice-repreviews-without-writing-and-locks-after-completion",
+      "status": "passed"
+    },
+    {
+      "id": "damaged-companion-has-an-ordinary-opt-out-without-losing-source",
+      "status": "passed"
+    },
+    {
+      "id": "retry-keeps-original-choice-and-only-rechecks-failed-items",
+      "status": "passed"
+    },
+    {
+      "id": "cancel-does-not-write-or-change-drafts",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-and-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

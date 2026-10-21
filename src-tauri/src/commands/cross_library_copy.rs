@@ -2,7 +2,12 @@
 use super::file_management::{
     visible_item, OperationError, OperationResult, PathChange, OPERATIONS,
 };
-use crate::services::{archive_dependencies, workspace_guard::WorkspaceGuard};
+use crate::formats::pdf_annotations::{
+    validate_pdf_annotations, PdfAnnotationDocument, MAX_ANNOTATION_FILE_BYTES,
+};
+use crate::services::{
+    archive_dependencies, copy_reading_results as reading, workspace_guard::WorkspaceGuard,
+};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::{
@@ -21,6 +26,18 @@ const MAX_FILES: usize = 10_000;
 const MAX_MARKDOWN: u64 = 20 * 1024 * 1024;
 const MAX_TEXT: usize = 64 * 1024 * 1024;
 
+fn annotation_json(document: &PdfAnnotationDocument) -> Result<String, String> {
+    let pretty = serde_json::to_string_pretty(document).map_err(|e| e.to_string())? + "\n";
+    if pretty.len() as u64 <= MAX_ANNOTATION_FILE_BYTES {
+        return Ok(pretty);
+    }
+    let compact = serde_json::to_string(document).map_err(|e| e.to_string())? + "\n";
+    if compact.len() as u64 > MAX_ANNOTATION_FILE_BYTES {
+        return Err("复制后的 PDF 批注超过 5 MiB，请减少批注或取消携带后复制".into());
+    }
+    Ok(compact)
+}
+
 #[derive(Clone)]
 struct File {
     source: PathBuf,
@@ -29,6 +46,7 @@ struct File {
     bytes: u64,
     original: Option<String>,
     replacement: Option<String>,
+    annotation_for: Option<PathBuf>,
 }
 #[derive(Clone)]
 struct Unit {
@@ -42,6 +60,8 @@ struct Unit {
     completed: bool,
     review_required: bool,
     error: Option<String>,
+    annotation_count: usize,
+    reading_sources: Vec<(PathBuf, Option<String>)>,
 }
 #[derive(Clone)]
 struct Plan {
@@ -52,6 +72,7 @@ struct Plan {
     units: Vec<Unit>,
     touched: Instant,
     started: bool,
+    reading_results_available: bool,
 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -65,6 +86,8 @@ pub struct CopyItemPreview {
     pub error: Option<String>,
     pub completed: bool,
     pub review_required: bool,
+    pub annotation_count: usize,
+    pub reading_source_count: usize,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -74,6 +97,7 @@ pub struct CopyPreview {
     pub target_root: String,
     pub target_directory: String,
     pub items: Vec<CopyItemPreview>,
+    pub reading_results_available: bool,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -196,8 +220,19 @@ fn unused(
                 }
             )
         });
+        let pdf = source
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("pdf"));
+        let sidecar = if pdf {
+            Some(reading::annotation_path(&candidate)?)
+        } else {
+            None
+        };
         if !candidate.try_exists().map_err(|e| e.to_string())?
             && !reserved.iter().any(|p| key(p) == key(&candidate))
+            && sidecar
+                .as_ref()
+                .is_none_or(|p| !p.exists() && !reserved.iter().any(|r| key(r) == key(p)))
         {
             reserved.insert(candidate.clone());
             return Ok(candidate);
@@ -233,6 +268,7 @@ fn load_file(source: PathBuf, target: PathBuf) -> Result<File, String> {
         bytes,
         original,
         replacement: None,
+        annotation_for: None,
     })
 }
 fn prepare_unit(
@@ -240,6 +276,8 @@ fn prepare_unit(
     source: PathBuf,
     target: PathBuf,
     assets: PathBuf,
+    target_root: &Path,
+    include_reading: bool,
 ) -> Result<Unit, String> {
     let inventory = walk(guard, &source)?;
     let mut directories = Vec::new();
@@ -272,6 +310,45 @@ fn prepare_unit(
             return Err("关联笔记正文合计超过 64 MiB，请分批复制".into());
         }
         let mut edits = BTreeMap::new();
+        let pdf_links = if include_reading {
+            reading::pdf_links(&original)?
+        } else {
+            vec![]
+        };
+        let mut pdf_sources = if include_reading {
+            reading::metadata_sources(&original)?
+        } else {
+            vec![]
+        };
+        pdf_sources.extend(pdf_links.iter().map(|link| link.relative.clone()));
+        let mut pdf_mapping = BTreeMap::new();
+        for relative in pdf_sources {
+            let path = guard
+                .resolve_existing_file(&relative, &["pdf"])
+                .map_err(|e| {
+                    format!("阅读来源 {relative} 无法接续：{e}；可取消携带阅读成果后原样复制")
+                })?;
+            let next = if let Some(file) = files.iter().find(|f| f.source == path) {
+                file.target.clone()
+            } else {
+                let next = assets.join(path.strip_prefix(guard.root()).map_err(|e| e.to_string())?);
+                files.push(load_file(path, next.clone())?);
+                next
+            };
+            pdf_mapping.insert(
+                relative,
+                next.strip_prefix(target_root)
+                    .map_err(|e| e.to_string())?
+                    .to_string_lossy()
+                    .replace('\\', "/"),
+            );
+        }
+        for link in pdf_links {
+            edits.insert(
+                (link.range.start, link.range.end),
+                reading::remap_uri(&link.uri, &pdf_mapping)?,
+            );
+        }
         let mut mentions =
             archive_dependencies::move_mentions(&text(&files[index].source), &original);
         let html_images = crate::services::external_import::images(&original)?
@@ -316,6 +393,9 @@ fn prepare_unit(
             });
         }
         for evidence in mentions {
+            if include_reading && evidence.kind == "pdf_reference" {
+                continue;
+            }
             if evidence.kind == "html_attribute"
                 && !evidence
                     .destination_span
@@ -407,8 +487,71 @@ fn prepare_unit(
             replacement.replace_range(start..end, &value);
             last = start;
         }
-        files[index].replacement = Some(replacement);
+        files[index].replacement = Some(if include_reading {
+            reading::remap_metadata(&replacement, &pdf_mapping)?
+        } else {
+            replacement
+        });
         index += 1;
+    }
+    let pdfs: Vec<_> = files
+        .iter()
+        .filter(|f| {
+            f.source
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("pdf"))
+        })
+        .map(|f| (f.source.clone(), f.target.clone(), f.bytes))
+        .collect();
+    let mut annotation_count = 0;
+    let mut reading_sources = Vec::new();
+    for (pdf, next_pdf, size) in pdfs {
+        let sidecar = reading::annotation_path(&pdf)?;
+        if !include_reading {
+            // A folder's recognized companion follows the same explicit choice.
+            files.retain(|f| f.source != sidecar);
+            continue;
+        }
+        let present = sidecar.try_exists().map_err(|e| e.to_string())?;
+        reading_sources.push((
+            sidecar.clone(),
+            if present {
+                Some(hash_file(&sidecar)?)
+            } else {
+                None
+            },
+        ));
+        if !present {
+            continue;
+        }
+        let sidecar = guard.resolve_existing_file(&sidecar, &["json"])?;
+        if fs::metadata(&sidecar).map_err(|e| e.to_string())?.len() > MAX_ANNOTATION_FILE_BYTES {
+            return Err("PDF 批注超过 5 MiB；可取消携带后原样复制 PDF".into());
+        }
+        let mut document: PdfAnnotationDocument =
+            serde_json::from_slice(&fs::read(&sidecar).map_err(|e| e.to_string())?)
+                .map_err(|e| format!("PDF 批注无法读取：{e}；可取消携带后重试"))?;
+        validate_pdf_annotations(&document)?;
+        if document.source.pdf_file != pdf.file_name().unwrap().to_string_lossy()
+            || document.source.size != size
+        {
+            return Err("PDF 批注与当前文件不匹配，请先核对来源，或取消携带后原样复制".into());
+        }
+        annotation_count += document.annotations.len();
+        document.source.pdf_file = next_pdf.file_name().unwrap().to_string_lossy().into_owned();
+        let next_sidecar = reading::annotation_path(&next_pdf)?;
+        let mut file = load_file(sidecar.clone(), next_sidecar)?;
+        file.annotation_for = Some(next_pdf);
+        file.replacement = Some(annotation_json(&document)?);
+        text_bytes = text_bytes.saturating_add(file.replacement.as_ref().map_or(0, String::len));
+        if text_bytes > MAX_TEXT {
+            return Err("批注与笔记正文合计超过 64 MiB，请分批复制或取消携带阅读成果".into());
+        }
+        files.retain(|f| f.source != sidecar);
+        files.push(file);
+    }
+    if files.len() > MAX_FILES {
+        return Err("文件和批注超过 10000 项，请分批复制".into());
     }
     let warning_count = warnings.len();
     let mut warnings: Vec<_> = warnings.into_iter().take(100).collect();
@@ -426,6 +569,8 @@ fn prepare_unit(
         completed: false,
         review_required: false,
         error: None,
+        annotation_count,
+        reading_sources,
     })
 }
 fn relative_url(document: &Path, target: &Path, original: &str) -> Option<String> {
@@ -450,6 +595,7 @@ fn summary(plan_id: &str, plan: &Plan) -> CopyPreview {
         source_root: text(&plan.source_root),
         target_root: text(&plan.target_root),
         target_directory: text(&plan.directory),
+        reading_results_available: plan.reading_results_available,
         items: plan
             .units
             .iter()
@@ -467,16 +613,29 @@ fn summary(plan_id: &str, plan: &Plan) -> CopyPreview {
                 error: u.error.clone(),
                 completed: u.completed,
                 review_required: u.review_required,
+                annotation_count: u.annotation_count,
+                reading_source_count: u.reading_sources.len(),
             })
             .collect(),
     }
 }
+#[cfg(test)]
 fn prepare(
     owner: &str,
     source_root: &str,
     target_root: &str,
     paths: &[String],
     target_dir: &str,
+) -> Result<CopyPreview, String> {
+    prepare_with_reading(owner, source_root, target_root, paths, target_dir, true)
+}
+fn prepare_with_reading(
+    owner: &str,
+    source_root: &str,
+    target_root: &str,
+    paths: &[String],
+    target_dir: &str,
+    include_reading: bool,
 ) -> Result<CopyPreview, String> {
     if paths.is_empty() || paths.len() > 512 {
         return Err("请选择 1 至 512 个文件或文件夹".into());
@@ -516,7 +675,14 @@ fn prepare(
     let mut units = Vec::new();
     let mut total_text = 0usize;
     let mut total_files = 0usize;
+    let mut reading_results_available = false;
     for path in sources {
+        reading_results_available |= path.is_dir()
+            || path.extension().is_some_and(|e| {
+                ["pdf", "md", "markdown"]
+                    .iter()
+                    .any(|ext| e.eq_ignore_ascii_case(ext))
+            });
         if directory.starts_with(&path) {
             return Err("不能复制到来源或其子文件夹".into());
         }
@@ -545,24 +711,39 @@ fn prepare(
                 &mut reserved,
             )?;
         }
-        let prepared = prepare_unit(&source, path.clone(), destination.clone(), assets.clone())
-            .and_then(|unit| {
-                let bytes = unit
-                    .files
-                    .iter()
-                    .map(|f| f.original.as_ref().map_or(0, String::len))
-                    .sum::<usize>();
-                if total_text.saturating_add(bytes) > MAX_TEXT
-                    || total_files.saturating_add(unit.files.len()) > MAX_FILES
-                {
-                    return Err("所选资料及关联笔记过多，请分批复制".into());
-                }
-                total_text += bytes;
-                total_files += unit.files.len();
-                Ok(unit)
-            });
+        let prepared = prepare_unit(
+            &source,
+            path.clone(),
+            destination.clone(),
+            assets.clone(),
+            target.root(),
+            include_reading,
+        )
+        .and_then(|unit| {
+            let bytes = unit
+                .files
+                .iter()
+                .map(|f| {
+                    f.original
+                        .as_ref()
+                        .map_or(0, String::len)
+                        .max(f.replacement.as_ref().map_or(0, String::len))
+                })
+                .sum::<usize>();
+            if total_text.saturating_add(bytes) > MAX_TEXT
+                || total_files.saturating_add(unit.files.len()) > MAX_FILES
+            {
+                return Err("所选资料及关联笔记过多，请分批复制".into());
+            }
+            total_text += bytes;
+            total_files += unit.files.len();
+            Ok(unit)
+        });
         match prepared {
-            Ok(unit) => units.push(unit),
+            Ok(unit) => {
+                reserved.extend(unit.files.iter().map(|f| f.target.clone()));
+                units.push(unit)
+            }
             Err(error) => units.push(Unit {
                 source: path,
                 target: destination,
@@ -574,6 +755,8 @@ fn prepare(
                 completed: false,
                 review_required: false,
                 error: Some(error),
+                annotation_count: 0,
+                reading_sources: vec![],
             }),
         }
     }
@@ -586,6 +769,7 @@ fn prepare(
         units,
         touched: Instant::now(),
         started: false,
+        reading_results_available,
     };
     let preview = summary(&key, &plan);
     let mut registry = plans().lock().map_err(|_| "复制预览暂不可用")?;
@@ -650,6 +834,20 @@ fn execute_unit(
             ));
         }
     }
+    let check_reading = || -> Result<(), String> {
+        for (path, expected) in &unit.reading_sources {
+            let current = if path.try_exists().map_err(|e| e.to_string())? {
+                Some(hash_file(path)?)
+            } else {
+                None
+            };
+            if &current != expected {
+                return Err("PDF 批注在预览后已改变，请重新核对未完成项".into());
+            }
+        }
+        Ok(())
+    };
+    check_reading()?;
     let cache = target.resolve_for_write(".longedit/copy-staging")?;
     fs::create_dir_all(&cache).map_err(|e| e.to_string())?;
     let stage_path = cache.join(id());
@@ -668,20 +866,44 @@ fn execute_unit(
         .map_err(|e| e.to_string())?;
     }
     let mut has_assets = false;
-    for file in &unit.files {
+    let mut extras = Vec::new();
+    let staged_path = |file: &File, index: usize| -> Result<PathBuf, String> {
+        if let Ok(relative) = file.target.strip_prefix(&unit.target) {
+            Ok(if relative.as_os_str().is_empty() {
+                payload.clone()
+            } else {
+                payload.join(relative)
+            })
+        } else if let Ok(relative) = file.target.strip_prefix(&unit.assets) {
+            Ok(assets.join(relative))
+        } else if file.annotation_for.as_ref() == Some(&unit.target) {
+            Ok(stage.path.join("companions").join(index.to_string()))
+        } else {
+            Err("复制结果超出预览位置".into())
+        }
+    };
+    for (index, file) in unit.files.iter().enumerate() {
         let staged = if let Ok(relative) = file.target.strip_prefix(&unit.target) {
             if relative.as_os_str().is_empty() {
                 payload.clone()
             } else {
                 payload.join(relative)
             }
-        } else {
+        } else if file.target.starts_with(&unit.assets) {
             has_assets = true;
             assets.join(
                 file.target
                     .strip_prefix(&unit.assets)
                     .map_err(|e| e.to_string())?,
             )
+        } else {
+            target.resolve_for_write(&file.target)?;
+            if file.target.exists() {
+                return Err("目标 PDF 批注已存在，请重新核对；已有批注未覆盖".into());
+            }
+            let staged = staged_path(file, index)?;
+            extras.push((staged.clone(), file.target.clone()));
+            staged
         };
         fs::create_dir_all(staged.parent().unwrap()).map_err(|e| e.to_string())?;
         let mut output = fs::OpenOptions::new()
@@ -689,7 +911,28 @@ fn execute_unit(
             .create_new(true)
             .open(&staged)
             .map_err(|e| e.to_string())?;
-        if let Some(content) = &file.replacement {
+        let mut replacement = file.replacement.clone();
+        if let Some(pdf) = &file.annotation_for {
+            let (pdf_index, pdf_file) = unit
+                .files
+                .iter()
+                .enumerate()
+                .find(|(_, f)| &f.target == pdf)
+                .ok_or("批注缺少配套 PDF")?;
+            let meta =
+                fs::metadata(staged_path(pdf_file, pdf_index)?).map_err(|e| e.to_string())?;
+            let mut doc: PdfAnnotationDocument =
+                serde_json::from_str(replacement.as_deref().ok_or("批注缺少复制内容")?)
+                    .map_err(|e| e.to_string())?;
+            doc.source.modified_at = meta
+                .modified()
+                .ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map_or(0, |t| t.as_secs());
+            doc.source.size = meta.len();
+            replacement = Some(annotation_json(&doc)?);
+        }
+        if let Some(content) = &replacement {
             output
                 .write_all(content.as_bytes())
                 .map_err(|e| e.to_string())?;
@@ -702,8 +945,7 @@ fn execute_unit(
         }
         output.sync_all().map_err(|e| e.to_string())?;
         drop(output);
-        let expected = file
-            .replacement
+        let expected = replacement
             .as_ref()
             .map(|s| format!("{:x}", Sha256::digest(s.as_bytes())))
             .unwrap_or_else(|| file.digest.clone());
@@ -730,6 +972,7 @@ fn execute_unit(
             return Err("复制期间来源已改变，请重新核对；该项尚未发布".into());
         }
     }
+    check_reading()?;
     if walk(&source, &unit.source)? != unit.inventory {
         return Err("来源目录已变化，尚未发布该项".into());
     }
@@ -738,6 +981,12 @@ fn execute_unit(
         return Err("目标目录位置已改变".into());
     }
     fs::create_dir_all(&directory).map_err(|e| e.to_string())?;
+    for (staged, destination) in extras {
+        match crate::services::archive_move::rename_no_replace(&staged, &destination) {
+            Ok(()) => unit.review_required = true,
+            Err(e) => return Err(format!("PDF 批注未能发布：{e}；请核对目标位置")),
+        }
+    }
     if has_assets {
         if unit.assets.exists() {
             return Err("关联资料目标已变化，请重新核对；已有内容未覆盖".into());
@@ -753,8 +1002,11 @@ fn execute_unit(
                 unit.assets.display()
             ));
         }
-        return Err(format!("该项未能发布，未覆盖已有文件：{error}"));
+        return Err(format!(
+            "该项未能发布，未覆盖已有文件：{error}；若目标已有批注，请先核对目标位置"
+        ));
     }
+    unit.review_required = false;
     Ok(())
 }
 fn execute(owner: &str, key: &str, acknowledge_warnings: bool) -> Result<CopyReceipt, String> {
@@ -786,21 +1038,49 @@ fn execute(owner: &str, key: &str, acknowledge_warnings: bool) -> Result<CopyRec
             continue;
         }
         let operation_id = crate::services::file_operation_history::id();
-        if let Err(error) = crate::services::file_operation_history::begin(&target_root, &operation_id, &unit.source, &unit.target, &target_root, None, None) {
+        if let Err(error) = crate::services::file_operation_history::begin(
+            &target_root,
+            &operation_id,
+            &unit.source,
+            &unit.target,
+            &target_root,
+            None,
+            None,
+        ) {
             unit.error = Some(format!("目标资料库的操作记录未能保存，尚未复制：{error}"));
             continue;
         }
         // A read-only source remains copyable. The writable destination owns the
         // durable receipt; mirror it to the source only when that is possible.
-        let _ = crate::services::file_operation_history::begin(&source_root, &operation_id, &unit.source, &unit.target, &target_root, None, None);
+        let _ = crate::services::file_operation_history::begin(
+            &source_root,
+            &operation_id,
+            &unit.source,
+            &unit.target,
+            &target_root,
+            None,
+            None,
+        );
         match execute_unit(&source_root, &target_root, &directory, unit) {
-            Ok(()) => { unit.completed = true; },
+            Ok(()) => {
+                unit.completed = true;
+            }
             Err(error) => unit.error = Some(error),
         }
         if !unit.review_required {
             // Publishing succeeded independently of receipt persistence. Never invite duplicate copies.
-            let _ = crate::services::file_operation_history::finish(&source_root, &operation_id, unit.completed, &[]);
-            let _ = crate::services::file_operation_history::finish(&target_root, &operation_id, unit.completed, &[]);
+            let _ = crate::services::file_operation_history::finish(
+                &source_root,
+                &operation_id,
+                unit.completed,
+                &[],
+            );
+            let _ = crate::services::file_operation_history::finish(
+                &target_root,
+                &operation_id,
+                unit.completed,
+                &[],
+            );
         }
         for file in &mut unit.files {
             file.original = None;
@@ -847,6 +1127,7 @@ pub async fn preview_cross_library_copy(
     target_root: String,
     paths: Vec<String>,
     target_dir: String,
+    include_reading_results: Option<bool>,
 ) -> Result<CopyPreview, String> {
     if window.label() != "main" {
         return Err("请在主界面的文件栏复制资料".into());
@@ -854,7 +1135,14 @@ pub async fn preview_cross_library_copy(
     let owner = window.label().to_owned();
     tauri::async_runtime::spawn_blocking(move || {
         let _lock = OPERATIONS.lock().unwrap_or_else(|e| e.into_inner());
-        prepare(&owner, &source_root, &target_root, &paths, &target_dir)
+        prepare_with_reading(
+            &owner,
+            &source_root,
+            &target_root,
+            &paths,
+            &target_dir,
+            include_reading_results.unwrap_or(true),
+        )
     })
     .await
     .map_err(|e| e.to_string())?
@@ -1143,14 +1431,264 @@ mod tests {
         let p = f.preview(&["a.txt"], ".");
         let result = execute(&f.owner, &p.plan_id, false).unwrap();
         assert!(result.result.errors.is_empty());
-        assert_eq!(fs::read(f.b.join("a.txt")).unwrap(), b"source stays unchanged");
-        assert_eq!(fs::read(f.a.join("a.txt")).unwrap(), b"source stays unchanged");
-        assert_eq!(fs::read(f.a.join(".longedit")).unwrap(), b"unwritable metadata location");
+        assert_eq!(
+            fs::read(f.b.join("a.txt")).unwrap(),
+            b"source stays unchanged"
+        );
+        assert_eq!(
+            fs::read(f.a.join("a.txt")).unwrap(),
+            b"source stays unchanged"
+        );
+        assert_eq!(
+            fs::read(f.a.join(".longedit")).unwrap(),
+            b"unwritable metadata location"
+        );
         let records = crate::services::file_operation_history::list(&f.b).unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].action, "copy");
         assert_eq!(records[0].status, "completed");
-        assert!(!crate::services::file_operation_history::restorable(&records[0]));
-        assert_eq!(crate::services::file_operation_history::locate(&f.b, &records[0].id).unwrap(), f.b.join("a.txt").canonicalize().unwrap());
+        assert!(!crate::services::file_operation_history::restorable(
+            &records[0]
+        ));
+        assert_eq!(
+            crate::services::file_operation_history::locate(&f.b, &records[0].id).unwrap(),
+            f.b.join("a.txt").canonicalize().unwrap()
+        );
+    }
+    fn annotated_pdf(f: &Fixture, name: &str) -> Vec<u8> {
+        let pdf = f.a.join(name);
+        fs::create_dir_all(pdf.parent().unwrap()).unwrap();
+        fs::write(&pdf, b"saved PDF bytes").unwrap();
+        let document = serde_json::json!({"schemaVersion":1,"source":{"pdfFile":pdf.file_name().unwrap().to_str().unwrap(),"size":15,"modifiedAt":1},"annotations":[{"id":"note-1","kind":"comment","page":1,"color":"yellow","quote":"原文摘录","comment":"不能丢失的评论","createdAt":1,"updatedAt":1}]});
+        let bytes = serde_json::to_vec(&document).unwrap();
+        fs::write(reading::annotation_path(&pdf).unwrap(), &bytes).unwrap();
+        bytes
+    }
+    #[test]
+    fn pdf_copy_carries_renamed_annotations_preserves_original_and_replays_one_receipt() {
+        let f = Fixture::new();
+        let original = annotated_pdf(&f, "研究 来源.pdf");
+        fs::write(f.b.join("研究 来源.pdf"), b"existing PDF").unwrap();
+        fs::write(
+            f.b.join("研究 来源.pdf.annotations.json"),
+            b"existing annotations",
+        )
+        .unwrap();
+        let p = f.preview(&["研究 来源.pdf"], ".");
+        assert_eq!(p.items[0].annotation_count, 1);
+        assert!(p.reading_results_available);
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.errors.is_empty(), "{:?}", r.result.errors);
+        let path = Path::new(&r.result.items[0].new_path);
+        assert!(path.ends_with("研究 来源 - 副本.pdf"));
+        let document = tauri::async_runtime::block_on(super::super::pdf::read_pdf_annotations(
+            text(&f.b),
+            text(path),
+        ))
+        .unwrap();
+        assert_eq!(document.source.pdf_file, "研究 来源 - 副本.pdf");
+        assert_eq!(document.annotations[0].comment, "不能丢失的评论");
+        assert_eq!(
+            fs::read(reading::annotation_path(&f.a.join("研究 来源.pdf")).unwrap()).unwrap(),
+            original
+        );
+        assert_eq!(
+            fs::read(f.b.join("研究 来源.pdf.annotations.json")).unwrap(),
+            b"existing annotations"
+        );
+        assert_eq!(
+            execute(&f.owner, &p.plan_id, false)
+                .unwrap()
+                .result
+                .items
+                .len(),
+            1
+        );
+        assert_eq!(
+            fs::read_dir(&f.b)
+                .unwrap()
+                .filter_map(Result::ok)
+                .filter(|e| e.path().is_file())
+                .count(),
+            4
+        );
+    }
+    #[test]
+    fn reading_note_sources_and_managed_metadata_follow_the_actual_copied_pdf() {
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        let f = Fixture::new();
+        annotated_pdf(&f, "资料/来源.pdf");
+        let uri="longedit://pdf?path=%E8%B5%84%E6%96%99%2F%E6%9D%A5%E6%BA%90.pdf&page=1&annotation=note-1&sha256=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let metadata = serde_json::json!({"version":1,"id":"00000000-0000-4000-8000-000000000000","snapshot":{"relativePath":"资料/来源.pdf","items":[{"uri":uri}],"sourceDigest":"a".repeat(64)},"comments":true,"grouping":"page"});
+        let source=format!("\u{feff}# 项目笔记\r\n<!-- longedit:pdf-reading:v1 {} -->\r\n\r\n# 保留自己的补写\r\n[来源]({uri})\r\n`[示例]({uri})`\r\n<!-- longedit:pdf-reading:end 00000000-0000-4000-8000-000000000000 -->\r\n",STANDARD.encode(serde_json::to_vec(&metadata).unwrap()));
+        fs::write(f.a.join("笔记.md"), &source).unwrap();
+        let p = f.preview(&["笔记.md"], "接收");
+        assert!(p.items[0].warnings.is_empty(), "{:?}", p.items[0].warnings);
+        assert_eq!(p.items[0].annotation_count, 1);
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.errors.is_empty(), "{:?}", r.result.errors);
+        let copied = fs::read_to_string(&r.result.items[0].new_path).unwrap();
+        let links = reading::pdf_links(&copied).unwrap();
+        assert_eq!(links.len(), 1);
+        let pdf = f.b.join(&links[0].relative);
+        assert_eq!(fs::read(&pdf).unwrap(), b"saved PDF bytes");
+        assert!(copied.contains("# 保留自己的补写\r\n"));
+        assert!(copied.contains(&format!("`[示例]({uri})`")));
+        assert_eq!(
+            reading::metadata_sources(&copied).unwrap(),
+            vec![links[0].relative.clone()]
+        );
+        assert_eq!(fs::read_to_string(f.a.join("笔记.md")).unwrap(), source);
+        assert!(reading::annotation_path(&pdf).unwrap().is_file());
+    }
+    #[test]
+    fn changed_or_new_annotations_stop_only_the_affected_copy_and_retry_keeps_completed_items() {
+        let f = Fixture::new();
+        annotated_pdf(&f, "a.pdf");
+        fs::write(f.a.join("b.txt"), b"ordinary").unwrap();
+        let p = f.preview(&["a.pdf", "b.txt"], ".");
+        let side = reading::annotation_path(&f.a.join("a.pdf")).unwrap();
+        fs::write(&side, b"changed outside").unwrap();
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert_eq!(r.result.items.len(), 1);
+        assert!(!f.b.join("a.pdf").exists());
+        assert!(!f.b.join("a.pdf.annotations.json").exists());
+        assert_eq!(
+            execute(&f.owner, &p.plan_id, false)
+                .unwrap()
+                .result
+                .items
+                .len(),
+            1
+        );
+        assert_eq!(fs::read(f.b.join("b.txt")).unwrap(), b"ordinary");
+        fs::write(f.a.join("new.pdf"), b"saved PDF bytes").unwrap();
+        let p = f.preview(&["new.pdf"], ".");
+        annotated_pdf(&f, "new.pdf");
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.items.is_empty());
+        assert!(!f.b.join("new.pdf").exists());
+    }
+    #[test]
+    fn damaged_annotations_can_be_excluded_without_modifying_or_overwriting_any_source() {
+        let f = Fixture::new();
+        annotated_pdf(&f, "项目/a.pdf");
+        let side = reading::annotation_path(&f.a.join("项目/a.pdf")).unwrap();
+        fs::write(&side, b"damaged annotation JSON").unwrap();
+        let p = f.preview(&["项目"], ".");
+        assert!(p.items[0].error.is_some());
+        let p = prepare_with_reading(
+            &f.owner,
+            &text(&f.a),
+            &text(&f.b),
+            &["项目".into()],
+            ".",
+            false,
+        )
+        .unwrap();
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.errors.is_empty(), "{:?}", r.result.errors);
+        assert_eq!(
+            fs::read(f.b.join("项目/a.pdf")).unwrap(),
+            b"saved PDF bytes"
+        );
+        assert!(!f.b.join("项目/a.pdf.annotations.json").exists());
+        assert_eq!(fs::read(side).unwrap(), b"damaged annotation JSON");
+    }
+    #[test]
+    fn orphan_or_racing_target_annotations_never_overwrite_existing_comments() {
+        let f = Fixture::new();
+        annotated_pdf(&f, "a.pdf");
+        fs::write(f.b.join("a.pdf.annotations.json"), b"orphan to preserve").unwrap();
+        let p = f.preview(&["a.pdf"], ".");
+        assert!(p.items[0].new_path.ends_with("a - 副本.pdf"));
+        fs::write(
+            reading::annotation_path(Path::new(&p.items[0].new_path)).unwrap(),
+            b"new outside comments",
+        )
+        .unwrap();
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.items.is_empty());
+        assert!(!Path::new(&p.items[0].new_path).exists());
+        assert_eq!(
+            fs::read(f.b.join("a.pdf.annotations.json")).unwrap(),
+            b"orphan to preserve"
+        );
+    }
+    #[test]
+    fn copied_folder_keeps_companion_names_and_empty_directories_once() {
+        let f = Fixture::new();
+        annotated_pdf(&f, "项目/来源.pdf");
+        fs::create_dir_all(f.a.join("项目/空目录")).unwrap();
+        let p = f.preview(&["项目"], ".");
+        assert_eq!(p.items[0].annotation_count, 1);
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.errors.is_empty(), "{:?}", r.result.errors);
+        assert!(f.b.join("项目/空目录").is_dir());
+        let doc = tauri::async_runtime::block_on(super::super::pdf::read_pdf_annotations(
+            text(&f.b),
+            text(&f.b.join("项目/来源.pdf")),
+        ))
+        .unwrap();
+        assert_eq!(doc.annotations.len(), 1);
+        assert_eq!(doc.source.pdf_file, "来源.pdf");
+    }
+    #[test]
+    fn unsupported_pdf_locator_retains_the_original_in_the_explicit_plain_copy() {
+        let f = Fixture::new();
+        annotated_pdf(&f, "来源.pdf");
+        let note =
+            "[来源](longedit://pdf?path=%E6%9D%A5%E6%BA%90.pdf&page=oops&annotation=note-1)\n";
+        fs::write(f.a.join("笔记.md"), note).unwrap();
+        let p = f.preview(&["笔记.md"], ".");
+        assert!(p.items[0].error.is_some());
+        assert!(!f.b.join("笔记.md").exists());
+        let p = prepare_with_reading(
+            &f.owner,
+            &text(&f.a),
+            &text(&f.b),
+            &["笔记.md".into()],
+            ".",
+            false,
+        )
+        .unwrap();
+        let r = execute(&f.owner, &p.plan_id, true).unwrap();
+        assert!(r.result.errors.is_empty());
+        assert_eq!(
+            fs::read_to_string(&r.result.items[0].new_path).unwrap(),
+            note
+        );
+        assert_eq!(fs::read_to_string(f.a.join("笔记.md")).unwrap(), note);
+    }
+    #[test]
+    fn compact_annotations_remain_readable_when_pretty_printing_would_exceed_the_existing_limit() {
+        let f = Fixture::new();
+        annotated_pdf(&f, "大批注.pdf");
+        let side = reading::annotation_path(&f.a.join("大批注.pdf")).unwrap();
+        let mut doc: PdfAnnotationDocument =
+            serde_json::from_slice(&fs::read(&side).unwrap()).unwrap();
+        let base = doc.annotations[0].clone();
+        doc.annotations = (0..4000)
+            .map(|n| {
+                let mut a = base.clone();
+                a.id = format!("comment-{n}");
+                a.comment = "x".repeat(1100);
+                a
+            })
+            .collect();
+        let original = serde_json::to_vec(&doc).unwrap();
+        assert!(original.len() as u64 <= MAX_ANNOTATION_FILE_BYTES);
+        assert!(serde_json::to_vec_pretty(&doc).unwrap().len() as u64 > MAX_ANNOTATION_FILE_BYTES);
+        fs::write(&side, &original).unwrap();
+        let p = f.preview(&["大批注.pdf"], ".");
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.errors.is_empty(), "{:?}", r.result.errors);
+        let reopened = tauri::async_runtime::block_on(super::super::pdf::read_pdf_annotations(
+            text(&f.b),
+            r.result.items[0].new_path.clone(),
+        ))
+        .unwrap();
+        assert_eq!(reopened.annotations, doc.annotations);
+        assert_eq!(fs::read(side).unwrap(), original);
     }
 }

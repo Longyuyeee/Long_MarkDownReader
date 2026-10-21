@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
+export const copyReadingChecks=['reading-copy-preview-is-read-only','collision-copy-keeps-paired-comments-and-source','copied-pdf-reopens-with-real-annotation','reading-note-links-and-managed-record-follow-target','changed-comments-stop-and-retry-only-unfinished','damaged-comments-have-an-ordinary-opt-out','cancel-and-copy-preserve-current-drafts','trusted-input-without-runtime-overlay']
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex')
+export function validateInstalledCopyReading(report,manifest){
+ assert.equal(manifest.appVersion,'1.1.33');for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-cross-library-reading-results-and-output-bytes');for(const [k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(report[k],new RegExp('^[a-f0-9]{'+n+'}$'))
+ for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)
+ for(const k of ['previewReadOnly','collisionExact','sourceExact','reopenedExact','noteMappingExact','metadataUpdatable','partialExact','retryExact','optOutExact','cancelExact','draftsExact','receiptRepeatExact'])assert.equal(report[k],true,k)
+ assert.deepEqual(report.checks.map(c=>[c.id,c.status]),copyReadingChecks.map(id=>[id,'passed']));assert.deepEqual(report.runtimeErrors,[]);assert.ok(report.inputTrace.length>10&&report.inputTrace.every(e=>e.trusted));for(const type of ['click','pointerdown','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type))
+}
+export function assertCopyReadingOutputBytes(report,read){
+ const names=['source.pdf','source.annotations.json','source.md','copied.pdf','copied.annotations.json','copied.md','dependency.pdf','dependency.annotations.json','changed-source.annotations.json','retry.annotations.json','unchecked.pdf','observations.json'].map(n=>'installed-v1133-'+n)
+ assert.deepEqual(report.outputs.map(o=>o.fileName).sort(),names.sort());for(const o of report.outputs){const b=read(o.fileName);assert.equal(b.length,o.sizeBytes);assert.equal(sha(b),o.sha256)}
+ const raw=n=>read('installed-v1133-'+n),json=n=>JSON.parse(raw(n)),source=json('source.annotations.json'),copy=json('copied.annotations.json'),dependency=json('dependency.annotations.json'),observed=json('observations.json')
+ for(const name of ['copied.pdf','dependency.pdf','unchecked.pdf'])assert.deepEqual(raw(name),raw('source.pdf'))
+ assert.deepEqual(source.annotations,copy.annotations);assert.deepEqual(source.annotations,dependency.annotations);assert.equal(copy.source.pdfFile,report.copiedPdfName);assert.equal(copy.source.size,raw('source.pdf').length);assert.equal(dependency.source.size,raw('source.pdf').length)
+ assert.deepEqual(json('changed-source.annotations.json').annotations,json('retry.annotations.json').annotations)
+ const original=raw('source.md').toString('utf8'),copied=raw('copied.md').toString('utf8'),decode=text=>JSON.parse(Buffer.from(/<!-- longedit:pdf-reading:v1 ([A-Za-z0-9+/=]+) -->/.exec(text)[1],'base64').toString('utf8')),before=decode(original),after=decode(copied)
+ assert.equal(after.snapshot.relativePath,report.dependencyRelative);assert.deepEqual(before.snapshot.items.map(i=>i.annotation),after.snapshot.items.map(i=>i.annotation));assert.equal(before.id,after.id);assert.ok(copied.startsWith('自己的补写\r\n')&&copied.endsWith('\r\n保留末尾补写\r\n'))
+ const expected=structuredClone(before);expected.snapshot.relativePath=report.dependencyRelative;expected.snapshot.items[0].uri=after.snapshot.items[0].uri;assert.deepEqual(after,expected)
+ const uri=new URL(after.snapshot.items[0].uri);assert.equal(uri.searchParams.get('path'),report.dependencyRelative);assert.equal(uri.searchParams.get('annotation'),'copy-reading-1');assert.equal(uri.searchParams.get('sha256'),sha(raw('source.pdf')));assert.ok(copied.includes(']('+after.snapshot.items[0].uri+')'));assert.equal(copied.replace(/<!-- longedit:pdf-reading:v1 [A-Za-z0-9+/=]+ -->/g,'<!-- record -->'),original.replace(/<!-- longedit:pdf-reading:v1 [A-Za-z0-9+/=]+ -->/g,'<!-- record -->').replaceAll(before.snapshot.items[0].uri,after.snapshot.items[0].uri))
+ assert.equal(observed.renderedComment,source.annotations[0].comment);assert.equal(observed.annotationEditorComment,source.annotations[0].comment);assert.equal(observed.canvasRendered,true);assert.equal(observed.uncheckedCompanionExists,false);assert.equal(observed.retryPdfSha256,sha(raw('source.pdf')));assert.equal(observed.retryFileCount,3);assert.equal(observed.existingPdf,'目标原件，不能覆盖');assert.equal(observed.existingComments,'目标批注，不能覆盖')
+}

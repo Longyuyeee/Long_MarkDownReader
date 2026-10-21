@@ -2,15 +2,16 @@
   <section class="copy-preview" aria-label="跨库复制预览" :aria-busy="loading || busy" :data-plan-id="preview?.planId">
     <p v-if="loading" class="copy-note" role="status">正在核对文件和关联资料…</p>
     <p v-if="error" class="copy-error" role="alert">{{ error }}</p>
+    <label v-if="preview?.readingResultsAvailable || readingChoiceVisible" class="copy-ack copy-reading-choice"><input v-model="includeReadingResults" type="checkbox" :disabled="busy || loading || completed.length > 0 || uncertain || reviewRequired" />携带 PDF 批注和阅读来源<span v-if="annotations">（{{ annotations }} 条批注）</span></label>
     <template v-if="preview">
       <div class="copy-summary"><strong>{{ completed.length ? `已复制 ${completed.length} 项` : '复制预览' }}</strong><span>{{ pending.length }} 项待复制 · {{ dependencies }} 份关联资源 · {{ formatBytes(bytes) }}</span></div>
       <div class="copy-items">
-        <article v-for="item in rows" :key="item.oldPath"><div><strong>{{ filename(item.oldPath) }}</strong><span class="copy-state" :class="{ done: item.completed, failed: item.error }">{{ item.completed ? '已完成' : item.error ? '未完成' : '待复制' }}</span></div><small>→ {{ relative(item.newPath) }}</small><p v-if="item.error" class="copy-error">{{ item.error }}</p><details v-if="item.warnings.length"><summary>{{ item.warnings.length }} 条引用需留意</summary><ul><li v-for="warning in item.warnings" :key="warning">{{ warning }}</li></ul></details></article>
+        <article v-for="item in rows" :key="item.oldPath"><div><strong>{{ filename(item.oldPath) }}</strong><span class="copy-state" :class="{ done: item.completed, failed: item.error }">{{ item.completed ? '已完成' : item.error ? '未完成' : '待复制' }}</span></div><small>→ {{ relative(item.newPath) }}</small><small v-if="item.annotationCount">含 {{ item.annotationCount }} 条 PDF 批注</small><p v-if="item.error" class="copy-error">{{ item.error }}</p><details v-if="item.warnings.length"><summary>{{ item.warnings.length }} 条引用需留意</summary><ul><li v-for="warning in item.warnings" :key="warning">{{ warning }}</li></ul></details></article>
       </div>
       <label v-if="warnings && pending.length" class="copy-ack"><input v-model="acknowledge" type="checkbox" :disabled="busy" />保留未自动接续的引用，继续复制</label>
     </template>
     <p class="copy-note">复制已保存的文件，源文件和未保存草稿仍留在原位置。</p>
-    <details class="copy-scope"><summary>复制范围</summary><p>可识别的 Markdown 相对文件引用及关联笔记会随复制接续；无法接续的引用在预览中列出。其他格式原样复制，历史、手动关系和 PDF 批注等管理记录不随带。</p></details>
+    <details class="copy-scope"><summary>复制范围</summary><p>可识别的 Markdown 相对文件引用及关联笔记会随复制接续。勾选后携带配套 PDF 批注，并接续阅读笔记中的来源及生成记录；无法接续的引用在预览中列出。其他格式原样复制，历史、手动关系和 OCR 记录不自动随带。</p></details>
     <div class="copy-actions"><n-button :disabled="busy" @click="$emit('close')">{{ completed.length ? '关闭' : '取消' }}</n-button><n-button v-if="completed.length || reviewRequired" :disabled="busy" @click="reveal">在文件管理器中查看</n-button><n-button v-if="uncertain" type="primary" :loading="busy" @click="execute">核对复制结果</n-button><n-button v-else-if="retryable.length" type="primary" :loading="loading" :disabled="busy || loading" @click="refreshFailed">重新核对未完成的 {{ retryable.length }} 项</n-button><n-button v-else-if="pending.length" type="primary" :loading="busy" :disabled="loading || Boolean(error) || (warnings && !acknowledge)" @click="execute">复制 {{ pending.length }} 项</n-button><n-button v-else-if="!preview && error" :loading="loading" :disabled="busy" @click="load()">重新预览</n-button></div>
   </section>
 </template>
@@ -20,25 +21,27 @@ import { NButton } from 'naive-ui'
 import { invoke } from '../services/tauriRuntime'
 import { fileOperationBusy as busy, sameLibrary, type FileOperationResult, type PathChange } from '../services/libraryFileOperations'
 import { beginWindowSave } from '../services/windowDrafts'
-interface Item { oldPath:string; newPath:string; fileCount:number; dependencyCount:number; totalBytes:number; warnings:string[]; error:string|null; completed:boolean; reviewRequired:boolean }
-interface Preview { planId:string; sourceRoot:string; targetRoot:string; targetDirectory:string; items:Item[] }
+interface Item { oldPath:string; newPath:string; fileCount:number; dependencyCount:number; totalBytes:number; warnings:string[]; error:string|null; completed:boolean; reviewRequired:boolean; annotationCount?:number; readingSourceCount?:number }
+interface Preview { planId:string; sourceRoot:string; targetRoot:string; targetDirectory:string; items:Item[]; readingResultsAvailable?:boolean }
 const props=defineProps<{ active:boolean; sourceRoot:string; targetRoot:string; paths:string[]; targetDir:string; beforeCopy:()=>Promise<boolean>; afterCopy:(result:FileOperationResult,targetRoot:string)=>Promise<void> }>()
 const emit=defineEmits<{ close:[]; lock:[value:boolean] }>()
 const preview=ref<Preview|null>(null),completed=ref<PathChange[]>([]),loading=ref(false),error=ref(''),acknowledge=ref(false),uncertain=ref(false)
+const includeReadingResults=ref(true),readingChoiceVisible=ref(false)
+const annotations=computed(()=>preview.value?.items.reduce((sum,item)=>sum+(item.annotationCount||0),0)||0)
 let disposed=false,generation=0,timer:ReturnType<typeof setTimeout>|undefined
 const pending=computed(()=>preview.value?.items.filter(item=>!item.completed&&!item.error)||[])
 const retryable=computed(()=>preview.value?.items.filter(item=>!item.completed&&item.error&&!item.reviewRequired)||[])
 const reviewRequired=computed(()=>Boolean(preview.value?.items.some(item=>item.reviewRequired)))
-const rows=computed(()=>[...completed.value.filter(item=>!preview.value?.items.some(row=>sameLibrary(row.oldPath,item.oldPath))).map(item=>({...item,fileCount:0,dependencyCount:0,totalBytes:0,warnings:[],error:null,completed:true,reviewRequired:false})),...(preview.value?.items||[])])
+const rows=computed<Item[]>(()=>[...completed.value.filter(item=>!preview.value?.items.some(row=>sameLibrary(row.oldPath,item.oldPath))).map(item=>({...item,fileCount:0,dependencyCount:0,totalBytes:0,warnings:[],error:null,completed:true,reviewRequired:false})),...(preview.value?.items||[])])
 const warnings=computed(()=>pending.value.some(item=>item.warnings.length>0))
 const dependencies=computed(()=>preview.value?.items.reduce((sum,item)=>sum+item.dependencyCount,0)||0),bytes=computed(()=>preview.value?.items.reduce((sum,item)=>sum+item.totalBytes,0)||0)
 const filename=(path:string)=>path.split(/[\\/]/).pop()||path
 const relative=(path:string)=>path.replace(/\\/g,'/').replace(props.targetRoot.replace(/\\/g,'/').replace(/\/$/,'')+'/','')
 const formatBytes=(value:number)=>value>=1024*1024?`${(value/(1024*1024)).toFixed(1)} MB`:`${Math.ceil(value/1024)} KB`
-const context=()=>({sourceRoot:props.sourceRoot,targetRoot:props.targetRoot,targetDir:props.targetDir.trim()||'.',paths:[...props.paths]})
+const context=()=>({sourceRoot:props.sourceRoot,targetRoot:props.targetRoot,targetDir:props.targetDir.trim()||'.',paths:[...props.paths],includeReadingResults:includeReadingResults.value})
 async function load(selected=props.paths){
   const token=++generation,args={...context(),paths:[...selected]};preview.value=null;error.value='';acknowledge.value=false;uncertain.value=false;loading.value=true
-  try {const result=await invoke<Preview>('preview_cross_library_copy',args);if(!disposed&&token===generation){if(!sameLibrary(result.sourceRoot,args.sourceRoot)||!sameLibrary(result.targetRoot,args.targetRoot))throw Error('资料库已变化，请重新预览');preview.value=result}}
+  try {const result=await invoke<Preview>('preview_cross_library_copy',args);if(!disposed&&token===generation){if(!sameLibrary(result.sourceRoot,args.sourceRoot)||!sameLibrary(result.targetRoot,args.targetRoot))throw Error('资料库已变化，请重新预览');preview.value=result;readingChoiceVisible.value=Boolean(result.readingResultsAvailable)}}
   catch(cause){if(!disposed&&token===generation)error.value=`未执行复制：${String(cause)}`}
   finally{if(!disposed&&token===generation)loading.value=false}
 }
@@ -59,7 +62,7 @@ async function execute(){
   finally{busy.value=false;finish();if(!disposed&&!completed.value.length&&!uncertain.value&&!reviewRequired.value)emit('lock',false)}
 }
 async function reveal(){try{const {revealItemInDir}=await import('@tauri-apps/plugin-opener');await revealItemInDir(completed.value[0]?.newPath||preview.value!.targetDirectory)}catch(cause){error.value=`无法显示目标位置，复制结果仍保留：${String(cause)}`}}
-watch(()=>[props.active,props.sourceRoot,props.targetRoot,props.targetDir,JSON.stringify(props.paths)],()=>{if(timer)clearTimeout(timer);++generation;preview.value=null;error.value='';loading.value=props.active;if(props.active)timer=setTimeout(()=>void load(),250)},{immediate:true})
+watch(()=>[props.active,props.sourceRoot,props.targetRoot,props.targetDir,JSON.stringify(props.paths),includeReadingResults.value],()=>{if(timer)clearTimeout(timer);++generation;preview.value=null;error.value='';loading.value=props.active;if(props.active)timer=setTimeout(()=>void load(),250)},{immediate:true})
 onBeforeUnmount(()=>{disposed=true;++generation;if(timer)clearTimeout(timer)})
 </script>
 <style scoped>

@@ -1,0 +1,35 @@
+   Compiling tauri-app v1.1.33 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 53.71s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-cfa5b3b6c6b20e37.exe)
+
+running 18 tests
+test commands::cross_library_copy::tests::changed_or_new_annotations_stop_only_the_affected_copy_and_retry_keeps_completed_items ... ok
+test commands::cross_library_copy::tests::changed_source_and_new_directory_entry_stop_only_the_affected_unit ... ok
+test commands::cross_library_copy::tests::compact_annotations_remain_readable_when_pretty_printing_would_exceed_the_existing_limit ... ok
+test commands::cross_library_copy::tests::copied_folder_keeps_companion_names_and_empty_directories_once ... ok
+test commands::cross_library_copy::tests::damaged_annotations_can_be_excluded_without_modifying_or_overwriting_any_source ... ok
+test commands::cross_library_copy::tests::directory_copy_excludes_internal_metadata_preserves_empty_folders_and_external_dependencies ... ok
+test commands::cross_library_copy::tests::html_image_parser_ignores_fake_src_inside_other_attributes ... ok
+test commands::cross_library_copy::tests::markdown_graph_keeps_bom_crlf_titles_code_and_cycles_without_changing_sources ... ok
+test commands::cross_library_copy::tests::name_collisions_keep_existing_bytes_and_compound_extensions_in_preview ... ok
+test commands::cross_library_copy::tests::orphan_or_racing_target_annotations_never_overwrite_existing_comments ... ok
+test commands::cross_library_copy::tests::pdf_copy_carries_renamed_annotations_preserves_original_and_replays_one_receipt ... ok
+test commands::cross_library_copy::tests::preview_is_read_only_and_copy_replays_the_same_receipt_without_duplicates ... ok
+test commands::cross_library_copy::tests::reading_note_sources_and_managed_metadata_follow_the_actual_copied_pdf ... ok
+test commands::cross_library_copy::tests::source_history_unavailable_still_copies_and_records_the_writable_destination ... ok
+test commands::cross_library_copy::tests::target_race_and_document_save_never_overwrite_or_claim_success ... ok
+test commands::cross_library_copy::tests::unknown_owner_and_same_or_descendant_vault_never_write ... ok
+test commands::cross_library_copy::tests::unresolved_references_require_explicit_acknowledgement_and_keep_original_syntax ... ok
+test commands::cross_library_copy::tests::unsupported_pdf_locator_retains_the_original_in_the_explicit_plain_copy ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 1105 filtered out; finished in 5.92s
+
