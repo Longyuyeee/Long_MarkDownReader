@@ -160,6 +160,7 @@
 </template>
 
 <script setup lang="ts">
+import { useContextCommands } from '../services/contextCommands'
 import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import SearchMatchNavigation from '../components/SearchMatchNavigation.vue'
 import { searchRanges, wrapSearchIndex } from '../utils/searchLocation'
@@ -835,6 +836,11 @@ watch([textPath, isExternal], () => {
   )
   void load()
 })
+
+useContextCommands(() => JSON.stringify([store.libraryPath,textPath.value,isExternal.value,loadGeneration]), () => !loading.value && !saving.value && !loadError.value && editor ? [
+  ...(!isExternal.value && format.value?.id === 'plain-text' ? [{id:'text-history',title:'历史与差异…',description:'比较当前文本草稿与保存历史',keywords:'历史 版本 差异 恢复 history',run:()=>{showHistory.value=true}}] : []),
+  ...(!readOnly.value ? [{id:'text-save',title:'保存文件',description:'保存当前文本草稿',keywords:'保存 save',run:()=>save()}] : []),
+] : [])
 onMounted(async () => {
   createEditor()
   window.addEventListener('keydown', handleKeydown,true)
@@ -848,6 +854,7 @@ onBeforeUnmount(() => {
   editor = null
   window.removeEventListener('keydown', handleKeydown,true)
 })
+
 </script>
 
 <style scoped>

@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "evidenceLevel": "browser-controlled-callbacks",
+  "checks": [
+    "six styles retain readable Chinese operation results and ordinary transitions",
+    "Chinese alias and keyboard Enter execute the original registered action without saving",
+    "stale document result remains a local recoverable palette error",
+    "operation availability is checked again immediately before execution",
+    "legacy greater-than prefix still works"
+  ],
+  "errors": []
+}

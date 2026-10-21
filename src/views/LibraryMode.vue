@@ -700,6 +700,7 @@
 </template>
 
 <script setup lang="ts">
+import { useContextCommands, type ContextCommand } from '../services/contextCommands'
 import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
 import SearchFeedback from '../components/SearchFeedback.vue'
@@ -4839,6 +4840,34 @@ watch(activeTabId, (newId, oldId) => {
 
   } 
 })
+
+useContextCommands(
+  () => JSON.stringify([store.libraryPath, activeTabId.value, editorLoadGeneration, activeEmbeddedEditor.value ? 'embedded' : vditor?.getCurrentMode()]),
+  () => {
+    const commands: ContextCommand[] = [
+      {id:'refresh',title:'刷新目录',description:'重新读取当前资料库',keywords:'目录 文件 刷新 refresh',run:()=>refreshLibrary()},
+      {id:'daily-note',title:'今日笔记',description:'创建或打开今天的笔记',keywords:'日记 今天 daily',run:()=>createDailyNote()},
+    ]
+    if (!activeTabId.value || editorLoading.value || editorModeChangeBusy.value || fileOperationBusy.value || currentFileReloadBusy.value) return commands
+    commands.unshift({id:'attachments',title:'管理附件…',description:activeIsMarkdown.value?'查看当前笔记附件和引用位置':'查看哪些笔记引用了当前文件',keywords:'图片 附件 引用 attachment',run:()=>openAttachments(activeTabId.value)})
+    if (activeEmbeddedEditor.value) return commands
+    if (activeFormatCanEdit.value) commands.push({id:'save-file',title:'保存文件',description:'保存当前文档 · Ctrl+S',keywords:'保存 save',run:()=>saveCurrentFile()})
+    if (activeIsMarkdown.value) {
+      commands.push(
+        {id:'document-find',title:'查找替换…',description:'在当前笔记中查找或替换文字',keywords:'查找 搜索 替换 find',run:()=>openDocumentFind()},
+        {id:'history',title:'历史与差异…',description:'查看当前笔记的保存历史，比较并恢复内容',keywords:'历史 版本 差异 恢复 history diff',run:()=>{activeSidebarTab.value='history';isSidebarCollapsed.value=false}},
+        {id:'export-html',title:'导出 HTML',description:'导出当前笔记',keywords:'导出 export html',run:()=>handleExportHtml()},
+      )
+      if (activeTextTab.value?.content?.includes('longedit:') && pdfReadingContext().ready) commands.push({id:'pdf-reading-update',title:'更新 PDF 阅读笔记…',description:'核对批注变化，在原窗口预览笔记更新',keywords:'阅读 笔记 PDF 更新 批注',run:()=>openPdfReadingUpdate()})
+    }
+    if (searchPreviewResult.value) commands.push({id:'source-check',title:'核对参考来源…',description:searchPreviewResult.value.title,keywords:'来源 核对 修复 链接 参考',run:()=>{
+      const source={...searchPreviewResult.value!},root=store.libraryPath
+      referenceRepairRequest.value={root,source,effect:'更新右侧参考的来源，当前笔记内容保持不变。',commit:next=>repairPinnedReference(source.path,next)}
+    }})
+    return commands
+  },
+)
+
 </script>
 
 <style scoped>

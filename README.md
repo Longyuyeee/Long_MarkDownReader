@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> **v1.1.36 开发候选**：命令按当前文件提供附件、历史、阅读笔记和录入检查，保留未保存正文；正在验证，稳定下载仍为 v1.1.35。[本版记录](docs/V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md)。
+
 > **v1.1.35 已正式发布**：附件引用包含当前窗口未保存笔记，草稿优先、查询不代存。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35) · [发布说明](docs/RELEASE_NOTES_v1.1.35.md)。
 
 

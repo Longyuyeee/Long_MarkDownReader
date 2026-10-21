@@ -198,6 +198,7 @@
 </template>
 
 <script setup lang="ts">
+import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, recordWindowDraftActivity, useWindowDraft } from '../services/windowDrafts'
 import { hasPendingTableSave, tableSaveKey, tryAcquireTableSave, waitForTableSave } from '../utils/tableSaveOwnership'
 import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -1258,6 +1259,15 @@ onBeforeUnmount(() => {
   window.clearTimeout(typeTimer)
   window.removeEventListener('beforeunload', beforeUnload)
   resizeObserver?.disconnect()
+})
+
+useContextCommands(() => JSON.stringify([store.libraryPath,tablePath.value,isExternal.value,loadGeneration]), () => {
+  if (!table.value || loading.value || saving.value || converting.value) return []
+  return [
+    {id:'table-check-all',title:'检查表格录入…',description:'按列规则检查全部记录，在原窗口查看问题',keywords:'表格 数据 录入 检查 规则',run:()=>openIssues(true)},
+    ...(filterQuery.value ? [{id:'table-check-filtered',title:'检查表格筛选结果…',description:'只检查当前筛选出的记录',keywords:'筛选 录入 检查',run:()=>openIssues(false)}] : []),
+    ...(!isExternal.value ? [{id:'table-save',title:'保存表格',description:'保存当前表格草稿',keywords:'保存 save',run:()=>saveTable()}] : []),
+  ]
 })
 </script>
 

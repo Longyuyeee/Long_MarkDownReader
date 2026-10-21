@@ -381,3 +381,8 @@ docs/evidence/v1-1-35-candidate-lifecycle/installed-v1135-*.json -text
 /docs/evidence/v1.1.35-release/** -text whitespace=cr-at-eol
 /docs/evidence/v1-1-35-candidate-lifecycle/** -text whitespace=cr-at-eol
 /docs/evidence/v1135-*/**/*.log -diff
+
+/docs/evidence/v1136-*/** -text whitespace=cr-at-eol
+/docs/evidence/v1.1.36-release/** -text whitespace=cr-at-eol
+/docs/evidence/v1-1-36-candidate-lifecycle/** -text whitespace=cr-at-eol
+/docs/evidence/v1136-*/**/*.log -diff

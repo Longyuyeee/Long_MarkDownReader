@@ -43,6 +43,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import { searchResultPath } from '../utils/searchResultPath'
 import { computed, ref, watch } from 'vue'
 import { NModal, NInput, NButton, useMessage } from 'naive-ui'
 import { Paperclip, FileText, RefreshCw } from 'lucide-vue-next'
@@ -63,7 +64,7 @@ const referenceDrafts=()=>props.captureReferenceDrafts?.()||[]
 const filename=(value:string)=>value.split(/[\\/]/).pop()||value
 const canOpen=(value?:string|null)=>!!value && !!findFileFormat(value)
 const referenceName=(value:string)=>{try{return filename(decodeURIComponent(value.split(/[?#]/)[0]||value))}catch{return filename(value)}}
-const relative=(value:string)=>value.replace(props.libraryRoot,'').replace(/^[\\/]/,'')
+const relative=(value:string)=>searchResultPath(value,props.libraryRoot)
 const status=(value:string)=>({resolved_file:'可用',missing:'已失效',unreadable:'无法读取',outside_library:'库外路径',internal:'内部记录'}[value]||'需核对')
 const filtered=computed(()=>report.value?.references.filter(item=>`${item.target}\n${item.path||''}`.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase()))||[])
 const selected=computed(()=>filtered.value.find(item=>item.target===selectedTarget.value)||filtered.value[0])
