@@ -900,6 +900,29 @@ mod tests {
         execute(None, &guard, &f.0.join(old), &f.0.join(new))
     }
     #[test]
+    fn portable_chapter_references_follow_durable_rename_and_reverse_without_changing_examples() {
+        let f = TestWorkspace::new();
+        f.dir("归档");
+        let uri = "longedit://chapter?path=source.md&title=%E9%87%8D%E5%A4%8D#%E9%87%8D%E5%A4%8D-1";
+        let note = format!("\u{feff}自己的补写\r\n[章节](<{uri}>)\r\n```md\r\n[示例](<{uri}>)\r\n```\r\n末尾保留\r\n");
+        fs::write(f.0.join("source.md"), "# 重复\n\n## 重复\n").unwrap();
+        fs::write(f.0.join("note.md"), &note).unwrap();
+        run(&f, "source.md", "归档/改名.md").unwrap();
+        let next =
+            super::super::chapter_links::remap_to(&f.0, &f.0.join("归档/改名.md"), uri).unwrap();
+        assert_eq!(
+            fs::read_to_string(f.0.join("note.md")).unwrap(),
+            note.replacen(uri, &next, 1)
+        );
+        assert!(!f.0.join("source.md").exists());
+        run(&f, "归档/改名.md", "source.md").unwrap();
+        assert_eq!(fs::read_to_string(f.0.join("note.md")).unwrap(), note);
+        assert_eq!(
+            fs::read_to_string(f.0.join("source.md")).unwrap(),
+            "# 重复\n\n## 重复\n"
+        );
+    }
+    #[test]
     fn moving_markdown_rewrites_relative_images_and_documents_without_moving_shared_assets() {
         let f = TestWorkspace::new();
         f.dir("assets");

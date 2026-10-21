@@ -133,6 +133,9 @@ pub(crate) fn relative_target(
     }
     let parent = future_document.parent()?.strip_prefix(root).ok()?;
     let target = intended.strip_prefix(root).ok()?;
+    if super::chapter_links::is_chapter(&evidence.target) {
+        return super::chapter_links::remap_to(root, intended, &evidence.target);
+    }
     let components = |path: &Path| -> Option<Vec<String>> {
         path.components()
             .map(|c| match c {
@@ -256,11 +259,20 @@ fn preview_parsed(
         {
             return Err("引用范围与当前解析结果不一致".into());
         }
-        if replacement.is_empty()
-            || !replacement
+        let encoded = if super::chapter_links::is_chapter(&evidence.target) {
+            super::chapter_links::parse(replacement).is_some()
+                && replacement
+                    .strip_prefix("longedit://chapter?")
+                    .is_some_and(|tail| {
+                        tail.bytes()
+                            .all(|b| b.is_ascii_alphanumeric() || b"-._~/%#?=&".contains(&b))
+                    })
+        } else {
+            replacement
                 .bytes()
                 .all(|b| b.is_ascii_alphanumeric() || b"-._~/%#?=&".contains(&b))
-        {
+        };
+        if replacement.is_empty() || !encoded {
             return Err("替换目标必须先进行 URL 编码".into());
         }
         edits.push((span.start, span.end, replacement.as_str()));

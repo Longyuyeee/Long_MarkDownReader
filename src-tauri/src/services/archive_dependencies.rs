@@ -76,19 +76,34 @@ pub(crate) fn resolve_relative(root: &Path, evidence: &DependencyEvidence) -> De
     if !["markdown", "reference_definition", "html_attribute"].contains(&evidence.kind) {
         return result("unsupported", None);
     }
-    let raw = evidence.target.split(['#', '?']).next().unwrap_or("");
-    let decoded = match urlencoding::decode(raw) {
-        Ok(value) => value,
-        Err(_) => return result("unsupported", None),
+    let chapter = super::chapter_links::is_chapter(&evidence.target);
+    let decoded = if chapter {
+        match super::chapter_links::parse(&evidence.target) {
+            Some(link) => std::borrow::Cow::Owned(link.relative),
+            None => return result("unsupported", None),
+        }
+    } else {
+        let raw = evidence.target.split(['#', '?']).next().unwrap_or("");
+        match urlencoding::decode(raw) {
+            Ok(value) => value,
+            Err(_) => return result("unsupported", None),
+        }
     };
-    // Escapes/entities need a syntax-aware parser. Do not guess root/drive/URI semantics.
-    if decoded.is_empty() || decoded.contains([':', '\\', '&', '\0']) || decoded.starts_with('/') {
+    if decoded.is_empty()
+        || decoded.contains([':', '\\', '\0'])
+        || (!chapter && decoded.contains('&'))
+        || decoded.starts_with('/')
+    {
         return result("unsupported", None);
     }
     let document = Path::new(&evidence.document);
-    let mut path = match document.parent() {
-        Some(p) if p.starts_with(root) => p.to_owned(),
-        _ => return result("outside_library", None),
+    let mut path = if chapter {
+        root.to_owned()
+    } else {
+        match document.parent() {
+            Some(p) if p.starts_with(root) => p.to_owned(),
+            _ => return result("outside_library", None),
+        }
     };
     for part in decoded.split('/') {
         match part {
@@ -345,6 +360,14 @@ fn mentions_impl(document: &str, text: &str, for_move: bool) -> Vec<DependencyEv
 }
 
 fn basename(value: &str) -> String {
+    if let Some(link) = super::chapter_links::parse(value) {
+        return link
+            .relative
+            .rsplit('/')
+            .next()
+            .unwrap_or("")
+            .to_lowercase();
+    }
     // Split URL fragments BEFORE decoding: %23 may belong to the actual filename.
     let path = value.split(['#', '?']).next().unwrap_or(value);
     let decoded = urlencoding::decode(path).unwrap_or_else(|_| path.into());
@@ -554,9 +577,7 @@ fn scan_impl(root: &str, visible_only: bool, for_move: bool) -> Result<Inventory
             }
             let name = entry.file_name();
             let name = name.to_string_lossy();
-            if name == ".git"
-                || (visible_only && super::library_visibility::hidden_name(&name))
-            {
+            if name == ".git" || (visible_only && super::library_visibility::hidden_name(&name)) {
                 continue;
             }
             let metadata = fs::symlink_metadata(entry.path()).map_err(|e| e.to_string())?;

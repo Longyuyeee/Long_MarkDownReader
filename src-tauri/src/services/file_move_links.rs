@@ -79,6 +79,9 @@ pub(crate) fn moved_names(source: &Path) -> Result<HashSet<String>, String> {
     Ok(names)
 }
 fn candidate_name(target: &str) -> String {
+    if let Some(link) = super::chapter_links::parse(target) {
+        return link.relative.rsplit('/').next().unwrap_or("").to_lowercase();
+    }
     let path = target.split(['#', '?', '|']).next().unwrap_or("");
     urlencoding::decode(path)
         .unwrap_or_else(|_| path.into())

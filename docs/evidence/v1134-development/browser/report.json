@@ -1,0 +1,28 @@
+{
+  "nativeBridgeMocked": true,
+  "clipboardMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "actual-right-click-default-copies-portable-duplicate-link",
+      "status": "passed"
+    },
+    {
+      "id": "local-link-option-and-unsaved-content-preserved",
+      "status": "passed"
+    },
+    {
+      "id": "stale-menu-retains-new-input-without-copying-a-stale-link",
+      "status": "passed"
+    },
+    {
+      "id": "library-change-closes-stale-menu",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-with-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

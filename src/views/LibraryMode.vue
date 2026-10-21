@@ -788,6 +788,7 @@ import PdfReadingUpdateDialog from '../components/PdfReadingUpdateDialog.vue'
 import { applyVditorDraftUpdate } from '../utils/vditorDraftUpdate'
 import { applyVditorSourceRepair } from '../utils/vditorSourceRepair'
 import { localMarkdownLink, markdownAnchorTarget } from '../utils/localMarkdownLinks'
+import { isPortableChapterLink, parsePortableChapterLink, chapterHeadingTarget } from '../utils/portableChapterLinks'
 import { parseSourceReference, sourceExcerpt } from '../utils/sourceExcerpt'
 import { parsePdfReferenceUri, resolveLibraryPdfPath } from '../utils/pdfReference'
 import { resolveCollectionPath, sameWorkspacePath } from '../utils/savedCollections'
@@ -1653,9 +1654,22 @@ const refreshVisibleOutline = () => {
 }
 watch([activeSidebarTab, isSidebarCollapsed, () => store.isZen, documentPreviewActive],()=>{void nextTick(refreshVisibleOutline)})
 const { fixEditorImages, destroyImageFix } = useImageFix(() => vditor, () => activeTabId.value || '', { libraryRoot: () => store.libraryPath, draft:()=>vditor?.getValue()||'' })
+let chapterLinkGeneration = 0, chapterNoticeToken = ''
 const revealLinkedHeading = () => {
   const fragment = typeof route.query.markdownAnchor === 'string' ? route.query.markdownAnchor : ''
   if (!fragment || !isVditorReady || lastLoadedPath !== activeTabId.value) return
+  if (typeof route.query.path === 'string' && !sameLibrary(route.query.path, activeTabId.value || '')) return
+  const title = route.query.markdownHeading
+  if (typeof title === 'string') {
+    syncOutlineManual(true)
+    const heading = chapterHeadingTarget(outlineItems.value, fragment, title)
+    if (heading) scrollToHeading(heading.id)
+    else {
+      const token = String(route.query.markdownLocator || '') + ':' + activeTabId.value + ':' + fragment + ':' + title
+      if (chapterNoticeToken !== token) { chapterNoticeToken = token; message.warning('未找到原章节，标题可能已改名或删除；文档已打开，可从大纲重新定位。') }
+    }
+    return
+  }
   const root = vditor?.vditor?.[vditor.getCurrentMode()]?.element as HTMLElement | undefined
   if (root && !scrollToFragment(fragment)) markdownAnchorTarget(root, fragment)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
@@ -2704,7 +2718,7 @@ const captureSectionContext=(id:string):MarkdownSectionContext=>{
   if(!selectedId||!heading)throw Error('标题已经变化，请重新选择。')
   const sourceSection=sectionModel.value.sections.find(item=>item.id===selectedId)
   const readOnlyReason=documentPreviewActive.value?'返回编辑后可整理章节':!outlineMapped.value?(sectionModel.value.reason||'当前模式可定位和复制链接；切换模式后再整理章节'):!sourceSection?'引用或列表内标题可定位和复制链接':undefined
-  return {path:owner.path,model:sectionModel.value,id:selectedId,owner,readOnlyReason,heading:sourceSection?undefined:heading}
+  return {path:owner.path,libraryRoot:owner.root,model:sectionModel.value,id:selectedId,owner,readOnlyReason,heading:sourceSection?undefined:heading}
 }
 const applySectionChange=(context:MarkdownSectionContext,change:SectionChange)=>{
   const owner=context.owner as SectionOwner
@@ -4281,6 +4295,21 @@ const beginSourceLinkRepair = async (href: string, source: ReferenceTarget, root
 const openSourceReference = async (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[href]')
   const href = anchor?.getAttribute('href') || ''
+  if (isPortableChapterLink(href)) {
+    event.preventDefault(); event.stopPropagation()
+    const root = store.libraryPath, ownerPath = activeTabId.value, generation = ++chapterLinkGeneration
+    const target = parsePortableChapterLink(href, root)
+    if (!target) { message.warning('章节链接格式无法识别，请从原文大纲重新复制；当前内容保持不变。'); return }
+    try {
+      await invoke('get_file_stats', {libraryRoot:root,path:target.path})
+      if (generation !== chapterLinkGeneration || store.libraryPath !== root || activeTabId.value !== ownerPath) return
+      snapshotWindowDrafts()
+      const existing = allTabs.value.find(tab => tab.isDirty && sameLibrary(tab.path, target.path)) || allTabs.value.find(tab => sameLibrary(tab.path, target.path))
+      await openManagedFile(router, existing?.path || target.path, {markdownAnchor:target.fragment,markdownHeading:target.title,markdownLocator:String(generation)})
+      void nextTick(revealLinkedHeading)
+    } catch { if (generation === chapterLinkGeneration && store.libraryPath === root && activeTabId.value === ownerPath) message.warning('找不到章节所在文件，位置可能已变化；请在当前资料库查找原文后重新复制链接。当前草稿已保留。') }
+    return
+  }
   const local = activeTabId.value && localMarkdownLink(activeTabId.value, href)
   if (local) {
     event.preventDefault(); event.stopPropagation()
@@ -4491,7 +4520,7 @@ watch(() => store.codeTheme, (newCodeTheme) => {
 })
 
 watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
-watch(() => route.query.markdownAnchor, () => { void nextTick(revealLinkedHeading) })
+watch(() => [route.query.markdownAnchor, route.query.markdownHeading, route.query.markdownLocator], () => { void nextTick(revealLinkedHeading) })
 watch(() => route.query.path, (path) => {
   if (typeof path !== 'string' || !path) return
   const format = findFileFormat(path)
