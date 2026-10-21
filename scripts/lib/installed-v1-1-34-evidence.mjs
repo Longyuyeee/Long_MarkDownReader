@@ -6,6 +6,7 @@ export const chapterOutputNames=['source.md','target.md','copy-source.md','copie
 export function validateInstalledPortableChapters(report,manifest){
  assert.equal(manifest.appVersion,'1.1.34');for(const key of ['appVersion','sourceCommit'])assert.equal(report[key],manifest[key]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-portable-chapters-trusted-ui-and-output-bytes')
+ assert.ok(['wysiwyg','ir','sv'].includes(report.editorModeBefore));assert.equal(report.editorModeAfter,report.editorModeBefore)
  for(const[key,length]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(report[key],new RegExp('^[a-f0-9]{'+length+'}$'))
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false)
  for(const key of ['clipboardExact','duplicateExact','draftsExact','renamedHeadingExact','missingExact','copyExact','renameExact','cancelExact','predecessorDraftsExact','savedSourceExact','savedTargetExact'])assert.equal(report[key],true,key)
