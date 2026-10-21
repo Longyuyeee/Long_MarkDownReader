@@ -2833,7 +2833,7 @@ const handleScroll = () => {
       if (delta < distance) { distance = delta; nearest = Number(element.dataset.page) }
     }
     if (nearest !== currentPage.value) { currentPage.value = nearest; pageInput.value = nearest; schedulePositionSave() }
-    rememberPdfViewState()
+    scheduleViewSave()
   })
 }
 
