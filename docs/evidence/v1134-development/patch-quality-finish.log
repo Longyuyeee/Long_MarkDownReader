@@ -1,0 +1,198 @@
+node .release-secrets/v1134-audit-identity-tail.mjs
+✔ PDF notes page range works for one page, disjoint ranges and rejects invalid/outside ranges (2.1097ms)
+✔ PDF reading note retains quote and optional comment, escapes Markdown and only includes snapshot items (0.5498ms)
+✔ Draft insertion never writes and appends to latest content while keeping save identity (0.3248ms)
+✔ PDF reference validates digest, keeps legacy compatibility and rejects traversal (5.4262ms)
+✔ Same-named draft targets show their actual folder including Windows extended aliases (0.5967ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 484.5503
+✔ PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts (13.8888ms)
+✔ PDF workflow uses real input, owned native chooser and independent disk checks (0.6139ms)
+✔ a tab label or blank/wrong canvas cannot stand in for an actual source page (2.5547ms)
+✔ v1.1.13 requires its PDF report and every predecessor, with the same executable and driver (170.2738ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 364.3651
+Current development audit passed: v1.1.33 is public and v1.1.34 is the next bounded development target.
+EA-4D2 external Mermaid workspace passed: strict preview, bounded source, guarded explicit save, export isolation and unchanged Windows associations are aligned.
+EA-4D3 external OPML workspace passed: bounded XML semantics, professional canvas editing, guarded explicit save and unchanged Windows associations are aligned.
+EA-5A default-app candidate workflow passed: 37 format profiles are user-triggered, Windows-confirmed, independently windowed, and installer-safe.
+EA-5B1 uninstall recovery passed: 37 candidate formats and 85 extensions clean only LongEdit-owned HKCU registrations.
+EA-5B2A installed lifecycle harness passed: user-triggered candidates, independent Unicode launch windows, Windows ownership, uninstall recovery, and disposable evidence export are locked.
+EA-5C closure passed: 43 formats, 29 edit, 8 preview, 6 import, 37 user-selected default-app profiles, 41 completed UX requirements, and verified installed evidence.
+P1-A3B image editor controls passed: precise crop, JPEG quality and mandatory privacy cleanup stay inside the library-only right workspace.
+P1-A3B desktop audit passed: crop-aware sizing, JPEG quality, privacy cleanup, reliable reopen and responsive right-workspace layout are accepted.
+P1-B1 PDF safety audit passed: copy/sidecar capabilities are reconciled while mandatory blockers and the B2A-B5 sequence remain frozen.
+P1-B2A1 PDF form inspector passed: canonical fields and page widgets are read-only inspected with bounded ambiguity and active-content diagnostics.
+P1-B2A2 PDF form panel passed: historical read-only evidence remains accepted while the original workspace has progressed to bounded reliable copies.
+P1-B2B0 PDF registry reconciliation passed: library-only copy boundaries remain intact and the public form state is advanced-but-bounded.
+P1-B2B1 PDF text form copy passed: digest-locked isolated preview, new-target save, canonical value and non-empty widget appearance verification are present.
+P1-B2B2 PDF form workspace passed: original right workspace, preview-before-save, reliable new copy and wide/narrow desktop evidence are accepted.
+P1-B2B3 PDF Unicode form copy passed: licensed subset font, UTF-16 field value, live desktop workflow, reopen and rendered glyph evidence are accepted.
+P1-B2B4 PDF checkbox copy passed: bounded export state, canonical field value, widget appearance state, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B2B5 PDF radio copy passed: unique widget exports, mutually exclusive appearance states, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B2B6 PDF Choice copy passed: bounded export/display options, canonical value/index, source safety, desktop workflow, reopen and independent render evidence are accepted.
+P1-B3A PDF permanent redaction safety audit passed: overlay and heuristic removal are rejected, fresh full-document raster reconstruction is frozen, and no writer is prematurely exposed.
+P1-B3B PDF permanent redaction backend passed: bounded opaque PNG input, burned-pixel verification, fresh image-only PDF construction, no-overwrite save, reopen checks and no premature UI are aligned.
+P1-B3C PDF permanent redaction workspace passed: original right workspace selection, full-page opaque PDF.js rasterization, bounded Base64 IPC, digest-locked reliable save and explicit image-only tradeoff are aligned.
+P1-B3D PDF permanent redaction evidence passed: real Tauri workflow, source preservation, saved reopen, empty text structure and independent opaque Poppler render are accepted.
+P1-B4A PDF watermark safety audit passed: visible-attribution semantics, isolated vector overlay, embedded Unicode subset font, resource/page geometry preservation and no premature writer are frozen.
+P1-B4B PDF watermark backend passed: bounded embedded Unicode vector overlays, private resources, digest-locked new-copy save, preservation inventory and reopen verification are aligned without premature UI.
+P1-B4C PDF watermark workspace passed: original PdfView integration, bounded controls, digest-invalidating preview, explicit tradeoff, reliable save/open and draft protection are aligned.
+P1-B4D PDF watermark evidence passed: real Tauri workflow, source preservation, saved reopen, Unicode extraction, structure preservation and unclipped Poppler renders are accepted.
+P1-B5A PDF metadata safety audit passed: four descriptive fields, Info/XMP consistency blockers, full-rewrite copy semantics and explicit non-anonymization boundaries are frozen without a premature writer.
+P1-B5B PDF metadata backend passed: Unicode allowlisted Info edits, true deletion, preserved keys, reachable-object equivalence, digest-locked new-copy save and fail-closed blockers are implemented without premature UI.
+P1-B5C PDF metadata workspace passed: the original right workspace exposes four bounded fields, explicit non-anonymization scope, draft protection, preview-locked reliable save and aligned responsive styling; desktop evidence remains pending.
+P1-B5D PDF metadata evidence passed: original-workspace editing, draft protection, reliable copy, source preservation, metadata semantics and pixel-identical renders are accepted.
+P1 final capability closure passed: 43 formats/91 extensions are tiered truthfully; bounded daily management and basic editing remain ready for the v1.1.34 unsigned patch release flow.
+P2-A PDF capability alignment passed: implemented copy workflows and bounded limitations are public and source overwrite remains forbidden.
+P2-B image color adjustment contract passed: UI preview, bounded backend pixels, saved report and reset path are connected.
+P2-B real evidence passed: desktop wide/narrow UI, source preservation, target reopen and independent grayscale pixels match expectations.
+P2-C image navigation contract passed: cursor-anchored wheel zoom, pointer-captured pan, double-click toggle and keyboard fallback are connected.
+P2-C real evidence passed: cursor anchor, wheel scale, two-axis drag pan, double-click toggle and responsive layout match expectations.
+✔ v117 requires its own complete installed save/history evidence in addition to retained workflows (11.273ms)
+✔ v117 rejects a missing task, wrong installer or different product source (11.6016ms)
+✔ v117 still requires actual predecessor workflow reports (3.6336ms)
+✔ v117 final safety checks are mandatory and publishing requires the current check count (9.5672ms)
+✔ installed final check detects the current runtime and route error notices (8.7204ms)
+✔ installed v117 navigation supplies the real three-argument driver contract (32.1769ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 491.3398
+✔ both UI history reads use shared coordination before resolving the document (1.0933ms)
+✔ history mutations and signature-checked recovery retain exclusive coordination (0.3375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 156.5944
+npm run check:ux33j-installed-docx-harness
+
+> tauri-app@1.1.34 check:ux33j-installed-docx-harness
+> node scripts/check-ux33j-installed-docx-harness.mjs
+
+UX-33J installed DOCX harness passed: dynamic 1.0.x build binding and three-producer installed WebView smoke are ready.
+cargo check --locked --manifest-path src-tauri/Cargo.toml
+   Compiling tauri-app v1.1.34 (E:\Project\AIProject\GeminiProject\MDReader\src-tauri)
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:558:15
+    |
+558 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 30s
+npm run audit:prod
+
+> tauri-app@1.1.34 audit:prod
+> npm audit --omit=dev --registry=https://registry.npmjs.org
+
+found 0 vulnerabilities
+npm run test:table-validation
+
+> tauri-app@1.1.34 test:table-validation
+> node --test scripts/test-table-validation.mjs scripts/test-v1130-installed-release.mjs
+
+✔ exact numeric boundaries retain long identifiers, decimal and exponent order (1.6675ms)
+✔ rules check real dates, optional blanks, unicode text and literal options without coercion (0.6754ms)
+✔ correction plans use stable identities, preserve hidden rows and undo exactly (1.8239ms)
+✔ all workbook literal-list entry paths can reject atomically while respecting formulas, blank and unchanged values (0.5083ms)
+✔ native Table validation observations parse and every publication stage binds actual output bytes (36.0156ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 604.6847
+npm run test:workbook-entry-validation
+
+> tauri-app@1.1.34 test:workbook-entry-validation
+> node --test scripts/test-workbook-entry-validation.mjs scripts/test-v1131-installed-release.mjs
+
+✔ workbook installed driver expressions parse and every release stage binds output bytes (35.8959ms)
+✔ workbook numeric rules reject text and fractional integers, compare exact long boundaries and all operators (3.2195ms)
+✔ workbook dates use both calendar epochs, validate calendar and time without local timezone (0.7329ms)
+✔ workbook checks distinguish unknown rules, Unicode length, blanks, advisory and overlapping rules (0.5586ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 657.3776
+npm run test:content-restore-continuity
+
+> tauri-app@1.1.34 test:content-restore-continuity
+> node --test scripts/test-content-restore-continuity.mjs scripts/test-v1132-installed-release.mjs
+
+✔ one folder mapping preserves file identity, active tab, view and reference including nested paths (2.8345ms)
+✔ a conflicting folder mapping is atomic and cannot merge two document identities (0.7006ms)
+✔ skipping selected documents changes only opening preview, not the repairable source record (0.4467ms)
+✔ restore driver uses trusted UI, expressions parse, and all release stages verify actual bytes (38.1033ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 537.8759
+npm run test:copy-reading-outcomes
+
+> tauri-app@1.1.34 test:copy-reading-outcomes
+> node --test scripts/test-v1133-installed-release.mjs
+
+✔ reading copy uses real existing controls and parses every embedded observation (45.9583ms)
+✔ installed reading-copy identity cannot accept a missing task or a different source (9.7232ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 510.184
+npm run test:portable-chapter-links
+
+> tauri-app@1.1.34 test:portable-chapter-links
+> node --experimental-strip-types --test scripts/test-portable-chapter-links.mjs scripts/test-v1134-installed-release.mjs
+
+✔ default library links follow the library root and retain Chinese, encoded names and duplicate fragments (2.5614ms)
+✔ ambiguous or unavailable addresses never become a guessed local document (1.6203ms)
+✔ actual click preserves the source draft and reuses the target draft before precise navigation (87.0462ms)
+✔ late file checks cannot redirect a different document or library (37.1802ms)
+✔ actual heading reveal refuses a renamed heading instead of falling back to a different target (10.3998ms)
+✔ installed fixture uses Node builtins and the same chapter format as the production copy action (39.2739ms)
+✔ installed chapter evidence rejects partial tasks, changed identity, untrusted input or lost draft protection (17.1687ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 656.5585
