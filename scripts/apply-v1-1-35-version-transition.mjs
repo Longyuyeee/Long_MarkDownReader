@@ -32,7 +32,7 @@ Object.assign(development, {
   runtimeBaseVersion: '1.1.35', currentStage: 'M8-98-v1.1.35-version-candidate',
   binaryVersionTransition: 'v1.1.35-quality-gate-pending',
   displayLabel: 'v1.1.35 附件引用与草稿接续候选 · 当前公开 v1.1.34',
-  activeSlice: { id: 'v1.1.35-attachment-draft-references', status: 'candidate-validation-pending', document: 'docs/V1_1_34_Unsigned_Community_Release_Audit_2026-10-22.md' },
+  activeSlice: { id: 'v1.1.35-attachment-draft-references', status: 'candidate-validation-pending', document: 'docs/V1_1_35_Unsigned_Community_Release_Audit_2026-10-22.md' },
 })
 changes.set('shared/development-version-policy.json', JSON.stringify(development, null, 2) + '\n')
 const community = json('shared/v1-community-release-policy.json')
