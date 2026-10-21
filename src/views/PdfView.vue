@@ -544,7 +544,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { NCard, NModal, NDropdown, useDialog, useMessage } from 'naive-ui'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
-import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
+import { recallWorkspaceViewState, rememberWorkspaceViewState, type WorkspaceViewState } from '../services/workspaceViewState'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
 import WorkspaceFileIdentity from '../components/workspace/WorkspaceFileIdentity.vue'
 import WorkspaceStateNotice from '../components/workspace/WorkspaceStateNotice.vue'
@@ -872,6 +872,9 @@ let annotationSourcePath = ''
 let annotationLibraryRoot = ''
 let annotationLoadGeneration = 0
 let pdfLoadGeneration = 0
+let restoringPdfView = false
+let loadedViewPath = ''
+let loadedPositionKey = ''
 let pdfFormInspectionGeneration = 0
 let ocrGeneration = 0
 let ocrWorker: TesseractWorker | null = null
@@ -1007,17 +1010,17 @@ const readPositions = (): Record<string, number> => {
   try { return JSON.parse(localStorage.getItem(POSITION_KEY) || '{}') } catch { return {} }
 }
 const savePosition = () => {
-  if (!pdfPath.value) return
+  if (!loadedPositionKey || restoringPdfView) return
   const positions = readPositions()
-  delete positions[positionId()]
-  positions[positionId()] = currentPage.value
+  delete positions[loadedPositionKey]
+  positions[loadedPositionKey] = currentPage.value
   const limited = Object.fromEntries(Object.entries(positions).slice(-100))
   try { localStorage.setItem(POSITION_KEY, JSON.stringify(limited)) } catch { /* best effort */ }
 }
-const rememberPdfViewState = (path = pdfPath.value) => {
+const rememberPdfViewState = () => {
   const container = scrollRef.value
-  if (!path || !container) return
-  rememberWorkspaceViewState(path, {
+  if (!loadedViewPath || !container || restoringPdfView) return
+  rememberWorkspaceViewState(loadedViewPath, {
     scrollTop: container.scrollTop,
     scrollLeft: container.scrollLeft,
     section: String(currentPage.value),
@@ -1080,7 +1083,7 @@ const focusRequestedReference = () => {
   }
 }
 
-const loadAnnotations = async (document: PDFDocumentProxy) => {
+const loadAnnotations = async (document: PDFDocumentProxy, saved?: WorkspaceViewState['pdfAnnotations']) => {
   const generation = ++annotationLoadGeneration
   annotationError.value = ''
   annotationSaveError.value = ''
@@ -1100,7 +1103,6 @@ const loadAnnotations = async (document: PDFDocumentProxy) => {
     annotationDocument.value = loaded
     annotationSourcePath = sourcePath
     annotationLibraryRoot = libraryRoot
-    const saved = recallWorkspaceViewState(sourcePath)?.pdfAnnotations
     if (saved && saved.signature === pdfSourceSignature.value && !requestedAnnotationId()) {
       annotationQuery.value = saved.query; annotationPages.value = saved.pages
       annotationKindFilter.value = saved.kind; annotationColorFilter.value = saved.color
@@ -2537,8 +2539,13 @@ const runSearch = async () => {
 }
 
 const loadPdf = async () => {
+  // Freeze the old view before reset/scroll/native sidecar reads can overwrite it.
+  rememberPdfViewState()
+  const viewState = recallWorkspaceViewState(pdfPath.value)
   const generation = ++pdfLoadGeneration
   const current = () => generation === pdfLoadGeneration
+  restoringPdfView = true
+  try {
   loading.value = true
   referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false; readingSnapshot.value = null
   readingSelection.value = []; readingListPage.value = 0
@@ -2645,12 +2652,13 @@ const loadPdf = async () => {
     return
   }
   try {
-    const viewState = recallWorkspaceViewState(pdfPath.value)
     const descriptor = await invoke<PdfReadDescriptor>(isExternal.value ? 'read_external_pdf_info' : 'read_pdf_info', {
       ...(isExternal.value ? {} : { libraryRoot: store.libraryPath }),
       path: pdfPath.value,
     })
     if (!current()) return
+    loadedViewPath = pdfPath.value
+    loadedPositionKey = positionId()
     pdfSourceSignature.value = descriptor.signature
     pdfSourceLength.value = descriptor.length
     if (!isExternal.value && route.query.sourceDigest) {
@@ -2752,7 +2760,7 @@ const loadPdf = async () => {
     }
     loadOutline()
     if (!isExternal.value) {
-      await loadAnnotations(document)
+      await loadAnnotations(document, viewState?.pdfAnnotations)
       if (!current()) return
       await loadOcrDocument(document)
       if (sidebarTab.value === 'forms') void loadPdfFormInspection()
@@ -2762,6 +2770,9 @@ const loadPdf = async () => {
     if (!current()) return
     if (!error.value) error.value = String(cause).replace(/^Error:\s*/, '')
     loading.value = false
+  }
+  } finally {
+    if (current()) restoringPdfView = false
   }
 }
 
@@ -2853,8 +2864,7 @@ const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
   event.preventDefault()
   event.returnValue = ''
 }
-watch([pdfPath, () => store.libraryPath, isExternal, () => route.query.sourceDigest], (_next, previous) => {
-  if (previous?.[0]) rememberPdfViewState(previous[0])
+watch([pdfPath, () => store.libraryPath, isExternal, () => route.query.sourceDigest], () => {
   void loadPdf()
 })
 watch([() => route.query.page, () => route.query.annotation], () => {

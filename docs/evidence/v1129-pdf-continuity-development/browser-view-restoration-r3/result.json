@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "Pending source checks remain cancellable and late replies cannot modify the draft",
+    "Six visual styles retain the complete update preview",
+    "Preview cancel preserves the full original draft",
+    "Update preserves outside additions and deleted excerpts while adding only genuinely new annotations",
+    "A single delayed Undo and Redo preserves the exact whole draft",
+    "Repeated update has no duplicate generated section",
+    "Changed source remains a local error and does not alter the draft",
+    "wysiwyg exact transaction, rollback and delayed Undo",
+    "ir exact transaction, rollback and delayed Undo",
+    "sv exact transaction, rollback and delayed Undo",
+    "Annotation changes after preview reject stale application without changing the draft",
+    "User changes inside generated text are preserved by explicit append of a new version",
+    "Embedded LibraryMode restores filter, active annotation and checked items after slow sidecar reads",
+    "PDF updates open the target draft and its preview directly, without another menu action"
+  ],
+  "errors": []
+}

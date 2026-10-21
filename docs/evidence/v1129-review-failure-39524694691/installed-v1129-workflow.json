@@ -1,0 +1,40 @@
+{
+  "appVersion": "1.1.29",
+  "sourceCommit": "cadedc30f40c11bd2671265b9330b7bc96baaf88",
+  "installerSha256": "30517d0bd3b90a4405da0929c012d71b2fa3cf2be6ddf3dc51e790deddff3a1e",
+  "harnessSourceCommit": "cadedc30f40c11bd2671265b9330b7bc96baaf88",
+  "executableSha256": "a56f88960d261284d25fbf379e5b97459ad4f71305421e78ea073372eb981dc7",
+  "status": "failed",
+  "evidenceLevel": "installed-native-pdf-continuity-and-exact-draft-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "native-note-generation-and-original-source",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1129-annotations-before.json",
+      "sizeBytes": 594,
+      "sha256": "88f46c6b6a0cc88e9eea48103fb4f48d03999639b5bf1110a3c95c03da944bcf"
+    },
+    {
+      "fileName": "installed-v1129-disk-before.md",
+      "sizeBytes": 2664,
+      "sha256": "4e4ba3e4d6804fc3c4af0a3c94e984399f22d034052666418b8a55f171857457"
+    }
+  ],
+  "pdfBefore": "b29de51a291e97c98e8773e7dde2d7c9fb34e50b43a5a6ec81d4064bfd50434d",
+  "generatedFromNative": true,
+  "annotationEditExact": true,
+  "readingReturnExact": false,
+  "failure": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(report.annotationEditExact&&report.readingReturnExact)\n\n    at runInstalledV1129Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-29-workflow.mjs:31:371)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:1066:5",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1129-continuity-a66dfffd-7171-45d1-94f1-89d3544a17b9%5C%E6%8E%A5%E7%BB%AD%E6%9D%A5%E6%BA%90%E4%BA%8C%E4%B9%9D.pdf",
+    "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\nR5L Disposable Vault\n▾\nrenamed.md\nreference-final.txt\nincoming\ndraft\nplain-new.md\n接续草稿.txt\n方案.md\n记录\n标签笔记000\n图谱验收主题017 - 项目长期研究与来源证据核对\n项目写作\n研究 来源\n研究 来源\n阅读成果\n研究 来源\n研究 来源\n任务清单\n不要修改\n任务清单\n项目 工作簿\n不要修改\n独立生产者 另存\n同事更新\nmicrosoft-word-16-source\n不要修改\nmicrosoft-word-16-copy\nwps-writer-source\nwps-writer-copy\nlibreoffice-writer-source\nlibreoffice-writer-copy\njson\n不要修改\nyaml\nxml\ntoml\n项目\n接续来源\n项目\n保留扩展\n不要修改\n同事更新\nmicrosoft-powerpoint-16-source\n不要修改\nmicrosoft-powerpoint-16-copy\nwps-presentation-source\nwps-presentation-copy\nlibreoffice-impress-source\nlibreoffice-impress-copy\n交付 草稿\n用户填写的文章\n真实 打印\nsaved\nwarning\n草稿.md\n笔记\n引用笔记\n菜单检查\njson\njson-恢复-1792544973-1\nyaml\nyaml-恢复-1792544983-1\nxml\nxml-恢复-1792544993-1\ntoml\ntoml-恢复-1792545002-1\n查找文本-v1125\n对照-v1125\n查找长文-v1125\n对照-v1124\n章节长文-v1124\n二草稿\n引用修复二八\n资料\n接续阅读笔记二九\n接续来源二九\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n添加资料关系\n资料关系\n0\n\n暂无手动关系\n\n这类文件不使用笔记引用\n打开笔记\n在知识图谱中查看\n486 篇笔记\n5,207 词\n当前资料库\nv1.1.29\nR5L Disposable Vault\n接续来源二九.pdf\n专注\n添加关系\n参考\n文档操作\n←\n☰\n接续来源二九\n4 页 · 快速读取 · 首屏 169 ms\n阅读\n批注\n页面\n文档工具\n‹\n/ 4\n›\n⌕\n−\n100%\n＋\n适合宽度\n缩略图\n目录\n批注 3\n表单\n属性\n脱敏\n水印\nOCR\n页面\n全部类型\n高亮\n区域批注\n页评论\n全部颜色\n黄色\n绿色\n粉色\n蓝色\n全选筛选结果\n清除选择\n3 条匹配 · 已选 0\n整理为笔记 · 0\n第 1 页 · 评论\n原来未选中的摘录\n···\n第 2 页 · 评论\n接续摘录甲\n···\n第 3 页 · 评论\n接续摘录乙\n···\n批注已保存到 sidecar\n◆\nReading source page 1\n\n\nKeep the original page and source when writing notes.\n1\n◆\nReading source page 2\n\n\nKeep the original page and source when writing notes.\n2\n◆\n3\n3\n4\n4\nPDF · 受限 PDF 编辑\n参考 · 只读\n资料.txt\n000-v1128-reference-b2340355-0168-4dca-a1cf-3212442c50a9/新目录/资料.txt\n×\n刷新参考\n返回编辑\n•••\n取消来源\n文本内容 · 只读\n二八独特来源文字\n预算资料，原文件必须保持\n\n打开可编辑 Markdown 笔记后可插入\n复制选中文字及来源\n先在参考内容中选择需要摘录的文字\n参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。\n在主编辑区打开"
+  },
+  "failureDraft": "# 接续阅读笔记二九\n\n二九未保存补写，必须保留。\n\n<!-- longedit:pdf-reading:v1 eyJ2ZXJzaW9uIjoxLCJpZCI6ImMwZmI1MTI3LWU5YzMtNGY4ZS1hN2U4LTczMWM5YmZjMGZjMiIsImdyb3VwaW5nIjoicGFnZSIsImNvbW1lbnRzIjp0cnVlLCJzbmFwc2hvdCI6eyJzb3VyY2VEaWdlc3QiOiJiMjlkZTUxYTI5MWU5N2M5OGU4NzczZTdkZGUyZDdjOWZiMzRlNTBiNDNhNWE2ZWM4MWQ0MDY0YmZkNTA0MzRkIiwic291cmNlU2lnbmF0dXJlIjoiMTc0MToxNzkyNTQ1MTI4MjM2NTA5ODAwIiwicmVsYXRpdmVQYXRoIjoiMDAwLXYxMTI5LWNvbnRpbnVpdHktYTY2ZGZmZmQtNzE3MS00NWQxLTk0ZjEtODlkMzU0NGExN2I5L+aOpee7readpea6kOS6jOS5nS5wZGYiLCJpdGVtcyI6W3siYW5ub3RhdGlvbiI6eyJpZCI6ImNvbnRpbnVlLWEiLCJraW5kIjoiY29tbWVudCIsInBhZ2UiOjIsImNvbG9yIjoieWVsbG93IiwicmVjdHMiOltdLCJxdW90ZSI6IuaOpee7reaRmOW9leeUsiIsImNvbW1lbnQiOiLliJ3lp4vor4TorrrnlLIiLCJjcmVhdGVkQXQiOjEsInVwZGF0ZWRBdCI6MX0sInVyaSI6ImxvbmdlZGl0Oi8vcGRmP3BhdGg9MDAwLXYxMTI5LWNvbnRpbnVpdHktYTY2ZGZmZmQtNzE3MS00NWQxLTk0ZjEtODlkMzU0NGExN2I5JTJGJUU2JThFJUE1JUU3JUJCJUFEJUU2JTlEJUE1JUU2JUJBJTkwJUU0JUJBJThDJUU0JUI5JTlELnBkZiZwYWdlPTImYW5ub3RhdGlvbj1jb250aW51ZS1hJnNoYTI1Nj1iMjlkZTUxYTI5MWU5N2M5OGU4NzczZTdkZGUyZDdjOWZiMzRlNTBiNDNhNWE2ZWM4MWQ0MDY0YmZkNTA0MzRkIiwibGFiZWwiOiLmjqXnu63mnaXmupDkuozkuZ0ucGRmIMK3IOesrCAyIOmhtSJ9LHsiYW5ub3RhdGlvbiI6eyJpZCI6ImNvbnRpbnVlLWIiLCJraW5kIjoiY29tbWVudCIsInBhZ2UiOjMsImNvbG9yIjoieWVsbG93IiwicmVjdHMiOltdLCJxdW90ZSI6IuaOpee7reaRmOW9leS5mSIsImNvbW1lbnQiOiLliJ3lp4vor4TorrrkuZkiLCJjcmVhdGVkQXQiOjEsInVwZGF0ZWRBdCI6MX0sInVyaSI6ImxvbmdlZGl0Oi8vcGRmP3BhdGg9MDAwLXYxMTI5LWNvbnRpbnVpdHktYTY2ZGZmZmQtNzE3MS00NWQxLTk0ZjEtODlkMzU0NGExN2I5JTJGJUU2JThFJUE1JUU3JUJCJUFEJUU2JTlEJUE1JUU2JUJBJTkwJUU0JUJBJThDJUU0JUI5JTlELnBkZiZwYWdlPTMmYW5ub3RhdGlvbj1jb250aW51ZS1iJnNoYTI1Nj1iMjlkZTUxYTI5MWU5N2M5OGU4NzczZTdkZGUyZDdjOWZiMzRlNTBiNDNhNWE2ZWM4MWQ0MDY0YmZkNTA0MzRkIiwibGFiZWwiOiLmjqXnu63mnaXmupDkuozkuZ0ucGRmIMK3IOesrCAzIOmhtSJ9XSwia25vd25Bbm5vdGF0aW9uSWRzIjpbImNvbnRpbnVlLWEiLCJjb250aW51ZS1iIiwidW5zZWxlY3RlZCJdLCJtaXNzaW5nSWRzIjpbXX19 -->\n\n# 接续来源二九 · 阅读笔记\n\n## 第 2 页\n\n> 接续摘录甲\n\n评论：初始评论甲\n\n[来源：接续来源二九.pdf · 第 2 页](longedit://pdf?path=000-v1129-continuity-a66dfffd-7171-45d1-94f1-89d3544a17b9%2F%E6%8E%A5%E7%BB%AD%E6%9D%A5%E6%BA%90%E4%BA%8C%E4%B9%9D.pdf&page=2&annotation=continue-a&sha256=b29de51a291e97c98e8773e7dde2d7c9fb34e50b43a5a6ec81d4064bfd50434d)\n\n## 第 3 页\n\n> 接续摘录乙\n\n评论：初始评论乙\n\n[来源：接续来源二九.pdf · 第 3 页](longedit://pdf?path=000-v1129-continuity-a66dfffd-7171-45d1-94f1-89d3544a17b9%2F%E6%8E%A5%E7%BB%AD%E6%9D%A5%E6%BA%90%E4%BA%8C%E4%B9%9D.pdf&page=3&annotation=continue-b&sha256=b29de51a291e97c98e8773e7dde2d7c9fb34e50b43a5a6ec81d4064bfd50434d)\n\n<!-- longedit:pdf-reading:end c0fb5127-e9c3-4f8e-a7e8-731c9bfc0fc2 -->\n"
+}

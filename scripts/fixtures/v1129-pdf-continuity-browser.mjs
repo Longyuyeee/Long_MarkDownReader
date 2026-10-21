@@ -13,7 +13,7 @@ a.disk.set(a.store.tabs[0].path,a.note);a.store.tabs[0].content=a.note;a.store.t
 a.router.addRoute({path:'/pdf',name:'Pdf',component:PdfView})
 window.__TAURI_INTERNALS__.invoke=async(command,args={})=>{
  if(command==='read_pdf_info')return {length:pdfBytes.length,signature:'fixture',fullData:pdfBytes}
- if(command==='read_pdf_annotations')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:pdfBytes.length,modifiedAt:1},annotations:structuredClone(a.pdfAnnotations)}
+ if(command==='read_pdf_annotations'){await new Promise(resolve=>setTimeout(resolve,a.annotationReadDelay||0));return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:pdfBytes.length,modifiedAt:1},annotations:structuredClone(a.pdfAnnotations)}}
  if(command==='read_pdf_ocr')return {schemaVersion:1,source:{pdfFile:'Paper.pdf',size:pdfBytes.length,modifiedAt:1},provider:{id:'tesseract-wasm',version:'fixture',languages:['eng']},pages:[]}
  if(command==='write_pdf_annotations'){a.pdfAnnotations=structuredClone(args.document.annotations);return}
  if(command==='verify_pdf_reference')return {sourceDigest:'a'.repeat(64),sourceSignature:'fixture'}
