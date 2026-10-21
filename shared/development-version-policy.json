@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.36",
+  "developmentTargetVersion": "1.1.37",
   "runtimeBaseVersion": "1.1.36",
-  "publicVersion": "1.1.35",
-  "publicTag": "v1.1.35",
-  "publicTagCommit": "4857485ac31d598ae2077cf6c018e9983ffedd25",
+  "publicVersion": "1.1.36",
+  "publicTag": "v1.1.36",
+  "publicTagCommit": "d4f62a11d61b49ff551d75aeab9a7dff2c2dc9a9",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-100-v1.1.36-version-candidate",
-  "binaryVersionTransition": "v1.1.36-release-ready",
-  "displayLabel": "v1.1.36 上下文操作候选 · 当前公开 v1.1.35",
+  "currentStage": "M8-101-v1.1.36-published",
+  "binaryVersionTransition": "v1.1.36-public-release-published",
+  "displayLabel": "v1.1.36 已发布 · 下一目标 v1.1.37（PDF 批注跨重启接续）",
   "activeSlice": {
     "id": "v1.1.36-contextual-command-actions",
-    "status": "installed-workflows-passed-ready-to-publish",
+    "status": "published-with-installed-workflows-and-public-assets-verified",
     "document": "docs/V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md"
   }
 }
