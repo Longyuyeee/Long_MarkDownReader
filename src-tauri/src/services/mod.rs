@@ -34,3 +34,4 @@ pub(crate) mod tag_edit;
 #[cfg(test)]
 pub(crate) mod test_workspace;
 pub mod workspace_guard;
+pub(crate) mod chapter_links;

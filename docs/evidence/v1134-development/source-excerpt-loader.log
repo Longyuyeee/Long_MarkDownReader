@@ -1,0 +1,16 @@
+✔ excerpt quotes every line and source round-trips special paths and PDF position (3.0284ms)
+✔ Windows reference keeps native path identity and library-bound source (0.709ms)
+✔ actual Markdown source click opens the library file with PDF position (41.7821ms)
+✔ text excerpts carry a bounded anchor, old links remain readable (0.4929ms)
+✔ native canonical Windows and UNC source paths resolve within the library (0.335ms)
+✔ source repair waits for explicit confirmation and applies the verified link to the current draft only (24.5417ms)
+✔ cancel, invalid path, readonly note and changed target never rewrite a source (131.5941ms)
+✔ generic source links retain a verified PDF digest and reject malformed digests (0.435ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 863.0901

@@ -1,0 +1,19 @@
+✔ outline reads text without layout and preserves unchanged tree identity (37.3595ms)
+✔ rapid mutations coalesce and destroy cancels stale refresh work (22.8971ms)
+✔ replacing an outline observer disconnects the previous document (18.7103ms)
+✔ LibraryMode stops observation while the outline is hidden (3.5154ms)
+✔ TempMode stops observation while the outline is hidden (1.8521ms)
+✔ compiled shared Markdown styles preserve effects unless adaptive reduction is active (419.8572ms)
+✔ smooth frames keep normal effects even for a long-running document (42.2463ms)
+✔ startup and isolated stalls do not reduce effects (14.0566ms)
+✔ persistent slow frames reduce once, including severe one-FPS stalls (28.438ms)
+✔ foreground resume discards background time and rewarms (10.4862ms)
+✔ adaptive lifecycle preserves normal motion, degrades, resets per document and cleans up (32.073ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1838.8125

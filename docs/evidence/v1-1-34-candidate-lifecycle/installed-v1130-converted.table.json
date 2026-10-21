@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "kind": "longedit.table",
+  "data": {
+    "columns": [
+      {
+        "id": "column-1",
+        "name": "任务",
+        "type": "text"
+      },
+      {
+        "id": "column-2",
+        "name": "状态",
+        "type": "text",
+        "validation": {
+          "kind": "options",
+          "required": true,
+          "options": [
+            "待处理"
+          ]
+        }
+      },
+      {
+        "id": "column-3",
+        "name": "编号",
+        "type": "integer"
+      }
+    ],
+    "rows": [
+      {
+        "id": "row-1",
+        "values": {
+          "column-1": "临时任务",
+          "column-2": "待处理",
+          "column-3": "00123"
+        }
+      },
+      {
+        "id": "row-2",
+        "values": {
+          "column-1": "另一个任务",
+          "column-2": "已完成",
+          "column-3": "9007199254740993123"
+        }
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "grid",
+      "name": "表格",
+      "kind": "grid",
+      "config": {
+        "filter": "",
+        "sort": null,
+        "frozenColumns": 1,
+        "columnWidths": {
+          "column-1": 160,
+          "column-2": 160,
+          "column-3": 160
+        },
+        "groupBy": null,
+        "titleColumn": null,
+        "cardColumns": [],
+        "categoryColumn": null,
+        "valueColumn": null,
+        "aggregation": "count",
+        "chartType": "bar",
+        "seriesColumn": null,
+        "nullStrategy": "skip",
+        "showLegend": true,
+        "dashboardItems": []
+      }
+    }
+  ],
+  "activeView": "grid"
+}

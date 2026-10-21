@@ -27,7 +27,7 @@ const options=computed<DropdownOption[]>(()=>{
   const model=context.value?.model,section=displayHeading.value
   if(!model||!section)return[{label:error.value||'正在加载正文，请稍后重试',key:'unavailable',disabled:true}]
   const can=(kind:SectionAction)=>{if(context.value?.readOnlyReason)return false;try{changeMarkdownSection(model,section.id,kind);return true}catch{return false}}
-  return[{label:'复制章节链接',key:'copy'},{type:'divider',key:'divider'},...(context.value?.readOnlyReason?[{label:context.value.readOnlyReason,key:'readonly',disabled:true}]:[]),{label:'上移章节…',key:'up',disabled:!can('up')},{label:'下移章节…',key:'down',disabled:!can('down')},{label:'提高一级',key:'promote',disabled:!can('promote')},{label:'降低一级',key:'demote',disabled:!can('demote')}]
+  return[{label:'复制章节链接',key:'copy'},{label:'复制本机章节链接',key:'copy-local'},{type:'divider',key:'divider'},...(context.value?.readOnlyReason?[{label:context.value.readOnlyReason,key:'readonly',disabled:true}]:[]),{label:'上移章节…',key:'up',disabled:!can('up')},{label:'下移章节…',key:'down',disabled:!can('down')},{label:'提高一级',key:'promote',disabled:!can('promote')},{label:'降低一级',key:'demote',disabled:!can('demote')}]
 })
 function open(event:MouseEvent,id:string){
   error.value='';context.value=null;change.value=null
@@ -38,11 +38,11 @@ function open(event:MouseEvent,id:string){
 async function select(key:string){
   visible.value=false;if(!context.value||!displayHeading.value)return
   try{
-    if(key==='copy'){
+    if(key==='copy'||key==='copy-local'){
       const current=props.capture(context.value.id)
-      if(current.path!==context.value.path||current.model.content!==context.value.model.content)throw Error('正文已有变化，请重新选择章节后复制链接。')
-      // Absolute local paths keep a copied link usable in another note.
-      await navigator.clipboard.writeText(markdownChapterLink(context.value.path,displayHeading.value.text,displayHeading.value.slug))
+      if(current.path!==context.value.path||current.libraryRoot!==context.value.libraryRoot||current.model.content!==context.value.model.content)throw Error('正文已有变化，请重新选择章节后复制链接。')
+      // Library-relative chapter addresses follow a library when its root changes.
+      await navigator.clipboard.writeText(markdownChapterLink(context.value.path,displayHeading.value.text,displayHeading.value.slug,key==='copy'?current.libraryRoot:undefined))
       message.success('已复制章节链接');return
     }
     if(context.value.readOnlyReason)throw Error(context.value.readOnlyReason)

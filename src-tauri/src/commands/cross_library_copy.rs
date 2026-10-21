@@ -466,8 +466,9 @@ fn prepare_unit(
                 destination
             };
             // Compute paths lexically: the preview must not create target folders.
-            let replacement = relative_url(&files[index].target, &next, &evidence.target)
-                .ok_or("无法计算复制后的相对引用")?;
+            let replacement =
+                relative_url(&files[index].target, &next, &evidence.target, target_root)
+                    .ok_or("无法计算复制后的相对引用")?;
             if let Some(prior) = edits.insert((span.start, span.end), replacement.clone()) {
                 if prior != replacement {
                     return Err("引用范围重叠，请单独复制该文件".into());
@@ -573,7 +574,15 @@ fn prepare_unit(
         reading_sources,
     })
 }
-fn relative_url(document: &Path, target: &Path, original: &str) -> Option<String> {
+fn relative_url(
+    document: &Path,
+    target: &Path,
+    original: &str,
+    target_root: &Path,
+) -> Option<String> {
+    if crate::services::chapter_links::is_chapter(original) {
+        return crate::services::chapter_links::remap_to(target_root, target, original);
+    }
     let from: Vec<_> = document.parent()?.components().collect();
     let to: Vec<_> = target.components().collect();
     let common = from.iter().zip(&to).take_while(|(a, b)| a == b).count();
@@ -1203,6 +1212,79 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.root);
         }
+    }
+    fn chapter_uri(relative: &str) -> String {
+        format!(
+            "longedit://chapter?path={}&title=%E9%87%8D%E5%A4%8D#%E9%87%8D%E5%A4%8D-1",
+            urlencoding::encode(relative)
+        )
+    }
+    #[test]
+    fn portable_chapters_copy_dependencies_and_cycles_with_exact_source_and_fragment_identity() {
+        let f = Fixture::new();
+        fs::create_dir(f.a.join("项目")).unwrap();
+        let uri = chapter_uri("项目/目标 #%.md");
+        let back = chapter_uri("项目/来源.md");
+        let note =
+            format!("\u{feff}# 来源\r\n[章节](<{uri}>)\r\n`[示例](<{uri}>)`\r\n自己的补写\r\n");
+        fs::write(f.a.join("项目/来源.md"), &note).unwrap();
+        fs::write(
+            f.a.join("项目/目标 #%.md"),
+            format!("# 重复\n\n## 重复\n\n[返回](<{back}>)\n"),
+        )
+        .unwrap();
+        let p = f.preview(&["项目/来源.md"], "接收");
+        assert!(p.items[0].warnings.is_empty());
+        assert_eq!(p.items[0].dependency_count, 1);
+        assert!(!f.b.join("接收").exists());
+        let result = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(result.result.errors.is_empty());
+        let copy = PathBuf::from(&result.result.items[0].new_path);
+        let copied = fs::read_to_string(&copy).unwrap();
+        let evidence = archive_dependencies::move_mentions(&text(&copy), &copied);
+        assert_eq!(evidence.len(), 1);
+        let link = crate::services::chapter_links::parse(&evidence[0].target).unwrap();
+        assert_eq!(link.title, "重复");
+        assert_eq!(link.fragment, "重复-1");
+        let target = f.b.join(&link.relative);
+        assert!(target.is_file());
+        let original_link = chapter_uri("项目/目标 #%.md");
+        assert_eq!(
+            copied,
+            note.replacen(&original_link, &evidence[0].target, 1)
+        );
+        let target_body = fs::read_to_string(&target).unwrap();
+        let target_evidence = archive_dependencies::move_mentions(&text(&target), &target_body);
+        let returned = crate::services::chapter_links::parse(&target_evidence[0].target).unwrap();
+        assert_eq!(f.b.join(returned.relative).canonicalize().unwrap(), copy.canonicalize().unwrap());
+        assert_eq!(fs::read_to_string(f.a.join("项目/来源.md")).unwrap(), note);
+    }
+    #[test]
+    fn portable_chapters_follow_a_copied_folder_collision_and_detect_changed_dependencies() {
+        let f = Fixture::new();
+        fs::create_dir(f.a.join("项目")).unwrap();
+        fs::create_dir(f.b.join("项目")).unwrap();
+        fs::write(f.b.join("项目/保留.txt"), "existing").unwrap();
+        let note = format!("[章节](<{}>)\r\n", chapter_uri("项目/目标.md"));
+        fs::write(f.a.join("项目/来源.md"), &note).unwrap();
+        fs::write(f.a.join("项目/目标.md"), "# 重复\n\n## 重复\n").unwrap();
+        let p = f.preview(&["项目"], ".");
+        assert!(p.items[0].warnings.is_empty());
+        assert!(p.items[0].new_path.ends_with("项目 - 副本"));
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.errors.is_empty());
+        let copied = fs::read_to_string(f.b.join("项目 - 副本/来源.md")).unwrap();
+        assert!(copied.contains(&chapter_uri("项目 - 副本/目标.md")));
+        assert_eq!(
+            fs::read_to_string(f.b.join("项目/保留.txt")).unwrap(),
+            "existing"
+        );
+        let p = f.preview(&["项目/来源.md"], "后续");
+        fs::write(f.a.join("项目/目标.md"), "externally changed").unwrap();
+        let r = execute(&f.owner, &p.plan_id, false).unwrap();
+        assert!(r.result.items.is_empty());
+        assert!(!f.b.join("后续/来源.md").exists());
+        assert_eq!(fs::read_to_string(f.a.join("项目/来源.md")).unwrap(), note);
     }
     fn copied_reference(document: &Path, target: &str) -> PathBuf {
         let raw = target.split(['?', '#']).next().unwrap();

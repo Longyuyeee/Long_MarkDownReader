@@ -1,0 +1,38 @@
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:558:15
+    |
+558 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.50s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-2223db00a87d39b2.exe)
+
+running 22 tests
+test services::file_move_transaction::tests::an_in_flight_save_prevents_relocation_before_references_are_written ... ok
+test services::file_move_transaction::tests::occupied_destination_does_not_change_any_source_or_reference ... ok
+test services::file_move_transaction::tests::occupied_pdf_sidecar_preserves_both_records_and_does_not_move_the_pdf ... ok
+test services::file_move_transaction::recovery_tests::both_positions_occupied_never_overwrites_either_file ... ok
+test services::file_move_transaction::recovery_tests::a_preexisting_destination_is_preserved_while_exporting_recovery_material ... ok
+test services::file_move_transaction::recovery_tests::changed_document_after_interruption_is_preserved_and_not_retired ... ok
+test services::file_move_transaction::tests::unsatisfied_reference_checks_leave_document_and_location_untouched ... ok
+test services::file_move_transaction::recovery_tests::original_copies_can_be_exported_when_current_documents_have_new_edits ... ok
+test services::file_move_transaction::recovery_tests::partial_history_migration_is_verified_and_restored_before_marking_recovery_finished ... ok
+test services::file_move_transaction::recovery_tests::interrupt_after_rename_completes_links_without_moving_the_file_again ... ok
+test services::file_move_transaction::recovery_tests::interrupt_after_reference_write_restores_originals_at_the_original_location ... ok
+test services::file_move_transaction::recovery_tests::explicit_restore_returns_position_references_and_history_without_overwriting ... ok
+test services::file_move_transaction::tests::a_reference_definition_at_end_of_file_does_not_require_an_extra_newline ... ok
+test services::file_move_transaction::tests::directory_moves_keep_internal_links_and_update_outside_references ... ok
+test services::file_move_transaction::tests::history_collision_rolls_back_reference_edits_and_keeps_original_history ... ok
+test services::file_move_transaction::tests::moving_markdown_rewrites_relative_images_and_documents_without_moving_shared_assets ... ok
+test services::file_move_transaction::tests::renaming_an_image_updates_all_incoming_notes_and_keeps_surrounding_text ... ok
+test services::file_move_transaction::tests::ordinary_titles_reference_definitions_and_literal_html_keep_their_surrounding_syntax ... ok
+test services::file_move_transaction::tests::pdf_rename_and_undo_keep_annotations_and_ocr_with_the_document ... ok
+test services::file_move_transaction::tests::portable_chapter_references_follow_durable_rename_and_reverse_without_changing_examples ... ok
+test services::file_move_transaction::tests::undo_recomputes_links_and_migrates_original_snapshots_without_overwrite ... ok
+test services::file_move_transaction::tests::v1119_canvas_incoming_references_join_durable_move_and_reverse_move ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 1108 filtered out; finished in 2.99s
+

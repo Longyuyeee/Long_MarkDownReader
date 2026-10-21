@@ -1,0 +1,61 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "undoDelaysMs": [
+    0,
+    100,
+    200,
+    300
+  ],
+  "checks": [
+    {
+      "id": "0-wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "0-ir-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "0-sv-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "1-wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "1-ir-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "1-sv-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "2-wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "2-ir-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "2-sv-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "3-wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "3-ir-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "3-sv-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

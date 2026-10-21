@@ -1,0 +1,300 @@
+node .release-secrets/v1134-audit-tail.mjs
+Verified 5 native fault/recovery observations and original hashes; external responses were simulated, no installer acceptance claimed.
+Community updater contract passed: fixed GitHub source, SHA-256 verification, hidden install and automatic relaunch are aligned.
+Official v1.0.21 to v1.0.22 update accepted: 12 checks and nine immutable reviewed evidence files.
+Official v1.0.22 to v1.0.23 update accepted: 12 checks and nine immutable reviewed evidence files.
+Command strip layout passed: 11 workspaces keep controls readable, scrollable and reachable.
+V1.0.6 managed updater lifecycle contract passed: hosted 1.0.5 -> 1.0.6 evidence accepted.
+V1.0.7 managed updater lifecycle passed: hosted 1.0.6 -> 1.0.7 evidence accepted.
+V1.0.8 managed updater lifecycle contract passed: automatic relaunch failure is recorded for v1.0.9 recovery.
+V1.0.9 managed updater lifecycle contract passed: hosted 1.0.8 -> 1.0.9 evidence accepted.
+V1.0.10 managed updater lifecycle contract passed: hosted 1.0.9 -> 1.0.10 evidence accepted.
+V1.0.11 managed updater lifecycle contract passed: hosted 1.0.10 -> 1.0.11 evidence accepted.
+V1.0.12 managed updater lifecycle contract passed: hosted 1.0.11 -> 1.0.12 evidence accepted.
+V1.0.13 managed updater lifecycle contract passed: hosted 1.0.12 -> 1.0.13 evidence accepted.
+V1.0.14 managed updater lifecycle contract passed: hosted 1.0.13 -> 1.0.14 evidence accepted.
+V1.0.16 managed updater lifecycle contract passed: hosted 1.0.15 -> 1.0.16 evidence accepted.
+M5-0 accepted: v1.0.17 selects only M5-1 ODP slide-body producer fidelity and object selection; ODP remains preview-only.
+M5-1 accepted: only direct text-frame paragraphs on simple ODP slides advance to M5-2; notes and complex-object slides remain blocked.
+M5-2 accepted: bounded simple-slide ODP reliable copies pass real LibreOffice/PowerPoint reopen; UI and version promotion remain M5-3+ work.
+M5-3 accepted: real LibreOffice/PowerPoint ODP workspace copies, draft protection, responsive UI and whole-slide blockers are verified; M5-4 owns release readiness.
+M5-4 accepted: 548 Rust tests pass with zero failures, the complete patch release gate passes, and M5-5 owns atomic v1.0.17 packaging.
+M5-5 accepted: v1.0.17 candidate identity and historical local package receipts remain valid after publication.
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+M5-7 accepted: hosted lifecycle artifacts, SHA256SUMS and release boundaries remain valid after M5-8 publication.
+M5-8 accepted: v1.0.17 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+V1.0.17 managed updater lifecycle contract passed: hosted 1.0.16 -> 1.0.17 evidence accepted.
+V1.0.18 managed updater lifecycle contract passed: hosted 1.0.17 -> 1.0.18 evidence accepted.
+V1.0.19 managed updater lifecycle contract passed: hosted 1.0.18 -> 1.0.19 evidence accepted.
+V1.0.21 managed updater lifecycle contract passed: hosted 1.0.20 -> 1.0.21 evidence accepted.
+M8-5 graph visual/performance polish passed: settled auto-fit, dense priority-only arrows, restrained status rings, non-duplicated tooltip and bounded reduced-motion-safe selection feedback are present.
+M8-5 real desktop evidence accepted: all 180 nodes auto-fit, dense middle arrows are priority-only, 12 status rings remain, bounded selection settles idle, Canvas draw peaks at 5.1 ms and runtime errors are zero.
+M6-0 accepted: v1.0.18 selects only M6-1 graph-scoped bounded fullscreen lifecycle; cluster proxies, governance rings, structured schemas and ODP note editing remain deferred.
+M6-1 accepted: 6/6 real Tauri fullscreen cycles preserve graph state, Escape and route cleanup exit safely, runtime errors remain zero and source files remain unchanged.
+M6-2 accepted: stop feature expansion and run M6-3 complete Rust plus patch-release readiness gates before any v1.0.18 version transition.
+M6-3 accepted: 548 Rust tests, the corrected complete patch-release gate, 6,275 frontend modules and zero production vulnerabilities permit M6-4 candidate packaging.
+M6-4 accepted: v1.0.18 candidate identity, real local package receipts, and WebView2 evidence are valid while public v1.0.17 remains frozen.
+M6-5 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.18 candidate and v1.0.17 upgrade baseline remain frozen.
+M6-6 accepted: hosted lifecycle artifacts, public names, SHA256SUMS and unsigned community release boundaries are ready for M6-7 publication.
+M6-7 accepted: v1.0.18 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+M7-0 accepted: v1.0.19 selects only local JSON/JSONC Schema sidecar provider and mapping feasibility; remote providers, YAML/TOML projection, XSD, graph proxies, governance rings and ODP notes remain deferred.
+M7-1 accepted: bounded offline JSON/JSONC Schema sidecar validation and source mapping are feasible; product UI and real Tauri acceptance remain M7-2 work.
+M7-2 accepted: bounded local JSON/JSONC Schema validation is integrated and passed real Tauri wide/narrow read-only acceptance; M7-3 quality readiness is next.
+M7-3 accepted: 559 Rust tests, complete patch-release CI, 6,275 frontend modules and zero production vulnerabilities permit M7-4 candidate packaging.
+M7-4 accepted: v1.0.19 runtime identity is atomic while public v1.0.18 remains frozen.
+CF-1 code creation passed: 10 format families and 32 registered extensions use guarded atomic templates.
+CF-1 desktop creation audit passed: 10 format families, explicit save, close/reopen and no-overwrite evidence are accepted.
+UX-51 lifecycle passed: updater relaunch and independent external windows are implementation- and desktop-verified.
+v1.0.15 interaction-polish audit passed: modern tab tooltip, contextual right-click policy, and accepted clean desktop evidence are aligned.
+v1.0.15 global-tooltip policy passed: static and dynamic native titles use one theme-aware, keyboard-accessible and viewport-bounded application surface.
+v1.0.15 overlay-bounds contract passed: the long create menu is scrollable, uniquely measurable and viewport bounded.
+M1C-C ODS formula/style evidence contract passed.
+M1C-D ODS existing named style contract passed.
+M1D selection accepted: 10 MiB JSON timeout and 50 MiB boundary select progressive large-JSON reading before media frame tools.
+M1D-A large JSON accepted: progressive read, segment navigation, streaming search and small-file editing are real-desktop verified.
+M1D-B video tools accepted: real 1080p/4K frame stepping, PNG capture, position restore and source safety are verified.
+M1D-C selection accepted: real sidecars and semantic-invalid structured files select bounded external subtitle playback as M1D-C1.
+M1D-C1 accepted: real VTT/SRT active cues, selection, off state, reopen, malformed rejection and source safety are verified.
+M1 total exit criteria accepted: M1A-M1D real evidence, producer matrix, source safety, boundaries and user documentation are aligned.
+{
+  "expected": {
+    "developmentTargetVersion": "1.1.34",
+    "runtimeBaseVersion": "1.1.34",
+    "publicTag": "v1.1.33",
+    "headAheadOfPublicTag": true,
+    "binaryVersionTransition": "v1.1.34-quality-gate-pending"
+  },
+  "actual": {
+    "headCommit": "a88155c5e653ed1db452132a79c2cbae09c0db11",
+    "tagCommit": "9961c0c2fe9f02ced2ae9987bb6b55cd26d739cf",
+    "commitsAhead": 6,
+    "tagIsAncestor": true,
+    "checks": {
+      "policySchema": true,
+      "nextPatchTarget": true,
+      "runtimeFactsFrozen": true,
+      "candidateMetadataFacts": true,
+      "publicFactsFrozen": true,
+      "publicTagImmutable": true,
+      "developmentAhead": true,
+      "enterpriseNotReleaseCandidate": true,
+      "binaryTransitionComplete": true,
+      "currentStageAligned": true,
+      "configConsumesPolicy": true,
+      "mainUiIdentifiesDevelopment": true,
+      "capabilityUiIdentifiesDevelopment": true,
+      "auditDocumentsIdentity": true
+    }
+  }
+}
+M3C-1 dirty-frame loop accepted: 100=680/2305ms, idle 0/s, resume 0; 1000=3236/17317ms, idle 0/s, resume 0; 5000=23562/186338ms, idle 0/s, resume 0; original 5000-node layout/interaction limits remain independently visible.
+M3C-2 phase profile accepted: 100=1285/3393ms; 1000=3558/29861ms; 5000=39105/140049ms bounded; 5000-node dominant=layout-simulation 133038ms; layout=133038ms, draw-exclusive=0ms, semantic=1269ms.
+M3C-3 worker layout accepted: 100=2511/4777ms, main-layout-max=7.2ms, worker-max=13.4ms; 1000=2466/3542ms, main-layout-max=6.9ms, worker-max=5.9ms; 5000=7229/10964ms, main-layout-max=26.7ms, worker-max=17.6ms.
+M3C-4 performance exit accepted: 100=2376ms stable, idle-longtasks=0, remaining-max=29.6ms; 1000=4037ms stable, idle-longtasks=0, remaining-max=59.2ms; 5000=10631ms stable, idle-longtasks=0, remaining-max=421.8ms.
+M4F-4 accepted: two real unsigned installers, public-name mapping, SHA256SUMS, passed Tauri smoke, hosted lifecycle and cross-platform evidence are preserved after publication.
+M4F-5 accepted: v1.0.16 is published, the tag binds the real candidate, and all three remotely downloaded assets match the frozen manifest.
+M3B-10 remaining professional visual selection accepted: restrained recency and relation-strength rings selected from real Tauri three-viewport, filesystem timestamp and health/pulse evidence; governance rings, cluster collapse/expand, fullscreen and M3C remain deferred.
+M3B-6 navigation selection accepted: fit-all and community filtering remain reliable, and the selected fit-selection/bounded-focus successor is implemented with historical real Tauri three-viewport evidence.
+M3B-8 remaining navigation selection accepted: bounded semantic minimap selected from real 100/1000/5000-node evidence and real Tauri three-viewport evidence; cluster collapse/expand, fullscreen and M3C remain deferred.
+M3C-0 large-graph baseline accepted: 100=1407/3724ms, 132 settled draws/s, longest 537ms; 1000=2189/15050ms, 132 settled draws/s, longest 616ms; 5000=24722/185195ms, 132 settled draws/s, longest 17237ms; 5000-node interaction and long-task budget failures remain explicit, and M3C-1 closes settled dirty-frame and lifecycle-loop control.
+M3B professional visual system exit accepted: M3B-1 through M3B-11 remain safe and the combined semantic hierarchy, path, camera, minimap, status and responsive flow passes in 4 real Tauri sessions; cluster collapse, fullscreen and M3C remain outside M3B.
+✔ outline reads text without layout and preserves unchanged tree identity (41.9851ms)
+✔ rapid mutations coalesce and destroy cancels stale refresh work (29.1787ms)
+✔ replacing an outline observer disconnects the previous document (20.3174ms)
+✔ LibraryMode stops observation while the outline is hidden (2.9117ms)
+✔ TempMode stops observation while the outline is hidden (1.6382ms)
+✔ compiled shared Markdown styles preserve effects unless adaptive reduction is active (355.101ms)
+✔ smooth frames keep normal effects even for a long-running document (24.2644ms)
+✔ startup and isolated stalls do not reduce effects (10.6867ms)
+✔ persistent slow frames reduce once, including severe one-FPS stalls (18.6093ms)
+✔ foreground resume discards background time and rewarms (9.7383ms)
+✔ adaptive lifecycle preserves normal motion, degrades, resets per document and cleans up (21.1414ms)
+✔ default media opener covers supported extensions, mixed case and external windows (33.4537ms)
+✔ file manager action uses the existing reveal permission and handles failures (0.5274ms)
+✔ a failed system open remains a recoverable media notice (1.7522ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1715.6271
+✔ same titles retain distinct directory identity (1.992ms)
+✔ native Windows extended and UNC paths remain readable (0.5479ms)
+✔ sibling roots and case-sensitive Unix paths are not shortened incorrectly (0.4755ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 690.883
+[Vue warn]: Property undefined was accessed during render but is not defined on instance. 
+  at <App>
+✔ literal highlight preserves content: 预算确认与预算修订 / 预算 (3.2245ms)
+✔ literal highlight preserves content: Needle needle NEEDLE /  needle  (0.5889ms)
+✔ literal highlight preserves content: a.b axb [x] / a.b (0.3015ms)
+✔ literal highlight preserves content: İ🙂预算 / 预算 (0.2791ms)
+✔ literal highlight preserves content: İstanbul / i (0.257ms)
+✔ literal highlight preserves content: 🙂🙂 / 🙂 (0.2413ms)
+✔ literal highlight preserves content: 正常文字 /  (0.277ms)
+✔ literal highlight preserves content: 没有结果 / 预算 (0.2034ms)
+✔ actual highlight template escapes file content instead of rendering HTML (57.594ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 999.5765
+[Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+  at <App>
+[Vue warn]: Property "showSearchPreview" was accessed during render but is not defined on instance. 
+  at <App>
+✔ same file pages group together without merging same-named files or losing ranking (3.708ms)
+✔ separate annotations and match kinds on one page remain independently accessible (0.5116ms)
+✔ unlocated contexts and case-sensitive paths are preserved (0.4141ms)
+✔ actual result click forwards each PDF page and annotation to the existing router (123.7542ms)
+✔ actual grouped results template exposes separate page actions and bounded-count wording (283.1946ms)
+✔ restored fifth annotation expands the actual lazy position disclosure (73.8987ms)
+✔ body results carry a fresh location intent on repeated opens (10.0069ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2017.8778
+✔ switching results never displays late content from the previous file (46.8362ms)
+✔ failed preview can retry; closing discards pending responses (25.8754ms)
+✔ excerpt uses selected text and resets on a different source (15.6813ms)
+✔ clipboard failure keeps the selection for retry (16.5412ms)
+✔ explicit side reference docks immediately, survives searches and clears on library change (87.7238ms)
+✔ normal result opens use main document navigation and never replace the reference (9.1743ms)
+✔ main open and side reference remain distinct accessible actions (2.9462ms)
+✔ arrow keys move between main-open actions without opening files or swallowing Enter (11.2141ms)
+✔ explicit return hides the reference, retains its source and focuses a visible writable editor after rendering (9.101ms)
+✔ direct excerpt insertion requires a live bookmark in the current writable Markdown note (12.3828ms)
+✔ manual reference refresh clears selection and ignores an older read (13.8115ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 925.5258
+✔ leaving and reopening restores query, filters, selected result and scroll after fresh results (6.9167ms)
+✔ paged return restores sort and depth, retaining a not-yet-loaded selection (2.185ms)
+✔ named work-session restore retains bounded sort and page depth without old selection (1.0006ms)
+✔ missing result is explained; a failed refresh does not discard the saved selection (1.0416ms)
+✔ changing query or library clears selection and libraries never inherit one another (0.6714ms)
+✔ named restore resolves fresh result identity after an excerpt changes, while retaining scroll and depth (0.8097ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 741.998
+✔ editor offsets: 🙂İ预算预算/预算 (1.9417ms)
+✔ editor offsets: İstanbul/i (0.3434ms)
+✔ editor offsets: a.b axb/a.b (0.1842ms)
+✔ editor offsets: A needle/ NEEDLE  (0.2759ms)
+✔ editor offsets: 预算/ (0.181ms)
+✔ editor offsets: 已修改/预算 (0.1959ms)
+✔ text editor locates in current draft without replacing it; repeated intent only runs once (24.4962ms)
+✔ Markdown waits for the requested document and selects without changing editor mode or content (14.6361ms)
+✔ navigation keeps adjacent matches separate and uses literal Unicode offsets (0.445ms)
+✔ DOM matching spans inline formatting but never joins separate paragraphs (0.9922ms)
+✔ long paragraph scroll uses match geometry rather than paragraph geometry (1.1292ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 658.3685
+✔ excerpt quotes every line and source round-trips special paths and PDF position (5.1571ms)
+✔ Windows reference keeps native path identity and library-bound source (6.8062ms)
+✖ actual Markdown source click opens the library file with PDF position (56.347ms)
+✔ text excerpts carry a bounded anchor, old links remain readable (0.8955ms)
+✔ native canonical Windows and UNC source paths resolve within the library (0.5073ms)
+✖ source repair waits for explicit confirmation and applies the verified link to the current draft only (43.6802ms)
+✖ cancel, invalid path, readonly note and changed target never rewrite a source (24.8617ms)
+✔ generic source links retain a verified PDF digest and reject malformed digests (0.7391ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 5
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 772.0393
+
+✖ failing tests:
+
+test at scripts\test-source-excerpt.mjs:31:1
+✖ actual Markdown source click opens the library file with PDF position (56.347ms)
+  ReferenceError: isPortableChapterLink is not defined
+      at evalmachine.<anonymous>:56:17
+      at step (evalmachine.<anonymous>:43:23)
+      at Object.next (evalmachine.<anonymous>:24:53)
+      at evalmachine.<anonymous>:18:71
+      at new Promise (<anonymous>)
+      at __awaiter (evalmachine.<anonymous>:14:12)
+      at Object.openSourceReference (evalmachine.<anonymous>:48:53)
+      at TestContext.<anonymous> (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:39:17)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+
+test at scripts\test-source-excerpt.mjs:72:1
+✖ source repair waits for explicit confirmation and applies the verified link to the current draft only (43.6802ms)
+  ReferenceError: isPortableChapterLink is not defined
+      at Object.openSourceReference [as open] (evalmachine.<anonymous>:57:5)
+      at Object.run (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:69:64)
+      at TestContext.<anonymous> (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:73:34)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+
+test at scripts\test-source-excerpt.mjs:75:1
+✖ cancel, invalid path, readonly note and changed target never rewrite a source (24.8617ms)
+  ReferenceError: isPortableChapterLink is not defined
+      at Object.openSourceReference [as open] (evalmachine.<anonymous>:57:5)
+      at Object.run (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:69:64)
+      at TestContext.<anonymous> (file:///E:/Project/AIProject/GeminiProject/MDReader/scripts/test-source-excerpt.mjs:76:44)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7)
+node:internal/errors:985
+  const err = new Error(message);
+              ^
+
+Error: Command failed: C:\nvm4w\nodejs\node.exe --test scripts/test-source-excerpt.mjs
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at execFileSync (node:child_process:961:15)
+    at file:///E:/Project/AIProject/GeminiProject/MDReader/.release-secrets/v1134-audit-tail.mjs:10:1 {
+  status: 1,
+  signal: null,
+  output: [ null, null, null ],
+  pid: 93344,
+  stdout: null,
+  stderr: null
+}
+
+Node.js v24.14.0

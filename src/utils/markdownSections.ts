@@ -1,4 +1,5 @@
 import { Lexer, Tokenizer, type Tokens, type Token } from 'marked'
+import { portableChapterUri } from './portableChapterLinks.ts'
 
 export type SectionAction = 'up' | 'down' | 'promote' | 'demote'
 export interface MarkdownSection {
@@ -11,7 +12,8 @@ export interface SectionChange { content: string; start: number; title: string; 
 export function headingSlug(text: string) {
   return text.toLowerCase().replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, '').replace(/\s/g, '-')
 }
-export function markdownChapterLink(documentPath: string, text: string, slug: string) {
+export function markdownChapterLink(documentPath: string, text: string, slug: string, libraryRoot?: string) {
+  if (libraryRoot) return `[${text.replace(/([\\\[\]])/g, '\\$1')}](<${portableChapterUri(libraryRoot, documentPath, text, slug)}>)`
   const local = documentPath.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '')
   const destination = encodeURI(local).replace(/[()#?]/g, char => '%' + char.charCodeAt(0).toString(16).toUpperCase()).replace(/^\/\//, '%2F%2F')
   return `[${text.replace(/([\\\[\]])/g, '\\$1')}](<${destination}#${encodeURIComponent(slug)}>)`

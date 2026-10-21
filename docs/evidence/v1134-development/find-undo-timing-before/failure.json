@@ -1,0 +1,20 @@
+{
+  "error": "page.waitForFunction: Timeout 20000ms exceeded.\n    at E:\\Project\\AIProject\\GeminiProject\\MDReader\\.release-secrets\\v1134-find-undo-repro.mjs:16:525",
+  "draft": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 访客 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n\n未保存的输入 wysiwyg\n",
+  "before": "# 查找测试\n\n第一段 用户 保留。\n\n第二段 用户 之外 用户。\n\nUser user USER users\n\n😀 用户 表情保持。\n\n![保留图片](images/shared.png)\n\n```txt\ncode stays\n```\n\n结尾保留。\n\n未保存的输入 wysiwyg\n",
+  "checks": [
+    {
+      "id": "wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    },
+    {
+      "id": "wysiwyg-selected-duplicate-only-and-single-undo",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

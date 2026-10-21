@@ -23,7 +23,9 @@ export function applyVditorDraftUpdate(editor: any, before: string, after: strin
     undo.addToUndoStack(editor.vditor)
     editor.vditor.preview?.render(editor.vditor)
   } catch (cause) {root.innerHTML = html; Object.assign(state,history); undo.resetIcon(editor.vditor); throw cause}
+  // WYSIWYG and IR/source modes use different pending history timers.
   clearTimeout(editor.vditor[mode].afterRenderTimeoutId)
+  clearTimeout(editor.vditor[mode].processTimeoutId)
   const popover = editor.vditor[mode].popover as HTMLElement|undefined
   if (popover) popover.style.display = 'none'
 }
