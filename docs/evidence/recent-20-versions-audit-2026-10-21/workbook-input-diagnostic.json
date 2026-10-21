@@ -1,0 +1,17 @@
+{
+  "method": "Actual TypeScript function bodies isolated with simulated cell/context; not a native or installed acceptance test",
+  "source": "src/views/WorkbookView.vue",
+  "rule": "literal list: 是,否, showErrorMessage=true",
+  "input": "不在列表",
+  "single": {
+    "errors": [
+      "列表不允许此值"
+    ],
+    "drafts": 0
+  },
+  "batch": {
+    "drafts": 1,
+    "input": "不在列表"
+  },
+  "conclusion": "Single-cell formula-bar entry refuses the value; batch paste planning accepts it into the draft. No real workbook was read or written."
+}

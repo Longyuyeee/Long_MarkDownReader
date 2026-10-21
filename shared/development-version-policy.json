@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.30",
-  "runtimeBaseVersion": "1.1.29",
-  "publicVersion": "1.1.29",
-  "publicTag": "v1.1.29",
-  "publicTagCommit": "c177bbe9952684b61fcf0f253f77d88a6cfbcb9a",
+  "developmentTargetVersion": "1.1.31",
+  "runtimeBaseVersion": "1.1.30",
+  "publicVersion": "1.1.30",
+  "publicTag": "v1.1.30",
+  "publicTagCommit": "c72848e2f67347541584b6a58e6fb840e8ac7dc4",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-87-v1.1.29-published",
-  "binaryVersionTransition": "v1.1.29-public-release-published",
-  "displayLabel": "v1.1.29 已发布 · 下一目标 v1.1.30（Table 录入与纠错）",
+  "currentStage": "M8-89-v1.1.30-published",
+  "binaryVersionTransition": "v1.1.30-public-release-published",
+  "displayLabel": "v1.1.30 已发布 · 下一目标 v1.1.31（XLSX 连续录入）",
   "activeSlice": {
-    "id": "v1.1.29-pdf-reading-continuity",
+    "id": "v1.1.30-table-entry-validation",
     "status": "published-with-installed-workflows-and-public-assets-verified",
-    "document": "docs/V1_1_28_Unsigned_Community_Release_Audit_2026-10-21.md"
+    "document": "docs/V1_1_30_Unsigned_Community_Release_Audit_2026-10-21.md"
   }
 }

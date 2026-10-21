@@ -1,7 +1,7 @@
 use crate::formats::table::{
     parse_internal_table, validate_internal_table, DashboardItem, GridViewConfig, InternalTable,
-    TableColumn, TableData, TableRow, TableSort, TableView, MAX_INTERNAL_TABLE_BYTES, TABLE_KIND,
-    TABLE_SCHEMA_VERSION,
+    TableColumn, TableData, TableRow, TableRule, TableSort, TableView, MAX_INTERNAL_TABLE_BYTES,
+    TABLE_KIND, TABLE_SCHEMA_VERSION,
 };
 use crate::sanitize_filename;
 use crate::services::external_file_access::ExternalFileAccess;
@@ -12,7 +12,7 @@ use csv::{ReaderBuilder, Terminator, WriterBuilder};
 use encoding_rs::Encoding;
 use rust_xlsxwriter::{Format, Workbook};
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::DefaultHasher;
+use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
@@ -38,6 +38,7 @@ pub struct TableDocument {
     pub headers: Vec<String>,
     pub rows: Vec<Vec<String>>,
     pub column_types: Vec<String>,
+    pub validation_rules: BTreeMap<String, TableRule>,
     pub column_ids: Vec<String>,
     pub row_ids: Vec<String>,
     pub view: TableViewState,
@@ -158,6 +159,8 @@ pub struct TableWritePayload {
     pub rows: Vec<Vec<String>>,
     #[serde(default)]
     pub column_types: Vec<String>,
+    #[serde(default)]
+    pub validation_rules: Option<BTreeMap<String, TableRule>>,
     #[serde(default)]
     pub column_ids: Vec<String>,
     #[serde(default)]
@@ -475,6 +478,7 @@ fn parse_table_under_lease(path: &Path) -> Result<TableDocument, String> {
         headers,
         rows,
         column_types,
+        validation_rules: BTreeMap::new(),
         column_ids: (0..columns)
             .map(|index| format!("column-{}", index + 1))
             .collect(),
@@ -572,6 +576,17 @@ fn parse_internal_under_lease(path: &Path) -> Result<TableDocument, String> {
         headers,
         rows,
         column_types,
+        validation_rules: internal
+            .data
+            .columns
+            .iter()
+            .filter_map(|column| {
+                column
+                    .validation
+                    .clone()
+                    .map(|rule| (column.id.clone(), rule))
+            })
+            .collect(),
         column_ids,
         row_ids: internal
             .data
@@ -707,11 +722,31 @@ fn write_internal_table(
             .map(|column| infer_column_type(&payload.rows, column))
             .collect()
     };
+    let validation_rules = payload.validation_rules.unwrap_or_else(|| {
+        internal
+            .data
+            .columns
+            .iter()
+            .filter_map(|column| {
+                column
+                    .validation
+                    .clone()
+                    .map(|rule| (column.id.clone(), rule))
+            })
+            .collect()
+    });
+    if validation_rules.keys().any(|id| !column_ids.contains(id)) {
+        return Err("录入规则引用了不存在的列".into());
+    }
+    if !validation_rules.is_empty() {
+        internal.schema_version = 2;
+    }
     internal.data.columns = (0..columns)
         .map(|index| TableColumn {
             id: column_ids[index].clone(),
             name: payload.headers.get(index).cloned().unwrap_or_default(),
             column_type: column_types[index].clone(),
+            validation: validation_rules.get(&column_ids[index]).cloned(),
         })
         .collect();
     internal.data.rows = payload
@@ -789,7 +824,11 @@ pub(crate) fn internal_from_document(document: &TableDocument) -> InternalTable 
         .map(|index| format!("column-{}", index + 1))
         .collect::<Vec<_>>();
     InternalTable {
-        schema_version: TABLE_SCHEMA_VERSION,
+        schema_version: if document.validation_rules.is_empty() {
+            TABLE_SCHEMA_VERSION
+        } else {
+            2
+        },
         kind: TABLE_KIND.into(),
         data: TableData {
             columns: document
@@ -800,6 +839,10 @@ pub(crate) fn internal_from_document(document: &TableDocument) -> InternalTable 
                     id: column_ids[index].clone(),
                     name: name.clone(),
                     column_type: document.column_types[index].clone(),
+                    validation: document
+                        .validation_rules
+                        .get(&document.column_ids[index])
+                        .cloned(),
                 })
                 .collect(),
             rows: document
@@ -860,6 +903,7 @@ pub async fn create_table_file(
         headers: vec!["名称".into()],
         rows: Vec::new(),
         column_types: vec!["text".into()],
+        validation_rules: BTreeMap::new(),
         column_ids: vec!["column-1".into()],
         row_ids: Vec::new(),
         view: TableViewState::default(),
@@ -873,7 +917,12 @@ pub async fn create_table_file(
 }
 
 #[tauri::command]
-pub async fn import_table_file(library_root: String, path: String) -> Result<String, String> {
+pub async fn import_table_file(
+    library_root: String,
+    path: String,
+    expected_signature: Option<String>,
+    validation_rules: Option<BTreeMap<String, TableRule>>,
+) -> Result<String, String> {
     let guard = WorkspaceGuard::new(&library_root)?;
     let source = guard.resolve_existing_file(path, &["csv", "tsv"])?;
     let directory = source.parent().ok_or("源文件没有父目录")?.to_path_buf();
@@ -886,7 +935,19 @@ pub async fn import_table_file(library_root: String, path: String) -> Result<Str
         // Reserve source and output through their common directory, including
         // name allocation. Do not recursively acquire the source reservation.
         let _directory = crate::services::document_coordination::acquire(&[&directory])?;
-        let document = parse_table_under_lease(&source)?;
+        let mut document = parse_table_under_lease(&source)?;
+        if expected_signature
+            .as_ref()
+            .is_some_and(|signature| signature != &document.signature)
+        {
+            return Err("来源已变化，请重新读取后创建副本".into());
+        }
+        if let Some(rules) = validation_rules {
+            if rules.keys().any(|id| !document.column_ids.contains(id)) {
+                return Err("规则字段已变化，请重新检查".into());
+            }
+            document.validation_rules = rules;
+        }
         let internal = internal_from_document(&document);
         validate_internal_table(&internal)?;
         let output = serde_json::to_vec_pretty(&internal).map_err(|error| error.to_string())?;
@@ -920,7 +981,9 @@ fn export_delimited(document: &TableDocument, delimiter: u8) -> Result<Vec<u8>, 
 fn lossless_xlsx_number(value: &str) -> Option<f64> {
     // Excel numbers have 15 significant decimal digits. Inference is a hint,
     // not permission to remove leading zeros/signs or round an identifier.
-    if value.bytes().filter(u8::is_ascii_digit).count() > 15 { return None; }
+    if value.bytes().filter(u8::is_ascii_digit).count() > 15 {
+        return None;
+    }
     let number = value.parse::<f64>().ok()?;
     (number.is_finite() && number.to_string() == value).then_some(number)
 }
@@ -958,7 +1021,11 @@ fn export_xlsx(document: &TableDocument) -> Result<Vec<u8>, String> {
             let column_number = column as u16;
             match document.column_types.get(column).map(String::as_str) {
                 Some("integer" | "number") if lossless_xlsx_number(value).is_some() => worksheet
-                    .write_number(row_number, column_number, lossless_xlsx_number(value).unwrap())
+                    .write_number(
+                        row_number,
+                        column_number,
+                        lossless_xlsx_number(value).unwrap(),
+                    )
                     .map_err(|error| error.to_string())?,
                 Some("boolean")
                     if matches!(value.to_ascii_lowercase().as_str(), "true" | "false") =>
@@ -1116,6 +1183,7 @@ mod tests {
             headers: document.headers.clone(),
             rows: document.rows.clone(),
             column_types: document.column_types.clone(),
+            validation_rules: Some(document.validation_rules.clone()),
             column_ids: document.column_ids.clone(),
             row_ids: document.row_ids.clone(),
             view: document.view.clone(),
@@ -1128,23 +1196,52 @@ mod tests {
     fn secondary_external_tables_share_directory_protection_and_retry() {
         let cases: [(&str, &[u8]); 2] = [
             ("csv", b"Task,Status\r\nShip,Pending\r\n"),
-            ("table.json", include_bytes!("../../../fixtures/post-v115-m4b0/workspace/M4B0 Tasks.table.json")),
+            (
+                "table.json",
+                include_bytes!("../../../fixtures/post-v115-m4b0/workspace/M4B0 Tasks.table.json"),
+            ),
         ];
         for (extension, original) in cases {
             let path = temp_table(extension, original);
             let access = ExternalFileAccess::default();
             access.authorize_editable(&path).unwrap();
             let input = path.to_string_lossy().into_owned();
-            let opened = tauri::async_runtime::block_on(read_external_table_file_with_access(input.clone(), &access)).unwrap();
-            let backup = path.parent().unwrap().join(format!(".{}.longedit-bak", path.file_name().unwrap().to_str().unwrap()));
+            let opened = tauri::async_runtime::block_on(read_external_table_file_with_access(
+                input.clone(),
+                &access,
+            ))
+            .unwrap();
+            let backup = path.parent().unwrap().join(format!(
+                ".{}.longedit-bak",
+                path.file_name().unwrap().to_str().unwrap()
+            ));
             fs::write(&backup, "keep backup evidence").unwrap();
-            let moving = crate::services::document_coordination::acquire(&[path.parent().unwrap()]).unwrap();
-            assert!(tauri::async_runtime::block_on(read_external_table_file_with_access(input.clone(), &access)).is_err());
-            assert!(tauri::async_runtime::block_on(write_external_table_file_with_access(input.clone(), payload(&opened), &access)).is_err());
+            let moving =
+                crate::services::document_coordination::acquire(&[path.parent().unwrap()]).unwrap();
+            assert!(
+                tauri::async_runtime::block_on(read_external_table_file_with_access(
+                    input.clone(),
+                    &access
+                ))
+                .is_err()
+            );
+            assert!(
+                tauri::async_runtime::block_on(write_external_table_file_with_access(
+                    input.clone(),
+                    payload(&opened),
+                    &access
+                ))
+                .is_err()
+            );
             assert_eq!(fs::read(&path).unwrap(), original);
             assert_eq!(fs::read_to_string(backup).unwrap(), "keep backup evidence");
             drop(moving);
-            tauri::async_runtime::block_on(write_external_table_file_with_access(input, payload(&opened), &access)).unwrap();
+            tauri::async_runtime::block_on(write_external_table_file_with_access(
+                input,
+                payload(&opened),
+                &access,
+            ))
+            .unwrap();
             fs::remove_dir_all(path.parent().unwrap()).unwrap();
         }
     }
@@ -1153,17 +1250,30 @@ mod tests {
     fn secondary_table_late_reads_and_saves_preserve_old_path_recovery_evidence() {
         let cases: [(&str, &[u8]); 2] = [
             ("csv", b"Task,Status\nShip,Pending\n"),
-            ("table.json", include_bytes!("../../../fixtures/post-v115-m4b0/workspace/M4B0 Tasks.table.json")),
+            (
+                "table.json",
+                include_bytes!("../../../fixtures/post-v115-m4b0/workspace/M4B0 Tasks.table.json"),
+            ),
         ];
         for (extension, original) in cases {
             let path = temp_table(extension, original);
             let opened = parse_any_table(&path).unwrap();
             let moved = path.parent().unwrap().join(format!("moved.{extension}"));
             fs::rename(&path, &moved).unwrap();
-            let backup = path.parent().unwrap().join(format!(".{}.longedit-bak", path.file_name().unwrap().to_str().unwrap()));
+            let backup = path.parent().unwrap().join(format!(
+                ".{}.longedit-bak",
+                path.file_name().unwrap().to_str().unwrap()
+            ));
             fs::write(&backup, original).unwrap();
-            assert!(parse_any_table(&path).is_err(), "a late read must not promote the old path's backup");
-            let saved = if is_internal_table(&path) { write_internal_table(&path, payload(&opened)) } else { write_table(&path, payload(&opened)) };
+            assert!(
+                parse_any_table(&path).is_err(),
+                "a late read must not promote the old path's backup"
+            );
+            let saved = if is_internal_table(&path) {
+                write_internal_table(&path, payload(&opened))
+            } else {
+                write_table(&path, payload(&opened))
+            };
             assert!(saved.is_err());
             assert!(!path.exists());
             assert_eq!(fs::read(&backup).unwrap(), original);
@@ -1408,18 +1518,37 @@ mod tests {
     #[test]
     fn xlsx_export_keeps_identifier_spelling_and_formula_looking_text() {
         use std::io::{Cursor, Read};
-        let path = temp_table("csv", b"code,amount,formula\n00123,12.5,=SUM(A1:A2)\n9007199254740993123,2,+123\n");
+        let path = temp_table(
+            "csv",
+            b"code,amount,formula\n00123,12.5,=SUM(A1:A2)\n9007199254740993123,2,+123\n",
+        );
         let document = parse_table(&path).unwrap();
         let bytes = export_xlsx(&document).unwrap();
         let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
         let mut sheet = String::new();
-        archive.by_name("xl/worksheets/sheet1.xml").unwrap().read_to_string(&mut sheet).unwrap();
-        assert!(sheet.contains("r=\"A2\" t=\"s\""), "Leading-zero identifier must remain a string: {sheet}");
-        assert!(sheet.contains("r=\"A3\" t=\"s\""), "Long identifier must remain a string");
+        archive
+            .by_name("xl/worksheets/sheet1.xml")
+            .unwrap()
+            .read_to_string(&mut sheet)
+            .unwrap();
+        assert!(
+            sheet.contains("r=\"A2\" t=\"s\""),
+            "Leading-zero identifier must remain a string: {sheet}"
+        );
+        assert!(
+            sheet.contains("r=\"A3\" t=\"s\""),
+            "Long identifier must remain a string"
+        );
         assert!(!sheet.contains("<f>"));
         let mut strings = String::new();
-        archive.by_name("xl/sharedStrings.xml").unwrap().read_to_string(&mut strings).unwrap();
-        for expected in ["00123", "9007199254740993123", "=SUM(A1:A2)", "+123"] { assert!(strings.contains(expected)); }
+        archive
+            .by_name("xl/sharedStrings.xml")
+            .unwrap()
+            .read_to_string(&mut strings)
+            .unwrap();
+        for expected in ["00123", "9007199254740993123", "=SUM(A1:A2)", "+123"] {
+            assert!(strings.contains(expected));
+        }
         assert!(sheet.contains("<v>12.5</v>"));
         fs::remove_dir_all(path.parent().unwrap()).unwrap();
     }
@@ -1427,11 +1556,26 @@ mod tests {
     #[test]
     fn bulk_text_roundtrip_preserves_bom_crlf_quotes_tabs_and_empty_tail() {
         for extension in ["csv", "tsv"] {
-            let initial = if extension == "csv" { b"\xef\xbb\xbfa,b,c\r\nx,y,z\r\n".as_slice() } else { b"\xef\xbb\xbfa\tb\tc\r\nx\ty\tz\r\n".as_slice() };
+            let initial = if extension == "csv" {
+                b"\xef\xbb\xbfa,b,c\r\nx,y,z\r\n".as_slice()
+            } else {
+                b"\xef\xbb\xbfa\tb\tc\r\nx\ty\tz\r\n".as_slice()
+            };
             let path = temp_table(extension, initial);
             let document = parse_table(&path).unwrap();
             let mut next = payload(&document);
-            let rows: Vec<Vec<String>> = vec![vec!["00123".into(), "含\t制表符\r\n和\"引号\"".into(), String::new()], vec!["9007199254740993123".into(), "中文".into(), "=SUM(A1:A2)".into()]];
+            let rows: Vec<Vec<String>> = vec![
+                vec![
+                    "00123".into(),
+                    "含\t制表符\r\n和\"引号\"".into(),
+                    String::new(),
+                ],
+                vec![
+                    "9007199254740993123".into(),
+                    "中文".into(),
+                    "=SUM(A1:A2)".into(),
+                ],
+            ];
             next.rows = rows.clone();
             write_table(&path, next).unwrap();
             let bytes = fs::read(&path).unwrap();
@@ -1453,6 +1597,8 @@ mod tests {
         let imported = tauri::async_runtime::block_on(import_table_file(
             root.to_string_lossy().into_owned(),
             csv.to_string_lossy().into_owned(),
+            None,
+            None,
         ))
         .unwrap();
         assert!(imported.ends_with("fixture.table.json"));
@@ -1482,9 +1628,48 @@ mod tests {
         assert!(tauri::async_runtime::block_on(import_table_file(
             root.to_string_lossy().into_owned(),
             outside.to_string_lossy().into_owned(),
+            None,
+            None,
         ))
         .is_err());
         fs::remove_file(outside).unwrap();
         fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn v1130_rule_save_reopen_and_csv_conversion_preserve_original_values() {
+        let path = temp_table(
+            "csv",
+            b"Code,State\r\n00123,wrong\r\n9007199254740993123,ok\r\n",
+        );
+        let original = fs::read(&path).unwrap();
+        let document = parse_table(&path).unwrap();
+        let rule: TableRule = serde_json::from_value(
+            serde_json::json!({"kind":"options","required":true,"options":["ok"]}),
+        )
+        .unwrap();
+        let rules = BTreeMap::from([(document.column_ids[1].clone(), rule)]);
+        let imported = tauri::async_runtime::block_on(import_table_file(
+            path.parent().unwrap().to_string_lossy().into_owned(),
+            path.to_string_lossy().into_owned(),
+            Some(document.signature.clone()),
+            Some(rules.clone()),
+        ))
+        .unwrap();
+        assert_eq!(fs::read(&path).unwrap(), original);
+        let imported = Path::new(&imported);
+        let reopened = parse_internal(imported).unwrap();
+        assert_eq!(reopened.validation_rules, rules);
+        assert_eq!(reopened.rows[0][0], "00123");
+        assert_eq!(reopened.rows[1][0], "9007199254740993123");
+        let mut change = payload(&reopened);
+        change.rows[0][1] = "ok".into();
+        write_internal_table(imported, change).unwrap();
+        let saved = parse_internal(imported).unwrap();
+        assert_eq!(saved.validation_rules, rules);
+        assert_eq!(saved.rows[0][1], "ok");
+        assert_eq!(fs::read(&path).unwrap(), original);
+        fs::remove_file(imported).unwrap();
+        fs::remove_file(&path).unwrap();
+        fs::remove_dir(path.parent().unwrap()).unwrap();
     }
 }

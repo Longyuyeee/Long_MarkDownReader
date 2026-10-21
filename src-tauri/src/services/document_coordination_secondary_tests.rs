@@ -228,7 +228,9 @@ fn secondary_table_import_respects_directory_move() {
     let moving = acquire(&[&directory]).unwrap();
     assert!(tauri::async_runtime::block_on(table::import_table_file(
         fixture.root(),
-        source.to_string_lossy().into_owned()
+        source.to_string_lossy().into_owned(),
+        None,
+        None,
     ))
     .is_err());
     assert_eq!(fs::read(&source).unwrap(), original);
@@ -237,6 +239,8 @@ fn secondary_table_import_respects_directory_move() {
     let imported = tauri::async_runtime::block_on(table::import_table_file(
         fixture.root(),
         source.to_string_lossy().into_owned(),
+        None,
+        None,
     ))
     .unwrap();
     assert!(Path::new(&imported).is_file());

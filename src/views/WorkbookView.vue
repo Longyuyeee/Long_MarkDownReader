@@ -899,6 +899,7 @@ import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
+import { assertWorkbookListValue } from '../utils/workbookListValidation'
 import WorkbookValidationForm, { type ValidationFields } from '../components/WorkbookValidationForm.vue'
 import { h } from 'vue'
 import { useDialog, useMessage } from 'naive-ui'
@@ -2529,14 +2530,8 @@ const commitFormulaInput = () => {
   // Reloads and recalculation also flush the formula bar. Validate only a new
   // input, not an unchanged existing value that predates the validation rule.
   if (formulaInput.value === originalInput(cellAt(selection.row, selection.column))) return
-  const validation = validationAt(selection.row, selection.column)
-  if (validation?.showErrorMessage && validation.kind === 'list' && formulaInput.value && !formulaInput.value.startsWith('=')) {
-    const options = literalValidationOptions(validation)
-    if (options.length && !options.includes(formulaInput.value)) {
-      message.error(validation.error || `请输入列表中的值：${options.join('、')}`)
-      return
-    }
-  }
+  try { assertWorkbookListValue(formulaInput.value, validationAt(selection.row, selection.column)) }
+  catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return }
   const key = editKey(selection.sheet, selection.row, selection.column)
   const before = drafts.value.get(key)
   const source = sourceCellAt(selection.row, selection.column)
@@ -3570,6 +3565,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][], cells?: Work
     const metadata = cells?.[rowOffset]?.[columnOffset]
     if (metadata) validateWorkbookInput(input, metadata.kind)
     const edit = metadata ? { ...selection, input, kind: metadata.kind } : inferEdit(selection, input)
+    assertWorkbookListValue(input, validationAt(selection.row, selection.column), input === originalInput(source), edit.kind === 'formula')
     const sourceKind = source.formula ? 'formula' : source.kind === 'text' ? 'string' : source.kind === 'date' ? source.dateKind || 'date' : source.kind
     const after = input === originalInput(source) && edit.kind === sourceKind ? undefined : edit
     if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
@@ -3676,6 +3672,7 @@ const clearSelection = () => {
       const before = drafts.value.get(key)
       const source = sourceCellAt(row, column)
       if (!before && ((source.kind === 'date' && !source.dateEditable) || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
+      assertWorkbookListValue('', validationAt(row,column), originalInput(source)==='', false)
       const selection = { sheet: focus.sheet, row, column }
       const after = source.kind === 'empty' ? undefined : inferEdit(selection, '')
       if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
@@ -3766,6 +3763,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
     for (const item of destination) {
       if (item.row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(item.row)) throw new Error('填充目标包含尚未载入的数据，请先载入；本次未修改')
       validateWorkbookInput(item.input, item.kind)
+      assertWorkbookListValue(item.input, validationAt(item.row, item.column), item.input === originalInput(sourceCellAt(item.row, item.column)), item.kind === 'formula')
       if (arrayFormulaAt(item.row, item.column)) throw new Error(`${columnLabel(item.column)}${item.row + 1} 位于只读数组公式区域`)
       const key = editKey(activeSheet.value, item.row, item.column)
       const before = drafts.value.get(key)

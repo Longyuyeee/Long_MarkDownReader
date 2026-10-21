@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "Single-cell input retains existing literal-list rejection",
+    "Trusted system paste rejects the same value before changing the draft",
+    "Allowed paste remains one reversible draft operation"
+  ],
+  "errors": []
+}

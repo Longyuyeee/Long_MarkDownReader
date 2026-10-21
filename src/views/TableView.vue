@@ -19,6 +19,7 @@
         <button v-if="!isExternal && table.format !== 'longedit-table'" data-testid="m4c1-create-table-copy" :disabled="converting" aria-live="polite" @click="requestConvertToTable">{{ converting ? '正在创建…' : '创建 Table 副本' }}</button>
         <button v-if="!isExternal && table.format === 'longedit-table'" @click="exportAs('csv')">导出 CSV</button>
         <button v-if="!isExternal && table.format === 'longedit-table'" @click="exportAs('xlsx')">导出 XLSX</button>
+        <n-dropdown trigger="click" :options="dataMenuOptions" @select="key => openIssues(key === 'all')"><button data-testid="table-data-menu">数据操作 ▾</button></n-dropdown>
         <button @click="addRow">＋ 行</button>
         <button @click="addColumn">＋ 列</button>
         <button class="save-button" :disabled="!dirty || saving" aria-live="polite" @click="saveTable">{{ saving ? '保存中' : dirty ? '保存' : '已保存' }}</button>
@@ -105,10 +106,10 @@
           <div class="table-canvas" :style="{ width: `${tableWidth}px` }">
             <div class="table-header" :style="gridStyle">
               <div class="row-number header-number">#</div>
-              <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="header-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1 }" :style="frozenColumnStyle(column)">
+              <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="header-cell" @contextmenu.prevent="openColumnMenu($event,column)" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1 }" :style="frozenColumnStyle(column)">
                 <input :value="table.headers[column]" :aria-label="`第 ${column + 1} 列名称`" @focus="editSession++" @input="editHeader(column, $event)" />
                 <button :title="`按 ${headerLabel(column)} 排序`" @click="cycleSort(column)">{{ sortColumn === column ? (sortDirection === 'asc' ? '↑' : '↓') : '↕' }}</button>
-                <small>{{ typeLabel(table.columnTypes[column]) }}</small>
+                <small>{{ typeLabel(table.columnTypes[column]) }}</small><button v-if="table.validationRules?.[table.columnIds[column]]" class="rule-indicator" :aria-label="`编辑${headerLabel(column)}录入规则`" @click="openRule(table.columnIds[column])">规则</button>
                 <span class="column-resize" title="拖动调整列宽" @pointerdown="startColumnResize(column, $event)"></span>
               </div>
             </div>
@@ -130,11 +131,12 @@
                   :aria-pressed="table.rowIds[item.rowIndex] === selectedRowId"
                   @click="selectRow(item.rowIndex)"
                 >{{ item.rowIndex + 1 }}</button>
-                <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="data-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1, 'range-selected': selectedCellRows.has(table.rowIds[item.rowIndex]) && selectedCellColumns.has(table.columnIds[column]), 'has-multiline': hasCellNewline(item.rowIndex, column) }" :style="frozenColumnStyle(column)">
+                <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="data-cell" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1, 'range-selected': selectedCellRows.has(table.rowIds[item.rowIndex]) && selectedCellColumns.has(table.columnIds[column]), 'has-multiline': hasCellNewline(item.rowIndex, column), invalid: !!cellIssue(item.rowIndex,column) }" :style="frozenColumnStyle(column)">
                   <input
                     :value="hasCellNewline(item.rowIndex, column) ? table.rows[item.rowIndex][column].replace(/\r\n|\r|\n/g, ' ⏎ ') : table.rows[item.rowIndex][column]"
                     :readonly="hasCellNewline(item.rowIndex, column)"
-                    :title="hasCellNewline(item.rowIndex, column) ? '含换行，双击或 Enter 编辑：' + table.rows[item.rowIndex][column] : undefined"
+                    :aria-invalid="!!cellIssue(item.rowIndex,column)"
+                    :title="cellIssue(item.rowIndex,column) || (hasCellNewline(item.rowIndex, column) ? '含换行，双击或 Enter 编辑：' + table.rows[item.rowIndex][column] : undefined)"
                     :aria-label="`${headerLabel(column)}，第 ${item.rowIndex + 1} 行`"
                     @pointerdown="selectCell(item.rowIndex, column, $event)"
                     @focus="focusCell(item.rowIndex, column)"
@@ -189,6 +191,9 @@
         />
       </template>
     </main>
+    <n-dropdown :show="columnMenu.show" trigger="manual" :x="columnMenu.x" :y="columnMenu.y" :options="[{label:'录入规则…',key:'rule'}]" @clickoutside="columnMenu.show=false" @select="selectColumnAction" />
+    <TableRuleDialog v-if="ruleDialog" :key="ruleDialog.columnId" :column-name="headerLabel(columnIndex(ruleDialog.columnId))" :rule="table?.validationRules?.[ruleDialog.columnId]" :temporary="table?.format!=='longedit-table'" @close="ruleDialog=undefined" @apply="applyRule" />
+    <TableIssuesDialog v-if="issuesDialog" :issues="issuesDialog.issues" :columns="issuesDialog.document.headers" :column-ids="issuesDialog.document.columnIds" :scope-label="issuesDialog.scope" :has-rules="Object.keys(issuesDialog.document.validationRules||{}).length>0" :busy="issuesDialog.busy" :failure="issuesDialog.failure" :truncated="issuesDialog.truncated" :can-locate="views.some(view=>view.kind==='grid')" :plan="planCorrection" :apply-edit="applyCorrection" @close="issuesDialog=undefined" @locate="locateIssue" />
   </div>
 </template>
 
@@ -200,7 +205,10 @@ import { invoke } from '@tauri-apps/api/core'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { openManagedFile } from '../services/fileNavigation'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
-import { useDialog, useMessage } from 'naive-ui'
+import { NDropdown, useDialog, useMessage } from 'naive-ui'
+import TableRuleDialog from '../components/TableRuleDialog.vue'
+import TableIssuesDialog from '../components/TableIssuesDialog.vue'
+import {normalizeTableRule,tableValueIssue,planTableCorrection,type TableRule,type TableRules,type TableIssue} from '../utils/tableValidation'
 import {
   BarChart3 as ChartIcon,
   Check as CheckIcon,
@@ -255,6 +263,7 @@ interface TableDocument {
   headers: string[]
   rows: string[][]
   columnTypes: string[]
+  validationRules?: TableRules
   columnIds: string[]
   rowIds: string[]
   view: TableViewConfig
@@ -271,7 +280,8 @@ interface RowHistoryEntry {
   columnIds?: string[]
 }
 interface CellHistoryEntry { kind: 'edit'; edit: TableEdit; session?: string }
-type DataHistoryEntry = RowHistoryEntry | CellHistoryEntry
+interface RuleHistoryEntry {kind:'rule';columnId:string;before?:TableRule;after?:TableRule}
+type DataHistoryEntry = RowHistoryEntry | CellHistoryEntry | RuleHistoryEntry
 
 const route = useRoute()
 const router = useRouter()
@@ -451,6 +461,25 @@ const visibleRows = computed(() => {
   return filteredIndices.value.slice(start, start + count).map((rowIndex, offset) => ({ rowIndex, virtualIndex: start + offset }))
 })
 
+interface RuleContext {document:TableDocument;revision:number;generation:number;path:string;root:string;external:boolean}
+const ruleDialog=ref<(RuleContext & {columnId:string})>(),issuesDialog=ref<(RuleContext & {issues:TableIssue[];scope:string;busy:boolean;failure:string;truncated:boolean})>()
+const columnMenu=ref({show:false,x:0,y:0,columnId:'',document:null as TableDocument|null})
+const dataMenuOptions=computed(()=>filterQuery.value?[{label:'检查筛选结果…',key:'filtered'},{label:'检查全部记录…',key:'all'}]:[{label:'检查数据…',key:'all'}])
+const visibleCellIssues=computed(()=>{const map=new Map<string,string>(),doc=table.value;if(!doc)return map;const columns=doc.columnIds.map((id,column)=>({id,column,rule:doc.validationRules?.[id]})).filter(c=>c.rule);for(const item of visibleRows.value)for(const c of columns){const reason=tableValueIssue(doc.rows[item.rowIndex][c.column]||'',c.rule);if(reason)map.set(doc.rowIds[item.rowIndex]+':'+c.id,reason)}return map})
+const cellIssue=(row:number,column:number)=>table.value?visibleCellIssues.value.get(table.value.rowIds[row]+':'+table.value.columnIds[column])||'':''
+const captureRuleContext=():RuleContext=>({document:table.value!,revision:editRevision,generation:loadGeneration,path:tablePath.value,root:store.libraryPath,external:isExternal.value})
+function requireRuleContext(context?:RuleContext){if(!context||context.document!==table.value||context.revision!==editRevision||context.generation!==loadGeneration||context.path!==tablePath.value||context.root!==store.libraryPath||context.external!==isExternal.value||loading.value||saving.value||converting.value)throw Error('表格或草稿已有变化，请重新打开检查')}
+function openColumnMenu(event:MouseEvent,column:number){if(!table.value)return;columnMenu.value={show:true,x:event.clientX,y:event.clientY,columnId:table.value.columnIds[column],document:table.value}}
+function selectColumnAction(){const menu=columnMenu.value;columnMenu.value.show=false;if(menu.document===table.value)openRule(menu.columnId)}
+function openRule(columnId:string){if(!table.value||loading.value||saving.value||converting.value)return;ruleDialog.value={...captureRuleContext(),columnId}}
+function markRuleDirty(){if(table.value?.format==='longedit-table')markDirty();else{editRevision++;recordWindowDraftActivity()}}
+function applyRule(rule?:TableRule){const context=ruleDialog.value;try{requireRuleContext(context);const id=context!.columnId;if(!table.value!.columnIds.includes(id))throw Error('字段已变化');const before=table.value!.validationRules?.[id],after=rule?normalizeTableRule(rule):undefined;if(JSON.stringify(before)===JSON.stringify(after)){ruleDialog.value=undefined;return}const entry:RuleHistoryEntry={kind:'rule',columnId:id,before,after};if(historyEntryBytes(entry)>TABLE_HISTORY_BYTES)throw Error('规则超过撤销预算');table.value!.validationRules={...table.value!.validationRules};if(after)table.value!.validationRules[id]=after;else delete table.value!.validationRules[id];pushDataHistory(entry);markRuleDirty();notice.value=table.value!.format==='longedit-table'?'规则已应用到草稿，可撤销；仍需保存':'规则仅用于本次检查；创建 Table 副本可保留';ruleDialog.value=undefined}catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}}
+function applyRuleHistory(entry:RuleHistoryEntry,forward:boolean){const doc=table.value!;if(!doc.columnIds.includes(entry.columnId)||JSON.stringify(doc.validationRules?.[entry.columnId])!==JSON.stringify(forward?entry.before:entry.after))throw Error('规则已变化，未执行撤销');doc.validationRules={...doc.validationRules};const next=forward?entry.after:entry.before;if(next)doc.validationRules[entry.columnId]=next;else delete doc.validationRules[entry.columnId];markRuleDirty()}
+async function openIssues(all=false){if(!table.value||loading.value||saving.value)return;const doc=table.value,rows=all?doc.rowIds.map((_,i)=>i):[...filteredIndices.value];issuesDialog.value={...captureRuleContext(),issues:[],scope:all?'全部记录':'当前筛选结果',busy:true,failure:'',truncated:false};const state=issuesDialog.value,columns=doc.columnIds.map((id,column)=>({id,column,rule:doc.validationRules?.[id]})).filter(c=>c.rule);let cells=0;try{outer:for(let n=0;n<rows.length;n++){if(n%64===0){await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));if(issuesDialog.value!==state)return;requireRuleContext(state)}const row=rows[n];for(const c of columns){if(++cells>1_000_000||state.issues.length>=5000){state.truncated=true;break outer}const value=doc.rows[row][c.column]||'',reason=tableValueIssue(value,c.rule);if(reason)state.issues.push({rowId:doc.rowIds[row],columnId:c.id,row,column:c.column,value,reason})}}}catch(cause){if(issuesDialog.value===state)state.failure=String(cause).replace(/^Error:\s*/,'')}finally{if(issuesDialog.value===state)state.busy=false}}
+function planCorrection(issues:TableIssue[],columnId:string,value:string){requireRuleContext(issuesDialog.value);if(issuesDialog.value!.busy)throw Error('请等检查完成');return planTableCorrection(table.value!,table.value!.validationRules||{},issues,columnId,value)}
+function applyCorrection(edit:TableEdit){requireRuleContext(issuesDialog.value);commitCellEdit(edit);editSession++}
+async function locateIssue(issue:TableIssue){const context=issuesDialog.value;try{requireRuleContext(context);const grid=views.value.find(view=>view.kind==='grid');if(!grid)return;if(activeViewId.value!==grid.id)switchView(grid.id);const row=table.value!.rowIds.indexOf(issue.rowId);if(!filteredIndices.value.includes(row)){filterQuery.value='';markViewDirty()}selectedRowId.value=issue.rowId;issuesDialog.value=undefined;await nextTick();const index=filteredIndices.value.indexOf(row);scrollRef.value?.scrollTo({top:Math.max(0,index*rowHeight-100)});await nextTick();scrollRef.value?.querySelector<HTMLElement>('[data-row-id="'+CSS.escape(issue.rowId)+'"] .data-cell:nth-child('+(issue.column+2)+') input')?.focus()}catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}}
+
 const markDirty = () => {
   editRevision += 1
   dirty.value = true
@@ -459,7 +488,7 @@ const markDirty = () => {
   if (tab) tab.isDirty = true
   recordWindowDraftActivity()
 }
-const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'edit' ? entry.edit.bytes : 128 + entry.row.reduce((sum, value) => sum + value.length * 2 + 16, 0)
+const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'rule' ? JSON.stringify(entry).length*2+128 : entry.kind === 'edit' ? entry.edit.bytes : 128 + entry.row.reduce((sum, value) => sum + value.length * 2 + 16, 0)
 const pushDataHistory = (entry: DataHistoryEntry) => {
   rowRedoStack.value = []
   const history = [...rowUndoStack.value, entry]
@@ -820,6 +849,7 @@ const undoRowOperation = () => {
   if (!table.value) return
   const entry = rowUndoStack.value[rowUndoStack.value.length - 1]
   if (!entry) return
+  if(entry.kind==='rule'){try{applyRuleHistory(entry,false);rowUndoStack.value.pop();rowRedoStack.value.push(entry)}catch(cause){message.error(String(cause))}return}
   if (entry.kind === 'edit') {
     try {
       applyTableEdit(table.value, entry.edit, false)
@@ -854,6 +884,7 @@ const redoRowOperation = () => {
   if (!table.value) return
   const entry = rowRedoStack.value[rowRedoStack.value.length - 1]
   if (!entry) return
+  if(entry.kind==='rule'){try{applyRuleHistory(entry,true);rowRedoStack.value.pop();rowUndoStack.value.push(entry)}catch(cause){message.error(String(cause))}return}
   if (entry.kind === 'edit') {
     try {
       applyTableEdit(table.value, entry.edit, true)
@@ -909,6 +940,7 @@ const toggleCardColumn = (id: string) => {
 }
 
 const loadTable = async () => {
+  ruleDialog.value=undefined;issuesDialog.value=undefined;columnMenu.value.show=false;
   if (scrollRef.value && presentedPath.value) {
     rememberWorkspaceViewState(presentedPath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
   }
@@ -1037,6 +1069,7 @@ const saveTable = async () => {
       headers: table.value.headers,
       rows: table.value.rows,
       columnTypes: table.value.columnTypes,
+      validationRules: table.value.validationRules||{},
       columnIds: table.value.columnIds,
       rowIds: table.value.rowIds,
       view: {
@@ -1091,7 +1124,7 @@ const convertToTable = async () => {
   if (!table.value || converting.value) return
   converting.value = true
   try {
-    const path = await invoke<string>('import_table_file', { libraryRoot: store.libraryPath, path: tablePath.value })
+    const path = await invoke<string>('import_table_file', { libraryRoot: store.libraryPath, path: tablePath.value, expectedSignature: table.value.signature, validationRules: table.value.validationRules||{} })
     window.dispatchEvent(new CustomEvent('longedit:library-file-created', { detail: path }))
     message.success(`Table 副本已创建：${path.split(/[\\/]/).pop()}，正在打开`)
     await openManagedFile(router, path)
@@ -1229,6 +1262,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.data-cell.invalid{box-shadow:inset 0 -2px var(--status-warning,#b87912)}.header-cell .rule-indicator{font-size:var(--text-compact);color:var(--theme-primary);padding:0 4px;min-width:0}.data-cell.invalid:focus-within{outline:1px solid var(--status-warning,#b87912);outline-offset:-1px}
+
 .cell-range-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--theme-primary); }
 .cell-range-hint { min-width: 0; }
 .data-cell.range-selected { background: color-mix(in srgb, var(--theme-primary) 13%, var(--theme-card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-primary) 45%, transparent); }
