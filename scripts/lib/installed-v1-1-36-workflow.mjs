@@ -19,7 +19,7 @@ export async function runInstalledV1136Workflow({send,ui,evaluate,navigate,captu
  try{
   report.editorModeBefore=await evaluate(`${store}.editorMode`)
   await evaluate(`window.__v1136Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}));window.__v1136Trace=[];window.__v1136Errors=[];for(const type of ['click','keydown','input'])document.addEventListener(type,e=>window.__v1136Trace.push({type,trusted:e.isTrusted}),true);window.addEventListener('error',e=>window.__v1136Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1136Errors.push(String(e.reason)))`)
-  await fs.mkdir(folder);const before='# 操作入口\n\n磁盘原文。\n\n[附件](attachment.txt)\n'
+  await fs.mkdir(folder);await fs.writeFile(p('.v119-installed-owner'),'v1136-owned-command-fixture',{flag:'wx'});const before='# 操作入口\n\n磁盘原文。\n\n[附件](attachment.txt)\n'
   for(const[n,t]of Object.entries({'操作入口.md':before,'attachment.txt':'附件原文\n','检查.csv':'名称,数量\n草稿,2\n','源码.json':'{"名称":"操作入口"}\n'}))await fs.writeFile(p(n),t,{flag:'wx'})
   await fs.writeFile(p('阅读.pdf'),readingPdfFixture(1),{flag:'wx'});await take('before.md',Buffer.from(before))
   await new Promise((resolve,reject)=>{const child=spawn(process.env.LONGEDIT_XLSX_PYTHON,[path.join(repoRoot,'scripts/create-v1131-entry-workbook.py'),folder,p('检查.xlsx')],{windowsHide:true,stdio:'inherit'});child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('owned workbook producer '+code)))})
