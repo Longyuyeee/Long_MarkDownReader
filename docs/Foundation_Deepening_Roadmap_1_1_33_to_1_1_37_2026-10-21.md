@@ -1,6 +1,6 @@
 # 1.1.33—1.1.37：让已有资料和成果一起接续
 
-状态：1.1.33 已正式发布，完成 **1/5 版**；1.1.34 已实现候选并在检查；1.1.35—1.1.37 尚未实施。接续 [1.1.21—1.1.32 路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。本轮继续深化已有基础功能，沿用右键与按需弹窗。
+状态：1.1.33、1.1.34 已正式发布，完成 **2/5 版**；1.1.35—1.1.37 尚未实施。接续 [1.1.21—1.1.32 路线](Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。继续深化已有基础功能，沿用右键与按需弹窗。
 
 依据：[最近二十版审计](Recent_20_Versions_Development_and_Direction_Audit_2026-10-21.md) 的后续候选，以及本次重新阅读 `LibraryFileOperations.vue`、`AttachmentManagerDialog.vue`、`MarkdownSectionActions.vue`、`CommandPalette.vue` 和 `workspaceViewState.ts`。现有能力直接复用：跨库复制已带 Markdown 依赖、附件管理已能检查当前笔记草稿、命令窗口已存在，不能换名再次当成新增功能。
 
@@ -22,7 +22,7 @@
 
 ## 1.1.34：可移植的章节链接
 
-进度：已实现候选，待原安装器与正式发布核对。[开发记录](V1_1_34_Portable_Chapter_Links_Development_2026-10-21.md) · [使用方法](Portable_Chapter_Links_User_Guide.md)。以下保留原计划。
+进度：已正式发布。[实际范围](V1_1_34_Unsigned_Community_Release_Audit_2026-10-21.md) · [使用方法](Portable_Chapter_Links_User_Guide.md)。以下保留原计划。
 
 现有章节链接仍基于本机绝对路径。先定义同库相对定位和外部分享的区别，沿既有复制章节链接入口按上下文选择合适形式；保留旧链接解析。当前笔记中粘贴后可打开准确章节，整个项目移目录或沿现有跨库复制后仍能映射。重名标题、中文空格、锚点改名和目标缺失给出可理解的定位结果，不静默跳到错误文档。
 

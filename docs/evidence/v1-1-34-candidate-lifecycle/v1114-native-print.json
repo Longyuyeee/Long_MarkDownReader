@@ -1,0 +1,1117 @@
+{
+    "status":  "saved-real-native-print-pdf",
+    "desktopUserSession":  "disposable-github-hosted",
+    "target":  "C:\\LongEditR5ILibrary\\v1114-writing-cee8f0ce-d070-4236-a5ba-762245c4d1e3\\真实 打印.pdf",
+    "actions":  [
+                    "queued-owned-native-print-ui-Save",
+                    "typed-owned-native-print-output-path-and-confirmed"
+                ],
+    "windows":  [
+                    {
+                        "Handle":  1901182,
+                        "Pid":  9040,
+                        "OwnerPid":  2188,
+                        "Title":  "",
+                        "ClassName":  "Chrome_WidgetWin_2",
+                        "Id":  0
+                    },
+                    {
+                        "Handle":  589844,
+                        "Pid":  2188,
+                        "OwnerPid":  0,
+                        "Title":  "Long编辑·md助手",
+                        "ClassName":  "Tauri Window",
+                        "Id":  0
+                    },
+                    {
+                        "Handle":  262214,
+                        "Pid":  2188,
+                        "OwnerPid":  0,
+                        "Title":  "com.longyuye.mdreader-siw",
+                        "ClassName":  "com.longyuye.mdreader-sic",
+                        "Id":  0
+                    },
+                    {
+                        "Handle":  327978,
+                        "Pid":  2188,
+                        "OwnerPid":  0,
+                        "Title":  "",
+                        "ClassName":  "Tao Thread Event Target",
+                        "Id":  0
+                    }
+                ],
+    "controls":  [
+                     {
+                         "name":  "",
+                         "type":  "ControlType.Button",
+                         "id":  ""
+                     },
+                     {
+                         "name":  "",
+                         "type":  "ControlType.ComboBox",
+                         "id":  "input-39"
+                     },
+                     {
+                         "name":  "More settings",
+                         "type":  "ControlType.Button",
+                         "id":  "more-settings-toggle"
+                     },
+                     {
+                         "name":  "Save",
+                         "type":  "ControlType.Button",
+                         "id":  ""
+                     },
+                     {
+                         "name":  "Cancel",
+                         "type":  "ControlType.Button",
+                         "id":  ""
+                     }
+                 ],
+    "temporarilyMinimizedWindows":  [
+                                        {
+                                            "Handle":  590620,
+                                            "Pid":  2188,
+                                            "OwnerPid":  0,
+                                            "Title":  "快速笔记",
+                                            "ClassName":  "Tauri Window",
+                                            "Id":  0
+                                        }
+                                    ],
+    "mainWindow":  {
+                       "handle":  589844,
+                       "pid":  2188,
+                       "title":  "Long编辑·md助手",
+                       "configuredMainTitle":  "Long编辑·md助手",
+                       "className":  "Tauri Window",
+                       "wasVisible":  false,
+                       "visibleBeforePrint":  true,
+                       "foregroundBefore":  852620,
+                       "foregroundRequestAccepted":  true,
+                       "foregroundBeforePrint":  true,
+                       "clientWidth":  1000,
+                       "clientHeight":  700
+                   },
+    "printers":  [
+                     {
+                         "Name":  "Microsoft Print to PDF",
+                         "Default":  true,
+                         "DriverName":  "Microsoft Print To PDF"
+                     }
+                 ],
+    "defaultPrinter":  "Microsoft Print to PDF",
+    "controlWindows":  {
+                           "589844":  {
+                                          "title":  "Long编辑·md助手",
+                                          "className":  "Tauri Window",
+                                          "controls":  [
+                                                           {
+                                                               "name":  "",
+                                                               "type":  "ControlType.Button",
+                                                               "id":  ""
+                                                           },
+                                                           {
+                                                               "name":  "",
+                                                               "type":  "ControlType.ComboBox",
+                                                               "id":  "input-39"
+                                                           },
+                                                           {
+                                                               "name":  "More settings",
+                                                               "type":  "ControlType.Button",
+                                                               "id":  "more-settings-toggle"
+                                                           },
+                                                           {
+                                                               "name":  "Save",
+                                                               "type":  "ControlType.Button",
+                                                               "id":  ""
+                                                           },
+                                                           {
+                                                               "name":  "Cancel",
+                                                               "type":  "ControlType.Button",
+                                                               "id":  ""
+                                                           }
+                                                       ]
+                                      },
+                           "262214":  {
+                                          "title":  "com.longyuye.mdreader-siw",
+                                          "className":  "com.longyuye.mdreader-sic",
+                                          "controls":  [
+
+                                                       ]
+                                      },
+                           "327978":  {
+                                          "title":  "",
+                                          "className":  "Tao Thread Event Target",
+                                          "controls":  [
+
+                                                       ]
+                                      }
+                       },
+    "diagnosticTopWindows":  [
+                                 {
+                                     "Handle":  196742,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "Shell_TrayWnd",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  590620,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "快速笔记",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  1901182,
+                                     "Pid":  9040,
+                                     "OwnerPid":  2188,
+                                     "Title":  "",
+                                     "ClassName":  "Chrome_WidgetWin_2",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  589844,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "Long编辑·md助手",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  852620,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "标签笔记003.md · Long编辑",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  852588,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "附带.txt · Long编辑",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  721610,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "缺图.md · Long编辑",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131540,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "资料.md · Long编辑",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66092,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "secondary 中文 notes.txt · Long编辑",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66064,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "cold launch 中文 mindmap.opml · Long编辑",
+                                     "ClassName":  "Tauri Window",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  262214,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "com.longyuye.mdreader-siw",
+                                     "ClassName":  "com.longyuye.mdreader-sic",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  327978,
+                                     "Pid":  2188,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "Tao Thread Event Target",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131506,
+                                     "Pid":  8780,
+                                     "OwnerPid":  0,
+                                     "Title":  "GDI+ Window (ServiceFabricLocalClusterManager.exe)",
+                                     "ClassName":  "GDI+ Hook Window Class",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131378,
+                                     "Pid":  8780,
+                                     "OwnerPid":  0,
+                                     "Title":  ".NET-BroadcastEventWindow.4.0.0.0.141b42a.0",
+                                     "ClassName":  ".NET-BroadcastEventWindow.4.0.0.0.141b42a.0",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131528,
+                                     "Pid":  3828,
+                                     "OwnerPid":  0,
+                                     "Title":  "Azure Arc system tray",
+                                     "ClassName":  "ATL:00007FF6E4F490D0",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66054,
+                                     "Pid":  1940,
+                                     "OwnerPid":  0,
+                                     "Title":  "DDE Server Window",
+                                     "ClassName":  "OleDdeWndClass",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  196708,
+                                     "Pid":  1940,
+                                     "OwnerPid":  0,
+                                     "Title":  "C:\\ProgramData\\GitHub\\HostedComputeAgent\\hosted-compute-agent",
+                                     "ClassName":  "CASCADIA_HOSTING_WINDOW_CLASS",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66052,
+                                     "Pid":  2476,
+                                     "OwnerPid":  1940,
+                                     "Title":  "",
+                                     "ClassName":  "PseudoConsoleWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65964,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "BluetoothNotificationAreaIconWindowClass",
+                                     "ClassName":  "BluetoothNotificationAreaIconWindowClass",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131486,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "MS_WebcheckMonitor",
+                                     "ClassName":  "MS_WebcheckMonitor",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65890,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "Battery Meter",
+                                     "ClassName":  "SystemTray_Main",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65796,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "DummyDWMListenerWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131232,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "EdgeUiInputTopWndClass",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65788,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "DummyDWMListenerWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65786,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "DummyDWMListenerWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65784,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "DummyDWMListenerWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65782,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "",
+                                     "ClassName":  "DummyDWMListenerWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131166,
+                                     "Pid":  672,
+                                     "OwnerPid":  0,
+                                     "Title":  "DesktopWindowXamlSource",
+                                     "ClassName":  "Windows.UI.Core.CoreWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  1179698,
+                                     "Pid":  6248,
+                                     "OwnerPid":  0,
+                                     "Title":  "Windows Push Notifications Platform",
+                                     "ClassName":  "PushNotificationsPowerManagement",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131114,
+                                     "Pid":  1000,
+                                     "OwnerPid":  0,
+                                     "Title":  "Task Host Window",
+                                     "ClassName":  "COMTASKSWINDOWCLASS",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131178,
+                                     "Pid":  3376,
+                                     "OwnerPid":  0,
+                                     "Title":  "Task Host Window",
+                                     "ClassName":  "COMTASKSWINDOWCLASS",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65592,
+                                     "Pid":  6632,
+                                     "OwnerPid":  0,
+                                     "Title":  "DWM Notification Window",
+                                     "ClassName":  "Dwm",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  262248,
+                                     "Pid":  1940,
+                                     "OwnerPid":  0,
+                                     "Title":  "Windows Terminal",
+                                     "ClassName":  "Windows Terminal Admin 006cd1f52e6cb06b",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131470,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "MiracastConnectionWindow",
+                                     "ClassName":  "MiracastConnectionWindow",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65724,
+                                     "Pid":  6748,
+                                     "OwnerPid":  0,
+                                     "Title":  "Program Manager",
+                                     "ClassName":  "Progman",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65808,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65718,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "MSCTFIME UI",
+                                     "ClassName":  "MSCTFIME UI",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131208,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66060,
+                                     "Pid":  9040,
+                                     "OwnerPid":  9040,
+                                     "Title":  "MSCTFIME UI",
+                                     "ClassName":  "MSCTFIME UI",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  196724,
+                                     "Pid":  9040,
+                                     "OwnerPid":  9040,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66058,
+                                     "Pid":  2188,
+                                     "OwnerPid":  2188,
+                                     "Title":  "MSCTFIME UI",
+                                     "ClassName":  "MSCTFIME UI",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  196942,
+                                     "Pid":  2188,
+                                     "OwnerPid":  2188,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66236,
+                                     "Pid":  2188,
+                                     "OwnerPid":  2188,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  66316,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  262170,
+                                     "Pid":  2780,
+                                     "OwnerPid":  2780,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131558,
+                                     "Pid":  3400,
+                                     "OwnerPid":  3400,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  393726,
+                                     "Pid":  8780,
+                                     "OwnerPid":  8780,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  197060,
+                                     "Pid":  8780,
+                                     "OwnerPid":  8780,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131532,
+                                     "Pid":  3828,
+                                     "OwnerPid":  3828,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131334,
+                                     "Pid":  1940,
+                                     "OwnerPid":  1940,
+                                     "Title":  "MSCTFIME UI",
+                                     "ClassName":  "MSCTFIME UI",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  459230,
+                                     "Pid":  1940,
+                                     "OwnerPid":  1940,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65946,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65930,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65884,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65764,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131104,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131154,
+                                     "Pid":  6248,
+                                     "OwnerPid":  6248,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  196674,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "MSCTFIME UI",
+                                     "ClassName":  "MSCTFIME UI",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  131158,
+                                     "Pid":  6748,
+                                     "OwnerPid":  6748,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 },
+                                 {
+                                     "Handle":  65960,
+                                     "Pid":  7640,
+                                     "OwnerPid":  7640,
+                                     "Title":  "Default IME",
+                                     "ClassName":  "IME",
+                                     "Id":  0
+                                 }
+                             ],
+    "diagnosticProcesses":  [
+                                {
+                                    "ProcessId":  6632,
+                                    "ParentProcessId":  6296,
+                                    "Name":  "dwm.exe",
+                                    "ExecutablePath":  "C:\\Windows\\system32\\dwm.exe"
+                                },
+                                {
+                                    "ProcessId":  6248,
+                                    "ParentProcessId":  948,
+                                    "Name":  "svchost.exe",
+                                    "ExecutablePath":  "C:\\Windows\\system32\\svchost.exe"
+                                },
+                                {
+                                    "ProcessId":  3376,
+                                    "ParentProcessId":  2644,
+                                    "Name":  "taskhostw.exe",
+                                    "ExecutablePath":  "C:\\Windows\\system32\\taskhostw.exe"
+                                },
+                                {
+                                    "ProcessId":  1000,
+                                    "ParentProcessId":  2644,
+                                    "Name":  "taskhostw.exe",
+                                    "ExecutablePath":  "C:\\Windows\\system32\\taskhostw.exe"
+                                },
+                                {
+                                    "ProcessId":  6748,
+                                    "ParentProcessId":  2192,
+                                    "Name":  "explorer.exe",
+                                    "ExecutablePath":  "C:\\Windows\\Explorer.EXE"
+                                },
+                                {
+                                    "ProcessId":  672,
+                                    "ParentProcessId":  6224,
+                                    "Name":  "ShellHost.exe",
+                                    "ExecutablePath":  "C:\\Windows\\System32\\ShellHost.exe"
+                                },
+                                {
+                                    "ProcessId":  7640,
+                                    "ParentProcessId":  796,
+                                    "Name":  "RuntimeBroker.exe",
+                                    "ExecutablePath":  "C:\\Windows\\System32\\RuntimeBroker.exe"
+                                },
+                                {
+                                    "ProcessId":  2476,
+                                    "ParentProcessId":  2644,
+                                    "Name":  "hosted-compute-agent",
+                                    "ExecutablePath":  "C:\\ProgramData\\GitHub\\HostedComputeAgent\\hosted-compute-agent"
+                                },
+                                {
+                                    "ProcessId":  1940,
+                                    "ParentProcessId":  796,
+                                    "Name":  "WindowsTerminal.exe",
+                                    "ExecutablePath":  "C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.23.20211.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe"
+                                },
+                                {
+                                    "ProcessId":  3828,
+                                    "ParentProcessId":  6748,
+                                    "Name":  "AzureArcSysTray.exe",
+                                    "ExecutablePath":  "C:\\Windows\\AzureArcSetup\\Systray\\AzureArcSysTray.exe"
+                                },
+                                {
+                                    "ProcessId":  8780,
+                                    "ParentProcessId":  6748,
+                                    "Name":  "ServiceFabricLocalClusterManager.exe",
+                                    "ExecutablePath":  "C:\\Program Files\\Microsoft SDKs\\Service Fabric\\Tools\\ServiceFabricLocalClusterManager\\ServiceFabricLocalClusterManager.exe"
+                                },
+                                {
+                                    "ProcessId":  2188,
+                                    "ParentProcessId":  8656,
+                                    "Name":  "tauri-app.exe",
+                                    "ExecutablePath":  "C:\\LongEditR5I\\tauri-app.exe"
+                                },
+                                {
+                                    "ProcessId":  9040,
+                                    "ParentProcessId":  2188,
+                                    "Name":  "msedgewebview2.exe",
+                                    "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\155.0.4283.62\\msedgewebview2.exe"
+                                },
+                                {
+                                    "ProcessId":  3400,
+                                    "ParentProcessId":  9040,
+                                    "Name":  "msedgewebview2.exe",
+                                    "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\155.0.4283.62\\msedgewebview2.exe"
+                                },
+                                {
+                                    "ProcessId":  2780,
+                                    "ParentProcessId":  9040,
+                                    "Name":  "msedgewebview2.exe",
+                                    "ExecutablePath":  "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\155.0.4283.62\\msedgewebview2.exe"
+                                }
+                            ],
+    "stage":  "enumerated-owned-windows",
+    "observingWindow":  "Long编辑·md助手",
+    "destinationValues":  [
+                              "Save as PDF"
+                          ],
+    "selectedDestination":  "Save as PDF",
+    "printUiObserved":  true,
+    "saveControls":  [
+                         {
+                             "Handle":  787244,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "DUIViewWndClassName",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  852822,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "DirectUIHWND",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1507964,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "FloatNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  2097872,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ComboBox",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1114918,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Edit",
+                             "Id":  1001
+                         },
+                         {
+                             "Handle":  459616,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "CtrlNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  852790,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Namespace Tree Control",
+                             "ClassName":  "NamespaceTreeControl",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1704602,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Namespace Tree Control",
+                             "ClassName":  "Static",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1639104,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Navigation Pane",
+                             "ClassName":  "SysTreeView32",
+                             "Id":  100
+                         },
+                         {
+                             "Handle":  4784686,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "CtrlNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1704236,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "ShellView",
+                             "ClassName":  "SHELLDLL_DefView",
+                             "Id":  1121
+                         },
+                         {
+                             "Handle":  1966804,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "DirectUIHWND",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1704626,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "CtrlNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1770160,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ScrollBar",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1966760,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "CtrlNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1835642,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ScrollBar",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  2753360,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "FloatNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1049380,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Button",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  2032328,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "FloatNotifySink",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  787248,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ComboBox",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  2097884,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ToolbarWindow32",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  983898,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "\u0026Save",
+                             "ClassName":  "Button",
+                             "Id":  1
+                         },
+                         {
+                             "Handle":  918348,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Cancel",
+                             "ClassName":  "Button",
+                             "Id":  2
+                         },
+                         {
+                             "Handle":  1246024,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ScrollBar",
+                             "Id":  -1
+                         },
+                         {
+                             "Handle":  1639016,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Static",
+                             "Id":  1092
+                         },
+                         {
+                             "Handle":  1704606,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Static",
+                             "Id":  1091
+                         },
+                         {
+                             "Handle":  1835768,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Static",
+                             "Id":  1093
+                         },
+                         {
+                             "Handle":  2097800,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ListBox",
+                             "Id":  1120
+                         },
+                         {
+                             "Handle":  918356,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Static",
+                             "Id":  1095
+                         },
+                         {
+                             "Handle":  1966842,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "\u0026Help",
+                             "ClassName":  "Button",
+                             "Id":  1038
+                         },
+                         {
+                             "Handle":  1573402,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "WorkerW",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  787252,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "ReBarWindow32",
+                             "Id":  40965
+                         },
+                         {
+                             "Handle":  1966830,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "TravelBand",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1704672,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Navigation buttons",
+                             "ClassName":  "ToolbarWindow32",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1049436,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "UpBand",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  656198,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Up band",
+                             "ClassName":  "ToolbarWindow32",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  918328,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Address Band Root",
+                             "Id":  41477
+                         },
+                         {
+                             "Handle":  1835604,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "msctls_progress32",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  721742,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Breadcrumb Parent",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1507942,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Address: Downloads",
+                             "ClassName":  "ToolbarWindow32",
+                             "Id":  1001
+                         },
+                         {
+                             "Handle":  1835762,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "Address band",
+                             "ClassName":  "ToolbarWindow32",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  983848,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "SeparatorBand",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1966740,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "UniversalSearchBand",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1704638,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "Search Box",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1835640,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "SearchEditBoxWrapperClass",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1049394,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "DirectUIHWND",
+                             "Id":  0
+                         },
+                         {
+                             "Handle":  1966822,
+                             "Pid":  2188,
+                             "OwnerPid":  0,
+                             "Title":  "",
+                             "ClassName":  "SeparatorBand",
+                             "Id":  0
+                         }
+                     ],
+    "sizeBytes":  245347,
+    "sha256":  "763026bf006655990a7a52c28706100e3d949c861eb5cab9064c180436daabbc",
+    "executable":  "C:\\LongEditR5I\\tauri-app.exe",
+    "buttonInvocation":  {
+                             "started":  true,
+                             "completed":  true,
+                             "error":  null
+                         },
+    "companionsRestored":  true
+}

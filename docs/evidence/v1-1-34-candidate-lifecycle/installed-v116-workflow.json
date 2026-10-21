@@ -1,0 +1,62 @@
+{
+  "appVersion": "1.1.34",
+  "sourceCommit": "af69cdb4fd84b43f63248a1bc8da9ff2815df116",
+  "installerSha256": "fdf54d9cbec16a42e2d6dfb14bafe677ef76481c9e9fcda5a5350c55815380b9",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "moving-note-rebases-local-images-and-links-without-moving-shared-resources",
+      "status": "passed"
+    },
+    {
+      "id": "renaming-image-updates-all-saved-incoming-notes",
+      "status": "passed"
+    },
+    {
+      "id": "renaming-linked-note-retains-fragment-and-title",
+      "status": "passed"
+    },
+    {
+      "id": "moving-folder-keeps-internal-and-outgoing-references",
+      "status": "passed"
+    },
+    {
+      "id": "undo-restores-position-links-and-history",
+      "status": "passed"
+    },
+    {
+      "id": "fresh-unsaved-only-incoming-link-blocks-move-without-losing-draft",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-then-retry-completes-the-original-operation",
+      "status": "passed"
+    },
+    {
+      "id": "plain-unsaved-markdown-follows-rename-without-implicit-save",
+      "status": "passed"
+    },
+    {
+      "id": "pdf-annotations-and-ocr-follow-the-document",
+      "status": "passed"
+    },
+    {
+      "id": "another-real-markdown-window-retains-its-draft-and-refreshes-links-after-save",
+      "status": "passed"
+    },
+    {
+      "id": "same-folder-rename-does-not-require-repairing-unrelated-old-broken-links",
+      "status": "passed"
+    },
+    {
+      "id": "move-continuity-keeps-interface-operable-without-global-error-overlay",
+      "status": "passed"
+    },
+    {
+      "id": "cached-text-draft-keeps-encoding-and-saves-only-at-the-renamed-path",
+      "status": "passed"
+    }
+  ]
+}
