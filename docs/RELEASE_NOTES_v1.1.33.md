@@ -1,6 +1,6 @@
 # Long编辑 v1.1.33
 
-当前为发布前候选；原安装器完成构建、同包复核与公开下载核对后更新发布记录。
+已正式发布于 2026-10-21T14:59:15Z，原安装器公开下载与摘要核对通过。
 
 把项目资料复制到另一个库时，已保存的阅读成果可以一起接续。
 
@@ -9,4 +9,4 @@
 - 来源或批注在预览后变化时停下受影响项，只重新核对未完成项；取消不写入，已完成项不重复复制。
 - 保留全部既有功能、六种风格和正常动效，主页面不增加常驻表单。
 
-[使用方法](Copy_Reading_Outcomes_User_Guide.md) · [实际开发与发布记录](V1_1_33_Unsigned_Community_Release_Audit_2026-10-21.md)。社区版为未签名 Windows x64；32→33 应用内更新观察单独记录。
+[使用方法](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/Copy_Reading_Outcomes_User_Guide.md) · [实际开发与发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_33_Unsigned_Community_Release_Audit_2026-10-21.md)。社区版为未签名 Windows x64；32→33 应用内更新观察单独记录。
