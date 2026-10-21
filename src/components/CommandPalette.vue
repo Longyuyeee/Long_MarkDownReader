@@ -7,11 +7,11 @@
         <n-input
           ref="inputInst"
           v-model:value="query"
-          placeholder="搜索笔记或执行命令 (> 开头)"
+          :placeholder="commandMode ? '查找操作，如：附件、历史、录入检查' : '搜索资料，或切换到操作'"
           :input-props="{ 'aria-label': '搜索资料或命令' }"
           :maxlength="500"
           :disabled="opening"
-          @keydown.enter="handleEnter"
+          @keydown.enter.prevent="handleEnter"
           @keydown.esc="close"
           @keydown.down.prevent="moveSelection(1)"
           @keydown.up.prevent="moveSelection(-1)"
@@ -20,8 +20,9 @@
             <n-icon :component="SearchIcon" />
           </template>
         </n-input>
-        <n-select v-if="!query.startsWith('>')" v-model:value="scope" class="palette-scope" aria-label="搜索范围" :to="overlayHost || undefined" :disabled="opening" :options="scopeOptions" size="small" />
+        <n-select v-if="!commandMode" v-model:value="scope" class="palette-scope" aria-label="搜索范围" :to="overlayHost || undefined" :disabled="opening" :options="scopeOptions" size="small" />
         </div>
+        <div class="palette-modes" role="group" aria-label="查找类型"><n-button size="small" :type="mode === 'files' && !query.startsWith('>') ? 'primary' : 'default'" :disabled="opening" @click="mode = 'files'; query = query.replace(/^>\s*/, '')">资料</n-button><n-button size="small" :type="commandMode ? 'primary' : 'default'" :disabled="opening" @click="mode = 'commands'">操作</n-button></div>
         <div v-if="searching && !searchPages.files.value.length" class="palette-status" role="status">正在查找资料…</div>
         <div v-if="opening" class="palette-status" role="status">正在打开资料，请稍候…</div>
         <div v-if="error" class="palette-status palette-error" role="alert">{{ error }}<n-button v-if="!opening" size="tiny" @click="scheduleSearch">重试</n-button></div>
@@ -56,7 +57,7 @@
         </div>
         <SearchPageStatus v-if="pagedSearch" part="footer" :page="searchPages" :sort="sort" :disabled="opening" @more="searchPages.loadMore" @continue="searchPages.continueSearch" @apply="searchPages.applyPending" @retry="retryPages"/>
         </div>
-        <div v-if="!query.startsWith('>')" class="palette-status palette-help">空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。结果按文件续载，组内位置并非全部出现次数。</div>
+        <div v-if="!commandMode" class="palette-status palette-help">空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。结果按文件续载，组内位置并非全部出现次数。</div>
       </div>
     </div>
   </transition>
@@ -77,12 +78,18 @@ import { snapshotWindowDrafts, windowDraftCount } from '../services/windowDrafts
 import SearchHighlight from './SearchHighlight.vue'
 import SearchFileCard from './SearchFileCard.vue'
 import SearchPageStatus from './SearchPageStatus.vue'
+import { contextCommands } from '../services/contextCommands'
+import type { ContextCommand } from '../services/contextCommands'
 import { createSearchPages, type SearchMatch, type SearchSort } from '../services/searchPages'
 
 const props = defineProps<{ show: boolean }>()
 const emitEvent = defineEmits(['close', 'execute'])
 
-const query = ref('')
+const query = ref(''), mode = ref<'files' | 'commands'>('files')
+const commandMode = computed(() => mode.value === 'commands' || query.value.startsWith('>'))
+let documentCommands: (ContextCommand & {check:()=>ContextCommand})[] = []
+let previousRange: Range | null = null
+let previousInputSelection: {start: number; end: number; direction: 'forward' | 'backward' | 'none'} | null = null
 const selectedIndex = ref(0)
 const inputInst = ref<InputInst | null>(null)
 const results = ref<any[]>([])
@@ -91,7 +98,7 @@ const store = useAppStore(), scope = ref<'current' | 'all'>('current')
 const scopeOptions = [{ label: '当前资料库', value: 'current' }, { label: '全部资料库', value: 'all' }]
 const searching = ref(false), opening = ref(false), error = ref('')
 const searchPages = createSearchPages(invoke), sort = ref<SearchSort>('relevance'), route = useRoute()
-const pagedSearch = computed(() => !!query.value.trim() && !query.value.startsWith('>'))
+const pagedSearch = computed(() => !!query.value.trim() && !commandMode.value)
 watch(searchPages.files, files => {
   if (!pagedSearch.value) return
   const selected = results.value[selectedIndex.value]?.path
@@ -110,6 +117,15 @@ const retryPages = async () => {
 let generation = 0, disposed = false
 let previousFocus: HTMLElement | null = null
 let restoreFocusOnClose = true
+let returnContext = ''
+const contextKey = () => JSON.stringify([route.fullPath,store.libraryPath,store.activeTabId])
+const restoreSelection = () => {
+  if (previousFocus?.isConnected) {
+    previousFocus.focus({preventScroll:true})
+    if (previousInputSelection && (previousFocus instanceof HTMLInputElement || previousFocus instanceof HTMLTextAreaElement)) previousFocus.setSelectionRange(previousInputSelection.start, previousInputSelection.end, previousInputSelection.direction)
+  }
+  if (previousRange?.startContainer.isConnected && previousRange.endContainer.isConnected) {const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(previousRange)}
+}
 
 const close = () => { if (opening.value) return; invalidateSearch(); emitEvent('close') }
 const handleEscape = (event: KeyboardEvent) => {
@@ -120,13 +136,17 @@ onMounted(() => window.addEventListener('keydown', handleEscape, true))
 
 watch(() => props.show, (newVal) => {
   if (newVal) {
-    restoreFocusOnClose = true
+    restoreFocusOnClose = true; returnContext=contextKey()
     const focused = document.activeElement
     if (focused instanceof HTMLElement && !overlayHost.value?.contains(focused)) previousFocus = focused
-    query.value = ''; selectedIndex.value = 0; scheduleSearch(); nextTick(() => inputInst.value?.focus())
+    documentCommands = contextCommands.capture()
+    const selection = window.getSelection()
+    previousRange = selection?.rangeCount ? selection.getRangeAt(0).cloneRange() : null
+    previousInputSelection = (focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement) && focused.selectionStart !== null ? {start:focused.selectionStart, end:focused.selectionEnd ?? focused.selectionStart, direction:focused.selectionDirection || 'none'} : null
+    mode.value = 'files'; query.value = ''; selectedIndex.value = 0; scheduleSearch(); nextTick(() => inputInst.value?.focus())
   } else {
     invalidateSearch()
-    nextTick(() => { if (!props.show && restoreFocusOnClose && previousFocus?.isConnected) previousFocus.focus({ preventScroll: true }) })
+    nextTick(() => { if (!props.show && restoreFocusOnClose && returnContext===contextKey()) restoreSelection() })
   }
 })
 
@@ -144,6 +164,14 @@ const execute = async (item: any) => {
   if (!props.show || disposed || (searching.value && !searchPages.files.value.length) || opening.value) return
   opening.value = true; error.value = ''
   try {
+    if (item.contextCommand) {
+      item.contextCommand.check()
+      snapshotWindowDrafts()
+      restoreSelection()
+      await item.contextCommand.run()
+      if (disposed || !props.show) return
+      restoreFocusOnClose=false; opening.value=false; close(); return
+    }
     if (item.type === 'file') {
       if (item.reference) {
         if (!canReference(item)) throw new Error('请在当前资料库页面使用侧边参考；没有切换资料库或替换草稿。')
@@ -161,7 +189,7 @@ const execute = async (item: any) => {
     }
     if (disposed || !props.show) return
     restoreFocusOnClose = false; opening.value = false; emitEvent('execute', item); close()
-  } catch (cause) { error.value = String(cause).replace(/^Error:\s*/, '') }
+  } catch (cause) { error.value = String(cause).replace(/^Error:\s*/, ''); nextTick(()=>inputInst.value?.focus()) }
   finally { opening.value = false }
 }
 
@@ -207,13 +235,9 @@ const themeCommands = themePresets.map(preset => ({
 }))
 
 const ALL_COMMANDS = [
-  { title: '打开外部文件', description: '选择受支持的文本、代码或结构化源码文件', keywords: 'open external text code structured file', icon: FileIcon, type: 'cmd', action: 'open-external-file' },
+  { title: '打开外部文件', description: '选择受支持的文本、代码或结构化源码文件', keywords: '打开 文件 导入 open external text code structured file', icon: FileIcon, type: 'cmd', action: 'open-external-file' },
   { title: '专注模式', description: '切换全屏专注模式  F11', keywords: 'zen f11 fullscreen', icon: CommandIcon, type: 'cmd', action: 'zen-mode' },
-  { title: '导出 HTML', description: '导出当前文件为 HTML', keywords: 'export html', icon: CommandIcon, type: 'cmd', action: 'export-html' },
-  { title: '保存文件', description: '保存当前编辑的文件  Ctrl+S', keywords: 'save write', icon: CommandIcon, type: 'cmd', action: 'save-file' },
-  { title: '刷新目录', description: '重新扫描知识库目录结构', keywords: 'refresh reload', icon: CommandIcon, type: 'cmd', action: 'refresh' },
   ...themeCommands,
-  { title: '今日笔记', description: '创建或打开今天日期的日记', keywords: 'daily today journal', icon: CommandIcon, type: 'cmd', action: 'daily-note' },
 ]
 
 let searchDebounce: ReturnType<typeof setTimeout> | null = null
@@ -240,16 +264,10 @@ function scheduleSearch() {
   if (!props.show) return
   const val = query.value, token = generation, root = store.libraryPath, selectedScope = scope.value
   error.value = ''; results.value = []
-  if (val.startsWith('>')) {
-    // 命令模式：模糊匹配
-    const cmd = val.slice(1).trim().toLowerCase()
-    if (!cmd) {
-      results.value = ALL_COMMANDS.map(c => ({ ...c, description: c.description + '  —  ' + c.keywords }))
-    } else {
-      results.value = ALL_COMMANDS.filter(c =>
-        fuzzyMatch(c.title, cmd) || fuzzyMatch(c.keywords, cmd)
-      )
-    }
+  if (commandMode.value) {
+    const cmd = val.replace(/^>\s*/, '').trim().toLowerCase()
+    const commands = [...(route.name === 'TempMode' ? [{title:'导出 HTML',description:'导出当前临时笔记',keywords:'导出 export html',icon:CommandIcon,type:'cmd',action:'export-html'}] : []), ...documentCommands.map(command => ({title:command.title, description:command.description, keywords:command.keywords || '', icon:CommandIcon, type:'cmd', action:command.id, contextCommand:command})), ...ALL_COMMANDS]
+    results.value = commands.filter(c => !cmd || fuzzyMatch(c.title, cmd) || fuzzyMatch(c.keywords, cmd))
     selectedIndex.value = 0
   } else if (val.trim().length > 0) {
     // 文件搜索模式
@@ -270,7 +288,7 @@ function scheduleSearch() {
     selectedIndex.value = 0
   }
 }
-watch([query, scope, sort, () => store.libraryPath], scheduleSearch)
+watch([query, mode, scope, sort, () => store.libraryPath], scheduleSearch)
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleEscape, true)
@@ -280,6 +298,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.palette-modes{display:flex;gap:6px;padding:0 20px 8px;flex-shrink:0}
 .palette-scroll-content{min-height:0;flex:1 1 auto;overflow-y:auto}.palette-scroll-content>.results-list{max-height:none;overflow:visible}.result-item:has(.search-file-card){padding:3px;display:block;transform:none;cursor:default}.result-item>.search-file-card{width:100%;box-sizing:border-box}.palette-search-row{flex-shrink:0}
 .palette-search-row{display:flex;align-items:center;gap:8px;padding-right:16px}.palette-search-row>.n-input{min-width:0;flex:1}.palette-scope{width:138px;flex-shrink:0}.palette-status{padding:8px 20px;color:var(--theme-text-secondary);font-size:var(--text-compact);overflow-wrap:anywhere}.palette-error{color:var(--status-danger);display:flex;align-items:center;gap:8px;justify-content:space-between}.palette-help{border-top:var(--theme-border)}.item-context{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--theme-text-secondary)}.results-list[aria-busy="true"]{opacity:.65;pointer-events:none}@media(max-width:520px){.palette-search-row{padding-right:10px;gap:2px}.palette-scope{width:120px}}
 .command-palette-overlay {

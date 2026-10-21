@@ -1,0 +1,25 @@
+✔ current-window dirty Markdown overlays preserve empty, Unicode and aliased paths (18.0079ms)
+✔ unavailable or partial dirty drafts cannot silently fall back to stale disk references (0.578ms)
+✔ Ctrl or Cmd P is consumed before embedded editors can switch preview (57.842ms)
+✔ other editor and scoped fullscreen shortcuts keep their existing handlers (28.3818ms)
+✔ only the palette shortcut captures keydown and its listener is removed on disposal (0.4356ms)
+✔ commands use the live callback and never apply an old result to another document (3.1276ms)
+✔ a remounted editor cannot inherit an old callback even with the same path (0.4934ms)
+✔ local operation failures propagate without saving or unregistering other actions (0.4133ms)
+✔ attachment paths display relative Windows and UNC names while preserving input bytes (0.3372ms)
+✔ a text read completing after unmount cannot re-register a global shortcut (52.9168ms)
+✔ a detached text editor leaves the active document shortcut untouched (14.5062ms)
+✔ a detached Markdown editor cannot consume another view shortcut (8.9163ms)
+✔ installed draft workflow uses trusted input, restores preferences and registers mandatory output verification (38.3023ms)
+✔ installed draft evidence rejects partial checks, changed identity, untrusted input and mode loss (17.0787ms)
+✔ installed context command workflow uses trusted input, restores preferences and registers mandatory output verification (39.2896ms)
+✔ installed context command evidence rejects partial checks, changed identity, untrusted input and mode loss (13.5553ms)
+✔ native readiness predicates return scalar booleans before CDP serialization (2.7798ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 588.2717

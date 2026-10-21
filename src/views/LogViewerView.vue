@@ -141,6 +141,7 @@
 </template>
 
 <script setup lang="ts">
+import { useContextCommands } from '../services/contextCommands'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
@@ -588,6 +589,9 @@ watch([logPath, isExternal], async (_next, previous) => {
   await load()
 })
 watch(followTail, enabled => { if (enabled) void scrollToTail() })
+useContextCommands(() => JSON.stringify([store.libraryPath,logPath.value,loadGeneration]), () => workspaceMode.value==='editor' && !loading.value && !saving.value ? [
+  {id:'log-save',title:'保存文件',description:'保存当前日志草稿',keywords:'保存 save',run:()=>saveLog()},
+] : [])
 onMounted(async () => {
   await load()
   refreshTimer = setInterval(() => { void pollForUpdates() }, REFRESH_INTERVAL_MS)

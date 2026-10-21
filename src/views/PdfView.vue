@@ -538,6 +538,7 @@
 </template>
 
 <script setup lang="ts">
+import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -2908,6 +2909,11 @@ onBeforeUnmount(async () => {
   rangeTransport = null
   pdfjsLib.TextLayer.cleanup()
 })
+
+useContextCommands(() => JSON.stringify([store.libraryPath,pdfPath.value,isExternal.value,pdfSourceSignature.value]), () => !isExternal.value && !loading.value && pdfDocument.value ? [
+  {id:'pdf-annotations',title:'查看 PDF 批注',description:'打开现有批注列表，可选择批注整理为笔记',keywords:'PDF 批注 阅读 笔记',run:()=>{sidebarOpen.value=true;sidebarTab.value='annotations'}},
+  ...(readingSelection.value.length && annotationWritable.value && !referenceWorking.value ? [{id:'pdf-reading-note',title:'整理 PDF 阅读笔记…',description:'从已选批注生成笔记预览',keywords:'PDF 批注 阅读 笔记 整理',run:()=>openReadingPreview([...readingSelection.value])}] : []),
+] : [])
 </script>
 
 <style scoped>

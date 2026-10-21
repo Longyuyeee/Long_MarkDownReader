@@ -890,6 +890,7 @@
 </template>
 
 <script setup lang="ts">
+import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type CSSProperties } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -5182,6 +5183,15 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointerup', stopCellSelection)
   window.removeEventListener('pointerdown', handleWindowPointerDown)
   window.removeEventListener('beforeunload', warnBeforeUnload)
+})
+
+useContextCommands(() => JSON.stringify([store.libraryPath,workbookPath.value,isExternal.value,generation,activeSheet.value]), () => {
+  if (!workbook.value || !sheetInfo.value || saving.value || entryChecking.value || updatingStructure.value) return []
+  return [
+    ...(selectedCell.value ? [{id:'workbook-check-selection',title:'检查工作簿所选区域…',description:'按录入规则检查所选单元格',keywords:'工作簿 表格 录入 检查 选区',run:()=>checkEntries('selection')}] : []),
+    ...(activeDataRegion.value ? [{id:'workbook-check-filtered',title:'检查工作簿筛选结果…',description:'按原单元格位置查看检查结果',keywords:'工作簿 表格 录入 检查 筛选',run:()=>checkEntries('filtered')}] : []),
+    ...(!isExternal.value ? [{id:'workbook-save',title:'保存工作簿',description:'保存当前工作簿草稿',keywords:'保存 save',run:()=>saveWorkbook()}] : []),
+  ]
 })
 </script>
 

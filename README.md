@@ -39,7 +39,7 @@
 
 ## 不只是打开文件，更是接续你的工作
 
-> **v1.1.35 已正式发布**：附件引用包含当前窗口未保存笔记，草稿优先、查询不代存。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35) · [发布说明](docs/RELEASE_NOTES_v1.1.35.md)。
+> **v1.1.36 已正式发布**：按当前文件查找附件、历史、阅读笔记和录入检查，直接使用原面板。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36) · [发布说明](docs/RELEASE_NOTES_v1.1.36.md)。
 
 
 
@@ -76,19 +76,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35"><img src="https://img.shields.io/badge/Stable-v1.1.35-cca43b" alt="v1.1.35 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36"><img src="https://img.shields.io/badge/Stable-v1.1.36-cca43b" alt="v1.1.36 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.35**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.36**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.35_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.35/LongEdit_1.1.35_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.35_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.35/LongEdit_1.1.35_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.35](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.36_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.36/LongEdit_1.1.36_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.36_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.36/LongEdit_1.1.36_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.36](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.35/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.36/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -96,12 +96,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.35_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.36_x64-setup.exe
 ```
 
 ```text
-f3f0280b8bff2f18e606c887ba216fc838e921dd33278d499c51965518400107  LongEdit_1.1.35_x64_zh-CN.msi
-bf5027dfa9f1454af57f6604531c5a8558b8d0b3227ec5b8c398cd2daf3be59b  LongEdit_1.1.35_x64-setup.exe
+a4216cb5f3a6212440836a0194d37f66690e90105ad5928b7dcc4cb736ec80a8  LongEdit_1.1.36_x64_zh-CN.msi
+412b071685afeb0711577229b54b34812960bac0078f808138e0f82aa889948f  LongEdit_1.1.36_x64-setup.exe
 ```
 
 </details>
@@ -491,7 +491,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.1.35 已发布：附件引用与草稿接续，区分来源并保护正在写的笔记。[发布说明](docs/RELEASE_NOTES_v1.1.35.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md)。
+1.1.36 已发布：在命令窗口按当前文件查找操作，保留原菜单和未保存内容。[发布说明](docs/RELEASE_NOTES_v1.1.36.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -554,7 +554,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_35_Unsigned_Community_Release_Audit_2026-10-22.md) |
+| 当前公开版本的实际发布证据 | [本版发布记录](docs/V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md) |
 | DOCX 日常编辑与保存 | [原件、副本及草稿保护](docs/DOCX_Editing_User_Guide.md) |
 | PPTX 编辑与副本交付 | [目标、备注、多项更改与保存接续](docs/PPTX_Editing_User_Guide.md) |
 | XLSX 连续录入与检查 | [单元格右键检查及草稿修正](docs/Workbook_Entry_Validation_User_Guide.md) |
@@ -581,6 +581,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.36 | 按文件查找已有操作、原窗口接续、草稿保护和路径显示整理 | [发布说明](docs/RELEASE_NOTES_v1.1.36.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36) · [发布记录](docs/V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md) |
 | v1.1.35 | 附件引用纳入当前窗口草稿、来源区分和局部刷新 | [发布说明](docs/RELEASE_NOTES_v1.1.35.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35) · [发布记录](docs/V1_1_35_Unsigned_Community_Release_Audit_2026-10-22.md) |
 | v1.1.34 | 可移植章节链接、文件位置接续、草稿保护与查找撤销修复 | [发布说明](docs/RELEASE_NOTES_v1.1.34.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.34) · [发布记录](docs/V1_1_34_Unsigned_Community_Release_Audit_2026-10-21.md) |
 | v1.1.33 | 带 PDF 批注复制、阅读来源和生成记录接续、重名配套、草稿与失败项保护 | [发布说明](docs/RELEASE_NOTES_v1.1.33.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.33) · [发布记录](docs/V1_1_33_Unsigned_Community_Release_Audit_2026-10-21.md) |
@@ -620,9 +621,13 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已发布 **3/5 版**；1.1.36—1.1.37 仍为规划，下一版深化已有命令窗口的上下文入口。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。本轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已发布 **4/5 版**；下一版 1.1.37 深化 PDF 批注跨重启接续，仍为规划。
 
-### v1.1.35 本次更新
+### v1.1.36 本次更新
+
+命令窗口增加“资料 / 操作”切换；按当前文档显示附件、历史、来源核对、PDF 阅读笔记和录入检查，直接打开原有面板，保留原菜单与草稿。切换文档后拒绝旧结果，取消恢复同文档选区。[使用方法](docs/Context_Command_User_Guide.md)。
+
+### v1.1.35 附件引用和草稿接续
 
 附件“查看引用”自动纳入当前窗口的完整未保存 Markdown，同一路径以草稿为准；区分来源，变化后可刷新，打开复用草稿。[使用方法](docs/Attachment_Management_User_Guide.md)。
 

@@ -370,8 +370,12 @@ const removeRouteError = router.onError((cause, to) => {
   console.error('[Long编辑 Route Error]', cause)
 })
 
+// Reserve the advertised application shortcut before embedded editors handle it.
+const handlePaletteKeydown = (e: KeyboardEvent) => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'p') return
+  e.preventDefault(); e.stopImmediatePropagation(); openCommandPalette()
+}
 const handleGlobalKeydown = (e: KeyboardEvent) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); showPalette.value = true }
   if (e.key === 'F11') { e.preventDefault(); store.toggleZen() }
 }
 
@@ -525,6 +529,7 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handlePaletteKeydown, true)
   window.addEventListener('keydown', handleGlobalKeydown)
   window.addEventListener('longedit:open-command-palette', openCommandPalette)
   window.addEventListener('beforeunload', handleBeforeUnload)
@@ -596,6 +601,7 @@ onUnmounted(() => {
   lifecycleReady = false
   lifecycleUnlisteners.splice(0).forEach(unlisten => unlisten())
   resolveDiscardConfirm(false)
+  window.removeEventListener('keydown', handlePaletteKeydown, true)
   window.removeEventListener('keydown', handleGlobalKeydown)
   window.removeEventListener('longedit:open-command-palette', openCommandPalette)
   window.removeEventListener('beforeunload', handleBeforeUnload)

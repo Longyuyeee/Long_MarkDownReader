@@ -1,0 +1,22 @@
+✔ current-window dirty Markdown overlays preserve empty, Unicode and aliased paths (10.8649ms)
+✔ unavailable or partial dirty drafts cannot silently fall back to stale disk references (0.2489ms)
+✔ commands use the live callback and never apply an old result to another document (2.3453ms)
+✔ a remounted editor cannot inherit an old callback even with the same path (0.3728ms)
+✔ local operation failures propagate without saving or unregistering other actions (0.4265ms)
+✔ attachment paths display relative Windows and UNC names while preserving input bytes (0.3587ms)
+✔ a text read completing after unmount cannot re-register a global shortcut (40.6187ms)
+✔ a detached text editor leaves the active document shortcut untouched (8.5543ms)
+✔ a detached Markdown editor cannot consume another view shortcut (4.6806ms)
+✔ installed draft workflow uses trusted input, restores preferences and registers mandatory output verification (50.1572ms)
+✔ installed draft evidence rejects partial checks, changed identity, untrusted input and mode loss (12.1807ms)
+✔ installed context command workflow uses trusted input, restores preferences and registers mandatory output verification (31.2356ms)
+✔ installed context command evidence rejects partial checks, changed identity, untrusted input and mode loss (13.0011ms)
+✔ native readiness predicates return scalar booleans before CDP serialization (1.7831ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1198.302

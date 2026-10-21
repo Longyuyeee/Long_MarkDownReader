@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.35",
+  "appVersion": "1.1.36",
   "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-22",
-  "currentStatus": "v1.1.35-community-release-published",
+  "currentStatus": "v1.1.36-community-release-published",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -36,52 +36,52 @@
     "githubReleasePublished": true
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.34",
+    "previousPublicVersion": "1.1.35",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
     "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.34-to-1.1.35-pending",
-    "scope": "attachment-draft-references"
+    "managedUpdaterUpgradePath": "1.1.35-to-1.1.36-pending",
+    "scope": "contextual-command-actions"
   },
   "targetRelease": {
-    "tag": "v1.1.35",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35",
+    "tag": "v1.1.36",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
   "candidate": {
-    "artifactSourceCommit": "4857485ac31d598ae2077cf6c018e9983ffedd25",
+    "artifactSourceCommit": "d4f62a11d61b49ff551d75aeab9a7dff2c2dc9a9",
     "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39660631641,
-    "hostedInstalledLifecycleRunId": 39666497970,
+    "artifactBuildRunId": 39686025213,
+    "hostedInstalledLifecycleRunId": 39689248577,
     "artifacts": [
       {
         "target": "msi",
-        "fileName": "LongEdit_1.1.35_x64_zh-CN.msi",
+        "fileName": "LongEdit_1.1.36_x64_zh-CN.msi",
         "sizeBytes": 77950976,
-        "sha256": "f3f0280b8bff2f18e606c887ba216fc838e921dd33278d499c51965518400107",
+        "sha256": "a4216cb5f3a6212440836a0194d37f66690e90105ad5928b7dcc4cb736ec80a8",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.35_x64_zh-CN.msi"
+        "sourceFileName": "Long编辑_1.1.36_x64_zh-CN.msi"
       },
       {
         "target": "nsis",
-        "fileName": "LongEdit_1.1.35_x64-setup.exe",
-        "sizeBytes": 68620352,
-        "sha256": "bf5027dfa9f1454af57f6604531c5a8558b8d0b3227ec5b8c398cd2daf3be59b",
+        "fileName": "LongEdit_1.1.36_x64-setup.exe",
+        "sizeBytes": 68587122,
+        "sha256": "412b071685afeb0711577229b54b34812960bac0078f808138e0f82aa889948f",
         "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.35_x64-setup.exe"
+        "sourceFileName": "Long编辑_1.1.36_x64-setup.exe"
       }
     ]
   },
   "release": {
-    "tag": "v1.1.35",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.35",
-    "databaseId": 420012635,
+    "tag": "v1.1.36",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36",
+    "databaseId": 420142033,
     "isDraft": false,
     "isPrerelease": false,
-    "taggedCommit": "4857485ac31d598ae2077cf6c018e9983ffedd25",
-    "publishedAt": "2026-10-21T20:16:35Z"
+    "taggedCommit": "d4f62a11d61b49ff551d75aeab9a7dff2c2dc9a9",
+    "publishedAt": "2026-10-21T23:09:31Z"
   },
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -119,7 +119,8 @@
     "v1.1.31-to-v1.1.32-managed-update-observation-pending",
     "v1.1.32-to-v1.1.33-managed-update-observation-pending",
     "v1.1.33-to-v1.1.34-managed-update-observation-pending",
-    "v1.1.34-to-v1.1.35-managed-update-observation-pending"
+    "v1.1.34-to-v1.1.35-managed-update-observation-pending",
+    "v1.1.35-to-v1.1.36-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.36-contextual-command-actions-planned"
+  "nextAction": "v1.1.37-pdf-annotation-resume-planned"
 }
