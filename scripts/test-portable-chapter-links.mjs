@@ -13,6 +13,9 @@ test('default library links follow the library root and retain Chinese, encoded 
  assert.equal(parsePortableChapterLink(portableChapterUri('/','/a.md','A','a'),'/new').path,'/new/a.md')
  assert.match(markdownChapterLink('C:/库/a.md','标题','标题','C:/库'),/longedit:\/\/chapter/)
  assert.match(markdownChapterLink('C:/库/a.md','标题','标题'),/C:\/库\/a.md|C:\/%E5%BA%93\/a.md/)
+ const long='字'.repeat(1365);assert.ok(parsePortableChapterLink(portableChapterUri('C:/库','C:/库/a.md',long,long),'D:/库'))
+ assert.throws(()=>portableChapterUri('C:/库','C:/库/a.md','字'.repeat(1366),'a'),/标题或位置过长/)
+ assert.throws(()=>portableChapterUri('C:/库','C:/库/a.md','a','字'.repeat(1366)),/标题或位置过长/)
 })
 test('ambiguous or unavailable addresses never become a guessed local document',()=>{
  const uri=portableChapterUri('C:/库','C:/库/a.md','A','a')

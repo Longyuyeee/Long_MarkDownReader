@@ -1,0 +1,16 @@
+✔ default library links follow the library root and retain Chinese, encoded names and duplicate fragments (5.1541ms)
+✔ ambiguous or unavailable addresses never become a guessed local document (0.9259ms)
+✔ actual click preserves the source draft and reuses the target draft before precise navigation (110.5394ms)
+✔ late file checks cannot redirect a different document or library (45.5258ms)
+✔ actual heading reveal refuses a renamed heading instead of falling back to a different target (9.9471ms)
+✔ installed fixture uses Node builtins and the same chapter format as the production copy action (57.5544ms)
+✔ installed chapter evidence rejects partial tasks, changed identity, untrusted input or lost draft protection (12.5029ms)
+✔ output verifier retains exact prose and draft bytes while requiring actual mapped dependencies (3.9614ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 740.2186
