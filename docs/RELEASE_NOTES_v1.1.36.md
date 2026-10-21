@@ -6,8 +6,8 @@
 - 修复 Ctrl+P 同时触发 Markdown 双栏预览的快捷键冲突。
 - 附件引用列表正确显示 Windows 和网络资料库的相对路径。
 
-当前为发布前候选；原安装器完成构建、同包复核与公开下载核对后更新发布记录。
+安装包构建和同包完整复核已完成；公开下载核对结果见发布记录。
 
 社区未签名版本（community-unsigned），支持手动下载安装。托管自动更新路径单独观察。
 
-[使用方法](Context_Command_User_Guide.md) · [发布记录](V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md)
+[使用方法](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/Context_Command_User_Guide.md) · [发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_36_Unsigned_Community_Release_Audit_2026-10-22.md)
