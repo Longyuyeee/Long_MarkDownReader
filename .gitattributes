@@ -357,3 +357,8 @@ docs/evidence/v1131-publication-*/** -text whitespace=cr-at-eol
 docs/evidence/v1131-publication-*/**/*.log -text -diff
 docs/evidence/v1131-workbook-development/** -text whitespace=cr-at-eol
 docs/evidence/v1131-workbook-development/**/*.log -text -diff
+
+/docs/evidence/v1132-*/** -text
+/docs/evidence/v1.1.32-release/** -text
+/docs/evidence/v1-1-32-candidate-lifecycle/** -text
+/docs/evidence/v1132-*/**/*.log -diff

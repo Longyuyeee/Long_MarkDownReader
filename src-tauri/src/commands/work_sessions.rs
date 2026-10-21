@@ -120,7 +120,7 @@ fn range(value: f64, min: f64, max: f64) -> Result<(), String> {
         Err("现场阅读位置超出有效范围".into())
     }
 }
-fn validate(bundle: &PortableWorkSession) -> Result<(), String> {
+pub(crate) fn validate(bundle: &PortableWorkSession) -> Result<(), String> {
     if bundle.kind != "longedit-work-session" || bundle.schema_version != 1 {
         return Err("这不是支持的 Long编辑工作现场文件".into());
     }

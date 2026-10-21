@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "channel": "main-development",
   "developmentTargetVersion": "1.1.32",
-  "runtimeBaseVersion": "1.1.31",
+  "runtimeBaseVersion": "1.1.32",
   "publicVersion": "1.1.31",
   "publicTag": "v1.1.31",
   "publicTagCommit": "d3072311171f12f717d456193fa3d035518f683a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-91-v1.1.31-published",
-  "binaryVersionTransition": "v1.1.31-public-release-published",
-  "displayLabel": "v1.1.31 已发布 · 下一目标 v1.1.32（工作现场恢复接续）",
+  "currentStage": "M8-92-v1.1.32-version-candidate",
+  "binaryVersionTransition": "v1.1.32-quality-gate-pending",
+  "displayLabel": "v1.1.32 工作现场恢复接续候选 · 当前公开 v1.1.31",
   "activeSlice": {
-    "id": "v1.1.31-workbook-entry-validation",
-    "status": "published-with-installed-workflows-and-public-assets-verified",
-    "document": "docs/V1_1_31_Unsigned_Community_Release_Audit_2026-10-21.md"
+    "id": "v1.1.32-workspace-restore-continuity",
+    "status": "candidate-validation-pending",
+    "document": "docs/V1_1_32_Unsigned_Community_Release_Audit_2026-10-21.md"
   }
 }

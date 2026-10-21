@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> v1.1.32 正在进行发布前检查：备份后的文件、阅读位置和参考资料接续。[本版说明](docs/RELEASE_NOTES_v1.1.32.md)。
+
 > **v1.1.31 已正式发布**：XLSX 连续录入、规则检查与可撤销修正。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31) · [发布说明](docs/RELEASE_NOTES_v1.1.31.md)。
 
 

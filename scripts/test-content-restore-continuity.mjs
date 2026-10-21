@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import vm from 'node:vm'
+import ts from 'typescript'
+import {test} from 'node:test'
+const exports={};vm.runInNewContext(ts.transpile(fs.readFileSync('src/utils/portableWorkSession.ts','utf8'),{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}),{exports,TextEncoder})
+const scene=()=>({kind:'longedit-work-session',schemaVersion:1,name:'恢复',savedAt:1,files:[{relativePath:'旧目录/a.md',pinned:true,view:{scrollTop:150,scrollLeft:0}},{relativePath:'旧目录/下层/b.pdf'},{relativePath:'其他/a.md'}],activePath:'旧目录/a.md',reference:{relativePath:'旧目录/下层/b.pdf',query:'引用',page:2}})
+test('one folder mapping preserves file identity, active tab, view and reference including nested paths',()=>{const original=scene(),mapped=exports.remapPortableDirectory(original,'旧目录','资料/新目录');assert.equal(mapped.files[0].relativePath,'资料/新目录/a.md');assert.equal(mapped.files[0].view.scrollTop,150);assert.equal(mapped.files[0].pinned,true);assert.equal(mapped.reference.relativePath,'资料/新目录/下层/b.pdf');assert.equal(mapped.activePath,mapped.files[0].relativePath);assert.equal(original.files[0].relativePath,'旧目录/a.md');assert.equal(exports.remapPortableDirectory(original,'旧目录','').files[0].relativePath,'a.md')})
+test('a conflicting folder mapping is atomic and cannot merge two document identities',()=>{const original=scene(),before=JSON.stringify(original);assert.throws(()=>exports.remapPortableDirectory(original,'旧目录','其他'),/重复/);assert.equal(JSON.stringify(original),before);assert.throws(()=>exports.remapPortableDirectory(original,'旧目录','../外部'))})
+test('skipping selected documents changes only opening preview, not the repairable source record',()=>{const original=scene(),selected=exports.selectedPortableSession(original,['旧目录/下层/b.pdf'],true);assert.equal(selected.files.length,1);assert.equal(selected.activePath,'旧目录/下层/b.pdf');assert.equal(selected.reference.page,2);assert.equal(original.files.length,3);assert.equal(exports.selectedPortableSession(original,['其他/a.md'],true).reference,undefined);assert.throws(()=>exports.selectedPortableSession(original,[],false),/1–128/)})

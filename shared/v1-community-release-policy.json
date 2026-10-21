@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.31",
-  "releaseCandidate": true,
+  "appVersion": "1.1.32",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-21",
-  "currentStatus": "v1.1.31-community-release-published",
+  "currentStatus": "v1.1.32-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.30",
+    "previousPublicVersion": "1.1.31",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.30-to-1.1.31-pending",
-    "scope": "workbook-entry-validation"
+    "managedUpdaterUpgradePath": "1.1.31-to-1.1.32-pending",
+    "scope": "workspace-restore-continuity"
   },
   "targetRelease": {
-    "tag": "v1.1.31",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31",
+    "tag": "v1.1.32",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.32",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "d3072311171f12f717d456193fa3d035518f683a",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39553674389,
-    "hostedInstalledLifecycleRunId": 39560348810,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.31_x64_zh-CN.msi",
-        "sizeBytes": 77856768,
-        "sha256": "99b4c6ff4e6cea09cf4bc9f5cca5e5b296bb946f1e37ecdab877c1f44cbc25d1",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.31_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.31_x64-setup.exe",
-        "sizeBytes": 68517883,
-        "sha256": "38849d7804a62b002ae9e0ac0ec5b7321d2c434ac197d1ed0354410a24552c1d",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.31_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.31",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31",
-    "databaseId": 419279954,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "d3072311171f12f717d456193fa3d035518f683a",
-    "publishedAt": "2026-10-21T07:43:59Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -115,7 +84,8 @@
     "v1.1.27-to-v1.1.28-managed-update-observation-pending",
     "v1.1.28-to-v1.1.29-managed-update-observation-pending",
     "v1.1.29-to-v1.1.30-managed-update-observation-pending",
-    "v1.1.30-to-v1.1.31-managed-update-observation-pending"
+    "v1.1.30-to-v1.1.31-managed-update-observation-pending",
+    "v1.1.31-to-v1.1.32-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.32-workspace-restore-continuity-planned"
+  "nextAction": "validate-and-build-v1.1.32-installers"
 }

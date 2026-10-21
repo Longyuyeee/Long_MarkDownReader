@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "checks": [
+    "optional backup scene contains reading metadata and no unsaved body",
+    "restore completion can cancel continuation without changing current tabs",
+    "folder relocation maps descendants and reference; dirty source saves only repairable scene",
+    "clean source continues chosen files with mapped view and reference through existing route",
+    "input during pending native settings save blocks switching and keeps new draft plus saved scene",
+    "old content packages still restore without a session action",
+    "six styles retain normal motion and usable continuation dialog",
+    "narrow dialog keeps final action available"
+  ],
+  "errors": [],
+  "nativeBridgeMocked": true,
+  "evidenceLevel": "actual-vue-component-simulated-ipc",
+  "sourceUserContentIncluded": false
+}

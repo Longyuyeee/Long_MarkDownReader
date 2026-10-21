@@ -818,6 +818,9 @@ watch(() => [route.query.category, route.query.focus], () => {
   alignActiveSettingsCategory()
 })
 
+// Keep delayed settings writes aligned with an explicit restored-library switch.
+watch(() => store.activeLibraryPath, path => { config.value.activeLibraryPath = path }, { flush: 'sync' })
+
 // 深度监听配置对象，实现实时保存
 let saveDebounce: any = null
 watch(config, (newVal) => {
