@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.29",
+  "developmentTargetVersion": "1.1.30",
   "runtimeBaseVersion": "1.1.29",
-  "publicVersion": "1.1.28",
-  "publicTag": "v1.1.28",
-  "publicTagCommit": "eba705bce78744fa20d30a7acad422d7297f0ef1",
+  "publicVersion": "1.1.29",
+  "publicTag": "v1.1.29",
+  "publicTagCommit": "c177bbe9952684b61fcf0f253f77d88a6cfbcb9a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-86-v1.1.29-version-candidate",
-  "binaryVersionTransition": "v1.1.29-quality-gate-pending",
-  "displayLabel": "v1.1.29 PDF 批注与阅读笔记接续候选 · 当前公开 v1.1.28",
+  "currentStage": "M8-87-v1.1.29-published",
+  "binaryVersionTransition": "v1.1.29-public-release-published",
+  "displayLabel": "v1.1.29 已发布 · 下一目标 v1.1.30（Table 录入与纠错）",
   "activeSlice": {
     "id": "v1.1.29-pdf-reading-continuity",
-    "status": "candidate-validation-pending",
+    "status": "published-with-installed-workflows-and-public-assets-verified",
     "document": "docs/V1_1_28_Unsigned_Community_Release_Audit_2026-10-21.md"
   }
 }
