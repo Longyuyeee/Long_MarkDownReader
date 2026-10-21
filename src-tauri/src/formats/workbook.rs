@@ -61,6 +61,7 @@ pub struct WorkbookCapabilities {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkbookDocument {
+    pub date_1904: bool,
     pub path: String,
     pub size: u64,
     pub signature: String,

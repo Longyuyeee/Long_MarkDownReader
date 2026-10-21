@@ -38,7 +38,7 @@ for (const token of [
   "'外部 XLSX · 只读'",
   '外部文件只读分页预览 · 源文件未修改 · 外部链接不会打开',
   'if (isExternal.value) return false',
-  "if (isExternal.value && !['copy', 'linked-data', 'refresh'].includes(key)) return",
+  "if (isExternal.value && !['copy', 'linked-data', 'refresh', 'check-entry', 'check-filtered-entry'].includes(key)) return",
   'if (isExternal.value) return',
 ]) requireText(view, token, `external XLSX workspace is missing ${token}`)
 requireText(access, 'resolve_preview(&workbook)', 'external XLSX preview authorization regression is missing')

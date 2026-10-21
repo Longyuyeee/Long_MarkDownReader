@@ -1,5 +1,7 @@
 <template>
   <div class="workbook-view" :class="{ 'external-readonly': isExternal }" tabindex="-1" @paste="handleWorkbookPaste">
+    <n-dropdown trigger="manual" :show="entryMenu !== null" :x="entryMenu?.x || 0" :y="entryMenu?.y || 0" :options="entryMenuOptions" @select="handleEntryMenu" @clickoutside="entryMenu=null" @esc="entryMenu=null" />
+    <WorkbookEntryCheckDialog v-if="entryCheckOpen" :issues="entryIssues" :scope="entryCheckScope" :checked="entryChecked" :busy="entryChecking" :failure="entryCheckFailure" :editable="!isExternal && !sheetProtected" :plan="planEntryCorrection" @close="entryCheckOpen=false;entryCheckRequest++" @locate="locateEntryIssue" />
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
     <WorkspaceToolbar class="workbook-toolbar">
       <WorkspaceFileIdentity class="workbook-title">
@@ -832,6 +834,8 @@
                       frozen: row.index < effectiveFreeze.rows || column <= effectiveFreeze.columns,
                     },
                   ]"
+                  :data-row="row.index" :data-column="column - 1"
+                  @contextmenu.prevent.stop="openEntryMenu(row.index, column - 1, $event)"
                   :title="cellTitle(row.index, column - 1)"
                   :style="[cellStyleCss(row.index, column - 1), conditionalCellStyle(row.index, column - 1), frozenColumnStyle(column - 1)]"
                   @pointerdown="startCellSelection(row.index, column - 1, $event)"
@@ -899,7 +903,8 @@ import WorkspaceToolbar from '../components/workspace/WorkspaceToolbar.vue'
 import WorkspaceTabs from '../components/WorkspaceTabs.vue'
 import { recallWorkspaceViewState, rememberWorkspaceViewState } from '../services/workspaceViewState'
 import { confirmAppAction, promptAppAction } from '../services/appDialog'
-import { assertWorkbookListValue } from '../utils/workbookListValidation'
+import { assertWorkbookEntry, checkWorkbookEntry, workbookRuleLabel } from '../utils/workbookEntryValidation'
+import WorkbookEntryCheckDialog, { type WorkbookEntryIssue } from '../components/WorkbookEntryCheckDialog.vue'
 import WorkbookValidationForm, { type ValidationFields } from '../components/WorkbookValidationForm.vue'
 import { h } from 'vue'
 import { useDialog, useMessage } from 'naive-ui'
@@ -939,7 +944,7 @@ interface WorkbookLinkedDataSummary { totalObjectCount: number; localPivotCount:
 interface WorkbookLinkedDataPolicy { mode: string; metadataVisible: boolean; refreshAllowed: boolean; objectEditingAllowed: boolean; externalTargetsFollowed: boolean; sensitiveFieldsExposed: boolean }
 interface WorkbookLinkedData { pivotTables: WorkbookPivotTable[]; slicers: WorkbookSlicer[]; externalLinks: WorkbookExternalLink[]; connections: WorkbookDataConnection[]; externalRelationshipCount: number; summary: WorkbookLinkedDataSummary; policy: WorkbookLinkedDataPolicy }
 interface WorkbookProtection { enabled: boolean; lockStructure: boolean; lockWindows: boolean; lockRevision: boolean; passwordProtected: boolean }
-interface WorkbookDocument { path: string; size: number; signature: string; sheets: string[]; definedNames: WorkbookDefinedName[]; linkedData: WorkbookLinkedData; protection: WorkbookProtection }
+interface WorkbookDocument { date1904?: boolean; path: string; size: number; signature: string; sheets: string[]; definedNames: WorkbookDefinedName[]; linkedData: WorkbookLinkedData; protection: WorkbookProtection }
 interface WorkbookCellStyle {
   styleId: number
   namedStyle?: string
@@ -1736,14 +1741,7 @@ const conditionalCellStyle = (row: number, column: number): CSSProperties => {
   }
   return result
 }
-const validationLabel = (validation: WorkbookDataValidation) => {
-  if (validation.kind === 'list') return `列表 ${validation.formula1 || ''}`
-  if (validation.kind === 'whole') return `整数 ${validation.operator || 'between'} ${validation.formula1 || ''}${validation.formula2 ? `～${validation.formula2}` : ''}`
-  if (validation.kind === 'decimal') return `数值 ${validation.operator || 'between'} ${validation.formula1 || ''}${validation.formula2 ? `～${validation.formula2}` : ''}`
-  if (validation.kind === 'textLength') return `文本长度 ${validation.operator || 'between'}`
-  if (validation.kind === 'custom') return `自定义公式 ${validation.formula1 || ''}`
-  return validation.kind
-}
+const validationLabel = workbookRuleLabel
 const tableSelection = computed(() => {
   const area = selectionAreas.value.length === 1 ? selectionBounds.value : null
   if (!area || area.top >= area.bottom || area.left > area.right) return null
@@ -2343,6 +2341,8 @@ const workbookToolOptions = computed(() => [
   { label: '收起工具面板', key: 'none', disabled: activeToolPanel.value === 'none' },
 ])
 const workbookActionOptions = computed(() => [
+  { label: '检查所选区域…', key: 'check-entry', disabled: !selectedCell.value || saving.value || entryChecking.value },
+  { label: '检查筛选结果…', key: 'check-filtered-entry', disabled: !activeDataRegion.value || saving.value || entryChecking.value },
   { label: '复制选区', key: 'copy', disabled: !selectedCell.value || saving.value },
   ...(!isExternal.value ? [
     { label: '粘贴文本（自动识别）', key: 'paste', disabled: !selectedCell.value || saving.value || sheetProtected.value },
@@ -2373,8 +2373,10 @@ const handleWorkbookToolSelect = (key: string) => {
   activeToolPanel.value = activeToolPanel.value === target ? 'none' : target
 }
 const handleWorkbookAction = async (key: string) => {
-  if (isExternal.value && !['copy', 'linked-data', 'refresh'].includes(key)) return
-  if (key === 'copy') await copySelection()
+  if (isExternal.value && !['copy', 'linked-data', 'refresh', 'check-entry', 'check-filtered-entry'].includes(key)) return
+  if (key === 'check-entry') await checkEntries('selection')
+  else if (key === 'check-filtered-entry') await checkEntries('filtered')
+  else if (key === 'copy') await copySelection()
   else if (key === 'paste') await pasteSelection()
   else if (key === 'recalculate') recalculateFormulas()
   else if (key === 'convert-table') await convertSheet()
@@ -2394,6 +2396,106 @@ const frozenColumnStyle = (column: number, header = false): CSSProperties => col
   ? { position: 'sticky', left: `${52 + columnPixels.value.slice(0, column).reduce((total, width) => total + width, 0)}px`, zIndex: header ? 25 : 17 }
   : {}
 
+// Checks bind to the document, draft and exact coordinates; scrolling never changes scope.
+const rulesAt = (row: number, column: number) => (sheetInfo.value?.dataValidations || []).filter(rule => rule.ranges.some(range => containsCell(range, row, column)))
+const assertEntry = (edit: {row:number;column:number;input:string;kind:string}, unchanged=false) => {
+  try { assertWorkbookEntry(edit, rulesAt(edit.row,edit.column), !!workbook.value?.date1904, unchanged) }
+  catch (cause) { throw Error(`${columnLabel(edit.column)}${edit.row+1}：${String(cause).replace(/^Error:\s*/, '')}`) }
+}
+const entryMenu = ref<{x:number;y:number}|null>(null)
+const entryChecking = ref(false), entryCheckOpen = ref(false), entryCheckFailure = ref(''), entryCheckScope = ref(''), entryChecked = ref(0), entryIssues = ref<WorkbookEntryIssue[]>([])
+let entryCheckRequest = 0
+const entrySnapshot = () => JSON.stringify([workbookDocumentEpoch,generation,workbookPath.value,store.libraryPath,isExternal.value,workbook.value?.signature,activeSheet.value,selectionAreas.value,selectedCell.value,filterColumn.value,filterQuery.value,sortColumn.value,sortDirection.value,[...drafts.value],[...styleDrafts.value],[...rowHeightDrafts.value],[...columnWidthDrafts.value],[...mergeDrafts.value],objectDrafts.value])
+let entryCheckSnapshot = ''
+const entryMenuOptions = computed(() => [
+  {label:'检查所选区域…',key:'selection',disabled:saving.value || entryChecking.value},
+  {label:'检查筛选结果…',key:'filtered',disabled:!activeDataRegion.value || saving.value || entryChecking.value},
+  ...(!isExternal.value ? [{label: selectedValidation.value ? '编辑录入规则…' : '设置录入规则…',key:'rule',disabled:!canEditDataValidation.value}] : []),
+])
+const openEntryMenu = (row:number,column:number,event:MouseEvent) => {
+  if (!isInSelection(row,column)) selectCell(row,column)
+  entryMenu.value = {x:event.clientX,y:event.clientY}
+}
+const handleEntryMenu = (key:string) => {
+  entryMenu.value=null
+  if (key==='rule') { void editDataValidationRule(selectedValidation.value ? 'update' : 'create'); return }
+  void checkEntries(key==='filtered'?'filtered':'selection')
+}
+const checkEntries = async (scope:'selection'|'filtered') => {
+  if (!workbook.value || !sheetInfo.value || saving.value || entryChecking.value || updatingStructure.value) return
+  commitFormulaInput()
+  if(selectedCell.value && formulaInput.value!==originalInput(cellAt(selectedCell.value.row,selectedCell.value.column))) return
+  const request=++entryCheckRequest, snapshot=entrySnapshot(), sheet=activeSheet.value, info=sheetInfo.value
+  const current=()=>request===entryCheckRequest && snapshot===entrySnapshot() && !saving.value && !updatingStructure.value
+  entryCheckOpen.value=true;entryChecking.value=true;entryCheckFailure.value='';entryIssues.value=[];entryChecked.value=0
+  entryCheckScope.value=scope==='filtered'?'筛选结果（不含标题和隐藏行，按原单元格位置）':'所选区域（包含隐藏单元格）'
+  try {
+    let areas=selectionAreas.value.map(area=>({...area}))
+    const region=activeDataRegion.value
+    if(scope==='filtered') {
+      if(!region) throw Error('请先选择带筛选的区域或 Table')
+      if(region.range.bottom-region.range.top>MAX_DATA_VIEW_ROWS) throw Error('筛选范围过大，请缩小区域后检查；本次未检查')
+      areas=[{...region.range,top:region.range.top+1}]
+    }
+    const positions=new Map<string,{row:number;column:number}>()
+    for(const area of areas) for(let row=area.top;row<=area.bottom;row++) for(let column=area.left;column<=area.right;column++) {
+      if(column>=256 || row>=1048576) throw Error('范围超出当前工作面，请缩小选区')
+      positions.set(`${row}:${column}`,{row,column})
+      if(positions.size>MAX_BATCH_CELLS) throw Error('一次最多检查 10,000 个单元格，请缩小范围；本次未检查')
+    }
+    if(!positions.size) throw Error('请先选择要检查的单元格')
+    const inspect=()=>invoke<WorkbookDocument>(isExternal.value?'read_external_workbook_file':'read_workbook_file',{...(isExternal.value?{}:{libraryRoot:store.libraryPath}),path:workbookPath.value})
+    const before=await inspect()
+    if(!current()) throw Error('文档、选区或草稿已有变化，请重新检查')
+    if(before.signature!==workbook.value?.signature) throw Error('磁盘文件已变化，请先处理外部修改；当前草稿保留')
+    const rows=new Map(loadedRows.value),states=new Map(sourceRowStates.value)
+    const offsets=[...new Set([...positions.values()].filter(p=>p.row<info.totalRows && !rows.has(p.row)).map(p=>Math.floor(p.row/PAGE_ROWS)*PAGE_ROWS))]
+    for(const offset of offsets) {
+      const page=await readSheetPage(sheet,offset,PAGE_ROWS)
+      if(!current()) throw Error('文档、选区或草稿已有变化，请重新检查')
+      page.rows.forEach((row,index)=>rows.set(page.rowOffset+index,row));page.rowStates.forEach(state=>states.set(state.row,state))
+    }
+    const after=await inspect()
+    if(!current() || after.signature!==before.signature) throw Error('检查期间文件或草稿已变化，请重新检查；本次未修改')
+    for(const {row} of positions.values()) if(row<info.totalRows && !rows.has(row)) throw Error('部分记录未能完整读取，请重试；本次未检查')
+    // Merge only after every awaited read still belongs to this draft.
+    loadedRows.value=rows;sourceRowStates.value=states
+    const filtered=new Set(dataViewRows.value.filter(row=>!states.get(row)?.hidden))
+    const issues:WorkbookEntryIssue[]=[]
+    let checked=0
+    for(const {row,column} of positions.values()) {
+      if(scope==='filtered' && !filtered.has(row)) continue
+      const cell=cellAt(row,column),input=originalInput(cell),kind=cell.formula?'formula':cell.kind==='date'?cell.dateKind||'date':cell.kind==='text'?'string':cell.kind
+      const rules=rulesAt(row,column)
+      if(!rules.length) continue
+      checked++
+      for(const rule of rules) {
+        const result=checkWorkbookEntry({input,kind},rule,!!workbook.value?.date1904)
+        if(result.status!=='valid') issues.push({row,column,ruleIndex:info.dataValidations.indexOf(rule),address:`${sheet}!${columnLabel(column)}${row+1}`,input,status:result.status,reason:result.reason,blocking:rule.showErrorMessage,rule:workbookRuleLabel(rule),ranges:rule.ranges.map(rangeLabel).join('、')})
+      }
+    }
+    entryCheckSnapshot=snapshot;entryIssues.value=issues;entryChecked.value=checked
+  }catch(cause){if(request===entryCheckRequest) entryCheckFailure.value=String(cause).replace(/^Error:\s*/,'')}
+  finally{entryChecking.value=false}
+}
+const planEntryCorrection = (issue:WorkbookEntryIssue,input:string) => {
+  if(entryCheckSnapshot!==entrySnapshot() || saving.value || updatingStructure.value || isExternal.value || !isEditableCell(issue.row,issue.column)) throw Error('文档或草稿已有变化，或单元格不可编辑，请重新检查')
+  if(originalInput(cellAt(issue.row,issue.column))!==issue.input) throw Error('单元格已有变化，请重新检查')
+  if(input===issue.input) throw Error('内容没有变化')
+  const edit=inferEdit({sheet:activeSheet.value,row:issue.row,column:issue.column},input)
+  assertEntry(edit)
+  const snapshot=entrySnapshot()
+  return ()=>{
+    if(snapshot!==entrySnapshot() || saving.value || updatingStructure.value || !isEditableCell(issue.row,issue.column)) throw Error('预览后文档或草稿已有变化，请重新检查')
+    applyBatchInputs({sheet:activeSheet.value,row:issue.row,column:issue.column},[[input]])
+    formulaInput.value=selectedCell.value?originalInput(cellAt(selectedCell.value.row,selectedCell.value.column)):''
+  }
+}
+const locateEntryIssue = async (issue:WorkbookEntryIssue) => {
+  if(entryCheckSnapshot!==entrySnapshot() || saving.value) {entryCheckFailure.value='文档或草稿已有变化，请重新检查';return}
+  entryCheckOpen.value=false;selectCell(issue.row,issue.column)
+  await nextTick();scrollRef.value?.scrollTo({top:Math.max(0,rowOffset(issue.row)-80),left:Math.max(0,columnPixels.value.slice(0,issue.column).reduce((a,b)=>a+b,0)-80),behavior:'smooth'})
+}
 const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit => {
   validateWorkbookInput(input, input.startsWith('=') && input.length > 1 ? 'formula' : 'string')
   if (input.startsWith('=') && input.length > 1) return { ...selection, input, kind: 'formula' }
@@ -2401,7 +2503,7 @@ const inferEdit = (selection: CellSelection, input: string): WorkbookCellEdit =>
   if (/^(true|false)$/i.test(input)) return { ...selection, input: input.toLowerCase(), kind: 'boolean' }
   if (EDITABLE_ERROR_VALUES.has(input.toUpperCase())) return { ...selection, input: input.toUpperCase(), kind: 'error' }
   const source = sourceCellAt(selection.row, selection.column)
-  if (source.kind === 'date' && source.dateEditable) {
+  if ((source.kind === 'date' && source.dateEditable) || rulesAt(selection.row, selection.column).some(rule => rule.kind === 'date')) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return { ...selection, input, kind: 'date' }
     if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(input)) return { ...selection, input: input.replace('T', ' '), kind: 'datetime' }
     if (/^\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(input)) return { ...selection, input, kind: 'time' }
@@ -2530,7 +2632,7 @@ const commitFormulaInput = () => {
   // Reloads and recalculation also flush the formula bar. Validate only a new
   // input, not an unchanged existing value that predates the validation rule.
   if (formulaInput.value === originalInput(cellAt(selection.row, selection.column))) return
-  try { assertWorkbookListValue(formulaInput.value, validationAt(selection.row, selection.column)) }
+  try { assertEntry(inferEdit(selection, formulaInput.value), formulaInput.value === originalInput(sourceCellAt(selection.row, selection.column))) }
   catch (cause) { message.error(String(cause).replace(/^Error:\s*/, '')); return }
   const key = editKey(selection.sheet, selection.row, selection.column)
   const before = drafts.value.get(key)
@@ -2584,12 +2686,16 @@ const applyHistoryAction = (action: EditAction, direction: 'undo' | 'redo') => {
   }
   const changes = action.changes || []
   const last = changes[changes.length - 1]
-  const edit = last && (direction === 'undo' ? last.before : last.after)
-  if (edit && edit.sheet === activeSheet.value) {
-    selectedCell.value = { sheet: edit.sheet, row: edit.row, column: edit.column }
-    selectionAnchor.value = selectedCell.value
-    selectionAreas.value = [{ top: edit.row, bottom: edit.row, left: edit.column, right: edit.column }]
-    formulaInput.value = edit.input
+  if (last) {
+    const [sheet, rowText, columnText] = last.key.split('\u0000')
+    const row=Number(rowText),column=Number(columnText)
+    if(sheet===activeSheet.value) {
+      selectedCell.value={sheet,row,column};selectionAnchor.value=selectedCell.value
+      selectionAreas.value=[{top:row,bottom:row,left:column,right:column}]
+      // Returning to the source value must also reset the formula bar, or the
+      // next check/save would silently reapply the value that was just undone.
+      formulaInput.value=originalInput(cellAt(row,column))
+    }
   }
 }
 const undo = () => { if (saving.value) return; const action = undoStack.value.pop(); if (action) { applyHistoryAction(action, 'undo'); redoStack.value.push(action) } }
@@ -3565,7 +3671,7 @@ const applyBatchInputs = (start: CellSelection, matrix: string[][], cells?: Work
     const metadata = cells?.[rowOffset]?.[columnOffset]
     if (metadata) validateWorkbookInput(input, metadata.kind)
     const edit = metadata ? { ...selection, input, kind: metadata.kind } : inferEdit(selection, input)
-    assertWorkbookListValue(input, validationAt(selection.row, selection.column), input === originalInput(source), edit.kind === 'formula')
+    assertEntry(edit, input === originalInput(source) && edit.kind === (source.formula ? 'formula' : source.kind === 'text' ? 'string' : source.kind === 'date' ? source.dateKind || 'date' : source.kind))
     const sourceKind = source.formula ? 'formula' : source.kind === 'text' ? 'string' : source.kind === 'date' ? source.dateKind || 'date' : source.kind
     const after = input === originalInput(source) && edit.kind === sourceKind ? undefined : edit
     if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
@@ -3672,7 +3778,7 @@ const clearSelection = () => {
       const before = drafts.value.get(key)
       const source = sourceCellAt(row, column)
       if (!before && ((source.kind === 'date' && !source.dateEditable) || (source.kind === 'error' && !EDITABLE_ERROR_VALUES.has(source.value)))) throw new Error(`${columnLabel(column)}${row + 1} 当前类型暂不支持区域写入`)
-      assertWorkbookListValue('', validationAt(row,column), originalInput(source)==='', false)
+      assertEntry({row,column,input:'',kind:'empty'}, originalInput(source)==='')
       const selection = { sheet: focus.sheet, row, column }
       const after = source.kind === 'empty' ? undefined : inferEdit(selection, '')
       if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, before, after })
@@ -3763,7 +3869,7 @@ const commitFill = async (source: SelectionArea | null, preview: SelectionArea |
     for (const item of destination) {
       if (item.row < (sheetInfo.value?.totalRows || 0) && !loadedRows.value.has(item.row)) throw new Error('填充目标包含尚未载入的数据，请先载入；本次未修改')
       validateWorkbookInput(item.input, item.kind)
-      assertWorkbookListValue(item.input, validationAt(item.row, item.column), item.input === originalInput(sourceCellAt(item.row, item.column)), item.kind === 'formula')
+      assertEntry(item, item.input === originalInput(sourceCellAt(item.row, item.column)) && item.kind === (sourceCellAt(item.row,item.column).kind === 'text' ? 'string' : sourceCellAt(item.row,item.column).kind))
       if (arrayFormulaAt(item.row, item.column)) throw new Error(`${columnLabel(item.column)}${item.row + 1} 位于只读数组公式区域`)
       const key = editKey(activeSheet.value, item.row, item.column)
       const before = drafts.value.get(key)

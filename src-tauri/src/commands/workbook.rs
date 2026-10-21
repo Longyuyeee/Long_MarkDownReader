@@ -913,6 +913,7 @@ impl WorkbookEngine for CalamineWorkbookEngine {
             return Err("XLSX 不包含可读取的工作表".into());
         }
         Ok(WorkbookDocument {
+            date_1904: workbook.has_1904_epoch(),
             path: path.to_string_lossy().into_owned(),
             size: metadata.len(),
             signature: workbook_signature(&metadata, &bytes),
@@ -1014,6 +1015,7 @@ fn inspect_external_workbook_path(path: &Path) -> Result<WorkbookDocument, Strin
         return Err("XLSX 不包含可读取的工作表".into());
     }
     let document = WorkbookDocument {
+        date_1904: workbook.has_1904_epoch(),
         path: path.to_string_lossy().into_owned(),
         size: metadata.len(),
         signature: workbook_signature(&metadata, &before),

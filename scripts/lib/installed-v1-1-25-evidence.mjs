@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const findReplaceChecks=['three-mode-exact-selected-duplicate','three-mode-single-undo-preserves-live-drafts','case-word-and-next-previous','all-preview-cancel-keeps-disk','literal-all-replace-and-single-undo','text-selected-replace-and-native-find','switch-closes-old-preview-and-keeps-drafts','explicit-save-close-and-reopen','external-conflict-copy-keeps-current-draft','exact-output-bytes-and-shared-image']
 export function validateInstalledFindReplace(report,manifest){
- assert.ok(['1.1.25','1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.25','1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/)
  assert.match(report.executableSha256,/^[a-f0-9]{64}$/);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-document-find-replace-trusted-ui-and-output-bytes')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[key],false,key)

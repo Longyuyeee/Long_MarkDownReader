@@ -1330,6 +1330,9 @@ fn v118_pages_mixed_case_assets_directory_uses_the_same_rule_as_source_scanning(
 
 #[test]
 fn v118_pages_fixed_fixture_timing_reports_first_page_and_continuation_separately() {
+    // This measures a completed page, not the interactive time-slicing contract.
+    // Use the same bounded fixture budget as other completion tests so parallel
+    // I/O load cannot turn a timing sample into an unrelated Preparing response.
     let fixture = Fixture::new(240);
     let snapshot = Arc::new(fixture.snapshot());
     let mut observations = Vec::new();
@@ -1348,7 +1351,7 @@ fn v118_pages_fixed_fixture_timing_reports_first_page_and_continuation_separatel
             .unwrap();
             let started = Instant::now();
             let first = session
-                .request(&request, 0, SearchLimits::default())
+                .request(&request, 0, limits())
                 .unwrap();
             first_times.push(started.elapsed().as_micros() as u64);
             assert_eq!(first.scan_state, ScanState::Ready);
@@ -1356,7 +1359,7 @@ fn v118_pages_fixed_fixture_timing_reports_first_page_and_continuation_separatel
             request.cursor = first.next_cursor;
             let started = Instant::now();
             let next = session
-                .request(&request, 0, SearchLimits::default())
+                .request(&request, 0, limits())
                 .unwrap();
             next_times.push(started.elapsed().as_micros() as u64);
             assert_eq!(next.page_offset, Some(40));

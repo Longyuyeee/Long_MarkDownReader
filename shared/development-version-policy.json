@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "channel": "main-development",
-  "developmentTargetVersion": "1.1.31",
-  "runtimeBaseVersion": "1.1.30",
-  "publicVersion": "1.1.30",
-  "publicTag": "v1.1.30",
-  "publicTagCommit": "c72848e2f67347541584b6a58e6fb840e8ac7dc4",
+  "developmentTargetVersion": "1.1.32",
+  "runtimeBaseVersion": "1.1.31",
+  "publicVersion": "1.1.31",
+  "publicTag": "v1.1.31",
+  "publicTagCommit": "d3072311171f12f717d456193fa3d035518f683a",
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
-  "currentStage": "M8-89-v1.1.30-published",
-  "binaryVersionTransition": "v1.1.30-public-release-published",
-  "displayLabel": "v1.1.30 已发布 · 下一目标 v1.1.31（XLSX 连续录入）",
+  "currentStage": "M8-91-v1.1.31-published",
+  "binaryVersionTransition": "v1.1.31-public-release-published",
+  "displayLabel": "v1.1.31 已发布 · 下一目标 v1.1.32（工作现场恢复接续）",
   "activeSlice": {
-    "id": "v1.1.30-table-entry-validation",
+    "id": "v1.1.31-workbook-entry-validation",
     "status": "published-with-installed-workflows-and-public-assets-verified",
-    "document": "docs/V1_1_30_Unsigned_Community_Release_Audit_2026-10-21.md"
+    "document": "docs/V1_1_31_Unsigned_Community_Release_Audit_2026-10-21.md"
   }
 }

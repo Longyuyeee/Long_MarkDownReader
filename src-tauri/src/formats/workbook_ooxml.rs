@@ -51,13 +51,7 @@ const MAX_CELL_EDITS: usize = 10_000;
 const MAX_CELL_TEXT: usize = 32_767;
 const MAX_FORMULA_TEXT: usize = 8_192;
 const EDITABLE_ERROR_VALUES: [&str; 7] = [
-    "#NULL!",
-    "#DIV/0!",
-    "#VALUE!",
-    "#REF!",
-    "#NAME?",
-    "#NUM!",
-    "#N/A",
+    "#NULL!", "#DIV/0!", "#VALUE!", "#REF!", "#NAME?", "#NUM!", "#N/A",
 ];
 const MAX_ARRAY_FORMULAS: usize = 1_024;
 const MAX_ARRAY_FORMULA_CELLS: usize = 1_000_000;
@@ -988,8 +982,8 @@ fn parse_date_time_edit(edit: &WorkbookCellEdit, date_1904: bool) -> Result<f64,
                 "1900 日期系统不接受 1899-12-31 之前的日期".into()
             });
         }
-        let leap_bug_offset = !date_1904
-            && date >= NaiveDate::from_ymd_opt(1900, 3, 1).expect("valid leap boundary");
+        let leap_bug_offset =
+            !date_1904 && date >= NaiveDate::from_ymd_opt(1900, 3, 1).expect("valid leap boundary");
         days as f64 + if leap_bug_offset { 1.0 } else { 0.0 }
     } else {
         0.0
@@ -1055,21 +1049,60 @@ fn validation_contains(validation: &WorkbookDataValidation, row: usize, column: 
     })
 }
 
-fn compare_validation_number(value: f64, validation: &WorkbookDataValidation) -> Option<bool> {
-    let first = validation.formula1.as_deref()?.parse::<f64>().ok()?;
-    let second = validation
-        .formula2
-        .as_deref()
-        .and_then(|value| value.parse::<f64>().ok());
+fn compare_validation_decimal(left: &str, right: &str) -> Option<std::cmp::Ordering> {
+    use std::cmp::Ordering;
+    let (an, ad, ap) = super::table::decimal_parts(left)?;
+    let (bn, bd, bp) = super::table::decimal_parts(right)?;
+    let sign = |negative, digits: &str| {
+        if digits == "0" {
+            0
+        } else if negative {
+            -1
+        } else {
+            1
+        }
+    };
+    let (asign, bsign) = (sign(an, &ad), sign(bn, &bd));
+    if asign != bsign {
+        return Some(asign.cmp(&bsign));
+    }
+    if asign == 0 {
+        return Some(Ordering::Equal);
+    }
+    let width = ad.len().max(bd.len());
+    let a = format!("{ad:0<width$}");
+    let b = format!("{bd:0<width$}");
+    let result = ap.cmp(&bp).then(a.cmp(&b));
+    Some(if an { result.reverse() } else { result })
+}
+fn compare_validation_number(value: &str, validation: &WorkbookDataValidation) -> Option<bool> {
+    use std::cmp::Ordering::*;
+    let constant = |text: &str| {
+        text.trim()
+            .strip_prefix('=')
+            .unwrap_or(text.trim())
+            .to_string()
+    };
+    let first = constant(validation.formula1.as_deref()?);
+    let a = compare_validation_decimal(value, &first)?;
+    let second = validation.formula2.as_deref().map(constant);
+    if matches!(
+        validation.operator.as_deref().unwrap_or("between"),
+        "between" | "notBetween"
+    ) {
+        compare_validation_decimal(value, second.as_deref()?)?;
+    }
     Some(match validation.operator.as_deref().unwrap_or("between") {
-        "between" => value >= first && value <= second?,
-        "notBetween" => value < first || value > second?,
-        "equal" => value == first,
-        "notEqual" => value != first,
-        "lessThan" => value < first,
-        "lessThanOrEqual" => value <= first,
-        "greaterThan" => value > first,
-        "greaterThanOrEqual" => value >= first,
+        "between" => a != Less && compare_validation_decimal(value, second.as_deref()?)? != Greater,
+        "notBetween" => {
+            a == Less || compare_validation_decimal(value, second.as_deref()?)? == Greater
+        }
+        "equal" => a == Equal,
+        "notEqual" => a != Equal,
+        "lessThan" => a == Less,
+        "lessThanOrEqual" => a != Greater,
+        "greaterThan" => a == Greater,
+        "greaterThanOrEqual" => a != Less,
         _ => return None,
     })
 }
@@ -1077,6 +1110,7 @@ fn compare_validation_number(value: f64, validation: &WorkbookDataValidation) ->
 fn validate_edit_against_rules(
     edit: &WorkbookCellEdit,
     validations: &[WorkbookDataValidation],
+    date_1904: bool,
 ) -> Result<(), String> {
     for validation in validations
         .iter()
@@ -1097,7 +1131,11 @@ fn validate_edit_against_rules(
         let accepted = match validation.kind.as_str() {
             "list" => validation.formula1.as_deref().and_then(|formula| {
                 let formula = formula.strip_prefix('=').unwrap_or(formula);
-                if formula.starts_with('"') && formula.ends_with('"') && formula.len() >= 2 {
+                if formula.starts_with('"')
+                    && formula.ends_with('"')
+                    && formula.len() >= 2
+                    && !formula[1..formula.len() - 1].contains('"')
+                {
                     Some(
                         formula[1..formula.len() - 1]
                             .split(',')
@@ -1107,13 +1145,34 @@ fn validate_edit_against_rules(
                     None
                 }
             }),
-            "whole" | "decimal" => edit
-                .input
-                .parse::<f64>()
-                .ok()
-                .and_then(|value| compare_validation_number(value, validation)),
+            "whole" | "decimal" => match super::table::decimal_parts(&edit.input) {
+                Some((_, digits, power))
+                    if edit.kind == "number"
+                        && (validation.kind != "whole"
+                            || digits == "0"
+                            || power >= digits.len() as i32) =>
+                {
+                    compare_validation_number(&edit.input, validation)
+                }
+                _ => Some(false),
+            },
+            "date" => {
+                let serial = match edit.kind.as_str() {
+                    "date" | "datetime" => parse_date_time_edit(edit, date_1904)
+                        .ok()
+                        .map(|value| value.to_string()),
+                    "number" if super::table::decimal_parts(&edit.input).is_some() => {
+                        Some(edit.input.clone())
+                    }
+                    _ => None,
+                };
+                match serial {
+                    Some(value) => compare_validation_number(&value, validation),
+                    None => Some(false),
+                }
+            }
             "textLength" => {
-                compare_validation_number(edit.input.chars().count() as f64, validation)
+                compare_validation_number(&edit.input.chars().count().to_string(), validation)
             }
             "none" => Some(true),
             _ => None,
@@ -18719,7 +18778,7 @@ pub fn patch_workbook(
         }
         let structure = read_sheet_structure(&xml.data, 0, MAX_XLSX_ROWS, MAX_XLSX_COLUMNS)?;
         for edit in sheet_edits {
-            validate_edit_against_rules(edit, &structure.data_validations)?;
+            validate_edit_against_rules(edit, &structure.data_validations, date_1904)?;
         }
     }
     for edit in row_height_edits {
@@ -18844,14 +18903,13 @@ pub fn patch_workbook(
 mod tests {
     use super::{
         audit_workbook_pivot_multi_axis_isolated, load_package, parse_chart_part,
-        patch_calc_chain_rows,
-        patch_sheet_structure_axis, patch_workbook, patch_workbook_conditional_format,
-        patch_workbook_data_validation, patch_workbook_defined_name, patch_workbook_drawing,
-        patch_workbook_filter, patch_workbook_structure, patch_workbook_table, read_array_formulas,
-        read_sheet_formulas, read_workbook_defined_names, read_workbook_linked_data,
-        read_workbook_sheet_layout, rebuild_workbook_pivot_aggregation_variant_isolated,
-        validate_plain_structure_sheet, validate_workbook_package, write_package,
-        MAX_ARRAY_DIAGNOSTIC_CELLS,
+        patch_calc_chain_rows, patch_sheet_structure_axis, patch_workbook,
+        patch_workbook_conditional_format, patch_workbook_data_validation,
+        patch_workbook_defined_name, patch_workbook_drawing, patch_workbook_filter,
+        patch_workbook_structure, patch_workbook_table, read_array_formulas, read_sheet_formulas,
+        read_workbook_defined_names, read_workbook_linked_data, read_workbook_sheet_layout,
+        rebuild_workbook_pivot_aggregation_variant_isolated, validate_plain_structure_sheet,
+        validate_workbook_package, write_package, MAX_ARRAY_DIAGNOSTIC_CELLS,
     };
     use crate::formats::workbook::{
         WorkbookCellEdit, WorkbookChartDataLabels, WorkbookConditionalColorScale,
@@ -18942,10 +19000,7 @@ mod tests {
             let Data::DateTime(datetime) = values.get_value((1, 4)).unwrap() else {
                 panic!("datetime cell did not reopen as a typed datetime")
             };
-            assert_eq!(
-                datetime.to_ymd_hms_milli(),
-                (2024, 2, 29, 13, 14, 15, 250)
-            );
+            assert_eq!(datetime.to_ymd_hms_milli(), (2024, 2, 29, 13, 14, 15, 250));
 
             let time_output = patch_workbook(
                 &source,
@@ -22041,6 +22096,204 @@ mod tests {
         let layout = read_workbook_sheet_layout(&deleted, "Data", 0, 10, 10).unwrap();
         assert_eq!(layout.data_validations.len(), 1);
         assert_eq!(layout.data_validations[0].kind, "whole");
+    }
+
+    fn entry_rule(kind: &str, first: &str, second: &str) -> WorkbookDataValidation {
+        WorkbookDataValidation {
+            ranges: vec![WorkbookMergeRange {
+                top: 0,
+                bottom: 4,
+                left: 0,
+                right: 0,
+            }],
+            kind: kind.into(),
+            operator: Some("between".into()),
+            formula1: Some(first.into()),
+            formula2: Some(second.into()),
+            allow_blank: false,
+            show_error_message: true,
+            error_title: None,
+            error: None,
+            prompt_title: None,
+            prompt: None,
+        }
+    }
+    fn entry_edit(input: &str, kind: &str) -> WorkbookCellEdit {
+        WorkbookCellEdit {
+            sheet: "Data".into(),
+            row: 0,
+            column: 0,
+            input: input.into(),
+            kind: kind.into(),
+        }
+    }
+    #[test]
+    fn workbook_entry_numeric_rules_require_numeric_integers_and_exact_bounds() {
+        let whole = entry_rule("whole", "1", "10");
+        for (value, kind) in [
+            ("1.5", "number"),
+            ("abc", "string"),
+            ("2", "string"),
+            ("", "empty"),
+        ] {
+            assert!(super::validate_edit_against_rules(
+                &entry_edit(value, kind),
+                &[whole.clone()],
+                false
+            )
+            .is_err());
+        }
+        for value in ["1", "10", "1.0", "1e1"] {
+            super::validate_edit_against_rules(
+                &entry_edit(value, "number"),
+                &[whole.clone()],
+                false,
+            )
+            .unwrap();
+        }
+        let exact = entry_rule("decimal", "9007199254740993123", "9007199254740993123");
+        assert!(super::validate_edit_against_rules(
+            &entry_edit("9007199254740993124", "number"),
+            &[exact],
+            false
+        )
+        .is_err());
+        let tiny = entry_rule("decimal", "0.1", "0.1");
+        assert!(super::validate_edit_against_rules(
+            &entry_edit("0.10000000000000001", "number"),
+            &[tiny],
+            false
+        )
+        .is_err());
+        for (left, right) in [("-100", "-2"), ("0", "0.01"), ("-0.01", "0")] {
+            assert_eq!(
+                super::compare_validation_decimal(left, right),
+                Some(std::cmp::Ordering::Less)
+            );
+        }
+    }
+    #[test]
+    fn workbook_entry_dates_respect_1900_and_1904_epochs() {
+        for (date, serial, epoch) in [
+            ("1900-01-01", "1", false),
+            ("1900-03-01", "61", false),
+            ("1904-01-01", "0", true),
+            ("1904-01-01 12:00", "0.5", true),
+        ] {
+            super::validate_edit_against_rules(
+                &entry_edit(date, if date.len() > 10 { "datetime" } else { "date" }),
+                &[entry_rule("date", serial, serial)],
+                epoch,
+            )
+            .unwrap();
+        }
+        for date in ["2023-02-29", "1900-02-29", "2026-10-21 24:00"] {
+            assert!(super::validate_edit_against_rules(
+                &entry_edit(date, "date"),
+                &[entry_rule("date", "1", "99999")],
+                false
+            )
+            .is_err());
+        }
+    }
+    #[test]
+    fn workbook_entry_unicode_advisory_unknown_and_overlapping_rules() {
+        super::validate_edit_against_rules(
+            &entry_edit("😀字", "string"),
+            &[entry_rule("textLength", "2", "2")],
+            false,
+        )
+        .unwrap();
+        let mut advisory = entry_rule("whole", "1", "10");
+        advisory.show_error_message = false;
+        super::validate_edit_against_rules(&entry_edit("20", "number"), &[advisory.clone()], false)
+            .unwrap();
+        assert!(super::validate_edit_against_rules(
+            &entry_edit("20", "number"),
+            &[advisory, entry_rule("whole", "1", "10")],
+            false
+        )
+        .is_err());
+        for rule in [
+            entry_rule("custom", "A1>0", ""),
+            entry_rule("list", "Options!A1:A3", ""),
+            entry_rule("decimal", "SUM(A1:A2)", "10"),
+        ] {
+            super::validate_edit_against_rules(&entry_edit("20", "number"), &[rule], false)
+                .unwrap();
+        }
+        super::validate_edit_against_rules(
+            &entry_edit("=A2", "formula"),
+            &[entry_rule("whole", "1", "10")],
+            false,
+        )
+        .unwrap();
+    }
+    #[test]
+    fn workbook_entry_package_rejection_is_atomic_and_other_parts_survive_save() {
+        let mut workbook = Workbook::new();
+        workbook
+            .add_worksheet()
+            .set_name("Data")
+            .unwrap()
+            .write_number(0, 0, 2)
+            .unwrap();
+        workbook
+            .add_worksheet()
+            .set_name("Other")
+            .unwrap()
+            .write_string(0, 0, "00123")
+            .unwrap();
+        let source = patch_workbook_data_validation(
+            &workbook.save_to_buffer().unwrap(),
+            &WorkbookDataValidationChange {
+                sheet: "Data".into(),
+                action: WorkbookDataValidationAction::Create,
+                validation_index: None,
+                validation: Some(entry_rule("whole", "1", "10")),
+            },
+        )
+        .unwrap();
+        let original = source.clone();
+        let mut good = entry_edit("3", "number");
+        good.row = 1;
+        assert!(super::patch_workbook(
+            &source,
+            &[good.clone(), entry_edit("1.5", "number")],
+            &[],
+            &[],
+            &[],
+            &[]
+        )
+        .is_err());
+        assert_eq!(source, original);
+        let output = super::patch_workbook(&source, &[good], &[], &[], &[], &[]).unwrap();
+        validate_workbook_package(&output).unwrap();
+        let before = super::load_package(&source).unwrap();
+        let after = super::load_package(&output).unwrap();
+        for entry in before.iter().filter(|entry| {
+            entry.name != "xl/worksheets/sheet1.xml"
+                && entry.name != "xl/calcChain.xml"
+                && entry.name != "xl/workbook.xml"
+        }) {
+            assert_eq!(
+                after
+                    .iter()
+                    .find(|out| out.name == entry.name)
+                    .unwrap()
+                    .data,
+                entry.data,
+                "{}",
+                entry.name
+            );
+        }
+        assert_eq!(
+            read_workbook_sheet_layout(&output, "Data", 0, 10, 10)
+                .unwrap()
+                .data_validations
+                .len(),
+            1
+        );
     }
 
     #[test]
