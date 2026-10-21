@@ -688,7 +688,7 @@
     </n-modal>
     <HistoryDiffDialog v-if="historyComparison" :path="historyComparison.entry.path" :timestamp="historyComparison.entry.timestamp" :draft="historyComparison.draft" :disk="historyComparison.disk" :historical="historyComparison.content" :busy="historyActionBusy" :error="historyActionError" @close="closeHistoryComparison" @copy="recoverHistory('copy')" @replace="recoverHistory('replace')" @partial="id => recoverHistory('partial', id)" />
     <LibraryFileOperations ref="fileOperations" :library-root="store.libraryPath" :libraries="store.libraries" :before-operate="beforeFileOperation" :after-operate="applyFileOperation" :after-cross-copy="applyCrossLibraryCopy" />
-    <AttachmentManagerDialog ref="attachmentManager" :library-root="store.libraryPath" :context-key="store.libraryPath + ':' + activeTabId" :capture-draft="captureAttachmentDraft" :apply-draft="applyAttachmentDraft" @open="path => handleNodeSelect([path])" />
+    <AttachmentManagerDialog ref="attachmentManager" :library-root="store.libraryPath" :context-key="store.libraryPath + ':' + activeTabId" :capture-draft="captureAttachmentDraft" :capture-reference-drafts="captureAttachmentReferenceDrafts" :apply-draft="applyAttachmentDraft" @open="openAttachmentReference" />
     <PdfReadingUpdateDialog ref="pdfReadingUpdate" :context="pdfReadingContext" :apply="applyPdfReadingUpdate" />
     <DocumentFindReplace ref="documentFind" :context-key="store.libraryPath+':'+activeTabId+':'+store.editorMode+':'+documentPreviewActive" :revision="activeTextTab?.content" v-bind="documentFindAdapter" />
     <MarkdownSectionActions ref="sectionActions" :context-key="store.libraryPath + ':' + activeTabId + ':' + store.editorMode + ':' + documentPreviewActive" :capture="captureSectionContext" :apply-change="applySectionChange" />
@@ -744,6 +744,7 @@ import TextConflictDialog, { type ConflictSnapshot } from '../components/TextCon
 import { restoreHistoryChange } from '../utils/historyDiff'
 import LibraryFileOperations from '../components/LibraryFileOperations.vue'
 import AttachmentManagerDialog from '../components/AttachmentManagerDialog.vue'
+import { attachmentDrafts } from '../utils/attachmentDrafts'
 import MarkdownSectionActions from '../components/MarkdownSectionActions.vue'
 import type { MarkdownSectionContext } from '../utils/markdownSectionContext'
 import type { SectionChange } from '../utils/markdownSections'
@@ -2654,6 +2655,18 @@ const refreshNode = async (path: string) => {
 const pendingEditorSaveLoad = ref(false)
 let editorLoadGeneration = 0
 const attachmentManager = ref<InstanceType<typeof AttachmentManagerDialog> | null>(null)
+const captureAttachmentReferenceDrafts = () => {
+  // A pending mode/file transition cannot provide a reliable active editor text.
+  if (editorLoading.value || editorModeChangeBusy.value || suppressEditorInput || fileOperationBusy.value || currentFileReloadBusy.value
+    || (activeIsMarkdown.value && (!isVditorReady || lastLoadedPath !== activeTabId.value)))
+    throw Error('正文正在加载或整理，请稍后刷新引用；草稿已保留。')
+  snapshotWindowDrafts()
+  return attachmentDrafts(store.libraryPath, allTabs.value)
+}
+const openAttachmentReference = (path: string) => {
+  snapshotWindowDrafts()
+  handleNodeSelect([path])
+}
 let attachmentOwner: { root:string; path:string; editor:any; tab:TabInfo; generation:number } | null = null
 const pendingAttachment = ref<{root:string;path:string}|null>(null)
 const captureAttachmentDraft = (path:string):string|null => {

@@ -4,7 +4,7 @@ use crate::services::{
     archive_dependencies as links, archive_edits, file_activity, library_visibility,
     workspace_guard::WorkspaceGuard,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs,
@@ -37,6 +37,12 @@ pub struct AttachmentUse {
     document: String,
     line: usize,
     count: usize,
+    source: &'static str,
+}
+#[derive(Deserialize)]
+pub struct AttachmentDraft {
+    document: String,
+    content: String,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -143,10 +149,36 @@ fn inspect(root: &str, document: &str, draft: Option<String>) -> Result<Attachme
         references: references.into_values().collect(),
     })
 }
+#[cfg(test)]
 fn incoming(root: &str, target: &str) -> Result<Vec<AttachmentUse>, String> {
+    incoming_with_drafts(root, target, vec![])
+}
+fn incoming_with_drafts(
+    root: &str,
+    target: &str,
+    drafts: Vec<AttachmentDraft>,
+) -> Result<Vec<AttachmentUse>, String> {
     let guard = WorkspaceGuard::new(root)?;
     let target = user_file(&guard, target)?;
-    let inventory = links::scan_for_move(root)?;
+    let mut overlays = BTreeMap::new();
+    let mut total = 0usize;
+    for draft in drafts {
+        let document = user_file(&guard, &draft.document)?;
+        if !markdown(&document) {
+            return Err("仅支持 Markdown 草稿引用检查".into());
+        }
+        let content = text(&document, Some(draft.content))?;
+        total += content.len();
+        if total > 32 * 1024 * 1024 {
+            return Err("当前草稿超过 32 MiB，引用检查未完成；草稿未改动".into());
+        }
+        if let Some(previous) = overlays.insert(document, content.clone()) {
+            if previous != content {
+                return Err("同一篇笔记存在不同草稿，请核对后再试；草稿均未改动".into());
+            }
+        }
+    }
+    let inventory = links::scan_for_move_with_drafts(root, &overlays)?;
     let mut uses: BTreeMap<String, AttachmentUse> = BTreeMap::new();
     for evidence in inventory.evidence() {
         let resolution = evidence.resolution.as_ref().ok_or("引用检查未完成")?;
@@ -166,6 +198,11 @@ fn incoming(root: &str, target: &str) -> Result<Vec<AttachmentUse>, String> {
                 document: evidence.document.clone(),
                 line: evidence.line,
                 count: 0,
+                source: if overlays.contains_key(Path::new(&evidence.document)) {
+                    "draft"
+                } else {
+                    "saved"
+                },
             });
         item.count += 1;
     }
@@ -232,11 +269,12 @@ pub async fn inspect_library_attachments(
 pub async fn list_library_attachment_uses(
     library_root: String,
     path: String,
+    drafts: Option<Vec<AttachmentDraft>>,
 ) -> Result<Vec<AttachmentUse>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let guard = WorkspaceGuard::new(&library_root)?;
         let _io = file_activity::read_write(&[guard.root()])?;
-        incoming(&library_root, &path)
+        incoming_with_drafts(&library_root, &path, drafts.unwrap_or_default())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -347,6 +385,77 @@ mod tests {
     use crate::services::{
         file_move_transaction, file_operation_history, test_workspace::TestWorkspace,
     };
+    #[test]
+    fn incoming_drafts_replace_disk_references_including_empty_and_new_uses() {
+        let f = TestWorkspace::new();
+        fs::create_dir(f.0.join(".assets")).unwrap();
+        fs::write(f.0.join(".assets/图 片.png"), b"unchanged").unwrap();
+        for (name, text) in [
+            ("删除.md", "![旧](<.assets/图 片.png>)"),
+            ("新增.markdown", "磁盘未引用"),
+            ("保留.md", "![保存](<.assets/图 片.png>)"),
+        ] {
+            fs::write(f.0.join(name), text).unwrap();
+        }
+        let draft = "自己的补写\r\n\r\n![新增](<.assets/图 片.png>)\r\n[文件](<.assets/图 片.png#片段>)\r\n`![示例](<.assets/图 片.png>)`\r\n";
+        let r = incoming_with_drafts(
+            f.0.to_str().unwrap(),
+            ".assets/图 片.png",
+            vec![
+                AttachmentDraft {
+                    document: "删除.md".into(),
+                    content: String::new(),
+                },
+                AttachmentDraft {
+                    document: "新增.markdown".into(),
+                    content: draft.into(),
+                },
+            ],
+        )
+        .unwrap();
+        assert_eq!(r.len(), 2);
+        let new = r
+            .iter()
+            .find(|r| r.document.ends_with("新增.markdown"))
+            .unwrap();
+        assert_eq!((new.line, new.count, new.source), (3, 2, "draft"));
+        assert_eq!(
+            r.iter()
+                .find(|r| r.document.ends_with("保留.md"))
+                .unwrap()
+                .source,
+            "saved"
+        );
+        assert_eq!(
+            fs::read_to_string(f.0.join("新增.markdown")).unwrap(),
+            "磁盘未引用"
+        );
+        assert_eq!(
+            fs::read(f.0.join(".assets/图 片.png")).unwrap(),
+            b"unchanged"
+        );
+    }
+    #[test]
+    fn incoming_draft_identity_conflict_and_unreadable_limits_are_local_errors() {
+        let f = TestWorkspace::new();
+        fs::write(f.0.join("note.md"), [0xff, 0xfe]).unwrap();
+        fs::write(f.0.join("image.png"), b"image").unwrap();
+        let run = |drafts| incoming_with_drafts(f.0.to_str().unwrap(), "image.png", drafts);
+        let d = |text: &str| AttachmentDraft {
+            document: "note.md".into(),
+            content: text.into(),
+        };
+        assert_eq!(run(vec![d("![图](image.png)")]).unwrap()[0].source, "draft");
+        assert!(run(vec![]).is_err());
+        assert!(run(vec![d("a"), d("b")]).is_err());
+        assert!(run(vec![d(&"a".repeat(MAX_TEXT + 1))]).is_err());
+        assert!(run(vec![AttachmentDraft {
+            document: "../outside.md".into(),
+            content: "".into()
+        }])
+        .is_err());
+        assert_eq!(fs::read(f.0.join("note.md")).unwrap(), [0xff, 0xfe]);
+    }
     #[test]
     fn user_attachment_folders_are_visible_searchable_and_private_metadata_stays_hidden() {
         let f = TestWorkspace::new();
