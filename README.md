@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> **v1.1.37 PDF 批注接续候选**：已完成实现，安装包验证待完成；正式下载仍为 v1.1.36。[开发记录](docs/V1_1_37_Development_2026-10-22.md)。
+
 > **v1.1.36 已正式发布**：按当前文件查找附件、历史、阅读笔记和录入检查，直接使用原面板。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.36) · [发布说明](docs/RELEASE_NOTES_v1.1.36.md)。
 
 

@@ -1,6 +1,6 @@
 # 1.1.33—1.1.37：让已有资料和成果一起接续
 
-状态：1.1.33—1.1.36 已正式发布，完成 **4/5 版**；1.1.37 尚未实施。沿用已有基础功能深化方向，保留右键与按需弹窗。
+状态：1.1.33—1.1.36 已正式发布，完成 **4/5 版**；1.1.37 已实施，安装包验证待完成。沿用已有基础功能深化方向，保留右键与按需弹窗。
 
 依据：[最近二十版审计](Recent_20_Versions_Development_and_Direction_Audit_2026-10-21.md) 的后续候选，以及本次重新阅读 `LibraryFileOperations.vue`、`AttachmentManagerDialog.vue`、`MarkdownSectionActions.vue`、`CommandPalette.vue` 和 `workspaceViewState.ts`。现有能力直接复用：跨库复制已带 Markdown 依赖、附件管理已能检查当前笔记草稿、命令窗口已存在，不能换名再次当成新增功能。
 

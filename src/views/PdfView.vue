@@ -76,7 +76,7 @@
           <p v-else-if="!outline.length" class="sidebar-empty">此文档没有内置目录</p>
           <button v-for="(item, index) in outline" :key="`${item.title}-${index}`" :style="{ paddingLeft: `${12 + item.depth * 14}px` }" @click="openOutlineItem(item)">{{ item.title }}</button>
         </div>
-        <div v-else-if="!isExternal && sidebarTab === 'annotations'" class="annotation-panel">
+        <div v-else-if="!isExternal && sidebarTab === 'annotations'" ref="annotationPanelRef" class="annotation-panel" @scroll.passive="rememberAnnotationScroll">
           <div v-if="annotationError" class="annotation-alert" role="alert">{{ annotationError }}</div>
           <div v-if="referenceNotice" class="annotation-alert reference-notice" role="status" aria-live="polite">{{ referenceNotice }}</div>
           <div v-if="!annotationError && !annotations.length" class="sidebar-empty">选择正文后添加高亮，或启用“区域批注”框选页面。</div>
@@ -539,7 +539,7 @@
 
 <script setup lang="ts">
 import { useContextCommands } from '../services/contextCommands'
-import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
+import { beginWindowSave, useWindowDraft, useWindowDraftSnapshot } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { NCard, NModal, NDropdown, useDialog, useMessage } from 'naive-ui'
@@ -734,6 +734,9 @@ watch(activePdfTask, async () => {
 const message = useMessage()
 const dialog = useDialog()
 const scrollRef = ref<HTMLElement | null>(null)
+const annotationPanelRef = ref<HTMLElement | null>(null)
+let annotationScrollTop = 0
+let viewSaveTimer = 0
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const pdfDocument = shallowRef<PDFDocumentProxy | null>(null)
 const loading = ref(true)
@@ -1029,9 +1032,22 @@ const rememberPdfViewState = () => {
     fitWidth: fitWidth.value,
     sidebarOpen: sidebarOpen.value,
     sidebarTab: sidebarTab.value,
-    pdfAnnotations: {signature:pdfSourceSignature.value,id:selectedAnnotationId.value,query:annotationQuery.value,pages:annotationPages.value,kind:annotationKindFilter.value,color:annotationColorFilter.value,listPage:readingListPage.value,selection:[...readingSelection.value],scrollTop:window.document.querySelector('.annotation-panel')?.scrollTop||0},
+    pdfAnnotations: {signature:pdfSourceSignature.value,id:selectedAnnotationId.value,query:annotationQuery.value,pages:annotationPages.value,kind:annotationKindFilter.value,color:annotationColorFilter.value,listPage:readingListPage.value,selection:[...readingSelection.value],scrollTop:annotationPanelRef.value?.scrollTop ?? annotationScrollTop},
   })
 }
+const scheduleViewSave = () => {
+  if (restoringPdfView) return
+  window.clearTimeout(viewSaveTimer)
+  viewSaveTimer = window.setTimeout(rememberPdfViewState, 200)
+}
+const rememberAnnotationScroll = () => {
+  if (restoringPdfView) return
+  annotationScrollTop = annotationPanelRef.value?.scrollTop ?? annotationScrollTop
+  scheduleViewSave()
+}
+watch([annotationQuery, annotationPages, annotationKindFilter, annotationColorFilter, selectedAnnotationId, readingSelection, readingListPage, sidebarOpen, sidebarTab], scheduleViewSave, { deep: true, flush: 'post' })
+watch(annotationPanelRef, panel => { if (panel && !restoringPdfView) panel.scrollTop = annotationScrollTop }, { flush: 'post' })
+useWindowDraftSnapshot(rememberPdfViewState)
 
 const flattenOutline = (items: Awaited<ReturnType<PDFDocumentProxy['getOutline']>>, depth = 0): OutlineEntry[] => {
   if (!items) return []
@@ -1104,15 +1120,18 @@ const loadAnnotations = async (document: PDFDocumentProxy, saved?: WorkspaceView
     annotationDocument.value = loaded
     annotationSourcePath = sourcePath
     annotationLibraryRoot = libraryRoot
-    if (saved && saved.signature === pdfSourceSignature.value && !requestedAnnotationId()) {
+    if (saved && saved.signature === pdfSourceSignature.value && annotationWritable.value && !requestedAnnotationId() && !requestedPage()) {
       annotationQuery.value = saved.query; annotationPages.value = saved.pages
       annotationKindFilter.value = saved.kind; annotationColorFilter.value = saved.color
       readingSelection.value = saved.selection.filter(id => loaded.annotations.some(a => a.id === id))
       selectedAnnotationId.value = loaded.annotations.some(a => a.id === saved.id) ? saved.id : ''
       await nextTick()
+      if (generation !== annotationLoadGeneration || pdfDocument.value !== document) return
       readingListPage.value = Math.min(saved.listPage, Math.max(0, Math.ceil(filteredAnnotations.value.length/50)-1))
       await nextTick()
-      window.document.querySelector('.annotation-panel')?.scrollTo({top:saved.scrollTop,behavior:'instant'})
+      if (generation !== annotationLoadGeneration || pdfDocument.value !== document) return
+      annotationScrollTop = saved.scrollTop
+      annotationPanelRef.value?.scrollTo({top:annotationScrollTop,behavior:'instant'})
     }
     await nextTick()
     focusRequestedReference()
@@ -2542,6 +2561,7 @@ const runSearch = async () => {
 const loadPdf = async () => {
   // Freeze the old view before reset/scroll/native sidecar reads can overwrite it.
   rememberPdfViewState()
+  window.clearTimeout(viewSaveTimer)
   const viewState = recallWorkspaceViewState(pdfPath.value)
   const generation = ++pdfLoadGeneration
   const current = () => generation === pdfLoadGeneration
@@ -2550,6 +2570,7 @@ const loadPdf = async () => {
   loading.value = true
   referenceGeneration++; referenceWorking.value = false; readingPreviewOpen.value = false; readingSnapshot.value = null
   readingSelection.value = []; readingListPage.value = 0
+  annotationScrollTop = 0
   annotationQuery.value = ''; annotationPages.value = ''; annotationKindFilter.value = ''; annotationColorFilter.value = ''
   await cancelOcr()
   if (!current()) return
@@ -2853,15 +2874,24 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleResize = () => { if (fitWidth.value) applyFitWidth() }
-const mayDiscardPagePlan = async () => !pdfWorkspaceDirty.value || await confirmAppAction(dialog, {
+const mayDiscardPagePlan = async () => {
+  window.clearTimeout(annotationSaveTimer)
+  await persistAnnotations()
+  if (annotationDirty.value) {
+    message.error(annotationSaveError.value || '批注尚未保存，请稍后重试')
+    return false
+  }
+  return !pdfWorkspaceDirty.value || await confirmAppAction(dialog, {
   title: '离开 PDF 工作区？',
   content: '编辑草稿尚未生成新文件，页面整理、合并、脱敏、水印和文档属性修改都将丢失。',
   positiveText: '放弃草稿并离开',
   danger: true,
-})
-useWindowDraft(() => pdfWorkspaceDirty.value, () => String(route.query.path || store.activeTabId || ''))
+  })
+}
+useWindowDraft(() => pdfWorkspaceDirty.value || annotationDirty.value, () => String(route.query.path || store.activeTabId || ''))
 const warnPagePlanBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (!pdfWorkspaceDirty.value) return
+  rememberPdfViewState()
+  if (!pdfWorkspaceDirty.value && !annotationDirty.value) return
   event.preventDefault()
   event.returnValue = ''
 }
@@ -2892,6 +2922,7 @@ onBeforeUnmount(async () => {
   // Capture live panel/reading positions before the first await removes its DOM.
   savePosition()
   rememberPdfViewState()
+  window.clearTimeout(viewSaveTimer)
   pdfLoadGeneration++
   referenceGeneration++
   await cancelOcr()

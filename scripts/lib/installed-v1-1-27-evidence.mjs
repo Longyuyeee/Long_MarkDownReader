@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 import {collectionReuseFixture} from './collection-reuse-fixture.mjs'
 export const collectionReuseChecks=['native-bundle-roundtrip-without-machine-identities','tag-menu-explicit-scope-and-cancel','saved-tag-rename-preserves-draft-history-and-prefix','import-preview-cancel-keeps-config','missing-conditions-can-remap-and-skip','cross-project-import-keeps-original-collections','files-and-other-unsaved-drafts-unchanged','trusted-input-and-no-runtime-errors']
 export function validateInstalledCollectionReuse(report,manifest){
- assert.ok(['1.1.27','1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.27','1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37'].includes(manifest.appVersion));assert.equal(report.appVersion,manifest.appVersion);assert.equal(report.sourceCommit,manifest.sourceCommit);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  for(const key of ['sourceCommit','harnessSourceCommit'])assert.match(report[key],/^[a-f0-9]{40}$/);assert.match(report.executableSha256,/^[a-f0-9]{64}$/)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-trusted-input-native-conditions-and-file-bytes')
  for(const key of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','nativeFileDialogsAutomated','errorOverlay'])assert.equal(report[key],false)

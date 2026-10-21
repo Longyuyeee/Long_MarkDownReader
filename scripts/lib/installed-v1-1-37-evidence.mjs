@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
+export const pdfResumeChecks=['persist-bounded-view-without-annotation-text','new-renderer-resumes-filters-selection-and-scroll','deleted-annotation-ids-discarded','explicit-reference-overrides-saved-view','immediate-comment-save-before-leaving','changed-source-rejects-stale-view','original-pdf-and-other-drafts-preserved']
+export const pdfResumeOutputNames=['before.json','view.json','after.json','observations.json'].map(n=>'installed-v1137-'+n)
+export function validateInstalledPdfResume(report,manifest){
+ assert.equal(manifest.appVersion,'1.1.37');for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256);assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-pdf-view-reload-trusted-ui-and-sidecar-bytes');assert.equal(report.rendererReloads,1)
+ for(const[k,n]of [['harnessSourceCommit',40],['executableSha256',64],['pdfBefore',64]])assert.match(report[k],new RegExp('^[a-f0-9]{'+n+'}$'));assert.equal(report.pdfBefore,report.pdfAfter)
+ for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false);assert.deepEqual(report.checks.map(c=>[c.id,c.status]),pdfResumeChecks.map(id=>[id,'passed']));assert.deepEqual(report.runtimeErrors,[]);assert.ok(report.inputTrace.length>10&&report.inputTrace.every(e=>e.trusted));for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type))
+}
+export function assertPdfResumeOutputBytes(report,read){
+ assert.deepEqual(report.outputs.map(o=>o.fileName).sort(),[...pdfResumeOutputNames].sort());for(const o of report.outputs){const b=read(o.fileName);assert.equal(b.length,o.sizeBytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),o.sha256)}
+ const json=n=>JSON.parse(read('installed-v1137-'+n).toString('utf8')),before=json('before.json'),after=json('after.json'),view=json('view.json'),o=json('observations.json');assert.equal(before.annotations.length,120);assert.equal(after.annotations.length,119);assert.equal(after.annotations.find(a=>a.id==='resume-15').comment,'重开后的评论，切换时立即保存');assert.ok(!after.annotations.some(a=>a.id==='resume-9'));assert.deepEqual(view.selection,['resume-9','resume-15']);assert.ok(view.scrollTop>100);for(const k of ['comment','quote','annotations','draft'])assert.equal(view[k],undefined);for(const k of ['query','pages','kind','color'])assert.equal(o.before[k],o.resumed[k]);assert.ok(Math.abs(o.before.scrollTop-o.resumed.scrollTop)<2);for(const k of ['deleted','reference','commentSaved','sourceChanged','noDirtyNotes'])assert.equal(o[k],true)
+}
