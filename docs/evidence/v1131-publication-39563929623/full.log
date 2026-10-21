@@ -1,0 +1,891 @@
+publish	Set up job	﻿2026-10-21T07:43:01.2671656Z Current runner version: '2.337.0'
+publish	Set up job	2026-10-21T07:43:01.2719230Z ##[group]Runner Image Provisioner
+publish	Set up job	2026-10-21T07:43:01.2720084Z Hosted Compute Agent
+publish	Set up job	2026-10-21T07:43:01.2720692Z Version: 20261002.596
+publish	Set up job	2026-10-21T07:43:01.2721303Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+publish	Set up job	2026-10-21T07:43:01.2721986Z Build Date: 2026-10-02T22:28:27Z
+publish	Set up job	2026-10-21T07:43:01.2722690Z Worker ID: {31c0fd97-2ff4-49ee-a7eb-75c6578f820e}
+publish	Set up job	2026-10-21T07:43:01.2723390Z Region: centralus
+publish	Set up job	2026-10-21T07:43:01.2723960Z Cloud: Azure
+publish	Set up job	2026-10-21T07:43:01.2724474Z ##[endgroup]
+publish	Set up job	2026-10-21T07:43:01.2725824Z ##[group]Operating System
+publish	Set up job	2026-10-21T07:43:01.2726516Z Microsoft Windows Server 2025
+publish	Set up job	2026-10-21T07:43:01.2727105Z 10.0.26100
+publish	Set up job	2026-10-21T07:43:01.2727599Z Datacenter
+publish	Set up job	2026-10-21T07:43:01.2728127Z ##[endgroup]
+publish	Set up job	2026-10-21T07:43:01.2728647Z ##[group]Runner Image
+publish	Set up job	2026-10-21T07:43:01.2729234Z Image: windows-2025-vs2026
+publish	Set up job	2026-10-21T07:43:01.2729847Z Version: 20261007.264.1
+publish	Set up job	2026-10-21T07:43:01.2730952Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20261007.264/images/windows/Windows2025-VS2026-Readme.md
+publish	Set up job	2026-10-21T07:43:01.2734859Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20261007.264
+publish	Set up job	2026-10-21T07:43:01.2736696Z ##[endgroup]
+publish	Set up job	2026-10-21T07:43:01.2739255Z ##[group]GITHUB_TOKEN Permissions
+publish	Set up job	2026-10-21T07:43:01.2741910Z Actions: read
+publish	Set up job	2026-10-21T07:43:01.2742973Z Contents: write
+publish	Set up job	2026-10-21T07:43:01.2744011Z Metadata: read
+publish	Set up job	2026-10-21T07:43:01.2744969Z ##[endgroup]
+publish	Set up job	2026-10-21T07:43:01.2747803Z Secret source: Actions
+publish	Set up job	2026-10-21T07:43:01.2749408Z Cache mode: write
+publish	Set up job	2026-10-21T07:43:01.2750632Z Prepare workflow directory
+publish	Set up job	2026-10-21T07:43:01.3300672Z Prepare all required actions
+publish	Set up job	2026-10-21T07:43:01.3379385Z Getting action download info
+publish	Set up job	2026-10-21T07:43:01.5654504Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+publish	Set up job	2026-10-21T07:43:01.7070679Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+publish	Set up job	2026-10-21T07:43:02.1615362Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+publish	Set up job	2026-10-21T07:43:02.5096506Z Complete job name: publish
+publish	Run actions/checkout@v6	﻿2026-10-21T07:43:02.6452098Z ##[group]Run actions/checkout@v6
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6453312Z with:
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6453760Z   fetch-depth: 0
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6454269Z   repository: Longyuyeee/Long_MarkDownReader
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6459033Z   token: ***
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6459497Z   ssh-strict: true
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6459947Z   ssh-user: git
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6460642Z   persist-credentials: true
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6461152Z   clean: true
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6461592Z   sparse-checkout-cone-mode: true
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6462118Z   fetch-tags: false
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6462571Z   show-progress: true
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6463012Z   lfs: false
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6463411Z   submodules: false
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6463872Z   set-safe-directory: true
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6464373Z   allow-unsafe-pr-checkout: false
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6465194Z env:
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6469515Z   GH_TOKEN: ***
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6469965Z   BUILD_RUN: 39553674389
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6470438Z   REVIEW_RUN: 39560348810
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6471072Z   PRODUCT_COMMIT: d3072311171f12f717d456193fa3d035518f683a
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6471746Z   RELEASE_VERSION: 1.1.31
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.6472210Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.7948776Z Syncing repository: Longyuyeee/Long_MarkDownReader
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.7951526Z ##[group]Getting Git version info
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.7952832Z Working directory is 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+publish	Run actions/checkout@v6	2026-10-21T07:43:02.8960789Z [command]"C:\Program Files\Git\bin\git.exe" version
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.2042751Z git version 2.56.0.windows.2
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.2098482Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.2119248Z Temporarily overriding HOME='D:\a\_temp\57abc99f-7baf-472a-8496-6ff0972b1845' before making global git config changes
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.2121236Z Adding repository directory to the temporary git global config as a safe directory
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.2131199Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.3161204Z Deleting the contents of 'D:\a\Long_MarkDownReader\Long_MarkDownReader'
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.3168222Z ##[group]Determining repository object format
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.3172223Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.3175210Z ##[group]Initializing the repository
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.3182865Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\Long_MarkDownReader\Long_MarkDownReader
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.4241800Z Initialized empty Git repository in D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.4292890Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/Longyuyeee/Long_MarkDownReader
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.4983274Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.4985057Z ##[group]Disabling automatic garbage collection
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.4992502Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.5375378Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.5377125Z ##[group]Setting up auth
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.5378317Z Removing SSH command configuration
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.5389084Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+publish	Run actions/checkout@v6	2026-10-21T07:43:03.5786521Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+publish	Run actions/checkout@v6	2026-10-21T07:43:04.9611856Z Removing HTTP extra header
+publish	Run actions/checkout@v6	2026-10-21T07:43:04.9622909Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+publish	Run actions/checkout@v6	2026-10-21T07:43:05.0012673Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+publish	Run actions/checkout@v6	2026-10-21T07:43:05.5782553Z Removing includeIf entries pointing to credentials config files
+publish	Run actions/checkout@v6	2026-10-21T07:43:05.5797593Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+publish	Run actions/checkout@v6	2026-10-21T07:43:05.6195736Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.1802961Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.2203993Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.2616109Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.3050160Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.3443759Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.3842779Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.3843447Z ##[group]Fetching the repository
+publish	Run actions/checkout@v6	2026-10-21T07:43:06.3857653Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1453726Z From https://github.com/Longyuyeee/Long_MarkDownReader
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1456084Z  * [new branch]        agent/audit-s8-7e2e-delivery -> origin/agent/audit-s8-7e2e-delivery
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1457088Z  * [new branch]        codex/a4-format-closure -> origin/codex/a4-format-closure
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1458047Z  * [new branch]        codex/c3c1-pptx-index   -> origin/codex/c3c1-pptx-index
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1458619Z  * [new branch]        codex/custom-note-templates -> origin/codex/custom-note-templates
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1459255Z  * [new branch]        codex/foundation-file-management -> origin/codex/foundation-file-management
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1459920Z  * [new branch]        codex/foundation-template-history -> origin/codex/foundation-template-history
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1460489Z  * [new branch]        codex/inbox-experience  -> origin/codex/inbox-experience
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1461101Z  * [new branch]        codex/professional-workspace-foundation -> origin/codex/professional-workspace-foundation
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1462440Z  * [new branch]        codex/release-1.0.0     -> origin/codex/release-1.0.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1463360Z  * [new branch]        codex/s8-2b-table-lifecycle -> origin/codex/s8-2b-table-lifecycle
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1464434Z  * [new branch]        codex/v1.0.11-candidate-evidence -> origin/codex/v1.0.11-candidate-evidence
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1465487Z  * [new branch]        codex/v1.0.11-managed-updater -> origin/codex/v1.0.11-managed-updater
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1466694Z  * [new branch]        codex/v1.0.11-published-evidence -> origin/codex/v1.0.11-published-evidence
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1467692Z  * [new branch]        codex/v1.0.11-release-closure -> origin/codex/v1.0.11-release-closure
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1468708Z  * [new branch]        codex/v1.0.15-interaction-polish -> origin/codex/v1.0.15-interaction-polish
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1469536Z  * [new branch]        codex/v1.0.15-publication -> origin/codex/v1.0.15-publication
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1470608Z  * [new branch]        codex/v110-editor-shell -> origin/codex/v110-editor-shell
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1471637Z  * [new branch]        codex/v1110-installed-proof -> origin/codex/v1110-installed-proof
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1472222Z  * [new branch]        codex/v1110-installer-closure -> origin/codex/v1110-installer-closure
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1473892Z  * [new branch]        codex/v1110-management-proof -> origin/codex/v1110-management-proof
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1474482Z  * [new branch]        codex/v1110-native-error-proof -> origin/codex/v1110-native-error-proof
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1475078Z  * [new branch]        codex/v1110-stable-native-input -> origin/codex/v1110-stable-native-input
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1475642Z  * [new branch]        codex/v1110-tags-collections -> origin/codex/v1110-tags-collections
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1476172Z  * [new branch]        codex/v1111-graph-continuity -> origin/codex/v1111-graph-continuity
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1476754Z  * [new branch]        codex/v1111-health-loading-handoff -> origin/codex/v1111-health-loading-handoff
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1477423Z  * [new branch]        codex/v1111-routed-visibility-default -> origin/codex/v1111-routed-visibility-default
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1478082Z  * [new branch]        codex/v1112-local-content-backup -> origin/codex/v1112-local-content-backup
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1478671Z  * [new branch]        codex/v1120-release-roadmap -> origin/codex/v1120-release-roadmap
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1479212Z  * [new branch]        codex/v1120-structured-editing -> origin/codex/v1120-structured-editing
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1479767Z  * [new branch]        codex/v1121-cross-library-copy -> origin/codex/v1121-cross-library-copy
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1480361Z  * [new branch]        codex/v1122-file-operation-history -> origin/codex/v1122-file-operation-history
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1480980Z  * [new branch]        codex/v1123-attachment-management -> origin/codex/v1123-attachment-management
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1481539Z  * [new branch]        codex/v1124-long-markdown -> origin/codex/v1124-long-markdown
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1482200Z  * [new branch]        codex/v1125-find-replace -> origin/codex/v1125-find-replace
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1482724Z  * [new branch]        codex/v1126-structured-history -> origin/codex/v1126-structured-history
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1483268Z  * [new branch]        codex/v1127-tags-collections -> origin/codex/v1127-tags-collections
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1483805Z  * [new branch]        codex/v1128-reference-repair -> origin/codex/v1128-reference-repair
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1485204Z  * [new branch]        codex/v1129-pdf-continuity -> origin/codex/v1129-pdf-continuity
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1486115Z  * [new branch]        codex/v1130-table-validation -> origin/codex/v1130-table-validation
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1487050Z  * [new branch]        codex/v1131-workbook-validation -> origin/codex/v1131-workbook-validation
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1488003Z  * [new branch]        codex/v114-release-readiness -> origin/codex/v114-release-readiness
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1562942Z  * [new branch]        codex/v114-updater-audit -> origin/codex/v114-updater-audit
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1564697Z  * [new branch]        codex/v115-foundation-hardening -> origin/codex/v115-foundation-hardening
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1565793Z  * [new branch]        codex/v116-installed-image-review -> origin/codex/v116-installed-image-review
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1566805Z  * [new branch]        codex/v116-move-continuity -> origin/codex/v116-move-continuity
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1567735Z  * [new branch]        codex/v116-safe-library-moves -> origin/codex/v116-safe-library-moves
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1568766Z  * [new branch]        codex/v116-same-installer-review -> origin/codex/v116-same-installer-review
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1570207Z  * [new branch]        codex/v117-save-history -> origin/codex/v117-save-history
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1571079Z  * [new branch]        codex/v118-candidate    -> origin/codex/v118-candidate
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1571993Z  * [new branch]        codex/v118-native-ipc-audit -> origin/codex/v118-native-ipc-audit
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1572966Z  * [new branch]        codex/v118-release-closure -> origin/codex/v118-release-closure
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1573975Z  * [new branch]        codex/v118-search-completeness -> origin/codex/v118-search-completeness
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1574916Z  * [new branch]        codex/v119-candidate    -> origin/codex/v119-candidate
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1576202Z  * [new branch]        codex/v119-native-session-audit -> origin/codex/v119-native-session-audit
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1577308Z  * [new branch]        codex/v119-publication-complete -> origin/codex/v119-publication-complete
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1578318Z  * [new branch]        codex/v119-publication-evidence -> origin/codex/v119-publication-evidence
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1579286Z  * [new branch]        codex/v119-release-closure -> origin/codex/v119-release-closure
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1579904Z  * [new branch]        codex/v119-work-session-continuity -> origin/codex/v119-work-session-continuity
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1580517Z  * [new branch]        codex/v124-release-readiness -> origin/codex/v124-release-readiness
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1581101Z  * [new branch]        codex/v125-experience-roadmap -> origin/codex/v125-experience-roadmap
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1581556Z  * [new branch]        main                    -> origin/main
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1581883Z  * [new tag]           v0.1.0                  -> v0.1.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1582174Z  * [new tag]           v0.2.0                  -> v0.2.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1582464Z  * [new tag]           v0.3.0                  -> v0.3.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1582765Z  * [new tag]           v0.3.1                  -> v0.3.1
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1583052Z  * [new tag]           v0.3.2                  -> v0.3.2
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1583367Z  * [new tag]           v0.3.3                  -> v0.3.3
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1583773Z  * [new tag]           v0.3.4                  -> v0.3.4
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1584327Z  * [new tag]           v0.4.4                  -> v0.4.4
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1584867Z  * [new tag]           v0.4.5                  -> v0.4.5
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1585662Z  * [new tag]           v0.4.6                  -> v0.4.6
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1586115Z  * [new tag]           v0.4.7                  -> v0.4.7
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1586407Z  * [new tag]           v0.4.8                  -> v0.4.8
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1586697Z  * [new tag]           v0.4.9                  -> v0.4.9
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1586980Z  * [new tag]           v0.5.0                  -> v0.5.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1587264Z  * [new tag]           v0.5.1                  -> v0.5.1
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1587543Z  * [new tag]           v0.5.2                  -> v0.5.2
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1587824Z  * [new tag]           v0.5.3                  -> v0.5.3
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1588102Z  * [new tag]           v0.5.4                  -> v0.5.4
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1588380Z  * [new tag]           v0.5.5                  -> v0.5.5
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1588858Z  * [new tag]           v0.5.6                  -> v0.5.6
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1589336Z  * [new tag]           v0.5.7                  -> v0.5.7
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1589851Z  * [new tag]           v0.5.8                  -> v0.5.8
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1590672Z  * [new tag]           v0.5.9                  -> v0.5.9
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1591252Z  * [new tag]           v0.6.0                  -> v0.6.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1591776Z  * [new tag]           v0.6.1                  -> v0.6.1
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1592298Z  * [new tag]           v0.6.2                  -> v0.6.2
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1592597Z  * [new tag]           v0.6.3                  -> v0.6.3
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1592887Z  * [new tag]           v0.6.4                  -> v0.6.4
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1593168Z  * [new tag]           v0.6.5                  -> v0.6.5
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1593444Z  * [new tag]           v0.6.6                  -> v0.6.6
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1593721Z  * [new tag]           v0.6.7                  -> v0.6.7
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1593998Z  * [new tag]           v0.6.8                  -> v0.6.8
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1594292Z  * [new tag]           v0.6.9                  -> v0.6.9
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1594581Z  * [new tag]           v1.0.0                  -> v1.0.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1594865Z  * [new tag]           v1.0.1                  -> v1.0.1
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1595362Z  * [new tag]           v1.0.10                 -> v1.0.10
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1595652Z  * [new tag]           v1.0.11                 -> v1.0.11
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1595927Z  * [new tag]           v1.0.12                 -> v1.0.12
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1596258Z  * [new tag]           v1.0.13                 -> v1.0.13
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1596538Z  * [new tag]           v1.0.14                 -> v1.0.14
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1596816Z  * [new tag]           v1.0.15                 -> v1.0.15
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1597105Z  * [new tag]           v1.0.16                 -> v1.0.16
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1597383Z  * [new tag]           v1.0.17                 -> v1.0.17
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1597658Z  * [new tag]           v1.0.18                 -> v1.0.18
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1597936Z  * [new tag]           v1.0.19                 -> v1.0.19
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1598212Z  * [new tag]           v1.0.2                  -> v1.0.2
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1598503Z  * [new tag]           v1.0.20                 -> v1.0.20
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1598803Z  * [new tag]           v1.0.21                 -> v1.0.21
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1599090Z  * [new tag]           v1.0.22                 -> v1.0.22
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1599369Z  * [new tag]           v1.0.23                 -> v1.0.23
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1599650Z  * [new tag]           v1.0.24                 -> v1.0.24
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1599932Z  * [new tag]           v1.0.25                 -> v1.0.25
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1600210Z  * [new tag]           v1.0.26                 -> v1.0.26
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1600499Z  * [new tag]           v1.0.3                  -> v1.0.3
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1600783Z  * [new tag]           v1.0.4                  -> v1.0.4
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1601072Z  * [new tag]           v1.0.5                  -> v1.0.5
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1602124Z  * [new tag]           v1.0.6                  -> v1.0.6
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1602429Z  * [new tag]           v1.0.7                  -> v1.0.7
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1602730Z  * [new tag]           v1.0.8                  -> v1.0.8
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1603025Z  * [new tag]           v1.0.9                  -> v1.0.9
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1603334Z  * [new tag]           v1.1.0                  -> v1.1.0
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1603620Z  * [new tag]           v1.1.1                  -> v1.1.1
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1603906Z  * [new tag]           v1.1.10                 -> v1.1.10
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1604199Z  * [new tag]           v1.1.11                 -> v1.1.11
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1604480Z  * [new tag]           v1.1.12                 -> v1.1.12
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1604764Z  * [new tag]           v1.1.13                 -> v1.1.13
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1605043Z  * [new tag]           v1.1.14                 -> v1.1.14
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1605333Z  * [new tag]           v1.1.15                 -> v1.1.15
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1605617Z  * [new tag]           v1.1.16                 -> v1.1.16
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1605901Z  * [new tag]           v1.1.17                 -> v1.1.17
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1606185Z  * [new tag]           v1.1.18                 -> v1.1.18
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1606468Z  * [new tag]           v1.1.19                 -> v1.1.19
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1606761Z  * [new tag]           v1.1.2                  -> v1.1.2
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1607056Z  * [new tag]           v1.1.20                 -> v1.1.20
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1607339Z  * [new tag]           v1.1.21                 -> v1.1.21
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1607622Z  * [new tag]           v1.1.22                 -> v1.1.22
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1607907Z  * [new tag]           v1.1.23                 -> v1.1.23
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1608196Z  * [new tag]           v1.1.24                 -> v1.1.24
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1608481Z  * [new tag]           v1.1.25                 -> v1.1.25
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1608772Z  * [new tag]           v1.1.26                 -> v1.1.26
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1609053Z  * [new tag]           v1.1.27                 -> v1.1.27
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1609338Z  * [new tag]           v1.1.28                 -> v1.1.28
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1610371Z  * [new tag]           v1.1.29                 -> v1.1.29
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1610697Z  * [new tag]           v1.1.3                  -> v1.1.3
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1610991Z  * [new tag]           v1.1.30                 -> v1.1.30
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1611278Z  * [new tag]           v1.1.31                 -> v1.1.31
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1611721Z  * [new tag]           v1.1.4                  -> v1.1.4
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1612091Z  * [new tag]           v1.1.5                  -> v1.1.5
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1612375Z  * [new tag]           v1.1.6                  -> v1.1.6
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1612656Z  * [new tag]           v1.1.7                  -> v1.1.7
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1612935Z  * [new tag]           v1.1.8                  -> v1.1.8
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1613233Z  * [new tag]           v1.1.9                  -> v1.1.9
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.1614226Z [command]"C:\Program Files\Git\bin\git.exe" branch --list --remote origin/codex/v1131-workbook-validation
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2007806Z   origin/codex/v1131-workbook-validation
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2062346Z [command]"C:\Program Files\Git\bin\git.exe" rev-parse refs/remotes/origin/codex/v1131-workbook-validation
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2512037Z 19c1aec3442f9c674dc3c4846e5eac1a8e6b4e2c
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2547733Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2548246Z ##[group]Determining the checkout info
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2549873Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.2559059Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.3055630Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.3444995Z ##[group]Checking out the ref
+publish	Run actions/checkout@v6	2026-10-21T07:43:24.3455140Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B codex/v1131-workbook-validation refs/remotes/origin/codex/v1131-workbook-validation
+publish	Run actions/checkout@v6	2026-10-21T07:43:25.4458080Z Updating files:   6% (1416/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:25.6018640Z Updating files:   7% (1446/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:25.8468668Z Updating files:   8% (1652/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:25.9923406Z Updating files:   9% (1859/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.1742015Z Updating files:  10% (2065/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.3010297Z Updating files:  11% (2272/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.4353033Z Updating files:  12% (2478/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.4770889Z Updating files:  12% (2629/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.6297720Z Updating files:  13% (2685/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.7846632Z Updating files:  14% (2891/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:26.9137069Z Updating files:  15% (3098/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.1413329Z Updating files:  16% (3304/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.2656252Z Updating files:  17% (3510/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.3906965Z Updating files:  18% (3717/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.4360721Z Updating files:  19% (3923/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.5314871Z Updating files:  19% (3994/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.6497953Z Updating files:  20% (4130/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.7713901Z Updating files:  21% (4336/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:27.8898012Z Updating files:  22% (4543/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.0027844Z Updating files:  23% (4749/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.1104719Z Updating files:  24% (4956/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.2281284Z Updating files:  25% (5162/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.3381680Z Updating files:  26% (5369/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.4493601Z Updating files:  27% (5575/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.4577918Z Updating files:  27% (5770/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.5499985Z Updating files:  28% (5782/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.6611703Z Updating files:  29% (5988/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.7787513Z Updating files:  30% (6195/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.8802419Z Updating files:  31% (6401/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:28.9907105Z Updating files:  32% (6608/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.0981574Z Updating files:  33% (6814/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.2281794Z Updating files:  34% (7020/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.3298196Z Updating files:  35% (7227/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.3982211Z Updating files:  36% (7433/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.4492572Z Updating files:  37% (7640/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.4650339Z Updating files:  37% (7812/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.5964668Z Updating files:  38% (7846/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.7260175Z Updating files:  39% (8053/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:29.8809226Z Updating files:  40% (8259/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.0226100Z Updating files:  41% (8466/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.2700872Z Updating files:  42% (8672/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.4398181Z Updating files:  43% (8879/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.4506630Z Updating files:  44% (9085/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.5899830Z Updating files:  44% (9097/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.7351761Z Updating files:  45% (9292/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:30.8744966Z Updating files:  46% (9498/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.0126912Z Updating files:  47% (9705/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.1385953Z Updating files:  48% (9911/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.2660108Z Updating files:  49% (10118/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.3944085Z Updating files:  50% (10324/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.4616666Z Updating files:  51% (10530/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.5108815Z Updating files:  51% (10647/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.6390829Z Updating files:  52% (10737/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.7586647Z Updating files:  53% (10943/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.8657759Z Updating files:  54% (11150/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:31.9925615Z Updating files:  55% (11356/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.1041895Z Updating files:  56% (11563/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.2376188Z Updating files:  57% (11769/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.3425314Z Updating files:  58% (11976/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.4587609Z Updating files:  59% (12182/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.4628238Z Updating files:  60% (12389/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.5960633Z Updating files:  60% (12397/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.7160017Z Updating files:  61% (12595/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.8385142Z Updating files:  62% (12802/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:32.9541372Z Updating files:  63% (13008/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.0921297Z Updating files:  64% (13215/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.2220351Z Updating files:  65% (13421/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.3627623Z Updating files:  66% (13628/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.4743097Z Updating files:  67% (13834/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.4864750Z Updating files:  67% (14025/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.6134744Z Updating files:  68% (14040/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.7288266Z Updating files:  69% (14247/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.8286650Z Updating files:  70% (14453/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:33.9609387Z Updating files:  71% (14660/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.0702654Z Updating files:  72% (14866/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.1636489Z Updating files:  73% (15073/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.2719772Z Updating files:  74% (15279/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.3649886Z Updating files:  75% (15486/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.4711753Z Updating files:  76% (15692/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.4884284Z Updating files:  77% (15899/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.5783428Z Updating files:  77% (15939/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.7155308Z Updating files:  78% (16105/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.8208734Z Updating files:  79% (16312/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:34.9169922Z Updating files:  80% (16518/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.0847506Z Updating files:  81% (16725/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.2280326Z Updating files:  82% (16931/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.3763344Z Updating files:  83% (17138/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.4942448Z Updating files:  84% (17344/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.5031575Z Updating files:  85% (17550/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.6143690Z Updating files:  85% (17560/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.7269032Z Updating files:  86% (17757/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.8004759Z Updating files:  87% (17963/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:35.9176964Z Updating files:  88% (18170/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.3153136Z Updating files:  89% (18376/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.3697551Z Updating files:  90% (18583/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.4769889Z Updating files:  91% (18789/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.5044289Z Updating files:  92% (18996/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.5244192Z Updating files:  92% (19110/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.5765239Z Updating files:  93% (19202/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.6256244Z Updating files:  94% (19409/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.6776323Z Updating files:  95% (19615/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.7626888Z Updating files:  96% (19822/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:36.9701174Z Updating files:  97% (20028/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.0419206Z Updating files:  98% (20235/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.1074659Z Updating files:  99% (20441/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.1075142Z Updating files: 100% (20647/20647)
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.1075416Z Updating files: 100% (20647/20647), done.
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.1469409Z Switched to a new branch 'codex/v1131-workbook-validation'
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.1487251Z branch 'codex/v1131-workbook-validation' set up to track 'origin/codex/v1131-workbook-validation'.
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.2539908Z ##[endgroup]
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.2963677Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+publish	Run actions/checkout@v6	2026-10-21T07:43:37.3327053Z 19c1aec3442f9c674dc3c4846e5eac1a8e6b4e2c
+publish	Run actions/download-artifact@v4	﻿2026-10-21T07:43:37.3799047Z ##[group]Run actions/download-artifact@v4
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3799600Z with:
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3804670Z   github-token: ***
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3804989Z   run-id: 39553674389
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3805445Z   name: community-release-candidate-lifecycle-39553674389
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3806007Z   path: verified-build
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3806348Z   merge-multiple: false
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3806735Z   repository: Longyuyeee/Long_MarkDownReader
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3807171Z env:
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3811941Z   GH_TOKEN: ***
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3812232Z   BUILD_RUN: 39553674389
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3812575Z   REVIEW_RUN: 39560348810
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3813005Z   PRODUCT_COMMIT: d3072311171f12f717d456193fa3d035518f683a
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3814141Z   RELEASE_VERSION: 1.1.31
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.3814484Z ##[endgroup]
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.5671900Z Downloading single artifact
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.5749811Z (node:1440) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.5750915Z (Use `node --trace-deprecation ...` to show where the warning was created)
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.6147166Z (node:1440) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.8486831Z Preparing to download the following artifacts:
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.8488040Z - community-release-candidate-lifecycle-39553674389 (ID: 12326655381, Size: 214529917, Expected Digest: sha256:4933575fe3c6f10832875ca491e6ad87f5b43e41a0072af827ef64a798cf0400)
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:37.8523193Z Downloading artifact '12326655381' from 'Longyuyeee/Long_MarkDownReader'
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:38.0297075Z Redirecting to blob download url: https://productionresultssa13.blob.core.windows.net/actions-results/aa805bbb-cec8-4b6b-8419-a4d767cd47f2/workflow-job-run-e83e0b6e-99ea-5ee8-94df-675338d4702d/artifacts/e67f3bbd83afcb34f81d95f800b51e8b2c696bb764c96adbba2e1fea18dafcd1.zip
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:38.0298818Z Starting download of artifact to: D:\a\Long_MarkDownReader\Long_MarkDownReader\verified-build
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:38.2230260Z (node:1440) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.0750962Z SHA256 digest of downloaded artifact is 4933575fe3c6f10832875ca491e6ad87f5b43e41a0072af827ef64a798cf0400
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.0751874Z Artifact download completed successfully.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.0752479Z Total of 1 artifact(s) downloaded
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.0764124Z Download artifact has finished successfully
+publish	Run actions/download-artifact@v4	﻿2026-10-21T07:43:42.1081706Z ##[group]Run actions/download-artifact@v4
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1082055Z with:
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1084671Z   github-token: ***
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1084929Z   run-id: 39560348810
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1085192Z   name: community-release-installer-review-39560348810
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1085515Z   path: verified-review
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1085731Z   merge-multiple: false
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1085974Z   repository: Longyuyeee/Long_MarkDownReader
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1086237Z env:
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1088704Z   GH_TOKEN: ***
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1088892Z   BUILD_RUN: 39553674389
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1089096Z   REVIEW_RUN: 39560348810
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1089366Z   PRODUCT_COMMIT: d3072311171f12f717d456193fa3d035518f683a
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1090103Z   RELEASE_VERSION: 1.1.31
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.1090320Z ##[endgroup]
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.3119884Z Downloading single artifact
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.3220732Z (node:10116) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.3222281Z (Use `node --trace-deprecation ...` to show where the warning was created)
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.3593076Z (node:10116) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.6081241Z Preparing to download the following artifacts:
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.6082086Z - community-release-installer-review-39560348810 (ID: 12327644086, Size: 16221270, Expected Digest: sha256:5796bf35d5152f05dcc70ff79758723b84f020124972f38af0c14b1dcb706213)
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.6122606Z Downloading artifact '12327644086' from 'Longyuyeee/Long_MarkDownReader'
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.7837113Z Redirecting to blob download url: https://productionresultssa0.blob.core.windows.net/actions-results/bdafcb60-eab2-49c3-ae51-96a93b857e3c/workflow-job-run-87d8f729-6214-599f-8e2c-7621d6b4a6e5/artifacts/e957823c895ae37b4d5bf8862f3ab6904e7314bc216321b784ff4e27c96a2d46.zip
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.7840298Z Starting download of artifact to: D:\a\Long_MarkDownReader\Long_MarkDownReader\verified-review
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:42.9443021Z (node:10116) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:43.5053753Z SHA256 digest of downloaded artifact is 5796bf35d5152f05dcc70ff79758723b84f020124972f38af0c14b1dcb706213
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:43.5054710Z Artifact download completed successfully.
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:43.5054999Z Total of 1 artifact(s) downloaded
+publish	Run actions/download-artifact@v4	2026-10-21T07:43:43.5063088Z Download artifact has finished successfully
+publish	Verify source, successful review and exact installer bytes	﻿2026-10-21T07:43:43.5417919Z ##[group]Run $ErrorActionPreference = 'Stop'
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5418989Z ^[[36;1m$ErrorActionPreference = 'Stop'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5419863Z ^[[36;1mif ($env:PRODUCT_COMMIT -notmatch '^[a-f0-9]{40}$' -or $env:RELEASE_VERSION -notmatch '^1\.\d+\.\d+$' -or $env:BUILD_RUN -notmatch '^\d+$' -or $env:REVIEW_RUN -notmatch '^\d+$') { throw 'Invalid immutable release inputs' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5420955Z ^[[36;1m$build = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:BUILD_RUN" | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5421628Z ^[[36;1m$review = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:REVIEW_RUN" | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5422421Z ^[[36;1mif ($build.head_sha -ne $env:PRODUCT_COMMIT -or $review.conclusion -ne 'success') { throw 'Build identity or review result mismatch' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5423223Z ^[[36;1m$jobs = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:BUILD_RUN/jobs" | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5424176Z ^[[36;1mforeach ($name in @('Run frozen candidate release quality gate','Run complete Rust regression suite','Build frozen candidate MSI and NSIS','Capture immutable installer receipt')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5425039Z ^[[36;1m  $step = @($jobs.jobs.steps | Where-Object name -eq $name)^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5425601Z ^[[36;1m  if ($step.Count -ne 1 -or $step[0].conclusion -ne 'success') { throw "Original build step failed: $name" }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5426069Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5426567Z ^[[36;1m$receipt = Get-Content verified-build/community-release-output/installer-build-receipt.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5427650Z ^[[36;1mif ($receipt.candidateSourceCommit -ne $env:PRODUCT_COMMIT -or $receipt.appVersion -ne $env:RELEASE_VERSION -or $receipt.artifacts.Count -ne 2) { throw 'Installer receipt mismatch' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5428486Z ^[[36;1m$tag = (git rev-parse "v$env:RELEASE_VERSION^{}").Trim()^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5429035Z ^[[36;1mif ($LASTEXITCODE -ne 0 -or $tag -ne $env:PRODUCT_COMMIT) { throw 'Release tag differs from tested source' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5430141Z ^[[36;1mforeach ($pair in @(@('lifecycle-result.json',22),@('installed-artifact-smoke.json',18),@('management-backup-index-evidence.json',7),@('installed-v112-workflow.json',9),@('installed-version-identity.json',4))) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5431192Z ^[[36;1m  $report = Get-Content (Join-Path verified-review $pair[0]) -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5432297Z ^[[36;1m  if ($report.status -ne 'passed' -or $report.sourceUserContentIncluded -ne $false -or $report.checks.Count -ne $pair[1] -or @($report.checks | Where-Object status -ne 'passed').Count) { throw "Installed review did not pass: $($pair[0])" }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5433522Z ^[[36;1m  if ($report.sourceCommit -and $report.sourceCommit -ne $env:PRODUCT_COMMIT) { throw 'Installed source identity mismatch' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5434332Z ^[[36;1m  if ($report.appVersion -and $report.appVersion -ne $env:RELEASE_VERSION) { throw 'Installed version mismatch' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5434843Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5435550Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.3','1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5437325Z ^[[36;1m  $foundation = Get-Content verified-review/installed-v113-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5439002Z ^[[36;1m  if ($foundation.status -ne 'passed' -or $foundation.checks.Count -ne 8 -or @($foundation.checks | Where-Object status -ne 'passed').Count -or $foundation.sourceCommit -ne $env:PRODUCT_COMMIT -or $foundation.appVersion -ne $env:RELEASE_VERSION -or $foundation.sourceUserContentIncluded -ne $false) { throw 'Foundation workflows did not pass in the exact installed product' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5440467Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5443331Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.4','1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5444350Z ^[[36;1m  $extended = Get-Content verified-review/installed-v114-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5446051Z ^[[36;1m  if ($extended.status -ne 'passed' -or $extended.checks.Count -ne 8 -or @($extended.checks | Where-Object status -ne 'passed').Count -or $extended.sourceCommit -ne $env:PRODUCT_COMMIT -or $extended.appVersion -ne $env:RELEASE_VERSION -or $extended.sourceUserContentIncluded -ne $false) { throw 'Template transfer, partial recovery and batch rename did not pass in the exact installed product' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5447524Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5448212Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.5','1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5449213Z ^[[36;1m  $hardening = Get-Content verified-review/installed-v115-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5451171Z ^[[36;1m  if ($hardening.status -ne 'passed' -or $hardening.checks.Count -ne 11 -or @($hardening.checks | Where-Object status -ne 'passed').Count -or $hardening.sourceCommit -ne $env:PRODUCT_COMMIT -or $hardening.appVersion -ne $env:RELEASE_VERSION -or $hardening.sourceUserContentIncluded -ne $false -or $hardening.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Safe import and scoped search did not pass in the exact installed product' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5452893Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5454004Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.6','1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5455000Z ^[[36;1m  $continuity = Get-Content verified-review/installed-v116-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5457058Z ^[[36;1m  if ($continuity.status -ne 'passed' -or $continuity.checks.Count -ne 13 -or @($continuity.checks | Where-Object status -ne 'passed').Count -or $continuity.sourceCommit -ne $env:PRODUCT_COMMIT -or $continuity.appVersion -ne $env:RELEASE_VERSION -or $continuity.sourceUserContentIncluded -ne $false -or $continuity.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Move, link and multi-window draft workflows did not pass in the exact installed product' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5458850Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5459489Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.7','1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5460579Z ^[[36;1m  $history = Get-Content verified-review/installed-v117-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5462453Z ^[[36;1m  if ($history.status -ne 'passed' -or $history.checks.Count -ne 12 -or @($history.checks | Where-Object status -ne 'passed').Count -or $history.sourceCommit -ne $env:PRODUCT_COMMIT -or $history.appVersion -ne $env:RELEASE_VERSION -or $history.sourceUserContentIncluded -ne $false -or $history.installerSha256 -ne @($receipt.artifacts | Where-Object target -eq 'nsis')[0].sha256) { throw 'Save/history workflows did not pass in the exact installed product' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5464091Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5464715Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.8','1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5466179Z ^[[36;1m  $searchReview = Get-Content verified-review/installed-v118-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5467057Z ^[[36;1m  if ($searchReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed search report does not belong to the successful review driver' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5467680Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5467866Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5468356Z ^[[36;1mimport { validateInstalledSearchCompleteness } from './scripts/lib/installed-v1-1-8-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5469096Z ^[[36;1mconst read = name => JSON.parse(fs.readFileSync('verified-review/' + name, 'utf8').replace(/^\uFEFF/, ''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5469999Z ^[[36;1mconst receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json', 'utf8').replace(/^\uFEFF/, ''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5471618Z ^[[36;1mvalidateInstalledSearchCompleteness(read('installed-v118-workflow.json'), read('installed-v118-baseline.json'), read('installed-v118-user.json'), read('installed-v118-office.json'), {appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5472827Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5473392Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Current installed search and Office workflows did not pass against the exact installer' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5474326Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5474960Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5475914Z ^[[36;1m  $sceneReview = Get-Content verified-review/installed-v119-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5476784Z ^[[36;1m  if ($sceneReview.harnessSourceCommit -ne $review.head_sha) { throw 'Installed scene report does not belong to this successful review driver' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5477848Z ^[[36;1m  if ($sceneReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Scene and historical search checks used different installed executable bytes' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5478531Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5478713Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5479168Z ^[[36;1mimport { validateInstalledWorkSession } from './scripts/lib/installed-v1-1-9-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5479950Z ^[[36;1mconst report = JSON.parse(fs.readFileSync('verified-review/installed-v119-workflow.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5480924Z ^[[36;1mconst receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5482014Z ^[[36;1mvalidateInstalledWorkSession(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5482845Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5483314Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Current scene workflow failed exact-installer validation' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5483761Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5484367Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.10','1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5485277Z ^[[36;1m  $tagReview = Get-Content verified-review/installed-v1110-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5486497Z ^[[36;1m  if ($tagReview.harnessSourceCommit -ne $review.head_sha -or $tagReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Tag and collection review must use the exact successful driver and installed executable' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5487404Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5487589Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5488062Z ^[[36;1mimport { validateInstalledTagCollections } from './scripts/lib/installed-v1-1-10-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5488853Z ^[[36;1mconst report = JSON.parse(fs.readFileSync('verified-review/installed-v1110-workflow.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5489823Z ^[[36;1mconst receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5490926Z ^[[36;1mvalidateInstalledTagCollections(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5491636Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5492119Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Current tag/collection workflow failed exact-installer validation' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5492588Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5493163Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.11','1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5494401Z ^[[36;1m  $graphReview = Get-Content verified-review/installed-v1111-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5495537Z ^[[36;1m  if ($graphReview.harnessSourceCommit -ne $review.head_sha -or $graphReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Graph review must use the exact successful driver and installed executable' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5496425Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5496610Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5497086Z ^[[36;1mimport { validateInstalledGraphExploration } from './scripts/lib/installed-v1-1-11-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5497893Z ^[[36;1mconst report = JSON.parse(fs.readFileSync('verified-review/installed-v1111-workflow.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5498862Z ^[[36;1mconst receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5499972Z ^[[36;1mvalidateInstalledGraphExploration(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5500697Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5501141Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Current graph workflow failed exact-installer validation' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5501590Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5502167Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.12','1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5503182Z ^[[36;1m  $backupReview = Get-Content verified-review/installed-v1112-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5504327Z ^[[36;1m  if ($backupReview.harnessSourceCommit -ne $review.head_sha -or $backupReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Content backup must use the exact successful driver and installed executable' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5505237Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5505420Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5505883Z ^[[36;1mimport { validateInstalledContentBackup } from './scripts/lib/installed-v1-1-12-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5506671Z ^[[36;1mconst report = JSON.parse(fs.readFileSync('verified-review/installed-v1112-workflow.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5507727Z ^[[36;1mconst receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5508834Z ^[[36;1mvalidateInstalledContentBackup(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5509532Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5509938Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Content backup exact-installer validation failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5510340Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5510889Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.13','1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5511746Z ^[[36;1m  $pdfReview = Get-Content verified-review/installed-v1113-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5512860Z ^[[36;1m  if ($pdfReview.harnessSourceCommit -ne $review.head_sha -or $pdfReview.executableSha256 -ne $searchReview.executableSha256) { throw 'PDF reading review must use the exact successful driver and installed executable' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5513740Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5513914Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5514697Z ^[[36;1mimport { validateInstalledPdfReading } from './scripts/lib/installed-v1-1-13-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5515485Z ^[[36;1mconst report = JSON.parse(fs.readFileSync('verified-review/installed-v1113-workflow.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5516469Z ^[[36;1mconst receipt = JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5517549Z ^[[36;1mvalidateInstalledPdfReading(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5518232Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5518686Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Current PDF reading workflow failed exact-installer validation' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5519143Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5519674Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.14','1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5520523Z ^[[36;1m  $writingReview = Get-Content verified-review/installed-v1114-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5521634Z ^[[36;1m  if ($writingReview.harnessSourceCommit -ne $review.head_sha -or $writingReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Writing delivery must use the exact driver and installed executable' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5522494Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5522672Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5523125Z ^[[36;1mimport {validateInstalledWritingDelivery} from './scripts/lib/installed-v1-1-14-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5524020Z ^[[36;1mconst report=JSON.parse(fs.readFileSync('verified-review/installed-v1114-workflow.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5524981Z ^[[36;1mconst receipt=JSON.parse(fs.readFileSync('verified-build/community-release-output/installer-build-receipt.json','utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5526078Z ^[[36;1mvalidateInstalledWritingDelivery(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5526776Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5527183Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Writing delivery exact-installer validation failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5527657Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5528160Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.15','1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5529483Z ^[[36;1m  $tableReview = Get-Content verified-review/installed-v1115-workflow.json -Raw | ConvertFrom-Json^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5530514Z ^[[36;1m  if ($tableReview.harnessSourceCommit -ne $review.head_sha -or $tableReview.executableSha256 -ne $searchReview.executableSha256) { throw 'Table review source, executable or driver differs' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5531303Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5531478Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5531725Z ^[[36;1mimport crypto from 'node:crypto';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5532193Z ^[[36;1mimport {validateInstalledTableEditing} from './scripts/lib/installed-v1-1-15-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5532782Z ^[[36;1mconst read=n=>JSON.parse(fs.readFileSync(n,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5533598Z ^[[36;1mconst report=read('verified-review/installed-v1115-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5535102Z ^[[36;1mvalidateInstalledTableEditing(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5536692Z ^[[36;1mfor(const [field,file]of [['csvInspection','installed-v1115-saved.csv'],['xlsxInspection','installed-v1115-export.xlsx']])if(crypto.createHash('sha256').update(fs.readFileSync('verified-review/'+file)).digest('hex')!==report[field].sha256)throw Error('Actual native table delivery bytes mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5537846Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5538217Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer table workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5538583Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5539069Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.16','1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5539637Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5539818Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5540068Z ^[[36;1mimport crypto from 'node:crypto';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5540616Z ^[[36;1mimport {validateInstalledWorkbookEditing} from './scripts/lib/installed-v1-1-16-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5541224Z ^[[36;1mconst read=n=>JSON.parse(fs.readFileSync(n,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5542258Z ^[[36;1mconst report=read('verified-review/installed-v1116-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5543609Z ^[[36;1mvalidateInstalledWorkbookEditing(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5544813Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Workbook driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5546688Z ^[[36;1mfor(const [file,hash]of [['installed-v1116-saved.xlsx',report.workbookInspection.sha256],['installed-v1116-producer.xlsx',report.workbookInspection.producerReopen.sha256]])if(crypto.createHash('sha256').update(fs.readFileSync('verified-review/'+file)).digest('hex')!==hash)throw Error('Actual workbook bytes mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5547961Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5548345Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer workbook workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5548719Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5549182Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.17','1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5549803Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5549981Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5550523Z ^[[36;1mimport {validateInstalledDocxEditing,assertDocxOutputBytes} from './scripts/lib/installed-v1-1-17-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5551208Z ^[[36;1mconst read=n=>JSON.parse(fs.readFileSync(n,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5552238Z ^[[36;1mconst report=read('verified-review/installed-v1117-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5553565Z ^[[36;1mvalidateInstalledDocxEditing(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5555051Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('DOCX driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5555963Z ^[[36;1massertDocxOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5556393Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5556756Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer DOCX workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5557114Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5557562Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.18','1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5558082Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5558255Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5558795Z ^[[36;1mimport {validateInstalledPptxEditing,assertPptxOutputBytes} from './scripts/lib/installed-v1-1-18-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5559512Z ^[[36;1mconst read=name=>JSON.parse(fs.readFileSync(name,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5560565Z ^[[36;1mconst report=read('verified-review/installed-v1118-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5561897Z ^[[36;1mvalidateInstalledPptxEditing(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5563053Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('PPTX driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5563938Z ^[[36;1massertPptxOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5564362Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5564720Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer PPTX workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5565074Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5565504Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.19','1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5566012Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5566296Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5566855Z ^[[36;1mimport {validateInstalledOrganizing,assertOrganizingOutputBytes} from './scripts/lib/installed-v1-1-19-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5567591Z ^[[36;1mconst read=name=>JSON.parse(fs.readFileSync(name,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5568631Z ^[[36;1mconst report=read('verified-review/installed-v1119-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5569950Z ^[[36;1mvalidateInstalledOrganizing(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5571127Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Organizing driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5572152Z ^[[36;1massertOrganizingOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5572615Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5572999Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer organizing workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5573379Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5573796Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.20','1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5574283Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5574463Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5575353Z ^[[36;1mimport {validateInstalledStructured,assertStructuredOutputBytes} from './scripts/lib/installed-v1-1-20-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5576100Z ^[[36;1mconst read=name=>JSON.parse(fs.readFileSync(name,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5577154Z ^[[36;1mconst report=read('verified-review/installed-v1120-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5578471Z ^[[36;1mvalidateInstalledStructured(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5579642Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Structured driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5580575Z ^[[36;1massertStructuredOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5581025Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5581402Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer structured workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5581779Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5582174Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.21','1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5582641Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5582815Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5583362Z ^[[36;1mimport {validateInstalledCrossCopy,assertCrossCopyOutputBytes} from './scripts/lib/installed-v1-1-21-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5584089Z ^[[36;1mconst read=name=>JSON.parse(fs.readFileSync(name,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5585153Z ^[[36;1mconst report=read('verified-review/installed-v1121-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5586474Z ^[[36;1mvalidateInstalledCrossCopy(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5587678Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Cross-library copy driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5589264Z ^[[36;1massertCrossCopyOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5589731Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5590152Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer cross-library copy workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5590564Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5590947Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.22','1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5591403Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5591579Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5592159Z ^[[36;1mimport {validateInstalledFileHistory,assertFileHistoryOutputBytes} from './scripts/lib/installed-v1-1-22-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5593006Z ^[[36;1mconst read=name=>JSON.parse(fs.readFileSync(name,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5594072Z ^[[36;1mconst report=read('verified-review/installed-v1122-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5595927Z ^[[36;1mvalidateInstalledFileHistory(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5597339Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('File operation history driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5598344Z ^[[36;1massertFileHistoryOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5598800Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5599243Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer file operation history workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5599670Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5600034Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.23','1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5600466Z ^[[36;1m@'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5600639Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5601205Z ^[[36;1mimport {validateInstalledAttachments,assertAttachmentOutputBytes} from './scripts/lib/installed-v1-1-23-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5601924Z ^[[36;1mconst read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5602952Z ^[[36;1mconst report=read('verified-review/installed-v1123-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5604279Z ^[[36;1mvalidateInstalledAttachments(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5605471Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Attachment driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5606412Z ^[[36;1massertAttachmentOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5606858Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5607240Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer attachment workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5607612Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5607947Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.24','1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5608358Z ^[[36;1m@'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5608523Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5609061Z ^[[36;1mimport {validateInstalledChapters,assertChapterOutputBytes} from './scripts/lib/installed-v1-1-24-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5609738Z ^[[36;1mconst read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5611162Z ^[[36;1mconst report=read('verified-review/installed-v1124-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5613294Z ^[[36;1mvalidateInstalledChapters(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5614475Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Chapter driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5615598Z ^[[36;1massertChapterOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5617539Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5618258Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer chapter workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5618693Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5618904Z ^[[36;1mif ($env:RELEASE_VERSION -eq '1.1.31') {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5619166Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5619347Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5619615Z ^[[36;1mimport assert from 'node:assert/strict';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5620264Z ^[[36;1mimport {validateInstalledWorkbookEntry,assertWorkbookEntryOutputBytes} from './scripts/lib/installed-v1-1-31-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5621019Z ^[[36;1mconst read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5622057Z ^[[36;1mconst report=read('verified-review/installed-v1131-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5623399Z ^[[36;1mvalidateInstalledWorkbookEntry(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5624303Z ^[[36;1mfor(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5624971Z ^[[36;1massertWorkbookEntryOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5625441Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5625871Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Installed workbook entry tasks or original bytes failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5626292Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5626513Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.30','1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5626798Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5626977Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5627241Z ^[[36;1mimport assert from 'node:assert/strict';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5627900Z ^[[36;1mimport {validateInstalledTableValidation,assertTableValidationOutputBytes} from './scripts/lib/installed-v1-1-30-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5628669Z ^[[36;1mconst read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5629696Z ^[[36;1mconst report=read('verified-review/installed-v1130-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5631043Z ^[[36;1mvalidateInstalledTableValidation(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5631955Z ^[[36;1mfor(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5632920Z ^[[36;1massertTableValidationOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5633471Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5633923Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Installed Table validation tasks or original bytes failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5634511Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5634760Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.29','1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5635082Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5635257Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5635518Z ^[[36;1mimport assert from 'node:assert/strict';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5636157Z ^[[36;1mimport {validateInstalledPdfContinuity,assertPdfContinuityOutputBytes} from './scripts/lib/installed-v1-1-29-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5636902Z ^[[36;1mconst read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5637931Z ^[[36;1mconst report=read('verified-review/installed-v1129-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5639349Z ^[[36;1mvalidateInstalledPdfContinuity(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5640258Z ^[[36;1mfor(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5640966Z ^[[36;1massertPdfContinuityOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5641436Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5641870Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Installed PDF continuity tasks or original bytes failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5642297Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5642570Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.28','1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5642925Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5643110Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5643370Z ^[[36;1mimport assert from 'node:assert/strict';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5644029Z ^[[36;1mimport {validateInstalledReferenceRepair,assertReferenceRepairOutputBytes} from './scripts/lib/installed-v1-1-28-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5644796Z ^[[36;1mconst read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5645821Z ^[[36;1mconst report=read('verified-review/installed-v1128-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5647171Z ^[[36;1mvalidateInstalledReferenceRepair(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5648077Z ^[[36;1mfor(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5648740Z ^[[36;1massertReferenceRepairOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5649213Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5649701Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Installed source and relationship repair tasks or original bytes failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5650186Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5650474Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.27','1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5650841Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5651014Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5651276Z ^[[36;1mimport assert from 'node:assert/strict';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5651925Z ^[[36;1mimport {validateInstalledCollectionReuse,assertCollectionReuseOutputBytes} from './scripts/lib/installed-v1-1-27-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5652676Z ^[[36;1mconst read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5654051Z ^[[36;1mconst report=read('verified-review/installed-v1127-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5655425Z ^[[36;1mvalidateInstalledCollectionReuse(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5656454Z ^[[36;1mfor(const key of ['executableSha256','harnessSourceCommit'])assert.equal(report[key],prior[key]);^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5657134Z ^[[36;1massertCollectionReuseOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5657606Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5658052Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Installed collection reuse tasks or exact output bytes failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5658496Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5658802Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.26','1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5659186Z ^[[36;1m  @'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5659445Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5660076Z ^[[36;1mimport {validateInstalledStructuredHistory,assertStructuredHistoryOutputBytes} from './scripts/lib/installed-v1-1-26-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5660854Z ^[[36;1mconst read=p=>JSON.parse(fs.readFileSync(p,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5661877Z ^[[36;1mconst report=read('verified-review/installed-v1126-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),prior=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5663224Z ^[[36;1mvalidateInstalledStructuredHistory(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5664346Z ^[[36;1mfor(const key of ['executableSha256','harnessSourceCommit'])if(report[key]!==prior[key])throw Error('Structured history belongs to another driver/executable');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5665237Z ^[[36;1massertStructuredHistoryOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5665721Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5666225Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Structured history and file submenus did not pass the exact installed product' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5666721Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5667047Z ^[[36;1mif ($env:RELEASE_VERSION -in @('1.1.25','1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31')) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5667446Z ^[[36;1m@'^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5667616Z ^[[36;1mimport fs from 'node:fs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5668187Z ^[[36;1mimport {validateInstalledFindReplace,assertFindReplaceOutputBytes} from './scripts/lib/installed-v1-1-25-evidence.mjs';^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5668901Z ^[[36;1mconst read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5669930Z ^[[36;1mconst report=read('verified-review/installed-v1125-workflow.json'),receipt=read('verified-build/community-release-output/installer-build-receipt.json'),search=read('verified-review/installed-v118-workflow.json');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5671272Z ^[[36;1mvalidateInstalledFindReplace(report,{appVersion:process.env.RELEASE_VERSION,sourceCommit:process.env.PRODUCT_COMMIT,artifacts:receipt.artifacts});^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5672469Z ^[[36;1mif(report.harnessSourceCommit!==search.harnessSourceCommit||report.executableSha256!==search.executableSha256)throw Error('Find/replace driver/executable identity mismatch');^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5673769Z ^[[36;1massertFindReplaceOutputBytes(report,file=>fs.readFileSync('verified-review/'+file));^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5674243Z ^[[36;1m'@ | node --input-type=module^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5674645Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Exact-installer find/replace workflow failed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5675032Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5675388Z ^[[36;1mNew-Item -ItemType Directory release-upload,release-publish-output -Force | Out-Null^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5675835Z ^[[36;1m$expected = @()^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5676079Z ^[[36;1mforeach ($artifact in $receipt.artifacts) {^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5676682Z ^[[36;1m  $source = Join-Path "verified-build/current-product/src-tauri/target/release/bundle/$($artifact.target)" $artifact.fileName^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5677849Z ^[[36;1m  if ((Get-Item $source).Length -ne $artifact.sizeBytes -or (Get-FileHash $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne $artifact.sha256) { throw 'Installer bytes changed' }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5678712Z ^[[36;1m  $name = $artifact.fileName.Replace('Long编辑_','LongEdit_')^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5679217Z ^[[36;1m  Copy-Item -LiteralPath $source -Destination (Join-Path release-upload $name)^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5679824Z ^[[36;1m  $expected += [ordered]@{ name=$name; sizeBytes=$artifact.sizeBytes; sha256=$artifact.sha256 }^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5680246Z ^[[36;1m}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5680512Z ^[[36;1m$lines = @($expected | ForEach-Object { "$($_.sha256)  $($_.name)" })^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5681291Z ^[[36;1m[IO.File]::WriteAllText((Join-Path $PWD 'release-upload/SHA256SUMS.txt'), ($lines -join "`n") + "`n", [Text.UTF8Encoding]::new($false))^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5682433Z ^[[36;1m$expected += [ordered]@{name='SHA256SUMS.txt';sizeBytes=(Get-Item release-upload/SHA256SUMS.txt).Length;sha256=(Get-FileHash release-upload/SHA256SUMS.txt -Algorithm SHA256).Hash.ToLowerInvariant()}^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5683531Z ^[[36;1m$expected | ConvertTo-Json -Depth 6 | Set-Content release-publish-output/expected-assets.json -Encoding utf8NoBOM^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5684340Z ^[[36;1mCopy-Item verified-build/community-release-output/installer-build-receipt.json release-publish-output/^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.5684976Z ^[[36;1mCopy-Item release-upload/SHA256SUMS.txt release-publish-output/^[[0m
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6431313Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6431772Z env:
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6435068Z   GH_TOKEN: ***
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6435319Z   BUILD_RUN: 39553674389
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6435566Z   REVIEW_RUN: 39560348810
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6435896Z   PRODUCT_COMMIT: d3072311171f12f717d456193fa3d035518f683a
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6436321Z   RELEASE_VERSION: 1.1.31
+publish	Verify source, successful review and exact installer bytes	2026-10-21T07:43:43.6436576Z ##[endgroup]
+publish	Publish exact packages and verify public downloads	﻿2026-10-21T07:43:53.4738836Z ##[group]Run $ErrorActionPreference = 'Stop'
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4739295Z ^[[36;1m$ErrorActionPreference = 'Stop'^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4739580Z ^[[36;1m$tag = "v$env:RELEASE_VERSION"^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4739950Z ^[[36;1m# The by-tag REST endpoint only resolves published releases.^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4740665Z ^[[36;1m$prepared = gh release view $tag --repo $env:GITHUB_REPOSITORY --json databaseId,isDraft,isPrerelease,tagName | ConvertFrom-Json^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4741382Z ^[[36;1mif ($LASTEXITCODE -ne 0) { throw 'Prepared release not found' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4741766Z ^[[36;1mif ($prepared.isDraft) {^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4742649Z ^[[36;1m  gh release upload $tag --repo $env:GITHUB_REPOSITORY "release-upload/LongEdit_$($env:RELEASE_VERSION)_x64-setup.exe" "release-upload/LongEdit_$($env:RELEASE_VERSION)_x64_zh-CN.msi" release-upload/SHA256SUMS.txt --clobber^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4743644Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4744360Z ^[[36;1m  gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest --notes-file "docs/RELEASE_NOTES_v$($env:RELEASE_VERSION).md"^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4745046Z ^[[36;1m  if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4745396Z ^[[36;1m}^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4745721Z ^[[36;1mgh release download $tag --repo $env:GITHUB_REPOSITORY --dir public-download^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4746238Z ^[[36;1mif ($LASTEXITCODE -ne 0) { throw 'Public attachment download failed' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4746772Z ^[[36;1m$release = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" | ConvertFrom-Json^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4747413Z ^[[36;1m$expected = Get-Content release-publish-output/expected-assets.json -Raw | ConvertFrom-Json^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4748212Z ^[[36;1mif ($release.draft -or $release.prerelease -or $release.assets.Count -ne $expected.Count) { throw 'Published release state mismatch' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4749023Z ^[[36;1m$verified = @()^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4749261Z ^[[36;1mforeach ($asset in $expected) {^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4749569Z ^[[36;1m  $file = Join-Path public-download $asset.name^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4749962Z ^[[36;1m  $remote = @($release.assets | Where-Object name -eq $asset.name)^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4751006Z ^[[36;1m  if ($remote.Count -ne 1 -or $remote[0].size -ne $asset.sizeBytes -or (Get-Item $file).Length -ne $asset.sizeBytes -or (Get-FileHash $file -Algorithm SHA256).Hash.ToLowerInvariant() -ne $asset.sha256) { throw 'Public download bytes mismatch' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4752161Z ^[[36;1m  if ($remote[0].digest -and $remote[0].digest -ne "sha256:$($asset.sha256)") { throw 'GitHub digest mismatch' }^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4752998Z ^[[36;1m  $verified += [ordered]@{name=$asset.name;sizeBytes=$asset.sizeBytes;sha256=$asset.sha256;assetId=$remote[0].id;remoteDownloadVerified=$true}^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4753601Z ^[[36;1m}^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4754052Z ^[[36;1m$release | ConvertTo-Json -Depth 20 | Set-Content release-publish-output/published-api.json -Encoding utf8NoBOM^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4755401Z ^[[36;1m[ordered]@{status='published-and-remote-assets-verified';sourceCommit=$env:PRODUCT_COMMIT;runId=$env:GITHUB_RUN_ID;assets=$verified} | ConvertTo-Json -Depth 8 | Set-Content release-publish-output/public-download-verification.json -Encoding utf8NoBOM^[[0m
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4825936Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4826288Z env:
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4828925Z   GH_TOKEN: ***
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4829127Z   BUILD_RUN: 39553674389
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4829342Z   REVIEW_RUN: 39560348810
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4829603Z   PRODUCT_COMMIT: d3072311171f12f717d456193fa3d035518f683a
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4829916Z   RELEASE_VERSION: 1.1.31
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:53.4830117Z ##[endgroup]
+publish	Publish exact packages and verify public downloads	2026-10-21T07:43:59.7307446Z https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31
+publish	Run actions/upload-artifact@v4	﻿2026-10-21T07:44:02.9135029Z ##[group]Run actions/upload-artifact@v4
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9135382Z with:
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9135609Z   name: community-release-publication-39563929623
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9135923Z   path: release-publish-output
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9136168Z   if-no-files-found: error
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9136381Z   compression-level: 6
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9136577Z   overwrite: false
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9136770Z   include-hidden-files: false
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9136987Z env:
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9139729Z   GH_TOKEN: ***
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9139922Z   BUILD_RUN: 39553674389
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9140125Z   REVIEW_RUN: 39560348810
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9140378Z   PRODUCT_COMMIT: d3072311171f12f717d456193fa3d035518f683a
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9140673Z   RELEASE_VERSION: 1.1.31
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:02.9140862Z ##[endgroup]
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.1147338Z (node:5044) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.1148704Z (Use `node --trace-deprecation ...` to show where the warning was created)
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.1228735Z With the provided path, there will be 5 files uploaded
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.1234090Z Artifact name is valid!
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.1236346Z Root directory input is valid!
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.4344198Z Beginning upload of artifact content to blob storage
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.4651754Z (node:5044) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.5878982Z Uploaded bytes 4376
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.6286559Z Finished uploading artifact content to blob storage!
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.6287792Z SHA256 digest of uploaded artifact zip is a14cd3f5765f319466ceca626d45ad1639cb0294a360311af098107f317b47c6
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.6290498Z Finalizing artifact upload
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.8564055Z Artifact community-release-publication-39563929623.zip successfully finalized. Artifact ID 12329002445
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.8566068Z Artifact community-release-publication-39563929623 has been successfully uploaded! Final size is 4376 bytes. Artifact ID is 12329002445
+publish	Run actions/upload-artifact@v4	2026-10-21T07:44:03.8579611Z Artifact download URL: https://github.com/Longyuyeee/Long_MarkDownReader/actions/runs/39563929623/artifacts/12329002445
+publish	Post Run actions/checkout@v6	﻿2026-10-21T07:44:03.8934629Z Post job cleanup.
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.0907327Z [command]"C:\Program Files\Git\bin\git.exe" version
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.1272338Z git version 2.56.0.windows.2
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.1349936Z Temporarily overriding HOME='D:\a\_temp\84fbbb30-d5b5-41a3-9479-9524e41fdd64' before making global git config changes
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.1351047Z Adding repository directory to the temporary git global config as a safe directory
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.1361707Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\Long_MarkDownReader\Long_MarkDownReader
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.1743352Z Removing SSH command configuration
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.1754528Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.2147936Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.7898560Z Removing HTTP extra header
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.7908559Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:04.8314958Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4052809Z Removing includeIf entries pointing to credentials config files
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4065646Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4423100Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4423859Z includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4424321Z includeif.gitdir:/github/workspace/.git.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4424895Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4463823Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4815002Z D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.4868700Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git.path D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.5277584Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.5623979Z D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.5668237Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/Long_MarkDownReader/Long_MarkDownReader/.git/worktrees/*.path D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.6179433Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.6528640Z /github/runner_temp/git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.6570013Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.6975311Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.7320116Z /github/runner_temp/git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.7362980Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:05.7750999Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+publish	Post Run actions/checkout@v6	2026-10-21T07:44:06.3547643Z Removing credentials config 'D:\a\_temp\git-credentials-5bd86324-d6ca-4ee1-ac2f-bdddda06fe44.config'
+publish	Complete job	﻿2026-10-21T07:44:06.3744534Z Cleaning up orphan processes
+publish	Complete job	2026-10-21T07:44:06.3785366Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/download-artifact@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
