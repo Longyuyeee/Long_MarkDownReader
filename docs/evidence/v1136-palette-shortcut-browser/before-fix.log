@@ -1,0 +1,15 @@
+{
+  "before": "vditor-menu--current",
+  "after": "vditor-menu--current",
+  "clicks": [
+    {
+      "trusted": true,
+      "tag": "PRE"
+    },
+    {
+      "trusted": false,
+      "type": "both",
+      "tag": "BUTTON"
+    }
+  ]
+}

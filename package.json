@@ -588,7 +588,7 @@
     "test:content-restore-continuity": "node --test scripts/test-content-restore-continuity.mjs scripts/test-v1132-installed-release.mjs",
     "test:copy-reading-outcomes": "node --test scripts/test-v1133-installed-release.mjs",
     "test:portable-chapter-links": "node --experimental-strip-types --test scripts/test-portable-chapter-links.mjs scripts/test-v1134-installed-release.mjs",
-    "test:context-commands": "node --experimental-strip-types --test scripts/test-context-commands.mjs scripts/test-v1136-installed-release.mjs",
+    "test:context-commands": "node --experimental-strip-types --test scripts/test-context-commands.mjs scripts/test-v1136-installed-release.mjs scripts/test-command-palette-shortcut.mjs",
     "test:attachment-drafts": "node --experimental-strip-types --test scripts/test-attachment-drafts.mjs scripts/test-v1135-installed-release.mjs"
   },
   "dependencies": {

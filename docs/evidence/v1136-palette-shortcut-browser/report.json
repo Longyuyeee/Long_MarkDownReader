@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "evidenceLevel": "browser-production-App-and-Vditor-with-controlled-IPC",
+  "checks": [
+    "ir opens only the application palette and preserves content",
+    "sv opens only the application palette and preserves content",
+    "wysiwyg opens only the application palette and preserves content"
+  ],
+  "errors": []
+}
