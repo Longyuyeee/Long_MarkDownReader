@@ -1,0 +1,36 @@
+{
+  "appVersion": "1.1.31",
+  "sourceCommit": "d3072311171f12f717d456193fa3d035518f683a",
+  "installerSha256": "38849d7804a62b002ae9e0ac0ec5b7321d2c434ac197d1ed0354410a24552c1d",
+  "harnessSourceCommit": "d3072311171f12f717d456193fa3d035518f683a",
+  "executableSha256": "7d4a547e6e9abaa0476ae533b9f44847ecf302296ac9bb475aedfb2843bfa9ff",
+  "status": "failed",
+  "evidenceLevel": "installed-native-workbook-entry-check-and-correction",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "integer-direct-refusal-with-draft-retained",
+      "status": "passed"
+    },
+    {
+      "id": "mixed-paste-atomic-rejection",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1131-before.xlsx",
+      "sizeBytes": 6493,
+      "sha256": "067223d4be07f0930c080b53e5d07390c4f029e5e4860df154578cd02b42eb6a"
+    }
+  ],
+  "directRefused": true,
+  "atomicRefused": true,
+  "failure": "Error: Actual native UI did not become ready: unobscured target document.querySelector(\".workbook-view button[title=\\\"撤销\\\"]\")\n    at waitFor (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:8:11)\n    at async settledPoint (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:17:5)\n    at async clickTarget (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/v118-native-user-input.mjs:36:17)\n    at async runInstalledV1131Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-31-workflow.mjs:31:150)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:1074:5",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1131-entry-c1903d6a-20fb-4efc-b6c2-ab47c3eed7e4%5C%E8%BF%9E%E7%BB%AD%E5%BD%95%E5%85%A5%E4%B8%89%E4%B8%80.xlsx",
+    "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\nR5L Disposable Vault\n▾\nrenamed.md\nreference-final.txt\nincoming\ndraft\nplain-new.md\n接续草稿.txt\n方案.md\n记录\n标签笔记000\n图谱验收主题017 - 项目长期研究与来源证据核对\n项目写作\n研究 来源\n研究 来源\n阅读成果\n研究 来源\n研究 来源\n任务清单\n不要修改\n任务清单\n项目 工作簿\n不要修改\n独立生产者 另存\n同事更新\nmicrosoft-word-16-source\n不要修改\nmicrosoft-word-16-copy\nwps-writer-source\nwps-writer-copy\nlibreoffice-writer-source\nlibreoffice-writer-copy\njson\n不要修改\nyaml\nxml\ntoml\n项目\n接续来源\n项目\n保留扩展\n不要修改\n同事更新\nmicrosoft-powerpoint-16-source\n不要修改\nmicrosoft-powerpoint-16-copy\nwps-presentation-source\nwps-presentation-copy\nlibreoffice-impress-source\nlibreoffice-impress-copy\n交付 草稿\n用户填写的文章\n真实 打印\nsaved\nwarning\n草稿.md\n笔记\n引用笔记\n菜单检查\njson\njson-恢复-1792565966-1\nyaml\nyaml-恢复-1792565976-1\nxml\nxml-恢复-1792565986-1\ntoml\ntoml-恢复-1792565996-1\n查找文本-v1125\n对照-v1125\n查找长文-v1125\n对照-v1124\n章节长文-v1124\n二草稿\n引用修复二八\n资料\n接续阅读笔记二九\n接续来源二九\n持续录入三零\n临时检查三零\n临时检查三零\n列表校验三零\n连续录入三一\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n添加资料关系\n资料关系\n0\n\n暂无手动关系\n\n这类文件不使用笔记引用\n打开笔记\n在知识图谱中查看\n486 篇笔记\n5,207 词\n当前资料库\nv1.1.31\nR5L Disposable Vault\n连续录入三一.xlsx\n专注\n添加关系\n参考\n文档操作\n连续录入三一.xlsx\nXLSX 工作簿 · 3 个 Sheet · 6.3 KB\n工具\n保存 (3)\n录入\n保留\nOptions\n5 行 × 5 列\n页面\n设为打印区域\n清除打印区域\n页面设置\n打印选项\n页眉页脚\n无命名区域\nA2:B2\nfx\n3 个更改项尚未保存\n#\nA\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\n1\n数量\n单价\n备注\n日期\n区域列表\n2\n3\n0.3\n太长的备注\n2026-10-21\n甲\n3\n99\n99\n隐藏原文\n2025-01-01\n乙\n4\n2\n0.2\n好\n2026-10-22\n=A4\n5\n未保存保护三一\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\nExcel 工作簿 · 基础编辑\n参考 · 只读\n资料.txt\n000-v1128-reference-b49c01d5-d323-4614-a33b-e098b1bc3cc5/新目录/资料.txt\n×\n刷新参考\n返回编辑\n•••\n取消来源\n文本内容 · 只读\n二八独特来源文字\n预算资料，原文件必须保持\n\n打开可编辑 Markdown 笔记后可插入\n复制选中文字及来源\n先在参考内容中选择需要摘录的文字\n参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。\n在主编辑区打开"
+  }
+}

@@ -125,6 +125,7 @@ const files = fs.readdirSync(directory).filter(file => (/\.(?:json|jpg|png)$/i.t
 for (const file of files) fs.copyFileSync(path.join(directory, file), path.join(evidenceRoot, file))
 const entries = files.map(file => { const bytes = fs.readFileSync(path.join(evidenceRoot, file)); return { path: file, sizeBytes: bytes.length, sha256: digest(bytes) } })
 const runtimeReports = Object.fromEntries([
+  ...(version==='1.1.31' ? [['workbookEntry',reports.workbookEntry.file]] : []),
   ...(['1.1.30','1.1.31'].includes(version) ? [['tableValidation',reports.tableValidation.file]] : []),
   ...(['1.1.29','1.1.30', '1.1.31'].includes(version) ? [['pdfContinuity',reports.pdfContinuity.file]] : []),
   ...(['1.1.28','1.1.29', '1.1.30', '1.1.31'].includes(version) ? [['referenceRepair',reports.referenceRepair.file]] : []),
@@ -161,6 +162,7 @@ const manifest = {
   qualityGate: { status: 'passed', command: 'npm run ci:patch-release', runId: buildRun },
   runtimeSmoke: { status: 'passed-installed-tauri-webview2', checksPassed: 18, routesPassed: 11, reports: runtimeReports },
   hostedInstalledLifecycle: {
+    ...(version==='1.1.31' ? {workbookEntryChecksPassed:workbookEntryChecks.length} : {}),
     ...(['1.1.30','1.1.31'].includes(version) ? {tableValidationChecksPassed:tableValidationChecks.length} : {}),
     ...(['1.1.25','1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31'].includes(version) ? {findReplaceChecksPassed:findReplaceChecks.length} : {}),
     ...(['1.1.24','1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31'].includes(version) ? {chapterChecksPassed:chapterChecks.length} : {}),
@@ -200,6 +202,7 @@ write(path.join(releaseRoot, 'import-manifest.json'), {
   productSourceCommit: receipt.candidateSourceCommit, appVersion: version, sourceUserContentIncluded: false,
   releaseCandidate: false,
   checks: {
+    ...(version==='1.1.31' ? {workbookEntryPassed:workbookEntryChecks.length} : {}),
     ...(['1.1.30','1.1.31'].includes(version) ? {tableValidationPassed:tableValidationChecks.length} : {}),
     ...(['1.1.25','1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31'].includes(version) ? {findReplacePassed:findReplaceChecks.length} : {}),
     ...(['1.1.24','1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31'].includes(version) ? {chaptersPassed:chapterChecks.length} : {}),
