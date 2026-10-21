@@ -1,0 +1,22 @@
+
+> tauri-app@1.1.29 test:pdf-reading-continuity
+> node --test scripts/test-pdf-reading-continuity.mjs scripts/test-pdf-reading-note.mjs scripts/test-v1129-installed-release.mjs
+
+✔ managed boundaries preserve exact outside prose and prevent duplicate identity on repeat updates (14.2043ms)
+✔ user edits inside generated text refuse replacement and allow explicit append without changing original (1.1871ms)
+✔ deleted annotations retain their excerpts by default; adding genuinely new ids does not select old unselected ones (1.2202ms)
+✔ legacy, fenced examples and malformed boundaries never infer a replaceable user section (1.3276ms)
+✔ PDF notes page range works for one page, disjoint ranges and rejects invalid/outside ranges (2.2659ms)
+✔ PDF reading note retains quote and optional comment, escapes Markdown and only includes snapshot items (0.8209ms)
+✔ Draft insertion never writes and appends to latest content while keeping save identity (0.4528ms)
+✔ PDF reference validates digest, keeps legacy compatibility and rejects traversal (5.1846ms)
+✔ Same-named draft targets show their actual folder including Windows extended aliases (0.4069ms)
+✔ native PDF continuity observations parse and every publication stage binds actual output bytes (218.0275ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 640.9749

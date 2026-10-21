@@ -219,3 +219,32 @@ fn reading_rejects_damaged_or_mismatched_sidecar_and_window_identity() {
         assert!(main_only(label).is_err());
     }
 }
+
+#[test]
+fn reading_refresh_distinguishes_new_deleted_and_previously_unselected_annotations() {
+    let f = Fixture::new();
+    let original = f.snapshot();
+    let pdf_bytes = fs::read(&f.pdf).unwrap();
+    let mut document: PdfAnnotationDocument = serde_json::from_slice(&fs::read(&f.companion).unwrap()).unwrap();
+    document.annotations.retain(|a| a.id != "a-1");
+    document.annotations.iter_mut().find(|a| a.id == "a-2").unwrap().comment = "更新评论".into();
+    let mut added = document.annotations[0].clone(); added.id = "new-annotation".into(); document.annotations.push(added);
+    let bytes = serde_json::to_vec(&document).unwrap(); fs::write(&f.companion, &bytes).unwrap();
+    let ids = vec!["a-2".into(), "a-1".into()];
+    let kept = refresh_snapshot(&f.root, &f.pdf, &original.source_digest, &ids, &original.known_annotation_ids, false).unwrap();
+    assert_eq!(kept.items.len(), 1); assert_eq!(kept.items[0].annotation.comment, "更新评论"); assert_eq!(kept.missing_ids, vec!["a-1"]);
+    let expanded = refresh_snapshot(&f.root, &f.pdf, &original.source_digest, &ids, &original.known_annotation_ids, true).unwrap();
+    assert_eq!(expanded.items.iter().map(|i| i.annotation.id.as_str()).collect::<Vec<_>>(), vec!["a-2", "new-annotation"]);
+    assert_eq!(fs::read(&f.pdf).unwrap(), pdf_bytes); assert_eq!(fs::read(&f.companion).unwrap(), bytes);
+}
+#[test]
+fn reading_refresh_handles_all_deleted_and_rejects_a_changed_pdf_without_writing() {
+    let f = Fixture::new(); let original = f.snapshot();
+    let mut document: PdfAnnotationDocument = serde_json::from_slice(&fs::read(&f.companion).unwrap()).unwrap();
+    document.annotations.clear(); let bytes = serde_json::to_vec(&document).unwrap(); fs::write(&f.companion, &bytes).unwrap();
+    let refreshed = refresh_snapshot(&f.root, &f.pdf, &original.source_digest, &["a-1".into()], &original.known_annotation_ids, false).unwrap();
+    assert!(refreshed.items.is_empty()); assert_eq!(refreshed.missing_ids, vec!["a-1"]);
+    fs::write(&f.pdf, b"replacement PDF bytes").unwrap();
+    assert!(refresh_snapshot(&f.root, &f.pdf, &original.source_digest, &["a-1".into()], &original.known_annotation_ids, true).is_err());
+    assert_eq!(fs::read(&f.companion).unwrap(), bytes);
+}

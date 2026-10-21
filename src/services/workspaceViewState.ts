@@ -1,4 +1,5 @@
 export interface WorkspaceViewState {
+  pdfAnnotations?: { signature:string; id:string; query:string; pages:string; kind:string; color:string; listPage:number; selection:string[]; scrollTop:number }
   scrollTop: number
   scrollLeft: number
   section?: string

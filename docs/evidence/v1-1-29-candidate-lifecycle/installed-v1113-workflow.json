@@ -1,0 +1,778 @@
+{
+  "appVersion": "1.1.29",
+  "sourceCommit": "c177bbe9952684b61fcf0f253f77d88a6cfbcb9a",
+  "installerSha256": "355bf02d719da0dc7ca8b13a771ddfa6ff7664fa12e324a69a1ed20ab5f3fb75",
+  "harnessSourceCommit": "c177bbe9952684b61fcf0f253f77d88a6cfbcb9a",
+  "executableSha256": "0f6e45f76c40c1fab4f6e1c421bb9bcdad482f436adeb060461a9f918dff4706",
+  "evidenceLevel": "installed-webview-input-native-pdf-notes-picker-and-disk",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "installed-identity-and-source-fixtures",
+      "status": "passed"
+    },
+    {
+      "id": "long-pdf-filtered-paginated-annotations",
+      "status": "passed"
+    },
+    {
+      "id": "selected-notes-preview-only",
+      "status": "passed"
+    },
+    {
+      "id": "draft-only-append-keeps-unsaved-input-and-disk",
+      "status": "passed"
+    },
+    {
+      "id": "explicit-save-persists-source-links",
+      "status": "passed"
+    },
+    {
+      "id": "source-link-returns-exact-page-annotation",
+      "status": "passed"
+    },
+    {
+      "id": "deleted-annotation-honest-page-fallback",
+      "status": "passed"
+    },
+    {
+      "id": "legacy-link-remains-explicitly-unverified",
+      "status": "passed"
+    },
+    {
+      "id": "real-native-new-note-picker-and-selected-output",
+      "status": "passed"
+    },
+    {
+      "id": "existing-note-never-overwritten",
+      "status": "passed"
+    },
+    {
+      "id": "same-size-same-time-replacement-rejected",
+      "status": "passed"
+    },
+    {
+      "id": "moved-source-user-relinks-verified-draft",
+      "status": "passed"
+    },
+    {
+      "id": "relative-restored-copy-keeps-source-identity",
+      "status": "passed"
+    },
+    {
+      "id": "original-pdf-sidecar-unselected-bytes-and-no-errors",
+      "status": "passed"
+    }
+  ],
+  "sourceBefore": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+  "sidecarBefore": "6ec133e40ca5cc17017dd81041aeac284e5dde23f2cf06bdbda4eb93c7ebe8df",
+  "unselectedBefore": "c5cc304c5742c0f757b3dd9d343cc5fb6e3ab7a6b177d94481c14c9a7795808b",
+  "annotationCount": 240,
+  "selectedIds": [
+    "reading-11",
+    "reading-14"
+  ],
+  "pdfPages": 86,
+  "editorModes": {
+    "before": "sv",
+    "after": "sv"
+  },
+  "dirtyBeforeInsert": true,
+  "targetSignatureBefore": "15:1792548834021595100:aee6c983c93433d9a2204e99b40ddcf5",
+  "filteredCount": 6,
+  "previewCount": 2,
+  "snapshot": {
+    "sourceDigest": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+    "sourceSignature": "31248:1792548834019136100",
+    "relativePath": "v1113-reading-0ddb38f5-05b9-4771-a36f-ad8c7137b85e/研究 来源.pdf",
+    "items": [
+      {
+        "annotation": {
+          "id": "reading-11",
+          "kind": "comment",
+          "page": 12,
+          "color": "yellow",
+          "rects": [],
+          "quote": "",
+          "comment": "用户阅读评论 11",
+          "createdAt": 12,
+          "updatedAt": 12
+        },
+        "uri": "longedit://pdf?path=v1113-reading-0ddb38f5-05b9-4771-a36f-ad8c7137b85e%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 12 页"
+      },
+      {
+        "annotation": {
+          "id": "reading-14",
+          "kind": "highlight",
+          "page": 15,
+          "color": "yellow",
+          "rects": [
+            {
+              "x": 0.08,
+              "y": 0.07,
+              "width": 0.6,
+              "height": 0.05
+            }
+          ],
+          "quote": "Reading source page 15",
+          "comment": "用户阅读评论 14",
+          "createdAt": 15,
+          "updatedAt": 15
+        },
+        "uri": "longedit://pdf?path=v1113-reading-0ddb38f5-05b9-4771-a36f-ad8c7137b85e%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+        "label": "研究 来源.pdf · 第 15 页"
+      }
+    ],
+    "knownAnnotationIds": [
+      "reading-0",
+      "reading-1",
+      "reading-2",
+      "reading-3",
+      "reading-4",
+      "reading-5",
+      "reading-6",
+      "reading-7",
+      "reading-8",
+      "reading-9",
+      "reading-10",
+      "reading-11",
+      "reading-12",
+      "reading-13",
+      "reading-14",
+      "reading-15",
+      "reading-16",
+      "reading-17",
+      "reading-18",
+      "reading-19",
+      "reading-20",
+      "reading-21",
+      "reading-22",
+      "reading-23",
+      "reading-24",
+      "reading-25",
+      "reading-26",
+      "reading-27",
+      "reading-28",
+      "reading-29",
+      "reading-30",
+      "reading-31",
+      "reading-32",
+      "reading-33",
+      "reading-34",
+      "reading-35",
+      "reading-36",
+      "reading-37",
+      "reading-38",
+      "reading-39",
+      "reading-40",
+      "reading-41",
+      "reading-42",
+      "reading-43",
+      "reading-44",
+      "reading-45",
+      "reading-46",
+      "reading-47",
+      "reading-48",
+      "reading-49",
+      "reading-50",
+      "reading-51",
+      "reading-52",
+      "reading-53",
+      "reading-54",
+      "reading-55",
+      "reading-56",
+      "reading-57",
+      "reading-58",
+      "reading-59",
+      "reading-60",
+      "reading-61",
+      "reading-62",
+      "reading-63",
+      "reading-64",
+      "reading-65",
+      "reading-66",
+      "reading-67",
+      "reading-68",
+      "reading-69",
+      "reading-70",
+      "reading-71",
+      "reading-72",
+      "reading-73",
+      "reading-74",
+      "reading-75",
+      "reading-76",
+      "reading-77",
+      "reading-78",
+      "reading-79",
+      "reading-80",
+      "reading-81",
+      "reading-82",
+      "reading-83",
+      "reading-84",
+      "reading-85",
+      "reading-86",
+      "reading-87",
+      "reading-88",
+      "reading-89",
+      "reading-90",
+      "reading-91",
+      "reading-92",
+      "reading-93",
+      "reading-94",
+      "reading-95",
+      "reading-96",
+      "reading-97",
+      "reading-98",
+      "reading-99",
+      "reading-100",
+      "reading-101",
+      "reading-102",
+      "reading-103",
+      "reading-104",
+      "reading-105",
+      "reading-106",
+      "reading-107",
+      "reading-108",
+      "reading-109",
+      "reading-110",
+      "reading-111",
+      "reading-112",
+      "reading-113",
+      "reading-114",
+      "reading-115",
+      "reading-116",
+      "reading-117",
+      "reading-118",
+      "reading-119",
+      "reading-120",
+      "reading-121",
+      "reading-122",
+      "reading-123",
+      "reading-124",
+      "reading-125",
+      "reading-126",
+      "reading-127",
+      "reading-128",
+      "reading-129",
+      "reading-130",
+      "reading-131",
+      "reading-132",
+      "reading-133",
+      "reading-134",
+      "reading-135",
+      "reading-136",
+      "reading-137",
+      "reading-138",
+      "reading-139",
+      "reading-140",
+      "reading-141",
+      "reading-142",
+      "reading-143",
+      "reading-144",
+      "reading-145",
+      "reading-146",
+      "reading-147",
+      "reading-148",
+      "reading-149",
+      "reading-150",
+      "reading-151",
+      "reading-152",
+      "reading-153",
+      "reading-154",
+      "reading-155",
+      "reading-156",
+      "reading-157",
+      "reading-158",
+      "reading-159",
+      "reading-160",
+      "reading-161",
+      "reading-162",
+      "reading-163",
+      "reading-164",
+      "reading-165",
+      "reading-166",
+      "reading-167",
+      "reading-168",
+      "reading-169",
+      "reading-170",
+      "reading-171",
+      "reading-172",
+      "reading-173",
+      "reading-174",
+      "reading-175",
+      "reading-176",
+      "reading-177",
+      "reading-178",
+      "reading-179",
+      "reading-180",
+      "reading-181",
+      "reading-182",
+      "reading-183",
+      "reading-184",
+      "reading-185",
+      "reading-186",
+      "reading-187",
+      "reading-188",
+      "reading-189",
+      "reading-190",
+      "reading-191",
+      "reading-192",
+      "reading-193",
+      "reading-194",
+      "reading-195",
+      "reading-196",
+      "reading-197",
+      "reading-198",
+      "reading-199",
+      "reading-200",
+      "reading-201",
+      "reading-202",
+      "reading-203",
+      "reading-204",
+      "reading-205",
+      "reading-206",
+      "reading-207",
+      "reading-208",
+      "reading-209",
+      "reading-210",
+      "reading-211",
+      "reading-212",
+      "reading-213",
+      "reading-214",
+      "reading-215",
+      "reading-216",
+      "reading-217",
+      "reading-218",
+      "reading-219",
+      "reading-220",
+      "reading-221",
+      "reading-222",
+      "reading-223",
+      "reading-224",
+      "reading-225",
+      "reading-226",
+      "reading-227",
+      "reading-228",
+      "reading-229",
+      "reading-230",
+      "reading-231",
+      "reading-232",
+      "reading-233",
+      "reading-234",
+      "reading-235",
+      "reading-236",
+      "reading-237",
+      "reading-238",
+      "reading-239"
+    ],
+    "missingIds": []
+  },
+  "exactDraftPrefix": true,
+  "dirtyAfterInsert": true,
+  "targetSignatureAfterInsert": "15:1792548834021595100:aee6c983c93433d9a2204e99b40ddcf5",
+  "draftDiskUnchangedBeforeSave": true,
+  "appendedDraftSha256": "f08321bb0d18d5a48daa5708de43ec07c26286d5d9e2b1c08853f94c455bb37e",
+  "saveExpectation": {
+    "observedFrom": "rendered-vditor-source-before-explicit-save",
+    "mode": "sv",
+    "markdown": "# 我正在写方案\n\n这段还没有保存，整理 PDF 时不能代存或丢失。\n\n<!-- longedit:pdf-reading:v1 eyJ2ZXJzaW9uIjoxLCJpZCI6IjIyY2MyODVkLWQ5MmItNDg5Mi1iOGVhLTFiN2I1MDllZGIxOSIsImdyb3VwaW5nIjoicGFnZSIsImNvbW1lbnRzIjp0cnVlLCJzbmFwc2hvdCI6eyJzb3VyY2VEaWdlc3QiOiI0ZGFmZDJhMzRiOTI5MWFjZmJlMzg4NzMzYTVkZjZjMTA4NTYzZDg1MDc2NGY3MDlmMTMyZjEzM2U3ODNmNjgzIiwic291cmNlU2lnbmF0dXJlIjoiMzEyNDg6MTc5MjU0ODgzNDAxOTEzNjEwMCIsInJlbGF0aXZlUGF0aCI6InYxMTEzLXJlYWRpbmctMGRkYjM4ZjUtMDViOS00NzcxLWEzNmYtYWQ4YzcxMzdiODVlL+eglOeptiDmnaXmupAucGRmIiwiaXRlbXMiOlt7ImFubm90YXRpb24iOnsiaWQiOiJyZWFkaW5nLTExIiwia2luZCI6ImNvbW1lbnQiLCJwYWdlIjoxMiwiY29sb3IiOiJ5ZWxsb3ciLCJyZWN0cyI6W10sInF1b3RlIjoiIiwiY29tbWVudCI6IueUqOaIt+mYheivu+ivhOiuuiAxMSIsImNyZWF0ZWRBdCI6MTIsInVwZGF0ZWRBdCI6MTJ9LCJ1cmkiOiJsb25nZWRpdDovL3BkZj9wYXRoPXYxMTEzLXJlYWRpbmctMGRkYjM4ZjUtMDViOS00NzcxLWEzNmYtYWQ4YzcxMzdiODVlJTJGJUU3JUEwJTk0JUU3JUE5JUI2JTIwJUU2JTlEJUE1JUU2JUJBJTkwLnBkZiZwYWdlPTEyJmFubm90YXRpb249cmVhZGluZy0xMSZzaGEyNTY9NGRhZmQyYTM0YjkyOTFhY2ZiZTM4ODczM2E1ZGY2YzEwODU2M2Q4NTA3NjRmNzA5ZjEzMmYxMzNlNzgzZjY4MyIsImxhYmVsIjoi56CU56m2IOadpea6kC5wZGYgwrcg56ysIDEyIOmhtSJ9LHsiYW5ub3RhdGlvbiI6eyJpZCI6InJlYWRpbmctMTQiLCJraW5kIjoiaGlnaGxpZ2h0IiwicGFnZSI6MTUsImNvbG9yIjoieWVsbG93IiwicmVjdHMiOlt7IngiOjAuMDgsInkiOjAuMDcsIndpZHRoIjowLjYsImhlaWdodCI6MC4wNX1dLCJxdW90ZSI6IlJlYWRpbmcgc291cmNlIHBhZ2UgMTUiLCJjb21tZW50Ijoi55So5oi36ZiF6K+76K+E6K66IDE0IiwiY3JlYXRlZEF0IjoxNSwidXBkYXRlZEF0IjoxNX0sInVyaSI6ImxvbmdlZGl0Oi8vcGRmP3BhdGg9djExMTMtcmVhZGluZy0wZGRiMzhmNS0wNWI5LTQ3NzEtYTM2Zi1hZDhjNzEzN2I4NWUlMkYlRTclQTAlOTQlRTclQTklQjYlMjAlRTYlOUQlQTUlRTYlQkElOTAucGRmJnBhZ2U9MTUmYW5ub3RhdGlvbj1yZWFkaW5nLTE0JnNoYTI1Nj00ZGFmZDJhMzRiOTI5MWFjZmJlMzg4NzMzYTVkZjZjMTA4NTYzZDg1MDc2NGY3MDlmMTMyZjEzM2U3ODNmNjgzIiwibGFiZWwiOiLnoJTnqbYg5p2l5rqQLnBkZiDCtyDnrKwgMTUg6aG1In1dLCJrbm93bkFubm90YXRpb25JZHMiOlsicmVhZGluZy0wIiwicmVhZGluZy0xIiwicmVhZGluZy0yIiwicmVhZGluZy0zIiwicmVhZGluZy00IiwicmVhZGluZy01IiwicmVhZGluZy02IiwicmVhZGluZy03IiwicmVhZGluZy04IiwicmVhZGluZy05IiwicmVhZGluZy0xMCIsInJlYWRpbmctMTEiLCJyZWFkaW5nLTEyIiwicmVhZGluZy0xMyIsInJlYWRpbmctMTQiLCJyZWFkaW5nLTE1IiwicmVhZGluZy0xNiIsInJlYWRpbmctMTciLCJyZWFkaW5nLTE4IiwicmVhZGluZy0xOSIsInJlYWRpbmctMjAiLCJyZWFkaW5nLTIxIiwicmVhZGluZy0yMiIsInJlYWRpbmctMjMiLCJyZWFkaW5nLTI0IiwicmVhZGluZy0yNSIsInJlYWRpbmctMjYiLCJyZWFkaW5nLTI3IiwicmVhZGluZy0yOCIsInJlYWRpbmctMjkiLCJyZWFkaW5nLTMwIiwicmVhZGluZy0zMSIsInJlYWRpbmctMzIiLCJyZWFkaW5nLTMzIiwicmVhZGluZy0zNCIsInJlYWRpbmctMzUiLCJyZWFkaW5nLTM2IiwicmVhZGluZy0zNyIsInJlYWRpbmctMzgiLCJyZWFkaW5nLTM5IiwicmVhZGluZy00MCIsInJlYWRpbmctNDEiLCJyZWFkaW5nLTQyIiwicmVhZGluZy00MyIsInJlYWRpbmctNDQiLCJyZWFkaW5nLTQ1IiwicmVhZGluZy00NiIsInJlYWRpbmctNDciLCJyZWFkaW5nLTQ4IiwicmVhZGluZy00OSIsInJlYWRpbmctNTAiLCJyZWFkaW5nLTUxIiwicmVhZGluZy01MiIsInJlYWRpbmctNTMiLCJyZWFkaW5nLTU0IiwicmVhZGluZy01NSIsInJlYWRpbmctNTYiLCJyZWFkaW5nLTU3IiwicmVhZGluZy01OCIsInJlYWRpbmctNTkiLCJyZWFkaW5nLTYwIiwicmVhZGluZy02MSIsInJlYWRpbmctNjIiLCJyZWFkaW5nLTYzIiwicmVhZGluZy02NCIsInJlYWRpbmctNjUiLCJyZWFkaW5nLTY2IiwicmVhZGluZy02NyIsInJlYWRpbmctNjgiLCJyZWFkaW5nLTY5IiwicmVhZGluZy03MCIsInJlYWRpbmctNzEiLCJyZWFkaW5nLTcyIiwicmVhZGluZy03MyIsInJlYWRpbmctNzQiLCJyZWFkaW5nLTc1IiwicmVhZGluZy03NiIsInJlYWRpbmctNzciLCJyZWFkaW5nLTc4IiwicmVhZGluZy03OSIsInJlYWRpbmctODAiLCJyZWFkaW5nLTgxIiwicmVhZGluZy04MiIsInJlYWRpbmctODMiLCJyZWFkaW5nLTg0IiwicmVhZGluZy04NSIsInJlYWRpbmctODYiLCJyZWFkaW5nLTg3IiwicmVhZGluZy04OCIsInJlYWRpbmctODkiLCJyZWFkaW5nLTkwIiwicmVhZGluZy05MSIsInJlYWRpbmctOTIiLCJyZWFkaW5nLTkzIiwicmVhZGluZy05NCIsInJlYWRpbmctOTUiLCJyZWFkaW5nLTk2IiwicmVhZGluZy05NyIsInJlYWRpbmctOTgiLCJyZWFkaW5nLTk5IiwicmVhZGluZy0xMDAiLCJyZWFkaW5nLTEwMSIsInJlYWRpbmctMTAyIiwicmVhZGluZy0xMDMiLCJyZWFkaW5nLTEwNCIsInJlYWRpbmctMTA1IiwicmVhZGluZy0xMDYiLCJyZWFkaW5nLTEwNyIsInJlYWRpbmctMTA4IiwicmVhZGluZy0xMDkiLCJyZWFkaW5nLTExMCIsInJlYWRpbmctMTExIiwicmVhZGluZy0xMTIiLCJyZWFkaW5nLTExMyIsInJlYWRpbmctMTE0IiwicmVhZGluZy0xMTUiLCJyZWFkaW5nLTExNiIsInJlYWRpbmctMTE3IiwicmVhZGluZy0xMTgiLCJyZWFkaW5nLTExOSIsInJlYWRpbmctMTIwIiwicmVhZGluZy0xMjEiLCJyZWFkaW5nLTEyMiIsInJlYWRpbmctMTIzIiwicmVhZGluZy0xMjQiLCJyZWFkaW5nLTEyNSIsInJlYWRpbmctMTI2IiwicmVhZGluZy0xMjciLCJyZWFkaW5nLTEyOCIsInJlYWRpbmctMTI5IiwicmVhZGluZy0xMzAiLCJyZWFkaW5nLTEzMSIsInJlYWRpbmctMTMyIiwicmVhZGluZy0xMzMiLCJyZWFkaW5nLTEzNCIsInJlYWRpbmctMTM1IiwicmVhZGluZy0xMzYiLCJyZWFkaW5nLTEzNyIsInJlYWRpbmctMTM4IiwicmVhZGluZy0xMzkiLCJyZWFkaW5nLTE0MCIsInJlYWRpbmctMTQxIiwicmVhZGluZy0xNDIiLCJyZWFkaW5nLTE0MyIsInJlYWRpbmctMTQ0IiwicmVhZGluZy0xNDUiLCJyZWFkaW5nLTE0NiIsInJlYWRpbmctMTQ3IiwicmVhZGluZy0xNDgiLCJyZWFkaW5nLTE0OSIsInJlYWRpbmctMTUwIiwicmVhZGluZy0xNTEiLCJyZWFkaW5nLTE1MiIsInJlYWRpbmctMTUzIiwicmVhZGluZy0xNTQiLCJyZWFkaW5nLTE1NSIsInJlYWRpbmctMTU2IiwicmVhZGluZy0xNTciLCJyZWFkaW5nLTE1OCIsInJlYWRpbmctMTU5IiwicmVhZGluZy0xNjAiLCJyZWFkaW5nLTE2MSIsInJlYWRpbmctMTYyIiwicmVhZGluZy0xNjMiLCJyZWFkaW5nLTE2NCIsInJlYWRpbmctMTY1IiwicmVhZGluZy0xNjYiLCJyZWFkaW5nLTE2NyIsInJlYWRpbmctMTY4IiwicmVhZGluZy0xNjkiLCJyZWFkaW5nLTE3MCIsInJlYWRpbmctMTcxIiwicmVhZGluZy0xNzIiLCJyZWFkaW5nLTE3MyIsInJlYWRpbmctMTc0IiwicmVhZGluZy0xNzUiLCJyZWFkaW5nLTE3NiIsInJlYWRpbmctMTc3IiwicmVhZGluZy0xNzgiLCJyZWFkaW5nLTE3OSIsInJlYWRpbmctMTgwIiwicmVhZGluZy0xODEiLCJyZWFkaW5nLTE4MiIsInJlYWRpbmctMTgzIiwicmVhZGluZy0xODQiLCJyZWFkaW5nLTE4NSIsInJlYWRpbmctMTg2IiwicmVhZGluZy0xODciLCJyZWFkaW5nLTE4OCIsInJlYWRpbmctMTg5IiwicmVhZGluZy0xOTAiLCJyZWFkaW5nLTE5MSIsInJlYWRpbmctMTkyIiwicmVhZGluZy0xOTMiLCJyZWFkaW5nLTE5NCIsInJlYWRpbmctMTk1IiwicmVhZGluZy0xOTYiLCJyZWFkaW5nLTE5NyIsInJlYWRpbmctMTk4IiwicmVhZGluZy0xOTkiLCJyZWFkaW5nLTIwMCIsInJlYWRpbmctMjAxIiwicmVhZGluZy0yMDIiLCJyZWFkaW5nLTIwMyIsInJlYWRpbmctMjA0IiwicmVhZGluZy0yMDUiLCJyZWFkaW5nLTIwNiIsInJlYWRpbmctMjA3IiwicmVhZGluZy0yMDgiLCJyZWFkaW5nLTIwOSIsInJlYWRpbmctMjEwIiwicmVhZGluZy0yMTEiLCJyZWFkaW5nLTIxMiIsInJlYWRpbmctMjEzIiwicmVhZGluZy0yMTQiLCJyZWFkaW5nLTIxNSIsInJlYWRpbmctMjE2IiwicmVhZGluZy0yMTciLCJyZWFkaW5nLTIxOCIsInJlYWRpbmctMjE5IiwicmVhZGluZy0yMjAiLCJyZWFkaW5nLTIyMSIsInJlYWRpbmctMjIyIiwicmVhZGluZy0yMjMiLCJyZWFkaW5nLTIyNCIsInJlYWRpbmctMjI1IiwicmVhZGluZy0yMjYiLCJyZWFkaW5nLTIyNyIsInJlYWRpbmctMjI4IiwicmVhZGluZy0yMjkiLCJyZWFkaW5nLTIzMCIsInJlYWRpbmctMjMxIiwicmVhZGluZy0yMzIiLCJyZWFkaW5nLTIzMyIsInJlYWRpbmctMjM0IiwicmVhZGluZy0yMzUiLCJyZWFkaW5nLTIzNiIsInJlYWRpbmctMjM3IiwicmVhZGluZy0yMzgiLCJyZWFkaW5nLTIzOSJdLCJtaXNzaW5nSWRzIjpbXX19 -->\n\n# 研究 来源 · 阅读笔记\n\n## 第 12 页\n\n评论：用户阅读评论 11\n\n[来源：研究 来源.pdf · 第 12 页](longedit://pdf?path=v1113-reading-0ddb38f5-05b9-4771-a36f-ad8c7137b85e%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=12&annotation=reading-11&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n## 第 15 页\n\n> Reading source page 15\n\n评论：用户阅读评论 14\n\n[来源：研究 来源.pdf · 第 15 页](longedit://pdf?path=v1113-reading-0ddb38f5-05b9-4771-a36f-ad8c7137b85e%2F%E7%A0%94%E7%A9%B6%20%E6%9D%A5%E6%BA%90.pdf&page=15&annotation=reading-14&sha256=4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683)\n\n<!-- longedit:pdf-reading:end 22cc285d-d92b-4892-b8ea-1b7b509edb19 -->\n\n",
+    "encoding": "UTF-8",
+    "bom": "none",
+    "lineEnding": "lf",
+    "hasFinalNewline": true
+  },
+  "draftBeforeSaveSha256": "df89e55fcf2468374b390ce5c3284f841d2d9aa7a60873023568085ea94df4d8",
+  "explicitSavedSha256": "df89e55fcf2468374b390ce5c3284f841d2d9aa7a60873023568085ea94df4d8",
+  "explicitSave": true,
+  "sourceRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "returnedExactAnnotation": true,
+  "deletedNotice": {
+    "observedFrom": "rendered-reference-notice-in-panel-viewport",
+    "text": "引用对应的批注不存在或已被删除，已定位到引用页码。",
+    "top": 363.96875,
+    "bottom": 413.84375,
+    "parentTop": 354.96875,
+    "parentBottom": 789.40625,
+    "visible": true
+  },
+  "deletedAnnotationNotice": true,
+  "legacySourceNotice": {
+    "observedFrom": "rendered-reference-notice-in-panel-viewport",
+    "text": "旧引用没有内容摘要，仅按路径、页码和批注 ID 定位，请核对来源。",
+    "top": 363.96875,
+    "bottom": 413.84375,
+    "parentTop": 354.96875,
+    "parentBottom": 789.40625,
+    "visible": true
+  },
+  "legacyNotice": true,
+  "nativePicker": {
+    "status": "selected-real-native-dialog",
+    "processId": 1968,
+    "dialogProcessId": 1968,
+    "executable": "C:\\LongEditR5I\\tauri-app.exe",
+    "title": "保存新的 PDF 阅读笔记（不覆盖已有文件）",
+    "fileNameAutomationId": "1001",
+    "selectedPath": "C:\\LongEditR5ILibrary\\v1113-reading-0ddb38f5-05b9-4771-a36f-ad8c7137b85e\\阅读成果.md",
+    "inputCharacters": 80,
+    "method": "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession": "disposable-github-hosted",
+    "controlCandidates": [
+      {
+        "Handle": 1049278,
+        "ParentHandle": 1180412,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 852672,
+        "ParentHandle": 1049278,
+        "ControlId": 1001,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 328580,
+        "ParentHandle": 852628,
+        "ControlId": 0,
+        "ClassName": "Static",
+        "Title": "Namespace Tree Control"
+      },
+      {
+        "Handle": 656060,
+        "ParentHandle": 525184,
+        "ControlId": 0,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 263066,
+        "ParentHandle": 262726,
+        "ControlId": 1092,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 459660,
+        "ParentHandle": 262726,
+        "ControlId": 1091,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 459618,
+        "ParentHandle": 262726,
+        "ControlId": 1093,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 394130,
+        "ParentHandle": 262726,
+        "ControlId": 1095,
+        "ClassName": "Static",
+        "Title": ""
+      },
+      {
+        "Handle": 459602,
+        "ParentHandle": 328558,
+        "ControlId": 41477,
+        "ClassName": "ComboBoxEx32",
+        "Title": ""
+      },
+      {
+        "Handle": 459646,
+        "ParentHandle": 459602,
+        "ControlId": 41477,
+        "ClassName": "ComboBox",
+        "Title": ""
+      },
+      {
+        "Handle": 852786,
+        "ParentHandle": 459646,
+        "ControlId": 41477,
+        "ClassName": "Edit",
+        "Title": ""
+      },
+      {
+        "Handle": 983702,
+        "ParentHandle": 525170,
+        "ControlId": 0,
+        "ClassName": "UniversalSearchBand",
+        "Title": ""
+      },
+      {
+        "Handle": 328554,
+        "ParentHandle": 983702,
+        "ControlId": 0,
+        "ClassName": "Search Box",
+        "Title": ""
+      },
+      {
+        "Handle": 525180,
+        "ParentHandle": 328554,
+        "ControlId": 0,
+        "ClassName": "SearchEditBoxWrapperClass",
+        "Title": ""
+      }
+    ],
+    "dialogClosed": true,
+    "folderConfirmedAgain": false,
+    "folderObservations": []
+  },
+  "newNoteSelectedOnly": true,
+  "existingTargetPreserved": true,
+  "replacement": {
+    "beforeBytes": 31248,
+    "status": "same-size-same-native-timestamp",
+    "beforeTicks": "639281456340191361",
+    "afterBytes": 31248,
+    "afterTicks": "639281456340191361"
+  },
+  "replacementTimestampPreserved": true,
+  "replacementRejected": true,
+  "movedRelinkDirtyOnly": true,
+  "movedRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "movedRelinkReturnedExact": true,
+  "restoredReferenceVerified": true,
+  "restoredRender": {
+    "observedFrom": "rendered-pdf-controls-text-and-canvas",
+    "page": 12,
+    "width": 612,
+    "height": 792,
+    "opaquePixels": 30294,
+    "inkPixels": 138,
+    "text": "Reading source page 12Keep the original page and source when writing notes.",
+    "placeholderAbsent": true,
+    "annotationId": "reading-11"
+  },
+  "restoredPageVisible": true,
+  "sourceAfter": "4dafd2a34b9291acfbe388733a5df6c108563d850764f709f132f133e783f683",
+  "sidecarAfter": "6ec133e40ca5cc17017dd81041aeac284e5dde23f2cf06bdbda4eb93c7ebe8df",
+  "unselectedAfter": "c5cc304c5742c0f757b3dd9d343cc5fb6e3ab7a6b177d94481c14c9a7795808b",
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "errorOverlay": false
+}

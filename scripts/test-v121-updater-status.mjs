@@ -130,3 +130,13 @@ test('v1.1.28 keeps predecessor identity and independent updater observation', (
  const published={...community,gates:{githubReleasePublished:true},release:{tag:'v1.1.28',taggedCommit:'b'.repeat(40)}}
  assert.doesNotThrow(()=>assertV121DevelopmentBoundary({...development,publicVersion:'1.1.28',publicTag:'v1.1.28',publicTagCommit:'b'.repeat(40),developmentTargetVersion:'1.1.29'},published))
 })
+
+test('v1.1.29 keeps predecessor identity and independent updater observation', () => {
+ const community={appVersion:'1.1.29',targetRelease:{tag:'v1.1.29'},gates:{githubReleasePublished:false},release:null,patchValidation:{previousPublicVersion:'1.1.28',managedUpdaterUpgradePath:'1.1.28-to-1.1.29-pending'}}
+ const development={runtimeBaseVersion:'1.1.29',publicVersion:'1.1.28',publicTag:'v1.1.28',publicTagCommit:'eba705bce78744fa20d30a7acad422d7297f0ef1',developmentTargetVersion:'1.1.29',releaseCandidate:false}
+ assert.doesNotThrow(()=>assertV121DevelopmentBoundary(development,community));assert.doesNotThrow(()=>assertV121UpdaterStatus(closed,community,receipt))
+ assert.throws(()=>assertV121UpdaterStatus(closed,{...community,patchValidation:{...community.patchValidation,managedUpdaterUpgradePath:'1.0.20-to-1.0.21-passed'}},receipt))
+ assert.throws(()=>assertV121DevelopmentBoundary({...development,publicTagCommit:'a'.repeat(40)},community))
+ const published={...community,gates:{githubReleasePublished:true},release:{tag:'v1.1.29',taggedCommit:'b'.repeat(40)}}
+ assert.doesNotThrow(()=>assertV121DevelopmentBoundary({...development,publicVersion:'1.1.29',publicTag:'v1.1.29',publicTagCommit:'b'.repeat(40),developmentTargetVersion:'1.1.30'},published))
+})

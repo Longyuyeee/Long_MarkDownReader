@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "Right-click comment editing keeps the current PDF page, filter and selected annotation",
+    "Returning to the PDF restores its filter, list group, selection and reading page",
+    "Comment input is saved when leaving immediately, without requiring blur"
+  ],
+  "errors": []
+}

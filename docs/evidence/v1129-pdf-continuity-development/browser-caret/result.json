@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "Preview cancel preserves the full original draft",
+    "Update preserves outside additions and deleted excerpts while adding only genuinely new annotations",
+    "A single delayed Undo and Redo preserves the exact whole draft",
+    "Repeated update has no duplicate generated section",
+    "Changed source remains a local error and does not alter the draft",
+    "wysiwyg exact transaction, rollback and delayed Undo",
+    "ir exact transaction, rollback and delayed Undo",
+    "sv exact transaction, rollback and delayed Undo"
+  ],
+  "errors": []
+}

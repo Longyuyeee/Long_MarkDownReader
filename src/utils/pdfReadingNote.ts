@@ -1,7 +1,7 @@
 import type { PdfAnnotation } from '../types/pdfAnnotations'
 import type { TabInfo } from '../store/app'
 export interface PdfReadingItem { annotation: PdfAnnotation; uri: string; label: string }
-export interface PdfReadingSnapshot { sourceDigest: string; sourceSignature: string; relativePath: string; items: PdfReadingItem[] }
+export interface PdfReadingSnapshot { sourceDigest: string; sourceSignature: string; relativePath: string; items: PdfReadingItem[]; knownAnnotationIds?: string[]; missingIds?: string[] }
 export const MAX_READING_SELECTION = 200
 export const readingTargetDirectory = (root: string, path: string) => {
   const clean = (value: string) => value.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '')
@@ -24,7 +24,7 @@ export const readingNoteMarkdown = (snapshot: PdfReadingSnapshot, grouping: 'pag
   for (const item of items) {
     const next = grouping === 'page' ? `第 ${item.annotation.page} 页` : colors[item.annotation.color]
     if(next !== group) { parts.push(`## ${next}`); group=next }
-    parts.push(readingItemMarkdown(item,comments))
+    parts.push((snapshot.missingIds?.includes(item.annotation.id) ? '> 原批注已删除，保留原摘录。\n\n' : '') + readingItemMarkdown(item,comments))
   }
   return parts.join('\n\n')+'\n'
 }
