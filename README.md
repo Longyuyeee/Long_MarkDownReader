@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> v1.1.33 正在进行发布前检查：跨库复制时携带 PDF 批注和阅读来源，保护当前草稿。当前稳定下载保持 v1.1.32。
+
 > **v1.1.32 已正式发布**：备份恢复后的文件、阅读位置与参考接续，保留未保存内容。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.32) · [发布说明](docs/RELEASE_NOTES_v1.1.32.md)。
 
 

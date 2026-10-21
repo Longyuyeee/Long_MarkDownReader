@@ -32,3 +32,14 @@ test('legacy, fenced examples and malformed boundaries never infer a replaceable
  assert.deepEqual(readingNoteBlocks('```md\n'+managed+'```\n'),[])
  for(const text of [managed.replace('pdf-reading:end','broken:end'),managed+managed,'<!-- longedit:pdf-reading:v1 broken -->\n'])assert.throws(()=>readingNoteBlocks(text))
 })
+test('copied managed notes retain their generated body across libraries and remain updatable',()=>{
+ const original=managedReadingMarkdown(snapshot,'page',true),block=readingNoteBlocks(original)[0]
+ const copied={...snapshot,relativePath:'收件/Paper.pdf',items:snapshot.items.map(i=>({...i,uri:i.uri.replace('path=Paper.pdf','path='+encodeURIComponent('收件/Paper.pdf'))}))}
+ // The native copy rewrites only URI spans and the metadata marker, keeping all body prose.
+ const marker=managedReadingMarkdown(copied,'page',true,block.metadata.id).split('\n')[0]
+ const content='自己的补写\n'+original.replace(original.split('\n')[0],marker).replaceAll('path=Paper.pdf','path='+encodeURIComponent('收件/Paper.pdf'))+'\n自己的后记'
+ const live=readingNoteBlocks(content)[0];assert.equal(live.edited,false)
+ const next={...copied,items:[{...copied.items[0],annotation:{...copied.items[0].annotation,comment:'更新后的评论'}},copied.items[1]]}
+ const updated=replaceReadingNote(content,live,next);assert.ok(updated.startsWith('自己的补写\n')&&updated.endsWith('\n自己的后记'));assert.ok(updated.includes('更新后的评论'));assert.equal(readingNoteBlocks(updated)[0].edited,false)
+ const edited=content.replace('评论：原评论','评论：我的补写');assert.equal(readingNoteBlocks(edited)[0].edited,true);assert.throws(()=>replaceReadingNote(edited,readingNoteBlocks(edited)[0],next))
+})

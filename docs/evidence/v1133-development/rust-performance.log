@@ -1,0 +1,34 @@
+
+> tauri-app@1.1.33 test:rust:performance
+> cargo test --locked --manifest-path src-tauri/Cargo.toml commands::workbook::tests::complex_workbook_performance_stays_within_release_budget -- --nocapture --test-threads=1
+
+warning: function `scan_visible` is never used
+   --> src\services\archive_dependencies.rs:535:15
+    |
+535 | pub(crate) fn scan_visible(root: &str) -> Result<Inventory, String> {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `tauri-app` (lib) generated 1 warning
+warning: `tauri-app` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.24s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\tauri_app_lib-cfa5b3b6c6b20e37.exe)
+
+running 1 test
+workbook performance attempt 1/2: inspect=455ms page=12036ms patch=8619ms total=21111ms
+workbook performance attempt 2/2: inspect=561ms page=34ms patch=6992ms total=7587ms
+
+thread 'commands::workbook::tests::complex_workbook_performance_stays_within_release_budget' (41248) panicked at src\commands\workbook.rs:5851:9:
+patch 6992 ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::workbook::tests::complex_workbook_performance_stays_within_release_budget ... FAILED
+
+failures:
+
+failures:
+    commands::workbook::tests::complex_workbook_performance_stays_within_release_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1122 filtered out; finished in 31.17s
+
+error: test failed, to rerun pass `--lib`

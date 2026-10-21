@@ -8,6 +8,7 @@ pub(crate) mod archive_plan;
 pub mod credentials;
 pub(crate) mod canvas_move_links;
 pub(crate) mod content_backup;
+pub(crate) mod copy_reading_results;
 pub mod data_migration;
 pub(crate) mod document_coordination;
 pub mod external_file_access;

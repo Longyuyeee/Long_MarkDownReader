@@ -4,7 +4,7 @@ import {inflateRawSync} from 'node:zlib'
 export const restoreContinuityChecks=['backup-with-real-reading-context','restored-files-exact-in-new-library','cancel-continuation-preserves-source','folder-mapping-covers-tabs-views-reference','clean-source-continues-mapped-files','mapped-reader-position-and-disk-reopen','dirty-source-retains-input-and-saves-only-scene','trusted-input-without-runtime-overlay']
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export function validateInstalledRestoreContinuity(report,manifest){
- assert.equal(manifest.appVersion,'1.1.32');for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.32','1.1.33'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-content-package-and-restored-work-session');assert.match(report.harnessSourceCommit,/^[a-f0-9]{40}$/);assert.match(report.executableSha256,/^[a-f0-9]{64}$/)
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)
  for(const k of ['exportSceneExact','restoreBytesExact','cancelledExact','mappingExact','continuedExact','saveReopenExact','deferredDirtyExact'])assert.equal(report[k],true,k)
