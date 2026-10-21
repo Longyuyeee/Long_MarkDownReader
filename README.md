@@ -39,9 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
-> v1.1.32 正在进行发布前检查：备份后的文件、阅读位置和参考资料接续。[本版说明](docs/RELEASE_NOTES_v1.1.32.md)。
+> **v1.1.32 已正式发布**：备份恢复后的文件、阅读位置与参考接续，保留未保存内容。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.32) · [发布说明](docs/RELEASE_NOTES_v1.1.32.md)。
 
-> **v1.1.31 已正式发布**：XLSX 连续录入、规则检查与可撤销修正。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31) · [发布说明](docs/RELEASE_NOTES_v1.1.31.md)。
 
 
 
@@ -75,19 +74,19 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 ## 下载
 
 <p>
-  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31"><img src="https://img.shields.io/badge/Stable-v1.1.31-cca43b" alt="v1.1.31 stable"></a>
+  <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.32"><img src="https://img.shields.io/badge/Stable-v1.1.32-cca43b" alt="v1.1.32 stable"></a>
   <a href="https://github.com/Longyuyeee/Long_MarkDownReader/releases/latest"><img src="https://img.shields.io/badge/Download-GitHub%20Release-2563eb" alt="GitHub Release 下载"></a>
 </p>
 
-当前公开稳定版为 **v1.1.31**，支持 Windows 10/11 x64。
+当前公开稳定版为 **v1.1.32**，支持 Windows 10/11 x64。
 
 | 安装方式 | 下载 | 适用场景 |
 | --- | --- | --- |
-| NSIS 安装程序 | [LongEdit_1.1.31_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.31/LongEdit_1.1.31_x64-setup.exe) | 推荐，大多数用户 |
-| MSI 安装程序 | [LongEdit_1.1.31_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.31/LongEdit_1.1.31_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
-| 校验与说明 | [Release v1.1.31](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31) | Release Notes 与 SHA-256 |
+| NSIS 安装程序 | [LongEdit_1.1.32_x64-setup.exe](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.32/LongEdit_1.1.32_x64-setup.exe) | 推荐，大多数用户 |
+| MSI 安装程序 | [LongEdit_1.1.32_x64_zh-CN.msi](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.32/LongEdit_1.1.32_x64_zh-CN.msi) | 管理部署或 MSI 工作流 |
+| 校验与说明 | [Release v1.1.32](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.32) | Release Notes 与 SHA-256 |
 
-> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.31/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
+> 社区版暂未使用 Authenticode 商业证书，Windows 可能显示“未知发布者”或 SmartScreen 提示。请只从本仓库的 GitHub Release 下载，并使用同页 [`SHA256SUMS.txt`](https://github.com/Longyuyeee/Long_MarkDownReader/releases/download/v1.1.32/SHA256SUMS.txt) 核对文件；不需要关闭系统安全防护。
 
 <details>
 <summary>展开安装包 SHA-256 与本机核对方法</summary>
@@ -95,12 +94,12 @@ Long编辑不是完整的 Office 套件、IDE 或专业媒体编辑器；具体�
 在 PowerShell 中进入下载目录，核对实际文件的哈希值：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.31_x64-setup.exe
+Get-FileHash -Algorithm SHA256 .\LongEdit_1.1.32_x64-setup.exe
 ```
 
 ```text
-99b4c6ff4e6cea09cf4bc9f5cca5e5b296bb946f1e37ecdab877c1f44cbc25d1  LongEdit_1.1.31_x64_zh-CN.msi
-38849d7804a62b002ae9e0ac0ec5b7321d2c434ac197d1ed0354410a24552c1d  LongEdit_1.1.31_x64-setup.exe
+4c55c8f8f28fbcb84964dfa2c50806ffa90d40c052c0f0409f731abab345eea7  LongEdit_1.1.32_x64_zh-CN.msi
+07eb74c68cd4f029ba261baf05f89f39d1cd681eca5f3365f4a01291e26c90cc  LongEdit_1.1.32_x64-setup.exe
 ```
 
 </details>
@@ -490,7 +489,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ## 开发与验证
 
-1.1.31 已发布：XLSX 单元格右键检查与预览纠错，统一录入规则、保护隐藏行与未保存内容。[发布说明](docs/RELEASE_NOTES_v1.1.31.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md)。
+1.1.32 已发布：恢复后选择接续文件、目录批量映射和阅读参考接续，保护当前草稿。[发布说明](docs/RELEASE_NOTES_v1.1.32.md) · [后续路线](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md)。
 
 <p>
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3">
@@ -503,7 +502,7 @@ CSV、TSV 与开放 Table 提供网格、冻结前 N 列、看板、导入导出
 
 ### 基础功能深化路线
 
-现有基础能力持续围绕实际使用任务深化，入口放在右键、具名菜单和按需弹窗中。跨库复制、整理记录、附件管理、长文组织、查找替换、结构化历史、集合复用、引用修复、PDF 阅读笔记接续和 Table 录入纠错已交付；下一版深化工作现场恢复接续。[十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) · [1.1.32 具体计划](docs/V1_1_32_Workspace_Restore_Continuity_Plan_2026-10-21.md)。计划不代表已交付。
+现有基础能力持续围绕实际使用任务深化，入口放在右键、具名菜单和按需弹窗中。跨库复制、整理记录、附件管理、长文组织、查找替换、结构化历史、集合复用、引用修复、PDF 阅读笔记、Table / XLSX 录入检查和恢复接续已交付。[十二版完成情况](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) · [1.1.33—1.1.37 后续规划](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md)。计划不代表已交付。
 
 ### 从源码启动
 
@@ -553,7 +552,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 | 当前开发状态与换电脑接续 | [开发交接](docs/Development_Handoff.md) |
 | 原始需求、阶段与收口边界 | [开发对齐与收口计划](docs/Development_Alignment_and_Closure_Plan_2026-08-02.md) |
 | 产品路线与全界面改版方向 | [产品与 UI 计划](docs/V1_1_0_Product_and_UI_Plan_2026-10-11.md) |
-| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_31_Unsigned_Community_Release_Audit_2026-10-21.md) |
+| 当前公开版本的实际发布证据 | [社区版发布记录](docs/V1_1_32_Unsigned_Community_Release_Audit_2026-10-21.md) |
 | DOCX 日常编辑与保存 | [原件、副本及草稿保护](docs/DOCX_Editing_User_Guide.md) |
 | PPTX 编辑与副本交付 | [目标、备注、多项更改与保存接续](docs/PPTX_Editing_User_Guide.md) |
 | XLSX 连续录入与检查 | [单元格右键检查及草稿修正](docs/Workbook_Entry_Validation_User_Guide.md) |
@@ -580,6 +579,7 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 | 版本 | 简要变化 | 完整说明 |
 | --- | --- | --- |
+| v1.1.32 | 备份现场、恢复后选择接续、目录映射、阅读与参考、草稿保护 | [发布说明](docs/RELEASE_NOTES_v1.1.32.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.32) · [发布记录](docs/V1_1_32_Unsigned_Community_Release_Audit_2026-10-21.md) |
 | v1.1.31 | XLSX 规则录入、所选与筛选范围检查、可撤销修正、日期系统与精确数值边界 | [发布说明](docs/RELEASE_NOTES_v1.1.31.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.31) · [发布记录](docs/V1_1_31_Unsigned_Community_Release_Audit_2026-10-21.md) |
 | v1.1.30 | Table 录入规则、异常定位与预览纠错；XLSX 固定列表批量输入一致 | [发布说明](docs/RELEASE_NOTES_v1.1.30.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.30) · [发布记录](docs/V1_1_30_Unsigned_Community_Release_Audit_2026-10-21.md) |
 | v1.1.29 | PDF 批注连续编辑、阅读笔记更新预览、草稿保留及一次撤销 | [发布说明](docs/RELEASE_NOTES_v1.1.29.md) · [下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.29) · [发布记录](docs/V1_1_29_Unsigned_Community_Release_Audit_2026-10-21.md) |
@@ -615,9 +615,13 @@ releases/            仍受合同引用的历史产物与旧安装包归档
 
 更多变更见 [GitHub Releases](https://github.com/Longyuyeee/Long_MarkDownReader/releases)；旧版过程记录见 [历史发布记录](docs/README_Release_History.md)。
 
-v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**。[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并发布 **11/12 版**，余下 1 版为计划；下一版深化工作现场恢复接续。[1.1.32 具体计划](docs/V1_1_32_Workspace_Restore_Continuity_Plan_2026-10-21.md) 已登记，尚未实施。
+v1.1.8—v1.1.20 路线已完成并公开 **13/13 版**；[1.1.21—1.1.32 十二版路线](docs/Foundation_Deepening_Roadmap_1_1_21_to_1_1_32_2026-10-19.md) 已完成并公开 **12/12 版**。下一轮 [1.1.33—1.1.37](docs/Foundation_Deepening_Roadmap_1_1_33_to_1_1_37_2026-10-21.md) 已规划，首先深化带阅读成果的跨库复制，尚未实施。
 
-### v1.1.31 本次更新
+### v1.1.32 本次更新
+
+备份时可选记录工作现场，恢复后按需接续文件与阅读位置；缺失目录可一次映射，当前有草稿则先记住现场。[使用方法](docs/Content_Restore_Continuity_User_Guide.md)。
+
+### v1.1.31 XLSX 连续录入与检查
 
 XLSX 单元格右键按需检查所选区域或筛选记录，定位并预览修正草稿。规则贯通输入、粘贴、清空和已有填充，保护其他草稿，可一次撤销。[详细说明](docs/RELEASE_NOTES_v1.1.31.md)。
 
