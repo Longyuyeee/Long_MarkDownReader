@@ -22,7 +22,7 @@ export function captureContentWorkSession(root: string, store = useAppStore()): 
 }
 
 const pending = (store: ReturnType<typeof useAppStore>) => pendingDocumentSaves.value || store.tabs.some(tab=>hasPendingMainTextSave(tab.path))
-const dirty = (store: ReturnType<typeof useAppStore>) => windowDraftCount.value || dirtyDocumentPaths().length || store.tabs.some(tab=>tab.isDirty)
+const dirty = (store: ReturnType<typeof useAppStore>) => store.isTempDirty || windowDraftCount.value || dirtyDocumentPaths().length || store.tabs.some(tab=>tab.isDirty)
 
 // Store the repairable full scene first. Opening is separate from saving a
 // record, and must never require an automatic save/discard of a live editor.

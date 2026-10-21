@@ -50,7 +50,7 @@ const readyTabCount = computed(() => bundle.value.files.filter(file => !omitted.
 const status = (file: string) => checks.value.find(item => item.relativePath.toLowerCase() === file.toLowerCase())
 const isReferenceOnly = (file: string) => !bundle.value.files.some(item => item.relativePath === file)
 const assertLive = (token: number, root = target.value) => {
-  if (disposed || token !== generation || root !== target.value || !store.libraries.some(library => sameWorkspacePath(library.path, root)) || (props.sourceRoot || props.root) !== store.libraryPath) throw Error('资料库或核对内容已变化，请重新打开现场')
+  if (disposed || token !== generation || root !== target.value || !store.libraries.some(library => sameWorkspacePath(library.path, root)) || !sameWorkspacePath(props.sourceRoot ?? props.root, store.libraryPath)) throw Error('资料库或核对内容已变化，请重新打开现场')
 }
 async function refresh() {
   if (mode === 'export' || writing.value) return
