@@ -1,6 +1,6 @@
 # v1.1.35 · 附件引用与草稿接续
 
-当前为发布前候选；原安装器完成构建、同包复核与公开下载核对后更新发布记录。
+已正式发布于 2026-10-21T20:16:35Z，原安装器公开下载与摘要核对通过。
 
 - “查看引用”现在包含当前窗口的未保存 Markdown，同一篇以草稿为准；新增或删除引用立即按当前内容查询。
 - 结果区分“未保存”和“已保存”，显示行号及引用处数。打开结果保留已有输入，不用先保存。
@@ -11,4 +11,4 @@
 
 Windows 社区未签名安装包，支持手动安装；34→35 应用内自动更新观察仍单独 pending。
 
-[附件使用方法](Attachment_Management_User_Guide.md) · [开发与发布记录](V1_1_35_Unsigned_Community_Release_Audit_2026-10-22.md)
+[附件使用方法](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/Attachment_Management_User_Guide.md) · [开发与发布记录](https://github.com/Longyuyeee/Long_MarkDownReader/blob/main/docs/V1_1_35_Unsigned_Community_Release_Audit_2026-10-22.md)
