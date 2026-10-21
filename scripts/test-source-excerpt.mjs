@@ -11,6 +11,9 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/localImagePath.
 const linkBox={exports:{},require:()=>imageBox.exports}
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/localMarkdownLinks.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,linkBox)
 const {localMarkdownLink}=linkBox.exports
+const chapterBox={exports:{},URL}
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/portableChapterLinks.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,chapterBox)
+const {isPortableChapterLink}=chapterBox.exports
 
 test('excerpt quotes every line and source round-trips special paths and PDF position', () => {
   const text = sourceExcerpt('第一行\n\n第二行', { path: '/库/资料/a #&[1].pdf', title: '资料[1]', page: 4, annotationId: 'note&2' }, '/库')
@@ -32,7 +35,7 @@ test('actual Markdown source click opens the library file with PDF position', as
   const source = fs.readFileSync('src/views/LibraryMode.vue', 'utf8')
   const handler = source.slice(source.indexOf('const openSourceReference ='), source.indexOf('const openPdfReference ='))
   const opened = []
-  const context = { localMarkdownLink, parseSourceReference, store: { libraryPath: '/库' }, router: {}, activeTabId: { value: '/库/note.md' }, vditor: null, invoke: async () => ({}),
+  const context = { isPortableChapterLink, localMarkdownLink, parseSourceReference, store: { libraryPath: '/库' }, router: {}, activeTabId: { value: '/库/note.md' }, vditor: null, invoke: async () => ({}),
     findFileFormat: () => ({ id: 'pdf' }), message: { warning() {} },
     openManagedFile: (_router, path, query) => opened.push({ path, query }) }
   vm.runInNewContext(ts.transpileModule(handler + '\nglobalThis.open = openSourceReference', { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context)
@@ -63,7 +66,7 @@ function repairHarness() {
  const source=fs.readFileSync('src/views/LibraryMode.vue','utf8'),handler=source.slice(source.indexOf('const openRepairedSource ='),source.indexOf('const openPdfReference ='))
  const href='longedit://source?path=old.md&quote=hello';let content=`[source](${href})`;const calls=[],tab={path:'/库/note.md',isDirty:false}
  const editor={getCurrentMode:()=> 'wysiwyg',getValue:()=>content,setValue:next=>{content=next;calls.push('edit')},vditor:{undo:{addToUndoStack:()=>calls.push('undo')}}}
- const context={URL,localMarkdownLink,parseSourceReference,editorModeChangeBusy:{value:false},editorLoading:{value:false},suppressEditorInput:false,recordWindowDraftActivity(){},updateWordCount(){},syncOutlineManual(){},applyVditorSourceRepair:(editor,original,href,next,expected,count)=>{assert.equal(editor.getValue(),original);assert.equal(count,1);assert.equal(expected,original.replace(href,next));content=expected;calls.push('edit','apply')},store:{libraryPath:'/库',updateTabContent:()=>calls.push('draft')},router:{},activeTabId:{value:tab.path},activeIsMarkdown:{value:true},activeFormatCanEdit:{value:true},vditor:editor,tabs:{value:[tab]},referenceRepairRequest:{value:null},searchNavigationSequence:0,findFileFormat:()=>({}),searchResultPath:(path,root)=>path.startsWith(root+'/')?path.slice(root.length+1):path,message:{warning:text=>calls.push(text),success(){}},snapshotWindowDrafts(){},
+ const context={URL,isPortableChapterLink,localMarkdownLink,parseSourceReference,editorModeChangeBusy:{value:false},editorLoading:{value:false},suppressEditorInput:false,recordWindowDraftActivity(){},updateWordCount(){},syncOutlineManual(){},applyVditorSourceRepair:(editor,original,href,next,expected,count)=>{assert.equal(editor.getValue(),original);assert.equal(count,1);assert.equal(expected,original.replace(href,next));content=expected;calls.push('edit','apply')},store:{libraryPath:'/库',updateTabContent:()=>calls.push('draft')},router:{},activeTabId:{value:tab.path},activeIsMarkdown:{value:true},activeFormatCanEdit:{value:true},vditor:editor,tabs:{value:[tab]},referenceRepairRequest:{value:null},searchNavigationSequence:0,findFileFormat:()=>({}),searchResultPath:(path,root)=>path.startsWith(root+'/')?path.slice(root.length+1):path,message:{warning:text=>calls.push(text),success(){}},snapshotWindowDrafts(){},
  invoke:async(command,args)=>{if(command==='preview_source_link_repair'){calls.push('preview');return {content:args.content.replace(args.originalUri,args.replacementUri),count:1}}if(args.path==='/库/old.md')throw Error('missing');return{}},openManagedFile:(_router,path)=>calls.push('open:'+path)}
  vm.runInNewContext(ts.transpileModule(handler+'\nglobalThis.open = openSourceReference',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context)
  return {context,calls,tab,content:()=>content,run:()=>context.open({target:{closest:()=>({getAttribute:()=>href})},preventDefault(){},stopPropagation(){}}),apply:path=>context.referenceRepairRequest.value.commit({...context.referenceRepairRequest.value.source,path})}

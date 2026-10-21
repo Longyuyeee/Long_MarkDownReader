@@ -1,0 +1,576 @@
+node .release-secrets/v1134-audit-tail-2.mjs
+Verified 5 native fault/recovery observations and original hashes; external responses were simulated, no installer acceptance claimed.
+Community updater contract passed: fixed GitHub source, SHA-256 verification, hidden install and automatic relaunch are aligned.
+Official v1.0.21 to v1.0.22 update accepted: 12 checks and nine immutable reviewed evidence files.
+Official v1.0.22 to v1.0.23 update accepted: 12 checks and nine immutable reviewed evidence files.
+Command strip layout passed: 11 workspaces keep controls readable, scrollable and reachable.
+V1.0.6 managed updater lifecycle contract passed: hosted 1.0.5 -> 1.0.6 evidence accepted.
+V1.0.7 managed updater lifecycle passed: hosted 1.0.6 -> 1.0.7 evidence accepted.
+V1.0.8 managed updater lifecycle contract passed: automatic relaunch failure is recorded for v1.0.9 recovery.
+V1.0.9 managed updater lifecycle contract passed: hosted 1.0.8 -> 1.0.9 evidence accepted.
+V1.0.10 managed updater lifecycle contract passed: hosted 1.0.9 -> 1.0.10 evidence accepted.
+V1.0.11 managed updater lifecycle contract passed: hosted 1.0.10 -> 1.0.11 evidence accepted.
+V1.0.12 managed updater lifecycle contract passed: hosted 1.0.11 -> 1.0.12 evidence accepted.
+V1.0.13 managed updater lifecycle contract passed: hosted 1.0.12 -> 1.0.13 evidence accepted.
+V1.0.14 managed updater lifecycle contract passed: hosted 1.0.13 -> 1.0.14 evidence accepted.
+V1.0.16 managed updater lifecycle contract passed: hosted 1.0.15 -> 1.0.16 evidence accepted.
+M5-0 accepted: v1.0.17 selects only M5-1 ODP slide-body producer fidelity and object selection; ODP remains preview-only.
+M5-1 accepted: only direct text-frame paragraphs on simple ODP slides advance to M5-2; notes and complex-object slides remain blocked.
+M5-2 accepted: bounded simple-slide ODP reliable copies pass real LibreOffice/PowerPoint reopen; UI and version promotion remain M5-3+ work.
+M5-3 accepted: real LibreOffice/PowerPoint ODP workspace copies, draft protection, responsive UI and whole-slide blockers are verified; M5-4 owns release readiness.
+M5-4 accepted: 548 Rust tests pass with zero failures, the complete patch release gate passes, and M5-5 owns atomic v1.0.17 packaging.
+M5-5 accepted: v1.0.17 candidate identity and historical local package receipts remain valid after publication.
+M5-6 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.17 candidate and 1.0.16 upgrade baseline remain frozen.
+M5-7 accepted: hosted lifecycle artifacts, SHA256SUMS and release boundaries remain valid after M5-8 publication.
+M5-8 accepted: v1.0.17 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+V1.0.17 managed updater lifecycle contract passed: hosted 1.0.16 -> 1.0.17 evidence accepted.
+V1.0.18 managed updater lifecycle contract passed: hosted 1.0.17 -> 1.0.18 evidence accepted.
+V1.0.19 managed updater lifecycle contract passed: hosted 1.0.18 -> 1.0.19 evidence accepted.
+V1.0.21 managed updater lifecycle contract passed: hosted 1.0.20 -> 1.0.21 evidence accepted.
+M8-5 graph visual/performance polish passed: settled auto-fit, dense priority-only arrows, restrained status rings, non-duplicated tooltip and bounded reduced-motion-safe selection feedback are present.
+M8-5 real desktop evidence accepted: all 180 nodes auto-fit, dense middle arrows are priority-only, 12 status rings remain, bounded selection settles idle, Canvas draw peaks at 5.1 ms and runtime errors are zero.
+M6-0 accepted: v1.0.18 selects only M6-1 graph-scoped bounded fullscreen lifecycle; cluster proxies, governance rings, structured schemas and ODP note editing remain deferred.
+M6-1 accepted: 6/6 real Tauri fullscreen cycles preserve graph state, Escape and route cleanup exit safely, runtime errors remain zero and source files remain unchanged.
+M6-2 accepted: stop feature expansion and run M6-3 complete Rust plus patch-release readiness gates before any v1.0.18 version transition.
+M6-3 accepted: 548 Rust tests, the corrected complete patch-release gate, 6,275 frontend modules and zero production vulnerabilities permit M6-4 candidate packaging.
+M6-4 accepted: v1.0.18 candidate identity, real local package receipts, and WebView2 evidence are valid while public v1.0.17 remains frozen.
+M6-5 contract accepted: hosted-installer-lifecycle-passed-release-readiness-pending; exact 1.0.18 candidate and v1.0.17 upgrade baseline remain frozen.
+M6-6 accepted: hosted lifecycle artifacts, public names, SHA256SUMS and unsigned community release boundaries are ready for M6-7 publication.
+M6-7 accepted: v1.0.18 tag, latest GitHub Release and three remotely downloaded assets match the frozen candidate.
+M7-0 accepted: v1.0.19 selects only local JSON/JSONC Schema sidecar provider and mapping feasibility; remote providers, YAML/TOML projection, XSD, graph proxies, governance rings and ODP notes remain deferred.
+M7-1 accepted: bounded offline JSON/JSONC Schema sidecar validation and source mapping are feasible; product UI and real Tauri acceptance remain M7-2 work.
+M7-2 accepted: bounded local JSON/JSONC Schema validation is integrated and passed real Tauri wide/narrow read-only acceptance; M7-3 quality readiness is next.
+M7-3 accepted: 559 Rust tests, complete patch-release CI, 6,275 frontend modules and zero production vulnerabilities permit M7-4 candidate packaging.
+M7-4 accepted: v1.0.19 runtime identity is atomic while public v1.0.18 remains frozen.
+CF-1 code creation passed: 10 format families and 32 registered extensions use guarded atomic templates.
+CF-1 desktop creation audit passed: 10 format families, explicit save, close/reopen and no-overwrite evidence are accepted.
+UX-51 lifecycle passed: updater relaunch and independent external windows are implementation- and desktop-verified.
+v1.0.15 interaction-polish audit passed: modern tab tooltip, contextual right-click policy, and accepted clean desktop evidence are aligned.
+v1.0.15 global-tooltip policy passed: static and dynamic native titles use one theme-aware, keyboard-accessible and viewport-bounded application surface.
+v1.0.15 overlay-bounds contract passed: the long create menu is scrollable, uniquely measurable and viewport bounded.
+M1C-C ODS formula/style evidence contract passed.
+M1C-D ODS existing named style contract passed.
+M1D selection accepted: 10 MiB JSON timeout and 50 MiB boundary select progressive large-JSON reading before media frame tools.
+M1D-A large JSON accepted: progressive read, segment navigation, streaming search and small-file editing are real-desktop verified.
+M1D-B video tools accepted: real 1080p/4K frame stepping, PNG capture, position restore and source safety are verified.
+M1D-C selection accepted: real sidecars and semantic-invalid structured files select bounded external subtitle playback as M1D-C1.
+M1D-C1 accepted: real VTT/SRT active cues, selection, off state, reopen, malformed rejection and source safety are verified.
+M1 total exit criteria accepted: M1A-M1D real evidence, producer matrix, source safety, boundaries and user documentation are aligned.
+{
+  "expected": {
+    "developmentTargetVersion": "1.1.34",
+    "runtimeBaseVersion": "1.1.34",
+    "publicTag": "v1.1.33",
+    "headAheadOfPublicTag": true,
+    "binaryVersionTransition": "v1.1.34-quality-gate-pending"
+  },
+  "actual": {
+    "headCommit": "a88155c5e653ed1db452132a79c2cbae09c0db11",
+    "tagCommit": "9961c0c2fe9f02ced2ae9987bb6b55cd26d739cf",
+    "commitsAhead": 6,
+    "tagIsAncestor": true,
+    "checks": {
+      "policySchema": true,
+      "nextPatchTarget": true,
+      "runtimeFactsFrozen": true,
+      "candidateMetadataFacts": true,
+      "publicFactsFrozen": true,
+      "publicTagImmutable": true,
+      "developmentAhead": true,
+      "enterpriseNotReleaseCandidate": true,
+      "binaryTransitionComplete": true,
+      "currentStageAligned": true,
+      "configConsumesPolicy": true,
+      "mainUiIdentifiesDevelopment": true,
+      "capabilityUiIdentifiesDevelopment": true,
+      "auditDocumentsIdentity": true
+    }
+  }
+}
+M3C-1 dirty-frame loop accepted: 100=680/2305ms, idle 0/s, resume 0; 1000=3236/17317ms, idle 0/s, resume 0; 5000=23562/186338ms, idle 0/s, resume 0; original 5000-node layout/interaction limits remain independently visible.
+M3C-2 phase profile accepted: 100=1285/3393ms; 1000=3558/29861ms; 5000=39105/140049ms bounded; 5000-node dominant=layout-simulation 133038ms; layout=133038ms, draw-exclusive=0ms, semantic=1269ms.
+M3C-3 worker layout accepted: 100=2511/4777ms, main-layout-max=7.2ms, worker-max=13.4ms; 1000=2466/3542ms, main-layout-max=6.9ms, worker-max=5.9ms; 5000=7229/10964ms, main-layout-max=26.7ms, worker-max=17.6ms.
+M3C-4 performance exit accepted: 100=2376ms stable, idle-longtasks=0, remaining-max=29.6ms; 1000=4037ms stable, idle-longtasks=0, remaining-max=59.2ms; 5000=10631ms stable, idle-longtasks=0, remaining-max=421.8ms.
+M4F-4 accepted: two real unsigned installers, public-name mapping, SHA256SUMS, passed Tauri smoke, hosted lifecycle and cross-platform evidence are preserved after publication.
+M4F-5 accepted: v1.0.16 is published, the tag binds the real candidate, and all three remotely downloaded assets match the frozen manifest.
+M3B-6 navigation selection accepted: fit-all and community filtering remain reliable, and the selected fit-selection/bounded-focus successor is implemented with historical real Tauri three-viewport evidence.
+M3B-10 remaining professional visual selection accepted: restrained recency and relation-strength rings selected from real Tauri three-viewport, filesystem timestamp and health/pulse evidence; governance rings, cluster collapse/expand, fullscreen and M3C remain deferred.
+M3B-8 remaining navigation selection accepted: bounded semantic minimap selected from real 100/1000/5000-node evidence and real Tauri three-viewport evidence; cluster collapse/expand, fullscreen and M3C remain deferred.
+M3C-0 large-graph baseline accepted: 100=1407/3724ms, 132 settled draws/s, longest 537ms; 1000=2189/15050ms, 132 settled draws/s, longest 616ms; 5000=24722/185195ms, 132 settled draws/s, longest 17237ms; 5000-node interaction and long-task budget failures remain explicit, and M3C-1 closes settled dirty-frame and lifecycle-loop control.
+M3B professional visual system exit accepted: M3B-1 through M3B-11 remain safe and the combined semantic hierarchy, path, camera, minimap, status and responsive flow passes in 4 real Tauri sessions; cluster collapse, fullscreen and M3C remain outside M3B.
+✔ excerpt quotes every line and source round-trips special paths and PDF position (2.4204ms)
+✔ Windows reference keeps native path identity and library-bound source (2.4359ms)
+✔ actual Markdown source click opens the library file with PDF position (38.7604ms)
+✔ text excerpts carry a bounded anchor, old links remain readable (0.485ms)
+✔ native canonical Windows and UNC source paths resolve within the library (0.3011ms)
+✔ source repair waits for explicit confirmation and applies the verified link to the current draft only (26.4838ms)
+✔ cancel, invalid path, readonly note and changed target never rewrite a source (117.1738ms)
+✔ generic source links retain a verified PDF digest and reject malformed digests (0.3655ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 785.741
+✔ minimize preserves temporary draft and never asks to discard (82.629ms)
+✔ ask choice precedes discard; cancellation preserves the editor (20.1471ms)
+✔ repeated system close requests yield one confirmation and one exit (15.2665ms)
+✔ secondary windows close after confirmation without re-entering native CloseRequested (11.4768ms)
+✔ failure to exit remains recoverable and permits retry (9.4869ms)
+✔ local editor drafts join the close guard and disappear on unmount (45.6036ms)
+✔ an Office or canvas draft prevents exit even when text tabs are clean (10.9471ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 753.0713
+✔ unavailable root is handled locally; retry restores the file tree (74.4967ms)
+✔ a late failure from the old library cannot replace the new library (20.9363ms)
+✔ explicit creation failure stays recoverable and does not escape to global errors (18.701ms)
+✔ unavailable child folder is not cached as empty and expanding after recovery retries (6.7158ms)
+✔ late child directory results do not mutate the tree after switching or refreshing a library (10.3615ms)
+✔ directory preparation completes before a library is registered or persisted (13.2423ms)
+✔ creation or persistence failures preserve the input and do not register a phantom library (23.5764ms)
+✔ repeated clicks cannot create two copies while preparation is pending (8.9744ms)
+✔ global error notice leaves the workspace intact, renders errors as text, and can be dismissed (16.5887ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 631.5531
+✔ original frozen candidate reproduces null-state save error after navigation (240.7943ms)
+✔ save then immediately leave: original tab becomes saved without touching destroyed view (39.7764ms)
+✔ immediately reopening waits for native save and reconciled tab (30.0499ms)
+✔ switching to a different file cannot apply the old reply there (25.5069ms)
+✔ new edits after save remain dirty and retain the new disk signature (21.0643ms)
+✔ changed save policy must remain dirty even if text is unchanged (19.5779ms)
+✔ real save failure is still reported and dirty draft survives (31.4684ms)
+✔ load waits before draft restoration and unmount invalidates pending loads (0.9191ms)
+✔ window save guard spans queued write and survives destroyed editor until receipt (17.4207ms)
+✔ failed native write releases window save guard without discarding dirty draft (16.8663ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1026.3419
+✔ dry run validates without writes (5.7263ms)
+✔ apply changes all 44 identities while preserving public and historical fields (2.3398ms)
+✔ late-contract-drift fails before any write (2.7072ms)
+✔ unclosed-predecessor fails before any write (1.7125ms)
+✔ wrong-baseline fails before any write (3.6019ms)
+✔ unknown-argument fails before any write (2.2536ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 212.1264
+✔ verified bytes do not promote lifecycle or version identity gates (1.7305ms)
+✔ reject wrong-candidate (0.6284ms)
+✔ reject rebuilt-previous (0.2511ms)
+✔ reject wrong-previous-hash (0.2536ms)
+✔ reject duplicate-target (0.2279ms)
+✔ reject path-traversal (0.2404ms)
+✔ reject wrong-version (0.2837ms)
+✔ reject missing-privacy (0.2229ms)
+✔ reject changed-bytes (0.4096ms)
+✔ reject wrong-size (0.2517ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 171.4212
+✔ dry run validates without writes (3.7672ms)
+✔ apply changes all 44 identities while preserving public and historical fields (1.7772ms)
+✔ late-contract-drift fails before any write (1.5329ms)
+✔ unclosed-predecessor fails before any write (2.2618ms)
+✔ wrong-baseline fails before any write (2.4876ms)
+✔ unknown-argument fails before any write (0.9736ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 176.3244
+✔ dry run validates without writes (4.7541ms)
+✔ apply changes all 44 identities while preserving public and historical fields (1.5672ms)
+✔ late-contract-drift fails before any write (2.6434ms)
+✔ unclosed-predecessor fails before any write (1.9189ms)
+✔ wrong-baseline fails before any write (3.6758ms)
+✔ unknown-argument fails before any write (1.3675ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 187.6874
+✔ visible settings gate rejects transparent ancestors, motion, clipping and occlusion (2.8418ms)
+✔ visual follow-up reuses exact candidate and preserves failures without rebuilding (5.2614ms)
+✔ fixed product, official predecessor and disposable install boundaries (132.576ms)
+✔ installed observations validate the actual three version surfaces (0.4408ms)
+✔ reject wrong installed observation: nativeVersion (1.3122ms)
+✔ reject wrong installed observation: badge (0.3367ms)
+✔ reject wrong installed observation: badgeLabel (4.4139ms)
+✔ reject wrong installed observation: settingsRoute (0.3126ms)
+✔ reject wrong installed observation: settings (0.3755ms)
+✔ reject wrong installed observation: checkedSettings (0.3653ms)
+✔ reject wrong installed observation: capabilities (0.251ms)
+✔ PowerShell steps parse without installing locally (4072.3442ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4486.7723
+✔ verified bytes do not promote lifecycle or version identity gates (2.7826ms)
+✔ reject wrong-candidate (1.0904ms)
+✔ reject rebuilt-previous (0.3683ms)
+✔ reject wrong-previous-hash (0.1993ms)
+✔ reject duplicate-target (0.2334ms)
+✔ reject path-traversal (0.2008ms)
+✔ reject wrong-version (0.2413ms)
+✔ reject missing-privacy (0.1624ms)
+✔ reject changed-bytes (0.2804ms)
+✔ reject wrong-size (1.2137ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 233.4793
+✔ workflow uses fixed candidate identity, disposable Windows and no publication rights (138.8273ms)
+✔ upgrade baseline is the hash-checked official previous installer, never a rebuild (0.743ms)
+✔ quality gate precedes build; installed search has exact independent evidence and publication stays closed (29.4896ms)
+✔ all embedded PowerShell steps parse without executing installers (4190.5329ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4683.3044
+✔ v1.0.23 uses the reviewed immutable follow-up, not the initial invisible capture (75.5891ms)
+✔ release uses real immutable installed reports, not invented debug counts (45.2464ms)
+✔ installed release rejects bytes (1.7241ms)
+✔ installed release rejects version (6.1711ms)
+✔ installed release rejects installer (2.4475ms)
+✔ installed release rejects source (3.4002ms)
+✔ installed release rejects failed-check (2.4966ms)
+✔ installed release rejects missing-save (2.5666ms)
+✔ installed release rejects crashed-route (2.1926ms)
+✔ v1.0.23 synthetic validator requires installed reports, not debug evidence (3.1256ms)
+✔ v1.0.23 rejects old-native-version (2.2102ms)
+✔ v1.0.23 rejects dev-marker (2.9892ms)
+✔ v1.0.23 rejects wrong-source (1.5522ms)
+✔ v1.0.23 rejects wrong-installer (1.3926ms)
+✔ v1.0.23 rejects failed-check (2.9951ms)
+✔ v1.0.23 rejects missing-version-report (1.9246ms)
+✔ v1.0.23 rejects changed-bytes (1.6891ms)
+✔ v1.0.23 rejects debug-status (2.2679ms)
+✔ v1.0.24 requires its own stability observations (2.3446ms)
+✔ v1.0.24 accepts retained animations when the adaptive observer reports normal motion (2.4896ms)
+✔ v1.0.24 rejects unconditional motion removal disguised as adaptive reduction (2.2267ms)
+✔ v1.0.24 rejects missing-stability (2.9107ms)
+✔ v1.0.24 rejects wrong-source (1.9949ms)
+✔ v1.0.24 rejects legend-overlap (3.8959ms)
+✔ v1.0.24 rejects tutorial-overflow (2.7457ms)
+✔ v1.0.24 rejects tutorial-obscured (1.4654ms)
+✔ v1.0.24 rejects missing-viewport (2.3916ms)
+✔ v1.0.24 rejects missing-close (1.981ms)
+✔ v1.0.24 rejects animated-markdown (1.391ms)
+✔ v1.0.24 rejects missing-markdown-input (2.2338ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 441.2829
+✔ opening release notes preserves current, failed and available update observations (131.0103ms)
+✔ slow release-page opening cannot overwrite a completed concurrent update check (16.2451ms)
+✔ release-page opening is blocked during installation and reports opener failure (21.1855ms)
+✔ late browser failure cannot dismiss an available update or interrupt installation state (108.0585ms)
+✔ retrying browser opening clears only browser error and both user surfaces expose it (27.764ms)
+✔ installed version never becomes the future development target (1.3291ms)
+✔ development mode identifies the actual runtime separately from the planned version (0.5487ms)
+✔ runtime wins over build fallback, including a genuine 1.0.0 runtime (0.3144ms)
+✔ available update is not represented as already installed (0.3273ms)
+✔ failed or pending checks do not advertise stale latest data (0.5815ms)
+✔ only successful update observation presents a verified remote version (0.2658ms)
+✔ all identity surfaces consume the common reactive runtime source (4.8122ms)
+✔ actual shared computed identity updates when initialization and network results arrive (6.2835ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 920.1549
+✔ fixture refuses production mode and the real user application (116.9632ms)
+✔ fixture cannot install under any scenario, including invalid config (46.6008ms)
+✔ only external results are injected; available update retains actual runtime version (6.8016ms)
+✔ offline and opener failures remain errors rather than empty successes (9.4512ms)
+✔ invalid or missing scenario fails closed (21.2461ms)
+✔ current and opener retry success are explicitly controllable (6.3804ms)
+✔ unrelated native calls retain their arguments and use the actual backend (8.0598ms)
+✔ normal product configuration never imports the opt-in fixture (1.4193ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 714.1154
+✔ verified bytes do not promote lifecycle or search gates (4.0895ms)
+✔ reject wrong-candidate (0.6867ms)
+✔ reject rebuilt-previous (0.2348ms)
+✔ reject wrong-previous-hash (0.1978ms)
+✔ reject duplicate-target (0.2604ms)
+✔ reject path-traversal (0.231ms)
+✔ reject wrong-version (0.2199ms)
+✔ reject missing-privacy (0.1419ms)
+✔ reject changed-bytes (0.4023ms)
+✔ reject wrong-size (0.5673ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 231.074
+✔ file pages append only the issued same-snapshot end and preserve locator payloads (6.3146ms)
+✔ a failed next page retains loaded files and retries exactly the same cursor (1.8156ms)
+✔ expired re-search preserves old files while waiting and preserves conditions (1.0558ms)
+✔ expired restart retains all loaded cards across preparation and resumes the saved depth (736.0207ms)
+✔ a failed replacement keeps the old cards and offers a fresh search, not stale paging (1.1089ms)
+✔ explicit cross-library refresh marks retained cards before IPC returns and retires old paging (0.8629ms)
+✔ partial replacement with no usable files is not a successful empty search (2.442ms)
+✔ only a confirmed complete empty replacement removes the retained cards (0.6724ms)
+✔ an inconsistent completion flag cannot turn a failed or partial replacement into empty success (0.998ms)
+✔ changing the query retires a pending replacement and cannot resurrect the old cards (0.9419ms)
+✔ a newly ranked view waits for explicit refresh and never appends into the old list (0.5515ms)
+✔ same-view progress cannot rewind the already-loaded page cursor (1.8487ms)
+✔ late query reply cannot replace new results or close the newer native session (0.6601ms)
+✔ clear retires a late initial session (0.4306ms)
+✔ unmount retires a late initial session (0.271ms)
+✔ preparation is bounded and resumable, never reported as a completed empty result (0.3793ms)
+✔ automatic preparation stops when a usable first page is ready (7.1976ms)
+✔ restoring previously loaded depth reads only the necessary pages (0.4846ms)
+✔ invalid phrase never invokes IPC, unknown native error never exposes raw paths (0.616ms)
+✔ explicit tag mode uses the page protocol and keeps exact tag case (0.418ms)
+✔ duplicate or cross-snapshot next pages fail without touching the old list (1.6498ms)
+✔ a malformed protocol response cannot become successful no-results (0.49ms)
+✔ a malformed reply retires its allocated native session and invalid input retry stays local (0.626ms)
+✔ all failures, partial success with zero files and complete zero remain distinct (0.3616ms)
+✔ failure and retry preserve query: 项目 (9.5269ms)
+✔ failure and retry preserve query: #项目 (6.148ms)
+✔ successful empty response is not failure (6.2189ms)
+✔ stale resolve cannot overwrite newer results (4.8325ms)
+✔ stale reject cannot overwrite newer results (5.2576ms)
+✔ clear invalidates pending response and clears busy state (4.8441ms)
+✔ library change rejects old response (4.755ms)
+✔ new query immediately removes old result; missing library does not spin (5.2656ms)
+✔ component keeps errors distinct and offers accessible retry (0.8807ms)
+✔ real Vue watchers debounce changes and retry retains format filter (6.0261ms)
+✔ real library watcher clears query, collection and busy state before late response (3.8275ms)
+✔ real Vue clear cancels debounce without invoking backend (3.1245ms)
+✔ real Vue unmount cancels scheduled search (8.4501ms)
+✔ real Vue unmount invalidates a late response (4.5087ms)
+✔ empty-keyword collections call their real scoped command and page beyond 200 files without losing file-group locators (6.7304ms)
+✔ refresh failure retains file cards but retires old cursors; a complete empty refresh alone clears them (1.366ms)
+✔ a new collection cannot absorb a late old response or sort another query locally (1.7482ms)
+✔ 600-note catalog advances by issued cursors, never treats partial counts as totals and closes its own channel (4.8636ms)
+✔ failed or incomplete refresh keeps prior tags explicitly stale, only complete empty statistics clears them (0.8313ms)
+✔ same-cursor retry cannot duplicate counts and stale library responses cannot replace the active library (1.3081ms)
+✔ unknown or contradictory totals and malformed rows are not accepted as complete (1.3761ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1125.0413
+✔ file card has one full-width column; relation badge follows its title and locations (2.2295ms)
+✔ title and metadata stack; long titles wrap and snippets remain bounded (0.2881ms)
+✔ full title and separate file/graph actions remain available (0.2906ms)
+✔ actual file card stacks narrow actions and retains all lazy internal positions (0.2206ms)
+✔ actual status identifies old cards immediately, without presenting an old total as fresh results (11.4828ms)
+✔ actual status retains a paused or failed replacement label and returns to normal after acceptance (2.0088ms)
+✔ a loaded page failure exposes recovery in the actual footer instead of a disabled dead end (3.3558ms)
+✔ footer keeps precise restart/refresh semantics and normal paging returns after recovery (2.6545ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1029.4889
+✔ route query preserves the question mark in Windows extended-length paths (1.6578ms)
+✔ scenario targets accessible names retained by the actual tooltip adoption policy (69.9651ms)
+✔ installed search reuses verified artifact and cannot publish (1.4684ms)
+✔ search scenario refuses arbitrary user library before performing any IO (1.7802ms)
+✔ Markdown scenario reads the actual Markdown work surface, not the non-Markdown embedded editor (1.846ms)
+✔ workflow PowerShell parses without installing (1546.7739ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2140.159
+✔ installed runner rejects the original visible save error even when disk content exists (2.8402ms)
+✔ installed runner rejects dirty, missing and contradictory save identities (5.6394ms)
+✔ installed runner accepts synchronized identity only without visible save failure (2.0704ms)
+✔ installed runner preserves the screenshot before feedback rejection and records pass afterward (0.51ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 173.1456
+✔ graph candidate retains the exact public 1.1.10 predecessor without borrowing old updater success (2.897ms)
+✔ published v1.0.24 requires its exact tag and keeps the new updater pending (0.5274ms)
+✔ hosted-execution-pending: community=pending, receipt=pending (0.3341ms)
+✔ hosted-execution-pending: community=pending, receipt=passed (0.386ms)
+✔ hosted-execution-pending: community=passed, receipt=pending (0.2073ms)
+✔ hosted-execution-pending: community=passed, receipt=passed (0.1494ms)
+✔ hosted-managed-update-passed: community=pending, receipt=pending (0.1564ms)
+✔ hosted-managed-update-passed: community=pending, receipt=passed (0.1615ms)
+✔ hosted-managed-update-passed: community=passed, receipt=pending (0.3311ms)
+✔ hosted-managed-update-passed: community=passed, receipt=passed (0.19ms)
+✔ unknown status fails closed (0.2649ms)
+✔ v1.0.23 candidate does not inherit historical updater acceptance (0.2619ms)
+✔ published successor boundary requires its own real release identity (0.2064ms)
+✔ v1.1.18 keeps its exact predecessor and a separate update observation in candidate and public states (0.4771ms)
+✔ successor keeps the historical receipt and a separate pending update path (0.1213ms)
+✔ successor rejects pending-predecessor (0.2104ms)
+✔ successor rejects stale-successor-path (0.1004ms)
+✔ successor rejects wrong-previous (0.1221ms)
+✔ successor rejects wrong-tag (0.0908ms)
+✔ successor rejects unknown-version (0.0948ms)
+✔ successor rejects changed-receipt (0.1177ms)
+✔ version boundary admits only current and planned successor runtime (0.3641ms)
+✔ v1.1.19 keeps its exact predecessor and a separate update observation in candidate and public states (0.9184ms)
+✔ v1.1.28 keeps predecessor identity and independent updater observation (0.5735ms)
+✔ v1.1.29 keeps predecessor identity and independent updater observation (0.4357ms)
+✔ v1.1.30 keeps predecessor identity and independent updater observation (0.3973ms)
+✔ v1.1.34 retains its real v1.1.33 predecessor and a separate managed-update observation (0.3634ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 173.1796
+✔ minor-version policy names never borrow 1.0.x update evidence (2.19ms)
+✔ installed candidate remains pending without an official observation (0.3834ms)
+✔ publication alone can remain pending (0.2418ms)
+✔ only a separately successful published update can pass (0.2273ms)
+✔ reject false update success: unpublished (0.2654ms)
+✔ reject false update success: missing-evidence (0.2461ms)
+✔ reject false update success: wrong-version (0.1897ms)
+✔ reject false update success: wrong-previous (0.1374ms)
+✔ reject false update success: failed-run (0.1674ms)
+✔ reject false update success: missing-run (0.2898ms)
+✔ reject false update success: pending-evidence (0.1816ms)
+✔ reject false update success: stale-path (0.1566ms)
+✔ production checker uses independent observation and pending candidate state (0.9139ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 156.4782
+✔ import: accepted (408.8691ms)
+✔ import: missing-review (196.7424ms)
+✔ import: wrong-hash (209.4559ms)
+✔ import: failed-lifecycle (242.0318ms)
+✔ import: wrong-version (220.0974ms)
+✔ import: missing-privacy (261.4374ms)
+✔ import: malformed-json (247.8941ms)
+✔ import: unexpected-file (244.9951ms)
+✔ import: invalid-run (254.8201ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2451.4874
+Post-v1.0.20 graph interaction polish passed: ordinary zoom floors are 0.580/0.645, large overview remains bounded, details are card-sized, and themed popup controls replace native selects.
+M3B-4 curved relation routes accepted: deterministic parallel/reciprocal separation, tangent arrows, selected-path labels and shared SVG routing, with three-theme real Tauri evidence.
+M3B-5 path motion accepted: selected traversal flow, independent fact arrows, static labels, reduced-motion shutdown and inactive lifecycle cleanup, with three-theme calm/reduced real Tauri evidence.
+M3B-7 camera navigation accepted: fit-selection, bounded cancellable focus, reduced-motion immediacy and narrow command reachability with real calm/reduced Tauri evidence.
+M3B-9 semantic minimap accepted: bounded sampling, label-free semantic overview, viewport frame, click/drag/keyboard navigation and responsive overlay safety with four real Tauri sessions.
+M3B-11 restrained node status rings accepted: fixed recency boundaries, visible-graph strength normalization, uniform-graph safety, priority suppression and no governance scan with 4 real Tauri sessions.
+✔ PDF notes page range works for one page, disjoint ranges and rejects invalid/outside ranges (2.2185ms)
+✔ PDF reading note retains quote and optional comment, escapes Markdown and only includes snapshot items (0.5593ms)
+✔ Draft insertion never writes and appends to latest content while keeping save identity (0.3331ms)
+✔ PDF reference validates digest, keeps legacy compatibility and rejects traversal (0.9373ms)
+✔ Same-named draft targets show their actual folder including Windows extended aliases (1.0914ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 704.1554
+✔ PDF installed evidence refuses missing checks, changed bytes, fake input and unprotected drafts (18.9093ms)
+✔ PDF workflow uses real input, owned native chooser and independent disk checks (1.3658ms)
+✔ a tab label or blank/wrong canvas cannot stand in for an actual source page (4.2002ms)
+✔ v1.1.13 requires its PDF report and every predecessor, with the same executable and driver (502.6212ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 742.4205
+file:///E:/Project/AIProject/GeminiProject/MDReader/.release-secrets/v1134-audit-tail-2.mjs:232
+  if (!condition) throw new Error(`[current-development-audit] source-of-truth no longer supports: ${token}`)
+                        ^
+
+Error: [current-development-audit] source-of-truth no longer supports: 当前阶段：**v1.1.34 undefined候选**
+    at file:///E:/Project/AIProject/GeminiProject/MDReader/.release-secrets/v1134-audit-tail-2.mjs:232:25
+
+Node.js v24.14.0

@@ -4,7 +4,9 @@ import vm from 'node:vm'
 import ts from 'typescript'
 import { ref, shallowRef, computed } from 'vue'
 import {createRequire} from 'node:module'
-const sectionContext=vm.createContext({exports:{},require:createRequire(import.meta.url)})
+const nativeRequire=createRequire(import.meta.url),chapterContext=vm.createContext({exports:{},URL})
+vm.runInContext(ts.transpileModule(fs.readFileSync('src/utils/portableChapterLinks.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,chapterContext)
+const sectionContext=vm.createContext({exports:{},require:name=>name==='./portableChapterLinks.ts'?chapterContext.exports:nativeRequire(name)})
 vm.runInContext(ts.transpileModule(fs.readFileSync('src/utils/markdownSections.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,sectionContext)
 const {markdownSections,headingSlug}=sectionContext.exports
 import { test } from 'node:test'
