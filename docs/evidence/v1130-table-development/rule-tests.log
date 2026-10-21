@@ -1,0 +1,17 @@
+
+> tauri-app@1.1.30 test:table-validation
+> node --test scripts/test-table-validation.mjs scripts/test-v1130-installed-release.mjs
+
+✔ exact numeric boundaries retain long identifiers, decimal and exponent order (2.4846ms)
+✔ rules check real dates, optional blanks, unicode text and literal options without coercion (1.3219ms)
+✔ correction plans use stable identities, preserve hidden rows and undo exactly (2.1232ms)
+✔ all workbook literal-list entry paths can reject atomically while respecting formulas, blank and unchanged values (1.2156ms)
+✔ native Table validation observations parse and every publication stage binds actual output bytes (76.0309ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1108.6584

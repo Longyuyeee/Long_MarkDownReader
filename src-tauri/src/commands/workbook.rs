@@ -1987,6 +1987,7 @@ fn sheet_to_table(source: &Path, sheet: &str) -> Result<PathBuf, String> {
         headers,
         rows,
         column_types,
+        validation_rules: Default::default(),
         column_ids: (0..total_columns)
             .map(|index| format!("column-{}", index + 1))
             .collect(),

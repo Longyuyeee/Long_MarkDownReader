@@ -30,6 +30,138 @@ pub(crate) struct TableColumn {
     pub name: String,
     #[serde(rename = "type")]
     pub column_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation: Option<TableRule>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TableRule {
+    pub kind: String,
+    #[serde(default)]
+    pub required: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_length: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub options: Option<Vec<String>>,
+}
+
+fn decimal_parts(value: &str) -> Option<(bool, String, i32)> {
+    if value.len() > 128 || value.trim() != value || !value.parse::<f64>().ok()?.is_finite() {
+        return None;
+    }
+    let (negative, unsigned) = if let Some(s) = value.strip_prefix('-') {
+        (true, s)
+    } else {
+        (false, value.strip_prefix('+').unwrap_or(value))
+    };
+    let mut parts = unsigned.split(['e', 'E']);
+    let mantissa = parts.next()?;
+    let exponent = parts
+        .next()
+        .map(str::parse::<i32>)
+        .transpose()
+        .ok()?
+        .unwrap_or(0);
+    if parts.next().is_some() || exponent.abs() > 308 {
+        return None;
+    }
+    let mut fractions = mantissa.split('.');
+    let whole = fractions.next()?;
+    let fraction = fractions.next().unwrap_or("");
+    if fractions.next().is_some()
+        || whole.len() + fraction.len() == 0
+        || !whole
+            .bytes()
+            .chain(fraction.bytes())
+            .all(|b| b.is_ascii_digit())
+    {
+        return None;
+    }
+    let combined = format!("{whole}{fraction}");
+    let raw = combined.trim_start_matches('0');
+    if raw.is_empty() {
+        return Some((false, "0".into(), 0));
+    }
+    Some((
+        negative,
+        raw.trim_end_matches('0').into(),
+        raw.len() as i32 - fraction.len() as i32 + exponent,
+    ))
+}
+
+pub(crate) fn validate_table_rule(rule: &TableRule) -> Result<(), String> {
+    if !matches!(
+        rule.kind.as_str(),
+        "any" | "text" | "integer" | "number" | "date" | "options"
+    ) {
+        return Err("不支持的 Table 录入规则，原文件未修改".into());
+    }
+    if let Some(length) = rule.max_length {
+        if rule.kind != "text" || length == 0 || length > MAX_CELL_CHARS {
+            return Err("文本长度规则无效".into());
+        }
+    }
+    if let Some(options) = &rule.options {
+        if rule.kind != "options"
+            || options.is_empty()
+            || options.len() > 128
+            || options
+                .iter()
+                .any(|s| s.is_empty() || s.chars().count() > 255 || s.contains(['\r', '\n']))
+            || options.iter().collect::<HashSet<_>>().len() != options.len()
+        {
+            return Err("选项规则无效".into());
+        }
+    } else if rule.kind == "options" {
+        return Err("选项规则不能为空".into());
+    }
+    for value in [&rule.min, &rule.max].into_iter().flatten() {
+        if !matches!(rule.kind.as_str(), "integer" | "number") || decimal_parts(value).is_none() {
+            return Err("数值边界规则无效".into());
+        }
+    }
+    if let (Some(min), Some(max)) = (&rule.min, &rule.max) {
+        let (an, a, ap) = decimal_parts(min).ok_or("数值边界规则无效")?;
+        let (bn, b, bp) = decimal_parts(max).ok_or("数值边界规则无效")?;
+        let order = if a == "0" && b != "0" {
+            if bn {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Less
+            }
+        } else if b == "0" && a != "0" {
+            if an {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Greater
+            }
+        } else if an != bn {
+            if an {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Greater
+            }
+        } else {
+            let width = a.len().max(b.len());
+            let compare = ap
+                .cmp(&bp)
+                .then_with(|| format!("{a:0<width$}").cmp(&format!("{b:0<width$}")));
+            if an {
+                compare.reverse()
+            } else {
+                compare
+            }
+        };
+        if order.is_gt() {
+            return Err("最小值不能大于最大值".into());
+        }
+    }
+    Ok(())
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -146,7 +278,7 @@ fn valid_id(value: &str) -> bool {
 }
 
 pub(crate) fn validate_internal_table(table: &InternalTable) -> Result<(), String> {
-    if table.schema_version != TABLE_SCHEMA_VERSION || table.kind != TABLE_KIND {
+    if !matches!(table.schema_version, 1 | 2) || table.kind != TABLE_KIND {
         return Err("Table schemaVersion 或 kind 不受支持".into());
     }
     if table.data.columns.is_empty() || table.data.columns.len() > MAX_TABLE_COLUMNS {
@@ -157,6 +289,12 @@ pub(crate) fn validate_internal_table(table: &InternalTable) -> Result<(), Strin
     }
     let mut column_ids = HashSet::new();
     for column in &table.data.columns {
+        if let Some(rule) = &column.validation {
+            if table.schema_version < 2 {
+                return Err("带录入规则的 Table 需要新版格式".into());
+            }
+            validate_table_rule(rule)?;
+        }
         if !valid_id(&column.id) || !column_ids.insert(column.id.as_str()) {
             return Err("Table 列 ID 必须合法且唯一".into());
         }
@@ -340,6 +478,7 @@ mod tests {
                     id: "name".into(),
                     name: "名称".into(),
                     column_type: "text".into(),
+                    validation: None,
                 }],
                 rows: vec![TableRow {
                     id: "row-1".into(),
@@ -514,5 +653,39 @@ mod tests {
             .dashboard_items
             .push(duplicate_item);
         assert!(validate_internal_table(&duplicate).is_err());
+    }
+    #[test]
+    fn v1130_rules_require_new_schema_and_roundtrip_without_changing_values() {
+        let mut table = fixture();
+        let rule: TableRule = serde_json::from_value(serde_json::json!({"kind":"options","required":true,"options":["00123","9007199254740993123"]})).unwrap();
+        table.data.columns[0].validation = Some(rule.clone());
+        assert!(validate_internal_table(&table).is_err());
+        table.schema_version = 2;
+        let before = table.data.rows[0].values.clone();
+        let raw = serde_json::to_string(&table).unwrap();
+        let reopened = parse_internal_table(&raw).unwrap();
+        assert_eq!(reopened.data.columns[0].validation, Some(rule));
+        assert_eq!(reopened.data.rows[0].values, before);
+        assert!(parse_internal_table(
+            &raw.replace("\"kind\":\"options\"", "\"kind\":\"future-rule\"")
+        )
+        .is_err());
+    }
+    #[test]
+    fn v1130_rule_boundaries_compare_exactly_including_zero_and_long_integers() {
+        for (min, max) in [
+            ("0", "0.01"),
+            ("-0.01", "0"),
+            ("9007199254740993123", "9007199254740993124"),
+        ] {
+            let rule: TableRule =
+                serde_json::from_value(serde_json::json!({"kind":"number","min":min,"max":max}))
+                    .unwrap();
+            validate_table_rule(&rule).unwrap();
+            let mut reversed = rule.clone();
+            reversed.min = rule.max;
+            reversed.max = rule.min;
+            assert!(validate_table_rule(&reversed).is_err());
+        }
     }
 }

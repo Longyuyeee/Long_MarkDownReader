@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> v1.1.30 正在进行发布前构建与原包复核：Table 录入规则、异常定位与批量纠错。[使用方法](docs/Table_Entry_Validation_User_Guide.md)。当前正式下载仍为 v1.1.29。
+
 > **v1.1.29 已正式发布**：PDF 批注与阅读笔记接续。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.29) · [发布说明](docs/RELEASE_NOTES_v1.1.29.md)。
 
 文件可能分散在笔记、报告、配置、表格和图片里，思路却不应该被文件类型切碎。Long编辑以本地目录为资料库，在同一套导航里连接不同的阅读与编辑工作区：先找到资料，再理解内容，最后把自己的记录留在合适的位置。

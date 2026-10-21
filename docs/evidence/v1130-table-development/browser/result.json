@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    "Column right-click applies rules to the draft without writing a file",
+    "Rule changes share bounded Undo and Redo",
+    "Filtered correction preview and cancel preserve the complete draft",
+    "Correction updates only captured visible stable row IDs and preserves hidden rows and identifiers",
+    "One Undo and Redo after sorting preserve unrelated unsaved input",
+    "Explicit save and reopen retain rules, values, view and the remaining invalid record",
+    "Invalid correction is refused before mutation",
+    "Six visual styles retain readable opaque rule dialogs",
+    "CSV rules remain temporary and do not create a false unsaved document or hidden file write"
+  ],
+  "errors": []
+}
