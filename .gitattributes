@@ -377,7 +377,7 @@ docs/evidence/v1-1-35-candidate-lifecycle/installed-v1135-*.md -text
 docs/evidence/v1-1-35-candidate-lifecycle/installed-v1135-*.txt -text
 docs/evidence/v1-1-35-candidate-lifecycle/installed-v1135-*.json -text
 
-/docs/evidence/v1135-*/** -text
-/docs/evidence/v1.1.35-release/** -text
-/docs/evidence/v1-1-35-candidate-lifecycle/** -text
+/docs/evidence/v1135-*/** -text whitespace=cr-at-eol
+/docs/evidence/v1.1.35-release/** -text whitespace=cr-at-eol
+/docs/evidence/v1-1-35-candidate-lifecycle/** -text whitespace=cr-at-eol
 /docs/evidence/v1135-*/**/*.log -diff
