@@ -562,7 +562,25 @@ pub(crate) fn scan_for_move(root: &str) -> Result<Inventory, String> {
     scan_impl(root, true, true)
 }
 
+// A draft replaces this document's disk text before parsing, including when the
+// draft removes every reference. Never append it to a stale disk inventory.
+pub(crate) fn scan_for_move_with_drafts(
+    root: &str,
+    drafts: &std::collections::BTreeMap<PathBuf, String>,
+) -> Result<Inventory, String> {
+    scan_with_drafts(root, true, true, drafts)
+}
+
 fn scan_impl(root: &str, visible_only: bool, for_move: bool) -> Result<Inventory, String> {
+    scan_with_drafts(root, visible_only, for_move, &Default::default())
+}
+
+fn scan_with_drafts(
+    root: &str,
+    visible_only: bool,
+    for_move: bool,
+    drafts: &std::collections::BTreeMap<PathBuf, String>,
+) -> Result<Inventory, String> {
     let guard = WorkspaceGuard::new(root)?;
     let mut dirs: Vec<PathBuf> = vec![guard.root().to_path_buf()];
     let mut remaining = 32 * 1024 * 1024u64;
@@ -596,17 +614,23 @@ fn scan_impl(root: &str, visible_only: bool, for_move: bool) -> Result<Inventory
             {
                 continue;
             }
-            if metadata.len() > remaining || metadata.len() > 2 * 1024 * 1024 {
+            let draft = drafts.get(&path);
+            let size = draft.map_or(metadata.len(), |s| s.len() as u64);
+            if size > remaining || size > 2 * 1024 * 1024 {
                 return Err("Markdown 超过单文件 2 MiB 或总计 32 MiB 依赖扫描上限".into());
             }
             let mut bytes = vec![];
-            fs::File::open(&path)
-                .map_err(|e| e.to_string())?
-                .take(metadata.len() + 1)
-                .read_to_end(&mut bytes)
-                .map_err(|e| e.to_string())?;
-            if bytes.len() as u64 != metadata.len() {
-                return Err("依赖文件在扫描期间改变，请重新检查".into());
+            if let Some(draft) = draft {
+                bytes.extend_from_slice(draft.as_bytes());
+            } else {
+                fs::File::open(&path)
+                    .map_err(|e| e.to_string())?
+                    .take(metadata.len() + 1)
+                    .read_to_end(&mut bytes)
+                    .map_err(|e| e.to_string())?;
+                if bytes.len() as u64 != metadata.len() {
+                    return Err("依赖文件在扫描期间改变，请重新检查".into());
+                }
             }
             remaining -= bytes.len() as u64;
             let text = std::str::from_utf8(&bytes)

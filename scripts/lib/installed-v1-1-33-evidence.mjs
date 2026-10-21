@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 export const copyReadingChecks=['reading-copy-preview-is-read-only','collision-copy-keeps-paired-comments-and-source','copied-pdf-reopens-with-real-annotation','reading-note-links-and-managed-record-follow-target','changed-comments-stop-and-retry-only-unfinished','damaged-comments-have-an-ordinary-opt-out','cancel-and-copy-preserve-current-drafts','trusted-input-without-runtime-overlay']
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export function validateInstalledCopyReading(report,manifest){
- assert.ok(['1.1.33','1.1.34'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.1.33','1.1.34', '1.1.35'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-cross-library-reading-results-and-output-bytes');for(const [k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(report[k],new RegExp('^[a-f0-9]{'+n+'}$'))
  for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)
  for(const k of ['previewReadOnly','collisionExact','sourceExact','reopenedExact','noteMappingExact','metadataUpdatable','partialExact','retryExact','optOutExact','cancelExact','draftsExact','receiptRepeatExact'])assert.equal(report[k],true,k)

@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict'
+import crypto from 'node:crypto'
+export const attachmentDraftChecks=['current-window-drafts-replace-disk-uses','saved-and-unsaved-sources-visible','open-result-preserves-both-current-drafts','new-edit-removes-stale-reference','read-failure-local-with-working-refresh','explicit-save-and-predecessor-drafts-preserved']
+export const attachmentDraftOutputNames=['added-before.md','added-saved.md','removed-before.md','removed-saved.md','saved.md','attachment.txt','observations.json'].map(n=>'installed-v1135-'+n)
+export function validateInstalledAttachmentDrafts(report,manifest){
+ assert.equal(manifest.appVersion,'1.1.35');for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-attachment-drafts-trusted-ui-and-output-bytes');for(const [k,n]of [['harnessSourceCommit',40],['executableSha256',64]])assert.match(report[k],new RegExp('^[a-f0-9]{'+n+'}$'))
+ for(const k of ['nativeBridgeMocked','desktopInputUsed','sourceUserContentIncluded','errorOverlay'])assert.equal(report[k],false)
+ assert.equal(report.editorModeAfter,report.editorModeBefore);assert.deepEqual(report.checks.map(c=>[c.id,c.status]),attachmentDraftChecks.map(id=>[id,'passed']));assert.deepEqual(report.runtimeErrors,[]);assert.ok(report.inputTrace.length>10&&report.inputTrace.every(e=>e.trusted));for(const type of ['click','keydown','input'])assert.ok(report.inputTrace.some(e=>e.type===type))
+}
+export function assertAttachmentDraftOutputBytes(report,read){
+ assert.deepEqual(report.outputs.map(o=>o.fileName).sort(),[...attachmentDraftOutputNames].sort());for(const o of report.outputs){const b=read(o.fileName);assert.equal(b.length,o.sizeBytes);assert.equal(crypto.createHash('sha256').update(b).digest('hex'),o.sha256)}
+ const text=n=>read('installed-v1135-'+n).toString('utf8'),o=JSON.parse(text('observations.json'));assert.equal(text('added-before.md'),'# 新增引用\n\n磁盘尚无引用。\n');assert.equal(text('removed-before.md'),'# 删除引用\n\n[旧附件](attachment.txt)\n');assert.equal(text('added-saved.md'),'# 新增引用\n\n后来输入仍保留。\n');assert.equal(text('removed-saved.md'),'# 删除引用\n\n自己的未保存补写。\n');assert.equal(text('saved.md'),'# 已保存引用\n\n[附件](attachment.txt)\n');assert.equal(text('attachment.txt'),'附件原文\r\n')
+ assert.deepEqual(o.initialNames.sort(),['已保存.md','新增.md']);assert.equal(o.unsavedLabel,true);assert.equal(o.savedLabel,true);assert.equal(o.openDraftExact,true);assert.equal(o.removedDraftExact,true);assert.deepEqual(o.afterEditNames,['已保存.md']);assert.equal(o.diskUnchangedBeforeSave,true);assert.equal(o.predecessorDraftsExact,true);assert.ok(o.errorMessage.includes('检查未完成'));assert.equal(o.refreshed,true)
+}

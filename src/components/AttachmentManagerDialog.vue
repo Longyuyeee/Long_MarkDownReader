@@ -32,10 +32,11 @@
   </n-modal>
   <n-modal :show="usesVisible" preset="card" title="引用位置" class="attachment-uses" :style="{ width: 'min(620px, calc(100vw - 28px))' }" @update:show="value => usesVisible = value">
     <strong>{{ filename(usesPath) }}</strong><p v-if="usesError" role="alert" class="attachment-error">{{ usesError }}</p>
-    <p v-if="usesLoading">正在查找已保存的 Markdown 笔记…</p>
-    <div class="attachment-list"><button v-for="item in uses" :key="item.document" class="attachment-row" type="button" @click="openFile(item.document)"><FileText :size="18" /><span><strong>{{ filename(item.document) }}</strong><small v-if="relative(item.document) !== filename(item.document)">{{ relative(item.document) }}</small></span><small>第 {{ item.line }} 行</small></button></div>
-    <p v-if="!usesLoading && !usesError && !uses.length" class="attachment-note">尚未在已保存的 Markdown 笔记中找到引用。没有结果不表示可以删除文件。</p>
-    <div class="attachment-footer"><small>已保存的 Markdown 引用</small><n-button size="small" @click="usesVisible = false">返回</n-button></div>
+    <p v-if="usesLoading">正在查找 Markdown 引用…</p>
+    <div class="attachment-list"><button v-for="item in uses" :key="item.document" class="attachment-row" type="button" @click="openUse(item)"><FileText :size="18" /><span><strong>{{ filename(item.document) }}</strong><small v-if="relative(item.document) !== filename(item.document)">{{ relative(item.document) }}</small></span><span class="attachment-use-location"><small>{{ item.source === 'draft' ? '未保存' : '已保存' }}</small><small>第 {{ item.line }} 行 · {{ item.count }} 处</small></span></button></div>
+    <p v-if="!usesLoading && !usesError && !uses.length" class="attachment-note">没有找到引用。没有结果不表示可以删除文件。</p>
+    <details class="attachment-note attachment-scope"><summary>检查范围</summary>资料库内已保存的 Markdown，以及当前窗口的完整未保存笔记；同一篇以草稿为准。其他窗口、库外文件和其他格式未检查。每篇最多 2 MiB、总计 32 MiB，遇到读取限制会说明。</details>
+    <div class="attachment-footer"><n-button size="small" :loading="usesLoading" @click="showUses(usesPath)">刷新引用</n-button><n-button size="small" @click="usesVisible = false">返回</n-button></div>
   </n-modal>
   <n-modal :show="!!replacement" preset="card" title="更换引用" class="attachment-replacement" :style="{ width: 'min(560px, calc(100vw - 28px))' }" @update:show="value => !value && (replacement = null)">
     <template v-if="replacement"><p class="attachment-path">{{ replacement.oldTarget }} → {{ replacement.target }}</p><p>仅更改这篇笔记的 {{ replacement.count }} 处引用，原附件保留。</p><p v-if="replacement.imported" class="attachment-note">库外文件已复制到附件目录，原件保持不变；取消更换也会保留副本。</p><p v-if="replacementError" role="alert" class="attachment-error">{{ replacementError }}</p><div class="attachment-footer"><n-button @click="replacement = null">取消</n-button><n-button type="primary" @click="applyReplacement">应用到草稿</n-button></div></template>
@@ -48,15 +49,17 @@ import { Paperclip, FileText, RefreshCw } from 'lucide-vue-next'
 import { invoke } from '@tauri-apps/api/core'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { findFileFormat } from '../config/fileFormats'
+import type { AttachmentDraft } from '../utils/attachmentDrafts'
 interface Attachment { target:string; path:string|null; status:string; line:number; count:number; canReplace:boolean }
 interface Report { document:string; markdown:boolean; references:Attachment[] }
-interface Use { document:string; line:number; count:number }
+interface Use { document:string; line:number; count:number; source:'draft'|'saved' }
 interface Replacement { content:string; count:number; target:string; oldTarget:string; expected:string; imported:boolean }
-const props=defineProps<{libraryRoot:string; contextKey:string; captureDraft:(path:string)=>string|null; applyDraft:(path:string,expected:string,content:string)=>void}>()
+const props=defineProps<{libraryRoot:string; contextKey:string; captureDraft:(path:string)=>string|null; captureReferenceDrafts?:()=>AttachmentDraft[]; applyDraft:(path:string,expected:string,content:string)=>void}>()
 const emit=defineEmits<{open:[path:string]}>(), message=useMessage()
 const visible=ref(false), path=ref(''), report=ref<Report|null>(null), query=ref(''), selectedTarget=ref(''), loading=ref(false), working=ref(false), error=ref(''), notice=ref('')
 const usesVisible=ref(false), usesLoading=ref(false), usesError=ref(''), usesPath=ref(''), uses=ref<Use[]>([]), replacement=ref<Replacement|null>(null), replacementError=ref('')
-let generation=0, useGeneration=0
+let generation=0, useGeneration=0, usesSnapshot=''
+const referenceDrafts=()=>props.captureReferenceDrafts?.()||[]
 const filename=(value:string)=>value.split(/[\\/]/).pop()||value
 const canOpen=(value?:string|null)=>!!value && !!findFileFormat(value)
 const referenceName=(value:string)=>{try{return filename(decodeURIComponent(value.split(/[?#]/)[0]||value))}catch{return filename(value)}}
@@ -78,9 +81,21 @@ const locate=async(value?:string|null)=>{if(!value)return;const token=generation
 const showUses=async(value?:string|null)=>{
   if(!value)return
   const token=++useGeneration, root=props.libraryRoot;usesPath.value=value;uses.value=[];usesError.value='';usesLoading.value=true;usesVisible.value=true
-  try{const result=await invoke<Use[]>('list_library_attachment_uses',{libraryRoot:root,path:value});if(token===useGeneration&&usesVisible.value)uses.value=result}
+  try{
+    const drafts=referenceDrafts(), snapshot=JSON.stringify(drafts)
+    const result=await invoke<Use[]>('list_library_attachment_uses',{libraryRoot:root,path:value,drafts})
+    if(token!==useGeneration||!usesVisible.value)return
+    if(JSON.stringify(referenceDrafts())!==snapshot)throw Error('笔记已有新修改，请刷新引用后查看。')
+    usesSnapshot=snapshot;uses.value=result
+  }
   catch(cause){if(token===useGeneration)usesError.value=`引用检查未完成：${String(cause)}`}
   finally{if(token===useGeneration)usesLoading.value=false}
+}
+const openUse=(item:Use)=>{
+  try{
+    if(JSON.stringify(referenceDrafts())!==usesSnapshot)throw Error('笔记已有新修改，请刷新引用后打开。')
+    openFile(item.document)
+  }catch(cause){uses.value=[];usesError.value=`引用已变化：${String(cause)}`}
 }
 const prepareReplacement=async()=>{
   const item=selected.value,document=path.value,root=props.libraryRoot,token=generation
@@ -105,5 +120,6 @@ watch(()=>props.contextKey,close,{flush:'sync'})
 defineExpose({open,close})
 </script>
 <style scoped>
+.attachment-use-location{flex:0 0 auto!important;text-align:right}.attachment-scope{margin-top:12px;line-height:1.6}.attachment-scope summary{cursor:pointer;width:fit-content}
 .attachment-heading,.attachment-footer,.attachment-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.attachment-heading{margin-bottom:12px}.attachment-heading>strong{min-width:0;overflow-wrap:anywhere}.attachment-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:12px}.attachment-list{max-height:48vh;overflow:auto;display:grid;align-content:start;gap:5px}.attachment-row{display:flex;align-items:center;gap:9px;width:100%;padding:10px;text-align:left;color:var(--theme-text);background:var(--theme-surface);border:1px solid transparent;border-radius:var(--theme-radius-sm);cursor:pointer}.attachment-row:hover{background:var(--theme-background)}.attachment-row.selected{background:color-mix(in srgb,var(--theme-primary) 10%,var(--theme-surface));border-color:var(--theme-primary)}.attachment-row>svg{flex-shrink:0;color:var(--theme-primary)}.attachment-row>span{display:grid;gap:4px;flex:1;min-width:0}.attachment-row strong,.attachment-row small{overflow-wrap:anywhere}.attachment-status{flex-shrink:0}.attachment-status.missing,.attachment-error{color:var(--theme-error,#d03050)}.attachment-detail{padding:12px;background:var(--theme-surface);border:var(--theme-border);border-radius:var(--theme-radius-sm);min-width:0}.attachment-path,.attachment-error{overflow-wrap:anywhere}.attachment-actions{justify-content:flex-start;margin-top:14px}.attachment-note,small{color:var(--theme-text-secondary);font-size:var(--text-compact)}.attachment-empty{display:flex;align-items:center;justify-content:center;gap:10px;padding:30px 10px;color:var(--theme-text-secondary)}.attachment-footer{margin-top:14px}.attachment-row:focus-visible{outline:2px solid var(--theme-primary);outline-offset:-2px}@media(max-width:600px){.attachment-layout{grid-template-columns:1fr}.attachment-list{max-height:27vh}}
 </style>

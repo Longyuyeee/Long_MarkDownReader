@@ -39,6 +39,8 @@
 
 ## 不只是打开文件，更是接续你的工作
 
+> **v1.1.35 开发候选**：附件引用纳入当前窗口未保存的笔记，草稿优先；查询不代存。原安装器构建与同包复核待完成，当前正式下载保持 v1.1.34。[开发情况](docs/V1_1_35_Attachment_Draft_References_Development_2026-10-22.md)。
+
 > **v1.1.34 已正式发布**：章节链接随资料库和文件位置接续，保护当前草稿。[下载安装](https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.34) · [发布说明](docs/RELEASE_NOTES_v1.1.34.md)。
 
 

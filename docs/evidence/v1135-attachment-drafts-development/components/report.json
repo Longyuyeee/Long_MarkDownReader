@@ -1,0 +1,31 @@
+{
+  "nativeBridgeMocked": true,
+  "desktopInputUsed": false,
+  "checks": [
+    {
+      "id": "snapshot-passed-with-empty-draft-and-source-labels",
+      "status": "passed"
+    },
+    {
+      "id": "open-result-without-save-or-draft-mutation",
+      "status": "passed"
+    },
+    {
+      "id": "new-input-invalidates-result-and-refreshes",
+      "status": "passed"
+    },
+    {
+      "id": "late-response-cannot-replace-current-draft-snapshot",
+      "status": "passed"
+    },
+    {
+      "id": "query-error-local-and-closable",
+      "status": "passed"
+    },
+    {
+      "id": "six-styles-light-dark-wide-narrow-normal-motion",
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}
