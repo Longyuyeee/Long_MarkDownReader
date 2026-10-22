@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {
+      "id": "g",
+      "type": "group",
+      "label": "资料分组",
+      "x": -30,
+      "y": -50,
+      "width": 320,
+      "height": 270
+    },
+    {
+      "id": "a",
+      "type": "text",
+      "text": "用户保存的画布内容",
+      "x": 0,
+      "y": 0,
+      "width": 260,
+      "height": 160,
+      "custom": {
+        "keep": "不要丢失"
+      }
+    },
+    {
+      "id": "f",
+      "type": "file",
+      "file": "v1119-organizing-41cce3ae-ffa9-4383-8c10-012bd52c7a64/notes/接续来源.md",
+      "x": 420,
+      "y": 0,
+      "width": 260,
+      "height": 160
+    }
+  ],
+  "edges": [],
+  "vendor": {
+    "preserve": "unknown root field"
+  }
+}

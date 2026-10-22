@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-102-v1.1.37-version-candidate",
-  "binaryVersionTransition": "v1.1.37-quality-gate-pending",
+  "binaryVersionTransition": "v1.1.37-release-ready",
   "displayLabel": "v1.1.37 PDF 批注接续候选 · 当前公开 v1.1.36",
   "activeSlice": {
     "id": "v1.1.37-pdf-annotation-resume",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_1_37_Unsigned_Community_Release_Audit_2026-10-22.md"
   }
 }
