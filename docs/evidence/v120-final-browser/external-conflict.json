@@ -1,0 +1,8 @@
+{
+  "scope": "Actual external Vue editors with simulated IPC; native copy/protection tested separately",
+  "checks": [
+    "Markdown external conflict uses signature checks; failed protection retains draft; explicit reload keeps a discoverable copy and never overwrites original disk",
+    "TXT external conflict uses signature checks; failed protection retains draft; explicit reload keeps a discoverable copy and never overwrites original disk"
+  ],
+  "errors": []
+}

@@ -1,0 +1,168 @@
+{
+  "scope": "Actual Vue views/components with simulated IPC; native disk tests are separate",
+  "checks": [
+    "history body/note search, date groups, context-menu pin and note, pinned-delete unavailable",
+    "history difference navigation retains existing compare/recovery entry",
+    "history read errors stay local; retry retains persisted pin/note after panel reopening",
+    "Markdown uses the same conflict dialog; continue preserves draft and failed protection prevents replacement",
+    "TXT conflict copy keeps original disk version and unsaved editor intact",
+    "failed protection and stale disk comparison retain the draft and allow explicit recompare",
+    "TXT applies checked disk content only after preserving draft, with six styles and narrow/wide layouts",
+    "new input during native draft protection prevents late replacement"
+  ],
+  "layouts": [
+    {
+      "style": "professional-light",
+      "width": 1280
+    },
+    {
+      "style": "professional-light",
+      "width": 640
+    },
+    {
+      "style": "professional-dark",
+      "width": 1280
+    },
+    {
+      "style": "professional-dark",
+      "width": 640
+    },
+    {
+      "style": "high-contrast",
+      "width": 1280
+    },
+    {
+      "style": "high-contrast",
+      "width": 640
+    },
+    {
+      "style": "cloud-paper",
+      "width": 1280
+    },
+    {
+      "style": "cloud-paper",
+      "width": 640
+    },
+    {
+      "style": "tech-blue",
+      "width": 1280
+    },
+    {
+      "style": "tech-blue",
+      "width": 640
+    },
+    {
+      "style": "forest-green",
+      "width": 1280
+    },
+    {
+      "style": "forest-green",
+      "width": 640
+    },
+    {
+      "style": "sakura-glass",
+      "width": 1280
+    },
+    {
+      "style": "sakura-glass",
+      "width": 640
+    },
+    {
+      "style": "minimal-bw",
+      "width": 1280
+    },
+    {
+      "style": "minimal-bw",
+      "width": 640
+    },
+    {
+      "style": "dark-neon",
+      "width": 1280
+    },
+    {
+      "style": "dark-neon",
+      "width": 640
+    },
+    {
+      "style": "sharp-business",
+      "width": 1280
+    },
+    {
+      "style": "sharp-business",
+      "width": 640
+    },
+    {
+      "style": "cream-warmth",
+      "width": 1280
+    },
+    {
+      "style": "cream-warmth",
+      "width": 640
+    },
+    {
+      "style": "purple-dream",
+      "width": 1280
+    },
+    {
+      "style": "purple-dream",
+      "width": 640
+    },
+    {
+      "style": "amber-vintage",
+      "width": 1280
+    },
+    {
+      "style": "amber-vintage",
+      "width": 640
+    },
+    {
+      "style": "ocean-glass",
+      "width": 1280
+    },
+    {
+      "style": "ocean-glass",
+      "width": 640
+    },
+    {
+      "style": "midnight-glass",
+      "width": 1280
+    },
+    {
+      "style": "midnight-glass",
+      "width": 640
+    },
+    {
+      "style": "jade-airy",
+      "width": 1280
+    },
+    {
+      "style": "jade-airy",
+      "width": 640
+    },
+    {
+      "style": "rose-soft",
+      "width": 1280
+    },
+    {
+      "style": "rose-soft",
+      "width": 640
+    },
+    {
+      "style": "cream-airy",
+      "width": 1280
+    },
+    {
+      "style": "cream-airy",
+      "width": 640
+    },
+    {
+      "style": "violet-neon",
+      "width": 1280
+    },
+    {
+      "style": "violet-neon",
+      "width": 640
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,71 @@
+{
+  "scope": "Actual App and Vue controls, native-event protocol and user input; IPC/disk simulated here, real filesystem tested separately",
+  "checks": [
+    "Moving a referenced file detects unsaved changes in the incoming note; both the disk location and draft stay intact, and the interface remains usable",
+    "The move refreshes the incoming editor and cached tab, preserves the user-saved content and unrelated unsaved draft, and recovers a lost release event",
+    "Interrupted moves remain accessible after reopening the app through a context menu; the review dialog shows actual positions, preserves failure and allows explicit retry"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "soft",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "neo",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "neo",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "glass",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "glass",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "airy",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "airy",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "minimal",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "minimal",
+      "width": 480,
+      "dialogFits": true
+    },
+    {
+      "style": "sharp",
+      "width": 1280,
+      "dialogFits": true
+    },
+    {
+      "style": "sharp",
+      "width": 480,
+      "dialogFits": true
+    }
+  ],
+  "errors": []
+}
