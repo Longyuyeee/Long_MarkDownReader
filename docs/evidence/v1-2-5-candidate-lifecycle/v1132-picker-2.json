@@ -1,0 +1,179 @@
+{
+    "status":  "selected-real-native-dialog",
+    "processId":  9408,
+    "dialogProcessId":  9408,
+    "executable":  "C:\\LongEditR5I\\tauri-app.exe",
+    "title":  "选择新恢复文件夹的父目录",
+    "fileNameAutomationId":  "1152",
+    "selectedPath":  "C:\\LongEdit-v1132-1d7acf15-8448-4ee1-a184-94a772eb506a\\目标父目录",
+    "inputCharacters":  60,
+    "method":  "Windows-Win32-filename-character-input-and-OK-notification",
+    "desktopUserSession":  "disposable-github-hosted",
+    "controlCandidates":  [
+                              {
+                                  "Handle":  656100,
+                                  "ParentHandle":  721608,
+                                  "ControlId":  0,
+                                  "ClassName":  "Static",
+                                  "Title":  "Namespace Tree Control"
+                              },
+                              {
+                                  "Handle":  524976,
+                                  "ParentHandle":  656180,
+                                  "ControlId":  1090,
+                                  "ClassName":  "Static",
+                                  "Title":  "Folder:"
+                              },
+                              {
+                                  "Handle":  590492,
+                                  "ParentHandle":  656180,
+                                  "ControlId":  1152,
+                                  "ClassName":  "Edit",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  590552,
+                                  "ParentHandle":  656180,
+                                  "ControlId":  1092,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  131932,
+                                  "ParentHandle":  656180,
+                                  "ControlId":  1091,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  590482,
+                                  "ParentHandle":  656180,
+                                  "ControlId":  1093,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  525014,
+                                  "ParentHandle":  656180,
+                                  "ControlId":  1095,
+                                  "ClassName":  "Static",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  656078,
+                                  "ParentHandle":  197458,
+                                  "ControlId":  41477,
+                                  "ClassName":  "ComboBoxEx32",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  656160,
+                                  "ParentHandle":  656078,
+                                  "ControlId":  41477,
+                                  "ClassName":  "ComboBox",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  525068,
+                                  "ParentHandle":  656160,
+                                  "ControlId":  41477,
+                                  "ClassName":  "Edit",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  917872,
+                                  "ParentHandle":  787214,
+                                  "ControlId":  0,
+                                  "ClassName":  "UniversalSearchBand",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  721600,
+                                  "ParentHandle":  917872,
+                                  "ControlId":  0,
+                                  "ClassName":  "Search Box",
+                                  "Title":  ""
+                              },
+                              {
+                                  "Handle":  852764,
+                                  "ParentHandle":  721600,
+                                  "ControlId":  0,
+                                  "ClassName":  "SearchEditBoxWrapperClass",
+                                  "Title":  ""
+                              }
+                          ],
+    "dialogClosed":  true,
+    "folderConfirmedAgain":  true,
+    "folderObservations":  [
+                               {
+                                   "ControlId":  0,
+                                   "ClassName":  "Static",
+                                   "Title":  "Namespace Tree Control"
+                               },
+                               {
+                                   "ControlId":  1090,
+                                   "ClassName":  "Static",
+                                   "Title":  "Folder:"
+                               },
+                               {
+                                   "ControlId":  1152,
+                                   "ClassName":  "Edit",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  1,
+                                   "ClassName":  "Button",
+                                   "Title":  "Select Folder"
+                               },
+                               {
+                                   "ControlId":  2,
+                                   "ClassName":  "Button",
+                                   "Title":  "Cancel"
+                               },
+                               {
+                                   "ControlId":  1092,
+                                   "ClassName":  "Static",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  1091,
+                                   "ClassName":  "Static",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  1093,
+                                   "ClassName":  "Static",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  1095,
+                                   "ClassName":  "Static",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  1038,
+                                   "ClassName":  "Button",
+                                   "Title":  "\u0026Help"
+                               },
+                               {
+                                   "ControlId":  41477,
+                                   "ClassName":  "ComboBoxEx32",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  41477,
+                                   "ClassName":  "ComboBox",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  41477,
+                                   "ClassName":  "Edit",
+                                   "Title":  ""
+                               },
+                               {
+                                   "ControlId":  0,
+                                   "ClassName":  "SearchEditBoxWrapperClass",
+                                   "Title":  ""
+                               }
+                           ]
+}

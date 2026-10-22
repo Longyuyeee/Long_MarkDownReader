@@ -130,6 +130,7 @@
                   :aria-label="`选择第 ${item.rowIndex + 1} 行`"
                   :aria-pressed="table.rowIds[item.rowIndex] === selectedRowId"
                   @click="selectRow(item.rowIndex)"
+                  @contextmenu.prevent="openRowMenu($event,item.rowIndex)"
                 >{{ item.rowIndex + 1 }}</button>
                 <div v-for="(_, column) in table.headers" :key="table.columnIds[column]" class="data-cell" @contextmenu.prevent="openCellMenu($event,item.rowIndex,column)" :class="{ frozen: column < frozenColumns, 'frozen-edge': column === frozenColumns - 1, 'range-selected': selectedCellRows.has(table.rowIds[item.rowIndex]) && selectedCellColumns.has(table.columnIds[column]), 'has-multiline': hasCellNewline(item.rowIndex, column), invalid: !!cellIssue(item.rowIndex,column) }" :style="frozenColumnStyle(column)">
                   <input
@@ -193,6 +194,7 @@
     </main>
     <n-dropdown :show="columnMenu.show" trigger="manual" :x="columnMenu.x" :y="columnMenu.y" :options="[{label:'录入规则…',key:'rule'}]" @clickoutside="columnMenu.show=false" @select="selectColumnAction" />
     <n-dropdown :show="cellMenu.show" trigger="manual" :x="cellMenu.x" :y="cellMenu.y" :options="cellMenuOptions" @clickoutside="cellMenu.show=false" @select="key => selectCellAction(String(key))" />
+    <n-dropdown :show="rowMenu.show" trigger="manual" :x="rowMenu.x" :y="rowMenu.y" :options="rowMenuOptions" @clickoutside="rowMenu.show=false" @select="key => selectRowAction(String(key))" />
     <TableFillDialog v-if="fillDialog" :rows="fillDialog.range.rows.length" :columns="fillDialog.range.columns.length" :empty="fillDialog.empty" :apply-fill="applyRangeFill" @close="fillDialog=undefined" />
     <TableRuleDialog v-if="ruleDialog" :key="ruleDialog.columnId" :column-name="headerLabel(columnIndex(ruleDialog.columnId))" :rule="table?.validationRules?.[ruleDialog.columnId]" :temporary="table?.format!=='longedit-table'" @close="ruleDialog=undefined" @apply="applyRule" />
     <TableIssuesDialog v-if="issuesDialog" :issues="issuesDialog.issues" :columns="issuesDialog.document.headers" :column-ids="issuesDialog.document.columnIds" :scope-label="issuesDialog.scope" :has-rules="Object.keys(issuesDialog.document.validationRules||{}).length>0" :busy="issuesDialog.busy" :failure="issuesDialog.failure" :truncated="issuesDialog.truncated" :can-locate="views.some(view=>view.kind==='grid')" :plan="planCorrection" :apply-edit="applyCorrection" @close="issuesDialog=undefined" @locate="locateIssue" />
@@ -214,6 +216,7 @@ import { NDropdown, useDialog, useMessage } from 'naive-ui'
 import TableRuleDialog from '../components/TableRuleDialog.vue'
 import TableFillDialog from '../components/TableFillDialog.vue'
 import {planTableRangeFill,type TableCellRange,type TableFillMode} from '../utils/tableRangeFill'
+import {planTableRowInsertion,tableRowHistorySize,type TableRowInsertion} from '../utils/tableRowInsertion'
 import TableIssuesDialog from '../components/TableIssuesDialog.vue'
 import {normalizeTableRule,tableValueIssue,planTableCorrection,type TableRule,type TableRules,type TableIssue} from '../utils/tableValidation'
 import {
@@ -281,6 +284,7 @@ interface TableDocument {
 interface TableWriteResult { signature: string; size: number }
 interface RowHistoryEntry {
   kind: 'add' | 'delete'
+  label?: string
   index: number
   row: string[]
   rowId: string
@@ -478,6 +482,31 @@ const cellIssue=(row:number,column:number)=>table.value?visibleCellIssues.value.
 const captureRuleContext=():RuleContext=>({document:table.value!,revision:editRevision,generation:loadGeneration,path:tablePath.value,root:store.libraryPath,external:isExternal.value})
 function requireRuleContext(context?:RuleContext){if(!context||context.document!==table.value||context.revision!==editRevision||context.generation!==loadGeneration||context.path!==tablePath.value||context.root!==store.libraryPath||context.external!==isExternal.value||loading.value||saving.value||converting.value)throw Error('表格或草稿已有变化，请重新打开检查')}
 const rangeKey = () => JSON.stringify(cellRange.value ? {rows:cellRange.value.rows,columns:cellRange.value.columns} : null)
+const rowMenu=ref({show:false,x:0,y:0,rowId:'',context:undefined as RuleContext|undefined})
+const rowMenuOptions=computed(()=>{const busy=loading.value||saving.value||converting.value,sorted=sortColumn.value>=0;return [
+  {key:'above',label:sorted?'上方插入行（排序时不可用）':'上方插入行',disabled:busy||sorted},
+  {key:'below',label:sorted?'下方插入行（排序时不可用）':'下方插入行',disabled:busy||sorted},
+  {key:'duplicate',label:'复制此行',disabled:busy},
+  {type:'divider' as const,key:'row-divider'},
+  {key:'delete',label:'删除此行…',disabled:busy},
+]})
+function openRowMenu(event:MouseEvent,row:number){
+  if(!table.value||loading.value||saving.value||converting.value)return
+  cellMenu.value.show=false;columnMenu.value.show=false;cellRange.value=null
+  selectedRowId.value=table.value.rowIds[row]!
+  rowMenu.value={show:true,x:event.clientX,y:event.clientY,rowId:selectedRowId.value,context:captureRuleContext()}
+}
+function selectRowAction(action:string){
+  const menu=rowMenu.value;rowMenu.value.show=false
+  try{
+    requireRuleContext(menu.context)
+    if(activeViewKind.value!=='grid'||!table.value!.rowIds.includes(menu.rowId))throw Error('原记录已变化，请重新打开行菜单')
+    if(action==='delete'){selectedRowId.value=menu.rowId;requestDeleteSelectedRow();return}
+    if(!['above','below','duplicate'].includes(action))return
+    if(action!=='duplicate'&&sortColumn.value>=0)throw Error('请先清除排序，再选择插入位置；原内容未修改')
+    insertRow(action as TableRowInsertion,menu.rowId)
+  }catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}
+}
 const cellMenu=ref({show:false,x:0,y:0,context:undefined as RuleContext|undefined,rangeKey:''})
 const fillDialog=ref<(RuleContext & {range:TableCellRange;rangeKey:string;empty:number})>()
 const cellMenuOptions=computed(()=>[
@@ -495,7 +524,7 @@ function requireRangeContext(context?:RuleContext & {rangeKey:string}){
 function openCellMenu(event:MouseEvent,row:number,column:number){
   if(!table.value||loading.value||saving.value||converting.value)return
   if(!selectedCellRows.value.has(table.value.rowIds[row])||!selectedCellColumns.value.has(table.value.columnIds[column]))selectCell(row,column)
-  columnMenu.value.show=false
+  columnMenu.value.show=false;rowMenu.value.show=false
   cellMenu.value={show:true,x:event.clientX,y:event.clientY,context:captureRuleContext(),rangeKey:rangeKey()}
 }
 async function selectCellAction(action:string){
@@ -528,7 +557,7 @@ function applyRangeFill(value:string,mode:TableFillMode){
   if(edit.cells.length){editSession++;commitCellEdit(edit)}
   return edit.cells.length
 }
-function openColumnMenu(event:MouseEvent,column:number){if(!table.value)return;columnMenu.value={show:true,x:event.clientX,y:event.clientY,columnId:table.value.columnIds[column],document:table.value}}
+function openColumnMenu(event:MouseEvent,column:number){if(!table.value)return;rowMenu.value.show=false;cellMenu.value.show=false;columnMenu.value={show:true,x:event.clientX,y:event.clientY,columnId:table.value.columnIds[column],document:table.value}}
 function selectColumnAction(){const menu=columnMenu.value;columnMenu.value.show=false;if(menu.document===table.value)openRule(menu.columnId)}
 function openRule(columnId:string){if(!table.value||loading.value||saving.value||converting.value)return;ruleDialog.value={...captureRuleContext(),columnId}}
 function markRuleDirty(){if(table.value?.format==='longedit-table')markDirty();else{editRevision++;recordWindowDraftActivity()}}
@@ -547,7 +576,7 @@ const markDirty = () => {
   if (tab) tab.isDirty = true
   recordWindowDraftActivity()
 }
-const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'rule' ? JSON.stringify(entry).length*2+128 : entry.kind === 'edit' ? entry.edit.bytes : 128 + entry.row.reduce((sum, value) => sum + value.length * 2 + 16, 0)
+const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'rule' ? JSON.stringify(entry).length*2+128 : entry.kind === 'edit' ? entry.edit.bytes : tableRowHistorySize(entry.row,entry.columnIds,entry.rowId,entry.label)
 const pushDataHistory = (entry: DataHistoryEntry) => {
   rowRedoStack.value = []
   const history = [...rowUndoStack.value, entry]
@@ -846,22 +875,27 @@ const cycleSort = (column: number) => {
 }
 const clearSort = () => { sortColumn.value = -1; sortDirection.value = 'asc'; markViewDirty() }
 
-const addRow = () => {
-  if (!table.value) return
-  if (table.value.rows.length >= 200_000) { message.warning('已达到20万行上限，本次未新增'); return }
-  const entry: RowHistoryEntry = {
-    kind: 'add',
-    index: table.value.rows.length,
-    row: Array(table.value.headers.length).fill(''),
-    rowId: `row-${Date.now()}-${table.value.rowIds.length + 1}`,
-  }
-  table.value.rows.push(entry.row)
-  table.value.rowIds.push(entry.rowId)
-  pushRowHistory(entry)
-  selectedRowId.value = entry.rowId
-  markDirty()
-  nextTick(() => scrollRef.value?.scrollTo({ top: filteredIndices.value.length * rowHeight }))
+const insertRow = (action:TableRowInsertion,anchorId?:string) => {
+  if(!table.value||loading.value||converting.value)return
+  try{
+    const entry=planTableRowInsertion(table.value,action,anchorId,()=>`row-${crypto.randomUUID()}`)
+    table.value.rows.splice(entry.index,0,entry.row);table.value.rowIds.splice(entry.index,0,entry.rowId)
+    editSession++;cellRange.value=null;pushRowHistory(entry);selectedRowId.value=entry.rowId
+    const revealed=!filteredIndices.value.includes(entry.index)
+    if(revealed)filterQuery.value=''
+    markDirty()
+    notice.value=`已${entry.label||'新增行'}${revealed?'，已清除筛选以显示新行':''}，可撤销；保存后写入文件`
+    const document=table.value,generation=loadGeneration,path=tablePath.value
+    nextTick(async()=>{
+      if(table.value!==document||generation!==loadGeneration||tablePath.value!==path||selectedRowId.value!==entry.rowId||rowMenu.value.show||activeViewKind.value!=='grid')return
+      const index=filteredIndices.value.indexOf(document.rowIds.indexOf(entry.rowId)),top=Math.max(0,index*rowHeight-100)
+      scrollTop.value=top;scrollRef.value?.scrollTo({top});await nextTick()
+      if(table.value!==document||generation!==loadGeneration||selectedRowId.value!==entry.rowId||rowMenu.value.show)return
+      scrollRef.value?.querySelector<HTMLElement>('[data-row-id="'+CSS.escape(entry.rowId)+'"] '+(action==='append'?'.row-number':'.data-cell input'))?.focus({preventScroll:true})
+    })
+  }catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}
 }
+const addRow = () => insertRow('append')
 const addColumn = () => {
   if (!table.value || table.value.headers.length >= 512) return
   table.value.headers.push(`列 ${table.value.headers.length + 1}`)
@@ -886,6 +920,7 @@ const deleteSelectedRow = () => {
   const index = selectedRowIndex.value
   const entry: RowHistoryEntry = {
     kind: 'delete',
+    columnIds: [...table.value.columnIds],
     index,
     row: [...table.value.rows[index]],
     rowId: table.value.rowIds[index],
@@ -900,13 +935,16 @@ const deleteSelectedRow = () => {
 }
 const requestDeleteSelectedRow = () => {
   if (selectedRowIndex.value < 0) return
-  const rowNumber = selectedRowIndex.value + 1
+  const rowNumber = selectedRowIndex.value + 1,context=captureRuleContext(),rowId=selectedRowId.value
   dialog.warning({
     title: `删除第 ${rowNumber} 行？`,
     content: '此操作只会从当前编辑草稿移除该行，点击保存后才会写入源文件。删除后仍可撤销。',
     positiveText: '删除行',
     negativeText: '取消',
-    onPositiveClick: deleteSelectedRow,
+    onPositiveClick: () => {
+      try{requireRuleContext(context);if(!table.value!.rowIds.includes(rowId))throw Error('原记录已变化，本次未删除');selectedRowId.value=rowId;deleteSelectedRow()}
+      catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''));return false}
+    },
   })
 }
 const undoRowOperation = () => {
@@ -942,7 +980,7 @@ const undoRowOperation = () => {
   }
   rowRedoStack.value = [...rowRedoStack.value, completedEntry]
   markDirty()
-  notice.value = entry.kind === 'delete' ? '已撤销删除行' : '已撤销新增行'
+  notice.value = entry.kind === 'delete' ? '已撤销删除行' : `已撤销${entry.label||'新增行'}`
 }
 const redoRowOperation = () => {
   if (!table.value) return
@@ -977,7 +1015,7 @@ const redoRowOperation = () => {
   }
   rowUndoStack.value = [...rowUndoStack.value, completedEntry]
   markDirty()
-  notice.value = entry.kind === 'delete' ? '已重做删除行' : '已重做新增行'
+  notice.value = entry.kind === 'delete' ? '已重做删除行' : `已重做${entry.label||'新增行'}`
 }
 const cardTitle = (row: number) => {
   const column = columnIndex(titleColumn.value)
@@ -1004,7 +1042,7 @@ const toggleCardColumn = (id: string) => {
 }
 
 const loadTable = async () => {
-  ruleDialog.value=undefined;issuesDialog.value=undefined;columnMenu.value.show=false;cellMenu.value.show=false;
+  ruleDialog.value=undefined;issuesDialog.value=undefined;columnMenu.value.show=false;cellMenu.value.show=false;rowMenu.value.show=false;
   if (scrollRef.value && presentedPath.value) {
     rememberWorkspaceViewState(presentedPath.value, { scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, frozenColumns: frozenColumns.value })
   }
@@ -1275,6 +1313,11 @@ const handleScroll = () => {
     frozenColumns: frozenColumns.value,
   })
 }
+const dismissTableMenus = (event: KeyboardEvent) => {
+  if(event.key!=='Escape'||event.isComposing||!(rowMenu.value.show||cellMenu.value.show||columnMenu.value.show))return
+  rowMenu.value.show=false;cellMenu.value.show=false;columnMenu.value.show=false
+  event.preventDefault();event.stopPropagation()
+}
 const handleKeydown = (event: KeyboardEvent) => {
   if (loading.value || event.isComposing) return
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); void saveTable() }
@@ -1331,6 +1374,7 @@ onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query
 onMounted(() => {
   loadTable()
   window.addEventListener('beforeunload', beforeUnload)
+  window.addEventListener('keydown', dismissTableMenus, true)
   resizeObserver = new ResizeObserver(() => { if (scrollRef.value) viewportHeight.value = scrollRef.value.clientHeight })
   if (scrollRef.value) resizeObserver.observe(scrollRef.value)
 })
@@ -1341,6 +1385,7 @@ onBeforeUnmount(() => {
   }
   window.clearTimeout(typeTimer)
   window.removeEventListener('beforeunload', beforeUnload)
+  window.removeEventListener('keydown', dismissTableMenus, true)
   resizeObserver?.disconnect()
 })
 
