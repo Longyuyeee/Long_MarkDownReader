@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 export const tableFillChecks=['range-context-cancel-and-single-cell-scope','empty-fill-stable-identities-one-undo-redo','replace-validation-atomic-and-input-retained','same-file-locator-keeps-unsaved-table-and-history','real-locked-save-retains-draft-retries-and-reopens','csv-tsv-fill-preserves-original-text-and-encoding','external-conflict-keeps-file-and-current-fill']
 export function validateInstalledTableFill(report,manifest){
- assert.ok(['1.2.4','1.2.5'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
+ assert.ok(['1.2.4','1.2.5', '1.2.6'].includes(manifest.appVersion));for(const k of ['appVersion','sourceCommit'])assert.equal(report[k],manifest[k]);assert.equal(report.installerSha256,manifest.artifacts.find(a=>a.target==='nsis')?.sha256)
  assert.equal(report.status,'passed');assert.equal(report.evidenceLevel,'installed-table-range-fill-trusted-input-and-file-bytes')
  for(const [key,n]of [['harnessSourceCommit',40],['executableSha256',64],['lockedBefore',64],['externalBefore',64]])assert.match(report[key],new RegExp('^[a-f0-9]{'+n+'}$'))
  assert.equal(report.lockedBefore,report.lockedAfter);assert.equal(report.externalBefore,report.externalAfter)

@@ -1,0 +1,85 @@
+{
+  "evidenceLevel": "production-TableView-real-headless-input-simulated-native-IPC",
+  "checks": [
+    "Real trusted clipboard: two rows/three columns, exact identifiers, keyboard whole-paste undo/redo and range copy; no auto-save",
+    "Filtered paste binds visible row IDs only; sorting before undo/redo never writes hidden rows or wrong positions",
+    "Shift-click rectangle, copy and clear in one transaction; contiguous typing and header edit undo together without removing row-history features",
+    "Unfiltered append/undo/redo preserves new row IDs, formula-like text and separately added columns",
+    "Out-of-view, extra-column and clipboard-byte limits reject entire paste; no partial values or auto-save",
+    "Deferred save keeps later paste dirty; failure/retry preserves values; explicit save/reopen retains quoted tabs/newlines and encoding/BOM/CRLF metadata (simulated native IPC)",
+    "Multiline cells cannot be flattened by a single-line edit; actual textarea edits retain uniform cell newline style and undo as one draft transaction",
+    "50,000-row actual page remains virtualized and 3,000-cell paste/undo meets the bounded 5s check"
+  ],
+  "layouts": [
+    {
+      "style": "soft",
+      "theme": "white"
+    },
+    {
+      "style": "soft",
+      "theme": "dark"
+    },
+    {
+      "style": "neo",
+      "theme": "white"
+    },
+    {
+      "style": "neo",
+      "theme": "dark"
+    },
+    {
+      "style": "glass",
+      "theme": "white"
+    },
+    {
+      "style": "glass",
+      "theme": "dark"
+    },
+    {
+      "style": "airy",
+      "theme": "white"
+    },
+    {
+      "style": "airy",
+      "theme": "dark"
+    },
+    {
+      "style": "minimal",
+      "theme": "white"
+    },
+    {
+      "style": "minimal",
+      "theme": "dark"
+    },
+    {
+      "style": "sharp",
+      "theme": "white"
+    },
+    {
+      "style": "sharp",
+      "theme": "dark"
+    },
+    {
+      "width": 760,
+      "height": 620
+    },
+    {
+      "width": 480,
+      "height": 760
+    },
+    {
+      "width": 360,
+      "height": 620
+    }
+  ],
+  "errors": [],
+  "sourceUserContentIncluded": false,
+  "receivedMultilineClipboard": "项目一\t待处理\t00123\r\n\"含\t制表符\"\t\"含\r\n换行\"\t9007199254740993123",
+  "performance": {
+    "rows": 50000,
+    "pastedCells": 3000,
+    "elapsedMs": 357.2374999999993,
+    "environment": "headless Chromium local, ordinary motion, virtual DOM; not a cross-machine benchmark"
+  },
+  "status": "passed"
+}

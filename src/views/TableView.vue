@@ -192,7 +192,7 @@
         />
       </template>
     </main>
-    <n-dropdown :show="columnMenu.show" trigger="manual" :x="columnMenu.x" :y="columnMenu.y" :options="[{label:'录入规则…',key:'rule'}]" @clickoutside="columnMenu.show=false" @select="selectColumnAction" />
+    <n-dropdown :show="columnMenu.show" trigger="manual" :x="columnMenu.x" :y="columnMenu.y" :options="columnMenuOptions" @clickoutside="columnMenu.show=false" @select="key => selectColumnAction(String(key))" />
     <n-dropdown :show="cellMenu.show" trigger="manual" :x="cellMenu.x" :y="cellMenu.y" :options="cellMenuOptions" @clickoutside="cellMenu.show=false" @select="key => selectCellAction(String(key))" />
     <n-dropdown :show="rowMenu.show" trigger="manual" :x="rowMenu.x" :y="rowMenu.y" :options="rowMenuOptions" @clickoutside="rowMenu.show=false" @select="key => selectRowAction(String(key))" />
     <TableFillDialog v-if="fillDialog" :rows="fillDialog.range.rows.length" :columns="fillDialog.range.columns.length" :empty="fillDialog.empty" :apply-fill="applyRangeFill" @close="fillDialog=undefined" />
@@ -217,6 +217,7 @@ import TableRuleDialog from '../components/TableRuleDialog.vue'
 import TableFillDialog from '../components/TableFillDialog.vue'
 import {planTableRangeFill,type TableCellRange,type TableFillMode} from '../utils/tableRangeFill'
 import {planTableRowInsertion,tableRowHistorySize,type TableRowInsertion} from '../utils/tableRowInsertion'
+import {applyTableColumnEdit,planTableColumnMove,planTableColumnAdd,type TableColumnEdit} from '../utils/tableColumnEditing'
 import TableIssuesDialog from '../components/TableIssuesDialog.vue'
 import {normalizeTableRule,tableValueIssue,planTableCorrection,type TableRule,type TableRules,type TableIssue} from '../utils/tableValidation'
 import {
@@ -292,7 +293,8 @@ interface RowHistoryEntry {
 }
 interface CellHistoryEntry { kind: 'edit'; edit: TableEdit; session?: string }
 interface RuleHistoryEntry {kind:'rule';columnId:string;before?:TableRule;after?:TableRule}
-type DataHistoryEntry = RowHistoryEntry | CellHistoryEntry | RuleHistoryEntry
+interface ColumnHistoryEntry {kind:'column';edit:TableColumnEdit;removedViews?:{id:string;before:TableViewConfig;after:TableViewConfig}[]}
+type DataHistoryEntry = RowHistoryEntry | CellHistoryEntry | RuleHistoryEntry | ColumnHistoryEntry
 
 const route = useRoute()
 const router = useRouter()
@@ -394,13 +396,13 @@ const inferType = (column: number) => {
   return 'text'
 }
 
-const pendingTypeColumns = new Set<number>()
+const pendingTypeColumns = new Set<string>()
 const scheduleTypeRefresh = (column: number) => {
-  pendingTypeColumns.add(column)
+  const id=table.value?.columnIds[column];if(id)pendingTypeColumns.add(id)
   window.clearTimeout(typeTimer)
   const document = table.value
   typeTimer = window.setTimeout(() => {
-    if (document && table.value === document) for (const index of pendingTypeColumns) document.columnTypes[index] = inferType(index)
+    if (document && table.value === document) for (const id of pendingTypeColumns) {const index=document.columnIds.indexOf(id);if(index>=0)document.columnTypes[index] = inferType(index)}
     pendingTypeColumns.clear()
   }, 180)
 }
@@ -475,7 +477,13 @@ const visibleRows = computed(() => {
 
 interface RuleContext {document:TableDocument;revision:number;generation:number;path:string;root:string;external:boolean}
 const ruleDialog=ref<(RuleContext & {columnId:string})>(),issuesDialog=ref<(RuleContext & {issues:TableIssue[];scope:string;busy:boolean;failure:string;truncated:boolean})>()
-const columnMenu=ref({show:false,x:0,y:0,columnId:'',document:null as TableDocument|null})
+const columnMenu=ref({show:false,x:0,y:0,columnId:'',document:null as TableDocument|null,context:undefined as RuleContext|undefined})
+const columnMenuOptions=computed(()=>{const index=columnIndex(columnMenu.value.columnId),busy=loading.value||saving.value||converting.value;return [
+  {label:'向左移动',key:'left',disabled:busy||index<=0},
+  {label:'向右移动',key:'right',disabled:busy||index<0||index>=(table.value?.columnIds.length||0)-1},
+  {type:'divider' as const,key:'column-divider'},
+  {label:'录入规则…',key:'rule',disabled:busy},
+]})
 const dataMenuOptions=computed(()=>filterQuery.value?[{label:'检查筛选结果…',key:'filtered'},{label:'检查全部记录…',key:'all'}]:[{label:'检查数据…',key:'all'}])
 const visibleCellIssues=computed(()=>{const map=new Map<string,string>(),doc=table.value;if(!doc)return map;const columns=doc.columnIds.map((id,column)=>({id,column,rule:doc.validationRules?.[id]})).filter(c=>c.rule);for(const item of visibleRows.value)for(const c of columns){const reason=tableValueIssue(doc.rows[item.rowIndex][c.column]||'',c.rule);if(reason)map.set(doc.rowIds[item.rowIndex]+':'+c.id,reason)}return map})
 const cellIssue=(row:number,column:number)=>table.value?visibleCellIssues.value.get(table.value.rowIds[row]+':'+table.value.columnIds[column])||'':''
@@ -557,8 +565,17 @@ function applyRangeFill(value:string,mode:TableFillMode){
   if(edit.cells.length){editSession++;commitCellEdit(edit)}
   return edit.cells.length
 }
-function openColumnMenu(event:MouseEvent,column:number){if(!table.value)return;rowMenu.value.show=false;cellMenu.value.show=false;columnMenu.value={show:true,x:event.clientX,y:event.clientY,columnId:table.value.columnIds[column],document:table.value}}
-function selectColumnAction(){const menu=columnMenu.value;columnMenu.value.show=false;if(menu.document===table.value)openRule(menu.columnId)}
+function openColumnMenu(event:MouseEvent,column:number){if(!table.value||loading.value||saving.value||converting.value)return;rowMenu.value.show=false;cellMenu.value.show=false;columnMenu.value={show:true,x:event.clientX,y:event.clientY,columnId:table.value.columnIds[column],document:table.value,context:captureRuleContext()}}
+function selectColumnAction(action='rule'){
+  const menu=columnMenu.value;columnMenu.value.show=false
+  try{
+    requireRuleContext(menu.context)
+    if(activeViewKind.value!=='grid'||!table.value!.columnIds.includes(menu.columnId))throw Error('原字段已变化，请重新打开列菜单')
+    if(action==='rule'){openRule(menu.columnId);return}
+    if(action!=='left'&&action!=='right')return
+    commitColumnEdit(planTableColumnMove(table.value!,menu.columnId,action==='left'?-1:1))
+  }catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}
+}
 function openRule(columnId:string){if(!table.value||loading.value||saving.value||converting.value)return;ruleDialog.value={...captureRuleContext(),columnId}}
 function markRuleDirty(){if(table.value?.format==='longedit-table')markDirty();else{editRevision++;recordWindowDraftActivity()}}
 function applyRule(rule?:TableRule){const context=ruleDialog.value;try{requireRuleContext(context);const id=context!.columnId;if(!table.value!.columnIds.includes(id))throw Error('字段已变化');const before=table.value!.validationRules?.[id],after=rule?normalizeTableRule(rule):undefined;if(JSON.stringify(before)===JSON.stringify(after)){ruleDialog.value=undefined;return}const entry:RuleHistoryEntry={kind:'rule',columnId:id,before,after};if(historyEntryBytes(entry)>TABLE_HISTORY_BYTES)throw Error('规则超过撤销预算');table.value!.validationRules={...table.value!.validationRules};if(after)table.value!.validationRules[id]=after;else delete table.value!.validationRules[id];pushDataHistory(entry);markRuleDirty();notice.value=table.value!.format==='longedit-table'?'规则已应用到草稿，可撤销；仍需保存':'规则仅用于本次检查；创建 Table 副本可保留';ruleDialog.value=undefined}catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}}
@@ -576,7 +593,7 @@ const markDirty = () => {
   if (tab) tab.isDirty = true
   recordWindowDraftActivity()
 }
-const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'rule' ? JSON.stringify(entry).length*2+128 : entry.kind === 'edit' ? entry.edit.bytes : tableRowHistorySize(entry.row,entry.columnIds,entry.rowId,entry.label)
+const historyEntryBytes = (entry: DataHistoryEntry) => entry.kind === 'column' ? entry.edit.bytes+JSON.stringify(entry.removedViews||[]).length*2 : entry.kind === 'rule' ? JSON.stringify(entry).length*2+128 : entry.kind === 'edit' ? entry.edit.bytes : tableRowHistorySize(entry.row,entry.columnIds,entry.rowId,entry.label)
 const pushDataHistory = (entry: DataHistoryEntry) => {
   rowRedoStack.value = []
   const history = [...rowUndoStack.value, entry]
@@ -896,14 +913,55 @@ const insertRow = (action:TableRowInsertion,anchorId?:string) => {
   }catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}
 }
 const addRow = () => insertRow('append')
+const applyColumnHistory = (entry:ColumnHistoryEntry,forward:boolean) => {
+  const doc=table.value!
+  if(!forward&&entry.edit.kind==='add'&&doc.validationRules?.[entry.edit.columnId])throw Error('新增列仍有录入规则，请先撤销规则；本次未移除')
+  captureActiveView()
+  const beforeIds=[...doc.columnIds],afterIds=forward?entry.edit.after:entry.edit.before
+  const copy=(config:TableViewConfig):TableViewConfig=>JSON.parse(JSON.stringify(config))
+  const configs=views.value.map(view=>{
+    const before=copy(view.config),after=copy(before),removed=entry.removedViews?.find(item=>item.id===view.id)
+    after.columnWidths=afterIds.map(id=>{const index=beforeIds.indexOf(id);return index>=0?before.columnWidths[index]||160:removed?.before.columnWidths[entry.edit.after.indexOf(id)]||160})
+    after.frozenColumns=Math.min(12,afterIds.length,after.frozenColumns)
+    if(entry.edit.kind==='add'&&!forward){
+      for(const key of ['groupBy','titleColumn','categoryColumn','valueColumn','seriesColumn','sortColumn'] as const)if(after[key]===entry.edit.columnId)after[key]=key==='groupBy'||key==='titleColumn'?afterIds[0]:undefined
+      after.cardColumns=after.cardColumns.filter(id=>afterIds.includes(id))
+    }else if(entry.edit.kind==='add'&&forward&&removed){
+      for(const key of ['groupBy','titleColumn','categoryColumn','valueColumn','seriesColumn','sortColumn','cardColumns','frozenColumns'] as const){
+        if(JSON.stringify(before[key])===JSON.stringify(removed.after[key]))Object.assign(after,{[key]:removed.before[key]})
+      }
+    }
+    return {id:view.id,before,after}
+  })
+  const retained=entry.edit.kind==='add'&&!forward?configs:entry.removedViews
+  const next={...entry,removedViews:retained}
+  const bytes=[...rowUndoStack.value,...rowRedoStack.value].reduce((sum,item)=>sum+historyEntryBytes(item),0)-([...rowUndoStack.value,...rowRedoStack.value].includes(entry)?historyEntryBytes(entry):0)+historyEntryBytes(next)
+  if(historyEntryBytes(next)>TABLE_HISTORY_BYTES||(!forward&&bytes>TABLE_HISTORY_BYTES))throw Error('列视图超过撤销预算，本次未修改')
+  applyTableColumnEdit(doc,entry.edit,forward)
+  for(const view of views.value)view.config=copy(configs.find(item=>item.id===view.id)!.after)
+  entry.removedViews=retained
+  applyView(activeView.value)
+  cellRange.value=null;editSession++
+}
+const focusColumn = (columnId:string) => {
+  const doc=table.value,generation=loadGeneration,path=tablePath.value
+  nextTick(()=>{
+    if(doc!==table.value||generation!==loadGeneration||path!==tablePath.value||activeViewKind.value!=='grid')return
+    const index=doc!.columnIds.indexOf(columnId)
+    const input=scrollRef.value?.querySelectorAll<HTMLInputElement>('.header-cell input')[index]
+    input?.focus({preventScroll:true});input?.scrollIntoView({block:'nearest',inline:'nearest'})
+  })
+}
+const commitColumnEdit = (edit:TableColumnEdit) => {
+  const entry:ColumnHistoryEntry={kind:'column',edit}
+  applyColumnHistory(entry,true);pushDataHistory(entry);markDirty()
+  notice.value=`已${edit.label}，可一次撤销；保存后写入文件`
+  focusColumn(edit.columnId)
+}
 const addColumn = () => {
-  if (!table.value || table.value.headers.length >= 512) return
-  table.value.headers.push(`列 ${table.value.headers.length + 1}`)
-  table.value.columnTypes.push('empty')
-  table.value.columnIds.push(`column-${Date.now()}-${table.value.columnIds.length + 1}`)
-  columnWidths.value.push(160)
-  table.value.rows.forEach(row => row.push(''))
-  markDirty()
+  if(!table.value||loading.value||converting.value)return
+  try{commitColumnEdit(planTableColumnAdd(table.value,`column-${crypto.randomUUID()}`))}
+  catch(cause){message.warning(String(cause).replace(/^Error:\s*/,''))}
 }
 const pushRowHistory = (entry: RowHistoryEntry) => {
   pushDataHistory({ ...entry, row: [...entry.row], columnIds: [...table.value!.columnIds] })
@@ -951,6 +1009,10 @@ const undoRowOperation = () => {
   if (!table.value) return
   const entry = rowUndoStack.value[rowUndoStack.value.length - 1]
   if (!entry) return
+  if(entry.kind==='column'){
+    try{applyColumnHistory(entry,false);rowUndoStack.value.pop();rowRedoStack.value.push(entry);markDirty();notice.value=`已撤销${entry.edit.label}，当前为未保存草稿`}
+    catch(cause){message.error(String(cause).replace(/^Error:\s*/,''))}return
+  }
   if(entry.kind==='rule'){try{applyRuleHistory(entry,false);rowUndoStack.value.pop();rowRedoStack.value.push(entry)}catch(cause){message.error(String(cause))}return}
   if (entry.kind === 'edit') {
     try {
@@ -986,6 +1048,10 @@ const redoRowOperation = () => {
   if (!table.value) return
   const entry = rowRedoStack.value[rowRedoStack.value.length - 1]
   if (!entry) return
+  if(entry.kind==='column'){
+    try{applyColumnHistory(entry,true);rowRedoStack.value.pop();rowUndoStack.value.push(entry);markDirty();notice.value=`已重做${entry.edit.label}，当前为未保存草稿`}
+    catch(cause){message.error(String(cause).replace(/^Error:\s*/,''))}return
+  }
   if(entry.kind==='rule'){try{applyRuleHistory(entry,true);rowRedoStack.value.pop();rowUndoStack.value.push(entry)}catch(cause){message.error(String(cause))}return}
   if (entry.kind === 'edit') {
     try {
