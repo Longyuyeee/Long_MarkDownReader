@@ -5,6 +5,7 @@ import crypto from 'node:crypto'
 import {nativeUserInput} from './v118-native-user-input.mjs'
 import {visibleMarkdownInput} from './visible-markdown-input.mjs'
 import {readingPdfFixture} from './pdf-reading-fixture.mjs'
+import {installedViewLookupExpression} from './installed-view-lookup.mjs'
 import {readingMoveChecks,validateInstalledReadingMove,assertReadingMoveOutputBytes} from './installed-v1-2-1-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV121Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
@@ -13,7 +14,7 @@ export async function runInstalledV121Workflow({send,evaluate,navigate,capture,l
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),ready=(e,label)=>ui.waitFor('Boolean('+e+')',label),store=`document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('app')`,normalize=p=>p.replaceAll('\\','/').replace(/^\/\/\?\//,'').toLowerCase()
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),status:'running',evidenceLevel:'installed-reading-continuity-native-receipts-and-trusted-input',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[],runtimeErrors:[],inputTrace:[]},observed={}
  const mark=i=>report.checks.push({id:readingMoveChecks[i],status:'passed'}),invoke=async(command,args)=>{const r=await evaluate(`(async()=>{try{return {ok:true,value:await window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})}}catch(e){return {ok:false,error:String(e)}}})()`);if(!r.ok)throw Error(r.error);return r.value}
- const metadata=async(file,key='longedit.view-state.v1')=>evaluate(`(()=>{const key=${q(normalize(file))};return Object.entries(JSON.parse(localStorage.getItem(${q(key)})||'{}')).find(([p])=>p.replaceAll('\\\\','/').replace(/^\\/\\/\\?\\//,'').toLowerCase()===key)?.[1]})()`)
+ const metadata=async(file,key='longedit.view-state.v1')=>evaluate(installedViewLookupExpression(file,key))
  const rename=items=>invoke('rename_library_items',{libraryRoot:library,items}),transfer=(paths,targetDir,operation)=>invoke('transfer_library_items',{libraryRoot:library,paths,targetDir,operation})
  let failure
  try{

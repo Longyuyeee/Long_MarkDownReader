@@ -4,6 +4,14 @@ import ts from 'typescript'
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
 import {readingMoveChecks,validateInstalledReadingMove} from './lib/installed-v1-2-1-evidence.mjs'
+import {installedViewLookupExpression} from './lib/installed-view-lookup.mjs'
+test('installed reading snapshots select the exact file when two folders share a PDF name and annotation IDs',()=>{
+ const first='C:/Library/moved/接续.pdf',second='C:/Library/resume/接续.pdf',data={[first]:{pdfAnnotations:{query:'',selection:[]} },['\\\\?\\C:\\Library\\resume\\接续.pdf']:{pdfAnnotations:{query:'接续评论',selection:['resume-9']}}}
+ const localStorage={getItem:key=>{assert.equal(key,'longedit.view-state.v1');return JSON.stringify(data)}}
+ assert.equal(vm.runInNewContext(installedViewLookupExpression(first),{localStorage}).pdfAnnotations.query,'')
+ assert.equal(vm.runInNewContext(installedViewLookupExpression(second),{localStorage}).pdfAnnotations.query,'接续评论')
+ assert.equal(vm.runInNewContext(installedViewLookupExpression('C:/elsewhere/接续.pdf'),{localStorage}),undefined)
+})
 test('the actual moved-PDF predicate keeps the Windows namespace question mark inside the query value',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-2-1-workflow.mjs','utf8'),tree=ts.createSourceFile('driver.mjs',source,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS)
  let template
@@ -14,7 +22,11 @@ test('the actual moved-PDF predicate keeps the Windows namespace question mark i
 })
 test('reading move driver keeps native receipts, trusted input and valid browser expressions',()=>{
  const source=fs.readFileSync('scripts/lib/installed-v1-2-1-workflow.mjs','utf8'),tree=ts.createSourceFile('driver.mjs',source,ts.ScriptTarget.ESNext,true,ts.ScriptKind.JS);let count=0
- const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ready|ui\.waitFor)$/.test(node.expression.getText(tree))){const a=node.arguments[0];if(a&&(ts.isStringLiteral(a)||ts.isNoSubstitutionTemplateLiteral(a)||ts.isTemplateExpression(a))){const expr=ts.isTemplateExpression(a)?a.head.text+a.templateSpans.map(s=>'__fixture__'+s.literal.text).join(''):a.text;assert.doesNotThrow(()=>new vm.Script(expr),expr);count++}}ts.forEachChild(node,visit)};visit(tree);assert.ok(count>=20)
+ const visit=node=>{if(ts.isCallExpression(node)&&/^(?:evaluate|ready|ui\.waitFor)$/.test(node.expression.getText(tree))){const a=node.arguments[0];if(a&&(ts.isStringLiteral(a)||ts.isNoSubstitutionTemplateLiteral(a)||ts.isTemplateExpression(a))){const expr=ts.isTemplateExpression(a)?a.head.text+a.templateSpans.map(s=>'__fixture__'+s.literal.text).join(''):a.text;assert.doesNotThrow(()=>new vm.Script(expr),expr);count++}}ts.forEachChild(node,visit)};visit(tree)
+ // The shared observer is generated rather than a source literal; retain its
+ // syntax coverage for both stores instead of dropping that expression check.
+ for(const key of ['longedit.view-state.v1','longedit.session-view-state.v1']){assert.doesNotThrow(()=>new vm.Script(installedViewLookupExpression('C:/Library/接续.pdf',key)));count++}
+ assert.ok(count>=20)
  for(const forbidden of ['dispatchEvent(','__TAURI_INTERNALS__=','force: true','Unidentified'])assert.ok(!source.includes(forbidden))
  for(const file of ['scripts/import-community-release-review.mjs','scripts/lib/installed-release-runtime.mjs','.github/workflows/community-release-publish.yml'])assert.ok(fs.readFileSync(file,'utf8').includes('assertReadingMoveOutputBytes'))
 })

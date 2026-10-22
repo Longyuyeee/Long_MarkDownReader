@@ -1,0 +1,120 @@
+{
+  "appVersion": "1.2.1",
+  "sourceCommit": "baa46e69679dab1c21e1873d7e1dc9d648c68be3",
+  "installerSha256": "eeedfa4e805a1ae3eb1c320f614012e23c4ce3496a41094db91a1d4775ff908f",
+  "harnessSourceCommit": "6c82a8b798e21153df4bff94844e51730e08c075",
+  "executableSha256": "b26d4f7d2225395473f74f823a13a4973aa4dfabf29be0ee5ee6bea419635ba9",
+  "status": "failed",
+  "evidenceLevel": "installed-pdf-view-reload-trusted-ui-and-sidecar-bytes",
+  "nativeBridgeMocked": false,
+  "desktopInputUsed": false,
+  "sourceUserContentIncluded": false,
+  "checks": [
+    {
+      "id": "persist-bounded-view-without-annotation-text",
+      "status": "passed"
+    }
+  ],
+  "outputs": [
+    {
+      "fileName": "installed-v1137-before.json",
+      "sizeBytes": 17096,
+      "sha256": "eb6532ba35a7dbb8d79c3c111b0e646c5c9d73824bce8f67ea4f648b30dc76f8"
+    },
+    {
+      "fileName": "installed-v1137-view.json",
+      "sizeBytes": 170,
+      "sha256": "75a8e442b3dcb10357a088a023025e0136d7e034620e7d7c1eec779cdc674620"
+    }
+  ],
+  "inputTrace": [
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "keydown",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "trusted": true
+    },
+    {
+      "type": "click",
+      "trusted": true
+    }
+  ],
+  "runtimeErrors": [],
+  "rendererReloads": 1,
+  "pdfBefore": "e48f37c1a02de01eb66622334e83c0f3dd92f58d13da14a8f67f91702e03d366",
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'接续评论' !== ''\n\n    at runInstalledV1137Workflow (file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/lib/installed-v1-1-37-workflow.mjs:35:614)\n    at async file:///D:/a/Long_MarkDownReader/Long_MarkDownReader/scripts/capture-r5j-installed-artifact-smoke.mjs:935:3",
+  "failureUI": {
+    "hash": "#/library?path=C%3A%5CLongEditR5ILibrary%5C000-v1137-pdf-ccffe0c4-1fe6-4f65-96a0-9c83f123d71e%5C%E6%8E%A5%E7%BB%AD.pdf",
+    "body": "Long编辑\n资料库\n工作台\n图谱\n设置\n导航\nR5L Disposable Vault\n▾\nr5j-notes\nr5j-config\nUX33J Microsoft Word Hyperlinks-1792675561365-2908\nUX33J WPS Writer Hyperlinks-1792675561365-2908\nUX33J LibreOffice Writer Hyperlinks-1792675561365-2908\n接续.pdf\n草稿新.md\n接续\n快速笔记\n命令\n搜索文件与正文\n文件\n大纲\n最近\n智能集合\n标签\n关系\n历史\n新建\n收集箱\n143对象·130关系\n000-v1137-pdf-ccffe0c4-1fe6-4f65-96a0-9c83f123d71e\n000-v121-reading-d3c3ef74-dfa9-47af-a625-42568b4ebf24\ng15c-linked-follow-up.md\nr5i-library-marker.txt\nr5j-config.json\nr5j-network.canvas\nr5j-north-star.md\nr5j-notes.txt\nr5j-plan.md\nUX33J LibreOffice Writer Hyperlinks-1792675561365-2908.docx\nUX33J Microsoft Word Hyperlinks-1792675561365-2908.docx\nUX33J WPS Writer Hyperlinks-1792675561365-2908.docx\n7 篇笔记\n35 词\n设置\nv1.2.1\n接续.pdf\n关系\n参考\n更多\n☰\n2 页\n阅读\n批注\n页面\n文档工具\n‹\n/ 2\n›\n⌕\n−\n100%\n＋\n适合宽度\n缩略图\n目录\n批注 120\n表单\n属性\n脱敏\n水印\nOCR\n页面\n全部类型\n高亮\n区域批注\n页评论\n全部颜色\n黄色\n绿色\n粉色\n蓝色\n全选筛选结果\n清除选择\n40 条匹配 · 已选 2\n整理为笔记 · 2\n第 2 页 · 评论\n接续评论 0\n···\n第 2 页 · 评论\n接续评论 3\n···\n第 2 页 · 评论\n接续评论 6\n···\n第 2 页 · 评论\n接续评论 9\n···\n第 2 页 · 评论\n接续评论 12\n···\n第 2 页 · 评论\n接续评论 15\n···\n第 2 页 · 评论\n接续评论 18\n···\n第 2 页 · 评论\n接续评论 21\n···\n第 2 页 · 评论\n接续评论 24\n···\n第 2 页 · 评论\n接续评论 27\n···\n第 2 页 · 评论\n接续评论 30\n···\n第 2 页 · 评论\n接续评论 33\n···\n第 2 页 · 评论\n接续评论 36\n···\n第 2 页 · 评论\n接续评论 39\n···\n第 2 页 · 评论\n接续评论 42\n···\n第 2 页 · 评论\n接续评论 45\n···\n第 2 页 · 评论\n接续评论 48\n···\n第 2 页 · 评论\n接续评论 51\n···\n第 2 页 · 评论\n接续评论 54\n···\n第 2 页 · 评论\n接续评论 57\n···\n第 2 页 · 评论\n接续评论 60\n···\n第 2 页 · 评论\n接续评论 63\n···\n第 2 页 · 评论\n接续评论 66\n···\n第 2 页 · 评论\n接续评论 69\n···\n第 2 页 · 评论\n接续评论 72\n···\n第 2 页 · 评论\n接续评论 75\n···\n第 2 页 · 评论\n接续评论 78\n···\n第 2 页 · 评论\n接续评论 81\n···\n第 2 页 · 评论\n接续评论 84\n···\n第 2 页 · 评论\n接续评论 87\n···\n第 2 页 · 评论\n接续评论 90\n···\n第 2 页 · 评论\n接续评论 93\n···\n第 2 页 · 评论\n接续评论 96\n···\n第 2 页 · 评论\n接续评论 99\n···\n第 2 页 · 评论\n接续评论 102\n···\n第 2 页 · 评论\n接续评论 105\n···\n第 2 页 · 评论\n接续评论 108\n···\n第 2 页 · 评论\n接续评论 111\n···\n第 2 页 · 评论\n接续评论 114\n···\n第 2 页 · 评论\n接续评论 117\n···\n评论\n复制引用\n插入笔记…\n删除批注\n批注已保存到 sidecar\nReading source page 1\n\n\nKeep the original page and source when writing notes.\n1\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\n◆\nReading source page 2\n\n\nKeep the original page and source when writing notes.\n2"
+  }
+}

@@ -4,6 +4,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import {nativeUserInput} from './v118-native-user-input.mjs'
 import {readingPdfFixture} from './pdf-reading-fixture.mjs'
+import {installedViewLookupExpression} from './installed-view-lookup.mjs'
 import {pdfResumeChecks,validateInstalledPdfResume,assertPdfResumeOutputBytes} from './installed-v1-1-37-evidence.mjs'
 const q=JSON.stringify,sha=b=>crypto.createHash('sha256').update(b).digest('hex')
 export async function runInstalledV1137Workflow({send,evaluate,navigate,capture,library,output,sourceCommit,installerSha256,appVersion,installedExecutable}){
@@ -23,7 +24,7 @@ export async function runInstalledV1137Workflow({send,evaluate,navigate,capture,
   await fs.mkdir(folder);const bytes=readingPdfFixture(2);await fs.writeFile(pdf,bytes);await fs.writeFile(note,'# 接续验证返回\n');report.pdfBefore=sha(bytes)
   const annotations=Array.from({length:120},(_,n)=>({id:'resume-'+n,kind:'comment',page:2,color:n%3?'yellow':'blue',rects:[],quote:'',comment:'接续评论 '+n,createdAt:n,updatedAt:n}));await fs.writeFile(sidecar,JSON.stringify({schemaVersion:1,source:{pdfFile:'接续.pdf',size:bytes.length,modifiedAt:1},annotations}));await take('before.json',await fs.readFile(sidecar));await trace();await open()
   await ui.fill('[aria-label="查找批注摘录或评论"]','接续评论');await ui.fill('[aria-label="筛选批注页码"]','2');await select('[aria-label="筛选批注类型"]',3);await select('[aria-label="筛选批注颜色"]',4);await ui.click('[aria-label="选择批注 resume-9"]');await ui.click('[aria-label="选择批注 resume-15"]');await ui.clickTarget(`[...document.querySelectorAll('.annotation-card')].find(e=>e.textContent.trim().endsWith('接续评论 9'))`)
-  const point=await evaluate(`(()=>{const r=document.querySelector('.annotation-panel').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);await send('Input.dispatchMouseEvent',{type:'mouseMoved',...point});await send('Input.dispatchMouseEvent',{type:'mouseWheel',...point,deltaX:0,deltaY:450});await ready(`Object.values(JSON.parse(localStorage.getItem('longedit.view-state.v1')||'{}')).some(v=>v.pdfAnnotations?.selection?.includes('resume-9')&&v.pdfAnnotations.scrollTop>100)`,'persisted nonzero scroll and selection');observed.before=await evaluate(`(()=>{const v=Object.entries(JSON.parse(localStorage.getItem('longedit.view-state.v1'))).find(([p])=>p.endsWith('接续.pdf'))[1];return v.pdfAnnotations})()`);await take('view.json',Buffer.from(JSON.stringify(observed.before,null,2)));mark(0)
+  const point=await evaluate(`(()=>{const r=document.querySelector('.annotation-panel').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);await send('Input.dispatchMouseEvent',{type:'mouseMoved',...point});await send('Input.dispatchMouseEvent',{type:'mouseWheel',...point,deltaX:0,deltaY:450});await ready(`(()=>{const v=${installedViewLookupExpression(pdf)};return v?.pdfAnnotations?.selection?.includes('resume-9')&&v.pdfAnnotations.scrollTop>100})()`,'persisted nonzero scroll and selection');observed.before=await evaluate(`(${installedViewLookupExpression(pdf)}).pdfAnnotations`);await take('view.json',Buffer.from(JSON.stringify(observed.before,null,2)));mark(0)
   await collect();await send('Page.reload',{});
   // Require a fresh JS realm: the old page can briefly remain queryable after
   // Page.reload acknowledges. Only retry transient context destruction while
