@@ -1,10 +1,10 @@
 <template>
   <section class="graph-semantic-legend" data-testid="graph-semantic-legend" :class="{ collapsed }" aria-label="知识图谱语义图例">
     <button class="legend-toggle" type="button" :aria-expanded="!collapsed" @click="collapsed = !collapsed">
-      <span>图例与操作</span><small v-if="collapsed">拖动 · 滚轮 · 双击打开</small><small v-else>{{ objectItems.length }} 类对象 · {{ relationItems.length }} 类关系</small>
+      <span>图例</span><small v-if="!collapsed">{{ objectItems.length }} 类对象 · {{ relationItems.length }} 类关系</small>
     </button>
     <div v-if="!collapsed" class="legend-body">
-      <p class="interaction-help">拖动画布移动视野，滚轮缩放；单击选择节点，双击才会打开文件。</p>
+      <WorkspaceHelp label="说明：拖动画布移动视野，滚轮缩放；单击选择" text="拖动画布移动视野，滚轮缩放；单击选择节点，双击才会打开文件。" />
       <div class="legend-group status-legend" data-testid="graph-node-status-legend" :data-visible="String(statusRingsVisible)" :data-fresh-count="statusSummary.freshCount" :data-recent-count="statusSummary.recentCount" :data-strength-count="statusSummary.relationStrengthCount">
         <strong>节点状态 <small>{{ statusRingsVisible ? '当前视图' : '远景隐藏' }}</small></strong>
         <span class="legend-item"><i class="status-mark recency-fresh"></i><span>7 天内修改</span><small>{{ statusSummary.freshCount }}</small></span>
@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, ref } from 'vue'
 import { graphObjectSemantic, graphRelationSemantic, graphSemanticColor } from '../config/graphSemantics'
 import type { GraphData } from '../types/graph'

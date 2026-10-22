@@ -57,13 +57,14 @@
         </div>
         <SearchPageStatus v-if="pagedSearch" part="footer" :page="searchPages" :sort="sort" :disabled="opening" @more="searchPages.loadMore" @continue="searchPages.continueSearch" @apply="searchPages.applyPending" @retry="retryPages"/>
         </div>
-        <div v-if="!commandMode" class="palette-status palette-help">空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。结果按文件续载，组内位置并非全部出现次数。</div>
+        <WorkspaceHelp v-if="!commandMode" label="说明：空格分隔关键词，双引号匹配短语，-排" text="空格分隔关键词，双引号匹配短语，-排除词；Enter 在主编辑区打开。结果按文件续载，组内位置并非全部出现次数。" />
       </div>
     </div>
   </transition>
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { NButton, NSelect } from 'naive-ui'

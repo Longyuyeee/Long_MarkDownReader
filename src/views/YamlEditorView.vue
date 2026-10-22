@@ -2,14 +2,14 @@
   <div class="yaml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
-    <header class="yaml-toolbar">
+    <header class="workspace-document-header yaml-toolbar">
       <div class="document-identity">
         <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="leaveEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="FileCodeIcon" size="22" class="format-icon" />
-        <div class="document-title">
-          <strong :title="yamlPath">{{ fileName }}</strong>
+        <div class="workspace-document-copy document-title">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span aria-live="polite"><template v-if="isExternal">外部文件 · </template>YAML · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span>
         </div>
       </div>

@@ -1,13 +1,13 @@
 <template>
   <div class="text-workspace">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" class="text-tabs" />
-    <header class="text-toolbar">
+    <header class="workspace-document-header text-toolbar">
       <div class="document-identity">
         <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="leaveEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
-        <div class="document-title">
-          <strong :title="textPath">{{ fileName }}</strong>
+        <div class="workspace-document-copy document-title">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span>
             <template v-if="isExternal">外部文件 · </template>
             {{ format?.label || '文本' }}
@@ -61,10 +61,8 @@
           <template #icon><n-icon :component="SaveIcon" /></template>
           {{ saving ? '保存中' : '保存' }}
         </n-button>
-        <n-button v-if="format?.id === 'plain-text' && !isExternal" size="small" quaternary :disabled="loading || saving || readOnly || rangeMode" @click="showHistory = true">历史与差异</n-button>
-      </div>
-    </header>
-
+        <n-popover v-if="viewMode === 'source'" trigger="click" placement="bottom-end" :show-arrow="false">
+          <template #trigger><n-button quaternary size="small">编码与换行</n-button></template>
     <section v-if="viewMode === 'source'" class="format-bar" aria-label="文本保存策略" data-horizontal-wheel="always">
       <label>
         <span>读取</span>
@@ -103,14 +101,15 @@
       <span v-if="encodingConfidence" class="confidence-label">{{ confidenceLabel }}</span>
       <span v-if="readOnlyReason" class="readonly-label">{{ readOnlyLabel }}</span>
     </section>
-
-    <section v-else class="preview-bar" aria-label="安全网页预览说明">
-      <div>
-        <strong>安全网页预览</strong>
-        <span>脚本、内联事件、嵌入页面、表单提交和外部资源已隔离。</span>
+        </n-popover>
+        <WorkspaceHelp v-else label="网页预览说明" text="预览当前草稿，不会保存文件；脚本、嵌入页面、表单提交和外部资源不会运行或加载。" />
+        <n-button v-if="format?.id === 'plain-text' && !isExternal" size="small" quaternary :disabled="loading || saving || readOnly || rangeMode" @click="showHistory = true">历史与差异</n-button>
       </div>
-      <span>预览当前草稿，不会自动保存</span>
-    </section>
+    </header>
+
+
+
+
 
     <SearchMatchNavigation class="search-navigation" v-if="route.query.searchLocator && !searchNavigationClosed && !loading && !loadError"
       :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" :scope="rangeMode ? '已加载内容' : '当前文档'"
@@ -160,6 +159,8 @@
 </template>
 
 <script setup lang="ts">
+import { NPopover } from 'naive-ui'
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import TextConflictDialog, { type ConflictSnapshot } from '../components/TextConflictDialog.vue'
 import SearchMatchNavigation from '../components/SearchMatchNavigation.vue'
@@ -1114,4 +1115,6 @@ onBeforeUnmount(() => {
   .editor-actions { flex: 1 1 100%; }
   .format-bar { gap: 10px; padding-inline: 10px; }
 }
+
+.format-bar { max-width: min(620px, calc(100vw - 40px)); flex-wrap: wrap; border: 0; padding: 4px; }
 </style>

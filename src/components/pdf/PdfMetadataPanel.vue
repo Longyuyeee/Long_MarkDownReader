@@ -1,12 +1,12 @@
 <template>
   <div class="metadata-panel" data-testid="p1b5c-pdf-metadata">
     <WorkspaceStateNotice kind="limited" tone="warning" title="文档属性，不是隐私清理">
-      <p>这里只编辑标题、作者、主题和关键词四项描述属性。</p>
+      <WorkspaceHelp label="说明：这里只编辑标题、作者、主题和关键词四" text="这里只编辑标题、作者、主题和关键词四项描述属性。" />
       <small>正文、批注、附件、表单和其他嵌入数据仍可能包含身份信息；系统只创建经过复读验证的新副本，绝不覆盖源 PDF。</small>
     </WorkspaceStateNotice>
 
     <WorkspaceStateNotice v-if="loading" kind="loading" tone="info" title="正在读取并审计文档属性" compact>
-      <small>检查 Info、XMP、签名、附件和完整重写资格。</small>
+      <WorkspaceHelp label="说明：检查 Info、XMP、签名、附件和" text="检查 Info、XMP、签名、附件和完整重写资格。" />
     </WorkspaceStateNotice>
 
     <section v-else class="metadata-fields">
@@ -26,7 +26,7 @@
         <span><strong>关键词</strong><small>{{ modelValue.keywords.trim().length }}/512</small></span>
         <textarea :value="modelValue.keywords" maxlength="512" rows="3" placeholder="例如：知识管理, PDF, 项目资料" aria-label="PDF 文档关键词" @input="updateField('keywords', $event)"></textarea>
       </label>
-      <small>清空字段会从新副本中移除对应属性；Creator、Producer 和原始时间等保留属性不会被改写。</small>
+      <WorkspaceHelp label="说明：清空字段会从新副本中移除对应属性；C" text="清空字段会从新副本中移除对应属性；Creator、Producer 和原始时间等保留属性不会被改写。" />
     </section>
 
     <button class="metadata-preview" :disabled="loading || working || !dirty" @click="$emit('preview')">
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../workspace/WorkspaceHelp.vue'
 import { computed, ref, watch } from 'vue'
 import WorkspaceStateNotice from '../workspace/WorkspaceStateNotice.vue'
 import type { PdfMetadataCopyReport, PdfMetadataValues } from '../../types/pdfMetadata'

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "stage": "V1",
-  "appVersion": "1.1.37",
-  "releaseCandidate": true,
+  "appVersion": "1.2.0",
+  "releaseCandidate": false,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-22",
-  "currentStatus": "v1.1.37-community-release-published",
+  "currentStatus": "v1.2.0-community-release-quality-gate-pending",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,65 +24,34 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": true,
-    "rustLockedCheckPassed": true,
-    "productionDependencyAuditPassed": true,
-    "msiBuilt": true,
-    "nsisBuilt": true,
-    "artifactHashesVerified": true,
-    "localRuntimeSmokePassed": true,
-    "installedLifecyclePassed": true,
-    "qualityGatePassed": true,
-    "githubReleasePublished": true
+    "frontendBuildPassed": false,
+    "rustLockedCheckPassed": false,
+    "productionDependencyAuditPassed": false,
+    "msiBuilt": false,
+    "nsisBuilt": false,
+    "artifactHashesVerified": false,
+    "localRuntimeSmokePassed": false,
+    "installedLifecyclePassed": false,
+    "qualityGatePassed": false,
+    "githubReleasePublished": false
   },
   "patchValidation": {
-    "previousPublicVersion": "1.1.36",
+    "previousPublicVersion": "1.1.37",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": true,
+    "fullInstalledLifecycleRerun": false,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
-    "managedUpdaterUpgradePath": "1.1.36-to-1.1.37-pending",
-    "scope": "pdf-annotation-resume"
+    "managedUpdaterUpgradePath": "1.1.37-to-1.2.0-pending",
+    "scope": "whole-window-ui-and-foundation-stability"
   },
   "targetRelease": {
-    "tag": "v1.1.37",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37",
+    "tag": "v1.2.0",
+    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.0",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": {
-    "artifactSourceCommit": "45ad1d5b5a791885a655bbb8cea851e0a26f8b72",
-    "qualityGateCommand": "npm run ci:patch-release",
-    "artifactBuildRunId": 39700892385,
-    "hostedInstalledLifecycleRunId": 39703527452,
-    "artifacts": [
-      {
-        "target": "msi",
-        "fileName": "LongEdit_1.1.37_x64_zh-CN.msi",
-        "sizeBytes": 77946880,
-        "sha256": "ccbb948d9de2fd977226064131992aa113bb424cad17c021280127fe15397d7f",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.37_x64_zh-CN.msi"
-      },
-      {
-        "target": "nsis",
-        "fileName": "LongEdit_1.1.37_x64-setup.exe",
-        "sizeBytes": 68640183,
-        "sha256": "507e32470dcde6233216ab8a6bb4d7e43d53ef0f17644b01961087f422d07483",
-        "authenticodeStatus": "NotSigned",
-        "sourceFileName": "Long编辑_1.1.37_x64-setup.exe"
-      }
-    ]
-  },
-  "release": {
-    "tag": "v1.1.37",
-    "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.1.37",
-    "databaseId": 420215987,
-    "isDraft": false,
-    "isPrerelease": false,
-    "taggedCommit": "45ad1d5b5a791885a655bbb8cea851e0a26f8b72",
-    "publishedAt": "2026-10-22T01:28:35Z"
-  },
+  "candidate": null,
+  "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
     "v1.0.4-users-must-install-v1.0.5-manually-once",
@@ -121,7 +90,8 @@
     "v1.1.33-to-v1.1.34-managed-update-observation-pending",
     "v1.1.34-to-v1.1.35-managed-update-observation-pending",
     "v1.1.35-to-v1.1.36-managed-update-observation-pending",
-    "v1.1.36-to-v1.1.37-managed-update-observation-pending"
+    "v1.1.36-to-v1.1.37-managed-update-observation-pending",
+    "v1.1.37-to-v1.2.0-managed-update-observation-pending"
   ],
-  "nextAction": "v1.1.38-move-view-continuity-planned"
+  "nextAction": "validate-and-build-v1.2.0-installers"
 }

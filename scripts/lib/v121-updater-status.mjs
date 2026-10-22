@@ -1,6 +1,21 @@
 // Published installer verification and post-publication in-app update observation
 // are separate gates. Never infer the latter from a successful release alone.
 export function assertV121DevelopmentBoundary(development, community) {
+  if (community.appVersion === '1.2.0'
+    && community.patchValidation?.previousPublicVersion === '1.1.37'
+    && development.runtimeBaseVersion === '1.2.0'
+    && development.releaseCandidate === false
+    && community.targetRelease?.tag === 'v1.2.0'
+    && /^(?!0{40})[0-9a-f]{40}$/.test(development.publicTagCommit)
+    && (community.gates?.githubReleasePublished === true
+      ? development.publicVersion === '1.2.0' && development.publicTag === 'v1.2.0'
+        && development.developmentTargetVersion === '1.2.1'
+        && community.release?.tag === 'v1.2.0'
+        && community.release?.taggedCommit === development.publicTagCommit
+      : community.gates?.githubReleasePublished === false && community.release === null
+        && development.publicVersion === '1.1.37' && development.publicTag === 'v1.1.37'
+        && development.publicTagCommit === '45ad1d5b5a791885a655bbb8cea851e0a26f8b72'
+        && development.developmentTargetVersion === '1.2.0')) return
   if (community.appVersion === '1.1.37'
     && community.patchValidation?.previousPublicVersion === '1.1.36'
     && development.runtimeBaseVersion === '1.1.37'
@@ -630,6 +645,14 @@ export function assertV121DevelopmentBoundary(development, community) {
 }
 
 export function assertV121UpdaterStatus(policy, community, receipt) {
+  if (community.appVersion === '1.2.0') {
+    if (policy.status !== 'hosted-managed-update-passed'
+      || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'
+      || community.targetRelease?.tag !== 'v1.2.0'
+      || community.patchValidation?.previousPublicVersion !== '1.1.37'
+      || !['1.1.37-to-1.2.0-pending','1.1.37-to-1.2.0-passed'].includes(community.patchValidation?.managedUpdaterUpgradePath)) throw Error('1.2.0 must retain its separate update observation and immutable predecessor')
+    return
+  }
   if (community.appVersion === '1.1.37') {
     if (policy.status !== 'hosted-managed-update-passed'
       || receipt.managedUpdaterObservation !== '1.0.20-to-1.0.21-passed'

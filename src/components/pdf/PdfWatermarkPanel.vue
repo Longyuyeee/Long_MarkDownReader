@@ -1,7 +1,7 @@
 <template>
   <div class="watermark-panel" data-testid="p1b4c-pdf-watermark">
     <WorkspaceStateNotice kind="limited" tone="warning" title="可见归属，不是内容保护">
-      <p>文字会作为可搜索、可提取的矢量内容加入全部页面，熟练接收者仍可能移除或修改水印。</p>
+      <WorkspaceHelp label="说明：文字会作为可搜索、可提取的矢量内容加" text="文字会作为可搜索、可提取的矢量内容加入全部页面，熟练接收者仍可能移除或修改水印。" />
       <small>系统只创建经过复读验证的新副本；源 PDF 不会被覆盖。水印不等同于永久脱敏、DRM 或防复制。</small>
     </WorkspaceStateNotice>
 
@@ -35,7 +35,7 @@
       </label>
 
       <div class="watermark-swatch" aria-hidden="true"><i :style="swatchStyle">{{ modelValue.text.trim() || '项目机密 L' }}</i></div>
-      <small>首批安全子集固定为全部页面、单条居中斜向文字；字号会根据每页可用空间在 18～72 pt 内自动适配。</small>
+      <WorkspaceHelp label="说明：首批安全子集固定为全部页面、单条居中" text="首批安全子集固定为全部页面、单条居中斜向文字；字号会根据每页可用空间在 18～72 pt 内自动适配。" />
     </section>
 
     <button class="watermark-preview" :disabled="!canPreview || working" @click="$emit('preview')">
@@ -62,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../workspace/WorkspaceHelp.vue'
 import { computed, ref, watch } from 'vue'
 import WorkspaceStateNotice from '../workspace/WorkspaceStateNotice.vue'
 import type { PdfWatermarkCopyReport, PdfWatermarkSpec } from '../../types/pdfWatermark'

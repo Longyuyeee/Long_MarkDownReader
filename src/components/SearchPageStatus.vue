@@ -5,7 +5,7 @@
       <span role="status">{{ summary }}</span>
       <label>排序 <select :value="sort" :disabled="disabled || page.busy.value" aria-label="搜索结果排序" @change="$emit('sort', ($event.target as HTMLSelectElement).value as SearchSort)"><option value="relevance">相关性</option><option value="modified">修改时间</option></select></label>
     </div>
-    <small v-if="tag">Markdown 标签筛选 · 当前可提取范围，非任意文件全文</small>
+    <small v-if="tag">笔记标签筛选<WorkspaceHelp label="标签筛选范围" text="按 Markdown 笔记中的标签筛选；只搜索当前可提取的内容。" /></small>
     <details v-if="frame?.libraries?.length" class="search-library-progress"><summary>各资料库进度</summary><div v-for="library in frame.libraries" :key="library.libraryRoot" class="search-library-row"><span :title="library.libraryRoot">{{ library.libraryName }}</span><span>{{ libraryLabels[library.state] }}<template v-if="library.totalFiles !== null"> · {{ library.totalFiles }} 个文件</template></span></div></details>
     <p v-if="frame?.warnings?.length" class="search-page-warning" role="status">{{ frame.warnings.join('；') }}</p>
     <p v-if="frame?.scanState === 'limited' || frame?.scanState === 'failed'" class="search-page-warning" role="status">{{ frame.scanState === 'failed' ? '所有资料库都未能完成搜索，请核对访问情况后重新搜索。' : '结果尚未查全，部分资料不可读或达到处理上限；已找到的文件仍可查看。' }}</p>
@@ -27,6 +27,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed } from 'vue'
 import type { SearchPages, SearchSort } from '../services/searchPages'
 const props = defineProps<{ page: SearchPages; sort: SearchSort; tag?: boolean; disabled?: boolean; visibleCount?: number; loading?: boolean; part?: 'header' | 'footer' }>()

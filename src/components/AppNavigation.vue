@@ -2,12 +2,12 @@
   <nav class="app-navigation" aria-label="主导航">
     <div class="navigation-destinations">
       <router-link v-for="item in destinations" :key="item.name" :to="{ name: item.name }"
-        :class="{ active: activeDestination === item.name }" :aria-current="activeDestination === item.name ? 'page' : undefined">
+        :class="{ active: activeDestination === item.name }" :aria-label="item.label" :aria-current="activeDestination === item.name ? 'page' : undefined">
         <span class="navigation-icon" aria-hidden="true"><component :is="item.icon" :size="19" /></span><span>{{ item.label }}</span>
       </router-link>
     </div>
     <router-link class="navigation-settings" :class="{ active: activeDestination === 'Settings' }"
-      :to="{ name: 'Settings' }" :aria-current="activeDestination === 'Settings' ? 'page' : undefined">
+      :to="{ name: 'Settings' }" aria-label="设置" :aria-current="activeDestination === 'Settings' ? 'page' : undefined">
       <span class="navigation-icon" aria-hidden="true"><Settings :size="19" /></span><span>设置</span>
     </router-link>
   </nav>
@@ -39,10 +39,10 @@ a.active { color: var(--theme-primary); background: rgba(var(--theme-primary-rgb
 a:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
 .navigation-settings { margin-top: auto; }
 @media (max-width: 760px) {
-  .app-navigation { flex: 0 0 44px; width: 100%; flex-direction: row; padding: 3px 8px; gap: 4px; border-right: 0; border-bottom: var(--theme-border); overflow-y: hidden; }
-  .navigation-destinations { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; }
-  a { min-height: 36px; flex-direction: row; gap: 5px; padding: 0 4px; }
-  .navigation-settings { margin: 0; }
+  .app-navigation { flex-basis: 48px; width: 48px; padding: 6px 4px; gap: 6px; }
+  .navigation-destinations { gap: 5px; }
+  a { min-height: 38px; gap: 0; }
+  a > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 }
 @media (max-width: 400px) { a { gap: 3px; padding: 0 2px; } a svg { width: 16px; } }
 </style>

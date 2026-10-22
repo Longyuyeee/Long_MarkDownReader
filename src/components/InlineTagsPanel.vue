@@ -37,7 +37,7 @@
         <div class="section-label"><strong>相关笔记</strong><small>已加载 {{ results.length }}<template v-if="pageState?.totalFiles != null && !retaining"> / {{ pageState.totalFiles }}</template> 篇</small></div>
         <p v-if="retaining">仍显示上次笔记，本次尚未更新。</p><p v-else-if="pageState && !pageState.scanComplete">尚未查全。{{ pageState.warnings?.join('；') }}</p>
         <div class="note-actions"><button :disabled="!results.length || running" @click="selecting = !selecting; selectedPaths = []">{{ selecting ? '取消选择' : '选择笔记整理标签' }}</button><button v-if="selecting" :disabled="!selectedPaths.length" @click="chooseTagScope = false; editingTags = true">整理 {{ selectedPaths.length }} 份笔记</button></div>
-        <p v-if="selecting">最多选择 64 篇；仅处理明确选择的已加载笔记，不会代存草稿。</p>
+        <WorkspaceHelp v-if="selecting" label="说明：最多选择 64 篇；仅处理明确选择的" text="最多选择 64 篇；仅处理明确选择的已加载笔记，不会代存草稿。" />
         <div v-if="!results.length && pageState?.scanComplete && !resultError" class="empty-tags"><strong>还没有保存的匹配笔记</strong><p>刚添加的标签需保存笔记后刷新。旧标签的固定记录仍保留，可右键取消固定。</p></div>
         <div v-else class="tag-results"><div v-for="file in results" :key="file.path" class="tag-file-row"><input v-if="selecting" v-model="selectedPaths" type="checkbox" :value="file.path" :aria-label="`选择 ${file.title}`" :disabled="selectedPaths.length >= 64 && !selectedPaths.includes(file.path)" /><button class="tag-note" @click="$emit('open', file.path)"><NotebookPen :style="{ color: noteIconColor }" /><span><strong>{{ file.title }}</strong><small>{{ resultPath(file.path) }}</small></span><ChevronRight /></button></div></div>
         <button v-if="nextPage" class="file-search" :disabled="running" @click="lookup.loadMore()">加载更多笔记</button><button v-if="canContinue" class="file-search" :disabled="running" @click="lookup.continueSearch()">继续查找笔记</button>
@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { NDropdown } from 'naive-ui'
 import { invoke } from '@tauri-apps/api/core'

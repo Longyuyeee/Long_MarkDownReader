@@ -1,6 +1,6 @@
 <template>
   <div class="temp-mode" :class="{ 'is-dark': isActiveThemeDark(store.theme), 'zen-mode': store.isZen }">
-    <div class="temp-header" v-if="!store.isZen">
+    <div class="workspace-document-header temp-header" v-if="!store.isZen">
       <div class="temp-info">
         <n-button quaternary circle size="small" title="返回资料库" @click="leaveExternalEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
@@ -8,7 +8,7 @@
         <n-tag :bordered="false" type="info" size="small" class="mode-tag">外部 Markdown</n-tag>
         <span class="file-name" :title="filePath">{{ fileName }}</span>
         <div v-if="isDirty" class="dirty-dot"></div>
-        <span class="save-boundary">仅在点击保存时写回源文件</span>
+        <WorkspaceHelp label="外部 Markdown 保存说明" text="修改先保留在编辑区，点击保存后写回源文件；关闭前会提醒处理未保存内容。" />
       </div>
       <div class="actions">
         <n-button-group size="small">
@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { onMounted, ref, computed, onUnmounted, watch, nextTick, reactive } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { invoke } from '@tauri-apps/api/core'
@@ -442,7 +443,8 @@ watch(() => store.autoSaveInterval, () => { startShadowSaveTimer() })
 .dirty-dot { width: 6px; height: 6px; background: #ff4d4f; border-radius: 50%; }
 :deep(#vditor),
 :deep(.vditor) { width: 100% !important; height: 100% !important; min-width: 0; min-height: 0; border: none !important; background: transparent !important; }
-:deep(.vditor-toolbar) { background: transparent !important; border-bottom: var(--theme-border) !important; }
+:deep(.vditor-toolbar) { display: flex; flex-wrap: wrap; align-items: center; padding-inline: 8px !important; background: transparent !important; border-bottom: var(--theme-border) !important; }
+:deep(.vditor-toolbar > .vditor-toolbar__item) { flex-shrink: 0; }
 :deep(.vditor-content) { min-width: 0; min-height: 0; background: transparent !important; }
 :deep(.vditor-reset) { width: 100% !important; max-width: none !important; margin: 0 !important; padding-inline: clamp(22px, 4vw, 64px) !important; box-sizing: border-box; color: inherit !important; }
 .compact-outline-tree :deep(.n-tree-node-content) { font-size: 13px !important; padding: 4px 8px !important; overflow: hidden; }

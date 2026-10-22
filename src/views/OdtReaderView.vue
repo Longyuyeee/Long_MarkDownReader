@@ -1,10 +1,10 @@
 <template>
   <section ref="workspaceRef" class="odt-workspace" data-testid="e1b-odt-workspace">
-    <header class="odt-toolbar">
+    <header class="workspace-document-header odt-toolbar">
       <div class="document-identity">
         <FileText :size="18" aria-hidden="true" />
-        <div>
-          <strong>{{ fileName }}</strong>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span>OpenDocument Text · 只读</span>
         </div>
       </div>

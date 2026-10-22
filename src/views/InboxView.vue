@@ -3,7 +3,7 @@
     <WorkspaceManagementHeader title="收集箱" :subtitle="store.currentLibraryName" @back="router.push({ name: 'LibraryMode' })">
       <n-button size="small" :disabled="!store.libraryPath" @click="quickNote"><template #icon><SquarePen :size="16" /></template>快速笔记</n-button>
     </WorkspaceManagementHeader>
-    <WorkspaceManagementContent v-if="store.libraryPath" narrow>
+    <WorkspaceManagementContent v-if="store.libraryPath">
       <InboxBrowser :library-root="store.libraryPath" standalone @close="router.push({ name: 'LibraryMode' })" @open="openFile" @manage="router.push({ name: 'Settings', query: { category: 'library' } })" />
       <p v-if="actionError" role="alert" class="workflow-action-error">{{ actionError }}</p>
     </WorkspaceManagementContent>

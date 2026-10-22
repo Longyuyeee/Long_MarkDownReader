@@ -26,9 +26,9 @@ for (const [filePath, tokens] of Object.entries(componentContracts)) {
   else requireTokens(filePath, tokens)
 }
 
-requireTokens('src/views/PdfView.vue', ['<WorkspaceToolbar class="pdf-toolbar">', '<WorkspaceFileIdentity class="toolbar-leading">'])
-requireTokens('src/views/WorkbookView.vue', ['<WorkspaceToolbar class="workbook-toolbar">', '<WorkspaceFileIdentity class="workbook-title">', '<WorkspaceSegmentedControl', '<WorkspaceStatusBar'])
-requireTokens('src/views/DiagramStudio.vue', ['<WorkspaceToolbar class="studio-toolbar">', '<WorkspaceFileIdentity class="studio-title">', '<WorkspaceField>', '<WorkspaceStatusBar'])
+requireTokens('src/views/PdfView.vue', ['<WorkspaceToolbar class="workspace-document-header pdf-toolbar">', '<WorkspaceFileIdentity class="toolbar-leading">'])
+requireTokens('src/views/WorkbookView.vue', ['<WorkspaceToolbar class="workspace-document-header workbook-toolbar">', '<WorkspaceFileIdentity class="workbook-title">', '<WorkspaceSegmentedControl', '<WorkspaceStatusBar'])
+requireTokens('src/views/DiagramStudio.vue', ['<WorkspaceToolbar class="workspace-document-header studio-toolbar">', '<WorkspaceFileIdentity class="studio-title">', '<WorkspaceField>', '<WorkspaceStatusBar'])
 requireTokens('src/views/WorkspaceHome.vue', ['<WorkspaceManagementHeader', '<WorkspaceManagementContent', '<WorkspaceEmptyState'])
 
 if (failures.length) {

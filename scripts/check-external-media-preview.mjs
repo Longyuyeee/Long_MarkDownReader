@@ -58,7 +58,7 @@ requireText(externalWindows, 'matches!(format.external_policy.as_str(), "edit" |
 requireText(externalWindows, '"MediaViewer" => Ok("/media")', 'external media window route is missing')
 requireText(files, 'matches!(format.external_policy.as_str(), "edit" | "preview")', 'file picker does not include preview formats')
 requireText(lib, 'authorize_and_create_external_window', 'startup and single-instance routing do not create authorized preview windows')
-for (const token of ['externalPreviewCount', "externalPolicy === 'preview'", '预览格式永不写回', "preview: '"]) {
+for (const token of ['externalPreviewCount', "externalPolicy === 'preview'", '不会修改或写回源文件', "preview: '"]) {
   requireText(capabilities, token, `format capability UI is missing ${token}`)
 }
 

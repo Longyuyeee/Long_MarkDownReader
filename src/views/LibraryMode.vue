@@ -281,43 +281,18 @@
             知识图谱
           </n-button>
         </div>
-        <!-- 侧边栏页脚 -->
+        <!-- 设置与更新保持独立入口，资料库名称已在顶部显示 -->
         <div class="sidebar-footer-container">
-          <div
-            class="sidebar-footer"
-            role="button"
-            tabindex="0"
-            aria-label="打开资料库设置"
-            @click="openSettings"
-            @keydown.enter="openSettings"
-            @keydown.space.prevent="openSettings"
-          >
-            <div class="settings-icon-box">
-              <n-icon :component="SettingsIcon" class="rotating-settings" />
-            </div>
-            <div class="lib-info-box">
-              <div class="lib-name-row">
-                <span class="lib-label">当前资料库</span>
-                <div class="lib-status-dot"></div>
-                <button
-                  type="button"
-                  class="app-version-badge"
-                  :class="{ 'has-update': hasAvailableUpdate }"
-                  data-testid="main-app-version"
-                  :data-update-status="updaterState.status"
-                  :title="versionIndicatorLabel"
-                  :aria-label="versionIndicatorLabel"
-                  @click.stop="openUpdateSettings"
-                >
-                  <span v-if="hasAvailableUpdate" class="version-update-dot" aria-hidden="true"></span>
-                  v{{ displayedAppVersion }}<span v-if="DEVELOPMENT_CHANNEL_ACTIVE" class="version-channel">dev</span>
-                </button>
-              </div>
-              <span class="meta-path" :title="store.libraryPath">{{ store.currentLibraryName }}</span>
-            </div>
-            <div class="footer-chevron">
-              <n-icon :component="ChevronRightIcon" />
-            </div>
+          <div class="sidebar-footer">
+            <button type="button" class="sidebar-settings" aria-label="打开设置" @click="openSettings">
+              <n-icon :component="SettingsIcon" class="rotating-settings" /><span>设置</span>
+            </button>
+            <button type="button" class="app-version-badge" :class="{ 'has-update': hasAvailableUpdate }"
+              data-testid="main-app-version" :data-update-status="updaterState.status"
+              :title="versionIndicatorLabel" :aria-label="versionIndicatorLabel" @click="openUpdateSettings">
+              <span v-if="hasAvailableUpdate" class="version-update-dot" aria-hidden="true"></span>
+              v{{ displayedAppVersion }}<span v-if="DEVELOPMENT_CHANNEL_ACTIVE" class="version-channel">dev</span>
+            </button>
           </div>
         </div>
       </div>
@@ -345,14 +320,14 @@
           <n-button data-testid="library-document-favorite" quaternary circle size="small" :type="store.isStarred(activeTabId) ? 'primary' : 'default'" :aria-pressed="store.isStarred(activeTabId)" :aria-label="store.isStarred(activeTabId) ? '取消收藏当前文档' : '收藏当前文档'" :title="store.isStarred(activeTabId) ? '取消收藏当前文档' : '收藏当前文档'" @click="store.toggleStar(activeTabId)"><template #icon><n-icon :component="StarIcon" :style="{ fill: store.isStarred(activeTabId) ? 'currentColor' : 'none' }" /></template></n-button>
         </div>
         <div class="document-primary-actions">
-          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-preview" quaternary size="small" :type="documentPreviewActive ? 'primary' : 'default'" :aria-pressed="documentPreviewActive" :disabled="editorLoading || editorModeChangeBusy || !documentPreviewAvailable" :title="documentPreviewActive ? '返回编辑' : '预览当前文档'" @click="toggleDocumentPreview"><template #icon><n-icon :component="EyeIcon" /></template>{{ documentPreviewActive ? '返回编辑' : '预览' }}</n-button>
-          <n-button data-testid="library-focus-toggle" quaternary size="small" title="专注写作 F11" @click="store.toggleZen()"><template #icon><n-icon :component="FocusIcon" /></template>专注</n-button>
-          <n-button data-testid="library-add-relation" quaternary size="small" :disabled="!activeTabId" @click="requestFileRelation(activeTabId || undefined)"><template #icon><n-icon :component="LinkIcon" /></template>添加关系</n-button>
-          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template>AI 辅助</n-button>
+          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-preview" quaternary size="small" :type="documentPreviewActive ? 'primary' : 'default'" :aria-pressed="documentPreviewActive" :disabled="editorLoading || editorModeChangeBusy || !documentPreviewAvailable" :title="documentPreviewActive ? '返回编辑' : '预览当前文档'" @click="toggleDocumentPreview"><template #icon><n-icon :component="EyeIcon" /></template><span class="document-action-label">{{ documentPreviewActive ? '返回编辑' : '预览' }}</span></n-button>
+          <n-button data-testid="library-focus-toggle" quaternary size="small" title="专注写作 F11" @click="store.toggleZen()"><template #icon><n-icon :component="FocusIcon" /></template><span class="document-action-label">专注</span></n-button>
+          <n-button data-testid="library-add-relation" aria-label="添加关系" quaternary size="small" :disabled="!activeTabId" @click="requestFileRelation(activeTabId || undefined)"><template #icon><n-icon :component="LinkIcon" /></template><span class="document-action-long">添加关系</span><span class="document-action-short">关系</span></n-button>
+          <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" data-testid="library-document-ai" quaternary size="small" title="AI 辅助 Alt+A · 先选择要处理的文字" :disabled="editorLoading || editorModeChangeBusy" @mousedown.prevent @click="handleAIAssist"><template #icon><n-icon :component="SparklesIcon" /></template><span class="document-action-label">AI 辅助</span></n-button>
           <n-button data-testid="library-reference-toggle" quaternary size="small" :type="referencePinned && referenceVisible ? 'primary' : 'default'" :aria-expanded="referenceVisible" aria-controls="library-reference" @click="referenceVisible = !referenceVisible"><template #icon><n-icon :component="LinkIcon" /></template>参考</n-button>
           <n-button v-if="!activeEmbeddedEditor" data-testid="library-explicit-save" secondary size="small" @click="saveCurrentFile" :disabled="!activeTabId || !activeFormatCanEdit || currentFileReloadBusy" :title="activeSaveTitle"><template #icon><n-icon :component="SaveIcon" /></template>保存</n-button>
           <n-popover v-model:show="documentActionsVisible" trigger="click" placement="bottom-end" class="document-actions-popover">
-            <template #trigger><n-button data-testid="library-document-menu" @mousedown="documentFindAdapter.rememberSelection" quaternary size="small">文档操作<template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
+            <template #trigger><n-button data-testid="library-document-menu" @mousedown="documentFindAdapter.rememberSelection" quaternary size="small" aria-label="文档操作"><span class="document-action-long">文档操作</span><span class="document-action-short">更多</span><template #icon><n-icon :component="MoreIcon" /></template></n-button></template>
             <div class="document-menu-content" aria-label="文档操作菜单">
         <n-button v-if="activeIsMarkdown && !activeEmbeddedEditor" quaternary size="small" @mousedown.prevent @click="openDocumentFind">查找替换… · Ctrl+H</n-button>
         <n-button quaternary size="small" :disabled="fileOperationBusy || editorLoading || editorModeChangeBusy" @click="openAttachments(activeTabId)"><template #icon><n-icon :component="AttachmentIcon" /></template>管理附件…</n-button>
@@ -419,9 +394,9 @@
         :query="String(route.query.searchNeedle || '')" :index="searchMatchIndex" :count="searchMatchCount" scope="当前编辑模式"
         @move="moveSearchMatch" @refresh="revealSearchMatch(0, true)" @close="closeSearchNavigation" />
       <div class="editor-viewport" :class="'editor-width-' + editorWidthMode" :style="{ '--custom-editor-bg': store.editorBgColor || 'var(--theme-surface)' }">
-        <div v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
+        <WorkspaceEmbeddedDocument v-if="activeEmbeddedEditor && activeTabId" class="library-embedded-editor">
           <component :is="activeEmbeddedEditor" :key="activeDocumentFormat?.routeName === 'Table' ? `table:${store.libraryPath}:${route.query.external === '1'}` : activeTabId" />
-        </div>
+        </WorkspaceEmbeddedDocument>
         <div v-if="!activeEmbeddedEditor && (editorLoading || pendingEditorSaveLoad) && tabs.length > 0" class="editor-loading">
           <n-spin size="large">
             <template #description>同步中...</template>
@@ -469,7 +444,7 @@
           </div>
         </div>
       </div>
-      <footer v-if="activeTabId" class="document-status" aria-label="文档状态">
+      <footer v-if="activeTabId && (!activeEmbeddedEditor || store.isZen)" class="document-status" aria-label="文档状态">
         <span v-if="!activeEmbeddedEditor" class="document-save-state">{{ activeTextTab?.isDirty ? '● 未保存 · Ctrl+S' : '已保存' }}</span>
         <span class="format-capability-badge" :class="`level-${activeDocumentFormat?.userCapability.level || 'unsupported'}`" :title="activeDocumentFormat?.userCapability.description">{{ activeDocumentFormat?.label }} · {{ activeDocumentFormat?.userCapability.label }}</span>
         <span v-if="!activeEmbeddedEditor && activeTextSnapshotLabel" class="text-snapshot-badge" :title="activeTextSnapshotTitle">{{ activeTextSnapshotLabel }}</span>
@@ -484,9 +459,9 @@
       @close="referenceVisible = false" @clear-source="referenceVisible = false; searchPreviewResult = null" @return-to-editor="referenceVisible = false; returnToEditorFromReference()" @open="openSearchPreview" />
     <ReferenceRepairDialog v-if="referenceRepairRequest" :library-root="referenceRepairRequest.root" :source="referenceRepairRequest.source" :effect="referenceRepairRequest.effect" :commit="referenceRepairRequest.commit" @close="referenceRepairRequest = null" @open="openRepairedSource" />
     <aside v-if="!searchPreviewResult && referenceVisible && !store.isZen" id="library-reference" class="reference-empty" aria-label="只读参考文档">
-      <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button></header>
+      <header><strong>参考</strong><n-button quaternary size="small" @click="referenceVisible = false">关闭</n-button><WorkspaceHelp label="说明：在搜索结果旁点击“在侧边参考”即可打" text="在搜索结果旁点击“在侧边参考”即可打开。参考内容不会替换当前草稿。" /></header>
       <p>选择一份资料作为参考，边看边写。</p>
-      <p>在搜索结果旁点击“在侧边参考”即可打开。参考内容不会替换当前草稿。</p>
+
       <n-button secondary size="small" @click="findReferenceDocument">查找资料</n-button>
     </aside>
     <aside v-if="localGraphPinned && activeTabId && !store.isZen" class="local-graph-rail" data-testid="local-graph-rail" :data-active-path="activeTabId">
@@ -538,7 +513,7 @@
         <p v-else-if="renameExtensionChange.changed" class="rename-feedback is-warning">
           将从 {{ renameExtensionChange.oldLabel }} 改为 {{ renameExtensionChange.newLabel }}。此操作只修改文件名，不会转换文件内容，确认后才会执行。
         </p>
-        <p v-else class="rename-feedback">可以修改名称和后缀；同名项目不会被覆盖。</p>
+        <WorkspaceHelp v-else label="说明：可以修改名称和后缀；同名项目不会被覆" text="可以修改名称和后缀；同名项目不会被覆盖。" />
         <div v-if="renameState.confirmExtension" class="rename-confirmation">
           <strong>文件内容不会自动转换</strong>
           <span>请确认目标编辑器能够解析现有内容，然后点击“仍然重命名”。</span>
@@ -548,7 +523,7 @@
 
     <n-modal v-model:show="fileStyleEditor.show" preset="card" class="file-style-modal" title="文件显示样式" style="width: min(520px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); border-radius: var(--theme-radius);">
       <div class="file-style-editor">
-        <div class="file-style-preview-heading"><strong>实时预览</strong><span>仅改变资料库中的显示，不修改文件内容</span></div>
+        <div class="file-style-preview-heading"><strong>实时预览<WorkspaceHelp label="说明：仅改变资料库中的显示，不修改文件内容" text="仅改变资料库中的显示，不修改文件内容" /></strong></div>
         <div class="file-style-previews">
           <div><small>普通</small><div class="file-style-preview" :style="{ backgroundColor: fileStylePreviewColors.background, color: fileStylePreviewColors.text }">
             <n-icon size="19" :color="fileStylePreviewVisual.color"><component :is="fileStylePreviewVisual.icon" /></n-icon><span>{{ fileStyleEditor.name }}</span>
@@ -618,7 +593,7 @@
             <label><span>选中文字</span><div><button type="button" @click="fileStyleEditor.selectedTextColor = ''">自动</button><input type="color" aria-label="选中文字色" :value="fileStyleEditor.selectedTextColor || '#253041'" @input="fileStyleEditor.selectedTextColor = ($event.target as HTMLInputElement).value"></div></label>
             <label><span>高亮标记</span><div><button type="button" @click="fileStyleEditor.selectedAccentColor = ''">自动</button><input type="color" aria-label="选中标记色" :value="fileStyleEditor.selectedAccentColor || '#245ca6'" @input="fileStyleEditor.selectedAccentColor = ($event.target as HTMLInputElement).value"></div></label>
           </div>
-          <p class="file-style-help">自动颜色会兼顾文字可读性。描边和侧边标记保留原背景。</p>
+          <WorkspaceHelp label="说明：自动颜色会兼顾文字可读性。描边和侧边" text="自动颜色会兼顾文字可读性。描边和侧边标记保留原背景。" />
         </section>
 
         <section class="file-style-section">
@@ -700,6 +675,8 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceEmbeddedDocument from '../components/workspace/WorkspaceEmbeddedDocument.vue'
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands, type ContextCommand } from '../services/contextCommands'
 import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
 import InboxBrowser from '../components/InboxBrowser.vue'
@@ -4908,6 +4885,15 @@ useContextCommands(
 .document-breadcrumb > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .document-primary-actions { display: flex; align-items: center; flex-wrap: wrap; max-width: 100%; gap: 4px; margin-left: auto; }
 .document-primary-actions > .n-button { flex-shrink: 0; }
+.document-action-short { display: none; }
+@container library-editor (max-width: 1000px) {
+  .document-toolbar { flex-wrap: nowrap; gap: 4px; }
+  .document-identity { flex-basis: 60px; }
+  .document-primary-actions { flex-wrap: nowrap; flex-shrink: 0; }
+  .document-action-label, .document-action-long { display: none; }
+  .document-action-short { display: inline; }
+  .document-primary-actions :deep(.n-button:has(.document-action-label) .n-button__icon) { margin-right: 0; }
+}
 .document-menu-content { display: flex; flex-direction: column; width: min(228px, calc(100vw - 80px)); gap: 4px; color: var(--theme-text); }
 .document-menu-content .n-button { justify-content: flex-start; }
 .document-menu-content .tab-actions { padding: 0; align-items: stretch; }
@@ -4927,6 +4913,11 @@ useContextCommands(
 .editor-main :deep(.vditor-toolbar > .vditor-toolbar__item) { flex-shrink: 0; }
 .editor-main :deep(.document-shortcut-host) { display: inline-flex; align-items: center; min-height: var(--toolbar-height); margin-left: auto; padding-left: 8px; vertical-align: middle; }
 .document-inline-shortcuts { display: flex; align-items: center; gap: 4px; padding-left: 8px; border-left: var(--theme-border); white-space: nowrap; }
+/* These four shortcuts also remain in Document actions. Avoid a second
+   toolbar row in narrow windows; keep formatting next to the document. */
+@container library-editor (max-width: 760px) {
+  .editor-main :deep(.document-shortcut-host) { display: none; }
+}
 @container library-editor (max-width: 520px) {
   .document-toolbar { padding-inline: 8px; gap: 4px; }
   .document-primary-actions { gap: 2px; }
@@ -5228,7 +5219,7 @@ useContextCommands(
 
 .quick-pane { padding: 8px 0; overflow-y: auto; }
 .collections-pane { overflow-y: auto; }.collection-list { display: grid; padding: 5px 10px 14px; }.collection-row { min-height: 54px; display: grid; grid-template-columns: minmax(0,1fr) 28px; align-items: center; gap: 4px; border-bottom: var(--theme-border); }.collection-open { min-width: 0; height: 100%; display: grid; grid-template-columns: 22px minmax(0,1fr); align-items: center; gap: 8px; padding: 6px 2px; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.collection-open:hover { color: var(--theme-primary); }.collection-open>svg { width: 15px; color: var(--theme-primary); }.collection-open>span { min-width: 0; display: grid; gap: 3px; }.collection-open strong,.collection-open small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.collection-open strong { font-size: var(--text-compact); }.collection-open small { color: var(--theme-text-secondary); font-size: var(--text-compact); }
-.tags-pane { overflow-y: auto; }
+.tags-pane, .links-pane { overflow-y: auto; }
 
 .sidebar-panel-intro {
   display: grid;
@@ -5791,9 +5782,9 @@ useContextCommands(
 .is-dark .git-status-bar { border-top-color: rgba(255,255,255,0.05); }
 .sidebar-actions { padding: 0 12px; }
 .sidebar-actions .n-button { width: 100%; justify-content: flex-start; font-size: 12px; }
-.sidebar-footer-container { padding: 12px; flex-shrink: 0; }
+.sidebar-footer-container { padding: 6px 10px; flex-shrink: 0; }
 .sidebar-footer {
-  display: flex; align-items: center; gap: 12px; padding: calc(10px * var(--theme-spacing));
+  display: flex; align-items: center; gap: 8px; padding: 4px 8px;
   background: var(--theme-card);
   backdrop-filter: var(--theme-glass);
   border-radius: var(--theme-radius);
@@ -5806,6 +5797,10 @@ useContextCommands(
 .is-dark .sidebar-footer { background: var(--theme-card); border-color: rgba(var(--theme-primary-rgb), 0.7); }
 .sidebar-footer:hover { transform: translateY(-2px); background: var(--theme-card); box-shadow: var(--theme-shadow); border-color: var(--theme-primary); }
 .is-dark .sidebar-footer:hover { background: var(--theme-card); }
+
+.sidebar-settings { min-width: 0; min-height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; border: 0; border-radius: var(--theme-radius-sm); color: var(--theme-text); background: transparent; cursor: pointer; font: inherit; font-size: var(--text-compact); }
+.sidebar-settings:hover { color: var(--theme-primary); background: var(--theme-hover); }
+.sidebar-settings:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: 1px; }
 
 .settings-icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.03); border-radius: var(--theme-radius-sm); transition: all 0.3s var(--ease-premium); color: var(--theme-text); opacity: 0.8; }
 .is-dark .settings-icon-box { background: rgba(255, 255, 255, 0.06); }
@@ -5871,8 +5866,8 @@ useContextCommands(
   .sidebar-footer-container { padding: 8px; }
   .sidebar-footer {
     gap: 8px;
-    min-height: 56px;
-    padding: 8px;
+    min-height: 36px;
+    padding: 4px;
   }
   .settings-icon-box {
     width: 32px;

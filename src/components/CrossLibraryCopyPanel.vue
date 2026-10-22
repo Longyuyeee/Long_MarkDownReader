@@ -11,11 +11,12 @@
       <label v-if="warnings && pending.length" class="copy-ack"><input v-model="acknowledge" type="checkbox" :disabled="busy" />保留未自动接续的引用，继续复制</label>
     </template>
     <p class="copy-note">复制已保存的文件，源文件和未保存草稿仍留在原位置。</p>
-    <details class="copy-scope"><summary>复制范围</summary><p>可识别的 Markdown 相对文件引用及关联笔记会随复制接续。勾选后携带配套 PDF 批注，并接续阅读笔记中的来源及生成记录；无法接续的引用在预览中列出。其他格式原样复制，历史、手动关系和 OCR 记录不自动随带。</p></details>
+    <div class="copy-scope">复制范围<WorkspaceHelp label="复制范围说明" text="可识别的 Markdown 相对文件引用及关联笔记会随复制接续。勾选后携带配套 PDF 批注，并接续阅读笔记中的来源及生成记录；无法接续的引用在预览中列出。其他格式原样复制，历史、手动关系和 OCR 记录不自动随带。" /></div>
     <div class="copy-actions"><n-button :disabled="busy" @click="$emit('close')">{{ completed.length ? '关闭' : '取消' }}</n-button><n-button v-if="completed.length || reviewRequired" :disabled="busy" @click="reveal">在文件管理器中查看</n-button><n-button v-if="uncertain" type="primary" :loading="busy" @click="execute">核对复制结果</n-button><n-button v-else-if="retryable.length" type="primary" :loading="loading" :disabled="busy || loading" @click="refreshFailed">重新核对未完成的 {{ retryable.length }} 项</n-button><n-button v-else-if="pending.length" type="primary" :loading="busy" :disabled="loading || Boolean(error) || (warnings && !acknowledge)" @click="execute">复制 {{ pending.length }} 项</n-button><n-button v-else-if="!preview && error" :loading="loading" :disabled="busy" @click="load()">重新预览</n-button></div>
   </section>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { NButton } from 'naive-ui'
 import { invoke } from '../services/tauriRuntime'

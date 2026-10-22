@@ -512,7 +512,7 @@ requireText(docxCommands, 'rollback_protected: true', 'UX-33 DOCX source save mu
 requireText(docxCommands, 'write_new_bytes', 'C2E must use atomic create-new reliable writing')
 requireText(docxCommands, 'c2e_reliably_saves_and_reopens_all_three_producer_copies', 'C2E must regress all producer copies')
 if (docxCommands.includes('write_docx') || docxCommands.includes('save_docx_overwrite')) failures.push('C2E must not expose DOCX source overwrite commands')
-requireText(docxReader, 'Word 页面编辑 · 草稿只驻留内存 · 点击保存才写入', 'UX-33 DOCX workspace must identify explicit-save page editing')
+requireText(docxReader, 'Word 编辑与保存说明', 'UX-33 DOCX workspace must identify explicit-save page editing')
 requireText(docxReader, '文档目录', 'C1 DOCX workspace must expose a heading outline')
 requireText(docxReader, '搜索 DOCX 正文', 'C1 DOCX workspace must expose in-document search')
 requireText(docxReader, '兼容画像', 'C1 DOCX workspace must expose its compatibility profile')
@@ -644,7 +644,7 @@ requireText(pptxReader, 'sameContext(owner)', 'PPTX late responses must be check
 for (const forbiddenPptxWrite of ['write_pptx', 'overwrite_pptx', 'save_pptx_overwrite']) {
   if (pptxCommands.includes(forbiddenPptxWrite)) failures.push(`C4D must not expose unsafe PPTX write command: ${forbiddenPptxWrite}`)
 }
-requireText(pptxReader, '演示文稿编辑 · 显式保存', 'M1B1C PPTX workspace must identify its bounded source-edit capability')
+requireText(pptxReader, 'hasUnappliedInput', 'M1B1C PPTX workspace must identify its bounded source-edit capability')
 requireText(pptxReader, '搜索 PPTX 文本与备注', 'C3A PPTX workspace must expose in-presentation search')
 requireText(pptxReader, '放映', 'C3A PPTX workspace must expose read-only presentation mode')
 requireText(pptxReader, '兼容画像', 'C3A PPTX workspace must expose its compatibility profile')

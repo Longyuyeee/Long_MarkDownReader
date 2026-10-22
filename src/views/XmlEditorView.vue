@@ -1,14 +1,14 @@
 <template>
   <div class="xml-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
-    <header class="toolbar">
+    <header class="workspace-document-header toolbar">
       <div class="identity">
         <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="router.push({ name: 'LibraryMode' })">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <n-icon :component="isSvg ? ImageIcon : FileCodeIcon" size="22" class="accent" />
-        <div>
-          <strong :title="xmlPath">{{ fileName }}</strong>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span aria-live="polite"><template v-if="isExternal">外部文件 · </template>{{ formatLabel }} · {{ readOnly ? '只读' : dirty ? '有未保存修改' : '已保存' }}<template v-if="isExternal && !readOnly"> · 仅点击保存写回</template></span>
         </div>
       </div>
@@ -66,7 +66,7 @@
 
         <section v-if="isSvg && previewUrl" class="svg-preview">
           <img :src="previewUrl" alt="SVG 净化预览" />
-          <span>仅渲染安全白名单子集，不加载外部资源</span>
+          <WorkspaceHelp label="说明：仅渲染安全白名单子集，不加载外部资源" text="仅渲染安全白名单子集，不加载外部资源" />
         </section>
         <section v-else-if="isSvg" class="valid-summary">
           <n-icon :component="ShieldOffIcon" />
@@ -119,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'

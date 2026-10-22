@@ -1,0 +1,348 @@
+{
+  "scope": "Production Vue components with simulated IPC; not installed Tauri or native-format tests",
+  "pages": 28,
+  "layoutCases": 336,
+  "styles": [
+    "soft",
+    "neo",
+    "glass",
+    "airy",
+    "minimal",
+    "sharp"
+  ],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900,
+      "tone": "white"
+    },
+    {
+      "width": 760,
+      "height": 620,
+      "tone": "dark"
+    }
+  ],
+  "unhandledErrors": 0,
+  "pageOverflowCases": 0,
+  "helpGeometryFailures": 0,
+  "interactions": [
+    "工作现场命名弹窗可保存；正文草稿与未保存标记保持",
+    "文本编码弹层保留源码、未保存状态，不触发写入",
+    "快速笔记失败保留正文；选择位置、重试保存、继续记录可用",
+    "Table 的表格、看板、图表、仪表盘均可切换",
+    "设置八个分类可切换且标题对应",
+    "问号支持悬停、聚焦、Escape；弹层内可查看，选择及操作菜单打开时不遮挡",
+    "独立、内嵌编辑器各只有一套标签栏；内嵌不重复文件名；草稿不写盘",
+    "HTML 预览来自当前草稿，返回源码内容保留，切换不保存"
+  ],
+  "pageResults": [
+    {
+      "page": "workspace",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 96,
+        "y": 77,
+        "width": 1316,
+        "height": 823
+      }
+    },
+    {
+      "page": "inbox",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 96,
+        "y": 88,
+        "width": 1316,
+        "height": 176
+      }
+    },
+    {
+      "page": "library",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 265,
+        "y": 83,
+        "width": 1171,
+        "height": 786
+      }
+    },
+    {
+      "page": "temp",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 860
+      }
+    },
+    {
+      "page": "text",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 75,
+        "width": 1440,
+        "height": 797
+      }
+    },
+    {
+      "page": "json",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 75,
+        "width": 1440,
+        "height": 799
+      }
+    },
+    {
+      "page": "yaml",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 75,
+        "width": 1440,
+        "height": 797
+      }
+    },
+    {
+      "page": "xml",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 75,
+        "width": 1440,
+        "height": 797
+      }
+    },
+    {
+      "page": "toml",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 75,
+        "width": 1440,
+        "height": 797
+      }
+    },
+    {
+      "page": "log",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 121,
+        "width": 1440,
+        "height": 751
+      }
+    },
+    {
+      "page": "drawio",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 74,
+        "width": 1440,
+        "height": 826
+      }
+    },
+    {
+      "page": "docx",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 230,
+        "y": 45,
+        "width": 1210,
+        "height": 827
+      }
+    },
+    {
+      "page": "odt",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 230,
+        "y": 40,
+        "width": 1210,
+        "height": 832
+      }
+    },
+    {
+      "page": "odf",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 108,
+        "width": 1440,
+        "height": 764
+      }
+    },
+    {
+      "page": "pptx",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 190,
+        "y": 43,
+        "width": 1250,
+        "height": 829
+      }
+    },
+    {
+      "page": "external-office",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 340,
+        "y": 74,
+        "width": 760,
+        "height": 367
+      }
+    },
+    {
+      "page": "legacy-office",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 330,
+        "y": 70,
+        "width": 780,
+        "height": 532
+      }
+    },
+    {
+      "page": "quick-note",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 13,
+        "y": 117,
+        "width": 1414,
+        "height": 729
+      }
+    },
+    {
+      "page": "graph",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "page": "canvas",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 93,
+        "width": 1440,
+        "height": 779
+      }
+    },
+    {
+      "page": "pdf",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 83,
+        "width": 1440,
+        "height": 817
+      }
+    },
+    {
+      "page": "table",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 77,
+        "width": 1440,
+        "height": 823
+      }
+    },
+    {
+      "page": "workbook",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 140,
+        "width": 1440,
+        "height": 760
+      }
+    },
+    {
+      "page": "diagram",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 860
+      }
+    },
+    {
+      "page": "mindmap",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 92,
+        "width": 1440,
+        "height": 780
+      }
+    },
+    {
+      "page": "media",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 828
+      }
+    },
+    {
+      "page": "settings",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 28,
+        "y": 44,
+        "width": 1384,
+        "height": 856
+      }
+    },
+    {
+      "page": "capabilities",
+      "layoutCases": 12,
+      "unhandledErrors": [],
+      "primaryArea": {
+        "x": 28,
+        "y": 44,
+        "width": 1384,
+        "height": 2732
+      }
+    }
+  ]
+}

@@ -37,7 +37,7 @@ for (const token of [
   'editorOpen && !isExternal',
   'editorOpen && !isExternal',
   'external: requestedExternal',
-  '外部 Word 文档 · 只读 · 不会写回',
+  '外部 Word 文档以只读方式打开，不会写回。',
   '<WorkspaceTabs v-if="isExternal',
 ]) requireText(view, token, `external DOCX workspace is missing ${token}`)
 requireText(access, 'resolve_preview(&document)', 'external DOCX preview authorization regression is missing')

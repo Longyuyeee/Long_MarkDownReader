@@ -17,11 +17,12 @@
       <small role="status">{{ copyStatus || (selectedText ? `已选 ${selectedText.length} 字` : insertTarget ? '先在笔记中点击插入位置，再选择参考文字；也可直接复制摘录。' : '先在参考内容中选择需要摘录的文字') }}</small>
     </div>
     <ReferenceRepairDialog v-if="repairing && repairSource" :library-root="libraryRoot" :source="repairing" effect="只更新这份只读参考的来源，不改动笔记、原文件和其他引用。" :commit="repairPinned" @close="repairing = null" @open="repairing = null; $emit('open')" />
-    <footer><small>参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。</small><button type="button" class="preview-open" @click="$emit('open')">在主编辑区打开</button></footer>
+    <footer><WorkspaceHelp label="说明：参考显示磁盘上的部分内容，不改动当前" text="参考显示磁盘上的部分内容，不改动当前草稿。选择文字可复制摘录及来源。" /><button type="button" class="preview-open" @click="$emit('open')">在主编辑区打开</button></footer>
   </aside>
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { NDropdown } from 'naive-ui'

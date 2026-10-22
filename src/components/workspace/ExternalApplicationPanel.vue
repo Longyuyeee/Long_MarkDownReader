@@ -2,8 +2,8 @@
   <section class="external-panel" aria-labelledby="external-panel-title">
     <header>
       <div>
-        <strong id="external-panel-title">使用桌面应用打开</strong>
-        <span>LongEdit 只负责安全交接，不编辑、不转换，也不写回当前文件</span>
+        <strong id="external-panel-title">使用桌面应用打开<WorkspaceHelp label="说明：LongEdit 只负责安全交接，不" text="LongEdit 只负责安全交接，不编辑、不转换，也不写回当前文件" /></strong>
+
       </div>
       <button class="icon-button" type="button" title="重新检测桌面应用" :disabled="loading || opening" @click="loadApplications">
         <RefreshCw :size="15" :class="{ spinning: loading }" />
@@ -47,7 +47,7 @@
 
     <p v-if="discoveryError" class="panel-message error">{{ discoveryError }}</p>
     <p v-else-if="!loading && !compatibleApplications.length" class="panel-message">未检测到明确兼容的桌面应用，仍可尝试系统默认应用；失败时 Windows 会返回原因。</p>
-    <p v-else class="panel-message">交接前后会核对源文件 SHA-256，应用启动后产生的修改由对应桌面应用负责。</p>
+    <WorkspaceHelp v-else label="说明：交接前后会核对源文件 SHA-256" text="交接前后会核对源文件 SHA-256，应用启动后产生的修改由对应桌面应用负责。" />
 
     <button class="open-button" type="button" :disabled="loading || opening" @click="openSelected">
       <LoaderCircle v-if="opening" :size="16" class="spinning" />
@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './WorkspaceHelp.vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { AppWindow, Check, CircleOff, ExternalLink, LoaderCircle, MonitorUp, RefreshCw } from 'lucide-vue-next'

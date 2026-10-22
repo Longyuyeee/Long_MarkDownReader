@@ -1,3 +1,5 @@
+@use './workspace-density';
+
 body {
   --titlebar-height: 32px;
 
@@ -22,13 +24,13 @@ body {
   --space-6: 24px;
   --space-8: 32px;
 
-  --workspace-toolbar-height: 48px;
-  --workspace-management-header-height: 58px;
+  --workspace-toolbar-height: 40px;
+  --workspace-management-header-height: 44px;
   --workspace-control-height: 32px;
   --workspace-status-height: 28px;
-  --workspace-page-max-width: 1180px;
+  --workspace-page-max-width: 1440px;
   --workspace-page-narrow-width: 840px;
-  --workspace-page-gutter: clamp(12px, 4vw, 52px);
+  --workspace-page-gutter: clamp(12px, 2vw, 28px);
   --workspace-floating-gutter: 18px;
   --workspace-inspector-width: 320px;
   --workspace-border-color: color-mix(in srgb, var(--theme-text) 12%, transparent);

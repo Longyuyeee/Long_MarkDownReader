@@ -1,9 +1,9 @@
 <template>
   <div class="diagram-studio" tabindex="-1" @keydown="handleKeydown">
-    <WorkspaceToolbar class="studio-toolbar">
+    <WorkspaceToolbar class="workspace-document-header studio-toolbar">
       <WorkspaceFileIdentity class="studio-title">
         <button title="返回知识库" @click="router.push('/library')">←</button>
-        <div><strong>{{ fileName }}</strong><span>{{ isExternal ? '外部 Mermaid · 仅点击保存写回' : 'Mermaid 图表工作室' }} · {{ lineCount }} 行</span></div>
+        <div class="workspace-document-copy"><strong class="workspace-file-name">{{ fileName }}</strong><span>{{ isExternal ? '外部 Mermaid · 仅点击保存写回' : 'Mermaid 图表工作室' }} · {{ lineCount }} 行</span></div>
       </WorkspaceFileIdentity>
       <div class="studio-actions" data-command-strip data-horizontal-wheel="always">
         <label>模板
@@ -30,11 +30,11 @@
     </WorkspaceToolbar>
 
     <section v-if="showExport" class="export-panel" role="dialog" aria-label="导出图表">
-      <header><div><strong>导出图表</strong><span>当前主题：{{ diagramTheme }}</span></div><button title="关闭" @click="showExport = false">×</button></header>
+      <header><div><strong>导出图表</strong><span>当前主题：{{ diagramTheme }}</span></div><WorkspaceHelp label="说明：SVG 保留矢量文字；PNG 最大边" text="SVG 保留矢量文字；PNG 最大边 8192 px、最多 3200 万像素。" /><button title="关闭" @click="showExport = false">×</button></header>
       <WorkspaceField>格式<select v-model="exportFormat"><option value="svg">SVG 矢量图</option><option value="png">PNG 位图</option></select></WorkspaceField>
       <WorkspaceField v-if="exportFormat === 'png'">倍率<select v-model.number="exportScale"><option :value="1">1×</option><option :value="2">2×</option><option :value="3">3×</option></select></WorkspaceField>
       <WorkspaceField>背景<select v-model="exportBackground"><option value="transparent">透明</option><option value="theme">当前主题背景</option><option value="white">白色</option></select></WorkspaceField>
-      <p>SVG 保留矢量文字；PNG 最大边 8192 px、最多 3200 万像素。</p>
+
       <button class="export-confirm" :disabled="!exportReady || exporting" @click="exportDiagram">{{ exporting ? '导出中…' : exportReady ? `导出 ${exportFormat.toUpperCase()}` : '等待最新预览' }}</button>
     </section>
 
@@ -55,7 +55,7 @@
       </section>
 
       <section class="preview-panel">
-        <header><strong>实时预览</strong><span>严格安全模式 · 禁用图内点击</span></header>
+        <header><strong>实时预览</strong><WorkspaceHelp label="预览说明" text="预览不执行图表内的点击指令。导出可在工具栏中操作。" /></header>
         <div class="preview-scroll">
           <div v-if="rendering && !svg" class="preview-empty">正在生成图表…</div>
           <div v-else-if="parseError && !svg" class="preview-empty"><strong>修复语法后显示预览</strong><span>点击左下方错误可以定位到相关行。</span></div>
@@ -81,9 +81,9 @@
             <button type="submit" :disabled="!selectedNode.editable || !draftLabel.trim()">应用到源码</button>
           </form>
           <form v-else-if="selectedEdge" class="property-form" @submit.prevent="applyStructureEdit">
-            <header><strong>{{ selectedEdge.source }} → {{ selectedEdge.target }}</strong><span>第 {{ selectedEdge.line }} 行</span></header>
+            <header><strong>{{ selectedEdge.source }} → {{ selectedEdge.target }}</strong><span>第 {{ selectedEdge.line }} 行</span><WorkspaceHelp label="说明：只替换或插入当前连线标签，不改变箭头" text="只替换或插入当前连线标签，不改变箭头、节点定义和其他源码。" /></header>
             <label>连线标签<input v-model="draftLabel" maxlength="500" placeholder="留空表示无标签" /></label>
-            <p>只替换或插入当前连线标签，不改变箭头、节点定义和其他源码。</p>
+
             <button type="submit">应用到源码</button>
           </form>
           <div v-else class="property-placeholder">选择一个节点或连线进行编辑。</div>
@@ -94,6 +94,8 @@
 </template>
 
 <script setup lang="ts">
+import { useResponsiveInspector } from '../composables/useResponsiveInspector'
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -147,7 +149,7 @@ const notice = ref('')
 const selectedTemplate = ref('')
 const diagramTheme = ref<MermaidTheme>('default')
 const zoom = ref(1)
-const showStructure = ref(true)
+const { inspectorVisible: showStructure } = useResponsiveInspector(980)
 const showExport = ref(false)
 const exporting = ref(false)
 const exportFormat = ref<'svg' | 'png'>('svg')

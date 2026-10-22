@@ -17,7 +17,7 @@
         </div>
       </div>
       <label class="session-context-option"><input v-model="includeContext" type="checkbox" :disabled="writing" />{{ mode === 'export' ? '包含搜索条件和参考资料（文件名、搜索词可能含私人信息）' : mode === 'import' ? '同时导入搜索条件与参考位置' : '同时恢复搜索条件与参考位置' }}</label>
-      <p v-if="mode === 'export'" class="session-explanation">导出不包含正文、草稿、命中摘要、密钥或原资料库绝对路径；请另行复制原文件到新电脑。</p>
+      <WorkspaceHelp v-if="mode === 'export'" label="说明：导出不包含正文、草稿、命中摘要、密钥" text="导出不包含正文、草稿、命中摘要、密钥或原资料库绝对路径；请另行复制原文件到新电脑。" />
       <p v-if="recordError || error" role="alert" class="session-transfer-error">{{ recordError || error }}</p>
       <p v-else-if="checking" role="status">正在核对真实文件位置…</p>
     </div>
@@ -25,6 +25,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { NButton, NModal } from 'naive-ui'
 import { FileText } from 'lucide-vue-next'

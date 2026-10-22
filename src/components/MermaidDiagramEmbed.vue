@@ -1,7 +1,7 @@
 <template>
   <section class="mermaid-embed" :class="{ compact }">
     <header>
-      <div><strong>{{ sourceLabel }}</strong><span>Mermaid 源文件 · 实时引用</span></div>
+      <div><strong>{{ sourceLabel }}<WorkspaceHelp label="说明：Mermaid 源文件 · 实时引用" text="Mermaid 源文件 · 实时引用" /></strong></div>
       <nav>
         <button title="重新读取源文件" :disabled="loading" @mousedown.stop @click.stop="load">↻</button>
         <button title="打开图表工作室" @mousedown.stop @click.stop="$emit('open', resolvedSource)">编辑源图表</button>
@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 

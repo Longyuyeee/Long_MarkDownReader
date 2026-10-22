@@ -1,16 +1,17 @@
 <template>
   <section class="odf-workspace" data-testid="e1c-odf-workspace">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
-    <header>
+    <header class="workspace-document-header">
       <div class="identity">
         <button v-if="isExternal" class="identity-back" title="返回资料库" @click="router.push({ name: 'LibraryMode' })"><ArrowLeft :size="15" /></button>
         <component :is="isOds ? Table2 : Presentation" :size="18" aria-hidden="true" />
-        <div>
-          <strong>{{ fileName }}</strong>
-          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? 'OpenDocument Spreadsheet' : 'OpenDocument Presentation' }} · {{ workspaceCapabilityLabel }}<template v-if="isExternal"> · 不会写回</template></span>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
+          <span><template v-if="isExternal">外部文件 · </template>{{ isOds ? '表格' : '演示文稿' }} · {{ workspaceCapabilityLabel }}<template v-if="isExternal"> · 不会写回</template></span>
         </div>
       </div>
       <div class="toolbar" data-command-strip data-horizontal-wheel="always">
+        <WorkspaceHelp v-if="editAvailable || odpEditAvailable" label="开放文档编辑说明" :text="isOds ? '单击选择单元格样式，双击编辑值，然后另存副本。公式、合并及复杂内容保持只读。' : '可编辑不含复杂对象的正文段落，再另存副本。源文件、备注、版式、媒体和动画保持不变。'" />
         <button v-if="workspaceEditable" :disabled="!canUndo" :aria-label="undoLabel" :title="`${undoLabel} Ctrl+Z`" @click="undoDraft"><Undo2 :size="15" /></button>
         <button v-if="workspaceEditable" :disabled="!canRedo" :aria-label="redoLabel" :title="`${redoLabel} Ctrl+Y`" @click="redoDraft"><Redo2 :size="15" /></button>
         <button v-if="workspaceEditable" class="save-copy-action" :disabled="!draftDirty || saving" :aria-label="saveLabel" :title="`${saveLabel} Ctrl+S`" @click="saveCopy"><Save :size="15" /><span>另存副本</span></button>
@@ -37,9 +38,8 @@
         <ShieldAlert :size="16" />
         <div><strong>文档包含只读或隔离内容</strong><span>{{ warnings.join('；') }}</span></div>
       </div>
-      <div v-if="editAvailable" class="edit-banner" data-testid="m1cb-ods-edit-banner">
+      <div v-if="editAvailable && (draft || styleDraft)" class="edit-banner" data-testid="m1cb-ods-edit-banner">
         <PencilLine :size="15" />
-        <span><strong>值与已有样式</strong> 单击选择样式，双击编辑值；公式、合并及复杂内容保持只读。</span>
         <div v-if="styleDraft && namedCellStyles.length" class="style-controls" data-testid="m1cd-ods-style-controls">
           <span>{{ styleDraft.sheetName }} {{ styleDraft.address }}</span>
           <span class="style-swatch" :style="selectedStylePreview" aria-hidden="true"></span>
@@ -49,9 +49,8 @@
         </div>
         <span v-if="draft || styleDraft" class="draft-status">{{ activeDraftLabel }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
       </div>
-      <div v-if="odpEditAvailable" class="edit-banner" data-testid="m5-3-odp-edit-banner">
+      <div v-if="odpEditAvailable && odpDraft" class="edit-banner" data-testid="m5-3-odp-edit-banner">
         <PencilLine :size="15" />
-        <span><strong>简单正文可靠副本</strong> 仅可选择未含复杂对象的正文段落；源文件、备注、版式、媒体和动画不会写回。</span>
         <span v-if="odpDraft" class="draft-status">第 {{ odpDraft.slideIndex }} 张 · 正文 {{ odpDraft.paragraphIndex }}{{ draftDirty ? ' · 有未保存修改' : ' · 未修改' }}</span>
       </div>
 
@@ -137,7 +136,7 @@
               </div>
             </template>
             <template v-else-if="selectedOdpTargets.length">
-              <header><strong>可另存的简单正文</strong><span>{{ selectedOdpTargets.length }} 段</span></header>
+              <header><strong>可另存的简单正文</strong><span>{{ selectedOdpTargets.length }} 段</span><WorkspaceHelp label="说明：保存时只创建同目录新 ODP；已有文" text="保存时只创建同目录新 ODP；已有文件和源文件都不会覆盖。" /></header>
               <div class="odp-target-list" role="list" aria-label="可编辑正文段落">
                 <button
                   v-for="target in selectedOdpTargets"
@@ -160,7 +159,7 @@
                   @keydown.esc.prevent="resetDraft"
                 ></textarea>
               </label>
-              <p class="odp-copy-boundary">保存时只创建同目录新 ODP；已有文件和源文件都不会覆盖。</p>
+
             </template>
             <div v-else class="odp-blocked">
               <ShieldAlert :size="16" /><div><strong>没有可安全编辑的正文</strong><p>{{ odpInventoryExplanation }}</p></div>
@@ -182,6 +181,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
 import { invoke } from '@tauri-apps/api/core'
 import {

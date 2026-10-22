@@ -3,12 +3,23 @@
     <WorkspaceManagementHeader
       class="workspace-header"
       title="工作台"
-      :subtitle="store.currentLibraryName || '专业工作区概览'"
+      :subtitle="store.currentLibraryName"
+      :help="store.libraryPath ? `当前资料库：${store.libraryPath}` : ''"
       :show-back="false"
     >
       <template #icon>
         <img class="brand-mark" src="/icon.png" alt="Long编辑图标">
       </template>
+      <div v-if="store.libraryPath" class="workspace-quick-actions">
+        <n-dropdown trigger="manual" scrollable :show="workspaceCreateMenuOpen" :options="workspaceCreateOptions" :menu-props="workspaceCreateMenuProps" @clickoutside="workspaceCreateMenuOpen = false" @select="createWorkspaceFile">
+          <button data-testid="m2-closure-create" class="quick-command" aria-haspopup="menu" :aria-expanded="workspaceCreateMenuOpen" @click="workspaceCreateMenuOpen = !workspaceCreateMenuOpen" @keydown.enter.prevent="workspaceCreateMenuOpen = true" @keydown.space.prevent="workspaceCreateMenuOpen = true" @keydown.escape="workspaceCreateMenuOpen = false"><PlusIcon />新建</button>
+        </n-dropdown>
+        <button data-testid="m2-closure-open" class="quick-command" @click="openLibrary" @keydown.enter.prevent="openLibrary" @keydown.space.prevent="openLibrary"><OpenIcon />打开文件</button>
+      </div>
+      <div v-if="store.libraryPath" class="workspace-signals">
+        <span :class="`signal index-${indexStatus.state}`"><DatabaseIcon />{{ indexLabel }}</span>
+        <span class="signal"><ClockIcon />{{ refreshedLabel }}</span>
+      </div>
       <nav class="workspace-nav" aria-label="工作台导航">
         <button title="知识图谱" :disabled="!store.libraryPath" @click="router.push({ name: 'Graph' })"><NetworkIcon /><span>图谱</span></button>
         <button title="设置" @click="router.push({ name: 'Settings' })"><SettingsIcon /></button>
@@ -17,25 +28,6 @@
     </WorkspaceManagementHeader>
 
     <WorkspaceManagementContent v-if="store.libraryPath" class="workspace-content" data-testid="m2a2-workspace-primary" :data-primary-state="loading ? 'loading' : 'ready'">
-      <section class="workspace-identity">
-        <div>
-          <span class="section-kicker">{{ store.currentLibraryName }}</span>
-          <h1>从这里继续</h1>
-          <p :title="store.libraryPath">{{ store.libraryPath }}</p>
-        </div>
-        <div class="workspace-meta">
-          <div class="workspace-quick-actions">
-            <n-dropdown trigger="manual" scrollable :show="workspaceCreateMenuOpen" :options="workspaceCreateOptions" :menu-props="workspaceCreateMenuProps" @clickoutside="workspaceCreateMenuOpen = false" @select="createWorkspaceFile">
-              <button data-testid="m2-closure-create" class="quick-command" aria-haspopup="menu" :aria-expanded="workspaceCreateMenuOpen" @click="workspaceCreateMenuOpen = !workspaceCreateMenuOpen" @keydown.enter.prevent="workspaceCreateMenuOpen = true" @keydown.space.prevent="workspaceCreateMenuOpen = true" @keydown.escape="workspaceCreateMenuOpen = false"><PlusIcon />新建</button>
-            </n-dropdown>
-            <button data-testid="m2-closure-open" class="quick-command" @click="openLibrary" @keydown.enter.prevent="openLibrary" @keydown.space.prevent="openLibrary"><OpenIcon />打开文件</button>
-          </div>
-          <div class="workspace-signals">
-            <span :class="`signal index-${indexStatus.state}`"><DatabaseIcon />{{ indexLabel }}</span>
-            <span class="signal"><ClockIcon />{{ refreshedLabel }}</span>
-          </div>
-        </div>
-      </section>
 
       <WorkSessionBar />
       <WorkspaceStateNotice v-if="loading" class="workspace-loading" kind="loading" tone="info" compact data-testid="m2-closure-loading" title="正在准备工作台"><span>正在读取最近文件和待办，完成后会自动更新。</span></WorkspaceStateNotice>
@@ -50,7 +42,7 @@
 
       <div v-else class="workspace-grid">
         <section class="workspace-section activity-section">
-          <div class="section-heading"><div><span class="section-kicker">最近活动</span><h2>继续工作</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode' })">浏览文件</button></div>
+          <div class="section-heading"><div><h2>继续工作</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode' })">浏览文件</button></div>
           <div v-if="continueGroups.length" class="continue-groups" data-testid="m2a3-continue-work">
             <section v-for="group in continueGroups" :key="group.id" class="continue-group" :data-group="group.id">
               <div class="list-label"><component :is="group.icon" />{{ group.label }}<span>{{ group.items.length }}</span></div>
@@ -70,7 +62,7 @@
         </section>
 
         <section class="workspace-section task-section" data-testid="m2a1-task-section">
-          <div class="section-heading"><div><span class="section-kicker">今天要做</span><h2>待办</h2></div><span class="section-count">{{ overview.tasks.length }} 未完成</span></div>
+          <div class="section-heading"><div><h2>待办</h2></div><span class="section-count">{{ overview.tasks.length }} 未完成</span></div>
           <div class="task-filters" data-testid="m2a3-task-filters">
             <WorkspaceSegmentedControl class="task-status" aria-label="待办状态">
               <button v-for="option in taskStatusOptions" :key="option.value" :class="{ active: taskStatusFilter === option.value }" @click="taskStatusFilter = option.value">{{ option.label }}</button>
@@ -98,7 +90,7 @@
         </section>
 
         <section class="workspace-section collection-section">
-          <div class="section-heading"><div><span class="section-kicker">快捷视图</span><h2>保存视图</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理视图</button></div>
+          <div class="section-heading"><div><h2>保存视图</h2></div><button class="text-command" @click="router.push({ name: 'LibraryMode', query: { panel: 'collections' } })">管理视图</button></div>
           <div v-if="savedSearches.length" class="collection-list">
             <button v-for="search in savedSearches" :key="search.id" @click="openSavedSearch(search)">
               <CollectionIcon />
@@ -111,7 +103,7 @@
 
         <section class="workspace-section governance-section">
           <details class="workspace-organization">
-            <summary><span><strong>资料整理与关联</strong><small>查看重复文件、批注和链接，处理搜索与关联状态</small></span></summary>
+            <summary><span><strong>资料整理与关联<WorkspaceHelp text="查看重复文件、批注和链接，处理搜索与关联状态。" label="资料整理说明" /></strong></span></summary>
           <WorkspaceHealthQueue
             :report="workspaceHealth"
             :graph-health="health"
@@ -139,6 +131,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, onMounted, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useRouter } from 'vue-router'
@@ -509,7 +502,7 @@ onMounted(async () => {
 .workspace-identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 19px; border-bottom: 2px solid var(--theme-text); }.workspace-identity h1 { margin: 4px 0 3px; font-size: 25px; line-height: 1.15; letter-spacing: 0; }.workspace-identity p { max-width: min(620px,60vw); margin: 0; overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.workspace-meta { min-width: 0; display: grid; justify-items: end; gap: 7px; }.workspace-quick-actions,.configured-empty>div { display: flex; gap: 6px; flex-wrap: wrap; }.quick-command { min-height: 31px; display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text); background: var(--theme-surface); cursor: pointer; font-size: var(--text-compact); }.quick-command:hover { color: var(--theme-primary); border-color: rgba(var(--theme-primary-rgb),.35); }.quick-command svg { width: 14px; }
 .section-kicker { color: var(--theme-primary); font-size: var(--text-compact); font-weight: 800; }.workspace-signals { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }.signal { height: 27px; display: flex; align-items: center; gap: 5px; padding: 0 8px; border: var(--theme-border); border-radius: 5px; color: var(--theme-text-secondary); background: var(--theme-surface); font-size: var(--text-compact); }.signal svg { width: 13px; }.signal.index-ready { color: var(--status-success); }.signal.index-stale,.signal.index-corrupt,.signal.index-error { color: var(--status-warning); }
 .workspace-loading,.workspace-alert { min-height: 38px; margin-top: 10px; border-radius: 5px; }.workspace-alert { color: var(--status-danger); border-color: var(--status-danger-border); background: var(--status-danger-bg); }.workspace-alert svg { width: 14px; }.workspace-alert button,.text-command { border: 0; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.configured-empty { min-height: 360px; border-bottom: var(--theme-border); }.configured-empty>svg { width: 30px; color: var(--theme-primary); }.configured-empty h2 { margin: 5px 0 0; font-size: 18px; }.configured-empty p { margin: 0 0 8px; color: var(--theme-text-secondary); font-size: var(--text-compact); }.configured-empty button { min-height: 33px; display: inline-flex; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid var(--theme-primary); border-radius: 5px; color: var(--workspace-on-accent); background: var(--theme-primary); cursor: pointer; }.configured-empty button.secondary { color: var(--theme-primary); background: transparent; }.configured-empty button svg { width: 14px; }
-.workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 32px; }.workspace-section { min-width: 0; padding: 25px 0 28px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); column-gap: 20px; }.workspace-section { min-width: 0; padding: 14px 0 18px; border-bottom: var(--theme-border); }.governance-section { grid-column: 1 / -1; }.section-heading { min-height: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }.section-heading h2 { margin: 3px 0 0; font-size: 14px; letter-spacing: 0; }.section-count { min-width: 24px; text-align: right; color: var(--theme-text-secondary); font-size: 11px; }
 .list-label { margin: 9px 0 5px; color: var(--theme-text-secondary); font-size: var(--text-compact); font-weight: 700; }.list-label:first-of-type { margin-top: 0; }.list-label svg { width: 13px; }.list-label span { margin-left: auto; font-weight: 500; }.continue-groups { display: grid; gap: 11px; }.continue-group>.list-label { display: flex; align-items: center; gap: 6px; }.file-list,.task-list { display: grid; }.file-row { min-height: 51px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding-right: 8px; border-top: var(--theme-border); }.file-row:hover { background: rgba(var(--theme-primary-rgb),.045); }.file-open { min-width: 0; min-height: 50px; display: grid; grid-template-columns: 28px minmax(0,1fr) 18px; align-items: center; gap: 10px; padding: 6px 0; border: 0; color: var(--theme-text); background: transparent; cursor: pointer; text-align: left; }.file-icon { width: 26px; height: 26px; display: grid; place-items: center; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.08); border-radius: 5px; }.file-icon svg,.file-action svg { width: 13px; }.file-copy { min-width: 0; display: grid; gap: 3px; }.file-copy strong,.task-list strong,.canvas-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.file-copy small,.task-list small,.canvas-list small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.file-action { color: var(--theme-text-secondary); }
 .health-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: var(--theme-border); border-bottom: var(--theme-border); }.health-grid button { min-height: 65px; display: grid; align-content: center; gap: 4px; border: 0; border-right: var(--theme-border); color: var(--theme-text); background: transparent; cursor: pointer; text-align: center; }.health-grid button:last-child { border-right: 0; }.health-grid span { color: var(--theme-text-secondary); font-size: var(--text-compact); }.health-grid strong { font-size: 17px; }.index-line { min-height: 54px; display: grid; grid-template-columns: 22px minmax(0,1fr) 24px; align-items: center; gap: 8px; border-bottom: var(--theme-border); }.index-line>svg { width: 16px; color: var(--theme-primary); }.index-line>div { display: grid; gap: 2px; }.index-line strong { font-size: var(--text-compact); }.index-line small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.index-line button { border: 0; color: var(--theme-text-secondary); background: transparent; cursor: pointer; }.index-line button svg { width: 13px; }.format-line { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 10px; }.format-line span { display: flex; align-items: center; gap: 5px; padding: 4px 6px; border: var(--theme-border); border-radius: 4px; font-size: var(--text-compact); }.format-line i { color: var(--theme-text-secondary); font-style: normal; }.format-line b { font-weight: 700; }
 .knowledge-pulse { display: grid; gap: 8px; padding: 12px 0; border-bottom: var(--theme-border); }.pulse-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }.pulse-heading>div { display: flex; align-items: baseline; gap: 6px; }.pulse-heading span,.pulse-heading small { color: var(--theme-text-secondary); font-size: var(--text-compact); }.pulse-heading strong { color: var(--theme-primary); font-size: 16px; }.pulse-track { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(var(--theme-primary-rgb),.09); }.pulse-track i { display: block; height: 100%; border-radius: inherit; background: var(--theme-primary); transition: width .25s ease; }.pulse-types,.pulse-nodes { display: flex; flex-wrap: wrap; gap: 5px; }.pulse-types span { padding: 3px 5px; border-radius: 4px; color: var(--theme-text-secondary); background: rgba(var(--theme-primary-rgb),.055); font-size: var(--text-compact); }.pulse-types b { color: var(--theme-text); }.pulse-nodes button { max-width: 150px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 6px; border: 1px solid rgba(var(--theme-primary-rgb),.16); border-radius: 999px; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); }.pulse-nodes button:hover { background: rgba(var(--theme-primary-rgb),.07); }.pulse-nodes span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.pulse-nodes b { min-width: 14px; color: var(--theme-text-secondary); }.pulse-empty { min-height: 30px; padding: 0 8px; border: 1px dashed rgba(var(--theme-primary-rgb),.24); border-radius: 5px; color: var(--theme-primary); background: rgba(var(--theme-primary-rgb),.035); cursor: pointer; font-size: var(--text-compact); }.pulse-guidance { min-height: 42px; display: grid; grid-template-columns: minmax(0,1fr) 16px; align-items: center; gap: 8px; padding: 7px 8px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 5px; color: var(--theme-text); background: rgba(var(--theme-primary-rgb),.045); cursor: pointer; text-align: left; }.pulse-guidance:hover { border-color: rgba(var(--theme-primary-rgb),.35); }.pulse-guidance>span { min-width: 0; display: grid; gap: 2px; }.pulse-guidance b { font-size: var(--text-compact); }.pulse-guidance small { overflow: hidden; color: var(--theme-text-secondary); text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-compact); }.pulse-guidance svg { width: 13px; color: var(--theme-primary); }.pulse-observation-action { justify-self: end; min-height: 26px; padding: 0 8px; border: 1px solid rgba(var(--theme-primary-rgb),.18); border-radius: 5px; color: var(--theme-primary); background: transparent; cursor: pointer; font-size: var(--text-compact); font-weight: 650; }.pulse-observation-action:hover { background: rgba(var(--theme-primary-rgb),.06); }

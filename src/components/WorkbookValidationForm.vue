@@ -8,11 +8,11 @@
       <option value="between">介于</option><option value="notBetween">不介于</option><option value="equal">等于</option><option value="notEqual">不等于</option><option value="lessThan">小于</option><option value="lessThanOrEqual">小于或等于</option><option value="greaterThan">大于</option><option value="greaterThanOrEqual">大于或等于</option>
     </select></label>
     <label>{{ draft.kind === 'list' ? '选项或单元格区域' : draft.kind === 'custom' ? '验证公式' : '值或公式' }}<input v-model="draft.formula1" required autofocus /></label>
-    <p v-if="draft.kind === 'list'">列表填写 "是,否"，或区域 Options!$A$1:$A$10。</p>
+    <WorkspaceHelp v-if="draft.kind === 'list'" label="说明：列表填写 &quot;是,否&quot;，或区域 Opt" text="列表填写 &quot;是,否&quot;，或区域 Options!$A$1:$A$10。" />
     <p v-if="draft.kind === 'custom'">公式以选区左上角为相对引用基准。</p>
     <label v-if="second">第二个值或公式<input v-model="draft.formula2" required /></label>
     <label>输入不符合规则时的提示<textarea v-model="draft.error" rows="2" /></label>
-    <p>留空表示仅保存规则，不阻止当前编辑器中的输入。</p>
+    <WorkspaceHelp label="说明：留空表示仅保存规则，不阻止当前编辑器" text="留空表示仅保存规则，不阻止当前编辑器中的输入。" />
     <label>选中单元格时的提示（可选）<textarea v-model="draft.prompt" rows="2" /></label>
     <p>点击“保存规则”立即写回工作簿；取消不会修改文件。</p>
     <p v-if="error" role="alert">{{ error }}</p>
@@ -23,6 +23,7 @@
 export interface ValidationFields { kind: string; operator: string; formula1: string; formula2: string; error: string; prompt: string }
 </script>
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, reactive, ref } from 'vue'
 const props = defineProps<{ initial: ValidationFields; rangeLabel: string; customDefault: string }>()
 const emit = defineEmits<{ apply: [value: ValidationFields]; cancel: [] }>()

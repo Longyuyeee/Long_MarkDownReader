@@ -2,17 +2,19 @@
   <div class="quick-note-window">
     <header data-tauri-drag-region><strong>快速笔记</strong><span>{{ saving ? '正在保存…' : content ? '未保存' : '空白笔记' }}</span><button aria-label="关闭快速笔记" :disabled="busy" @click="close">×</button></header>
     <div class="capture-toolbar">
-      <label :title="library">资料库<select v-model="library" :disabled="busy || !ready" aria-label="资料库"><option value="" disabled>请选择</option><option v-for="item in store.libraries" :key="item.path" :value="item.path">{{ item.name }}</option></select></label>
-      <label :title="target">保存到<select :value="target" :disabled="busy || !library" aria-label="保存到" @change="selectTarget"><option :value="inbox">收集箱</option><option :value="library">根目录</option><option v-if="target && target !== inbox && target !== library" :value="target">{{ target }}</option><option value="__choose">选择目录…</option></select></label>
+      <label>资料库<select v-model="library" :disabled="busy || !ready" aria-label="资料库"><option value="" disabled>请选择</option><option v-for="item in store.libraries" :key="item.path" :value="item.path">{{ item.name }}</option></select></label>
+      <label>保存到<select :value="target" :disabled="busy || !library" aria-label="保存到" @change="selectTarget"><option :value="inbox">收集箱</option><option :value="library">根目录</option><option v-if="target && target !== inbox && target !== library" :value="target">{{ target }}</option><option value="__choose">选择目录…</option></select></label>
+<label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-if="!store.allNoteTemplates.some(item => item.id === template)" :value="template">当前内容（模板已移除）</option><option v-for="item in store.allNoteTemplates" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
     </div>
-    <div class="capture-destination" :title="target">{{ target ? `当前保存位置：${target}` : '先选择资料库和保存位置' }}</div>
-    <main><div class="capture-composer"><div class="capture-composer-heading"><span>写下想法</span><label>模板<select :value="template" :disabled="busy" aria-label="模板" @change="selectTemplate"><option v-if="!store.allNoteTemplates.some(item => item.id === template)" :value="template">当前内容（模板已移除）</option><option v-for="item in store.allNoteTemplates" :key="item.id" :value="item.id">{{ item.name }}</option></select></label></div><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></div></main>
-    <p role="status">{{ status || '仅点击保存时写入本地文件' }}</p>
-    <footer><n-button size="small" quaternary :disabled="busy" @click="close">丢弃</n-button><label class="after-save">保存后<select v-model="afterSave" :disabled="busy" aria-label="保存后操作"><option value="close">关闭窗口</option><option value="continue">继续记录</option><option value="open">主编辑区打开</option></select></label><n-button size="small" type="primary" :loading="saving" :disabled="(busy && !saving) || !ready" @click="save">保存笔记</n-button></footer>
+    <div v-if="!target" class="capture-destination">先选择资料库和保存位置</div>
+    <main><div class="capture-composer"><textarea ref="editor" v-model="content" :disabled="busy" aria-label="笔记正文" placeholder="写下这一刻的灵感…" autofocus /></div></main>
+    <p v-if="status" role="status">{{ status }}</p>
+    <footer><WorkspaceHelp :text="captureSaveExplanation()" label="笔记保存说明" /><n-button size="small" quaternary :disabled="busy" @click="close">丢弃</n-button><label class="after-save">保存后<select v-model="afterSave" :disabled="busy" aria-label="保存后操作"><option value="close">关闭窗口</option><option value="continue">继续记录</option><option value="open">主编辑区打开</option></select></label><n-button size="small" type="primary" :loading="saving" :disabled="(busy && !saving) || !ready" @click="save">保存笔记</n-button></footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
@@ -33,6 +35,9 @@ const editor = ref<HTMLTextAreaElement>()
 // Retain identity across failed invocations; clear it only after an acknowledged save.
 let operationId = crypto.randomUUID().replace(/-/g, '')
 let operationTarget: { libraryRoot: string; targetDir: string } | null = null
+const captureSaveExplanation = () => operationTarget
+  ? `重试将继续保存到：${operationTarget.targetDir}，避免重复创建笔记。`
+  : target.value ? `保存位置：${target.value}。只有点击保存才会创建文件。` : '选择资料库和保存位置后记录笔记。'
 const inbox = computed(() => inboxDirectory(library.value, store.libraries))
 const pendingInbox = ref<string | null>(null)
 let stopInboxUpdates: (() => void) | undefined
@@ -163,12 +168,12 @@ const save = async () => {
 header { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; background: var(--style-card-gradient, var(--theme-surface)); border-bottom: var(--theme-border); cursor: move; flex-shrink: 0; }
 header strong { font-size: var(--text-md); } header span { margin-left: auto; color: var(--theme-text-secondary); font-size: var(--text-sm); }
 header button { border: 0; background: transparent; color: inherit; font-size: 22px; width: 28px; height: 28px; cursor: pointer; }
-.capture-toolbar { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; padding: 12px 16px 6px; flex-shrink: 0; }
+.capture-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 8px; padding: 8px 12px; flex-shrink: 0; }
 label { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--text-sm); white-space: nowrap; }
 .capture-toolbar label { display: grid; gap: 5px; }
 select { min-width: 0; width: 100%; height: 32px; padding: 0 6px; border: var(--theme-border); border-radius: var(--theme-radius-sm); background: var(--theme-surface); color: var(--theme-text); font: inherit; text-overflow: ellipsis; }
 .capture-destination { flex: none; padding: 0 16px 10px; color: var(--theme-text-secondary); font-size: var(--text-compact); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-main { flex: 1; min-height: 0; display: flex; padding: 0 16px; }
+main { flex: 1; min-height: 0; display: flex; padding: 0 12px; }
 .capture-composer { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; overflow: hidden; border: var(--theme-border); border-radius: var(--theme-radius); background: var(--theme-surface); box-shadow: var(--workflow-panel-shadow, none); }
 .capture-composer-heading { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: var(--theme-border); color: var(--theme-text-secondary); font-size: var(--text-sm); }
 .capture-composer-heading select { max-width: 150px; }

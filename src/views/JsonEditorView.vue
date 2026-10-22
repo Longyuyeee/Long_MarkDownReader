@@ -2,14 +2,14 @@
   <div class="json-workspace" data-testid="json-workspace" :data-dirty="dirty" :data-saving="saving" :data-loading="loading">
     <WorkspaceTabs v-if="!store.isZen && store.tabs.length" />
 
-    <header class="json-toolbar">
+    <header class="workspace-document-header json-toolbar">
       <div class="document-identity">
         <n-button quaternary circle size="small" :title="isExternal ? '返回资料库' : '返回知识库'" @click="leaveEditor">
           <template #icon><n-icon :component="ArrowLeftIcon" /></template>
         </n-button>
         <FileJsonIcon :size="18" />
-        <div class="document-title">
-          <strong>{{ fileName }}</strong>
+        <div class="workspace-document-copy document-title">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
           <span aria-live="polite">
             <template v-if="isExternal">外部文件 · </template>{{ formatLabel }}
             <template v-if="readOnly"> · 只读预览</template>
@@ -265,9 +265,7 @@
           </div>
           <n-tag size="small" :bordered="false">{{ formatBytes(fileSize) }}</n-tag>
         </div>
-        <p class="range-search-help">
-          搜索会按 1 MiB 分块扫描整个文件，只保存最多 100 条结果，不会把全文载入内存。
-        </p>
+        <WorkspaceHelp label="说明：搜索会按 1 MiB 分块扫描整个文" text="搜索会按 1 MiB 分块扫描整个文件，只保存最多 100 条结果，不会把全文载入内存。" />
         <n-input
           v-model:value="rangeSearchQuery"
           size="small"
@@ -319,8 +317,8 @@
         <div class="structure-status range-boundary-note">
           <ShieldCheckIcon :size="17" />
           <div>
-            <strong>小文件能力不受影响</strong>
-            <span>小于 4 MiB 的 JSON 仍可完整编辑、分析和切换树形；大文件保存与结构编辑保持关闭。</span>
+            <strong>小文件能力不受影响<WorkspaceHelp label="说明：小于 4 MiB 的 JSON 仍可" text="小于 4 MiB 的 JSON 仍可完整编辑、分析和切换树形；大文件保存与结构编辑保持关闭。" /></strong>
+
           </div>
         </div>
       </aside>
@@ -387,7 +385,7 @@
           </div>
           <div v-else-if="schemaValidation?.status === 'external-unavailable'" class="schema-state neutral">
             <ShieldCheckIcon :size="17" />
-            <span>仅资料库内文件启用确定性本地 Schema，避免读取未授权的外部相邻文件。</span>
+            <WorkspaceHelp label="说明：仅资料库内文件启用确定性本地 Sch" text="仅资料库内文件启用确定性本地 Schema，避免读取未授权的外部相邻文件。" />
           </div>
           <div v-else-if="schemaValidation?.status === 'large-file-unavailable'" class="schema-state neutral">
             <ShieldCheckIcon :size="17" />
@@ -653,6 +651,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'

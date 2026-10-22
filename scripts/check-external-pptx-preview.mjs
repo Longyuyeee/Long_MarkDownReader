@@ -36,7 +36,7 @@ for (const token of [
   'editBaseline && !isExternal',
   'savePreview && draftOperations.length && !isExternal',
   'baselineLoading.value || isExternal.value',
-  '外部演示文稿 · 只读 · 不会写回',
+  '外部演示文稿只读，不会写回。',
   '<WorkspaceTabs v-if="isExternal',
 ]) requireText(view, token, `external PPTX workspace is missing ${token}`)
 requireText(access, 'resolve_preview(&powerpoint)', 'external PPTX preview authorization regression is missing')

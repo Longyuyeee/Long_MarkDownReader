@@ -7,7 +7,7 @@
       <p class="file-operation-selection">{{ errors.length ? `待重试 ${paths.length} 项` : paths.length === 1 ? filename(paths[0]) : `已选择 ${paths.length} 项` }}</p>
       <label v-if="operation === 'copy' && libraryOptions.length > 1">目标资料库<n-select :value="targetRoot" :options="libraryOptions" :disabled="busy || crossLocked" :consistent-menu-width="false" :aria-label="'目标资料库'" @update:value="chooseLibrary" /></label>
       <label>目标文件夹<div class="directory-field"><n-input v-model:value="target" :disabled="busy || crossLocked" :input-props="{ 'aria-label': '目标文件夹' }" placeholder="资料库内的路径，例如：项目/会议" /><n-button :disabled="busy || crossLocked" @click="chooseDirectory"><FolderOpen :size="16" />选择</n-button></div></label>
-      <small>不存在的目录会自动创建；重名时保留两份。</small>
+      <WorkspaceHelp label="说明：不存在的目录会自动创建；重名时保留两" text="不存在的目录会自动创建；重名时保留两份。" />
       <p v-if="inputError" class="operation-errors" role="alert">{{ inputError }}</p>
       <CrossLibraryCopyPanel v-if="crossLibrary" :active="showTransfer && isCurrent(root)" :source-root="root" :target-root="targetRoot" :paths="paths" :target-dir="target" :before-copy="beforeCrossCopy" :after-copy="afterCrossCopy" @close="showTransfer = false" @lock="crossLocked = $event" />
       <template v-else>
@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from './workspace/WorkspaceHelp.vue'
 import { computed, ref, watch } from 'vue'
 import BatchRenameDialog from './BatchRenameDialog.vue'
 import FileOperationOutcome from './FileOperationOutcome.vue'

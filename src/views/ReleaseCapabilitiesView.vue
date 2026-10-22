@@ -3,6 +3,8 @@
     <WorkspaceManagementHeader
       title="格式能力"
       :subtitle="versionSubtitle"
+      :back-label="route.query.from === 'settings' ? '返回设置' : '返回资料库'"
+      :help="`${externalEditableCount} 类格式可编辑，${externalPreviewCount} 类格式可预览。展开格式可管理打开方式；设为系统默认时按 Windows 提示确认。`"
       @back="returnToSource"
     >
       <div class="release-state" title="社区无签名发布渠道；企业签名发布候选状态独立评估">
@@ -12,14 +14,6 @@
     </WorkspaceManagementHeader>
 
     <WorkspaceManagementContent class="release-content">
-      <section class="external-opening-summary">
-        <FileInput :size="20" />
-        <div>
-          <strong>外部打开与默认应用</strong>
-          <p>{{ externalEditableCount }} 类格式可直接编辑，{{ externalPreviewCount }} 类文件可只读预览，预览格式永不写回。展开格式即可启用或关闭 Long编辑；设为系统默认时，Windows 会显示一次必要的确认。</p>
-        </div>
-        <span class="managed-here"><SlidersHorizontal :size="15" />在此页逐项管理</span>
-      </section>
 
       <div class="toolbar">
         <label class="search-box">
@@ -137,18 +131,18 @@
       </div>
       <div v-else class="empty-state">没有匹配的格式</div>
 
-      <section class="external-gates">
-        <div class="section-heading">
-          <h2>外部证据门禁</h2>
+      <details class="external-gates">
+        <summary class="section-heading">
+          <h2>兼容性与验证详情</h2>
           <span>{{ RELEASE_EXTERNAL_GATES.length }}</span>
-        </div>
+        </summary>
         <div v-for="gate in RELEASE_EXTERNAL_GATES" :key="gate.id" class="gate-row">
           <span class="gate-status">{{ gate.status === 'complete' ? '完成' : '待外部环境' }}</span>
           <strong>{{ gate.id }}</strong>
           <span>{{ gate.evidence }}</span>
           <p>{{ gate.releaseImpact }}</p>
         </div>
-      </section>
+      </details>
     </WorkspaceManagementContent>
   </div>
 </template>
@@ -158,7 +152,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useMessage } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronDown, ExternalLink, FileInput, LoaderCircle, Power, Search, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next'
+import { ChevronDown, ExternalLink, LoaderCircle, Power, Search, ShieldCheck } from 'lucide-vue-next'
 import WorkspaceManagementContent from '../components/workspace/WorkspaceManagementContent.vue'
 import WorkspaceManagementHeader from '../components/workspace/WorkspaceManagementHeader.vue'
 import {
@@ -174,8 +168,6 @@ import { initializeUpdater } from '../services/appUpdater'
 
 const versionSubtitle = computed(() => [
   `Long编辑 v${appVersionIdentity.value.version}`,
-  appVersionIdentity.value.developmentLabel,
-  appVersionIdentity.value.remoteLabel,
   `${RELEASE_CAPABILITY_ROWS.length} 类格式`,
 ].filter(Boolean).join(' · '))
 onMounted(() => { void initializeUpdater() })

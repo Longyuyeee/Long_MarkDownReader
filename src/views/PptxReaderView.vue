@@ -1,15 +1,15 @@
 <template>
   <div class="pptx-workspace">
     <WorkspaceTabs v-if="isExternal && !store.isZen && store.tabs.length" />
-    <header class="pptx-toolbar">
+    <header class="workspace-document-header pptx-toolbar">
       <div class="document-identity">
         <button v-if="isExternal" type="button" class="identity-back" title="返回资料库" @click="router.push({ name: 'LibraryMode' })">
           <ArrowLeftIcon :size="15" />
         </button>
         <PresentationIcon :size="18" />
-        <div>
-          <strong :title="pptxPath">{{ fileName }}</strong>
-          <span>{{ isExternal ? '外部演示文稿 · 只读 · 不会写回' : hasUnappliedInput ? '还有输入未加入更改' : draftOperations.length ? `${draftOperations.length} 个更改尚未保存` : '演示文稿编辑 · 显式保存' }}</span>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
+          <span>{{ isExternal ? '只读' : hasUnappliedInput ? '还有输入未加入更改' : draftOperations.length ? `${draftOperations.length} 个更改尚未保存` : '已同步' }}</span>
         </div>
       </div>
       <div class="toolbar-actions" data-command-strip data-horizontal-wheel="always">
@@ -161,10 +161,10 @@
             <p class="baseline-digest" :title="editBaseline.sourcePackageDigest">
               SHA-256 · {{ editBaseline.sourcePackageDigest.slice(0, 16) }}…
             </p>
-            <p class="muted">保护基线覆盖文本/备注、基础字符样式、图片替代文本与替换、基础形状和幻灯片生命周期编辑；所有操作均在隔离副本中验证。</p>
+            <WorkspaceHelp label="说明：保护基线覆盖文本/备注、基础字符样式" text="保护基线覆盖文本/备注、基础字符样式、图片替代文本与替换、基础形状和幻灯片生命周期编辑；所有操作均在隔离副本中验证。" />
           </details>
           <p v-else-if="baselineError" class="baseline-error">{{ baselineError }}</p>
-          <p v-else class="muted">尚未启动编辑。所有修改先进入内存草稿，只有点击保存并确认后才写入原文件。</p>
+          <WorkspaceHelp v-else label="说明：尚未启动编辑。所有修改先进入内存草稿" text="尚未启动编辑。所有修改先进入内存草稿，只有点击保存并确认后才写入原文件。" />
         </section>
         <section v-if="editBaseline && !isExternal" class="isolated-text-patch">
           <header>
@@ -358,7 +358,7 @@
               </div>
             </div>
             <div class="patch-actions">
-              <small>共享图片、格式变化和新增关系均会被拒绝</small>
+              <WorkspaceHelp label="说明：共享图片、格式变化和新增关系均会被拒" text="共享图片、格式变化和新增关系均会被拒绝" />
               <button
                 type="button"
                 data-testid="c5a-image-preview"
@@ -458,7 +458,7 @@
               </select>
             </label>
             <div class="patch-actions">
-              <small>含文本、关系、组合或连接端点的对象不会列出</small>
+              <WorkspaceHelp label="说明：含文本、关系、组合或连接端点的对象不" text="含文本、关系、组合或连接端点的对象不会列出" />
               <button
                 type="button"
                 data-testid="c5b-shape-delete-preview"
@@ -567,7 +567,7 @@
             <SaveIcon :size="15" />
             <strong>可靠另存副本</strong>
             <span v-if="savedCopyReport" class="verified-badge">已保存</span>
-          </header>
+          <WorkspaceHelp label="说明：支持多项更改一起另存；原件不变，不覆" text="支持多项更改一起另存；原件不变，不覆盖同名文件。" /></header>
           <p class="save-summary">
             {{ draftOperations.length }} 个草稿操作已完成事务验证，共变化
             {{ savePreview.changedParts.length }} 个 OOXML 部件。
@@ -592,7 +592,7 @@
             <SaveIcon v-else :size="14" />
             {{ savingCopy ? '正在落盘并复读' : '另存新 PPTX' }}
           </button>
-          <p class="muted">支持多项更改一起另存；原件不变，不覆盖同名文件。</p>
+
           <ul class="draft-labels" aria-label="待保存的更改"><li v-for="(label, index) in draftLabels" :key="index">{{ label }}</li></ul>
           <p v-if="sourceSaveError" class="baseline-error" role="alert">{{ sourceSaveError }}</p>
           <p v-if="saveCopyError" class="baseline-error" role="alert">{{ saveCopyError }}</p>
@@ -710,6 +710,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
 import { invoke } from '@tauri-apps/api/core'
 import {

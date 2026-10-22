@@ -1,39 +1,39 @@
 <template>
   <section class="legacy-office" data-testid="legacy-office-workspace">
-    <header>
+    <header class="workspace-document-header">
       <div class="identity">
         <FileClock :size="20" aria-hidden="true" />
-        <div>
-          <strong>{{ fileName }}</strong>
-          <span>{{ formatLabel }} · 隔离转换</span>
+        <div class="workspace-document-copy">
+          <strong class="workspace-file-name">{{ fileName }}</strong>
+          <span>{{ formatLabel }} · 格式转换</span>
         </div>
       </div>
-      <button class="icon-button" :disabled="loading || converting" title="重新预检" @click="load">
+      <button class="icon-button" :disabled="loading || converting" title="重新检查" @click="load">
         <RefreshCw :size="16" :class="{ spinning: loading }" />
-        <span>重新预检</span>
+        <span>重新检查</span>
       </button>
     </header>
 
     <div v-if="loading && !report" class="state">
       <RefreshCw :size="20" class="spinning" />
-      <span>正在只读检查 OLE 复合容器</span>
+      <span>正在检查文件格式</span>
     </div>
     <div v-else-if="loadError" class="state error" role="alert">
       <ShieldAlert :size="22" />
-      <div><strong>预检未通过</strong><p>{{ loadError }}</p></div>
+      <div><strong>文件检查未通过</strong><p>{{ loadError }}</p></div>
       <button @click="load">重试</button>
     </div>
     <main v-else-if="report">
       <div class="status" :class="{ blocked: !report.conversionEligible }">
         <component :is="report.conversionEligible ? ShieldCheck : ShieldAlert" :size="22" />
         <div>
-          <strong>{{ report.conversionEligible ? `可以生成 ${targetLabel} 副本` : '转换已被风险策略阻止' }}</strong>
-          <span>预检和转换均不修改源文件，也不覆盖已有目标</span>
+          <strong>{{ report.conversionEligible ? `可以生成 ${targetLabel} 副本` : '此文件暂时无法转换' }}<WorkspaceHelp label="说明：预检和转换均不修改源文件，也不覆盖已" text="预检和转换均不修改源文件，也不覆盖已有目标" /></strong>
+
         </div>
       </div>
 
       <details class="file-details">
-      <summary>源文件详情与完整校验摘要</summary>
+      <summary>源文件详情</summary>
       <dl>
         <div><dt>位置</dt><dd class="file-path">{{ documentPath }}</dd></div>
         <div><dt>格式</dt><dd>{{ formatLabel }}</dd></div>
@@ -48,7 +48,7 @@
       </details>
 
       <section v-if="report.riskCodes.length" class="risk-section">
-        <h2>风险预检</h2>
+        <h2>文件检查</h2>
         <div class="risk-list">
           <span v-for="risk in report.riskCodes" :key="risk" :class="{ clear: risk === 'none-detected' }">
             {{ riskLabel(risk) }}
@@ -78,7 +78,7 @@
             <span>{{ converting ? '转换中' : '生成副本' }}</span>
           </button>
         </div>
-        <p>目标必须位于当前知识库内且尚不存在。外部转换器只接触临时源副本。</p>
+        <WorkspaceHelp label="说明：目标必须位于当前知识库内且尚不存在。" text="目标必须位于当前知识库内且尚不存在。外部转换器只接触临时源副本。" />
       </section>
 
       <div v-if="conversionError" class="result error" role="alert">
@@ -99,6 +99,7 @@
 </template>
 
 <script setup lang="ts">
+import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { invoke } from '@tauri-apps/api/core'
 import {
   CircleCheck,
