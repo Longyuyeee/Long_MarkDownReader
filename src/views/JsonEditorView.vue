@@ -136,6 +136,7 @@
           <div
             ref="treeViewport"
             class="tree-rows"
+            tabindex="-1"
             role="tree"
             aria-label="JSON 节点"
             @scroll.passive="handleTreeScroll"
@@ -655,6 +656,7 @@ import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { basicSetup } from 'codemirror'
+import { undo, redo } from '@codemirror/commands'
 import { json } from '@codemirror/lang-json'
 import { foldAll, unfoldAll } from '@codemirror/language'
 import { openSearchPanel } from '@codemirror/search'
@@ -1812,6 +1814,9 @@ const moveArrayItem = async (entry: JsonPathEntry, direction: -1 | 1) => {
       byteOffsetToCodeUnit(result.content, result.start), () => {
         movedItemFocus = { source: result.content, start: result.start }
         selectedTreeStart.value = result.start
+        void nextTick(() => {
+          if (session.owns(owner) && viewMode.value === 'tree') treeViewport.value?.focus({ preventScroll: true })
+        })
       })
   } catch (cause) {
     if (session.owns(owner)) message.error(`移动数组项失败：${errorMessage(cause)}`)
@@ -1925,7 +1930,21 @@ watch(viewMode, async mode => {
   await nextTick()
   measureTreeViewport()
 })
+const handleTreeHistoryKey = (event: KeyboardEvent) => {
+  if (!editor || viewMode.value !== 'tree' || loading.value || saving.value || readOnly.value
+    || !session.hasDocument() || !(event.ctrlKey || event.metaKey) || event.altKey || document.body.inert
+    || document.querySelector('.n-modal,.n-dialog')) return
+  const target = event.target instanceof Element ? event.target : null
+  if (target?.closest('input,textarea,[contenteditable="true"]')) return
+  const key = event.key.toLowerCase()
+  const command = key === 'z' ? (event.shiftKey ? redo : undo) : key === 'y' ? redo : null
+  if (!command) return
+  event.preventDefault(); event.stopImmediatePropagation()
+  command(editor)
+}
+
 onMounted(async () => {
+  window.addEventListener('keydown', handleTreeHistoryKey, true)
   await nextTick()
   createEditor()
   await load()
@@ -1948,6 +1967,7 @@ onBeforeUnmount(() => {
   editor = null
 
   window.removeEventListener('resize', measureTreeViewport)
+  window.removeEventListener('keydown', handleTreeHistoryKey, true)
 
 })
 </script>
