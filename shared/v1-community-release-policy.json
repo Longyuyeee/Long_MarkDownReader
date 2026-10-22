@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "stage": "V1",
   "appVersion": "1.2.4",
-  "releaseCandidate": false,
+  "releaseCandidate": true,
   "channel": "community-unsigned",
   "generatedAt": "2026-10-23",
-  "currentStatus": "v1.2.4-community-release-quality-gate-pending",
+  "currentStatus": "v1.2.4-community-release-ready-to-publish",
   "supersedesAuthenticodeGateForThisChannel": "R5N",
   "userDecision": {
     "authenticodeRequired": false,
@@ -24,22 +24,22 @@
     "releaseApi": "https://api.github.com/repos/Longyuyeee/Long_MarkDownReader/releases/latest"
   },
   "gates": {
-    "frontendBuildPassed": false,
-    "rustLockedCheckPassed": false,
-    "productionDependencyAuditPassed": false,
-    "msiBuilt": false,
-    "nsisBuilt": false,
-    "artifactHashesVerified": false,
-    "localRuntimeSmokePassed": false,
-    "installedLifecyclePassed": false,
-    "qualityGatePassed": false,
+    "frontendBuildPassed": true,
+    "rustLockedCheckPassed": true,
+    "productionDependencyAuditPassed": true,
+    "msiBuilt": true,
+    "nsisBuilt": true,
+    "artifactHashesVerified": true,
+    "localRuntimeSmokePassed": true,
+    "installedLifecyclePassed": true,
+    "qualityGatePassed": true,
     "githubReleasePublished": false
   },
   "patchValidation": {
     "previousPublicVersion": "1.2.3",
     "previousInstalledLifecycleEvidenceVersion": "1.0.5",
     "previousEvidenceInheritedAsCurrent": false,
-    "fullInstalledLifecycleRerun": false,
+    "fullInstalledLifecycleRerun": true,
     "managedUpdaterFirstRelease": false,
     "v1_0_4RequiresManualMigration": true,
     "managedUpdaterUpgradePath": "1.2.3-to-1.2.4-pending",
@@ -50,7 +50,30 @@
     "url": "https://github.com/Longyuyeee/Long_MarkDownReader/releases/tag/v1.2.4",
     "assetMode": "managed-nsis-msi-with-sha256"
   },
-  "candidate": null,
+  "candidate": {
+    "artifactSourceCommit": "797afe406cf3101c8e7070b68bcc024e462464e6",
+    "qualityGateCommand": "npm run ci:patch-release",
+    "artifactBuildRunId": 39830040110,
+    "hostedInstalledLifecycleRunId": 39834024632,
+    "artifacts": [
+      {
+        "target": "msi",
+        "fileName": "LongEdit_1.2.4_x64_zh-CN.msi",
+        "sizeBytes": 77918208,
+        "sha256": "011ac6e4f26433273bc0d2cd9cfaf7266686b52091de6e290ea89cd1f3a7e61e",
+        "authenticodeStatus": "NotSigned",
+        "sourceFileName": "Long编辑_1.2.4_x64_zh-CN.msi"
+      },
+      {
+        "target": "nsis",
+        "fileName": "LongEdit_1.2.4_x64-setup.exe",
+        "sizeBytes": 68590166,
+        "sha256": "1fe28153dcc181f01ff9f5e7876a6a482a5c68274a40cad630be15c8855b689d",
+        "authenticodeStatus": "NotSigned",
+        "sourceFileName": "Long编辑_1.2.4_x64-setup.exe"
+      }
+    ]
+  },
   "release": null,
   "releaseWarnings": [
     "windows-unknown-publisher-or-smartscreen-may-appear",
@@ -97,5 +120,5 @@
     "v1.2.2-to-v1.2.3-managed-update-observation-pending",
     "v1.2.3-to-v1.2.4-managed-update-observation-pending"
   ],
-  "nextAction": "validate-and-build-v1.2.4-installers"
+  "nextAction": "publish-verified-v1.2.4"
 }
