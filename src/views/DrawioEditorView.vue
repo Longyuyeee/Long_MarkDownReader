@@ -158,6 +158,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { useWindowDraft } from '../services/windowDrafts'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
@@ -471,6 +472,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('beforeunload', beforeUnload)
 })
+
+useWindowDraftSnapshot(() => rememberDrawioViewState())
 </script>
 
 <style scoped>

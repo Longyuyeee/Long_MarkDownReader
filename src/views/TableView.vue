@@ -198,6 +198,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, recordWindowDraftActivity, useWindowDraft } from '../services/windowDrafts'
@@ -1270,6 +1271,8 @@ useContextCommands(() => JSON.stringify([store.libraryPath,tablePath.value,isExt
     ...(!isExternal.value ? [{id:'table-save',title:'保存表格',description:'保存当前表格草稿',keywords:'保存 save',run:()=>saveTable()}] : []),
   ]
 })
+
+useWindowDraftSnapshot(handleScroll)
 </script>
 
 <style scoped>

@@ -7,7 +7,8 @@ import { test } from 'node:test'
 let cleanupTarget
 const sessionHelpers={}
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/utils/workSessions.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports:sessionHelpers})
-const box = { exports: {}, require: name => name==='../utils/workSessions'?sessionHelpers:({ ...Vue, onBeforeUnmount: fn => cleanupTarget.push(fn) }) }
+const listeners = new Set()
+const box = { exports: {}, window:{addEventListener:(_name,fn)=>listeners.add(fn),removeEventListener:(_name,fn)=>listeners.delete(fn)}, require: name => name==='../utils/workSessions'?sessionHelpers:({ ...Vue, onBeforeUnmount: fn => cleanupTarget.push(fn) }) }
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/composables/useSearchReturn.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, box)
 function harness(root, paging=false) {
   const cleanups = []; cleanupTarget = cleanups
@@ -20,6 +21,14 @@ function harness(root, paging=false) {
   return { state, query, types, running, failed, keys, library, viewport, node, loaded,sort,more,restored:()=>restored, focus: () => focus, shown: () => shown, stop: () => { cleanups.forEach(fn => fn()); scope.stop() } }
 }
 const settle = async () => { await Vue.nextTick(); await Vue.nextTick(); await Promise.resolve() }
+test('a native canonical-root move keeps the live search selection on the renamed file and disposes its listener',async()=>{
+ const h=harness('C:/Search-Move'),locator=['C:/Search-Move/old.pdf','pdf','annotation',2,null,'a',null],key=JSON.stringify([...locator,'excerpt'])
+ h.query.value='研究';h.keys.value=[key];h.state.remember(key)
+ const target='C:/Search-Move/new.pdf'
+ for(const listener of listeners)listener({detail:{root:'c:/search-move',mapPath:path=>path===locator[0]?target:path}})
+ h.keys.value=[JSON.stringify([target,...locator.slice(1),'new excerpt'])];await settle();assert.equal(JSON.parse(h.state.selectedKey.value)[0],target)
+ h.stop();assert.equal(listeners.size,0)
+})
 test('leaving and reopening restores query, filters, selected result and scroll after fresh results', async () => {
   const first = harness('/return-a'); first.query.value = '预算'; first.types.value = ['pdf']; first.node.scrollTop = 420; first.state.remember('page-5'); first.stop()
   const back = harness('/return-a'); back.running.value = true; back.state.restore(); await settle()

@@ -710,6 +710,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useWindowDraft } from '../services/windowDrafts'
 import { invoke } from '@tauri-apps/api/core'
@@ -2713,6 +2714,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', warnBeforeUnload)
   store.clearRelationObjectFocus()
 })
+
+useWindowDraftSnapshot(() => rememberPptxViewState())
 </script>
 
 <style scoped>

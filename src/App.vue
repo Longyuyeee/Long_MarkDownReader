@@ -101,6 +101,7 @@ import { normalizeDisplayPreferences, documentTypographyStyle, VISUAL_STYLE_RADI
 import { openManagedFile, openManagedObject } from './services/fileNavigation'
 import { windowDraftCount, windowDraftActivity, windowReferenceDrafts } from './services/windowDrafts'
 import { createFileMoveProtection, canRetainMovedDraft, movedPath, pathsOverlap, type FileMoveNotice } from './services/fileMoveProtection'
+import { continueFileReading } from './services/fileReadingContinuity'
 import { createSerialDraftReporter } from './utils/serialDraftReports'
 import { isTauriRuntime } from './services/tauriRuntime'
 
@@ -486,6 +487,7 @@ const moveProtection = createFileMoveProtection({
   referenceDrafts: () => [...store.tabs.filter(tab => tab.isDirty && findFileFormat(tab.path)?.id === 'markdown').map(tab => ({ path: tab.path, content: tab.content })), ...windowReferenceDrafts()],
   dirtyPaths: () => [...store.tabs.filter(tab => tab.isDirty).map(tab => tab.path), ...(store.isTempDirty ? [String(router.currentRoute.value.query.path || '')] : [])],
   completed: async notice => {
+    if (continueFileReading(notice)) routeErrorMessage.value = '文件位置已更新；部分阅读记录未能接续，原记录仍保留。当前文稿可继续使用。'
     for (const tab of store.tabs) {
       const path = movedPath(tab.path, notice)
       if (path !== tab.path) { tab.path = path; tab.id = path; tab.title = path.split(/[\\/]/).pop() || tab.title }

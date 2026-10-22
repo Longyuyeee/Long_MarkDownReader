@@ -1813,6 +1813,7 @@ const destinationMenuOptions = () => [
   { label: '最近操作…', key: 'file-operation-history', disabled: fileOperationBusy.value, icon: fileMenuIcon(UndoFileIcon) },
 ]
 const beforeFileOperation = async (paths: string[], operation: FileOperation) => {
+  snapshotWindowDrafts()
   if (fileDropBusy.value) { message.info('文件正在移动，请稍后再操作'); return false }
   const targets = allTabs.value.filter(tab => paths.some(path => sameLibrary(tab.path, path) || fileStylePathKey(tab.path).startsWith(fileStylePathKey(path) + '/')))
   if (targets.some(tab => hasPendingMainTextSave(tab.path))) { message.info('文件正在保存，请稍后再操作'); return false }
@@ -2765,6 +2766,7 @@ const captureEditorPosition = () => {
   const element = editorScroller()
   if (lastLoadedPath && element) rememberWorkspaceViewState(lastLoadedPath, { scrollTop: element.scrollTop, scrollLeft: element.scrollLeft })
 }
+useWindowDraftSnapshot(captureEditorPosition)
 const rememberEditorScroll = (event: Event) => {
   if (!(event.target instanceof HTMLElement) || !event.target.matches('.vditor-reset, .vditor-sv') || !lastLoadedPath) return
   clearTimeout(readingPositionTimer); readingPositionTimer = setTimeout(captureEditorPosition, 120)
@@ -3746,6 +3748,10 @@ const refreshAfterFileMove = (event: Event) => {
   if (!sameLibrary(notice.root, store.libraryPath)) return
   pending.push((async () => {
     if (!notice.contentOnly) {
+      if (searchPreviewResult.value) {
+        const path = replaceRenamedPath(searchPreviewResult.value.path, notice.oldPath, notice.newPath)
+        if (path !== searchPreviewResult.value.path) searchPreviewResult.value = { ...searchPreviewResult.value, path, title: fileDisplayName(path) }
+      }
       selectedKeys.value = selectedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
       expandedKeys.value = expandedKeys.value.map(path => replaceRenamedPath(path, notice.oldPath, notice.newPath))
     }

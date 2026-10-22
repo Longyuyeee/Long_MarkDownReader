@@ -105,5 +105,20 @@ export function useSearchReturn(options: {
   watch([options.viewport, options.running, options.failed, options.resultKeys], () => { void apply() }, { flush: 'post' })
   onBeforeUnmount(() => { save(); disposed = true })
   const reconcile = () => { pending = true; focusResult = false; void apply() }
+  const relocate = (event: Event) => {
+    const { root, mapPath } = (event as CustomEvent<{ root: string; mapPath: (path: string) => string }>).detail
+    const identity = (path: string) => path.replace(/\\/g, '/').replace(/^\/\/\?\/UNC\//i, '//').replace(/^\/\/\?\//, '').replace(/\/+$/, '').toLowerCase()
+    for (const [path, cached] of sessions) if (identity(path) === identity(root) && cached.selection) cached.selection = [mapPath(cached.selection[0]), ...cached.selection.slice(1)] as SearchSelection
+    if (identity(root) !== identity(options.root())) return
+    const locator = searchSelectionMetadata(selectedKey.value) || selection
+    if (locator) {
+      selection = [mapPath(locator[0]), ...locator.slice(1)] as SearchSelection
+      selectedKey.value = ''; pending = true
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('longedit:reading-paths-changed', relocate)
+    onBeforeUnmount(() => window.removeEventListener('longedit:reading-paths-changed', relocate))
+  }
   return { selectedKey, notice, remember, restore, returnToResults, reconcile }
 }

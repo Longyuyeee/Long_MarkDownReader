@@ -186,6 +186,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useResponsiveInspector } from '../composables/useResponsiveInspector'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
@@ -834,6 +835,8 @@ onBeforeUnmount(() => {
 })
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to, from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
+
+useWindowDraftSnapshot(() => rememberMindMapViewState())
 </script>
 
 <style scoped>

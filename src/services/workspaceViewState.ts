@@ -23,6 +23,9 @@ const VIEW_STORAGE_KEY = 'longedit.view-state.v1'
 const SESSION_VIEW_KEY = 'longedit.session-view-state.v1'
 const viewIdentity = (path: string) => path.replace(/^\\\\\?\\UNC\\/i, '//').replace(/^\\\\\?\\/, '').replace(/\\/g, '/').toLowerCase()
 let staged: Map<string, WorkspaceViewState> | undefined
+// Route watchers/unmount hooks can finish after a successful move. Their old
+// owner must not resurrect a stale bookmark (which would also break Undo Move).
+const retiredViewOwners = new Set<string>()
 // Reading metadata contains locators only; annotation text and pending comments
 // remain owned by the sidecar save flow, never the session/view cache.
 const safePdfAnnotations = (value: unknown): WorkspaceViewState['pdfAnnotations'] => {
@@ -47,6 +50,67 @@ const safeView = (state: WorkspaceViewState): WorkspaceViewState => {
   const pdfAnnotations = safePdfAnnotations(state.pdfAnnotations)
   if (pdfAnnotations) view.pdfAnnotations = pdfAnnotations
   return view
+}
+export const workspaceViewMetadata = safeView
+
+// Each receipt is applied to the original keys once, never to an already mapped
+// destination. Keep destination records when a deleted/replaced file had a view.
+export const relocateViewEntries = <T>(entries: Record<string, T>, mapPath: (path: string) => string) => {
+  const next = { ...entries }, occupied = new Map(Object.keys(entries).map(path => [viewIdentity(path), path]))
+  let conflicts = 0
+  for (const [path, value] of Object.entries(entries)) {
+    const target = mapPath(path)
+    if (target === path) continue
+    const existing = occupied.get(viewIdentity(target))
+    if (existing && existing !== path) { conflicts++; continue }
+    delete next[path]; next[target] = value
+    occupied.set(viewIdentity(target), target)
+  }
+  return { entries: next, conflicts }
+}
+
+export const relocateWorkspaceViewStates = (mapPath: (path: string) => string) => {
+  let issues = 0
+  const retire = (paths: string[]) => {
+    for (const path of paths) {
+      const target = mapPath(path)
+      if (target === path) continue
+      retiredViewOwners.add(viewIdentity(path)); retiredViewOwners.delete(viewIdentity(target))
+    }
+    while (retiredViewOwners.size > 256) retiredViewOwners.delete(retiredViewOwners.values().next().value!)
+  }
+  // Persistent metadata is changed before live state. Corrupt records are kept
+  // verbatim, and a quota error must not turn a completed move into a failure.
+  for (const key of [VIEW_STORAGE_KEY, SESSION_VIEW_KEY]) {
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw)
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw Error('Invalid reading metadata')
+      retire(Object.keys(parsed))
+      const result = relocateViewEntries(parsed, mapPath)
+      issues += result.conflicts
+      if (JSON.stringify(result.entries) !== raw) localStorage.setItem(key, JSON.stringify(result.entries))
+    } catch { issues++ }
+  }
+  retire([...states.keys(), ...(staged?.keys() || [])])
+  const live = relocateViewEntries(Object.fromEntries(states), mapPath)
+  issues += live.conflicts
+  // Moving a location never transfers in-memory conversion drafts/selection.
+  for (const path of Object.keys(live.entries)) if (!states.has(path)) live.entries[path] = safeView(live.entries[path])
+  const draftOwners = [...states].filter(([path, value]) => mapPath(path) !== path && (value.draft !== undefined || value.selection !== undefined))
+  for (const [path, value] of draftOwners) {
+    const target = mapPath(path)
+    if (!states.has(target)) delete live.entries[target]
+    live.entries[path] = value
+  }
+  states.clear(); for (const [path, value] of Object.entries(live.entries)) states.set(path, value)
+  if (staged) {
+    const result = relocateViewEntries(Object.fromEntries(staged), mapPath)
+    issues += result.conflicts
+    staged = new Map(Object.entries(result.entries).map(([path, value]) => [viewIdentity(path), safeView(value)]))
+  }
+  return issues
 }
 const readStoredViews = (): Record<string, WorkspaceViewState> => {
   try {
@@ -110,7 +174,7 @@ export const restoreWorkspaceViewStates = (views: Record<string, WorkspaceViewSt
 }
 
 export const rememberWorkspaceViewState = (path: string, state: WorkspaceViewState) => {
-  if (!path) return
+  if (!path || retiredViewOwners.has(viewIdentity(path))) return
   states.delete(path)
   states.set(path, { ...state, pdfAnnotations: safePdfAnnotations(state.pdfAnnotations) })
   try {
@@ -132,6 +196,10 @@ export const rememberWorkspaceViewState = (path: string, state: WorkspaceViewSta
 }
 
 export const recallWorkspaceViewState = (path: string) => {
-  const state = states.get(path) || stagedViews().get(viewIdentity(path)) || readStoredViews()[path]
+  const id = viewIdentity(path)
+  // Opening that location again establishes a new owner, including a recreated
+  // file or the destination of Undo Move. Old components never call recall.
+  retiredViewOwners.delete(id)
+  const state = states.get(path) || [...states].find(([key]) => viewIdentity(key) === id)?.[1] || stagedViews().get(id) || Object.entries(readStoredViews()).find(([key]) => viewIdentity(key) === id)?.[1]
   return state ? { ...state, pdfAnnotations: safePdfAnnotations(state.pdfAnnotations) } : undefined
 }

@@ -315,6 +315,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
@@ -1621,6 +1622,8 @@ onBeforeUnmount(() => {
 })
 onBeforeRouteLeave(() => mayLeave())
 onBeforeRouteUpdate((to,from) => (to.query.path === from.query.path && to.query.external === from.query.external) || mayLeave())
+
+useWindowDraftSnapshot(() => rememberCanvasViewState())
 </script>
 
 <style scoped>

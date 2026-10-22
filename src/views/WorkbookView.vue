@@ -890,6 +890,7 @@
 </template>
 
 <script setup lang="ts">
+import { useWindowDraftSnapshot } from '../services/windowDrafts'
 import WorkspaceHelp from '../components/workspace/WorkspaceHelp.vue'
 import { useContextCommands } from '../services/contextCommands'
 import { beginWindowSave, useWindowDraft } from '../services/windowDrafts'
@@ -5194,6 +5195,10 @@ useContextCommands(() => JSON.stringify([store.libraryPath,workbookPath.value,is
     ...(!isExternal.value ? [{id:'workbook-save',title:'保存工作簿',description:'保存当前工作簿草稿',keywords:'保存 save',run:()=>saveWorkbook()}] : []),
   ]
 })
+
+useWindowDraftSnapshot(() => { if (scrollRef.value) rememberWorkspaceViewState(workbookPath.value, {
+  scrollTop: scrollRef.value.scrollTop, scrollLeft: scrollRef.value.scrollLeft, section: activeSheet.value,
+}) })
 </script>
 
 <style scoped>
