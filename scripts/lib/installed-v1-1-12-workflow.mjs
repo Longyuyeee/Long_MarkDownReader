@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -84,7 +85,7 @@ export async function runInstalledV1112Workflow({send,evaluate,navigate,capture,
   await snapshotDraft();check(13);await button('完成');await ui.clickText('.app-navigation a','资料库');await ui.waitFor(`!!document.querySelector('.library-mode')`,'back to unsaved document');await snapshotDraft();await ui.clickText('button','保存');await ui.waitFor('window.__v1112Draft.isDirty===false','explicit final user save');assert.ok((await fs.readFile(report.draftPath,'utf8')).includes('请不要为备份自动保存'));report.explicitSaveAfterChecks=true
   await ui.clickText('.app-navigation a','设置');await ui.clickText('.settings-navigation button','资料库');await ui.clickTarget(`[...document.querySelectorAll('.library-item')].find(e=>e.querySelector('.lib-path')?.textContent.trim()===${q(afterConfig.libraries.find(l=>key(l.path)===key(restored)).path)})?.querySelector('.lib-actions button:nth-child(2)')`);await ui.clickText('.n-dialog button','确认切换');await ui.waitFor(`(${key.toString()})(${store}.activeLibraryPath)===${q(key(restored))}`,'explicit switch to restored library')
   await navigate('#/library?path='+encodeURIComponent(restoredNote),'.library-mode','open restored Markdown normally');await ui.waitFor(`(${editor})?.textContent.includes('恢复后继续工作')`,'actual restored body');report.markdownBodyVisible=true;report.editorModes={before:await evaluate(`${store}.editorMode`)}
-  const chooseMode=async mode=>{await ui.click('.inline-mode');await ui.clickText('.n-dropdown-option-body__label',({wysiwyg:'所见即所得',ir:'即时渲染 IR',sv:'源码编辑'})[mode]);await ui.waitFor(`${store}.editorMode===${q(mode)}&&!!(${editor})`,'explicit toolbar editor mode '+mode)}
+  const chooseMode=async mode=>{await chooseInstalledMarkdownMode({send,evaluate},({wysiwyg:'所见即所得',ir:'即时渲染 IR',sv:'源码编辑'})[mode]);await ui.waitFor(`${store}.editorMode===${q(mode)}&&!!(${editor})`,'explicit toolbar editor mode '+mode)}
   // The predecessor deliberately uses source mode. Rendering an image is a
   // separate ordinary user action, never a hidden preference/state override.
   if(report.editorModes.before!=='wysiwyg')await chooseMode('wysiwyg')

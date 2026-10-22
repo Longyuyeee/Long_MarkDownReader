@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -23,7 +24,7 @@ export async function runInstalledV1124Workflow({send,evaluate,navigate,capture,
   await fs.mkdir(path.dirname(image),{recursive:true});await fs.writeFile(path.join(folder,'.v119-installed-owner'),'owned chapter fixture');await fs.writeFile(file,sectionFixture);await fs.writeFile(other,'# 对照资料\n\n其他文档保持原样。\n');await fs.writeFile(image,writingImageFixture())
   const original=await fs.readFile(file,'utf8'),imageBefore=sha(await fs.readFile(image));await go(file);await ui.click('#tab-outline')
   for(const[mode,label]of [['wysiwyg','所见即所得'],['ir','即时渲染 IR'],['sv','源码编辑']]){
-   await ui.click('.inline-mode');await ui.clickText('.n-dropdown-option-body__label',label);await ui.waitFor(`${store}.editorMode===${q(mode)}&&document.querySelectorAll('#vditor-lib .vditor-${mode} [data-longedit-section]').length===5&&!document.querySelector('.inline-mode').disabled`,'ready '+mode+' chapter outline')
+   await chooseInstalledMarkdownMode({send,evaluate},label);await ui.waitFor(`${store}.editorMode===${q(mode)}&&document.querySelectorAll('#vditor-lib .vditor-${mode} [data-longedit-section]').length===5&&!document.querySelector('.inline-mode').disabled`,'ready '+mode+' chapter outline')
    await append('需要保留的章节草稿 '+mode);await ui.clickTarget(row(1));await ui.waitFor(`(()=>{const row=${row(1)};return row&&document.querySelector('[data-longedit-section="'+row.dataset.sectionKey+'"]')})()`,'exact second duplicate target '+mode)
    const baseline=await draft(),item={mode,outlineExact:await evaluate(`document.querySelectorAll('.compact-outline-tree [data-section-key]').length===5`)}
    await menu(1,'上移章节…');await ui.waitFor('!!document.querySelector(".markdown-section-preview")','chapter preview');await cancel();item.cancelExact=(await draft())===baseline&&await fs.readFile(file,'utf8')===original;assert.equal(item.cancelExact,true)

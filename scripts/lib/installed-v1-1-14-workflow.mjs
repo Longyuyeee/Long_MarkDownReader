@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -17,7 +18,7 @@ export async function runInstalledV1114Workflow({send,evaluate,navigate,capture,
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),evidenceLevel:'installed-writing-native-pickers-print-and-disk',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,status:'running',checks:[]}
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000}),editor=visibleMarkdownInput('#vditor-lib'),check=i=>report.checks.push({id:writingDeliveryChecks[i],status:'passed'})
  const folder=path.join(library,'v1114-writing-'+crypto.randomUUID()),source=path.join(folder,'交付 草稿.md'),shared=path.join(folder,'共享 图片.png'),unselected=path.join(folder,'别改我的正文.md'),html=path.join(folder,'文章 交付.html'),md=path.join(folder,'仅正文.md'),pdf=path.join(folder,'真实 打印.pdf'),cancel=path.join(folder,'取消后不能出现.md'),movedFolder=path.join(folder,'换个目录阅读'),movedHtml=path.join(movedFolder,'独立文章.html')
- const tab=()=>`${store}.tabs.find(t=>t.path===${q(source)})`,mode=async m=>{await ui.click('.inline-mode');await ui.clickText('.n-dropdown-option-body__label',{sv:'源码编辑',wysiwyg:'所见即所得',ir:'即时渲染 IR'}[m]);await ui.waitFor(`${store}.editorMode===${q(m)}&&!!(${editor})`,'actual editor mode '+m)}
+ const tab=()=>`${store}.tabs.find(t=>t.path===${q(source)})`,mode=async m=>{await chooseInstalledMarkdownMode({send,evaluate},{sv:'源码编辑',wysiwyg:'所见即所得',ir:'即时渲染 IR'}[m]);await ui.waitFor(`${store}.editorMode===${q(m)}&&!!(${editor})`,'actual editor mode '+m)}
  const button=t=>ui.clickText('.writing-delivery-dialog button',t)
  const picker=async(title,target,action,tag,cancelled=false)=>{
   const file=path.join(output,`v1114-${tag}-picker.json`),args=['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(repoRoot,'scripts/select-hosted-session-file.ps1'),'-Executable',installedExecutable,'-Title',title,'-SelectedPath',target,'-OwnerRoot',folder,'-Report',file,...(cancelled?['-Cancel']:[])]

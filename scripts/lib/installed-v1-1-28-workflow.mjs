@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -15,7 +16,7 @@ export async function runInstalledV1128Workflow({send,evaluate,navigate,capture,
  const ui=nativeUserInput({send,evaluate},{timeoutMs:60000,stableMs:500}),invoke=(command,args={})=>evaluate(`window.__TAURI_INTERNALS__.invoke(${q(command)},${q(args)})`),option=text=>`[...document.querySelectorAll('.n-dropdown-option-body__label')].filter(e=>e.getClientRects().length&&e.textContent.trim()===${q(text)}).at(-1)`
  const report={appVersion,sourceCommit,installerSha256,harnessSourceCommit:process.env.GITHUB_SHA,executableSha256:sha(await fs.readFile(installedExecutable)),fixtureDirectory:directory,status:'running',evidenceLevel:'installed-trusted-input-native-reference-and-relationship-repair',nativeBridgeMocked:false,desktopInputUsed:false,sourceUserContentIncluded:false,checks:[],outputs:[]}
  const mark=i=>report.checks.push({id:referenceRepairChecks[i],status:'passed'}),take=async(bytes,fileName)=>{await fs.writeFile(path.join(output,fileName),bytes,{flag:'wx'});report.outputs.push({fileName,sizeBytes:bytes.length,sha256:sha(bytes)})},tab=`${store}.tabs.find(t=>window.__v1128Key(t.path)===${q(key(note))})`
- const mode=async value=>{await ui.click('.inline-mode');await ui.clickTarget(option({wysiwyg:'所见即所得',ir:'即时渲染 IR',sv:'源码编辑'}[value]));await ui.waitFor(`${store}.editorMode===${q(value)}&&!!(${editor})`,'actual Markdown mode '+value)}
+ const mode=async value=>{await chooseInstalledMarkdownMode({send,evaluate},{wysiwyg:'所见即所得',ir:'即时渲染 IR',sv:'源码编辑'}[value]);await ui.waitFor(`${store}.editorMode===${q(value)}&&!!(${editor})`,'actual Markdown mode '+value)}
  const choose=async()=>{await ui.click(modal+' .relation-file-picker .n-base-selection');await ui.fill(modal+' input.n-base-selection-input','资料.txt');await ui.clickTarget(`[...document.querySelectorAll('.n-base-select-option')].find(e=>e.getClientRects().length&&e.textContent.includes(${q(fixture.newPath)}))`);await ui.waitFor(`!![...document.querySelectorAll('${modal} button')].find(e=>e.textContent.trim()==='确认修复'&&!e.disabled)`,'chosen source checked and ready')}
  const openRelation=async()=>{await ui.click('.manual-file-relations article button[aria-label^="关系操作"]');await ui.clickTarget(option('核对来源…'));await ui.waitFor(`!!document.querySelector('${modal}')`,'targeted relationship source review');await choose()}
  let failure

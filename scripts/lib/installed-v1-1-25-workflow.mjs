@@ -1,3 +1,4 @@
+import {chooseInstalledMarkdownMode} from './installed-markdown-mode.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -26,7 +27,7 @@ export async function runInstalledV1125Workflow({send,evaluate,navigate,capture,
   await evaluate(`window.__v1125Key=${key.toString()};window.__v1125Prior=${store}.tabs.filter(t=>t.isDirty).map(t=>({id:t.id,path:t.path,content:t.content}));window.__v1125Trace=[];window.__v1125Errors=[];for(const type of ['click','pointerdown','keydown','input'])document.addEventListener(type,e=>window.__v1125Trace.push({type,trusted:e.isTrusted,key:e.key||null,ctrl:!!e.ctrlKey,shift:!!e.shiftKey,alt:!!e.altKey,meta:!!e.metaKey}),true);window.addEventListener('error',e=>window.__v1125Errors.push(String(e.message)));window.addEventListener('unhandledrejection',e=>window.__v1125Errors.push(String(e.reason)));`)
   await fs.mkdir(path.dirname(image),{recursive:true});await fs.writeFile(path.join(folder,'.v119-installed-owner'),'owned find fixture');await fs.writeFile(file,findFixture);await fs.writeFile(text,textFindFixture);await fs.writeFile(other,'# 对照资料\n\n其他文档保持原样。\n');await fs.writeFile(image,writingImageFixture());const original=await fs.readFile(file,'utf8'),imageBefore=sha(await fs.readFile(image));await go(file)
   for(const[mode,label]of [['wysiwyg','所见即所得'],['ir','即时渲染 IR'],['sv','源码编辑']]){
-   await ui.click('.inline-mode');await ui.clickText('.n-dropdown-option-body__label',label);await ui.waitFor(`${store}.editorMode===${q(mode)}&&!document.querySelector('.inline-mode').disabled`,'find mode '+mode);await append('需要保留的查找草稿 '+mode)
+   await chooseInstalledMarkdownMode({send,evaluate},label);await ui.waitFor(`${store}.editorMode===${q(mode)}&&!document.querySelector('.inline-mode').disabled`,'find mode '+mode);await append('需要保留的查找草稿 '+mode)
    await selectDuplicate(mode)
    const selectedText=await evaluate('getSelection().toString()'),item={mode,selectedText,selectionExact:selectedText==='用户'},before=await draft();assert.equal(item.selectionExact,true);await open();await count(1);await ui.fill(replace,'访客');await btn('替换这一处');await ui.waitFor(`${tab}.content===${q(before.replace('第二段 用户','第二段 访客'))}`,'exact selected replacement '+mode);item.replaceExact=true;await close();await undo();await ui.waitFor(`${tab}.content===${q(before)}`,'find single undo '+mode);item.undoExact=true;report.modes.push(item)
   }

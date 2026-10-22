@@ -1,0 +1,31 @@
+{
+  "appVersion": "1.2.0",
+  "sourceCommit": "0c4798fb41c5122551e76a85938be07e3be38ece",
+  "installerSha256": "b10f3c8fd6703e5f9ad2425a22e33cfde3d3485fd98d0d25023d51dd20a0b798",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "failed",
+  "checks": [
+    {
+      "id": "moving-note-rebases-local-images-and-links-without-moving-shared-resources",
+      "status": "passed"
+    },
+    {
+      "id": "renaming-image-updates-all-saved-incoming-notes",
+      "status": "passed"
+    },
+    {
+      "id": "renaming-linked-note-retains-fragment-and-title",
+      "status": "passed"
+    },
+    {
+      "id": "moving-folder-keeps-internal-and-outgoing-references",
+      "status": "passed"
+    },
+    {
+      "id": "undo-restores-position-links-and-history",
+      "status": "passed"
+    }
+  ],
+  "error": "Error: Timed out waiting for v116 control ready"
+}
