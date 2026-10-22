@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-116-v1.2.6-table-column-order-candidate",
-  "binaryVersionTransition": "v1.2.6-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.6-release-ready",
   "displayLabel": "v1.2.6 表格列位置调整候选 · 当前公开 v1.2.5",
   "activeSlice": {
     "id": "v1.2.6-table-column-order",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_6_Unsigned_Community_Release_Audit_2026-10-23.md"
   }
 }
