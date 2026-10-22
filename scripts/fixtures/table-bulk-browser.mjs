@@ -21,6 +21,11 @@ if(params.get('fill')==='1'){
  disk.view.columnWidths=[180,180,220,150];for(const v of disk.views)v.config.columnWidths=[180,180,220,150]
 }
 if(params.get('row')==='1')disk.rows[0][0]='复用\r\n记录'
+if(params.get('column')==='1'){
+ disk.view.frozenColumns=1
+ for(const [index,v]of disk.views.entries()){v.config.columnWidths=disk.columnIds.map((_,c)=>120+index*20+c*30);v.config.frozenColumns=1;v.config.groupBy='state';v.config.titleColumn='task';v.config.cardColumns=['code'];v.config.categoryColumn='state';v.config.valueColumn='code'}
+ disk.view=structuredClone(disk.views[0].config)
+}
 document.addEventListener('paste',event=>audit.trace.push({type:event.type,trusted:event.isTrusted}),true)
 window.__TAURI_INTERNALS__={invoke:async(command,args)=>{
  audit.calls.push(command)

@@ -213,7 +213,7 @@ const required = [
 
 // The approved 1.1.0 minor transition supersedes the old patch-only roadmap.
 // Retain all capability counts and historical acceptance checks above.
-if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5'].includes(pkg.version)) {
+if (['1.1.0', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6', '1.1.7', '1.1.8', '1.1.9', '1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37', '1.2.0', '1.2.1', '1.2.2', '1.2.3', '1.2.4', '1.2.5', '1.2.6'].includes(pkg.version)) {
   const published = policy.gates?.githubReleasePublished === true
   const version = pkg.version
   const patch = Number(version.split('.')[2])
@@ -330,6 +330,12 @@ if (pkg.version === '1.2.5') {
   required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.6' : '1.2.5')]
   required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.5' : '1.2.4') && development.publicTag === `v${development.publicVersion}`]
   required[9] = [published ? '当前阶段：**v1.2.5 已发布**' : '当前阶段：**v1.2.5 表格行插入与复制候选**', development.currentStage === (published ? 'M8-115-v1.2.5-published' : 'M8-114-v1.2.5-table-row-actions-candidate') && development.activeSlice?.id === 'v1.2.5-table-row-actions' && fs.existsSync(development.activeSlice.document)]
+}
+if (pkg.version === '1.2.6') {
+  const published = policy.gates?.githubReleasePublished === true
+  required[5] = [`当前开发目标：\`${development.developmentTargetVersion}\``, development.developmentTargetVersion === (published ? '1.2.7' : '1.2.6')]
+  required[7] = [`当前公开版本：\`${development.publicVersion}\``, development.publicVersion === (published ? '1.2.6' : '1.2.5') && development.publicTag === `v${development.publicVersion}`]
+  required[9] = [published ? '当前阶段：**v1.2.6 已发布**' : '当前阶段：**v1.2.6 表格列位置调整候选**', development.currentStage === (published ? 'M8-117-v1.2.6-published' : 'M8-116-v1.2.6-table-column-order-candidate') && development.activeSlice?.id === 'v1.2.6-table-column-order' && fs.existsSync(development.activeSlice.document)]
 }
 
 for (const [token, condition] of required) {
