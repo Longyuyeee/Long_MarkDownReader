@@ -462,20 +462,37 @@ try {
     $startedProcess = $null
     Wait-ForPort -Port 9343 -Listening $false
 
-    if ($CurrentVersion -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1')) {
+    if ($CurrentVersion -in @('1.1.9','1.1.10', '1.1.11', '1.1.12', '1.1.13', '1.1.14', '1.1.15', '1.1.16', '1.1.17', '1.1.18', '1.1.19', '1.1.20', '1.1.21', '1.1.22', '1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1', '1.2.2')) {
         # Same installed image/profile, after every inherited smoke workflow.
         # The new scene must still be recoverable after an actual process exit.
         $startedProcess = Start-Process -FilePath $mainBinary -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
         Wait-ForPort -Port 9343 -Listening $true -Process $startedProcess -Phase 'v119-scene-process-restart'
         & $NodeExecutable (Join-Path (Split-Path -Parent $InstalledSmokeScript) 'capture-v119-installed-restart.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'v119 same-installed-image scene process restart failed' }
-        if ($CurrentVersion -in @('1.1.22','1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1')) {
+        if ($CurrentVersion -in @('1.1.22','1.1.23', '1.1.24', '1.1.25', '1.1.26', '1.1.27', '1.1.28', '1.1.29', '1.1.30', '1.1.31', '1.1.32', '1.1.33', '1.1.34', '1.1.35', '1.1.36', '1.1.37','1.2.0', '1.2.1', '1.2.2')) {
             & $NodeExecutable (Join-Path (Split-Path -Parent $InstalledSmokeScript) 'capture-v1122-installed-restart.mjs')
             if ($LASTEXITCODE -ne 0) { throw 'v1122 same-installed-image file history process restart failed' }
         }
         Stop-Process -Id $startedProcess.Id -Force
         $startedProcess = $null
         Wait-ForPort -Port 9343 -Listening $false
+    }
+    # A successful outer process is insufficient if a workflow still awaits its
+    # actual process restart. Keep the CI result aligned with the raw reports.
+    foreach ($workflowFile in Get-ChildItem -LiteralPath $OutputDirectory -Filter 'installed-v*-workflow.json' -File) {
+        $workflowReport = Get-Content -LiteralPath $workflowFile.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($workflowReport.status -ne 'passed' -or @($workflowReport.checks | Where-Object { $_.status -ne 'passed' }).Count -ne 0) {
+            throw "Installed workflow is incomplete: $($workflowFile.Name)"
+        }
+    }
+    foreach ($restartName in @('installed-v119-workflow.json', 'installed-v1122-workflow.json')) {
+        $restartPath = Join-Path $OutputDirectory $restartName
+        if (Test-Path -LiteralPath $restartPath -PathType Leaf) {
+            $restartReport = Get-Content -LiteralPath $restartPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($restartReport.processRestart.nativeVersion -ne $CurrentVersion -or $restartReport.processRestart.executableSha256 -ne $restartReport.executableSha256) {
+                throw "Installed process restart proof is missing: $restartName"
+            }
+        }
     }
     $currentBinarySha256 = (Get-FileHash -LiteralPath $mainBinary -Algorithm SHA256).Hash.ToLowerInvariant()
     $downgradeProcess = Start-Process -FilePath $previousInstaller.FullName `

@@ -1,0 +1,10 @@
+{
+  "new-comment-undo-redo": true,
+  "continuous-comment-edit-undo-once": true,
+  "color-and-delete-restore-selection": true,
+  "text-input-keeps-native-undo": true,
+  "failed-sidecar-write-retains-undo-and-retries": true,
+  "external-sidecar-conflict-keeps-both-versions": true,
+  "cancel-reload-keeps-unsaved-comment": true,
+  "file-switch-clears-history-and-source-bytes-unchanged": true
+}

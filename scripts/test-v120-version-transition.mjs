@@ -29,4 +29,10 @@ test('actual-process restart accepts the approved minor release without admittin
   for (const version of ['1.1.8', '1.2.3', '2.0.0', '']) assert.ok(!accepted.includes(version), version)
   assert.ok(source.includes("assert.equal(version,process.env.LONGEDIT_R5J_APP_VERSION)"))
   assert.ok(source.includes('validateInstalledWorkSession(report,'))
+  const lifecycle=fs.readFileSync('scripts/run-r5i-isolated-install-lifecycle.ps1','utf8')
+  const guards=[...lifecycle.matchAll(/\$CurrentVersion -in @\(([^)]+)\)/g)].map(m=>m[1])
+  assert.equal(guards.length,2,'both actual-process restart phases retain explicit approved versions')
+  for(const guard of guards){assert.ok(guard.includes("'1.2.2'"));assert.ok(!guard.includes("'1.2.3'"))}
+  assert.ok(lifecycle.includes('Installed workflow is incomplete:'))
+  assert.ok(lifecycle.includes('Installed process restart proof is missing:'))
 })
