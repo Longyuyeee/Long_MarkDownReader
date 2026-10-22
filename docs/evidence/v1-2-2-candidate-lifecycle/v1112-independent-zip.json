@@ -1,0 +1,228 @@
+﻿{
+    "status":  "passed",
+    "reader":  "dotnet-system-io-compression-independent-no-extraction",
+    "archive":  "C:\\LongEditV1112Backup-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543\\资料内容.longedit-backup.zip",
+    "sha256":  "b5755c9a6ba6a789ac83f31ce8cb5b32604c8a3ebf9f342d088975d8b2675532",
+    "manifest":  {
+                     "kind":  "longedit-library-content",
+                     "schemaVersion":  1,
+                     "appVersion":  "1.2.2",
+                     "libraryName":  "LongEditR5ILibrary",
+                     "createdAt":  1792685972,
+                     "options":  {
+                                     "directory":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543",
+                                     "documents":  true,
+                                     "attachments":  true,
+                                     "annotations":  true,
+                                     "history":  true
+                                 },
+                     "entries":  [
+                                     {
+                                         "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf",
+                                         "relativePath":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf",
+                                         "category":  "documents",
+                                         "bytes":  1650,
+                                         "sha256":  "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+                                         "modifiedNanos":  1792685641977159200,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf.annotations.json",
+                                         "relativePath":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf.annotations.json",
+                                         "category":  "annotations",
+                                         "bytes":  389,
+                                         "sha256":  "911e667f7acfd2b5af4724861c7368e126d4f01e51fae3d1a88c106c8993970d",
+                                         "modifiedNanos":  1792685968554881600,
+                                         "sourceRelative":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf"
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/备份方案.md",
+                                         "relativePath":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/备份方案.md",
+                                         "category":  "documents",
+                                         "bytes":  79,
+                                         "sha256":  "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+                                         "modifiedNanos":  1792685968537694900,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/示意.png",
+                                         "relativePath":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/示意.png",
+                                         "category":  "attachments",
+                                         "bytes":  248699,
+                                         "sha256":  "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+                                         "modifiedNanos":  1792685641163123300,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/项目数据.json",
+                                         "relativePath":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/项目数据.json",
+                                         "category":  "documents",
+                                         "bytes":  50,
+                                         "sha256":  "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+                                         "modifiedNanos":  1792685970391656400,
+                                         "sourceRelative":  null
+                                     },
+                                     {
+                                         "path":  "history/2825083b814355927405ea348645d98f7a52212a4e75c4e06880a751cbdf18dc/1792685968.md",
+                                         "relativePath":  "1792685968.md",
+                                         "category":  "history",
+                                         "bytes":  27,
+                                         "sha256":  "ecdfaf9512909dc5d40ca7fdc4aff436ac30a9fafb108e36edf05bc60cd3b120",
+                                         "modifiedNanos":  1792685968567382400,
+                                         "sourceRelative":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/备份方案.md"
+                                     },
+                                     {
+                                         "path":  "history/2825083b814355927405ea348645d98f7a52212a4e75c4e06880a751cbdf18dc/metadata.json",
+                                         "relativePath":  "metadata.json",
+                                         "category":  "history",
+                                         "bytes":  67,
+                                         "sha256":  "d7418846c2e9040a9268663b3dacb01a996a25fe5462d58f00cb429be963f409",
+                                         "modifiedNanos":  1792685968584372000,
+                                         "sourceRelative":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/备份方案.md"
+                                     }
+                                 ],
+                     "directories":  [
+                                         "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543"
+                                     ],
+                     "excluded":  [
+                                      {
+                                          "path":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/.env",
+                                          "reason":  "隐藏、依赖目录或敏感配置，未包含"
+                                      },
+                                      {
+                                          "path":  "v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/.v1112-owned",
+                                          "reason":  "隐藏、依赖目录或敏感配置，未包含"
+                                      }
+                                  ],
+                     "boundary":  [
+                                      "未保存草稿",
+                                      "应用配置与系统凭据",
+                                      "所选范围外链接目标（不会自动跟随）",
+                                      "隐藏和依赖目录",
+                                      "已知敏感配置文件",
+                                      "自定义模板（使用模板导入导出）"
+                                  ],
+                     "workSession":  {
+                                         "activePath":  "v1111-graph-0c21ffa0-bc36-4c6e-a078-34f489811487/图谱验收主题017 - 项目长期研究与来源证据核对.md",
+                                         "files":  [
+                                                       {
+                                                           "relativePath":  "v116-continuity/notes/renamed.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  1244
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v116-continuity/reference-final.txt",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v116-continuity/incoming.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v116-continuity/draft.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v116-continuity/plain-new.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v116-continuity/接续草稿.txt",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v117-save-history/整理后/方案.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v117-save-history/记录.txt",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v1110-tags-c8723622-5471-407d-827c-1d640ddeb8e2/标签笔记000.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       },
+                                                       {
+                                                           "relativePath":  "v1111-graph-0c21ffa0-bc36-4c6e-a078-34f489811487/图谱验收主题017 - 项目长期研究与来源证据核对.md",
+                                                           "view":  {
+                                                                        "scrollLeft":  0,
+                                                                        "scrollTop":  0
+                                                                    }
+                                                       }
+                                                   ],
+                                         "kind":  "longedit-work-session",
+                                         "name":  "备份时的工作现场",
+                                         "reference":  {
+                                                           "query":  "私人参考词",
+                                                           "relativePath":  "v119-session-9e5e3cc1-58e7-423f-9578-df41aa9a3d1a/阅读01.txt"
+                                                       },
+                                         "savedAt":  1792685972051,
+                                         "schemaVersion":  1
+                                     }
+                 },
+    "entries":  [
+                    {
+                        "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf",
+                        "sha256":  "17c08b3a288dd40d178eeff071d20dd543b2a6facd6cc58fbf6701e0b0550cb7",
+                        "bytes":  1650
+                    },
+                    {
+                        "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/参考.pdf.annotations.json",
+                        "sha256":  "911e667f7acfd2b5af4724861c7368e126d4f01e51fae3d1a88c106c8993970d",
+                        "bytes":  389
+                    },
+                    {
+                        "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/备份方案.md",
+                        "sha256":  "8642f8795e74f2b4a2204131d126783db08c020cd306564d0360a26738dbb9fd",
+                        "bytes":  79
+                    },
+                    {
+                        "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/示意.png",
+                        "sha256":  "d522dbab37e9ccad4b62959d92e9fe890cc8b4d5bd3da8f381aec1248434382f",
+                        "bytes":  248699
+                    },
+                    {
+                        "path":  "files/v1112-content-a4d95f3e-e32c-46b4-a6b9-cdacc94f2543/项目数据.json",
+                        "sha256":  "8f18eaae2a8c4d40192447e749a7b2c84bfbf4d82b012cf0dd2c95d8d5f6bd49",
+                        "bytes":  50
+                    },
+                    {
+                        "path":  "history/2825083b814355927405ea348645d98f7a52212a4e75c4e06880a751cbdf18dc/1792685968.md",
+                        "sha256":  "ecdfaf9512909dc5d40ca7fdc4aff436ac30a9fafb108e36edf05bc60cd3b120",
+                        "bytes":  27
+                    },
+                    {
+                        "path":  "history/2825083b814355927405ea348645d98f7a52212a4e75c4e06880a751cbdf18dc/metadata.json",
+                        "sha256":  "d7418846c2e9040a9268663b3dacb01a996a25fe5462d58f00cb429be963f409",
+                        "bytes":  67
+                    }
+                ],
+    "nativeBridgeMocked":  false,
+    "sourceUserContentIncluded":  false
+}

@@ -1,0 +1,51 @@
+{
+  "appVersion": "1.2.2",
+  "sourceCommit": "3fbaa24e2e22361bc4137dacb786682ea65386dc",
+  "installerSha256": "63a5ddabe3e3fa687c60d6e97967385fed4b43bccae83745ed1cabf1be6bd96c",
+  "evidenceLevel": "installed-tauri-ipc-and-disk",
+  "sourceUserContentIncluded": false,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "context-duplicate-writes-real-copy-and-preserves-source",
+      "status": "passed"
+    },
+    {
+      "id": "move-dialog-creates-directory-and-updates-active-path",
+      "status": "passed"
+    },
+    {
+      "id": "context-undo-restores-original-file",
+      "status": "passed"
+    },
+    {
+      "id": "recycle-keeps-recoverable-content-without-source-file",
+      "status": "passed"
+    },
+    {
+      "id": "recycle-dialog-restores-real-file",
+      "status": "passed"
+    },
+    {
+      "id": "native-copy-command-preserves-source-and-new-directory",
+      "status": "passed"
+    },
+    {
+      "id": "native-purge-removes-only-selected-trash-content",
+      "status": "passed"
+    },
+    {
+      "id": "native-move-and-undo-commands-registered",
+      "status": "passed"
+    },
+    {
+      "id": "no-global-error-overlay-after-file-operations",
+      "status": "passed"
+    }
+  ],
+  "fileNavigationSetup": {
+    "searchBefore": "",
+    "method": "native-webview-keyboard",
+    "searchAfter": ""
+  }
+}
