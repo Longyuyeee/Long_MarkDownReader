@@ -20,6 +20,7 @@ if(params.get('fill')==='1'){
  Object.assign(disk,{headers:['任务','状态','编号','范围'],columnIds:['task','state','code','scope'],columnTypes:['text','text','integer','text'],rows:[['','待处理','00123','可见'],['隐藏记录','隐藏','9007199254740993123','隐藏'],['已有备注','','00002','可见'],['保持','已完成','=SUM(A1:A2)','其他']],rowIds:['row-0','row-1','row-2','row-3'],validationRules:{state:{kind:'options',required:true,options:['待处理','已完成']}}})
  disk.view.columnWidths=[180,180,220,150];for(const v of disk.views)v.config.columnWidths=[180,180,220,150]
 }
+if(params.get('row')==='1')disk.rows[0][0]='复用\r\n记录'
 document.addEventListener('paste',event=>audit.trace.push({type:event.type,trusted:event.isTrusted}),true)
 window.__TAURI_INTERNALS__={invoke:async(command,args)=>{
  audit.calls.push(command)

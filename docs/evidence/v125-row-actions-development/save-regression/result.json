@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "nativeBridgeMocked": true,
+  "checks": [
+    "deferred receipts retain later changes",
+    "failed save retains draft and retry succeeds",
+    "route recreation and abandoned wait preserve owner"
+  ]
+}
