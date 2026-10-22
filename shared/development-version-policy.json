@@ -9,11 +9,11 @@
   "requiresHeadAheadOfPublicTag": true,
   "releaseCandidate": false,
   "currentStage": "M8-118-v1.2.7-json-array-order-candidate",
-  "binaryVersionTransition": "v1.2.7-quality-gate-pending",
+  "binaryVersionTransition": "v1.2.7-release-ready",
   "displayLabel": "v1.2.7 JSON 数组项位置调整候选 · 当前公开 v1.2.6",
   "activeSlice": {
     "id": "v1.2.7-json-array-order",
-    "status": "candidate-validation-pending",
+    "status": "installed-workflows-passed-ready-to-publish",
     "document": "docs/V1_2_7_Unsigned_Community_Release_Audit_2026-10-23.md"
   }
 }
